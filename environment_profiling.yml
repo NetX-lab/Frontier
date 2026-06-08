@@ -1,0 +1,27 @@
+name: frontier-profiling
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.10
+  - pip
+  - setuptools>=68
+  - wheel
+  - numpy>=1.23,<3
+  - pandas>=1.5,<3
+  - scipy>=1.9,<2
+  - scikit-learn>=1.1,<2
+  - plotly>=5,<7
+  - tqdm>=4.64,<5
+  - pyyaml>=6,<7
+  - pytest>=7,<9
+  - fasteners>=0.19,<1
+  - cuda-nvcc=12.8.*
+  - cuda-cudart=12.8.*
+  - cuda-cudart-dev=12.8.*
+  - pip:
+      - ddsketch>=3,<4
+      - torch>=2.7,<2.9
+      - vllm>=0.10,<0.11
+      - flashinfer-python>=0.3,<0.4
+      - triton>=3,<4

@@ -1,0 +1,29 @@
+{
+  "_comment": "Example: cluster-specific precision overrides for disaggregated modes.",
+  "version": "1.0",
+  "default_precision": "FP16",
+  "profiling_precision": "FP16",
+  "operations": {
+    "allreduce": {
+      "precision": "FP16",
+      "description": "Default AllReduce precision."
+    }
+  },
+  "cluster_overrides": {
+    "PREFILL": {
+      "mlp_up_proj": {
+        "precision": "FP16"
+      }
+    },
+    "DECODE_ATTN": {
+      "attn_decode": {
+        "precision": "FP16"
+      }
+    },
+    "DECODE_FFN": {
+      "moe_grouped_gemm": {
+        "precision": "FP8"
+      }
+    }
+  }
+}

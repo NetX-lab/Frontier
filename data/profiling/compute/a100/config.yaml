@@ -1,0 +1,24 @@
+block_shape: null
+device: a100
+disable_ray: true
+enable_load_imbalance: false
+expert_parallel_sizes:
+- 1
+load_distributions:
+- uniform
+max_tokens: 64
+models:
+- mixtral_8x7b_moe
+num_gpus: 1
+num_samples_per_distribution: 3
+num_tensor_parallel_workers:
+- 1
+- 2
+- 4
+- 8
+output_dir: data/profiling/compute
+per_channel_quant: false
+precision: null
+profile_method: cuda_event
+skip_confirmation: false
+use_fp8: null

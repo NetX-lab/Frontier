@@ -1,0 +1,33 @@
+{
+  "_comment": "Example: mixed precision across compute and communication operations.",
+  "version": "1.0",
+  "default_precision": "FP16",
+  "profiling_precision": "FP16",
+  "operations": {
+    "attn_prefill": {
+      "precision": "FP16",
+      "description": "Keep attention prefill at FP16 for accuracy."
+    },
+    "mlp_up_proj": {
+      "precision": "FP8",
+      "compute_speedup_factor": 1.8,
+      "description": "FP8 MLP with estimated speedup."
+    },
+    "allreduce": {
+      "precision": "FP8",
+      "description": "AllReduce on FP8 tensors."
+    },
+    "send_recv": {
+      "precision": "INT8",
+      "description": "Pipeline communication in INT8."
+    },
+    "kv_cache_transfer": {
+      "precision": "FP8",
+      "description": "KV cache transfer in FP8."
+    },
+    "m2n_transfer": {
+      "precision": "FP8",
+      "description": "M2N activation transfer in FP8."
+    }
+  }
+}

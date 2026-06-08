@@ -1,0 +1,25 @@
+attn_tp: null
+block_shape: null
+device: rtx_pro_6000
+disable_ray: true
+disable_replicated: false
+extra_num_tokens: null
+ffn_tp: null
+include_target_embedded_mtp: false
+is_moe: false
+max_tokens: 8
+models:
+- qwen2_dense_test
+num_gpus: 1
+num_tensor_parallel_workers:
+- 1
+num_tokens_list:
+- 1
+- 4
+- 8
+output_dir: data/profiling
+precision: null
+profile_method: record_function
+ray_enable_datasets_serializers: false
+skip_confirmation: true
+use_fp8: null

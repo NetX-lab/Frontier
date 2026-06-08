@@ -1,0 +1,4 @@
+[submodule "frontier/cc_backend/backends/collective-sim"]
+	path = frontier/cc_backend/backends/collective-sim
+	url = https://github.com/fwyc0573/frontier-htsim.git
+	branch = main

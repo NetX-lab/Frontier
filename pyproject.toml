@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "frontier-simulator"
+version = "0.1.0"
+description = "Discrete-event simulator for co-located LLM inference serving."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+dependencies = [
+  "ddsketch>=3.0,<4",
+  "fasteners>=0.19,<1",
+  "numpy>=1.23",
+  "pandas>=1.5",
+  "plotly>=5.0",
+  "pyyaml>=6.0",
+  "scikit-learn>=1.1",
+  "scipy>=1.9",
+  "tqdm>=4.64",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=7.0",
+]
+wandb = [
+  "wandb>=0.15,<1",
+]
+profiling = [
+  "pyyaml>=6.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["frontier*"]

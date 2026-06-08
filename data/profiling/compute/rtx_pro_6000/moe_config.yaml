@@ -1,0 +1,30 @@
+block_shape: null
+device: rtx_pro_6000
+disable_ray: true
+disable_replicated: false
+enable_load_imbalance: true
+expert_parallel_sizes:
+- 1
+extra_num_tokens: null
+gating_runtime_context: prefill_hot
+load_distributions:
+- uniform
+- skewed
+max_tokens: 32
+models:
+- Qwen3-30B-A3B-tiny
+num_gpus: 1
+num_samples_per_distribution: 1
+num_tensor_parallel_workers:
+- 1
+num_tokens_list:
+- 8
+- 16
+- 32
+output_dir: data/profiling
+per_channel_quant: false
+precision: null
+profile_method: record_function
+routing_runtime_path: uniform_topk
+skip_confirmation: true
+use_fp8: null

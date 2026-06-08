@@ -1,0 +1,10 @@
+{
+  "device": "h20",
+  "fp16_tflops": 148,
+  "total_memory_gb": 96,
+  "sources": [
+    "local NVIDIA-H20 worker nvidia-smi inventory: 97871 MiB total memory",
+    "tests/debug/flow-level/afd/paper/megascale-infer.md Table 3"
+  ],
+  "notes": "Values represent the H20 SXM workers used for the 2026-04-25 H20 Frontier-vLLM accuracy calibration task."
+}
