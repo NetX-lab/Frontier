@@ -1,0 +1,1 @@
+{"traceEvents": [{"name": "[0]", "ph": "X", "ts": 0.0, "dur": 344000.0, "pid": 0, "tid": 0, "args": {"batch_id": 0, "batch_size": 1, "request_ids": [0], "num_tokens": [4]}}, {"name": "[0]", "ph": "X", "ts": 344000.0, "dur": 344000.0, "pid": 0, "tid": 0, "args": {"batch_id": 1, "batch_size": 1, "request_ids": [0], "num_tokens": [1]}}]}

@@ -1,9 +1,23 @@
 <div align="center">
-  <h1>
-    <img src="figs/icon.png" alt="Frontier icon" height="40" align="absmiddle" />
-    Frontier: A Discrete-Event Simulator for Modern LLM Inference Serving
-  </h1>
-</div>
+
+<img src="figs/icon-frontier-transparent.png" alt="Frontier logo" width="300" />
+
+# Frontier
+
+<h4>A Discrete-Event Simulator for Modern LLM Inference Serving</h4>
+
+[![docs](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](./docs)
+[![version](https://img.shields.io/badge/release-pre--v0.1-green)](#latest-news-)
+[![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+[![arxiv](https://img.shields.io/badge/arXiv-2605.21312-b31b1b.svg)](https://arxiv.org/abs/2605.21312)
+
+<div align="left">
+
+## Modification History
+
+| Date       | Summary of Changes |
+|------------|--------------------|
+| 2026-06-09 | Documented offline/online co-location examples, validation scope, and backend prerequisites. |
 
 ## Latest News 🎯
 
@@ -14,7 +28,7 @@
 
 Frontier is a discrete-event simulator for modern LLM inference serving. It is built for serving systems that combine complex parallelism, runtime optimizations, MoE models, and stateful workloads such as reasoning agents and RL rollouts.
 
-Frontier helps researchers and engineers study large serving designs without repeatedly deploying expensive GPU clusters. The current `pre-release-v0.1` public branch models co-location only, while Prefill-Decode Disaggregation (PDD) and Attention-FFN Disaggregation (AFD) remain roadmap items.
+Frontier helps researchers and engineers study large serving designs without repeatedly deploying expensive GPU clusters.
 
 <div align="left">
   <img src="figs/arch.png" alt="Frontier system architecture" width="760" />
@@ -26,20 +40,7 @@ Frontier helps researchers and engineers study large serving designs without rep
 - **Modern Runtime Optimizations**: Frontier captures production techniques such as CUDA Graph, speculative decoding / MTP, prefix caching, quantization, chunked prefill, and hierarchical caching as part of the scheduler-batch-engine loop. These optimizations change batch shape, memory state, and per-request progress, so Frontier models them as runtime behavior rather than simple speedup factors.
 - **Decision-Fidelity**: Frontier combines calibrated operator, communication, transfer, and KV-cache memory models to make simulation results useful for deployment decisions. This helps users compare configurations under SLA constraints, explore large GPU-scale design spaces ex-situ, and avoid conclusions that would be distorted by coarse average-case models.
 
-> Disaggregated architectures are intentionally not included in this release but will be available soon. Stay tuned!
-
-## How Frontier Models Serving Systems
-
-Frontier treats serving as a sequence of events over time. Requests arrive, enter scheduler queues, form batches, execute through model stages, and finally emit metrics such as TTFT, TPOT, throughput, and end-to-end latency.
-
-At a high level, Frontier is organized around four user-facing concepts:
-
-- **Workload and Config**: Describe the model, hardware, serving architecture, parallelism, runtime options, and request workload.
-- **Fidelity Plane**: Provides calibrated estimates for operator runtime, communication cost, transfer delay, and KV-cache capacity.
-- **Control Plane**: Compiles the serving specification into co-location execution flows for this release.
-- **Execution Plane**: Advances requests through scheduling, batching, and runtime adapters.
-
-This design lets Frontier study both traditional serving deployments and newer workloads whose behavior depends on hidden state, phase changes, or multi-step sessions.
+> Disaggregated architectures are intentionally not included in this release but will be available soon.
 
 ## Minimum Hardware Requirements
 
@@ -86,32 +87,58 @@ python -m pip install -e '.[test]'
 PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 pytest tests/unit/test_open_source_release_arch_guard.py -q -p no:cacheprovider
 ```
 
-Current release-facing examples default to the ASTRA-Sim analytical backend:
+Current release-facing co-location examples are split by simulation mode and default to the formula-based `analytical` backend for one-click smoke runs:
 
-- `examples/architecture/co-location/dense_model_basic.sh`
-- `examples/architecture/co-location/moe_model_basic.sh`
-- `examples/architecture/co-location/thinking_mode_basic.sh`
-- `examples/architecture/co-location/moe_spec_dec.sh`
-- `examples/architecture/co-location/moe_prefix_caching.sh`
+- `examples/architecture/co-location/run_all.sh`
+- `examples/architecture/co-location/offline/dense_model_basic.sh`
+- `examples/architecture/co-location/offline/moe_model_basic.sh`
+- `examples/architecture/co-location/offline/thinking_mode_basic.sh`
+- `examples/architecture/co-location/offline/moe_spec_dec.sh`
+- `examples/architecture/co-location/offline/moe_prefix_caching.sh`
+- `examples/architecture/co-location/online/dense_model_basic_online.sh`
+- `examples/architecture/co-location/online/moe_model_basic_online.sh`
+- `examples/architecture/co-location/online/thinking_mode_basic_online.sh`
+- `examples/architecture/co-location/online/moe_spec_dec_online.sh`
+- `examples/architecture/co-location/online/moe_prefix_caching_online.sh`
 
-Feature examples include `decode_cuda_graph_mode`, Chunked Prefill, Speculative Decoding / MTP, and Prefix Caching. Example fixtures live under:
+Release-facing profiling and downstream simulator smoke wrappers are available under `examples/profiling/`:
+
+- `examples/profiling/profile_linear_op.sh`
+- `examples/profiling/profile_attention_chunked_prefill.sh`
+- `examples/profiling/profile_moe.sh`
+- `examples/profiling/smoke_simulator_dense_csv.sh`
+- `examples/profiling/smoke_simulator_moe_csv.sh`
+
+Example fixtures live under:
 
 ```text
 examples/
 ├── architecture/
+│   └── co-location/
+│       ├── run_all.sh
+│       ├── offline/
+│       └── online/
 ├── fixtures/
 └── profiling/
 ```
 
+The Prefix Caching recipes replay `examples/fixtures/prefix_cache_shared_session_trace.csv`. Smoke examples use dummy execution-time predictor mode, so they validate CLI/runtime plumbing and CSV/JSON metrics generation, not profiling fidelity. For latency studies, disable dummy mode and keep profiling CSVs under `data/profiling/compute/<device>/<model>/`.
+
 ## Communication Backend
 
-The default public example backend is ASTRA-Sim analytical:
+The co-location example suite defaults to the lightweight formula-based backend for one-click smoke runs:
+
+```bash
+--cc_backend_config_type analytical
+```
+
+The ASTRA-Sim-inspired topology model remains available for direct CLI experiments:
 
 ```bash
 --cc_backend_config_type astra_sim_analytical
 ```
 
-collective_sim is optional and is used only when you explicitly select `--cc_backend_config_type collective_sim`.
+`collective_sim` is optional and is used only when you explicitly select `--cc_backend_config_type collective_sim`.
 
 To enable the optional target-runtime backend:
 
@@ -120,6 +147,8 @@ git submodule update --init --recursive frontier/cc_backend/backends/collective-
 cd frontier/cc_backend/backends/collective-sim/sim
 make -j"$(nproc)"
 ```
+
+After building, verify that `frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp` exists before selecting `--cc_backend_config_type collective_sim`.
 
 If your host C++ runtime reports a GLIBC or GLIBCXX mismatch, rebuild the optional backend in the target runtime:
 
@@ -150,23 +179,9 @@ docker run --rm --gpus all --shm-size 16g \
   fengyicheng/frontier-env bash
 ```
 
-The image may contain an image-specific Python path. Set `FRONTIER_DOCKER_PYTHON` after you replace this path with the correct interpreter for your image:
-
-```bash
-find / -path '*/envs/vidur_te/bin/python' -type l -o -path '*/envs/vidur_te/bin/python' -type f 2>/dev/null
-export FRONTIER_DOCKER_PYTHON=/path/to/your/python
-"$FRONTIER_DOCKER_PYTHON" -c "import pytest"
-```
-
-If that check prints `Python executable not found`, inspect the image-specific environment layout before running tests. For GPU runs, verify NVIDIA Container Toolkit installation, driver compatibility, and `nvidia-smi`.
-
-FlashInfer JIT kernels require `nvcc`. If the container or conda environment does not expose it, install `cuda-nvcc` and confirm `CUDA_HOME` points to the matching CUDA toolkit.
-
 ## Plan
 
-We will gradually release Frontier's core components to the community.
-
-We are actively developing new features and plan to support:
+We will gradually release Frontier's core components to the community. We are actively developing new features and plan to support:
 
 - **Simulation Acceleration**: Introduce more simulation acceleration mechanisms.
 - **Serving Engines Integration**: Support for SGLang and TensorRT-LLM frameworks.

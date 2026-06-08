@@ -14,11 +14,17 @@ def test_readme_documents_current_examples_surface() -> None:
     readme = _read("README.md")
 
     for script in (
-        "examples/architecture/co-location/dense_model_basic.sh",
-        "examples/architecture/co-location/moe_model_basic.sh",
-        "examples/architecture/co-location/thinking_mode_basic.sh",
-        "examples/architecture/co-location/moe_spec_dec.sh",
-        "examples/architecture/co-location/moe_prefix_caching.sh",
+        "examples/architecture/co-location/run_all.sh",
+        "examples/architecture/co-location/offline/dense_model_basic.sh",
+        "examples/architecture/co-location/offline/moe_model_basic.sh",
+        "examples/architecture/co-location/offline/thinking_mode_basic.sh",
+        "examples/architecture/co-location/offline/moe_spec_dec.sh",
+        "examples/architecture/co-location/offline/moe_prefix_caching.sh",
+        "examples/architecture/co-location/online/dense_model_basic_online.sh",
+        "examples/architecture/co-location/online/moe_model_basic_online.sh",
+        "examples/architecture/co-location/online/thinking_mode_basic_online.sh",
+        "examples/architecture/co-location/online/moe_spec_dec_online.sh",
+        "examples/architecture/co-location/online/moe_prefix_caching_online.sh",
         "examples/profiling/profile_linear_op.sh",
         "examples/profiling/profile_attention_chunked_prefill.sh",
         "examples/profiling/profile_moe.sh",
@@ -34,6 +40,9 @@ def test_readme_documents_current_examples_surface() -> None:
     assert "data/profiling/compute" in readme
     assert "├── fixtures/" in readme
     assert "examples/fixtures/prefix_cache_shared_session_trace.csv" in readme
+    assert "offline/" in readme
+    assert "online/" in readme
+    assert "not profiling fidelity" in readme
     assert "tests/integration/fixtures/prefix_cache_shared_session_trace.csv" not in readme
 
 
@@ -58,20 +67,10 @@ def test_examples_docs_list_all_colocation_scripts_and_metrics_behavior() -> Non
     assert "decode_cuda_graph_mode=none" in combined
     assert "├── fixtures/" in examples_readme
     assert "examples/fixtures/prefix_cache_shared_session_trace.csv" in combined
-
-
-def test_examples_docs_default_to_astra_sim_and_mark_collective_sim_optional() -> None:
-    examples_readme = _read("examples/README.md")
-    architecture_readme = _read("examples/architecture/README.md")
-    combined = examples_readme + "\n" + architecture_readme
-
-    assert "--cc_backend_config_type astra_sim_analytical" in combined
-    assert "default public example backend" in combined
-    assert "collective_sim" in combined
-    assert "optional" in combined.lower()
-    assert "explicitly pass `--cc_backend_config_type collective_sim`" in combined
-    assert "default `collective_sim`" not in combined
-    assert "baseline examples use Frontier's default `collective_sim` backend" not in combined
+    assert "co-location/run_all.sh" in combined
+    assert "co-location/offline/dense_model_basic.sh" in combined
+    assert "co-location/online/dense_model_basic_online.sh" in combined
+    assert "--cc_backend_config_type analytical" in combined
 
 
 def test_examples_docs_link_profiling_entrypoints_and_downstream_smokes() -> None:

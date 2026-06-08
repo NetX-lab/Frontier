@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-06-09 | Updated co-location entrypoints for the offline/online split and analytical one-click suite backend. |
 | 2026-06-07 | Updated the CLI guide for `astra_sim_analytical` defaults and optional `collective_sim` backend usage. |
 | 2026-06-07 | Added the release CLI guide for co-location simulation, examples, metrics, and common runtime options. |
 
@@ -42,7 +43,7 @@ python -m pip install -e ".[test]"
 export PYTHONPATH=$PWD
 ```
 
-The default public examples and direct CLI default use `--cc_backend_config_type astra_sim_analytical` and do not require the optional `collective_sim` submodule. Build `collective_sim` only when you explicitly select it:
+The co-location example suite defaults to `--cc_backend_config_type analytical` for one-click smoke runs and does not require the optional `collective_sim` submodule. Build `collective_sim` only when you explicitly select it:
 
 ```bash
 git submodule update --init --recursive frontier/cc_backend/backends/collective-sim
@@ -50,31 +51,42 @@ cd frontier/cc_backend/backends/collective-sim/sim
 make -j"$(nproc)"
 ```
 
-Use `--cc_backend_config_type astra_sim_analytical` for the release default lightweight topology model. Use `--cc_backend_config_type analytical` only when you intentionally want the simpler formula-based backend.
+Use `--cc_backend_config_type analytical` for the release co-location smoke examples. Use `--cc_backend_config_type astra_sim_analytical` when you intentionally want the ASTRA-Sim-inspired lightweight topology model.
 
 ## Recommended Entry Points
 
 Run the release examples before writing a custom command:
 
 ```bash
-bash examples/architecture/co-location/dense_model_basic.sh
-bash examples/architecture/co-location/moe_model_basic.sh
-bash examples/architecture/co-location/thinking_mode_basic.sh
-bash examples/architecture/co-location/moe_spec_dec.sh
-bash examples/architecture/co-location/moe_prefix_caching.sh
+# Run all five offline cases and all five online cases.
+bash examples/architecture/co-location/run_all.sh
+
+# Offline cases.
+bash examples/architecture/co-location/offline/dense_model_basic.sh
+bash examples/architecture/co-location/offline/moe_model_basic.sh
+bash examples/architecture/co-location/offline/thinking_mode_basic.sh
+bash examples/architecture/co-location/offline/moe_spec_dec.sh
+bash examples/architecture/co-location/offline/moe_prefix_caching.sh
+
+# Online cases.
+bash examples/architecture/co-location/online/dense_model_basic_online.sh
+bash examples/architecture/co-location/online/moe_model_basic_online.sh
+bash examples/architecture/co-location/online/thinking_mode_basic_online.sh
+bash examples/architecture/co-location/online/moe_spec_dec_online.sh
+bash examples/architecture/co-location/online/moe_prefix_caching_online.sh
 ```
 
-The baseline dense and MoE scripts enable these runtime settings by default:
+The baseline dense, MoE, and Thinking Mode scripts enable these runtime settings by default:
 
 - `--decode_cuda_graph_mode full_decode_only`
 - `--vllm_v1_scheduler_config_enable_chunked_prefill`
 - CSV/JSON metrics output
 - dummy execution-time predictor mode for fast smoke tests
 
-The advanced MoE scripts cover:
+The advanced MoE scripts are available in both `offline/` and `online/`:
 
-- `moe_spec_dec.sh`: Speculative Decoding / MTP. It uses `decode_cuda_graph_mode=none` because Speculative Decoding and decode CUDA Graph modeling currently conflict unless a diagnostic opt-in is used.
-- `moe_prefix_caching.sh`: Prefix Caching. It replays `examples/fixtures/prefix_cache_shared_session_trace.csv` so repeated prompt blocks produce cache-hit behavior.
+- `moe_spec_dec.sh` / `moe_spec_dec_online.sh`: Speculative Decoding / MTP. They use `decode_cuda_graph_mode=none` because Speculative Decoding and decode CUDA Graph modeling currently conflict unless a diagnostic opt-in is used.
+- `moe_prefix_caching.sh` / `moe_prefix_caching_online.sh`: Prefix Caching. They replay `examples/fixtures/prefix_cache_shared_session_trace.csv` so repeated prompt blocks produce cache-hit behavior.
 
 ## Running `frontier.main` Directly
 
@@ -224,7 +236,7 @@ Common files include:
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | Release guard exits for `pd-disaggregation` or `pd-af-disaggregation`. | Disaggregated architectures are not included in `pre-release-v0.1`. | Use `--sys_arch co-location`. |
-| `htsim_ndp` is missing after selecting `--cc_backend_config_type collective_sim`. | The optional `collective_sim` submodule binary has not been built. | Build `frontier/cc_backend/backends/collective-sim/sim`, or use the default `astra_sim_analytical` backend. |
+| `htsim_ndp` is missing after selecting `--cc_backend_config_type collective_sim`. | The optional `collective_sim` submodule binary has not been built. | Build `frontier/cc_backend/backends/collective-sim/sim`, or use the default co-location example `analytical` backend. |
 | W&B tries to initialize. | Environment variables are not set. | Set `WANDB_DISABLED=true` and `VIDUR_DISABLE_WANDB=1`. |
 | Non-dummy run fails on a missing CSV or schema mismatch. | Predictor training needs matching profiling data. | Use the profiling guide and keep CSVs under `data/profiling/compute/<device>/<model>/`. |
 | Plot export warns about `kaleido`. | PNG export is optional. | Keep `--no-metrics_config_store_plots` for smoke runs, or install `kaleido` if PNGs are needed. |

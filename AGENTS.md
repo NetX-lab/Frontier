@@ -4,9 +4,8 @@
 
 - Current public branch supports co-location only.
 - PDD and AFD are upcoming roadmap items; they are not enabled in this branch yet.
-- Public examples and the direct CLI default use `--cc_backend_config_type astra_sim_analytical` for one-click runs without the optional network simulator.
+- The co-location example suite uses `--cc_backend_config_type analytical` for one-click smoke runs without the optional network simulator; direct CLI experiments may still select `astra_sim_analytical` explicitly.
 - collective_sim is optional. Initialize and build its submodule only when you explicitly select `--cc_backend_config_type collective_sim`.
-
 
 Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.1` branch is an open-source preparation branch focused on the **co-location** architecture, where prefill and decode run in a single monolithic cluster.
 
@@ -168,7 +167,7 @@ The minimal `environment.yml` intentionally does not include large GPU packages 
 
 ### Optional collective-sim backend build
 
-Public examples and the direct CLI default use `--cc_backend_config_type astra_sim_analytical` and do not require the `collective_sim` binary. `collective_sim` is optional; initialize and build this submodule only when you explicitly select `--cc_backend_config_type collective_sim`:
+The co-location example suite uses `--cc_backend_config_type analytical` and does not require the `collective_sim` binary. Direct CLI experiments may explicitly select `astra_sim_analytical`; initialize and build the `collective_sim` submodule only when you explicitly select `--cc_backend_config_type collective_sim`:
 
 ```bash
 git submodule update --init --recursive frontier/cc_backend/backends/collective-sim
@@ -278,7 +277,7 @@ Because the CLI is generated from dataclasses, the flag set is large. The most r
 
 ### Example: Dense co-location using dummy execution time
 
-The co-location dense example is intended to be runnable without profiling data. Public examples default to `--cc_backend_config_type astra_sim_analytical`, so they do not require the optional `collective_sim` binary. If you explicitly select `--cc_backend_config_type collective_sim`, build the collective-sim binary first and verify `frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp` exists before running:
+The co-location dense examples are intended to be runnable without profiling data. The example suite defaults to `--cc_backend_config_type analytical`, so it does not require the optional `collective_sim` binary. If you explicitly select `--cc_backend_config_type collective_sim`, build the collective-sim binary first and verify `frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp` exists before running:
 
 ```bash
 # From repo root
@@ -286,19 +285,19 @@ export PYTHONPATH=$PWD
 export WANDB_DISABLED=true
 export VIDUR_DISABLE_WANDB=1
 
-bash examples/architecture/co-location/dense_model_basic.sh
+bash examples/architecture/co-location/offline/dense_model_basic.sh
 ```
 
 ### Example: MoE co-location
 
-Use the MoE co-location wrapper for a shared-domain MoE smoke run. This wrapper also defaults to `--cc_backend_config_type astra_sim_analytical`; `collective_sim` remains an explicit opt-in backend:
+Use the MoE co-location wrappers for shared-domain MoE smoke runs. These wrappers default to `--cc_backend_config_type analytical`; `collective_sim` remains an explicit opt-in backend:
 
 ```bash
 export PYTHONPATH=$PWD
 export WANDB_DISABLED=true
 export VIDUR_DISABLE_WANDB=1
 
-bash examples/architecture/co-location/moe_model_basic.sh
+bash examples/architecture/co-location/offline/moe_model_basic.sh
 ```
 
 ## Examples
@@ -313,11 +312,19 @@ examples/
 ├── architecture/
 │   ├── README.md
 │   └── co-location/
-│       ├── dense_model_basic.sh
-│       ├── moe_model_basic.sh
-│       ├── thinking_mode_basic.sh
-│       ├── moe_spec_dec.sh
-│       └── moe_prefix_caching.sh
+│       ├── run_all.sh
+│       ├── offline/
+│       │   ├── dense_model_basic.sh
+│       │   ├── moe_model_basic.sh
+│       │   ├── thinking_mode_basic.sh
+│       │   ├── moe_spec_dec.sh
+│       │   └── moe_prefix_caching.sh
+│       └── online/
+│           ├── dense_model_basic_online.sh
+│           ├── moe_model_basic_online.sh
+│           ├── thinking_mode_basic_online.sh
+│           ├── moe_spec_dec_online.sh
+│           └── moe_prefix_caching_online.sh
 └── profiling/
     ├── README.md
     ├── profile_linear_op.sh
@@ -330,26 +337,32 @@ examples/
 
 Co-location recipes:
 
-| Script                                                     | Purpose                               | Default runtime behavior                                                                                |
-| ---------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `examples/architecture/co-location/dense_model_basic.sh`   | Dense co-location baseline            | `--cc_backend_config_type astra_sim_analytical`, `decode_cuda_graph_mode=full_decode_only`, Chunked Prefill enabled, CSV/JSON metrics enabled |
-| `examples/architecture/co-location/moe_model_basic.sh`     | MoE co-location baseline              | `--cc_backend_config_type astra_sim_analytical`, `decode_cuda_graph_mode=full_decode_only`, Chunked Prefill enabled, CSV/JSON metrics enabled |
-| `examples/architecture/co-location/thinking_mode_basic.sh` | Thinking Mode co-location smoke       | `--cc_backend_config_type astra_sim_analytical`, Thinking Mode enabled, CSV/JSON metrics enabled |
-| `examples/architecture/co-location/moe_spec_dec.sh`        | MoE Speculative Decoding / MTP recipe | Speculative Decoding / MTP enabled, `decode_cuda_graph_mode=none` to avoid the current runtime conflict |
-| `examples/architecture/co-location/moe_prefix_caching.sh`  | MoE Prefix Caching recipe             | Prefix Caching enabled against `examples/fixtures/prefix_cache_shared_session_trace.csv`                |
+| Script                                                                   | Purpose                                       | Default runtime behavior                                                                                                            |
+| ------------------------------------------------------------------------ | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `examples/architecture/co-location/run_all.sh`                           | Full co-location suite                        | Runs all five offline cases and all five online cases                                                                               |
+| `examples/architecture/co-location/offline/dense_model_basic.sh`         | Offline dense co-location baseline            | `--cc_backend_config_type analytical`, `decode_cuda_graph_mode=full_decode_only`, Chunked Prefill enabled, CSV/JSON metrics enabled |
+| `examples/architecture/co-location/offline/moe_model_basic.sh`           | Offline MoE co-location baseline              | `--cc_backend_config_type analytical`, shared-domain MoE invariant, Chunked Prefill enabled, CSV/JSON metrics enabled               |
+| `examples/architecture/co-location/offline/thinking_mode_basic.sh`       | Offline Thinking Mode co-location smoke       | `--cc_backend_config_type analytical`, Thinking Mode enabled, CSV/JSON metrics enabled                                              |
+| `examples/architecture/co-location/offline/moe_spec_dec.sh`              | Offline MoE Speculative Decoding / MTP recipe | Speculative Decoding / MTP enabled, `decode_cuda_graph_mode=none` to avoid the current runtime conflict                             |
+| `examples/architecture/co-location/offline/moe_prefix_caching.sh`        | Offline MoE Prefix Caching recipe             | Prefix Caching enabled against `examples/fixtures/prefix_cache_shared_session_trace.csv`                                            |
+| `examples/architecture/co-location/online/dense_model_basic_online.sh`   | Online dense co-location baseline             | Mirrors the dense offline case with `--simulation_mode online`                                                                      |
+| `examples/architecture/co-location/online/moe_model_basic_online.sh`     | Online MoE co-location baseline               | Mirrors the MoE offline case with `--simulation_mode online`                                                                        |
+| `examples/architecture/co-location/online/thinking_mode_basic_online.sh` | Online Thinking Mode co-location smoke        | Mirrors the Thinking Mode offline case with `--simulation_mode online`                                                              |
+| `examples/architecture/co-location/online/moe_spec_dec_online.sh`        | Online MoE Speculative Decoding / MTP recipe  | Mirrors the speculative decoding offline case with `--simulation_mode online`                                                       |
+| `examples/architecture/co-location/online/moe_prefix_caching_online.sh`  | Online MoE Prefix Caching recipe              | Replays the same prefix-cache fixture with `--simulation_mode online`                                                               |
 
 Quick start with examples:
 
 ```bash
 # Basic co-location (monolithic) MoE example
-bash examples/architecture/co-location/moe_model_basic.sh
+bash examples/architecture/co-location/offline/moe_model_basic.sh
 
 # Advanced MoE recipes
-bash examples/architecture/co-location/moe_spec_dec.sh
-bash examples/architecture/co-location/moe_prefix_caching.sh
+bash examples/architecture/co-location/offline/moe_spec_dec.sh
+bash examples/architecture/co-location/offline/moe_prefix_caching.sh
 ```
 
-The dense, MoE, Thinking Mode, Speculative Decoding / MTP, and Prefix Caching examples all default to `--cc_backend_config_type astra_sim_analytical`. `collective_sim` is optional: build `frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp` only when you explicitly select `--cc_backend_config_type collective_sim`.
+The dense, MoE, Thinking Mode, Speculative Decoding / MTP, and Prefix Caching examples all default to `--cc_backend_config_type analytical`. `collective_sim` is optional: build `frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp` only when you explicitly select `--cc_backend_config_type collective_sim`.
 
 Dummy mode (`--random_forrest_execution_time_predictor_config_enable_dummy_mode`) skips ML predictor training and profiling metadata loading; it is suitable for smoke tests, not realistic latency prediction. For production simulations, disable dummy mode and provide matching CSV datasets under `data/profiling/compute/<device>/<model>/`.
 

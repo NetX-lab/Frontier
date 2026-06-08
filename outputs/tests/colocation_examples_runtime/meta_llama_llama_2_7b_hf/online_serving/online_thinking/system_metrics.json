@@ -1,0 +1,119 @@
+{
+  "simulation_metadata": {
+    "total_requests": 2,
+    "completed_requests": 2,
+    "system_architecture": "co-location",
+    "server_count": 1
+  },
+  "quantization_config": {
+    "config_path": "model_config",
+    "default_precision": "FP16",
+    "custom_operation_count": 0,
+    "config_hash": "42109853e89a56d3df2f6c05e59e80a447b1f2cc8e73e79661fed2736e268699"
+  },
+  "ttft_statistics": {
+    "count": 2,
+    "mean": 2039.3355804786304,
+    "median": 2039.3355804786304,
+    "std": 215.3355804786304,
+    "min": 1824.0,
+    "max": 2254.671160957261,
+    "p50": 2039.3355804786304,
+    "p90": 2211.604044861535,
+    "p95": 2233.1376029093976,
+    "p99": 2250.364449347688,
+    "unit": "ms"
+  },
+  "tpot_statistics": {
+    "count": 2,
+    "mean": 455.99999999999994,
+    "median": 455.99999999999994,
+    "std": 0.0,
+    "min": 455.99999999999994,
+    "max": 455.99999999999994,
+    "p50": 455.99999999999994,
+    "p90": 455.99999999999994,
+    "p95": 455.99999999999994,
+    "p99": 455.99999999999994,
+    "unit": "ms",
+    "note": "TPOT is only computed for requests with num_decode_tokens > 1. Computed from 2 out of 2 requests."
+  },
+  "request_e2e_time_statistics": {
+    "count": 2,
+    "mean": 2495.3355804786306,
+    "median": 2495.3355804786306,
+    "std": 215.33558047863042,
+    "min": 2280.0000000000005,
+    "max": 2710.6711609572612,
+    "p50": 2495.3355804786306,
+    "p90": 2667.6040448615354,
+    "p95": 2689.137602909398,
+    "p99": 2706.3644493476886,
+    "unit": "ms"
+  },
+  "throughput_metrics": {
+    "total_duration_ms": 2735.9999999999995,
+    "total_duration_seconds": 2.7359999999999998,
+    "requests_per_second": 0.7309941520467836,
+    "total_tokens_processed": 20,
+    "total_decode_tokens_generated": 4,
+    "tokens_per_second": 7.309941520467837,
+    "decode_tokens_per_second": 1.4619883040935673
+  },
+  "spec_decode_statistics": {
+    "total_iterations": 0,
+    "total_accepted_drafts": 0,
+    "total_rejected_drafts": 0,
+    "total_committed_tokens": 0,
+    "acceptance_ratio": 0.0,
+    "avg_committed_tokens_per_iteration": 0.0
+  },
+  "preemption_statistics": {
+    "total_preemption_events": 0,
+    "total_preempted_requests": 0,
+    "preemption_rate": 0.0,
+    "by_cluster_type": {}
+  },
+  "model_weight_memory": {
+    "MONOLITHIC": {
+      "total_parameters": 3238002688,
+      "total_memory_bytes": 6476005376,
+      "total_memory_gb": 6.03125,
+      "memory_utilization_percent": 7.5390625,
+      "breakdown": {
+        "attention_parameters": 1073741824,
+        "attention_memory_bytes": 2147483648,
+        "attention_memory_gb": 2.0,
+        "ffn_parameters": 2164260864,
+        "ffn_memory_bytes": 4328521728,
+        "ffn_memory_gb": 4.03125
+      },
+      "device_info": {
+        "device_type": "A100",
+        "total_device_memory_gb": 80.0,
+        "num_replicas": 1,
+        "expert_parallel_size": 1,
+        "moe_tensor_parallel_size": 1
+      }
+    }
+  },
+  "memory_utilization_percent": {
+    "MONOLITHIC": 7.5390625
+  },
+  "system_architecture_info": {
+    "system_architecture": "co-location",
+    "cluster_configurations": {
+      "MONOLITHIC": {
+        "num_replicas": 1,
+        "parallel_parameters": {
+          "PP": 1,
+          "ATTN_TP": 2,
+          "MOE_TP": 1,
+          "MOE_EP": 1
+        },
+        "device_type": "A100",
+        "model_name": "meta-llama/Llama-2-7b-hf"
+      }
+    }
+  }
+}

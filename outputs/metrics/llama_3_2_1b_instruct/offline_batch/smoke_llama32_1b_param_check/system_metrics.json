@@ -1,0 +1,119 @@
+{
+  "simulation_metadata": {
+    "total_requests": 1,
+    "completed_requests": 1,
+    "system_architecture": "co-location",
+    "server_count": 1
+  },
+  "quantization_config": {
+    "config_path": "model_config",
+    "default_precision": "BF16",
+    "custom_operation_count": 0,
+    "config_hash": "2c48979b10f225a82b0f4a1fcd194bd7e422ed8ea76c2fa46a6e973828c7a35e"
+  },
+  "ttft_statistics": {
+    "count": 1,
+    "mean": 232.0,
+    "median": 232.0,
+    "std": 0.0,
+    "min": 232.0,
+    "max": 232.0,
+    "p50": 232.0,
+    "p90": 232.0,
+    "p95": 232.0,
+    "p99": 232.0,
+    "unit": "ms"
+  },
+  "tpot_statistics": {
+    "count": 1,
+    "mean": 232.0,
+    "median": 232.0,
+    "std": 0.0,
+    "min": 232.0,
+    "max": 232.0,
+    "p50": 232.0,
+    "p90": 232.0,
+    "p95": 232.0,
+    "p99": 232.0,
+    "unit": "ms",
+    "note": "TPOT is only computed for requests with num_decode_tokens > 1. Computed from 1 out of 1 requests."
+  },
+  "request_e2e_time_statistics": {
+    "count": 1,
+    "mean": 464.0,
+    "median": 464.0,
+    "std": 0.0,
+    "min": 464.0,
+    "max": 464.0,
+    "p50": 464.0,
+    "p90": 464.0,
+    "p95": 464.0,
+    "p99": 464.0,
+    "unit": "ms"
+  },
+  "throughput_metrics": {
+    "total_duration_ms": 464.0,
+    "total_duration_seconds": 0.464,
+    "requests_per_second": 2.155172413793103,
+    "total_tokens_processed": 6,
+    "total_decode_tokens_generated": 2,
+    "tokens_per_second": 12.93103448275862,
+    "decode_tokens_per_second": 4.310344827586206
+  },
+  "spec_decode_statistics": {
+    "total_iterations": 0,
+    "total_accepted_drafts": 0,
+    "total_rejected_drafts": 0,
+    "total_committed_tokens": 0,
+    "acceptance_ratio": 0.0,
+    "avg_committed_tokens_per_iteration": 0.0
+  },
+  "preemption_statistics": {
+    "total_preemption_events": 0,
+    "total_preempted_requests": 0,
+    "preemption_rate": 0.0,
+    "by_cluster_type": {}
+  },
+  "model_weight_memory": {
+    "MONOLITHIC": {
+      "total_parameters": 973078528,
+      "total_memory_bytes": 1946157056,
+      "total_memory_gb": 1.8125,
+      "memory_utilization_percent": 2.265625,
+      "breakdown": {
+        "attention_parameters": 167772160,
+        "attention_memory_bytes": 335544320,
+        "attention_memory_gb": 0.3125,
+        "ffn_parameters": 805306368,
+        "ffn_memory_bytes": 1610612736,
+        "ffn_memory_gb": 1.5
+      },
+      "device_info": {
+        "device_type": "A100",
+        "total_device_memory_gb": 80.0,
+        "num_replicas": 1,
+        "expert_parallel_size": 1,
+        "moe_tensor_parallel_size": 1
+      }
+    }
+  },
+  "memory_utilization_percent": {
+    "MONOLITHIC": 2.265625
+  },
+  "system_architecture_info": {
+    "system_architecture": "co-location",
+    "cluster_configurations": {
+      "MONOLITHIC": {
+        "num_replicas": 1,
+        "parallel_parameters": {
+          "PP": 1,
+          "ATTN_TP": 1,
+          "MOE_TP": 1,
+          "MOE_EP": 1
+        },
+        "device_type": "A100",
+        "model_name": "Llama-3.2-1B-Instruct"
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
-| 2026-06-07 | Set co-location examples to default to `astra_sim_analytical` and documented `collective_sim` as optional. |
+| 2026-06-08 | Split co-location architecture scripts into offline and online suites with a one-click runner and validation criteria. |
 | 2026-06-07 | Added optimized co-location defaults and advanced MoE Speculative Decoding/MTP plus Prefix Caching recipes. |
 | 2026-06-04 | Confirmed this directory exposes only co-location architecture scripts for `pre-release-v0.1`. |
 | 2026-06-04 | Updated architecture examples for the co-location-only `pre-release-v0.1` release branch. |
@@ -20,35 +20,59 @@ This directory contains one-click architecture entrypoints for Frontier's releas
 
 | Path | Scenario | Notes |
 |------|----------|-------|
-| `co-location/dense_model_basic.sh` | Dense co-location baseline | Defaults to `--cc_backend_config_type astra_sim_analytical`, dummy execution time, `decode_cuda_graph_mode=full_decode_only`, Chunked Prefill, CSV/JSON metrics |
-| `co-location/moe_model_basic.sh` | MoE co-location baseline | Defaults to `--cc_backend_config_type astra_sim_analytical`, dummy execution time, `decode_cuda_graph_mode=full_decode_only`, Chunked Prefill, CSV/JSON metrics |
-| `co-location/thinking_mode_basic.sh` | Thinking Mode v1 co-location | Defaults to `--cc_backend_config_type astra_sim_analytical`; one hidden round plus one final round; CSV/JSON metrics |
-| `co-location/moe_spec_dec.sh` | MoE Speculative Decoding / MTP | Speculative Decoding / MTP enabled; uses `decode_cuda_graph_mode=none` to avoid the current conflict |
-| `co-location/moe_prefix_caching.sh` | MoE Prefix Caching | Prefix Caching enabled with `examples/fixtures/prefix_cache_shared_session_trace.csv` |
+| `co-location/run_all.sh` | Full co-location suite | Runs all five offline cases and all five online cases; pass extra Frontier CLI flags after `--` |
+| `co-location/offline/dense_model_basic.sh` | Offline dense co-location baseline | Analytical backend by default, dummy execution time, `decode_cuda_graph_mode=full_decode_only`, Chunked Prefill, CSV/JSON metrics |
+| `co-location/offline/moe_model_basic.sh` | Offline MoE co-location baseline | Analytical backend by default, dummy execution time, shared-domain MoE invariant, Chunked Prefill, CSV/JSON metrics |
+| `co-location/offline/thinking_mode_basic.sh` | Offline Thinking Mode v1 co-location | Analytical backend; one hidden round plus one final round; CSV/JSON metrics |
+| `co-location/offline/moe_spec_dec.sh` | Offline MoE Speculative Decoding / MTP | Speculative Decoding / MTP enabled; uses `decode_cuda_graph_mode=none` to avoid the current conflict |
+| `co-location/offline/moe_prefix_caching.sh` | Offline MoE Prefix Caching | Prefix Caching enabled with `examples/fixtures/prefix_cache_shared_session_trace.csv` |
+| `co-location/online/dense_model_basic_online.sh` | Online dense co-location baseline | Mirrors dense offline settings with analytical backend and `--simulation_mode online` |
+| `co-location/online/moe_model_basic_online.sh` | Online MoE co-location baseline | Mirrors MoE offline settings with analytical backend and `--simulation_mode online` |
+| `co-location/online/thinking_mode_basic_online.sh` | Online Thinking Mode v1 co-location | Mirrors Thinking Mode offline settings with `--simulation_mode online` |
+| `co-location/online/moe_spec_dec_online.sh` | Online MoE Speculative Decoding / MTP | Mirrors Speculative Decoding offline settings with `--simulation_mode online` |
+| `co-location/online/moe_prefix_caching_online.sh` | Online MoE Prefix Caching | Replays the same prefix-cache fixture with `--simulation_mode online` |
 
 ## Thinking Mode v1
 
-The Thinking Mode example uses:
+The Thinking Mode examples use:
 
 - `--enable_thinking_mode`
 - `--thinking_depth 2`
 - one explicit hidden round via `--thinking_round_prefill_tokens` and `--thinking_round_decode_tokens`
 - `--tool_call_latency 0.001`
 - explicit `vllm_v1` scheduler settings
-- `--cc_backend_config_type astra_sim_analytical` so the one-click smoke run works on a minimal single-replica layout without the optional `collective_sim` submodule
+- `--cc_backend_config_type analytical` so the one-click smoke run works on a minimal single-replica layout
 - CSV/JSON metrics enabled by default, with plots, Chrome trace, and JSON event trace disabled for lightweight artifacts
-
-
-`collective_sim` is optional for these scripts. Build it only when you explicitly pass `--cc_backend_config_type collective_sim`.
 
 ## Recommended Start Order
 
 ```bash
-bash examples/architecture/co-location/dense_model_basic.sh
-bash examples/architecture/co-location/moe_model_basic.sh
-bash examples/architecture/co-location/thinking_mode_basic.sh
-bash examples/architecture/co-location/moe_spec_dec.sh
-bash examples/architecture/co-location/moe_prefix_caching.sh
+# Full suite.
+bash examples/architecture/co-location/run_all.sh
+
+# Offline cases.
+bash examples/architecture/co-location/offline/dense_model_basic.sh
+bash examples/architecture/co-location/offline/moe_model_basic.sh
+bash examples/architecture/co-location/offline/thinking_mode_basic.sh
+bash examples/architecture/co-location/offline/moe_spec_dec.sh
+bash examples/architecture/co-location/offline/moe_prefix_caching.sh
+
+# Online cases.
+bash examples/architecture/co-location/online/dense_model_basic_online.sh
+bash examples/architecture/co-location/online/moe_model_basic_online.sh
+bash examples/architecture/co-location/online/thinking_mode_basic_online.sh
+bash examples/architecture/co-location/online/moe_spec_dec_online.sh
+bash examples/architecture/co-location/online/moe_prefix_caching_online.sh
 ```
 
-Use the baseline scripts first, then use `moe_spec_dec.sh` and `moe_prefix_caching.sh` as advanced recipes for Speculative Decoding / MTP and Prefix Caching.
+Use the baseline scripts first, then use the Speculative Decoding / MTP and Prefix Caching recipes as advanced cases.
+
+## Cross-validation Criteria
+
+For each offline/online pair:
+
+1. Confirm the script exits with code `0`.
+2. Confirm `request_metrics.csv` and `system_metrics.json` exist in the metrics output directory.
+3. Record expected request count, actual request rows, completed request rows, total input tokens, total output tokens, mean TTFT, mean latency, and request throughput when present.
+4. Confirm offline outputs include the `offline_batch` taxonomy segment and online outputs include `online_serving`.
+5. Treat latency differences as expected when online mode preserves request arrival times; investigate only if counts, token totals, output files, or finite numeric metrics diverge unexpectedly.

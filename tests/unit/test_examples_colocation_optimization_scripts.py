@@ -6,15 +6,22 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 COLOCATION_DIR = REPO_ROOT / "examples" / "architecture" / "co-location"
+OFFLINE_DIR = COLOCATION_DIR / "offline"
+ONLINE_DIR = COLOCATION_DIR / "online"
 
 BASELINE_SCRIPTS = (
-    COLOCATION_DIR / "dense_model_basic.sh",
-    COLOCATION_DIR / "moe_model_basic.sh",
-    COLOCATION_DIR / "thinking_mode_basic.sh",
+    OFFLINE_DIR / "dense_model_basic.sh",
+    OFFLINE_DIR / "moe_model_basic.sh",
+    OFFLINE_DIR / "thinking_mode_basic.sh",
+    ONLINE_DIR / "dense_model_basic_online.sh",
+    ONLINE_DIR / "moe_model_basic_online.sh",
+    ONLINE_DIR / "thinking_mode_basic_online.sh",
 )
 ADVANCED_SCRIPTS = (
-    COLOCATION_DIR / "moe_spec_dec.sh",
-    COLOCATION_DIR / "moe_prefix_caching.sh",
+    OFFLINE_DIR / "moe_spec_dec.sh",
+    OFFLINE_DIR / "moe_prefix_caching.sh",
+    ONLINE_DIR / "moe_spec_dec_online.sh",
+    ONLINE_DIR / "moe_prefix_caching_online.sh",
 )
 ALL_SCRIPTS = (*BASELINE_SCRIPTS, *ADVANCED_SCRIPTS)
 
@@ -53,9 +60,7 @@ def test_baseline_colocation_scripts_enable_runtime_optimizations_by_default() -
 def test_colocation_scripts_allow_runtime_overrides_and_emit_metrics() -> None:
     for script in ALL_SCRIPTS:
         text = _read(script)
-        assert 'CC_BACKEND_CONFIG_TYPE="${CC_BACKEND_CONFIG_TYPE:-astra_sim_analytical}"' in text, script
-        assert '--cc_backend_config_type "$CC_BACKEND_CONFIG_TYPE"' in text, script
-        assert 'METRICS_OUTPUT_DIR="${METRICS_OUTPUT_DIR:-$REPO_ROOT/outputs/examples/co-location}"' in text, script
+        assert 'METRICS_OUTPUT_DIR="${METRICS_OUTPUT_DIR:-$REPO_ROOT/outputs/examples/co-location/' in text, script
         assert 'RUN_ID="${RUN_ID:-' in text, script
         assert '--metrics_config_output_dir "$METRICS_OUTPUT_DIR"' in text, script
         assert '--metrics_config_run_id "$RUN_ID"' in text, script
@@ -63,7 +68,7 @@ def test_colocation_scripts_allow_runtime_overrides_and_emit_metrics() -> None:
         assert 'if [ "$#" -gt 0 ]; then' in text, script
         assert 'CMD+=("$@")' in text, script
 
-    for script in (*BASELINE_SCRIPTS, COLOCATION_DIR / "moe_spec_dec.sh"):
+    for script in (*BASELINE_SCRIPTS, OFFLINE_DIR / "moe_spec_dec.sh", ONLINE_DIR / "moe_spec_dec_online.sh"):
         assert 'NUM_REQUESTS="${NUM_REQUESTS:-' in _read(script), script
 
 
@@ -154,7 +159,7 @@ def test_advanced_moe_recipes_fail_fast_on_invalid_chunked_prefill_boolean() -> 
 
 
 def test_moe_spec_decode_recipe_fails_fast_on_invalid_mtp_integer_values() -> None:
-    script = COLOCATION_DIR / "moe_spec_dec.sh"
+    script = OFFLINE_DIR / "moe_spec_dec.sh"
     invalid_cases = (
         {"MTP_N_PREDICT": "abc", "MTP_NUM_LAYERS": "1", "expected": "MTP_N_PREDICT"},
         {"MTP_N_PREDICT": "1", "MTP_NUM_LAYERS": "abc", "expected": "MTP_NUM_LAYERS"},
@@ -187,7 +192,7 @@ def test_moe_spec_decode_recipe_fails_fast_on_invalid_mtp_integer_values() -> No
 
 
 def test_moe_spec_decode_recipe_uses_speculative_or_mtp_controls_without_cuda_graph_conflict() -> None:
-    text = _read(COLOCATION_DIR / "moe_spec_dec.sh")
+    text = _read(OFFLINE_DIR / "moe_spec_dec.sh")
 
     assert 'DECODE_CUDA_GRAPH_MODE="${DECODE_CUDA_GRAPH_MODE:-none}"' in text
     assert "require_non_negative_integer" in text
@@ -203,7 +208,7 @@ def test_moe_spec_decode_recipe_uses_speculative_or_mtp_controls_without_cuda_gr
 
 
 def test_moe_prefix_cache_recipe_uses_shared_prefix_trace_and_no_spec_decode() -> None:
-    text = _read(COLOCATION_DIR / "moe_prefix_caching.sh")
+    text = _read(OFFLINE_DIR / "moe_prefix_caching.sh")
 
     assert 'TRACE_FILE="${TRACE_FILE:-$REPO_ROOT/examples/fixtures/prefix_cache_shared_session_trace.csv}"' in text
     assert "tests/integration/fixtures/prefix_cache_shared_session_trace.csv" not in text

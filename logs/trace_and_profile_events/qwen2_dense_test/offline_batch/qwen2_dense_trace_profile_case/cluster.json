@@ -1,0 +1,1 @@
+{"replicas": [{"id": 0, "num_layers": 24, "num_q_heads": 16, "num_kv_heads": 16, "embedding_dim": 1024, "mlp_hidden_dim": 2816, "use_gated_mlp": true, "vocab_size": 151936, "num_pipeline_stages": 1, "num_attn_tensor_parallel_workers": 1}]}

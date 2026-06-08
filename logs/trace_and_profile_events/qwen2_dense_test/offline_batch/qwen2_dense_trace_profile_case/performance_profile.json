@@ -1,0 +1,126 @@
+{
+  "total_profiling_time_s": 0.008172912988811731,
+  "component_breakdown": {
+    "write_json_trace": {
+      "total_time_ms": 0.17033005133271217,
+      "call_count": 1,
+      "avg_time_ms": 0.17033005133271217,
+      "min_time_ms": 0.17033005133271217,
+      "max_time_ms": 0.17033005133271217
+    },
+    "request_generation": {
+      "total_time_ms": 0.09329896420240402,
+      "call_count": 1,
+      "avg_time_ms": 0.09329896420240402,
+      "min_time_ms": 0.09329896420240402,
+      "max_time_ms": 0.09329896420240402
+    },
+    "write_chrome_trace": {
+      "total_time_ms": 0.06900867447257042,
+      "call_count": 1,
+      "avg_time_ms": 0.06900867447257042,
+      "min_time_ms": 0.06900867447257042,
+      "max_time_ms": 0.06900867447257042
+    },
+    "initialize_periodic_scheduling": {
+      "total_time_ms": 0.005159992724657059,
+      "call_count": 1,
+      "avg_time_ms": 0.005159992724657059,
+      "min_time_ms": 0.005159992724657059,
+      "max_time_ms": 0.005159992724657059
+    }
+  },
+  "event_type_breakdown": {
+    "ReplicaScheduleEvent": {
+      "total_time_ms": 1.106339506804943,
+      "call_count": 3,
+      "avg_time_ms": 0.3687798356016477,
+      "min_time_ms": 0.2503502182662487,
+      "max_time_ms": 0.4856232553720474
+    },
+    "ReplicaStageScheduleEvent": {
+      "total_time_ms": 0.8043618872761726,
+      "call_count": 2,
+      "avg_time_ms": 0.4021809436380863,
+      "min_time_ms": 0.3592027351260185,
+      "max_time_ms": 0.4451591521501541
+    },
+    "GlobalBatchEndEvent": {
+      "total_time_ms": 0.3562755882740021,
+      "call_count": 2,
+      "avg_time_ms": 0.17813779413700104,
+      "min_time_ms": 0.10425178334116936,
+      "max_time_ms": 0.2520238049328327
+    },
+    "BatchStageArrivalEvent": {
+      "total_time_ms": 0.29961345717310905,
+      "call_count": 2,
+      "avg_time_ms": 0.14980672858655453,
+      "min_time_ms": 0.022227410227060318,
+      "max_time_ms": 0.27738604694604874
+    },
+    "ClusterBatchEndEvent": {
+      "total_time_ms": 0.08613010868430138,
+      "call_count": 2,
+      "avg_time_ms": 0.04306505434215069,
+      "min_time_ms": 0.038144178688526154,
+      "max_time_ms": 0.04798592999577522
+    },
+    "ClusterScheduleEvent": {
+      "total_time_ms": 0.06907712668180466,
+      "call_count": 1,
+      "avg_time_ms": 0.06907712668180466,
+      "min_time_ms": 0.06907712668180466,
+      "max_time_ms": 0.06907712668180466
+    },
+    "BatchStageEndEvent": {
+      "total_time_ms": 0.04473840817809105,
+      "call_count": 2,
+      "avg_time_ms": 0.022369204089045525,
+      "min_time_ms": 0.020986422896385193,
+      "max_time_ms": 0.023751985281705856
+    },
+    "GlobalScheduleEvent": {
+      "total_time_ms": 0.015005934983491898,
+      "call_count": 1,
+      "avg_time_ms": 0.015005934983491898,
+      "min_time_ms": 0.015005934983491898,
+      "max_time_ms": 0.015005934983491898
+    }
+  },
+  "scheduler_breakdown": {},
+  "cluster_breakdown": {},
+  "phase_times": {
+    "event_processing_loop": 5.047930870205164
+  },
+  "top_10_bottlenecks": [
+    {
+      "component": "write_json_trace",
+      "total_time_ms": 0.17033005133271217,
+      "percentage": 2.084080077273362,
+      "call_count": 1,
+      "avg_time_ms": 0.17033005133271217
+    },
+    {
+      "component": "request_generation",
+      "total_time_ms": 0.09329896420240402,
+      "percentage": 1.1415631651789904,
+      "call_count": 1,
+      "avg_time_ms": 0.09329896420240402
+    },
+    {
+      "component": "write_chrome_trace",
+      "total_time_ms": 0.06900867447257042,
+      "percentage": 0.8443583648454291,
+      "call_count": 1,
+      "avg_time_ms": 0.06900867447257042
+    },
+    {
+      "component": "initialize_periodic_scheduling",
+      "total_time_ms": 0.005159992724657059,
+      "percentage": 0.06313529498871216,
+      "call_count": 1,
+      "avg_time_ms": 0.005159992724657059
+    }
+  ]
+}
