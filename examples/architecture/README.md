@@ -1,13 +1,3 @@
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-06-08 | Split co-location architecture scripts into offline and online suites with a one-click runner and validation criteria. |
-| 2026-06-07 | Added optimized co-location defaults and advanced MoE Speculative Decoding/MTP plus Prefix Caching recipes. |
-| 2026-06-04 | Confirmed this directory exposes only co-location architecture scripts for `pre-release-v0.1`. |
-| 2026-06-04 | Updated architecture examples for the co-location-only `pre-release-v0.1` release branch. |
-| 2026-06-03 | Removed private disaggregated architecture examples from the open-source preparation branch. |
-
 # Architecture Examples
 
 This directory contains one-click architecture entrypoints for Frontier's release-supported runtime layout.

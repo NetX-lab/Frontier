@@ -13,12 +13,6 @@
 
 <div align="left">
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-06-09 | Documented offline/online co-location examples, validation scope, and backend prerequisites. |
-
 ## Latest News 🎯
 
 📍[2026/06] We have released the initial version of Frontier, which supports co-located serving and modern optimizations. The disaggregated version will be available soon. Stay tuned!<br />
@@ -90,24 +84,9 @@ PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 pytest tests/unit/test_open_source_rel
 Current release-facing co-location examples are split by simulation mode and default to the formula-based `analytical` backend for one-click smoke runs:
 
 - `examples/architecture/co-location/run_all.sh`
-- `examples/architecture/co-location/offline/dense_model_basic.sh`
-- `examples/architecture/co-location/offline/moe_model_basic.sh`
-- `examples/architecture/co-location/offline/thinking_mode_basic.sh`
-- `examples/architecture/co-location/offline/moe_spec_dec.sh`
-- `examples/architecture/co-location/offline/moe_prefix_caching.sh`
 - `examples/architecture/co-location/online/dense_model_basic_online.sh`
 - `examples/architecture/co-location/online/moe_model_basic_online.sh`
 - `examples/architecture/co-location/online/thinking_mode_basic_online.sh`
-- `examples/architecture/co-location/online/moe_spec_dec_online.sh`
-- `examples/architecture/co-location/online/moe_prefix_caching_online.sh`
-
-Release-facing profiling and downstream simulator smoke wrappers are available under `examples/profiling/`:
-
-- `examples/profiling/profile_linear_op.sh`
-- `examples/profiling/profile_attention_chunked_prefill.sh`
-- `examples/profiling/profile_moe.sh`
-- `examples/profiling/smoke_simulator_dense_csv.sh`
-- `examples/profiling/smoke_simulator_moe_csv.sh`
 
 Example fixtures live under:
 
@@ -121,8 +100,6 @@ examples/
 ├── fixtures/
 └── profiling/
 ```
-
-The Prefix Caching recipes replay `examples/fixtures/prefix_cache_shared_session_trace.csv`. Smoke examples use dummy execution-time predictor mode, so they validate CLI/runtime plumbing and CSV/JSON metrics generation, not profiling fidelity. For latency studies, disable dummy mode and keep profiling CSVs under `data/profiling/compute/<device>/<model>/`.
 
 ## Communication Backend
 
@@ -214,6 +191,10 @@ If you use this repo in your research, please cite our paper (citation details w
 Email **Yicheng Feng** (<yichengfeng@link.cuhk.edu.hk>) if you have any questions.
 
 Feedback, issues, and PRs are highly welcome! We would love for you to join the Frontier community.
+
+<div align="left">
+  <img src="figs/lark.png" alt="Lark" width="100" />
+</div>
 
 ## License
 

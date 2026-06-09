@@ -1,20 +1,5 @@
 # Frontier Profiling Module
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-06-07 | Prioritized `examples/profiling/` wrappers in the usage guide and demoted disaggregated profiling examples to guarded historical notes. |
-| 2026-06-07 | Pointed release-facing profiling examples to `examples/profiling/` while keeping `frontier/profiling/example/` as legacy/internal reference scripts. |
-| 2026-06-06 | Updated profiling environment guidance to use environment_profiling.yml and avoid stale private environment names |
-| 2026-04-27 | Clarify that PP receiver-head / prefill consumer-active handoff uses consumer-local `recv_end_ts`; producer `send_end_ts` belongs to the separate producer-send-path family. |
-| 2026-03-29 | Record the first MoE uniform-topk data landing: `frontier/profiling/moe/main.py` now exposes `--routing_runtime_path`, MoE profiling rows carry explicit routing-path metadata, and the current canonical `qwen3-a3b-30b-moe/moe.csv` contains both standard and `uniform_topk` TP1/EP1/CUDA_EVENT routing rows. |
-| 2026-03-29 | Add the MoE uniform-routing reminder: when runtime enables uniform routing, profiling/modeling must target the uniform-routing runtime path rather than reusing standard `fused_topk/topk_softmax` rows. |
-| 2026-03-26 | Add `other_overhead/pp_receiver_head.csv` documentation for the PP8 baseline-only receiver-head family and record that broader single-GPU profiling plus CSV-miss generalization remains future work. |
-| 2026-03-13 | Align profiling docs with measurement-aware contract; document `profile_method -> measurement_type` mapping and current defaults |
-| 2026-02-16 | Restore CPU overhead section after accidental worktree deletion; add schema v2 columns, legacy defaults, and replay format notes |
-| 2026-02-15 | Add CPU overhead profiling section with single-node policy, CSV contract, backend usage, and analytical TP modeling notes |
-
 ## Overview
 
 The `frontier/profiling` module is the hardware profiling subsystem of the Frontier LLM inference simulator. It collects timing data for various LLM operations on real GPU hardware, which is then used to train ML-based execution time predictors for accurate simulation.
