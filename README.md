@@ -19,7 +19,7 @@
 
 ## Frontier Overview
 
-Frontier is a discrete-event simulator for modern LLM serving. It is built for serving systems that combine complex parallelisms, runtime optimizations, sparse model architectures (MoE), and stateful workloads (reasoning agents, RL rollouts).
+Frontier is a discrete-event simulator for modern LLM serving. It is built for serving systems that combine complex parallelisms, runtime optimizations, sparse model architectures (MoE), and stateful workloads (reasoning agents, RL rollouts). It simulates vLLM at the moment but we plan to include other serving engines soon.
 
 Frontier helps researchers and engineers better understand serving system designs and tradeoffs without the time and financial costs of repeatedly deploying on GPU clusters.
 
@@ -29,9 +29,9 @@ Frontier helps researchers and engineers better understand serving system design
 
 ### Key Features
 
-- **Co-location Serving System**: This branch models a monolithic co-location serving cluster. PDD and AFD support is planned for a later public release.
+- **Co-located Serving**: This branch models a monolithic co-location serving cluster. PDD and AFD support is planned for a later public release.
 - **Modern Runtime Optimizations**: Frontier captures production techniques such as CUDA Graph, speculative decoding / MTP, prefix caching, quantization, chunked prefill, and hierarchical caching as part of the scheduler-batch-engine loop. These optimizations change batch shape, memory state, and per-request progress, so Frontier models them as runtime behavior rather than simple speedup factors.
-- **Decision-Fidelity**: Frontier combines calibrated operator, communication, transfer, and KV-cache memory models to make simulation results useful for deployment decisions. This helps users compare configurations under SLA constraints, explore large GPU-scale design spaces ex-situ, and avoid conclusions that would be distorted by coarse average-case models.
+- **Fidelity**: Frontier combines calibrated operator, communication, transfer, and KV-cache memory models to make simulation results useful for deployment decisions. This helps users compare configurations under SLA constraints, explore large GPU-scale design spaces ex-situ, and avoid conclusions that would be distorted by coarse average-case models.
 
 > Disaggregated architectures are intentionally not included in this release but will be available soon.
 
