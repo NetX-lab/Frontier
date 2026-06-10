@@ -15,14 +15,13 @@
 
 ## Latest News 🎯
 
-📍[2026/06] We have released the initial version of Frontier, which supports co-located serving and modern optimizations. The disaggregated version will be available soon. Stay tuned!<br />
-📍[2026/05] We are preparing for the initial open-source release of Frontier. The core simulation engine and documentation will be available soon.
+📍[2026/06] Initial version released, with support for co-located serving and modern optimizations. Support for disaggregated serving will be available soon. Stay tuned!<br />
 
 ## Frontier Overview
 
-Frontier is a discrete-event simulator for modern LLM inference serving. It is built for serving systems that combine complex parallelism, runtime optimizations, MoE models, and stateful workloads such as reasoning agents and RL rollouts.
+Frontier is a discrete-event simulator for modern LLM serving. It is built for serving systems that combine complex parallelisms, runtime optimizations, sparse model architectures (MoE), and stateful workloads (reasoning agents, RL rollouts).
 
-Frontier helps researchers and engineers study large serving designs without repeatedly deploying expensive GPU clusters.
+Frontier helps researchers and engineers better understand serving system designs and tradeoffs without the time and financial costs of repeatedly deploying on GPU clusters.
 
 <div align="left">
   <img src="figs/arch.png" alt="Frontier system architecture" width="760" />
