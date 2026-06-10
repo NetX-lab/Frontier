@@ -4,7 +4,7 @@
 
 # Frontier
 
-<h4>A Discrete-Event Simulator for Modern LLM Inference Serving</h4>
+<h4>A Discrete-Event Simulator for Modern LLM Serving</h4>
 
 [![docs](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](./docs)
 [![version](https://img.shields.io/badge/release-pre--v0.1-green)](#latest-news-)
@@ -157,16 +157,16 @@ docker run --rm --gpus all --shm-size 16g \
 
 ## Plan
 
-We will gradually release Frontier's core components to the community. We are actively developing new features and plan to support:
+We will continuously release Frontier's core components to the community. We are actively developing new features and plan to support:
 
-- **Simulation Acceleration**: Introduce more simulation acceleration mechanisms.
 - **Serving Engines Integration**: Support for SGLang and TensorRT-LLM frameworks.
 - **Advanced Caching**: Support for `tair-kvcache` as an advanced runtime backend for the Hierarchical Caching feature.
 - **Advanced Model Support**: Expanded support for state-of-the-art models such as DeepSeek-V4, Kimi 2.5, and more.
+- **Simulation Acceleration**: Introduce more simulation acceleration mechanisms.
 
 ## Acknowledgments
 
-Frontier is mainly built on top of Vidur. The following great works have been referenced or adapted as runtime backends during the development of Frontier. We sincerely thank the authors for their contributions to the community!
+Frontier is mainly built on top of Vidur. The following great systems have been referenced or adapted as runtime backends. We sincerely thank all the developers for their contributions to the community!
 
 - [**Vidur**](https://github.com/microsoft/vidur)
 - [**ASTRA-Sim**](https://github.com/astra-sim/astra-sim)
@@ -187,9 +187,9 @@ If you use this repo in your research, please cite our paper (citation details w
 
 ## Contact
 
-Email **Yicheng Feng** (<yichengfeng@link.cuhk.edu.hk>) if you have any questions.
+Email **Yicheng Feng** (<yichengfeng@link.cuhk.edu.hk>) or **Hong Xu** (<hongxu@cuhk.edu.hk>) if you have any questions.
 
-Feedback, issues, and PRs are highly welcome! We would love for you to join the Frontier community.
+Feedback, issues, and PRs are highly welcome! We would love your contribution!
 
 <div align="left">
   <img src="figs/lark.png" alt="Lark" width="100" />
