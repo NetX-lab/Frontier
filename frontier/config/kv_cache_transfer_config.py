@@ -5,6 +5,21 @@ from frontier.config.base_poly_config import BasePolyConfig
 from frontier.types import KVCacheTransferType
 
 
+def _require_positive(value: float | int, field_name: str) -> None:
+    if value <= 0:
+        raise ValueError(f"{field_name} must be > 0, got {value}")
+
+
+def _require_non_negative(value: float | int, field_name: str) -> None:
+    if value < 0:
+        raise ValueError(f"{field_name} must be >= 0, got {value}")
+
+
+def _require_optional_positive(value: Optional[int], field_name: str) -> None:
+    if value is not None and value <= 0:
+        raise ValueError(f"{field_name} must be > 0 when set, got {value}")
+
+
 @dataclass
 class BaseKVCacheTransferConfig(BasePolyConfig):
     """Base configuration for KV Cache transfer predictors."""
@@ -43,6 +58,11 @@ class BaseKVCacheTransferConfig(BasePolyConfig):
         metadata={"help": "Transfer protocol: rdma, tcp, infiniband."},
     )
 
+    def __post_init__(self) -> None:
+        _require_positive(self.network_bandwidth_gbps, "network_bandwidth_gbps")
+        _require_non_negative(self.network_latency_ms, "network_latency_ms")
+        _require_positive(self.compression_ratio, "compression_ratio")
+
 
 @dataclass
 class AnalyticalKVCacheTransferConfig(BaseKVCacheTransferConfig):
@@ -75,7 +95,14 @@ class AnalyticalKVCacheTransferConfig(BaseKVCacheTransferConfig):
         default=None,
         metadata={"help": "Override head dimension for KV cache size calculation."},
     )
-    
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        _require_positive(self.kv_cache_dtype_size_bytes, "kv_cache_dtype_size_bytes")
+        _require_optional_positive(self.override_num_layers, "override_num_layers")
+        _require_optional_positive(self.override_num_heads, "override_num_heads")
+        _require_optional_positive(self.override_head_dim, "override_head_dim")
+
     @classmethod
     def get_type(cls) -> KVCacheTransferType:
         return KVCacheTransferType.ANALYTICAL

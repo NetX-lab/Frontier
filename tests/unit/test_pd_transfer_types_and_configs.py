@@ -1,4 +1,4 @@
-"""pd-disaggregation transfer enum and config contract tests."""
+"""PD-disaggregation transfer enum and config contract tests."""
 
 import os
 import subprocess
@@ -80,3 +80,52 @@ def test_pd_disaggregation_cli_release_guard_exits_without_traceback() -> None:
     assert result.returncode == 1
     assert "--no-enable_parallel_clusters" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "expected_field"),
+    [
+        ({"network_bandwidth_gbps": 0.0}, "network_bandwidth_gbps"),
+        ({"network_bandwidth_gbps": -1.0}, "network_bandwidth_gbps"),
+        ({"network_latency_ms": -0.1}, "network_latency_ms"),
+        ({"compression_ratio": 0.0}, "compression_ratio"),
+        ({"compression_ratio": -1.0}, "compression_ratio"),
+        ({"kv_cache_dtype_size_bytes": 0}, "kv_cache_dtype_size_bytes"),
+        ({"kv_cache_dtype_size_bytes": -1}, "kv_cache_dtype_size_bytes"),
+        ({"override_num_layers": 0}, "override_num_layers"),
+        ({"override_num_heads": -1}, "override_num_heads"),
+        ({"override_head_dim": 0}, "override_head_dim"),
+    ],
+)
+def test_kv_transfer_config_rejects_invalid_numeric_boundaries(
+    kwargs: dict[str, float | int],
+    expected_field: str,
+) -> None:
+    from frontier.config.kv_cache_transfer_config import AnalyticalKVCacheTransferConfig
+
+    with pytest.raises(ValueError, match=expected_field):
+        AnalyticalKVCacheTransferConfig(**kwargs)
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "expected_field"),
+    [
+        ({"memory_bandwidth_gbps": 0.0}, "memory_bandwidth_gbps"),
+        ({"memory_bandwidth_gbps": -1.0}, "memory_bandwidth_gbps"),
+        ({"network_latency_ms": -0.1}, "network_latency_ms"),
+        ({"compression_ratio": 0.0}, "compression_ratio"),
+        ({"compression_ratio": -1.0}, "compression_ratio"),
+        ({"activation_dtype_size_bytes": 0}, "activation_dtype_size_bytes"),
+        ({"activation_dtype_size_bytes": -1}, "activation_dtype_size_bytes"),
+        ({"override_hidden_size": 0}, "override_hidden_size"),
+        ({"override_intermediate_size": -1}, "override_intermediate_size"),
+    ],
+)
+def test_m2n_transfer_config_rejects_invalid_numeric_boundaries(
+    kwargs: dict[str, float | int],
+    expected_field: str,
+) -> None:
+    from frontier.config.m2n_transfer_config import AnalyticalM2NTransferConfig
+
+    with pytest.raises(ValueError, match=expected_field):
+        AnalyticalM2NTransferConfig(**kwargs)

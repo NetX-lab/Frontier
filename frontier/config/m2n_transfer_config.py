@@ -5,6 +5,21 @@ from frontier.config.base_poly_config import BasePolyConfig
 from frontier.types import M2NTransferType
 
 
+def _require_positive(value: float | int, field_name: str) -> None:
+    if value <= 0:
+        raise ValueError(f"{field_name} must be > 0, got {value}")
+
+
+def _require_non_negative(value: float | int, field_name: str) -> None:
+    if value < 0:
+        raise ValueError(f"{field_name} must be >= 0, got {value}")
+
+
+def _require_optional_positive(value: Optional[int], field_name: str) -> None:
+    if value is not None and value <= 0:
+        raise ValueError(f"{field_name} must be > 0 when set, got {value}")
+
+
 @dataclass
 class BaseM2NTransferConfig(BasePolyConfig):
     """Base configuration for Memory-to-Memory (M2N) transfer predictors."""
@@ -45,6 +60,11 @@ class BaseM2NTransferConfig(BasePolyConfig):
         metadata={"help": "Whether to enable latency hiding with pipelined transfer."},
     )
 
+    def __post_init__(self) -> None:
+        _require_positive(self.memory_bandwidth_gbps, "memory_bandwidth_gbps")
+        _require_non_negative(self.network_latency_ms, "network_latency_ms")
+        _require_positive(self.compression_ratio, "compression_ratio")
+
 
 @dataclass
 class AnalyticalM2NTransferConfig(BaseM2NTransferConfig):
@@ -73,7 +93,13 @@ class AnalyticalM2NTransferConfig(BaseM2NTransferConfig):
         default=None,
         metadata={"help": "Override intermediate size for FFN M2N transfer calculation."},
     )
-    
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        _require_positive(self.activation_dtype_size_bytes, "activation_dtype_size_bytes")
+        _require_optional_positive(self.override_hidden_size, "override_hidden_size")
+        _require_optional_positive(self.override_intermediate_size, "override_intermediate_size")
+
     @classmethod
     def get_type(cls) -> M2NTransferType:
         return M2NTransferType.ANALYTICAL
