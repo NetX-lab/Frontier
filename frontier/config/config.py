@@ -5679,7 +5679,7 @@ class SimulationConfig(ABC):
     sys_arch: str = field(
         default="co-location",
         metadata={
-            "help": "System architecture type. 'co-location' for baseline, 'pd-disaggregation' for PD-only disaggregation, 'pd-af-disaggregation' for PD+AF disaggregation.",
+            "help": "System architecture type. 'co-location' for baseline, 'pd-disaggregation' for prefill/decode disaggregation, 'pd-af-disaggregation' for prefill/decode/attention-FFN disaggregation.",
             "choices": ["pd-af-disaggregation", "pd-disaggregation", "co-location"],
         },
     )

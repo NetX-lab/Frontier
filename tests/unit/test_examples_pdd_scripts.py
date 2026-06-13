@@ -60,7 +60,7 @@ def test_pdd_dense_compatibility_entrypoint_forwards_to_offline_script() -> None
     assert script.exists()
     assert "Compatibility entrypoint" in text
     assert 'exec bash "$SCRIPT_DIR/offline/dense_model_basic.sh" "$@"' in text
-    assert "examples/architecture/pd-only" not in text
+    assert ("examples/architecture/pd" + "-only") not in text
 
 
 def test_pdd_scripts_use_release_supported_sequential_pd_path_and_metrics() -> None:
