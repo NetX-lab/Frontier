@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple, TYPE_CHECKING
+from typing import Dict, List, Tuple, Optional, TYPE_CHECKING
 import threading
 import queue
 from collections import defaultdict
@@ -12,6 +12,8 @@ from frontier.execution_time_predictor import BaseExecutionTimePredictor
 from frontier.logger import init_logger
 
 if TYPE_CHECKING:
+    from frontier.kv_cache_transfer import BaseKVCacheTransferPredictor
+    from frontier.m2n_transfer import BaseM2NTransferPredictor
     from frontier.events import BaseEvent
 
 logger = init_logger(__name__)
@@ -23,11 +25,15 @@ class BaseGlobalScheduler(ABC):
         clusters: Dict[ClusterType, Cluster],
         request_generator_config: BaseRequestGeneratorConfig,
         predictors: Dict[ClusterType, BaseExecutionTimePredictor] = None,
+        kv_cache_transfer_predictor: Optional["BaseKVCacheTransferPredictor"] = None,
+        m2n_transfer_predictor: Optional["BaseM2NTransferPredictor"] = None,
         enable_parallel_mode: bool = False,
         max_inter_cluster_queue_size: int = 1000,
     ):
         self._clusters = clusters
         self._cluster_schedulers = {}
+        self._kv_cache_transfer_predictor = kv_cache_transfer_predictor
+        self._m2n_transfer_predictor = m2n_transfer_predictor
         self._enable_parallel_mode = enable_parallel_mode
 
         assert predictors is not None, "Predictors are required for scheduler initialization"
@@ -42,6 +48,8 @@ class BaseGlobalScheduler(ABC):
                 cluster=cluster,
                 request_generator_config=request_generator_config,
                 predictor=predictor,
+                kv_cache_transfer_predictor=kv_cache_transfer_predictor,
+                m2n_transfer_predictor=m2n_transfer_predictor,
                 available_clusters=set(clusters.keys()),  # Pass available cluster types
             )
         self._request_queue = []  # List[Tuple[Request, ClusterType]]

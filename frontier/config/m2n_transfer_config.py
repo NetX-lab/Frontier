@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from frontier.config.base_poly_config import BasePolyConfig
+from frontier.types import M2NTransferType
 
 
 @dataclass
@@ -74,8 +75,8 @@ class AnalyticalM2NTransferConfig(BaseM2NTransferConfig):
     )
     
     @classmethod
-    def get_type(cls) -> str:
-        return "analytical"
+    def get_type(cls) -> M2NTransferType:
+        return M2NTransferType.ANALYTICAL
     
     @classmethod
     def get_name(cls) -> str:

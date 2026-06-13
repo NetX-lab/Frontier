@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from frontier.config.base_poly_config import BasePolyConfig
+from frontier.types import KVCacheTransferType
 
 
 @dataclass
@@ -76,8 +77,8 @@ class AnalyticalKVCacheTransferConfig(BaseKVCacheTransferConfig):
     )
     
     @classmethod
-    def get_type(cls) -> str:
-        return "analytical"
+    def get_type(cls) -> KVCacheTransferType:
+        return KVCacheTransferType.ANALYTICAL
     
     @classmethod
     def get_name(cls) -> str:

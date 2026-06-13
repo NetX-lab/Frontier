@@ -22,7 +22,7 @@ import logging
 from math import ceil
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from frontier.config import global_vars
 from frontier.entities.batch import (
@@ -1122,6 +1122,23 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 if request.id == request_id:
                     return request
         return None
+
+    def complete_kv_transfer_for_requests(
+        self, requests: Sequence[Request]
+    ) -> None:
+        for request in requests:
+            if request.id not in self._pending_kv_transfer_requests:
+                raise ValueError(
+                    "KV transfer completion for request without pending transfer state: "
+                    f"request_id={request.id}, "
+                    f"source_cluster={self._cluster_type.name}, "
+                    f"source_replica={self._replica_id}, "
+                    f"source_dp={self._dp_id}"
+                )
+
+            if request.id in self._allocation_map:
+                self._free_request_resources(request)
+            self._pending_kv_transfer_requests.discard(request.id)
 
     def _free_request_resources(self, request: Request) -> None:
         self._get_monolithic_pp_mtp_near_full_prefill_request_ids().discard(

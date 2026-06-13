@@ -400,7 +400,8 @@ def build_kv_cache_transfer_meta(
 ) -> Dict[str, Any]:
     model_config = replica_config.model_config
     num_layers = model_config.num_layers
-    num_heads = model_config.num_q_heads
+    num_q_heads = model_config.num_q_heads
+    num_kv_heads = model_config.num_kv_heads
     # Use model_config.get_head_dim() to prioritize explicit head_dim from JSON config
     head_dim = model_config.get_head_dim()
 
@@ -408,7 +409,7 @@ def build_kv_cache_transfer_meta(
     precision = _precision_for_op("kv_cache_transfer", cluster_type)
     dtype_bytes = precision.bytes_per_element
     tensor_shape = {
-        "kv": [total_tokens, num_layers, num_heads, head_dim, 2],
+        "kv": [total_tokens, num_layers, num_kv_heads, head_dim, 2],
     }
     element_count = _elements_from_shape(tensor_shape["kv"])
     tensor_size_bytes = {
@@ -424,7 +425,9 @@ def build_kv_cache_transfer_meta(
         "transfer_size_bytes": transfer_size_bytes,
         "total_tokens": total_tokens,
         "num_layers": num_layers,
-        "num_heads": num_heads,
+        "num_heads": num_kv_heads,
+        "num_q_heads": num_q_heads,
+        "num_kv_heads": num_kv_heads,
         "head_dim": head_dim,
     }
 

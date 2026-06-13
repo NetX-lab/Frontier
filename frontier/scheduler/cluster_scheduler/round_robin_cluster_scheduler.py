@@ -3,7 +3,6 @@ from frontier.entities import Request, EPBatchGroup
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )
-from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 from frontier.types import ClusterType
 
 
@@ -38,13 +37,30 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
     def schedule(self) -> List[Tuple[int, int, Request]]:
         """
-        Schedule requests with the release-supported monolithic round-robin strategy.
+        Schedule requests using cluster-type-aware round-robin strategy.
+
+        - PREFILL cluster: Batch processing mode (offline-style)
+        - DECODE cluster (PD mode): Priority-based scheduling with batch backfilling
+        - DECODE_ATTN cluster (PD+AF mode): Optional initial request allocation with threshold, then A↔F priority dynamic routing
+        - DECODE_FFN cluster (PD+AF mode): Batch processing mode with M2N immediate processing
+        - Other clusters: Default batch processing mode
         """
         self.sort_requests()
 
-        if self._cluster_type != ClusterType.MONOLITHIC:
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
-        return self._schedule_batch_mode()
+        if self._cluster_type == ClusterType.DECODE:
+            return self._schedule_decode_with_priority()
+        elif self._cluster_type == ClusterType.DECODE_ATTN:
+            initial_mapping = self._try_initial_request_allocation()
+            if initial_mapping is not None:
+                if initial_mapping and self._request_queue:
+                    initial_mapping.extend(self._schedule_dynamic())
+                return initial_mapping
+            return self._schedule_dynamic_with_af_priority()
+        elif self._cluster_type == ClusterType.DECODE_FFN:
+            affected = self.schedule_ffn_with_m2n_immediate()
+            return [(replica_id, ep_id, None) for (replica_id, ep_id) in affected]
+        else:
+            return self._schedule_batch_mode()
 
     def _try_initial_request_allocation(self) -> Optional[List[Tuple[int, int, Request]]]:
         """

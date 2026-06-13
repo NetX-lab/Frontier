@@ -6,7 +6,6 @@ from frontier.entities import Request
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
-from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 from frontier.types import ClusterType
 
 
@@ -47,6 +46,14 @@ class StickyRoundRobinClusterScheduler(RoundRobinClusterScheduler):
     def schedule(self) -> List[Tuple[int, int, Request]]:
         self.sort_requests()
         cluster_type = getattr(self, "_cluster_type", None)
-        if cluster_type != ClusterType.MONOLITHIC:
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+        if cluster_type == ClusterType.DECODE:
+            return self._schedule_decode_with_priority()
+        if cluster_type == ClusterType.DECODE_ATTN:
+            initial_mapping = self._try_initial_request_allocation()
+            if initial_mapping is not None:
+                return initial_mapping
+            return self._schedule_dynamic_with_af_priority()
+        if cluster_type == ClusterType.DECODE_FFN:
+            affected = self.schedule_ffn_with_m2n_immediate()
+            return [(replica_id, ep_id, None) for (replica_id, ep_id) in affected]
         return self._schedule_batch_mode()

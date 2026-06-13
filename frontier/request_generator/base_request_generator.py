@@ -151,4 +151,7 @@ class BaseRequestGenerator(ABC):
 
     def generate(self) -> List[Request]:
         requests = self.generate_requests()
+        self.config.num_decode_bound_requests = sum(
+            1 for request in requests if request.num_decode_tokens > 0
+        )
         return requests
