@@ -165,8 +165,11 @@ class ClusterBatchEndEvent(BaseEvent):
 
             replica = cluster_scheduler._cluster.replicas[self._replica_id]
             is_moe = replica.is_moe
+            moe_sync_required = (
+                replica.dp_size > 1 or replica.num_moe_expert_parallel_size > 1
+            )
 
-            if not is_moe:
+            if not is_moe or not moe_sync_required:
                 from frontier.events.global_batch_end_event import GlobalBatchEndEvent
 
                 next_events.append(
