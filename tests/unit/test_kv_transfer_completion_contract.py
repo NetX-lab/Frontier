@@ -525,9 +525,12 @@ def test_sarathi_counts_preempted_pending_work_for_transfer_reschedule() -> None
     assert scheduler.should_schedule_after_kv_transfer_completion()
 
 
-def test_vllm_v1_engine_counts_preempted_prefill_work_for_transfer_reschedule() -> None:
+@pytest.mark.parametrize("cluster_type", [ClusterType.PREFILL, ClusterType.MONOLITHIC])
+def test_vllm_v1_engine_counts_preempted_source_work_for_transfer_reschedule(
+    cluster_type: ClusterType,
+) -> None:
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
-    scheduler._cluster_type = ClusterType.PREFILL
+    scheduler._cluster_type = cluster_type
     scheduler._request_queue = []
     scheduler._preempted_requests = [_Request(706)]
     scheduler._waiting_requests = []
