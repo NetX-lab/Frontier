@@ -66,13 +66,24 @@ class _ContractSourceScheduler:
         *,
         num_pending_requests: int = 0,
         num_running_batches: int = 0,
+        should_schedule_after_kv_transfer_completion: bool | None = None,
     ) -> None:
         self.completed_request_ids: list[int] = []
         self.num_pending_requests = num_pending_requests
         self.num_running_batches = num_running_batches
+        self.should_schedule_after_kv_transfer_completion_calls = 0
+        self._should_schedule_after_kv_transfer_completion = (
+            should_schedule_after_kv_transfer_completion
+        )
 
     def complete_kv_transfer_for_requests(self, requests) -> None:
         self.completed_request_ids.extend(request.id for request in requests)
+
+    def should_schedule_after_kv_transfer_completion(self) -> bool:
+        self.should_schedule_after_kv_transfer_completion_calls += 1
+        if self._should_schedule_after_kv_transfer_completion is not None:
+            return self._should_schedule_after_kv_transfer_completion
+        return self.num_pending_requests > 0 and self.num_running_batches == 0
 
 
 class _SourceClusterScheduler:
@@ -237,6 +248,52 @@ def test_kv_transfer_end_reschedules_source_when_pending_work_remains() -> None:
     assert isinstance(reschedule_event, ReplicaScheduleEvent)
     assert reschedule_event.time == 1.5
     assert source_replica_scheduler.completed_request_ids == [request.id]
+    assert (
+        source_replica_scheduler.should_schedule_after_kv_transfer_completion_calls
+        == 1
+    )
+
+
+def test_kv_transfer_end_uses_scheduler_reschedule_contract() -> None:
+    request = _Request(112)
+    batch = SimpleNamespace(
+        id=11,
+        global_id=21,
+        requests=[request],
+        request_ids=[request.id],
+    )
+    transfer_info = SimpleNamespace(
+        transfer_start_time=1.0,
+        transfer_end_time=None,
+        kv_cache_size_bytes=4096,
+        target_cluster_type=ClusterType.DECODE,
+        source_cluster_type=ClusterType.PREFILL,
+        source_replica_id=3,
+        source_dp_id=1,
+        transfer_time_ms=2.0,
+        batch=batch,
+    )
+    source_replica_scheduler = _ContractSourceScheduler(
+        num_pending_requests=0,
+        num_running_batches=0,
+        should_schedule_after_kv_transfer_completion=True,
+    )
+    source_cluster_scheduler = _SourceClusterScheduler(source_replica_scheduler)
+    target_cluster_scheduler = _TargetClusterScheduler()
+    scheduler = _GlobalScheduler(source_cluster_scheduler, target_cluster_scheduler)
+    metrics_store = _MetricsStore()
+
+    event = KVCacheTransferEndEvent(1.25, transfer_info)
+    arrival_events = event.handle_event(scheduler, metrics_store)
+
+    assert source_replica_scheduler.completed_request_ids == [request.id]
+    assert (
+        source_replica_scheduler.should_schedule_after_kv_transfer_completion_calls
+        == 1
+    )
+    assert arrival_events[0] == "arrival-event"
+    assert len(arrival_events) == 2
+    assert isinstance(arrival_events[1], ReplicaScheduleEvent)
 
 
 def test_base_scheduler_rejects_unsupported_kv_transfer_completion() -> None:

@@ -775,6 +775,9 @@ class BaseReplicaScheduler(ABC):
             f"{self.__class__.__name__} does not support KV transfer completion."
         )
 
+    def should_schedule_after_kv_transfer_completion(self) -> bool:
+        return self.num_pending_requests > 0 and self.num_running_batches == 0
+
     @abstractmethod
     def on_batch_end(self, batch: Batch) -> None:
         pass

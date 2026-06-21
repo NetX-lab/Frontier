@@ -70,22 +70,7 @@ class KVCacheTransferEndEvent(BaseEvent):
                 dp_id=self._transfer_info.source_dp_id,
             )
 
-            pending_requests = getattr(
-                source_replica_scheduler,
-                "num_pending_requests",
-                None,
-            )
-            num_running_batches = getattr(
-                source_replica_scheduler,
-                "num_running_batches",
-                None,
-            )
-            if (
-                pending_requests is not None
-                and num_running_batches is not None
-                and pending_requests > 0
-                and num_running_batches == 0
-            ):
+            if source_replica_scheduler.should_schedule_after_kv_transfer_completion():
                 source_cluster_logical_time = scheduler.get_cluster_logical_time(
                     self._transfer_info.source_cluster_type
                 )
