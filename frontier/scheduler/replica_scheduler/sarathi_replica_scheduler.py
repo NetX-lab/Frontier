@@ -96,6 +96,10 @@ class SarathiReplicaScheduler(BaseReplicaScheduler):
                 self._free_request_resources(request)
             self._pending_kv_transfer_requests.discard(request.id)
 
+    @property
+    def num_pending_requests(self) -> int:
+        return len(self._request_queue) + len(self._preempted_requests)
+
     def _get_request_next_num_tokens(
         self, request: Request, batch_contains_prefill: bool, num_batch_tokens: int
     ) -> int:

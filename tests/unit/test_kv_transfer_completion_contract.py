@@ -515,6 +515,16 @@ def test_request_preempting_legacy_scheduler_counts_preempted_pending_work(
     assert scheduler.num_pending_requests == 3
 
 
+def test_sarathi_counts_preempted_pending_work_for_transfer_reschedule() -> None:
+    scheduler = object.__new__(SarathiReplicaScheduler)
+    scheduler._request_queue = []
+    scheduler._preempted_requests = [_Request(705)]
+    scheduler._num_running_batches = 0
+
+    assert scheduler.num_pending_requests == 1
+    assert scheduler.should_schedule_after_kv_transfer_completion()
+
+
 def test_faster_transformer_counts_preempted_batch_pending_work() -> None:
     unfinished_prefill = _Request(
         801,
