@@ -364,6 +364,43 @@ def test_legacy_scheduler_prefill_completion_waits_for_kv_transfer(
     assert scheduler._num_running_batches == 0
     assert scheduler._pending_kv_transfer_requests == {request.id}
     assert getattr(scheduler, preempted_attr) == []
+    scheduler._request_queue = []
+    assert scheduler.num_pending_requests == 0
+
+
+def test_kv_transfer_end_does_not_reschedule_source_for_transfer_only_state() -> None:
+    request = _Request(515)
+    batch = SimpleNamespace(
+        id=9,
+        global_id=19,
+        requests=[request],
+        request_ids=[request.id],
+    )
+    transfer_info = SimpleNamespace(
+        transfer_start_time=1.0,
+        transfer_end_time=None,
+        kv_cache_size_bytes=4096,
+        target_cluster_type=ClusterType.DECODE,
+        source_cluster_type=ClusterType.PREFILL,
+        source_replica_id=3,
+        source_dp_id=1,
+        transfer_time_ms=2.0,
+        batch=batch,
+    )
+    source_replica_scheduler = _ContractSourceScheduler(
+        num_pending_requests=0,
+        num_running_batches=0,
+    )
+    source_cluster_scheduler = _SourceClusterScheduler(source_replica_scheduler)
+    target_cluster_scheduler = _TargetClusterScheduler()
+    scheduler = _GlobalScheduler(source_cluster_scheduler, target_cluster_scheduler)
+    metrics_store = _MetricsStore()
+
+    event = KVCacheTransferEndEvent(1.25, transfer_info)
+    arrival_events = event.handle_event(scheduler, metrics_store)
+
+    assert arrival_events == ["arrival-event"]
+    assert source_replica_scheduler.completed_request_ids == [request.id]
 
 
 def test_faster_transformer_prefill_preempted_batch_skips_transferred_requests() -> None:
