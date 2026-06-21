@@ -4242,7 +4242,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             return first_micro_batch
 
 
-        logger.debug(f"[VLLMv1Engine][DECODE_ATTN] No requests to schedule")
+        logger.debug("[VLLMv1Engine][DECODE_ATTN] No requests to schedule")
         return None
 
     def _attach_afd_metadata_if_needed(self, batch: Batch) -> Batch:
@@ -4316,14 +4316,14 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
     @property
     def num_pending_requests(self) -> int:
         """
-        Return total pending requests including waiting queue for DECODE cluster.
+        Return total schedulable pending requests for this cluster.
 
-        For DECODE cluster, this includes requests in _waiting_requests.
-        For other clusters, uses the base implementation.
+        DECODE clusters admit requests from _waiting_requests. PREFILL and
+        MONOLITHIC clusters admit from _request_queue plus _preempted_requests.
         """
-        base_count = len(self._request_queue)
-        waiting_count = len(self._waiting_requests)
-        return base_count + waiting_count
+        if self._cluster_type in (ClusterType.DECODE, ClusterType.DECODE_ATTN):
+            return len(self._request_queue) + len(self._waiting_requests)
+        return len(self._request_queue) + len(self._preempted_requests)
 
     def peek_waiting_requests(self) -> List[Request]:
         requests: List[Request] = []
