@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-06-22 | Removed legacy split-decode terminology from the public PDD surface. |
 | 2026-06-14 | Added PDD pd-disaggregation script list, configuration contract, and validation criteria for local PR preparation. |
 
 This directory contains one-click architecture entrypoints for Frontier's release-supported runtime layouts.
@@ -12,7 +13,7 @@ This directory contains one-click architecture entrypoints for Frontier's releas
 
 `pre-release-v0.2` foregrounds **PDD / `pd-disaggregation`** examples. Prefill runs in the `PREFILL` cluster, decode runs in the unified `DECODE` cluster, and KV cache is transferred between them. The public PDD example path uses the sequential simulator mode through `--no-enable_parallel_clusters`.
 
-`co-location` examples remain available as baseline comparison recipes and v0.1-compatible architecture references. `pd-af-disaggregation` and split `DECODE_ATTN` / `DECODE_FFN` public examples remain outside this release scope.
+`co-location` examples remain available as baseline comparison recipes and v0.1-compatible architecture references. Additional disaggregated research prototypes outside the PDD path are not exposed as release examples.
 
 ## Scripts
 
@@ -53,14 +54,7 @@ All PDD scripts use these release-supported defaults unless overridden from the 
 - CSV/JSON metrics enabled by default through `--metrics_config_write_metrics` and `--metrics_config_store_request_metrics`
 - plots, Chrome trace, and JSON event trace disabled for lightweight one-click artifacts
 
-MoE PDD scripts also enforce the shared-domain invariant before launching Frontier:
-
-```text
-PREFILL_ATTN_TP * PREFILL_ATTN_DP == PREFILL_MOE_TP * PREFILL_MOE_EP
-DECODE_ATTN_TP * DECODE_ATTN_DP == DECODE_MOE_TP * DECODE_MOE_EP
-```
-
-This fail-fast check prevents known non-runnable MoE topology combinations from entering the simulator.
+MoE PDD scripts also enforce that each role's attention and MoE parallel domains match before launching Frontier. This fail-fast check prevents known non-runnable MoE topology combinations from entering the simulator.
 
 ## Thinking Mode v1
 

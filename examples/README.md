@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-06-22 | Cleaned public PDD wording to avoid unsupported split-decode terminology. |
 | 2026-06-14 | Added PDD pd-disaggregation examples, script index, and release-scope guidance for local PR preparation. |
 | 2026-06-08 | Clarified that dummy analytical co-location smoke runs validate runtime plumbing, not profiling fidelity. |
 | 2026-06-08 | Split co-location examples into `offline/` and `online/`, added suite runner and cross-validation guidance. |
@@ -19,7 +20,7 @@ This directory contains runnable examples for the release-supported Frontier sim
 
 `pre-release-v0.2` foregrounds **PDD / `pd-disaggregation`** examples: prefill runs in the `PREFILL` cluster, decode runs in the unified `DECODE` cluster, and KV cache is transferred between them. The public PDD example path uses the sequential simulator mode through `--no-enable_parallel_clusters`.
 
-The `pd-af-disaggregation` architecture and split `DECODE_ATTN` / `DECODE_FFN` release surface remain intentionally outside this examples release scope. Co-location examples are still kept as baseline comparison recipes and historical v0.1-compatible references.
+Additional disaggregated research prototypes outside the PDD path remain intentionally outside this examples release scope. Co-location examples are still kept as baseline comparison recipes and historical v0.1-compatible references.
 
 ## Quick Start
 
@@ -37,6 +38,13 @@ For the complete PDD architecture suite, run:
 
 ```bash
 bash examples/architecture/pdd/run_all.sh
+```
+
+PDD Thinking Mode examples are available in both modes:
+
+```bash
+bash examples/architecture/pdd/offline/thinking_mode_basic.sh
+bash examples/architecture/pdd/online/thinking_mode_basic_online.sh
 ```
 
 Co-location baseline and advanced recipes remain available for comparison. The current co-location layout is split into offline and online entrypoints:
@@ -113,13 +121,13 @@ examples/
 
 ### PDD / pd-disaggregation
 
-Separate prefill and decode clusters model prefill/decode disaggregation without splitting decode attention and decode FFN into separate public release clusters.
+Separate prefill and decode clusters model prefill/decode disaggregation through one public decode role.
 
 - `--sys_arch pd-disaggregation`
 - Uses `PREFILL` and unified `DECODE` clusters.
 - Supports Dense, MoE, Thinking Mode, Speculative Decoding / MTP, and Prefix Caching examples in offline and online modes.
 - Uses `--no-enable_parallel_clusters` because the pre-release-v0.2 public PDD path is the sequential simulator path; parallel cluster processing is still guarded.
-- Keeps `pd-af-disaggregation` and global `--use_cuda_graph` outside the v0.2 examples release surface.
+- Keeps experimental disaggregation variants and global `--use_cuda_graph` outside the v0.2 examples release surface.
 
 ### Co-location
 
