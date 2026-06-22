@@ -512,7 +512,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         """Delegate grouped GEMM prediction to the MoE base predictor implementation.
 
         This disaggregation predictor must share exactly the same grouped GEMM
-        modeling semantics as monolithic/PD-only MoE predictors.
+        modeling semantics as monolithic and pd-disaggregation MoE predictors.
 
         Args:
             num_tokens_or_allocation: Either an integer token count or

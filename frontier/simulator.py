@@ -41,8 +41,6 @@ logger = init_logger(__name__)
 class Simulator:
     def __init__(self, config: SimulationConfig) -> None:
         self._config: SimulationConfig = config
-        if self._config.is_disaggregated_mode():
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
 
         self._time = 0
         self._terminate = False
@@ -201,6 +199,24 @@ class Simulator:
                 )
             )
 
+        kv_cache_transfer_predictor = None
+        if self._config.is_disaggregated_mode():
+            from frontier.kv_cache_transfer import KVCacheTransferPredictorRegistry
+
+            kv_cache_transfer_predictor = KVCacheTransferPredictorRegistry.get(
+                self._config.kv_cache_transfer_config.get_type(),
+                config=self._config.kv_cache_transfer_config,
+            )
+
+        m2n_transfer_predictor = None
+        if self._config.is_disaggregated_mode():
+            from frontier.m2n_transfer import M2NTransferPredictorRegistry
+
+            m2n_transfer_predictor = M2NTransferPredictorRegistry.get(
+                self._config.m2n_transfer_config.get_type(),
+                config=self._config.m2n_transfer_config,
+            )
+
         # In disaggregated mode, global scheduler gets all clusters with their predictors.
         # In monolithic mode, it gets a dict with one cluster and predictor.
         # Enable parallel mode in GlobalScheduler if configured
@@ -214,6 +230,8 @@ class Simulator:
             self._clusters,
             self._config.request_generator_config,
             predictors=self._predictors,
+            kv_cache_transfer_predictor=kv_cache_transfer_predictor,
+            m2n_transfer_predictor=m2n_transfer_predictor,
             enable_parallel_mode=enable_parallel,
             max_inter_cluster_queue_size=self._config.max_inter_cluster_queue_size,
         )

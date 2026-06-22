@@ -1,19 +1,22 @@
-# Frontier: LLM Inference Simulator (Co-location Release)
+# Frontier: LLM Inference Simulator (Co-location + PDD Release)
 
-## Release Status: `pre-release-v0.1`
+## Release Status: `pre-release-v0.2`
 
-- Current public branch supports co-location only.
-- PDD and AFD are upcoming roadmap items; they are not enabled in this branch yet.
+- Current public branch supports `co-location` and sequential PDD / `pd-disaggregation`.
+- AFD / `pd-af-disaggregation` remains outside this public release surface.
 - The co-location example suite uses `--cc_backend_config_type analytical` for one-click smoke runs without the optional network simulator; direct CLI experiments may still select `astra_sim_analytical` explicitly.
+- The PDD example suite also uses `--cc_backend_config_type analytical` and `--no-enable_parallel_clusters` for one-click sequential smoke runs.
 - collective_sim is optional. Initialize and build its submodule only when you explicitly select `--cc_backend_config_type collective_sim`.
 
-Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.1` branch is an open-source preparation branch focused on the **co-location** architecture, where prefill and decode run in a single monolithic cluster.
+Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.2` branch supports the **co-location** architecture, where prefill and decode run in a single monolithic cluster, and sequential **PDD / `pd-disaggregation`**, where prefill and decode run in separate clusters with KV cache transfer between them.
 
-Disaggregated architectures are intentionally not included in this release. If a user selects `pd-disaggregation` or `pd-af-disaggregation`, Frontier fails fast with this message:
+The supported PDD path requires sequential cluster execution. If a user selects `pd-disaggregation` with parallel clusters enabled, Frontier fails fast with this message:
 
 ```text
-Error: Disaggregated architecture support is currently being optimized and is not included in this release. It will be available in an upcoming version. Please use the co-located architecture for current usage and testing.
+Error: pd-disaggregation public release support requires --no-enable_parallel_clusters. Parallel cluster processing for pd-disaggregation is not included in this release.
 ```
+
+If a user selects `pd-af-disaggregation` or other unsupported disaggregated research surfaces, Frontier still fails fast with the guarded disaggregation release error.
 
 This AGENTS.md release guide is intended to be the **authoritative entry point** for users and developers. Older documents in the repo may contain deeper narrative explanations but may lag behind the current code.
 
@@ -52,8 +55,8 @@ Frontier models an LLM serving system as a set of clusters and replicas processi
 
 ## Key Features
 
-- `co-location` system architecture for this release
-- Runtime guard for `pd-disaggregation` and `pd-af-disaggregation`
+- `co-location` and sequential `pd-disaggregation` system architectures for this release
+- Runtime guard for `pd-af-disaggregation`, parallel PDD clusters, and unsupported disaggregated research surfaces
 - MoE support (EP synchronization, routing and imbalance modeling)
 - Speculative decoding support via `frontier/spec_decode/` and `ReplicaConfig.speculative_decoding_config`
 - Prefix caching for supported replica schedulers (`vllm_v1`, `sglang`)
@@ -67,20 +70,24 @@ Frontier models an LLM serving system as a set of clusters and replicas processi
 
 ## Supported System Architectures & Mode Compatibility
 
-This release supports one runtime architecture:
+This release supports two runtime architectures:
 
 - `co-location`: Monolithic mode with a single cluster.
+- `pd-disaggregation`: Sequential PDD mode with separate `PREFILL` and unified `DECODE` clusters. Public examples use `--no-enable_parallel_clusters`.
 
 The CLI/config parser still accepts the historical `sys_arch` choices so existing parameter parsing structures remain stable. Runtime behavior is stricter:
 
 - `offline + co-location` is supported.
 - `online + co-location` is supported where the selected scheduler/runtime path supports online mode.
-- `pd-disaggregation` and `pd-af-disaggregation` abort during `SimulationConfig.__post_init__()` with the release error shown above.
+- `offline + pd-disaggregation` is supported for the public PDD scripts.
+- `online + pd-disaggregation` is supported for the public PDD scripts.
+- `pd-af-disaggregation` aborts during `SimulationConfig.__post_init__()` with the guarded disaggregation release error.
+- `pd-disaggregation` aborts unless `--no-enable_parallel_clusters` is provided.
 
 Important runtime constraints:
 
 - `sglang` is available only for `co-location` / `MONOLITHIC`.
-- `decode_cuda_graph_mode` is intended for `co-location`.
+- `decode_cuda_graph_mode` is intended for `co-location` and `pd-disaggregation`.
 - `use_cuda_graph=True` is not part of this release because the guarded PD+AF path previously owned that setting.
 - When speculative decoding is enabled, Frontier currently requires `decode_cuda_graph_mode='none'` unless the diagnostic opt-in is explicitly enabled.
 
@@ -300,6 +307,18 @@ export VIDUR_DISABLE_WANDB=1
 bash examples/architecture/co-location/offline/moe_model_basic.sh
 ```
 
+### Example: Dense PDD
+
+The PDD dense example is also runnable without profiling data. It uses sequential PDD through `--no-enable_parallel_clusters` and writes the same CSV/JSON metrics artifacts as the co-location examples:
+
+```bash
+export PYTHONPATH=$PWD
+export WANDB_DISABLED=true
+export VIDUR_DISABLE_WANDB=1
+
+bash examples/architecture/pdd/offline/dense_model_basic.sh
+```
+
 ## Examples
 
 The release-supported example surface is split between runtime architecture recipes and profiling recipes:
@@ -311,6 +330,21 @@ examples/
 │   └── prefix_cache_shared_session_trace.csv
 ├── architecture/
 │   ├── README.md
+│   ├── pdd/
+│   │   ├── run_all.sh
+│   │   ├── dense_model_basic.sh
+│   │   ├── offline/
+│   │   │   ├── dense_model_basic.sh
+│   │   │   ├── moe_model_basic.sh
+│   │   │   ├── thinking_mode_basic.sh
+│   │   │   ├── moe_spec_dec.sh
+│   │   │   └── moe_prefix_caching.sh
+│   │   └── online/
+│   │       ├── dense_model_basic_online.sh
+│   │       ├── moe_model_basic_online.sh
+│   │       ├── thinking_mode_basic_online.sh
+│   │       ├── moe_spec_dec_online.sh
+│   │       └── moe_prefix_caching_online.sh
 │   └── co-location/
 │       ├── run_all.sh
 │       ├── offline/
@@ -335,6 +369,19 @@ examples/
     └── smoke_simulator_moe_csv.sh
 ```
 
+PDD recipes:
+
+| Script                                                        | Purpose                                  | Default runtime behavior                                                                                       |
+| ------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `examples/architecture/pdd/run_all.sh`                        | Full PDD suite                           | Runs all five offline PDD cases and all five online PDD cases                                                  |
+| `examples/architecture/pdd/offline/dense_model_basic.sh`      | Offline dense PDD baseline               | Sequential `pd-disaggregation`, analytical backend, Chunked Prefill enabled, CSV/JSON metrics enabled          |
+| `examples/architecture/pdd/offline/moe_model_basic.sh`        | Offline MoE PDD baseline                 | Sequential `pd-disaggregation`, shared-domain MoE invariant, Chunked Prefill enabled, CSV/JSON metrics enabled |
+| `examples/architecture/pdd/offline/thinking_mode_basic.sh`    | Offline Thinking Mode PDD smoke          | Thinking Mode enabled and records prefill-to-decode KV transfer handoffs                                       |
+| `examples/architecture/pdd/offline/moe_spec_dec.sh`           | Offline MoE PDD Speculative Decoding/MTP | Speculative Decoding / MTP enabled, `decode_cuda_graph_mode=none` to avoid the current runtime conflict        |
+| `examples/architecture/pdd/offline/moe_prefix_caching.sh`     | Offline MoE PDD Prefix Caching recipe    | Prefix Caching enabled against `examples/fixtures/prefix_cache_shared_session_trace.csv`                       |
+| `examples/architecture/pdd/online/dense_model_basic_online.sh` | Online dense PDD baseline                | Mirrors the dense offline case with `--simulation_mode online`                                                 |
+| `examples/architecture/pdd/online/moe_model_basic_online.sh`  | Online MoE PDD baseline                  | Mirrors the MoE offline case with `--simulation_mode online`                                                   |
+
 Co-location recipes:
 
 | Script                                                                   | Purpose                                       | Default runtime behavior                                                                                                            |
@@ -354,6 +401,12 @@ Co-location recipes:
 Quick start with examples:
 
 ```bash
+# Basic PDD example
+bash examples/architecture/pdd/offline/dense_model_basic.sh
+
+# Full PDD suite
+bash examples/architecture/pdd/run_all.sh
+
 # Basic co-location (monolithic) MoE example
 bash examples/architecture/co-location/offline/moe_model_basic.sh
 
@@ -390,8 +443,9 @@ Practical implications:
 - Polymorphic configs use an explicit `*_type` field (e.g., request generator type).
 - Defaults exist for many fields, but some options may be required depending on which config objects are instantiated.
 - Backend-specific CC subconfigs use backend-prefixed flat flags such as `--analytical_cc_backend_config_*`, `--collective_sim_cc_backend_config_*`, and `--astra_sim_analytical_cc_backend_config_*`.
-- Historical disaggregated cluster-specific parser fields such as `--cluster_config_prefill_*`, `--cluster_config_decode_*`, `--cluster_config_decode_attn_*`, and `--cluster_config_decode_ffn_*` are still present to avoid breaking parser structure. In this release, using any of them aborts with the release guard error.
-- Historical transfer parser fields such as `--kv_cache_transfer_config_type`, `--m2n_transfer_config_type`, `--analytical_kv_cache_transfer_config_*`, and `--analytical_m2n_transfer_config_*` are also guarded out of this release.
+- PDD cluster-specific parser fields such as `--cluster_config_prefill_*` and `--cluster_config_decode_*` are release-supported for `pd-disaggregation`.
+- Historical AFD parser fields such as `--cluster_config_decode_attn_*`, `--cluster_config_decode_ffn_*`, and M2N transfer fields remain guarded out of this release.
+- KV-cache transfer parser fields such as `--kv_cache_transfer_config_type` and `--analytical_kv_cache_transfer_config_*` are release-supported for the public PDD path.
 - For `astra_sim_analytical`, runtime-materialized layout fields such as `cluster_servers`, `cluster_gpus_per_server`, and `runtime_*` are internal only and intentionally omitted from the public CLI.
 
 Configuration inheritance for the co-location path:
@@ -548,7 +602,7 @@ Practical implication: Frontier intentionally uses a split interface (`param_mem
 
 ## Tests
 
-The repo contains a large set of scripts in `tests/`. For this release branch, start with co-location and release-guard coverage:
+The repo contains a large set of scripts in `tests/`. For this release branch, start with PDD, co-location, and release-guard coverage:
 
 - `comm_backend_tests/`: Tests for Communication Cost (CC) backends.
 - `integration/`: workflow-level tests for CUDA graph, prefix cache, and spec decode where applicable to co-location.
@@ -557,7 +611,7 @@ The repo contains a large set of scripts in `tests/`. For this release branch, s
 
 Start with:
 
-- `pytest tests/unit/test_open_source_release_arch_guard.py -q`
+- `pytest tests/unit/test_pdd_public_surface_docs.py tests/unit/test_examples_pdd_scripts.py -q`
 - `bash tests/debug/e2e-level/monolith_mode/scripts/test_dense_tp2_pp2_dummy.sh`
 - `bash tests/debug/e2e-level/monolith_mode/scripts/test_moe_tp2_ep2_pp2_dummy.sh`
 
@@ -569,7 +623,7 @@ Start with:
 
 ## License
 
-Frontier `pre-release-v0.1` is released under the MIT License. See `LICENSE` for the full text.
+Frontier `pre-release-v0.2` is released under the MIT License. See `LICENSE` for the full text.
 
 ## Other Documentation
 

@@ -38,4 +38,5 @@ def test_examples_readme_documents_current_release_thinking_mode_entrypoint() ->
     assert "examples/architecture/co-location/offline/thinking_mode_basic.sh" in readme_text
     assert "examples/architecture/co-location/online/thinking_mode_basic_online.sh" in readme_text
     assert "examples/architecture/pd-disaggregation/thinking_mode_basic.sh" not in readme_text
-    assert "pre-release-v0.1` supports only the `co-location` architecture" in readme_text
+    assert "examples/architecture/pdd/offline/thinking_mode_basic.sh" in readme_text
+    assert "pre-release-v0.2` foregrounds **PDD / `pd-disaggregation`** examples" in readme_text

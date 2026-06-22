@@ -4,6 +4,7 @@ import sys
 from frontier.config import (
     AICONFIGURATOR_BACKEND_RELEASE_ERROR,
     DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR,
+    PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
     SimulationConfig,
 )
 from frontier.errors import FrontierMemoryOOMError
@@ -11,21 +12,23 @@ from frontier.logger import set_log_level
 from frontier.utils.random import set_seeds
 
 
-_DISAGGREGATED_ARCHITECTURES = {"pd-disaggregation", "pd-af-disaggregation"}
-_DISAGGREGATED_CLUSTER_OPTION_PREFIXES = (
+_UNSUPPORTED_DISAGGREGATED_ARCHITECTURES = {"pd-af-disaggregation"}
+_PD_CLUSTER_OPTION_PREFIXES = (
     "--cluster_config_prefill_",
     "--cluster_config_decode_",
+)
+_UNSUPPORTED_DISAGGREGATED_CLUSTER_OPTION_PREFIXES = (
     "--cluster_config_decode_attn_",
     "--cluster_config_decode_ffn_",
-)
-_DISAGGREGATED_CLUSTER_OPTIONS = frozenset(
-    {
-        "--cluster_config_af_pipeline_num_micro_batch",
-    }
 )
 _DISAGGREGATED_TRANSFER_OPTION_MARKERS = (
     "kv_cache_transfer_config",
     "m2n_transfer_config",
+)
+_UNSUPPORTED_DISAGGREGATED_CLUSTER_OPTIONS = frozenset(
+    {
+        "--cluster_config_af_pipeline_num_micro_batch",
+    }
 )
 _AICONFIGURATOR_BACKEND_CONFIG_OPTION_PREFIXES = (
     "--aiconfigurator_cc_backend_config_",
@@ -62,9 +65,29 @@ def _normalize_cli_option(option: str) -> str:
 def _has_disaggregated_cluster_option(argv: list[str]) -> bool:
     for arg in argv:
         option = _normalize_cli_option(arg.split("=", maxsplit=1)[0])
-        if option in _DISAGGREGATED_CLUSTER_OPTIONS:
+        if option in _UNSUPPORTED_DISAGGREGATED_CLUSTER_OPTIONS:
             return True
-        if option.startswith(_DISAGGREGATED_CLUSTER_OPTION_PREFIXES):
+        if option.startswith(_PD_CLUSTER_OPTION_PREFIXES):
+            return True
+        if option.startswith(_UNSUPPORTED_DISAGGREGATED_CLUSTER_OPTION_PREFIXES):
+            return True
+    return False
+
+
+def _has_unsupported_disaggregated_cluster_option(argv: list[str]) -> bool:
+    for arg in argv:
+        option = _normalize_cli_option(arg.split("=", maxsplit=1)[0])
+        if option in _UNSUPPORTED_DISAGGREGATED_CLUSTER_OPTIONS:
+            return True
+        if option.startswith(_UNSUPPORTED_DISAGGREGATED_CLUSTER_OPTION_PREFIXES):
+            return True
+    return False
+
+
+def _has_pd_cluster_option(argv: list[str]) -> bool:
+    for arg in argv:
+        option = _normalize_cli_option(arg.split("=", maxsplit=1)[0])
+        if option.startswith(_PD_CLUSTER_OPTION_PREFIXES):
             return True
     return False
 
@@ -112,13 +135,22 @@ def _has_truthy_cli_bool(argv: list[str], option: str) -> bool:
 
 def _exit_if_disaggregated_architecture_requested(argv: list[str]) -> None:
     sys_arch = _get_cli_option_value(argv, "--sys_arch")
-    has_disaggregated_cluster_args = _has_disaggregated_cluster_option(argv)
+    has_unsupported_disaggregated_cluster_args = (
+        _has_unsupported_disaggregated_cluster_option(argv)
+    )
+    has_pd_cluster_args_without_pd_arch = (
+        _has_pd_cluster_option(argv) and sys_arch != "pd-disaggregation"
+    )
     has_disaggregated_transfer_args = _has_disaggregated_transfer_option(argv)
+    has_disaggregated_transfer_args_without_pd_arch = (
+        has_disaggregated_transfer_args and sys_arch != "pd-disaggregation"
+    )
     has_pd_af_cuda_graph_arg = _has_truthy_cli_bool(argv, "--use_cuda_graph")
     if (
-        sys_arch in _DISAGGREGATED_ARCHITECTURES
-        or has_disaggregated_cluster_args
-        or has_disaggregated_transfer_args
+        sys_arch in _UNSUPPORTED_DISAGGREGATED_ARCHITECTURES
+        or has_unsupported_disaggregated_cluster_args
+        or has_pd_cluster_args_without_pd_arch
+        or has_disaggregated_transfer_args_without_pd_arch
         or has_pd_af_cuda_graph_arg
     ):
         print(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR, file=sys.stderr)
@@ -156,6 +188,7 @@ def main() -> None:
         if str(exc) in {
             AICONFIGURATOR_BACKEND_RELEASE_ERROR,
             DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR,
+            PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
         }:
             print(str(exc), file=sys.stderr)
             raise SystemExit(1) from exc

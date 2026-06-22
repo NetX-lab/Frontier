@@ -14,32 +14,18 @@ def test_readme_documents_current_examples_surface() -> None:
     readme = _read("README.md")
 
     for script in (
-        "examples/architecture/co-location/run_all.sh",
-        "examples/architecture/co-location/offline/dense_model_basic.sh",
-        "examples/architecture/co-location/offline/moe_model_basic.sh",
-        "examples/architecture/co-location/offline/thinking_mode_basic.sh",
-        "examples/architecture/co-location/offline/moe_spec_dec.sh",
-        "examples/architecture/co-location/offline/moe_prefix_caching.sh",
+        "examples/architecture/pdd/offline/dense_model_basic.sh",
+        "examples/architecture/pdd/online/dense_model_basic_online.sh",
         "examples/architecture/co-location/online/dense_model_basic_online.sh",
         "examples/architecture/co-location/online/moe_model_basic_online.sh",
         "examples/architecture/co-location/online/thinking_mode_basic_online.sh",
-        "examples/architecture/co-location/online/moe_spec_dec_online.sh",
-        "examples/architecture/co-location/online/moe_prefix_caching_online.sh",
-        "examples/profiling/profile_linear_op.sh",
-        "examples/profiling/profile_attention_chunked_prefill.sh",
-        "examples/profiling/profile_moe.sh",
-        "examples/profiling/smoke_simulator_dense_csv.sh",
-        "examples/profiling/smoke_simulator_moe_csv.sh",
     ):
         assert script in readme
 
-    assert "decode_cuda_graph_mode" in readme
-    assert "Chunked Prefill" in readme
-    assert "Speculative Decoding / MTP" in readme
-    assert "Prefix Caching" in readme
+    assert "PDD and co-location examples" in readme
+    assert "most runtime optimizations" in readme
     assert "data/profiling/compute" in readme
     assert "├── fixtures/" in readme
-    assert "examples/fixtures/prefix_cache_shared_session_trace.csv" in readme
     assert "offline/" in readme
     assert "online/" in readme
     assert "not profiling fidelity" in readme

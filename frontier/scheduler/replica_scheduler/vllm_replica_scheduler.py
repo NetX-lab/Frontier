@@ -1,10 +1,11 @@
 from math import ceil
-from typing import List
+from typing import List, Sequence
 
 from frontier.entities.batch import Batch, Request
 from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
     BaseReplicaScheduler,
 )
+from frontier.types import ClusterType
 
 
 class VLLMReplicaScheduler(BaseReplicaScheduler):
@@ -12,6 +13,7 @@ class VLLMReplicaScheduler(BaseReplicaScheduler):
         super().__init__(*args, **kwargs)
 
         self._preempted_requests: List[Request] = []
+        self._pending_kv_transfer_requests = set()
         self._num_running_batches = 0
         # For vLLM and its derivatives, we only need to set a loose max batch size
         # Memory requirements are handled explicitly by the scheduler
@@ -26,8 +28,39 @@ class VLLMReplicaScheduler(BaseReplicaScheduler):
         for request in batch.requests:
             if request.completed:
                 self.free(request.id)
+            elif (
+                self._cluster_type == ClusterType.PREFILL
+                and request.is_prefill_complete
+                and request.num_decode_tokens > 0
+            ):
+                # Retain PREFILL-side KV until the disaggregated release path frees it.
+                self._pending_kv_transfer_requests.add(request.id)
             else:
                 self._preempted_requests.append(request)
+
+    def _free_request_resources(self, request: Request) -> None:
+        self.free(request.id)
+
+    def complete_kv_transfer_for_requests(
+        self, requests: Sequence[Request]
+    ) -> None:
+        for request in requests:
+            if request.id not in self._pending_kv_transfer_requests:
+                raise ValueError(
+                    "KV transfer completion for request without pending transfer state: "
+                    f"request_id={request.id}, "
+                    f"source_cluster={self._cluster_type.name}, "
+                    f"source_replica={self._replica_id}, "
+                    f"source_dp={self._dp_id}"
+                )
+
+            if request.id in self._allocation_map:
+                self._free_request_resources(request)
+            self._pending_kv_transfer_requests.discard(request.id)
+
+    @property
+    def num_pending_requests(self) -> int:
+        return len(self._request_queue) + len(self._preempted_requests)
 
     def _can_allocate_request(self, request: Request) -> bool:
         if request.id not in self._allocation_map:

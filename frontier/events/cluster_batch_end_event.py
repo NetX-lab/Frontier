@@ -6,15 +6,14 @@ from frontier.scheduler import BaseGlobalScheduler
 from frontier.metrics import MetricsStore
 from frontier.entities import Batch
 from frontier.logger import get_cluster_logger
-from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 
 
 class ClusterBatchEndEvent(BaseEvent):
     """
     Cluster-internal batch stage completion event.
 
-    This release supports only the MONOLITHIC co-location path. Disaggregated
-    cluster types fail fast before any cluster-local completion logic runs.
+    PREFILL completes local batch work and emits KV cache transfers to the decode
+    cluster. MONOLITHIC keeps the existing co-location completion path.
     """
 
     def __init__(
@@ -58,10 +57,10 @@ class ClusterBatchEndEvent(BaseEvent):
     def handle_event(
         self, scheduler: BaseGlobalScheduler, metrics_store: MetricsStore
     ) -> List[BaseEvent]:
+        from frontier.events.kv_cache_transfer_start_event import (
+            KVCacheTransferStartEvent,
+        )
         from frontier.events.replica_schedule_event import ReplicaScheduleEvent
-
-        if self._cluster_type != ClusterType.MONOLITHIC:
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
 
         cluster_scheduler = scheduler.get_cluster_scheduler(self._cluster_type)
         replica_scheduler = cluster_scheduler.get_dp_replica_scheduler(
@@ -81,16 +80,151 @@ class ClusterBatchEndEvent(BaseEvent):
             )
             return []
 
-        # Always record cluster-internal stage completion hooks
-        try:
-            # Entities-level hook (lightweight; can be a no-op)
-            if hasattr(self._batch, "on_cluster_stage_end"):
-                self._batch.on_cluster_stage_end(self.time, self._cluster_type)
-            # Replica-scheduler-level hook (lightweight; can be a no-op)
-            if hasattr(replica_scheduler, "on_cluster_stage_end"):
-                replica_scheduler.on_cluster_stage_end(self._batch)
-        except Exception as e:
-            logger.info(f"[CLUSTER-END][WARN] on_cluster_stage_end hooks error: {e}")
+        # Always record cluster-internal stage completion hooks.
+        if hasattr(self._batch, "on_cluster_stage_end"):
+            self._batch.on_cluster_stage_end(self.time, self._cluster_type)
+        if hasattr(replica_scheduler, "on_cluster_stage_end"):
+            replica_scheduler.on_cluster_stage_end(self._batch)
+
+        if self._cluster_type == ClusterType.PREFILL:
+            self._batch.on_batch_end(
+                self.time,
+                self._cluster_type,
+            )
+            replica_scheduler.on_batch_end(self._batch)
+
+            memory_usage_percent = replica_scheduler.memory_usage_percent
+            metrics_store.on_batch_end(
+                self.time,
+                self._batch,
+                self._replica_id,
+                memory_usage_percent,
+                self._cluster_type,
+                self._dp_id,
+            )
+
+            kv_pred = cluster_scheduler._kv_cache_transfer_predictor
+            if kv_pred is None:
+                raise ValueError(
+                    "KV cache transfer predictor not found in ClusterScheduler"
+                )
+
+            replica_config = cluster_scheduler._config.replica_config
+            target_cluster = cluster_scheduler._get_decode_target_cluster()
+
+            for request in self._batch.requests:
+                if request.is_prefill_complete and request.num_decode_tokens > 0:
+                    kv_cache_size_bytes, transfer_time_ms = (
+                        kv_pred.get_transfer_info_for_request(
+                            source_cluster_type=self._cluster_type,
+                            target_cluster_type=target_cluster,
+                            request=request,
+                            replica_config=replica_config,
+                        )
+                    )
+
+                    from frontier.entities.batch import Batch as SingleBatch
+
+                    single_request_batch = SingleBatch(
+                        replica_id=self._replica_id,
+                        requests=[request],
+                        num_tokens=[request.num_prefill_tokens],
+                        is_moe=replica_config.model_config.is_moe,
+                    )
+                    next_events.append(
+                        KVCacheTransferStartEvent(
+                            self.time,
+                            source_replica_id=self._replica_id,
+                            source_dp_id=self._dp_id,
+                            target_cluster_type=target_cluster,
+                            batch=single_request_batch,
+                            kv_cache_size_bytes=kv_cache_size_bytes,
+                            transfer_time_ms=transfer_time_ms,
+                            source_cluster_type=self._cluster_type,
+                        )
+                    )
+
+            next_events.append(
+                ReplicaScheduleEvent(
+                    self.time, self._replica_id, self._cluster_type, self._dp_id
+                )
+            )
+            return next_events
+
+        if self._cluster_type == ClusterType.DECODE:
+            if self._batch.is_idle:
+                logger.info(
+                    f"[DECODE-END][IDLE] batch_id={self._batch.id} is idle batch, skipping normal end logic"
+                )
+                next_events.append(
+                    ReplicaScheduleEvent(
+                        self.time, self._replica_id, self._cluster_type, self._dp_id
+                    )
+                )
+                return next_events
+
+            replica = cluster_scheduler._cluster.replicas[self._replica_id]
+            is_moe = replica.is_moe
+            moe_sync_required = (
+                replica.dp_size > 1 or replica.num_moe_expert_parallel_size > 1
+            )
+
+            if not is_moe or not moe_sync_required:
+                from frontier.events.global_batch_end_event import GlobalBatchEndEvent
+
+                next_events.append(
+                    GlobalBatchEndEvent(
+                        self.time,
+                        self._replica_id,
+                        self._dp_id,
+                        self._batch,
+                        self._cluster_type,
+                        batch_schedule_epoch=self._batch_schedule_epoch,
+                        request_execution_signatures=self._request_execution_signatures,
+                        request_mutation_signatures=self._request_mutation_signatures,
+                        thinking_round_start_times=self._thinking_round_start_times,
+                    )
+                )
+                return next_events
+
+            model_config = cluster_scheduler._config.replica_config.model_config
+            total_layers = model_config.num_layers
+            current_layer_id = self._get_current_layer_id_from_batch(self._batch)
+            is_final_layer = current_layer_id >= total_layers - 1
+
+            if is_final_layer:
+                from frontier.events.global_batch_end_event import GlobalBatchEndEvent
+
+                next_events.append(
+                    GlobalBatchEndEvent(
+                        self.time,
+                        self._replica_id,
+                        self._dp_id,
+                        self._batch,
+                        self._cluster_type,
+                        batch_schedule_epoch=self._batch_schedule_epoch,
+                        request_execution_signatures=self._request_execution_signatures,
+                        request_mutation_signatures=self._request_mutation_signatures,
+                        thinking_round_start_times=self._thinking_round_start_times,
+                    )
+                )
+            else:
+                memory_usage_percent = replica_scheduler.memory_usage_percent
+                metrics_store.on_batch_end(
+                    self.time,
+                    self._batch,
+                    self._replica_id,
+                    memory_usage_percent,
+                    self._cluster_type,
+                    self._dp_id,
+                )
+                next_events.append(
+                    ReplicaScheduleEvent(
+                        self.time, self._replica_id, self._cluster_type, self._dp_id
+                    )
+                )
+
+            return next_events
 
         # MONOLITHIC cluster: Complete batch processing
         # In co-location mode, MONOLITHIC processes everything: prefill + all decode tokens

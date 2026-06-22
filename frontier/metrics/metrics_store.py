@@ -31,6 +31,7 @@ from frontier.metrics.series_average_meter import SeriesAverageMeter
 from frontier.metrics.trace_store import TraceStore
 from frontier.metrics.op_trace_utils import (
     OpTraceContext,
+    build_kv_cache_transfer_meta,
     build_parallel_context,
     compute_op_trace_meta,
 )
@@ -4181,7 +4182,60 @@ class MetricsStore:
         kv_cache_size_bytes: int,
         transfer_info: Any,
     ) -> None:
-        raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+        if self._trace_store and self._config.enable_op_level_tracing:
+            from frontier.metrics.trace_store import TraceEvent
+
+            batch_id = transfer_info.batch.id if transfer_info.batch else None
+            request_ids = (
+                [str(req.id) for req in transfer_info.batch.requests]
+                if transfer_info.batch and transfer_info.batch.requests
+                else []
+            )
+
+            cluster_config = self._cluster_configs.get(transfer_info.source_cluster_type)
+            if cluster_config is None:
+                raise ValueError(
+                    f"Cluster config not found for {transfer_info.source_cluster_type}"
+                )
+            transfer_meta = build_kv_cache_transfer_meta(
+                transfer_info.batch,
+                cluster_config.replica_config,
+                transfer_info.source_cluster_type,
+                kv_cache_size_bytes,
+            )
+            total_tokens = transfer_meta["total_tokens"]
+            trace_context = OpTraceContext(
+                cluster_type=transfer_info.source_cluster_type,
+                model_config=cluster_config.replica_config.model_config,
+                replica_config=cluster_config.replica_config,
+                total_tokens=total_tokens,
+                effective_tokens_compute=total_tokens,
+                effective_tokens_transfer=total_tokens,
+                effective_tokens_rounded=(total_tokens + 7) // 8 * 8,
+                tokens_are_post_routing=False,
+            )
+            transfer_meta["parallel_context"] = build_parallel_context(trace_context)
+            transfer_meta["model_name"] = cluster_config.replica_config.model_name
+            transfer_meta["request_ids"] = request_ids
+            transfer_meta["source_dp_id"] = source_dp_id
+
+            event = TraceEvent(
+                type="TRANSFER",
+                name="kv_cache_transfer",
+                ts_start=time,
+                duration_ms=transfer_info.transfer_time_ms,
+                cluster=transfer_info.source_cluster_type.name,
+                replica_id=source_replica_id,
+                batch_id=batch_id,
+                target_cluster=target_cluster_type.name,
+                meta=transfer_meta,
+            )
+            self._trace_store.log_event(event)
+
+        if not self._config.write_metrics:
+            return
+
+        self._kv_cache_transfer_metrics["transfer_count"] += 1
 
     def on_kv_cache_transfer_end(
         self,
@@ -4191,7 +4245,23 @@ class MetricsStore:
         target_cluster_type: ClusterType,
         transfer_info: Any,
     ) -> None:
-        raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+        if not self._config.write_metrics:
+            return
+
+        self._kv_cache_transfer_metrics["total_transfer_time"] += duration
+        self._kv_cache_transfer_metrics["total_data_transferred"] += size_bytes
+
+        request_info = ""
+        if transfer_info.batch and transfer_info.batch.requests:
+            request_ids = [str(req.id) for req in transfer_info.batch.requests]
+            request_info = f"_req_{'_'.join(request_ids)}"
+
+        transfer_id = (
+            f"transfer_{self._kv_cache_transfer_metrics['transfer_count']}"
+            f"{request_info}"
+        )
+        self._kv_cache_transfer_metrics["transfer_times"].put(transfer_id, duration)
+        self._kv_cache_transfer_metrics["transfer_sizes"].put(transfer_id, size_bytes)
 
     def on_m2n_transfer_start(
         self,

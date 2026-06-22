@@ -13,6 +13,8 @@ from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveE
 from frontier.events.periodic_schedule_event import PeriodicScheduleEvent
 from frontier.events.cluster_batch_end_event import ClusterBatchEndEvent
 from frontier.events.global_batch_end_event import GlobalBatchEndEvent
+from frontier.events.kv_cache_transfer_end_event import KVCacheTransferEndEvent
+from frontier.events.kv_cache_transfer_start_event import KVCacheTransferStartEvent
 from frontier.events.thinking_round_requeue_event import ThinkingRoundRequeueEvent
 
 
@@ -32,5 +34,7 @@ __all__ = [
     "PeriodicScheduleEvent",
     "ClusterBatchEndEvent",
     "GlobalBatchEndEvent",
+    "KVCacheTransferEndEvent",
+    "KVCacheTransferStartEvent",
     "ThinkingRoundRequeueEvent",
 ]

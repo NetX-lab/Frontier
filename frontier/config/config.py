@@ -71,6 +71,12 @@ DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR = (
     "It will be available in an upcoming version. Please use the co-located architecture for current usage and testing."
 )
 
+PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR = (
+    "Error: pd-disaggregation public release support requires "
+    "--no-enable_parallel_clusters. Parallel cluster processing for "
+    "pd-disaggregation is not included in this release."
+)
+
 AICONFIGURATOR_BACKEND_RELEASE_ERROR = (
     "Error: The aiconfigurator communication backend is not included in this release. "
     "Please use collective_sim, astra_sim_analytical, analytical, or vidur for current usage and testing."
@@ -288,6 +294,13 @@ class BaseRequestGeneratorConfig(BasePolyConfig):
     seed: int = field(
         default=42,
         metadata={"help": "Seed for the random number generator."},
+    )
+    num_decode_bound_requests: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "Number of generated requests that require decode-cluster work. "
+            "Derived by request generation and used by offline pd-disaggregation scheduling."
+        },
     )
 
 
@@ -4558,14 +4571,28 @@ class ClusterConfig:
             )
 
     def _validate_open_source_release_disaggregation_fields_guard(self) -> None:
-        if self._has_disaggregation_params_set():
+        for field_def in self.__dataclass_fields__.values():
+            if not (
+                field_def.name.startswith(("decode_attn_", "decode_ffn_"))
+                or field_def.name in DISAGGREGATED_CLUSTER_FIELD_NAMES
+            ):
+                continue
+            if self._field_is_set_to_non_default(field_def):
+                raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+
+        if any(
+            cluster_type in {ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN}
+            for cluster_type in self.periodic_scheduling_clusters
+        ):
+            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+
+        if self.allow_experiment_multi_decode_ffn_replicas:
             raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
 
     def _validate_open_source_release_cluster_type_guard(self) -> None:
-        if (
-            self.cluster_type is not None
-            and self.cluster_type != ClusterType.MONOLITHIC
-        ):
+        if self.cluster_type in {ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN}:
+            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+        if self.cluster_type is not None and self._has_disaggregation_params_set():
             raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
 
     def _validate_open_source_release_cc_backend_guard(self) -> None:
@@ -5652,7 +5679,7 @@ class SimulationConfig(ABC):
     sys_arch: str = field(
         default="co-location",
         metadata={
-            "help": "System architecture type. 'co-location' for baseline, 'pd-disaggregation' for PD-only disaggregation, 'pd-af-disaggregation' for PD+AF disaggregation.",
+            "help": "System architecture type. 'co-location' for baseline, 'pd-disaggregation' for prefill/decode disaggregation, 'pd-af-disaggregation' for prefill/decode/attention-FFN disaggregation.",
             "choices": ["pd-af-disaggregation", "pd-disaggregation", "co-location"],
         },
     )
@@ -5967,10 +5994,16 @@ class SimulationConfig(ABC):
         self.write_config_to_file()
 
     def _validate_open_source_release_architecture_guard(self) -> None:
-        if self.sys_arch in {"pd-disaggregation", "pd-af-disaggregation"}:
+        if self.sys_arch == "pd-af-disaggregation":
             raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
         if getattr(self, "use_cuda_graph", False):
             raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+
+        if self.sys_arch == "pd-disaggregation":
+            if self.enable_parallel_clusters:
+                raise ValueError(PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR)
+            return
+
         default_kv_cache_transfer_config = AnalyticalKVCacheTransferConfig()
         if (
             getattr(
@@ -5981,6 +6014,7 @@ class SimulationConfig(ABC):
             != default_kv_cache_transfer_config
         ):
             raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+
         default_m2n_transfer_config = AnalyticalM2NTransferConfig()
         if (
             getattr(self, "m2n_transfer_config", default_m2n_transfer_config)

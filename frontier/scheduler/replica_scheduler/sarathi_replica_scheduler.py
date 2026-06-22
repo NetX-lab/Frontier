@@ -1,4 +1,5 @@
 from math import ceil
+from typing import Sequence
 
 from frontier.entities.batch import Batch, Request
 from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
@@ -77,6 +78,27 @@ class SarathiReplicaScheduler(BaseReplicaScheduler):
 
     def _free_request_resources(self, request: Request) -> None:
         self.free(request.id)
+
+    def complete_kv_transfer_for_requests(
+        self, requests: Sequence[Request]
+    ) -> None:
+        for request in requests:
+            if request.id not in self._pending_kv_transfer_requests:
+                raise ValueError(
+                    "KV transfer completion for request without pending transfer state: "
+                    f"request_id={request.id}, "
+                    f"source_cluster={self._cluster_type.name}, "
+                    f"source_replica={self._replica_id}, "
+                    f"source_dp={self._dp_id}"
+                )
+
+            if request.id in self._allocation_map:
+                self._free_request_resources(request)
+            self._pending_kv_transfer_requests.discard(request.id)
+
+    @property
+    def num_pending_requests(self) -> int:
+        return len(self._request_queue) + len(self._preempted_requests)
 
     def _get_request_next_num_tokens(
         self, request: Request, batch_contains_prefill: bool, num_batch_tokens: int

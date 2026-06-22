@@ -1,21 +1,32 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
+import csv
 import math
+from pathlib import Path
 
 from typing import Any, Dict, List, Tuple, Optional, TYPE_CHECKING
 
-from frontier.config import ClusterConfig, MetricsConfig, BaseRequestGeneratorConfig
+from frontier.config import ClusterConfig, BaseRequestGeneratorConfig
 from frontier.entities import Batch, EPBatchGroup, ExecutionTime, Replica, Request, Cluster
 from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 # Phase 2.5: Removed deprecated MoECollectiveScheduleEvent import
 from frontier.execution_time_predictor import (
     BaseExecutionTimePredictor,
-    ExecutionTimePredictorRegistry,
 )
 from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
     ReplicaSchedulerRegistry,
 )
-from frontier.types import ClusterType, ClusterSchedulerType, ReplicaSchedulerType
+from frontier.types import (
+    ClusterType,
+    ClusterSchedulerType,
+    ReplicaSchedulerType,
+    RequestGeneratorType,
+)
+
+if TYPE_CHECKING:
+    from frontier.kv_cache_transfer import BaseKVCacheTransferPredictor
+    from frontier.m2n_transfer import BaseM2NTransferPredictor
+
 
 class BaseClusterScheduler(ABC):
     def _validate_prefix_cache_cluster_config(self, replica_scheduler_config) -> None:
@@ -50,6 +61,51 @@ class BaseClusterScheduler(ABC):
                 "Multi-replica prefix caching requires a sticky cluster scheduler. "
                 f"Got {cluster_scheduler_type}."
             )
+
+        request_generator_config = getattr(self, "_request_generator_config", None)
+        if request_generator_config is None:
+            return
+
+        request_generator_type = request_generator_config.get_type()
+        if request_generator_type != RequestGeneratorType.TRACE_REPLAY:
+            raise ValueError(
+                "Prefix caching requires a trace request source with session_id "
+                "and block_hash_ids metadata before scheduling. "
+                f"Got {request_generator_type}."
+            )
+
+        trace_file = Path(request_generator_config.trace_file)
+        if not trace_file.exists():
+            raise ValueError(
+                "Prefix caching trace request source requires an existing trace file "
+                f"with session_id and block_hash_ids columns. Got {trace_file}."
+            )
+
+        with trace_file.open("r", encoding="utf-8", newline="") as file:
+            reader = csv.DictReader(file)
+            header = reader.fieldnames
+            required_columns = {"session_id", "block_hash_ids"}
+            missing_columns = sorted(required_columns - set(header or []))
+            if missing_columns:
+                raise ValueError(
+                    "Prefix caching trace request source requires session_id and "
+                    "block_hash_ids columns before scheduling. "
+                    f"Missing columns: {missing_columns}."
+                )
+
+            for row_number, row in enumerate(reader, start=2):
+                missing_values = sorted(
+                    column
+                    for column in required_columns
+                    if row.get(column) is None or not row[column].strip()
+                )
+                if missing_values:
+                    raise ValueError(
+                        "Prefix caching trace request source requires non-empty "
+                        "session_id and block_hash_ids values before scheduling. "
+                        f"Trace file: {trace_file}; row {row_number}; "
+                        f"missing values: {missing_values}."
+                    )
 
     def _get_cluster_specific_replica_scheduler_config(self, config: ClusterConfig, cluster_type: ClusterType):
         """
@@ -160,15 +216,17 @@ class BaseClusterScheduler(ABC):
         cluster: Cluster,
         request_generator_config: BaseRequestGeneratorConfig,
         predictor: BaseExecutionTimePredictor = None,
+        kv_cache_transfer_predictor: Optional["BaseKVCacheTransferPredictor"] = None,
+        m2n_transfer_predictor: Optional["BaseM2NTransferPredictor"] = None,
         available_clusters: Optional[set] = None,
     ):
         self._config = config
         self._cluster = cluster
         self._cluster_type = cluster.cluster_type
-        if self._cluster_type != ClusterType.MONOLITHIC:
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
         self._num_replicas = len(self._cluster.replicas)
         self._predictor = predictor
+        self._kv_cache_transfer_predictor = kv_cache_transfer_predictor
+        self._m2n_transfer_predictor = m2n_transfer_predictor
         self._replica_dp_size = self._config.replica_config.data_parallel_size
         self._available_clusters = available_clusters or set()
         self._request_generator_config = request_generator_config
@@ -2891,8 +2949,18 @@ class BaseClusterScheduler(ABC):
         batch: Batch,
         transfer_info,
     ) -> List:
-        """Disaggregated KV cache arrivals are not included in this release."""
-        raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+        """Handle KV cache arrival at a decode-side cluster."""
+        from frontier.logger import get_cluster_logger
+
+        logger = get_cluster_logger(__name__, self._cluster_type.name)
+
+        if self._cluster_type == ClusterType.DECODE_ATTN:
+            return self._handle_decode_attn_arrival(time, batch, transfer_info, logger)
+        if self._cluster_type == ClusterType.DECODE:
+            return self._handle_decode_arrival(time, batch, transfer_info, logger)
+        raise ValueError(
+            f"Unexpected cluster type for KV cache arrival: {self._cluster_type}"
+        )
 
     def _handle_decode_attn_arrival(
         self,
@@ -2901,8 +2969,62 @@ class BaseClusterScheduler(ABC):
         transfer_info,
         logger,
     ) -> List:
-        """Disaggregated decode-attn arrivals are not included in this release."""
-        raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+        """Handle KV cache arrival at a decode-attention cluster."""
+        request_ids = [req.id for req in batch.requests]
+        logger.info(
+            "Decode-attn cluster received KV cache at %.3fs: requests %s, "
+            "batch_id=%s, transfer_size=%s bytes, source_cluster=%s",
+            time,
+            request_ids,
+            batch.id,
+            transfer_info.kv_cache_size_bytes,
+            transfer_info.source_cluster_type.name,
+        )
+
+        queue_was_empty = len(self._request_queue) == 0
+        for request in batch.requests:
+            request.on_arrival(time, self._cluster_type)
+            self.add_request(request)
+            logger.info(
+                "Request %s added to decode-attn cluster queue, prefill_tokens=%s, "
+                "decode_tokens=%s, num_processed_tokens=%s, total_tokens=%s, "
+                "is_prefill_complete=%s, current_decode_token_index=%s, "
+                "completed_layer_count=%s.",
+                request.id,
+                request.num_prefill_tokens,
+                request.num_decode_tokens,
+                request.num_processed_tokens,
+                request.total_tokens,
+                request.is_prefill_complete,
+                request.current_decode_token_index,
+                request.completed_layer_count,
+            )
+
+        if self._is_periodic_scheduling_enabled:
+            logger.info(
+                "Requests cached for periodic scheduling (interval=%sms), current queue size: %s",
+                self._periodic_scheduling_interval_ms,
+                len(self._request_queue),
+            )
+            return []
+
+        from frontier.config.global_vars import get_simulation_mode
+        from frontier.events.cluster_schedule_event import ClusterScheduleEvent
+
+        simulation_mode = get_simulation_mode()
+        if not queue_was_empty:
+            logger.info(
+                "Decode-attn queue already has pending requests; skip redundant schedule trigger in %s mode",
+                simulation_mode,
+            )
+            return []
+
+        logger.info(
+            "KV-cache arrival triggers immediate decode-attn scheduling in %s mode; queue size=%d",
+            simulation_mode,
+            len(self._request_queue),
+        )
+        return [ClusterScheduleEvent(time, self._cluster_type)]
 
     def _handle_decode_arrival(
         self,
@@ -2911,8 +3033,86 @@ class BaseClusterScheduler(ABC):
         transfer_info,
         logger,
     ) -> List:
-        """Disaggregated decode arrivals are not included in this release."""
-        raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+        """Handle KV cache arrival at a unified decode cluster."""
+        request_ids = [req.id for req in batch.requests]
+        logger.info(
+            "Decode cluster received KV cache at %.3fs: requests %s, "
+            "batch_id=%s, transfer_size=%s bytes, source_cluster=%s",
+            time,
+            request_ids,
+            batch.id,
+            transfer_info.kv_cache_size_bytes,
+            transfer_info.source_cluster_type.name,
+        )
+
+        for request in batch.requests:
+            request.on_arrival(time, self._cluster_type)
+            self.add_request(request)
+            logger.info(
+                "Request %s added to decode cluster queue, prefill_tokens=%s, "
+                "decode_tokens=%s, num_processed_tokens=%s, total_tokens=%s, "
+                "is_prefill_complete=%s, current_decode_token_index=%s, "
+                "completed_layer_count=%s.",
+                request.id,
+                request.num_prefill_tokens,
+                request.num_decode_tokens,
+                request.num_processed_tokens,
+                request.total_tokens,
+                request.is_prefill_complete,
+                request.current_decode_token_index,
+                request.completed_layer_count,
+            )
+
+        if self._is_periodic_scheduling_enabled:
+            logger.info(
+                "Requests cached for periodic scheduling (interval=%sms), current queue size: %s",
+                self._periodic_scheduling_interval_ms,
+                len(self._request_queue),
+            )
+            return []
+
+        from frontier.config.global_vars import get_simulation_mode
+        from frontier.events.cluster_schedule_event import ClusterScheduleEvent
+
+        simulation_mode = get_simulation_mode()
+        if simulation_mode == "offline":
+            expected_num_requests = getattr(
+                self._request_generator_config, "num_decode_bound_requests", None
+            )
+            if expected_num_requests is None:
+                raise ValueError(
+                    "Offline DECODE scheduling requires "
+                    "request_generator_config.num_decode_bound_requests to be set "
+                    "by request generation."
+                )
+
+            current_num_requests = len(self._request_queue)
+            if current_num_requests > expected_num_requests:
+                raise ValueError(
+                    "Offline DECODE received more decode-bound requests than "
+                    f"expected: current={current_num_requests}, "
+                    f"expected={expected_num_requests}"
+                )
+            if current_num_requests < expected_num_requests:
+                logger.info(
+                    "Offline mode: buffering decode-bound requests (%s/%s), "
+                    "deferring scheduling until all decode-bound requests arrive",
+                    current_num_requests,
+                    expected_num_requests,
+                )
+                return []
+            logger.info(
+                "Offline mode: all %s decode-bound requests arrived, "
+                "triggering batch scheduling",
+                expected_num_requests,
+            )
+            return [ClusterScheduleEvent(time, self._cluster_type)]
+
+        logger.info(
+            "Online mode: triggering immediate cluster scheduling for %s requests",
+            len(batch.requests),
+        )
+        return [ClusterScheduleEvent(time, self._cluster_type)]
 
 
     def on_m2n_arrival(

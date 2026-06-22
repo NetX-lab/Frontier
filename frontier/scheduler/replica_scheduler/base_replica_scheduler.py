@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Sequence
 
 from frontier.config import (
     BaseReplicaSchedulerConfig,
@@ -767,6 +767,16 @@ class BaseReplicaScheduler(ABC):
 
     def free_batch(self, batch: Batch) -> None:
         self.free(*batch.request_ids)
+
+    def complete_kv_transfer_for_requests(
+        self, requests: Sequence[Request]
+    ) -> None:
+        raise NotImplementedError(
+            f"{self.__class__.__name__} does not support KV transfer completion."
+        )
+
+    def should_schedule_after_kv_transfer_completion(self) -> bool:
+        return self.num_pending_requests > 0 and self.num_running_batches == 0
 
     @abstractmethod
     def on_batch_end(self, batch: Batch) -> None:

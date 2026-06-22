@@ -6,6 +6,8 @@ from .device_sku_type import DeviceSKUType
 from .event_type import EventType
 from .execution_time_predictor_type import ExecutionTimePredictorType
 from .cluster_scheduler_type import ClusterSchedulerType
+from .kv_cache_transfer_type import KVCacheTransferType
+from .m2n_transfer_type import M2NTransferType
 from .measurement_type import MeasurementType
 from .node_sku_type import NodeSKUType
 from .norm_type import NormType
@@ -19,6 +21,8 @@ __all__ = [
     ExecutionTimePredictorType,
     ClusterSchedulerType,
     CCBackendType,
+    KVCacheTransferType,
+    M2NTransferType,
     MeasurementType,
     RequestGeneratorType,
     RequestLengthGeneratorType,
