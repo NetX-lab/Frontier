@@ -15,7 +15,7 @@
 
 ## Latest News 🎯
 
-📍[2026/06] Prefill-Decode Disaggregation (PDD / `pd-disaggregation`) version released! Support for Attention-FFN Disaggregation (AFD) will be available soon.<br />
+📍[2026/06] Prefill-Decode Disaggregation (PDD) version released! Support for Attention-FFN Disaggregation (AFD) will be available soon.<br />
 📍[2026/06] Initial version released, with support for co-located serving and modern optimizations.<br />
 
 ## Frontier Overview
@@ -83,27 +83,15 @@ PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 pytest tests/unit/test_examples_pdd_sc
 
 Current release-facing PDD and co-location examples are split by simulation mode and default to the formula-based `analytical` backend for one-click smoke runs:
 
-- `examples/architecture/pdd/run_all.sh`
 - `examples/architecture/pdd/offline/dense_model_basic.sh`
 - `examples/architecture/pdd/online/dense_model_basic_online.sh`
-- `examples/architecture/co-location/run_all.sh`
-- `examples/architecture/co-location/offline/dense_model_basic.sh`
-- `examples/architecture/co-location/offline/moe_model_basic.sh`
-- `examples/architecture/co-location/offline/thinking_mode_basic.sh`
-- `examples/architecture/co-location/offline/moe_spec_dec.sh`
-- `examples/architecture/co-location/offline/moe_prefix_caching.sh`
 - `examples/architecture/co-location/online/dense_model_basic_online.sh`
 - `examples/architecture/co-location/online/moe_model_basic_online.sh`
 - `examples/architecture/co-location/online/thinking_mode_basic_online.sh`
-- `examples/architecture/co-location/online/moe_spec_dec_online.sh`
-- `examples/architecture/co-location/online/moe_prefix_caching_online.sh`
-- `examples/profiling/profile_linear_op.sh`
-- `examples/profiling/profile_attention_chunked_prefill.sh`
-- `examples/profiling/profile_moe.sh`
-- `examples/profiling/smoke_simulator_dense_csv.sh`
-- `examples/profiling/smoke_simulator_moe_csv.sh`
 
-These examples cover `decode_cuda_graph_mode`, Chunked Prefill, Speculative Decoding / MTP, and Prefix Caching. The dummy analytical smoke runs validate runtime plumbing, not profiling fidelity. Profiling outputs and reusable compute data are organized under `data/profiling/compute`, while the included Prefix Caching fixture is `examples/fixtures/prefix_cache_shared_session_trace.csv`.
+These examples cover most runtime optimizations. Note that dummy analytical smoke runs only validate runtime plumbing, not profiling fidelity. Profiling outputs and reusable compute data are organized under data/profiling/compute.
+
+> Currently, only the `a800` and `rtx_pro_6000` datasets contain full-feature format profiles; we highly recommend re-collecting profiling data locally for your specific hardware.
 
 Example fixtures live under:
 
@@ -179,7 +167,7 @@ docker run --rm --gpus all --shm-size 16g \
 
 ## Plan
 
-We will continue releasing Frontier's core components to the community. We are actively developing new features and plan to support:
+We will continuously release Frontier's core components to the community. We are actively developing new features and plan to support:
 
 - **Serving Engines Integration**: Support for SGLang and TensorRT-LLM frameworks.
 - **Advanced Caching**: Support for `tair-kvcache` as an advanced runtime backend for the Hierarchical Caching feature.

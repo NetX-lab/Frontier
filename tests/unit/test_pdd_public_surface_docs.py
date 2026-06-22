@@ -63,10 +63,16 @@ def test_public_architecture_entrypoints_stay_on_supported_pdd_path() -> None:
 
 
 def test_top_level_docs_advertise_supported_pdd_without_upcoming_claims() -> None:
-    for relative_path in PUBLIC_DOCS:
+    for relative_path in PUBLIC_DOCS[1:]:
         text = _read(relative_path)
         assert "pd-disaggregation" in text, relative_path
         assert "pdd/run_all.sh" in text, relative_path
+
+    top_level_readme = _read("README.md")
+    assert "Prefill-Decode Disaggregation (PDD) version released" in top_level_readme
+    assert "PDD serving" in top_level_readme
+    assert "examples/architecture/pdd/offline/dense_model_basic.sh" in top_level_readme
+    assert "examples/architecture/pdd/online/dense_model_basic_online.sh" in top_level_readme
 
     stale_claims = (
         "PDD and AFD support is planned",
