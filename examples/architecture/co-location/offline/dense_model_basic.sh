@@ -12,6 +12,11 @@
 # flags after "--" if you need to customize the run.
 # Example:
 #   NUM_REQUESTS=4 DECODE_TOKENS=16 bash examples/architecture/co-location/offline/dense_model_basic.sh -- --metrics_config_run_id custom_dense
+#
+# Non-dummy runs with DECODE_CUDA_GRAPH_MODE other than "none" require
+# *_kernel_only.csv profiling data for the selected DEVICE and MODEL_NAME.
+# If those files are absent, set DECODE_CUDA_GRAPH_MODE=none or generate
+# kernel-only profiling data for that hardware/model pair.
 # =============================================================================
 
 set -euo pipefail
@@ -25,6 +30,7 @@ PYTHON_BIN="${PYTHON_BIN:-python3}"
 MODEL_NAME="${MODEL_NAME:-meta-llama/Llama-2-7b-hf}"
 SYS_ARCH="${SYS_ARCH:-co-location}"
 CC_BACKEND="${CC_BACKEND:-analytical}"
+DEVICE="${DEVICE:-a100}"
 NUM_REPLICAS="${NUM_REPLICAS:-1}"
 ATTN_TP="${ATTN_TP:-2}"
 PP="${PP:-1}"
@@ -55,6 +61,30 @@ require_bool() {
 require_bool "ENABLE_DUMMY_MODE" "$ENABLE_DUMMY_MODE"
 require_bool "ENABLE_CHUNKED_PREFILL" "$ENABLE_CHUNKED_PREFILL"
 
+require_kernel_only_profiles_when_needed() {
+  if [ "$ENABLE_DUMMY_MODE" = "true" ] || [ "$DECODE_CUDA_GRAPH_MODE" = "none" ]; then
+    return
+  fi
+
+  local profile_dir="$REPO_ROOT/data/profiling/compute/$DEVICE/$MODEL_NAME"
+  local missing=()
+
+  if [ ! -f "$profile_dir/linear_op_kernel_only.csv" ]; then
+    missing+=("$profile_dir/linear_op_kernel_only.csv")
+  fi
+  if [ ! -f "$profile_dir/attention_kernel_only.csv" ]; then
+    missing+=("$profile_dir/attention_kernel_only.csv")
+  fi
+
+  if [ "${#missing[@]}" -gt 0 ]; then
+    echo "ERROR: Kernel-only profiling CSVs are required when ENABLE_DUMMY_MODE=false and DECODE_CUDA_GRAPH_MODE=$DECODE_CUDA_GRAPH_MODE." >&2
+    echo "ERROR: Missing files:" >&2
+    printf '  %s\n' "${missing[@]}" >&2
+    echo "INFO: Set DECODE_CUDA_GRAPH_MODE=none to run without decode CUDA Graph modeling when kernel-only CSVs are absent, or generate the missing kernel-only profiling data." >&2
+    exit 2
+  fi
+}
+
 if [ "$SYS_ARCH" != "co-location" ]; then
   echo "ERROR: this example only supports SYS_ARCH=co-location; got SYS_ARCH=$SYS_ARCH" >&2
   exit 2
@@ -73,6 +103,8 @@ if [ "$ENABLE_CHUNKED_PREFILL" = "false" ] && [ "$LONG_PREFILL_TOKEN_THRESHOLD" 
   exit 2
 fi
 
+require_kernel_only_profiles_when_needed
+
 if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
   echo "ERROR: PYTHON_BIN is not executable or not on PATH: $PYTHON_BIN" >&2
   exit 2
@@ -84,6 +116,7 @@ CMD=(
   --sys_arch "$SYS_ARCH"
   --cc_backend_config_type "$CC_BACKEND"
   --cluster_config_num_replicas "$NUM_REPLICAS"
+  --replica_config_device "$DEVICE"
   --replica_config_model_name "$MODEL_NAME"
   --replica_config_attn_tensor_parallel_size "$ATTN_TP"
   --replica_config_num_pipeline_stages "$PP"
@@ -137,6 +170,7 @@ cat <<EOF
 ============================================
 PYTHONPATH: $PYTHONPATH
 Model: $MODEL_NAME
+Device: $DEVICE
 Architecture: $SYS_ARCH
 Backend: $CC_BACKEND
 Replicas: $NUM_REPLICAS
