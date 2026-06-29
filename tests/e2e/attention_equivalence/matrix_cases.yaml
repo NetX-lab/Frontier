@@ -1,0 +1,6 @@
+# Attention equivalence matrix template.
+# Populate paths with pinned reference/candidate artifacts before running:
+#   python tests/e2e/attention_equivalence/run_equivalence_matrix.py \
+#     --matrix-cases tests/e2e/attention_equivalence/matrix_cases.yaml \
+#     --output-json /tmp/frontier_attention_equivalence_matrix.json
+cases: []

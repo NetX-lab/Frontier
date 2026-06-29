@@ -34,6 +34,7 @@ class TimerStatsStore(metaclass=Singleton):
                 "mean": np.mean(times),
                 "median": np.median(times),
                 "std": np.std(times),
+                "count": len(times),
             }
 
         return stats

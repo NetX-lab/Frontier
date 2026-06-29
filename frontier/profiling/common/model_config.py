@@ -53,6 +53,13 @@ class ModelConfig:
         share_expert_dim: Optional[int] = None,
         share_q_dim: Optional[int] = None,
         head_dim: Optional[int] = None,
+        use_mla: bool = False,
+        q_lora_rank: Optional[int] = None,
+        kv_lora_rank: Optional[int] = None,
+        qk_nope_head_dim: Optional[int] = None,
+        qk_rope_head_dim: Optional[int] = None,
+        qk_head_dim: Optional[int] = None,
+        v_head_dim: Optional[int] = None,
         # Quantization config for metadata tracking
         quantization_config: Optional[QuantizationConfig] = None,
         # Whether lm_head shares weights with embed_tokens (HF standard field)
@@ -107,6 +114,13 @@ class ModelConfig:
         self.share_q_dim = share_q_dim
         # head_dim: If provided, use it; otherwise compute from embedding_dim/num_q_heads
         self._head_dim = head_dim
+        self.use_mla = bool(use_mla)
+        self.q_lora_rank = q_lora_rank
+        self.kv_lora_rank = kv_lora_rank
+        self.qk_nope_head_dim = qk_nope_head_dim
+        self.qk_rope_head_dim = qk_rope_head_dim
+        self.qk_head_dim = qk_head_dim
+        self.v_head_dim = v_head_dim
 
         # Quantization config for metadata tracking
         if quantization_config is not None and not isinstance(
@@ -141,6 +155,33 @@ class ModelConfig:
             if not self.is_moe:
                 raise ValueError(
                     "Step2Mini model requires is_moe=True"
+                )
+
+        if self.use_mla:
+            missing_mla_fields = [
+                field_name
+                for field_name in (
+                    "kv_lora_rank",
+                    "qk_nope_head_dim",
+                    "qk_rope_head_dim",
+                    "v_head_dim",
+                )
+                if getattr(self, field_name) is None
+            ]
+            if missing_mla_fields:
+                raise ValueError(
+                    "MLA profiling ModelConfig requires fields: "
+                    f"{missing_mla_fields}"
+                )
+            if self.qk_head_dim is None:
+                self.qk_head_dim = self.qk_nope_head_dim + self.qk_rope_head_dim
+            expected_qk_head_dim = self.qk_nope_head_dim + self.qk_rope_head_dim
+            if self.qk_head_dim != expected_qk_head_dim:
+                raise ValueError(
+                    "qk_head_dim must equal qk_nope_head_dim + "
+                    "qk_rope_head_dim for MLA. "
+                    f"qk_head_dim={self.qk_head_dim}, "
+                    f"expected={expected_qk_head_dim}"
                 )
 
     @property
@@ -182,6 +223,25 @@ class ModelConfig:
         if self._head_dim is not None:
             return self._head_dim
         return self.embedding_dim // self.num_q_heads
+
+    def get_runtime_head_size(self) -> int:
+        """Return vLLM runtime KV-cache head size."""
+        if self.use_mla:
+            if self.kv_lora_rank is None or self.qk_rope_head_dim is None:
+                raise ValueError(
+                    "MLA runtime head size requires kv_lora_rank and "
+                    "qk_rope_head_dim"
+                )
+            return self.kv_lora_rank + self.qk_rope_head_dim
+        return self.get_head_dim()
+
+    def get_qk_head_dim(self) -> int:
+        """Return the full QK head dimension."""
+        if self.use_mla:
+            if self.qk_head_dim is None:
+                raise ValueError("MLA qk_head_dim is not configured")
+            return self.qk_head_dim
+        return self.get_head_dim()
 
     def get_moe_layer_ids(self) -> List[int]:
         """Return sorted MoE layer IDs for this model config.
@@ -296,6 +356,24 @@ class ModelConfig:
             )
             model_config_dict['share_q_dim'] = json_cfg.get('share_q_dim')
             model_config_dict['head_dim'] = json_cfg.get('head_dim')
+            for field_name in [
+                'use_mla',
+                'q_lora_rank',
+                'kv_lora_rank',
+                'qk_nope_head_dim',
+                'qk_rope_head_dim',
+                'qk_head_dim',
+                'v_head_dim',
+            ]:
+                if field_name in json_cfg:
+                    model_config_dict[field_name] = json_cfg[field_name]
+            if (
+                'use_mla' not in model_config_dict
+                and str(json_cfg.get('model_type', '')).lower()
+                in {'deepseek_v2', 'deepseek_v3', 'deepseek_mtp', 'kimi_k2'}
+                and json_cfg.get('kv_lora_rank') is not None
+            ):
+                model_config_dict['use_mla'] = True
             # Whether lm_head shares weights with embed_tokens (HF standard)
             model_config_dict['tie_word_embeddings'] = json_cfg.get(
                 'tie_word_embeddings', True
@@ -332,6 +410,9 @@ class ModelConfig:
         return self.num_q_heads // tp_size
 
     def get_num_kv_heads(self, parallel_config: ParallelConfig):
+        if self.use_mla:
+            return 1
+
         tp_size = parallel_config.tensor_parallel_size
         if tp_size <= 0:
             raise ValueError(
@@ -361,6 +442,8 @@ class ModelConfig:
         return max(1, self.num_kv_heads // tp_size)
 
     def get_head_size(self):
+        if self.use_mla:
+            return self.get_runtime_head_size()
         # Use explicit head_dim if provided (e.g., for Step3 models with MLA)
         # Otherwise compute from embedding_dim / num_q_heads
         if self._head_dim is not None:
@@ -459,6 +542,13 @@ class ModelConfig:
             "share_expert_dim": self.share_expert_dim,
             "share_q_dim": self.share_q_dim,
             "head_dim": self._head_dim,
+            "use_mla": self.use_mla,
+            "q_lora_rank": self.q_lora_rank,
+            "kv_lora_rank": self.kv_lora_rank,
+            "qk_nope_head_dim": self.qk_nope_head_dim,
+            "qk_rope_head_dim": self.qk_rope_head_dim,
+            "qk_head_dim": self.qk_head_dim,
+            "v_head_dim": self.v_head_dim,
             # Quantization config
             "quantization_config": asdict(self.quantization_config) if self.quantization_config else None,
             # LM head weight sharing

@@ -1,5 +1,7 @@
 from typing import Optional
 
+from frontier.attention.memory import get_attention_runtime_kv_layout
+from frontier.attention.model_binding import bind_attention_family
 from frontier.config import ReplicaConfig
 from frontier.errors import FrontierMemoryOOMError
 from frontier.entities.replica import Replica
@@ -84,11 +86,23 @@ class MemoryPlanner:
 
         return (
             2  # 2 bytes per fp16/bf16 element
-            * 2  # key + value
-            * self._replica.attention_head_dim
-            * self._replica.kv_heads_per_tensor_parallel_worker
+            * self._get_kv_cache_elements_per_token_per_worker()
             * self._replica.max_request_tokens
         )
+
+    def _get_kv_cache_elements_per_token_per_worker(self) -> int:
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            return 0
+
+        family = bind_attention_family(self._replica_config.model_config).family
+        layout = get_attention_runtime_kv_layout(
+            family,
+            runtime_num_kv_heads_per_worker=(
+                self._replica.kv_heads_per_tensor_parallel_worker
+            ),
+            runtime_head_size=self._replica.attention_head_dim,
+        )
+        return layout.elements_per_token_per_worker
 
     def _get_kv_cache_memory_per_layer_per_block(self, block_size: int) -> int:
         # DECODE_FFN does not allocate KV cache blocks.
@@ -97,10 +111,8 @@ class MemoryPlanner:
 
         return (
             2  # 2 bytes per fp16/bf16 element
-            * 2  # key + value
             * block_size
-            * self._replica.kv_heads_per_tensor_parallel_worker
-            * self._replica.attention_head_dim
+            * self._get_kv_cache_elements_per_token_per_worker()
         )
 
     def _get_parameter_memory_per_device(self) -> int:

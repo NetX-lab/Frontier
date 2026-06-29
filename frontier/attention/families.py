@@ -1,0 +1,132 @@
+from __future__ import annotations
+
+from frontier.attention.ops import (
+    AttentionFamilySpec,
+    AttentionMemoryLayout,
+    AttentionOperatorRole,
+    AttentionOperatorSpec,
+    AttentionPhase,
+    ProjectionOwnership,
+)
+
+
+_PREFILL_MIXED = (AttentionPhase.PREFILL, AttentionPhase.MIXED)
+_DECODE_MIXED = (AttentionPhase.DECODE, AttentionPhase.MIXED)
+_ALL_PHASES = (AttentionPhase.PREFILL, AttentionPhase.DECODE, AttentionPhase.MIXED)
+
+
+DENSE_ATTENTION_FAMILY = AttentionFamilySpec(
+    family_id="dense_attention",
+    display_name="Dense-KV Attention",
+    supported_variants=("gqa", "mha", "mqa"),
+    operators=(
+        AttentionOperatorSpec(
+            name="attn_kv_cache_save",
+            role=AttentionOperatorRole.CACHE_WRITE,
+            phases=_ALL_PHASES,
+            execution_time_attr="attention_kv_cache_save_execution_time",
+        ),
+        AttentionOperatorSpec(
+            name="attn_prefill",
+            role=AttentionOperatorRole.PREFILL_KERNEL,
+            phases=_PREFILL_MIXED,
+            execution_time_attr="attention_prefill_execution_time",
+        ),
+        AttentionOperatorSpec(
+            name="attn_decode",
+            role=AttentionOperatorRole.DECODE_KERNEL,
+            phases=_DECODE_MIXED,
+            execution_time_attr="attention_decode_execution_time",
+        ),
+    ),
+    memory_layout=AttentionMemoryLayout.DENSE_KV,
+    dense_compatible=True,
+    requires_runtime_kv_helpers=False,
+)
+
+
+LATENT_MLA_ATTENTION_FAMILY = AttentionFamilySpec(
+    family_id="latent_mla_attention",
+    display_name="Latent MLA Attention",
+    supported_variants=("mla",),
+    operators=(
+        AttentionOperatorSpec(
+            name="attn_mla_kv_cache_save",
+            role=AttentionOperatorRole.CACHE_WRITE,
+            phases=_ALL_PHASES,
+            execution_time_attr="attn_mla_kv_cache_save_time",
+        ),
+        AttentionOperatorSpec(
+            name="attn_mla_prefill_kv_up_proj",
+            role=AttentionOperatorRole.PROJECTION,
+            phases=_PREFILL_MIXED,
+            execution_time_attr="attn_mla_prefill_kv_up_proj_time",
+            projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
+        ),
+        AttentionOperatorSpec(
+            name="attn_mla_prefill",
+            role=AttentionOperatorRole.PREFILL_KERNEL,
+            phases=_PREFILL_MIXED,
+            execution_time_attr="attn_mla_prefill_time",
+        ),
+        AttentionOperatorSpec(
+            name="attn_mla_decode_q_latent_proj",
+            role=AttentionOperatorRole.PROJECTION,
+            phases=_DECODE_MIXED,
+            execution_time_attr="attn_mla_decode_q_latent_proj_time",
+            projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
+        ),
+        AttentionOperatorSpec(
+            name="attn_mla_decode",
+            role=AttentionOperatorRole.DECODE_KERNEL,
+            phases=_DECODE_MIXED,
+            execution_time_attr="attn_mla_decode_time",
+        ),
+        AttentionOperatorSpec(
+            name="attn_mla_v_up_proj",
+            role=AttentionOperatorRole.PROJECTION,
+            phases=_DECODE_MIXED,
+            execution_time_attr="attn_mla_v_up_proj_time",
+            projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
+        ),
+    ),
+    memory_layout=AttentionMemoryLayout.LATENT_MLA,
+    dense_compatible=False,
+    requires_runtime_kv_helpers=True,
+    # vLLM keeps model pre/post projections outside self.mla_attn(...), while
+    # the six attn_mla_* scopes live inside MLACommonImpl.
+    disjoint_model_projection_attrs=(
+        "attention_layer_pre_proj_execution_time",
+        "attention_layer_post_proj_execution_time",
+    ),
+)
+
+
+DSA_ATTENTION_FAMILY = AttentionFamilySpec(
+    family_id="dsa_attention",
+    display_name="Frozen DSA Attention",
+    supported_variants=("dsa",),
+    operators=(),
+    memory_layout=AttentionMemoryLayout.FROZEN_DSA,
+    dense_compatible=False,
+    requires_runtime_kv_helpers=True,
+    dsa_frozen=True,
+)
+
+
+_FAMILIES_BY_ID = {
+    DENSE_ATTENTION_FAMILY.family_id: DENSE_ATTENTION_FAMILY,
+    LATENT_MLA_ATTENTION_FAMILY.family_id: LATENT_MLA_ATTENTION_FAMILY,
+    DSA_ATTENTION_FAMILY.family_id: DSA_ATTENTION_FAMILY,
+}
+
+
+def get_attention_family(family_id: str) -> AttentionFamilySpec:
+    try:
+        return _FAMILIES_BY_ID[family_id]
+    except KeyError as exc:
+        raise ValueError(f"Unknown attention family: {family_id}") from exc
+
+
+def iter_attention_families() -> tuple[AttentionFamilySpec, ...]:
+    return tuple(_FAMILIES_BY_ID.values())

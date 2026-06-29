@@ -18,6 +18,22 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
 
+from frontier.attention.families import (
+    DENSE_ATTENTION_FAMILY,
+    LATENT_MLA_ATTENTION_FAMILY,
+)
+from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.ops import AttentionOperatorRole
+from frontier.attention.ops import AttentionPhase
+from frontier.attention.profiling_mapping import (
+    get_enabled_predictor_feature_columns,
+    get_enabled_predictor_median_column_by_role,
+    get_enabled_predictor_median_columns,
+    get_enabled_predictor_metric_name_by_role,
+    get_enabled_predictor_metric_names,
+    get_enabled_shared_predictor_feature_columns,
+    validate_attention_profiling_dataframe,
+)
 from frontier.config import (
     BaseExecutionTimePredictorConfig,
     BaseReplicaSchedulerConfig,
@@ -30,6 +46,7 @@ from frontier.config import (
 from frontier.entities import Batch
 from frontier.entities.time_components import (
     AttentionTime,
+    AttentionOperatorTimes,
     MLPTime,
     MoETime,
 )
@@ -88,6 +105,17 @@ def _build_exact_feature_lookup(
     """Build exact profiling-row lookups before falling back to regression."""
     if df.empty:
         return {}
+    for feature_col in feature_cols:
+        non_scalar_rows = df[feature_col].map(
+            lambda value: isinstance(value, (list, tuple, dict, set))
+        )
+        if bool(non_scalar_rows.any()):
+            raise ValueError(
+                "Exact feature lookup requires scalar numeric feature values; "
+                f"column {feature_col!r} contains non-scalar values. "
+                "Keep request-token vectors such as batch_request_num_tokens "
+                "out of numeric exact keys until a vector-key schema is designed."
+            )
     grouped = df.groupby(feature_cols, dropna=False)[target_col].mean()
     lookup: Dict[Tuple[float, ...], float] = {}
     for key, value in grouped.items():
@@ -107,6 +135,36 @@ MIGRATION_HELP_COMMAND = (
 
 
 class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
+    @staticmethod
+    def _dense_attention_cache_write_op_name() -> str:
+        return get_enabled_predictor_metric_name_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.CACHE_WRITE,
+        )
+
+    @staticmethod
+    def _dense_attention_prefill_op_name() -> str:
+        return get_enabled_predictor_metric_name_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.PREFILL_KERNEL,
+        )
+
+    @staticmethod
+    def _dense_attention_decode_op_name() -> str:
+        return get_enabled_predictor_metric_name_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.DECODE_KERNEL,
+        )
+
+    def _get_attention_family(self):
+        return bind_attention_family(self._model_config).family
+
+    def _is_mla_attention_family(self) -> bool:
+        return (
+            self._get_attention_family().family_id
+            == LATENT_MLA_ATTENTION_FAMILY.family_id
+        )
+
     def __init__(
         self,
         predictor_config: BaseExecutionTimePredictorConfig,
@@ -1024,16 +1082,25 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             self._get_attention_model_names(), metadata, file_path
         )
 
-        for column in [
-            "time_stats.attn_kv_cache_save.median",
-        ]:
+        if self._is_mla_attention_family():
+            return self._filter_mla_attention_df(df, file_path)
+
+        cache_write_median_column = get_enabled_predictor_median_column_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.CACHE_WRITE,
+        )
+        for column in [cache_write_median_column]:
             if column not in df.columns:
                 df[column] = 0
             else:
                 df.fillna({column: 0}, inplace=True)
 
+        prefill_op_name = get_enabled_predictor_metric_name_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.PREFILL_KERNEL,
+        )
         effective_tp = resolve_effective_attention_tp_size(
-            op_name="attn_prefill",
+            op_name=prefill_op_name,
             requested_tp_size=self._replica_config.attn_tensor_parallel_size,
             num_kv_heads=self._model_config.num_kv_heads,
             cluster_type=self._cluster_type,
@@ -1048,6 +1115,59 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             & (df["block_size"] == self._block_size)
             & (df["num_tensor_parallel_workers"] == effective_tp)
         ]
+
+    def _filter_mla_attention_df(
+        self, df: pd.DataFrame, file_path: str
+    ) -> pd.DataFrame:
+        validate_attention_profiling_dataframe(
+            df,
+            LATENT_MLA_ATTENTION_FAMILY,
+            measurement_type=self._active_measurement_type,
+        )
+
+        model_config = self._model_config
+        expected_values = {
+            "n_q_head": int(getattr(model_config, "num_q_heads")),
+            "n_kv_head": int(
+                model_config.get_runtime_num_kv_heads()
+                if hasattr(model_config, "get_runtime_num_kv_heads")
+                else 1
+            ),
+            "head_size": int(
+                model_config.get_runtime_head_size()
+                if hasattr(model_config, "get_runtime_head_size")
+                else int(getattr(model_config, "kv_lora_rank"))
+                + int(getattr(model_config, "qk_rope_head_dim"))
+            ),
+            "qk_nope_head_dim": int(getattr(model_config, "qk_nope_head_dim")),
+            "qk_rope_head_dim": int(getattr(model_config, "qk_rope_head_dim")),
+            "qk_head_dim": int(model_config.get_qk_head_dim()),
+            "kv_lora_rank": int(getattr(model_config, "kv_lora_rank")),
+            "v_head_dim": int(getattr(model_config, "v_head_dim")),
+            "block_size": int(self._block_size),
+            "num_tensor_parallel_workers": int(
+                self._replica_config.attn_tensor_parallel_size
+            ),
+        }
+        missing_columns = [
+            column for column in expected_values if column not in df.columns
+        ]
+        if missing_columns:
+            raise ValueError(
+                "MLA attention profiling data is missing structural columns: "
+                f"{missing_columns}. file={file_path}"
+            )
+
+        filtered = df.copy()
+        for column, expected_value in expected_values.items():
+            filtered = filtered[filtered[column].astype(int) == expected_value]
+
+        if filtered.empty:
+            raise ValueError(
+                "No MLA attention profiling rows remain after structural filtering. "
+                f"file={file_path}, expected={expected_values}"
+            )
+        return filtered
 
     def _load_all_reduce_df(self, file_path: str) -> pd.DataFrame:
         df = self._read_input_file(file_path)
@@ -2047,6 +2167,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
     def _get_attention_df_with_derived_features(self, df: pd.DataFrame) -> pd.DataFrame:
         df_with_derived_features = df.copy()
+        if self._is_mla_attention_family():
+            if "is_prefill" in df_with_derived_features.columns:
+                df_with_derived_features["is_prefill"] = (
+                    df_with_derived_features["is_prefill"]
+                    .astype(str)
+                    .str.strip()
+                    .str.lower()
+                    .isin({"1", "true", "t", "yes", "y"})
+                    .astype(int)
+                )
+            return df_with_derived_features
+
         df_with_derived_features["num_tokens"] = df_with_derived_features[
             ["prefill_chunk_size", "batch_size"]
         ].max(axis=1)
@@ -2442,7 +2574,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         raise ValueError(f"Unsupported linear op for TP mapping: {op_name}")
 
     def _get_attention_model_names(self) -> List[str]:
-        return ["attn_kv_cache_save"]
+        return list(get_enabled_predictor_metric_names(self._get_attention_family()))
 
     @staticmethod
     def mean_absolute_percentage_error(y_true: np.array, y_pred: np.array) -> float:
@@ -2773,32 +2905,116 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 target_col=target_col,
             )
 
-        attention_df = self._load_attention_df(self._attention_input_file)
-        attention_df = self._get_attention_df_with_derived_features(attention_df)
-
         model_names = self._get_attention_model_names()
+        if (
+            model_names
+            and self._get_attention_family().family_id
+            == DENSE_ATTENTION_FAMILY.family_id
+        ):
+            attention_df = self._load_attention_df(self._attention_input_file)
+            attention_df = self._get_attention_df_with_derived_features(attention_df)
+            target_columns = dict(
+                zip(
+                    model_names,
+                    get_enabled_predictor_median_columns(DENSE_ATTENTION_FAMILY),
+                )
+            )
+            feature_columns = get_enabled_shared_predictor_feature_columns(
+                DENSE_ATTENTION_FAMILY
+            )
+            kv_cache_model_name = get_enabled_predictor_metric_name_by_role(
+                DENSE_ATTENTION_FAMILY,
+                AttentionOperatorRole.CACHE_WRITE,
+            )
 
-        for model_name in model_names:
-            kv_cache_feature_cols = ["total_tokens", "kv_cache_size", "batch_size"]
+            kv_cache_feature_cols = list(feature_columns[kv_cache_model_name])
             missing_cols = [
                 col for col in kv_cache_feature_cols if col not in attention_df.columns
             ]
             if missing_cols:
                 raise ValueError(
-                    f"Missing columns for attn_kv_cache_save training: {missing_cols}. "
+                    f"Missing columns for {kv_cache_model_name} training: {missing_cols}. "
                     "Re-run attention profiling with mixed-batch metadata."
                 )
-            models[model_name] = self._train_model(
-                model_name=model_name,
+            models[kv_cache_model_name] = self._train_model(
+                model_name=kv_cache_model_name,
                 df=attention_df,
                 feature_cols=kv_cache_feature_cols,
-                target_col=f"time_stats.{model_name}.median",
+                target_col=target_columns[kv_cache_model_name],
             )
 
         # NOTE: Communication models (all_reduce, send_recv) are no longer trained here.
         # Communication predictions are now delegated to CC Backend.
         # See: _get_tensor_parallel_communication_time() and _get_pipeline_parallel_communication_time()
 
+        return models
+
+    def _train_mla_attention_layer_models(self) -> Dict[str, BaseEstimator]:
+        attention_df = self._load_attention_df(self._attention_input_file)
+        attention_df = self._get_attention_df_with_derived_features(attention_df)
+
+        model_names = list(get_enabled_predictor_metric_names(LATENT_MLA_ATTENTION_FAMILY))
+        target_columns = dict(
+            zip(
+                model_names,
+                get_enabled_predictor_median_columns(LATENT_MLA_ATTENTION_FAMILY),
+            )
+        )
+        feature_columns = get_enabled_shared_predictor_feature_columns(
+            LATENT_MLA_ATTENTION_FAMILY
+        )
+
+        models: Dict[str, BaseEstimator] = {}
+        for model_name in model_names:
+            feature_cols = list(feature_columns[model_name])
+            target_col = target_columns[model_name]
+            required_columns = [*feature_cols, target_col]
+            missing_columns = [
+                column for column in required_columns if column not in attention_df.columns
+            ]
+            all_nan_columns = [
+                column
+                for column in required_columns
+                if column in attention_df.columns and attention_df[column].isna().all()
+            ]
+            if missing_columns or all_nan_columns:
+                raise ValueError(
+                    "MLA attention profiling data cannot train "
+                    f"{model_name}."
+                    f"\nMissing columns: {missing_columns}"
+                    f"\nAll-NaN columns: {all_nan_columns}"
+                )
+            op_attention_df = attention_df.dropna(subset=[target_col]).copy()
+            if op_attention_df.empty:
+                raise ValueError(
+                    "MLA attention profiling data cannot train "
+                    f"{model_name}: target column {target_col!r} has no "
+                    "observed timing rows."
+                )
+            nan_feature_columns = [
+                column
+                for column in feature_cols
+                if op_attention_df[column].isna().any()
+            ]
+            if nan_feature_columns:
+                raise ValueError(
+                    "MLA attention profiling data cannot train "
+                    f"{model_name}: feature columns contain NaN after "
+                    f"target filtering: {nan_feature_columns}"
+                )
+
+            model = self._train_model(
+                model_name=model_name,
+                df=op_attention_df,
+                feature_cols=feature_cols,
+                target_col=target_col,
+            )
+            model._frontier_exact_lookup = _build_exact_feature_lookup(
+                op_attention_df,
+                feature_cols,
+                target_col,
+            )
+            models[model_name] = model
         return models
 
     def _train_cpu_overhead_models(self) -> Dict[str, BaseEstimator]:
@@ -2853,6 +3069,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         return models
 
     def _train_attention_layer_models(self) -> Dict[str, BaseEstimator]:
+        if self._is_mla_attention_family():
+            return self._train_mla_attention_layer_models()
+
         attention_df = self._load_attention_df(self._attention_input_file)
         attention_df = self._get_attention_df_with_derived_features(attention_df)
         true_mixed_df = attention_df[attention_df["is_true_mixed_batch"]].copy()
@@ -2862,6 +3081,26 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         models = {}
         measurement_type = getattr(self, "_active_measurement_type", MeasurementType.CUDA_EVENT)
+        dense_attention_model_names = get_enabled_predictor_metric_names(
+            DENSE_ATTENTION_FAMILY
+        )
+        dense_attention_target_columns = dict(
+            zip(
+                dense_attention_model_names,
+                get_enabled_predictor_median_columns(DENSE_ATTENTION_FAMILY),
+            )
+        )
+        dense_attention_feature_columns = get_enabled_shared_predictor_feature_columns(
+            DENSE_ATTENTION_FAMILY
+        )
+        prefill_model_name = get_enabled_predictor_metric_name_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.PREFILL_KERNEL,
+        )
+        decode_model_name = get_enabled_predictor_metric_name_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.DECODE_KERNEL,
+        )
 
         if measurement_type == MeasurementType.CUDA_EVENT:
             if "prefill_chunk_size" not in prefill_df.columns:
@@ -2874,34 +3113,43 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     "No standard prefill rows (prefill_chunk_size > 0) found in eager attention profiling data."
                 )
 
-            models["attn_prefill"] = self._train_model(
-                model_name="attn_prefill",
+            models[prefill_model_name] = self._train_model(
+                model_name=prefill_model_name,
                 df=standard_prefill_df,
-                feature_cols=["kv_cache_size", "prefill_chunk_size_squared"],
-                target_col="time_stats.attn_prefill.median",
+                feature_cols=list(dense_attention_feature_columns[prefill_model_name]),
+                target_col=dense_attention_target_columns[prefill_model_name],
             )
 
             if len(decode_df) > 0:
-                decode_feature_cols = ["batch_size", "kv_cache_size"]
+                decode_feature_cols = list(
+                    dense_attention_feature_columns[decode_model_name]
+                )
                 missing_decode_cols = [
                     col
-                    for col in [*decode_feature_cols, "time_stats.attn_decode.median"]
+                    for col in [
+                        *decode_feature_cols,
+                        dense_attention_target_columns[decode_model_name],
+                    ]
                     if col not in decode_df.columns
                 ]
                 if missing_decode_cols:
                     logger.info(
-                        "Skipping eager attn_decode training: missing decode feature columns %s",
+                        "Skipping eager %s training: missing decode feature columns %s",
+                        decode_model_name,
                         missing_decode_cols,
                     )
                 else:
-                    models["attn_decode"] = self._train_model(
-                        model_name="attn_decode",
+                    models[decode_model_name] = self._train_model(
+                        model_name=decode_model_name,
                         df=decode_df,
                         feature_cols=decode_feature_cols,
-                        target_col="time_stats.attn_decode.median",
+                        target_col=dense_attention_target_columns[decode_model_name],
                     )
             else:
-                logger.info("Skipping eager attn_decode training: no standard decode rows")
+                logger.info(
+                    "Skipping eager %s training: no standard decode rows",
+                    decode_model_name,
+                )
 
             mixed_feature_cols = [
                 "avg_seq_len",
@@ -3064,11 +3312,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "No standard decode rows found in kernel-only attention profiling data."
             )
 
-        models["attn_decode"] = self._train_model(
-            model_name="attn_decode",
+        models[decode_model_name] = self._train_model(
+            model_name=decode_model_name,
             df=decode_df,
-            feature_cols=["batch_size", "kv_cache_size"],
-            target_col="time_stats.attn_decode.median",
+            feature_cols=list(dense_attention_feature_columns[decode_model_name]),
+            target_col=dense_attention_target_columns[decode_model_name],
         )
         return models
 
@@ -3099,7 +3347,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     "attn_pre_proj",
                     "attn_post_proj",
                     "attn_rope",
-                    "attn_kv_cache_save",
+                    self._dense_attention_cache_write_op_name(),
                 ]
             )
 
@@ -3288,6 +3536,44 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         ]:
             return predictions
 
+        if self._is_mla_attention_family():
+            feature_columns = get_enabled_shared_predictor_feature_columns(
+                LATENT_MLA_ATTENTION_FAMILY
+            )
+            for model_name in get_enabled_predictor_metric_names(
+                LATENT_MLA_ATTENTION_FAMILY
+            ):
+                if model_name not in self._models:
+                    continue
+                model = self._models[model_name]
+                feature_names = getattr(model, "_frontier_feature_names", None)
+                if feature_names is None:
+                    feature_names = getattr(model, "feature_names_in_", None)
+                expected_feature_names = list(feature_columns[model_name])
+                if list(feature_names or []) != expected_feature_names:
+                    raise ValueError(
+                        "MLA attention model feature schema mismatch for "
+                        f"{model_name}: expected {expected_feature_names}, got "
+                        f"{list(feature_names or [])}"
+                    )
+                n_features = getattr(model, "n_features_in_", None)
+                if n_features is None:
+                    n_features = len(expected_feature_names)
+                if int(n_features) != len(expected_feature_names):
+                    raise ValueError(
+                        "MLA attention model feature count mismatch for "
+                        f"{model_name}: expected {len(expected_feature_names)}, "
+                        f"got {n_features}"
+                    )
+                predictions[model_name] = {
+                    "_on_demand_prediction": True,
+                    "_n_features": int(n_features),
+                    "_model": model,
+                    "_feature_names": expected_feature_names,
+                    "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
+                }
+            return predictions
+
         measurement_type = getattr(self, "_active_measurement_type", MeasurementType.CUDA_EVENT)
 
         # Cluster-specific needs with measurement-aware family split.
@@ -3316,7 +3602,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         decode_df = None
         prefill_df = None
 
-        if need_decode and "attn_decode" in self._models:
+        decode_op_name = self._dense_attention_decode_op_name()
+        prefill_op_name = self._dense_attention_prefill_op_name()
+
+        if need_decode and decode_op_name in self._models:
             decode_batch_size_range = np.arange(
                 1, self._config.prediction_max_batch_size + 1
             )
@@ -3335,13 +3624,13 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     ),
                 }
             )
-            predictions["attn_decode"] = self._get_model_prediction(
-                "attn_decode",
-                self._models["attn_decode"],
+            predictions[decode_op_name] = self._get_model_prediction(
+                decode_op_name,
+                self._models[decode_op_name],
                 decode_df[["batch_size", "kv_cache_size"]],
             )
 
-        if need_prefill and "attn_prefill" in self._models:
+        if need_prefill and prefill_op_name in self._models:
             prefill_kv_cache_size_range = np.arange(
                 0,
                 self._config.prediction_max_tokens_per_request + 1,
@@ -3364,9 +3653,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     ** 2,
                 }
             )
-            predictions["attn_prefill"] = self._get_model_prediction(
-                "attn_prefill",
-                self._models["attn_prefill"],
+            predictions[prefill_op_name] = self._get_model_prediction(
+                prefill_op_name,
+                self._models[prefill_op_name],
                 prefill_df[["kv_cache_size", "prefill_chunk_size_squared"]],
             )
 
@@ -3707,9 +3996,6 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         model = model_info.get("_model")
         feature_names = model_info.get("_feature_names", [])
 
-        if model is None:
-            raise ValueError(f"Model {model_name} has no trained model available")
-
         # Build feature vector in correct order.
         # Fail-fast if any required feature is missing (no silent defaults).
         missing = [fn for fn in feature_names if fn not in features]
@@ -3718,6 +4004,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"On-demand prediction missing required features for {model_name}: {missing}. "
                 f"Provided keys: {sorted(list(features.keys()))}"
             )
+
+        feature_key = tuple(float(features[fn]) for fn in feature_names)
+        exact_lookup = model_info.get("_exact_lookup") or {}
+        if feature_key in exact_lookup:
+            prediction = float(exact_lookup[feature_key])
+            self._runtime_cache[family_name][model_name][cache_key] = prediction
+            return prediction
+
+        if model is None:
+            raise ValueError(f"Model {model_name} has no trained model available")
 
         feature_vector = pd.DataFrame(
             [[features[fn] for fn in feature_names]],
@@ -3831,7 +4127,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             "attn_pre_proj",
             "attn_post_proj",
             "attn_rope",
-            "attn_kv_cache_save",
+            self._dense_attention_cache_write_op_name(),
         ]:
             return self._cluster_type in [
                 ClusterType.PREFILL,
@@ -3853,10 +4149,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 ClusterType.MONOLITHIC,
             ]
 
-        if operation in ["attn_prefill"]:
+        if operation == self._dense_attention_prefill_op_name():
             return self._cluster_type in [ClusterType.PREFILL, ClusterType.MONOLITHIC]
 
-        if operation in ["attn_decode"]:
+        if operation == self._dense_attention_decode_op_name():
             return self._cluster_type in [
                 ClusterType.DECODE_ATTN,
                 ClusterType.DECODE,
@@ -4949,15 +5245,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         return self._predictions["attn_rope"][(effective_tokens,)]
 
     def _get_attention_kv_cache_save_execution_time(self, batch: Batch) -> float:
-        if not self._supports_operation("attn_kv_cache_save"):
+        cache_write_op_name = self._dense_attention_cache_write_op_name()
+        if not self._supports_operation(cache_write_op_name):
             raise ValueError(
                 f"attention kv cache save operation not supported for cluster {self._cluster_type}"
             )
-        if "attn_kv_cache_save" not in self._predictions:
+        if cache_write_op_name not in self._predictions:
             raise ValueError(
                 f"attention kv cache save prediction cache not found for cluster {self._cluster_type}"
             )
-        prediction_info = self._predictions["attn_kv_cache_save"]
+        prediction_info = self._predictions[cache_write_op_name]
         if isinstance(prediction_info, dict) and prediction_info.get(
             "_on_demand_prediction", False
         ):
@@ -4971,7 +5268,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "kv_cache_size": kv_cache_size,
                 "batch_size": batch_size,
             }
-            raw_time = self._get_on_demand_prediction("attn_kv_cache_save", features)
+            raw_time = self._get_on_demand_prediction(cache_write_op_name, features)
             if getattr(batch, "num_prefill_tokens", 0) > 0:
                 prefill_phase_scale = self._get_optional_calibration_scale(
                     "_prefill_phase_attn_kv_cache_save_calibration_scale",
@@ -5031,16 +5328,17 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 return raw_time * mixed_scale
             return raw_time
 
-        if not self._supports_operation("attn_decode"):
+        decode_op_name = self._dense_attention_decode_op_name()
+        if not self._supports_operation(decode_op_name):
             raise ValueError(
                 f"attention decode operation not supported for cluster {self._cluster_type}"
             )
-        if "attn_decode" not in self._predictions:
+        if decode_op_name not in self._predictions:
             raise ValueError(
                 f"attention decode prediction cache not found for cluster {self._cluster_type}"
             )
 
-        raw_time = self._predictions["attn_decode"][
+        raw_time = self._predictions[decode_op_name][
             (decode_batch_size, decode_avg_kv_cache_size)
         ] * (
             1
@@ -5071,7 +5369,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"(num_prefill_tokens={batch.num_prefill_tokens}, num_tokens={batch.num_tokens})"
             )
 
-        if not self._supports_operation("attn_prefill"):
+        prefill_op_name = self._dense_attention_prefill_op_name()
+        if not self._supports_operation(prefill_op_name):
             raise ValueError(
                 f"attention prefill operation not supported for cluster {self._cluster_type}"
             )
@@ -5088,7 +5387,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 return self._get_on_demand_prediction("attn_prefill_mixed", features)
 
         # Fall back to original attn_prefill model for single-request prefill
-        if "attn_prefill" not in self._predictions:
+        if prefill_op_name not in self._predictions:
             raise ValueError(
                 f"attention prefill prediction cache not found for cluster {self._cluster_type}"
             )
@@ -5098,7 +5397,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         agg_kv_cache_size = sum(kv_cache_sizes)
         agg_prefill_chunk_size = sum([x**2 for x in prefill_chunk_sizes]) ** 0.5
 
-        return self._predictions["attn_prefill"][
+        return self._predictions[prefill_op_name][
             (agg_kv_cache_size, round(agg_prefill_chunk_size) ** 2)
         ] * (
             1
@@ -5150,11 +5449,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             features = self._get_spec_verify_prefill_mixed_features(verify_entries)
             return self._get_on_demand_prediction("attn_prefill_mixed", features)
 
-        if not self._supports_operation("attn_prefill"):
+        prefill_op_name = self._dense_attention_prefill_op_name()
+        if not self._supports_operation(prefill_op_name):
             raise ValueError(
                 f"attention prefill operation not supported for cluster {self._cluster_type}"
             )
-        if "attn_prefill" not in self._predictions:
+        if prefill_op_name not in self._predictions:
             raise ValueError(
                 f"attention prefill prediction cache not found for cluster {self._cluster_type}"
             )
@@ -5174,12 +5474,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             # dimension in this codebase. For speculative verify, query_len is
             # verify_tokens, so we map to verify_tokens**2 here.
             key = (int(kv_cache_size), int(verify_tokens**2))
-            if key not in self._predictions["attn_prefill"]:
+            if key not in self._predictions[prefill_op_name]:
                 raise ValueError(
                     "Speculative verify prefill key missing from attn_prefill cache: "
                     f"key={key}, request_id={request.id}, verify_tokens={verify_tokens}"
                 )
-            total_verify_prefill_time += self._predictions["attn_prefill"][key]
+            total_verify_prefill_time += self._predictions[prefill_op_name][key]
 
         return total_verify_prefill_time
 
@@ -5266,11 +5566,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
             return self._get_on_demand_prediction("attn_decode_in_mixed", features)
 
-        if not self._supports_operation("attn_decode"):
+        decode_op_name = self._dense_attention_decode_op_name()
+        if not self._supports_operation(decode_op_name):
             raise ValueError(
                 f"attention decode operation not supported for cluster {self._cluster_type}"
             )
-        if "attn_decode" not in self._predictions:
+        if decode_op_name not in self._predictions:
             raise ValueError(
                 f"attention decode prediction cache not found for cluster {self._cluster_type}"
             )
@@ -5287,13 +5588,13 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         ) * self._config.kv_cache_prediction_granularity
 
         key = (int(decode_batch_size), int(decode_avg_kv_cache_size))
-        if key not in self._predictions["attn_decode"]:
+        if key not in self._predictions[decode_op_name]:
             raise ValueError(
                 "Speculative decode key missing from attn_decode cache: "
                 f"key={key}, decode_batch_size={decode_batch_size}"
             )
 
-        raw_time = self._predictions["attn_decode"][key] * (
+        raw_time = self._predictions[decode_op_name][key] * (
             1
             + self._attention_decode_batching_overhead_fraction
             * int(decode_batch_size > 1)
@@ -5623,6 +5924,375 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     # New unified API implementation (Phase 0)
     # ========================================================================
 
+    @staticmethod
+    def _get_mla_batch_runtime_shape_components(batch: Batch) -> Dict[str, Any]:
+        requests = getattr(batch, "requests", None)
+        request_token_counts = getattr(batch, "num_tokens", None)
+        if not requests or request_token_counts is None:
+            raise ValueError(
+                "MLA exact-row prediction requires batch.requests and "
+                "batch.num_tokens to derive vLLM max_seqlen_k."
+            )
+        if not hasattr(request_token_counts, "__len__"):
+            raise ValueError(
+                "MLA exact-row prediction requires batch.num_tokens to be a "
+                f"per-request sequence, got {request_token_counts!r}."
+            )
+        if len(requests) != len(request_token_counts):
+            raise ValueError(
+                "MLA exact-row prediction requires one token count per request: "
+                f"requests={len(requests)}, num_tokens={len(request_token_counts)}"
+            )
+        missing_batch_fields = [
+            field
+            for field in (
+                "total_num_tokens",
+                "num_prefill_tokens",
+                "num_decode_tokens",
+            )
+            if not hasattr(batch, field)
+        ]
+        if missing_batch_fields:
+            missing_batch_attrs = [f"batch.{field}" for field in missing_batch_fields]
+            raise ValueError(
+                "MLA exact-row prediction requires batch token total fields: "
+                f"{missing_batch_attrs}."
+            )
+
+        max_seqlen_k = 0
+        batch_num_tokens = 0
+        current_tokens_by_request: list[tuple[Any, int]] = []
+        prefill_active_token_counts: list[int] = []
+        decode_active_token_counts: list[int] = []
+        for request, num_tokens in zip(requests, request_token_counts):
+            current_tokens = int(num_tokens)
+            if current_tokens <= 0:
+                raise ValueError(
+                    "MLA exact-row prediction requires positive per-request "
+                    f"token counts, got num_tokens={num_tokens}."
+                )
+            processed_tokens = getattr(request, "num_processed_tokens", None)
+            if processed_tokens is None:
+                raise ValueError(
+                    "MLA exact-row prediction requires request.num_processed_tokens "
+                    "to derive vLLM max_seqlen_k."
+                )
+            current_seq_len = int(processed_tokens) + current_tokens
+            if current_seq_len <= 0:
+                raise ValueError(
+                    "MLA exact-row prediction requires positive runtime sequence "
+                    f"lengths, got processed={processed_tokens}, "
+                    f"num_tokens={num_tokens}."
+                )
+            max_seqlen_k = max(max_seqlen_k, current_seq_len)
+            batch_num_tokens += current_tokens
+            current_tokens_by_request.append((request, current_tokens))
+            if not hasattr(request, "is_prefill_complete"):
+                raise ValueError(
+                    "MLA exact-row prediction requires request.is_prefill_complete "
+                    "to derive the current vLLM prefill/decode phase partition."
+                )
+            if bool(getattr(request, "is_prefill_complete")):
+                decode_active_token_counts.append(current_tokens)
+            else:
+                prefill_active_token_counts.append(current_tokens)
+
+        if int(getattr(batch, "total_num_tokens")) != batch_num_tokens:
+            raise ValueError(
+                "MLA exact-row prediction requires batch.total_num_tokens to match "
+                f"sum(batch.num_tokens): total_num_tokens="
+                f"{getattr(batch, 'total_num_tokens')}, "
+                f"sum_num_tokens={batch_num_tokens}."
+            )
+
+        batch_num_prefill_tokens = int(getattr(batch, "num_prefill_tokens"))
+        batch_num_decode_tokens = int(getattr(batch, "num_decode_tokens"))
+        if batch_num_prefill_tokens + batch_num_decode_tokens != batch_num_tokens:
+            raise ValueError(
+                "MLA exact-row prediction requires prefill/decode token counts to "
+                "sum to batch_num_tokens: "
+                f"prefill={batch_num_prefill_tokens}, decode={batch_num_decode_tokens}, "
+                f"batch_num_tokens={batch_num_tokens}."
+            )
+        prefill_active_token_sum = sum(prefill_active_token_counts)
+        decode_active_token_sum = sum(decode_active_token_counts)
+        if prefill_active_token_sum != batch_num_prefill_tokens:
+            raise ValueError(
+                "MLA exact-row prediction requires request.is_prefill_complete "
+                "partition to match batch.num_prefill_tokens: "
+                f"partition_prefill={prefill_active_token_sum}, "
+                f"batch_num_prefill_tokens={batch_num_prefill_tokens}."
+            )
+        if decode_active_token_sum != batch_num_decode_tokens:
+            raise ValueError(
+                "MLA exact-row prediction requires request.is_prefill_complete "
+                "partition to match batch.num_decode_tokens: "
+                f"partition_decode={decode_active_token_sum}, "
+                f"batch_num_decode_tokens={batch_num_decode_tokens}."
+            )
+
+        return {
+            "requests": requests,
+            "current_tokens_by_request": current_tokens_by_request,
+            "prefill_active_token_counts": prefill_active_token_counts,
+            "decode_active_token_counts": decode_active_token_counts,
+            "batch_size": len(requests),
+            "batch_num_tokens": batch_num_tokens,
+            "batch_num_prefill_tokens": batch_num_prefill_tokens,
+            "batch_num_decode_tokens": batch_num_decode_tokens,
+            "max_seqlen_k": max_seqlen_k,
+        }
+
+    @staticmethod
+    def _get_mla_runtime_dynamic_shape_features(batch: Batch) -> Dict[str, int]:
+        components = SklearnExecutionTimePredictor._get_mla_batch_runtime_shape_components(
+            batch
+        )
+        max_seqlen_q = max(
+            current_tokens
+            for _, current_tokens in components["current_tokens_by_request"]
+        )
+        batch_num_prefill_tokens = int(components["batch_num_prefill_tokens"])
+        max_seqlen_k = int(components["max_seqlen_k"])
+        batch_num_tokens = int(components["batch_num_tokens"])
+
+        return {
+            "batch_size": int(components["batch_size"]),
+            "batch_num_tokens": batch_num_tokens,
+            "batch_num_prefill_tokens": batch_num_prefill_tokens,
+            "batch_num_decode_tokens": int(components["batch_num_decode_tokens"]),
+            "max_seqlen_q": max_seqlen_q,
+            "max_seqlen_k": max_seqlen_k,
+            "num_actual_tokens": batch_num_tokens,
+            "is_prefill": int(batch_num_prefill_tokens > 0),
+            "max_seq_len": max_seqlen_k,
+        }
+
+    @staticmethod
+    def _get_mla_runtime_max_seq_len(batch: Batch) -> int:
+        return SklearnExecutionTimePredictor._get_mla_runtime_dynamic_shape_features(
+            batch
+        )["max_seqlen_k"]
+
+    @staticmethod
+    def _mla_operator_phase_kind(op_name: str) -> str:
+        for operator in LATENT_MLA_ATTENTION_FAMILY.predictor_ops():
+            if operator.name != op_name:
+                continue
+            if operator.role is AttentionOperatorRole.CACHE_WRITE:
+                return "cache_write"
+            if (
+                AttentionPhase.PREFILL in operator.phases
+                and AttentionPhase.DECODE not in operator.phases
+            ):
+                return "prefill"
+            if (
+                AttentionPhase.DECODE in operator.phases
+                and AttentionPhase.PREFILL not in operator.phases
+            ):
+                return "decode"
+            raise ValueError(
+                "Unsupported MLA operator phase contract for "
+                f"{op_name}: {operator.phases}"
+            )
+        raise ValueError(f"Unknown MLA predictor operator: {op_name}")
+
+    @staticmethod
+    def _is_mla_operator_applicable_to_batch(op_name: str, batch: Batch) -> bool:
+        phase_kind = SklearnExecutionTimePredictor._mla_operator_phase_kind(op_name)
+        if phase_kind == "cache_write":
+            return int(getattr(batch, "total_num_tokens")) > 0
+        if phase_kind == "prefill":
+            return int(getattr(batch, "num_prefill_tokens")) > 0
+        if phase_kind == "decode":
+            return int(getattr(batch, "num_decode_tokens")) > 0
+        raise ValueError(f"Unsupported MLA operator phase kind: {phase_kind}")
+
+    @staticmethod
+    def _get_mla_runtime_dynamic_shape_features_for_op(
+        batch: Batch,
+        op_name: str,
+    ) -> Dict[str, int]:
+        components = SklearnExecutionTimePredictor._get_mla_batch_runtime_shape_components(
+            batch
+        )
+        phase_kind = SklearnExecutionTimePredictor._mla_operator_phase_kind(op_name)
+        current_tokens_by_request = components["current_tokens_by_request"]
+        if phase_kind == "cache_write":
+            active_token_counts = [
+                current_tokens for _, current_tokens in current_tokens_by_request
+            ]
+            num_actual_tokens = int(components["batch_num_tokens"])
+        elif phase_kind == "prefill":
+            active_token_counts = list(components["prefill_active_token_counts"])
+            num_actual_tokens = int(components["batch_num_prefill_tokens"])
+        elif phase_kind == "decode":
+            active_token_counts = list(components["decode_active_token_counts"])
+            num_actual_tokens = int(components["batch_num_decode_tokens"])
+        else:
+            raise ValueError(f"Unsupported MLA operator phase kind: {phase_kind}")
+
+        if not active_token_counts or num_actual_tokens <= 0:
+            raise ValueError(
+                "MLA operator dynamic shape requested for an inactive operator: "
+                f"op_name={op_name}, phase_kind={phase_kind}, "
+                f"batch_num_prefill_tokens={components['batch_num_prefill_tokens']}, "
+                f"batch_num_decode_tokens={components['batch_num_decode_tokens']}."
+            )
+        active_token_sum = sum(active_token_counts)
+        if active_token_sum != num_actual_tokens:
+            raise ValueError(
+                "MLA operator dynamic shape active token sum must match "
+                f"num_actual_tokens for {op_name}: active_token_sum="
+                f"{active_token_sum}, num_actual_tokens={num_actual_tokens}."
+            )
+
+        max_seqlen_k = int(components["max_seqlen_k"])
+        return {
+            "batch_size": int(components["batch_size"]),
+            "batch_num_tokens": int(components["batch_num_tokens"]),
+            "batch_num_prefill_tokens": int(
+                components["batch_num_prefill_tokens"]
+            ),
+            "batch_num_decode_tokens": int(components["batch_num_decode_tokens"]),
+            "max_seqlen_q": max(active_token_counts),
+            "max_seqlen_k": max_seqlen_k,
+            "num_actual_tokens": num_actual_tokens,
+            "is_prefill": int(int(components["batch_num_prefill_tokens"]) > 0),
+            "max_seq_len": max_seqlen_k,
+        }
+
+    def _get_mla_imported_predictor_features(
+        self,
+        batch: Batch,
+        op_name: str | None = None,
+    ) -> Dict[str, float]:
+        feature_values: Dict[str, float] = {}
+        model_config = self._model_config
+        dynamic_shape_features = (
+            self._get_mla_runtime_dynamic_shape_features(batch)
+            if op_name is None
+            else self._get_mla_runtime_dynamic_shape_features_for_op(batch, op_name)
+        )
+        getters = {
+            "n_q_head": lambda: getattr(model_config, "num_q_heads"),
+            "n_kv_head": lambda: model_config.get_runtime_num_kv_heads()
+            if hasattr(model_config, "get_runtime_num_kv_heads")
+            else 1,
+            "head_size": lambda: model_config.get_runtime_head_size()
+            if hasattr(model_config, "get_runtime_head_size")
+            else int(getattr(model_config, "kv_lora_rank"))
+            + int(getattr(model_config, "qk_rope_head_dim")),
+            "qk_nope_head_dim": lambda: getattr(model_config, "qk_nope_head_dim"),
+            "qk_rope_head_dim": lambda: getattr(model_config, "qk_rope_head_dim"),
+            "qk_head_dim": lambda: model_config.get_qk_head_dim(),
+            "kv_lora_rank": lambda: getattr(model_config, "kv_lora_rank"),
+            "v_head_dim": lambda: getattr(model_config, "v_head_dim"),
+            "block_size": lambda: self._block_size,
+            "num_tensor_parallel_workers": lambda: (
+                self._replica_config.attn_tensor_parallel_size
+            ),
+            "batch_size": lambda: dynamic_shape_features["batch_size"],
+            "batch_num_tokens": lambda: dynamic_shape_features["batch_num_tokens"],
+            "batch_num_prefill_tokens": lambda: (
+                dynamic_shape_features["batch_num_prefill_tokens"]
+            ),
+            "batch_num_decode_tokens": lambda: (
+                dynamic_shape_features["batch_num_decode_tokens"]
+            ),
+            "max_seqlen_q": lambda: dynamic_shape_features["max_seqlen_q"],
+            "max_seqlen_k": lambda: dynamic_shape_features["max_seqlen_k"],
+            "num_actual_tokens": lambda: dynamic_shape_features["num_actual_tokens"],
+            "is_prefill": lambda: dynamic_shape_features["is_prefill"],
+            "max_seq_len": lambda: dynamic_shape_features["max_seq_len"],
+        }
+        feature_columns = get_enabled_predictor_feature_columns(
+            LATENT_MLA_ATTENTION_FAMILY
+        )
+        required_columns = next(iter(feature_columns.values()))
+        for column in required_columns:
+            try:
+                value = getters[column]()
+            except KeyError as exc:
+                raise ValueError(
+                    f"Unsupported MLA predictor feature column: {column!r}"
+                ) from exc
+            if value is None:
+                raise ValueError(
+                    f"MLA predictor feature {column!r} is not configured"
+                )
+            feature_values[column] = float(value)
+        return feature_values
+
+    def _get_mla_attention_operator_times(self, batch: Batch) -> AttentionOperatorTimes:
+        self._get_mla_batch_runtime_shape_components(batch)
+        feature_columns_by_op = get_enabled_predictor_feature_columns(
+            LATENT_MLA_ATTENTION_FAMILY
+        )
+        op_times: Dict[str, float] = {}
+        for op_name in get_enabled_predictor_metric_names(LATENT_MLA_ATTENTION_FAMILY):
+            if not self._is_mla_operator_applicable_to_batch(op_name, batch):
+                op_times[op_name] = 0.0
+                continue
+            features = self._get_mla_imported_predictor_features(batch, op_name)
+            model_info = self._predictions.get(op_name)
+            if not isinstance(model_info, dict) or not model_info.get(
+                "_on_demand_prediction"
+            ):
+                raise ValueError(
+                    "MLA predictor requires imported-row on-demand metadata for "
+                    f"{op_name}"
+                )
+            feature_names = list(model_info.get("_feature_names", ()))
+            expected_feature_names = list(feature_columns_by_op[op_name])
+            if feature_names != expected_feature_names:
+                raise ValueError(
+                    "MLA predictor feature schema mismatch for "
+                    f"{op_name}: expected {expected_feature_names}, got "
+                    f"{feature_names}"
+                )
+            exact_key = tuple(float(features[name]) for name in feature_names)
+            exact_lookup = model_info.get("_exact_lookup") or {}
+            if exact_key in exact_lookup:
+                op_times[op_name] = float(exact_lookup[exact_key])
+                continue
+
+            model = model_info.get("_model")
+            if model is None or getattr(model, "_frontier_model_hash", None) is None:
+                raise ValueError(
+                    f"No exact MLA profiling row for {op_name}: "
+                    f"features={dict(zip(feature_names, exact_key))}. "
+                    "No trained MLA prediction model is available for exact-miss "
+                    "prediction."
+                )
+            op_times[op_name] = self._get_on_demand_prediction(op_name, features)
+        return AttentionOperatorTimes(op_times)
+
+    def _predict_mla_attention_layer_time(
+        self,
+        batch: Batch,
+        layer_id: int,
+        cluster_type: ClusterType,
+    ) -> AttentionTime:
+        operator_times = self._get_mla_attention_operator_times(batch)
+        cluster_name = cluster_type.name
+        batch_input_lens = [req.num_prefill_tokens for req in batch.requests]
+        logger.info(
+            f"[OP-TRACE][{cluster_name}][ATTENTION] batch_id={batch.id}, layer_id={layer_id}, "
+            f"num_tokens={batch.total_num_tokens}, batch_size={len(batch.requests)}, "
+            f"batch_input_lens={batch_input_lens}, model_type=mla"
+        )
+        for op_name, predicted_time_ms in operator_times.op_times.items():
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][ATTENTION][{op_name}] batch_id={batch.id}, layer_id={layer_id}, "
+                f"predicted_time_ms={predicted_time_ms:.6f}"
+            )
+        logger.info(
+            f"[OP-TRACE][{cluster_name}][ATTENTION][TOTAL] batch_id={batch.id}, layer_id={layer_id}, "
+            f"total_attention_time_ms={operator_times.total_time():.6f}"
+        )
+        return AttentionTime(operator_times=operator_times)
+
     def predict_attention_layer_time(
         self, batch: Batch, layer_id: int, cluster_type: ClusterType
     ) -> AttentionTime:
@@ -5672,19 +6342,31 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Attention operations not supported for cluster type {cluster_type}"
             )
 
+        attention_family = self._get_attention_family()
+        attention_family.require_enabled_for_execution()
+        if attention_family.family_id == LATENT_MLA_ATTENTION_FAMILY.family_id:
+            return self._predict_mla_attention_layer_time(
+                batch=batch,
+                layer_id=layer_id,
+                cluster_type=cluster_type,
+            )
+
         logger.debug(
             f"Predicting attention layer time for layer_id={layer_id}, cluster_type={cluster_type}"
         )
 
         # Get individual operation times for detailed tracing
+        prefill_op_name = self._dense_attention_prefill_op_name()
+        decode_op_name = self._dense_attention_decode_op_name()
+        cache_write_op_name = self._dense_attention_cache_write_op_name()
         attn_prefill_time = (
             self._get_attention_prefill_execution_time(batch)
-            if batch.num_prefill_tokens > 0 and self._supports_operation("attn_prefill")
+            if batch.num_prefill_tokens > 0 and self._supports_operation(prefill_op_name)
             else 0.0
         )
         attn_decode_time = (
             self._get_attention_decode_execution_time(batch)
-            if batch.num_decode_tokens > 0 and self._supports_operation("attn_decode")
+            if batch.num_decode_tokens > 0 and self._supports_operation(decode_op_name)
             else 0.0
         )
 
@@ -5765,16 +6447,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
         if batch.num_prefill_tokens > 0:
             logger.info(
-                f"[OP-TRACE][{cluster_name}][ATTENTION][attn_prefill] batch_id={batch.id}, layer_id={layer_id}, "
+                f"[OP-TRACE][{cluster_name}][ATTENTION][{prefill_op_name}] batch_id={batch.id}, layer_id={layer_id}, "
                 f"predicted_time_ms={attn_prefill_time:.6f}"
             )
         if batch.num_decode_tokens > 0:
             logger.info(
-                f"[OP-TRACE][{cluster_name}][ATTENTION][attn_decode] batch_id={batch.id}, layer_id={layer_id}, "
+                f"[OP-TRACE][{cluster_name}][ATTENTION][{decode_op_name}] batch_id={batch.id}, layer_id={layer_id}, "
                 f"predicted_time_ms={attn_decode_time:.6f}"
             )
         logger.info(
-            f"[OP-TRACE][{cluster_name}][ATTENTION][attn_kv_cache_save] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][ATTENTION][{cache_write_op_name}] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={attn_kv_cache_save_time:.6f}"
         )
         logger.info(
@@ -6349,13 +7031,19 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             "attn_rope", attn_rope_time, self._cluster_type
         )
         attn_kv_save_time = quant_manager.adjust_compute_time(
-            "attn_kv_cache_save", attn_kv_save_time, self._cluster_type
+            self._dense_attention_cache_write_op_name(),
+            attn_kv_save_time,
+            self._cluster_type,
         )
         attn_decode_time = quant_manager.adjust_compute_time(
-            "attn_decode", attn_decode_time, self._cluster_type
+            self._dense_attention_decode_op_name(),
+            attn_decode_time,
+            self._cluster_type,
         )
         attn_prefill_time = quant_manager.adjust_compute_time(
-            "attn_prefill", attn_prefill_time, self._cluster_type
+            self._dense_attention_prefill_op_name(),
+            attn_prefill_time,
+            self._cluster_type,
         )
         attn_pre_proj_time = quant_manager.adjust_compute_time(
             "attn_pre_proj", attn_pre_proj_time, self._cluster_type
@@ -6428,6 +7116,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             pp_stage_boundary_handoff_time=pp_stage_boundary_handoff_time,
             decode_draft_proposer_time=decode_draft_proposer_time,
             mtp_terminal_overshoot_time=mtp_terminal_overshoot_time,
+            attention_operator_times=attention_time.operator_times,
         )
 
         # If num_layers is 1, return as-is
@@ -6474,4 +7163,5 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             mlp_layer_act_execution_time=base_execution_time._mlp_layer_act_execution_time,
             decode_draft_proposer_time=base_execution_time._decode_draft_proposer_time,
             mtp_terminal_overshoot_time=base_execution_time._mtp_terminal_overshoot_time,
+            attention_operator_times=base_execution_time.attention_operator_times,
         )

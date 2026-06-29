@@ -11,6 +11,15 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
 
+from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.ops import AttentionOperatorRole
+from frontier.attention.profiling_mapping import (
+    get_enabled_predictor_median_column_by_role,
+    get_enabled_predictor_median_columns,
+    get_enabled_predictor_metric_name_by_role,
+    get_enabled_predictor_metric_names,
+    get_enabled_shared_predictor_feature_columns,
+)
 from frontier.config import MetricsConfig, ClusterConfig, global_vars
 from frontier.types import ClusterType, CCBackendType, MeasurementType
 from frontier.execution_time_predictor.attention_tp_policy import (
@@ -1217,29 +1226,47 @@ class ExecutionTimePredictionModelManager:
         logger.info(f"Loaded {len(attention_df)} rows for attention core training")
         training_context['input_file'] = attn_file
         measurement_type = self._active_measurement_type
+        dense_attention_model_names = get_enabled_predictor_metric_names(
+            DENSE_ATTENTION_FAMILY
+        )
+        dense_attention_target_columns = dict(
+            zip(
+                dense_attention_model_names,
+                get_enabled_predictor_median_columns(DENSE_ATTENTION_FAMILY),
+            )
+        )
+        dense_attention_feature_columns = get_enabled_shared_predictor_feature_columns(
+            DENSE_ATTENTION_FAMILY
+        )
 
         # Train kv_cache_save model
-        kv_cache_model_signature = f"attn_kv_cache_save_{attention_signature}"
+        kv_cache_model_name = get_enabled_predictor_metric_name_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.CACHE_WRITE,
+        )
+        kv_cache_model_signature = f"{kv_cache_model_name}_{attention_signature}"
         if kv_cache_model_signature not in trained_model_signatures:
-            kv_cache_feature_cols = ["total_tokens", "kv_cache_size", "batch_size"]
+            kv_cache_feature_cols = list(
+                dense_attention_feature_columns[kv_cache_model_name]
+            )
             missing_cols = [
                 col for col in kv_cache_feature_cols if col not in attention_df.columns
             ]
             if missing_cols:
                 raise ValueError(
-                    f"Missing columns for attn_kv_cache_save training: {missing_cols}. "
+                    f"Missing columns for {kv_cache_model_name} training: {missing_cols}. "
                     "Re-run attention profiling with mixed-batch metadata."
                 )
-            models["attn_kv_cache_save"] = self._train_single_model(
-                model_name="attn_kv_cache_save",
+            models[kv_cache_model_name] = self._train_single_model(
+                model_name=kv_cache_model_name,
                 df=attention_df,
                 feature_cols=kv_cache_feature_cols,
-                target_col="time_stats.attn_kv_cache_save.median",
+                target_col=dense_attention_target_columns[kv_cache_model_name],
                 execution_time_predictor_config=execution_time_predictor_config,
                 training_context=training_context,
             )
             trained_model_signatures.add(kv_cache_model_signature)
-            logger.info(f"Trained attn_kv_cache_save for {cluster_type}")
+            logger.info(f"Trained {kv_cache_model_name} for {cluster_type}")
 
         # Split data for prefill and decode.
         # Mixed-batch prefill rows in attention_combined.csv use prefill_chunk_size=0,
@@ -1256,74 +1283,90 @@ class ExecutionTimePredictionModelManager:
                 )
             standard_prefill_df = prefill_df[prefill_df["prefill_chunk_size"] > 0].copy()
 
-            prefill_model_signature = f"attn_prefill_{attention_signature}"
+            prefill_model_name = get_enabled_predictor_metric_name_by_role(
+                DENSE_ATTENTION_FAMILY,
+                AttentionOperatorRole.PREFILL_KERNEL,
+            )
+            prefill_model_signature = f"{prefill_model_name}_{attention_signature}"
             if prefill_model_signature not in trained_model_signatures:
                 if len(standard_prefill_df) == 0:
                     raise ValueError(
                         "No standard prefill rows (prefill_chunk_size > 0) found in eager attention profiling data."
                     )
-                models["attn_prefill"] = self._train_single_model(
-                    model_name="attn_prefill",
+                models[prefill_model_name] = self._train_single_model(
+                    model_name=prefill_model_name,
                     df=standard_prefill_df,
-                    feature_cols=["kv_cache_size", "prefill_chunk_size_squared"],
-                    target_col="time_stats.attn_prefill.median",
+                    feature_cols=list(dense_attention_feature_columns[prefill_model_name]),
+                    target_col=dense_attention_target_columns[prefill_model_name],
                     execution_time_predictor_config=execution_time_predictor_config,
                     training_context=training_context,
                 )
                 trained_model_signatures.add(prefill_model_signature)
-                logger.info(f"Trained attn_prefill for {cluster_type}")
+                logger.info(f"Trained {prefill_model_name} for {cluster_type}")
 
-            decode_model_signature = f"attn_decode_{attention_signature}"
+            decode_model_name = get_enabled_predictor_metric_name_by_role(
+                DENSE_ATTENTION_FAMILY,
+                AttentionOperatorRole.DECODE_KERNEL,
+            )
+            decode_model_signature = f"{decode_model_name}_{attention_signature}"
             if decode_model_signature not in trained_model_signatures:
                 if len(decode_df) == 0:
                     logger.info(
-                        "Skipping eager attn_decode training for %s - no standard decode rows",
+                        "Skipping eager %s training for %s - no standard decode rows",
+                        decode_model_name,
                         cluster_type,
                     )
                 else:
-                    decode_feature_cols = ["batch_size", "kv_cache_size"]
+                    decode_feature_cols = list(
+                        dense_attention_feature_columns[decode_model_name]
+                    )
                     missing_decode_cols = [
                         col
                         for col in [
                             *decode_feature_cols,
-                            "time_stats.attn_decode.median",
+                            dense_attention_target_columns[decode_model_name],
                         ]
                         if col not in decode_df.columns
                     ]
                     if missing_decode_cols:
                         logger.info(
-                            "Skipping eager attn_decode training for %s - missing decode feature columns %s",
+                            "Skipping eager %s training for %s - missing decode feature columns %s",
+                            decode_model_name,
                             cluster_type,
                             missing_decode_cols,
                         )
                     else:
-                        models["attn_decode"] = self._train_single_model(
-                            model_name="attn_decode",
+                        models[decode_model_name] = self._train_single_model(
+                            model_name=decode_model_name,
                             df=decode_df,
                             feature_cols=decode_feature_cols,
-                            target_col="time_stats.attn_decode.median",
+                            target_col=dense_attention_target_columns[decode_model_name],
                             execution_time_predictor_config=execution_time_predictor_config,
                             training_context=training_context,
                         )
                         trained_model_signatures.add(decode_model_signature)
-                        logger.info(f"Trained eager attn_decode for {cluster_type}")
+                        logger.info(f"Trained eager {decode_model_name} for {cluster_type}")
         elif measurement_type == MeasurementType.KERNEL_ONLY:
-            decode_model_signature = f"attn_decode_{attention_signature}"
+            decode_model_name = get_enabled_predictor_metric_name_by_role(
+                DENSE_ATTENTION_FAMILY,
+                AttentionOperatorRole.DECODE_KERNEL,
+            )
+            decode_model_signature = f"{decode_model_name}_{attention_signature}"
             if decode_model_signature not in trained_model_signatures:
                 if len(decode_df) == 0:
                     raise ValueError(
                         "No standard decode rows found in kernel-only attention profiling data."
                     )
-                models["attn_decode"] = self._train_single_model(
-                    model_name="attn_decode",
+                models[decode_model_name] = self._train_single_model(
+                    model_name=decode_model_name,
                     df=decode_df,
-                    feature_cols=["batch_size", "kv_cache_size"],
-                    target_col="time_stats.attn_decode.median",
+                    feature_cols=list(dense_attention_feature_columns[decode_model_name]),
+                    target_col=dense_attention_target_columns[decode_model_name],
                     execution_time_predictor_config=execution_time_predictor_config,
                     training_context=training_context,
                 )
                 trained_model_signatures.add(decode_model_signature)
-                logger.info(f"Trained attn_decode for {cluster_type}")
+                logger.info(f"Trained {decode_model_name} for {cluster_type}")
         else:
             raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
 
@@ -1975,8 +2018,12 @@ class ExecutionTimePredictionModelManager:
             available_columns=df.columns,
         )
 
-        # Fill missing kv_cache_save column
-        for column in ["time_stats.attn_kv_cache_save.median"]:
+        # Fill missing cache-write column for older attention profiling CSVs.
+        cache_write_median_column = get_enabled_predictor_median_column_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.CACHE_WRITE,
+        )
+        for column in [cache_write_median_column]:
             if column not in df.columns:
                 df[column] = 0
             else:
@@ -1984,8 +2031,12 @@ class ExecutionTimePredictionModelManager:
 
         model_config = replica_config.model_config
         requested_tp = replica_config.attn_tensor_parallel_size
+        prefill_op_name = get_enabled_predictor_metric_name_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.PREFILL_KERNEL,
+        )
         effective_tp = resolve_effective_attention_tp_size(
-            op_name="attn_prefill",
+            op_name=prefill_op_name,
             requested_tp_size=requested_tp,
             num_kv_heads=model_config.num_kv_heads,
             cluster_type=cluster_type,

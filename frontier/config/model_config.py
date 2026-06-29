@@ -269,6 +269,17 @@ class BaseModelConfig(BaseFixedConfig):
     # If None, head_dim is computed as embedding_dim // num_q_heads
     head_dim: Optional[int] = None
 
+    # MLA topology fields. When use_mla is true, runtime KV cache semantics
+    # follow vLLM MLA: one latent KV head with cache head size
+    # kv_lora_rank + qk_rope_head_dim.
+    use_mla: bool = False
+    q_lora_rank: Optional[int] = None
+    kv_lora_rank: Optional[int] = None
+    qk_nope_head_dim: Optional[int] = None
+    qk_rope_head_dim: Optional[int] = None
+    qk_head_dim: Optional[int] = None
+    v_head_dim: Optional[int] = None
+
     # Default model precision from model config (e.g., torch_dtype in HF config)
     torch_dtype: str = "float16"
 
@@ -321,6 +332,33 @@ class BaseModelConfig(BaseFixedConfig):
                     "Step2Mini models require share_expert_dim to be set. "
                     f"Model: {self._model_name}"
                 )
+
+        if self.use_mla:
+            missing_mla_fields = [
+                field_name
+                for field_name in (
+                    "kv_lora_rank",
+                    "qk_nope_head_dim",
+                    "qk_rope_head_dim",
+                    "v_head_dim",
+                )
+                if getattr(self, field_name) is None
+            ]
+            if missing_mla_fields:
+                raise ValueError(
+                    "MLA model configuration requires fields: "
+                    f"{missing_mla_fields}"
+                )
+            if self.qk_head_dim is None:
+                self.qk_head_dim = self.qk_nope_head_dim + self.qk_rope_head_dim
+            expected_qk_head_dim = self.qk_nope_head_dim + self.qk_rope_head_dim
+            if self.qk_head_dim != expected_qk_head_dim:
+                raise ValueError(
+                    "qk_head_dim must equal qk_nope_head_dim + "
+                    "qk_rope_head_dim for MLA. "
+                    f"qk_head_dim={self.qk_head_dim}, "
+                    f"expected={expected_qk_head_dim}"
+                )
             # share_q_dim is optional but recommended for accurate inter_norm + wq modeling
 
     @property
@@ -366,6 +404,33 @@ class BaseModelConfig(BaseFixedConfig):
         if self.head_dim is not None:
             return self.head_dim
         return self.embedding_dim // self.num_q_heads
+
+    def uses_mla(self) -> bool:
+        """Return whether this model uses vLLM-style MLA cache semantics."""
+        return self.use_mla
+
+    def get_runtime_num_kv_heads(self) -> int:
+        """Return runtime KV heads for cache allocation."""
+        return 1 if self.use_mla else self.num_kv_heads
+
+    def get_runtime_head_size(self) -> int:
+        """Return runtime KV-cache head size."""
+        if self.use_mla:
+            if self.kv_lora_rank is None or self.qk_rope_head_dim is None:
+                raise ValueError(
+                    "MLA runtime head size requires kv_lora_rank and "
+                    "qk_rope_head_dim"
+                )
+            return self.kv_lora_rank + self.qk_rope_head_dim
+        return self.get_head_dim()
+
+    def get_qk_head_dim(self) -> int:
+        """Return the full QK head dimension."""
+        if self.use_mla:
+            if self.qk_head_dim is None:
+                raise ValueError("MLA qk_head_dim is not configured")
+            return self.qk_head_dim
+        return self.get_head_dim()
 
     def get_default_precision(self) -> PrecisionType:
         """Get default model precision derived from torch_dtype."""
@@ -596,6 +661,35 @@ class BaseModelConfig(BaseFixedConfig):
         if explicit_head_dim is not None:
             explicit_head_dim = int(explicit_head_dim)
 
+        use_mla = bool(
+            cfg.get("use_mla", False)
+            or (
+                model_type_lower
+                in {"deepseek_v2", "deepseek_v3", "deepseek_mtp", "kimi_k2"}
+                and cfg.get("kv_lora_rank") is not None
+            )
+        )
+        q_lora_rank = cfg.get("q_lora_rank")
+        kv_lora_rank = cfg.get("kv_lora_rank")
+        qk_nope_head_dim = cfg.get("qk_nope_head_dim")
+        qk_rope_head_dim = cfg.get("qk_rope_head_dim")
+        qk_head_dim = cfg.get("qk_head_dim")
+        v_head_dim = cfg.get("v_head_dim")
+        if q_lora_rank is not None:
+            q_lora_rank = int(q_lora_rank)
+        if kv_lora_rank is not None:
+            kv_lora_rank = int(kv_lora_rank)
+        if qk_nope_head_dim is not None:
+            qk_nope_head_dim = int(qk_nope_head_dim)
+        if qk_rope_head_dim is not None:
+            qk_rope_head_dim = int(qk_rope_head_dim)
+        if qk_head_dim is not None:
+            qk_head_dim = int(qk_head_dim)
+        elif qk_nope_head_dim is not None and qk_rope_head_dim is not None:
+            qk_head_dim = qk_nope_head_dim + qk_rope_head_dim
+        if v_head_dim is not None:
+            v_head_dim = int(v_head_dim)
+
         # Parse quantization configuration
         quant_config_dict = cfg.get("quantization_config")
         quantization_config = QuantizationConfig.from_dict(quant_config_dict)
@@ -625,6 +719,13 @@ class BaseModelConfig(BaseFixedConfig):
             share_q_dim=share_q_dim,
             norm_expert_weight=norm_expert_weight,
             head_dim=explicit_head_dim,
+            use_mla=use_mla,
+            q_lora_rank=q_lora_rank,
+            kv_lora_rank=kv_lora_rank,
+            qk_nope_head_dim=qk_nope_head_dim,
+            qk_rope_head_dim=qk_rope_head_dim,
+            qk_head_dim=qk_head_dim,
+            v_head_dim=v_head_dim,
             torch_dtype=torch_dtype,
             quantization_config=quantization_config,
             fused_add_norm_capability=fused_add_norm_capability,

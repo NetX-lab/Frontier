@@ -5,6 +5,11 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 
+from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.ops import AttentionOperatorRole
+from frontier.attention.profiling_mapping import (
+    get_enabled_predictor_metric_name_by_role,
+)
 from frontier.entities import Batch, ExecutionTime
 from frontier.entities.time_components import MoETime
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
@@ -2506,6 +2511,14 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         # Attention OP-TRACE: log per-layer attention op times
         et = base_execution_time
+        prefill_op_name = get_enabled_predictor_metric_name_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.PREFILL_KERNEL,
+        )
+        cache_write_op_name = get_enabled_predictor_metric_name_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.CACHE_WRITE,
+        )
         logger.info(
             f"[OP-TRACE][{cluster_name}][ATTENTION][input_layernorm] batch_id={batch.id}, "
             f"layer_id={layer_id}, predicted_time_ms={et._attn_norm_time:.6f}"
@@ -2519,11 +2532,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             f"layer_id={layer_id}, predicted_time_ms={et._attention_rope_execution_time:.6f}"
         )
         logger.info(
-            f"[OP-TRACE][{cluster_name}][ATTENTION][attn_prefill] batch_id={batch.id}, "
+            f"[OP-TRACE][{cluster_name}][ATTENTION][{prefill_op_name}] batch_id={batch.id}, "
             f"layer_id={layer_id}, predicted_time_ms={et._attention_prefill_execution_time:.6f}"
         )
         logger.info(
-            f"[OP-TRACE][{cluster_name}][ATTENTION][attn_kv_cache_save] batch_id={batch.id}, "
+            f"[OP-TRACE][{cluster_name}][ATTENTION][{cache_write_op_name}] batch_id={batch.id}, "
             f"layer_id={layer_id}, predicted_time_ms={et._attention_kv_cache_save_execution_time:.6f}"
         )
         logger.info(

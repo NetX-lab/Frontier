@@ -77,7 +77,10 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
                 "Install vllm or set PYTHONPATH to the vllm source tree."
             )
 
+        self.use_mla = bool(getattr(model_config, "use_mla", False))
         super().init(model_config, parallel_config, block_size, device)
+        if self.use_mla:
+            self._raise_mla_not_implemented()
 
         self.kv_cache_layout = get_kv_cache_layout()
         if self.kv_cache_layout == "NHD":
@@ -148,6 +151,14 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
 
         self.slot_mapping = None
 
+    def _raise_mla_not_implemented(self) -> None:
+        raise NotImplementedError(
+            "MLA profiling is not implemented in FlashinferAttentionWrapper. "
+            "The dense FlashInfer path cannot be reused for MLA latent KV cache "
+            "or vLLM V1 MLA physical scopes; add a dedicated MLA profiling "
+            "backend before enabling use_mla here."
+        )
+
     def to_int_tensor(self, data: List[int]) -> torch.Tensor:
         """Convert a list of integers to a CUDA tensor.
 
@@ -169,6 +180,8 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
         Returns:
             Cache block tensor with shape (num_blocks, 2, block_size, num_kv_heads, head_dim).
         """
+        if getattr(self, "use_mla", False):
+            self._raise_mla_not_implemented()
         return torch.randn(
             num_blocks,
             2,
@@ -359,6 +372,8 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
             Output tensor.
         """
         assert self.is_metadata_initialized, "Metadata is not initialized."
+        if getattr(self, "use_mla", False):
+            self._raise_mla_not_implemented()
 
         if self.is_profiling_iteration:
             # there is no need to call attention in profiling mode

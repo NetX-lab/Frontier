@@ -4,6 +4,8 @@ import math
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
+from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.ops import AttentionOperatorRole
 from frontier.config import get_quantization_manager
 from frontier.config.model_config import BaseModelConfig
 from frontier.config.precision_type import PrecisionType
@@ -38,6 +40,41 @@ class OpTraceContext:
         # Use model_config.get_head_dim() to prioritize explicit head_dim from JSON config
         # This ensures consistency with the profiling module's ModelConfig.get_head_size()
         return self.model_config.get_head_dim()
+
+    @property
+    def uses_mla(self) -> bool:
+        uses_mla = getattr(self.model_config, "uses_mla", None)
+        if callable(uses_mla):
+            return bool(uses_mla())
+        return bool(getattr(self.model_config, "use_mla", False))
+
+    @property
+    def runtime_num_kv_heads(self) -> int:
+        if not self.uses_mla:
+            return self.num_kv_heads
+        getter = getattr(self.model_config, "get_runtime_num_kv_heads", None)
+        if not callable(getter):
+            raise ValueError(
+                "MLA trace metadata requires model_config.get_runtime_num_kv_heads()"
+            )
+        return int(getter())
+
+    @property
+    def runtime_head_size(self) -> int:
+        if not self.uses_mla:
+            return self.head_dim
+        getter = getattr(self.model_config, "get_runtime_head_size", None)
+        if not callable(getter):
+            raise ValueError(
+                "MLA trace metadata requires model_config.get_runtime_head_size()"
+            )
+        return int(getter())
+
+    def require_mla_dim(self, attr_name: str) -> int:
+        value = getattr(self.model_config, attr_name, None)
+        if value is None:
+            raise ValueError(f"MLA trace metadata requires {attr_name}")
+        return int(value)
 
     @property
     def intermediate_size(self) -> int:
@@ -144,6 +181,22 @@ def _bytes_for_elements(num_elements: int, dtype_bytes: float) -> int:
     return int(math.ceil(num_elements * dtype_bytes))
 
 
+def _get_dense_attention_op_name_by_role(role: AttentionOperatorRole) -> str:
+    matches = tuple(
+        operator.name
+        for operator in DENSE_ATTENTION_FAMILY.e2e_trace_ops()
+        if operator.role is role
+    )
+    if len(matches) != 1:
+        raise ValueError(
+            "Expected exactly one E2E trace operator for role "
+            f"{role.value!r} in attention family "
+            f"{DENSE_ATTENTION_FAMILY.family_id!r}; found {len(matches)}: "
+            f"{list(matches)}"
+        )
+    return matches[0]
+
+
 def _get_pre_routing_tokens(tokens: int, ctx: OpTraceContext) -> int:
     if not ctx.model_config.is_moe:
         return tokens
@@ -196,6 +249,9 @@ def compute_op_trace_meta(
     intermediate_size = ctx.intermediate_size
 
     attention_meta: Optional[Tuple[int, int, int, int]] = None
+    mla_attention_meta: Optional[
+        Tuple[int, int, int, int, int, int, int, int, int]
+    ] = None
 
     def _get_attention_meta() -> Tuple[int, int, int, int]:
         nonlocal attention_meta
@@ -222,6 +278,71 @@ def compute_op_trace_meta(
             attention_meta = (head_dim, q_heads_per_tp, kv_heads_per_tp, hidden_size_per_tp)
         return attention_meta
 
+    def _get_mla_attention_meta() -> Tuple[int, int, int, int, int, int, int, int, int]:
+        nonlocal mla_attention_meta
+        if mla_attention_meta is None:
+            if not ctx.uses_mla:
+                raise ValueError("MLA trace metadata requires use_mla=True")
+            _validate_divisible(ctx.num_q_heads, ctx.attn_tp, "num_q_heads")
+            _validate_divisible(hidden_size, ctx.attn_tp, "hidden_size")
+
+            runtime_num_kv_heads = ctx.runtime_num_kv_heads
+            if runtime_num_kv_heads <= 0:
+                raise ValueError(
+                    f"runtime_num_kv_heads must be positive: {runtime_num_kv_heads}"
+                )
+            if runtime_num_kv_heads >= ctx.attn_tp:
+                _validate_divisible(
+                    runtime_num_kv_heads,
+                    ctx.attn_tp,
+                    "runtime_num_kv_heads",
+                )
+                runtime_kv_heads_per_tp = runtime_num_kv_heads // ctx.attn_tp
+            else:
+                if ctx.attn_tp % runtime_num_kv_heads != 0:
+                    raise ValueError(
+                        "MLA runtime_num_kv_heads replication requires attn_tp "
+                        "to be divisible by runtime_num_kv_heads"
+                    )
+                runtime_kv_heads_per_tp = 1
+
+            kv_lora_rank = ctx.require_mla_dim("kv_lora_rank")
+            qk_nope_head_dim = ctx.require_mla_dim("qk_nope_head_dim")
+            qk_rope_head_dim = ctx.require_mla_dim("qk_rope_head_dim")
+            qk_head_dim = ctx.require_mla_dim("qk_head_dim")
+            v_head_dim = ctx.require_mla_dim("v_head_dim")
+            runtime_head_size = ctx.runtime_head_size
+
+            if qk_head_dim != qk_nope_head_dim + qk_rope_head_dim:
+                raise ValueError(
+                    "MLA qk_head_dim must equal qk_nope_head_dim + "
+                    f"qk_rope_head_dim: qk_head_dim={qk_head_dim}, "
+                    f"qk_nope_head_dim={qk_nope_head_dim}, "
+                    f"qk_rope_head_dim={qk_rope_head_dim}"
+                )
+            if runtime_head_size != kv_lora_rank + qk_rope_head_dim:
+                raise ValueError(
+                    "MLA runtime_head_size must equal kv_lora_rank + "
+                    f"qk_rope_head_dim: runtime_head_size={runtime_head_size}, "
+                    f"kv_lora_rank={kv_lora_rank}, "
+                    f"qk_rope_head_dim={qk_rope_head_dim}"
+                )
+
+            q_heads_per_tp = ctx.num_q_heads // ctx.attn_tp
+            hidden_size_per_tp = hidden_size // ctx.attn_tp
+            mla_attention_meta = (
+                q_heads_per_tp,
+                runtime_kv_heads_per_tp,
+                hidden_size_per_tp,
+                kv_lora_rank,
+                qk_nope_head_dim,
+                qk_rope_head_dim,
+                qk_head_dim,
+                v_head_dim,
+                runtime_head_size,
+            )
+        return mla_attention_meta
+
     tensor_shape: Dict[str, Any] = {}
     tensor_size_bytes: Dict[str, int] = {}
 
@@ -243,7 +364,10 @@ def compute_op_trace_meta(
                 "q_out": [tokens, q_heads_per_tp, head_dim],
                 "k_out": [tokens, kv_heads_per_tp, head_dim],
             }
-        elif op_name in ("attn_prefill", "attn_decode"):
+        elif op_name in (
+            _get_dense_attention_op_name_by_role(AttentionOperatorRole.PREFILL_KERNEL),
+            _get_dense_attention_op_name_by_role(AttentionOperatorRole.DECODE_KERNEL),
+        ):
             head_dim, q_heads_per_tp, kv_heads_per_tp, hidden_size_per_tp = _get_attention_meta()
             tensor_shape = {
                 "q": [tokens, q_heads_per_tp, head_dim],
@@ -251,11 +375,93 @@ def compute_op_trace_meta(
                 "v": [tokens, kv_heads_per_tp, head_dim],
                 "output": [tokens, hidden_size_per_tp],
             }
-        elif op_name == "attn_kv_cache_save":
+        elif op_name == _get_dense_attention_op_name_by_role(
+            AttentionOperatorRole.CACHE_WRITE
+        ):
             head_dim, _, kv_heads_per_tp, _ = _get_attention_meta()
             tensor_shape = {
                 "k": [tokens, kv_heads_per_tp, head_dim],
                 "v": [tokens, kv_heads_per_tp, head_dim],
+            }
+        elif op_name == "attn_mla_kv_cache_save":
+            (
+                _q_heads_per_tp,
+                runtime_kv_heads_per_tp,
+                _hidden_size_per_tp,
+                _kv_lora_rank,
+                _qk_nope_head_dim,
+                _qk_rope_head_dim,
+                _qk_head_dim,
+                _v_head_dim,
+                runtime_head_size,
+            ) = _get_mla_attention_meta()
+            tensor_shape = {
+                "kv": [tokens, runtime_kv_heads_per_tp, runtime_head_size],
+            }
+        elif op_name == "attn_mla_prefill_kv_up_proj":
+            (
+                q_heads_per_tp,
+                runtime_kv_heads_per_tp,
+                _hidden_size_per_tp,
+                kv_lora_rank,
+                qk_nope_head_dim,
+                _qk_rope_head_dim,
+                _qk_head_dim,
+                v_head_dim,
+                _runtime_head_size,
+            ) = _get_mla_attention_meta()
+            tensor_shape = {
+                "latent_kv": [tokens, runtime_kv_heads_per_tp, kv_lora_rank],
+                "k_nope_v": [tokens, q_heads_per_tp, qk_nope_head_dim + v_head_dim],
+            }
+        elif op_name in ("attn_mla_prefill", "attn_mla_decode"):
+            (
+                q_heads_per_tp,
+                runtime_kv_heads_per_tp,
+                hidden_size_per_tp,
+                _kv_lora_rank,
+                _qk_nope_head_dim,
+                _qk_rope_head_dim,
+                qk_head_dim,
+                _v_head_dim,
+                runtime_head_size,
+            ) = _get_mla_attention_meta()
+            tensor_shape = {
+                "q": [tokens, q_heads_per_tp, qk_head_dim],
+                "latent_kv": [tokens, runtime_kv_heads_per_tp, runtime_head_size],
+                "output": [tokens, hidden_size_per_tp],
+            }
+        elif op_name == "attn_mla_decode_q_latent_proj":
+            (
+                q_heads_per_tp,
+                _runtime_kv_heads_per_tp,
+                _hidden_size_per_tp,
+                _kv_lora_rank,
+                qk_nope_head_dim,
+                _qk_rope_head_dim,
+                _qk_head_dim,
+                _v_head_dim,
+                _runtime_head_size,
+            ) = _get_mla_attention_meta()
+            tensor_shape = {
+                "input": [tokens, hidden_size],
+                "q_nope": [tokens, q_heads_per_tp, qk_nope_head_dim],
+            }
+        elif op_name == "attn_mla_v_up_proj":
+            (
+                q_heads_per_tp,
+                _runtime_kv_heads_per_tp,
+                hidden_size_per_tp,
+                _kv_lora_rank,
+                _qk_nope_head_dim,
+                _qk_rope_head_dim,
+                _qk_head_dim,
+                v_head_dim,
+                _runtime_head_size,
+            ) = _get_mla_attention_meta()
+            tensor_shape = {
+                "input": [tokens, q_heads_per_tp, v_head_dim],
+                "output": [tokens, hidden_size_per_tp],
             }
         elif op_name == "attn_post_proj":
             _, _, _, hidden_size_per_tp = _get_attention_meta()

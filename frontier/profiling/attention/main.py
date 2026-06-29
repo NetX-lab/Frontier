@@ -49,11 +49,16 @@ from frontier.config.precision_type import PrecisionType
 # Conditionally import ray - only needed when not using --disable_ray
 try:
     import ray
+
     RAY_AVAILABLE = True
 except ImportError:
     RAY_AVAILABLE = False
     ray = None
 
+from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.profiling_mapping import (
+    validate_attention_profiling_dataframe,
+)
 from frontier.profiling.attention.backends import AttentionBackend
 from frontier.profiling.common.parallel_config import ParallelConfig
 
@@ -464,8 +469,19 @@ def parse_args():
     parser.add_argument(
         "--attention_backend",
         default=AttentionBackend.FLASHINFER.value,
-        choices=[e.value for e in AttentionBackend],
+        choices=[e.value for e in AttentionBackend] + ["FLASHINFER_MLA"],
         help="The attention backend to profile (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--vllm_mla_cuda_op_log",
+        type=Path,
+        default=None,
+        help=(
+            "Import measured vLLM FlashInfer MLA CUDA op rows from cuda_ops.jsonl "
+            "and write a Frontier-compatible attention profiling CSV. This is an "
+            "explicit truth-source import path, not a replacement for native dense "
+            "FlashInfer profiling."
+        ),
     )
     parser.add_argument(
         "--precision",
@@ -759,6 +775,26 @@ def _validate_cli_conflicts(args: argparse.Namespace) -> None:
             "It is only valid for co-location mixed-batch profiling and cannot be combined with "
             "--profile_only_prefill or --profile_only_decode."
         )
+    if args.attention_backend == "FLASHINFER_MLA" and args.vllm_mla_cuda_op_log is None:
+        raise ValueError(
+            "--attention_backend FLASHINFER_MLA requires --vllm_mla_cuda_op_log. "
+            "Frontier does not yet provide a native FlashInfer MLA profiling backend."
+        )
+    if args.vllm_mla_cuda_op_log is not None:
+        if len(args.models) != 1:
+            raise ValueError("--vllm_mla_cuda_op_log requires exactly one model.")
+        if len(args.num_tensor_parallel_workers) != 1:
+            raise ValueError(
+                "--vllm_mla_cuda_op_log requires exactly one tensor parallel size."
+            )
+        if args.attention_backend != "FLASHINFER_MLA":
+            raise ValueError(
+                "--vllm_mla_cuda_op_log requires --attention_backend FLASHINFER_MLA."
+            )
+        if args.enable_mixed_prefill or args.enable_true_mixed:
+            raise ValueError(
+                "--vllm_mla_cuda_op_log cannot be combined with mixed profiling modes."
+            )
 
 
 def _attach_attention_output_metadata(
@@ -778,6 +814,85 @@ def _attach_attention_output_metadata(
     output_df["quant_signature"] = quant_signature
     output_df["measurement_type"] = measurement_type
     return output_df
+
+
+def _prepare_standard_attention_output_dataframe(
+    df: pd.DataFrame,
+    *,
+    precision_str: str,
+    model_arch: str,
+    quant_signature: str,
+    measurement_type: str,
+) -> pd.DataFrame:
+    output_df = _attach_attention_output_metadata(
+        df,
+        precision_str=precision_str,
+        model_arch=model_arch,
+        quant_signature=quant_signature,
+        measurement_type=measurement_type,
+    )
+    validate_attention_profiling_dataframe(
+        output_df,
+        DENSE_ATTENTION_FAMILY,
+        measurement_type=measurement_type,
+    )
+    return output_df
+
+
+def _run_vllm_mla_profile_import(args: argparse.Namespace) -> Path:
+    """Import vLLM MLA measured rows into the canonical attention profiling CSV."""
+
+    from frontier.profiling.attention.vllm_mla_profile_importer import (
+        build_frontier_mla_profile_dataframe,
+        build_mla_profile_groundtruth_comparison,
+        load_vllm_mla_rows,
+    )
+
+    _validate_cli_conflicts(args)
+    model = args.models[0]
+    precision_str = str(args.precision or "BF16").lower()
+    model_arch = str(getattr(args, "model_arch", None) or "deepseek_v2")
+    measurement_type = profile_method_to_measurement_type(args.profile_method).value
+
+    vllm_rows = load_vllm_mla_rows(args.vllm_mla_cuda_op_log)
+    df = build_frontier_mla_profile_dataframe(
+        vllm_rows,
+        model_name=model,
+        model_arch=model_arch,
+        precision=precision_str,
+        quant_signature="none",
+        measurement_type=measurement_type,
+        num_tensor_parallel_workers=args.num_tensor_parallel_workers[0],
+        max_model_len=args.max_model_len,
+    )
+    df = _attach_attention_output_metadata(
+        df,
+        precision_str=precision_str,
+        model_arch=model_arch,
+        quant_signature="none",
+        measurement_type=measurement_type,
+    )
+
+    output_file = build_profile_method_output_path(
+        output_root=args.output_dir,
+        profiling_type="compute",
+        hardware=args.device,
+        model_name=model,
+        op_name="attention",
+        profile_method=args.profile_method,
+    )
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(output_file, index=False)
+    comparison_file = output_file.with_name(
+        f"{output_file.stem}_vllm_mla_groundtruth_comparison.csv"
+    )
+    # This is an import round-trip check against the same vLLM rows, not an
+    # independent simulator-accuracy benchmark.
+    comparison_df = build_mla_profile_groundtruth_comparison(vllm_rows, df)
+    comparison_df.to_csv(comparison_file, index=False)
+    print(f"Saved vLLM MLA imported attention results to {output_file}")
+    print(f"Saved vLLM MLA groundtruth comparison to {comparison_file}")
+    return output_file
 
 
 def _normalize_partition_contract(
@@ -1427,6 +1542,10 @@ def profile_true_mixed_batches(
 def main():
     args = parse_args()
     _validate_cli_conflicts(args)
+    if args.vllm_mla_cuda_op_log is not None:
+        _run_vllm_mla_profile_import(args)
+        return
+
     if args.attention_backend == AttentionBackend.FLASHINFER.value:
         require_profiling_dependencies("attention", ("torch", "vllm", "flashinfer"))
     else:
@@ -1740,7 +1859,7 @@ def main():
 
         # Save standard attention results
         if not result_df.empty:
-            result_df = _attach_attention_output_metadata(
+            result_df = _prepare_standard_attention_output_dataframe(
                 result_df,
                 precision_str=precision_str,
                 model_arch=model_arch,

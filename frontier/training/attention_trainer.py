@@ -15,6 +15,15 @@ from typing import Dict, List
 import pandas as pd
 from sklearn.base import BaseEstimator
 
+from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.ops import AttentionOperatorRole
+from frontier.attention.profiling_mapping import (
+    get_enabled_predictor_feature_columns,
+    get_enabled_predictor_median_column_by_role,
+    get_enabled_predictor_median_columns,
+    get_enabled_predictor_metric_names,
+    get_enabled_predictor_required_feature_columns,
+)
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
@@ -45,6 +54,25 @@ class AttentionTrainer(BaseTrainer):
         "input_layernorm",
         # "add" is conditionally included based on norm type — see _get_model_names()
     ]
+    DENSE_LAYER_MODELS = list(get_enabled_predictor_metric_names(DENSE_ATTENTION_FAMILY))
+    DENSE_LAYER_TARGET_COLUMNS = list(
+        get_enabled_predictor_median_columns(DENSE_ATTENTION_FAMILY)
+    )
+    DENSE_LAYER_TARGET_COLUMN_BY_MODEL = dict(
+        zip(DENSE_LAYER_MODELS, DENSE_LAYER_TARGET_COLUMNS)
+    )
+    DENSE_LAYER_FEATURE_COLUMNS = get_enabled_predictor_feature_columns(
+        DENSE_ATTENTION_FAMILY
+    )
+    DENSE_LAYER_REQUIRED_FEATURE_COLUMNS = get_enabled_predictor_required_feature_columns(
+        DENSE_ATTENTION_FAMILY
+    )
+    DENSE_LAYER_CACHE_WRITE_TARGET_COLUMN = (
+        get_enabled_predictor_median_column_by_role(
+            DENSE_ATTENTION_FAMILY,
+            AttentionOperatorRole.CACHE_WRITE,
+        )
+    )
 
     def __init__(
         self,
@@ -182,8 +210,8 @@ class AttentionTrainer(BaseTrainer):
         
         logger.info(f"Original layer data: {len(df)} rows, {len(df.columns)} columns")
         
-        # Fill missing kv_cache_save column
-        for column in ["time_stats.attn_kv_cache_save.median"]:
+        # Fill missing cache-write column for older attention profiling CSVs.
+        for column in [self.DENSE_LAYER_CACHE_WRITE_TARGET_COLUMN]:
             if column not in df.columns:
                 df[column] = 0
             else:
@@ -441,14 +469,9 @@ class AttentionTrainer(BaseTrainer):
     def _verify_layer_dataset_columns(self, df: pd.DataFrame):
         """Verify that layer dataset has all required columns."""
         required_columns = [
-            "num_tokens",
             "is_decode",
-            "prefill_chunk_size_squared",
-            "kv_cache_size",
-            "batch_size",
-            "time_stats.attn_kv_cache_save.median",
-            "time_stats.attn_prefill.median",
-            "time_stats.attn_decode.median",
+            *self.DENSE_LAYER_REQUIRED_FEATURE_COLUMNS,
+            *self.DENSE_LAYER_TARGET_COLUMNS,
         ]
         
         missing_columns = [col for col in required_columns if col not in df.columns]
@@ -473,9 +496,7 @@ class AttentionTrainer(BaseTrainer):
         # Layer models (always trained) - 4 models
         model_names = [
             # Layer models (3)
-            "attn_kv_cache_save",
-            "attn_prefill",
-            "attn_decode",
+            *self.DENSE_LAYER_MODELS,
             # Mixed-batch model (1, optional - depends on data availability)
             "attn_prefill_mixed",
             # True mixed decode model (1, optional - depends on data availability)
@@ -513,14 +534,8 @@ class AttentionTrainer(BaseTrainer):
             return ["num_tokens"]
         
         # Layer models have different features
-        elif model_name == "attn_kv_cache_save":
-            return ["num_tokens"]
-        
-        elif model_name == "attn_prefill":
-            return ["kv_cache_size", "prefill_chunk_size_squared"]
-        
-        elif model_name == "attn_decode":
-            return ["batch_size", "kv_cache_size"]
+        elif model_name in self.DENSE_LAYER_FEATURE_COLUMNS:
+            return list(self.DENSE_LAYER_FEATURE_COLUMNS[model_name])
         
         elif model_name == "attn_prefill_mixed":
             # Mixed-batch prefill uses rich feature set
@@ -572,7 +587,10 @@ class AttentionTrainer(BaseTrainer):
             return "time_stats.attn_prefill.median"
         if model_name == "attn_decode_in_mixed":
             return "time_stats.attn_decode.median"
-        
+
+        if model_name in self.DENSE_LAYER_TARGET_COLUMN_BY_MODEL:
+            return self.DENSE_LAYER_TARGET_COLUMN_BY_MODEL[model_name]
+
         return f"time_stats.{model_name}.median"
 
     def train(self) -> Dict[str, BaseEstimator]:

@@ -139,6 +139,7 @@ class RecordFunctionTracer:
                 "mean": np.mean(times),
                 "median": np.median(times),
                 "std": np.std(times),
+                "count": len(times),
             }
             for operation, times in per_operation_times_ms.items()
         }

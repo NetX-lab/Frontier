@@ -55,6 +55,95 @@ def _build_context(is_moe: bool = False, tokens_are_post_routing: bool = False):
     )
 
 
+def _build_mla_context():
+    from frontier.metrics.op_trace_utils import OpTraceContext
+    from frontier.types import ClusterType
+
+    _reset_quantization()
+
+    model_config = MagicMock()
+    model_config.embedding_dim = 16
+    model_config.num_q_heads = 4
+    model_config.num_kv_heads = 1
+    model_config.mlp_hidden_dim = 32
+    model_config.num_experts = 0
+    model_config.num_experts_per_tok = 0
+    model_config.is_moe = False
+    model_config.use_mla = True
+    model_config.kv_lora_rank = 6
+    model_config.qk_nope_head_dim = 3
+    model_config.qk_rope_head_dim = 2
+    model_config.qk_head_dim = 5
+    model_config.v_head_dim = 4
+    model_config.get_head_dim = MagicMock(return_value=4)
+    model_config.uses_mla = MagicMock(return_value=True)
+    model_config.get_runtime_num_kv_heads = MagicMock(return_value=1)
+    model_config.get_runtime_head_size = MagicMock(return_value=8)
+    model_config.get_qk_head_dim = MagicMock(return_value=5)
+
+    replica_config = MagicMock()
+    replica_config.attn_tensor_parallel_size = 2
+    replica_config.attn_data_parallel_size = 1
+    replica_config.moe_tensor_parallel_size = 1
+    replica_config.moe_expert_parallel_size = 1
+    replica_config.num_pipeline_stages = 1
+    replica_config.router_topk = 1
+
+    return OpTraceContext(
+        cluster_type=ClusterType.MONOLITHIC,
+        model_config=model_config,
+        replica_config=replica_config,
+        total_tokens=8,
+        effective_tokens_compute=8,
+        effective_tokens_transfer=8,
+        effective_tokens_rounded=8,
+        tokens_are_post_routing=False,
+    )
+
+
+def test_mla_attention_trace_metadata_uses_latent_runtime_shapes():
+    from frontier.metrics.op_trace_utils import compute_op_trace_meta
+
+    ctx = _build_mla_context()
+    expected_shapes = {
+        "attn_mla_kv_cache_save": {
+            "kv": [8, 1, 8],
+        },
+        "attn_mla_prefill_kv_up_proj": {
+            "latent_kv": [8, 1, 6],
+            "k_nope_v": [8, 2, 7],
+        },
+        "attn_mla_prefill": {
+            "q": [8, 2, 5],
+            "latent_kv": [8, 1, 8],
+            "output": [8, 8],
+        },
+        "attn_mla_decode_q_latent_proj": {
+            "input": [8, 16],
+            "q_nope": [8, 2, 3],
+        },
+        "attn_mla_decode": {
+            "q": [8, 2, 5],
+            "latent_kv": [8, 1, 8],
+            "output": [8, 8],
+        },
+        "attn_mla_v_up_proj": {
+            "input": [8, 2, 4],
+            "output": [8, 8],
+        },
+    }
+
+    for op_name, tensor_shape in expected_shapes.items():
+        meta = compute_op_trace_meta(op_name, "COMPUTE", ctx)
+
+        assert meta["precision_op"] == op_name
+        assert meta["dtype"] == "FP16"
+        assert meta["dtype_bytes"] == 2
+        assert meta["tensor_shape"] == tensor_shape
+        assert set(meta["tensor_size_bytes"]) == set(tensor_shape)
+        assert all(size_bytes > 0 for size_bytes in meta["tensor_size_bytes"].values())
+
+
 def test_compute_attn_pre_proj_shapes():
     from frontier.metrics.op_trace_utils import compute_op_trace_meta
 

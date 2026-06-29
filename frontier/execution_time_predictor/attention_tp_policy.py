@@ -2,15 +2,26 @@ from __future__ import annotations
 
 from typing import Optional, Set
 
+from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.ops import AttentionOperatorRole
 from frontier.types import ClusterType
 
-ATTENTION_NON_LINEAR_OPS = frozenset(
-    {
-        "attn_prefill",
-        "attn_decode",
-        "attn_kv_cache_save",
-    }
-)
+
+def get_attention_non_linear_tp_policy_ops() -> frozenset[str]:
+    """Return dense-KV attention ops that require KV-head TP validation."""
+    return frozenset(
+        operator.name
+        for operator in DENSE_ATTENTION_FAMILY.operators
+        if operator.role
+        in {
+            AttentionOperatorRole.CACHE_WRITE,
+            AttentionOperatorRole.PREFILL_KERNEL,
+            AttentionOperatorRole.DECODE_KERNEL,
+        }
+    )
+
+
+ATTENTION_NON_LINEAR_OPS = get_attention_non_linear_tp_policy_ops()
 
 ATTENTION_LINEAR_OPS = frozenset(
     {

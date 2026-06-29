@@ -5,8 +5,61 @@ This module defines fine-grained time components that can be composed
 to form complete ExecutionTime objects for different cluster types.
 """
 
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Mapping
+
+from frontier.attention.families import iter_attention_families
+
+
+def _attention_operator_execution_time_attrs() -> dict[str, str]:
+    return {
+        operator.name: operator.execution_time_attr
+        for family in iter_attention_families()
+        for operator in family.e2e_trace_ops()
+        if operator.execution_time_attr is not None
+    }
+
+
+@dataclass
+class AttentionOperatorTimes:
+    """Single-layer timings keyed by physical attention operator name."""
+
+    op_times: Mapping[str, float] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        normalized_op_times: dict[str, float] = {}
+        for op_name, time_ms in self.op_times.items():
+            if not op_name:
+                raise ValueError("Attention operator name must be non-empty")
+            normalized_time_ms = float(time_ms)
+            if normalized_time_ms < 0.0:
+                raise ValueError(
+                    "Negative attention operator timing is invalid: "
+                    f"{op_name}={normalized_time_ms}"
+                )
+            normalized_op_times[str(op_name)] = normalized_time_ms
+        self.op_times = normalized_op_times
+
+    def get_required_time(self, op_name: str) -> float:
+        try:
+            return float(self.op_times[op_name])
+        except KeyError as exc:
+            raise ValueError(
+                f"ExecutionTime is missing structured attention operator "
+                f"timing for {op_name}"
+            ) from exc
+
+    def total_time(self) -> float:
+        return sum(float(time_ms) for time_ms in self.op_times.values())
+
+    def legacy_covered_time(self, attention_time: "AttentionTime") -> float:
+        covered_time_ms = 0.0
+        attention_operator_attrs = _attention_operator_execution_time_attrs()
+        for op_name in self.op_times:
+            attr_name = attention_operator_attrs.get(op_name)
+            if attr_name is not None:
+                covered_time_ms += float(getattr(attention_time, attr_name))
+        return covered_time_ms
 
 
 @dataclass
@@ -34,6 +87,14 @@ class AttentionTime:
     attention_rope_execution_time: float = 0.0              # RoPE (Rotary Position Embedding)
     attention_kv_cache_save_execution_time: float = 0.0     # KV cache write
 
+    # MLA physical attention operations from the vLLM V1 latent-attention path.
+    attn_mla_kv_cache_save_time: float = 0.0
+    attn_mla_prefill_kv_up_proj_time: float = 0.0
+    attn_mla_prefill_time: float = 0.0
+    attn_mla_decode_q_latent_proj_time: float = 0.0
+    attn_mla_decode_time: float = 0.0
+    attn_mla_v_up_proj_time: float = 0.0
+
     # Normalization
     attn_norm_time: float = 0.0  # Layer norm before attention
 
@@ -41,20 +102,34 @@ class AttentionTime:
     # These are 0.0 for non-Step2Mini models
     attn_inter_norm_time: float = 0.0  # RMSNorm on Q after split from QKV
     attn_wq_proj_time: float = 0.0     # ColumnParallelLinear on Q after inter_norm
+    operator_times: AttentionOperatorTimes | None = None
 
     def total_time(self) -> float:
         """Calculate total attention time for this layer."""
-        return (
+        legacy_total_time = (
             self.attention_prefill_execution_time
             + self.attention_decode_execution_time
             + self.attention_layer_pre_proj_execution_time
             + self.attention_layer_post_proj_execution_time
             + self.attention_rope_execution_time
             + self.attention_kv_cache_save_execution_time
+            + self.attn_mla_kv_cache_save_time
+            + self.attn_mla_prefill_kv_up_proj_time
+            + self.attn_mla_prefill_time
+            + self.attn_mla_decode_q_latent_proj_time
+            + self.attn_mla_decode_time
+            + self.attn_mla_v_up_proj_time
             + self.attn_norm_time
             # Step2Mini-specific operations (0.0 for non-Step2Mini models)
             + self.attn_inter_norm_time
             + self.attn_wq_proj_time
+        )
+        if self.operator_times is None:
+            return legacy_total_time
+        return (
+            legacy_total_time
+            - self.operator_times.legacy_covered_time(self)
+            + self.operator_times.total_time()
         )
 
 
