@@ -187,3 +187,13 @@ def test_latent_mla_runtime_resolver_fails_fast_on_missing_fields() -> None:
 
     with pytest.raises(ValueError, match="qk_rope_head_dim"):
         LATENT_MLA_ATTENTION_FAMILY.resolve_runtime_head_size(MissingRopeDim())
+
+
+def test_latent_mla_family_declares_runtime_meta_contract() -> None:
+    contract = LATENT_MLA_ATTENTION_FAMILY.runtime_meta_contract
+
+    assert contract is not None
+    assert contract.expected_runtime_num_kv_heads == 1
+    assert contract.runtime_head_size_formula == "kv_lora_rank + qk_rope_head_dim"
+    assert contract.supported_block_sizes == (32, 64)
+    assert contract.expected_n_q_head is None

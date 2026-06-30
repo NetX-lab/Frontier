@@ -386,6 +386,81 @@ def test_vllm_mla_profile_importer_rejects_dense_metadata() -> None:
         )
 
 
+def test_vllm_mla_profile_importer_rejects_inconsistent_runtime_head_size() -> None:
+    from frontier.profiling.attention.vllm_mla_profile_importer import (
+        build_frontier_mla_profile_dataframe,
+    )
+
+    rows = _sample_rows()
+    rows[0]["meta"] = {**_base_meta(), "runtime_head_size": 575}
+    with pytest.raises(ValueError, match="runtime_head_size"):
+        build_frontier_mla_profile_dataframe(
+            rows,
+            model_name="deepseek-ai/DeepSeek-V2-Lite",
+            model_arch="deepseek_v2",
+            precision="bf16",
+            quant_signature="none",
+            measurement_type="cuda_event",
+            num_tensor_parallel_workers=1,
+            max_model_len=163840,
+        )
+
+
+def test_vllm_mla_profile_importer_rejects_unsupported_block_size() -> None:
+    from frontier.profiling.attention.vllm_mla_profile_importer import (
+        build_frontier_mla_profile_dataframe,
+    )
+
+    rows = _sample_rows()
+    rows[0]["meta"] = {**_base_meta(), "block_size": 16}
+    with pytest.raises(ValueError, match="Unsupported FlashInfer MLA block_size"):
+        build_frontier_mla_profile_dataframe(
+            rows,
+            model_name="deepseek-ai/DeepSeek-V2-Lite",
+            model_arch="deepseek_v2",
+            precision="bf16",
+            quant_signature="none",
+            measurement_type="cuda_event",
+            num_tensor_parallel_workers=1,
+            max_model_len=163840,
+        )
+
+
+def test_vllm_mla_profile_importer_accepts_formula_consistent_runtime_variant() -> None:
+    from frontier.profiling.attention.vllm_mla_profile_importer import (
+        build_frontier_mla_profile_dataframe,
+    )
+
+    rows = _sample_rows()
+    variant_meta = {
+        **_base_meta(),
+        "runtime_head_size": 320,
+        "kv_lora_rank": 256,
+        "qk_nope_head_dim": 96,
+        "qk_rope_head_dim": 64,
+        "qk_head_dim": 160,
+    }
+    for row in rows:
+        if row["op_name"] in REQUIRED_SCOPES:
+            row["meta"] = variant_meta
+
+    df = build_frontier_mla_profile_dataframe(
+        rows,
+        model_name="deepseek-ai/DeepSeek-V2-Lite-Variant",
+        model_arch="deepseek_v2",
+        precision="bf16",
+        quant_signature="none",
+        measurement_type="cuda_event",
+        num_tensor_parallel_workers=1,
+        max_model_len=163840,
+    )
+
+    assert df.loc[0, "head_size"] == 320
+    assert df.loc[0, "kv_lora_rank"] == 256
+    assert df.loc[0, "qk_rope_head_dim"] == 64
+    assert df.loc[0, "qk_head_dim"] == 160
+
+
 def test_vllm_mla_profile_importer_rejects_mixed_scope_metadata() -> None:
     from frontier.profiling.attention.vllm_mla_profile_importer import (
         build_frontier_mla_profile_dataframe,

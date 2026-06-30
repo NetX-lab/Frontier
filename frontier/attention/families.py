@@ -6,6 +6,7 @@ from frontier.attention.ops import (
     AttentionOperatorRole,
     AttentionOperatorSpec,
     AttentionPhase,
+    AttentionRuntimeMetaContract,
     ProjectionOwnership,
 )
 
@@ -13,6 +14,7 @@ from frontier.attention.ops import (
 _PREFILL_MIXED = (AttentionPhase.PREFILL, AttentionPhase.MIXED)
 _DECODE_MIXED = (AttentionPhase.DECODE, AttentionPhase.MIXED)
 _ALL_PHASES = (AttentionPhase.PREFILL, AttentionPhase.DECODE, AttentionPhase.MIXED)
+
 
 def _required_int_attr(config, attr_name: str) -> int:
     value = getattr(config, attr_name, None)
@@ -176,6 +178,11 @@ LATENT_MLA_ATTENTION_FAMILY = AttentionFamilySpec(
     ),
     runtime_num_kv_heads_resolver=_latent_mla_runtime_num_kv_heads,
     runtime_head_size_resolver=_latent_mla_runtime_head_size,
+    runtime_meta_contract=AttentionRuntimeMetaContract(
+        expected_runtime_num_kv_heads=1,
+        runtime_head_size_formula="kv_lora_rank + qk_rope_head_dim",
+        supported_block_sizes=(32, 64),
+    ),
 )
 
 

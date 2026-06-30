@@ -142,26 +142,19 @@ def _require_meta(row: dict[str, Any], scope: str) -> dict[str, Any]:
 
 
 def _validate_flashinfer_mla_meta(meta: dict[str, Any], scope: str) -> None:
+    contract = LATENT_MLA_ATTENTION_FAMILY.runtime_meta_contract
+    if contract is None:
+        raise ValueError("Latent MLA attention family must declare runtime meta contract")
     if meta["attention_backend"] != "FLASHINFER_MLA":
         raise ValueError(
             f"Unexpected attention_backend for {scope}: {meta['attention_backend']}"
         )
     if meta["use_mla"] is not True:
         raise ValueError(f"use_mla must be true for {scope}")
-    if int(meta["runtime_num_kv_heads"]) != 1:
+    if int(meta["runtime_num_kv_heads"]) != contract.expected_runtime_num_kv_heads:
         raise ValueError(
             f"Unexpected runtime_num_kv_heads for {scope}: "
             f"{meta['runtime_num_kv_heads']}"
-        )
-    if int(meta["runtime_head_size"]) != 576:
-        raise ValueError(
-            f"Unexpected runtime_head_size for {scope}: {meta['runtime_head_size']}"
-        )
-    if int(meta["kv_lora_rank"]) != 512:
-        raise ValueError(f"Unexpected kv_lora_rank for {scope}: {meta['kv_lora_rank']}")
-    if int(meta["qk_rope_head_dim"]) != 64:
-        raise ValueError(
-            f"Unexpected qk_rope_head_dim for {scope}: {meta['qk_rope_head_dim']}"
         )
     if int(meta["qk_head_dim"]) != (
         int(meta["qk_nope_head_dim"]) + int(meta["qk_rope_head_dim"])
@@ -173,7 +166,7 @@ def _validate_flashinfer_mla_meta(meta: dict[str, Any], scope: str) -> None:
         raise ValueError(
             f"Inconsistent runtime_head_size for {scope}: {meta['runtime_head_size']}"
         )
-    if int(meta["block_size"]) not in {32, 64}:
+    if int(meta["block_size"]) not in set(contract.supported_block_sizes):
         raise ValueError(
             f"Unsupported FlashInfer MLA block_size for {scope}: {meta['block_size']}"
         )

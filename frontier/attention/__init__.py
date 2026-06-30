@@ -16,6 +16,7 @@ from frontier.attention.memory import (
     AttentionRuntimeKVLayout,
     get_attention_runtime_kv_layout,
 )
+from frontier.attention.ops import AttentionRuntimeMetaContract
 
 
 def __getattr__(name: str):
@@ -29,6 +30,7 @@ def __getattr__(name: str):
 __all__ = [
     "AttentionFamilyBinding",
     "AttentionRuntimeKVLayout",
+    "AttentionRuntimeMetaContract",
     "DENSE_ATTENTION_FAMILY",
     "DSA_ATTENTION_FAMILY",
     "LATENT_MLA_ATTENTION_FAMILY",

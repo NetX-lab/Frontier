@@ -49,6 +49,42 @@ class AttentionMemoryLayout(Enum):
 
 
 @dataclass(frozen=True)
+class AttentionRuntimeMetaContract:
+    """Runtime metadata contract for imported attention profiler rows."""
+
+    expected_runtime_num_kv_heads: int
+    runtime_head_size_formula: str
+    supported_block_sizes: tuple[int, ...]
+    expected_n_q_head: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.expected_runtime_num_kv_heads <= 0:
+            raise ValueError(
+                "expected_runtime_num_kv_heads must be positive, "
+                f"got={self.expected_runtime_num_kv_heads!r}"
+            )
+        if not self.runtime_head_size_formula:
+            raise ValueError("runtime_head_size_formula must be non-empty")
+        if not self.supported_block_sizes:
+            raise ValueError("supported_block_sizes must be non-empty")
+        invalid_block_sizes = [
+            block_size
+            for block_size in self.supported_block_sizes
+            if int(block_size) <= 0
+        ]
+        if invalid_block_sizes:
+            raise ValueError(
+                "supported_block_sizes must be positive, "
+                f"got={invalid_block_sizes!r}"
+            )
+        if self.expected_n_q_head is not None and self.expected_n_q_head <= 0:
+            raise ValueError(
+                "expected_n_q_head must be positive when declared, "
+                f"got={self.expected_n_q_head!r}"
+            )
+
+
+@dataclass(frozen=True)
 class AttentionOperatorSpec:
     """Declarative contract for one physical attention operator."""
 
@@ -100,6 +136,7 @@ class AttentionFamilySpec:
     imported_predictor_excluded_feature_columns: tuple[str, ...] = ()
     runtime_num_kv_heads_resolver: Callable[[Any], int] | None = None
     runtime_head_size_resolver: Callable[[Any], int] | None = None
+    runtime_meta_contract: AttentionRuntimeMetaContract | None = None
 
     def __post_init__(self) -> None:
         if not self.family_id:
