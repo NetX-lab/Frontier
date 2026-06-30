@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -223,6 +224,60 @@ def test_profiling_model_config_delegates_runtime_cache_helpers_to_family_spec()
         family.resolve_runtime_head_size(model_config)
     )
     assert model_config.get_num_kv_heads(parallel_config) == 1
+
+
+def test_profiling_model_config_get_head_size_binds_family_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from frontier.attention.ops import AttentionMemoryLayout
+
+    model_config = ModelConfig(
+        name="deepseek-ai/DeepSeek-V2-MLA-Unit",
+        num_layers=60,
+        num_q_heads=128,
+        num_kv_heads=128,
+        embedding_dim=5120,
+        mlp_hidden_dim=12288,
+        max_position_embeddings=163840,
+        use_gated_mlp=True,
+        use_bias=False,
+        use_qkv_bias=False,
+        activation=ActivationType.SILU,
+        norm=NormType.RMS_NORM,
+        post_attn_norm=True,
+        vocab_size=102400,
+        dtype="bfloat16",
+        model_type="deepseek_v2",
+        use_mla=True,
+        q_lora_rank=1536,
+        kv_lora_rank=512,
+        qk_nope_head_dim=128,
+        qk_rope_head_dim=64,
+        qk_head_dim=192,
+        v_head_dim=128,
+    )
+    bind_calls = 0
+
+    class FakeFamily:
+        memory_layout = AttentionMemoryLayout.LATENT_MLA
+
+        @staticmethod
+        def resolve_runtime_head_size(config: ModelConfig) -> int:
+            return 576
+
+    def fake_bind_attention_family(config: ModelConfig) -> SimpleNamespace:
+        nonlocal bind_calls
+        bind_calls += 1
+        assert config is model_config
+        return SimpleNamespace(family=FakeFamily())
+
+    monkeypatch.setattr(
+        "frontier.profiling.common.model_config.bind_attention_family",
+        fake_bind_attention_family,
+    )
+
+    assert model_config.get_head_size() == 576
+    assert bind_calls == 1
 
 
 def test_profiling_model_config_rebinds_attention_family_after_mutation() -> None:

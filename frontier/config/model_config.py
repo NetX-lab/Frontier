@@ -413,22 +413,23 @@ class BaseModelConfig(BaseFixedConfig):
 
     def uses_mla(self) -> bool:
         """Return whether this model uses vLLM-style MLA cache semantics."""
-        return (
-            self.get_attention_family().memory_layout
-            is AttentionMemoryLayout.LATENT_MLA
-        )
+        family = self.get_attention_family()
+        return family.memory_layout is AttentionMemoryLayout.LATENT_MLA
 
     def get_runtime_num_kv_heads(self) -> int:
         """Return runtime KV heads for cache allocation."""
-        return self.get_attention_family().resolve_runtime_num_kv_heads(self)
+        family = self.get_attention_family()
+        return family.resolve_runtime_num_kv_heads(self)
 
     def get_runtime_head_size(self) -> int:
         """Return runtime KV-cache head size."""
-        return self.get_attention_family().resolve_runtime_head_size(self)
+        family = self.get_attention_family()
+        return family.resolve_runtime_head_size(self)
 
     def get_qk_head_dim(self) -> int:
         """Return the full QK head dimension."""
-        if self.uses_mla():
+        family = self.get_attention_family()
+        if family.memory_layout is AttentionMemoryLayout.LATENT_MLA:
             if self.qk_head_dim is None:
                 raise ValueError("MLA qk_head_dim is not configured")
             return self.qk_head_dim

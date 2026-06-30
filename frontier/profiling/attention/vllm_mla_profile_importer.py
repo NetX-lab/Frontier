@@ -156,6 +156,12 @@ def _validate_flashinfer_mla_meta(meta: dict[str, Any], scope: str) -> None:
             f"Unexpected runtime_num_kv_heads for {scope}: "
             f"{meta['runtime_num_kv_heads']}"
         )
+    if (
+        contract.expected_n_q_head is not None
+        and "n_q_head" in meta
+        and int(meta["n_q_head"]) != contract.expected_n_q_head
+    ):
+        raise ValueError(f"Unexpected n_q_head for {scope}: {meta['n_q_head']}")
     if int(meta["qk_head_dim"]) != (
         int(meta["qk_nope_head_dim"]) + int(meta["qk_rope_head_dim"])
     ):
@@ -379,6 +385,11 @@ def _build_profile_row_base(
     num_tensor_parallel_workers: int,
     max_model_len: int,
 ) -> dict[str, Any]:
+    contract = LATENT_MLA_ATTENTION_FAMILY.runtime_meta_contract
+    if contract is None or contract.expected_n_q_head is None:
+        raise ValueError(
+            "Latent MLA attention family must declare expected_n_q_head"
+        )
     max_seqlen_k = int(representative_meta["max_seqlen_k"])
     return {
         "model_name": model_name,
@@ -387,7 +398,7 @@ def _build_profile_row_base(
         "quant_signature": quant_signature,
         "measurement_type": measurement_type.value,
         "attention_backend": str(representative_meta["attention_backend"]),
-        "n_q_head": 128,
+        "n_q_head": contract.expected_n_q_head,
         "n_kv_head": int(representative_meta["runtime_num_kv_heads"]),
         "head_size": int(representative_meta["runtime_head_size"]),
         "qk_nope_head_dim": int(representative_meta["qk_nope_head_dim"]),

@@ -366,6 +366,26 @@ def test_vllm_mla_profile_importer_fails_fast_on_missing_scope() -> None:
         )
 
 
+def test_vllm_mla_profile_importer_rejects_unexpected_query_head_count() -> None:
+    from frontier.profiling.attention.vllm_mla_profile_importer import (
+        build_frontier_mla_profile_dataframe,
+    )
+
+    rows = _sample_rows()
+    rows[0]["meta"] = {**_base_meta(), "n_q_head": 64}
+    with pytest.raises(ValueError, match="n_q_head"):
+        build_frontier_mla_profile_dataframe(
+            rows,
+            model_name="deepseek-ai/DeepSeek-V2-Lite",
+            model_arch="deepseek_v2",
+            precision="bf16",
+            quant_signature="none",
+            measurement_type="cuda_event",
+            num_tensor_parallel_workers=1,
+            max_model_len=163840,
+        )
+
+
 def test_vllm_mla_profile_importer_rejects_dense_metadata() -> None:
     from frontier.profiling.attention.vllm_mla_profile_importer import (
         build_frontier_mla_profile_dataframe,

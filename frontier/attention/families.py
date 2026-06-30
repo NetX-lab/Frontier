@@ -182,6 +182,7 @@ LATENT_MLA_ATTENTION_FAMILY = AttentionFamilySpec(
         expected_runtime_num_kv_heads=1,
         runtime_head_size_formula="kv_lora_rank + qk_rope_head_dim",
         supported_block_sizes=(32, 64),
+        expected_n_q_head=128,
     ),
 )
 
