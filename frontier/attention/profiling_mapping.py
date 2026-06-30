@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from frontier.attention.families import iter_attention_families
+from frontier.attention.families import (
+    LATENT_MLA_ATTENTION_FAMILY,
+    iter_attention_families,
+)
 from frontier.attention.ops import (
     AttentionFamilySpec,
     AttentionMemoryLayout,
@@ -12,53 +15,6 @@ from frontier.types import MeasurementType
 
 
 _TIME_STAT_SUFFIXES = ("min", "max", "mean", "median", "std", "count")
-
-_DENSE_PROFILING_FEATURE_COLUMNS = (
-    "measurement_type",
-    "attention_backend",
-    "n_q_head",
-    "n_kv_head",
-    "block_size",
-    "num_tensor_parallel_workers",
-    "max_model_len",
-    "batch_size",
-    "prefill_chunk_size",
-    "kv_cache_size",
-    "is_prefill",
-)
-
-_MLA_PROFILING_FEATURE_COLUMNS = (
-    "measurement_type",
-    "attention_backend",
-    "n_q_head",
-    "n_kv_head",
-    "head_size",
-    "qk_nope_head_dim",
-    "qk_rope_head_dim",
-    "qk_head_dim",
-    "kv_lora_rank",
-    "v_head_dim",
-    "block_size",
-    "num_tensor_parallel_workers",
-    "max_model_len",
-    "batch_size",
-    "batch_num_tokens",
-    "batch_num_prefill_tokens",
-    "batch_num_decode_tokens",
-    "max_seqlen_q",
-    "max_seqlen_k",
-    "num_actual_tokens",
-    "is_prefill",
-    "max_seq_len",
-    "is_mla_profile_import",
-)
-
-_MLA_IMPORTED_PREDICTOR_EXCLUDED_FEATURE_COLUMNS = (
-    "measurement_type",
-    "attention_backend",
-    "max_model_len",
-    "is_mla_profile_import",
-)
 
 
 @dataclass(frozen=True)
@@ -84,22 +40,14 @@ def _normalize_measurement_type(
     return MeasurementType.from_string(measurement_type)
 
 
-def _get_required_profiling_feature_columns_by_layout(
-    memory_layout: AttentionMemoryLayout,
-) -> tuple[str, ...]:
-    if memory_layout is AttentionMemoryLayout.DENSE_KV:
-        return _DENSE_PROFILING_FEATURE_COLUMNS
-    if memory_layout is AttentionMemoryLayout.LATENT_MLA:
-        return _MLA_PROFILING_FEATURE_COLUMNS
-    raise ValueError(
-        f"Unsupported attention profiling memory layout: {memory_layout.value}"
-    )
-
-
 def get_imported_mla_predictor_feature_columns() -> tuple[str, ...]:
-    excluded = set(_MLA_IMPORTED_PREDICTOR_EXCLUDED_FEATURE_COLUMNS)
+    excluded = set(
+        LATENT_MLA_ATTENTION_FAMILY.imported_predictor_excluded_feature_columns
+    )
     return tuple(
-        column for column in _MLA_PROFILING_FEATURE_COLUMNS if column not in excluded
+        column
+        for column in LATENT_MLA_ATTENTION_FAMILY.required_profiling_feature_columns
+        if column not in excluded
     )
 
 
@@ -110,9 +58,7 @@ def get_attention_profiling_feature_schema(
 ) -> AttentionProfilingFeatureSchema:
     family.require_enabled_for_execution()
     normalized_measurement_type = _normalize_measurement_type(measurement_type)
-    required_columns = _get_required_profiling_feature_columns_by_layout(
-        family.memory_layout
-    )
+    required_columns = family.required_profiling_feature_columns
     predictor_feature_columns = (
         get_imported_mla_predictor_feature_columns()
         if family.memory_layout is AttentionMemoryLayout.LATENT_MLA

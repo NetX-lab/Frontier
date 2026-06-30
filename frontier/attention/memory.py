@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from frontier.attention.ops import AttentionFamilySpec, AttentionMemoryLayout
+from frontier.attention.ops import AttentionFamilySpec
 
 
 @dataclass(frozen=True)
@@ -59,18 +59,15 @@ def get_attention_runtime_kv_layout(
 ) -> AttentionRuntimeKVLayout:
     family.require_enabled_for_execution()
 
-    if family.memory_layout is AttentionMemoryLayout.DENSE_KV:
-        kv_factor = 2
-    elif family.memory_layout is AttentionMemoryLayout.LATENT_MLA:
-        kv_factor = 1
-    else:
+    if family.kv_factor is None:
         raise NotImplementedError(
-            f"Unsupported attention memory layout: {family.memory_layout.value}"
+            f"Attention family {family.family_id!r} does not declare a runtime "
+            "kv_factor; cannot size its KV-cache layout."
         )
 
     return AttentionRuntimeKVLayout(
         family_id=family.family_id,
-        kv_factor=kv_factor,
+        kv_factor=family.kv_factor,
         runtime_num_kv_heads_per_worker=int(runtime_num_kv_heads_per_worker),
         runtime_head_size=int(runtime_head_size),
         bytes_per_element=int(bytes_per_element),

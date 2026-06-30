@@ -94,6 +94,9 @@ class AttentionFamilySpec:
     requires_runtime_kv_helpers: bool
     disjoint_model_projection_attrs: tuple[str, ...] = ()
     dsa_frozen: bool = False
+    kv_factor: int | None = None
+    required_profiling_feature_columns: tuple[str, ...] = ()
+    imported_predictor_excluded_feature_columns: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.family_id:
@@ -128,6 +131,21 @@ class AttentionFamilySpec:
             raise ValueError(
                 f"Attention family {self.family_id} has an empty disjoint "
                 "model projection attr"
+            )
+        if self.kv_factor is not None and self.kv_factor <= 0:
+            raise ValueError(
+                f"Attention family {self.family_id} kv_factor must be positive "
+                f"when declared, got={self.kv_factor!r}"
+            )
+        missing_excluded = tuple(
+            column
+            for column in self.imported_predictor_excluded_feature_columns
+            if column not in self.required_profiling_feature_columns
+        )
+        if missing_excluded:
+            raise ValueError(
+                f"Attention family {self.family_id} excludes imported predictor "
+                f"columns absent from its profiling schema: {list(missing_excluded)}"
             )
 
     def profiling_ops(self) -> tuple[AttentionOperatorSpec, ...]:
