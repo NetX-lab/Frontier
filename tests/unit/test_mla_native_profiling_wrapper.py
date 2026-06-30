@@ -196,6 +196,7 @@ def test_attention_wrapper_allows_mla_only_for_explicit_mla_capable_backend(
     )
 
     assert wrapper._attention_family.family_id == LATENT_MLA_ATTENTION_FAMILY.family_id
+    assert wrapper._uses_latent_mla is True
     assert fake_backend.init_args is not None
     assert fake_backend.cache_kwargs == {
         "num_blocks": 4,
@@ -434,7 +435,7 @@ def test_flashinfer_wrapper_rejects_mla_during_init(monkeypatch: pytest.MonkeyPa
 
 def test_flashinfer_wrapper_rejects_mla_before_dense_cache_or_forward() -> None:
     wrapper = FlashinferAttentionWrapper()
-    wrapper.use_mla = True
+    wrapper._uses_latent_mla = True
     wrapper.is_metadata_initialized = True
 
     with pytest.raises(NotImplementedError, match="MLA profiling is not implemented"):

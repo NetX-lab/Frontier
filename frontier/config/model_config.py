@@ -4,6 +4,8 @@ import hashlib
 import json
 import os
 
+from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.ops import AttentionMemoryLayout
 from frontier.config.base_fixed_config import BaseFixedConfig
 from frontier.config.precision_type import PrecisionType
 from frontier.logger import init_logger
@@ -405,28 +407,28 @@ class BaseModelConfig(BaseFixedConfig):
             return self.head_dim
         return self.embedding_dim // self.num_q_heads
 
+    def get_attention_family(self):
+        """Return the bound attention family for runtime cache semantics."""
+        return bind_attention_family(self).family
+
     def uses_mla(self) -> bool:
         """Return whether this model uses vLLM-style MLA cache semantics."""
-        return self.use_mla
+        return (
+            self.get_attention_family().memory_layout
+            is AttentionMemoryLayout.LATENT_MLA
+        )
 
     def get_runtime_num_kv_heads(self) -> int:
         """Return runtime KV heads for cache allocation."""
-        return 1 if self.use_mla else self.num_kv_heads
+        return self.get_attention_family().resolve_runtime_num_kv_heads(self)
 
     def get_runtime_head_size(self) -> int:
         """Return runtime KV-cache head size."""
-        if self.use_mla:
-            if self.kv_lora_rank is None or self.qk_rope_head_dim is None:
-                raise ValueError(
-                    "MLA runtime head size requires kv_lora_rank and "
-                    "qk_rope_head_dim"
-                )
-            return self.kv_lora_rank + self.qk_rope_head_dim
-        return self.get_head_dim()
+        return self.get_attention_family().resolve_runtime_head_size(self)
 
     def get_qk_head_dim(self) -> int:
         """Return the full QK head dimension."""
-        if self.use_mla:
+        if self.uses_mla():
             if self.qk_head_dim is None:
                 raise ValueError("MLA qk_head_dim is not configured")
             return self.qk_head_dim

@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
+from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.ops import AttentionMemoryLayout
 from frontier.config.model_config import (
     BaseModelConfig,
     FUSED_ADD_NORM_MODEL_TYPE_ALLOWLIST,
@@ -224,20 +226,24 @@ class ModelConfig:
             return self._head_dim
         return self.embedding_dim // self.num_q_heads
 
+    def get_attention_family(self):
+        """Return the bound attention family for profiling runtime semantics."""
+        return bind_attention_family(self).family
+
+    def get_runtime_num_kv_heads(self) -> int:
+        """Return runtime KV heads for cache allocation."""
+        return self.get_attention_family().resolve_runtime_num_kv_heads(self)
+
     def get_runtime_head_size(self) -> int:
         """Return vLLM runtime KV-cache head size."""
-        if self.use_mla:
-            if self.kv_lora_rank is None or self.qk_rope_head_dim is None:
-                raise ValueError(
-                    "MLA runtime head size requires kv_lora_rank and "
-                    "qk_rope_head_dim"
-                )
-            return self.kv_lora_rank + self.qk_rope_head_dim
-        return self.get_head_dim()
+        return self.get_attention_family().resolve_runtime_head_size(self)
 
     def get_qk_head_dim(self) -> int:
         """Return the full QK head dimension."""
-        if self.use_mla:
+        if (
+            self.get_attention_family().memory_layout
+            is AttentionMemoryLayout.LATENT_MLA
+        ):
             if self.qk_head_dim is None:
                 raise ValueError("MLA qk_head_dim is not configured")
             return self.qk_head_dim
@@ -410,8 +416,9 @@ class ModelConfig:
         return self.num_q_heads // tp_size
 
     def get_num_kv_heads(self, parallel_config: ParallelConfig):
-        if self.use_mla:
-            return 1
+        family = self.get_attention_family()
+        if family.memory_layout is AttentionMemoryLayout.LATENT_MLA:
+            return family.resolve_runtime_num_kv_heads(self)
 
         tp_size = parallel_config.tensor_parallel_size
         if tp_size <= 0:
@@ -442,7 +449,10 @@ class ModelConfig:
         return max(1, self.num_kv_heads // tp_size)
 
     def get_head_size(self):
-        if self.use_mla:
+        if (
+            self.get_attention_family().memory_layout
+            is AttentionMemoryLayout.LATENT_MLA
+        ):
             return self.get_runtime_head_size()
         # Use explicit head_dim if provided (e.g., for Step3 models with MLA)
         # Otherwise compute from embedding_dim / num_q_heads

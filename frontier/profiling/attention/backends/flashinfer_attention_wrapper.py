@@ -34,6 +34,8 @@ except ImportError:
 from frontier.profiling.attention.backends.base_attention_wrapper import (
     BaseAttentionWrapper,
 )
+from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.ops import AttentionMemoryLayout
 from frontier.profiling.attention.sequence_metadata import SequenceMetadata
 from frontier.profiling.common.constants import OperationMetrics
 from frontier.profiling.common.model_config import ModelConfig
@@ -77,9 +79,12 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
                 "Install vllm or set PYTHONPATH to the vllm source tree."
             )
 
-        self.use_mla = bool(getattr(model_config, "use_mla", False))
+        self._attention_family = bind_attention_family(model_config).family
+        self._uses_latent_mla = (
+            self._attention_family.memory_layout is AttentionMemoryLayout.LATENT_MLA
+        )
         super().init(model_config, parallel_config, block_size, device)
-        if self.use_mla:
+        if self._uses_latent_mla:
             self._raise_mla_not_implemented()
 
         self.kv_cache_layout = get_kv_cache_layout()
@@ -180,7 +185,7 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
         Returns:
             Cache block tensor with shape (num_blocks, 2, block_size, num_kv_heads, head_dim).
         """
-        if getattr(self, "use_mla", False):
+        if getattr(self, "_uses_latent_mla", False):
             self._raise_mla_not_implemented()
         return torch.randn(
             num_blocks,
@@ -372,7 +377,7 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
             Output tensor.
         """
         assert self.is_metadata_initialized, "Metadata is not initialized."
-        if getattr(self, "use_mla", False):
+        if getattr(self, "_uses_latent_mla", False):
             self._raise_mla_not_implemented()
 
         if self.is_profiling_iteration:

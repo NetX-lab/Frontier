@@ -154,3 +154,36 @@ def test_imported_mla_predictor_columns_derive_from_spec_data() -> None:
         if column not in excluded
     )
     assert profiling_mapping.get_imported_mla_predictor_feature_columns() == expected
+
+
+def test_attention_family_runtime_resolvers_match_current_cache_formulas() -> None:
+    class DenseRuntimeConfig:
+        num_kv_heads = 16
+
+        def get_head_dim(self) -> int:
+            return 128
+
+    class MlaRuntimeConfig:
+        kv_lora_rank = 512
+        qk_rope_head_dim = 64
+
+    assert DENSE_ATTENTION_FAMILY.resolve_runtime_num_kv_heads(
+        DenseRuntimeConfig()
+    ) == 16
+    assert DENSE_ATTENTION_FAMILY.resolve_runtime_head_size(
+        DenseRuntimeConfig()
+    ) == 128
+    assert LATENT_MLA_ATTENTION_FAMILY.resolve_runtime_num_kv_heads(
+        MlaRuntimeConfig()
+    ) == 1
+    assert LATENT_MLA_ATTENTION_FAMILY.resolve_runtime_head_size(
+        MlaRuntimeConfig()
+    ) == 576
+
+
+def test_latent_mla_runtime_resolver_fails_fast_on_missing_fields() -> None:
+    class MissingRopeDim:
+        kv_lora_rank = 512
+
+    with pytest.raises(ValueError, match="qk_rope_head_dim"):
+        LATENT_MLA_ATTENTION_FAMILY.resolve_runtime_head_size(MissingRopeDim())

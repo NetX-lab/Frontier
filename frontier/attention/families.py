@@ -14,6 +14,33 @@ _PREFILL_MIXED = (AttentionPhase.PREFILL, AttentionPhase.MIXED)
 _DECODE_MIXED = (AttentionPhase.DECODE, AttentionPhase.MIXED)
 _ALL_PHASES = (AttentionPhase.PREFILL, AttentionPhase.DECODE, AttentionPhase.MIXED)
 
+def _required_int_attr(config, attr_name: str) -> int:
+    value = getattr(config, attr_name, None)
+    if value is None:
+        raise ValueError(f"Attention runtime resolver requires {attr_name}")
+    return int(value)
+
+
+def _dense_runtime_num_kv_heads(config) -> int:
+    return _required_int_attr(config, "num_kv_heads")
+
+
+def _dense_runtime_head_size(config) -> int:
+    get_head_dim = getattr(config, "get_head_dim", None)
+    if get_head_dim is None:
+        raise ValueError("Dense runtime head size resolver requires get_head_dim()")
+    return int(get_head_dim())
+
+
+def _latent_mla_runtime_num_kv_heads(_config) -> int:
+    return 1
+
+
+def _latent_mla_runtime_head_size(config) -> int:
+    return _required_int_attr(config, "kv_lora_rank") + _required_int_attr(
+        config, "qk_rope_head_dim"
+    )
+
 
 DENSE_ATTENTION_FAMILY = AttentionFamilySpec(
     family_id="dense_attention",
@@ -56,6 +83,8 @@ DENSE_ATTENTION_FAMILY = AttentionFamilySpec(
         "kv_cache_size",
         "is_prefill",
     ),
+    runtime_num_kv_heads_resolver=_dense_runtime_num_kv_heads,
+    runtime_head_size_resolver=_dense_runtime_head_size,
 )
 
 
@@ -145,6 +174,8 @@ LATENT_MLA_ATTENTION_FAMILY = AttentionFamilySpec(
         "max_model_len",
         "is_mla_profile_import",
     ),
+    runtime_num_kv_heads_resolver=_latent_mla_runtime_num_kv_heads,
+    runtime_head_size_resolver=_latent_mla_runtime_head_size,
 )
 
 

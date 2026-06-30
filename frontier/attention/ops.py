@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Callable
 
 
 class AttentionOperatorRole(Enum):
@@ -97,6 +98,8 @@ class AttentionFamilySpec:
     kv_factor: int | None = None
     required_profiling_feature_columns: tuple[str, ...] = ()
     imported_predictor_excluded_feature_columns: tuple[str, ...] = ()
+    runtime_num_kv_heads_resolver: Callable[[Any], int] | None = None
+    runtime_head_size_resolver: Callable[[Any], int] | None = None
 
     def __post_init__(self) -> None:
         if not self.family_id:
@@ -164,6 +167,34 @@ class AttentionFamilySpec:
             if operator.projection_ownership
             is not ProjectionOwnership.NOT_PROJECTION
         )
+
+    def resolve_runtime_num_kv_heads(self, config: Any) -> int:
+        if self.runtime_num_kv_heads_resolver is None:
+            raise ValueError(
+                f"Attention family {self.family_id} does not declare a "
+                "runtime_num_kv_heads_resolver"
+            )
+        value = int(self.runtime_num_kv_heads_resolver(config))
+        if value <= 0:
+            raise ValueError(
+                f"Attention family {self.family_id} resolved non-positive "
+                f"runtime_num_kv_heads={value!r}"
+            )
+        return value
+
+    def resolve_runtime_head_size(self, config: Any) -> int:
+        if self.runtime_head_size_resolver is None:
+            raise ValueError(
+                f"Attention family {self.family_id} does not declare a "
+                "runtime_head_size_resolver"
+            )
+        value = int(self.runtime_head_size_resolver(config))
+        if value <= 0:
+            raise ValueError(
+                f"Attention family {self.family_id} resolved non-positive "
+                f"runtime_head_size={value!r}"
+            )
+        return value
 
     def require_enabled_for_execution(self) -> None:
         if self.dsa_frozen:

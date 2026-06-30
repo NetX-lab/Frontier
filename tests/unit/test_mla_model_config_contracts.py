@@ -69,6 +69,63 @@ def test_base_model_config_parses_first_class_mla_fields(tmp_path: Path, monkeyp
     assert config.get_qk_head_dim() == 192
 
 
+def test_base_model_config_delegates_runtime_cache_helpers_to_family_spec(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    model_name = "deepseek-ai/DeepSeek-V2-MLA-Family-Resolver-Unit"
+    config_dir = tmp_path / "data" / "config" / "models"
+    config_dir.mkdir(parents=True)
+    (config_dir / "deepseek-ai__DeepSeek-V2-MLA-Family-Resolver-Unit.json").write_text(
+        json.dumps(_deepseek_v2_hf_config()),
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    config = BaseModelConfig.create_from_name(model_name)
+    family = config.get_attention_family()
+
+    assert family.family_id == "latent_mla_attention"
+    assert config.get_runtime_num_kv_heads() == family.resolve_runtime_num_kv_heads(
+        config
+    )
+    assert config.get_runtime_head_size() == family.resolve_runtime_head_size(config)
+
+
+def test_base_model_config_rebinds_attention_family_after_mutation() -> None:
+    config = BaseModelConfig(
+        num_layers=1,
+        num_q_heads=128,
+        num_kv_heads=128,
+        embedding_dim=5120,
+        mlp_hidden_dim=12288,
+        max_position_embeddings=4096,
+        use_gated_mlp=True,
+        use_bias=False,
+        use_qkv_bias=False,
+        activation=ActivationType.SILU,
+        norm=NormType.RMS_NORM,
+        post_attn_norm=True,
+        vocab_size=102400,
+        model_type="generic",
+        use_mla=False,
+    )
+
+    assert config.get_attention_family().family_id == "dense_attention"
+
+    config.use_mla = True
+    config.kv_lora_rank = 512
+    config.qk_nope_head_dim = 128
+    config.qk_rope_head_dim = 64
+    config.qk_head_dim = 192
+    config.v_head_dim = 128
+
+    assert config.get_attention_family().family_id == "latent_mla_attention"
+    assert config.uses_mla() is True
+    assert config.get_runtime_num_kv_heads() == 1
+    assert config.get_runtime_head_size() == 576
+
+
 def test_base_model_config_rejects_incomplete_mla_topology() -> None:
     with pytest.raises(ValueError, match="kv_lora_rank"):
         BaseModelConfig(
@@ -125,6 +182,81 @@ def test_profiling_model_config_uses_vllm_mla_runtime_cache_semantics() -> None:
     assert model_config.use_mla is True
     assert model_config.get_num_kv_heads(parallel_config) == 1
     assert model_config.get_head_size() == 576
+    assert model_config.get_runtime_head_size() == 576
+    assert model_config.get_qk_head_dim() == 192
+
+
+def test_profiling_model_config_delegates_runtime_cache_helpers_to_family_spec() -> None:
+    model_config = ModelConfig(
+        name="deepseek-ai/DeepSeek-V2-MLA-Unit",
+        num_layers=60,
+        num_q_heads=128,
+        num_kv_heads=128,
+        embedding_dim=5120,
+        mlp_hidden_dim=12288,
+        max_position_embeddings=163840,
+        use_gated_mlp=True,
+        use_bias=False,
+        use_qkv_bias=False,
+        activation=ActivationType.SILU,
+        norm=NormType.RMS_NORM,
+        post_attn_norm=True,
+        vocab_size=102400,
+        dtype="bfloat16",
+        model_type="deepseek_v2",
+        use_mla=True,
+        q_lora_rank=1536,
+        kv_lora_rank=512,
+        qk_nope_head_dim=128,
+        qk_rope_head_dim=64,
+        qk_head_dim=192,
+        v_head_dim=128,
+    )
+    parallel_config = ParallelConfig(pipeline_parallel_size=1, tensor_parallel_size=8)
+    family = model_config.get_attention_family()
+
+    assert family.family_id == "latent_mla_attention"
+    assert model_config.get_runtime_num_kv_heads() == (
+        family.resolve_runtime_num_kv_heads(model_config)
+    )
+    assert model_config.get_runtime_head_size() == (
+        family.resolve_runtime_head_size(model_config)
+    )
+    assert model_config.get_num_kv_heads(parallel_config) == 1
+
+
+def test_profiling_model_config_rebinds_attention_family_after_mutation() -> None:
+    model_config = ModelConfig(
+        name="dense-unit",
+        num_layers=1,
+        num_q_heads=128,
+        num_kv_heads=128,
+        embedding_dim=5120,
+        mlp_hidden_dim=12288,
+        max_position_embeddings=4096,
+        use_gated_mlp=True,
+        use_bias=False,
+        use_qkv_bias=False,
+        activation=ActivationType.SILU,
+        norm=NormType.RMS_NORM,
+        post_attn_norm=True,
+        vocab_size=102400,
+        dtype="bfloat16",
+        model_type="generic",
+        use_mla=False,
+    )
+
+    assert model_config.get_attention_family().family_id == "dense_attention"
+
+    model_config.use_mla = True
+    model_config.kv_lora_rank = 512
+    model_config.qk_nope_head_dim = 128
+    model_config.qk_rope_head_dim = 64
+    model_config.qk_head_dim = 192
+    model_config.v_head_dim = 128
+
+    assert model_config.get_attention_family().family_id == "latent_mla_attention"
+    assert model_config.get_runtime_num_kv_heads() == 1
     assert model_config.get_runtime_head_size() == 576
     assert model_config.get_qk_head_dim() == 192
 

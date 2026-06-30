@@ -7,7 +7,7 @@ import torch
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
 from frontier.attention.model_binding import bind_attention_family
-from frontier.attention.ops import AttentionOperatorRole
+from frontier.attention.ops import AttentionMemoryLayout, AttentionOperatorRole
 from frontier.attention.profiling_mapping import get_profiling_metric_name_by_role
 from frontier.profiling.attention.backends import (
     AttentionBackend,
@@ -59,6 +59,12 @@ class AttentionWrapper:
         self._parallel_config = parallel_config
         self._dtype = dtype
         self._device = torch.device("cuda")
+        self._attention_binding = bind_attention_family(self._model_config)
+        self._attention_binding.require_enabled_for_execution()
+        self._attention_family = self._attention_binding.family
+        self._uses_latent_mla = (
+            self._attention_family.memory_layout is AttentionMemoryLayout.LATENT_MLA
+        )
 
         self._max_model_len = max_model_len
         self._n_worker_q_heads = self._model_config.get_num_q_heads(
@@ -68,12 +74,11 @@ class AttentionWrapper:
             self._parallel_config
         )
         self._head_dim = self._model_config.get_head_size()
-        self._use_mla = bool(getattr(self._model_config, "use_mla", False))
         self._qk_head_dim = self._model_config.get_qk_head_dim()
         self._kv_lora_rank = getattr(self._model_config, "kv_lora_rank", None)
         self._qk_rope_head_dim = getattr(self._model_config, "qk_rope_head_dim", None)
         self._v_head_dim = getattr(self._model_config, "v_head_dim", None)
-        scale_dim = self._qk_head_dim if self._use_mla else self._head_dim
+        scale_dim = self._qk_head_dim if self._uses_latent_mla else self._head_dim
         self._softmax_scale = 1.0 / (scale_dim**0.5)
 
         self._block_size = block_size
@@ -81,9 +86,6 @@ class AttentionWrapper:
         self._attention_backend = attention_backend
         set_attention_backend(attention_backend)
         attention_backend_wrapper = get_attention_wrapper()
-        self._attention_binding = bind_attention_family(self._model_config)
-        self._attention_binding.require_enabled_for_execution()
-        self._attention_family = self._attention_binding.family
         if not attention_backend_wrapper.supports_attention_family(
             self._attention_family
         ):
@@ -111,7 +113,7 @@ class AttentionWrapper:
         )
 
     def _make_qkv_tensors(self, total_tokens: int):
-        if self._use_mla:
+        if self._uses_latent_mla:
             if self._kv_lora_rank is None or self._qk_rope_head_dim is None:
                 raise ValueError(
                     "MLA profiling input tensors require kv_lora_rank and "
