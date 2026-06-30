@@ -17,6 +17,7 @@ from sklearn.base import BaseEstimator
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
 from frontier.attention.ops import AttentionOperatorRole
+from frontier.attention.string_coercion import coerce_truthy_bool
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_feature_columns,
     get_enabled_predictor_median_column_by_role,
@@ -261,12 +262,8 @@ class AttentionTrainer(BaseTrainer):
 
         # is_decode is derived from is_prefill when available.
         if "is_prefill" in df_with_features.columns:
-            normalized_prefill_values = (
+            normalized_prefill_values = coerce_truthy_bool(
                 df_with_features["is_prefill"]
-                .astype(str)
-                .str.strip()
-                .str.lower()
-                .isin({"1", "true", "t", "yes", "y"})
             )
             df_with_features["is_decode"] = ~normalized_prefill_values
         else:
@@ -278,12 +275,7 @@ class AttentionTrainer(BaseTrainer):
         logger.info("Added standard derived features: num_tokens, is_decode, prefill_chunk_size_squared")
 
         def _normalize_bool_series(series: pd.Series) -> pd.Series:
-            return (
-                series.astype(str)
-                .str.strip()
-                .str.lower()
-                .isin({"1", "true", "t", "yes", "y"})
-            )
+            return coerce_truthy_bool(series)
 
         if "is_mixed_batch" in df_with_features.columns:
             df_with_features["is_mixed_batch"] = _normalize_bool_series(

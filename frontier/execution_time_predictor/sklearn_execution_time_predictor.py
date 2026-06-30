@@ -25,6 +25,7 @@ from frontier.attention.families import (
 from frontier.attention.model_binding import bind_attention_family
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.ops import AttentionPhase
+from frontier.attention.string_coercion import coerce_truthy_bool, coerce_truthy_int
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_feature_columns,
     get_enabled_predictor_median_column_by_role,
@@ -2169,13 +2170,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         df_with_derived_features = df.copy()
         if self._is_mla_attention_family():
             if "is_prefill" in df_with_derived_features.columns:
-                df_with_derived_features["is_prefill"] = (
+                df_with_derived_features["is_prefill"] = coerce_truthy_int(
                     df_with_derived_features["is_prefill"]
-                    .astype(str)
-                    .str.strip()
-                    .str.lower()
-                    .isin({"1", "true", "t", "yes", "y"})
-                    .astype(int)
                 )
             return df_with_derived_features
 
@@ -2184,12 +2180,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         ].max(axis=1)
 
         if "is_prefill" in df_with_derived_features.columns:
-            normalized_prefill_values = (
+            normalized_prefill_values = coerce_truthy_bool(
                 df_with_derived_features["is_prefill"]
-                .astype(str)
-                .str.strip()
-                .str.lower()
-                .isin({"1", "true", "t", "yes", "y"})
             )
             df_with_derived_features["is_decode"] = ~normalized_prefill_values
         else:
@@ -2202,12 +2194,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
 
         def _normalize_bool_series(series: pd.Series) -> pd.Series:
-            return (
-                series.astype(str)
-                .str.strip()
-                .str.lower()
-                .isin({"1", "true", "t", "yes", "y"})
-            )
+            return coerce_truthy_bool(series)
 
         if "is_mixed_batch" in df_with_derived_features.columns:
             df_with_derived_features["is_mixed_batch"] = _normalize_bool_series(

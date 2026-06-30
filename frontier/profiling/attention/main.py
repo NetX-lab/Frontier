@@ -59,6 +59,7 @@ from frontier.attention.families import DENSE_ATTENTION_FAMILY
 from frontier.attention.profiling_mapping import (
     validate_attention_profiling_dataframe,
 )
+from frontier.attention.string_coercion import coerce_truthy_bool
 from frontier.profiling.attention.backends import AttentionBackend
 from frontier.profiling.common.parallel_config import ParallelConfig
 
@@ -906,12 +907,7 @@ def _normalize_partition_contract(
         return df
     output_df = df.copy()
     def _normalize_bool_series(series: pd.Series, default: bool) -> pd.Series:
-        normalized = (
-            series.astype(str)
-            .str.strip()
-            .str.lower()
-            .isin({"1", "true", "t", "yes", "y"})
-        )
+        normalized = coerce_truthy_bool(series)
         return normalized.where(~series.isna(), default)
 
     if "is_true_mixed_batch" not in output_df.columns:
