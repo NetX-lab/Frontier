@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.memory import get_attention_runtime_kv_layout
+from frontier.attention.model_binding import bind_attention_family
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.config import get_quantization_manager
 from frontier.config.model_config import BaseModelConfig
@@ -607,15 +609,23 @@ def build_kv_cache_transfer_meta(
     model_config = replica_config.model_config
     num_layers = model_config.num_layers
     num_q_heads = model_config.num_q_heads
-    num_kv_heads = model_config.num_kv_heads
-    # Use model_config.get_head_dim() to prioritize explicit head_dim from JSON config
-    head_dim = model_config.get_head_dim()
+    # Family-aware runtime KV layout: dense keeps (num_kv_heads, get_head_dim(), kv_factor=2);
+    # latent MLA collapses to (1, kv_lora_rank + qk_rope_head_dim, kv_factor=1). Mirrors the
+    # analytical transfer predictor so capacity and transfer agree on the same MLA cache.
+    family = bind_attention_family(model_config).family
+    layout = get_attention_runtime_kv_layout(
+        family,
+        runtime_num_kv_heads_per_worker=model_config.get_runtime_num_kv_heads(),
+        runtime_head_size=model_config.get_runtime_head_size(),
+    )
+    num_kv_heads = layout.runtime_num_kv_heads_per_worker
+    head_dim = layout.runtime_head_size
 
     total_tokens = sum(req.num_prefill_tokens for req in batch.requests)
     precision = _precision_for_op("kv_cache_transfer", cluster_type)
     dtype_bytes = precision.bytes_per_element
     tensor_shape = {
-        "kv": [total_tokens, num_layers, num_kv_heads, head_dim, 2],
+        "kv": [total_tokens, num_layers, num_kv_heads, head_dim, layout.kv_factor],
     }
     element_count = _elements_from_shape(tensor_shape["kv"])
     tensor_size_bytes = {
