@@ -176,3 +176,14 @@ def get_attention_family(family_id: str) -> AttentionFamilySpec:
 
 def iter_attention_families() -> tuple[AttentionFamilySpec, ...]:
     return tuple(_FAMILIES_BY_ID.values())
+
+
+def iter_execution_enabled_families() -> tuple[AttentionFamilySpec, ...]:
+    """Catalog families that participate in execution/profiling/training.
+
+    Single source of truth for the frozen-DSA guard: catalog consumers iterate
+    this instead of re-implementing a per-call ``dsa_frozen`` skip.
+    """
+    return tuple(
+        family for family in iter_attention_families() if not family.dsa_frozen
+    )

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from frontier.attention.families import (
     LATENT_MLA_ATTENTION_FAMILY,
-    iter_attention_families,
+    iter_execution_enabled_families,
 )
 from frontier.attention.ops import (
     AttentionFamilySpec,
@@ -331,7 +331,7 @@ def validate_attention_catalog_alignment(
     """Validate that existing metric enums cover all enabled family operators."""
     profiling_required: set[str] = set()
     e2e_required: set[str] = set()
-    for family in iter_attention_families():
+    for family in iter_execution_enabled_families():
         profiling_required.update(get_profiling_metric_names(family))
         e2e_required.update(get_e2e_metric_names(family))
 

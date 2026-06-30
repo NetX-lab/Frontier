@@ -7,7 +7,10 @@ import threading
 from pathlib import Path
 from typing import Dict, Optional, Set, Any, List
 
-from frontier.attention.families import DENSE_ATTENTION_FAMILY, iter_attention_families
+from frontier.attention.families import (
+    DENSE_ATTENTION_FAMILY,
+    iter_execution_enabled_families,
+)
 from frontier.config.model_config import BaseModelConfig
 from frontier.config.precision_type import PrecisionType, PrecisionMismatchInfo
 from frontier.logger import init_logger
@@ -18,9 +21,7 @@ logger = init_logger(__name__)
 
 def _attention_compute_operations() -> List[str]:
     operation_names: List[str] = []
-    for family in iter_attention_families():
-        if family.dsa_frozen:
-            continue
+    for family in iter_execution_enabled_families():
         active_family = (
             DENSE_ATTENTION_FAMILY
             if family.family_id == DENSE_ATTENTION_FAMILY.family_id

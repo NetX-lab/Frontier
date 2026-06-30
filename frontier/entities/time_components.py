@@ -8,13 +8,13 @@ to form complete ExecutionTime objects for different cluster types.
 from dataclasses import dataclass, field
 from typing import Mapping
 
-from frontier.attention.families import iter_attention_families
+from frontier.attention.families import iter_execution_enabled_families
 
 
 def _attention_operator_execution_time_attrs() -> dict[str, str]:
     return {
         operator.name: operator.execution_time_attr
-        for family in iter_attention_families()
+        for family in iter_execution_enabled_families()
         for operator in family.e2e_trace_ops()
         if operator.execution_time_attr is not None
     }

@@ -235,7 +235,7 @@ def test_structured_attention_legacy_coverage_uses_family_execution_time_attrs(
     )
     monkeypatch.setattr(
         time_components,
-        "iter_attention_families",
+        "iter_execution_enabled_families",
         lambda: (custom_family,),
         raising=False,
     )

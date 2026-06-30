@@ -5,6 +5,8 @@ from frontier.attention.families import (
     DSA_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
     get_attention_family,
+    iter_attention_families,
+    iter_execution_enabled_families,
 )
 from frontier.attention.model_binding import (
     AttentionFamilyBinding,
@@ -34,4 +36,6 @@ __all__ = [
     "get_attention_family",
     "get_attention_runtime_kv_layout",
     "get_attention_trace_op_times",
+    "iter_attention_families",
+    "iter_execution_enabled_families",
 ]
