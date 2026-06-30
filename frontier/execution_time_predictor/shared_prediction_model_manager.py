@@ -11,7 +11,11 @@ from sklearn.base import BaseEstimator
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
 
-from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.families import (
+    DENSE_ATTENTION_FAMILY,
+    LATENT_MLA_ATTENTION_FAMILY,
+)
+from frontier.attention.model_binding import bind_attention_family
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_median_column_by_role,
@@ -19,6 +23,7 @@ from frontier.attention.profiling_mapping import (
     get_enabled_predictor_metric_name_by_role,
     get_enabled_predictor_metric_names,
     get_enabled_shared_predictor_feature_columns,
+    validate_attention_profiling_dataframe,
 )
 from frontier.config import MetricsConfig, ClusterConfig, global_vars
 from frontier.types import ClusterType, CCBackendType, MeasurementType
@@ -1222,9 +1227,34 @@ class ExecutionTimePredictionModelManager:
             replica_scheduler_config,
             cluster_type=cluster_type,
         )
+        training_context['input_file'] = attn_file
+
+        # Family-aware attention-core training. Latent-MLA profiles carry six
+        # ``attn_mla_*`` operators with a structural layout the dense block cannot
+        # consume; route them through the MLA branch before the dense derive (which
+        # assumes dense feature columns such as ``prefill_chunk_size``).
+        if self._is_mla_family(replica_config.model_config):
+            attention_df = self._get_mla_attention_df_with_derived_features(
+                attention_df
+            )
+            logger.info(
+                f"Loaded {len(attention_df)} rows for latent-MLA attention core training"
+            )
+            models.update(
+                self._train_mla_attention_core_models(
+                    attention_df=attention_df,
+                    attention_signature=attention_signature,
+                    cluster_type=cluster_type,
+                    execution_time_predictor_config=execution_time_predictor_config,
+                    training_context=training_context,
+                    trained_model_signatures=trained_model_signatures,
+                )
+            )
+            trained_model_signatures.add(attention_signature)
+            return models
+
         attention_df = self._get_attention_df_with_derived_features(attention_df)
         logger.info(f"Loaded {len(attention_df)} rows for attention core training")
-        training_context['input_file'] = attn_file
         measurement_type = self._active_measurement_type
         dense_attention_model_names = get_enabled_predictor_metric_names(
             DENSE_ATTENTION_FAMILY
@@ -1437,6 +1467,196 @@ class ExecutionTimePredictionModelManager:
                 )
 
         trained_model_signatures.add(attention_signature)
+        return models
+
+    @staticmethod
+    def _is_mla_family(model_config) -> bool:
+        """Return True when the model binds to the latent-MLA attention family."""
+        if model_config is None:
+            return False
+        return (
+            bind_attention_family(model_config).family.family_id
+            == LATENT_MLA_ATTENTION_FAMILY.family_id
+        )
+
+    def _get_mla_attention_df_with_derived_features(
+        self, df: pd.DataFrame
+    ) -> pd.DataFrame:
+        """Derive latent-MLA attention features (normalize ``is_prefill`` to int).
+
+        Mirrors the monolithic ``SklearnExecutionTimePredictor`` MLA early-return:
+        latent-MLA training keys on the imported structural columns directly and must
+        NOT add the dense ``num_tokens`` / ``prefill_chunk_size`` derived features.
+        """
+        df_with_derived_features = df.copy()
+        if "is_prefill" in df_with_derived_features.columns:
+            df_with_derived_features["is_prefill"] = (
+                df_with_derived_features["is_prefill"]
+                .astype(str)
+                .str.strip()
+                .str.lower()
+                .isin({"1", "true", "t", "yes", "y"})
+                .astype(int)
+            )
+        return df_with_derived_features
+
+    def _filter_mla_attention_df(
+        self,
+        df: pd.DataFrame,
+        file_path: str,
+        replica_config,
+        replica_scheduler_config,
+    ) -> pd.DataFrame:
+        """Filter an imported latent-MLA profile to the requested structural layout.
+
+        Verbatim port of the monolithic ``_filter_mla_attention_df`` (adapted to the
+        shared-manager's per-cluster ``replica_config`` / ``replica_scheduler_config``
+        instead of instance state). Fail-fast on missing structural columns or an empty
+        post-filter frame per §7 (no silent fallback).
+        """
+        validate_attention_profiling_dataframe(
+            df,
+            LATENT_MLA_ATTENTION_FAMILY,
+            measurement_type=self._active_measurement_type,
+        )
+
+        model_config = replica_config.model_config
+        expected_values = {
+            "n_q_head": int(getattr(model_config, "num_q_heads")),
+            "n_kv_head": int(
+                model_config.get_runtime_num_kv_heads()
+                if hasattr(model_config, "get_runtime_num_kv_heads")
+                else 1
+            ),
+            "head_size": int(
+                model_config.get_runtime_head_size()
+                if hasattr(model_config, "get_runtime_head_size")
+                else int(getattr(model_config, "kv_lora_rank"))
+                + int(getattr(model_config, "qk_rope_head_dim"))
+            ),
+            "qk_nope_head_dim": int(getattr(model_config, "qk_nope_head_dim")),
+            "qk_rope_head_dim": int(getattr(model_config, "qk_rope_head_dim")),
+            "qk_head_dim": int(model_config.get_qk_head_dim()),
+            "kv_lora_rank": int(getattr(model_config, "kv_lora_rank")),
+            "v_head_dim": int(getattr(model_config, "v_head_dim")),
+            "block_size": int(replica_scheduler_config.block_size),
+            "num_tensor_parallel_workers": int(
+                replica_config.attn_tensor_parallel_size
+            ),
+        }
+        missing_columns = [
+            column for column in expected_values if column not in df.columns
+        ]
+        if missing_columns:
+            raise ValueError(
+                "MLA attention profiling data is missing structural columns: "
+                f"{missing_columns}. file={file_path}"
+            )
+
+        filtered = df.copy()
+        for column, expected_value in expected_values.items():
+            filtered = filtered[filtered[column].astype(int) == expected_value]
+
+        if filtered.empty:
+            raise ValueError(
+                "No MLA attention profiling rows remain after structural filtering. "
+                f"file={file_path}, expected={expected_values}"
+            )
+        return filtered
+
+    def _train_mla_attention_core_models(
+        self,
+        attention_df: pd.DataFrame,
+        attention_signature: str,
+        cluster_type: ClusterType,
+        execution_time_predictor_config,
+        training_context: Dict[str, Any],
+        trained_model_signatures: set,
+    ) -> Dict[str, BaseEstimator]:
+        """Train the six latent-MLA attention-core operators (training-only A2 fix).
+
+        Mirrors the monolithic ``_train_mla_attention_layer_models`` (sparse-by-target
+        row filtering + exact-row memoization). The on-demand consumer pairs each
+        estimator's ``_frontier_exact_lookup`` with the same module-level builder, so
+        the disaggregation prediction path works unchanged once these models exist.
+        """
+        model_names = list(
+            get_enabled_predictor_metric_names(LATENT_MLA_ATTENTION_FAMILY)
+        )
+        target_columns = dict(
+            zip(
+                model_names,
+                get_enabled_predictor_median_columns(LATENT_MLA_ATTENTION_FAMILY),
+            )
+        )
+        feature_columns = get_enabled_shared_predictor_feature_columns(
+            LATENT_MLA_ATTENTION_FAMILY
+        )
+
+        models: Dict[str, BaseEstimator] = {}
+        for model_name in model_names:
+            model_signature = f"{model_name}_{attention_signature}"
+            if model_signature in trained_model_signatures:
+                continue
+
+            feature_cols = list(feature_columns[model_name])
+            target_col = target_columns[model_name]
+            required_columns = [*feature_cols, target_col]
+            missing_columns = [
+                column
+                for column in required_columns
+                if column not in attention_df.columns
+            ]
+            all_nan_columns = [
+                column
+                for column in required_columns
+                if column in attention_df.columns
+                and attention_df[column].isna().all()
+            ]
+            if missing_columns or all_nan_columns:
+                raise ValueError(
+                    "MLA attention profiling data cannot train "
+                    f"{model_name}."
+                    f"\nMissing columns: {missing_columns}"
+                    f"\nAll-NaN columns: {all_nan_columns}"
+                )
+
+            op_attention_df = attention_df.dropna(subset=[target_col]).copy()
+            if op_attention_df.empty:
+                raise ValueError(
+                    "MLA attention profiling data cannot train "
+                    f"{model_name}: target column {target_col!r} has no "
+                    "observed timing rows."
+                )
+            nan_feature_columns = [
+                column
+                for column in feature_cols
+                if op_attention_df[column].isna().any()
+            ]
+            if nan_feature_columns:
+                raise ValueError(
+                    "MLA attention profiling data cannot train "
+                    f"{model_name}: feature columns contain NaN after "
+                    f"target filtering: {nan_feature_columns}"
+                )
+
+            model = self._train_single_model(
+                model_name=model_name,
+                df=op_attention_df,
+                feature_cols=feature_cols,
+                target_col=target_col,
+                execution_time_predictor_config=execution_time_predictor_config,
+                training_context=training_context,
+            )
+            model._frontier_exact_lookup = _build_exact_feature_lookup(
+                op_attention_df,
+                feature_cols,
+                target_col,
+            )
+            models[model_name] = model
+            trained_model_signatures.add(model_signature)
+            logger.info(f"Trained {model_name} for {cluster_type}")
+
         return models
 
     def _train_residual_models_for_cluster(self, cluster_type: ClusterType, replica_config, execution_time_predictor_config,
@@ -2017,6 +2237,15 @@ class ExecutionTimePredictionModelManager:
             attention_file_path=file_path,
             available_columns=df.columns,
         )
+
+        # Latent-MLA profiles use a distinct structural schema (runtime kv heads = 1,
+        # head size = kv_lora_rank + qk_rope_head_dim); route them to the MLA
+        # structural filter before the dense cache-write fill / dense filter.
+        model_config = replica_config.model_config
+        if self._is_mla_family(model_config):
+            return self._filter_mla_attention_df(
+                df, file_path, replica_config, replica_scheduler_config
+            )
 
         # Fill missing cache-write column for older attention profiling CSVs.
         cache_write_median_column = get_enabled_predictor_median_column_by_role(
