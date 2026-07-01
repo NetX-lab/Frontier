@@ -34,6 +34,8 @@ except ImportError:
 from frontier.profiling.attention.backends.base_attention_wrapper import (
     BaseAttentionWrapper,
 )
+from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.ops import AttentionMemoryLayout
 from frontier.profiling.attention.sequence_metadata import SequenceMetadata
 from frontier.profiling.common.constants import OperationMetrics
 from frontier.profiling.common.model_config import ModelConfig
@@ -77,7 +79,13 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
                 "Install vllm or set PYTHONPATH to the vllm source tree."
             )
 
+        self._attention_family = bind_attention_family(model_config).family
+        self._uses_latent_mla = (
+            self._attention_family.memory_layout is AttentionMemoryLayout.LATENT_MLA
+        )
         super().init(model_config, parallel_config, block_size, device)
+        if self._uses_latent_mla:
+            self._raise_mla_not_implemented()
 
         self.kv_cache_layout = get_kv_cache_layout()
         if self.kv_cache_layout == "NHD":
@@ -148,6 +156,14 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
 
         self.slot_mapping = None
 
+    def _raise_mla_not_implemented(self) -> None:
+        raise NotImplementedError(
+            "MLA profiling is not implemented in FlashinferAttentionWrapper. "
+            "The dense FlashInfer path cannot be reused for MLA latent KV cache "
+            "or vLLM V1 MLA physical scopes; add a dedicated MLA profiling "
+            "backend before enabling use_mla here."
+        )
+
     def to_int_tensor(self, data: List[int]) -> torch.Tensor:
         """Convert a list of integers to a CUDA tensor.
 
@@ -169,6 +185,8 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
         Returns:
             Cache block tensor with shape (num_blocks, 2, block_size, num_kv_heads, head_dim).
         """
+        if getattr(self, "_uses_latent_mla", False):
+            self._raise_mla_not_implemented()
         return torch.randn(
             num_blocks,
             2,
@@ -359,6 +377,8 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
             Output tensor.
         """
         assert self.is_metadata_initialized, "Metadata is not initialized."
+        if getattr(self, "_uses_latent_mla", False):
+            self._raise_mla_not_implemented()
 
         if self.is_profiling_iteration:
             # there is no need to call attention in profiling mode

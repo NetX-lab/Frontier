@@ -22,6 +22,14 @@ class OperationMetrics(enum.Enum):
     ATTN = "attn"
     ATTN_PREFILL = "attn_prefill"
     ATTN_DECODE = "attn_decode"
+    # Catalog names for vLLM-grounded MLA scopes; native Frontier profiling wrappers
+    # must add explicit timers before claiming measured MLA profiling support.
+    ATTN_MLA_KV_CACHE_SAVE = "attn_mla_kv_cache_save"
+    ATTN_MLA_PREFILL_KV_UP_PROJ = "attn_mla_prefill_kv_up_proj"
+    ATTN_MLA_PREFILL = "attn_mla_prefill"
+    ATTN_MLA_DECODE_Q_LATENT_PROJ = "attn_mla_decode_q_latent_proj"
+    ATTN_MLA_DECODE = "attn_mla_decode"
+    ATTN_MLA_V_UP_PROJ = "attn_mla_v_up_proj"
     ATTN_ROPE = "attn_rope"
     ATTN_INPUT_RESHAPE = "attn_input_reshape"
     ATTN_OUTPUT_RESHAPE = "attn_output_reshape"

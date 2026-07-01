@@ -12,15 +12,58 @@ from frontier.types import ClusterType
 class _ModelConfig:
     num_layers = 2
     num_kv_heads = 4
+    num_q_heads = 8
     embedding_dim = 64
     is_moe = False
+    use_mla = False
 
     def get_head_dim(self) -> int:
         return 8
 
+    def get_runtime_num_kv_heads(self) -> int:
+        return self.num_kv_heads
+
+    def get_runtime_head_size(self) -> int:
+        return self.get_head_dim()
+
+
+class _MLAModelConfig:
+    """DeepSeek-V2 style latent-MLA model config stub.
+
+    Dense-blind transfer sizing would use ``num_kv_heads * get_head_dim()``; the
+    family-aware path must instead use the runtime latent layout
+    (``get_runtime_num_kv_heads() == 1``, ``get_runtime_head_size() == 576``,
+    ``kv_factor == 1``).
+    """
+
+    num_layers = 2
+    num_kv_heads = 128
+    num_q_heads = 128
+    embedding_dim = 24576
+    is_moe = False
+    use_mla = True
+    kv_lora_rank = 512
+    qk_nope_head_dim = 128
+    qk_rope_head_dim = 64
+    qk_head_dim = 192
+    v_head_dim = 128
+
+    def get_head_dim(self) -> int:
+        return 192
+
+    def get_runtime_num_kv_heads(self) -> int:
+        return 1
+
+    def get_runtime_head_size(self) -> int:
+        return self.kv_lora_rank + self.qk_rope_head_dim
+
 
 class _ReplicaConfig:
     model_config = _ModelConfig()
+
+
+class _MLAReplicaConfig:
+    model_config = _MLAModelConfig()
 
 
 class _Batch:
@@ -76,6 +119,33 @@ def test_kv_cache_analytical_predictor_computes_size_time_and_registry_lookup() 
         KVCacheTransferPredictorRegistry.get(KVCacheTransferType.ANALYTICAL, config),
         AnalyticalKVCacheTransferPredictor,
     )
+
+
+def test_kv_cache_analytical_predictor_sizes_latent_mla_cache() -> None:
+    """MLA transfer sizing must follow the latent runtime layout, not dense heads.
+
+    Dense-blind sizing would yield ``num_kv_heads(128) * get_head_dim(192) * 2``
+    per token-layer; the family-aware path must instead use the latent layout
+    (runtime kv heads = 1, runtime head size = 576, kv_factor = 1).
+    """
+    from frontier.kv_cache_transfer import AnalyticalKVCacheTransferPredictor
+
+    config = AnalyticalKVCacheTransferConfig(
+        network_bandwidth_gbps=80.0,
+        network_latency_ms=0.25,
+        kv_cache_dtype_size_bytes=2,
+    )
+    predictor = AnalyticalKVCacheTransferPredictor(config)
+    batch = _Batch()
+    replica_config = _MLAReplicaConfig()
+
+    # total_tokens=8, num_layers=2, runtime_kv_heads=1, runtime_head_size=576,
+    # kv_factor=1, dtype_size=2 -> 8 * 2 * 1 * 576 * 1 * 2 = 18432
+    kv_size = predictor.get_kv_cache_size(batch, replica_config)
+    assert kv_size == 8 * 2 * 1 * 576 * 1 * 2
+
+    request_size = predictor.get_kv_cache_size_for_request(batch.requests[0], replica_config)
+    assert request_size == 3 * 2 * 1 * 576 * 1 * 2
 
 
 def test_m2n_analytical_predictor_computes_size_time_and_registry_lookup() -> None:

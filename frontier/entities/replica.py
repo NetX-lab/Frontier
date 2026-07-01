@@ -95,9 +95,7 @@ class Replica(BaseEntity):
     def attention_head_dim(self) -> int:
         if self.num_q_heads == 0:
             return 0
-        # Use model_config.get_head_dim() to prioritize explicit head_dim from JSON config
-        # This ensures consistency with the profiling module's ModelConfig.get_head_size()
-        return self._model_config.get_head_dim()
+        return self._model_config.get_runtime_head_size()
 
     @property
     def q_heads_per_tensor_parallel_worker(self) -> int:
@@ -111,10 +109,11 @@ class Replica(BaseEntity):
     def kv_heads_per_tensor_parallel_worker(self) -> int:
         if self.num_kv_heads == 0:
             return 0
+        runtime_num_kv_heads = self._model_config.get_runtime_num_kv_heads()
         if self.num_attn_tensor_parallel_workers == 0:
-            return self._model_config.num_kv_heads
+            return runtime_num_kv_heads
         return ceil(
-            self._model_config.num_kv_heads / self.num_attn_tensor_parallel_workers
+            runtime_num_kv_heads / self.num_attn_tensor_parallel_workers
         )
 
     @property

@@ -5,6 +5,10 @@ from typing import List
 import numpy as np
 import torch
 
+from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.ops import AttentionMemoryLayout, AttentionOperatorRole
+from frontier.attention.profiling_mapping import get_profiling_metric_name_by_role
 from frontier.profiling.attention.backends import (
     AttentionBackend,
     get_attention_wrapper,
@@ -26,6 +30,10 @@ from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
 WARMUP_STEPS = 3
 ACTIVE_STEPS = 5
 _ALLOW_ZERO_CUDA_OPS = {"attn_input_reshape", "attn_output_reshape"}
+
+
+def _dense_profiling_op_name_by_role(role: AttentionOperatorRole) -> str:
+    return get_profiling_metric_name_by_role(DENSE_ATTENTION_FAMILY, role)
 
 
 class AttentionWrapper:
@@ -51,6 +59,12 @@ class AttentionWrapper:
         self._parallel_config = parallel_config
         self._dtype = dtype
         self._device = torch.device("cuda")
+        self._attention_binding = bind_attention_family(self._model_config)
+        self._attention_binding.require_enabled_for_execution()
+        self._attention_family = self._attention_binding.family
+        self._uses_latent_mla = (
+            self._attention_family.memory_layout is AttentionMemoryLayout.LATENT_MLA
+        )
 
         self._max_model_len = max_model_len
         self._n_worker_q_heads = self._model_config.get_num_q_heads(
@@ -60,13 +74,32 @@ class AttentionWrapper:
             self._parallel_config
         )
         self._head_dim = self._model_config.get_head_size()
-        self._softmax_scale = 1.0 / (self._head_dim**0.5)
+        self._qk_head_dim = self._model_config.get_qk_head_dim()
+        self._kv_lora_rank = getattr(self._model_config, "kv_lora_rank", None)
+        self._qk_rope_head_dim = getattr(self._model_config, "qk_rope_head_dim", None)
+        self._v_head_dim = getattr(self._model_config, "v_head_dim", None)
+        scale_dim = self._qk_head_dim if self._uses_latent_mla else self._head_dim
+        self._softmax_scale = 1.0 / (scale_dim**0.5)
 
         self._block_size = block_size
 
         self._attention_backend = attention_backend
         set_attention_backend(attention_backend)
-        get_attention_wrapper().init(
+        attention_backend_wrapper = get_attention_wrapper()
+        if not attention_backend_wrapper.supports_attention_family(
+            self._attention_family
+        ):
+            backend_name = (
+                attention_backend.value
+                if isinstance(attention_backend, AttentionBackend)
+                else str(attention_backend)
+            )
+            raise NotImplementedError(
+                f"Attention family {self._attention_family.family_id} is not "
+                f"supported by backend {backend_name}. Add an explicit "
+                "MLA-capable profiling backend before enabling this family."
+            )
+        attention_backend_wrapper.init(
             self._model_config,
             self._parallel_config,
             self._block_size,
@@ -75,31 +108,81 @@ class AttentionWrapper:
         self._max_blocks_per_sequence = ceil(max_model_len / self._block_size)
         # We create (big) KV tensors and reuse them
         self.max_num_blocks = max_num_blocks
-        self.kv_cache = get_attention_wrapper().get_cache_block(
+        self.kv_cache = attention_backend_wrapper.get_cache_block(
             self.max_num_blocks, dtype=self._dtype, device=self._device
         )
 
+    def _make_qkv_tensors(self, total_tokens: int):
+        if self._uses_latent_mla:
+            if self._kv_lora_rank is None or self._qk_rope_head_dim is None:
+                raise ValueError(
+                    "MLA profiling input tensors require kv_lora_rank and "
+                    "qk_rope_head_dim"
+                )
+            query_width = self._n_worker_q_heads * self._qk_head_dim
+            key_width = self._n_worker_kv_heads * self._kv_lora_rank
+            # The value slot carries MLA k_pe for the existing backend interface,
+            # not dense V. Real MLA V up-projection remains future profiling work.
+            value_width = self._n_worker_kv_heads * self._qk_rope_head_dim
+        else:
+            query_width = self._n_worker_q_heads * self._head_dim
+            key_width = self._n_worker_kv_heads * self._head_dim
+            value_width = self._n_worker_kv_heads * self._head_dim
+
+        query = torch.randn(
+            total_tokens,
+            query_width,
+            dtype=self._dtype,
+            device=self._device,
+        )
+        key = torch.randn(
+            total_tokens,
+            key_width,
+            dtype=self._dtype,
+            device=self._device,
+        )
+        value = torch.randn(
+            total_tokens,
+            value_width,
+            dtype=self._dtype,
+            device=self._device,
+        )
+        return query, key, value
+
     def _validate_precision(self) -> None:
-        raise_if_fp8_requested(
-            "attn_kv_cache_save",
-            "FP8 KV cache save kernel is unavailable for attn_kv_cache_save profiling.",
+        cache_write_op = _dense_profiling_op_name_by_role(
+            AttentionOperatorRole.CACHE_WRITE
+        )
+        prefill_op = _dense_profiling_op_name_by_role(
+            AttentionOperatorRole.PREFILL_KERNEL
+        )
+        decode_op = _dense_profiling_op_name_by_role(
+            AttentionOperatorRole.DECODE_KERNEL
         )
         raise_if_fp8_requested(
-            "attn_prefill",
-            "FP8 attention prefill kernel is unavailable for attn_prefill profiling.",
+            cache_write_op,
+            f"FP8 KV cache save kernel is unavailable for {cache_write_op} profiling.",
         )
         raise_if_fp8_requested(
-            "attn_decode",
-            "FP8 attention decode kernel is unavailable for attn_decode profiling.",
+            prefill_op,
+            f"FP8 attention prefill kernel is unavailable for {prefill_op} profiling.",
+        )
+        raise_if_fp8_requested(
+            decode_op,
+            f"FP8 attention decode kernel is unavailable for {decode_op} profiling.",
         )
 
     def _get_allow_zero_cuda_ops_for_current_forward(self) -> set[str]:
         allowed_ops = set(_ALLOW_ZERO_CUDA_OPS)
         attention_wrapper = get_attention_wrapper()
         if not getattr(attention_wrapper, "contains_prefill", True):
-            allowed_ops.add("attn_prefill")
+            allowed_ops.add(
+                _dense_profiling_op_name_by_role(AttentionOperatorRole.PREFILL_KERNEL)
+            )
         if not getattr(attention_wrapper, "contains_decode", True):
-            allowed_ops.add("attn_decode")
+            allowed_ops.add(
+                _dense_profiling_op_name_by_role(AttentionOperatorRole.DECODE_KERNEL)
+            )
         return allowed_ops
 
     def _get_input_tensors(
@@ -110,24 +193,8 @@ class AttentionWrapper:
             attention_input.prefill_chunk_size if attention_input.is_prefill else 1
         )
         batch_size = attention_input.batch_size
-        query = torch.randn(
-            batch_size * num_tokens_per_seq,
-            self._n_worker_q_heads * self._head_dim,
-            dtype=self._dtype,
-            device=self._device,
-        )
-        key = torch.randn(
-            batch_size * num_tokens_per_seq,
-            self._n_worker_kv_heads * self._head_dim,
-            dtype=self._dtype,
-            device=self._device,
-        )
-        value = torch.randn(
-            batch_size * num_tokens_per_seq,
-            self._n_worker_kv_heads * self._head_dim,
-            dtype=self._dtype,
-            device=self._device,
-        )
+        total_tokens = batch_size * num_tokens_per_seq
+        query, key, value = self._make_qkv_tensors(total_tokens)
         # Create SequenceMetadataProxy objects corresponding to AttentionInput
         seq_metadata_list: List[SequenceMetadataProxy] = []
         for _ in range(attention_input.batch_size):
@@ -164,27 +231,7 @@ class AttentionWrapper:
         batch_size = mixed_input.batch_size
         seq_lens = mixed_input.seq_lens
         total_tokens = sum(seq_lens)
-        
-        # Generate query/key/value tensors
-        # Shape: (total_tokens, num_heads * head_dim)
-        query = torch.randn(
-            total_tokens,
-            self._n_worker_q_heads * self._head_dim,
-            dtype=self._dtype,
-            device=self._device,
-        )
-        key = torch.randn(
-            total_tokens,
-            self._n_worker_kv_heads * self._head_dim,
-            dtype=self._dtype,
-            device=self._device,
-        )
-        value = torch.randn(
-            total_tokens,
-            self._n_worker_kv_heads * self._head_dim,
-            dtype=self._dtype,
-            device=self._device,
-        )
+        query, key, value = self._make_qkv_tensors(total_tokens)
         
         # Create SequenceMetadataProxy objects for each sequence
         seq_metadata_list: List[SequenceMetadataProxy] = []
@@ -223,24 +270,7 @@ class AttentionWrapper:
         total_tokens = (
             true_mixed_input.total_prefill_tokens + true_mixed_input.total_decode_tokens
         )
-        query = torch.randn(
-            total_tokens,
-            self._n_worker_q_heads * self._head_dim,
-            dtype=self._dtype,
-            device=self._device,
-        )
-        key = torch.randn(
-            total_tokens,
-            self._n_worker_kv_heads * self._head_dim,
-            dtype=self._dtype,
-            device=self._device,
-        )
-        value = torch.randn(
-            total_tokens,
-            self._n_worker_kv_heads * self._head_dim,
-            dtype=self._dtype,
-            device=self._device,
-        )
+        query, key, value = self._make_qkv_tensors(total_tokens)
 
         seq_metadata_list: List[SequenceMetadataProxy] = []
         next_block_index = 0

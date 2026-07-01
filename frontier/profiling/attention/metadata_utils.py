@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pandas as pd
 
+from frontier.attention.string_coercion import coerce_truthy_bool
+
 
 def add_chunked_prefill_metadata(df: pd.DataFrame) -> pd.DataFrame:
     """Attach chunked-prefill metadata columns without changing core features."""
@@ -11,13 +13,7 @@ def add_chunked_prefill_metadata(df: pd.DataFrame) -> pd.DataFrame:
     if not required_cols.issubset(df.columns):
         return df
 
-    normalized_is_prefill = (
-        df["is_prefill"]
-        .astype(str)
-        .str.strip()
-        .str.lower()
-        .isin({"1", "true", "t", "yes", "y"})
-    )
+    normalized_is_prefill = coerce_truthy_bool(df["is_prefill"])
     kv_cache_size = pd.to_numeric(df["kv_cache_size"], errors="coerce").fillna(0)
     prefill_chunk_size = pd.to_numeric(
         df["prefill_chunk_size"], errors="coerce"
@@ -37,13 +33,7 @@ def add_chunked_prefill_metadata(df: pd.DataFrame) -> pd.DataFrame:
     if "total_prefill_tokens" not in result.columns:
         result["total_prefill_tokens"] = computed_total_prefill_tokens
     elif "is_true_mixed_batch" in result.columns:
-        is_true_mixed_batch = (
-            result["is_true_mixed_batch"]
-            .astype(str)
-            .str.strip()
-            .str.lower()
-            .isin({"1", "true", "t", "yes", "y"})
-        )
+        is_true_mixed_batch = coerce_truthy_bool(result["is_true_mixed_batch"])
         existing_total_prefill_tokens = pd.to_numeric(
             result["total_prefill_tokens"], errors="coerce"
         )

@@ -10,6 +10,12 @@ from frontier.config import SimulationConfig, ClusterConfig, get_quantization_ma
 from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 from frontier.entities import Batch, BatchStage, ExecutionTime, Request
 from frontier.logger import get_cluster_logger
+from frontier.attention.families import (
+    DENSE_ATTENTION_FAMILY,
+    LATENT_MLA_ATTENTION_FAMILY,
+)
+from frontier.attention.ops import AttentionOperatorRole
+from frontier.attention.trace_mapping import get_attention_trace_op_times
 
 if TYPE_CHECKING:
     from frontier.metrics.trace_store import TraceStore
@@ -63,6 +69,85 @@ TIME_STR_MS = "Time (ms)"
 
 def _round_ledger_ms(value: float) -> float:
     return round(float(value), 9)
+
+
+def _iter_mla_attention_op_times(execution_time: ExecutionTime):
+    return tuple(
+        (operator.name, duration_ms)
+        for operator, duration_ms in get_attention_trace_op_times(
+            execution_time,
+            LATENT_MLA_ATTENTION_FAMILY,
+            skip_zero=False,
+        )
+    )
+
+
+_DENSE_ATTENTION_PUBLIC_TRACE_NAME_BY_ROLE = {
+    AttentionOperatorRole.PREFILL_KERNEL: OperationMetrics.ATTN_PREFILL.value,
+    AttentionOperatorRole.DECODE_KERNEL: OperationMetrics.ATTN_DECODE.value,
+    AttentionOperatorRole.CACHE_WRITE: OperationMetrics.ATTN_KV_CACHE_SAVE.value,
+}
+
+
+def _dense_attention_op_times_by_role(
+    execution_time: ExecutionTime,
+    *,
+    per_layer_count: int | None = None,
+    skip_zero: bool = True,
+) -> dict[AttentionOperatorRole, float]:
+    role_times: dict[AttentionOperatorRole, float] = {}
+    for operator, duration_ms in get_attention_trace_op_times(
+        execution_time,
+        DENSE_ATTENTION_FAMILY,
+        per_layer_count=per_layer_count,
+        skip_zero=skip_zero,
+    ):
+        if operator.role in role_times:
+            raise ValueError(
+                f"Duplicate dense attention role in trace mapping: "
+                f"{operator.role.value}"
+            )
+        role_times[operator.role] = duration_ms
+
+    if not skip_zero:
+        missing_roles = [
+            role.value
+            for role in _DENSE_ATTENTION_PUBLIC_TRACE_NAME_BY_ROLE
+            if role not in role_times
+        ]
+        if missing_roles:
+            raise ValueError(
+                "Dense attention trace mapping is missing required roles: "
+                f"{missing_roles}"
+            )
+
+    return role_times
+
+
+def _iter_dense_attention_public_trace_ops(
+    execution_time: ExecutionTime,
+    *,
+    per_layer_count: int | None = None,
+) -> tuple[tuple[str, float], ...]:
+    role_times = _dense_attention_op_times_by_role(
+        execution_time,
+        per_layer_count=per_layer_count,
+    )
+    return tuple(
+        (public_name, role_times.get(role, 0.0))
+        for role, public_name in _DENSE_ATTENTION_PUBLIC_TRACE_NAME_BY_ROLE.items()
+    )
+
+
+def _iter_mla_attention_operation_metrics(execution_time: ExecutionTime):
+    return tuple(
+        (OperationMetrics(operator.name), duration_ms)
+        for operator, duration_ms in get_attention_trace_op_times(
+            execution_time,
+            LATENT_MLA_ATTENTION_FAMILY,
+            skip_zero=False,
+        )
+    )
 
 
 class MetricsStore:
@@ -678,22 +763,18 @@ class MetricsStore:
         emit("COMPUTE", "attn_pre_proj", execution_time.attention_pre_proj_time)
         emit("COMPUTE", "attn_rope", execution_time.attention_rope_execution_time)
 
-        if execution_time.attention_prefill_execution_time > 0:
-            emit(
-                "COMPUTE",
-                "attn_prefill",
-                execution_time.attention_prefill_execution_time,
-            )
-        if execution_time.attention_decode_execution_time > 0:
-            emit(
-                "COMPUTE", "attn_decode", execution_time.attention_decode_execution_time
-            )
-
-        emit(
-            "COMPUTE",
-            "attn_kv_cache_save",
-            execution_time.attention_kv_cache_save_execution_time,
+        dense_attention_trace_ops = _iter_dense_attention_public_trace_ops(
+            execution_time
         )
+        for op_name, duration_ms in dense_attention_trace_ops[:2]:
+            emit("COMPUTE", op_name, duration_ms)
+
+        for op_name, duration_ms in _iter_mla_attention_op_times(execution_time):
+            if duration_ms > 0:
+                emit("COMPUTE", op_name, duration_ms)
+
+        for op_name, duration_ms in dense_attention_trace_ops[2:]:
+            emit("COMPUTE", op_name, duration_ms)
         emit("COMPUTE", "attn_post_proj", execution_time.attention_post_proj_time)
         emit(
             "COMM",
@@ -853,14 +934,15 @@ class MetricsStore:
         per_layer_attn_norm = execution_time.attn_norm_time / num_layers
         per_layer_attn_pre_proj = execution_time.attention_pre_proj_time / num_layers
         per_layer_attn_rope = execution_time.attention_rope_execution_time / num_layers
-        per_layer_attn_prefill = (
-            execution_time.attention_prefill_execution_time / num_layers
+        per_layer_dense_attention_times = dict(
+            _iter_dense_attention_public_trace_ops(
+                execution_time,
+                per_layer_count=num_layers,
+            )
         )
-        per_layer_attn_decode = (
-            execution_time.attention_decode_execution_time / num_layers
-        )
-        per_layer_attn_kv_save = (
-            execution_time.attention_kv_cache_save_execution_time / num_layers
+        per_layer_mla_attention_ops = tuple(
+            (op_name, duration_ms / num_layers)
+            for op_name, duration_ms in _iter_mla_attention_op_times(execution_time)
         )
         per_layer_attn_post_proj = execution_time.attention_post_proj_time / num_layers
         per_layer_attn_allreduce = execution_time.attention_all_reduce_time / num_layers
@@ -917,27 +999,38 @@ class MetricsStore:
             )
             emit("COMPUTE", "attn_rope", per_layer_attn_rope, layer_idx, layer_meta)
 
-            if per_layer_attn_prefill > 0:
-                emit(
-                    "COMPUTE",
-                    "attn_prefill",
-                    per_layer_attn_prefill,
-                    layer_idx,
-                    layer_meta,
-                )
-            if per_layer_attn_decode > 0:
-                emit(
-                    "COMPUTE",
-                    "attn_decode",
-                    per_layer_attn_decode,
-                    layer_idx,
-                    layer_meta,
-                )
+            emit(
+                "COMPUTE",
+                OperationMetrics.ATTN_PREFILL.value,
+                per_layer_dense_attention_times.get(
+                    OperationMetrics.ATTN_PREFILL.value,
+                    0.0,
+                ),
+                layer_idx,
+                layer_meta,
+            )
+            emit(
+                "COMPUTE",
+                OperationMetrics.ATTN_DECODE.value,
+                per_layer_dense_attention_times.get(
+                    OperationMetrics.ATTN_DECODE.value,
+                    0.0,
+                ),
+                layer_idx,
+                layer_meta,
+            )
+
+            for op_name, duration_ms in per_layer_mla_attention_ops:
+                if duration_ms > 0:
+                    emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
 
             emit(
                 "COMPUTE",
-                "attn_kv_cache_save",
-                per_layer_attn_kv_save,
+                OperationMetrics.ATTN_KV_CACHE_SAVE.value,
+                per_layer_dense_attention_times.get(
+                    OperationMetrics.ATTN_KV_CACHE_SAVE.value,
+                    0.0,
+                ),
                 layer_idx,
                 layer_meta,
             )
@@ -3378,6 +3471,10 @@ class MetricsStore:
             )
 
         batch_id = batch_stage._batch_id
+        dense_attention_times = _dense_attention_op_times_by_role(
+            execution_time,
+            skip_zero=False,
+        )
         for _ in range(execution_time.num_layers):
             self._push_metric(
                 OperationMetrics.MLP_UP_PROJ,
@@ -3479,21 +3576,25 @@ class MetricsStore:
             self._push_metric(
                 OperationMetrics.ATTN_PREFILL,
                 batch_id,
-                execution_time.attention_prefill_execution_time,
+                dense_attention_times[AttentionOperatorRole.PREFILL_KERNEL],
                 cluster_type,
             )
             self._push_metric(
                 OperationMetrics.ATTN_DECODE,
                 batch_id,
-                execution_time.attention_decode_execution_time,
+                dense_attention_times[AttentionOperatorRole.DECODE_KERNEL],
                 cluster_type,
             )
             self._push_metric(
                 OperationMetrics.ATTN_KV_CACHE_SAVE,
                 batch_id,
-                execution_time.attention_kv_cache_save_execution_time,
+                dense_attention_times[AttentionOperatorRole.CACHE_WRITE],
                 cluster_type,
             )
+            for metric_name, metric_value in _iter_mla_attention_operation_metrics(
+                execution_time
+            ):
+                self._push_metric(metric_name, batch_id, metric_value, cluster_type)
             self._push_metric(
                 OperationMetrics.ATTN_ROPE,
                 batch_id,
@@ -3612,22 +3713,45 @@ class MetricsStore:
         self,
         execution_time: ExecutionTime,
     ) -> dict[str, float]:
+        dense_attention_times = _dense_attention_op_times_by_role(
+            execution_time,
+            skip_zero=False,
+        )
+        mla_attention_times = dict(_iter_mla_attention_op_times(execution_time))
         component_ledger = {
             "attention_prefill_execution_time": _round_ledger_ms(
-                execution_time.attention_prefill_execution_time
+                dense_attention_times[AttentionOperatorRole.PREFILL_KERNEL]
             ),
             "attention_decode_execution_time": _round_ledger_ms(
-                execution_time.attention_decode_execution_time
+                dense_attention_times[AttentionOperatorRole.DECODE_KERNEL]
             ),
             "attention_pre_proj_time": _round_ledger_ms(execution_time.attention_pre_proj_time),
             "attention_post_proj_time": _round_ledger_ms(
                 execution_time.attention_post_proj_time
             ),
             "attention_kv_cache_save_execution_time": _round_ledger_ms(
-                execution_time.attention_kv_cache_save_execution_time
+                dense_attention_times[AttentionOperatorRole.CACHE_WRITE]
             ),
             "attention_rope_execution_time": _round_ledger_ms(
                 execution_time.attention_rope_execution_time
+            ),
+            "attn_mla_kv_cache_save_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_kv_cache_save"]
+            ),
+            "attn_mla_prefill_kv_up_proj_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_prefill_kv_up_proj"]
+            ),
+            "attn_mla_prefill_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_prefill"]
+            ),
+            "attn_mla_decode_q_latent_proj_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_decode_q_latent_proj"]
+            ),
+            "attn_mla_decode_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_decode"]
+            ),
+            "attn_mla_v_up_proj_time": _round_ledger_ms(
+                mla_attention_times["attn_mla_v_up_proj"]
             ),
             "attn_norm_time": _round_ledger_ms(execution_time.attn_norm_time),
             "mlp_layer_up_proj_execution_time": _round_ledger_ms(

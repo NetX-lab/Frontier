@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from frontier.attention.memory import get_attention_runtime_kv_layout
+from frontier.attention.model_binding import bind_attention_family
 from frontier.config import get_quantization_manager
 from frontier.kv_cache_transfer.base_kv_cache_transfer_predictor import BaseKVCacheTransferPredictor
 from frontier.logger import init_logger
@@ -48,23 +50,39 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
         self, num_tokens: int, replica_config: "ReplicaConfig"
     ) -> int:
         model_config = replica_config.model_config
+        family = bind_attention_family(model_config).family
         num_layers = (
             self._config.override_num_layers
             if self._config.override_num_layers is not None
             else model_config.num_layers
         )
+        # Runtime KV layout is family-aware: dense uses (num_kv_heads, head_dim, kv_factor=2);
+        # latent MLA collapses to (1, kv_lora_rank + qk_rope_head_dim, kv_factor=1). Overrides,
+        # when set, replace the head count / head size but the family still owns kv_factor.
         num_heads = (
             self._config.override_num_heads
             if self._config.override_num_heads is not None
-            else model_config.num_kv_heads
+            else model_config.get_runtime_num_kv_heads()
         )
         head_dim = (
             self._config.override_head_dim
             if self._config.override_head_dim is not None
-            else model_config.get_head_dim()
+            else model_config.get_runtime_head_size()
+        )
+        layout = get_attention_runtime_kv_layout(
+            family,
+            runtime_num_kv_heads_per_worker=num_heads,
+            runtime_head_size=head_dim,
         )
         dtype_size = self._get_kv_cache_dtype_size_bytes()
-        return int(num_tokens * num_layers * num_heads * head_dim * 2 * dtype_size)
+        return int(
+            num_tokens
+            * num_layers
+            * layout.runtime_num_kv_heads_per_worker
+            * layout.runtime_head_size
+            * layout.kv_factor
+            * dtype_size
+        )
 
     def _get_kv_cache_dtype_size_bytes(self) -> float:
         quant_manager = get_quantization_manager()

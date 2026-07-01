@@ -9,6 +9,7 @@ from typing import List, Optional, Tuple, Union
 import torch
 
 from frontier.profiling.attention.sequence_metadata import SequenceMetadata
+from frontier.attention.ops import AttentionFamilySpec
 from frontier.profiling.common.constants import OperationMetrics
 from frontier.profiling.common.cuda_timer import CudaTimer
 from frontier.profiling.common.model_config import ModelConfig
@@ -24,6 +25,10 @@ class BaseAttentionWrapper(ABC):
     """
 
     _inst = None
+
+    def supports_attention_family(self, attention_family: AttentionFamilySpec) -> bool:
+        """Return whether this backend can profile the given attention family."""
+        return attention_family.dense_compatible
 
     def init(
         self,
@@ -122,4 +127,3 @@ class BaseAttentionWrapper(ABC):
             Output tensor.
         """
         pass
-

@@ -3,6 +3,7 @@ from typing import Union
 from frontier.entities.base_entity import BaseEntity
 from frontier.entities.time_components import (
     AttentionTime,
+    AttentionOperatorTimes,
     MLPTime,
     MoETime,
     CommunicationTime,
@@ -70,6 +71,13 @@ class ExecutionTime(BaseEntity):
         pp_stage_boundary_handoff_time: float = 0.0,
         decode_draft_proposer_time: float = 0.0,
         mtp_terminal_overshoot_time: float = 0.0,
+        attn_mla_kv_cache_save_time: float = 0.0,
+        attn_mla_prefill_kv_up_proj_time: float = 0.0,
+        attn_mla_prefill_time: float = 0.0,
+        attn_mla_decode_q_latent_proj_time: float = 0.0,
+        attn_mla_decode_time: float = 0.0,
+        attn_mla_v_up_proj_time: float = 0.0,
+        attention_operator_times: AttentionOperatorTimes | None = None,
     ) -> None:
         self._id = ExecutionTime.generate_id()
 
@@ -96,7 +104,14 @@ class ExecutionTime(BaseEntity):
             attention_layer_post_proj_execution_time=attention_layer_post_proj_execution_time,
             attention_rope_execution_time=attention_rope_execution_time,
             attention_kv_cache_save_execution_time=attention_kv_cache_save_execution_time,
+            attn_mla_kv_cache_save_time=attn_mla_kv_cache_save_time,
+            attn_mla_prefill_kv_up_proj_time=attn_mla_prefill_kv_up_proj_time,
+            attn_mla_prefill_time=attn_mla_prefill_time,
+            attn_mla_decode_q_latent_proj_time=attn_mla_decode_q_latent_proj_time,
+            attn_mla_decode_time=attn_mla_decode_time,
+            attn_mla_v_up_proj_time=attn_mla_v_up_proj_time,
             attn_norm_time=attn_norm_time,
+            operator_times=attention_operator_times,
         )
 
         if is_moe:
@@ -165,6 +180,12 @@ class ExecutionTime(BaseEntity):
         self._attention_kv_cache_save_execution_time = attention_kv_cache_save_execution_time
         self._attention_decode_execution_time = attention_decode_execution_time
         self._attention_prefill_execution_time = attention_prefill_execution_time
+        self._attn_mla_kv_cache_save_time = attn_mla_kv_cache_save_time
+        self._attn_mla_prefill_kv_up_proj_time = attn_mla_prefill_kv_up_proj_time
+        self._attn_mla_prefill_time = attn_mla_prefill_time
+        self._attn_mla_decode_q_latent_proj_time = attn_mla_decode_q_latent_proj_time
+        self._attn_mla_decode_time = attn_mla_decode_time
+        self._attn_mla_v_up_proj_time = attn_mla_v_up_proj_time
         self._attention_layer_pre_proj_execution_time = attention_layer_pre_proj_execution_time
         self._attention_layer_post_proj_execution_time = attention_layer_post_proj_execution_time
         self._mlp_layer_up_proj_execution_time = mlp_layer_up_proj_execution_time
@@ -216,6 +237,18 @@ class ExecutionTime(BaseEntity):
     def attention_time_component(self) -> AttentionTime:
         """Get the attention time component."""
         return self._attention_time
+
+    @property
+    def attention_operator_times(self) -> AttentionOperatorTimes | None:
+        """Get structured single-layer attention operator timings."""
+        return self._attention_time.operator_times
+
+    @attention_operator_times.setter
+    def attention_operator_times(
+        self,
+        operator_times: AttentionOperatorTimes | None,
+    ) -> None:
+        self._attention_time.operator_times = operator_times
 
     @property
     def moe_or_mlp_time_component(self) -> Union[MLPTime, MoETime]:
@@ -572,6 +605,36 @@ class ExecutionTime(BaseEntity):
     def attention_prefill_execution_time(self) -> float:
         """Attention prefill time (aggregated across all layers)."""
         return self._attention_time.attention_prefill_execution_time * self._num_layers_per_pipeline_stage
+
+    @property
+    def attn_mla_kv_cache_save_time(self) -> float:
+        """MLA latent KV cache save time (aggregated across all layers)."""
+        return self._attention_time.attn_mla_kv_cache_save_time * self._num_layers_per_pipeline_stage
+
+    @property
+    def attn_mla_prefill_kv_up_proj_time(self) -> float:
+        """MLA prefill KV up-projection time (aggregated across all layers)."""
+        return self._attention_time.attn_mla_prefill_kv_up_proj_time * self._num_layers_per_pipeline_stage
+
+    @property
+    def attn_mla_prefill_time(self) -> float:
+        """MLA prefill attention time (aggregated across all layers)."""
+        return self._attention_time.attn_mla_prefill_time * self._num_layers_per_pipeline_stage
+
+    @property
+    def attn_mla_decode_q_latent_proj_time(self) -> float:
+        """MLA decode Q latent projection time (aggregated across all layers)."""
+        return self._attention_time.attn_mla_decode_q_latent_proj_time * self._num_layers_per_pipeline_stage
+
+    @property
+    def attn_mla_decode_time(self) -> float:
+        """MLA decode attention time (aggregated across all layers)."""
+        return self._attention_time.attn_mla_decode_time * self._num_layers_per_pipeline_stage
+
+    @property
+    def attn_mla_v_up_proj_time(self) -> float:
+        """MLA V up-projection time (aggregated across all layers)."""
+        return self._attention_time.attn_mla_v_up_proj_time * self._num_layers_per_pipeline_stage
 
     @property
     def attn_norm_time(self) -> float:
