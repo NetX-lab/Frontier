@@ -188,6 +188,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         self._model_manager = model_manager
         self._cc_backend = cc_backend  # CC Backend for communication predictions
         self._attention_tp_warning_cache: Set[str] = set()
+        self._prediction_cache_miss_warning_cache: Set[str] = set()
 
         self._initialize_file_paths(training_file_paths)
         self._pp_stage_boundary_lookup: Dict[Tuple[int, int, int, int, int, int], float] = {}
@@ -3940,6 +3941,52 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         batch._decode_mixed_features = features
         return features
 
+    def _get_lookup_or_predict(
+        self,
+        model_name: str,
+        key: Tuple[Any, ...],
+        feature_names: List[str],
+    ) -> float:
+        predictions = self._predictions.get(model_name)
+        if predictions is None:
+            raise ValueError(f"{model_name} prediction cache not found")
+        if not isinstance(predictions, dict) or "_on_demand_prediction" in predictions:
+            raise ValueError(f"{model_name} is not backed by a lookup prediction cache")
+
+        if key in predictions:
+            return float(predictions[key])
+
+        model = self._models.get(model_name)
+        if model is None:
+            raise ValueError(f"{model_name} trained model not found for lookup miss {key}")
+        if len(key) != len(feature_names):
+            raise ValueError(
+                f"{model_name} lookup miss key length {len(key)} does not match "
+                f"feature length {len(feature_names)} for key={key}"
+            )
+
+        warning_key = f"{self._cluster_type}:{model_name}:{len(predictions)}"
+        if warning_key not in self._prediction_cache_miss_warning_cache:
+            logger.warning(
+                "%s prediction cache miss for key=%s; falling back to sklearn on-demand prediction. "
+                "Consider increasing prediction range config if this is frequent.",
+                model_name,
+                key,
+            )
+            self._prediction_cache_miss_warning_cache.add(warning_key)
+
+        feature_vector = pd.DataFrame([list(key)], columns=feature_names)
+        try:
+            prediction = float(model.predict(feature_vector)[0])
+            prediction = max(0.0, prediction)
+        except Exception as e:
+            raise ValueError(
+                f"On-demand prediction failed for {model_name} lookup miss key={key}: {e}"
+            ) from e
+
+        predictions[key] = prediction
+        return prediction
+
     def _get_on_demand_prediction(
         self, model_name: str, features: Dict[str, float]
     ) -> float:
@@ -4208,7 +4255,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention pre-projection operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions["attn_pre_proj"][(effective_tokens,)]
+        raw_time = self._get_lookup_or_predict("attn_pre_proj", (effective_tokens,), ["num_tokens"])
         if getattr(batch, "num_prefill_tokens", 0) > 0:
             prefill_phase_scale = self._get_optional_calibration_scale(
                 "_prefill_phase_attn_pre_proj_calibration_scale",
@@ -4227,7 +4274,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention post-projection operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions["attn_post_proj"][(effective_tokens,)]
+        raw_time = self._get_lookup_or_predict("attn_post_proj", (effective_tokens,), ["num_tokens"])
         if getattr(batch, "num_prefill_tokens", 0) > 0:
             prefill_phase_scale = self._get_optional_calibration_scale(
                 "_prefill_phase_attn_post_proj_calibration_scale",
@@ -4246,7 +4293,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"MLP up-projection operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions["mlp_up_proj"][(effective_tokens,)]
+        raw_time = self._get_lookup_or_predict("mlp_up_proj", (effective_tokens,), ["num_tokens"])
         if getattr(batch, "num_prefill_tokens", 0) > 0:
             prefill_phase_scale = self._get_optional_calibration_scale(
                 "_prefill_phase_mlp_up_proj_calibration_scale",
@@ -4265,7 +4312,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"MLP down-projection operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions["mlp_down_proj"][(effective_tokens,)]
+        raw_time = self._get_lookup_or_predict("mlp_down_proj", (effective_tokens,), ["num_tokens"])
         decode_phase_scale = self._get_decode_phase_only_calibration_scale(
             batch,
             "_decode_phase_mlp_down_proj_calibration_scale",
@@ -4284,7 +4331,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"MLP activation operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["mlp_act"][(effective_tokens,)]
+        return self._get_lookup_or_predict("mlp_act", (effective_tokens,), ["num_tokens"])
 
     def _get_attn_norm_layer_act_execution_time(self, batch: Batch) -> float:
         if not self._supports_operation("input_layernorm"):
@@ -4292,7 +4339,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"input layernorm operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["input_layernorm"][(effective_tokens,)]
+        return self._get_lookup_or_predict("input_layernorm", (effective_tokens,), ["num_tokens"])
 
     def _get_mlp_norm_layer_act_execution_time(self, batch: Batch) -> float:
         if not self._model_config.post_attn_norm:
@@ -4304,7 +4351,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"post-attention layernorm operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["post_attention_layernorm"][(effective_tokens,)]
+        return self._get_lookup_or_predict("post_attention_layernorm", (effective_tokens,), ["num_tokens"])
 
     def _get_add_layer_act_execution_time(self, batch: Batch) -> float:
         if self._model_config.uses_fused_add_norm:
@@ -4314,7 +4361,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"add operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["add"][(effective_tokens,)]
+        return self._get_lookup_or_predict("add", (effective_tokens,), ["num_tokens"])
 
     def _get_named_linear_op_execution_time(
         self,
@@ -4328,12 +4375,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "Ensure matching profiling data is available."
             )
         key = (int(num_tokens),)
-        if key not in self._predictions[op_name]:
-            raise ValueError(
-                f"{op_name} prediction key not found for num_tokens={num_tokens}. "
-                "Ensure matching profiling rows exist."
-            )
-        return float(self._predictions[op_name][key])
+        return self._get_lookup_or_predict(op_name, key, ["num_tokens"])
 
     @staticmethod
     def _get_mtp_active_request_indices(
@@ -4981,7 +5023,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure Step2Mini profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["attn_inter_norm"][(effective_tokens,)]
+        return self._get_lookup_or_predict("attn_inter_norm", (effective_tokens,), ["num_tokens"])
 
     def _get_attn_wq_proj_execution_time(self, batch: Batch) -> float:
         """Get Step2Mini wq projection execution time (ColumnParallelLinear on Q after inter_norm)."""
@@ -4996,7 +5038,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure Step2Mini profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["attn_wq_proj"][(effective_tokens,)]
+        return self._get_lookup_or_predict("attn_wq_proj", (effective_tokens,), ["num_tokens"])
 
     def _get_share_expert_up_proj_execution_time(self, batch: Batch) -> float:
         """Get Step2Mini/Step3 share_expert up projection execution time."""
@@ -5011,7 +5053,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure Step2Mini MoE profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["share_expert_up_proj"][(effective_tokens,)]
+        return self._get_lookup_or_predict("share_expert_up_proj", (effective_tokens,), ["num_tokens"])
 
     def _get_share_expert_down_proj_execution_time(self, batch: Batch) -> float:
         """Get Step2Mini/Step3 share_expert down projection execution time."""
@@ -5026,7 +5068,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure Step2Mini MoE profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["share_expert_down_proj"][(effective_tokens,)]
+        return self._get_lookup_or_predict("share_expert_down_proj", (effective_tokens,), ["num_tokens"])
 
     def _get_share_expert_act_execution_time(self, batch: Batch) -> float:
         """Get Step2Mini/Step3 share_expert activation execution time."""
@@ -5041,7 +5083,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure Step2Mini MoE profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["share_expert_act"][(effective_tokens,)]
+        return self._get_lookup_or_predict("share_expert_act", (effective_tokens,), ["num_tokens"])
 
     def _validate_prediction_value(
         self, value: float, operation_name: str, batch: Batch, context: str = ""
@@ -5229,7 +5271,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention rope prediction cache not found for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["attn_rope"][(effective_tokens,)]
+        return self._get_lookup_or_predict("attn_rope", (effective_tokens,), ["num_tokens"])
 
     def _get_attention_kv_cache_save_execution_time(self, batch: Batch) -> float:
         cache_write_op_name = self._dense_attention_cache_write_op_name()
@@ -5271,7 +5313,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         # don't use round up to the nearest multiple of 8 here, because we want to
         # predict the execution time for the exact number of tokens
         num_tokens = batch.total_num_tokens
-        raw_time = prediction_info[(num_tokens,)]
+        raw_time = self._get_lookup_or_predict(cache_write_op_name, (num_tokens,), ["num_tokens"])
         if getattr(batch, "num_prefill_tokens", 0) > 0:
             prefill_phase_scale = self._get_optional_calibration_scale(
                 "_prefill_phase_attn_kv_cache_save_calibration_scale",
@@ -5325,9 +5367,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention decode prediction cache not found for cluster {self._cluster_type}"
             )
 
-        raw_time = self._predictions[decode_op_name][
-            (decode_batch_size, decode_avg_kv_cache_size)
-        ] * (
+        raw_time = self._get_lookup_or_predict(
+            decode_op_name,
+            (decode_batch_size, decode_avg_kv_cache_size),
+            ["batch_size", "kv_cache_size"],
+        ) * (
             1
             + self._attention_decode_batching_overhead_fraction
             * int(decode_batch_size > 1)
@@ -5384,9 +5428,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         agg_kv_cache_size = sum(kv_cache_sizes)
         agg_prefill_chunk_size = sum([x**2 for x in prefill_chunk_sizes]) ** 0.5
 
-        return self._predictions[prefill_op_name][
-            (agg_kv_cache_size, round(agg_prefill_chunk_size) ** 2)
-        ] * (
+        return self._get_lookup_or_predict(
+            prefill_op_name,
+            (agg_kv_cache_size, round(agg_prefill_chunk_size) ** 2),
+            ["kv_cache_size", "prefill_chunk_size_squared"],
+        ) * (
             1
             + self._attention_prefill_batching_overhead_fraction
             * int(len(prefill_params) > 1)
@@ -5461,12 +5507,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             # dimension in this codebase. For speculative verify, query_len is
             # verify_tokens, so we map to verify_tokens**2 here.
             key = (int(kv_cache_size), int(verify_tokens**2))
-            if key not in self._predictions[prefill_op_name]:
-                raise ValueError(
-                    "Speculative verify prefill key missing from attn_prefill cache: "
-                    f"key={key}, request_id={request.id}, verify_tokens={verify_tokens}"
-                )
-            total_verify_prefill_time += self._predictions[prefill_op_name][key]
+            total_verify_prefill_time += self._get_lookup_or_predict(
+                prefill_op_name,
+                key,
+                ["kv_cache_size", "prefill_chunk_size_squared"],
+            )
 
         return total_verify_prefill_time
 
@@ -5575,13 +5620,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         ) * self._config.kv_cache_prediction_granularity
 
         key = (int(decode_batch_size), int(decode_avg_kv_cache_size))
-        if key not in self._predictions[decode_op_name]:
-            raise ValueError(
-                "Speculative decode key missing from attn_decode cache: "
-                f"key={key}, decode_batch_size={decode_batch_size}"
-            )
-
-        raw_time = self._predictions[decode_op_name][key] * (
+        raw_time = self._get_lookup_or_predict(
+            decode_op_name,
+            key,
+            ["batch_size", "kv_cache_size"],
+        ) * (
             1
             + self._attention_decode_batching_overhead_fraction
             * int(decode_batch_size > 1)
