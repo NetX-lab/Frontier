@@ -1,0 +1,33 @@
+attn_tp: null
+block_shape: null
+device: h800
+disable_ray: true
+disable_replicated: false
+extra_num_tokens: null
+ffn_tp: null
+include_target_embedded_mtp: false
+is_moe: true
+max_tokens: 128
+models:
+- qwen3-next-80b-a3b-instruct-reduced-l2
+num_gpus: 1
+num_tensor_parallel_workers:
+- 1
+- 2
+- 4
+- 8
+num_tokens_list:
+- 1
+- 2
+- 4
+- 8
+- 16
+- 32
+- 64
+- 128
+output_dir: /data/ycfeng/Frontier/worktrees/op-wide-refactor/data/profiling
+precision: null
+profile_method: record_function
+ray_enable_datasets_serializers: false
+skip_confirmation: true
+use_fp8: null
