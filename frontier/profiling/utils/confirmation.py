@@ -8,6 +8,9 @@ displaying key parameters in a clean tabular format.
 import sys
 from typing import Any, Dict, List, Optional, Tuple, Sequence
 
+from frontier.model_architectures import get_model_architecture_profile
+from frontier.profiling.common.parallel_config import ParallelConfig
+
 
 # Constants for ASCII table formatting
 TABLE_WIDTH = 70
@@ -165,21 +168,18 @@ def build_linear_op_config_sections(
         f"    - attn_post_proj             : {precision_str}, TP={attn_tp_str} (Sharded)",
     ]
 
-    if getattr(model_config, "is_step2_mini", False):
-        attn_lines.extend(
-            [
-                f"    - attn_inter_norm            : {precision_str}, TP={attn_tp_str} (Sharded)",
-                f"    - attn_wq_proj               : {precision_str}, TP={attn_tp_str} (Sharded)",
-            ]
+    architecture_profile = get_model_architecture_profile(model_config)
+    for op_name in architecture_profile.predictor_attention_extra_ops:
+        attn_lines.append(
+            f"    - {op_name:<28}: {precision_str}, TP={attn_tp_str} (Sharded)"
         )
-
-    if getattr(model_config, "model_type", None) == "step3_text":
-        attn_lines.extend(
-            [
-                f"    - attn_pre_proj_qkv          : {precision_str}, {replicated_note}",
-                f"    - attn_pre_proj_q_norm       : {precision_str}, {replicated_note}",
-                f"    - attn_pre_proj_wq           : {precision_str}, TP={attn_tp_str} (Sharded)",
-            ]
+    for op_name in architecture_profile.linear_attention.replicated_ops:
+        attn_lines.append(f"    - {op_name:<28}: {precision_str}, {replicated_note}")
+    for op_name in architecture_profile.linear_attention.additional_sharded_ops:
+        if op_name in architecture_profile.predictor_attention_extra_ops:
+            continue
+        attn_lines.append(
+            f"    - {op_name:<28}: {precision_str}, TP={attn_tp_str} (Sharded)"
         )
 
     is_moe = getattr(args, 'is_moe', False)
@@ -313,8 +313,12 @@ def build_attention_config_sections(
 
     per_tp_lines = []
     for tp in tp_sizes:
-        q_heads = model_config.num_q_heads // tp
-        kv_heads = model_config.num_kv_heads // tp
+        parallel_config = ParallelConfig(
+            tensor_parallel_size=tp,
+            pipeline_parallel_size=1,
+        )
+        q_heads = model_config.get_num_q_heads(parallel_config)
+        kv_heads = model_config.get_num_kv_heads(parallel_config)
         per_tp_lines.append(f"TP={tp}: Q_heads={q_heads}, KV_heads={kv_heads}, head_dim={head_dim}")
     per_tp_content = "\n".join(per_tp_lines)
 

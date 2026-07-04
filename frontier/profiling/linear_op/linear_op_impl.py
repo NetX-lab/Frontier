@@ -21,6 +21,11 @@ from frontier.profiling.common.parallel_utils.tensor_parallel_utils import (
 from frontier.profiling.common.cuda_timer import CudaTimer
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.common.utils import raise_if_fp8_requested
+from frontier.profiling.linear_op.profiling_plan import memory_operator_enabled
+from frontier.model_architectures import (
+    LinearAttentionImplementation,
+    get_model_architecture_profile,
+)
 
 REUSE_MEMORY = True
 
@@ -686,6 +691,37 @@ class ShareExpertMLP(torch.nn.Module):
         return hidden_states
 
 
+def build_linear_op_attention_module(
+    config: ModelConfig,
+    world_size: int,
+    enabled_ops: set[str] | None,
+    attn_sharded_enabled: bool,
+) -> torch.nn.Module:
+    """Build the linear-op profiling attention module from architecture profile."""
+
+    linear_attention = get_model_architecture_profile(config).linear_attention
+
+    if attn_sharded_enabled:
+        if linear_attention.sharded_impl is LinearAttentionImplementation.STEP3_TEXT:
+            return Step3TextCausalSelfAttention(config, world_size)
+        if linear_attention.sharded_impl is LinearAttentionImplementation.STEP2_MINI:
+            return Step2MiniCausalSelfAttention(config, world_size)
+        if linear_attention.sharded_impl is LinearAttentionImplementation.GENERIC:
+            return CausalSelfAttention(config, world_size)
+        raise ValueError(
+            "Unknown linear attention implementation: "
+            f"{linear_attention.sharded_impl}"
+        )
+
+    if (
+        linear_attention.sharded_impl is LinearAttentionImplementation.STEP3_TEXT
+        and linear_attention.has_replicated_pre_projection(enabled_ops)
+    ):
+        return Step3TextReplicatedPreProj(config, world_size, enabled_ops or set())
+
+    return DummyAttention()
+
+
 class GPTBlock(torch.nn.Module):
 
     def __init__(
@@ -717,12 +753,15 @@ class GPTBlock(torch.nn.Module):
             set(profiling_plan.get("enabled_ops", [])) if profiling_plan else None
         )
         self._profile_input_layernorm = (
-            True if enabled_ops is None else "input_layernorm" in enabled_ops
+            memory_operator_enabled(enabled_ops, "input_layernorm")
         )
         self._profile_post_attention_layernorm = (
-            True if enabled_ops is None else "post_attention_layernorm" in enabled_ops
+            memory_operator_enabled(enabled_ops, "post_attention_layernorm")
         )
-        self._profile_add = True if enabled_ops is None else "add" in enabled_ops
+        self._profile_add = (
+            memory_operator_enabled(enabled_ops, "add_attn_residual")
+            or memory_operator_enabled(enabled_ops, "add_ffn_residual")
+        )
         # RMSNorm uses fused_add_rms_norm kernel — add is already included in layernorm time
         if config.uses_fused_add_norm:
             self._profile_add = False
@@ -779,25 +818,12 @@ class GPTBlock(torch.nn.Module):
                     f"Unknown norm: {config.norm} for post_attention_layernorm"
                 )
 
-        # Select attention class based on model type
-        if self._attn_sharded_enabled:
-            if config.model_type == "step3_text":
-                self.attn = Step3TextCausalSelfAttention(config, world_size)
-            elif config.model_type == "step2_mini":
-                self.attn = Step2MiniCausalSelfAttention(config, world_size)
-            else:
-                self.attn = CausalSelfAttention(config, world_size)
-        elif (
-            config.model_type == "step3_text"
-            and enabled_ops is not None
-            and (
-                "attn_pre_proj_qkv" in enabled_ops
-                or "attn_pre_proj_q_norm" in enabled_ops
-            )
-        ):
-            self.attn = Step3TextReplicatedPreProj(config, world_size, enabled_ops)
-        else:
-            self.attn = DummyAttention()
+        self.attn = build_linear_op_attention_module(
+            config=config,
+            world_size=world_size,
+            enabled_ops=enabled_ops,
+            attn_sharded_enabled=self._attn_sharded_enabled,
+        )
 
         if self._ffn_sharded_enabled:
             self.mlp = MLP(
@@ -977,7 +1003,7 @@ class GPTModel(torch.nn.Module):
         enabled_ops = (
             set(profiling_plan.get("enabled_ops", [])) if profiling_plan else None
         )
-        self._profile_emb = True if enabled_ops is None else "emb" in enabled_ops
+        self._profile_emb = memory_operator_enabled(enabled_ops, "emb")
         self._profile_mtp_fusion_proj = bool(
             enabled_ops is not None and "mtp_fusion_proj" in enabled_ops
         )

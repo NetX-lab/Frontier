@@ -14,6 +14,8 @@ from frontier.attention.families import (
 from frontier.config.model_config import BaseModelConfig
 from frontier.config.precision_type import PrecisionType, PrecisionMismatchInfo
 from frontier.logger import init_logger
+from frontier.operators.families import MOE_FAMILY, SHARE_EXPERT_FAMILY
+from frontier.operators.spec import OperatorFamilySpec
 from frontier.types import ClusterType
 
 logger = init_logger(__name__)
@@ -30,6 +32,22 @@ def _attention_compute_operations() -> List[str]:
         operation_names.extend(
             operator.name for operator in active_family.profiling_ops()
         )
+    return operation_names
+
+
+def _family_precision_and_profiling_operations(
+    family: OperatorFamilySpec,
+) -> List[str]:
+    operation_names: List[str] = []
+    seen: Set[str] = set()
+    for operator in family.profiling_ops():
+        for operation_name in (
+            operator.precision_name(),
+            operator.profiling_name(),
+        ):
+            if operation_name not in seen:
+                operation_names.append(operation_name)
+                seen.add(operation_name)
     return operation_names
 
 
@@ -99,14 +117,8 @@ class QuantizationManager:
                 "mlp_up_proj",
                 "mlp_down_proj",
                 "mlp_act",
-                "moe_gating",
-                "moe_gating_linear",
-                "moe_gating_routing_topk",
-                "moe_shuffling",
-                "moe_grouped_gemm",
-                "share_expert_up_proj",
-                "share_expert_down_proj",
-                "share_expert_act",
+                *_family_precision_and_profiling_operations(MOE_FAMILY),
+                *_family_precision_and_profiling_operations(SHARE_EXPERT_FAMILY),
                 "input_layernorm",
                 "post_attention_layernorm",
                 "add",
@@ -461,7 +473,7 @@ class QuantizationManager:
     def has_explicit_precision(
         self, operation_name: str, cluster_type: Optional[ClusterType] = None
     ) -> bool:
-        if cluster_type in self._cluster_overrides:
+        if cluster_type is not None and cluster_type in self._cluster_overrides:
             if operation_name in self._cluster_overrides[cluster_type]:
                 return True
         return operation_name in self._operation_precisions
@@ -476,7 +488,7 @@ class QuantizationManager:
             )
 
         with self._lock:
-            if cluster_type in self._cluster_overrides:
+            if cluster_type is not None and cluster_type in self._cluster_overrides:
                 cluster_ops = self._cluster_overrides[cluster_type]
                 if operation_name in cluster_ops:
                     precision = cluster_ops[operation_name]

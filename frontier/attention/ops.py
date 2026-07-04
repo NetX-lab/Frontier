@@ -2,42 +2,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable
+from typing import Any, Callable, ClassVar
+
+from frontier.operators.spec import (
+    OperatorFamilySpec,
+    OperatorPhase,
+    OperatorRole,
+    OperatorSpec,
+    ProjectionOwnership,
+    TraceKind,
+)
 
 
-class AttentionOperatorRole(Enum):
-    """Semantic role of a physical attention operator."""
-
-    CACHE_WRITE = "cache_write"
-    PREFILL_KERNEL = "prefill_kernel"
-    DECODE_KERNEL = "decode_kernel"
-    PROJECTION = "projection"
-    POSITION_ENCODING = "position_encoding"
-    RESHAPE = "reshape"
-    COMMUNICATION = "communication"
-
-
-class AttentionPhase(Enum):
-    """Batch phase in which an attention operator can execute."""
-
-    PREFILL = "prefill"
-    DECODE = "decode"
-    MIXED = "mixed"
-
-
-class AttentionTraceKind(Enum):
-    """Trace event class used by Frontier E2E operation traces."""
-
-    COMPUTE = "COMPUTE"
-    COMM = "COMM"
-
-
-class ProjectionOwnership(Enum):
-    """Whether an operator accounts for projection work."""
-
-    OUTSIDE_ATTENTION = "outside_attention"
-    INSIDE_ATTENTION_PHYSICAL_SCOPE = "inside_attention_physical_scope"
-    NOT_PROJECTION = "not_projection"
+AttentionOperatorRole = OperatorRole
+AttentionPhase = OperatorPhase
+AttentionTraceKind = TraceKind
 
 
 class AttentionMemoryLayout(Enum):
@@ -85,47 +64,16 @@ class AttentionRuntimeMetaContract:
 
 
 @dataclass(frozen=True)
-class AttentionOperatorSpec:
+class AttentionOperatorSpec(OperatorSpec):
     """Declarative contract for one physical attention operator."""
 
-    name: str
-    role: AttentionOperatorRole
-    phases: tuple[AttentionPhase, ...]
-    trace_kind: AttentionTraceKind = AttentionTraceKind.COMPUTE
-    predictor_target: bool = True
-    profiling_target: bool = True
-    e2e_trace_target: bool = True
-    execution_time_attr: str | None = None
-    projection_ownership: ProjectionOwnership = ProjectionOwnership.NOT_PROJECTION
-
-    def __post_init__(self) -> None:
-        if not self.name:
-            raise ValueError("Attention operator name must be non-empty")
-        if not self.phases:
-            raise ValueError(f"Attention operator {self.name} must declare phases")
-        if self.e2e_trace_target and not self.execution_time_attr:
-            raise ValueError(
-                f"Attention operator {self.name} must declare execution_time_attr "
-                "when it is an E2E trace target"
-            )
-        if (
-            self.role is AttentionOperatorRole.PROJECTION
-            and self.projection_ownership
-            is ProjectionOwnership.NOT_PROJECTION
-        ):
-            raise ValueError(
-                f"Projection operator {self.name} must declare projection ownership"
-            )
+    _operator_label: ClassVar[str] = "Attention operator"
 
 
 @dataclass(frozen=True)
-class AttentionFamilySpec:
+class AttentionFamilySpec(OperatorFamilySpec):
     """Declarative contract for one attention operator family."""
 
-    family_id: str
-    display_name: str
-    supported_variants: tuple[str, ...]
-    operators: tuple[AttentionOperatorSpec, ...]
     memory_layout: AttentionMemoryLayout
     dense_compatible: bool
     requires_runtime_kv_helpers: bool
@@ -138,22 +86,14 @@ class AttentionFamilySpec:
     runtime_head_size_resolver: Callable[[Any], int] | None = None
     runtime_meta_contract: AttentionRuntimeMetaContract | None = None
 
+    _family_label: ClassVar[str] = "Attention family"
+
     def __post_init__(self) -> None:
-        if not self.family_id:
-            raise ValueError("Attention family_id must be non-empty")
-        if not self.supported_variants:
-            raise ValueError(
-                f"Attention family {self.family_id} must declare variants"
-            )
-        names = [operator.name for operator in self.operators]
-        duplicates = sorted({name for name in names if names.count(name) > 1})
-        if duplicates:
-            raise ValueError(
-                f"Attention family {self.family_id} has duplicate operators: "
-                f"{duplicates}"
-            )
+        super().__post_init__()
         if self.dsa_frozen and self.operators:
             raise ValueError("Frozen DSA family must not enable operator targets")
+        if self.dsa_frozen and self.execution_enabled:
+            raise ValueError("Frozen DSA family must not be execution enabled")
         projection_attrs = list(self.disjoint_model_projection_attrs)
         duplicate_projection_attrs = sorted(
             {
@@ -187,23 +127,6 @@ class AttentionFamilySpec:
                 f"Attention family {self.family_id} excludes imported predictor "
                 f"columns absent from its profiling schema: {list(missing_excluded)}"
             )
-
-    def profiling_ops(self) -> tuple[AttentionOperatorSpec, ...]:
-        return tuple(operator for operator in self.operators if operator.profiling_target)
-
-    def predictor_ops(self) -> tuple[AttentionOperatorSpec, ...]:
-        return tuple(operator for operator in self.operators if operator.predictor_target)
-
-    def e2e_trace_ops(self) -> tuple[AttentionOperatorSpec, ...]:
-        return tuple(operator for operator in self.operators if operator.e2e_trace_target)
-
-    def projection_ops(self) -> tuple[AttentionOperatorSpec, ...]:
-        return tuple(
-            operator
-            for operator in self.operators
-            if operator.projection_ownership
-            is not ProjectionOwnership.NOT_PROJECTION
-        )
 
     def resolve_runtime_num_kv_heads(self, config: Any) -> int:
         if self.runtime_num_kv_heads_resolver is None:
@@ -239,3 +162,4 @@ class AttentionFamilySpec:
                 "DSA attention is frozen until a real vLLM/FlashInfer truth "
                 "backend and Frontier mapping are approved."
             )
+        super().require_enabled_for_execution()

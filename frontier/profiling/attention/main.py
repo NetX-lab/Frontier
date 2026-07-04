@@ -60,6 +60,7 @@ from frontier.attention.profiling_mapping import (
     validate_attention_profiling_dataframe,
 )
 from frontier.attention.string_coercion import coerce_truthy_bool
+from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
 from frontier.profiling.attention.backends import AttentionBackend
 from frontier.profiling.common.parallel_config import ParallelConfig
 
@@ -485,6 +486,16 @@ def parse_args():
         ),
     )
     parser.add_argument(
+        "--model_architecture_profile",
+        type=str,
+        default=None,
+        help=(
+            "Explicit model architecture profile id for import-only profiling paths. "
+            "Required when --vllm_mla_cuda_op_log is used with a model that cannot "
+            "be resolved from data/config/models."
+        ),
+    )
+    parser.add_argument(
         "--precision",
         type=str,
         default=None,
@@ -803,6 +814,7 @@ def _attach_attention_output_metadata(
     *,
     precision_str: str,
     model_arch: str,
+    model_architecture_profile: str,
     quant_signature: str,
     measurement_type: str,
 ) -> pd.DataFrame:
@@ -810,11 +822,48 @@ def _attach_attention_output_metadata(
     if df.empty:
         return df
     output_df = df.copy()
-    output_df["profiling_precision"] = precision_str
-    output_df["model_arch"] = model_arch
-    output_df["quant_signature"] = quant_signature
-    output_df["measurement_type"] = measurement_type
+
+    _fill_metadata_column(output_df, "profiling_precision", precision_str)
+    _fill_metadata_column(output_df, "measurement_type", measurement_type)
+    _fill_metadata_column(output_df, "model_arch", model_arch)
+    _fill_metadata_column(
+        output_df,
+        "model_architecture_profile",
+        model_architecture_profile,
+    )
+    _fill_metadata_column(output_df, "quant_signature", quant_signature)
     return output_df
+
+
+def _fill_metadata_column(
+    output_df: pd.DataFrame,
+    column_name: str,
+    expected_value: str,
+) -> None:
+    """Fill blank metadata cells and fail fast on conflicting non-blank values."""
+
+    if column_name not in output_df.columns:
+        output_df[column_name] = expected_value
+        return
+
+    normalized = (
+        output_df[column_name]
+        .replace(r"^\s*$", pd.NA, regex=True)
+        .fillna(expected_value)
+    )
+    conflicting_values = sorted(
+        {
+            str(value)
+            for value in normalized.dropna().unique()
+            if str(value) != expected_value
+        }
+    )
+    if conflicting_values:
+        raise ValueError(
+            f"{column_name} contains conflicting metadata values "
+            f"{conflicting_values}; expected {expected_value!r}."
+        )
+    output_df[column_name] = normalized
 
 
 def _prepare_standard_attention_output_dataframe(
@@ -822,6 +871,7 @@ def _prepare_standard_attention_output_dataframe(
     *,
     precision_str: str,
     model_arch: str,
+    model_architecture_profile: str,
     quant_signature: str,
     measurement_type: str,
 ) -> pd.DataFrame:
@@ -829,6 +879,7 @@ def _prepare_standard_attention_output_dataframe(
         df,
         precision_str=precision_str,
         model_arch=model_arch,
+        model_architecture_profile=model_architecture_profile,
         quant_signature=quant_signature,
         measurement_type=measurement_type,
     )
@@ -838,6 +889,30 @@ def _prepare_standard_attention_output_dataframe(
         measurement_type=measurement_type,
     )
     return output_df
+
+
+def _resolve_vllm_mla_model_architecture_profile(
+    model_name: str,
+    explicit_profile: str | None,
+) -> str:
+    """Resolve the architecture profile for vLLM MLA import without silent defaults."""
+
+    if explicit_profile is not None:
+        normalized_profile = explicit_profile.strip().lower()
+        if not normalized_profile:
+            raise ValueError("model_architecture_profile must be non-empty.")
+        return MODEL_ARCHITECTURE_REGISTRY.get(normalized_profile).profile_id
+
+    try:
+        return ModelConfig.from_model_name(
+            model_name
+        ).get_model_architecture_profile().profile_id
+    except ValueError as exc:
+        raise ValueError(
+            "--vllm_mla_cuda_op_log requires a resolvable model config or an "
+            "explicit --model_architecture_profile. This import path must not "
+            "silently write a generic architecture profile."
+        ) from exc
 
 
 def _run_vllm_mla_profile_import(args: argparse.Namespace) -> Path:
@@ -853,6 +928,10 @@ def _run_vllm_mla_profile_import(args: argparse.Namespace) -> Path:
     model = args.models[0]
     precision_str = str(args.precision or "BF16").lower()
     model_arch = str(getattr(args, "model_arch", None) or "deepseek_v2")
+    model_architecture_profile = _resolve_vllm_mla_model_architecture_profile(
+        model,
+        getattr(args, "model_architecture_profile", None),
+    )
     measurement_type = profile_method_to_measurement_type(args.profile_method).value
 
     vllm_rows = load_vllm_mla_rows(args.vllm_mla_cuda_op_log)
@@ -870,6 +949,7 @@ def _run_vllm_mla_profile_import(args: argparse.Namespace) -> Path:
         df,
         precision_str=precision_str,
         model_arch=model_arch,
+        model_architecture_profile=model_architecture_profile,
         quant_signature="none",
         measurement_type=measurement_type,
     )
@@ -1850,6 +1930,9 @@ def main():
         model_config = model_configs[model]
         precision_str = model_precision_strs[model]
         model_arch = _resolve_model_arch_for_metadata(model_config)
+        model_architecture_profile = (
+            model_config.get_model_architecture_profile().profile_id
+        )
         quant_signature = model_config.get_quant_signature()
         measurement_type = profile_method_to_measurement_type(args.profile_method).value
 
@@ -1859,6 +1942,7 @@ def main():
                 result_df,
                 precision_str=precision_str,
                 model_arch=model_arch,
+                model_architecture_profile=model_architecture_profile,
                 quant_signature=quant_signature,
                 measurement_type=measurement_type,
             )
@@ -1879,6 +1963,7 @@ def main():
                 mixed_result_df,
                 precision_str=precision_str,
                 model_arch=model_arch,
+                model_architecture_profile=model_architecture_profile,
                 quant_signature=quant_signature,
                 measurement_type=measurement_type,
             )
@@ -1899,6 +1984,7 @@ def main():
                 true_mixed_result_df,
                 precision_str=precision_str,
                 model_arch=model_arch,
+                model_architecture_profile=model_architecture_profile,
                 quant_signature=quant_signature,
                 measurement_type=measurement_type,
             )

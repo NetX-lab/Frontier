@@ -38,6 +38,7 @@ from frontier.execution_time_predictor.attention_dataset_contract import (
     enforce_mixed_attention_input_contract,
 )
 from frontier.logger import init_logger
+from frontier.model_architectures import get_model_architecture_profile
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
     PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
@@ -50,19 +51,79 @@ from frontier.moe_routing_runtime import (
     filter_moe_gating_routing_topk_rows,
     resolve_moe_gating_routing_runtime_path,
 )
+from frontier.operators.families import (
+    FFN_FAMILY,
+    MEMORY_FAMILY,
+    MOE_FAMILY,
+    SHARE_EXPERT_FAMILY,
+    get_family_profiling_names,
+    get_family_profiling_name_set,
+    is_moe_operator_ep_agnostic,
+    resolve_moe_operator_tp_key,
+)
 from frontier.profiling.cpu_overhead.validation import (
     apply_cpu_overhead_schema_v2_defaults,
     validate_cpu_overhead_dataframe,
 )
-from frontier.spec_decode.runtime import (
-    TARGET_EMBEDDED_MTP_SAME_TP_LINEAR_OPS,
-    is_target_embedded_mtp_enabled,
-)
+from frontier.spec_decode.runtime import is_target_embedded_mtp_enabled
+from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_same_tp_linear_op
 
 logger = init_logger(__name__)
 MIGRATION_HELP_COMMAND = (
     "python -m frontier.profiling.migrate_csv_metadata --help"
 )
+
+
+def _get_moe_family_model_names() -> List[str]:
+    return list(get_family_profiling_names(MOE_FAMILY))
+
+
+def _get_moe_family_operator_by_model_name(model_name: str):
+    moe_ops = {
+        operator.profiling_name(): operator
+        for operator in MOE_FAMILY.profiling_ops()
+    }
+    if model_name not in moe_ops:
+        raise ValueError(f"Unsupported MoE op: {model_name}")
+    return moe_ops[model_name]
+
+
+def _get_moe_gating_family_model_names() -> List[str]:
+    return [
+        operator.profiling_name()
+        for operator in MOE_FAMILY.profiling_ops()
+        if operator.precision_name() == "moe_gating"
+    ]
+
+
+def _get_prefill_hot_moe_gating_model_names() -> List[str]:
+    return [
+        f"{model_name}__prefill_hot"
+        for model_name in _get_moe_gating_family_model_names()
+    ]
+
+
+def _resolve_model_architecture_profile(model_config):
+    if model_config is None:
+        return None
+    getter = getattr(model_config, "get_model_architecture_profile", None)
+    if callable(getter):
+        return getter()
+    return get_model_architecture_profile(model_config)
+
+
+def _resolve_model_architecture_profile_id(model_config) -> str:
+    architecture_profile = _resolve_model_architecture_profile(model_config)
+    if architecture_profile is None:
+        return "generic"
+    return architecture_profile.profile_id
+
+
+def _is_moe_gating_family_model_name(model_name: str) -> bool:
+    base_model_name = get_moe_gating_base_model_name(model_name)
+    return _get_moe_family_operator_by_model_name(
+        base_model_name
+    ).precision_name() == "moe_gating"
 
 
 def _build_exact_feature_lookup(
@@ -124,8 +185,7 @@ class ExecutionTimePredictionModelManager:
             self._model_profiling_precision = {}
         else:
             # Analyze all cluster configurations to determine required prediction model capabilities
-            # TODO: designed for reduce redundancy. Not use yet (consider to remove it). Currently, we use trained_model_signatures.
-            # ignore it now
+            # Required capabilities are retained for diagnostics; trained_model_signatures is the active cache key.
             self._required_capabilities = self._analyze_cluster_requirements()
 
             # Train all required prediction models once based on capabilities per cluster
@@ -504,26 +564,18 @@ class ExecutionTimePredictionModelManager:
         return replica_config.attn_tensor_parallel_size
 
     def _get_linear_op_tp_key(self, op_name: str, cluster_type: ClusterType, replica_config, is_moe_model: bool) -> int:
-        if op_name.startswith("mlp_"):
-            raise ValueError(
-                f"Linear op TP mapping helper does not handle mlp ops: {op_name}"
-            )
-
-        replicated_ops = {
-            "input_layernorm",
-            "post_attention_layernorm",
-            "add",
-            "emb",
-            # Step3Text-specific replicated pre-proj sub-ops.
-            "attn_pre_proj_qkv",
-            "attn_pre_proj_q_norm",
-        }
+        replicated_ops = set(get_family_profiling_name_set(MEMORY_FAMILY))
+        architecture_profile = _resolve_model_architecture_profile(
+            getattr(replica_config, "model_config", None)
+        )
+        if architecture_profile is not None:
+            replicated_ops.update(architecture_profile.linear_attention.replicated_ops)
         if op_name in replicated_ops:
             if (
                 is_target_embedded_mtp_enabled(
                     getattr(replica_config, "speculative_decoding_config", None)
                 )
-                and op_name in TARGET_EMBEDDED_MTP_SAME_TP_LINEAR_OPS
+                and is_target_embedded_mtp_same_tp_linear_op(op_name)
             ):
                 return resolve_effective_attention_tp_size(
                     op_name="attn_pre_proj",
@@ -548,11 +600,10 @@ class ExecutionTimePredictionModelManager:
                 include_linear_ops=True,
             )
 
-        if op_name in {
-            "share_expert_up_proj",
-            "share_expert_down_proj",
-            "share_expert_act",
-        }:
+        if op_name in get_family_profiling_name_set(FFN_FAMILY):
+            return self._get_ffn_tp_key(cluster_type, replica_config, is_moe_model)
+
+        if op_name in get_family_profiling_name_set(SHARE_EXPERT_FAMILY):
             return self._get_ffn_tp_key(cluster_type, replica_config, is_moe_model)
 
         if op_name.startswith("attn_"):
@@ -568,31 +619,42 @@ class ExecutionTimePredictionModelManager:
         raise ValueError(f"Unsupported linear op for TP mapping: {op_name}")
 
     @staticmethod
-    def _get_moe_op_tp_key(op_name: str, replica_config) -> int:
-        replicated_ops = {
-            "moe_gating_linear",
-            "moe_gating_routing_topk",
-            "moe_shuffling",
-        }
-        if op_name in replicated_ops:
-            return 1
-        if op_name == "moe_grouped_gemm":
-            return replica_config.moe_tensor_parallel_size
-        raise ValueError(f"Unsupported MoE op for TP mapping: {op_name}")
+    def _get_moe_op_tp_key(
+        op_name: str,
+        replica_config,
+        cluster_type: ClusterType | None = None,
+    ) -> int:
+        try:
+            return resolve_moe_operator_tp_key(
+                op_name,
+                moe_tp_size=replica_config.moe_tensor_parallel_size,
+                cluster_type=cluster_type,
+                family=MOE_FAMILY,
+            )
+        except ValueError as exc:
+            if str(exc).startswith("Unsupported MoE op:"):
+                raise ValueError(
+                    f"Unsupported MoE op for TP mapping: {op_name}"
+                ) from exc
+            raise
 
     @staticmethod
     def _is_moe_op_ep_agnostic(op_name: str) -> bool:
-        return op_name in {
-            "moe_gating_linear",
-            "moe_gating_routing_topk",
-            "moe_shuffling",
-        }
+        try:
+            return is_moe_operator_ep_agnostic(op_name, family=MOE_FAMILY)
+        except ValueError as exc:
+            if str(exc).startswith("Unsupported MoE op:"):
+                raise ValueError(
+                    f"Unsupported MoE op for EP mapping: {op_name}"
+                ) from exc
+            raise
 
     def _validate_moe_dataset_contract(
         self,
         file_path: str,
         replica_config,
         model_names: List[str],
+        cluster_type: ClusterType,
     ) -> None:
         """Validate op-level MoE profiling key coverage before model training."""
         df = pd.read_csv(file_path)
@@ -641,7 +703,11 @@ class ExecutionTimePredictionModelManager:
 
         missing_requirements: List[str] = []
         for model_name in model_names:
-            tp_key = self._get_moe_op_tp_key(model_name, replica_config)
+            tp_key = self._get_moe_op_tp_key(
+                model_name,
+                replica_config,
+                cluster_type,
+            )
             if self._is_moe_op_ep_agnostic(model_name):
                 op_df = base_df[
                     base_df["num_tensor_parallel_workers"] == tp_key
@@ -696,14 +762,18 @@ class ExecutionTimePredictionModelManager:
         ffn_tp_key = self._get_ffn_tp_key(cluster_type, replica_config, is_moe_model)
         tp_size = ffn_tp_key
 
-        # Create a signature for this FFN model configuration
-        # Include model_arch in signature to distinguish Step2Mini-specific operations from generic models
+        # Create a signature for this FFN model configuration.
         model_config = replica_config.model_config
         model_arch = model_config.get_model_arch() if model_config is not None else "generic"
+        architecture_profile_id = _resolve_model_architecture_profile_id(model_config)
         active_measurement_type = getattr(
             self, "_active_measurement_type", MeasurementType.CUDA_EVENT
         )
-        ffn_signature = f"ffn_{replica_config.device}_{replica_config.model_name}_{tp_size}_moe{is_moe_model}_arch{model_arch}_family{self._measurement_family_name(active_measurement_type)}"
+        ffn_signature = (
+            f"ffn_{replica_config.device}_{replica_config.model_name}_{tp_size}"
+            f"_moe{is_moe_model}_arch_profile{architecture_profile_id}"
+            f"_family{self._measurement_family_name(active_measurement_type)}"
+        )
 
         if ffn_signature in trained_model_signatures:
             logger.info(f"Skipping FFN models training for {cluster_type} - already trained with signature {ffn_signature}")
@@ -717,6 +787,7 @@ class ExecutionTimePredictionModelManager:
             'tensor_parallel_size': tp_size,
             'is_moe_model': is_moe_model,
             'model_arch': model_arch,
+            'model_architecture_profile': architecture_profile_id,
             'use_qk_norm': bool(getattr(model_config, 'use_qk_norm', False)),
         }
 
@@ -731,12 +802,8 @@ class ExecutionTimePredictionModelManager:
             # MoE core operations with per-operation feature selection
             # Split gating into moe_gating_linear and moe_gating_routing_topk (Step 1.6)
             # Aligned with frontier/training/moe_trainer.py _get_feature_cols() method
-            moe_model_names = [
-                "moe_gating_linear",
-                "moe_gating_routing_topk",
-                "moe_shuffling",
-                "moe_grouped_gemm",
-            ]
+            base_moe_model_names = _get_moe_family_model_names()
+            moe_model_names = list(base_moe_model_names)
             if should_enable_prefill_hot_moe_gating_contract(
                 model_config=model_config,
                 model_arch=model_arch,
@@ -757,12 +824,7 @@ class ExecutionTimePredictionModelManager:
                     include_prefill_hot_models = False
 
                 if include_prefill_hot_models:
-                    moe_model_names.extend(
-                        [
-                            "moe_gating_linear__prefill_hot",
-                            "moe_gating_routing_topk__prefill_hot",
-                        ]
-                    )
+                    moe_model_names.extend(_get_prefill_hot_moe_gating_model_names())
                 else:
                     logger.warning(
                         "Prefill-hot gating contract enabled for model=%s, but "
@@ -774,12 +836,8 @@ class ExecutionTimePredictionModelManager:
             self._validate_moe_dataset_contract(
                 moe_input_file,
                 replica_config,
-                [
-                    "moe_gating_linear",
-                    "moe_gating_routing_topk",
-                    "moe_shuffling",
-                    "moe_grouped_gemm",
-                ],
+                base_moe_model_names,
+                cluster_type,
             )
             requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
                 getattr(replica_config, "moe_routing_mode", "simulation")
@@ -793,7 +851,11 @@ class ExecutionTimePredictionModelManager:
                 model_name: str,
             ) -> Tuple[pd.DataFrame, int, Optional[int]]:
                 base_model_name = get_moe_gating_base_model_name(model_name)
-                tp_key = self._get_moe_op_tp_key(base_model_name, replica_config)
+                tp_key = self._get_moe_op_tp_key(
+                    base_model_name,
+                    replica_config,
+                    cluster_type,
+                )
                 if tp_key <= 0:
                     raise ValueError(
                         f"Invalid TP key for MoE training: {tp_key} (op={model_name})"
@@ -810,10 +872,7 @@ class ExecutionTimePredictionModelManager:
                     runtime_path_key = requested_routing_runtime_path
 
                 gating_context_key: Optional[str] = None
-                if base_model_name in {
-                    "moe_gating_linear",
-                    "moe_gating_routing_topk",
-                }:
+                if _is_moe_gating_family_model_name(base_model_name):
                     gating_context_key = DEFAULT_MOE_GATING_RUNTIME_CONTEXT
                     if model_name.endswith("__prefill_hot"):
                         gating_context_key = PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT
@@ -952,8 +1011,11 @@ class ExecutionTimePredictionModelManager:
                         f"Linear ops input file {linear_ops_file} not found for share_expert"
                     )
 
+                step2mini_share_expert_model_names = list(
+                    get_family_profiling_names(SHARE_EXPERT_FAMILY)
+                )
                 share_expert_tp_key = self._get_linear_op_tp_key(
-                    "share_expert_up_proj",
+                    step2mini_share_expert_model_names[0],
                     cluster_type,
                     replica_config,
                     is_moe_model,
@@ -963,7 +1025,6 @@ class ExecutionTimePredictionModelManager:
                 )
                 logger.info(f"Loaded {len(share_expert_linear_ops_df)} rows for share_expert training")
 
-                step2mini_share_expert_model_names = ["share_expert_up_proj", "share_expert_down_proj", "share_expert_act"]
                 for model_name in step2mini_share_expert_model_names:
                     model_signature = f"{model_name}_{ffn_signature}"
                     if model_signature not in trained_model_signatures:
@@ -1059,10 +1120,14 @@ class ExecutionTimePredictionModelManager:
         models = {}
         tp_size = replica_config.attn_tensor_parallel_size
 
-        # Include model_arch in signature to distinguish Step2Mini-specific operations from generic models
         model_config = replica_config.model_config
         model_arch = model_config.get_model_arch() if model_config is not None else "generic"
-        attention_signature = f"attention_{replica_config.device}_{replica_config.model_name}_{tp_size}_{replica_scheduler_config.block_size}_arch{model_arch}_family{self._measurement_family_name(self._active_measurement_type)}"
+        architecture_profile_id = _resolve_model_architecture_profile_id(model_config)
+        attention_signature = (
+            f"attention_{replica_config.device}_{replica_config.model_name}_{tp_size}"
+            f"_{replica_scheduler_config.block_size}_arch_profile{architecture_profile_id}"
+            f"_family{self._measurement_family_name(self._active_measurement_type)}"
+        )
 
         if attention_signature in trained_model_signatures:
             logger.info(f"Skipping attention models training for {cluster_type} - already trained")
@@ -1076,6 +1141,7 @@ class ExecutionTimePredictionModelManager:
             'tensor_parallel_size': tp_size,
             'block_size': replica_scheduler_config.block_size,
             'model_arch': model_arch,
+            'model_architecture_profile': architecture_profile_id,
             'use_qk_norm': bool(getattr(model_config, 'use_qk_norm', False)),
         }
 
@@ -1193,20 +1259,21 @@ class ExecutionTimePredictionModelManager:
                         cluster_type,
                     )
 
-        # Step2Mini-specific attention operations (forward_1: inter_norm + wq after Q split)
-        # These operations are unique to Step2Mini architecture and should only be trained
-        # when model_arch == "step2_mini"
         model_config = replica_config.model_config
-        if model_config is not None and model_config.is_step2_mini():
-            step2mini_attn_model_names = ["attn_inter_norm", "attn_wq_proj"]
-            for model_name in step2mini_attn_model_names:
+        architecture_profile = _resolve_model_architecture_profile(model_config)
+        predictor_attention_extra_ops = (
+            architecture_profile.predictor_attention_extra_ops
+            if architecture_profile is not None
+            else ()
+        )
+        for model_name in predictor_attention_extra_ops:
                 model_signature = f"{model_name}_{attention_signature}"
                 if model_signature not in trained_model_signatures:
                     target_col = f"time_stats.{model_name}.median"
                     if target_col not in attn_linear_ops_df.columns:
                         raise ValueError(
-                            f"Step2Mini operation '{model_name}' column '{target_col}' not found in profiling data. "
-                            f"Ensure profiling was run with Step2Mini model architecture. "
+                            f"Architecture-profile operation '{model_name}' column '{target_col}' not found in profiling data. "
+                            f"Ensure profiling was run with the selected model architecture profile. "
                             f"Available columns: {list(attn_linear_ops_df.columns)}"
                         )
                     models[model_name] = self._train_single_model(
@@ -1218,7 +1285,7 @@ class ExecutionTimePredictionModelManager:
                         training_context=attn_proj_context,
                     )
                     trained_model_signatures.add(model_signature)
-                    logger.info(f"Trained Step2Mini {model_name} for {cluster_type}")
+                    logger.info("Trained architecture-profile %s for %s", model_name, cluster_type)
 
         # ========== Part 2: Attention core operations from attention.csv ==========
         if not os.path.exists(attn_file):
@@ -2157,9 +2224,11 @@ class ExecutionTimePredictionModelManager:
         ]
         if model_config is not None and bool(getattr(model_config, "use_qk_norm", False)):
             required_columns.append("use_qk_norm")
-        if model_config is not None and model_config.is_step2_mini():
+        architecture_profile = _resolve_model_architecture_profile(model_config)
+        if architecture_profile is not None:
             required_columns.extend(
-                ["time_stats.attn_inter_norm.median", "time_stats.attn_wq_proj.median"]
+                f"time_stats.{op_name}.median"
+                for op_name in architecture_profile.predictor_attention_extra_ops
             )
         return required_columns
 

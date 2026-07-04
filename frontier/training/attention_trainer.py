@@ -29,6 +29,7 @@ from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
 from frontier.logger import init_logger
+from frontier.model_architectures import get_model_architecture_profile
 from frontier.training.base_trainer import BaseTrainer
 
 logger = init_logger(__name__)
@@ -377,13 +378,11 @@ class AttentionTrainer(BaseTrainer):
         if not self.model_config.uses_fused_add_norm:
             required_columns.append("time_stats.add.median")
 
-        if self.model_config.is_step2_mini():
-            required_columns.extend(
-                [
-                    "time_stats.attn_inter_norm.median",
-                    "time_stats.attn_wq_proj.median",
-                ]
-            )
+        architecture_profile = get_model_architecture_profile(self.model_config)
+        for op_name in architecture_profile.linear_attention.sharded_ops:
+            column_name = f"time_stats.{op_name}.median"
+            if column_name not in required_columns:
+                required_columns.append(column_name)
 
         return required_columns
 

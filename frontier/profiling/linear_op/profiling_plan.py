@@ -4,7 +4,17 @@ from __future__ import annotations
 
 from typing import Dict, List, Sequence
 
-from frontier.spec_decode.runtime import TARGET_EMBEDDED_MTP_SAME_TP_LINEAR_OPS
+from frontier.operators.families import (
+    FFN_FAMILY,
+    MEMORY_FAMILY,
+    SHARE_EXPERT_FAMILY,
+    get_family_profiling_names,
+)
+from frontier.model_architectures import get_model_architecture_profile
+from frontier.spec_decode.mtp_registry import (
+    get_target_embedded_mtp_linear_ops,
+    get_target_embedded_mtp_same_tp_linear_ops,
+)
 
 
 ATTN_BASE_OPS = [
@@ -26,27 +36,53 @@ ATTN_STEP3TEXT_SHARDED_OPS = [
 ATTN_REPLICATED_OPS = [
     "input_layernorm",
 ]
-FFN_OPS = [
-    "mlp_up_proj",
-    "mlp_down_proj",
-    "mlp_act",
-]
-SHARE_EXPERT_OPS = [
-    "share_expert_up_proj",
-    "share_expert_down_proj",
-    "share_expert_act",
-]
-FFN_REPLICATED_OPS = [
-    "post_attention_layernorm",
-]
-COMMON_REPLICATED_OPS = [
-    "add",
-    "emb",
-]
-TARGET_EMBEDDED_MTP_OPS = [
-    "mtp_fusion_proj",
-    "lm_head_linear",
-]
+TARGET_EMBEDDED_MTP_OPS = list(get_target_embedded_mtp_linear_ops())
+
+
+def _dedupe_preserving_order(values: Sequence[str]) -> List[str]:
+    return list(dict.fromkeys(values))
+
+
+def _memory_profiling_names(model_config) -> List[str]:
+    operators = []
+    for operator in MEMORY_FAMILY.profiling_ops():
+        if (
+            operator.name == "post_attention_layernorm"
+            and not getattr(model_config, "post_attn_norm", False)
+        ):
+            continue
+        operators.append(operator)
+    return _dedupe_preserving_order(
+        [operator.profiling_name() for operator in operators]
+    )
+
+
+def _ffn_profiling_names() -> List[str]:
+    return list(get_family_profiling_names(FFN_FAMILY))
+
+
+def _share_expert_profiling_names() -> List[str]:
+    return list(get_family_profiling_names(SHARE_EXPERT_FAMILY))
+
+
+def memory_operator_enabled(
+    enabled_ops: Sequence[str] | set[str] | None,
+    operator_name: str,
+) -> bool:
+    if enabled_ops is None:
+        return True
+    enabled_op_set = set(enabled_ops)
+    for operator in MEMORY_FAMILY.profiling_ops():
+        if operator.name == operator_name:
+            return operator.profiling_name() in enabled_op_set
+    raise ValueError(f"Unknown MEMORY profiling operator: {operator_name}")
+
+
+def _bool_config_value(model_config, name: str) -> bool:
+    value = getattr(model_config, name, False)
+    if callable(value):
+        value = value()
+    return bool(value)
 
 
 def _pad_to_multiple(value: int, multiple: int) -> int:
@@ -59,9 +95,9 @@ def _pad_to_multiple(value: int, multiple: int) -> int:
 
 
 def _supports_share_expert(model_config) -> bool:
-    if hasattr(model_config, "supports_share_expert"):
-        return model_config.supports_share_expert()
-    return getattr(model_config, "model_type", None) in {"step2_mini", "step3_text"}
+    if not hasattr(model_config, "supports_share_expert"):
+        raise TypeError("linear-op profiling requires model_config.supports_share_expert()")
+    return model_config.supports_share_expert()
 
 
 def build_profiling_plan(
@@ -125,19 +161,24 @@ def build_profiling_plan(
     attn_enabled = attn_sharded_enabled or replicated_enabled
     ffn_enabled = ffn_sharded_enabled or replicated_enabled
 
+    architecture_profile = get_model_architecture_profile(model_config)
+    linear_attention = architecture_profile.linear_attention
+    memory_ops = _memory_profiling_names(model_config)
+
     replicated_ops: List[str] = []
-    replicated_ops.extend(ATTN_REPLICATED_OPS)
-    if getattr(model_config, "model_type", None) == "step3_text":
-        replicated_ops.extend(ATTN_STEP3TEXT_REPLICATED_OPS)
-    if getattr(model_config, "post_attn_norm", False):
-        replicated_ops.extend(FFN_REPLICATED_OPS)
-    replicated_ops.extend(COMMON_REPLICATED_OPS)
+    replicated_ops.extend(
+        [op_name for op_name in ATTN_REPLICATED_OPS if op_name in memory_ops]
+    )
+    replicated_ops.extend(linear_attention.replicated_ops)
+    replicated_ops.extend(
+        [op_name for op_name in memory_ops if op_name not in ATTN_REPLICATED_OPS]
+    )
     target_embedded_same_tp_ops: List[str] = []
     if include_target_embedded_mtp:
         target_embedded_same_tp_ops.extend(
             [
                 op_name
-                for op_name in TARGET_EMBEDDED_MTP_SAME_TP_LINEAR_OPS
+                for op_name in get_target_embedded_mtp_same_tp_linear_ops()
                 if op_name != "post_attention_layernorm"
                 or getattr(model_config, "post_attn_norm", False)
             ]
@@ -154,34 +195,25 @@ def build_profiling_plan(
         enabled_ops.extend(target_embedded_same_tp_ops)
 
     if attn_sharded_enabled:
-        enabled_ops.extend(ATTN_BASE_OPS)
-        if getattr(model_config, "is_step2_mini", False):
-            enabled_ops.extend(ATTN_STEP2MINI_OPS)
-        if getattr(model_config, "model_type", None) == "step3_text":
-            enabled_ops.extend(ATTN_STEP3TEXT_SHARDED_OPS)
+        enabled_ops.extend(linear_attention.sharded_ops)
         if include_target_embedded_mtp:
             enabled_ops.extend(TARGET_EMBEDDED_MTP_OPS)
 
     if ffn_sharded_enabled:
         if not is_moe:
-            enabled_ops.extend(FFN_OPS)
+            enabled_ops.extend(_ffn_profiling_names())
         if getattr(model_config, "is_moe", False) and _supports_share_expert(model_config):
-            enabled_ops.extend(SHARE_EXPERT_OPS)
+            enabled_ops.extend(_share_expert_profiling_names())
 
     all_ops: List[str] = []
     all_ops.extend(replicated_ops)
-    all_ops.extend(ATTN_BASE_OPS)
-    if getattr(model_config, "is_step2_mini", False):
-        all_ops.extend(ATTN_STEP2MINI_OPS)
-    if getattr(model_config, "model_type", None) == "step3_text":
-        all_ops.extend(ATTN_STEP3TEXT_REPLICATED_OPS)
-        all_ops.extend(ATTN_STEP3TEXT_SHARDED_OPS)
+    all_ops.extend(linear_attention.sharded_ops)
     if include_target_embedded_mtp:
         all_ops.extend(TARGET_EMBEDDED_MTP_OPS)
     if not is_moe:
-        all_ops.extend(FFN_OPS)
+        all_ops.extend(_ffn_profiling_names())
     if getattr(model_config, "is_moe", False) and _supports_share_expert(model_config):
-        all_ops.extend(SHARE_EXPERT_OPS)
+        all_ops.extend(_share_expert_profiling_names())
     # Remove duplicates while preserving order.
     all_ops = list(dict.fromkeys(all_ops))
     enabled_ops = list(dict.fromkeys(enabled_ops))

@@ -10,6 +10,7 @@ from frontier.entities.request import Request
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
+from frontier.model_architectures import ModelArchitectureProfile
 from frontier.types import ClusterType, MeasurementType
 
 
@@ -18,7 +19,7 @@ def _dense_model_config() -> SimpleNamespace:
         use_mla=False,
         num_q_heads=32,
         num_kv_heads=8,
-        is_step2_mini=lambda: False,
+        get_model_architecture_profile=ModelArchitectureProfile.generic,
     )
 
 
@@ -50,7 +51,7 @@ def _build_predictor(
     predictor._enable_dummy_mode = False
     predictor._dummy_execution_time = 0.0
     predictor._model_config = _dense_model_config()
-    predictor._log_step3_attention_shape = lambda _batch: None
+    predictor._log_architecture_attention_shape = lambda _batch: None
     predictor._get_attention_layer_pre_proj_execution_time = lambda _batch: 0.0
     predictor._get_attention_layer_post_proj_execution_time = lambda _batch: 0.0
     predictor._get_attention_rope_execution_time = lambda _batch: 0.0

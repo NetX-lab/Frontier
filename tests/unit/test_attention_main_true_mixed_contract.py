@@ -138,6 +138,7 @@ def test_prepare_standard_attention_output_validates_dense_schema(
         df,
         precision_str="bf16",
         model_arch="llama",
+        model_architecture_profile="generic",
         quant_signature="none",
         measurement_type=measurement_type,
     )
@@ -145,7 +146,55 @@ def test_prepare_standard_attention_output_validates_dense_schema(
     assert output.loc[0, "measurement_type"] == measurement_type
     assert output.loc[0, "profiling_precision"] == "bf16"
     assert output.loc[0, "model_arch"] == "llama"
+    assert output.loc[0, "model_architecture_profile"] == "generic"
     assert output.loc[0, "quant_signature"] == "none"
+
+
+@pytest.mark.parametrize(
+    ("column_name", "existing_value", "expected_value"),
+    [
+        ("profiling_precision", "fp16", "bf16"),
+        ("measurement_type", "KERNEL_ONLY", "CUDA_EVENT"),
+        ("model_arch", "llama", "step3"),
+        ("model_architecture_profile", "generic", "step3_text"),
+        ("quant_signature", "none", "fp8_w8a8"),
+    ],
+)
+def test_prepare_standard_attention_output_rejects_conflicting_metadata(
+    column_name: str,
+    existing_value: str,
+    expected_value: str,
+) -> None:
+    df = pd.DataFrame([_dense_standard_row("CUDA_EVENT")]).drop(
+        columns=["measurement_type"]
+    )
+    df[column_name] = existing_value
+
+    kwargs = {
+        "precision_str": "bf16",
+        "model_arch": "llama",
+        "model_architecture_profile": "generic",
+        "quant_signature": "none",
+        "measurement_type": "CUDA_EVENT",
+    }
+    if column_name == "model_arch":
+        kwargs["model_arch"] = expected_value
+    elif column_name == "model_architecture_profile":
+        kwargs["model_architecture_profile"] = expected_value
+    elif column_name == "quant_signature":
+        kwargs["quant_signature"] = expected_value
+    elif column_name == "profiling_precision":
+        kwargs["precision_str"] = expected_value
+    elif column_name == "measurement_type":
+        kwargs["measurement_type"] = expected_value
+    else:
+        raise AssertionError(f"Unhandled metadata column: {column_name}")
+
+    with pytest.raises(ValueError, match=column_name):
+        attention_main._prepare_standard_attention_output_dataframe(  # pylint: disable=protected-access
+            df,
+            **kwargs,
+        )
 
 
 def test_prepare_standard_attention_output_rejects_missing_dense_schema_columns() -> None:
@@ -167,6 +216,7 @@ def test_prepare_standard_attention_output_rejects_missing_dense_schema_columns(
             df,
             precision_str="bf16",
             model_arch="llama",
+            model_architecture_profile="generic",
             quant_signature="none",
             measurement_type="CUDA_EVENT",
         )

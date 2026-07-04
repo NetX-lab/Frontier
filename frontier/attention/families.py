@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from typing import cast
+
+from frontier.operators.registry import OperatorRegistry
 from frontier.attention.ops import (
     AttentionFamilySpec,
     AttentionMemoryLayout,
@@ -9,6 +12,7 @@ from frontier.attention.ops import (
     AttentionRuntimeMetaContract,
     ProjectionOwnership,
 )
+from frontier.operators.spec import ResourceClass
 
 
 _PREFILL_MIXED = (AttentionPhase.PREFILL, AttentionPhase.MIXED)
@@ -54,18 +58,21 @@ DENSE_ATTENTION_FAMILY = AttentionFamilySpec(
             role=AttentionOperatorRole.CACHE_WRITE,
             phases=_ALL_PHASES,
             execution_time_attr="attention_kv_cache_save_execution_time",
+            resource_class=ResourceClass.MEMORY,
         ),
         AttentionOperatorSpec(
             name="attn_prefill",
             role=AttentionOperatorRole.PREFILL_KERNEL,
             phases=_PREFILL_MIXED,
             execution_time_attr="attention_prefill_execution_time",
+            resource_class=ResourceClass.COMP,
         ),
         AttentionOperatorSpec(
             name="attn_decode",
             role=AttentionOperatorRole.DECODE_KERNEL,
             phases=_DECODE_MIXED,
             execution_time_attr="attention_decode_execution_time",
+            resource_class=ResourceClass.COMP,
         ),
     ),
     memory_layout=AttentionMemoryLayout.DENSE_KV,
@@ -100,12 +107,14 @@ LATENT_MLA_ATTENTION_FAMILY = AttentionFamilySpec(
             role=AttentionOperatorRole.CACHE_WRITE,
             phases=_ALL_PHASES,
             execution_time_attr="attn_mla_kv_cache_save_time",
+            resource_class=ResourceClass.MEMORY,
         ),
         AttentionOperatorSpec(
             name="attn_mla_prefill_kv_up_proj",
             role=AttentionOperatorRole.PROJECTION,
             phases=_PREFILL_MIXED,
             execution_time_attr="attn_mla_prefill_kv_up_proj_time",
+            resource_class=ResourceClass.COMP,
             projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
         ),
         AttentionOperatorSpec(
@@ -113,12 +122,14 @@ LATENT_MLA_ATTENTION_FAMILY = AttentionFamilySpec(
             role=AttentionOperatorRole.PREFILL_KERNEL,
             phases=_PREFILL_MIXED,
             execution_time_attr="attn_mla_prefill_time",
+            resource_class=ResourceClass.COMP,
         ),
         AttentionOperatorSpec(
             name="attn_mla_decode_q_latent_proj",
             role=AttentionOperatorRole.PROJECTION,
             phases=_DECODE_MIXED,
             execution_time_attr="attn_mla_decode_q_latent_proj_time",
+            resource_class=ResourceClass.COMP,
             projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
         ),
         AttentionOperatorSpec(
@@ -126,12 +137,14 @@ LATENT_MLA_ATTENTION_FAMILY = AttentionFamilySpec(
             role=AttentionOperatorRole.DECODE_KERNEL,
             phases=_DECODE_MIXED,
             execution_time_attr="attn_mla_decode_time",
+            resource_class=ResourceClass.COMP,
         ),
         AttentionOperatorSpec(
             name="attn_mla_v_up_proj",
             role=AttentionOperatorRole.PROJECTION,
             phases=_DECODE_MIXED,
             execution_time_attr="attn_mla_v_up_proj_time",
+            resource_class=ResourceClass.COMP,
             projection_ownership=ProjectionOwnership.INSIDE_ATTENTION_PHYSICAL_SCOPE,
         ),
     ),
@@ -196,13 +209,25 @@ DSA_ATTENTION_FAMILY = AttentionFamilySpec(
     dense_compatible=False,
     requires_runtime_kv_helpers=True,
     dsa_frozen=True,
+    execution_enabled=False,
+    disabled_reason=(
+        "DSA attention is frozen until a real vLLM/FlashInfer truth backend "
+        "and Frontier mapping are approved."
+    ),
 )
 
 
-_FAMILIES_BY_ID = {
-    DENSE_ATTENTION_FAMILY.family_id: DENSE_ATTENTION_FAMILY,
-    LATENT_MLA_ATTENTION_FAMILY.family_id: LATENT_MLA_ATTENTION_FAMILY,
-    DSA_ATTENTION_FAMILY.family_id: DSA_ATTENTION_FAMILY,
+_ATTENTION_OPERATOR_REGISTRY = OperatorRegistry()
+for _family in (
+    DENSE_ATTENTION_FAMILY,
+    LATENT_MLA_ATTENTION_FAMILY,
+    DSA_ATTENTION_FAMILY,
+):
+    _ATTENTION_OPERATOR_REGISTRY.register(_family)
+
+_FAMILIES_BY_ID: dict[str, AttentionFamilySpec] = {
+    family.family_id: cast(AttentionFamilySpec, family)
+    for family in _ATTENTION_OPERATOR_REGISTRY.iter_families()
 }
 
 
@@ -214,15 +239,19 @@ def get_attention_family(family_id: str) -> AttentionFamilySpec:
 
 
 def iter_attention_families() -> tuple[AttentionFamilySpec, ...]:
-    return tuple(_FAMILIES_BY_ID.values())
+    return tuple(
+        cast(AttentionFamilySpec, family)
+        for family in _ATTENTION_OPERATOR_REGISTRY.iter_families()
+    )
 
 
 def iter_execution_enabled_families() -> tuple[AttentionFamilySpec, ...]:
     """Catalog families that participate in execution/profiling/training.
 
-    Single source of truth for the frozen-DSA guard: catalog consumers iterate
-    this instead of re-implementing a per-call ``dsa_frozen`` skip.
+    Single source of truth for family execution state: catalog consumers
+    iterate this instead of re-implementing per-family skip logic.
     """
     return tuple(
-        family for family in iter_attention_families() if not family.dsa_frozen
+        cast(AttentionFamilySpec, family)
+        for family in _ATTENTION_OPERATOR_REGISTRY.iter_execution_enabled_families()
     )

@@ -4,6 +4,7 @@ import json
 import os
 import hashlib
 from dataclasses import dataclass
+from typing import cast
 
 from frontier.config.model_config import (
     _infer_attn_output_gate_from_hf_config,
@@ -11,11 +12,18 @@ from frontier.config.model_config import (
     _infer_use_qk_norm_from_hf_config,
 )
 from frontier.config.precision_type import PrecisionType
+from frontier.model_architectures import get_model_architecture_profile
 from frontier.profiling.common.model_config import ModelConfig as ProfilingModelConfig
+from frontier.spec_decode.mtp_registry import (
+    MTPRuntimePolicy,
+    get_target_embedded_mtp_runtime_policy,
+    is_target_embedded_mtp_method,
+)
 from frontier.spec_decode.runtime import (
     get_mtp_method_family,
     method_requires_prefix_matching_disabled,
 )
+from frontier.types import ActivationType, NormType
 
 
 @dataclass(frozen=True)
@@ -50,6 +58,9 @@ class StructuralModelConfigAdapter:
     def get_name(self) -> str:
         return str(self._profiling_config.name)
 
+    def get_model_architecture_profile(self):
+        return get_model_architecture_profile(self._profiling_config)
+
     @property
     def torch_dtype(self) -> str:
         return str(
@@ -65,19 +76,14 @@ class StructuralModelConfigAdapter:
         return getattr(self._profiling_config, "quantization_config", None)
 
     def is_step2_mini(self) -> bool:
-        return bool(getattr(self._profiling_config, "model_arch", None) == "step2_mini")
+        return self.get_model_architecture_profile().step2_mini_compatible
 
     def is_step3_text(self) -> bool:
-        return bool(getattr(self._profiling_config, "model_type", None) == "step3_text")
+        return self.get_model_architecture_profile().step3_text_compatible
 
     def supports_share_expert(self) -> bool:
-        return (
-            self.is_step2_mini()
-            or self.is_step3_text()
-            or (
-                bool(getattr(self._profiling_config, "is_moe", False))
-                and int(getattr(self._profiling_config, "share_expert_dim", 0) or 0) > 0
-            )
+        return self.get_model_architecture_profile().supports_share_expert(
+            self._profiling_config
         )
 
     def get_head_dim(self) -> int:
@@ -109,29 +115,7 @@ class StructuralModelConfigAdapter:
         return hashlib.sha256(self.get_quant_signature().encode()).hexdigest()[:16]
 
 
-_MTP_RUNTIME_METHOD_REGISTRY = {
-    "qwen3_next_mtp": {
-        "fusion_op_name": "mtp_fusion_proj",
-        "fusion_is_tp_sharded": True,
-        "fusion_requires_allgather": True,
-        "norm_op_name": "input_layernorm",
-        "num_pre_fusion_norms": 2,
-        "num_post_decoder_norms": 1,
-        "embedding_requires_allreduce": True,
-        "lm_head_op_name": "lm_head_linear",
-        "lm_head_requires_allgather": True,
-    },
-    "qwen3_moe_mtp": {
-        "fusion_op_name": "mtp_fusion_proj",
-        "fusion_is_tp_sharded": True,
-        "fusion_requires_allgather": True,
-        "norm_op_name": "input_layernorm",
-        "num_pre_fusion_norms": 2,
-        "num_post_decoder_norms": 1,
-        "embedding_requires_allreduce": True,
-        "lm_head_op_name": "lm_head_linear",
-        "lm_head_requires_allgather": True,
-    },
+_DRAFT_MODEL_MTP_RUNTIME_METHOD_REGISTRY: dict[str, MTPRuntimePolicy] = {
     "deepseek_mtp": {
         "fusion_op_name": "mtp_fusion_proj",
         "fusion_is_tp_sharded": False,
@@ -185,6 +169,8 @@ def _load_structural_model_config_from_json(model_name: str) -> StructuralModelC
     use_gated_mlp = hidden_act == "silu"
     if hidden_act not in {"silu", "gelu"}:
         hidden_act = "silu" if use_gated_mlp else "gelu"
+    activation = ActivationType.SILU if hidden_act == "silu" else ActivationType.GELU
+    norm = NormType.RMS_NORM if "rms_norm_eps" in raw else NormType.LAYER_NORM
 
     profiling_config = ProfilingModelConfig(
         name=str(model_name),
@@ -197,8 +183,8 @@ def _load_structural_model_config_from_json(model_name: str) -> StructuralModelC
         use_gated_mlp=use_gated_mlp,
         use_bias=bool(raw.get("attention_bias", raw.get("use_bias", False))),
         use_qkv_bias=bool(raw.get("attention_bias", raw.get("use_qkv_bias", False))),
-        activation=hidden_act,
-        norm="rms_norm" if "rms_norm_eps" in raw else "layer_norm",
+        activation=activation,
+        norm=norm,
         post_attn_norm=bool(raw.get("post_attn_norm", True)),
         vocab_size=int(raw["vocab_size"]),
         rope_theta=raw.get("rope_theta"),
@@ -213,6 +199,7 @@ def _load_structural_model_config_from_json(model_name: str) -> StructuralModelC
         dtype=raw.get("torch_dtype", raw.get("dtype", "float16")),
         model_type=raw.get("model_type"),
         model_arch=raw.get("model_arch"),
+        model_architecture_profile=raw.get("model_architecture_profile"),
         share_expert_dim=_infer_share_expert_dim_from_hf_config(raw),
         share_q_dim=raw.get("share_q_dim"),
         head_dim=raw.get("head_dim"),
@@ -226,7 +213,7 @@ def load_mtp_structural_model_config(model_name: str) -> StructuralModelConfigAd
     try:
         profiling_config = ProfilingModelConfig.from_model_name(model_name)
         return StructuralModelConfigAdapter(profiling_config)
-    except Exception:
+    except ValueError:
         return _load_structural_model_config_from_json(model_name)
 
 
@@ -240,7 +227,10 @@ def build_mtp_runtime_contract(
     mtp_num_layers: int,
 ) -> MTPRuntimeContract:
     normalized_method = str(method)
-    if normalized_method not in _MTP_RUNTIME_METHOD_REGISTRY:
+    mtp_family = get_mtp_method_family(normalized_method)
+    if not is_target_embedded_mtp_method(normalized_method) and (
+        normalized_method not in _DRAFT_MODEL_MTP_RUNTIME_METHOD_REGISTRY
+    ):
         raise ValueError(
             f"No MTP runtime contract registered for method={normalized_method!r}"
         )
@@ -261,9 +251,16 @@ def build_mtp_runtime_contract(
             f"mtp_num_layers must be > 0 for MTP runtime, got={mtp_num_layers!r}"
         )
 
-    registry_entry = _MTP_RUNTIME_METHOD_REGISTRY[normalized_method]
+    registry_entry: MTPRuntimePolicy = (
+        get_target_embedded_mtp_runtime_policy(normalized_method)
+        if is_target_embedded_mtp_method(normalized_method)
+        else cast(
+            MTPRuntimePolicy,
+            dict(_DRAFT_MODEL_MTP_RUNTIME_METHOD_REGISTRY[normalized_method]),
+        )
+    )
     spec_model_name_normalized = str(spec_model_name).strip()
-    requires_draft_model = normalized_method in {"deepseek_mtp", "ernie_mtp"}
+    requires_draft_model = mtp_family == "draft_model_mtp"
     if requires_draft_model and not spec_model_name_normalized:
         raise ValueError(
             "draft-model MTP requires non-empty spec_model_name for runtime "
@@ -277,7 +274,7 @@ def build_mtp_runtime_contract(
 
     return MTPRuntimeContract(
         method=normalized_method,
-        mtp_family=get_mtp_method_family(normalized_method),
+        mtp_family=mtp_family,
         target_model_name=target_model_name_normalized,
         proposer_model_name=proposer_model_name,
         spec_model_name=spec_model_name_normalized,

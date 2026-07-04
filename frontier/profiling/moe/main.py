@@ -47,6 +47,7 @@ from frontier.config.precision_type import PrecisionType
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
 )
+from frontier.operators.families import MOE_FAMILY, get_family_profiling_names
 # Conditionally import ray - only needed when not using --disable_ray
 try:
     import ray
@@ -395,6 +396,63 @@ def _resolve_quant_signature_for_metadata(model_config: ModelConfig) -> str:
     return quant_signature
 
 
+def _attach_moe_output_metadata(
+    df: pd.DataFrame,
+    *,
+    precision_str: str,
+    model_arch: str,
+    model_architecture_profile: str,
+    quant_signature: str,
+    measurement_type: str,
+) -> pd.DataFrame:
+    """Attach required profiling metadata columns to a MoE profiling dataframe."""
+    if df.empty:
+        return df
+    output_df = df.copy()
+
+    _fill_metadata_column(output_df, "profiling_precision", precision_str)
+    _fill_metadata_column(output_df, "measurement_type", measurement_type)
+    _fill_metadata_column(output_df, "model_arch", model_arch)
+    _fill_metadata_column(
+        output_df,
+        "model_architecture_profile",
+        model_architecture_profile,
+    )
+    _fill_metadata_column(output_df, "quant_signature", quant_signature)
+    return output_df
+
+
+def _fill_metadata_column(
+    output_df: pd.DataFrame,
+    column_name: str,
+    expected_value: str,
+) -> None:
+    """Fill blank metadata cells and fail fast on conflicting non-blank values."""
+
+    if column_name not in output_df.columns:
+        output_df[column_name] = expected_value
+        return
+
+    normalized = (
+        output_df[column_name]
+        .replace(r"^\s*$", pd.NA, regex=True)
+        .fillna(expected_value)
+    )
+    conflicting_values = sorted(
+        {
+            str(value)
+            for value in normalized.dropna().unique()
+            if str(value) != expected_value
+        }
+    )
+    if conflicting_values:
+        raise ValueError(
+            f"{column_name} contains conflicting metadata values "
+            f"{conflicting_values}; expected {expected_value!r}."
+        )
+    output_df[column_name] = normalized
+
+
 def _resolve_fp8_settings(
     model_config: ModelConfig,
     use_fp8: Optional[bool],
@@ -421,25 +479,28 @@ def _resolve_fp8_settings(
     return config_use_fp8, config_block_shape
 
 
-MOE_REQUIRED_TARGET_COLUMNS = (
-    "time_stats.moe_gating_linear.median",
-    "time_stats.moe_gating_routing_topk.median",
-    "time_stats.moe_shuffling.median",
-    "time_stats.moe_grouped_gemm.median",
-)
+def _moe_required_target_columns() -> tuple[str, ...]:
+    return tuple(
+        f"time_stats.{operator_name}.median"
+        for operator_name in get_family_profiling_names(MOE_FAMILY)
+    )
+
+
+MOE_REQUIRED_TARGET_COLUMNS = _moe_required_target_columns()
 
 
 def _validate_canonical_moe_result_df(df: pd.DataFrame, *, model: str) -> None:
-    missing_columns = [col for col in MOE_REQUIRED_TARGET_COLUMNS if col not in df.columns]
+    required_target_columns = _moe_required_target_columns()
+    missing_columns = [col for col in required_target_columns if col not in df.columns]
     if missing_columns:
         raise ValueError(
             "MoE profiling contract validation failed: canonical MoE profiling "
-            f"must emit target columns {list(MOE_REQUIRED_TARGET_COLUMNS)}, but "
+            f"must emit target columns {list(required_target_columns)}, but "
             f"model={model} is missing {missing_columns}. This usually indicates "
             "a legacy split-row path or broken profiling aggregation."
         )
 
-    broken_mask = df[list(MOE_REQUIRED_TARGET_COLUMNS)].isna().any(axis=1)
+    broken_mask = df[list(required_target_columns)].isna().any(axis=1)
     if not broken_mask.any():
         return
 
@@ -449,7 +510,7 @@ def _validate_canonical_moe_result_df(df: pd.DataFrame, *, model: str) -> None:
             "num_tensor_parallel_workers",
             "expert_parallel_size",
             "num_tokens",
-            *MOE_REQUIRED_TARGET_COLUMNS,
+            *required_target_columns,
         ],
     ].copy()
     broken_rows = broken_rows.sort_values(
@@ -460,7 +521,7 @@ def _validate_canonical_moe_result_df(df: pd.DataFrame, *, model: str) -> None:
     for _, row in broken_rows.head(8).iterrows():
         missing_targets = [
             col.removeprefix("time_stats.").removesuffix(".median")
-            for col in MOE_REQUIRED_TARGET_COLUMNS
+            for col in required_target_columns
             if pd.isna(row[col])
         ]
         preview_lines.append(
@@ -915,28 +976,21 @@ def main():
                 profile_method=args.profile_method,
             )
             output_file.parent.mkdir(parents=True, exist_ok=True)
-            result_df["profiling_precision"] = precision_str
-            result_df["measurement_type"] = profile_method_to_measurement_type(args.profile_method).value
             model_arch = _resolve_model_arch_for_metadata(model_config)
+            model_architecture_profile = (
+                model_config.get_model_architecture_profile().profile_id
+            )
             quant_signature = _resolve_quant_signature_for_metadata(model_config)
-
-            if "model_arch" not in result_df.columns:
-                result_df["model_arch"] = model_arch
-            else:
-                result_df["model_arch"] = (
-                    result_df["model_arch"]
-                    .replace(r"^\s*$", model_arch, regex=True)
-                    .fillna(model_arch)
-                )
-
-            if "quant_signature" not in result_df.columns:
-                result_df["quant_signature"] = quant_signature
-            else:
-                result_df["quant_signature"] = (
-                    result_df["quant_signature"]
-                    .replace(r"^\s*$", quant_signature, regex=True)
-                    .fillna(quant_signature)
-                )
+            result_df = _attach_moe_output_metadata(
+                result_df,
+                precision_str=precision_str,
+                model_arch=model_arch,
+                model_architecture_profile=model_architecture_profile,
+                quant_signature=quant_signature,
+                measurement_type=profile_method_to_measurement_type(
+                    args.profile_method
+                ).value,
+            )
             result_df.to_csv(output_file, index=False)
             print(f"✓ Saved MoE profiling data to: {output_file}")
     finally:

@@ -16,6 +16,8 @@ from frontier.attention.ops import (
     AttentionPhase,
     ProjectionOwnership,
 )
+
+from frontier.operators.spec import ResourceClass
 from frontier.attention.trace_mapping import get_attention_trace_op_times
 from frontier.entities.execution_time import ExecutionTime
 from frontier.entities.time_components import AttentionOperatorTimes
@@ -90,18 +92,21 @@ def test_trace_mapper_uses_family_execution_time_attrs_not_operator_names() -> N
             AttentionOperatorSpec(
                 name="role_prefill",
                 role=AttentionOperatorRole.PREFILL_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.PREFILL,),
                 execution_time_attr="attention_prefill_execution_time",
             ),
             AttentionOperatorSpec(
                 name="role_decode",
                 role=AttentionOperatorRole.DECODE_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.DECODE,),
                 execution_time_attr="attention_decode_execution_time",
             ),
             AttentionOperatorSpec(
                 name="role_cache",
                 role=AttentionOperatorRole.CACHE_WRITE,
+                resource_class=ResourceClass.MEMORY,
                 phases=(AttentionPhase.PREFILL, AttentionPhase.DECODE),
                 execution_time_attr="attention_kv_cache_save_execution_time",
             ),
@@ -143,7 +148,7 @@ def test_trace_mapper_prefers_structured_attention_operator_times() -> None:
         ("attn_prefill", pytest.approx(0.06)),
         ("attn_decode", pytest.approx(0.09)),
     ]
-    assert execution_time.attention_kv_cache_save_execution_time == pytest.approx(0.6)
+    assert execution_time.attention_kv_cache_save_execution_time == pytest.approx(0.03)
 
 
 def test_trace_mapper_rejects_missing_structured_attention_operator_time() -> None:
@@ -181,8 +186,8 @@ def test_attention_total_time_includes_structured_operator_times_once() -> None:
     )
     execution_time.attention_operator_times = AttentionOperatorTimes(
         {
-            "future_cache": 0.11,
-            "future_prefill": 0.12,
+            "attn_kv_cache_save": 0.11,
+            "attn_prefill": 0.12,
         }
     )
 
@@ -211,7 +216,7 @@ def test_attention_total_time_uses_structured_values_without_legacy_double_count
     assert execution_time.get_single_layer_attention_time() == pytest.approx(
         0.5 + 0.7 + 0.8 + 0.4 + 0.01 + 0.02 + 0.03
     )
-    assert execution_time.attention_kv_cache_save_execution_time == pytest.approx(0.4)
+    assert execution_time.attention_kv_cache_save_execution_time == pytest.approx(0.02)
 
 
 def test_structured_attention_legacy_coverage_uses_family_execution_time_attrs(
@@ -225,6 +230,7 @@ def test_structured_attention_legacy_coverage_uses_family_execution_time_attrs(
             AttentionOperatorSpec(
                 name="custom_attn_core",
                 role=AttentionOperatorRole.PREFILL_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.PREFILL,),
                 execution_time_attr="attn_norm_time",
             ),
@@ -320,6 +326,7 @@ def test_trace_mapper_rejects_mla_projection_double_count_without_disjoint_rule(
             AttentionOperatorSpec(
                 name="custom_mla_prefill_kv_up_proj",
                 role=AttentionOperatorRole.PROJECTION,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.PREFILL,),
                 execution_time_attr="attn_mla_prefill_kv_up_proj_time",
                 projection_ownership=(
@@ -356,6 +363,7 @@ def test_trace_mapper_rejects_unknown_disjoint_projection_attr() -> None:
             AttentionOperatorSpec(
                 name="custom_mla_prefill_kv_up_proj",
                 role=AttentionOperatorRole.PROJECTION,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.PREFILL,),
                 execution_time_attr="attn_mla_prefill_kv_up_proj_time",
                 projection_ownership=(
@@ -381,7 +389,7 @@ def test_projection_ownership_guard_checks_structured_operator_times() -> None:
     execution_time = _build_execution_time(num_layers=1, mla_times=(0.0,) * 6)
     execution_time.attention_operator_times = AttentionOperatorTimes(
         {
-            "custom_mla_prefill_kv_up_proj": 0.12,
+            "attn_mla_prefill_kv_up_proj": 0.12,
         }
     )
     family = AttentionFamilySpec(
@@ -390,8 +398,9 @@ def test_projection_ownership_guard_checks_structured_operator_times() -> None:
         supported_variants=("mla",),
         operators=(
             AttentionOperatorSpec(
-                name="custom_mla_prefill_kv_up_proj",
+                name="attn_mla_prefill_kv_up_proj",
                 role=AttentionOperatorRole.PROJECTION,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.PREFILL,),
                 execution_time_attr="attn_mla_prefill_kv_up_proj_time",
                 projection_ownership=(

@@ -1,5 +1,6 @@
 import json
 import uuid
+from collections.abc import Collection
 from typing import Optional, Set
 
 import numpy as np
@@ -7,6 +8,7 @@ import torch
 
 
 _CUDA_EXECUTION_EVENT_CATEGORIES = frozenset({"kernel"})
+_CUDA_PROFILER_PRIME_KERNELS = 4
 
 
 class RecordFunctionTracer:
@@ -31,7 +33,18 @@ class RecordFunctionTracer:
             ],
         )
         self.profiler.__enter__()
+        self._prime_cuda_profiler_capture()
         return self
+
+    def _prime_cuda_profiler_capture(self) -> None:
+        # CUPTI can drop the first kernel record immediately after each fresh
+        # torch.profiler session starts. Run a few tiny CUDA kernels outside
+        # any vidur_* scope so the measured operation scopes remain strict.
+        prime_tensor = torch.empty((1,), device="cuda")
+        for _ in range(_CUDA_PROFILER_PRIME_KERNELS):
+            prime_tensor = prime_tensor + 1
+        torch.cuda.synchronize()
+        self._cuda_profiler_prime_tensor = prime_tensor
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Flush async CUDA work before stopping the profiler so the final launch
@@ -61,7 +74,7 @@ class RecordFunctionTracer:
         self,
         trace,
         event,
-        allowed_categories: Optional[Set[str]] = None,
+        allowed_categories: Optional[Collection[str]] = None,
     ):
         if not ("args" in event and "correlation" in event["args"]):
             return

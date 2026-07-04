@@ -9,6 +9,7 @@ from frontier.attention.ops import AttentionMemoryLayout
 from frontier.config.base_fixed_config import BaseFixedConfig
 from frontier.config.precision_type import PrecisionType
 from frontier.logger import init_logger
+from frontier.model_architectures import get_model_architecture_profile
 from frontier.types import ActivationType, NormType
 
 logger = init_logger(__name__)
@@ -259,6 +260,7 @@ class BaseModelConfig(BaseFixedConfig):
 
     # Model type from config.json (normalized to lowercase when provided)
     model_type: Optional[str] = None
+    model_architecture_profile: Optional[str] = None
 
     # Step2Mini/Step3-specific fields (used only when model_arch == "step2_mini"
     # or model_type == "step3_text")
@@ -301,6 +303,8 @@ class BaseModelConfig(BaseFixedConfig):
         """Validate model configuration after initialization."""
         if self.model_type is not None:
             self.model_type = str(self.model_type).lower()
+        if self.model_architecture_profile is not None:
+            self.model_architecture_profile = str(self.model_architecture_profile).lower()
 
         # Validate model_arch
         if self.model_arch not in ModelArch.VALID_ARCHS:
@@ -308,6 +312,7 @@ class BaseModelConfig(BaseFixedConfig):
                 f"Invalid model_arch '{self.model_arch}'. "
                 f"Must be one of: {ModelArch.VALID_ARCHS}"
             )
+        architecture_profile = self.get_model_architecture_profile()
 
         # Validate torch_dtype
         PrecisionType.from_torch_dtype(self.torch_dtype)
@@ -320,20 +325,17 @@ class BaseModelConfig(BaseFixedConfig):
                 f"got {type(self.fused_add_norm_capability)}"
             )
 
-        # Step3-specific validation
-        if self.model_type == "step3_text" and self.share_expert_dim is None:
+        # Architecture-specific validation.
+        if architecture_profile.requires_share_expert_dim and self.share_expert_dim is None:
             raise ValueError(
-                "Step3Text models require share_expert_dim to be set. "
+                f"{architecture_profile.display_name} models require share_expert_dim to be set. "
                 f"Model: {self._model_name}"
             )
-
-        # Step2Mini-specific validation
-        if self.model_arch == ModelArch.STEP2_MINI:
-            if self.share_expert_dim is None:
-                raise ValueError(
-                    "Step2Mini models require share_expert_dim to be set. "
-                    f"Model: {self._model_name}"
-                )
+        if architecture_profile.requires_moe and not self.is_moe:
+            raise ValueError(
+                f"{architecture_profile.display_name} models require is_moe=True. "
+                f"Model: {self._model_name}"
+            )
 
         if self.use_mla:
             missing_mla_fields = [
@@ -449,21 +451,21 @@ class BaseModelConfig(BaseFixedConfig):
         """Get model architecture identifier for op_name isolation."""
         return self.model_arch
 
+    def get_model_architecture_profile(self):
+        """Return plugin-style model architecture semantics for this config."""
+        return get_model_architecture_profile(self)
+
     def is_step2_mini(self) -> bool:
         """Check if this is a Step2Mini model."""
-        return self.model_arch == ModelArch.STEP2_MINI
+        return self.get_model_architecture_profile().step2_mini_compatible
 
     def is_step3_text(self) -> bool:
         """Check if this is a Step3Text model."""
-        return self.model_type == "step3_text"
+        return self.get_model_architecture_profile().step3_text_compatible
 
     def supports_share_expert(self) -> bool:
         """Check if the model uses share_expert in the FFN path."""
-        return (
-            self.is_step2_mini()
-            or self.is_step3_text()
-            or (self.is_moe and int(self.share_expert_dim or 0) > 0)
-        )
+        return self.get_model_architecture_profile().supports_share_expert(self)
 
     def get_moe_layer_ids(self) -> List[int]:
         """Return sorted MoE layer IDs covered by this model config.
@@ -717,6 +719,7 @@ class BaseModelConfig(BaseFixedConfig):
             rope_theta=rope_theta,
             rope_scaling=rope_scaling,
             model_type=model_type_lower or None,
+            model_architecture_profile=cfg.get("model_architecture_profile"),
             model_arch=model_arch,
             share_expert_dim=share_expert_dim,
             share_q_dim=share_q_dim,

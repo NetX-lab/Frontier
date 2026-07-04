@@ -10,6 +10,7 @@ from frontier.entities.execution_time import ExecutionTime
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
+from frontier.model_architectures import ModelArchitectureProfile
 from frontier.types import ClusterType
 
 
@@ -39,20 +40,31 @@ class _DummyBatch:
 class _DummyModelConfig:
     def __init__(
         self,
-        is_step3_text: bool,
+        architecture_profile: ModelArchitectureProfile,
         moe_layer_ids: set[int] | None = None,
     ) -> None:
-        self._is_step3_text = is_step3_text
+        self._architecture_profile = architecture_profile
         self._moe_layer_ids = moe_layer_ids
         self.embedding_dim = 7168
         self.num_q_heads = 32
         self.num_kv_heads = 8
+        self.share_expert_dim = (
+            1 if architecture_profile.always_supports_share_expert else None
+        )
+        self.share_q_dim = 512
+        self.is_moe = True
 
     def is_step3_text(self) -> bool:
-        return self._is_step3_text
+        return self._architecture_profile.step3_text_compatible
 
     def is_step2_mini(self) -> bool:
-        return False
+        return self._architecture_profile.step2_mini_compatible
+
+    def get_model_architecture_profile(self) -> ModelArchitectureProfile:
+        return self._architecture_profile
+
+    def get_head_dim(self) -> int:
+        return self.embedding_dim // self.num_q_heads
 
     def is_moe_layer(self, layer_id: int) -> bool:
         if self._moe_layer_ids is None:
@@ -60,7 +72,7 @@ class _DummyModelConfig:
         return layer_id in self._moe_layer_ids
 
     def supports_share_expert(self) -> bool:
-        return False
+        return self._architecture_profile.supports_share_expert(self)
 
 
 class _DummyReplicaConfig:
@@ -161,13 +173,13 @@ def _build_predictor() -> _DummySklearnMoEPredictor:
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._num_layers_per_pipeline_stage = 61
     predictor._moe_routing_mode = "simulation"
-    predictor._model_config = _DummyModelConfig(is_step3_text=False)
+    predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.generic())
     predictor._predictions_eager = {"loaded": True}
     predictor._predictions_kernel_only = {"loaded": True}
     predictor._supports_operation = lambda _operation: True
     predictor._attention_decode_batching_overhead_fraction = 0.0
     predictor._attention_prefill_batching_overhead_fraction = 0.0
-    predictor._log_step3_attention_shape = lambda _batch: None
+    predictor._log_architecture_attention_shape = lambda _batch: None
     predictor._require_predictions_for_measurement_type = (
         lambda _measurement_type, _batch: None
     )
@@ -182,7 +194,7 @@ def _build_predictor() -> _DummySklearnMoEPredictor:
 def test_predict_stage_execution_time_forwards_layer_id_to_moe_tokens_input() -> None:
     predictor = _build_predictor()
     predictor._model_config = _DummyModelConfig(
-        is_step3_text=False,
+        ModelArchitectureProfile.generic(),
         moe_layer_ids={17},
     )
     batch = _DummyBatch()
@@ -202,7 +214,7 @@ def test_predict_stage_execution_time_forwards_layer_id_to_moe_tokens_input() ->
 def test_predict_stage_execution_time_skips_moe_tokens_for_dense_layer() -> None:
     predictor = _build_predictor()
     predictor._model_config = _DummyModelConfig(
-        is_step3_text=False,
+        ModelArchitectureProfile.generic(),
         moe_layer_ids={4, 5, 6},
     )
 
@@ -303,7 +315,7 @@ def test_monolithic_decode_shared_domain_lane_moe_times_respects_dummy_mode() ->
     predictor._dummy_execution_time = 1.25
     predictor._moe_ep_size = 2
     predictor._router_topk = 2
-    predictor._model_config = _DummyModelConfig(is_step3_text=False)
+    predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.generic())
 
     # These methods are prediction-cache dependent in non-dummy mode.
     # The dummy-mode fast path must bypass them completely.
@@ -338,14 +350,14 @@ def test_monolithic_decode_shared_domain_lane_moe_times_respects_dummy_mode() ->
 
 def test_share_expert_overlap_scaling_applies_for_step3_model() -> None:
     predictor = _build_predictor()
-    predictor._model_config = _DummyModelConfig(is_step3_text=True)
+    predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.step3_text())
 
     assert predictor._apply_share_expert_tp_allreduce_overlap(3.0) == pytest.approx(2.0)
 
 
 def test_share_expert_overlap_scaling_skips_non_step3_model() -> None:
     predictor = _build_predictor()
-    predictor._model_config = _DummyModelConfig(is_step3_text=False)
+    predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.generic())
 
     assert predictor._apply_share_expert_tp_allreduce_overlap(3.0) == pytest.approx(3.0)
 
@@ -354,7 +366,7 @@ def test_share_expert_overlap_scaling_uses_replica_model_config_when_needed() ->
     predictor = _build_predictor()
     predictor._model_config = None
     predictor._replica_config = _DummyReplicaConfig(
-        model_config=_DummyModelConfig(is_step3_text=True)
+        model_config=_DummyModelConfig(ModelArchitectureProfile.step3_text())
     )
 
     assert predictor._apply_share_expert_tp_allreduce_overlap(3.0) == pytest.approx(2.0)
@@ -369,7 +381,7 @@ def test_share_expert_overlap_scaling_handles_non_positive_time() -> None:
 
 def test_share_expert_overlap_scaling_uses_configured_visibility_scale() -> None:
     predictor = _build_predictor()
-    predictor._model_config = _DummyModelConfig(is_step3_text=True)
+    predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.step3_text())
     predictor._share_expert_tp_allreduce_visibility_scale = 0.5
 
     assert predictor._apply_share_expert_tp_allreduce_overlap(3.0) == pytest.approx(1.5)
@@ -389,14 +401,15 @@ def test_step3_prefill_allgather_uses_per_device_bytes_in_moe_predictor() -> Non
     predictor = _DummySklearnMoEPredictor.__new__(_DummySklearnMoEPredictor)
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._replica_config = _DummyReplicaConfigForAllgather()
-    predictor._model_config = _DummyModelConfig(is_step3_text=True, moe_layer_ids={0})
+    predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.step3_text(), moe_layer_ids={0})
     predictor._num_layers_per_pipeline_stage = 1
+    predictor._moe_ep_size = 1
     predictor._enable_dummy_mode = False
     predictor._dummy_execution_time = 0.0
     predictor._supports_operation = lambda _operation: True
     predictor._attention_decode_batching_overhead_fraction = 0.0
     predictor._attention_prefill_batching_overhead_fraction = 0.0
-    predictor._log_step3_attention_shape = lambda _batch: None
+    predictor._log_architecture_attention_shape = lambda _batch: None
 
     predictor._get_pipeline_parallel_communication_time = lambda _batch: 0.0
     predictor._get_tensor_parallel_communication_time = lambda _batch: 0.0
@@ -415,6 +428,9 @@ def test_step3_prefill_allgather_uses_per_device_bytes_in_moe_predictor() -> Non
     predictor._get_attention_layer_post_proj_execution_time = lambda _batch: 0.0
     predictor._get_attn_norm_layer_act_execution_time = lambda _batch: 0.0
     predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 0.0
+    predictor._get_share_expert_up_proj_execution_time = lambda _batch: 0.0
+    predictor._get_share_expert_down_proj_execution_time = lambda _batch: 0.0
+    predictor._get_share_expert_act_execution_time = lambda _batch: 0.0
     predictor._get_schedule_time = lambda _batch: 0.0
     predictor._get_sampler_e2e_time = lambda _batch: 0.0
     predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0

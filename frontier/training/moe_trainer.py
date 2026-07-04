@@ -25,8 +25,69 @@ from frontier.moe_routing_runtime import (
     filter_moe_gating_routing_topk_rows,
     validate_moe_gating_routing_runtime_path,
 )
+from frontier.operators.families import MOE_FAMILY, get_family_profiling_names
+from frontier.operators.spec import TensorParallelMode
 
 logger = init_logger(__name__)
+
+
+def _get_moe_family_model_names() -> List[str]:
+    return list(get_family_profiling_names(MOE_FAMILY))
+
+
+def _get_moe_family_operator_by_model_name(model_name: str):
+    base_model_name = get_moe_gating_base_model_name(model_name)
+    by_model_name = {
+        operator.profiling_name(): operator
+        for operator in MOE_FAMILY.profiling_ops()
+    }
+    operator = by_model_name.get(base_model_name)
+    if operator is None:
+        return None
+    return operator
+
+
+def _get_moe_gating_family_model_names() -> List[str]:
+    return [
+        operator.profiling_name()
+        for operator in MOE_FAMILY.profiling_ops()
+        if operator.precision_name() == "moe_gating"
+    ]
+
+
+def _get_prefill_hot_moe_gating_model_names() -> List[str]:
+    return [
+        f"{model_name}__prefill_hot"
+        for model_name in _get_moe_gating_family_model_names()
+    ]
+
+
+def _is_moe_gating_family_model_name(model_name: str) -> bool:
+    base_model_name = get_moe_gating_base_model_name(model_name)
+    return base_model_name in set(_get_moe_gating_family_model_names())
+
+
+def _get_moe_required_target_columns() -> List[str]:
+    return [
+        f"time_stats.{model_name}.median"
+        for model_name in _get_moe_family_model_names()
+    ]
+
+
+def _get_moe_replicated_target_columns() -> List[str]:
+    return [
+        f"time_stats.{operator.profiling_name()}.median"
+        for operator in MOE_FAMILY.profiling_ops()
+        if operator.tp_mode is TensorParallelMode.REPLICATED
+    ]
+
+
+def _get_moe_tp_target_columns() -> List[str]:
+    return [
+        f"time_stats.{operator.profiling_name()}.median"
+        for operator in MOE_FAMILY.profiling_ops()
+        if operator.tp_mode is TensorParallelMode.MOE_TP
+    ]
 
 
 class MoETrainer(BaseTrainer):
@@ -63,17 +124,8 @@ class MoETrainer(BaseTrainer):
         "load_entropy",
         "load_gini_coefficient",
     ]
-    REQUIRED_TARGET_COLUMNS: List[str] = [
-        "time_stats.moe_gating_linear.median",
-        "time_stats.moe_gating_routing_topk.median",
-        "time_stats.moe_shuffling.median",
-        "time_stats.moe_grouped_gemm.median",
-    ]
-    REPLICATED_TARGET_COLUMNS: List[str] = [
-        "time_stats.moe_gating_linear.median",
-        "time_stats.moe_gating_routing_topk.median",
-        "time_stats.moe_shuffling.median",
-    ]
+    REQUIRED_TARGET_COLUMNS: List[str] = _get_moe_required_target_columns()
+    REPLICATED_TARGET_COLUMNS: List[str] = _get_moe_replicated_target_columns()
     
     def __init__(
         self,
@@ -217,7 +269,7 @@ class MoETrainer(BaseTrainer):
         Args:
             df: DataFrame to verify
         """
-        required_columns = ["num_tokens", *self.REQUIRED_TARGET_COLUMNS]
+        required_columns = ["num_tokens", *_get_moe_required_target_columns()]
         
         missing_columns = [col for col in required_columns if col not in df.columns]
         
@@ -251,9 +303,14 @@ class MoETrainer(BaseTrainer):
             logger.info("Load imbalance features not detected - will use standard mode (num_tokens only) for moe_grouped_gemm")
 
     def _reject_legacy_split_row_dataset(self, df: pd.DataFrame) -> None:
+        moe_tp_target_columns = _get_moe_tp_target_columns()
+        replicated_target_columns = _get_moe_replicated_target_columns()
+        if not moe_tp_target_columns or not replicated_target_columns:
+            return
+
         tp_gt1_mask = df["num_tensor_parallel_workers"] > 1
-        grouped_present_mask = df["time_stats.moe_grouped_gemm.median"].notna()
-        replicated_all_nan_mask = df[self.REPLICATED_TARGET_COLUMNS].isna().all(axis=1)
+        grouped_present_mask = df[moe_tp_target_columns].notna().any(axis=1)
+        replicated_all_nan_mask = df[replicated_target_columns].isna().all(axis=1)
         legacy_split_row_mask = tp_gt1_mask & grouped_present_mask & replicated_all_nan_mask
         if not legacy_split_row_mask.any():
             return
@@ -296,20 +353,10 @@ class MoETrainer(BaseTrainer):
         Returns:
             List of model names
         """
-        model_names = [
-            "moe_gating_linear",
-            "moe_gating_routing_topk",
-            "moe_shuffling",
-            "moe_grouped_gemm",
-        ]
+        model_names = _get_moe_family_model_names()
         if str(getattr(self, "model_name", "")).strip() == "qwen3-a3b-30b-moe":
             if self.df is not None and has_prefill_hot_moe_gating_rows(self.df):
-                model_names.extend(
-                    [
-                        "moe_gating_linear__prefill_hot",
-                        "moe_gating_routing_topk__prefill_hot",
-                    ]
-                )
+                model_names.extend(_get_prefill_hot_moe_gating_model_names())
             else:
                 logger.warning(
                     "Prefill-hot MoE gating rows are unavailable in %s; "
@@ -358,15 +405,16 @@ class MoETrainer(BaseTrainer):
         return f"time_stats.{base_model_name}.median"
 
     def _get_training_tp_key(self, model_name: str) -> int:
-        base_model_name = get_moe_gating_base_model_name(model_name)
-        if base_model_name in {
-            "moe_gating_linear",
-            "moe_gating_routing_topk",
-            "moe_shuffling",
-            "moe_grouped_gemm",
-        }:
+        operator = _get_moe_family_operator_by_model_name(model_name)
+        if operator is None:
+            raise ValueError(f"Unsupported MoE op for TP mapping: {model_name}")
+        if operator.tp_mode is TensorParallelMode.REPLICATED:
+            return 1
+        if operator.tp_mode is TensorParallelMode.MOE_TP:
             return self.moe_tensor_parallel_size
-        raise ValueError(f"Unsupported MoE op for TP mapping: {model_name}")
+        raise ValueError(
+            f"Unsupported MoE TP mode for {model_name}: {operator.tp_mode}"
+        )
 
     def _get_training_df_for_model(
         self,
@@ -377,7 +425,10 @@ class MoETrainer(BaseTrainer):
     ) -> pd.DataFrame:
         tp_key = self._get_training_tp_key(model_name)
         training_df = df[df["num_tensor_parallel_workers"] == tp_key].copy()
-        if model_name == "moe_grouped_gemm":
+        operator = _get_moe_family_operator_by_model_name(model_name)
+        if operator is None:
+            raise ValueError(f"Unsupported MoE op for EP mapping: {model_name}")
+        if not operator.ep_agnostic:
             training_df = training_df[
                 training_df["expert_parallel_size"] == self.expert_parallel_size
             ].copy()
@@ -392,10 +443,7 @@ class MoETrainer(BaseTrainer):
                 requested_runtime_path=self.routing_runtime_path,
                 source_name=self.dataset_path,
             )
-        if base_model_name in {
-            "moe_gating_linear",
-            "moe_gating_routing_topk",
-        }:
+        if _is_moe_gating_family_model_name(base_model_name):
             requested_context = self.gating_runtime_context
             if model_name.endswith("__prefill_hot"):
                 requested_context = PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import os
 from pathlib import Path
@@ -16,6 +17,7 @@ from frontier.types import MeasurementType
 REQUIRED_METADATA_COLUMNS = (
     "profiling_precision",
     "model_arch",
+    "model_architecture_profile",
     "quant_signature",
     "measurement_type",
 )
@@ -65,6 +67,7 @@ def migrate_csv_metadata(
     output_csv: str | None,
     profiling_precision: str,
     model_arch: str,
+    model_architecture_profile: str,
     quant_signature: str,
     measurement_type: str,
     overwrite: bool = False,
@@ -84,23 +87,43 @@ def migrate_csv_metadata(
     if df.empty:
         raise ValueError(f"Input CSV is empty: {input_csv}")
 
+    with open(input_csv, newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        fieldnames = list(reader.fieldnames or ())
+        rows = list(reader)
+    if not fieldnames:
+        raise ValueError(f"Input CSV has no header: {input_csv}")
+    if not rows:
+        raise ValueError(f"Input CSV is empty: {input_csv}")
+    for row_index, row in enumerate(rows, start=1):
+        if None in row:
+            raise ValueError(
+                f"Input CSV row {row_index} has more values than header columns: "
+                f"{input_csv}"
+            )
+
     normalized_precision = _normalize_precision(profiling_precision)
     normalized_model_arch = str(model_arch).strip()
+    normalized_model_architecture_profile = str(model_architecture_profile).strip().lower()
     normalized_quant_signature = str(quant_signature).strip()
     normalized_measurement_type = _normalize_measurement_type(measurement_type)
 
     if not normalized_model_arch:
         raise ValueError("model_arch must be non-empty.")
+    if not normalized_model_architecture_profile:
+        raise ValueError("model_architecture_profile must be non-empty.")
     if not normalized_quant_signature:
         raise ValueError("quant_signature must be non-empty.")
 
     metadata_values: Dict[str, str] = {
         "profiling_precision": normalized_precision,
         "model_arch": normalized_model_arch,
+        "model_architecture_profile": normalized_model_architecture_profile,
         "quant_signature": normalized_quant_signature,
         "measurement_type": normalized_measurement_type,
     }
 
+    output_fieldnames = list(fieldnames)
     for column in REQUIRED_METADATA_COLUMNS:
         _ensure_no_conflict(
             df=df,
@@ -108,12 +131,18 @@ def migrate_csv_metadata(
             expected_value=metadata_values[column],
             overwrite=overwrite,
         )
-        df[column] = metadata_values[column]
+        if column not in output_fieldnames:
+            output_fieldnames.append(column)
+        for row in rows:
+            row[column] = metadata_values[column]
 
     output_path = output_csv if output_csv else input_csv
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(output_path, index=False)
-    return df
+    with open(output_path, "w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=output_fieldnames, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(rows)
+    return pd.read_csv(output_path)
 
 
 def _iter_csv_files(input_dir: str | Path) -> Iterable[Path]:
@@ -127,6 +156,7 @@ def migrate_csv_metadata_directory(
     output_dir: str | None,
     profiling_precision: str,
     model_arch: str,
+    model_architecture_profile: str,
     quant_signature: str,
     measurement_type: str,
     overwrite: bool = False,
@@ -157,6 +187,7 @@ def migrate_csv_metadata_directory(
             output_csv=str(target_path),
             profiling_precision=profiling_precision,
             model_arch=model_arch,
+            model_architecture_profile=model_architecture_profile,
             quant_signature=quant_signature,
             measurement_type=measurement_type,
             overwrite=overwrite,
@@ -224,6 +255,12 @@ def _parse_args() -> argparse.Namespace:
         help="Model architecture tag (for example: generic, step2_mini).",
     )
     parser.add_argument(
+        "--model_architecture_profile",
+        type=str,
+        required=True,
+        help="Model architecture profile id (for example: generic, step2_mini, step3_text).",
+    )
+    parser.add_argument(
         "--quant_signature",
         type=str,
         default="none",
@@ -253,6 +290,7 @@ def main() -> None:
             output_csv=args.output_csv,
             profiling_precision=args.profiling_precision,
             model_arch=args.model_arch,
+            model_architecture_profile=args.model_architecture_profile,
             quant_signature=args.quant_signature,
             measurement_type=args.measurement_type,
             overwrite=args.overwrite,
@@ -261,7 +299,9 @@ def main() -> None:
             "CSV metadata migration completed. "
             f"input={args.input_csv}, output={output_path}, "
             f"profiling_precision={args.profiling_precision}, "
-            f"model_arch={args.model_arch}, quant_signature={args.quant_signature}, "
+            f"model_arch={args.model_arch}, "
+            f"model_architecture_profile={args.model_architecture_profile}, "
+            f"quant_signature={args.quant_signature}, "
             f"measurement_type={args.measurement_type}"
         )
         return
@@ -271,6 +311,7 @@ def main() -> None:
         output_dir=args.output_dir,
         profiling_precision=args.profiling_precision,
         model_arch=args.model_arch,
+        model_architecture_profile=args.model_architecture_profile,
         quant_signature=args.quant_signature,
         measurement_type=args.measurement_type,
         overwrite=args.overwrite,

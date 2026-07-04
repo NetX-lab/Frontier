@@ -14,6 +14,7 @@ from frontier.config.model_config import (
     _infer_share_expert_dim_from_hf_config,
     _infer_use_qk_norm_from_hf_config,
 )
+from frontier.model_architectures import get_model_architecture_profile
 from frontier.profiling.common.parallel_config import ParallelConfig
 from frontier.types import ActivationType, NormType
 
@@ -49,6 +50,7 @@ class ModelConfig:
         rms_norm_eps: float = 1e-6,
         dtype: Optional[str] = None,
         model_type: Optional[str] = None,
+        model_architecture_profile: Optional[str] = None,
         fused_add_norm_capability: Optional[bool] = None,
         # Step2Mini-specific fields
         model_arch: Optional[str] = None,
@@ -101,6 +103,11 @@ class ModelConfig:
         self.model_type = (
             str(model_type).lower() if model_type is not None else None
         )
+        self.model_architecture_profile = (
+            str(model_architecture_profile).lower()
+            if model_architecture_profile is not None
+            else None
+        )
         if fused_add_norm_capability is not None and not isinstance(
             fused_add_norm_capability, bool
         ):
@@ -148,16 +155,16 @@ class ModelConfig:
         else:
             assert self.activation == "gelu"
 
-        # Step2Mini validation: if model_arch is step2_mini, require share_expert_dim
-        if self.model_arch == "step2_mini":
-            if self.share_expert_dim is None:
-                raise ValueError(
-                    "Step2Mini model requires share_expert_dim to be specified"
-                )
-            if not self.is_moe:
-                raise ValueError(
-                    "Step2Mini model requires is_moe=True"
-                )
+        architecture_profile = self.get_model_architecture_profile()
+        if architecture_profile.requires_share_expert_dim and self.share_expert_dim is None:
+            raise ValueError(
+                f"{architecture_profile.display_name} model requires "
+                "share_expert_dim to be specified"
+            )
+        if architecture_profile.requires_moe and not self.is_moe:
+            raise ValueError(
+                f"{architecture_profile.display_name} model requires is_moe=True"
+            )
 
         if self.use_mla:
             missing_mla_fields = [
@@ -189,19 +196,19 @@ class ModelConfig:
     @property
     def is_step2_mini(self) -> bool:
         """Check if this is a Step2Mini model architecture."""
-        return self.model_arch == "step2_mini"
+        return self.get_model_architecture_profile().step2_mini_compatible
 
     def is_step3_text(self) -> bool:
         """Check if this is a Step3Text model architecture."""
-        return self.model_type == "step3_text"
+        return self.get_model_architecture_profile().step3_text_compatible
 
     def supports_share_expert(self) -> bool:
         """Check if the model uses share_expert in the FFN path."""
-        return (
-            self.is_step2_mini
-            or self.is_step3_text()
-            or (self.is_moe and int(self.share_expert_dim or 0) > 0)
-        )
+        return self.get_model_architecture_profile().supports_share_expert(self)
+
+    def get_model_architecture_profile(self):
+        """Return plugin-style model architecture semantics for this config."""
+        return get_model_architecture_profile(self)
 
     @property
     def uses_fused_add_norm(self) -> bool:
@@ -343,6 +350,10 @@ class ModelConfig:
             # Model type (e.g., step3_text) for Step3-only gating
             model_config_dict['model_type'] = json_cfg.get(
                 'model_type', model_config_dict.get('model_type')
+            )
+            model_config_dict['model_architecture_profile'] = json_cfg.get(
+                'model_architecture_profile',
+                model_config_dict.get('model_architecture_profile'),
             )
             # Explicit fused-add capability override
             explicit_fused_add_norm = json_cfg.get('uses_fused_add_norm')
@@ -544,6 +555,7 @@ class ModelConfig:
             "rms_norm_eps": self.rms_norm_eps,
             "dtype": self._dtype_to_str(self._dtype),
             "model_type": self.model_type,
+            "model_architecture_profile": self.model_architecture_profile,
             "fused_add_norm_capability": self.fused_add_norm_capability,
             # Step2Mini-specific fields
             "model_arch": self.model_arch,

@@ -432,6 +432,63 @@ def _resolve_model_arch_for_metadata(model_config: ModelConfig) -> str:
     return model_arch
 
 
+def _attach_linear_op_output_metadata(
+    df: pd.DataFrame,
+    *,
+    precision_str: str,
+    model_arch: str,
+    model_architecture_profile: str,
+    quant_signature: str,
+    measurement_type: str,
+) -> pd.DataFrame:
+    """Attach required profiling metadata columns to a linear-op dataframe."""
+    if df.empty:
+        return df
+    output_df = df.copy()
+
+    _fill_metadata_column(output_df, "profiling_precision", precision_str)
+    _fill_metadata_column(output_df, "measurement_type", measurement_type)
+    _fill_metadata_column(output_df, "model_arch", model_arch)
+    _fill_metadata_column(
+        output_df,
+        "model_architecture_profile",
+        model_architecture_profile,
+    )
+    _fill_metadata_column(output_df, "quant_signature", quant_signature)
+    return output_df
+
+
+def _fill_metadata_column(
+    output_df: pd.DataFrame,
+    column_name: str,
+    expected_value: str,
+) -> None:
+    """Fill blank metadata cells and fail fast on conflicting non-blank values."""
+
+    if column_name not in output_df.columns:
+        output_df[column_name] = expected_value
+        return
+
+    normalized = (
+        output_df[column_name]
+        .replace(r"^\s*$", pd.NA, regex=True)
+        .fillna(expected_value)
+    )
+    conflicting_values = sorted(
+        {
+            str(value)
+            for value in normalized.dropna().unique()
+            if str(value) != expected_value
+        }
+    )
+    if conflicting_values:
+        raise ValueError(
+            f"{column_name} contains conflicting metadata values "
+            f"{conflicting_values}; expected {expected_value!r}."
+        )
+    output_df[column_name] = normalized
+
+
 def _resolve_fp8_settings(
     model_config: ModelConfig,
     use_fp8: Optional[bool],
@@ -828,27 +885,17 @@ def main():
 
         model_config = ModelConfig.from_model_name(model)
         _, precision_str = _resolve_precision_for_model(model_config, args.precision, model)
-        result_df["profiling_precision"] = precision_str
-        result_df["measurement_type"] = profile_method_to_measurement_type(args.profile_method).value
         model_arch = _resolve_model_arch_for_metadata(model_config)
-        # Fill model_arch metadata even when the column already exists with empty values.
-        if "model_arch" not in result_df.columns:
-            result_df["model_arch"] = model_arch
-        else:
-            result_df["model_arch"] = (
-                result_df["model_arch"]
-                .replace(r"^\s*$", pd.NA, regex=True)
-                .fillna(model_arch)
-            )
-        # Add quant_signature column for quantization metadata tracking
-        if "quant_signature" not in result_df.columns:
-            result_df["quant_signature"] = model_config.get_quant_signature()
-        else:
-            result_df["quant_signature"] = (
-                result_df["quant_signature"]
-                .replace(r"^\s*$", pd.NA, regex=True)
-                .fillna(model_config.get_quant_signature())
-            )
+        result_df = _attach_linear_op_output_metadata(
+            result_df,
+            precision_str=precision_str,
+            model_arch=model_arch,
+            model_architecture_profile=(
+                model_config.get_model_architecture_profile().profile_id
+            ),
+            quant_signature=model_config.get_quant_signature(),
+            measurement_type=profile_method_to_measurement_type(args.profile_method).value,
+        )
         output_file = build_profile_method_output_path(
             output_root=args.output_dir,
             profiling_type="compute",

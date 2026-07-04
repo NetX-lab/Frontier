@@ -12,6 +12,7 @@ from frontier.profiling.common.utils import (
 )
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
 from frontier.profiling.linear_op.linear_op_impl import GPTModel
+from frontier.profiling.linear_op.profiling_plan import _share_expert_profiling_names
 from frontier.profiling.utils import ProfileMethod, normalize_profile_method
 from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
 
@@ -92,16 +93,18 @@ class LinearOpWrapper:
             "attn_post_proj",
             "attn_rope",
         ]
-        if self.model_config.is_step2_mini:
-            expected_keys.extend(["attn_inter_norm", "attn_wq_proj"])
+        architecture_profile = self.model_config.get_model_architecture_profile()
+        expected_keys.extend(
+            op_name
+            for op_name in architecture_profile.linear_attention.sharded_ops
+            if op_name not in expected_keys
+        )
         if (
             getattr(self.model_config, "is_moe", False)
             and hasattr(self.model_config, "supports_share_expert")
             and self.model_config.supports_share_expert()
         ):
-            expected_keys.extend(
-                ["share_expert_up_proj", "share_expert_down_proj", "share_expert_act"]
-            )
+            expected_keys.extend(_share_expert_profiling_names())
         return expected_keys
 
     @torch.inference_mode()  # disable gradient calculation
@@ -192,6 +195,9 @@ class LinearOpWrapper:
             # Step2Mini-specific metadata
             "model_arch": self.model_config.model_arch,
             "is_step2_mini": self.model_config.is_step2_mini,
+            "model_architecture_profile": (
+                self.model_config.get_model_architecture_profile().profile_id
+            ),
             "share_expert_dim": self.model_config.share_expert_dim,
             "share_q_dim": self.model_config.share_q_dim,
         }

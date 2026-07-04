@@ -11,6 +11,14 @@ from frontier.attention.ops import AttentionOperatorRole
 from frontier.config import get_quantization_manager
 from frontier.config.model_config import BaseModelConfig
 from frontier.config.precision_type import PrecisionType
+from frontier.operators.families import (
+    COMM_FAMILY,
+    FFN_FAMILY,
+    MEMORY_FAMILY,
+    MOE_FAMILY,
+    SHARE_EXPERT_FAMILY,
+)
+from frontier.operators.spec import OperatorFamilySpec, OperatorRole, OperatorSpec
 from frontier.types import ClusterType
 
 
@@ -137,21 +145,12 @@ def build_parallel_context(ctx: OpTraceContext) -> Dict[str, int]:
 
 
 def map_trace_op_to_precision_op(op_name: str) -> str:
+    for family in (MEMORY_FAMILY, FFN_FAMILY, MOE_FAMILY, SHARE_EXPERT_FAMILY, COMM_FAMILY):
+        for operator in family.e2e_trace_ops():
+            if operator.name == op_name:
+                return operator.precision_name()
+
     mapping = {
-        "add_attn_residual": "add",
-        "add_ffn_residual": "add",
-        "moe_gating_linear": "moe_gating",
-        "moe_gating_routing_topk": "moe_gating",
-        "attn_tensor_parallel_allreduce": "allreduce",
-        "mlp_tensor_parallel_allreduce": "allreduce",
-        "moe_tensor_parallel_allreduce": "allreduce",
-        "moe_tensor_parallel_allgather": "allgather",
-        "share_expert_tensor_parallel_allreduce": "allreduce",
-        "expert_parallel_allreduce": "allreduce",
-        "pipeline_parallel_send_recv": "send_recv",
-        "expert_parallel_alltoall": "expert_parallel_communication",
-        "expert_parallel_alltoall_dispatch": "expert_parallel_communication",
-        "expert_parallel_alltoall_combine": "expert_parallel_communication",
         "m2n_transfer_attn_to_ffn": "m2n_transfer",
         "m2n_transfer_ffn_to_attn": "m2n_transfer",
         "m2n_transfer_ffn_to_attn_recv": "m2n_transfer",
@@ -196,6 +195,20 @@ def _get_dense_attention_op_name_by_role(role: AttentionOperatorRole) -> str:
             f"{DENSE_ATTENTION_FAMILY.family_id!r}; found {len(matches)}: "
             f"{list(matches)}"
         )
+    return matches[0]
+
+
+def _get_family_operator_by_name(
+    family: OperatorFamilySpec,
+    op_name: str,
+) -> OperatorSpec | None:
+    matches = tuple(operator for operator in family.e2e_trace_ops() if operator.name == op_name)
+    if len(matches) > 1:
+        raise ValueError(
+            f"Duplicate trace operator {op_name!r} in family {family.family_id!r}"
+        )
+    if not matches:
+        return None
     return matches[0]
 
 
@@ -348,9 +361,49 @@ def compute_op_trace_meta(
     tensor_shape: Dict[str, Any] = {}
     tensor_size_bytes: Dict[str, int] = {}
 
+    def _memory_family_tensor_shape(operator: OperatorSpec) -> Dict[str, Any]:
+        if operator.role is OperatorRole.NORMALIZATION:
+            return {"input": [tokens, hidden_size], "output": [tokens, hidden_size]}
+        if operator.role is OperatorRole.RESIDUAL:
+            return {
+                "input_a": [tokens, hidden_size],
+                "input_b": [tokens, hidden_size],
+                "output": [tokens, hidden_size],
+            }
+        raise ValueError(
+            f"Unsupported MEMORY trace role for {operator.name}: {operator.role.value}"
+        )
+
+    def _ffn_family_tensor_shape(operator: OperatorSpec) -> Dict[str, Any]:
+        _validate_divisible(intermediate_size, ctx.attn_tp, "intermediate_size")
+        intermediate_size_per_tp = intermediate_size // ctx.attn_tp
+        if operator.execution_time_attr == "mlp_layer_up_proj_execution_time":
+            return {
+                "input": [tokens, hidden_size],
+                "output": [tokens, intermediate_size_per_tp],
+            }
+        if operator.execution_time_attr == "mlp_layer_act_execution_time":
+            return {
+                "input": [tokens, intermediate_size_per_tp],
+                "output": [tokens, intermediate_size_per_tp],
+            }
+        if operator.execution_time_attr == "mlp_layer_down_proj_execution_time":
+            return {
+                "input": [tokens, intermediate_size_per_tp],
+                "output": [tokens, hidden_size],
+            }
+        raise ValueError(
+            f"Unsupported FFN trace execution_time_attr for {operator.name}: "
+            f"{operator.execution_time_attr}"
+        )
+
     if op_type == "COMPUTE":
-        if op_name == "input_layernorm":
-            tensor_shape = {"input": [tokens, hidden_size], "output": [tokens, hidden_size]}
+        memory_operator = _get_family_operator_by_name(MEMORY_FAMILY, op_name)
+        ffn_operator = _get_family_operator_by_name(FFN_FAMILY, op_name)
+        if memory_operator is not None:
+            tensor_shape = _memory_family_tensor_shape(memory_operator)
+        elif ffn_operator is not None:
+            tensor_shape = _ffn_family_tensor_shape(ffn_operator)
         elif op_name == "attn_pre_proj":
             head_dim, q_heads_per_tp, kv_heads_per_tp, _ = _get_attention_meta()
             qkv_out_dim_per_tp = (q_heads_per_tp + 2 * kv_heads_per_tp) * head_dim
@@ -471,30 +524,10 @@ def compute_op_trace_meta(
                 "input": [tokens, hidden_size_per_tp],
                 "output": [tokens, hidden_size],
             }
-        elif op_name == "post_attention_layernorm":
-            tensor_shape = {"input": [tokens, hidden_size], "output": [tokens, hidden_size]}
-        elif op_name in ("add_attn_residual", "add_ffn_residual", "add"):
+        elif op_name == "add":
             tensor_shape = {
                 "input_a": [tokens, hidden_size],
                 "input_b": [tokens, hidden_size],
-                "output": [tokens, hidden_size],
-            }
-        elif op_name == "mlp_up_proj":
-            _validate_divisible(intermediate_size, ctx.attn_tp, "intermediate_size")
-            tensor_shape = {
-                "input": [tokens, hidden_size],
-                "output": [tokens, intermediate_size // ctx.attn_tp],
-            }
-        elif op_name == "mlp_act":
-            _validate_divisible(intermediate_size, ctx.attn_tp, "intermediate_size")
-            tensor_shape = {
-                "input": [tokens, intermediate_size // ctx.attn_tp],
-                "output": [tokens, intermediate_size // ctx.attn_tp],
-            }
-        elif op_name == "mlp_down_proj":
-            _validate_divisible(intermediate_size, ctx.attn_tp, "intermediate_size")
-            tensor_shape = {
-                "input": [tokens, intermediate_size // ctx.attn_tp],
                 "output": [tokens, hidden_size],
             }
         elif op_name == "share_expert_up_proj":
