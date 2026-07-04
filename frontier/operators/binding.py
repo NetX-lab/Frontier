@@ -41,6 +41,16 @@ class OperatorManifest:
         )
 
 
+def _get_model_architecture_profile(config):
+    get_profile = getattr(config, "get_model_architecture_profile", None)
+    if callable(get_profile):
+        return get_profile()
+
+    from frontier.model_architectures import get_model_architecture_profile
+
+    return get_model_architecture_profile(config)
+
+
 def build_operator_manifest(config) -> OperatorManifest:
     """Build the operator manifest for a model config."""
 
@@ -52,6 +62,8 @@ def build_operator_manifest(config) -> OperatorManifest:
         SHARE_EXPERT_FAMILY,
     )
 
+    architecture_profile = _get_model_architecture_profile(config)
+    architecture_profile.validate_structural_requirements(config)
     attention_binding = bind_attention_family(config)
     bindings = [
         FamilyBinding(

@@ -25,10 +25,6 @@ class _ProfileOnlyStep3ModelConfig:
     def get_model_architecture_profile(self) -> ModelArchitectureProfile:
         return ModelArchitectureProfile.step3_text()
 
-    def is_step3_text(self) -> bool:
-        # The PDD predictor must consume the profile contract, not this legacy shim.
-        return False
-
     def supports_share_expert(self) -> bool:
         return True
 
@@ -40,9 +36,6 @@ class _Step3NamedGenericProfileModelConfig:
 
     def get_model_architecture_profile(self) -> ModelArchitectureProfile:
         return ModelArchitectureProfile.generic()
-
-    def is_step3_text(self) -> bool:
-        return True
 
     def supports_share_expert(self) -> bool:
         return True
@@ -95,6 +88,7 @@ def test_pdd_predictor_has_no_direct_step3_identity_branches() -> None:
     ).read_text(encoding="utf-8")
 
     assert ".is_step3_text()" not in source
+    assert "_log_step3_attention_shape" not in source
 
 
 def test_pdd_predictor_fails_fast_when_cluster_model_config_is_missing() -> None:

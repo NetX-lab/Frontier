@@ -16,6 +16,7 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
     _build_exact_feature_lookup,
 )
+from frontier.model_architectures import ModelArchitectureProfile
 from frontier.profiling.attention.vllm_mla_profile_importer import (
     build_frontier_mla_profile_dataframe,
 )
@@ -180,11 +181,10 @@ def _build_mla_predictor(rows: list[dict[str, object]] | None = None):
         max_position_embeddings=163840,
         get_head_dim=lambda: 576,
         get_qk_head_dim=lambda: 192,
-        is_step2_mini=lambda: False,
-        is_step3_text=lambda: False,
+        get_model_architecture_profile=ModelArchitectureProfile.generic,
     )
     predictor._supports_operation = lambda operation: operation == "attention"
-    predictor._log_step3_attention_shape = lambda _batch: None
+    predictor._log_architecture_attention_shape = lambda _batch: None
     predictor._get_attention_layer_pre_proj_execution_time = lambda _batch: 0.0
     predictor._get_attention_layer_post_proj_execution_time = lambda _batch: 0.0
     predictor._get_attention_rope_execution_time = lambda _batch: 0.0

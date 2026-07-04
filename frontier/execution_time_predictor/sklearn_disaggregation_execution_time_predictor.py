@@ -1176,7 +1176,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 ClusterType.DECODE,
                 ClusterType.MONOLITHIC,
             ):
-                self._log_step3_attention_shape(batch)
+                self._log_architecture_attention_shape(batch)
             # Phase 1 Fix: Use cluster-specific dummy execution time
             dummy_exec_time = self._get_dummy_execution_time_for_cluster(
                 batch, stage_id, cluster_type

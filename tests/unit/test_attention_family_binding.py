@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 
 from frontier.attention.model_binding import (
@@ -137,6 +139,56 @@ def test_mla_binding_uses_latent_family_for_runtime_cache_semantics() -> None:
     assert binding.variant_id == "mla"
     assert binding.frozen is False
     assert "use_mla=True" in binding.reason
+
+
+def test_step3_mfa_binding_uses_dense_mqa_family_with_explicit_reason() -> None:
+    binding = bind_attention_family(
+        SimpleNamespace(
+            num_q_heads=64,
+            num_kv_heads=1,
+            model_type="step3_text",
+            use_mfa=True,
+            use_mla=False,
+            share_q_dim=2048,
+            head_dim=256,
+        )
+    )
+
+    assert binding.family_id == "dense_attention"
+    assert binding.variant_id == "mqa"
+    assert binding.frozen is False
+    assert "use_mfa=True" in binding.reason
+
+
+def test_step3_mfa_binding_rejects_mla_and_mfa_together() -> None:
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        bind_attention_family(
+            SimpleNamespace(
+                num_q_heads=64,
+                num_kv_heads=1,
+                model_type="step3_text",
+                use_mfa=True,
+                use_mla=True,
+                share_q_dim=2048,
+                head_dim=256,
+                **_mla_kwargs(),
+            )
+        )
+
+
+def test_step3_mfa_binding_requires_single_kv_head() -> None:
+    with pytest.raises(ValueError, match="use_mfa=True requires num_kv_heads=1"):
+        bind_attention_family(
+            SimpleNamespace(
+                num_q_heads=64,
+                num_kv_heads=8,
+                model_type="step3_text",
+                use_mfa=True,
+                use_mla=False,
+                share_q_dim=2048,
+                head_dim=256,
+            )
+        )
 
 
 def test_profiling_model_config_uses_same_binding_rules_as_runtime_config() -> None:

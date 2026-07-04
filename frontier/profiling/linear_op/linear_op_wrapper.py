@@ -192,9 +192,7 @@ class LinearOpWrapper:
                 if self.profiling_plan is not None
                 else self.model_config.mlp_hidden_dim
             ),
-            # Step2Mini-specific metadata
             "model_arch": self.model_config.model_arch,
-            "is_step2_mini": self.model_config.is_step2_mini,
             "model_architecture_profile": (
                 self.model_config.get_model_architecture_profile().profile_id
             ),

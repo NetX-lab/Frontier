@@ -67,6 +67,8 @@ class _ManifestModelConfig:
     num_experts: int
     share_expert_dim: int | None
     use_mla: bool
+    use_mfa: bool
+    share_q_dim: int | None
     kv_lora_rank: int | None = None
     qk_nope_head_dim: int | None = None
     qk_rope_head_dim: int | None = None
@@ -117,6 +119,8 @@ def _manifest_model_config(config: Mapping[str, Any]) -> _ManifestModelConfig:
         num_experts=num_experts,
         share_expert_dim=share_expert_dim,
         use_mla=bool(config.get("use_mla", False)),
+        use_mfa=bool(config.get("use_mfa", False)),
+        share_q_dim=_optional_int(config.get("share_q_dim")),
         kv_lora_rank=_optional_int(config.get("kv_lora_rank")),
         qk_nope_head_dim=_optional_int(config.get("qk_nope_head_dim")),
         qk_rope_head_dim=_optional_int(config.get("qk_rope_head_dim")),

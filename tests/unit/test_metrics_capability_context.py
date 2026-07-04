@@ -11,9 +11,6 @@ class _ProfileOnlyStep3ModelConfig:
     def get_model_architecture_profile(self) -> ModelArchitectureProfile:
         return ModelArchitectureProfile.step3_text()
 
-    def is_step3_text(self) -> bool:
-        return False
-
 
 def test_capability_context_derives_step3_decode_skip_and_ep_alltoall_from_profile() -> None:
     from frontier.metrics.capability_context import CapabilityContext

@@ -469,6 +469,7 @@ def test_observed_mapping_includes_architecture_linear_attention_ops(monkeypatch
             sharded_ops=("unit_arch_sharded_attention_op",),
             replicated_ops=("unit_arch_replicated_attention_op",),
         ),
+        validate_structural_requirements=lambda _config: None,
     )
 
     monkeypatch.setattr(
@@ -498,8 +499,14 @@ def test_coverage_oracle_recognizes_comm_family_operator_names(
         {
             "model_type": "step3_text",
             "model_arch": "step3_text",
+            "num_attention_heads": 8,
+            "num_key_value_heads": 1,
+            "hidden_size": 128,
+            "head_dim": 16,
             "num_experts": 16,
             "share_expert_dim": 4096,
+            "use_mfa": True,
+            "share_q_dim": 64,
         },
     )
     case = _case(tmp_path, name="step_moe_colocation", model_name="step_moe")

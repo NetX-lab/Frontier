@@ -1,17 +1,20 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
-from frontier.config.model_config import BaseModelConfig, ModelArch
+from frontier.config.model_config import BaseModelConfig, MoEModelConfig, ModelArch
 from frontier.model_architectures import (
     ExpertParallelCollective,
     LinearAttentionImplementation,
+    LinearAttentionProfile,
     ModelArchitectureProfile,
     ModelArchitectureRegistry,
     ResidualAddPolicy,
+    StructuralRequirement,
     get_model_architecture_profile,
 )
 from frontier.profiling.common.model_config import ModelConfig as ProfilingModelConfig
@@ -86,6 +89,15 @@ def _real_profiling_model_config(**overrides) -> ProfilingModelConfig:
     )
     values.update(overrides)
     return ProfilingModelConfig(**values)
+
+
+def _step3_mfa_overrides() -> dict[str, int | bool]:
+    return {
+        "num_kv_heads": 1,
+        "use_mfa": True,
+        "share_q_dim": 16,
+        "head_dim": 16,
+    }
 
 
 def test_explicit_profile_id_reuses_step3_contract_for_new_model_name() -> None:
@@ -166,19 +178,76 @@ def test_local_registry_can_plugin_custom_profile_without_global_model_branch() 
     )
 
 
-def test_runtime_config_explicit_profile_drives_legacy_compat_methods() -> None:
+def test_unknown_model_uses_generic_profile_with_warning(caplog) -> None:
+    cfg = SimpleNamespace(
+        model_type="unit_unknown_transformer",
+        model_arch="generic",
+        model_architecture_profile=None,
+    )
+
+    with caplog.at_level(logging.WARNING):
+        profile = get_model_architecture_profile(cfg)
+
+    assert profile.profile_id == "generic"
+    assert "unit_unknown_transformer" in caplog.text
+    assert "generic" in caplog.text
+
+
+def test_explicit_unknown_profile_fails_fast_without_generic_downgrade() -> None:
+    cfg = SimpleNamespace(
+        model_type="unit_unknown_transformer",
+        model_arch="generic",
+        model_architecture_profile="typo_step3_text",
+    )
+
+    with pytest.raises(ValueError, match="Unknown model architecture profile"):
+        get_model_architecture_profile(cfg)
+
+
+def test_profiles_no_longer_expose_model_identity_booleans() -> None:
+    for profile in (
+        ModelArchitectureProfile.generic(),
+        ModelArchitectureProfile.step2_mini(),
+        ModelArchitectureProfile.step3_text(),
+    ):
+        assert not hasattr(profile, "step2_mini_compatible")
+        assert not hasattr(profile, "step3_text_compatible")
+
+
+def test_config_objects_no_longer_expose_model_identity_accessors() -> None:
+    runtime_config = _runtime_model_config(model_architecture_profile="generic")
+    profiling_config = _real_profiling_model_config(model_architecture_profile="generic")
+
+    for config in (runtime_config, profiling_config):
+        assert not hasattr(config, "is_step2_mini")
+        assert not hasattr(config, "is_step3_text")
+
+
+def test_linear_op_wrapper_metadata_does_not_emit_identity_field() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    source = (
+        repo_root / "frontier/profiling/linear_op/linear_op_wrapper.py"
+    ).read_text(encoding="utf-8")
+
+    assert '"model_architecture_profile"' in source
+    assert '"is_step2_mini"' not in source
+
+
+def test_runtime_config_explicit_profile_uses_profile_api_without_identity_accessors() -> None:
     cfg = _runtime_model_config(
         model_type="unit_new_step3_like",
         model_architecture_profile="step3_text",
+        **_step3_mfa_overrides(),
     )
 
     assert cfg.get_model_architecture_profile().profile_id == "step3_text"
-    assert cfg.is_step3_text()
-    assert not cfg.is_step2_mini()
+    assert not hasattr(cfg, "is_step3_text")
+    assert not hasattr(cfg, "is_step2_mini")
     assert cfg.supports_share_expert()
+    assert cfg.get_attention_family().family_id == "dense_attention"
 
 
-def test_profiling_config_explicit_profile_drives_legacy_compat_methods() -> None:
+def test_profiling_config_explicit_profile_uses_profile_api_without_identity_accessors() -> None:
     cfg = _real_profiling_model_config(
         model_type="unit_new_step2_like",
         model_arch=ModelArch.GENERIC,
@@ -186,8 +255,8 @@ def test_profiling_config_explicit_profile_drives_legacy_compat_methods() -> Non
     )
 
     assert cfg.get_model_architecture_profile().profile_id == "step2_mini"
-    assert cfg.is_step2_mini
-    assert not cfg.is_step3_text()
+    assert not hasattr(cfg, "is_step2_mini")
+    assert not hasattr(cfg, "is_step3_text")
     assert cfg.supports_share_expert()
 
 
@@ -294,6 +363,7 @@ def test_predictor_metadata_validates_architecture_profile_id() -> None:
         model_architecture_profile="step3_text",
         is_moe=True,
         share_expert_dim=64,
+        **_step3_mfa_overrides(),
     )
     df = pd.DataFrame(
         {
@@ -332,6 +402,7 @@ def test_predictor_metadata_rejects_profile_mismatch() -> None:
         model_architecture_profile="step3_text",
         is_moe=True,
         share_expert_dim=64,
+        **_step3_mfa_overrides(),
     )
     df = pd.DataFrame(
         {
@@ -429,6 +500,175 @@ def test_step3_profile_requires_moe_profiling_config() -> None:
         )
 
 
+def test_step3_profile_requires_mfa_runtime_attention_contract() -> None:
+    with pytest.raises(ValueError, match="step3_text.*use_mfa=True"):
+        _runtime_model_config(
+            model_type="unit_invalid_step3_like",
+            model_architecture_profile="step3_text",
+            is_moe=True,
+            share_expert_dim=64,
+            use_mfa=False,
+        )
+
+
+def test_step3_profile_accepts_mfa_dense_runtime_attention_family() -> None:
+    cfg = _runtime_model_config(
+        model_type="unit_step3_like_mfa",
+        model_architecture_profile="step3_text",
+        is_moe=True,
+        share_expert_dim=64,
+        **_step3_mfa_overrides(),
+    )
+
+    assert cfg.get_model_architecture_profile().profile_id == "step3_text"
+    assert cfg.use_mfa is True
+    assert cfg.get_attention_family().family_id == "dense_attention"
+    assert cfg.get_attention_family().supported_variants == ("gqa", "mha", "mqa")
+
+
+def test_step3_profile_requires_mfa_profiling_attention_contract() -> None:
+    with pytest.raises(ValueError, match="step3_text.*use_mfa=True"):
+        _real_profiling_model_config(
+            model_type="unit_invalid_step3_like",
+            model_architecture_profile="step3_text",
+            is_moe=True,
+            share_expert_dim=64,
+            use_mfa=False,
+        )
+
+
+def test_step3_profiling_model_config_to_dict_preserves_mfa_contract() -> None:
+    cfg = _real_profiling_model_config(
+        model_type="unit_step3_like_mfa",
+        model_architecture_profile="step3_text",
+        is_moe=True,
+        share_expert_dim=64,
+        **_step3_mfa_overrides(),
+    )
+
+    serialized = cfg.to_dict()
+    restored = ProfilingModelConfig(**serialized)
+
+    assert serialized["use_mfa"] is True
+    assert restored.use_mfa is True
+    assert restored.get_model_architecture_profile().profile_id == "step3_text"
+
+
+def test_mla_attention_shape_profile_requires_latent_mla_attention_family() -> None:
+    profile = ModelArchitectureProfile(
+        profile_id="unit_mla_profile",
+        display_name="Unit MLA Profile",
+        linear_attention=LinearAttentionProfile(
+            sharded_impl=LinearAttentionImplementation.GENERIC,
+            sharded_ops=(
+                "attn_pre_proj",
+                "attn_rope",
+                "attn_post_proj",
+            ),
+        ),
+        attention_shape_log_kind="mla",
+    )
+
+    with pytest.raises(ValueError, match="unit_mla_profile.*latent_mla_attention"):
+        profile.validate_structural_requirements(
+            SimpleNamespace(
+                model_type="unit_dense",
+                model_arch="generic",
+                use_mla=False,
+                use_mfa=False,
+                num_q_heads=8,
+                num_kv_heads=8,
+            )
+        )
+
+    profile.validate_structural_requirements(
+        SimpleNamespace(
+            model_type="unit_mla",
+            model_arch="generic",
+            use_mla=True,
+            use_mfa=False,
+            num_q_heads=8,
+            num_kv_heads=1,
+            kv_lora_rank=4,
+            qk_nope_head_dim=3,
+            qk_rope_head_dim=2,
+            qk_head_dim=5,
+            v_head_dim=4,
+        )
+    )
+
+
+def test_structural_requirement_wraps_predicate_value_error_with_profile_context() -> None:
+    profile = ModelArchitectureProfile(
+        profile_id="unit_wrapped_error_profile",
+        display_name="Unit Wrapped Error Profile",
+        linear_attention=LinearAttentionProfile(
+            sharded_impl=LinearAttentionImplementation.GENERIC,
+            sharded_ops=(
+                "attn_pre_proj",
+                "attn_rope",
+                "attn_post_proj",
+            ),
+        ),
+        structural_requirements=(
+            StructuralRequirement(
+                name="requires_unit_contract",
+                predicate=lambda config: (_ for _ in ()).throw(
+                    ValueError("low-level binding failed")
+                ),
+                message=lambda profile, config: (
+                    f"{profile.profile_id} requires unit structural contract"
+                ),
+            ),
+        ),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="unit_wrapped_error_profile requires unit structural contract",
+    ):
+        profile.validate_structural_requirements(SimpleNamespace(model_type="unit_invalid"))
+
+
+def test_moe_model_config_runs_base_structural_validation_for_step3_profile() -> None:
+    with pytest.raises(ValueError, match="step3_text.*use_mfa=True"):
+        MoEModelConfig(
+            num_layers=2,
+            num_q_heads=8,
+            num_kv_heads=1,
+            embedding_dim=128,
+            mlp_hidden_dim=256,
+            max_position_embeddings=4096,
+            use_gated_mlp=True,
+            use_bias=False,
+            use_qkv_bias=False,
+            activation=ActivationType.SILU,
+            norm=NormType.RMS_NORM,
+            post_attn_norm=True,
+            vocab_size=32000,
+            model_type="step3_text",
+            model_architecture_profile="step3_text",
+            is_moe=True,
+            num_experts=8,
+            num_experts_per_tok=2,
+            share_expert_dim=64,
+            use_mfa=False,
+        )
+
+
+def test_existing_step3_json_preserves_mfa_dense_attention_contract() -> None:
+    from frontier.attention.model_binding import bind_attention_family
+
+    cfg = BaseModelConfig.create_from_name("step-moe-noquant-small")
+    binding = bind_attention_family(cfg)
+
+    assert cfg.get_model_architecture_profile().profile_id == "step3_text"
+    assert cfg.use_mfa is True
+    assert cfg.use_mla is False
+    assert binding.family_id == "dense_attention"
+    assert binding.variant_id == "mqa"
+
+
 def test_mtp_structural_adapter_uses_explicit_architecture_profile() -> None:
     from frontier.spec_decode.mtp_runtime import StructuralModelConfigAdapter
 
@@ -438,12 +678,13 @@ def test_mtp_structural_adapter_uses_explicit_architecture_profile() -> None:
         model_architecture_profile="step3_text",
         is_moe=True,
         share_expert_dim=64,
+        **_step3_mfa_overrides(),
     )
     adapter = StructuralModelConfigAdapter(profiling_config)
 
     assert adapter.get_model_architecture_profile().profile_id == "step3_text"
-    assert adapter.is_step3_text()
-    assert not adapter.is_step2_mini()
+    assert not hasattr(adapter, "is_step3_text")
+    assert not hasattr(adapter, "is_step2_mini")
     assert adapter.supports_share_expert()
 
 
@@ -464,7 +705,7 @@ def test_mtp_json_fallback_preserves_explicit_architecture_profile(
             {
                 "num_hidden_layers": 2,
                 "num_attention_heads": 8,
-                "num_key_value_heads": 4,
+                "num_key_value_heads": 1,
                 "hidden_size": 128,
                 "intermediate_size": 256,
                 "max_position_embeddings": 4096,
@@ -478,6 +719,7 @@ def test_mtp_json_fallback_preserves_explicit_architecture_profile(
                 "share_expert_dim": 64,
                 "share_q_dim": 16,
                 "head_dim": 16,
+                "use_mfa": True,
                 "torch_dtype": "float16",
                 "tie_word_embeddings": True,
             }
@@ -489,8 +731,11 @@ def test_mtp_json_fallback_preserves_explicit_architecture_profile(
     adapter = _load_structural_model_config_from_json("unit-json-step3-like")
 
     assert adapter.get_model_architecture_profile().profile_id == "step3_text"
-    assert adapter.is_step3_text()
+    assert not hasattr(adapter, "is_step3_text")
+    assert not hasattr(adapter, "is_step2_mini")
     assert adapter.supports_share_expert()
+    assert adapter.use_mfa is True
+    assert adapter.get_attention_family().family_id == "dense_attention"
 
 
 def test_mtp_structural_loader_does_not_mask_internal_profiling_errors(
@@ -531,7 +776,7 @@ def test_mtp_structural_loader_preserves_json_fallback_for_value_error(
             {
                 "num_hidden_layers": 2,
                 "num_attention_heads": 8,
-                "num_key_value_heads": 4,
+                "num_key_value_heads": 1,
                 "hidden_size": 128,
                 "intermediate_size": 256,
                 "max_position_embeddings": 4096,
@@ -545,6 +790,7 @@ def test_mtp_structural_loader_preserves_json_fallback_for_value_error(
                 "share_expert_dim": 64,
                 "share_q_dim": 16,
                 "head_dim": 16,
+                "use_mfa": True,
                 "torch_dtype": "float16",
                 "tie_word_embeddings": True,
             }
@@ -562,6 +808,8 @@ def test_mtp_structural_loader_preserves_json_fallback_for_value_error(
 
     assert adapter.get_model_architecture_profile().profile_id == "step3_text"
     assert adapter.supports_share_expert()
+    assert adapter.use_mfa is True
+    assert adapter.get_attention_family().family_id == "dense_attention"
 
 
 def test_param_counter_share_expert_uses_profile_for_new_model_name() -> None:
@@ -578,6 +826,7 @@ def test_param_counter_share_expert_uses_profile_for_new_model_name() -> None:
         share_expert_dim=64,
         use_gated_mlp=True,
         is_moe=True,
+        **_step3_mfa_overrides(),
     )
     replica_config = cast(
         ReplicaConfig,

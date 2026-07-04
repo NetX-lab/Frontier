@@ -6,6 +6,7 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     MeasurementType,
     SklearnExecutionTimePredictor,
 )
+from frontier.model_architectures import ModelArchitectureProfile
 from frontier.types import ClusterType
 
 
@@ -14,7 +15,7 @@ def _dense_model_config() -> SimpleNamespace:
         use_mla=False,
         num_q_heads=32,
         num_kv_heads=8,
-        is_step2_mini=lambda: False,
+        get_model_architecture_profile=ModelArchitectureProfile.generic,
     )
 
 

@@ -75,12 +75,6 @@ class StructuralModelConfigAdapter:
     def quantization_config(self):
         return getattr(self._profiling_config, "quantization_config", None)
 
-    def is_step2_mini(self) -> bool:
-        return self.get_model_architecture_profile().step2_mini_compatible
-
-    def is_step3_text(self) -> bool:
-        return self.get_model_architecture_profile().step3_text_compatible
-
     def supports_share_expert(self) -> bool:
         return self.get_model_architecture_profile().supports_share_expert(
             self._profiling_config
@@ -203,6 +197,14 @@ def _load_structural_model_config_from_json(model_name: str) -> StructuralModelC
         share_expert_dim=_infer_share_expert_dim_from_hf_config(raw),
         share_q_dim=raw.get("share_q_dim"),
         head_dim=raw.get("head_dim"),
+        use_mla=bool(raw.get("use_mla", False)),
+        use_mfa=bool(raw.get("use_mfa", False)),
+        q_lora_rank=raw.get("q_lora_rank"),
+        kv_lora_rank=raw.get("kv_lora_rank"),
+        qk_nope_head_dim=raw.get("qk_nope_head_dim"),
+        qk_rope_head_dim=raw.get("qk_rope_head_dim"),
+        qk_head_dim=raw.get("qk_head_dim"),
+        v_head_dim=raw.get("v_head_dim"),
         quantization_config=None,
         tie_word_embeddings=bool(raw.get("tie_word_embeddings", True)),
     )

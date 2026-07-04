@@ -365,7 +365,17 @@ def test_audit_requirements_rejects_architecture_profile_metadata_mismatch(
     _write_config(
         config_root,
         "step3_model",
-        {"model_type": "step3_text", "num_experts": 16},
+        {
+            "model_type": "step3_text",
+            "num_attention_heads": 8,
+            "num_key_value_heads": 1,
+            "hidden_size": 128,
+            "head_dim": 16,
+            "num_experts": 16,
+            "share_expert_dim": 64,
+            "use_mfa": True,
+            "share_q_dim": 64,
+        },
     )
     requirement = build_requirements(
         config_root=config_root,
@@ -389,6 +399,38 @@ def test_audit_requirements_rejects_architecture_profile_metadata_mismatch(
         "model_architecture_profile mismatch: expected step3_text, observed generic"
         in result.files["linear_op.csv"].semantic_coverage_errors
     )
+
+
+def test_build_requirements_rejects_structurally_invalid_step3_config(
+    tmp_path: Path,
+) -> None:
+    config_root = tmp_path / "models"
+    _write_config(
+        config_root,
+        "step3_model",
+        {
+            "model_type": "step3_text",
+            "num_attention_heads": 8,
+            "num_key_value_heads": 1,
+            "hidden_size": 128,
+            "head_dim": 16,
+            "num_experts": 16,
+            "share_expert_dim": 64,
+            "use_mfa": False,
+            "share_q_dim": 64,
+        },
+    )
+
+    try:
+        build_requirements(
+            config_root=config_root,
+            config_filenames=("step3_model.json",),
+        )
+    except ValueError as exc:
+        assert "Step3Text MFA" in str(exc)
+        assert "use_mfa=True" in str(exc)
+    else:
+        raise AssertionError("structurally invalid Step3 config must fail fast")
 
 
 def test_audit_requirements_rejects_moe_profiles_without_standalone_legacy_gating_rows(

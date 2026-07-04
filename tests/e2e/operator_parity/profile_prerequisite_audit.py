@@ -8,7 +8,6 @@ import json
 import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Iterable, Sequence
 
 from frontier.model_architectures import get_model_architecture_profile
@@ -104,6 +103,36 @@ class ProfileRequirementAudit:
     files: dict[str, ProfileFileAudit]
 
 
+@dataclass(frozen=True)
+class _ArchitectureProfileConfig:
+    """Minimal model-config adapter for architecture-profile validation."""
+
+    model_type: str | None
+    model_architecture_profile: str | None
+    model_arch: str
+    num_q_heads: int
+    num_kv_heads: int
+    embedding_dim: int
+    head_dim: int | None
+    is_moe: bool
+    num_experts: int
+    share_expert_dim: int | None
+    use_mla: bool
+    use_mfa: bool
+    share_q_dim: int | None
+    kv_lora_rank: int | None = None
+    qk_nope_head_dim: int | None = None
+    qk_rope_head_dim: int | None = None
+    qk_head_dim: int | None = None
+    v_head_dim: int | None = None
+
+    def get_model_architecture_profile(self):
+        return get_model_architecture_profile(self)
+
+    def supports_share_expert(self) -> bool:
+        return self.get_model_architecture_profile().supports_share_expert(self)
+
+
 def _is_moe_config(config: dict[str, object]) -> bool:
     num_experts = config.get("num_experts")
     if num_experts is None:
@@ -114,6 +143,58 @@ def _is_moe_config(config: dict[str, object]) -> bool:
         return int(num_experts) > 0
     except (TypeError, ValueError) as exc:
         raise ValueError(f"Invalid num_experts={num_experts!r} in model config.") from exc
+
+
+def _config_value(config: dict[str, object], *names: str) -> object | None:
+    for name in names:
+        if name in config and config[name] is not None:
+            return config[name]
+    return None
+
+
+def _optional_int(value: object) -> int | None:
+    if value is None or value == "":
+        return None
+    return int(value)
+
+
+def _positive_int(value: object) -> int:
+    if value is None or value == "":
+        return 0
+    return int(value)
+
+
+def _architecture_profile_config(config: dict[str, object]) -> _ArchitectureProfileConfig:
+    num_experts = _positive_int(config.get("num_experts"))
+    share_expert_dim = _optional_int(
+        _config_value(config, "share_expert_dim", "shared_expert_intermediate_size")
+    )
+    return _ArchitectureProfileConfig(
+        model_type=str(config.get("model_type", "") or "").lower() or None,
+        model_architecture_profile=(
+            str(config.get("model_architecture_profile", "") or "").lower() or None
+        ),
+        model_arch=str(config.get("model_arch", "") or "generic").lower(),
+        num_q_heads=_positive_int(
+            _config_value(config, "num_q_heads", "num_attention_heads")
+        ),
+        num_kv_heads=_positive_int(
+            _config_value(config, "num_kv_heads", "num_key_value_heads")
+        ),
+        embedding_dim=_positive_int(_config_value(config, "embedding_dim", "hidden_size")),
+        head_dim=_optional_int(config.get("head_dim")),
+        is_moe=bool(config.get("is_moe", False)) or num_experts > 1,
+        num_experts=num_experts,
+        share_expert_dim=share_expert_dim,
+        use_mla=bool(config.get("use_mla", False)),
+        use_mfa=bool(config.get("use_mfa", False)),
+        share_q_dim=_optional_int(config.get("share_q_dim")),
+        kv_lora_rank=_optional_int(config.get("kv_lora_rank")),
+        qk_nope_head_dim=_optional_int(config.get("qk_nope_head_dim")),
+        qk_rope_head_dim=_optional_int(config.get("qk_rope_head_dim")),
+        qk_head_dim=_optional_int(config.get("qk_head_dim")),
+        v_head_dim=_optional_int(config.get("v_head_dim")),
+    )
 
 
 def build_requirements(
@@ -130,14 +211,15 @@ def build_requirements(
         required_files = list(REQUIRED_BASE_PROFILE_FILES)
         if _is_moe_config(config):
             required_files.extend(REQUIRED_MOE_PROFILE_FILES)
+        architecture_config = _architecture_profile_config(config)
+        architecture_profile = architecture_config.get_model_architecture_profile()
+        architecture_profile.validate_structural_requirements(architecture_config)
         requirements.append(
             ProfileRequirement(
                 config_filename=config_filename,
                 config_path=str(config_path),
                 model_name=config_path.stem,
-                expected_model_architecture_profile=get_model_architecture_profile(
-                    SimpleNamespace(**config)
-                ).profile_id,
+                expected_model_architecture_profile=architecture_profile.profile_id,
                 required_files=tuple(required_files),
             )
         )

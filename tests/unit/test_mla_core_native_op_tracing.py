@@ -231,9 +231,6 @@ class _DummyMlaModelConfig:
     qk_head_dim = 5
     v_head_dim = 4
 
-    def is_step3_text(self) -> bool:
-        return False
-
     def get_head_dim(self) -> int:
         return 4
 

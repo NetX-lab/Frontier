@@ -27,6 +27,7 @@ def _stub_dense_attention_markers(model_config) -> None:
     """
     model_config.model_type = "llama"
     model_config.use_mla = False
+    model_config.use_mfa = False
     for field in (
         "dsa_topk",
         "dsa_top_k",
@@ -46,6 +47,7 @@ def _stub_mla_attention_markers(model_config) -> None:
     """Configure a MagicMock model_config as a DeepSeek-V2 style latent-MLA model."""
     model_config.model_type = "deepseek_v2"
     model_config.use_mla = True
+    model_config.use_mfa = False
     for field in ("dsa_topk", "dsa_top_k", "dsa_index_topk", "dsa_indexer"):
         setattr(model_config, field, None)
     model_config.kv_lora_rank = 512
@@ -70,6 +72,8 @@ def _build_context(is_moe: bool = False, tokens_are_post_routing: bool = False):
     model_config.num_experts = 4 if is_moe else 0
     model_config.num_experts_per_tok = 2 if is_moe else 0
     model_config.is_moe = is_moe
+    model_config.use_mla = False
+    model_config.use_mfa = False
     # Mock get_head_dim() to return computed value (embedding_dim // num_q_heads = 8 // 4 = 2)
     model_config.get_head_dim = MagicMock(return_value=2)
 
@@ -108,6 +112,7 @@ def _build_mla_context():
     model_config.num_experts_per_tok = 0
     model_config.is_moe = False
     model_config.use_mla = True
+    model_config.use_mfa = False
     model_config.kv_lora_rank = 6
     model_config.qk_nope_head_dim = 3
     model_config.qk_rope_head_dim = 2

@@ -54,12 +54,6 @@ class _DummyModelConfig:
         self.share_q_dim = 512
         self.is_moe = True
 
-    def is_step3_text(self) -> bool:
-        return self._architecture_profile.step3_text_compatible
-
-    def is_step2_mini(self) -> bool:
-        return self._architecture_profile.step2_mini_compatible
-
     def get_model_architecture_profile(self) -> ModelArchitectureProfile:
         return self._architecture_profile
 

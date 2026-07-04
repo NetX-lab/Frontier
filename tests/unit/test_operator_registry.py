@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 
 from frontier.attention.families import (
@@ -158,6 +160,27 @@ def test_build_operator_manifest_returns_wave_b_dense_families() -> None:
         "mlp_act",
         "mlp_down_proj",
     ]
+
+
+def test_build_operator_manifest_validates_architecture_structural_requirements() -> None:
+    with pytest.raises(ValueError, match="Step3Text MFA.*use_mfa=True"):
+        build_operator_manifest(
+            SimpleNamespace(
+                model_type="step3_text",
+                model_arch="generic",
+                model_architecture_profile=None,
+                num_q_heads=8,
+                num_kv_heads=1,
+                embedding_dim=128,
+                head_dim=16,
+                is_moe=True,
+                num_experts=16,
+                share_expert_dim=64,
+                use_mla=False,
+                use_mfa=False,
+                supports_share_expert=lambda: True,
+            )
+        )
 
 
 def test_global_operator_registry_assigns_resource_class_to_every_operator() -> None:

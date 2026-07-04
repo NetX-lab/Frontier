@@ -56,7 +56,6 @@ def _mla_model_config() -> SimpleNamespace:
         v_head_dim=128,
         use_qk_norm=False,
         get_model_arch=lambda: "deepseek_v2",
-        is_step2_mini=lambda: False,
         get_qk_head_dim=lambda: 192,
         get_runtime_num_kv_heads=lambda: 1,
         get_runtime_head_size=lambda: 576,
