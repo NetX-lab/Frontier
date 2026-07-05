@@ -21,7 +21,7 @@ import pandas as pd
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
-from frontier.spec_decode.runtime import TARGET_EMBEDDED_MTP_SAME_TP_LINEAR_OPS
+from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_same_tp_linear_op
 from frontier.training.base_trainer import BaseTrainer
 from frontier.logger import init_logger
 
@@ -306,7 +306,7 @@ class LinearOpTrainer(BaseTrainer):
         if model_name in replicated_ops:
             if (
                 getattr(self, "_has_target_embedded_mtp_ops", False)
-                and model_name in TARGET_EMBEDDED_MTP_SAME_TP_LINEAR_OPS
+                and is_target_embedded_mtp_same_tp_linear_op(model_name)
             ):
                 return resolve_effective_attention_tp_size(
                     op_name="attn_pre_proj",

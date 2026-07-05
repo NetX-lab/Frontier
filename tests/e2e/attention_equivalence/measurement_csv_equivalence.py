@@ -21,6 +21,7 @@ MISMATCH_EXIT_CODE = 1
 PASS_EXIT_CODE = 0
 
 _TIME_STATS_RE = re.compile(r"^time_stats\.(?P<op>.+)\.(?P<stat>min|max|mean|median|std)$")
+WILDCARD_TOLERANCE_COLUMN = "*"
 
 
 @dataclass(frozen=True)
@@ -248,7 +249,10 @@ def compare_csv_files(
             if reference_is_number and candidate_is_number:
                 assert reference_number is not None
                 assert candidate_number is not None
-                tolerance = tolerances.get(column, NumericTolerance())
+                tolerance = tolerances.get(
+                    column,
+                    tolerances.get(WILDCARD_TOLERANCE_COLUMN, NumericTolerance()),
+                )
                 passed, absolute_delta, relative_delta = _numeric_values_equal(
                     reference_number,
                     candidate_number,

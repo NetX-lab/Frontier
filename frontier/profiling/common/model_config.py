@@ -14,6 +14,7 @@ from frontier.config.model_config import (
     _infer_share_expert_dim_from_hf_config,
     _infer_use_qk_norm_from_hf_config,
 )
+from frontier.model_architectures import get_model_architecture_profile
 from frontier.profiling.common.parallel_config import ParallelConfig
 from frontier.types import ActivationType, NormType
 
@@ -49,13 +50,15 @@ class ModelConfig:
         rms_norm_eps: float = 1e-6,
         dtype: Optional[str] = None,
         model_type: Optional[str] = None,
+        model_architecture_profile: Optional[str] = None,
         fused_add_norm_capability: Optional[bool] = None,
-        # Step2Mini-specific fields
+        # Architecture-specific structural fields
         model_arch: Optional[str] = None,
         share_expert_dim: Optional[int] = None,
         share_q_dim: Optional[int] = None,
         head_dim: Optional[int] = None,
         use_mla: bool = False,
+        use_mfa: bool = False,
         q_lora_rank: Optional[int] = None,
         kv_lora_rank: Optional[int] = None,
         qk_nope_head_dim: Optional[int] = None,
@@ -101,6 +104,11 @@ class ModelConfig:
         self.model_type = (
             str(model_type).lower() if model_type is not None else None
         )
+        self.model_architecture_profile = (
+            str(model_architecture_profile).lower()
+            if model_architecture_profile is not None
+            else None
+        )
         if fused_add_norm_capability is not None and not isinstance(
             fused_add_norm_capability, bool
         ):
@@ -110,13 +118,14 @@ class ModelConfig:
             )
         self.fused_add_norm_capability = fused_add_norm_capability
 
-        # Step2Mini-specific fields
+        # Architecture-specific structural fields
         self.model_arch = model_arch
         self.share_expert_dim = share_expert_dim
         self.share_q_dim = share_q_dim
         # head_dim: If provided, use it; otherwise compute from embedding_dim/num_q_heads
         self._head_dim = head_dim
         self.use_mla = bool(use_mla)
+        self.use_mfa = bool(use_mfa)
         self.q_lora_rank = q_lora_rank
         self.kv_lora_rank = kv_lora_rank
         self.qk_nope_head_dim = qk_nope_head_dim
@@ -140,6 +149,9 @@ class ModelConfig:
         # Whether lm_head shares weights with embed_tokens
         self.tie_word_embeddings = bool(tie_word_embeddings)
 
+        if self.use_mla and self.use_mfa:
+            raise ValueError("use_mla and use_mfa are mutually exclusive")
+
         assert self.norm in ["layer_norm", "rms_norm"]
         assert self.activation in ["gelu", "silu"]
 
@@ -148,16 +160,8 @@ class ModelConfig:
         else:
             assert self.activation == "gelu"
 
-        # Step2Mini validation: if model_arch is step2_mini, require share_expert_dim
-        if self.model_arch == "step2_mini":
-            if self.share_expert_dim is None:
-                raise ValueError(
-                    "Step2Mini model requires share_expert_dim to be specified"
-                )
-            if not self.is_moe:
-                raise ValueError(
-                    "Step2Mini model requires is_moe=True"
-                )
+        architecture_profile = self.get_model_architecture_profile()
+        architecture_profile.validate_structural_requirements(self)
 
         if self.use_mla:
             missing_mla_fields = [
@@ -175,9 +179,13 @@ class ModelConfig:
                     "MLA profiling ModelConfig requires fields: "
                     f"{missing_mla_fields}"
                 )
+            qk_nope_head_dim = self.qk_nope_head_dim
+            qk_rope_head_dim = self.qk_rope_head_dim
+            assert qk_nope_head_dim is not None
+            assert qk_rope_head_dim is not None
             if self.qk_head_dim is None:
-                self.qk_head_dim = self.qk_nope_head_dim + self.qk_rope_head_dim
-            expected_qk_head_dim = self.qk_nope_head_dim + self.qk_rope_head_dim
+                self.qk_head_dim = qk_nope_head_dim + qk_rope_head_dim
+            expected_qk_head_dim = qk_nope_head_dim + qk_rope_head_dim
             if self.qk_head_dim != expected_qk_head_dim:
                 raise ValueError(
                     "qk_head_dim must equal qk_nope_head_dim + "
@@ -186,22 +194,13 @@ class ModelConfig:
                     f"expected={expected_qk_head_dim}"
                 )
 
-    @property
-    def is_step2_mini(self) -> bool:
-        """Check if this is a Step2Mini model architecture."""
-        return self.model_arch == "step2_mini"
-
-    def is_step3_text(self) -> bool:
-        """Check if this is a Step3Text model architecture."""
-        return self.model_type == "step3_text"
-
     def supports_share_expert(self) -> bool:
         """Check if the model uses share_expert in the FFN path."""
-        return (
-            self.is_step2_mini
-            or self.is_step3_text()
-            or (self.is_moe and int(self.share_expert_dim or 0) > 0)
-        )
+        return self.get_model_architecture_profile().supports_share_expert(self)
+
+    def get_model_architecture_profile(self):
+        """Return plugin-style model architecture semantics for this config."""
+        return get_model_architecture_profile(self)
 
     @property
     def uses_fused_add_norm(self) -> bool:
@@ -290,7 +289,7 @@ class ModelConfig:
 
         # Capture torch_dtype from BaseModelConfig before it gets removed.
         # BaseModelConfig._create_from_hf_json already parses torch_dtype correctly.
-        base_torch_dtype: str = model_config_dict.get('torch_dtype', None)
+        base_torch_dtype: str | None = model_config_dict.get('torch_dtype', None)
 
         # Extract quantization_config before removing it from dict
         # We need to preserve it for metadata tracking
@@ -304,7 +303,7 @@ class ModelConfig:
         unsupported_fields = [
             '_model_name',
             '_moe_layer_ids_cache',
-            'norm_expert_weight',  # Step2Mini field not used in profiling
+            'norm_expert_weight',  # Expert normalization field not used in profiling
             'torch_dtype',
         ]
         for field in unsupported_fields:
@@ -340,9 +339,13 @@ class ModelConfig:
                     f"Please specify the model precision."
                 )
             model_config_dict['dtype'] = dtype_value
-            # Model type (e.g., step3_text) for Step3-only gating
+            # Model type used by architecture profile matching
             model_config_dict['model_type'] = json_cfg.get(
                 'model_type', model_config_dict.get('model_type')
+            )
+            model_config_dict['model_architecture_profile'] = json_cfg.get(
+                'model_architecture_profile',
+                model_config_dict.get('model_architecture_profile'),
             )
             # Explicit fused-add capability override
             explicit_fused_add_norm = json_cfg.get('uses_fused_add_norm')
@@ -353,7 +356,7 @@ class ModelConfig:
                         f"got {type(explicit_fused_add_norm)} for '{model_name}'"
                     )
                 model_config_dict['fused_add_norm_capability'] = explicit_fused_add_norm
-            # Step2Mini-specific fields
+            # Architecture-specific structural fields
             model_config_dict['model_arch'] = json_cfg.get(
                 'model_arch', model_config_dict.get('model_arch')
             )
@@ -364,6 +367,7 @@ class ModelConfig:
             model_config_dict['head_dim'] = json_cfg.get('head_dim')
             for field_name in [
                 'use_mla',
+                'use_mfa',
                 'q_lora_rank',
                 'kv_lora_rank',
                 'qk_nope_head_dim',
@@ -452,7 +456,7 @@ class ModelConfig:
         family = self.get_attention_family()
         if family.memory_layout is AttentionMemoryLayout.LATENT_MLA:
             return family.resolve_runtime_head_size(self)
-        # Use explicit head_dim if provided (e.g., for Step3 models with MLA)
+        # Use explicit head_dim if provided by the model architecture
         # Otherwise compute from embedding_dim / num_q_heads
         if self._head_dim is not None:
             return self._head_dim
@@ -544,13 +548,15 @@ class ModelConfig:
             "rms_norm_eps": self.rms_norm_eps,
             "dtype": self._dtype_to_str(self._dtype),
             "model_type": self.model_type,
+            "model_architecture_profile": self.model_architecture_profile,
             "fused_add_norm_capability": self.fused_add_norm_capability,
-            # Step2Mini-specific fields
+            # Architecture-specific structural fields
             "model_arch": self.model_arch,
             "share_expert_dim": self.share_expert_dim,
             "share_q_dim": self.share_q_dim,
             "head_dim": self._head_dim,
             "use_mla": self.use_mla,
+            "use_mfa": self.use_mfa,
             "q_lora_rank": self.q_lora_rank,
             "kv_lora_rank": self.kv_lora_rank,
             "qk_nope_head_dim": self.qk_nope_head_dim,

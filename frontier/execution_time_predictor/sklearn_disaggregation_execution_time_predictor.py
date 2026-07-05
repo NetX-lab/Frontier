@@ -3,6 +3,11 @@ from enum import Enum
 from dataclasses import dataclass
 import numpy as np
 from frontier.logger import init_logger
+from frontier.model_architectures import (
+    ModelArchitectureProfile,
+    ResidualAddPolicy,
+    get_model_architecture_profile,
+)
 
 from frontier.config import (
     BaseExecutionTimePredictorConfig,
@@ -209,6 +214,28 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
         else:
             return self._replica_config
+
+    @staticmethod
+    def _resolve_model_architecture_profile_for_config(
+        model_config: Any,
+    ) -> ModelArchitectureProfile:
+        if model_config is None:
+            raise ValueError("PDD predictor requires cluster replica model_config")
+        getter = getattr(model_config, "get_model_architecture_profile", None)
+        profile = getter() if callable(getter) else get_model_architecture_profile(model_config)
+        if not isinstance(profile, ModelArchitectureProfile):
+            raise TypeError(
+                "model_config architecture profile must be ModelArchitectureProfile"
+            )
+        return profile
+
+    def _get_cluster_model_architecture_profile(
+        self, cluster_type: ClusterType
+    ) -> ModelArchitectureProfile:
+        cluster_replica_config = self._get_cluster_replica_config(cluster_type)
+        return self._resolve_model_architecture_profile_for_config(
+            getattr(cluster_replica_config, "model_config", None)
+        )
 
     def _get_tensor_parallel_size_for_comm(self) -> int:
         cluster_type = self._cluster_type
@@ -664,7 +691,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         # A MoE model remains MoE regardless of moe_expert_parallel_size
         model_config = cluster_replica_config.model_config
         is_moe_model = model_config is not None and model_config.is_moe
-        is_step3_text = bool(model_config and model_config.is_step3_text())
+        architecture_profile = self._get_cluster_model_architecture_profile(cluster_type)
         share_expert_enabled = (
             is_moe_model
             and cluster_replica_config.model_config is not None
@@ -682,12 +709,20 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         )
         # COMM_SKIP: TP all-reduce not needed when tp_size <= 1 (no tensor sharding)
         tp_comm_time = base_time if tp_size > 1 else 0.0
-        step3_ffn_tp_comm_enabled = (
-            cluster_type == ClusterType.DECODE_FFN and is_step3_text and tp_size > 1
+        ffn_tp_comm_enabled = (
+            cluster_type == ClusterType.DECODE_FFN
+            and architecture_profile.moe_tensor_parallel_allgather_op is not None
+            and tp_size > 1
         )
-        ffn_tp_allgather_time = base_time if step3_ffn_tp_comm_enabled else 0.0
+        ffn_tp_allgather_time = base_time if ffn_tp_comm_enabled else 0.0
         share_expert_tp_allreduce_time = (
-            base_time if step3_ffn_tp_comm_enabled and share_expert_enabled else 0.0
+            base_time
+            if (
+                ffn_tp_comm_enabled
+                and share_expert_enabled
+                and architecture_profile.share_expert_tensor_parallel_allreduce_op is not None
+            )
+            else 0.0
         )
 
         if cluster_type == ClusterType.PREFILL:
@@ -758,7 +793,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
         elif cluster_type == ClusterType.DECODE_ATTN:
             # DECODE_ATTN cluster only handles attention operations
-            add_attn_residual_time = 0.0 if is_step3_text else base_time
+            add_attn_residual_time = (
+                0.0 if architecture_profile.skip_decode_attn_residual else base_time
+            )
             return ExecutionTime(
                 num_layers_per_pipeline_stage=1,
                 attention_rope_execution_time=base_time,
@@ -1139,7 +1176,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 ClusterType.DECODE,
                 ClusterType.MONOLITHIC,
             ):
-                self._log_step3_attention_shape(batch)
+                self._log_architecture_attention_shape(batch)
             # Phase 1 Fix: Use cluster-specific dummy execution time
             dummy_exec_time = self._get_dummy_execution_time_for_cluster(
                 batch, stage_id, cluster_type
@@ -1262,8 +1299,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         if cluster_type == ClusterType.DECODE_ATTN:
             # Attention-only cluster - predict attention time
             cluster_replica_config = self._get_cluster_replica_config(cluster_type)
-            model_config = cluster_replica_config.model_config
-            is_step3_text = bool(model_config and model_config.is_step3_text())
+            architecture_profile = self._get_cluster_model_architecture_profile(cluster_type)
             attention_time = self.predict_attention_layer_time(
                 batch, layer_id=layer_id, cluster_type=cluster_type
             )
@@ -1271,7 +1307,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             mlp_norm_time = self._get_mlp_norm_layer_act_execution_time(batch)
             # Get residual add time (first residual connection after attention)
             add_attn_residual_time = self._get_add_layer_act_execution_time(batch)
-            if is_step3_text:
+            if architecture_profile.skip_decode_attn_residual:
                 add_attn_residual_time = 0.0
             # Attention-only cluster
             return ExecutionTime(
@@ -1393,7 +1429,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             # Use model_config.is_moe for MoE detection - NOT parallelism settings
             cluster_replica_config = self._get_cluster_replica_config(cluster_type)
             model_config = cluster_replica_config.model_config
-            is_step3_text = bool(model_config and model_config.is_step3_text())
+            architecture_profile = self._get_cluster_model_architecture_profile(cluster_type)
             is_moe_model = (
                 model_config is not None and model_config.is_moe
             )
@@ -1441,8 +1477,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 add_time = self._get_add_layer_act_execution_time(batch)
                 add_attn_residual_time = 0.0
                 add_ffn_residual_time = 0.0
-                if is_step3_text:
+                if architecture_profile.skip_decode_ffn_attn_norm_residual:
                     mlp_norm_time = 0.0
+                if architecture_profile.residual_add_policy is ResidualAddPolicy.FFN_RESIDUAL_ONLY:
                     add_attn_residual_time = 0.0
                     add_ffn_residual_time = add_time
                     add_time = 0.0
@@ -1451,7 +1488,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 ffn_tp_allgather_time = 0.0
                 share_expert_tp_allreduce_time = 0.0
                 moe_tp_size = cluster_replica_config.moe_tensor_parallel_size
-                if is_step3_text and moe_tp_size > 1:
+                if architecture_profile.moe_tensor_parallel_allgather_op and moe_tp_size > 1:
                     # Use compute-effective tokens. AFD paths already include CUDA Graph
                     # padding in metadata; non-CUDA-Graph paths keep exact token counts.
                     effective_tokens = batch.get_effective_total_tokens_rounded(
@@ -1460,7 +1497,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     data_size_bytes = model_config.embedding_dim * 2 * effective_tokens
                     if data_size_bytes % moe_tp_size != 0:
                         raise ValueError(
-                            "Step3 FFN TP allgather requires per-device tensor bytes to be "
+                            "Profile-declared FFN TP allgather requires per-device tensor bytes to be "
                             f"divisible by moe_tp_size, got data_size_bytes={data_size_bytes}, "
                             f"moe_tp_size={moe_tp_size}"
                         )
@@ -1638,8 +1675,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 add_time = self._get_add_layer_act_execution_time(batch)
                 add_attn_residual_time = 0.0
                 add_ffn_residual_time = 0.0
-                if is_step3_text:
+                if architecture_profile.skip_decode_ffn_attn_norm_residual:
                     mlp_norm_time = 0.0
+                if architecture_profile.residual_add_policy is ResidualAddPolicy.FFN_RESIDUAL_ONLY:
                     add_attn_residual_time = 0.0
                     add_ffn_residual_time = add_time
                     add_time = 0.0
@@ -1809,7 +1847,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     )
                     if data_size_bytes % moe_tp_size != 0:
                         raise ValueError(
-                            "Step3 FFN TP allgather requires per-device tensor bytes to be "
+                            "Profile-declared FFN TP allgather requires per-device tensor bytes to be "
                             f"divisible by moe_tp_size, got data_size_bytes={data_size_bytes}, "
                             f"moe_tp_size={moe_tp_size}"
                         )
@@ -2220,7 +2258,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     )
                     if data_size_bytes % moe_tp_size != 0:
                         raise ValueError(
-                            "Step3 FFN TP allgather requires per-device tensor bytes to be "
+                            "Profile-declared FFN TP allgather requires per-device tensor bytes to be "
                             f"divisible by moe_tp_size, got data_size_bytes={data_size_bytes}, "
                             f"moe_tp_size={moe_tp_size}"
                         )
@@ -2236,7 +2274,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         comm_domain="MOE_TP",
                     )
 
-                    if cluster_replica_config.model_config.is_step3_text():
+                    architecture_profile = self._resolve_model_architecture_profile_for_config(
+                        cluster_replica_config.model_config
+                    )
+                    if architecture_profile.moe_tensor_parallel_allgather_op:
                         allgather_bytes = quant_manager.adjust_tensor_size(
                             "allgather", per_device_data_size_bytes, cluster_type
                         )

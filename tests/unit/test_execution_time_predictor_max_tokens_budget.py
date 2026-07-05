@@ -20,11 +20,24 @@ range must be >= that budget so cache lookups are always in-range.
 from __future__ import annotations
 
 import csv
+from collections.abc import Iterator
 from pathlib import Path
 from types import SimpleNamespace
 
 import pandas as pd
 import pytest
+
+from frontier.model_architectures import ModelArchitectureProfile
+
+
+@pytest.fixture(autouse=True)
+def _reset_quantization_manager() -> Iterator[None]:
+    """Keep predictor initialization precision state isolated per test."""
+    from frontier.config.quantization_manager import QuantizationManager
+
+    QuantizationManager.reset()
+    yield
+    QuantizationManager.reset()
 
 
 def _dense_model_config() -> SimpleNamespace:
@@ -32,7 +45,7 @@ def _dense_model_config() -> SimpleNamespace:
         use_mla=False,
         num_q_heads=32,
         num_kv_heads=8,
-        is_step2_mini=lambda: False,
+        get_model_architecture_profile=ModelArchitectureProfile.generic,
     )
 
 

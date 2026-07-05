@@ -8,6 +8,8 @@ from frontier.attention.ops import (
     AttentionOperatorSpec,
     AttentionPhase,
 )
+
+from frontier.operators.spec import ResourceClass
 from frontier.entities.execution_time import ExecutionTime
 from frontier.entities.time_components import AttentionOperatorTimes
 from frontier.metrics.constants import OperationMetrics as MetricsOperationMetrics
@@ -40,6 +42,11 @@ def _fake_dense_attention_operator(
     return AttentionOperatorSpec(
         name=name,
         role=role,
+        resource_class=(
+            ResourceClass.MEMORY
+            if role is AttentionOperatorRole.CACHE_WRITE
+            else ResourceClass.COMP
+        ),
         phases=(
             AttentionPhase.PREFILL,
             AttentionPhase.DECODE,
@@ -223,9 +230,6 @@ class _DummyMlaModelConfig:
     qk_rope_head_dim = 2
     qk_head_dim = 5
     v_head_dim = 4
-
-    def is_step3_text(self) -> bool:
-        return False
 
     def get_head_dim(self) -> int:
         return 4

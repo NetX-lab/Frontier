@@ -13,6 +13,10 @@ from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 from frontier.execution_time_predictor import (
     BaseExecutionTimePredictor,
 )
+from frontier.model_architectures import (
+    ExpertParallelCollective,
+    get_model_architecture_profile,
+)
 from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
     ReplicaSchedulerRegistry,
 )
@@ -26,6 +30,23 @@ from frontier.types import (
 if TYPE_CHECKING:
     from frontier.kv_cache_transfer import BaseKVCacheTransferPredictor
     from frontier.m2n_transfer import BaseM2NTransferPredictor
+
+
+def resolve_ep_collective_kind(
+    model_config: Any,
+    cluster_type: ClusterType,
+    expected_ep_size: int,
+) -> ExpertParallelCollective:
+    """Resolve the EP collective policy from the model architecture profile."""
+
+    if model_config is None:
+        raise ValueError(
+            "EP collective resolution requires replica_config.model_config"
+        )
+    profile = get_model_architecture_profile(model_config)
+    if profile.uses_expert_parallel_alltoall(cluster_type, expected_ep_size):
+        return ExpertParallelCollective.ALLTOALL
+    return ExpertParallelCollective.ALLGATHER
 
 
 class BaseClusterScheduler(ABC):
@@ -1219,12 +1240,12 @@ class BaseClusterScheduler(ABC):
             # Calculate data size: tokens × hidden_size × 2 bytes (float16)
             data_size_bytes = total_tokens * hidden_size * 2
 
-            use_step3_alltoall = (
-                model_config is not None
-                and model_config.model_type == "step3_text"
-                and expected_ep_size > 1
+            ep_collective_kind = resolve_ep_collective_kind(
+                model_config,
+                self._cluster_type,
+                expected_ep_size,
             )
-            if use_step3_alltoall:
+            if ep_collective_kind is ExpertParallelCollective.ALLTOALL:
                 # EP alltoall combine phase
                 ep_collective_exec_time_ms = self._predictor.predict_alltoall_time(
                     data_size_bytes=data_size_bytes,
@@ -2019,8 +2040,16 @@ class BaseClusterScheduler(ABC):
             add_attn_residual_time=original_execution_time._add_attn_residual_time,
             add_ffn_residual_time=original_execution_time._add_ffn_residual_time,
             tensor_parallel_communication_time=original_execution_time._tensor_parallel_communication_time,
-            attn_tensor_parallel_allreduce_time=original_execution_time._attn_tensor_parallel_allreduce_time,
-            moe_tensor_parallel_allreduce_time=original_execution_time._moe_tensor_parallel_allreduce_time,
+            attn_tensor_parallel_allreduce_time=(
+                original_execution_time._attn_tensor_parallel_allreduce_time
+                if original_execution_time._has_attn_tensor_parallel_allreduce_time
+                else None
+            ),
+            moe_tensor_parallel_allreduce_time=(
+                original_execution_time._moe_tensor_parallel_allreduce_time
+                if original_execution_time._has_moe_tensor_parallel_allreduce_time
+                else None
+            ),
             tensor_parallel_allgather_time=original_execution_time._tensor_parallel_allgather_time,
             share_expert_tensor_parallel_allreduce_time=original_execution_time._share_expert_tensor_parallel_allreduce_time,
             dp_input_allreduce_time=original_execution_time._dp_input_allreduce_time,

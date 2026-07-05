@@ -1,12 +1,24 @@
+from collections.abc import Mapping
+from copy import deepcopy
+from types import MappingProxyType
 from typing import Union
 
 from frontier.entities.base_entity import BaseEntity
 from frontier.entities.time_components import (
     AttentionTime,
     AttentionOperatorTimes,
+    build_attention_operator_times_from_op_times,
+    build_communication_operator_times_from_op_times,
+    build_mlp_operator_times_from_op_times,
+    build_moe_operator_times_from_op_times,
+    CommunicationOperatorTimes,
+    execution_op_time_values_by_attr,
+    MLPOperatorTimes,
     MLPTime,
+    MoEOperatorTimes,
     MoETime,
     CommunicationTime,
+    normalize_execution_op_times,
     OverheadTime,
     ResidualTime,
 )
@@ -66,8 +78,8 @@ class ExecutionTime(BaseEntity):
         share_expert_tensor_parallel_allreduce_time: float = 0.0,
         dp_input_allreduce_time: float = 0.0,
         dp_output_allreduce_time: float = 0.0,
-        attn_tensor_parallel_allreduce_time: float = 0.0,
-        moe_tensor_parallel_allreduce_time: float = 0.0,
+        attn_tensor_parallel_allreduce_time: float | None = None,
+        moe_tensor_parallel_allreduce_time: float | None = None,
         pp_stage_boundary_handoff_time: float = 0.0,
         decode_draft_proposer_time: float = 0.0,
         mtp_terminal_overshoot_time: float = 0.0,
@@ -78,11 +90,178 @@ class ExecutionTime(BaseEntity):
         attn_mla_decode_time: float = 0.0,
         attn_mla_v_up_proj_time: float = 0.0,
         attention_operator_times: AttentionOperatorTimes | None = None,
+        communication_operator_times: CommunicationOperatorTimes | None = None,
+        mlp_operator_times: MLPOperatorTimes | None = None,
+        moe_operator_times: MoEOperatorTimes | None = None,
+        op_times: Mapping[str, float] | None = None,
     ) -> None:
         self._id = ExecutionTime.generate_id()
 
         self._num_layers_per_pipeline_stage = num_layers_per_pipeline_stage
         self._is_moe = is_moe
+        if is_moe and mlp_operator_times is not None:
+            raise ValueError("mlp_operator_times are only valid for dense MLP components")
+        if not is_moe and moe_operator_times is not None:
+            raise ValueError("moe_operator_times are only valid for MoE components")
+
+        merged_op_times = self._merge_operator_time_sources(
+            normalize_execution_op_times(op_times or {}),
+            attention_operator_times,
+            mlp_operator_times,
+            moe_operator_times,
+            communication_operator_times,
+        )
+        if attention_operator_times is None:
+            attention_operator_times = build_attention_operator_times_from_op_times(
+                merged_op_times
+            )
+        if is_moe:
+            if moe_operator_times is None:
+                moe_operator_times = build_moe_operator_times_from_op_times(
+                    merged_op_times
+                )
+        elif mlp_operator_times is None:
+            mlp_operator_times = build_mlp_operator_times_from_op_times(merged_op_times)
+        if communication_operator_times is None:
+            communication_operator_times = (
+                build_communication_operator_times_from_op_times(merged_op_times)
+            )
+        attention_operator_times = deepcopy(attention_operator_times)
+        mlp_operator_times = deepcopy(mlp_operator_times)
+        moe_operator_times = deepcopy(moe_operator_times)
+        communication_operator_times = deepcopy(communication_operator_times)
+
+        op_time_attr_values = execution_op_time_values_by_attr(merged_op_times)
+
+        attn_tensor_parallel_allreduce_is_provided = (
+            "attn_tensor_parallel_allreduce_time" in op_time_attr_values
+            or attn_tensor_parallel_allreduce_time is not None
+        )
+        moe_tensor_parallel_allreduce_is_provided = (
+            "moe_tensor_parallel_allreduce_time" in op_time_attr_values
+            or moe_tensor_parallel_allreduce_time is not None
+        )
+
+        def read_op_time_attr(attr_name: str, legacy_value: float | None) -> float:
+            return op_time_attr_values.get(
+                attr_name,
+                0.0 if legacy_value is None else legacy_value,
+            )
+
+        attention_kv_cache_save_execution_time = read_op_time_attr(
+            "attention_kv_cache_save_execution_time",
+            attention_kv_cache_save_execution_time,
+        )
+        attention_decode_execution_time = read_op_time_attr(
+            "attention_decode_execution_time",
+            attention_decode_execution_time,
+        )
+        attention_prefill_execution_time = read_op_time_attr(
+            "attention_prefill_execution_time",
+            attention_prefill_execution_time,
+        )
+        attn_norm_time = read_op_time_attr("attn_norm_time", attn_norm_time)
+        mlp_norm_time = read_op_time_attr("mlp_norm_time", mlp_norm_time)
+        add_attn_residual_time = read_op_time_attr(
+            "add_attn_residual_time",
+            add_attn_residual_time,
+        )
+        add_ffn_residual_time = read_op_time_attr(
+            "add_ffn_residual_time",
+            add_ffn_residual_time,
+        )
+        mlp_layer_up_proj_execution_time = read_op_time_attr(
+            "mlp_layer_up_proj_execution_time",
+            mlp_layer_up_proj_execution_time,
+        )
+        mlp_layer_down_proj_execution_time = read_op_time_attr(
+            "mlp_layer_down_proj_execution_time",
+            mlp_layer_down_proj_execution_time,
+        )
+        mlp_layer_act_execution_time = read_op_time_attr(
+            "mlp_layer_act_execution_time",
+            mlp_layer_act_execution_time,
+        )
+        moe_grouped_gemm_time = read_op_time_attr(
+            "moe_grouped_gemm_time",
+            moe_grouped_gemm_time,
+        )
+        moe_gating_linear_time = read_op_time_attr(
+            "moe_gating_linear_time",
+            moe_gating_linear_time,
+        )
+        moe_gating_routing_topk_time = read_op_time_attr(
+            "moe_gating_routing_topk_time",
+            moe_gating_routing_topk_time,
+        )
+        moe_shuffling_time = read_op_time_attr(
+            "moe_shuffling_time",
+            moe_shuffling_time,
+        )
+        share_expert_up_proj_time = read_op_time_attr(
+            "share_expert_up_proj_time",
+            share_expert_up_proj_time,
+        )
+        share_expert_down_proj_time = read_op_time_attr(
+            "share_expert_down_proj_time",
+            share_expert_down_proj_time,
+        )
+        share_expert_act_time = read_op_time_attr(
+            "share_expert_act_time",
+            share_expert_act_time,
+        )
+        attn_tensor_parallel_allreduce_time = read_op_time_attr(
+            "attn_tensor_parallel_allreduce_time",
+            attn_tensor_parallel_allreduce_time,
+        )
+        moe_tensor_parallel_allreduce_time = read_op_time_attr(
+            "moe_tensor_parallel_allreduce_time",
+            moe_tensor_parallel_allreduce_time,
+        )
+        tensor_parallel_allgather_time = read_op_time_attr(
+            "tensor_parallel_allgather_time",
+            tensor_parallel_allgather_time,
+        )
+        share_expert_tensor_parallel_allreduce_time = read_op_time_attr(
+            "share_expert_tensor_parallel_allreduce_time",
+            share_expert_tensor_parallel_allreduce_time,
+        )
+        pipeline_parallel_communication_time = read_op_time_attr(
+            "pipeline_parallel_send_recv_time",
+            pipeline_parallel_communication_time,
+        )
+        attn_mla_kv_cache_save_time = read_op_time_attr(
+            "attn_mla_kv_cache_save_time",
+            attn_mla_kv_cache_save_time,
+        )
+        attn_mla_prefill_kv_up_proj_time = read_op_time_attr(
+            "attn_mla_prefill_kv_up_proj_time",
+            attn_mla_prefill_kv_up_proj_time,
+        )
+        attn_mla_prefill_time = read_op_time_attr(
+            "attn_mla_prefill_time",
+            attn_mla_prefill_time,
+        )
+        attn_mla_decode_q_latent_proj_time = read_op_time_attr(
+            "attn_mla_decode_q_latent_proj_time",
+            attn_mla_decode_q_latent_proj_time,
+        )
+        attn_mla_decode_time = read_op_time_attr(
+            "attn_mla_decode_time",
+            attn_mla_decode_time,
+        )
+        attn_mla_v_up_proj_time = read_op_time_attr(
+            "attn_mla_v_up_proj_time",
+            attn_mla_v_up_proj_time,
+        )
+        expert_parallel_alltoall_time = read_op_time_attr(
+            "expert_parallel_alltoall_time",
+            0.0,
+        )
+        expert_parallel_communication_time = read_op_time_attr(
+            "expert_parallel_alltoall_time",
+            expert_parallel_communication_time,
+        )
 
         # Handle backward compatibility: if new fields are not provided, split moe_gating_time equally
         if moe_gating_linear_time == 0.0 and moe_gating_routing_topk_time == 0.0 and moe_gating_time > 0.0:
@@ -124,6 +303,7 @@ class ExecutionTime(BaseEntity):
                 share_expert_up_proj_time=share_expert_up_proj_time,
                 share_expert_down_proj_time=share_expert_down_proj_time,
                 share_expert_act_time=share_expert_act_time,
+                operator_times=moe_operator_times,
             )
         else:
             self._moe_or_mlp_time = MLPTime(
@@ -131,11 +311,12 @@ class ExecutionTime(BaseEntity):
                 mlp_layer_down_proj_execution_time=mlp_layer_down_proj_execution_time,
                 mlp_layer_act_execution_time=mlp_layer_act_execution_time,
                 mlp_norm_time=mlp_norm_time,
+                operator_times=mlp_operator_times,
             )
 
         use_split_tp_allreduce = (
-            attn_tensor_parallel_allreduce_time > 0.0
-            or moe_tensor_parallel_allreduce_time > 0.0
+            attn_tensor_parallel_allreduce_is_provided
+            or moe_tensor_parallel_allreduce_is_provided
         )
         legacy_tensor_parallel_allreduce_time = (
             0.0 if use_split_tp_allreduce else tensor_parallel_communication_time
@@ -152,7 +333,8 @@ class ExecutionTime(BaseEntity):
             pipeline_parallel_send_recv_time=pipeline_parallel_communication_time,
             # EP communication is tracked in ExecutionTime, but we keep this for future extensions
             expert_parallel_allgather_time=0.0,
-            expert_parallel_alltoall_time=0.0,
+            expert_parallel_alltoall_time=expert_parallel_alltoall_time,
+            operator_times=communication_operator_times,
         )
 
         self._overhead_time = OverheadTime(
@@ -175,7 +357,7 @@ class ExecutionTime(BaseEntity):
             add_ffn_residual_time=add_ffn_residual_time,
         )
 
-        # TODO: keep flat fields for backward compatibility (will be deprecated)
+        # Compatibility note: flat fields are retained for deprecated read paths.
         self._attention_rope_execution_time = attention_rope_execution_time
         self._attention_kv_cache_save_execution_time = attention_kv_cache_save_execution_time
         self._attention_decode_execution_time = attention_decode_execution_time
@@ -199,6 +381,12 @@ class ExecutionTime(BaseEntity):
         self._tensor_parallel_communication_time = legacy_tensor_parallel_allreduce_time
         self._attn_tensor_parallel_allreduce_time = attn_tensor_parallel_allreduce_time
         self._moe_tensor_parallel_allreduce_time = moe_tensor_parallel_allreduce_time
+        self._has_attn_tensor_parallel_allreduce_time = (
+            attn_tensor_parallel_allreduce_is_provided
+        )
+        self._has_moe_tensor_parallel_allreduce_time = (
+            moe_tensor_parallel_allreduce_is_provided
+        )
         self._tensor_parallel_allgather_time = tensor_parallel_allgather_time
         self._share_expert_tensor_parallel_allreduce_time = (
             share_expert_tensor_parallel_allreduce_time
@@ -231,50 +419,262 @@ class ExecutionTime(BaseEntity):
         self._share_expert_act_time = share_expert_act_time
         self._decode_draft_proposer_time = decode_draft_proposer_time
         self._mtp_terminal_overshoot_time = mtp_terminal_overshoot_time
+        self._op_times = normalize_execution_op_times(merged_op_times)
+        self._refresh_op_time_attr_values()
+
+    @staticmethod
+    def _merge_operator_time_sources(
+        base_op_times: Mapping[str, float],
+        *operator_time_sources,
+    ) -> dict[str, float]:
+        merged = normalize_execution_op_times(base_op_times)
+        for operator_times in operator_time_sources:
+            if operator_times is None:
+                continue
+            for op_name, time_ms in normalize_execution_op_times(
+                operator_times.op_times
+            ).items():
+                if op_name in merged and merged[op_name] != time_ms:
+                    raise ValueError(
+                        f"Conflicting operator timing for {op_name}: "
+                        f"{merged[op_name]} != {time_ms}"
+                    )
+                merged[op_name] = time_ms
+        return normalize_execution_op_times(merged)
+
+    def _refresh_op_time_attr_values(self) -> None:
+        self._op_time_attr_values = execution_op_time_values_by_attr(self._op_times)
+
+    def _merged_replacement_operator_time_source(
+        self,
+        old_operator_times,
+        new_operator_times,
+    ) -> dict[str, float]:
+        updated_op_times = dict(self._op_times)
+        if old_operator_times is not None:
+            for op_name in old_operator_times.op_times:
+                updated_op_times.pop(op_name, None)
+        if new_operator_times is not None:
+            for op_name, time_ms in normalize_execution_op_times(
+                new_operator_times.op_times
+            ).items():
+                if op_name in updated_op_times:
+                    raise ValueError(
+                        f"Conflicting operator timing for {op_name}: "
+                        f"{updated_op_times[op_name]} != {time_ms}"
+                    )
+                updated_op_times[op_name] = time_ms
+        return normalize_execution_op_times(updated_op_times)
+
+    def _replace_operator_time_source(self, old_operator_times, new_operator_times) -> None:
+        updated_op_times = self._merged_replacement_operator_time_source(
+            old_operator_times,
+            new_operator_times,
+        )
+        self._op_times = normalize_execution_op_times(updated_op_times)
+        self._refresh_op_time_attr_values()
+
+    def _replace_operator_time_values(self, op_times: Mapping[str, float]) -> None:
+        updated_op_times = dict(self._op_times)
+        updated_op_times.update(normalize_execution_op_times(op_times))
+        self._op_times = normalize_execution_op_times(updated_op_times)
+        self._refresh_op_time_attr_values()
+        self._attention_time.operator_times = build_attention_operator_times_from_op_times(
+            self._op_times
+        )
+        if isinstance(self._moe_or_mlp_time, MoETime):
+            self._moe_or_mlp_time.operator_times = build_moe_operator_times_from_op_times(
+                self._op_times
+            )
+        else:
+            self._moe_or_mlp_time.operator_times = build_mlp_operator_times_from_op_times(
+                self._op_times
+            )
+        self._communication_time.operator_times = (
+            build_communication_operator_times_from_op_times(self._op_times)
+        )
+
+    def _time_attr_value(self, attr_name: str, legacy_value: float) -> float:
+        return self._op_time_attr_values.get(attr_name, legacy_value)
+
+    def _scaled_time_attr_value(self, attr_name: str, legacy_value: float) -> float:
+        return (
+            self._time_attr_value(attr_name, legacy_value)
+            * self._num_layers_per_pipeline_stage
+        )
+
+    def _get_expert_parallel_communication_time(self) -> float:
+        return self._time_attr_value(
+            "expert_parallel_alltoall_time",
+            self._expert_parallel_communication_time,
+        )
+
+    def _get_moe_grouped_gemm_time(self) -> float:
+        if not isinstance(self._moe_or_mlp_time, MoETime):
+            return 0.0
+        return self._time_attr_value(
+            "moe_grouped_gemm_time",
+            self._moe_or_mlp_time.moe_grouped_gemm_time,
+        )
+
+    def _get_moe_gating_time(self) -> float:
+        if not isinstance(self._moe_or_mlp_time, MoETime):
+            return 0.0
+        return self._time_attr_value(
+            "moe_gating_linear_time",
+            self._moe_or_mlp_time.moe_gating_linear_time,
+        ) + self._time_attr_value(
+            "moe_gating_routing_topk_time",
+            self._moe_or_mlp_time.moe_gating_routing_topk_time,
+        )
+
+    def _get_moe_shuffling_time(self) -> float:
+        if not isinstance(self._moe_or_mlp_time, MoETime):
+            return 0.0
+        return self._time_attr_value(
+            "moe_shuffling_time",
+            self._moe_or_mlp_time.moe_shuffling_time,
+        )
+
+    def _get_tensor_parallel_allgather_time(self) -> float:
+        return self._time_attr_value(
+            "tensor_parallel_allgather_time",
+            self._communication_time.tensor_parallel_allgather_time,
+        )
+
+    def _get_share_expert_tensor_parallel_allreduce_time(self) -> float:
+        return self._time_attr_value(
+            "share_expert_tensor_parallel_allreduce_time",
+            self._communication_time.share_expert_tensor_parallel_allreduce_time,
+        )
+
+    def _get_dp_input_allreduce_time(self) -> float:
+        return self._time_attr_value(
+            "dp_input_allreduce_time",
+            self._communication_time.dp_input_allreduce_time,
+        )
+
+    def _get_dp_output_allreduce_time(self) -> float:
+        return self._time_attr_value(
+            "dp_output_allreduce_time",
+            self._communication_time.dp_output_allreduce_time,
+        )
 
     # Component accessors (new API)
     @property
+    def op_times(self) -> Mapping[str, float]:
+        """Read-only canonical per-operator timing map in milliseconds."""
+        return MappingProxyType(self._op_times)
+
+    @property
     def attention_time_component(self) -> AttentionTime:
         """Get the attention time component."""
-        return self._attention_time
+        return deepcopy(self._attention_time)
 
     @property
     def attention_operator_times(self) -> AttentionOperatorTimes | None:
         """Get structured single-layer attention operator timings."""
-        return self._attention_time.operator_times
+        return deepcopy(self._attention_time.operator_times)
 
     @attention_operator_times.setter
     def attention_operator_times(
         self,
         operator_times: AttentionOperatorTimes | None,
     ) -> None:
-        self._attention_time.operator_times = operator_times
+        old_operator_times = self._attention_time.operator_times
+        updated_op_times = self._merged_replacement_operator_time_source(
+            old_operator_times,
+            operator_times,
+        )
+        self._attention_time.operator_times = deepcopy(operator_times)
+        self._op_times = updated_op_times
+        self._refresh_op_time_attr_values()
 
     @property
     def moe_or_mlp_time_component(self) -> Union[MLPTime, MoETime]:
         """Get the MoE or MLP time component."""
-        return self._moe_or_mlp_time
+        return deepcopy(self._moe_or_mlp_time)
+
+    @property
+    def mlp_operator_times(self) -> MLPOperatorTimes | None:
+        """Get structured single-layer dense MLP operator timings."""
+        if isinstance(self._moe_or_mlp_time, MLPTime):
+            return deepcopy(self._moe_or_mlp_time.operator_times)
+        return None
+
+    @mlp_operator_times.setter
+    def mlp_operator_times(self, operator_times: MLPOperatorTimes | None) -> None:
+        if not isinstance(self._moe_or_mlp_time, MLPTime):
+            raise ValueError("mlp_operator_times are only valid for dense MLP components")
+        old_operator_times = self._moe_or_mlp_time.operator_times
+        updated_op_times = self._merged_replacement_operator_time_source(
+            old_operator_times,
+            operator_times,
+        )
+        self._moe_or_mlp_time.operator_times = deepcopy(operator_times)
+        self._op_times = updated_op_times
+        self._refresh_op_time_attr_values()
+
+    @property
+    def moe_operator_times(self) -> MoEOperatorTimes | None:
+        """Get structured single-layer MoE operator timings."""
+        if isinstance(self._moe_or_mlp_time, MoETime):
+            return deepcopy(self._moe_or_mlp_time.operator_times)
+        return None
+
+    @moe_operator_times.setter
+    def moe_operator_times(self, operator_times: MoEOperatorTimes | None) -> None:
+        if not isinstance(self._moe_or_mlp_time, MoETime):
+            raise ValueError("moe_operator_times are only valid for MoE components")
+        old_operator_times = self._moe_or_mlp_time.operator_times
+        updated_op_times = self._merged_replacement_operator_time_source(
+            old_operator_times,
+            operator_times,
+        )
+        self._moe_or_mlp_time.operator_times = deepcopy(operator_times)
+        self._op_times = updated_op_times
+        self._refresh_op_time_attr_values()
 
     @property
     def communication_time_component(self) -> CommunicationTime:
         """Get the communication time component."""
-        return self._communication_time
+        return deepcopy(self._communication_time)
+
+    @property
+    def communication_operator_times(self) -> CommunicationOperatorTimes | None:
+        """Get structured single-layer communication operator timings."""
+        return deepcopy(self._communication_time.operator_times)
+
+    @communication_operator_times.setter
+    def communication_operator_times(
+        self,
+        operator_times: CommunicationOperatorTimes | None,
+    ) -> None:
+        old_operator_times = self._communication_time.operator_times
+        updated_op_times = self._merged_replacement_operator_time_source(
+            old_operator_times,
+            operator_times,
+        )
+        self._communication_time.operator_times = deepcopy(operator_times)
+        self._op_times = updated_op_times
+        self._refresh_op_time_attr_values()
 
     @property
     def overhead_time_component(self) -> OverheadTime:
         """Get the overhead time component."""
-        return self._overhead_time
+        return deepcopy(self._overhead_time)
 
     @property
     def residual_time_component(self) -> ResidualTime:
         """Get the residual time component."""
-        return self._residual_time
+        return deepcopy(self._residual_time)
 
     def override_moe_grouped_gemm_time(self, time: float) -> None:
         """Override MoE grouped GEMM time (updates both component and flat field)."""
-        self._moe_grouped_gemm_time = time
         if isinstance(self._moe_or_mlp_time, MoETime):
+            self._replace_operator_time_values({"moe_grouped_gemm": time})
             self._moe_or_mlp_time.moe_grouped_gemm_time = time
+        self._moe_grouped_gemm_time = time
 
     def override_moe_times(self, grouped_gemm_time: float, expert_parallel_comm_time: float,
                           gating_time: float, shuffling_time: float,
@@ -289,24 +689,37 @@ class ExecutionTime(BaseEntity):
             gating_linear_time: Total gating linear time across all layers (new)
             gating_routing_topk_time: Total gating routing topk time across all layers (new)
         """
+        # Handle backward compatibility: if new fields are not provided, split gating_time equally
+        if gating_linear_time == 0.0 and gating_routing_topk_time == 0.0 and gating_time > 0.0:
+            effective_gating_linear_time = gating_time * 0.5
+            effective_gating_routing_topk_time = gating_time * 0.5
+        else:
+            effective_gating_linear_time = gating_linear_time
+            effective_gating_routing_topk_time = gating_routing_topk_time
+
+        if isinstance(self._moe_or_mlp_time, MoETime):
+            self._replace_operator_time_values(
+                {
+                    "moe_grouped_gemm": grouped_gemm_time,
+                    "moe_gating_linear": effective_gating_linear_time,
+                    "moe_gating_routing_topk": effective_gating_routing_topk_time,
+                    "moe_shuffling": shuffling_time,
+                    "expert_parallel_allreduce": expert_parallel_comm_time,
+                }
+            )
+            self._moe_or_mlp_time.moe_grouped_gemm_time = grouped_gemm_time
+            self._moe_or_mlp_time.moe_gating_linear_time = effective_gating_linear_time
+            self._moe_or_mlp_time.moe_gating_routing_topk_time = (
+                effective_gating_routing_topk_time
+            )
+            self._moe_or_mlp_time.moe_shuffling_time = shuffling_time
+
         self._moe_grouped_gemm_time = grouped_gemm_time
         self._expert_parallel_communication_time = expert_parallel_comm_time
         self._moe_gating_time = gating_time  # Deprecated
         self._moe_gating_linear_time = gating_linear_time
         self._moe_gating_routing_topk_time = gating_routing_topk_time
         self._moe_shuffling_time = shuffling_time
-
-        # Update component as well
-        if isinstance(self._moe_or_mlp_time, MoETime):
-            self._moe_or_mlp_time.moe_grouped_gemm_time = grouped_gemm_time
-            # Handle backward compatibility: if new fields are not provided, split gating_time equally
-            if gating_linear_time == 0.0 and gating_routing_topk_time == 0.0 and gating_time > 0.0:
-                self._moe_or_mlp_time.moe_gating_linear_time = gating_time * 0.5
-                self._moe_or_mlp_time.moe_gating_routing_topk_time = gating_time * 0.5
-            else:
-                self._moe_or_mlp_time.moe_gating_linear_time = gating_linear_time
-                self._moe_or_mlp_time.moe_gating_routing_topk_time = gating_routing_topk_time
-            self._moe_or_mlp_time.moe_shuffling_time = shuffling_time
 
     # ========================================================================
     # Refactored Properties: Delegate to Time Components (Single-Layer Granularity)
@@ -332,7 +745,8 @@ class ExecutionTime(BaseEntity):
         if not isinstance(self._moe_or_mlp_time, MoETime):
             return 0.0
         return (
-            self._expert_parallel_communication_time + self._moe_or_mlp_time.moe_shuffling_time
+            self._get_expert_parallel_communication_time()
+            + self._get_moe_shuffling_time()
         ) * self._num_layers_per_pipeline_stage
 
     @property
@@ -343,14 +757,14 @@ class ExecutionTime(BaseEntity):
         if not isinstance(self._moe_or_mlp_time, MoETime):
             return 0.0
         return (
-            self._moe_or_mlp_time.moe_grouped_gemm_time
-            + self._moe_or_mlp_time.moe_gating_time
+            self._get_moe_grouped_gemm_time()
+            + self._get_moe_gating_time()
         ) * self._num_layers_per_pipeline_stage
 
     @property
     def pipeline_time(self) -> float:
         """Get pipeline parallel communication time (not scaled by layers)."""
-        return self._communication_time.pipeline_parallel_send_recv_time
+        return self.pipeline_parallel_communication_time
 
     def get_single_layer_attention_time(self) -> float:
         """
@@ -371,8 +785,8 @@ class ExecutionTime(BaseEntity):
         if not isinstance(self._moe_or_mlp_time, MoETime):
             raise ValueError("MoE computation time is only available for MoE models")
         return (
-            self._moe_or_mlp_time.moe_grouped_gemm_time
-            + self._moe_or_mlp_time.moe_gating_time
+            self._get_moe_grouped_gemm_time()
+            + self._get_moe_gating_time()
         )
 
     def get_single_layer_moe_comm_time(self) -> float:
@@ -387,7 +801,8 @@ class ExecutionTime(BaseEntity):
         if not isinstance(self._moe_or_mlp_time, MoETime):
             raise ValueError("MoE communication time is only available for MoE models")
         return (
-            self._expert_parallel_communication_time + self._moe_or_mlp_time.moe_shuffling_time
+            self._get_expert_parallel_communication_time()
+            + self._get_moe_shuffling_time()
         )
 
     def get_single_layer_add_time(self) -> float:
@@ -401,11 +816,11 @@ class ExecutionTime(BaseEntity):
 
     def get_single_layer_dp_input_allreduce_time(self) -> float:
         """Get DP input allreduce time for a single layer in milliseconds."""
-        return self._communication_time.dp_input_allreduce_time
+        return self._get_dp_input_allreduce_time()
 
     def get_single_layer_dp_output_allreduce_time(self) -> float:
         """Get DP output allreduce time for a single layer in milliseconds."""
-        return self._communication_time.dp_output_allreduce_time
+        return self._get_dp_output_allreduce_time()
 
     def get_single_layer_block_time(self) -> float:
         """
@@ -460,21 +875,27 @@ class ExecutionTime(BaseEntity):
             return 0.0
         return (
             self._moe_or_mlp_time.total_time()
-            + self._expert_parallel_communication_time
+            + self._get_expert_parallel_communication_time()
             + self._get_moe_tp_allreduce_time()
-            + self._communication_time.tensor_parallel_allgather_time
-            + self._communication_time.share_expert_tensor_parallel_allreduce_time
-            + self._communication_time.dp_input_allreduce_time
-            + self._communication_time.dp_output_allreduce_time
+            + self._get_tensor_parallel_allgather_time()
+            + self._get_share_expert_tensor_parallel_allreduce_time()
+            + self._get_dp_input_allreduce_time()
+            + self._get_dp_output_allreduce_time()
         )
 
     def _get_attn_tp_allreduce_time(self) -> float:
-        if self._communication_time.attn_tensor_parallel_allreduce_time > 0.0:
+        attr_name = "attn_tensor_parallel_allreduce_time"
+        if attr_name in self._op_time_attr_values:
+            return self._op_time_attr_values[attr_name]
+        if self._has_attn_tensor_parallel_allreduce_time:
             return self._communication_time.attn_tensor_parallel_allreduce_time
         return self._communication_time.tensor_parallel_allreduce_time
 
     def _get_moe_tp_allreduce_time(self) -> float:
-        if self._communication_time.moe_tensor_parallel_allreduce_time > 0.0:
+        attr_name = "moe_tensor_parallel_allreduce_time"
+        if attr_name in self._op_time_attr_values:
+            return self._op_time_attr_values[attr_name]
+        if self._has_moe_tensor_parallel_allreduce_time:
             return self._communication_time.moe_tensor_parallel_allreduce_time
         return self._communication_time.tensor_parallel_allreduce_time
 
@@ -523,21 +944,30 @@ class ExecutionTime(BaseEntity):
     def mlp_layer_up_proj_execution_time(self) -> float:
         """MLP up projection time (aggregated across all layers)."""
         if isinstance(self._moe_or_mlp_time, MLPTime):
-            return self._moe_or_mlp_time.mlp_layer_up_proj_execution_time * self._num_layers_per_pipeline_stage
+            return self._scaled_time_attr_value(
+                "mlp_layer_up_proj_execution_time",
+                self._moe_or_mlp_time.mlp_layer_up_proj_execution_time,
+            )
         return 0.0
 
     @property
     def mlp_layer_down_proj_execution_time(self) -> float:
         """MLP down projection time (aggregated across all layers)."""
         if isinstance(self._moe_or_mlp_time, MLPTime):
-            return self._moe_or_mlp_time.mlp_layer_down_proj_execution_time * self._num_layers_per_pipeline_stage
+            return self._scaled_time_attr_value(
+                "mlp_layer_down_proj_execution_time",
+                self._moe_or_mlp_time.mlp_layer_down_proj_execution_time,
+            )
         return 0.0
 
     @property
     def mlp_layer_act_execution_time(self) -> float:
         """MLP activation time (aggregated across all layers)."""
         if isinstance(self._moe_or_mlp_time, MLPTime):
-            return self._moe_or_mlp_time.mlp_layer_act_execution_time * self._num_layers_per_pipeline_stage
+            return self._scaled_time_attr_value(
+                "mlp_layer_act_execution_time",
+                self._moe_or_mlp_time.mlp_layer_act_execution_time,
+            )
         return 0.0
 
     @property
@@ -549,21 +979,33 @@ class ExecutionTime(BaseEntity):
     def mlp_norm_time(self) -> float:
         """MLP layer norm time (aggregated across all layers). Supports both MLP and MoE models."""
         if isinstance(self._moe_or_mlp_time, MLPTime):
-            return self._moe_or_mlp_time.mlp_norm_time * self._num_layers_per_pipeline_stage
+            return self._scaled_time_attr_value(
+                "mlp_norm_time",
+                self._moe_or_mlp_time.mlp_norm_time,
+            )
         elif isinstance(self._moe_or_mlp_time, MoETime):
-            return self._moe_or_mlp_time.mlp_norm_time * self._num_layers_per_pipeline_stage
+            return self._scaled_time_attr_value(
+                "mlp_norm_time",
+                self._moe_or_mlp_time.mlp_norm_time,
+            )
         return 0.0
 
     # Attention Component Properties
     @property
     def attention_pre_proj_time(self) -> float:
         """Attention pre-projection (QKV) time (aggregated across all layers)."""
-        return self._attention_time.attention_layer_pre_proj_execution_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attention_layer_pre_proj_execution_time",
+            self._attention_time.attention_layer_pre_proj_execution_time,
+        )
 
     @property
     def attention_post_proj_time(self) -> float:
         """Attention post-projection time (aggregated across all layers)."""
-        return self._attention_time.attention_layer_post_proj_execution_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attention_layer_post_proj_execution_time",
+            self._attention_time.attention_layer_post_proj_execution_time,
+        )
 
     @property
     def attention_all_reduce_time(self) -> float:
@@ -573,89 +1015,131 @@ class ExecutionTime(BaseEntity):
     @property
     def moe_tensor_parallel_allgather_time(self) -> float:
         """TP allgather time for FFN input (aggregated across all layers)."""
-        return (
-            self._communication_time.tensor_parallel_allgather_time
-            * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "tensor_parallel_allgather_time",
+            self._communication_time.tensor_parallel_allgather_time,
         )
 
     @property
     def share_expert_tensor_parallel_allreduce_time(self) -> float:
         """TP allreduce time for shared expert output (aggregated across all layers)."""
-        return (
-            self._communication_time.share_expert_tensor_parallel_allreduce_time
-            * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "share_expert_tensor_parallel_allreduce_time",
+            self._communication_time.share_expert_tensor_parallel_allreduce_time,
         )
 
     @property
     def attention_rope_execution_time(self) -> float:
         """RoPE execution time (aggregated across all layers)."""
-        return self._attention_time.attention_rope_execution_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attention_rope_execution_time",
+            self._attention_time.attention_rope_execution_time,
+        )
 
     @property
     def attention_kv_cache_save_execution_time(self) -> float:
         """KV cache save time (aggregated across all layers)."""
-        return self._attention_time.attention_kv_cache_save_execution_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attention_kv_cache_save_execution_time",
+            self._attention_time.attention_kv_cache_save_execution_time,
+        )
 
     @property
     def attention_decode_execution_time(self) -> float:
         """Attention decode time (aggregated across all layers)."""
-        return self._attention_time.attention_decode_execution_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attention_decode_execution_time",
+            self._attention_time.attention_decode_execution_time,
+        )
 
     @property
     def attention_prefill_execution_time(self) -> float:
         """Attention prefill time (aggregated across all layers)."""
-        return self._attention_time.attention_prefill_execution_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attention_prefill_execution_time",
+            self._attention_time.attention_prefill_execution_time,
+        )
 
     @property
     def attn_mla_kv_cache_save_time(self) -> float:
         """MLA latent KV cache save time (aggregated across all layers)."""
-        return self._attention_time.attn_mla_kv_cache_save_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attn_mla_kv_cache_save_time",
+            self._attention_time.attn_mla_kv_cache_save_time,
+        )
 
     @property
     def attn_mla_prefill_kv_up_proj_time(self) -> float:
         """MLA prefill KV up-projection time (aggregated across all layers)."""
-        return self._attention_time.attn_mla_prefill_kv_up_proj_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attn_mla_prefill_kv_up_proj_time",
+            self._attention_time.attn_mla_prefill_kv_up_proj_time,
+        )
 
     @property
     def attn_mla_prefill_time(self) -> float:
         """MLA prefill attention time (aggregated across all layers)."""
-        return self._attention_time.attn_mla_prefill_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attn_mla_prefill_time",
+            self._attention_time.attn_mla_prefill_time,
+        )
 
     @property
     def attn_mla_decode_q_latent_proj_time(self) -> float:
         """MLA decode Q latent projection time (aggregated across all layers)."""
-        return self._attention_time.attn_mla_decode_q_latent_proj_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attn_mla_decode_q_latent_proj_time",
+            self._attention_time.attn_mla_decode_q_latent_proj_time,
+        )
 
     @property
     def attn_mla_decode_time(self) -> float:
         """MLA decode attention time (aggregated across all layers)."""
-        return self._attention_time.attn_mla_decode_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attn_mla_decode_time",
+            self._attention_time.attn_mla_decode_time,
+        )
 
     @property
     def attn_mla_v_up_proj_time(self) -> float:
         """MLA V up-projection time (aggregated across all layers)."""
-        return self._attention_time.attn_mla_v_up_proj_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attn_mla_v_up_proj_time",
+            self._attention_time.attn_mla_v_up_proj_time,
+        )
 
     @property
     def attn_norm_time(self) -> float:
         """Attention layer norm time (aggregated across all layers)."""
-        return self._attention_time.attn_norm_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "attn_norm_time",
+            self._attention_time.attn_norm_time,
+        )
 
     # Communication Component Properties
     @property
     def pipeline_parallel_communication_time(self) -> float:
         """Pipeline parallel communication time (not scaled by layers)."""
-        return self._communication_time.pipeline_parallel_send_recv_time
+        return self._time_attr_value(
+            "pipeline_parallel_send_recv_time",
+            self._communication_time.pipeline_parallel_send_recv_time,
+        )
 
     @property
     def dp_input_allreduce_time(self) -> float:
         """DP input allreduce time (aggregated across all layers)."""
-        return self._communication_time.dp_input_allreduce_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "dp_input_allreduce_time",
+            self._communication_time.dp_input_allreduce_time,
+        )
 
     @property
     def dp_output_allreduce_time(self) -> float:
         """DP output allreduce time (aggregated across all layers)."""
-        return self._communication_time.dp_output_allreduce_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "dp_output_allreduce_time",
+            self._communication_time.dp_output_allreduce_time,
+        )
 
     # Overhead Component Properties
     @property
@@ -722,24 +1206,40 @@ class ExecutionTime(BaseEntity):
     @property
     def add_time(self) -> float:
         """Residual connection time (aggregated across all layers). Sum of attn + ffn residuals."""
-        return self._residual_time.add_time * self._num_layers_per_pipeline_stage
+        single_layer_add_time = self._time_attr_value(
+            "add_attn_residual_time",
+            self._residual_time.add_attn_residual_time,
+        ) + self._time_attr_value(
+            "add_ffn_residual_time",
+            self._residual_time.add_ffn_residual_time,
+        )
+        return single_layer_add_time * self._num_layers_per_pipeline_stage
 
     @property
     def add_attn_residual_time(self) -> float:
         """Attention residual connection time (aggregated across all layers)."""
-        return self._residual_time.add_attn_residual_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "add_attn_residual_time",
+            self._residual_time.add_attn_residual_time,
+        )
 
     @property
     def add_ffn_residual_time(self) -> float:
         """FFN/MoE residual connection time (aggregated across all layers)."""
-        return self._residual_time.add_ffn_residual_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "add_ffn_residual_time",
+            self._residual_time.add_ffn_residual_time,
+        )
 
     # MoE Component Properties
     @property
     def moe_grouped_gemm_time(self) -> float:
         """MoE grouped GEMM time (aggregated across all layers)."""
         if isinstance(self._moe_or_mlp_time, MoETime):
-            return self._moe_or_mlp_time.moe_grouped_gemm_time * self._num_layers_per_pipeline_stage
+            return self._scaled_time_attr_value(
+                "moe_grouped_gemm_time",
+                self._moe_or_mlp_time.moe_grouped_gemm_time,
+            )
         return 0.0
 
     @property
@@ -747,43 +1247,55 @@ class ExecutionTime(BaseEntity):
         """EP communication time (aggregated across all layers)."""
         if not isinstance(self._moe_or_mlp_time, MoETime):
             return 0.0
-        return self._expert_parallel_communication_time * self._num_layers_per_pipeline_stage
+        return self._scaled_time_attr_value(
+            "expert_parallel_alltoall_time",
+            self._expert_parallel_communication_time,
+        )
 
     @property
     def moe_gating_time(self) -> float:
         """MoE gating time (aggregated across all layers). Sum of linear + routing_topk."""
         if isinstance(self._moe_or_mlp_time, MoETime):
-            return self._moe_or_mlp_time.moe_gating_time * self._num_layers_per_pipeline_stage
+            return self.moe_gating_linear_time + self.moe_gating_routing_topk_time
         return 0.0
 
     @property
     def moe_gating_linear_time(self) -> float:
         """MoE gating linear time (aggregated across all layers)."""
         if isinstance(self._moe_or_mlp_time, MoETime):
-            return self._moe_or_mlp_time.moe_gating_linear_time * self._num_layers_per_pipeline_stage
+            return self._scaled_time_attr_value(
+                "moe_gating_linear_time",
+                self._moe_or_mlp_time.moe_gating_linear_time,
+            )
         return 0.0
 
     @property
     def moe_gating_routing_topk_time(self) -> float:
         """MoE gating routing topk time (aggregated across all layers)."""
         if isinstance(self._moe_or_mlp_time, MoETime):
-            return self._moe_or_mlp_time.moe_gating_routing_topk_time * self._num_layers_per_pipeline_stage
+            return self._scaled_time_attr_value(
+                "moe_gating_routing_topk_time",
+                self._moe_or_mlp_time.moe_gating_routing_topk_time,
+            )
         return 0.0
 
     @property
     def moe_shuffling_time(self) -> float:
         """MoE shuffling time (aggregated across all layers)."""
         if isinstance(self._moe_or_mlp_time, MoETime):
-            return self._moe_or_mlp_time.moe_shuffling_time * self._num_layers_per_pipeline_stage
+            return self._scaled_time_attr_value(
+                "moe_shuffling_time",
+                self._moe_or_mlp_time.moe_shuffling_time,
+            )
         return 0.0
 
     @property
     def share_expert_up_proj_time(self) -> float:
         """Shared expert up projection time (aggregated across all layers)."""
         if isinstance(self._moe_or_mlp_time, MoETime):
-            return (
-                self._moe_or_mlp_time.share_expert_up_proj_time
-                * self._num_layers_per_pipeline_stage
+            return self._scaled_time_attr_value(
+                "share_expert_up_proj_time",
+                self._moe_or_mlp_time.share_expert_up_proj_time,
             )
         return 0.0
 
@@ -791,9 +1303,9 @@ class ExecutionTime(BaseEntity):
     def share_expert_down_proj_time(self) -> float:
         """Shared expert down projection time (aggregated across all layers)."""
         if isinstance(self._moe_or_mlp_time, MoETime):
-            return (
-                self._moe_or_mlp_time.share_expert_down_proj_time
-                * self._num_layers_per_pipeline_stage
+            return self._scaled_time_attr_value(
+                "share_expert_down_proj_time",
+                self._moe_or_mlp_time.share_expert_down_proj_time,
             )
         return 0.0
 
@@ -801,9 +1313,9 @@ class ExecutionTime(BaseEntity):
     def share_expert_act_time(self) -> float:
         """Shared expert activation time (aggregated across all layers)."""
         if isinstance(self._moe_or_mlp_time, MoETime):
-            return (
-                self._moe_or_mlp_time.share_expert_act_time
-                * self._num_layers_per_pipeline_stage
+            return self._scaled_time_attr_value(
+                "share_expert_act_time",
+                self._moe_or_mlp_time.share_expert_act_time,
             )
         return 0.0
 
@@ -812,7 +1324,9 @@ class ExecutionTime(BaseEntity):
         """Total shared expert time (aggregated across all layers)."""
         if isinstance(self._moe_or_mlp_time, MoETime):
             return (
-                self._moe_or_mlp_time.share_expert_time * self._num_layers_per_pipeline_stage
+                self.share_expert_up_proj_time
+                + self.share_expert_down_proj_time
+                + self.share_expert_act_time
             )
         return 0.0
 

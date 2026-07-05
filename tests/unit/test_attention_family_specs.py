@@ -18,6 +18,8 @@ from frontier.attention.ops import (
     AttentionPhase,
     ProjectionOwnership,
 )
+
+from frontier.operators.spec import ResourceClass
 from frontier.attention.profiling_mapping import (
     get_profiling_time_stat_columns,
     get_required_profiling_columns,
@@ -163,12 +165,14 @@ def test_e2e_trace_operator_specs_must_declare_execution_time_attr() -> None:
         AttentionOperatorSpec(
             name="missing_attr",
             role=AttentionOperatorRole.PREFILL_KERNEL,
+            resource_class=ResourceClass.COMP,
             phases=(AttentionPhase.PREFILL,),
         )
 
     predictor_only = AttentionOperatorSpec(
         name="predictor_only",
         role=AttentionOperatorRole.PREFILL_KERNEL,
+        resource_class=ResourceClass.COMP,
         phases=(AttentionPhase.PREFILL,),
         e2e_trace_target=False,
     )
@@ -206,18 +210,21 @@ def test_dense_predictor_median_column_lookup_uses_roles_not_operator_names() ->
             AttentionOperatorSpec(
                 name="role_prefill",
                 role=AttentionOperatorRole.PREFILL_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.PREFILL,),
                 e2e_trace_target=False,
             ),
             AttentionOperatorSpec(
                 name="role_decode",
                 role=AttentionOperatorRole.DECODE_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.DECODE,),
                 e2e_trace_target=False,
             ),
             AttentionOperatorSpec(
                 name="role_cache",
                 role=AttentionOperatorRole.CACHE_WRITE,
+                resource_class=ResourceClass.MEMORY,
                 phases=(AttentionPhase.PREFILL, AttentionPhase.DECODE),
                 e2e_trace_target=False,
             ),
@@ -258,18 +265,21 @@ def test_dense_predictor_feature_columns_use_roles_not_operator_names() -> None:
             AttentionOperatorSpec(
                 name="role_prefill",
                 role=AttentionOperatorRole.PREFILL_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.PREFILL,),
                 e2e_trace_target=False,
             ),
             AttentionOperatorSpec(
                 name="role_decode",
                 role=AttentionOperatorRole.DECODE_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.DECODE,),
                 e2e_trace_target=False,
             ),
             AttentionOperatorSpec(
                 name="role_cache",
                 role=AttentionOperatorRole.CACHE_WRITE,
+                resource_class=ResourceClass.MEMORY,
                 phases=(AttentionPhase.PREFILL, AttentionPhase.DECODE),
                 e2e_trace_target=False,
             ),
@@ -328,18 +338,21 @@ def test_predictor_metric_name_lookup_uses_role_not_family_order() -> None:
             AttentionOperatorSpec(
                 name="role_prefill",
                 role=AttentionOperatorRole.PREFILL_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.PREFILL,),
                 e2e_trace_target=False,
             ),
             AttentionOperatorSpec(
                 name="role_decode",
                 role=AttentionOperatorRole.DECODE_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.DECODE,),
                 e2e_trace_target=False,
             ),
             AttentionOperatorSpec(
                 name="role_cache",
                 role=AttentionOperatorRole.CACHE_WRITE,
+                resource_class=ResourceClass.MEMORY,
                 phases=(AttentionPhase.PREFILL, AttentionPhase.DECODE),
                 e2e_trace_target=False,
             ),
@@ -378,18 +391,21 @@ def test_profiling_metric_name_lookup_uses_role_not_family_order() -> None:
             AttentionOperatorSpec(
                 name="role_prefill_profile",
                 role=AttentionOperatorRole.PREFILL_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.PREFILL,),
                 e2e_trace_target=False,
             ),
             AttentionOperatorSpec(
                 name="role_decode_profile",
                 role=AttentionOperatorRole.DECODE_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.DECODE,),
                 e2e_trace_target=False,
             ),
             AttentionOperatorSpec(
                 name="role_cache_profile",
                 role=AttentionOperatorRole.CACHE_WRITE,
+                resource_class=ResourceClass.MEMORY,
                 phases=(AttentionPhase.PREFILL, AttentionPhase.DECODE),
                 e2e_trace_target=False,
             ),
@@ -428,6 +444,7 @@ def test_predictor_metric_name_lookup_rejects_missing_or_duplicate_roles() -> No
             AttentionOperatorSpec(
                 name="role_cache",
                 role=AttentionOperatorRole.CACHE_WRITE,
+                resource_class=ResourceClass.MEMORY,
                 phases=(AttentionPhase.PREFILL,),
                 e2e_trace_target=False,
             ),
@@ -444,12 +461,14 @@ def test_predictor_metric_name_lookup_rejects_missing_or_duplicate_roles() -> No
             AttentionOperatorSpec(
                 name="role_cache_a",
                 role=AttentionOperatorRole.CACHE_WRITE,
+                resource_class=ResourceClass.MEMORY,
                 phases=(AttentionPhase.PREFILL,),
                 e2e_trace_target=False,
             ),
             AttentionOperatorSpec(
                 name="role_cache_b",
                 role=AttentionOperatorRole.CACHE_WRITE,
+                resource_class=ResourceClass.MEMORY,
                 phases=(AttentionPhase.DECODE,),
                 e2e_trace_target=False,
             ),

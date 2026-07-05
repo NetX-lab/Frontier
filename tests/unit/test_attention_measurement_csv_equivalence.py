@@ -198,6 +198,47 @@ def test_measurement_equivalence_accepts_explicit_relative_tolerance(tmp_path: P
     assert report["numeric_comparisons"][0]["relative_delta_pct"] == pytest.approx(1.0)
 
 
+def test_measurement_equivalence_accepts_wildcard_numeric_tolerance_for_unnamed_columns(
+    tmp_path: Path,
+) -> None:
+    fieldnames = ["op_name", "tiny_float_ms", "large_float_ms"]
+    reference = tmp_path / "reference.csv"
+    candidate = tmp_path / "candidate.csv"
+    _write_csv(
+        reference,
+        [{"op_name": "attn_prefill", "tiny_float_ms": "1.0", "large_float_ms": "10.0"}],
+        fieldnames,
+    )
+    _write_csv(
+        candidate,
+        [
+            {
+                "op_name": "attn_prefill",
+                "tiny_float_ms": "1.0000000000005",
+                "large_float_ms": "10.25",
+            }
+        ],
+        fieldnames,
+    )
+
+    report = compare_measurement_csv(
+        reference,
+        candidate,
+        key_columns=("op_name",),
+        tolerance_allowlist={"*": {"absolute": 1e-12}},
+    )
+
+    comparisons = {comparison["column"]: comparison for comparison in report["numeric_comparisons"]}
+    assert report["status"] == "FAIL"
+    assert report["mismatch_count"] == 1
+    assert comparisons["tiny_float_ms"]["passed"] is True
+    assert comparisons["tiny_float_ms"]["tolerance"] == {
+        "absolute": 1e-12,
+        "relative_pct": 0.0,
+    }
+    assert comparisons["large_float_ms"]["passed"] is False
+
+
 def test_measurement_equivalence_handles_nan_and_inf_explicitly(tmp_path: Path) -> None:
     fieldnames = ["op_name", "time_stats.attn_prefill.mean", "time_stats.attn_decode.mean"]
     reference = tmp_path / "reference.csv"

@@ -15,6 +15,7 @@ from frontier.execution_time_predictor.shared_prediction_model_manager import (
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
+from frontier.model_architectures import ModelArchitectureProfile
 from frontier.types import ClusterType, MeasurementType
 
 
@@ -23,10 +24,10 @@ def _dense_model_config() -> SimpleNamespace:
         use_mla=False,
         num_q_heads=32,
         num_kv_heads=8,
-        is_step2_mini=lambda: False,
         is_moe=False,
         supports_share_expert=lambda: False,
         uses_fused_add_norm=False,
+        get_model_architecture_profile=ModelArchitectureProfile.generic,
     )
 
 
@@ -934,7 +935,7 @@ def test_sklearn_runtime_dense_attention_support_gates_follow_role_names(
         __enter__=lambda _self: None,
         __exit__=lambda _self, _exc_type, _exc, _tb: None,
     )
-    predictor._log_step3_attention_shape = lambda _batch: None
+    predictor._log_architecture_attention_shape = lambda _batch: None
     predictor._get_attention_prefill_execution_time = lambda _batch: 7.0
     predictor._get_attention_decode_execution_time = lambda _batch: 11.0
     predictor._get_attention_kv_cache_save_execution_time = lambda _batch: 13.0

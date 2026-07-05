@@ -1,11 +1,14 @@
 from math import ceil
 from types import SimpleNamespace
+from typing import cast
 
 from frontier.config import ReplicaConfig
+from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_method
 from frontier.spec_decode.mtp_runtime import (
     build_mtp_runtime_contract,
     load_mtp_structural_model_config,
 )
+from frontier.spec_decode.runtime import MTP_METHOD_FAMILIES, SUPPORTED_SPEC_METHODS
 from frontier.types import ClusterType
 
 
@@ -13,7 +16,7 @@ class ParamCounter:
     def __init__(
         self,
         replica_config: ReplicaConfig,
-        cluster_type: ClusterType = None
+        cluster_type: ClusterType | None = None
     ) -> None:
         self._replica_config = replica_config
         self._model_config = replica_config.model_config
@@ -126,8 +129,15 @@ class ParamCounter:
         if not getattr(self._model_config, "is_moe", False):
             return 0
 
-        model_type = str(getattr(self._model_config, "model_type", "")).lower()
-        if model_type not in {"step2_mini", "step3_text"}:
+        get_model_architecture_profile = getattr(
+            self._model_config, "get_model_architecture_profile", None
+        )
+        if not callable(get_model_architecture_profile):
+            raise TypeError(
+                "ParamCounter requires model_config.get_model_architecture_profile()"
+            )
+        profile = get_model_architecture_profile()
+        if not getattr(profile, "counts_share_expert_param_memory", False):
             return 0
 
         share_expert_dim = int(getattr(self._model_config, "share_expert_dim", 0) or 0)
@@ -304,33 +314,42 @@ class ParamCounter:
             // self._get_attn_tp_size()
         )
 
-    def _build_mtp_replica_config(self, proposer_model_config):
-        return SimpleNamespace(
-            model_config=proposer_model_config,
-            attn_tensor_parallel_size=self._get_attn_tp_size(),
-            moe_tensor_parallel_size=self._get_moe_tp_size(),
-            moe_expert_parallel_size=self._get_ep_size(),
-            num_pipeline_stages=1,
+    def _build_mtp_replica_config(self, proposer_model_config) -> ReplicaConfig:
+        return cast(
+            ReplicaConfig,
+            SimpleNamespace(
+                model_config=proposer_model_config,
+                attn_tensor_parallel_size=self._get_attn_tp_size(),
+                moe_tensor_parallel_size=self._get_moe_tp_size(),
+                moe_expert_parallel_size=self._get_ep_size(),
+                num_pipeline_stages=1,
+            ),
         )
 
     def get_num_mtp_parameters_per_device(self) -> int:
         spec_config = getattr(self._replica_config, "speculative_decoding_config", None)
-        if not getattr(spec_config, "enabled", False):
+        if spec_config is None or not getattr(spec_config, "enabled", False):
             return 0
         if self._cluster_type in {ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN}:
             return 0
 
-        try:
-            contract = build_mtp_runtime_contract(
-                method=str(spec_config.method),
-                target_model_name=str(self._replica_config.model_name),
-                spec_model_name=str(getattr(spec_config, "spec_model_name", "")),
-                attn_tp_size=self._get_attn_tp_size(),
-                mtp_n_predict=int(spec_config.mtp_n_predict),
-                mtp_num_layers=int(spec_config.mtp_num_layers),
-            )
-        except ValueError:
+        method = str(spec_config.method)
+        if method not in MTP_METHOD_FAMILIES:
+            if method not in SUPPORTED_SPEC_METHODS:
+                raise ValueError(
+                    "Speculative method name must match vLLM names, "
+                    f"got={method!r}, supported={sorted(SUPPORTED_SPEC_METHODS)}"
+                )
             return 0
+
+        contract = build_mtp_runtime_contract(
+            method=method,
+            target_model_name=str(self._replica_config.model_name),
+            spec_model_name=str(getattr(spec_config, "spec_model_name", "")),
+            attn_tp_size=self._get_attn_tp_size(),
+            mtp_n_predict=int(spec_config.mtp_n_predict),
+            mtp_num_layers=int(spec_config.mtp_num_layers),
+        )
 
         proposer_model_config = (
             self._model_config
@@ -356,7 +375,7 @@ class ParamCounter:
             int(contract.num_pre_fusion_norms) + int(contract.num_post_decoder_norms)
         ) * hidden_dim
 
-        if str(contract.method) in {"qwen3_next_mtp", "qwen3_moe_mtp"}:
+        if is_target_embedded_mtp_method(str(contract.method)):
             shared_lm_head_params = self._get_mtp_lm_head_params(proposer_model_config)
             shared_extra_params = (
                 shared_embed_params

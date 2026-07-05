@@ -19,6 +19,8 @@ from frontier.attention.ops import (
     AttentionOperatorSpec,
     AttentionPhase,
 )
+
+from frontier.operators.spec import ResourceClass
 from frontier.profiling.attention.mixed_attention_input import MixedAttentionInput
 from frontier.profiling.attention.true_mixed_batch_input import TrueMixedBatchInput
 from frontier.profiling.common.model_config import ModelConfig
@@ -308,18 +310,21 @@ def test_attention_wrapper_dense_profiling_controls_follow_family_roles(
             AttentionOperatorSpec(
                 name="role_cache_profile",
                 role=AttentionOperatorRole.CACHE_WRITE,
+                resource_class=ResourceClass.MEMORY,
                 phases=(AttentionPhase.PREFILL, AttentionPhase.DECODE),
                 e2e_trace_target=False,
             ),
             AttentionOperatorSpec(
                 name="role_prefill_profile",
                 role=AttentionOperatorRole.PREFILL_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.PREFILL,),
                 e2e_trace_target=False,
             ),
             AttentionOperatorSpec(
                 name="role_decode_profile",
                 role=AttentionOperatorRole.DECODE_KERNEL,
+                resource_class=ResourceClass.COMP,
                 phases=(AttentionPhase.DECODE,),
                 e2e_trace_target=False,
             ),

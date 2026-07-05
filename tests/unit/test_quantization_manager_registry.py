@@ -9,6 +9,8 @@ from frontier.attention.ops import (
     AttentionOperatorSpec,
     AttentionPhase,
 )
+
+from frontier.operators.spec import ResourceClass
 from frontier.config.quantization_manager import QuantizationManager
 
 
@@ -20,6 +22,11 @@ def _dense_operator(
     return AttentionOperatorSpec(
         name=name,
         role=role,
+        resource_class=(
+            ResourceClass.MEMORY
+            if role is AttentionOperatorRole.CACHE_WRITE
+            else ResourceClass.COMP
+        ),
         phases=(AttentionPhase.PREFILL, AttentionPhase.DECODE),
         execution_time_attr=execution_time_attr,
     )

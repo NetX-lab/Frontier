@@ -1,0 +1,39 @@
+block_shape: null
+device: h800
+disable_ray: true
+disable_replicated: false
+enable_load_imbalance: true
+expert_parallel_sizes:
+- 1
+- 2
+- 4
+- 8
+extra_num_tokens: null
+gating_runtime_context: prefill_hot
+load_distributions:
+- uniform
+max_tokens: 64
+models:
+- qwen3-next-80b-a3b-instruct-reduced-l2
+num_gpus: 1
+num_samples_per_distribution: 1
+num_tensor_parallel_workers:
+- 1
+- 2
+- 4
+- 8
+num_tokens_list:
+- 1
+- 2
+- 4
+- 8
+- 16
+- 32
+- 64
+output_dir: /data/ycfeng/Frontier/worktrees/op-wide-refactor/data/profiling
+per_channel_quant: false
+precision: null
+profile_method: record_function
+routing_runtime_path: uniform_topk
+skip_confirmation: true
+use_fp8: null

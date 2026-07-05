@@ -8,46 +8,46 @@ from frontier.spec_decode.model_identity import resolve_canonical_model_key
 from frontier.spec_decode.mtp_registry import (
     get_mtp_model_alias_map,
     get_registered_mtp_model_contract,
+    get_target_embedded_mtp_methods,
+    get_target_embedded_mtp_prefix_matching_disabled_methods,
+    get_target_embedded_mtp_same_tp_linear_ops,
+    is_target_embedded_mtp_method,
 )
 
+
+DRAFT_MODEL_MTP_METHOD_FAMILIES = {
+    "deepseek_mtp": "draft_model_mtp",
+    "ernie_mtp": "draft_model_mtp",
+}
+
+MTP_METHOD_FAMILIES = {
+    **DRAFT_MODEL_MTP_METHOD_FAMILIES,
+    **{
+        method: "target_embedded_mtp"
+        for method in get_target_embedded_mtp_methods()
+    },
+}
 
 SUPPORTED_SPEC_METHODS = {
     "ngram",
     "medusa",
     "eagle",
     "eagle3",
-    "deepseek_mtp",
-    "ernie_mtp",
-    "qwen3_moe_mtp",
-    "qwen3_next_mtp",
-}
-
-MTP_METHOD_FAMILIES = {
-    "deepseek_mtp": "draft_model_mtp",
-    "ernie_mtp": "draft_model_mtp",
-    "qwen3_moe_mtp": "target_embedded_mtp",
-    "qwen3_next_mtp": "target_embedded_mtp",
+    *MTP_METHOD_FAMILIES,
 }
 
 LOOKAHEAD_SLOT_METHODS = {
     "eagle",
     "eagle3",
-    "deepseek_mtp",
-    "ernie_mtp",
-    "qwen3_moe_mtp",
-    "qwen3_next_mtp",
+    *MTP_METHOD_FAMILIES,
 }
 
-PREFIX_MATCHING_DISABLED_METHODS = {
-    "qwen3_next_mtp",
-}
+PREFIX_MATCHING_DISABLED_METHODS = set(
+    get_target_embedded_mtp_prefix_matching_disabled_methods()
+)
 
 TARGET_EMBEDDED_MTP_SAME_TP_LINEAR_OPS = frozenset(
-    {
-        "emb",
-        "input_layernorm",
-        "post_attention_layernorm",
-    }
+    get_target_embedded_mtp_same_tp_linear_ops()
 )
 
 
@@ -101,7 +101,7 @@ def is_target_embedded_mtp_enabled(
     method = str(getattr(config, "method", "")).strip()
     if method not in MTP_METHOD_FAMILIES:
         return False
-    return MTP_METHOD_FAMILIES[method] == "target_embedded_mtp"
+    return is_target_embedded_mtp_method(method)
 
 
 def _build_default_mtp_policy_contract(_mtp_family: str) -> dict[str, object]:

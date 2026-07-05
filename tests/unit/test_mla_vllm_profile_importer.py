@@ -319,6 +319,7 @@ def test_attention_profile_main_imports_vllm_mla_log_for_cuda_event_and_kernel_o
         profile_only_decode=False,
         enable_mixed_prefill=False,
         enable_true_mixed=False,
+        model_architecture_profile="generic",
     )
 
     output_file = _run_vllm_mla_profile_import(args)
@@ -658,6 +659,7 @@ def test_attention_profile_main_imports_vllm_mla_log_to_canonical_csv(
         profile_only_decode=False,
         enable_mixed_prefill=False,
         enable_true_mixed=False,
+        model_architecture_profile="generic",
     )
 
     output_file = _run_vllm_mla_profile_import(args)
@@ -882,3 +884,33 @@ def test_vllm_mla_importer_preserves_h800_mixed_rows_as_sparse_profile_rows() ->
         "max_seqlen_k",
         "num_actual_tokens",
     }.issubset(comparison.columns)
+
+
+def test_vllm_mla_import_mode_requires_model_architecture_profile_for_unknown_model(
+    tmp_path: Path,
+) -> None:
+    from argparse import Namespace
+
+    from frontier.profiling.attention.main import _run_vllm_mla_profile_import
+
+    input_log = tmp_path / "cuda_ops.jsonl"
+    _write_jsonl(input_log, _sample_rows())
+    args = Namespace(
+        vllm_mla_cuda_op_log=input_log,
+        models=["deepseek-ai/DeepSeek-V2-Lite"],
+        model_arch="deepseek_v2",
+        precision="BF16",
+        output_dir=str(tmp_path / "profiling"),
+        device="h100",
+        profile_method="cuda_event",
+        num_tensor_parallel_workers=[1],
+        max_model_len=163840,
+        attention_backend="FLASHINFER_MLA",
+        profile_only_prefill=False,
+        profile_only_decode=False,
+        enable_mixed_prefill=False,
+        enable_true_mixed=False,
+    )
+
+    with pytest.raises(ValueError, match="model_architecture_profile"):
+        _run_vllm_mla_profile_import(args)

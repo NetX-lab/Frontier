@@ -708,7 +708,9 @@ class Batch(BaseEntity):
         spec_metadata = getattr(self, "spec_decode_metadata", None)
         if spec_metadata is not None:
             method = str(getattr(spec_metadata, "method", "")).strip()
-            if method in {"qwen3_moe_mtp", "qwen3_next_mtp"}:
+            from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_method
+
+            if is_target_embedded_mtp_method(method):
                 # vLLM target-embedded MTP target forward consumes the
                 # scheduler-visible tokens plus scheduled draft tokens.
                 return self._total_num_tokens + sum(
@@ -737,7 +739,9 @@ class Batch(BaseEntity):
         spec_metadata = getattr(self, "spec_decode_metadata", None)
         if spec_metadata is not None and bool(spec_metadata.uses_lookahead_slots):
             method = str(getattr(spec_metadata, "method", "")).strip()
-            if method in {"qwen3_moe_mtp", "qwen3_next_mtp"}:
+            from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_method
+
+            if is_target_embedded_mtp_method(method):
                 # Target-embedded MTP PP traces carry the scheduled verification
                 # payload. Adding reserved draft slots here double-counts the
                 # draft payload and breaks PP overhead lookup parity.

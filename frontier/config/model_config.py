@@ -9,6 +9,7 @@ from frontier.attention.ops import AttentionMemoryLayout
 from frontier.config.base_fixed_config import BaseFixedConfig
 from frontier.config.precision_type import PrecisionType
 from frontier.logger import init_logger
+from frontier.model_architectures import get_model_architecture_profile
 from frontier.types import ActivationType, NormType
 
 logger = init_logger(__name__)
@@ -259,22 +260,26 @@ class BaseModelConfig(BaseFixedConfig):
 
     # Model type from config.json (normalized to lowercase when provided)
     model_type: Optional[str] = None
+    model_architecture_profile: Optional[str] = None
 
-    # Step2Mini/Step3-specific fields (used only when model_arch == "step2_mini"
-    # or model_type == "step3_text")
+    # Architecture-specific structural fields used by registered profiles.
     model_arch: str = ModelArch.GENERIC
     share_expert_dim: Optional[int] = None  # Shared expert intermediate dimension
     share_q_dim: Optional[int] = None  # Shared Q dimension for inter_norm + wq path
     norm_expert_weight: bool = False  # Whether to normalize expert weights
 
-    # Explicit head dimension (for models like Step3 with MLA where head_dim != embedding_dim // num_q_heads)
+    # Explicit head dimension for architectures where head_dim differs from
+    # embedding_dim // num_q_heads.
     # If None, head_dim is computed as embedding_dim // num_q_heads
     head_dim: Optional[int] = None
 
-    # MLA topology fields. When use_mla is true, runtime KV cache semantics
-    # follow vLLM MLA: one latent KV head with cache head size
-    # kv_lora_rank + qk_rope_head_dim.
+    # Attention topology fields.
+    # use_mla follows vLLM latent-MLA cache semantics: one latent KV head with
+    # cache head size kv_lora_rank + qk_rope_head_dim.
+    # use_mfa models Step3Text's dense-KV MFA attention path: shared-Q
+    # projection plus a single dense KV head.
     use_mla: bool = False
+    use_mfa: bool = False
     q_lora_rank: Optional[int] = None
     kv_lora_rank: Optional[int] = None
     qk_nope_head_dim: Optional[int] = None
@@ -301,6 +306,8 @@ class BaseModelConfig(BaseFixedConfig):
         """Validate model configuration after initialization."""
         if self.model_type is not None:
             self.model_type = str(self.model_type).lower()
+        if self.model_architecture_profile is not None:
+            self.model_architecture_profile = str(self.model_architecture_profile).lower()
 
         # Validate model_arch
         if self.model_arch not in ModelArch.VALID_ARCHS:
@@ -308,6 +315,7 @@ class BaseModelConfig(BaseFixedConfig):
                 f"Invalid model_arch '{self.model_arch}'. "
                 f"Must be one of: {ModelArch.VALID_ARCHS}"
             )
+        architecture_profile = self.get_model_architecture_profile()
 
         # Validate torch_dtype
         PrecisionType.from_torch_dtype(self.torch_dtype)
@@ -320,20 +328,10 @@ class BaseModelConfig(BaseFixedConfig):
                 f"got {type(self.fused_add_norm_capability)}"
             )
 
-        # Step3-specific validation
-        if self.model_type == "step3_text" and self.share_expert_dim is None:
-            raise ValueError(
-                "Step3Text models require share_expert_dim to be set. "
-                f"Model: {self._model_name}"
-            )
+        if self.use_mla and self.use_mfa:
+            raise ValueError("use_mla and use_mfa are mutually exclusive")
 
-        # Step2Mini-specific validation
-        if self.model_arch == ModelArch.STEP2_MINI:
-            if self.share_expert_dim is None:
-                raise ValueError(
-                    "Step2Mini models require share_expert_dim to be set. "
-                    f"Model: {self._model_name}"
-                )
+        architecture_profile.validate_structural_requirements(self)
 
         if self.use_mla:
             missing_mla_fields = [
@@ -449,21 +447,13 @@ class BaseModelConfig(BaseFixedConfig):
         """Get model architecture identifier for op_name isolation."""
         return self.model_arch
 
-    def is_step2_mini(self) -> bool:
-        """Check if this is a Step2Mini model."""
-        return self.model_arch == ModelArch.STEP2_MINI
-
-    def is_step3_text(self) -> bool:
-        """Check if this is a Step3Text model."""
-        return self.model_type == "step3_text"
+    def get_model_architecture_profile(self):
+        """Return plugin-style model architecture semantics for this config."""
+        return get_model_architecture_profile(self)
 
     def supports_share_expert(self) -> bool:
         """Check if the model uses share_expert in the FFN path."""
-        return (
-            self.is_step2_mini()
-            or self.is_step3_text()
-            or (self.is_moe and int(self.share_expert_dim or 0) > 0)
-        )
+        return self.get_model_architecture_profile().supports_share_expert(self)
 
     def get_moe_layer_ids(self) -> List[int]:
         """Return sorted MoE layer IDs covered by this model config.
@@ -644,7 +634,7 @@ class BaseModelConfig(BaseFixedConfig):
                 f"Must be one of: {ModelArch.VALID_ARCHS}"
             )
 
-        # Parse Step2Mini-specific fields
+        # Parse architecture-specific structural fields.
         share_expert_dim = _infer_share_expert_dim_from_hf_config(cfg)
         share_q_dim = cfg.get("share_q_dim")
         if share_q_dim is not None:
@@ -658,7 +648,8 @@ class BaseModelConfig(BaseFixedConfig):
         #   3) float16 default when neither field exists
         torch_dtype = cls._resolve_model_torch_dtype(cfg, file_path)
 
-        # Parse explicit head_dim (for models like Step3 with MLA where head_dim != embedding_dim // num_q_heads)
+        # Parse explicit head_dim for architectures where head_dim differs from
+        # embedding_dim // num_q_heads.
         # If not provided, get_head_dim() will compute it as embedding_dim // num_q_heads
         explicit_head_dim = cfg.get("head_dim")
         if explicit_head_dim is not None:
@@ -672,6 +663,7 @@ class BaseModelConfig(BaseFixedConfig):
                 and cfg.get("kv_lora_rank") is not None
             )
         )
+        use_mfa = bool(cfg.get("use_mfa", False))
         q_lora_rank = cfg.get("q_lora_rank")
         kv_lora_rank = cfg.get("kv_lora_rank")
         qk_nope_head_dim = cfg.get("qk_nope_head_dim")
@@ -717,12 +709,14 @@ class BaseModelConfig(BaseFixedConfig):
             rope_theta=rope_theta,
             rope_scaling=rope_scaling,
             model_type=model_type_lower or None,
+            model_architecture_profile=cfg.get("model_architecture_profile"),
             model_arch=model_arch,
             share_expert_dim=share_expert_dim,
             share_q_dim=share_q_dim,
             norm_expert_weight=norm_expert_weight,
             head_dim=explicit_head_dim,
             use_mla=use_mla,
+            use_mfa=use_mfa,
             q_lora_rank=q_lora_rank,
             kv_lora_rank=kv_lora_rank,
             qk_nope_head_dim=qk_nope_head_dim,
@@ -844,6 +838,7 @@ class MoEModelConfig(BaseModelConfig):
     is_moe: bool = True
 
     def __post_init__(self):
+        super().__post_init__()
         if self.num_experts <= 1:
             raise ValueError("MoEModelConfig requires num_experts > 1")
 

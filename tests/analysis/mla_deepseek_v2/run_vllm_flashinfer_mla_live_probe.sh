@@ -244,6 +244,7 @@ if [[ "$RUN_FRONTIER_IMPORT_VALIDATION" == "1" ]]; then
     --num_tensor_parallel_workers 1 \
     --max_model_len 163840 \
     --attention_backend FLASHINFER_MLA \
+    --model_architecture_profile generic \
     --vllm_mla_cuda_op_log "$CUDA_EVENT_OP_LOG_PATH"
 
   "$PYTHON_BIN" "$PROJECT_ROOT/tests/analysis/mla_deepseek_v2/validate_flashinfer_mla_live_probe.py" \

@@ -668,7 +668,9 @@ class Request(BaseEntity):
 
     @property
     def spec_method_is_target_embedded_mtp(self) -> bool:
-        return self._spec_method in {"qwen3_moe_mtp", "qwen3_next_mtp"}
+        from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_method
+
+        return bool(self._spec_method is not None and is_target_embedded_mtp_method(self._spec_method))
 
     @property
     def spec_method_uses_lookahead_slots(self) -> bool:

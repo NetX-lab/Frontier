@@ -9,6 +9,13 @@ from dataclasses import dataclass, field
 from typing import Mapping
 
 from frontier.attention.families import iter_execution_enabled_families
+from frontier.operators.families import (
+    COMM_FAMILY,
+    FFN_FAMILY,
+    MEMORY_FAMILY,
+    MOE_FAMILY,
+    SHARE_EXPERT_FAMILY,
+)
 
 
 def _attention_operator_execution_time_attrs() -> dict[str, str]:
@@ -18,6 +25,219 @@ def _attention_operator_execution_time_attrs() -> dict[str, str]:
         for operator in family.e2e_trace_ops()
         if operator.execution_time_attr is not None
     }
+
+
+def _mlp_operator_execution_time_attrs() -> dict[str, str]:
+    return {
+        operator.name: operator.execution_time_attr
+        for family in (MEMORY_FAMILY, FFN_FAMILY)
+        for operator in family.e2e_trace_ops()
+        if operator.execution_time_attr
+        in {
+            "mlp_norm_time",
+            "mlp_layer_up_proj_execution_time",
+            "mlp_layer_act_execution_time",
+            "mlp_layer_down_proj_execution_time",
+        }
+    }
+
+
+def _moe_operator_execution_time_attrs() -> dict[str, str]:
+    return {
+        operator.name: operator.execution_time_attr
+        for family in (MEMORY_FAMILY, MOE_FAMILY, SHARE_EXPERT_FAMILY)
+        for operator in family.e2e_trace_ops()
+        if operator.execution_time_attr
+        in {
+            "mlp_norm_time",
+            "moe_gating_linear_time",
+            "moe_gating_routing_topk_time",
+            "moe_shuffling_time",
+            "moe_grouped_gemm_time",
+            "share_expert_up_proj_time",
+            "share_expert_act_time",
+            "share_expert_down_proj_time",
+        }
+    }
+
+
+def _communication_operator_execution_time_attrs() -> dict[str, str]:
+    return {
+        operator.name: operator.execution_time_attr
+        for operator in COMM_FAMILY.e2e_trace_ops()
+        if operator.execution_time_attr is not None
+    }
+
+
+def canonical_operator_execution_time_attrs() -> dict[str, str]:
+    """Return the canonical op_id -> ExecutionTime attribute mapping."""
+
+    operator_attrs: dict[str, str] = {}
+    for family in (
+        *tuple(iter_execution_enabled_families()),
+        MEMORY_FAMILY,
+        FFN_FAMILY,
+        MOE_FAMILY,
+        SHARE_EXPERT_FAMILY,
+        COMM_FAMILY,
+    ):
+        for operator in family.e2e_trace_ops():
+            if operator.execution_time_attr is None:
+                continue
+            if operator.name in operator_attrs:
+                raise ValueError(
+                    f"Duplicate ExecutionTime operator timing key: {operator.name}"
+                )
+            operator_attrs[operator.name] = operator.execution_time_attr
+    return operator_attrs
+
+
+def normalize_execution_op_times(op_times: Mapping[str, float]) -> dict[str, float]:
+    """Validate and return op timings in canonical operator order."""
+
+    operator_attrs = canonical_operator_execution_time_attrs()
+    normalized_by_name: dict[str, float] = {}
+    for op_name, time_ms in op_times.items():
+        normalized_op_name = str(op_name)
+        if not normalized_op_name:
+            raise ValueError("Execution operator name must be non-empty")
+        if normalized_op_name not in operator_attrs:
+            raise ValueError(
+                f"Unsupported ExecutionTime operator timing: {normalized_op_name}"
+            )
+        normalized_time_ms = float(time_ms)
+        if normalized_time_ms < 0.0:
+            raise ValueError(
+                "Negative ExecutionTime operator timing is invalid: "
+                f"{normalized_op_name}={normalized_time_ms}"
+            )
+        normalized_by_name[normalized_op_name] = normalized_time_ms
+    return {
+        op_name: normalized_by_name[op_name]
+        for op_name in operator_attrs
+        if op_name in normalized_by_name
+    }
+
+
+def execution_op_time_values_by_attr(op_times: Mapping[str, float]) -> dict[str, float]:
+    """Aggregate canonical op timings by the legacy ExecutionTime attribute they replace."""
+
+    operator_attrs = canonical_operator_execution_time_attrs()
+    attr_values: dict[str, float] = {}
+    for op_name, time_ms in normalize_execution_op_times(op_times).items():
+        attr_name = operator_attrs[op_name]
+        attr_values[attr_name] = attr_values.get(attr_name, 0.0) + float(time_ms)
+    return attr_values
+
+
+def _build_operator_times_subset(
+    op_times: Mapping[str, float],
+    allowed_attrs: Mapping[str, str],
+) -> dict[str, float]:
+    normalized_op_times = normalize_execution_op_times(op_times)
+    return {
+        op_name: normalized_op_times[op_name]
+        for op_name in normalized_op_times
+        if op_name in allowed_attrs
+    }
+
+
+def build_attention_operator_times_from_op_times(
+    op_times: Mapping[str, float],
+) -> "AttentionOperatorTimes | None":
+    subset = _build_operator_times_subset(
+        op_times,
+        _attention_operator_execution_time_attrs(),
+    )
+    return AttentionOperatorTimes(subset) if subset else None
+
+
+def build_mlp_operator_times_from_op_times(
+    op_times: Mapping[str, float],
+) -> "MLPOperatorTimes | None":
+    subset = _build_operator_times_subset(
+        op_times,
+        _mlp_operator_execution_time_attrs(),
+    )
+    return MLPOperatorTimes(subset) if subset else None
+
+
+def build_moe_operator_times_from_op_times(
+    op_times: Mapping[str, float],
+) -> "MoEOperatorTimes | None":
+    subset = _build_operator_times_subset(
+        op_times,
+        _moe_operator_execution_time_attrs(),
+    )
+    return MoEOperatorTimes(subset) if subset else None
+
+
+def build_communication_operator_times_from_op_times(
+    op_times: Mapping[str, float],
+) -> "CommunicationOperatorTimes | None":
+    subset = _build_operator_times_subset(
+        op_times,
+        _communication_operator_execution_time_attrs(),
+    )
+    return CommunicationOperatorTimes(subset) if subset else None
+
+
+@dataclass
+class CommunicationOperatorTimes:
+    """Single-layer timings keyed by physical communication operator name."""
+
+    op_times: Mapping[str, float] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        allowed_op_names = _communication_operator_execution_time_attrs()
+        normalized_op_times: dict[str, float] = {}
+        for op_name, time_ms in self.op_times.items():
+            if not op_name:
+                raise ValueError("Communication operator name must be non-empty")
+            normalized_op_name = str(op_name)
+            if normalized_op_name not in allowed_op_names:
+                raise ValueError(
+                    f"Unsupported communication operator timing: {normalized_op_name}"
+                )
+            normalized_time_ms = float(time_ms)
+            if normalized_time_ms < 0.0:
+                raise ValueError(
+                    "Negative communication operator timing is invalid: "
+                    f"{normalized_op_name}={normalized_time_ms}"
+                )
+            normalized_op_times[normalized_op_name] = normalized_time_ms
+        self.op_times = normalized_op_times
+
+    def get_required_time(self, op_name: str) -> float:
+        try:
+            return float(self.op_times[op_name])
+        except KeyError as exc:
+            raise ValueError(
+                f"ExecutionTime is missing structured communication operator "
+                f"timing for {op_name}"
+            ) from exc
+
+    def total_time(self) -> float:
+        return sum(float(time_ms) for time_ms in self.op_times.values())
+
+    def covers_attr(self, attr_name: str) -> bool:
+        communication_operator_attrs = _communication_operator_execution_time_attrs()
+        return any(
+            communication_operator_attrs[op_name] == attr_name
+            for op_name in self.op_times
+        )
+
+    def legacy_covered_time(self, communication_time: "CommunicationTime") -> float:
+        covered_time_ms = 0.0
+        communication_operator_attrs = _communication_operator_execution_time_attrs()
+        covered_attrs: set[str] = set()
+        for op_name in self.op_times:
+            attr_name = communication_operator_attrs[op_name]
+            if attr_name in covered_attrs:
+                continue
+            covered_time_ms += float(getattr(communication_time, attr_name))
+            covered_attrs.add(attr_name)
+        return covered_time_ms
 
 
 @dataclass
@@ -59,6 +279,100 @@ class AttentionOperatorTimes:
             attr_name = attention_operator_attrs.get(op_name)
             if attr_name is not None:
                 covered_time_ms += float(getattr(attention_time, attr_name))
+        return covered_time_ms
+
+
+@dataclass
+class MLPOperatorTimes:
+    """Single-layer timings keyed by physical dense-MLP operator name."""
+
+    op_times: Mapping[str, float] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        allowed_op_names = _mlp_operator_execution_time_attrs()
+        normalized_op_times: dict[str, float] = {}
+        for op_name, time_ms in self.op_times.items():
+            if not op_name:
+                raise ValueError("MLP operator name must be non-empty")
+            normalized_op_name = str(op_name)
+            if normalized_op_name not in allowed_op_names:
+                raise ValueError(
+                    f"Unsupported MLP operator timing: {normalized_op_name}"
+                )
+            normalized_time_ms = float(time_ms)
+            if normalized_time_ms < 0.0:
+                raise ValueError(
+                    "Negative MLP operator timing is invalid: "
+                    f"{normalized_op_name}={normalized_time_ms}"
+                )
+            normalized_op_times[normalized_op_name] = normalized_time_ms
+        self.op_times = normalized_op_times
+
+    def get_required_time(self, op_name: str) -> float:
+        try:
+            return float(self.op_times[op_name])
+        except KeyError as exc:
+            raise ValueError(
+                f"ExecutionTime is missing structured MLP operator "
+                f"timing for {op_name}"
+            ) from exc
+
+    def total_time(self) -> float:
+        return sum(float(time_ms) for time_ms in self.op_times.values())
+
+    def legacy_covered_time(self, mlp_time: "MLPTime") -> float:
+        covered_time_ms = 0.0
+        mlp_operator_attrs = _mlp_operator_execution_time_attrs()
+        for op_name in self.op_times:
+            attr_name = mlp_operator_attrs[op_name]
+            covered_time_ms += float(getattr(mlp_time, attr_name))
+        return covered_time_ms
+
+
+@dataclass
+class MoEOperatorTimes:
+    """Single-layer timings keyed by physical MoE operator name."""
+
+    op_times: Mapping[str, float] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        allowed_op_names = _moe_operator_execution_time_attrs()
+        normalized_op_times: dict[str, float] = {}
+        for op_name, time_ms in self.op_times.items():
+            if not op_name:
+                raise ValueError("MoE operator name must be non-empty")
+            normalized_op_name = str(op_name)
+            if normalized_op_name not in allowed_op_names:
+                raise ValueError(
+                    f"Unsupported MoE operator timing: {normalized_op_name}"
+                )
+            normalized_time_ms = float(time_ms)
+            if normalized_time_ms < 0.0:
+                raise ValueError(
+                    "Negative MoE operator timing is invalid: "
+                    f"{normalized_op_name}={normalized_time_ms}"
+                )
+            normalized_op_times[normalized_op_name] = normalized_time_ms
+        self.op_times = normalized_op_times
+
+    def get_required_time(self, op_name: str) -> float:
+        try:
+            return float(self.op_times[op_name])
+        except KeyError as exc:
+            raise ValueError(
+                f"ExecutionTime is missing structured MoE operator "
+                f"timing for {op_name}"
+            ) from exc
+
+    def total_time(self) -> float:
+        return sum(float(time_ms) for time_ms in self.op_times.values())
+
+    def legacy_covered_time(self, moe_time: "MoETime") -> float:
+        covered_time_ms = 0.0
+        moe_operator_attrs = _moe_operator_execution_time_attrs()
+        for op_name in self.op_times:
+            attr_name = moe_operator_attrs[op_name]
+            covered_time_ms += float(getattr(moe_time, attr_name))
         return covered_time_ms
 
 
@@ -145,14 +459,22 @@ class MLPTime:
     mlp_layer_down_proj_execution_time: float = 0.0  # Down projection (intermediate -> hidden)
     mlp_layer_act_execution_time: float = 0.0        # Activation function (e.g., SwiGLU, GELU)
     mlp_norm_time: float = 0.0                       # Layer norm before MLP
+    operator_times: MLPOperatorTimes | None = None
     
     def total_time(self) -> float:
         """Calculate total MLP time for this layer."""
-        return (
+        legacy_total_time = (
             self.mlp_layer_up_proj_execution_time
             + self.mlp_layer_down_proj_execution_time
             + self.mlp_layer_act_execution_time
             + self.mlp_norm_time
+        )
+        if self.operator_times is None:
+            return legacy_total_time
+        return (
+            legacy_total_time
+            - self.operator_times.legacy_covered_time(self)
+            + self.operator_times.total_time()
         )
 
 
@@ -185,6 +507,7 @@ class MoETime:
     share_expert_up_proj_time: float = 0.0    # Shared expert up projection
     share_expert_down_proj_time: float = 0.0  # Shared expert down projection
     share_expert_act_time: float = 0.0        # Shared expert activation
+    operator_times: MoEOperatorTimes | None = None
 
     @property
     def moe_gating_time(self) -> float:
@@ -198,7 +521,7 @@ class MoETime:
 
     def total_time(self) -> float:
         """Calculate total MoE time for this layer (computation only, excludes communication)."""
-        return (
+        legacy_total_time = (
             self.moe_grouped_gemm_time
             + self.moe_gating_linear_time
             + self.moe_gating_routing_topk_time
@@ -208,6 +531,13 @@ class MoETime:
             + self.share_expert_up_proj_time
             + self.share_expert_down_proj_time
             + self.share_expert_act_time
+        )
+        if self.operator_times is None:
+            return legacy_total_time
+        return (
+            legacy_total_time
+            - self.operator_times.legacy_covered_time(self)
+            + self.operator_times.total_time()
         )
 
 
@@ -242,11 +572,20 @@ class CommunicationTime:
     # This field is for additional EP-specific collectives (e.g., all-gather)
     expert_parallel_allgather_time: float = 0.0  # EP all-gather for result aggregation
     expert_parallel_alltoall_time: float = 0.0   # EP all-to-all for token dispatch/return
+    operator_times: CommunicationOperatorTimes | None = None
     
     def total_time(self) -> float:
         """Calculate total communication time."""
+        operator_times_cover_split_tp = (
+            self.operator_times is not None
+            and (
+                self.operator_times.covers_attr("attn_tensor_parallel_allreduce_time")
+                or self.operator_times.covers_attr("moe_tensor_parallel_allreduce_time")
+            )
+        )
         if (
-            self.attn_tensor_parallel_allreduce_time > 0
+            operator_times_cover_split_tp
+            or self.attn_tensor_parallel_allreduce_time > 0
             or self.moe_tensor_parallel_allreduce_time > 0
         ):
             tp_allreduce_time = (
@@ -255,7 +594,7 @@ class CommunicationTime:
             )
         else:
             tp_allreduce_time = self.tensor_parallel_allreduce_time
-        return (
+        legacy_total_time = (
             tp_allreduce_time
             + self.tensor_parallel_allgather_time
             + self.share_expert_tensor_parallel_allreduce_time
@@ -264,6 +603,13 @@ class CommunicationTime:
             + self.pipeline_parallel_send_recv_time
             + self.expert_parallel_allgather_time
             + self.expert_parallel_alltoall_time
+        )
+        if self.operator_times is None:
+            return legacy_total_time
+        return (
+            legacy_total_time
+            - self.operator_times.legacy_covered_time(self)
+            + self.operator_times.total_time()
         )
 
 

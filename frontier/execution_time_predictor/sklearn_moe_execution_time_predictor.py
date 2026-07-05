@@ -11,11 +11,16 @@ from frontier.attention.profiling_mapping import (
     get_enabled_predictor_metric_name_by_role,
 )
 from frontier.entities import Batch, ExecutionTime
-from frontier.entities.time_components import MoETime
+from frontier.entities.time_components import (
+    CommunicationOperatorTimes,
+    MoEOperatorTimes,
+    MoETime,
+)
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
 from frontier.logger import init_logger
+from frontier.model_architectures import ModelArchitectureProfile, ResidualAddPolicy
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
     PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
@@ -29,6 +34,13 @@ from frontier.moe_gating_runtime import (
 from frontier.moe_routing_runtime import (
     filter_moe_gating_routing_topk_rows,
     resolve_moe_gating_routing_runtime_path,
+)
+from frontier.operators.families import (
+    MOE_FAMILY,
+    get_family_profiling_names,
+    get_comm_operator,
+    is_moe_operator_ep_agnostic,
+    resolve_moe_operator_tp_key,
 )
 
 if TYPE_CHECKING:
@@ -49,6 +61,72 @@ from frontier.execution_time_predictor.shared_prediction_model_manager import (
 logger = init_logger(__name__)
 
 
+def _get_moe_family_model_names() -> list[str]:
+    return list(get_family_profiling_names(MOE_FAMILY))
+
+
+def _get_moe_family_operator_by_model_name(model_name: str):
+    moe_ops = {
+        operator.profiling_name(): operator
+        for operator in MOE_FAMILY.profiling_ops()
+    }
+    if model_name not in moe_ops:
+        raise ValueError(f"Unsupported MoE op: {model_name}")
+    return moe_ops[model_name]
+
+
+def _get_moe_gating_family_model_names() -> list[str]:
+    return [
+        operator.profiling_name()
+        for operator in MOE_FAMILY.profiling_ops()
+        if operator.precision_name() == "moe_gating"
+    ]
+
+
+def _get_prefill_hot_moe_gating_model_names() -> list[str]:
+    return [
+        f"{model_name}__prefill_hot"
+        for model_name in _get_moe_gating_family_model_names()
+    ]
+
+
+def _is_moe_gating_family_model_name(model_name: str) -> bool:
+    base_model_name = get_moe_gating_base_model_name(model_name)
+    return _get_moe_family_operator_by_model_name(
+        base_model_name
+    ).precision_name() == "moe_gating"
+
+
+def _build_moe_operator_times(
+    *,
+    mlp_norm_time: float,
+    moe_gating_linear_time: float,
+    moe_gating_routing_topk_time: float,
+    moe_shuffling_time: float,
+    moe_grouped_gemm_time: float,
+    share_expert_up_proj_time: float = 0.0,
+    share_expert_act_time: float = 0.0,
+    share_expert_down_proj_time: float = 0.0,
+    include_share_expert: bool = False,
+) -> MoEOperatorTimes:
+    op_times = {
+        "post_attention_layernorm": mlp_norm_time,
+        "moe_gating_linear": moe_gating_linear_time,
+        "moe_gating_routing_topk": moe_gating_routing_topk_time,
+        "moe_shuffling": moe_shuffling_time,
+        "moe_grouped_gemm": moe_grouped_gemm_time,
+    }
+    if include_share_expert:
+        op_times.update(
+            {
+                "share_expert_up_proj": share_expert_up_proj_time,
+                "share_expert_act": share_expert_act_time,
+                "share_expert_down_proj": share_expert_down_proj_time,
+            }
+        )
+    return MoEOperatorTimes(op_times=op_times)
+
+
 def _validate_moe_columns(moe_df: pd.DataFrame) -> None:
     """
     Validate that MoE DataFrame contains required split gating columns.
@@ -65,10 +143,8 @@ def _validate_moe_columns(moe_df: pd.DataFrame) -> None:
                    moe_gating column is present without split columns
     """
     required_columns = [
-        "time_stats.moe_gating_linear.median",
-        "time_stats.moe_gating_routing_topk.median",
-        "time_stats.moe_shuffling.median",
-        "time_stats.moe_grouped_gemm.median",
+        f"time_stats.{operator_name}.median"
+        for operator_name in get_family_profiling_names(MOE_FAMILY)
     ]
 
     missing_columns = [col for col in required_columns if col not in moe_df.columns]
@@ -99,7 +175,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
     def _get_dummy_execution_time(self, batch: Batch, pipeline_stage: int) -> ExecutionTime:
         """Return fixed dummy ExecutionTime object with MoE-aware fields."""
         base_time = self._dummy_execution_time
-        is_step3_text = self._model_config.is_step3_text()
+        architecture_profile = self._get_model_architecture_profile()
         share_expert_enabled = self._model_config.supports_share_expert()
 
         attn_tp_size = self._replica_config.attn_tensor_parallel_size
@@ -127,15 +203,18 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         ffn_tp_allgather_time = 0.0
         share_expert_tp_allreduce_time = 0.0
-        if is_step3_text and moe_tp_size > 1:
+        if architecture_profile.moe_tensor_parallel_allgather_op and moe_tp_size > 1:
             ffn_tp_allgather_time = base_time
-            if share_expert_enabled:
+            if (
+                share_expert_enabled
+                and architecture_profile.share_expert_tensor_parallel_allreduce_op
+            ):
                 share_expert_tp_allreduce_time = base_time
 
         add_time = base_time
         add_attn_residual_time = 0.0
         add_ffn_residual_time = 0.0
-        if is_step3_text:
+        if architecture_profile.residual_add_policy is ResidualAddPolicy.FFN_RESIDUAL_ONLY:
             add_attn_residual_time = 0.0
             add_ffn_residual_time = base_time
             add_time = 0.0
@@ -185,6 +264,17 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             share_expert_tensor_parallel_allreduce_time=share_expert_tp_allreduce_time,
             dp_input_allreduce_time=dp_input_allreduce_time,
             dp_output_allreduce_time=dp_output_allreduce_time,
+            moe_operator_times=_build_moe_operator_times(
+                mlp_norm_time=base_time,
+                moe_gating_linear_time=base_time * 0.5,
+                moe_gating_routing_topk_time=base_time * 0.5,
+                moe_shuffling_time=base_time,
+                moe_grouped_gemm_time=base_time,
+                share_expert_up_proj_time=share_expert_time,
+                share_expert_act_time=share_expert_time,
+                share_expert_down_proj_time=share_expert_time,
+                include_share_expert=share_expert_enabled,
+            ),
         )
 
     def __init__(
@@ -528,21 +618,35 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
     ]
 
     @staticmethod
-    def _get_moe_op_tp_key(op_name: str, moe_tp_size: int) -> int:
-        if moe_tp_size <= 0:
-            raise ValueError(f"Invalid MoE TP size: {moe_tp_size}")
-        if op_name in {
-            "moe_gating_linear",
-            "moe_gating_routing_topk",
-            "moe_shuffling",
-            "moe_grouped_gemm",
-        }:
-            return moe_tp_size
-        raise ValueError(f"Unsupported MoE op for TP mapping: {op_name}")
+    def _get_moe_op_tp_key(
+        op_name: str,
+        moe_tp_size: int,
+        cluster_type: ClusterType | None = None,
+    ) -> int:
+        try:
+            return resolve_moe_operator_tp_key(
+                op_name,
+                moe_tp_size=moe_tp_size,
+                cluster_type=cluster_type,
+                family=MOE_FAMILY,
+            )
+        except ValueError as exc:
+            if str(exc).startswith("Unsupported MoE op:"):
+                raise ValueError(
+                    f"Unsupported MoE op for TP mapping: {op_name}"
+                ) from exc
+            raise
 
     @staticmethod
     def _is_moe_op_ep_agnostic(op_name: str) -> bool:
-        return op_name in {"moe_gating_linear", "moe_gating_routing_topk", "moe_shuffling"}
+        try:
+            return is_moe_operator_ep_agnostic(op_name, family=MOE_FAMILY)
+        except ValueError as exc:
+            if str(exc).startswith("Unsupported MoE op:"):
+                raise ValueError(
+                    f"Unsupported MoE op for EP mapping: {op_name}"
+                ) from exc
+            raise
 
     def _validate_moe_dataset_contract(
         self,
@@ -600,7 +704,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         missing_requirements: List[str] = []
         for model_name in model_names:
             base_model_name = get_moe_gating_base_model_name(model_name)
-            tp_key = self._get_moe_op_tp_key(base_model_name, moe_tp_size)
+            tp_key = self._get_moe_op_tp_key(
+                base_model_name,
+                moe_tp_size,
+                cluster_type=getattr(self, "_cluster_type", None),
+            )
             requirement_parts = [f"TP={tp_key}"]
             if self._is_moe_op_ep_agnostic(base_model_name):
                 op_df = base_df[base_df["num_tensor_parallel_workers"] == tp_key]
@@ -620,10 +728,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 requirement_parts.append(
                     f"routing_runtime_path={requested_routing_runtime_path}"
                 )
-            if base_model_name in {
-                "moe_gating_linear",
-                "moe_gating_routing_topk",
-            }:
+            if _is_moe_gating_family_model_name(base_model_name):
                 op_df = filter_moe_gating_rows_by_runtime_context(
                     op_df,
                     requested_context=DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
@@ -695,21 +800,12 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "Re-run MoE profiling with EP metadata enabled."
             )
 
-        model_names = [
-            "moe_gating_linear",
-            "moe_gating_routing_topk",
-            "moe_shuffling",
-            "moe_grouped_gemm",
-        ]
+        base_model_names = _get_moe_family_model_names()
+        model_names = list(base_model_names)
         model_filtered_df = self._validate_moe_dataset_contract(
             moe_df,
             moe_input_file,
-            [
-                "moe_gating_linear",
-                "moe_gating_routing_topk",
-                "moe_shuffling",
-                "moe_grouped_gemm",
-            ],
+            base_model_names,
             moe_tp_size,
             moe_ep_size,
         )
@@ -717,12 +813,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             model_config=self._model_config,
         ):
             if has_prefill_hot_moe_gating_rows(model_filtered_df):
-                model_names.extend(
-                    [
-                        "moe_gating_linear__prefill_hot",
-                        "moe_gating_routing_topk__prefill_hot",
-                    ]
-                )
+                model_names.extend(_get_prefill_hot_moe_gating_model_names())
             else:
                 logger.warning(
                     "Prefill-hot gating contract is enabled for model=%s, but "
@@ -747,7 +838,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             model_name: str,
         ) -> tuple[pd.DataFrame, int, Optional[int]]:
             base_model_name = get_moe_gating_base_model_name(model_name)
-            tp_key = self._get_moe_op_tp_key(base_model_name, moe_tp_size)
+            tp_key = self._get_moe_op_tp_key(
+                base_model_name,
+                moe_tp_size,
+                cluster_type=getattr(self, "_cluster_type", None),
+            )
             ep_key: Optional[int]
             if self._is_moe_op_ep_agnostic(base_model_name):
                 ep_key = None
@@ -757,10 +852,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             if base_model_name == "moe_gating_routing_topk":
                 runtime_path_key = requested_routing_runtime_path
             gating_context_key: Optional[str] = None
-            if base_model_name in {
-                "moe_gating_linear",
-                "moe_gating_routing_topk",
-            }:
+            if _is_moe_gating_family_model_name(base_model_name):
                 gating_context_key = DEFAULT_MOE_GATING_RUNTIME_CONTEXT
                 if model_name.endswith("__prefill_hot"):
                     gating_context_key = PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT
@@ -878,12 +970,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
     def _register_additional_profiling_metadata_from_files(self) -> None:
         moe_input_file = self._moe_input_file
-        model_names = [
-            "moe_gating_linear",
-            "moe_gating_routing_topk",
-            "moe_shuffling",
-            "moe_grouped_gemm",
-        ]
+        model_names = _get_moe_family_model_names()
         if should_enable_prefill_hot_moe_gating_contract(
             model_config=self._model_config,
         ):
@@ -894,12 +981,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             except Exception:
                 include_prefill_hot_models = False
             if include_prefill_hot_models:
-                model_names.extend(
-                    [
-                        "moe_gating_linear__prefill_hot",
-                        "moe_gating_routing_topk__prefill_hot",
-                    ]
-                )
+                model_names.extend(_get_prefill_hot_moe_gating_model_names())
         self._register_profiling_metadata_from_file(moe_input_file, model_names)
 
     def _train_models(self) -> Dict[str, BaseEstimator]:
@@ -917,10 +999,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
     def _predict_for_compute_models(self) -> Dict[str, Any]:
         predictions = super()._predict_for_compute_models()
-        extra_model_names = [
-            "moe_gating_linear__prefill_hot",
-            "moe_gating_routing_topk__prefill_hot",
-        ]
+        extra_model_names = _get_prefill_hot_moe_gating_model_names()
         num_token_range = np.arange(1, self._max_tokens + 1)
         X = pd.DataFrame({"num_tokens": num_token_range})
         for model_name in extra_model_names:
@@ -1437,11 +1516,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         return raw_time * scale
 
     def _apply_share_expert_tp_allreduce_overlap(self, raw_time_ms: float) -> float:
-        """Apply overlap-aware scaling for Step3Text share_expert TP allreduce.
+        """Apply profile-declared overlap scaling for share_expert TP allreduce.
 
         vLLM records ``share_expert_tp_allreduce`` around an NCCL call that can overlap
-        with subsequent MoE kernels on separate streams. We model this by applying a
-        calibrated visibility scale for Step3Text models.
+        with subsequent MoE kernels on separate streams. Architecture profiles opt in
+        by declaring the calibrated visibility scale.
         """
         if raw_time_ms <= 0.0:
             return 0.0
@@ -1451,14 +1530,33 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             replica_config = getattr(self, "_replica_config", None)
             model_config = getattr(replica_config, "model_config", None)
 
-        is_step3_text = bool(model_config and model_config.is_step3_text())
-        if not is_step3_text:
+        if model_config is None:
             return raw_time_ms
-
-        overlap_visibility_scale = float(
-            getattr(self, "_share_expert_tp_allreduce_visibility_scale", 2.0 / 3.0)
+        architecture_getter = getattr(model_config, "get_model_architecture_profile", None)
+        if not callable(architecture_getter):
+            raise TypeError(
+                "MoE share-expert TP allreduce overlap requires "
+                "model_config.get_model_architecture_profile()"
+            )
+        architecture_profile = architecture_getter()
+        if not isinstance(architecture_profile, ModelArchitectureProfile):
+            raise TypeError(
+                "model_config.get_model_architecture_profile() must return "
+                "ModelArchitectureProfile"
+            )
+        overlap_visibility_scale = (
+            architecture_profile.share_expert_tp_allreduce_visibility_scale
         )
-        return raw_time_ms * overlap_visibility_scale
+        if overlap_visibility_scale is None:
+            return raw_time_ms
+        configured_visibility_scale = getattr(
+            self,
+            "_share_expert_tp_allreduce_visibility_scale",
+            None,
+        )
+        if configured_visibility_scale is not None:
+            overlap_visibility_scale = float(configured_visibility_scale)
+        return raw_time_ms * float(overlap_visibility_scale)
 
 
     def _apply_moe_grouped_gemm_decode_visibility(
@@ -1843,26 +1941,49 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             cluster_type=self._cluster_type,
         )
 
+        communication_operator_times: dict[str, float] = {}
+
         if pipeline_stage == self._replica_config.num_pipeline_stages - 1:
             pipeline_parallel_communication_time = 0
         else:
             pipeline_parallel_communication_time = (
-                self._get_pipeline_parallel_communication_time(batch)
+                self._predict_comm_operator(
+                    get_comm_operator("pipeline_parallel_send_recv"),
+                    batch,
+                )
+            )
+            communication_operator_times["pipeline_parallel_send_recv"] = (
+                pipeline_parallel_communication_time
             )
 
         # For MoE models, attention still uses Tensor Parallelism (AllReduce).
         if self._replica_config.attn_tensor_parallel_size == 1:
             attn_tp_allreduce_time = 0
         else:
-            attn_tp_allreduce_time = self._get_tensor_parallel_communication_time(batch)
+            attn_tp_allreduce_time = self._predict_comm_operator(
+                get_comm_operator("attn_tensor_parallel_allreduce"),
+                batch,
+            )
+            communication_operator_times["attn_tensor_parallel_allreduce"] = (
+                attn_tp_allreduce_time
+            )
 
         # Dense-FFN (non-MoE layer) path still uses FFN TP allreduce semantics.
         # Keep it aligned with dense predictor behavior for mixed-layer models.
         moe_tp_allreduce_time = 0.0
-        if include_moe:
-            moe_tp_allreduce_time = self._get_moe_tensor_parallel_allreduce_time(batch)
+        if include_moe and self._replica_config.moe_tensor_parallel_size > 1:
+            moe_tp_allreduce_time = self._predict_comm_operator(
+                get_comm_operator("moe_tensor_parallel_allreduce"),
+                batch,
+            )
+            communication_operator_times["moe_tensor_parallel_allreduce"] = (
+                moe_tp_allreduce_time
+            )
         elif self._replica_config.attn_tensor_parallel_size > 1:
             moe_tp_allreduce_time = attn_tp_allreduce_time
+            communication_operator_times["mlp_tensor_parallel_allreduce"] = (
+                moe_tp_allreduce_time
+            )
 
         share_expert_up_proj_time = 0.0
         share_expert_down_proj_time = 0.0
@@ -1877,9 +1998,23 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         mlp_act_time = 0.0
 
         if include_moe:
-            expert_parallel_communication_time = (
-                self._get_expert_parallel_communication_time(batch)
-            )
+            expert_parallel_communication_time = 0.0
+            if self._moe_ep_size > 1:
+                expert_parallel_operator_name = (
+                    "expert_parallel_alltoall"
+                    if self._use_expert_parallel_alltoall_path(batch)
+                    else "expert_parallel_allreduce"
+                )
+                expert_parallel_communication_time = (
+                    self._predict_comm_operator(
+                        get_comm_operator(expert_parallel_operator_name),
+                        batch,
+                    )
+                    * self._get_expert_parallel_communication_calibration_scale(batch)
+                )
+                communication_operator_times[expert_parallel_operator_name] = (
+                    expert_parallel_communication_time
+                )
             moe_gating_linear_time = self._get_gating_linear_time(batch)
             moe_gating_routing_topk_time = self._get_gating_routing_topk_time(batch)
             moe_gating_time = moe_gating_linear_time + moe_gating_routing_topk_time
@@ -1918,48 +2053,40 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         add_time = self._get_add_layer_act_execution_time(batch)
         add_attn_residual_time = 0.0
         add_ffn_residual_time = 0.0
-        if self._model_config.is_step3_text():
+        architecture_profile = self._get_model_architecture_profile()
+        if architecture_profile.residual_add_policy is ResidualAddPolicy.FFN_RESIDUAL_ONLY:
             add_attn_residual_time = 0.0
             add_ffn_residual_time = add_time
             add_time = 0.0
 
         ffn_tp_allgather_time = 0.0
         share_expert_tp_allreduce_time = 0.0
-        if include_moe and self._model_config.is_step3_text():
+        moe_tp_allgather_op = architecture_profile.moe_tensor_parallel_allgather_op
+        if include_moe and moe_tp_allgather_op:
             moe_tp_size = self._replica_config.moe_tensor_parallel_size
             if moe_tp_size > 1:
-                effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-                data_size_bytes = self._model_config.embedding_dim * 2 * effective_tokens
-                if data_size_bytes % moe_tp_size != 0:
-                    raise ValueError(
-                        "Step3 FFN TP allgather requires per-device tensor bytes to be "
-                        f"divisible by moe_tp_size, got data_size_bytes={data_size_bytes}, "
-                        f"moe_tp_size={moe_tp_size}"
-                    )
-                per_device_data_size_bytes = data_size_bytes // moe_tp_size
-                quant_manager = get_quantization_manager()
-                allgather_bytes = quant_manager.adjust_tensor_size(
-                    "allgather", per_device_data_size_bytes, self._cluster_type
+                ffn_tp_allgather_time = self._predict_comm_operator(
+                    get_comm_operator(moe_tp_allgather_op),
+                    batch,
                 )
-                ffn_tp_allgather_time = self.predict_allgather_time(
-                    data_size_bytes=allgather_bytes,
-                    num_devices=moe_tp_size,
-                    cluster_type=self._cluster_type,
-                    comm_domain="MOE_TP",
+                communication_operator_times[moe_tp_allgather_op] = ffn_tp_allgather_time
+                share_expert_tp_allreduce_op = (
+                    architecture_profile.share_expert_tensor_parallel_allreduce_op
                 )
-                if share_expert_up_proj_time + share_expert_down_proj_time + share_expert_act_time > 0:
-                    allreduce_bytes = quant_manager.adjust_tensor_size(
-                        "allreduce", data_size_bytes, self._cluster_type
-                    )
-                    raw_share_expert_tp_allreduce_time = self.predict_allreduce_time(
-                        data_size_bytes=allreduce_bytes,
-                        num_devices=moe_tp_size,
-                        cluster_type=self._cluster_type,
-                        comm_domain="MOE_TP",
+                if (
+                    share_expert_tp_allreduce_op
+                    and share_expert_up_proj_time + share_expert_down_proj_time + share_expert_act_time > 0
+                ):
+                    raw_share_expert_tp_allreduce_time = self._predict_comm_operator(
+                        get_comm_operator(share_expert_tp_allreduce_op),
+                        batch,
                     )
                     share_expert_tp_allreduce_time = self._apply_share_expert_tp_allreduce_overlap(
                         raw_share_expert_tp_allreduce_time
                     )
+                    communication_operator_times[
+                        share_expert_tp_allreduce_op
+                    ] = share_expert_tp_allreduce_time
 
         dp_input_allreduce_time = 0.0
         dp_output_allreduce_time = 0.0
@@ -2001,6 +2128,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             f"stage={pipeline_stage}",
         )
 
+        mlp_norm_time = self._get_mlp_norm_layer_act_execution_time(batch)
+
         return ExecutionTime(
             num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
             attention_rope_execution_time=attention_time.attention_rope_execution_time,
@@ -2010,7 +2139,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             attention_layer_pre_proj_execution_time=attention_time.attention_layer_pre_proj_execution_time,
             attention_layer_post_proj_execution_time=attention_time.attention_layer_post_proj_execution_time,
             attn_norm_time=attention_time.attn_norm_time,
-            mlp_norm_time=self._get_mlp_norm_layer_act_execution_time(batch),
+            attention_operator_times=attention_time.operator_times,
+            mlp_norm_time=mlp_norm_time,
             add_time=add_time,
             add_attn_residual_time=add_attn_residual_time,
             add_ffn_residual_time=add_ffn_residual_time,
@@ -2050,6 +2180,24 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             dp_output_allreduce_time=dp_output_allreduce_time,
             decode_draft_proposer_time=decode_draft_proposer_time,
             mtp_terminal_overshoot_time=mtp_terminal_overshoot_time,
+            communication_operator_times=CommunicationOperatorTimes(
+                communication_operator_times
+            ),
+            moe_operator_times=(
+                _build_moe_operator_times(
+                    mlp_norm_time=mlp_norm_time,
+                    moe_gating_linear_time=moe_gating_linear_time,
+                    moe_gating_routing_topk_time=moe_gating_routing_topk_time,
+                    moe_shuffling_time=moe_shuffling_time,
+                    moe_grouped_gemm_time=moe_grouped_gemm_time,
+                    share_expert_up_proj_time=share_expert_up_proj_time,
+                    share_expert_act_time=share_expert_act_time,
+                    share_expert_down_proj_time=share_expert_down_proj_time,
+                    include_share_expert=self._model_config.supports_share_expert(),
+                )
+                if include_moe
+                else None
+            ),
         )
 
     def _simulate_routing_per_layer(
@@ -2059,7 +2207,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         Simulate routing for each layer in the stage.
         Returns: {layer_id: {replica_id: {moe_component: time_value}}}
         """
-        # TODO: should num_layers be the total number of layers in the model? or just the number of layers in the stage?
+        # Routing simulation is stage-local and follows the current pipeline-stage scope.
         num_layers = self._num_layers_per_pipeline_stage
         layer_routing_results = {}
 
@@ -2138,6 +2286,17 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 share_expert_up_proj_time=share_expert_time,
                 share_expert_down_proj_time=share_expert_time,
                 share_expert_act_time=share_expert_time,
+                operator_times=_build_moe_operator_times(
+                    mlp_norm_time=base_time,
+                    moe_gating_linear_time=base_time * 0.5,
+                    moe_gating_routing_topk_time=base_time * 0.5,
+                    moe_shuffling_time=base_time,
+                    moe_grouped_gemm_time=base_time,
+                    share_expert_up_proj_time=share_expert_time,
+                    share_expert_act_time=share_expert_time,
+                    share_expert_down_proj_time=share_expert_time,
+                    include_share_expert=self._model_config.supports_share_expert(),
+                ),
             )
 
         if not self._supports_operation("moe_grouped_gemm"):
@@ -2321,6 +2480,17 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             share_expert_up_proj_time=share_expert_up_proj_time,
             share_expert_down_proj_time=share_expert_down_proj_time,
             share_expert_act_time=share_expert_act_time,
+            operator_times=_build_moe_operator_times(
+                mlp_norm_time=mlp_norm_time,
+                moe_gating_linear_time=gating_linear_time,
+                moe_gating_routing_topk_time=gating_routing_topk_time,
+                moe_shuffling_time=shuffling_time,
+                moe_grouped_gemm_time=grouped_gemm_time,
+                share_expert_up_proj_time=share_expert_up_proj_time,
+                share_expert_act_time=share_expert_act_time,
+                share_expert_down_proj_time=share_expert_down_proj_time,
+                include_share_expert=self._model_config.supports_share_expert(),
+            ),
         )
 
     def predict_allgather_time(
@@ -2618,8 +2788,16 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             add_attn_residual_time=base_execution_time._add_attn_residual_time,
             add_ffn_residual_time=base_execution_time._add_ffn_residual_time,
             tensor_parallel_communication_time=base_execution_time._tensor_parallel_communication_time,
-            attn_tensor_parallel_allreduce_time=base_execution_time._attn_tensor_parallel_allreduce_time,
-            moe_tensor_parallel_allreduce_time=base_execution_time._moe_tensor_parallel_allreduce_time,
+            attn_tensor_parallel_allreduce_time=(
+                base_execution_time._attn_tensor_parallel_allreduce_time
+                if base_execution_time._has_attn_tensor_parallel_allreduce_time
+                else None
+            ),
+            moe_tensor_parallel_allreduce_time=(
+                base_execution_time._moe_tensor_parallel_allreduce_time
+                if base_execution_time._has_moe_tensor_parallel_allreduce_time
+                else None
+            ),
             tensor_parallel_allgather_time=base_execution_time._tensor_parallel_allgather_time,
             share_expert_tensor_parallel_allreduce_time=base_execution_time._share_expert_tensor_parallel_allreduce_time,
             dp_input_allreduce_time=base_execution_time._dp_input_allreduce_time,
@@ -2649,4 +2827,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             share_expert_act_time=base_execution_time._share_expert_act_time,
             decode_draft_proposer_time=base_execution_time._decode_draft_proposer_time,
             mtp_terminal_overshoot_time=base_execution_time._mtp_terminal_overshoot_time,
+            attention_operator_times=base_execution_time.attention_operator_times,
+            communication_operator_times=base_execution_time.communication_operator_times,
+            moe_operator_times=base_execution_time.moe_operator_times,
         )

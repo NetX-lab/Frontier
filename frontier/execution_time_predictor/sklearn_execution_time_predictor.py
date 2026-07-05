@@ -48,6 +48,8 @@ from frontier.entities import Batch
 from frontier.entities.time_components import (
     AttentionTime,
     AttentionOperatorTimes,
+    CommunicationOperatorTimes,
+    MLPOperatorTimes,
     MLPTime,
     MoETime,
 )
@@ -65,6 +67,16 @@ from frontier.execution_time_predictor.attention_dataset_contract import (
 )
 from frontier.logger import init_logger
 from frontier.moe_gating_runtime import get_moe_gating_base_model_name
+from frontier.model_architectures import ModelArchitectureProfile
+from frontier.operators.families import (
+    FFN_FAMILY,
+    MEMORY_FAMILY,
+    SHARE_EXPERT_FAMILY,
+    get_family_profiling_names,
+    get_family_profiling_name_set,
+    get_comm_operator,
+)
+from frontier.operators.spec import CommOperatorSpec, CommPayloadContext, OperatorSpec
 from frontier.profiling.cpu_overhead.schema import (
     DEFAULT_NUM_DECODE_TOKENS_AMPLIFICATION_FACTOR,
     DEFAULT_NUM_PREFILL_TOKENS,
@@ -84,7 +96,7 @@ from frontier.spec_decode import (
     get_mtp_method_family,
     is_target_embedded_mtp_enabled,
 )
-from frontier.spec_decode.runtime import TARGET_EMBEDDED_MTP_SAME_TP_LINEAR_OPS
+from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_same_tp_linear_op
 from frontier.spec_decode.mtp_runtime import load_mtp_structural_model_config
 from frontier.entities import ExecutionTime
 from frontier.types import ClusterType, MeasurementType
@@ -95,6 +107,7 @@ class ProfilingMetadata:
     profiling_precision: PrecisionType
     quant_signature: str
     model_arch: str
+    model_architecture_profile: str
     measurement_type: MeasurementType
 
 
@@ -135,6 +148,16 @@ MIGRATION_HELP_COMMAND = (
 )
 
 
+def _get_operator_spec_by_name(family, op_name: str) -> OperatorSpec:
+    matches = tuple(operator for operator in family.operators if operator.name == op_name)
+    if len(matches) != 1:
+        raise ValueError(
+            f"Expected exactly one operator named {op_name!r} in family "
+            f"{family.family_id!r}; found {len(matches)}"
+        )
+    return matches[0]
+
+
 class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     @staticmethod
     def _dense_attention_cache_write_op_name() -> str:
@@ -164,6 +187,26 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         return (
             self._get_attention_family().family_id
             == LATENT_MLA_ATTENTION_FAMILY.family_id
+        )
+
+    def _get_model_architecture_profile(self) -> ModelArchitectureProfile:
+        getter = getattr(self._model_config, "get_model_architecture_profile", None)
+        if not callable(getter):
+            raise TypeError(
+                "SklearnExecutionTimePredictor requires "
+                "model_config.get_model_architecture_profile()"
+            )
+        profile = getter()
+        if not isinstance(profile, ModelArchitectureProfile):
+            raise TypeError(
+                "model_config.get_model_architecture_profile() must return "
+                "ModelArchitectureProfile"
+            )
+        return profile
+
+    def _get_predictor_attention_extra_ops(self) -> tuple[str, ...]:
+        return tuple(
+            self._get_model_architecture_profile().predictor_attention_extra_ops
         )
 
     def __init__(
@@ -244,11 +287,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             "_attn_kv_cache_save_calibration_scale",
             "attn_kv_cache_save_calibration_scale",
         )
-        self._mlp_up_proj_calibration_scale = self._get_calibration_scale(
-            "_mlp_up_proj_calibration_scale", "mlp_up_proj_calibration_scale"
+        self._mlp_up_proj_calibration_scale = self._get_operator_calibration_scale(
+            _get_operator_spec_by_name(FFN_FAMILY, "mlp_up_proj")
         )
-        self._mlp_down_proj_calibration_scale = self._get_calibration_scale(
-            "_mlp_down_proj_calibration_scale", "mlp_down_proj_calibration_scale"
+        self._mlp_down_proj_calibration_scale = self._get_operator_calibration_scale(
+            _get_operator_spec_by_name(FFN_FAMILY, "mlp_down_proj")
         )
         self._moe_shuffling_calibration_scale = self._get_calibration_scale(
             "_moe_shuffling_calibration_scale", "moe_shuffling_calibration_scale"
@@ -281,7 +324,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         if max_tokens_in_batch is not None:
             self._max_tokens = max(self._max_tokens, int(max_tokens_in_batch))
 
-        # TODO: FOR PREFILL CLUSTER, WE MAY NEED INIT 2 CONFIG SETTING FOR ATTN AND MOE MODULES, RESPECTIVELY.
+        # Design note: PREFILL/MONOLITHIC cache sizing keeps the current shared max-token budget.
         if cluster_type in [
             ClusterType.PREFILL,
             ClusterType.DECODE_ATTN,
@@ -392,6 +435,23 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         if config_value is None:
             return None
         return self._validate_positive_scale(float(config_value), field_name)
+
+    def _get_operator_calibration_scale(self, operator: OperatorSpec) -> float:
+        attr_name = operator.calibration_attr_name()
+        field_name = operator.calibration_field_name()
+        if attr_name is None or field_name is None:
+            return 1.0
+        return self._get_calibration_scale(attr_name, field_name)
+
+    def _get_optional_operator_phase_calibration_scale(
+        self,
+        operator: OperatorSpec,
+        phase_prefix: str,
+    ) -> Optional[float]:
+        if operator.calibration_key is None:
+            return None
+        field_name = f"{phase_prefix}_{operator.calibration_key}_calibration_scale"
+        return self._get_optional_calibration_scale(f"_{field_name}", field_name)
 
     def _get_decode_phase_only_calibration_scale(
         self, batch: Batch, attr_name: str, field_name: str
@@ -2008,7 +2068,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "Profiling data should have consistent precision."
             )
 
-        # Check for model_arch column (for Step2Mini isolation)
+        # Check for model_arch column (legacy metadata retained for diagnostics)
         if "model_arch" not in df.columns:
             raise ValueError(
                 f"model_arch column is missing from '{file_path}'. "
@@ -2030,6 +2090,33 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         if actual_arch != expected_arch:
             raise ValueError(
                 f"model_arch mismatch: expected '{expected_arch}' but profiling data has '{actual_arch}'. "
+                f"File: '{file_path}'"
+            )
+
+        if "model_architecture_profile" not in df.columns:
+            raise ValueError(
+                f"model_architecture_profile column is missing from '{file_path}'. "
+                f"Run '{MIGRATION_HELP_COMMAND}' to add required metadata columns."
+            )
+
+        profile_values = df["model_architecture_profile"].dropna().unique().tolist()
+        if not profile_values:
+            raise ValueError(
+                f"model_architecture_profile column is empty in '{file_path}'"
+            )
+        if len(profile_values) > 1:
+            raise ValueError(
+                "Multiple model_architecture_profile values found in "
+                f"'{file_path}': {profile_values}. Profiling data should have "
+                "consistent architecture profile."
+            )
+
+        expected_profile = self._get_model_architecture_profile().profile_id
+        actual_profile = str(profile_values[0])
+        if actual_profile != expected_profile:
+            raise ValueError(
+                "model_architecture_profile mismatch: expected "
+                f"'{expected_profile}' but profiling data has '{actual_profile}'. "
                 f"File: '{file_path}'"
             )
 
@@ -2083,6 +2170,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             profiling_precision=profiling_precision,
             quant_signature=actual_quant,
             model_arch=actual_arch,
+            model_architecture_profile=actual_profile,
             measurement_type=measurement_type,
         )
 
@@ -2465,7 +2553,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             "attn_rope",
         ]
         if self._requires_dense_mlp_compute_models():
-            model_names.extend(["mlp_up_proj", "mlp_down_proj", "mlp_act"])
+            model_names.extend(get_family_profiling_names(FFN_FAMILY))
         if self._requires_target_embedded_mtp_compute_models():
             model_names.extend(["mtp_fusion_proj", "lm_head_linear"])
 
@@ -2473,16 +2561,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         if not self._model_config.uses_fused_add_norm:
             model_names.append("add")
 
-        # Step2Mini-specific operations (only when model_arch == "step2_mini")
-        if self._model_config.is_step2_mini():
-            model_names.extend(["attn_inter_norm", "attn_wq_proj"])
+        model_names.extend(self._get_predictor_attention_extra_ops())
 
-        # Step2Mini/Step3Text share_expert operations (forward_3: shared expert alongside routed experts).
-        # These are required when the model indicates share_expert support.
+        # Shared-expert operations are required when the architecture profile exposes that path.
         if self._model_config.supports_share_expert() and self._model_config.is_moe:
-            model_names.extend(
-                ["share_expert_up_proj", "share_expert_down_proj", "share_expert_act"]
-            )
+            model_names.extend(get_family_profiling_names(SHARE_EXPERT_FAMILY))
         return model_names
 
     def _get_ffn_tp_key_for_linear_op(self) -> int:
@@ -2499,19 +2582,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         return self._replica_config.attn_tensor_parallel_size
 
     def _get_linear_op_tp_key(self, op_name: str) -> int:
-        replicated_ops = {
-            "input_layernorm",
-            "post_attention_layernorm",
-            "add",
-            "emb",
-            # Step3Text-specific replicated pre-proj sub-ops.
-            "attn_pre_proj_qkv",
-            "attn_pre_proj_q_norm",
-        }
+        replicated_ops = set(get_family_profiling_name_set(MEMORY_FAMILY))
+        replicated_ops.update(
+            self._get_model_architecture_profile().linear_attention.replicated_ops
+        )
         if op_name in replicated_ops:
             if (
                 self._requires_target_embedded_mtp_compute_models()
-                and op_name in TARGET_EMBEDDED_MTP_SAME_TP_LINEAR_OPS
+                and is_target_embedded_mtp_same_tp_linear_op(op_name)
             ):
                 return resolve_effective_attention_tp_size(
                     op_name="attn_pre_proj",
@@ -2525,7 +2603,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         ffn_tp_key = self._get_ffn_tp_key_for_linear_op()
 
-        if op_name.startswith("mlp_"):
+        if op_name in get_family_profiling_name_set(FFN_FAMILY):
             return ffn_tp_key
 
         if op_name in {
@@ -2541,11 +2619,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 include_linear_ops=True,
             )
 
-        if op_name in {
-            "share_expert_up_proj",
-            "share_expert_down_proj",
-            "share_expert_act",
-        }:
+        if op_name in get_family_profiling_name_set(SHARE_EXPERT_FAMILY):
             return ffn_tp_key
 
         if op_name.startswith("attn_"):
@@ -2835,11 +2909,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             return compute_df_cache[tp_size]
 
         model_names = self._get_compute_model_names()
-        if self._model_config.is_step2_mini():
+        predictor_attention_extra_ops = self._get_predictor_attention_extra_ops()
+        if predictor_attention_extra_ops:
             logger.info(
-                "Step2Mini model detected. Training additional models: "
-                "attn_inter_norm, attn_wq_proj"
-                + (", share_expert_*" if self._model_config.is_moe else "")
+                "Architecture profile requires additional attention models: %s%s",
+                ", ".join(predictor_attention_extra_ops),
+                ", share_expert_*" if self._model_config.is_moe else "",
             )
 
         for model_name in model_names:
@@ -2848,13 +2923,13 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             compute_df = _get_compute_df_for_tp(tp_key)
             if target_col not in compute_df.columns:
                 # For model-arch-required operations, raise error instead of warning.
-                # - Step2Mini forward_1: attn_inter_norm, attn_wq_proj
-                # - Step2Mini/Step3 forward_3: share_expert_* (when supported)
-                if model_name in ["attn_inter_norm", "attn_wq_proj"]:
+                # - Architecture profile attention extras, e.g. attn_inter_norm, attn_wq_proj
+                # - Shared-expert FFN operations when supported
+                if model_name in self._get_predictor_attention_extra_ops():
                     raise ValueError(
                         f"Column '{target_col}' not found in compute dataframe. "
-                        f"Step2Mini model requires {model_name} profiling data. "
-                        f"Re-run profiling with Step2Mini-enabled configuration."
+                        f"Architecture profile requires {model_name} profiling data. "
+                        f"Re-run profiling with the selected model_architecture_profile."
                     )
                 if (
                     model_name in ["share_expert_up_proj", "share_expert_down_proj", "share_expert_act"]
@@ -3305,6 +3380,40 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             feature_cols=list(dense_attention_feature_columns[decode_model_name]),
             target_col=dense_attention_target_columns[decode_model_name],
         )
+
+        decode_in_mixed_feature_cols = [
+            "decode_batch_size",
+            "decode_avg_kv_cache_size",
+            "num_prefill_seqs",
+            "total_prefill_tokens",
+            "total_batch_size",
+            "batch_composition_ratio",
+            "total_tokens",
+        ]
+        if all(col in true_mixed_df.columns for col in decode_in_mixed_feature_cols):
+            if len(true_mixed_df) > 0:
+                models["attn_decode_in_mixed"] = self._train_model(
+                    model_name="attn_decode_in_mixed",
+                    df=true_mixed_df,
+                    feature_cols=decode_in_mixed_feature_cols,
+                    target_col="time_stats.attn_decode.median",
+                )
+                logger.info(
+                    "Trained kernel-only model attn_decode_in_mixed with %d true mixed samples",
+                    len(true_mixed_df),
+                )
+            else:
+                logger.info(
+                    "Skipping kernel-only attn_decode_in_mixed training: no true mixed rows"
+                )
+        else:
+            missing_cols = [
+                c for c in decode_in_mixed_feature_cols if c not in true_mixed_df.columns
+            ]
+            logger.info(
+                "Skipping kernel-only attn_decode_in_mixed training: missing true mixed feature columns %s",
+                missing_cols,
+            )
         return models
 
     def _train_models(self) -> Dict[str, BaseEstimator]:
@@ -3338,9 +3447,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 ]
             )
 
-            # Step2Mini-specific attention operations (forward_1: inter_norm + wq after Q split)
-            if self._model_config.is_step2_mini():
-                model_names.extend(["attn_inter_norm", "attn_wq_proj"])
+            model_names.extend(self._get_predictor_attention_extra_ops())
 
         # Add FFN-related compute models for clusters that support FFN.
         # Distinguish MoE vs dense models based on ReplicaConfig.model_config.is_moe.
@@ -3377,7 +3484,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                         ]
                     )
 
-                # Step2Mini/Step3 share_expert operations (forward_3: shared expert alongside routed experts)
+                # Shared-expert operations follow the architecture profile capability.
                 if self._model_config.supports_share_expert():
                     model_names.extend([
                         "share_expert_up_proj",
@@ -3683,7 +3790,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "_feature_names": feature_names,
             }
 
-        if need_prefill and "attn_decode_in_mixed" in self._models:
+        need_true_mixed_decode = self._cluster_type == ClusterType.MONOLITHIC
+        if need_true_mixed_decode and "attn_decode_in_mixed" in self._models:
             model = self._models["attn_decode_in_mixed"]
             feature_names = list(
                 getattr(
@@ -4105,7 +4213,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         Check if the current cluster configuration supports a specific operation.
 
         Step2Mini/Step3-specific operations:
-        - attn_inter_norm, attn_wq_proj: Part of attention (forward_1), supported by attention clusters
+        - architecture-profile attention extras: supported by attention clusters
         - share_expert_up_proj, share_expert_down_proj, share_expert_act: Part of FFN (forward_3),
           supported by FFN clusters
         """
@@ -4123,12 +4231,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 ClusterType.MONOLITHIC,
             ]
 
-        # Step2Mini-specific attention operations (forward_1: inter_norm + wq after Q split)
-        # These are part of the attention path and should be handled by attention clusters
-        if operation in ["attn_inter_norm", "attn_wq_proj"]:
-            # Only supported for Step2Mini models
-            if not self._model_config.is_step2_mini():
-                return False
+        if operation in self._get_predictor_attention_extra_ops():
             return self._cluster_type in [
                 ClusterType.PREFILL,
                 ClusterType.DECODE_ATTN,
@@ -4146,16 +4249,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 ClusterType.MONOLITHIC,
             ]
 
-        if operation in [
-            "mlp_up_proj",
-            "mlp_down_proj",
-            "mlp_act",
+        if operation in {
+            *get_family_profiling_name_set(FFN_FAMILY),
             "moe_grouped_gemm",
             "expert_parallel_communication",
             "moe_gating_linear",  # Split gating: linear layer
             "moe_gating_routing_topk",  # Split gating: topk + softmax
             "moe_shuffling",
-        ]:
+        }:
             return self._cluster_type in [
                 ClusterType.PREFILL,
                 ClusterType.DECODE_FFN,
@@ -4165,7 +4266,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         # Step2Mini/Step3 share_expert operations (forward_3: shared expert alongside routed experts)
         # These are part of the FFN path and should be handled by FFN clusters
-        if operation in ["share_expert_up_proj", "share_expert_down_proj", "share_expert_act"]:
+        if operation in get_family_profiling_name_set(SHARE_EXPERT_FAMILY):
             # Only supported for Step2Mini/Step3 MoE models
             if not self._model_config.supports_share_expert():
                 return False
@@ -4245,18 +4346,17 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             raise ValueError(
                 f"MLP up-projection operation not supported for cluster {self._cluster_type}"
             )
+        operator = _get_operator_spec_by_name(FFN_FAMILY, "mlp_up_proj")
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions["mlp_up_proj"][(effective_tokens,)]
+        raw_time = self._predictions[operator.profiling_name()][(effective_tokens,)]
         if getattr(batch, "num_prefill_tokens", 0) > 0:
-            prefill_phase_scale = self._get_optional_calibration_scale(
-                "_prefill_phase_mlp_up_proj_calibration_scale",
-                "prefill_phase_mlp_up_proj_calibration_scale",
+            prefill_phase_scale = self._get_optional_operator_phase_calibration_scale(
+                operator,
+                "prefill_phase",
             )
             if prefill_phase_scale is not None:
                 return raw_time * prefill_phase_scale
-        scale = self._get_calibration_scale(
-            "_mlp_up_proj_calibration_scale", "mlp_up_proj_calibration_scale"
-        )
+        scale = self._get_operator_calibration_scale(operator)
         return raw_time * scale
 
     def _get_mlp_layer_down_proj_execution_time(self, batch: Batch) -> float:
@@ -4264,18 +4364,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             raise ValueError(
                 f"MLP down-projection operation not supported for cluster {self._cluster_type}"
             )
+        operator = _get_operator_spec_by_name(FFN_FAMILY, "mlp_down_proj")
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions["mlp_down_proj"][(effective_tokens,)]
-        decode_phase_scale = self._get_decode_phase_only_calibration_scale(
-            batch,
-            "_decode_phase_mlp_down_proj_calibration_scale",
-            "decode_phase_mlp_down_proj_calibration_scale",
-        )
+        raw_time = self._predictions[operator.profiling_name()][(effective_tokens,)]
+        decode_phase_scale = None
+        if getattr(batch, "num_prefill_tokens", 0) == 0:
+            decode_phase_scale = self._get_optional_operator_phase_calibration_scale(
+                operator,
+                "decode_phase",
+            )
         if decode_phase_scale is not None:
             return raw_time * decode_phase_scale
-        scale = self._get_calibration_scale(
-            "_mlp_down_proj_calibration_scale", "mlp_down_proj_calibration_scale"
-        )
+        scale = self._get_operator_calibration_scale(operator)
         return raw_time * scale
 
     def _get_mlp_layer_act_execution_time(self, batch: Batch) -> float:
@@ -4965,80 +5065,79 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
         return total_time_ms
 
-    # ========== Step2Mini-specific operation getters ==========
-    # These operations are only available for Step2Mini models (model_arch == "step2_mini")
+    # ========== Architecture-profile attention extra operation getters ==========
 
     def _get_attn_inter_norm_execution_time(self, batch: Batch) -> float:
-        """Get Step2Mini inter_norm execution time (RMSNorm on Q after split)."""
+        """Get architecture-profile inter_norm execution time."""
         if not self._supports_operation("attn_inter_norm"):
             raise ValueError(
                 f"attn_inter_norm operation not supported for cluster {self._cluster_type} "
-                f"(requires Step2Mini model)"
+                f"(requires matching model architecture profile)"
             )
         if "attn_inter_norm" not in self._predictions:
             raise ValueError(
                 f"attn_inter_norm prediction cache not found. "
-                f"Ensure Step2Mini profiling data is available."
+                f"Ensure architecture-profile profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
         return self._predictions["attn_inter_norm"][(effective_tokens,)]
 
     def _get_attn_wq_proj_execution_time(self, batch: Batch) -> float:
-        """Get Step2Mini wq projection execution time (ColumnParallelLinear on Q after inter_norm)."""
+        """Get architecture-profile WQ projection execution time."""
         if not self._supports_operation("attn_wq_proj"):
             raise ValueError(
                 f"attn_wq_proj operation not supported for cluster {self._cluster_type} "
-                f"(requires Step2Mini model)"
+                f"(requires matching model architecture profile)"
             )
         if "attn_wq_proj" not in self._predictions:
             raise ValueError(
                 f"attn_wq_proj prediction cache not found. "
-                f"Ensure Step2Mini profiling data is available."
+                f"Ensure architecture-profile profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
         return self._predictions["attn_wq_proj"][(effective_tokens,)]
 
     def _get_share_expert_up_proj_execution_time(self, batch: Batch) -> float:
-        """Get Step2Mini/Step3 share_expert up projection execution time."""
+        """Get shared-expert up projection execution time."""
         if not self._supports_operation("share_expert_up_proj"):
             raise ValueError(
                 f"share_expert_up_proj operation not supported for cluster {self._cluster_type} "
-                f"(requires Step2Mini MoE model)"
+                f"(requires shared-expert MoE profile)"
             )
         if "share_expert_up_proj" not in self._predictions:
             raise ValueError(
                 f"share_expert_up_proj prediction cache not found. "
-                f"Ensure Step2Mini MoE profiling data is available."
+                f"Ensure shared-expert MoE profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
         return self._predictions["share_expert_up_proj"][(effective_tokens,)]
 
     def _get_share_expert_down_proj_execution_time(self, batch: Batch) -> float:
-        """Get Step2Mini/Step3 share_expert down projection execution time."""
+        """Get shared-expert down projection execution time."""
         if not self._supports_operation("share_expert_down_proj"):
             raise ValueError(
                 f"share_expert_down_proj operation not supported for cluster {self._cluster_type} "
-                f"(requires Step2Mini MoE model)"
+                f"(requires shared-expert MoE profile)"
             )
         if "share_expert_down_proj" not in self._predictions:
             raise ValueError(
                 f"share_expert_down_proj prediction cache not found. "
-                f"Ensure Step2Mini MoE profiling data is available."
+                f"Ensure shared-expert MoE profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
         return self._predictions["share_expert_down_proj"][(effective_tokens,)]
 
     def _get_share_expert_act_execution_time(self, batch: Batch) -> float:
-        """Get Step2Mini/Step3 share_expert activation execution time."""
+        """Get shared-expert activation execution time."""
         if not self._supports_operation("share_expert_act"):
             raise ValueError(
                 f"share_expert_act operation not supported for cluster {self._cluster_type} "
-                f"(requires Step2Mini MoE model)"
+                f"(requires shared-expert MoE profile)"
             )
         if "share_expert_act" not in self._predictions:
             raise ValueError(
                 f"share_expert_act prediction cache not found. "
-                f"Ensure Step2Mini MoE profiling data is available."
+                f"Ensure shared-expert MoE profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
         return self._predictions["share_expert_act"][(effective_tokens,)]
@@ -5215,9 +5314,87 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             f"Current state: cc_backend=None, enable_dummy_mode={self._enable_dummy_mode}"
         )
 
-    # def _get_expert_parallel_communication_time(self, batch: Batch) -> float:
-    #     # TODO: Implement this
-    #     return 0
+    def _predict_comm_operator(
+        self,
+        operator: CommOperatorSpec,
+        batch: Batch,
+    ) -> float:
+        """Predict one first-class communication operator through the thin CC wrappers."""
+
+        ctx = CommPayloadContext(
+            batch=batch,
+            model_config=self._model_config,
+            replica_config=self._replica_config,
+            cluster_type=self._cluster_type,
+            quantization_manager=get_quantization_manager(),
+        )
+        data_size_bytes = operator.build_payload_bytes(ctx)
+        num_devices = operator.num_devices(ctx)
+
+        if operator.collective_alias == "allreduce":
+            if num_devices is None:
+                raise ValueError(
+                    f"CommOperator {operator.name} requires num_devices for allreduce"
+                )
+            predicted_ms = self.predict_allreduce_time(
+                data_size_bytes=data_size_bytes,
+                num_devices=num_devices,
+                cluster_type=self._cluster_type,
+                comm_domain=operator.comm_domain,
+            )
+            if operator.apply_allreduce_launch_overhead_strip:
+                if operator.comm_domain is None:
+                    raise ValueError(
+                        f"CommOperator {operator.name} requires comm_domain for "
+                        "allreduce launch-overhead stripping"
+                    )
+                predicted_ms = (
+                    self._strip_collective_sim_allreduce_launch_overhead_if_needed(
+                        batch=batch,
+                        predicted_ms=predicted_ms,
+                        num_devices=num_devices,
+                        comm_domain=operator.comm_domain,
+                    )
+                )
+            return predicted_ms
+
+        if operator.collective_alias == "allgather":
+            if num_devices is None:
+                raise ValueError(
+                    f"CommOperator {operator.name} requires num_devices for allgather"
+                )
+            return self.predict_allgather_time(
+                data_size_bytes=data_size_bytes,
+                num_devices=num_devices,
+                cluster_type=self._cluster_type,
+                comm_domain=operator.comm_domain,
+            )
+
+        if operator.collective_alias == "alltoall":
+            if num_devices is None:
+                raise ValueError(
+                    f"CommOperator {operator.name} requires num_devices for alltoall"
+                )
+            return self.predict_alltoall_time(
+                data_size_bytes=data_size_bytes,
+                num_devices=num_devices,
+                cluster_type=self._cluster_type,
+                comm_domain=operator.comm_domain,
+            )
+
+        if operator.collective_alias == "send_recv":
+            return self.predict_p2p_time(
+                data_size_bytes=data_size_bytes,
+                cluster_type=self._cluster_type,
+                comm_domain=operator.comm_domain,
+            )
+
+        raise ValueError(
+            f"Unsupported communication collective alias for {operator.name}: "
+            f"{operator.collective_alias}"
+        )
+
+    # Expert-parallel communication timing is modeled through COMM family operators.
 
     def _get_attention_rope_execution_time(self, batch: Batch) -> float:
         if not self._supports_operation("attn_rope"):
@@ -5827,8 +6004,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _get_schedule_time(self, batch: Batch) -> float:
         return self._get_cpu_overhead_prediction_or_default("schedule", batch)
 
-    def _log_step3_attention_shape(self, batch: Batch) -> None:
-        if not self._model_config.is_step3_text():
+    def _log_architecture_attention_shape(self, batch: Batch) -> None:
+        architecture_profile = self._get_model_architecture_profile()
+        if architecture_profile.attention_shape_log_kind is None:
             return
         num_tokens = batch.total_num_tokens
         hidden_dim = self._model_config.embedding_dim
@@ -5841,8 +6019,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         if share_q_dim is not None:
             qkv_out_dim = share_q_dim + 2 * kv_size
         logger.debug(
-            "[STEP3_SHAPE] tokens=%s hidden=%s share_q_dim=%s head_dim=%s "
-            "num_q_heads=%s num_kv_heads=%s qkv_out_dim=%s",
+            "[ARCH_ATTENTION_SHAPE] profile=%s kind=%s tokens=%s hidden=%s "
+            "share_q_dim=%s head_dim=%s num_q_heads=%s num_kv_heads=%s "
+            "qkv_out_dim=%s",
+            architecture_profile.profile_id,
+            architecture_profile.attention_shape_log_kind,
             num_tokens,
             hidden_dim,
             share_q_dim,
@@ -6310,7 +6491,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             #     attn_norm_time=0.0,
             # )
 
-        self._log_step3_attention_shape(batch)
+        self._log_architecture_attention_shape(batch)
+
+        attention_family = self._get_attention_family()
+        attention_family.require_enabled_for_execution()
 
         if self._enable_dummy_mode:
             base_time = self._dummy_execution_time
@@ -6329,8 +6513,6 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Attention operations not supported for cluster type {cluster_type}"
             )
 
-        attention_family = self._get_attention_family()
-        attention_family.require_enabled_for_execution()
         if attention_family.family_id == LATENT_MLA_ATTENTION_FAMILY.family_id:
             return self._predict_mla_attention_layer_time(
                 batch=batch,
@@ -6394,12 +6576,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
         attn_norm_time = self._get_attn_norm_layer_act_execution_time(batch)
 
-        # Step2Mini-specific operations (forward_1: inter_norm + wq after Q split)
-        # These are 0.0 for non-Step2Mini models
-        # In Step3, they are inclued in atten_prefill
+        # Architecture-profile attention extras are 0.0 when not declared by the profile.
         attn_inter_norm_time = 0.0
         attn_wq_proj_time = 0.0
-        if self._model_config.is_step2_mini():
+        if "attn_inter_norm" in self._get_predictor_attention_extra_ops():
             attn_inter_norm_time = self._get_attn_inter_norm_execution_time(batch)
             attn_wq_proj_time = self._get_attn_wq_proj_execution_time(batch)
 
@@ -6451,8 +6631,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             f"predicted_time_ms={attn_post_proj_time:.6f}"
         )
 
-        # Step2Mini-specific operation tracing (forward_1: inter_norm + wq after Q split)
-        if self._model_config.is_step2_mini():
+        # Architecture-profile attention extra operation tracing.
+        if "attn_inter_norm" in self._get_predictor_attention_extra_ops():
             logger.info(
                 f"[OP-TRACE][{cluster_name}][ATTENTION][attn_inter_norm] batch_id={batch.id}, layer_id={layer_id}, "
                 f"predicted_time_ms={attn_inter_norm_time:.6f}"
@@ -6467,9 +6647,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             + attn_pre_proj_time
             + attn_rope_time
             + attn_prefill_time
+            + attn_decode_time
             + attn_kv_cache_save_time
             + attn_post_proj_time
-            # Step2Mini-specific operations (0.0 for non-Step2Mini models)
+            # Architecture-profile attention extras are 0.0 when absent.
             + attn_inter_norm_time
             + attn_wq_proj_time
         )
@@ -6486,7 +6667,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             attention_rope_execution_time=attn_rope_time,
             attention_kv_cache_save_execution_time=attn_kv_cache_save_time,
             attn_norm_time=attn_norm_time,
-            # Step2Mini-specific operations (0.0 for non-Step2Mini models)
+            # Architecture-profile attention extras are 0.0 when absent.
             attn_inter_norm_time=attn_inter_norm_time,
             attn_wq_proj_time=attn_wq_proj_time,
         )
@@ -6574,6 +6755,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             mlp_layer_down_proj_execution_time=mlp_down_proj_time,
             mlp_layer_act_execution_time=mlp_act_time,
             mlp_norm_time=mlp_norm_time,
+            operator_times=MLPOperatorTimes(
+                op_times={
+                    "post_attention_layernorm": mlp_norm_time,
+                    "mlp_up_proj": mlp_up_proj_time,
+                    "mlp_act": mlp_act_time,
+                    "mlp_down_proj": mlp_down_proj_time,
+                }
+            ),
         )
 
     def predict_moe_layer_time(
@@ -6845,21 +7034,35 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         self._require_predictions_for_measurement_type(measurement_type, batch)
         self._activate_measurement_type(measurement_type)
 
-        # Phase 2.5: Refactored to directly build ExecutionTime without calling deprecated get_execution_time()
-        # Calculate pipeline parallel communication time
+        # Calculate first-class communication operators for the dense live path.
+        communication_operator_times: dict[str, float] = {}
         if stage_id == self._replica_config.num_pipeline_stages - 1:
             pipeline_parallel_communication_time = 0
         else:
             pipeline_parallel_communication_time = (
-                self._get_pipeline_parallel_communication_time(batch)
+                self._predict_comm_operator(
+                    get_comm_operator("pipeline_parallel_send_recv"),
+                    batch,
+                )
+            )
+            communication_operator_times["pipeline_parallel_send_recv"] = (
+                pipeline_parallel_communication_time
             )
 
-        # Calculate tensor parallel communication time
         if self._replica_config.attn_tensor_parallel_size == 1:
             tensor_parallel_communication_time = 0
         else:
             tensor_parallel_communication_time = (
-                self._get_tensor_parallel_communication_time(batch)
+                self._predict_comm_operator(
+                    get_comm_operator("attn_tensor_parallel_allreduce"),
+                    batch,
+                )
+            )
+            communication_operator_times["attn_tensor_parallel_allreduce"] = (
+                tensor_parallel_communication_time
+            )
+            communication_operator_times["mlp_tensor_parallel_allreduce"] = (
+                tensor_parallel_communication_time
             )
 
         # Build base ExecutionTime for single layer.
@@ -7104,6 +7307,17 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             decode_draft_proposer_time=decode_draft_proposer_time,
             mtp_terminal_overshoot_time=mtp_terminal_overshoot_time,
             attention_operator_times=attention_time.operator_times,
+            communication_operator_times=CommunicationOperatorTimes(
+                communication_operator_times
+            ),
+            mlp_operator_times=MLPOperatorTimes(
+                op_times={
+                    "post_attention_layernorm": mlp_norm_time,
+                    "mlp_up_proj": mlp_up_proj_time,
+                    "mlp_act": mlp_act_time,
+                    "mlp_down_proj": mlp_down_proj_time,
+                }
+            ),
         )
 
         # If num_layers is 1, return as-is
@@ -7129,8 +7343,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             mlp_norm_time=base_execution_time._mlp_norm_time,
             add_time=base_execution_time._add_time,
             tensor_parallel_communication_time=base_execution_time._tensor_parallel_communication_time,
-            attn_tensor_parallel_allreduce_time=base_execution_time._attn_tensor_parallel_allreduce_time,
-            moe_tensor_parallel_allreduce_time=base_execution_time._moe_tensor_parallel_allreduce_time,
+            attn_tensor_parallel_allreduce_time=(
+                base_execution_time._attn_tensor_parallel_allreduce_time
+                if base_execution_time._has_attn_tensor_parallel_allreduce_time
+                else None
+            ),
+            moe_tensor_parallel_allreduce_time=(
+                base_execution_time._moe_tensor_parallel_allreduce_time
+                if base_execution_time._has_moe_tensor_parallel_allreduce_time
+                else None
+            ),
             pipeline_parallel_communication_time=base_execution_time._pipeline_parallel_communication_time,
             expert_parallel_communication_time=base_execution_time._expert_parallel_communication_time,
             moe_gating_time=0.0,
@@ -7151,4 +7373,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             decode_draft_proposer_time=base_execution_time._decode_draft_proposer_time,
             mtp_terminal_overshoot_time=base_execution_time._mtp_terminal_overshoot_time,
             attention_operator_times=base_execution_time.attention_operator_times,
+            communication_operator_times=(
+                base_execution_time.communication_operator_times
+            ),
+            mlp_operator_times=base_execution_time.mlp_operator_times,
         )

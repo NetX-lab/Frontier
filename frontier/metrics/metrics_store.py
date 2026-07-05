@@ -9,16 +9,24 @@ import plotly.express as px
 from frontier.config import SimulationConfig, ClusterConfig, get_quantization_manager
 from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 from frontier.entities import Batch, BatchStage, ExecutionTime, Request
-from frontier.logger import get_cluster_logger
+from frontier.logger import get_cluster_logger, init_logger
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
 )
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.trace_mapping import get_attention_trace_op_times
+from frontier.operators.families import (
+    FFN_FAMILY,
+    MEMORY_FAMILY,
+    MOE_FAMILY,
+    SHARE_EXPERT_FAMILY,
+)
+from frontier.operators.spec import OperatorFamilySpec
 
 if TYPE_CHECKING:
     from frontier.metrics.trace_store import TraceStore
+from frontier.metrics.capability_context import CapabilityContext
 from frontier.metrics.cdf_sketch import CDFSketch
 from frontier.metrics.trace_store import TraceStore
 from frontier.metrics.constants import (
@@ -46,6 +54,7 @@ from frontier.utils.mfu_calculator import MFUCalculator
 from frontier.types import ClusterType
 
 wandb = get_wandb()
+logger = init_logger(__name__)
 
 
 def if_write_metrics(func):
@@ -80,6 +89,48 @@ def _iter_mla_attention_op_times(execution_time: ExecutionTime):
             skip_zero=False,
         )
     )
+
+
+def _iter_family_execution_times(
+    family: OperatorFamilySpec,
+    execution_time: ExecutionTime,
+) -> tuple[tuple[str, float], ...]:
+    return tuple(
+        (operator.name, float(getattr(execution_time, operator.execution_time_attr)))
+        for operator in family.e2e_trace_ops()
+        if operator.execution_time_attr is not None
+    )
+
+
+def _iter_memory_execution_times(
+    execution_time: ExecutionTime,
+    *,
+    per_layer_count: int | None = None,
+    include_input_layernorm: bool = True,
+    include_post_attention_layernorm: bool = True,
+    include_add_attn_residual: bool = True,
+    include_add_ffn_residual: bool = True,
+) -> tuple[tuple[str, float], ...]:
+    if per_layer_count is not None and per_layer_count <= 0:
+        raise ValueError("per_layer_count must be positive when provided")
+
+    included_ops = {
+        "input_layernorm": include_input_layernorm,
+        "post_attention_layernorm": include_post_attention_layernorm,
+        "add_attn_residual": include_add_attn_residual,
+        "add_ffn_residual": include_add_ffn_residual,
+    }
+    memory_times: list[tuple[str, float]] = []
+    for operator in MEMORY_FAMILY.e2e_trace_ops():
+        if operator.execution_time_attr is None:
+            continue
+        if not included_ops.get(operator.name, False):
+            continue
+        duration_ms = float(getattr(execution_time, operator.execution_time_attr))
+        if per_layer_count is not None:
+            duration_ms /= per_layer_count
+        memory_times.append((operator.name, duration_ms))
+    return tuple(memory_times)
 
 
 _DENSE_ATTENTION_PUBLIC_TRACE_NAME_BY_ROLE = {
@@ -435,27 +486,26 @@ class MetricsStore:
         model_name = (
             cluster_config.replica_config.model_name if cluster_config else "unknown"
         )
-        model_config = cluster_config.replica_config.model_config if cluster_config else None
-        skip_ffn_attn_norm_residual = (
-            cluster_type == ClusterType.DECODE_FFN
-            and model_config is not None
-            and model_config.is_step3_text()
-        )
-        skip_add_attn_residual = (
-            cluster_type == ClusterType.DECODE_ATTN
-            and model_config is not None
-            and model_config.is_step3_text()
-        )
-        use_step3_ep_alltoall = (
-            model_config is not None
-            and model_config.model_type == "step3_text"
-            and cluster_type
-            in (
-                ClusterType.PREFILL,
-                ClusterType.DECODE,
-                ClusterType.DECODE_FFN,
-                ClusterType.MONOLITHIC,
+        capability_context = (
+            CapabilityContext.from_replica_config(
+                cluster_type=cluster_type,
+                replica_config=cluster_config.replica_config,
             )
+            if cluster_config is not None
+            and getattr(cluster_config.replica_config, "model_config", None) is not None
+            else None
+        )
+        skip_ffn_attn_norm_residual = bool(
+            capability_context is not None
+            and capability_context.skip_decode_ffn_attn_norm_residual
+        )
+        skip_add_attn_residual = bool(
+            capability_context is not None
+            and capability_context.skip_decode_attn_residual
+        )
+        use_profile_ep_alltoall = bool(
+            capability_context is not None
+            and capability_context.uses_profile_ep_alltoall
         )
         use_ep_alltoall_dispatch_combine = self._use_ep_alltoall_dispatch_combine(
             cluster_type=cluster_type,
@@ -635,7 +685,7 @@ class MetricsStore:
                 cluster_type,
                 skip_ffn_attn_norm_residual=skip_ffn_attn_norm_residual,
                 skip_add_attn_residual=skip_add_attn_residual,
-                use_step3_ep_alltoall=use_step3_ep_alltoall,
+                use_profile_ep_alltoall=use_profile_ep_alltoall,
                 use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
             )
         else:
@@ -648,7 +698,7 @@ class MetricsStore:
                 cluster_type,
                 skip_ffn_attn_norm_residual=skip_ffn_attn_norm_residual,
                 skip_add_attn_residual=skip_add_attn_residual,
-                use_step3_ep_alltoall=use_step3_ep_alltoall,
+                use_profile_ep_alltoall=use_profile_ep_alltoall,
                 use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
             )
 
@@ -746,7 +796,7 @@ class MetricsStore:
         cluster_type: ClusterType,
         skip_ffn_attn_norm_residual: bool = False,
         skip_add_attn_residual: bool = False,
-        use_step3_ep_alltoall: bool = False,
+        use_profile_ep_alltoall: bool = False,
         use_ep_alltoall_dispatch_combine: bool = True,
     ) -> None:
         """
@@ -759,7 +809,13 @@ class MetricsStore:
         is_moe = execution_time._is_moe
 
         # Attention Block
-        emit("COMPUTE", "input_layernorm", execution_time.attn_norm_time)
+        for op_name, duration_ms in _iter_memory_execution_times(
+            execution_time,
+            include_post_attention_layernorm=False,
+            include_add_attn_residual=False,
+            include_add_ffn_residual=False,
+        ):
+            emit("COMPUTE", op_name, duration_ms)
         emit("COMPUTE", "attn_pre_proj", execution_time.attention_pre_proj_time)
         emit("COMPUTE", "attn_rope", execution_time.attention_rope_execution_time)
 
@@ -784,13 +840,13 @@ class MetricsStore:
 
         # MLP or MoE Block
         if not skip_ffn_attn_norm_residual:
-            emit("COMPUTE", "post_attention_layernorm", execution_time.mlp_norm_time)
-            if not skip_add_attn_residual:
-                emit(
-                    "COMPUTE",
-                    "add_attn_residual",
-                    execution_time.add_attn_residual_time,
-                )
+            for op_name, duration_ms in _iter_memory_execution_times(
+                execution_time,
+                include_input_layernorm=False,
+                include_add_attn_residual=not skip_add_attn_residual,
+                include_add_ffn_residual=False,
+            ):
+                emit("COMPUTE", op_name, duration_ms)
 
         if cluster_type == ClusterType.DECODE_ATTN:
             return
@@ -802,32 +858,24 @@ class MetricsStore:
                 execution_time.moe_tensor_parallel_allgather_time,
             )
             if execution_time.share_expert_time > 0:
-                emit(
-                    "COMPUTE",
-                    "share_expert_up_proj",
-                    execution_time.share_expert_up_proj_time,
-                )
-                emit("COMPUTE", "share_expert_act", execution_time.share_expert_act_time)
-                emit(
-                    "COMPUTE",
-                    "share_expert_down_proj",
-                    execution_time.share_expert_down_proj_time,
-                )
+                for op_name, duration_ms in _iter_family_execution_times(
+                    SHARE_EXPERT_FAMILY,
+                    execution_time,
+                ):
+                    emit("COMPUTE", op_name, duration_ms)
                 emit(
                     "COMM",
                     "share_expert_tensor_parallel_allreduce",
                     execution_time.share_expert_tensor_parallel_allreduce_time,
                 )
-            emit("COMPUTE", "moe_gating_linear", execution_time.moe_gating_linear_time)
-            emit(
-                "COMPUTE",
-                "moe_gating_routing_topk",
-                execution_time.moe_gating_routing_topk_time,
-            )
-            emit("COMPUTE", "moe_shuffling", execution_time.moe_shuffling_time)
+            for op_name, duration_ms in _iter_family_execution_times(
+                MOE_FAMILY,
+                execution_time,
+            )[:3]:
+                emit("COMPUTE", op_name, duration_ms)
             # COMM_SKIP: EP communication only needed when ep_size > 1 (experts distributed)
             if ep_enabled:
-                if use_step3_ep_alltoall:
+                if use_profile_ep_alltoall:
                     emit(
                         "COMM",
                         "expert_parallel_alltoall",
@@ -839,9 +887,13 @@ class MetricsStore:
                         "expert_parallel_alltoall_dispatch",
                         execution_time.expert_parallel_communication_time / 2,
                     )
-            emit("COMPUTE", "moe_grouped_gemm", execution_time.moe_grouped_gemm_time)
+            for op_name, duration_ms in _iter_family_execution_times(
+                MOE_FAMILY,
+                execution_time,
+            )[3:]:
+                emit("COMPUTE", op_name, duration_ms)
             if ep_enabled:
-                if use_step3_ep_alltoall or use_ep_alltoall_dispatch_combine:
+                if use_profile_ep_alltoall or use_ep_alltoall_dispatch_combine:
                     emit(
                         "COMM",
                         "expert_parallel_alltoall_combine",
@@ -886,24 +938,24 @@ class MetricsStore:
                 emit("COMPUTE", "mlp_act", dense_trace_act)
                 emit("COMPUTE", "mlp_down_proj", dense_trace_down)
         else:
-            emit(
-                "COMPUTE",
-                "mlp_up_proj",
-                execution_time.mlp_layer_up_proj_execution_time,
-            )
-            emit("COMPUTE", "mlp_act", execution_time.mlp_layer_act_execution_time)
-            emit(
-                "COMPUTE",
-                "mlp_down_proj",
-                execution_time.mlp_layer_down_proj_execution_time,
-            )
+            for op_name, duration_ms in _iter_family_execution_times(
+                FFN_FAMILY,
+                execution_time,
+            ):
+                emit("COMPUTE", op_name, duration_ms)
             emit(
                 "COMM",
                 "mlp_tensor_parallel_allreduce",
                 execution_time.mlp_all_reduce_time,
             )
 
-        emit("COMPUTE", "add_ffn_residual", execution_time.add_ffn_residual_time)
+        for op_name, duration_ms in _iter_memory_execution_times(
+            execution_time,
+            include_input_layernorm=False,
+            include_post_attention_layernorm=False,
+            include_add_attn_residual=False,
+        ):
+            emit("COMPUTE", op_name, duration_ms)
 
     def _emit_per_layer_traces(
         self,
@@ -916,7 +968,7 @@ class MetricsStore:
         cluster_type: ClusterType,
         skip_ffn_attn_norm_residual: bool = False,
         skip_add_attn_residual: bool = False,
-        use_step3_ep_alltoall: bool = False,
+        use_profile_ep_alltoall: bool = False,
         use_ep_alltoall_dispatch_combine: bool = True,
     ) -> None:
         """
@@ -931,7 +983,6 @@ class MetricsStore:
         is_moe = execution_time._is_moe
 
         # Get per-layer times by dividing aggregated times
-        per_layer_attn_norm = execution_time.attn_norm_time / num_layers
         per_layer_attn_pre_proj = execution_time.attention_pre_proj_time / num_layers
         per_layer_attn_rope = execution_time.attention_rope_execution_time / num_layers
         per_layer_dense_attention_times = dict(
@@ -946,12 +997,6 @@ class MetricsStore:
         )
         per_layer_attn_post_proj = execution_time.attention_post_proj_time / num_layers
         per_layer_attn_allreduce = execution_time.attention_all_reduce_time / num_layers
-        per_layer_mlp_norm = execution_time.mlp_norm_time / num_layers
-        per_layer_add_attn_residual = execution_time.add_attn_residual_time / num_layers
-        per_layer_add_ffn_residual = execution_time.add_ffn_residual_time / num_layers
-        per_layer_share_expert_up = execution_time.share_expert_up_proj_time / num_layers
-        per_layer_share_expert_act = execution_time.share_expert_act_time / num_layers
-        per_layer_share_expert_down = execution_time.share_expert_down_proj_time / num_layers
         per_layer_moe_tp_allgather = (
             execution_time.moe_tensor_parallel_allgather_time / num_layers
         )
@@ -960,17 +1005,23 @@ class MetricsStore:
         )
 
         if is_moe:
-            per_layer_moe_gating_linear = (
-                execution_time.moe_gating_linear_time / num_layers
+            per_layer_moe_times = tuple(
+                (op_name, duration_ms / num_layers)
+                for op_name, duration_ms in _iter_family_execution_times(
+                    MOE_FAMILY,
+                    execution_time,
+                )
             )
-            per_layer_moe_gating_routing_topk = (
-                execution_time.moe_gating_routing_topk_time / num_layers
+            per_layer_share_expert_times = tuple(
+                (op_name, duration_ms / num_layers)
+                for op_name, duration_ms in _iter_family_execution_times(
+                    SHARE_EXPERT_FAMILY,
+                    execution_time,
+                )
             )
-            per_layer_moe_shuffling = execution_time.moe_shuffling_time / num_layers
             per_layer_ep_comm = (
                 execution_time.expert_parallel_communication_time / num_layers
             )
-            per_layer_moe_gemm = execution_time.moe_grouped_gemm_time / num_layers
             per_layer_moe_tp_allreduce = execution_time.mlp_all_reduce_time / num_layers
         else:
             per_layer_mlp_up = (
@@ -987,9 +1038,14 @@ class MetricsStore:
             layer_meta = {"layer_idx": layer_idx}
 
             # Attention Block
-            emit(
-                "COMPUTE", "input_layernorm", per_layer_attn_norm, layer_idx, layer_meta
-            )
+            for op_name, duration_ms in _iter_memory_execution_times(
+                execution_time,
+                per_layer_count=num_layers,
+                include_post_attention_layernorm=False,
+                include_add_attn_residual=False,
+                include_add_ffn_residual=False,
+            ):
+                emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
             emit(
                 "COMPUTE",
                 "attn_pre_proj",
@@ -1051,21 +1107,14 @@ class MetricsStore:
 
             # MLP or MoE Block
             if not skip_ffn_attn_norm_residual:
-                emit(
-                    "COMPUTE",
-                    "post_attention_layernorm",
-                    per_layer_mlp_norm,
-                    layer_idx,
-                    layer_meta,
-                )
-                if not skip_add_attn_residual:
-                    emit(
-                        "COMPUTE",
-                        "add_attn_residual",
-                        per_layer_add_attn_residual,
-                        layer_idx,
-                        layer_meta,
-                    )
+                for op_name, duration_ms in _iter_memory_execution_times(
+                    execution_time,
+                    per_layer_count=num_layers,
+                    include_input_layernorm=False,
+                    include_add_attn_residual=not skip_add_attn_residual,
+                    include_add_ffn_residual=False,
+                ):
+                    emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
 
             if cluster_type == ClusterType.DECODE_ATTN:
                 continue
@@ -1079,27 +1128,8 @@ class MetricsStore:
                     layer_meta,
                 )
                 if execution_time.share_expert_time > 0:
-                    emit(
-                        "COMPUTE",
-                        "share_expert_up_proj",
-                        per_layer_share_expert_up,
-                        layer_idx,
-                        layer_meta,
-                    )
-                    emit(
-                        "COMPUTE",
-                        "share_expert_act",
-                        per_layer_share_expert_act,
-                        layer_idx,
-                        layer_meta,
-                    )
-                    emit(
-                        "COMPUTE",
-                        "share_expert_down_proj",
-                        per_layer_share_expert_down,
-                        layer_idx,
-                        layer_meta,
-                    )
+                    for op_name, duration_ms in per_layer_share_expert_times:
+                        emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
                     emit(
                         "COMM",
                         "share_expert_tensor_parallel_allreduce",
@@ -1107,30 +1137,11 @@ class MetricsStore:
                         layer_idx,
                         layer_meta,
                     )
-                emit(
-                    "COMPUTE",
-                    "moe_gating_linear",
-                    per_layer_moe_gating_linear,
-                    layer_idx,
-                    layer_meta,
-                )
-                emit(
-                    "COMPUTE",
-                    "moe_gating_routing_topk",
-                    per_layer_moe_gating_routing_topk,
-                    layer_idx,
-                    layer_meta,
-                )
-                emit(
-                    "COMPUTE",
-                    "moe_shuffling",
-                    per_layer_moe_shuffling,
-                    layer_idx,
-                    layer_meta,
-                )
+                for op_name, duration_ms in per_layer_moe_times[:3]:
+                    emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
                 # COMM_SKIP: EP communication only needed when ep_size > 1 (experts distributed)
                 if ep_enabled:
-                    if use_step3_ep_alltoall:
+                    if use_profile_ep_alltoall:
                         emit(
                             "COMM",
                             "expert_parallel_alltoall",
@@ -1146,15 +1157,10 @@ class MetricsStore:
                             layer_idx,
                             layer_meta,
                         )
-                emit(
-                    "COMPUTE",
-                    "moe_grouped_gemm",
-                    per_layer_moe_gemm,
-                    layer_idx,
-                    layer_meta,
-                )
+                for op_name, duration_ms in per_layer_moe_times[3:]:
+                    emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
                 if ep_enabled:
-                    if use_step3_ep_alltoall or use_ep_alltoall_dispatch_combine:
+                    if use_profile_ep_alltoall or use_ep_alltoall_dispatch_combine:
                         emit(
                             "COMM",
                             "expert_parallel_alltoall_combine",
@@ -1216,15 +1222,21 @@ class MetricsStore:
                         layer_meta,
                     )
             else:
-                emit("COMPUTE", "mlp_up_proj", per_layer_mlp_up, layer_idx, layer_meta)
-                emit("COMPUTE", "mlp_act", per_layer_mlp_act, layer_idx, layer_meta)
-                emit(
-                    "COMPUTE",
-                    "mlp_down_proj",
-                    per_layer_mlp_down,
-                    layer_idx,
-                    layer_meta,
-                )
+                per_layer_ffn_times = {
+                    "mlp_layer_up_proj_execution_time": per_layer_mlp_up,
+                    "mlp_layer_act_execution_time": per_layer_mlp_act,
+                    "mlp_layer_down_proj_execution_time": per_layer_mlp_down,
+                }
+                for operator in FFN_FAMILY.e2e_trace_ops():
+                    if operator.execution_time_attr is None:
+                        continue
+                    emit(
+                        "COMPUTE",
+                        operator.name,
+                        per_layer_ffn_times[operator.execution_time_attr],
+                        layer_idx,
+                        layer_meta,
+                    )
                 emit(
                     "COMM",
                     "mlp_tensor_parallel_allreduce",
@@ -1233,13 +1245,14 @@ class MetricsStore:
                     layer_meta,
                 )
 
-            emit(
-                "COMPUTE",
-                "add_ffn_residual",
-                per_layer_add_ffn_residual,
-                layer_idx,
-                layer_meta,
-            )
+            for op_name, duration_ms in _iter_memory_execution_times(
+                execution_time,
+                per_layer_count=num_layers,
+                include_input_layernorm=False,
+                include_post_attention_layernorm=False,
+                include_add_attn_residual=False,
+            ):
+                emit("COMPUTE", op_name, duration_ms, layer_idx, layer_meta)
 
     def _should_store_memory_time_series(self) -> bool:
         if not self._config.enable_memory_time_series:
@@ -3444,24 +3457,25 @@ class MetricsStore:
         cluster_config = self._cluster_configs.get(cluster_type)
         moe_tp_enabled = False
         ep_enabled = False
-        use_step3_ep_alltoall = False
+        use_profile_ep_alltoall = False
         use_ep_alltoall_dispatch_combine = False
         if execution_time._is_moe:
             if cluster_config is None:
                 raise ValueError(f"Cluster config not found for {cluster_type}")
             moe_tp_enabled = cluster_config.replica_config.moe_tensor_parallel_size > 1
             ep_enabled = cluster_config.replica_config.moe_expert_parallel_size > 1
-            model_config = cluster_config.replica_config.model_config
-            use_step3_ep_alltoall = (
-                model_config is not None
-                and model_config.model_type == "step3_text"
-                and cluster_type
-                in (
-                    ClusterType.PREFILL,
-                    ClusterType.DECODE,
-                    ClusterType.DECODE_FFN,
-                    ClusterType.MONOLITHIC,
+            capability_context = (
+                CapabilityContext.from_replica_config(
+                    cluster_type=cluster_type,
+                    replica_config=cluster_config.replica_config,
                 )
+                if getattr(cluster_config.replica_config, "model_config", None)
+                is not None
+                else None
+            )
+            use_profile_ep_alltoall = bool(
+                capability_context is not None
+                and capability_context.uses_profile_ep_alltoall
             )
             use_ep_alltoall_dispatch_combine = (
                 self._use_ep_alltoall_dispatch_combine(
@@ -3602,7 +3616,7 @@ class MetricsStore:
                 cluster_type,
             )
             if ep_enabled and (
-                use_step3_ep_alltoall or use_ep_alltoall_dispatch_combine
+                use_profile_ep_alltoall or use_ep_alltoall_dispatch_combine
             ):
                 self._push_metric(
                     OperationMetrics.EXPERT_PARALLEL_ALLTOALL_DISPATCH,
@@ -3610,32 +3624,18 @@ class MetricsStore:
                     execution_time.expert_parallel_communication_time / 2,
                     cluster_type,
                 )
-            self._push_metric(
-                OperationMetrics.MOE_GATING_LINEAR,
-                batch_id,
-                execution_time.moe_gating_linear_time,
-                cluster_type,
-            )
-            self._push_metric(
-                OperationMetrics.MOE_GATING_ROUTING_TOPK,
-                batch_id,
-                execution_time.moe_gating_routing_topk_time,
-                cluster_type,
-            )
-            self._push_metric(
-                OperationMetrics.MOE_SHUFFLING,
-                batch_id,
-                execution_time.moe_shuffling_time,
-                cluster_type,
-            )
-            self._push_metric(
-                OperationMetrics.MOE_GROUPED_GEMM,
-                batch_id,
-                execution_time.moe_grouped_gemm_time,
-                cluster_type,
-            )
+            for op_name, metric_value in _iter_family_execution_times(
+                MOE_FAMILY,
+                execution_time,
+            ):
+                self._push_metric(
+                    OperationMetrics(op_name),
+                    batch_id,
+                    metric_value,
+                    cluster_type,
+                )
             if ep_enabled and (
-                use_step3_ep_alltoall or use_ep_alltoall_dispatch_combine
+                use_profile_ep_alltoall or use_ep_alltoall_dispatch_combine
             ):
                 self._push_metric(
                     OperationMetrics.EXPERT_PARALLEL_ALLTOALL_COMBINE,
@@ -3643,24 +3643,16 @@ class MetricsStore:
                     execution_time.expert_parallel_communication_time / 2,
                     cluster_type,
                 )
-            self._push_metric(
-                OperationMetrics.SHARE_EXPERT_UP_PROJ,
-                batch_id,
-                execution_time.share_expert_up_proj_time,
-                cluster_type,
-            )
-            self._push_metric(
-                OperationMetrics.SHARE_EXPERT_ACT,
-                batch_id,
-                execution_time.share_expert_act_time,
-                cluster_type,
-            )
-            self._push_metric(
-                OperationMetrics.SHARE_EXPERT_DOWN_PROJ,
-                batch_id,
-                execution_time.share_expert_down_proj_time,
-                cluster_type,
-            )
+            for op_name, metric_value in _iter_family_execution_times(
+                SHARE_EXPERT_FAMILY,
+                execution_time,
+            ):
+                self._push_metric(
+                    OperationMetrics(op_name),
+                    batch_id,
+                    metric_value,
+                    cluster_type,
+                )
 
     @if_write_metrics
     def on_batch_stage_end(

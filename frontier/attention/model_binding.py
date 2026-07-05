@@ -29,7 +29,6 @@ _REQUIRED_MLA_FIELDS = (
     "v_head_dim",
 )
 
-
 @dataclass(frozen=True)
 class AttentionFamilyBinding:
     """Concrete attention family selected for one model configuration."""
@@ -85,6 +84,38 @@ def _validate_mla_fields(config: Any) -> None:
         raise ValueError(f"MLA attention binding requires fields: {missing}")
 
 
+def _validate_mfa_fields(config: Any) -> None:
+    missing = []
+    if _get_attr(config, "share_q_dim", None) is None:
+        missing.append("share_q_dim")
+    if (
+        _get_attr(config, "head_dim", None) is None
+        and _get_attr(config, "_head_dim", None) is None
+    ):
+        missing.append("head_dim")
+    if missing:
+        raise ValueError(f"MFA attention binding requires fields: {missing}")
+
+
+def _dense_variant_from_heads(num_q_heads: int, num_kv_heads: int) -> str:
+    reason = f"num_q_heads={num_q_heads}, num_kv_heads={num_kv_heads}"
+    if num_q_heads <= 0 or num_kv_heads <= 0:
+        raise ValueError(
+            "Attention head counts must be positive: "
+            f"{reason}"
+        )
+    if num_kv_heads == num_q_heads:
+        return "mha"
+    if num_kv_heads == 1:
+        return "mqa"
+    if 1 < num_kv_heads < num_q_heads:
+        return "gqa"
+    raise ValueError(
+        "Unsupported attention head topology: "
+        f"{reason}"
+    )
+
+
 def bind_attention_family(config: Any) -> AttentionFamilyBinding:
     """Bind a runtime or profiling model config to an attention family.
 
@@ -99,6 +130,11 @@ def bind_attention_family(config: Any) -> AttentionFamilyBinding:
             reason="DSA marker detected; truth backend remains frozen",
         )
 
+    if bool(_get_attr(config, "use_mla", False)) and bool(
+        _get_attr(config, "use_mfa", False)
+    ):
+        raise ValueError("use_mla and use_mfa are mutually exclusive")
+
     if bool(_get_attr(config, "use_mla", False)):
         _validate_mla_fields(config)
         return AttentionFamilyBinding(
@@ -106,6 +142,26 @@ def bind_attention_family(config: Any) -> AttentionFamilyBinding:
             variant_id="mla",
             frozen=False,
             reason="use_mla=True with required latent cache fields",
+        )
+
+    if bool(_get_attr(config, "use_mfa", False)):
+        _validate_mfa_fields(config)
+        num_q_heads = int(_get_attr(config, "num_q_heads"))
+        num_kv_heads = int(_get_attr(config, "num_kv_heads"))
+        if num_kv_heads != 1:
+            raise ValueError(
+                "use_mfa=True requires num_kv_heads=1 for Step3Text dense-KV "
+                f"MFA topology, got num_kv_heads={num_kv_heads}"
+            )
+        variant_id = _dense_variant_from_heads(num_q_heads, num_kv_heads)
+        return AttentionFamilyBinding(
+            family_id="dense_attention",
+            variant_id=variant_id,
+            frozen=False,
+            reason=(
+                "use_mfa=True with Step3Text dense-KV attention topology; "
+                f"num_q_heads={num_q_heads}, num_kv_heads={num_kv_heads}"
+            ),
         )
 
     exotic_fields = _unknown_exotic_fields(config)
@@ -119,22 +175,7 @@ def bind_attention_family(config: Any) -> AttentionFamilyBinding:
     num_kv_heads = int(_get_attr(config, "num_kv_heads"))
     reason = f"num_q_heads={num_q_heads}, num_kv_heads={num_kv_heads}"
 
-    if num_q_heads <= 0 or num_kv_heads <= 0:
-        raise ValueError(
-            "Attention head counts must be positive: "
-            f"{reason}"
-        )
-    if num_kv_heads == num_q_heads:
-        variant_id = "mha"
-    elif num_kv_heads == 1:
-        variant_id = "mqa"
-    elif 1 < num_kv_heads < num_q_heads:
-        variant_id = "gqa"
-    else:
-        raise ValueError(
-            "Unsupported attention head topology: "
-            f"{reason}"
-        )
+    variant_id = _dense_variant_from_heads(num_q_heads, num_kv_heads)
 
     return AttentionFamilyBinding(
         family_id="dense_attention",
