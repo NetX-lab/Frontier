@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-07-05 | Added profiling-independent dummy smoke matrix runner documentation. |
 | 2026-06-22 | Removed legacy split-decode terminology from the public PDD surface. |
 | 2026-06-14 | Added PDD pd-disaggregation script list, configuration contract, and validation criteria for local PR preparation. |
 
@@ -19,6 +20,7 @@ This directory contains one-click architecture entrypoints for Frontier's releas
 
 | Path | Scenario | Notes |
 |------|----------|-------|
+| `run_dummy_smoke_matrix.sh` | Profiling-independent dummy smoke matrix | Runs dense/MoE across co-location/PDD and offline/online; does not consume profiling CSV datasets |
 | `co-location/run_all.sh` | Full co-location suite | Runs all five offline cases and all five online cases; pass extra Frontier CLI flags after `--` |
 | `co-location/offline/dense_model_basic.sh` | Offline dense co-location baseline | Analytical backend by default, dummy execution time, `decode_cuda_graph_mode=full_decode_only`, Chunked Prefill, CSV/JSON metrics |
 | `co-location/offline/moe_model_basic.sh` | Offline MoE co-location baseline | Analytical backend by default, dummy execution time, shared-domain MoE invariant, Chunked Prefill, CSV/JSON metrics |
@@ -73,6 +75,10 @@ Under PDD, one user request can produce multiple prefill-to-decode KV handoffs. 
 ## Recommended Start Order
 
 ```bash
+# Profiling-independent smoke matrix: dense/MoE across co-location/PDD and offline/online.
+# This does not consume profiling CSV datasets because it forces dummy execution-time prediction.
+bash examples/architecture/run_dummy_smoke_matrix.sh
+
 # Full PDD suite for pre-release-v0.2.
 bash examples/architecture/pdd/run_all.sh
 
