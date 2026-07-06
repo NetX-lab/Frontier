@@ -1,11 +1,5 @@
 # Profiling User Guide
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-06-07 | Added the profiling guide for release examples, operator coverage, output taxonomy, and simulator CSV smokes. |
-
 ## Scope
 
 This guide covers the user-facing profiling workflow for `pre-release-v0.1`.

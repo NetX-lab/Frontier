@@ -1,13 +1,5 @@
 # CLI User Guide
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-06-09 | Updated co-location entrypoints for the offline/online split and analytical one-click suite backend. |
-| 2026-06-07 | Updated the CLI guide for `astra_sim_analytical` defaults and optional `collective_sim` backend usage. |
-| 2026-06-07 | Added the release CLI guide for co-location simulation, examples, metrics, and common runtime options. |
-
 ## Scope
 
 This guide covers the public CLI surface for the `pre-release-v0.1` branch. The supported runtime architecture is `co-location`, where prefill and decode run in one monolithic cluster.

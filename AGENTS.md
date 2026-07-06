@@ -10,11 +10,7 @@
 
 Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.2` branch supports the **co-location** architecture, where prefill and decode run in a single monolithic cluster, and sequential **PDD / `pd-disaggregation`**, where prefill and decode run in separate clusters with KV cache transfer between them.
 
-The supported PDD path requires sequential cluster execution. If a user selects `pd-disaggregation` with parallel clusters enabled, Frontier fails fast with this message:
-
-```text
-Error: pd-disaggregation public release support requires --no-enable_parallel_clusters. Parallel cluster processing for pd-disaggregation is not included in this release.
-```
+The supported PDD path requires sequential cluster execution. If a user selects `pd-disaggregation` with parallel clusters enabled, Frontier fails fast with message.
 
 If a user selects `pd-af-disaggregation` or other unsupported disaggregated research surfaces, Frontier still fails fast with the guarded disaggregation release error.
 
@@ -37,6 +33,7 @@ This AGENTS.md release guide is intended to be the **authoritative entry point**
 - [Canonical TTFT Contract for Frontier vs vLLM V1 Online Alignment](#canonical-ttft-contract-for-frontier-vs-vllm-v1-online-alignment)
 - [Training (Execution-Time & Network Models)](#training-execution-time--network-models)
 - [Profiling Utilities](#profiling-utilities)
+- [Development Gates](#development-gates)
 - [Tests](#tests)
 - [Contributing](#contributing)
 - [License](#license)
@@ -599,6 +596,15 @@ See `docs/profiling/README.md` for the public profiling workflow and downstream 
 | KV block count                              | `num_blocks = floor(available_kv / page_size / num_layers)`                       | `num_blocks = floor(available_kv / page_size / num_layers)`                                                                  | Same final block-count formula.                                                                     |
 
 Practical implication: Frontier intentionally uses a split interface (`param_memory` + `overhead`) to support three modes (`memory_planner`, `memory_planner_profiled`, `explicit`) while keeping compatibility with vLLM-style memory accounting.
+
+## Development Gates
+
+Any new feature, refactor, or module adjustment must pass these gates before delivery:
+
+- Keep the design and implementation modular, structured, integrated with existing code boundaries, and free of hard-coded logic or duplicated local reinventions.
+- Preserve existing behavior: unchanged features must keep results and key intermediate outputs highly consistent with the pre-change baseline.
+- Preserve simulator fidelity: refactors and module adjustments must not change final numeric results or key intermediate outputs unless an explicitly approved fidelity fix explains the difference.
+- Validate with a comprehensive case matrix covering dense/MoE, offline/online, varied request lengths and counts, varied QPS, feature toggles, and model configs, with at least 50 concrete scenario settings.
 
 ## Tests
 

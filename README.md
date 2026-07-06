@@ -14,7 +14,7 @@
 <div align="left">
 
 ## Latest News 🎯
-
+📍[2026/07] We refactored the operator registration module to improve support and integration for diverse models and attn algorithms. More examples will be provided, including how to use Frontier for end-to-end simulation of a new/customized model.<br />
 📍[2026/06] Prefill-Decode Disaggregation (PDD) version released! Support for Attention-FFN Disaggregation (AFD) will be available soon.<br />
 📍[2026/06] Initial version released, with support for co-located serving and modern optimizations.<br />
 
@@ -91,7 +91,7 @@ Current release-facing PDD and co-location examples are split by simulation mode
 
 These examples cover most runtime optimizations. Note that dummy analytical smoke runs only validate runtime plumbing, not profiling fidelity. Profiling outputs and reusable compute data are organized under data/profiling/compute.
 
-> Currently, only the `a800` and `rtx_pro_6000` datasets contain full-feature format profiles; we highly recommend re-collecting profiling data locally for your specific hardware.
+> Currently, only the `h800` and `rtx_pro_6000` datasets contain full-feature format profiles; we highly recommend re-collecting profiling data locally for your specific hardware.
 
 Example fixtures live under:
 

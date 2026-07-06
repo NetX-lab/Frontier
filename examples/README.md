@@ -1,17 +1,3 @@
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-06-22 | Cleaned public PDD wording to avoid unsupported split-decode terminology. |
-| 2026-06-14 | Added PDD pd-disaggregation examples, script index, and release-scope guidance for local PR preparation. |
-| 2026-06-08 | Clarified that dummy analytical co-location smoke runs validate runtime plumbing, not profiling fidelity. |
-| 2026-06-08 | Split co-location examples into `offline/` and `online/`, added suite runner and cross-validation guidance. |
-| 2026-06-07 | Added optimized co-location advanced MoE recipes, top-level profiling examples, and corrected metrics behavior for Thinking Mode. |
-| 2026-06-06 | Documented collective-sim prerequisites, optional Kaleido PNG export, and dummy-mode profiling behavior for co-location examples. |
-| 2026-06-04 | Clarified that transfer and disaggregated example surfaces are guarded out of `pre-release-v0.1`. |
-| 2026-06-04 | Restored release-supported co-location examples and removed disaggregated example references for `pre-release-v0.1`. |
-| 2026-06-03 | Reworked examples for the co-location-only open-source release branch. Earlier internal history may refer to guarded or removed private examples. |
-
 # Frontier Examples
 
 This directory contains runnable examples for the release-supported Frontier simulator surface.

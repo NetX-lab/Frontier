@@ -1,11 +1,5 @@
 # Training User Guide
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-06-07 | Added the training guide and documented on-demand predictor cache training during E2E simulation. |
-
 ## Scope
 
 This guide explains the role of `frontier.training` in the current repository.
@@ -199,9 +193,9 @@ The profiling smoke scripts in `examples/profiling/` use this path for downstrea
 
 ## Cache Management
 
-| Setting | Default | Use |
-|---------|---------|-----|
-| `--metrics_config_cache_dir` | `cache` | Cache root used by E2E simulation. |
+| Setting                               | Default | Use                                      |
+| ------------------------------------- | ------- | ---------------------------------------- |
+| `--metrics_config_cache_dir`          | `cache` | Cache root used by E2E simulation.       |
 | `--output_dir` in `frontier.training` | `cache` | Output root used by standalone training. |
 
 Use the same cache directory when you want standalone training and E2E simulation to share artifacts.
@@ -210,10 +204,10 @@ Do not copy cached model files between incompatible CSVs or predictor settings. 
 
 ## Troubleshooting
 
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| Standalone training reports missing dataset. | The CSV path is wrong or the profile was not generated. | Check `data/profiling/compute/<device>/<model>/`. |
-| Training fails with missing columns. | The CSV schema does not match the selected predictor path. | Regenerate the profile with the matching example script and measurement family. |
-| MoE training has no matching rows. | `routing_runtime_path`, `gating_runtime_context`, TP, or EP settings do not match the CSV metadata. | Align CLI settings with the CSV. |
-| E2E run spends time training at startup. | Predictor cache was missing. | Pre-run standalone training if startup time matters. |
-| E2E run uses fixed latencies. | Dummy predictor mode is enabled. | Pass `--no-random_forrest_execution_time_predictor_config_enable_dummy_mode` and provide CSV paths. |
+| Symptom                                      | Cause                                                                                               | Fix                                                                                                 |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Standalone training reports missing dataset. | The CSV path is wrong or the profile was not generated.                                             | Check `data/profiling/compute/<device>/<model>/`.                                                   |
+| Training fails with missing columns.         | The CSV schema does not match the selected predictor path.                                          | Regenerate the profile with the matching example script and measurement family.                     |
+| MoE training has no matching rows.           | `routing_runtime_path`, `gating_runtime_context`, TP, or EP settings do not match the CSV metadata. | Align CLI settings with the CSV.                                                                    |
+| E2E run spends time training at startup.     | Predictor cache was missing.                                                                        | Pre-run standalone training if startup time matters.                                                |
+| E2E run uses fixed latencies.                | Dummy predictor mode is enabled.                                                                    | Pass `--no-random_forrest_execution_time_predictor_config_enable_dummy_mode` and provide CSV paths. |

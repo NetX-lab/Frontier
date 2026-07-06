@@ -4,6 +4,224 @@ from types import SimpleNamespace
 
 import pytest
 
+from frontier.entities.time_components import CommunicationOperatorTimes, CommunicationTime
+from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+    SklearnExecutionTimePredictor,
+)
+from frontier.operators.families import COMM_FAMILY, get_comm_operator
+from frontier.operators.spec import CommOperatorSpec, CommPayloadContext, ResourceClass, TraceKind
+from frontier.types import ClusterType
+
+
+class _ConcreteSklearnExecutionTimePredictor(SklearnExecutionTimePredictor):
+    def _get_grid_search_params(self):
+        return {}
+
+    def _get_estimator(self):
+        raise NotImplementedError
+
+
+class _Batch:
+    id = 7
+    size = 2
+    num_tokens = 5
+    num_decode_tokens = 0
+    num_prefill_tokens = 5
+
+    def get_effective_total_tokens_rounded(self, _cluster_type: ClusterType) -> int:
+        return 5
+
+
+class _QuantizationManager:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, int, ClusterType]] = []
+
+    def adjust_tensor_size(
+        self,
+        collective: str,
+        data_size_bytes: int,
+        cluster_type: ClusterType,
+    ) -> int:
+        self.calls.append((collective, data_size_bytes, cluster_type))
+        return data_size_bytes + 11
+
+
+class _SpyCCBackend:
+    def __init__(self) -> None:
+        self.calls: list[dict[str, object]] = []
+
+    def predict_allreduce(
+        self,
+        *,
+        data_size_bytes: int,
+        num_devices: int,
+        cluster_type: ClusterType,
+        comm_domain: str | None = None,
+    ) -> float:
+        self.calls.append(
+            {
+                "collective_alias": "allreduce",
+                "data_size_bytes": data_size_bytes,
+                "num_devices": num_devices,
+                "cluster_type": cluster_type,
+                "comm_domain": comm_domain,
+            }
+        )
+        return float(data_size_bytes) / 1000.0 + float(num_devices)
+
+    def predict_send_recv(
+        self,
+        *,
+        data_size_bytes: int,
+        cluster_type: ClusterType,
+        comm_domain: str | None = None,
+    ) -> float:
+        self.calls.append(
+            {
+                "collective_alias": "send_recv",
+                "data_size_bytes": data_size_bytes,
+                "num_devices": 2,
+                "cluster_type": cluster_type,
+                "comm_domain": comm_domain,
+            }
+        )
+        return float(data_size_bytes) / 2000.0
+
+
+def _comm_context(*, quantization_manager: object | None = None) -> CommPayloadContext:
+    return CommPayloadContext(
+        batch=_Batch(),
+        model_config=SimpleNamespace(embedding_dim=8, num_experts_per_tok=2),
+        replica_config=SimpleNamespace(
+            attn_tensor_parallel_size=4,
+            moe_tensor_parallel_size=3,
+            moe_expert_parallel_size=2,
+            num_pipeline_stages=2,
+            router_topk=2,
+        ),
+        cluster_type=ClusterType.MONOLITHIC,
+        quantization_manager=quantization_manager or _QuantizationManager(),
+    )
+
+
+def _predictor() -> _ConcreteSklearnExecutionTimePredictor:
+    predictor = object.__new__(_ConcreteSklearnExecutionTimePredictor)
+    predictor._model_config = SimpleNamespace(embedding_dim=8, num_experts_per_tok=2)
+    predictor._replica_config = SimpleNamespace(
+        attn_tensor_parallel_size=4,
+        moe_tensor_parallel_size=3,
+        moe_expert_parallel_size=2,
+        num_pipeline_stages=2,
+        router_topk=2,
+    )
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._enable_dummy_mode = False
+    predictor._dummy_execution_time = 0.0
+    predictor._cc_backend = _SpyCCBackend()
+    predictor._supports_operation = lambda _operation: True
+    predictor._should_strip_collective_sim_allreduce_launch_overhead = lambda _batch: False
+    return predictor
+
+
+def test_comm_family_declares_first_class_collective_specs() -> None:
+    assert COMM_FAMILY.family_id == "comm"
+    assert COMM_FAMILY.resource_class is ResourceClass.COMM
+
+    comm_ops = {operator.name: operator for operator in COMM_FAMILY.operators}
+    assert {
+        "attn_tensor_parallel_allreduce",
+        "mlp_tensor_parallel_allreduce",
+        "moe_tensor_parallel_allreduce",
+        "moe_tensor_parallel_allgather",
+        "share_expert_tensor_parallel_allreduce",
+        "expert_parallel_allreduce",
+        "expert_parallel_alltoall",
+        "expert_parallel_alltoall_dispatch",
+        "expert_parallel_alltoall_combine",
+        "pipeline_parallel_send_recv",
+    }.issubset(comm_ops)
+
+    attn_allreduce = comm_ops["attn_tensor_parallel_allreduce"]
+    pp_send_recv = comm_ops["pipeline_parallel_send_recv"]
+
+    assert isinstance(attn_allreduce, CommOperatorSpec)
+    assert attn_allreduce.collective_alias == "allreduce"
+    assert attn_allreduce.comm_group == "attn_tp"
+    assert attn_allreduce.comm_domain == "ATTN_TP"
+    assert attn_allreduce.trace_kind is TraceKind.COMM
+    assert attn_allreduce.resource_class is ResourceClass.COMM
+    assert attn_allreduce.execution_time_attr == "attn_tensor_parallel_allreduce_time"
+
+    assert isinstance(pp_send_recv, CommOperatorSpec)
+    assert pp_send_recv.collective_alias == "send_recv"
+    assert pp_send_recv.comm_group == "pp"
+    assert pp_send_recv.comm_domain == "PP"
+    assert pp_send_recv.execution_time_attr == "pipeline_parallel_send_recv_time"
+
+
+def test_comm_payload_builder_preserves_legacy_quantized_hidden_state_bytes() -> None:
+    quantization_manager = _QuantizationManager()
+    ctx = _comm_context(quantization_manager=quantization_manager)
+
+    attn_allreduce = get_comm_operator("attn_tensor_parallel_allreduce")
+    payload = attn_allreduce.build_payload_bytes(ctx)
+
+    # Legacy formula: embedding_dim * fp16_bytes * effective_tokens.
+    assert payload == (8 * 2 * 5) + 11
+    assert quantization_manager.calls == [
+        ("allreduce", 80, ClusterType.MONOLITHIC),
+    ]
+
+
+def test_communication_operator_times_reconcile_split_tp_and_pp_legacy_fields() -> None:
+    communication_time = CommunicationTime(
+        attn_tensor_parallel_allreduce_time=1.5,
+        moe_tensor_parallel_allreduce_time=2.5,
+        pipeline_parallel_send_recv_time=0.75,
+        operator_times=CommunicationOperatorTimes(
+            {
+                "attn_tensor_parallel_allreduce": 1.5,
+                "mlp_tensor_parallel_allreduce": 2.5,
+                "pipeline_parallel_send_recv": 0.75,
+            }
+        ),
+    )
+
+    assert communication_time.total_time() == pytest.approx(4.75)
+
+
+def test_comm_operator_live_path_matches_legacy_dense_tp_and_pp_oracles() -> None:
+    batch = _Batch()
+    predictor = _predictor()
+
+    legacy_tp = predictor._get_tensor_parallel_communication_time(batch)
+    legacy_tp_call = predictor._cc_backend.calls[-1]
+    operator_tp = predictor._predict_comm_operator(
+        get_comm_operator("attn_tensor_parallel_allreduce"),
+        batch,
+    )
+    operator_tp_call = predictor._cc_backend.calls[-1]
+
+    assert operator_tp == pytest.approx(legacy_tp)
+    assert operator_tp_call == legacy_tp_call
+
+    legacy_pp = predictor._get_pipeline_parallel_communication_time(batch)
+    legacy_pp_call = predictor._cc_backend.calls[-1]
+    operator_pp = predictor._predict_comm_operator(
+        get_comm_operator("pipeline_parallel_send_recv"),
+        batch,
+    )
+    operator_pp_call = predictor._cc_backend.calls[-1]
+
+    assert operator_pp == pytest.approx(legacy_pp)
+    assert operator_pp_call == legacy_pp_call
+
+from __future__ import annotations
+
+from types import SimpleNamespace
+
+import pytest
+
 from frontier.entities.time_components import (
     AttentionOperatorTimes,
     AttentionTime,
