@@ -12,7 +12,7 @@
 #
 # To use EP=4 (requires at least 4 experts), set:
 #   PREFILL_MOE_EP=4 PREFILL_ATTN_TP=4 DECODE_ATTN_TP=4 DECODE_FFN_MOE_EP=4
-# Phi-tiny-MoE-instruct has 8 experts, so EP=4 places 2 experts per EP rank.
+# Phi-tiny-MoE-instruct has 16 experts, so EP=4 places 4 experts per EP rank.
 #
 # Default: EP=2 with attn_TP=2 to demonstrate the EP structure while keeping
 # the domain constraint (attn_TP * attn_DP == moe_TP * moe_EP).
@@ -66,7 +66,7 @@ DECODE_FFN_DEVICE="${DECODE_FFN_DEVICE:-a800}"
 DECODE_FFN_MEMORY_MARGIN_FRACTION="${DECODE_FFN_MEMORY_MARGIN_FRACTION:-0.2}"
 
 # --- MoE configuration ---
-TOTAL_EXPERTS="${TOTAL_EXPERTS:-8}"
+TOTAL_EXPERTS="${TOTAL_EXPERTS:-16}"
 ROUTER_TOPK="${ROUTER_TOPK:-2}"
 MOE_ROUTING_MODE="${MOE_ROUTING_MODE:-simulation}"
 MOE_ROUTING_SEED="${MOE_ROUTING_SEED:-42}"

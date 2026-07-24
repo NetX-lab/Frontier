@@ -170,6 +170,20 @@ def test_pdaf_rejects_prefix_caching_at_architecture_boundary() -> None:
         config._validate_open_source_release_architecture_guard()
 
 
+def test_pdaf_rejects_parallel_clusters_at_architecture_boundary() -> None:
+    config = object.__new__(SimulationConfig)
+    config.sys_arch = "pd-af-disaggregation"
+    config.enable_parallel_clusters = True
+    config.cluster_config = SimpleNamespace(
+        replica_scheduler_config=VllmV1SchedulerConfig(
+            enable_prefix_caching=False
+        )
+    )
+
+    with pytest.raises(ValueError, match="--no-enable_parallel_clusters"):
+        config._validate_open_source_release_architecture_guard()
+
+
 @pytest.mark.parametrize(
     ("sys_arch", "enable_parallel_clusters"),
     [

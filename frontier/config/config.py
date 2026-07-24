@@ -77,9 +77,21 @@ PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR = (
     "pd-disaggregation is not included in this release."
 )
 
+PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR = (
+    "Error: pd-af-disaggregation v0.3 requires "
+    "--no-enable_parallel_clusters. Parallel cluster processing for "
+    "pd-af-disaggregation is deferred in this release."
+)
+
 AICONFIGURATOR_BACKEND_RELEASE_ERROR = (
     "Error: The aiconfigurator communication backend is not included in this release. "
     "Please use collective_sim, astra_sim_analytical, analytical, or vidur for current usage and testing."
+)
+
+PD_AF_TRACE_REPLAY_DEFERRED_ERROR = (
+    "Error: pd-af-disaggregation v0.3 trace-replay is deferred. "
+    "The configured trace-driven fields are public stubs only and are not "
+    "implemented in this release."
 )
 
 DISAGGREGATED_CLUSTER_FIELD_PREFIXES = (
@@ -1891,6 +1903,34 @@ class ReplicaConfig:
         metadata={
             "help": "Random seed for MoE routing simulation. Must be a non-negative integer. "
             "Used when moe_routing_mode is 'simulation' or 'uniform_random' to ensure deterministic and reproducible results."
+        },
+    )
+    moe_routing_trace_path: str = field(
+        default="",
+        metadata={
+            "help": "Optional StepFun merged trace JSONL for trace-driven MoE routing. "
+            "Required when moe_routing_mode='trace_driven'."
+        },
+    )
+    decode_attn_initial_lane_trace_path: str = field(
+        default="",
+        metadata={
+            "help": "Optional StepFun attention trace JSONL for trace-driven "
+            "decode-attn initial lane occupancy and warmup replay."
+        },
+    )
+    decode_attn_steady_state_snapshot_path: str = field(
+        default="",
+        metadata={
+            "help": "Optional StepFun attention trace JSONL for explicit "
+            "decode-attn steady-state snapshot hydration."
+        },
+    )
+    decode_attn_steady_state_measurement_report_path: str = field(
+        default="",
+        metadata={
+            "help": "Optional StepFun measurement JSON for post-boundary "
+            "decode-attn request arrival replay."
         },
     )
     moe_routing_distribution_type: str = field(
@@ -4863,6 +4903,16 @@ class ClusterConfig:
             router_topk=router_topk,
             moe_routing_mode=get_field_value("moe_routing_mode"),
             moe_routing_seed=get_field_value("moe_routing_seed"),
+            moe_routing_trace_path=get_field_value("moe_routing_trace_path"),
+            decode_attn_initial_lane_trace_path=get_field_value(
+                "decode_attn_initial_lane_trace_path"
+            ),
+            decode_attn_steady_state_snapshot_path=get_field_value(
+                "decode_attn_steady_state_snapshot_path"
+            ),
+            decode_attn_steady_state_measurement_report_path=get_field_value(
+                "decode_attn_steady_state_measurement_report_path"
+            ),
             moe_routing_distribution_type=moe_routing_distribution_type,
             extend_ep_across_dp=extend_ep_across_dp,
             device=get_field_value("device"),
@@ -5630,6 +5680,18 @@ class ClusterConfig:
             router_load_balancing_type=original_config.router_load_balancing_type,
             router_topk=original_config.router_topk,
             extend_ep_across_dp=original_config.extend_ep_across_dp,
+            moe_routing_mode=original_config.moe_routing_mode,
+            moe_routing_seed=original_config.moe_routing_seed,
+            moe_routing_trace_path=original_config.moe_routing_trace_path,
+            decode_attn_initial_lane_trace_path=(
+                original_config.decode_attn_initial_lane_trace_path
+            ),
+            decode_attn_steady_state_snapshot_path=(
+                original_config.decode_attn_steady_state_snapshot_path
+            ),
+            decode_attn_steady_state_measurement_report_path=(
+                original_config.decode_attn_steady_state_measurement_report_path
+            ),
             device=original_config.device,
             network_device=original_config.network_device,
             speculative_decoding_config=original_config.speculative_decoding_config,
@@ -5876,6 +5938,7 @@ class SimulationConfig(ABC):
 
     def __post_init__(self):
         self._validate_open_source_release_architecture_guard()
+        self._validate_pdaf_trace_replay_contract()
         self.performance_profiling_output_file = validate_output_filename(
             self.performance_profiling_output_file,
             "performance_profiling_output_file",
@@ -5938,6 +6001,56 @@ class SimulationConfig(ABC):
         self._normalize_metrics_output_dir()
         self.write_config_to_file()
 
+    def _validate_pdaf_trace_replay_contract(self) -> None:
+        """Reject deferred StepFun trace replay inputs at the PD-AF boundary."""
+        if self.sys_arch != "pd-af-disaggregation":
+            return
+
+        replica_configs = []
+        for attr_name in (
+            "replica_config",
+            "prefill_replica_config",
+            "decode_replica_config",
+            "decode_attn_replica_config",
+            "decode_ffn_replica_config",
+        ):
+            replica_config = getattr(self.cluster_config, attr_name, None)
+            if replica_config is not None and all(
+                replica_config is not existing for existing in replica_configs
+            ):
+                replica_configs.append(replica_config)
+
+        configured_fields = set()
+        trace_driven = False
+        deferred_trace_fields = (
+            "moe_routing_trace_path",
+            "decode_attn_initial_lane_trace_path",
+            "decode_attn_steady_state_snapshot_path",
+            "decode_attn_steady_state_measurement_report_path",
+        )
+        for replica_config in replica_configs:
+            for field_name in deferred_trace_fields:
+                value = getattr(replica_config, field_name, "")
+                if value is not None and str(value).strip():
+                    configured_fields.add(field_name)
+            if (
+                str(getattr(replica_config, "moe_routing_mode", ""))
+                .strip()
+                .lower()
+                == "trace_driven"
+            ):
+                trace_driven = True
+
+        if trace_driven:
+            configured_fields.add("moe_routing_mode='trace_driven'")
+        if not configured_fields:
+            return
+
+        fields_text = ", ".join(sorted(configured_fields))
+        raise ValueError(
+            f"{PD_AF_TRACE_REPLAY_DEFERRED_ERROR} Configured fields: {fields_text}."
+        )
+
     def _maybe_set_default_decode_attn_request_allocation_threshold(self) -> None:
         """Keep offline PD+AF decode-attn staged admission opt-in only.
 
@@ -5973,6 +6086,8 @@ class SimulationConfig(ABC):
                 "Prefix caching is excluded for pd-af-disaggregation in v0.3. "
                 "Disable replica_scheduler_config.enable_prefix_caching."
             )
+        if self.sys_arch == "pd-af-disaggregation" and self.enable_parallel_clusters:
+            raise ValueError(PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR)
         if self.sys_arch == "pd-disaggregation":
             if self.enable_parallel_clusters:
                 raise ValueError(PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR)

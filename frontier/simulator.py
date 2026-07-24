@@ -209,7 +209,7 @@ class Simulator:
             )
 
         m2n_transfer_predictor = None
-        if self._config.is_disaggregated_mode():
+        if self._config.sys_arch == "pd-af-disaggregation":
             from frontier.m2n_transfer import M2NTransferPredictorRegistry
 
             m2n_transfer_predictor = M2NTransferPredictorRegistry.get(

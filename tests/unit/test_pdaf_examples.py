@@ -30,6 +30,12 @@ ONLINE_CASES = (
     "online/moe_cuda_graph_online.sh",
 )
 ALL_CASES = OFFLINE_CASES + ONLINE_CASES
+MOE_CASES = (
+    "offline/moe_model_basic.sh",
+    "offline/moe_model_ep.sh",
+    "online/moe_model_basic_online.sh",
+    "online/moe_model_ep_online.sh",
+)
 
 
 def test_pdaf_example_surface_contains_offline_and_online_cases() -> None:
@@ -180,6 +186,31 @@ def test_pdaf_ep_recipes_exercise_ep_greater_than_one_by_default(
     assert _option_value(
         argv, "--cluster_config_decode_attn_micro_batch_size"
     ) == "1"
+
+
+@pytest.mark.parametrize("relative", MOE_CASES)
+def test_pdaf_moe_recipe_total_experts_match_model_config(
+    tmp_path: Path, relative: str
+) -> None:
+    argv = _capture_cli(tmp_path, relative)
+    model_name = _option_value(argv, "--replica_config_model_name")
+    model_config = json.loads(
+        (REPO_ROOT / "data" / "config" / "models" / f"{model_name}.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    expected_total_experts = int(model_config["num_experts"])
+
+    for option in (
+        "--cluster_config_prefill_replica_config_total_expert_num",
+        "--cluster_config_decode_ffn_replica_config_total_expert_num",
+    ):
+        actual_total_experts = int(_option_value(argv, option))
+        assert actual_total_experts == expected_total_experts, (
+            f"{relative}: {option} must match {model_name}; "
+            f"expected={expected_total_experts}, actual={actual_total_experts}, "
+            f"delta={actual_total_experts - expected_total_experts}"
+        )
 
 
 @pytest.mark.parametrize(

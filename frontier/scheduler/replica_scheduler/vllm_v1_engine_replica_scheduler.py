@@ -4354,8 +4354,19 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                     continue
 
                 # Try to allocate with preemption (follows vLLM v1 behavior)
+                preempted_count_before = len(preempted_requests)
                 success = self._try_allocate_with_preemption(
                     request, num_new_tokens, preempted_requests
+                )
+                self._current_iteration_token_budget = (
+                    self._rollback_current_iteration_preempted_requests(
+                        scheduled_requests=scheduled_requests,
+                        scheduled_num_tokens=scheduled_tokens,
+                        newly_preempted_requests=preempted_requests[
+                            preempted_count_before:
+                        ],
+                        token_budget=self._current_iteration_token_budget,
+                    )
                 )
                 if success:
                     scheduled_requests.append(request)
