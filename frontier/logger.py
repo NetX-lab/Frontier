@@ -368,6 +368,17 @@ def configure_cluster_logging(cluster_filter=None, enable_cluster_prefix=True, u
         _default_handler.setFormatter(fmt)
 
 
+class ClusterLoggerAdapter(logging.LoggerAdapter):
+    def process(self, msg, kwargs):
+        if 'extra' not in kwargs:
+            kwargs['extra'] = {}
+        kwargs['extra']['cluster_type'] = self.extra['cluster_type']
+        return msg, kwargs
+
+
+_cluster_logger_adapters = {}
+
+
 def get_cluster_logger(name: str, cluster_type: str = None):
     """
     Get a logger with cluster type information.
@@ -379,18 +390,13 @@ def get_cluster_logger(name: str, cluster_type: str = None):
     Returns:
         Logger instance with cluster type context
     """
-    logger = logging.getLogger(name)
-
     if cluster_type:
-        # Create a custom LoggerAdapter that adds cluster_type to all log records
-        class ClusterLoggerAdapter(logging.LoggerAdapter):
-            def process(self, msg, kwargs):
-                # Add cluster_type to the log record
-                if 'extra' not in kwargs:
-                    kwargs['extra'] = {}
-                kwargs['extra']['cluster_type'] = cluster_type
-                return msg, kwargs
+        key = (name, cluster_type)
+        adapter = _cluster_logger_adapters.get(key)
+        if adapter is None:
+            logger = logging.getLogger(name)
+            adapter = ClusterLoggerAdapter(logger, {'cluster_type': cluster_type})
+            _cluster_logger_adapters[key] = adapter
+        return adapter
 
-        return ClusterLoggerAdapter(logger, {'cluster_type': cluster_type})
-
-    return logger
+    return logging.getLogger(name)

@@ -250,6 +250,20 @@ class GlobalBatchEndEvent(BaseEvent):
         # Note: Idle batch mechanism now handles MoE synchronization when num_requests < dp_size
         next_events = [ReplicaScheduleEvent(self.time, self._replica_id, self._cluster_type, self._dp_id)]
 
+        if self._cluster_type == ClusterType.DECODE_ATTN:
+            on_decode_attn_global_batch_end = getattr(
+                cluster_scheduler,
+                "on_decode_attn_global_batch_end",
+                None,
+            )
+            if callable(on_decode_attn_global_batch_end):
+                next_events.extend(
+                    on_decode_attn_global_batch_end(
+                        self.time,
+                        self._batch,
+                    )
+                )
+
         return next_events + thinking_requeue_events
 
     def get_target_cluster(self) -> ClusterType:

@@ -80,6 +80,142 @@ class ClusterBatchEndEvent(BaseEvent):
             )
             return []
 
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            from frontier.entities.batch import DenseFFNBatchGroup, EPBatchGroup
+            from frontier.events.m2n_transfer_start_event import (
+                M2NTransferStartEvent,
+            )
+
+            m2n_pred = getattr(
+                cluster_scheduler, "_m2n_transfer_predictor", None
+            )
+            if m2n_pred is None:
+                raise ValueError(
+                    "M2N transfer predictor not found in decode-ffn cluster "
+                    "scheduler"
+                )
+            replica_config = cluster_scheduler._config.replica_config
+
+            if not isinstance(self._batch, (EPBatchGroup, DenseFFNBatchGroup)):
+                raise ValueError(
+                    "DECODE_FFN F→A return path received "
+                    "non-EPBatchGroup/non-DenseFFNBatchGroup unsupported batch "
+                    f"(type={type(self._batch).__name__}, "
+                    f"id={self._batch.id}). Expected EPBatchGroup for MoE or "
+                    "DenseFFNBatchGroup for dense Llama."
+                )
+
+            source_batch_ids = list(
+                getattr(self._batch, "source_batch_ids", [])
+            )
+            if not source_batch_ids:
+                raise ValueError(
+                    f"{type(self._batch).__name__} {self._batch.id} has empty "
+                    "source_batch_ids in DECODE_FFN return path"
+                )
+            if len(set(source_batch_ids)) != len(source_batch_ids):
+                raise ValueError(
+                    f"{type(self._batch).__name__} {self._batch.id} has "
+                    f"duplicate source_batch_ids: {source_batch_ids}"
+                )
+            raw_batch_waiting = getattr(
+                cluster_scheduler, "_raw_batch_waiting_for_m2n_back", None
+            )
+            if raw_batch_waiting is None:
+                raise ValueError(
+                    "_raw_batch_waiting_for_m2n_back is missing in "
+                    "decode-ffn cluster scheduler"
+                )
+
+            batches_for_transfer = []
+            for source_batch_id in source_batch_ids:
+                original_batch = raw_batch_waiting.get(source_batch_id)
+                if original_batch is None:
+                    raise ValueError(
+                        "Missing original batch for "
+                        f"source_batch_id={source_batch_id} from "
+                        f"{type(self._batch).__name__} {self._batch.id}"
+                    )
+                batches_for_transfer.append(original_batch)
+
+            ffn_execution_time = getattr(self._batch, "execution_time", 0.0)
+            if ffn_execution_time <= 0:
+                raise ValueError(
+                    "Invalid DECODE_FFN execution_time on "
+                    f"{type(self._batch).__name__} {self._batch.id}: "
+                    f"{ffn_execution_time}. ReplicaStageScheduleEvent must "
+                    "store stage execution time."
+                )
+
+            activation_bytes = getattr(self._batch, "activation_bytes", 0)
+            activation_bytes = (
+                int(activation_bytes) if activation_bytes else 0
+            )
+
+            prepared_m2n_events = []
+            for batch_for_transfer in batches_for_transfer:
+                current_layer_id = self._get_current_layer_id_from_batch(
+                    batch_for_transfer
+                )
+                if (
+                    batch_for_transfer.decode_attn_original_replica_id is None
+                    or batch_for_transfer.decode_attn_original_dp_id is None
+                ):
+                    raise ValueError(
+                        f"Batch {batch_for_transfer.id} missing "
+                        "decode_attn_original routing metadata"
+                    )
+
+                activation_size, transfer_time = m2n_pred.get_transfer_info(
+                    source_cluster_type=ClusterType.DECODE_FFN,
+                    target_cluster_type=ClusterType.DECODE_ATTN,
+                    batch=batch_for_transfer,
+                    replica_config=replica_config,
+                )
+                try:
+                    req_ids = [r.id for r in batch_for_transfer.requests]
+                    logger.info(
+                        f"[M2N][F2A][CREATE] batch_id={batch_for_transfer.id} "
+                        f"reqs={req_ids} "
+                        f"batch_global_id={getattr(batch_for_transfer, 'global_id', '?')} "
+                        "decode_attn_orig="
+                        f"(replica={getattr(batch_for_transfer, 'decode_attn_original_replica_id', '?')},"
+                        f"dp={getattr(batch_for_transfer, 'decode_attn_original_dp_id', '?')}) "
+                        f"target={ClusterType.DECODE_ATTN.name} "
+                        f"size={activation_size}B t_ms={transfer_time:.3f}"
+                    )
+                except Exception:
+                    logger.info(
+                        f"[M2N][F2A][CREATE] batch_id={batch_for_transfer.id} "
+                        "(details unavailable)"
+                    )
+
+                prepared_m2n_events.append(
+                    M2NTransferStartEvent(
+                        time=self.time,
+                        source_replica_id=(
+                            batch_for_transfer.decode_attn_original_replica_id
+                        ),
+                        source_dp_id=(
+                            batch_for_transfer.decode_attn_original_dp_id
+                        ),
+                        source_cluster_type=ClusterType.DECODE_FFN,
+                        target_cluster_type=ClusterType.DECODE_ATTN,
+                        batch=batch_for_transfer,
+                        activation_size_bytes=activation_size,
+                        transfer_time_ms=transfer_time,
+                        layer_id=current_layer_id,
+                        afd_stage_idx=batch_for_transfer.afd_stage_idx,
+                    )
+                )
+
+            prepared_schedule_event = ReplicaScheduleEvent(
+                self.time,
+                self._replica_id,
+                self._cluster_type,
+                self._dp_id,
+            )
+
         # Always record cluster-internal stage completion hooks.
         if hasattr(self._batch, "on_cluster_stage_end"):
             self._batch.on_cluster_stage_end(self.time, self._cluster_type)
@@ -149,6 +285,147 @@ class ClusterBatchEndEvent(BaseEvent):
                     self.time, self._replica_id, self._cluster_type, self._dp_id
                 )
             )
+            return next_events
+
+        # DECODE_ATTN: after attention, either recover an already-complete /
+        # overflowed state or emit A→F M2N transfer for the matching FFN.
+        if self._cluster_type == ClusterType.DECODE_ATTN:
+            active_requests = [r for r in self._batch.requests if not r.completed]
+
+            if not active_requests:
+                from frontier.events.global_batch_end_event import GlobalBatchEndEvent
+
+                global_end_time = (
+                    cluster_scheduler.resolve_decode_attn_boundary_first_mixed_global_end_time(
+                        self.time,
+                        self._batch,
+                    )
+                )
+                logger.info(
+                    f"[DECODE_ATTN-END] batch_id={self._batch.id} all requests completed, "
+                    f"emitting GlobalBatchEndEvent at {global_end_time:.6f}s "
+                    f"(skipping A→F transfer)"
+                )
+                next_events.append(
+                    GlobalBatchEndEvent(
+                        global_end_time,
+                        self._replica_id,
+                        self._dp_id,
+                        self._batch,
+                        self._cluster_type,
+                    )
+                )
+                next_events.append(
+                    ReplicaScheduleEvent(
+                        self.time, self._replica_id, self._cluster_type, self._dp_id
+                    )
+                )
+                return next_events
+
+            model_config = cluster_scheduler._config.replica_config.model_config
+            total_layers = model_config.num_layers
+
+            current_layer_id = self._get_current_layer_id_from_batch(self._batch)
+            is_final_layer = current_layer_id >= total_layers
+
+            logger.info(
+                f"[DECODE_ATTN-END] batch_id={self._batch.id} layer={current_layer_id}/{total_layers - 1} "
+                f"is_final_layer={is_final_layer} active_requests={len(active_requests)}"
+            )
+
+            if is_final_layer:
+                from frontier.events.global_batch_end_event import GlobalBatchEndEvent
+
+                global_end_time = (
+                    cluster_scheduler.resolve_decode_attn_boundary_first_mixed_global_end_time(
+                        self.time,
+                        self._batch,
+                    )
+                )
+                logger.info(
+                    f"[DECODE_ATTN-END] Final layer completed, emitting GlobalBatchEndEvent "
+                    f"at {global_end_time:.6f}s"
+                )
+                next_events.append(
+                    GlobalBatchEndEvent(
+                        global_end_time,
+                        self._replica_id,
+                        self._dp_id,
+                        self._batch,
+                        self._cluster_type,
+                    )
+                )
+                next_events.append(
+                    ReplicaScheduleEvent(
+                        self.time, self._replica_id, self._cluster_type, self._dp_id
+                    )
+                )
+                return next_events
+            else:
+                logger.info(
+                    f"[ISSUE-007][A2F][READY] batch_id={self._batch.id}, "
+                    f"decode_attn_original_replica_id={getattr(self._batch, 'decode_attn_original_replica_id', 'MISSING')}, "
+                    f"decode_attn_original_dp_id={getattr(self._batch, 'decode_attn_original_dp_id', 'MISSING')}, "
+                    f"layer_id={current_layer_id}"
+                )
+                next_events.extend(
+                    cluster_scheduler.on_decode_attn_a2f_ready(
+                        self.time,
+                        self._batch,
+                        replica_id=self._replica_id,
+                        dp_id=self._dp_id,
+                        layer_id=current_layer_id,
+                        logger=logger,
+                    )
+                )
+                return next_events
+
+        # DECODE_FFN: emit F→A M2N transfer; do not decrement here
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            for source_batch_id in source_batch_ids:
+                raw_batch_waiting.pop(source_batch_id)
+
+            logger.info(
+                f"[ISSUE-007][F2A][RESOLVE] "
+                f"{type(self._batch).__name__} {self._batch.id} "
+                f"expanded to source batches {source_batch_ids}"
+            )
+
+            for original_batch in batches_for_transfer:
+                for request in original_batch.requests:
+                    request.on_batch_stage_end(
+                        self.time,
+                        ffn_execution_time,
+                        ffn_execution_time,
+                        ClusterType.DECODE_FFN,
+                    )
+
+            memory_usage_percent = replica_scheduler.memory_usage_percent
+            for original_batch in batches_for_transfer:
+                metrics_store.on_batch_end(
+                    self.time,
+                    original_batch,
+                    self._replica_id,
+                    memory_usage_percent,
+                    ClusterType.DECODE_FFN,
+                    self._dp_id,
+                )
+
+            replica_scheduler.decrement_num_running_batches()
+            if activation_bytes:
+                replica_scheduler.release_activation_memory_bytes(
+                    activation_bytes
+                )
+                metrics_store.on_replica_schedule(
+                    self.time,
+                    self._replica_id,
+                    replica_scheduler.memory_usage_percent,
+                    ClusterType.DECODE_FFN,
+                    dp_id=self._dp_id,
+                )
+
+            next_events.extend(prepared_m2n_events)
+            next_events.append(prepared_schedule_event)
             return next_events
 
         if self._cluster_type == ClusterType.DECODE:

@@ -1,9 +1,24 @@
-from typing import Any, List, Tuple, Optional
-from frontier.entities import Request, EPBatchGroup
+from collections import deque
+from typing import Any, List, NamedTuple, Tuple, Optional
+from frontier.entities import Batch, Request, EPBatchGroup
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )
 from frontier.types import ClusterType
+
+
+class DecodeFFNReadyGroupPreflight(NamedTuple):
+    """Validated, side-effect-free facts for one DECODE_FFN ready group."""
+
+    group: List[Tuple[Batch, Any]]
+    source_batches: Tuple[Batch, ...]
+    source_batch_ids: Tuple[int, ...]
+    group_activation_bytes: int
+    requests: Tuple[Request, ...]
+    num_tokens: Tuple[int, ...]
+    layer_global_id: int
+    afd_stage_idx: int
+    target_replica_id: int
 
 
 class RoundRobinClusterScheduler(BaseClusterScheduler):
@@ -22,6 +37,15 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         # Decode-attn initial request allocation setup state
         self._decode_attn_initial_allocation_done = False
+        self._decode_attn_initial_allocation_allocated_requests = 0
+        expected_total_requests = getattr(
+            self._request_generator_config, "num_requests", None
+        )
+        self._decode_attn_expected_total_requests = (
+            int(expected_total_requests)
+            if expected_total_requests is not None
+            else None
+        )
         self._decode_attn_request_allocation_threshold = None  # total requests required cluster-wide
         self._initial_allocation_enabled = self._cluster_type == ClusterType.DECODE_ATTN
         if self._initial_allocation_enabled:
@@ -30,10 +54,13 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             if explicit_threshold is not None:
                 self._decode_attn_request_allocation_threshold = explicit_threshold
             else:
-                raise ValueError("decode_attn_request_allocation_threshold not configured")
+                self._initial_allocation_enabled = False
+                self._decode_attn_initial_allocation_done = True
 
         # Internal buffer for initial wait (decode-attn)
         self._initial_allocation_buffer = []  # type: List[Request]
+        self._decode_attn_wave_release_pending_request_ids: set[int] = set()
+        self._decode_attn_wave_release_completed_request_ids: set[int] = set()
 
     def schedule(self) -> List[Tuple[int, int, Request]]:
         """
@@ -52,8 +79,6 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         elif self._cluster_type == ClusterType.DECODE_ATTN:
             initial_mapping = self._try_initial_request_allocation()
             if initial_mapping is not None:
-                if initial_mapping and self._request_queue:
-                    initial_mapping.extend(self._schedule_dynamic())
                 return initial_mapping
             return self._schedule_dynamic_with_af_priority()
         elif self._cluster_type == ClusterType.DECODE_FFN:
@@ -83,21 +108,165 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             self._decode_attn_initial_allocation_done = True
             return None
 
+        if self._should_hold_decode_attn_buffered_wave_release():
+            logger.info(
+                "[initial allocation] holding buffered later wave until the active wave reaches a global batch end boundary"
+            )
+            return None
+
         # Move current queued requests into the initial buffer
         while self._request_queue:
             self._initial_allocation_buffer.append(self._request_queue.pop(0))
             logger.info("[initial allocation] pop 1 req from request queue")
 
-        if len(self._initial_allocation_buffer) < self._decode_attn_request_allocation_threshold:
-            # Keep waiting until threshold is reached
-            logger.info("[initial allocation] not enough requests, keep waiting")
-            return []
+        threshold = self._decode_attn_request_allocation_threshold
+        total_expected_requests = getattr(
+            self._request_generator_config, "num_requests", None
+        )
+        if total_expected_requests is None:
+            total_expected_requests = getattr(
+                self,
+                "_decode_attn_expected_total_requests",
+                None,
+            )
+        if total_expected_requests is not None:
+            total_expected_requests = int(total_expected_requests)
+            self._decode_attn_expected_total_requests = total_expected_requests
+        if len(self._initial_allocation_buffer) < threshold:
+            allocated_requests = self._decode_attn_initial_allocation_allocated_requests
+            should_release_partial_final_wave = (
+                total_expected_requests is not None
+                and allocated_requests + len(self._initial_allocation_buffer)
+                >= total_expected_requests
+                and len(self._initial_allocation_buffer) > 0
+            )
+            if not should_release_partial_final_wave:
+                logger.info("[initial allocation] not enough requests, keep buffering")
+                return None
+
+            logger.info(
+                "[initial allocation] releasing final partial wave: buffered=%s expected_total=%s allocated=%s",
+                len(self._initial_allocation_buffer),
+                total_expected_requests,
+                allocated_requests,
+            )
+            return self._perform_initial_request_allocation(allocate_all_buffered=True)
         
         logger.info(f"[initial allocation] enough requests:{len(self._initial_allocation_buffer)}, perform initial request allocation next.")
         # Perform the initial request allocation now
         return self._perform_initial_request_allocation()
 
-    def _perform_initial_request_allocation(self) -> List[Tuple[int, int, Request]]:
+    def _should_hold_decode_attn_buffered_wave_release(self) -> bool:
+        if self._cluster_type != ClusterType.DECODE_ATTN:
+            return False
+        if not self._initial_allocation_enabled:
+            return False
+        pending_request_ids = getattr(
+            self,
+            "_decode_attn_wave_release_pending_request_ids",
+            set(),
+        )
+        if not pending_request_ids:
+            return False
+        return len(self._initial_allocation_buffer) > 0
+
+    def _arm_decode_attn_wave_release_guard(
+        self,
+        requests_to_allocate: List[Request],
+    ) -> None:
+        if self._cluster_type != ClusterType.DECODE_ATTN:
+            return
+
+        if self._initial_allocation_buffer:
+            self._decode_attn_wave_release_pending_request_ids = {
+                int(request.id) for request in requests_to_allocate
+            }
+            self._decode_attn_wave_release_completed_request_ids = set()
+            return
+
+        self._decode_attn_wave_release_pending_request_ids = set()
+        self._decode_attn_wave_release_completed_request_ids = set()
+
+    def _has_ready_decode_attn_buffered_wave(self) -> bool:
+        if self._cluster_type != ClusterType.DECODE_ATTN:
+            return False
+        if not self._initial_allocation_enabled:
+            return False
+        if self._decode_attn_initial_allocation_done:
+            return False
+
+        threshold = self._decode_attn_request_allocation_threshold
+        if threshold is None:
+            return False
+        if len(self._initial_allocation_buffer) >= threshold:
+            return True
+
+        total_expected_requests = getattr(
+            self._request_generator_config,
+            "num_requests",
+            None,
+        )
+        if total_expected_requests is None:
+            total_expected_requests = getattr(
+                self,
+                "_decode_attn_expected_total_requests",
+                None,
+            )
+        if total_expected_requests is None:
+            return False
+
+        total_expected_requests = int(total_expected_requests)
+        allocated_requests = self._decode_attn_initial_allocation_allocated_requests
+        return (
+            len(self._initial_allocation_buffer) > 0
+            and allocated_requests + len(self._initial_allocation_buffer)
+            >= total_expected_requests
+        )
+
+    def on_decode_attn_global_batch_end(self, time: float, batch) -> List[object]:
+        if self._cluster_type != ClusterType.DECODE_ATTN:
+            return []
+
+        pending_request_ids = getattr(
+            self,
+            "_decode_attn_wave_release_pending_request_ids",
+            set(),
+        )
+        if not pending_request_ids:
+            return []
+
+        completed_request_ids = getattr(
+            self,
+            "_decode_attn_wave_release_completed_request_ids",
+            set(),
+        )
+        batch_request_ids = {
+            int(request.id)
+            for request in getattr(batch, "requests", [])
+            if int(request.id) in pending_request_ids
+        }
+        if not batch_request_ids:
+            return []
+
+        completed_request_ids.update(batch_request_ids)
+        if completed_request_ids != pending_request_ids:
+            return []
+
+        self._decode_attn_wave_release_pending_request_ids = set()
+        self._decode_attn_wave_release_completed_request_ids = set()
+
+        if not self._has_ready_decode_attn_buffered_wave():
+            return []
+
+        from frontier.events.cluster_schedule_event import ClusterScheduleEvent
+
+        return [ClusterScheduleEvent(time, self._cluster_type)]
+
+    def _perform_initial_request_allocation(
+        self,
+        *,
+        allocate_all_buffered: bool = False,
+    ) -> List[Tuple[int, int, Request]]:
         """
         Perform initial request allocation for DECODE_ATTN using two-level distribution strategy.
 
@@ -113,17 +282,25 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         # Get the accumulated requests up to the threshold
         threshold = self._decode_attn_request_allocation_threshold
-        if len(self._initial_allocation_buffer) < threshold:
+        if threshold is None:
+            raise ValueError("decode_attn_request_allocation_threshold must be configured")
+
+        allocation_size = (
+            len(self._initial_allocation_buffer)
+            if allocate_all_buffered
+            else threshold
+        )
+        if allocation_size <= 0:
+            return []
+
+        if len(self._initial_allocation_buffer) < allocation_size:
             # Defensive check; should not happen because caller guards threshold
             raise ValueError(f"Insufficient requests in buffer for initial allocation: "
-                             f"buffer_size={len(self._initial_allocation_buffer)}, threshold={threshold}")
+                             f"buffer_size={len(self._initial_allocation_buffer)}, allocation_size={allocation_size}")
 
-        # Take requests up to the threshold
-        requests_to_allocate = self._initial_allocation_buffer[:threshold]
-        remaining_buffer = self._initial_allocation_buffer[threshold:]
-        self._initial_allocation_buffer = []
-        if remaining_buffer:
-            self._request_queue = remaining_buffer + self._request_queue
+        # Take requests for the next cluster-wide wave.
+        requests_to_allocate = self._initial_allocation_buffer[:allocation_size]
+        self._initial_allocation_buffer = self._initial_allocation_buffer[allocation_size:]
 
         replica_ids = list(self._cluster.replicas.keys())
         dp_size = self._replica_dp_size
@@ -174,8 +351,29 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             f"remaining in buffer={len(self._initial_allocation_buffer)}"
         )
 
-        # Mark initial allocation as complete
-        self._decode_attn_initial_allocation_done = True
+        self._arm_decode_attn_wave_release_guard(requests_to_allocate)
+
+        self._decode_attn_initial_allocation_allocated_requests += len(
+            requests_to_allocate
+        )
+        total_expected_requests = getattr(
+            self._request_generator_config, "num_requests", None
+        )
+        if total_expected_requests is None:
+            total_expected_requests = getattr(
+                self,
+                "_decode_attn_expected_total_requests",
+                None,
+            )
+        if total_expected_requests is not None:
+            total_expected_requests = int(total_expected_requests)
+            self._decode_attn_expected_total_requests = total_expected_requests
+        self._decode_attn_initial_allocation_done = (
+            total_expected_requests is not None
+            and self._decode_attn_initial_allocation_allocated_requests
+            >= total_expected_requests
+            and len(self._initial_allocation_buffer) == 0
+        )
         return request_mapping
 
     def _schedule_batch_mode(self) -> List[Tuple[int, int, Request]]:
@@ -428,6 +626,304 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         selected_idx = self._request_counter % len(candidates)
         return candidates[selected_idx]
 
+    def _commit_decode_ffn_m2n_queue_operations(self, operations) -> None:
+        """Commit prepared DECODE_FFN queue writes as one validated batch."""
+
+        grouped_operations = []
+        grouped_by_identity = {}
+        for replica_scheduler, batch in operations:
+            key = id(replica_scheduler)
+            group_index = grouped_by_identity.get(key)
+            if group_index is None:
+                group_index = len(grouped_operations)
+                grouped_by_identity[key] = group_index
+                grouped_operations.append((replica_scheduler, []))
+            grouped_operations[group_index][1].append(batch)
+
+        prepared_commits = []
+        for replica_scheduler, batches in grouped_operations:
+            immediate_queue = getattr(
+                replica_scheduler,
+                "_m2n_immediate_batch_queue",
+                None,
+            )
+            activation_memory = getattr(
+                replica_scheduler,
+                "_activation_bytes_allocated",
+                None,
+            )
+            if type(immediate_queue) in {list, deque}:
+                if type(activation_memory) is not int or activation_memory < 0:
+                    raise RuntimeError(
+                        "DECODE_FFN replica activation memory must be an exact "
+                        f"non-negative int, got {activation_memory!r}"
+                    )
+                activation_delta = 0
+                for batch in batches:
+                    activation_bytes = getattr(batch, "activation_bytes", None)
+                    if type(activation_bytes) is not int or activation_bytes < 0:
+                        raise ValueError(
+                            "DECODE_FFN prepared batch activation_bytes must be "
+                            f"an exact non-negative int, got {activation_bytes!r}"
+                        )
+                    activation_delta += activation_bytes
+                prepared_commits.append(
+                    (replica_scheduler, batches, activation_delta)
+                )
+                continue
+
+            raise RuntimeError(
+                "DECODE_FFN replica scheduler must expose an exact immediate "
+                "batch queue for atomic queue commit"
+            )
+
+        for target, batches, activation_delta in prepared_commits:
+            target._m2n_immediate_batch_queue.extend(batches)
+            target._activation_bytes_allocated += activation_delta
+
+    def _preflight_decode_ffn_ready_group(
+        self,
+        ready_groups,
+    ) -> Optional[DecodeFFNReadyGroupPreflight]:
+        """Validate the next DECODE_FFN group without constructing entities."""
+
+        if type(ready_groups) is not deque:
+            raise RuntimeError(
+                "DECODE_FFN ready-group inventory must be an exact deque"
+            )
+
+        group_counter = getattr(self, "_batch_group_creation_counter", None)
+        if type(group_counter) is not int or group_counter < 0:
+            raise ValueError(
+                "DECODE_FFN batch-group creation counter must be an exact "
+                f"non-negative int, got {group_counter!r}"
+            )
+
+        raw_batches = getattr(self, "_raw_batch_waiting_for_m2n_back", None)
+        if type(raw_batches) is not dict:
+            raise RuntimeError(
+                "DECODE_FFN raw waiting-room inventory must be an exact dict"
+            )
+
+        if not ready_groups:
+            return None
+
+        group = ready_groups[0]
+        if type(group) is not list or not group:
+            raise ValueError(
+                "DECODE_FFN ready group must be an exact non-empty list"
+            )
+
+        for entry in group:
+            if type(entry) is not tuple or len(entry) != 2:
+                raise ValueError(
+                    "DECODE_FFN ready-group entries must be exact "
+                    "(batch, transfer_info) tuples"
+                )
+
+        layer_global_id = self._get_ffn_layer_id_from_group(group)
+        source_batches = []
+        source_batch_ids = []
+        all_requests = []
+        all_num_tokens = []
+        seen_source_batch_ids = set()
+        group_activation_bytes = 0
+        afd_stage_idx = None
+        target_replica_id = None
+        for entry in group:
+            source_batch, transfer_info = entry
+            if type(source_batch) is not Batch:
+                raise ValueError(
+                    "DECODE_FFN source batch must be an exact Batch, "
+                    f"got {type(source_batch).__name__}"
+                )
+
+            requests = getattr(source_batch, "requests", None)
+            if type(requests) is not list:
+                raise ValueError(
+                    "DECODE_FFN source batch requests must be an exact list"
+                )
+            if not requests:
+                raise ValueError(
+                    "DECODE_FFN source batch requests must not be empty"
+                )
+            for request in requests:
+                if type(request) is not Request:
+                    raise ValueError(
+                        "DECODE_FFN source batch requests must contain exact "
+                        f"Request objects, got {request!r}"
+                    )
+
+            num_tokens = getattr(source_batch, "num_tokens", None)
+            if type(num_tokens) is not list:
+                raise ValueError(
+                    "DECODE_FFN source batch num_tokens must be an exact list"
+                )
+            if len(requests) != len(num_tokens):
+                raise ValueError(
+                    "DECODE_FFN source batch request/token length mismatch: "
+                    f"requests={len(requests)}, num_tokens={len(num_tokens)}"
+                )
+            for token_count in num_tokens:
+                if type(token_count) is not int or token_count < 0:
+                    raise ValueError(
+                        "DECODE_FFN source batch num_tokens must contain exact "
+                        f"non-negative ints, got {token_count!r}"
+                    )
+
+            total_num_tokens = getattr(
+                source_batch,
+                "total_num_tokens",
+                None,
+            )
+            if (
+                type(total_num_tokens) is not int
+                or total_num_tokens < 0
+                or total_num_tokens != sum(num_tokens)
+            ):
+                raise ValueError(
+                    "DECODE_FFN source batch total_num_tokens must be an exact "
+                    "non-negative int equal to the sum of num_tokens, "
+                    f"got total={total_num_tokens!r}, num_tokens={num_tokens!r}"
+                )
+
+            source_batch_id = getattr(source_batch, "id", None)
+            if type(source_batch_id) is not int or source_batch_id < 0:
+                raise ValueError(
+                    "DECODE_FFN source batch id must be an exact non-negative "
+                    f"int, got {source_batch_id!r}"
+                )
+            if source_batch_id in seen_source_batch_ids:
+                raise ValueError(
+                    "DECODE_FFN ready group contains duplicate source batch IDs: "
+                    f"{source_batch_id!r}"
+                )
+            if source_batch_id in raw_batches:
+                raise ValueError(
+                    "DECODE_FFN source batch is already registered in the raw "
+                    f"waiting-room inventory: batch_id={source_batch_id}"
+                )
+
+            source_stage_idx = getattr(source_batch, "afd_stage_idx", None)
+            if source_stage_idx is None:
+                raise ValueError("DECODE_FFN source batch afd_stage_idx missing")
+            if type(source_stage_idx) is not int or source_stage_idx < 0:
+                raise ValueError(
+                    "DECODE_FFN source batch afd_stage_idx must be an exact "
+                    f"non-negative int, got {source_stage_idx!r}"
+                )
+            transfer_stage_idx = getattr(
+                transfer_info,
+                "afd_stage_idx",
+                None,
+            )
+            if type(transfer_stage_idx) is not int or transfer_stage_idx < 0:
+                raise ValueError(
+                    "DECODE_FFN transfer afd_stage_idx must be an exact "
+                    f"non-negative int, got {transfer_stage_idx!r}"
+                )
+            if transfer_stage_idx != source_stage_idx:
+                raise ValueError(
+                    "DECODE_FFN source/transfer afd_stage_idx mismatch: "
+                    f"source={source_stage_idx}, transfer={transfer_stage_idx}"
+                )
+            if afd_stage_idx is None:
+                afd_stage_idx = source_stage_idx
+            elif source_stage_idx != afd_stage_idx:
+                raise ValueError(
+                    "DECODE_FFN ready group afd_stage_idx mismatch: "
+                    f"expected={afd_stage_idx}, got={source_stage_idx}"
+                )
+
+            entry_target_replica_id = getattr(
+                transfer_info,
+                "target_ffn_replica_id",
+                None,
+            )
+            if (
+                type(entry_target_replica_id) is not int
+                or entry_target_replica_id < 0
+            ):
+                raise ValueError(
+                    "DECODE_FFN target_ffn_replica_id must be an exact "
+                    f"non-negative int, got {entry_target_replica_id!r}"
+                )
+            if target_replica_id is None:
+                target_replica_id = entry_target_replica_id
+            elif entry_target_replica_id != target_replica_id:
+                raise ValueError(
+                    "DECODE_FFN ready group target replica mismatch: "
+                    f"expected={target_replica_id}, "
+                    f"got={entry_target_replica_id}"
+                )
+
+            activation_size_bytes = getattr(
+                transfer_info,
+                "activation_size_bytes",
+                None,
+            )
+            if (
+                type(activation_size_bytes) is not int
+                or activation_size_bytes < 0
+            ):
+                raise ValueError(
+                    "DECODE_FFN activation_size_bytes must be an exact "
+                    f"non-negative int, got {activation_size_bytes!r}"
+                )
+
+            seen_source_batch_ids.add(source_batch_id)
+            source_batches.append(source_batch)
+            source_batch_ids.append(source_batch_id)
+            all_requests.extend(requests)
+            all_num_tokens.extend(num_tokens)
+            group_activation_bytes += activation_size_bytes
+
+        replica_ids = list(self._cluster.replicas.keys())
+        if target_replica_id not in replica_ids:
+            raise ValueError(
+                "DECODE_FFN ready group target replica is not available: "
+                f"target={target_replica_id}, available={replica_ids}"
+            )
+
+        return DecodeFFNReadyGroupPreflight(
+            group=group,
+            source_batches=tuple(source_batches),
+            source_batch_ids=tuple(source_batch_ids),
+            group_activation_bytes=group_activation_bytes,
+            requests=tuple(all_requests),
+            num_tokens=tuple(all_num_tokens),
+            layer_global_id=layer_global_id,
+            afd_stage_idx=afd_stage_idx,
+            target_replica_id=target_replica_id,
+        )
+
+    @staticmethod
+    def _preflight_decode_ffn_queue_target(replica_scheduler) -> None:
+        """Validate one resolved DECODE_FFN queue target without writing to it."""
+
+        immediate_queue = getattr(
+            replica_scheduler,
+            "_m2n_immediate_batch_queue",
+            None,
+        )
+        activation_memory = getattr(
+            replica_scheduler,
+            "_activation_bytes_allocated",
+            None,
+        )
+        if type(immediate_queue) in {list, deque}:
+            if type(activation_memory) is not int or activation_memory < 0:
+                raise RuntimeError(
+                    "DECODE_FFN replica activation memory must be an exact "
+                    f"non-negative int, got {activation_memory!r}"
+                )
+            return
+
+        raise RuntimeError(
+            "DECODE_FFN replica scheduler must expose an exact immediate "
+            "batch queue for atomic queue commit"
+        )
+
     def schedule_ffn_with_m2n_immediate(self) -> List[Tuple[int, int]]:
         """
         Schedule decode-ffn micro-batches with corrected group aggregation and two-level MoE routing.
@@ -446,8 +942,25 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         affected_ep_pairs: set[Tuple[int, int]] = set()
 
-        ready_groups = self._m2n_ready_groups
-        assert ready_groups is not None, "M2N ready groups not found in decode-ffn cluster scheduler"
+        ready_groups = getattr(self, "_m2n_ready_groups", None)
+        group_preflight = self._preflight_decode_ffn_ready_group(ready_groups)
+        if group_preflight is None:
+            return []
+        group = group_preflight.group
+        raw_batches = group_preflight.source_batches
+        source_batch_ids = group_preflight.source_batch_ids
+        group_activation_bytes = group_preflight.group_activation_bytes
+        layer_global_id = group_preflight.layer_global_id
+        target_replica_id = group_preflight.target_replica_id
+
+        model_config = self._config.replica_config.model_config
+        if model_config is None:
+            raise ValueError("Missing model_config for DECODE_FFN layer classification")
+
+        # Dense layers do not use expert routing or EP collectives, including
+        # dense layers inside a mixed dense/MoE model.
+        if not model_config.is_moe_layer(layer_global_id):
+            return self._schedule_dense_ffn_from_m2n_group(ready_groups, logger)
 
         ep_size = getattr(self, '_replica_ep_size', self._config.replica_config.moe_expert_parallel_size)
         # total_experts = self._config.replica_config.total_expert_num
@@ -460,39 +973,20 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
 
         if ready_groups and len(ready_groups) > 0:
-            group = ready_groups.popleft()  # List[(batch, transfer_info)]
             replica_ids = list(self._cluster.replicas.keys())
-            # group elements are (batch, transfer_info)
-            layer_global_id = self._get_ffn_layer_id_from_group(group)
 
             # Extract source batch IDs for diagnostic logging
-            source_batch_ids = [batch.id for (batch, _) in group]
             logger.info(f"[FFN-GROUP][DEBUG] replica_ids={replica_ids}")
 
-            target_replica_ids = {
-                getattr(transfer_info, "target_ffn_replica_id", None)
-                for (_, transfer_info) in group
-            }
-            if len(target_replica_ids) != 1:
-                raise ValueError(
-                    "DECODE_FFN ready group must map to exactly one target replica; "
-                    f"got {sorted(target_replica_ids)}"
-                )
-            target_replica_id = next(iter(target_replica_ids))
-            if target_replica_id not in replica_ids:
-                raise ValueError(
-                    "DECODE_FFN ready group target replica is not available: "
-                    f"target={target_replica_id}, available={replica_ids}"
-                )
             rd_replicas = list(getattr(routing_details, 'keys', lambda: [])())
             logger.info(
                 f"[FFN-GROUP] Consuming group size={len(group)} -> target_replica={target_replica_id}, "
                 f"routing_detail_replicas={rd_replicas}, layer_global_id={layer_global_id}"
             )
 
-            # Prepare a shared group_global_id so all EP sub-batches share the same global_id
+            # Prepare a shared group_global_id so all EP sub-batches share the same global_id.
+            # The counter is committed only after all queue writes succeed.
             shared_group_id = self._batch_group_creation_counter
-            self._batch_group_creation_counter += 1
 
             # DIAGNOSTIC: Log the shared_group_id assignment
             logger.info(f"[EP-GLOBAL-ID][ASSIGN] shared_group_id={shared_group_id} assigned to group with source_batch_ids={source_batch_ids}, layer={layer_global_id}, target_replica={target_replica_id}")
@@ -504,17 +998,32 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             # 为每个EP 构建一个EPBatchGroup
             created_ep_batches = []  # Track created EP batches for diagnostic logging
             ep_batch_groups = []  # (ep_id, EPBatchGroup)
-            group_activation_bytes = int(
-                sum(
-                    getattr(transfer_info, "activation_size_bytes", 0)
-                    for (_, transfer_info) in group
-                )
-            )
+            queue_operations = []
+            replica_schedulers = []
+            for ep_id in range(ep_size):
+                try:
+                    replica_scheduler = self.get_dp_replica_scheduler(
+                        target_replica_id,
+                        ep_id,
+                    )
+                except (KeyError, IndexError) as exc:
+                    raise RuntimeError(
+                        "DECODE_FFN target replica scheduler is unavailable: "
+                        f"replica_id={target_replica_id}, ep_id={ep_id}"
+                    ) from exc
+                self._preflight_decode_ffn_queue_target(replica_scheduler)
+                replica_schedulers.append(replica_scheduler)
+
             for ep_id in range(ep_size):
                 # 计算当前ep_id对应experts的global_id (based on offset)
                 expert_global_ids = list(range(ep_id * experts_per_ep, ep_id * experts_per_ep + experts_per_ep))
                 ep_batch_group: EPBatchGroup = self._distribute_tokens_within_ep_replica(
-                    group, target_replica_id, ep_id, expert_global_ids, layer_global_id, routing_details
+                    group,
+                    target_replica_id,
+                    ep_id,
+                    expert_global_ids,
+                    layer_global_id,
+                    routing_details,
                 )
                 # Ensure all EP sub-batches share the same global_id for AllGather synchronization
                 ep_batch_group.set_global_id(shared_group_id)
@@ -544,7 +1053,8 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
                     activation_bytes = 0
                 ep_batch_group.activation_bytes = activation_bytes
 
-                self.get_dp_replica_scheduler(target_replica_id, ep_id).add_batch_to_m2n_queue(ep_batch_group)
+                replica_scheduler = replica_schedulers[ep_id]
+                queue_operations.append((replica_scheduler, ep_batch_group))
                 affected_ep_pairs.add((target_replica_id, ep_id))
 
             # DIAGNOSTIC: Verify all EP batches have the same global_id
@@ -555,21 +1065,114 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             else:
                 logger.info(f"[EP-GLOBAL-ID][VERIFY] All {len(created_ep_batches)} EP batches share global_id={shared_group_id}")
 
-            logger.info(f"[FFN-GROUP] Affected EP lanes: {sorted(list(affected_ep_pairs))}")
+            logger.info(
+                "[FFN-GROUP] Affected EP lanes prepared for commit: "
+                f"{sorted(affected_ep_pairs)}"
+            )
+            self._commit_decode_ffn_m2n_queue_operations(queue_operations)
+            for source_batch in raw_batches:
+                self._raw_batch_waiting_for_m2n_back[source_batch.id] = source_batch
+            self._batch_group_creation_counter = shared_group_id + 1
+            ready_groups.popleft()
+
             return sorted(list(affected_ep_pairs))
 
         return []
 
+    def _schedule_dense_ffn_from_m2n_group(
+        self, ready_groups, logger
+    ) -> List[Tuple[int, int]]:
+        """Schedule a dense (non-MoE) FFN batch from the M2N ready group.
+
+        For dense models there is no expert routing, no EP dispatch/combine,
+        and no all-to-all. We simply aggregate the group into a single
+        DenseFFNBatchGroup and queue it on the target replica at dp_id=0.
+        """
+        from frontier.entities.batch import DenseFFNBatchGroup
+
+        group_preflight = self._preflight_decode_ffn_ready_group(ready_groups)
+        if group_preflight is None:
+            return []
+        raw_batches = group_preflight.source_batches
+        source_batch_ids = group_preflight.source_batch_ids
+        group_activation_bytes = group_preflight.group_activation_bytes
+        layer_global_id = group_preflight.layer_global_id
+        afd_stage_idx = group_preflight.afd_stage_idx
+        target_replica_id = group_preflight.target_replica_id
+        all_requests = list(group_preflight.requests)
+        all_num_tokens = list(group_preflight.num_tokens)
+
+        shared_group_id = self._batch_group_creation_counter
+
+        try:
+            replica_scheduler = self.get_dp_replica_scheduler(
+                target_replica_id,
+                0,
+            )
+        except (KeyError, IndexError) as exc:
+            raise RuntimeError(
+                "DECODE_FFN target replica scheduler is unavailable: "
+                f"replica_id={target_replica_id}, ep_id=0"
+            ) from exc
+        self._preflight_decode_ffn_queue_target(replica_scheduler)
+
+        dense_batch = DenseFFNBatchGroup(
+            requests=all_requests,
+            num_tokens=all_num_tokens,
+            replica_id=target_replica_id,
+            lane_id=0,
+            time=0.0,
+            source_batch_ids=source_batch_ids,
+            cluster_type=self._cluster_type,
+        )
+        dense_batch.set_global_id(shared_group_id)
+        dense_batch.decode_ffn_layer_id = layer_global_id
+        dense_batch.afd_stage_idx = afd_stage_idx
+        dense_batch.activation_bytes = group_activation_bytes
+
+        logger.info(
+            f"[FFN-GROUP][DENSE] Prepared DenseFFNBatchGroup id={dense_batch.id} "
+            f"global_id={shared_group_id} target_replica={target_replica_id} "
+            f"layer={layer_global_id} source_batches={source_batch_ids} "
+            f"total_tokens={sum(all_num_tokens)}"
+        )
+        self._commit_decode_ffn_m2n_queue_operations(
+            [(replica_scheduler, dense_batch)]
+        )
+        for batch in raw_batches:
+            self._raw_batch_waiting_for_m2n_back[batch.id] = batch
+        self._batch_group_creation_counter = shared_group_id + 1
+        ready_groups.popleft()
+
+        return [(target_replica_id, 0)]
+
     @staticmethod
     def _get_ffn_layer_id_from_group(group: List[Tuple["Batch", Any]]) -> int:
-        layer_id = getattr(group[0][1], "layer_id", None)
-        if layer_id is None:
-            raise ValueError("Missing layer_id in M2N transfer_info for DECODE_FFN group")
-        for (_, transfer_info) in group[1:]:
-            if getattr(transfer_info, "layer_id", None) != layer_id:
+        if type(group) is not list or not group:
+            raise ValueError(
+                "DECODE_FFN layer lookup requires an exact non-empty group list"
+            )
+
+        layer_id = None
+        for entry in group:
+            if type(entry) is not tuple or len(entry) != 2:
+                raise ValueError(
+                    "DECODE_FFN layer lookup requires exact "
+                    "(batch, transfer_info) tuples"
+                )
+            transfer_info = entry[1]
+            entry_layer_id = getattr(transfer_info, "layer_id", None)
+            if type(entry_layer_id) is not int or entry_layer_id < 0:
+                raise ValueError(
+                    "DECODE_FFN layer_id must be an exact non-negative int, "
+                    f"got {entry_layer_id!r}"
+                )
+            if layer_id is None:
+                layer_id = entry_layer_id
+            elif entry_layer_id != layer_id:
                 raise ValueError(
                     "M2N transfer_info layer_id mismatch within DECODE_FFN group: "
-                    f"expected={layer_id}, got={getattr(transfer_info, 'layer_id', None)}"
+                    f"expected={layer_id}, got={entry_layer_id}"
                 )
         return layer_id
 

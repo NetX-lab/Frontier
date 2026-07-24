@@ -904,7 +904,6 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             "attention_layer_pre_proj_execution_time": 0.0,
             "attention_layer_post_proj_execution_time": 0.0,
             "attn_norm_time": 0.0,
-            "is_moe": True,  # For FFN/MoE cluster
         }
 
     @staticmethod
@@ -1424,20 +1423,20 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
 
         elif cluster_type == ClusterType.DECODE_FFN:
-            # FFN-only cluster (can be MoE or MLP depending on model type)
-            # Check if this is a MoE model or dense model
-            # Use model_config.is_moe for MoE detection - NOT parallelism settings
+            # FFN-only cluster (can be MoE or MLP depending on the current layer)
             cluster_replica_config = self._get_cluster_replica_config(cluster_type)
             model_config = cluster_replica_config.model_config
             architecture_profile = self._get_cluster_model_architecture_profile(cluster_type)
-            is_moe_model = (
-                model_config is not None and model_config.is_moe
+            is_moe_layer = (
+                model_config is not None
+                and model_config.is_moe
+                and model_config.is_moe_layer(layer_id)
             )
 
-            if is_moe_model:
-                # MoE model: use MoE operations
+            if is_moe_layer:
+                # MoE layer: use MoE operations
                 logger.debug(
-                    f"[DECODE_FFN] Processing MoE model: total_expert_num={self._replica_config.total_expert_num}, "
+                    f"[DECODE_FFN] Processing MoE layer {layer_id}: total_expert_num={self._replica_config.total_expert_num}, "
                     f"moe_expert_parallel_size={self._replica_config.moe_expert_parallel_size}"
                 )
 
@@ -1471,14 +1470,13 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     cluster_type=cluster_type,
                     per_expert_tokens=per_expert_tokens,  # Pass actual expert allocation
                 )
-                # Get post_attention_layernorm time (runs before MoE)
-                mlp_norm_time = self._get_mlp_norm_layer_act_execution_time(batch)
+                # In PD-AF flow, post-attention layernorm is accounted on DECODE_ATTN.
+                # Keep DECODE_FFN free of this op to avoid double-counting per layer.
+                mlp_norm_time = 0.0
                 # Get residual add time (second residual connection after MoE)
                 add_time = self._get_add_layer_act_execution_time(batch)
                 add_attn_residual_time = 0.0
                 add_ffn_residual_time = 0.0
-                if architecture_profile.skip_decode_ffn_attn_norm_residual:
-                    mlp_norm_time = 0.0
                 if architecture_profile.residual_add_policy is ResidualAddPolicy.FFN_RESIDUAL_ONLY:
                     add_attn_residual_time = 0.0
                     add_ffn_residual_time = add_time
@@ -1658,25 +1656,26 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         overhead_time.pp_stage_boundary_residual_runtime_time
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
+                    is_moe=True,
                     **self._get_zero_attn_params(),
                 )
             else:
-                # Dense model: use MLP operations
+                # Dense layer: use MLP operations
                 logger.debug(
-                    f"[DECODE_FFN] Processing dense model: total_expert_num={self._replica_config.total_expert_num}, "
+                    f"[DECODE_FFN] Processing dense layer {layer_id}: total_expert_num={self._replica_config.total_expert_num}, "
                     f"moe_expert_parallel_size={self._replica_config.moe_expert_parallel_size}"
                 )
 
                 mlp_time = self.predict_mlp_layer_time(
                     batch, layer_id=layer_id, cluster_type=cluster_type
                 )
-                mlp_norm_time = mlp_time.mlp_norm_time
+                # In PD-AF flow, post-attention layernorm is accounted on DECODE_ATTN.
+                # Keep DECODE_FFN free of this op to avoid double-counting per layer.
+                mlp_norm_time = 0.0
                 # Get residual add time (second residual connection after MLP)
                 add_time = self._get_add_layer_act_execution_time(batch)
                 add_attn_residual_time = 0.0
                 add_ffn_residual_time = 0.0
-                if architecture_profile.skip_decode_ffn_attn_norm_residual:
-                    mlp_norm_time = 0.0
                 if architecture_profile.residual_add_policy is ResidualAddPolicy.FFN_RESIDUAL_ONLY:
                     add_attn_residual_time = 0.0
                     add_ffn_residual_time = add_time
@@ -2185,12 +2184,17 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 batch, layer_id=layer_id, cluster_type=cluster_type
             )
 
-            # Check if this is a MoE model or dense model
-            # Use model_config.is_moe for MoE detection - NOT parallelism settings
+            # Check whether the requested layer is MoE or dense.  Step3 models
+            # are mixed-layer: the model-level ``is_moe`` flag is true even for
+            # dense boundary layers (for example layers 0-3 and 60).  The
+            # layer-specific predicate must therefore control the PREFILL FFN
+            # path just as it does for DECODE_FFN.
             cluster_replica_config = self._get_cluster_replica_config(cluster_type)
-            is_moe_model = (
-                cluster_replica_config.model_config is not None
-                and cluster_replica_config.model_config.is_moe
+            model_config = cluster_replica_config.model_config
+            is_moe_model = bool(
+                model_config is not None
+                and model_config.is_moe
+                and model_config.is_moe_layer(layer_id)
             )
 
             if is_moe_model:

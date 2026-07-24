@@ -52,6 +52,7 @@ class BaseGlobalScheduler(ABC):
                 m2n_transfer_predictor=m2n_transfer_predictor,
                 available_clusters=set(clusters.keys()),  # Pass available cluster types
             )
+        self._sync_decode_ffn_lane_topology(request_generator_config)
         self._request_queue = []  # List[Tuple[Request, ClusterType]]
         self._cluster_logical_times: Dict[ClusterType, float] = {
             cluster_type: 0.0 for cluster_type in clusters.keys()
@@ -61,6 +62,65 @@ class BaseGlobalScheduler(ABC):
         # Parallel mode inter-cluster communication
         if self._enable_parallel_mode:
             self._init_parallel_communication(max_inter_cluster_queue_size)
+
+    def _sync_decode_ffn_lane_topology(
+        self, request_generator_config: BaseRequestGeneratorConfig
+    ) -> None:
+        decode_attn_scheduler = self._cluster_schedulers.get(ClusterType.DECODE_ATTN)
+        decode_ffn_scheduler = self._cluster_schedulers.get(ClusterType.DECODE_FFN)
+        if decode_attn_scheduler is None or decode_ffn_scheduler is None:
+            return
+        if not hasattr(decode_ffn_scheduler, "_ffn_group_micro_batches"):
+            return
+
+        get_current_expected_lanes = getattr(
+            decode_attn_scheduler,
+            "_get_decode_attn_a2f_expected_lanes",
+            None,
+        )
+        expected_lanes = []
+        if callable(get_current_expected_lanes):
+            expected_lanes = [
+                (int(replica_id), int(dp_id))
+                for replica_id, dp_id in get_current_expected_lanes()
+            ]
+        if not expected_lanes:
+            expected_lanes = [
+                (int(replica_id), int(dp_id))
+                for replica_id, dp_id in getattr(
+                    decode_attn_scheduler, "_a2f_expected_lanes", []
+                )
+            ]
+        if not expected_lanes:
+            attn_replica_ids = list(decode_attn_scheduler._cluster.replicas.keys())
+            attn_dp_size = int(getattr(decode_attn_scheduler, "_replica_dp_size", 0))
+            if not attn_replica_ids or attn_dp_size <= 0:
+                raise ValueError(
+                    "Unable to derive DECODE_FFN barrier lanes from DECODE_ATTN scheduler"
+                )
+            expected_lanes = [
+                (int(replica_id), dp_id)
+                for replica_id in attn_replica_ids
+                for dp_id in range(attn_dp_size)
+            ]
+
+        configured_group_size = len(expected_lanes)
+        if configured_group_size <= 0:
+            raise ValueError("Invalid DECODE_FFN lane group size during topology sync")
+
+        decode_ffn_scheduler._ffn_expected_lanes = expected_lanes
+        decode_ffn_scheduler._ffn_group_micro_batches = configured_group_size
+        idle_lanes = set()
+        total_requests = getattr(request_generator_config, "num_requests", None)
+        if total_requests is not None:
+            total_requests = int(total_requests)
+            if total_requests < len(expected_lanes):
+                idle_lanes = set(expected_lanes[total_requests:])
+        decode_ffn_scheduler._ffn_idle_lanes = idle_lanes
+        logger.info(
+            "Synced DECODE_FFN barrier lanes from DECODE_ATTN scheduler: "
+            f"lanes={expected_lanes}, idle_lanes={sorted(idle_lanes)}"
+        )
 
     def _init_parallel_communication(self, max_queue_size: int):
         """Initialize parallel mode communication infrastructure."""
@@ -142,6 +202,17 @@ class BaseGlobalScheduler(ABC):
             cluster_scheduler.is_empty()
             for cluster_scheduler in self._cluster_schedulers.values()
         )
+
+    def get_entry_cluster_type(self) -> ClusterType:
+        if ClusterType.MONOLITHIC in self._cluster_schedulers:
+            return ClusterType.MONOLITHIC
+        if ClusterType.PREFILL in self._cluster_schedulers:
+            return ClusterType.PREFILL
+        if ClusterType.DECODE_ATTN in self._cluster_schedulers:
+            return ClusterType.DECODE_ATTN
+        if ClusterType.DECODE in self._cluster_schedulers:
+            return ClusterType.DECODE
+        raise ValueError("Unable to infer entry cluster type from active cluster schedulers")
 
     def update_cluster_logical_time(
         self, cluster_type: ClusterType, logical_time: float

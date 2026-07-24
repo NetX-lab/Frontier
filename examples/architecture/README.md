@@ -4,6 +4,8 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-07-23 | Completed the five-offline/five-online PD-AF dense/MoE/EP/CUDA Graph recipe surface and dummy matrix coverage. |
+| 2026-07-22 | Added the `pd-af-disaggregation` offline/online MoE example surface and one-click smoke contract. |
 | 2026-07-05 | Added profiling-independent dummy smoke matrix runner documentation. |
 | 2026-06-22 | Removed legacy split-decode terminology from the public PDD surface. |
 | 2026-06-14 | Added PDD pd-disaggregation script list, configuration contract, and validation criteria for local PR preparation. |
@@ -12,7 +14,7 @@ This directory contains one-click architecture entrypoints for Frontier's releas
 
 ## Release Scope
 
-`pre-release-v0.2` foregrounds **PDD / `pd-disaggregation`** examples. Prefill runs in the `PREFILL` cluster, decode runs in the unified `DECODE` cluster, and KV cache is transferred between them. The public PDD example path uses the sequential simulator mode through `--no-enable_parallel_clusters`.
+`pre-release-v0.3` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD uses `PREFILL` plus unified `DECODE`; PD-AF uses `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` with KV and M2N transfers. Both public disaggregated paths use `--no-enable_parallel_clusters`.
 
 `co-location` examples remain available as baseline comparison recipes and v0.1-compatible architecture references. Additional disaggregated research prototypes outside the PDD path are not exposed as release examples.
 
@@ -20,7 +22,7 @@ This directory contains one-click architecture entrypoints for Frontier's releas
 
 | Path | Scenario | Notes |
 |------|----------|-------|
-| `run_dummy_smoke_matrix.sh` | Profiling-independent dummy smoke matrix | Runs dense/MoE across co-location/PDD and offline/online; does not consume profiling CSV datasets |
+| `run_dummy_smoke_matrix.sh` | Profiling-independent dummy smoke matrix | Runs dense/MoE across co-location/PDD/PD-AF and offline/online; does not consume profiling CSV datasets |
 | `co-location/run_all.sh` | Full co-location suite | Runs all five offline cases and all five online cases; pass extra Frontier CLI flags after `--` |
 | `co-location/offline/dense_model_basic.sh` | Offline dense co-location baseline | Analytical backend by default, dummy execution time, `decode_cuda_graph_mode=full_decode_only`, Chunked Prefill, CSV/JSON metrics |
 | `co-location/offline/moe_model_basic.sh` | Offline MoE co-location baseline | Analytical backend by default, dummy execution time, shared-domain MoE invariant, Chunked Prefill, CSV/JSON metrics |
@@ -43,6 +45,17 @@ This directory contains one-click architecture entrypoints for Frontier's releas
 | `pdd/online/thinking_mode_basic_online.sh` | Online Thinking Mode v1 PDD | Mirrors Thinking Mode offline settings with `--simulation_mode online` |
 | `pdd/online/moe_spec_dec_online.sh` | Online MoE PDD Speculative Decoding / MTP | Mirrors Speculative Decoding offline settings with `--simulation_mode online` |
 | `pdd/online/moe_prefix_caching_online.sh` | Online MoE PDD Prefix Caching | Replays the same prefix-cache fixture with `--simulation_mode online` |
+| `pd-af-disagg/run_all.sh` | Full PD-AF suite | Runs five offline and five online cases; pass extra Frontier CLI flags after `--` |
+| `pd-af-disagg/offline/dense_model_basic.sh` | Offline PD-AF dense baseline | Dense-safe three-role topology, analytical KV/M2N, dummy predictor by default |
+| `pd-af-disagg/offline/moe_model_basic.sh` | Offline PD-AF MoE baseline | Three-role topology, analytical KV/M2N, dummy predictor by default |
+| `pd-af-disagg/offline/moe_model_ep.sh` | Offline PD-AF EP baseline | Legal EP=2 topology with fail-fast domain checks |
+| `pd-af-disagg/offline/dense_cuda_graph.sh` | Offline dense CUDA Graph | Global `use_cuda_graph` with capture sizes `8 16 32 64` |
+| `pd-af-disagg/offline/moe_cuda_graph.sh` | Offline MoE CUDA Graph | EP=1 MoE with the same global CUDA Graph contract |
+| `pd-af-disagg/online/dense_model_basic_online.sh` | Online PD-AF dense baseline | Mirrors the dense offline topology with online arrivals |
+| `pd-af-disagg/online/moe_model_basic_online.sh` | Online PD-AF MoE baseline | Same topology with `--simulation_mode online` |
+| `pd-af-disagg/online/moe_model_ep_online.sh` | Online PD-AF EP baseline | Same legal EP=2 contract with online arrivals |
+| `pd-af-disagg/online/dense_cuda_graph_online.sh` | Online dense CUDA Graph | Dense online path with global CUDA Graph |
+| `pd-af-disagg/online/moe_cuda_graph_online.sh` | Online MoE CUDA Graph | MoE online path with global CUDA Graph |
 
 ## PDD Configuration Contract
 
@@ -57,6 +70,21 @@ All PDD scripts use these release-supported defaults unless overridden from the 
 - plots, Chrome trace, and JSON event trace disabled for lightweight one-click artifacts
 
 MoE PDD scripts also enforce that each role's attention and MoE parallel domains match before launching Frontier. This fail-fast check prevents known non-runnable MoE topology combinations from entering the simulator.
+
+## PD-AF Configuration Contract
+
+All PD-AF scripts use these release-supported defaults unless overridden from the shell:
+
+- `--sys_arch pd-af-disaggregation`
+- `--no-enable_parallel_clusters` (sequential role execution)
+- explicit `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` cluster settings
+- `--cc_backend_config_type analytical` and analytical KV/M2N transfer models
+- dummy execution-time prediction enabled by default for profiling-independent smoke runs
+- CSV/JSON metrics enabled; plots and trace exports disabled for lightweight artifacts
+
+The EP recipe validates expert-domain equality and expert-count bounds before launching the simulator. A successful smoke run must emit `request_metrics.csv`, `system_metrics.json`, positive KV/M2N transfer metrics, and one completed row per generated request.
+
+PD-AF CUDA Graph examples use `--use_cuda_graph`, not `--decode_cuda_graph_mode`. PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`. These scripts default to dummy prediction for one-click structural checks; dummy-mode evidence is not trained numerical parity.
 
 ## Thinking Mode v1
 
@@ -75,11 +103,11 @@ Under PDD, one user request can produce multiple prefill-to-decode KV handoffs. 
 ## Recommended Start Order
 
 ```bash
-# Profiling-independent smoke matrix: dense/MoE across co-location/PDD and offline/online.
+# Profiling-independent smoke matrix: dense/MoE across co-location/PDD/PD-AF and offline/online.
 # This does not consume profiling CSV datasets because it forces dummy execution-time prediction.
 bash examples/architecture/run_dummy_smoke_matrix.sh
 
-# Full PDD suite for pre-release-v0.2.
+# Full PDD suite for pre-release-v0.3.
 bash examples/architecture/pdd/run_all.sh
 
 # PDD offline cases.
@@ -95,6 +123,23 @@ bash examples/architecture/pdd/online/moe_model_basic_online.sh
 bash examples/architecture/pdd/online/thinking_mode_basic_online.sh
 bash examples/architecture/pdd/online/moe_spec_dec_online.sh
 bash examples/architecture/pdd/online/moe_prefix_caching_online.sh
+
+# Full PD-AF suite for pre-release-v0.3.
+bash examples/architecture/pd-af-disagg/run_all.sh
+
+# PD-AF offline cases.
+bash examples/architecture/pd-af-disagg/offline/dense_model_basic.sh
+bash examples/architecture/pd-af-disagg/offline/moe_model_basic.sh
+bash examples/architecture/pd-af-disagg/offline/moe_model_ep.sh
+bash examples/architecture/pd-af-disagg/offline/dense_cuda_graph.sh
+bash examples/architecture/pd-af-disagg/offline/moe_cuda_graph.sh
+
+# PD-AF online cases.
+bash examples/architecture/pd-af-disagg/online/dense_model_basic_online.sh
+bash examples/architecture/pd-af-disagg/online/moe_model_basic_online.sh
+bash examples/architecture/pd-af-disagg/online/moe_model_ep_online.sh
+bash examples/architecture/pd-af-disagg/online/dense_cuda_graph_online.sh
+bash examples/architecture/pd-af-disagg/online/moe_cuda_graph_online.sh
 
 # Full co-location comparison suite.
 bash examples/architecture/co-location/run_all.sh
@@ -114,7 +159,7 @@ bash examples/architecture/co-location/online/moe_spec_dec_online.sh
 bash examples/architecture/co-location/online/moe_prefix_caching_online.sh
 ```
 
-Use the dense baseline scripts first, then use the Thinking Mode, Speculative Decoding / MTP, and Prefix Caching recipes as advanced cases.
+Use the dense baseline scripts first. For PD-AF, use the EP and CUDA Graph recipes as advanced cases. Thinking Mode, Speculative Decoding / MTP, and Prefix Caching advanced recipes apply only to their documented co-location/PDD paths.
 
 ## Cross-validation Criteria
 

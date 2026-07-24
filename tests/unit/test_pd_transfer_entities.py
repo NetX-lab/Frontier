@@ -117,6 +117,38 @@ def test_m2n_transfer_info_rejects_non_m2n_cluster_pairs() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    ("field_name", "invalid_cluster_type"),
+    [
+        ("source_cluster_type", ClusterType.DECODE_ATTN.value),
+        ("source_cluster_type", None),
+        ("target_cluster_type", ClusterType.DECODE_FFN.value),
+        ("target_cluster_type", None),
+    ],
+    ids=["raw-int-source", "none-source", "raw-int-target", "none-target"],
+)
+def test_m2n_transfer_info_rejects_nonexact_cluster_types(
+    field_name: str,
+    invalid_cluster_type,
+) -> None:
+    from frontier.entities import M2NTransferInfo
+
+    fields = {
+        "batch": SimpleNamespace(id=13, global_id=103),
+        "source_cluster_type": ClusterType.DECODE_ATTN,
+        "target_cluster_type": ClusterType.DECODE_FFN,
+        "source_replica_id": 0,
+        "source_dp_id": 0,
+        "activation_size_bytes": 1,
+        "transfer_time_ms": 0.1,
+        "transfer_start_time": 0.0,
+    }
+    fields[field_name] = invalid_cluster_type
+
+    with pytest.raises((TypeError, ValueError), match=field_name):
+        M2NTransferInfo(**fields)
+
+
 def test_kv_cache_transfer_start_event_targets_decode_cluster_for_routing() -> None:
     from frontier.cluster_simulator import ClusterSimulator
     from frontier.events.kv_cache_transfer_start_event import KVCacheTransferStartEvent

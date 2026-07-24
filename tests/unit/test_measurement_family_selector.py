@@ -33,8 +33,10 @@ def _make_predictor(cluster_type: ClusterType, runtime_mode: str = "NONE"):
 
 @pytest.fixture(autouse=True)
 def _reset_cuda_graph_config():
+    global_vars.set_global_vars("offline", "co-location")
     global_vars.set_cuda_graph_config(False, None, "none")
     yield
+    global_vars.set_global_vars("offline", "co-location")
     global_vars.set_cuda_graph_config(False, None, "none")
 
 
@@ -101,6 +103,28 @@ def test_specialized_clusters_use_eager_when_cuda_graph_disabled() -> None:
     assert decode_predictor._select_measurement_type_for_batch(batch) == MeasurementType.CUDA_EVENT
     assert decode_attn_predictor._select_measurement_type_for_batch(batch) == MeasurementType.CUDA_EVENT
     assert decode_ffn_predictor._select_measurement_type_for_batch(batch) == MeasurementType.CUDA_EVENT
+
+
+def test_pd_af_decode_clusters_use_reference_measurement_families_without_cuda_graph() -> None:
+    global_vars.set_global_vars("offline", "pd-af-disaggregation")
+    decode_attn_predictor = _make_predictor(ClusterType.DECODE_ATTN)
+    decode_ffn_predictor = _make_predictor(ClusterType.DECODE_FFN)
+
+    pure_decode_batch = SimpleNamespace(num_prefill_tokens=0, num_decode_tokens=4)
+    mixed_batch = SimpleNamespace(num_prefill_tokens=8, num_decode_tokens=4)
+
+    assert (
+        decode_attn_predictor._select_measurement_type_for_batch(pure_decode_batch)
+        == MeasurementType.KERNEL_ONLY
+    )
+    assert (
+        decode_attn_predictor._select_measurement_type_for_batch(mixed_batch)
+        == MeasurementType.CUDA_EVENT
+    )
+    assert (
+        decode_ffn_predictor._select_measurement_type_for_batch(pure_decode_batch)
+        == MeasurementType.KERNEL_ONLY
+    )
 
 
 def test_eager_baselines_do_not_enable_kernel_only_families() -> None:
@@ -330,16 +354,26 @@ def test_shared_manager_family_views_enable_kernel_only_only_when_graph_enabled(
     assert set(monolithic_models["kernel_only"].keys()) == {"attn_decode"}
 
 
-def test_shared_manager_pd_af_measurement_types_follow_cuda_graph_policy() -> None:
+def test_shared_manager_pd_af_measurement_types_match_reference_contract() -> None:
     manager = _make_manager()
+    global_vars.set_global_vars("offline", "pd-af-disaggregation")
 
     assert manager._get_measurement_types_for_cluster(ClusterType.DECODE_ATTN) == [
-        MeasurementType.CUDA_EVENT
+        MeasurementType.CUDA_EVENT,
+        MeasurementType.KERNEL_ONLY,
     ]
     assert manager._get_measurement_types_for_cluster(ClusterType.DECODE_FFN) == [
-        MeasurementType.CUDA_EVENT
+        MeasurementType.KERNEL_ONLY
     ]
+    models = manager.get_models_for_cluster(ClusterType.DECODE_ATTN)
+    assert set(models["eager"]) == {"attn_prefill"}
+    assert set(models["kernel_only"]) == {"attn_decode"}
 
+    models = manager.get_models_for_cluster(ClusterType.DECODE_FFN)
+    assert models["eager"] == {}
+    assert set(models["kernel_only"]) == {"attn_decode"}
+
+    global_vars.set_global_vars("offline", "co-location")
     global_vars.set_cuda_graph_config(True, [1, 2, 4], "none")
 
     assert manager._get_measurement_types_for_cluster(ClusterType.DECODE_ATTN) == [

@@ -789,6 +789,36 @@ class ExecutionTime(BaseEntity):
             + self._get_moe_gating_time()
         )
 
+    def get_single_layer_moe_pre_dispatch_time(self) -> float:
+        """
+        Get the MoE runtime that must complete before EP dispatch begins.
+
+        This covers the explicit FFN-EP workflow segment observed in runtime
+        traces: share-expert ops, MoE gating, then token shuffling.
+        """
+        if not isinstance(self._moe_or_mlp_time, MoETime):
+            raise ValueError("MoE pre-dispatch time is only available for MoE models")
+        return (
+            self._moe_or_mlp_time.share_expert_up_proj_time
+            + self._moe_or_mlp_time.share_expert_down_proj_time
+            + self._moe_or_mlp_time.share_expert_act_time
+            + self._moe_or_mlp_time.moe_gating_time
+            + self._moe_or_mlp_time.moe_shuffling_time
+        )
+
+    def get_single_layer_moe_post_dispatch_compute_time(self) -> float:
+        """
+        Get the MoE runtime that remains after EP dispatch finishes.
+
+        In the explicit FFN-EP workflow, only the routed grouped GEMM executes
+        between dispatch and combine.
+        """
+        if not isinstance(self._moe_or_mlp_time, MoETime):
+            raise ValueError(
+                "MoE post-dispatch compute time is only available for MoE models"
+            )
+        return self._moe_or_mlp_time.moe_grouped_gemm_time
+
     def get_single_layer_moe_comm_time(self) -> float:
         """
         Get MoE communication time for a single layer.

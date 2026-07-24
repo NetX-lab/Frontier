@@ -31,24 +31,41 @@ class M2NTransferInfo:
     target_ffn_replica_id: Optional[int] = None
 
     def __post_init__(self) -> None:
+        self.validate_direction()
+
         if self.transfer_end_time is None:
             self.transfer_end_time = self.transfer_start_time + (self.transfer_time_ms * 1e-3)
-
-        valid_transfers = [
-            (ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN),
-            (ClusterType.DECODE_FFN, ClusterType.DECODE_ATTN),
-        ]
-        if (self.source_cluster_type, self.target_cluster_type) not in valid_transfers:
-            raise ValueError(
-                f"Invalid M2N transfer: {self.source_cluster_type.name} -> {self.target_cluster_type.name}. "
-                "M2N transfers only support DECODE_ATTN <-> DECODE_FFN communication."
-            )
 
         if self.pipeline_stage is None:
             if self.source_cluster_type == ClusterType.DECODE_ATTN:
                 self.pipeline_stage = "attn_to_ffn"
             else:
                 self.pipeline_stage = "ffn_to_attn"
+
+    def validate_direction(self) -> None:
+        """Validate the exact cluster types and legal M2N direction."""
+
+        if type(self.source_cluster_type) is not ClusterType:
+            raise ValueError(
+                "M2N source_cluster_type must be an exact ClusterType, "
+                f"got {self.source_cluster_type!r}"
+            )
+        if type(self.target_cluster_type) is not ClusterType:
+            raise ValueError(
+                "M2N target_cluster_type must be an exact ClusterType, "
+                f"got {self.target_cluster_type!r}"
+            )
+
+        valid_transfers = {
+            (ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN),
+            (ClusterType.DECODE_FFN, ClusterType.DECODE_ATTN),
+        }
+        if (self.source_cluster_type, self.target_cluster_type) not in valid_transfers:
+            raise ValueError(
+                f"Invalid M2N transfer: {self.source_cluster_type.name} -> "
+                f"{self.target_cluster_type.name}. M2N transfers only support "
+                "DECODE_ATTN <-> DECODE_FFN communication."
+            )
 
     @property
     def is_completed(self) -> bool:

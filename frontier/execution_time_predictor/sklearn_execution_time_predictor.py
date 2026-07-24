@@ -44,7 +44,7 @@ from frontier.config import (
     global_vars,
     get_quantization_manager,
 )
-from frontier.entities import Batch
+from frontier.entities import Batch, Request
 from frontier.entities.time_components import (
     AttentionTime,
     AttentionOperatorTimes,
@@ -190,6 +190,13 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
 
     def _get_model_architecture_profile(self) -> ModelArchitectureProfile:
+        cached_profile = getattr(
+            self,
+            "_model_architecture_profile_cache",
+            None,
+        )
+        if cached_profile is not None:
+            return cached_profile
         getter = getattr(self._model_config, "get_model_architecture_profile", None)
         if not callable(getter):
             raise TypeError(
@@ -202,6 +209,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "model_config.get_model_architecture_profile() must return "
                 "ModelArchitectureProfile"
             )
+        self._model_architecture_profile_cache = profile
         return profile
 
     def _get_predictor_attention_extra_ops(self) -> tuple[str, ...]:
@@ -323,6 +331,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         max_tokens_in_batch = getattr(replica_scheduler_config, "max_tokens_in_batch", None)
         if max_tokens_in_batch is not None:
             self._max_tokens = max(self._max_tokens, int(max_tokens_in_batch))
+
+        if cluster_type in [ClusterType.PREFILL, ClusterType.MONOLITHIC]:
+            # Linear compute predictors are indexed by the batch-level effective
+            # token count.  A PREFILL batch can therefore exceed the per-request
+            # token limit when its configured chunk contains multiple requests.
+            # Keep the lookup range aligned with the largest profiled prefill
+            # chunk so valid measured rows (for example 32 * 512 = 16384) are
+            # materialized instead of failing at runtime with KeyError.
+            self._max_tokens = max(
+                self._max_tokens,
+                int(self._config.prediction_max_prefill_chunk_size),
+            )
 
         # Design note: PREFILL/MONOLITHIC cache sizing keeps the current shared max-token budget.
         if cluster_type in [
@@ -888,6 +908,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         raise ValueError(f"Unsupported cluster_type={self._cluster_type!r}")
 
     def _get_default_measurement_type_for_cluster(self) -> MeasurementType:
+        if global_vars.get_sys_arch() == "pd-af-disaggregation":
+            if self._cluster_type in (
+                ClusterType.DECODE,
+                ClusterType.DECODE_ATTN,
+                ClusterType.DECODE_FFN,
+            ):
+                return MeasurementType.KERNEL_ONLY
+            return MeasurementType.CUDA_EVENT
+
         if self._should_enable_measurement_family(MeasurementType.KERNEL_ONLY) and not (
             self._should_enable_measurement_family(MeasurementType.CUDA_EVENT)
         ):
@@ -899,6 +928,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _should_enable_measurement_family(
         self, measurement_type: MeasurementType
     ) -> bool:
+        if global_vars.get_sys_arch() == "pd-af-disaggregation":
+            if self._cluster_type == ClusterType.DECODE_ATTN:
+                return measurement_type in (
+                    MeasurementType.CUDA_EVENT,
+                    MeasurementType.KERNEL_ONLY,
+                )
+            if self._cluster_type in (ClusterType.DECODE, ClusterType.DECODE_FFN):
+                return measurement_type == MeasurementType.KERNEL_ONLY
+            return measurement_type == MeasurementType.CUDA_EVENT
+
         decode_graph_mode = str(global_vars.get_decode_cuda_graph_mode()).strip().lower()
         use_cuda_graph = bool(global_vars.get_use_cuda_graph())
 
@@ -925,6 +964,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
 
     def _select_measurement_type_for_batch(self, batch: Batch) -> MeasurementType:
+        if global_vars.get_sys_arch() == "pd-af-disaggregation":
+            if self._cluster_type == ClusterType.DECODE_ATTN:
+                if getattr(batch, "num_prefill_tokens", 0) > 0:
+                    return MeasurementType.CUDA_EVENT
+                return MeasurementType.KERNEL_ONLY
+            if self._cluster_type in (
+                ClusterType.PREFILL,
+                ClusterType.DECODE,
+                ClusterType.DECODE_FFN,
+            ):
+                return self._get_default_measurement_type_for_cluster()
+
         if self._cluster_type in (
             ClusterType.PREFILL,
             ClusterType.DECODE,
@@ -2245,9 +2296,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         self._register_profiling_metadata_from_file(
             self._compute_input_file, self._get_compute_model_names()
         )
-        self._register_profiling_metadata_from_file(
-            self._attention_input_file, self._get_attention_model_names()
-        )
+        if self._cluster_type != ClusterType.DECODE_FFN:
+            self._register_profiling_metadata_from_file(
+                self._attention_input_file, self._get_attention_model_names()
+            )
         self._register_additional_profiling_metadata_from_files()
 
     def _get_compute_df_with_derived_features(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -3695,6 +3747,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         # Build only the grids we actually need to avoid unnecessary compute/memory.
         decode_df = None
         prefill_df = None
+        attention_max_tokens = self._get_attention_prediction_max_tokens_per_request()
 
         decode_op_name = self._dense_attention_decode_op_name()
         prefill_op_name = self._dense_attention_prefill_op_name()
@@ -3705,7 +3758,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
             decode_kv_cache_size_range = np.arange(
                 0,
-                self._config.prediction_max_tokens_per_request + 1,
+                attention_max_tokens + 1,
                 self._config.kv_cache_prediction_granularity,
             )
             decode_df = pd.DataFrame(
@@ -3727,7 +3780,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         if need_prefill and prefill_op_name in self._models:
             prefill_kv_cache_size_range = np.arange(
                 0,
-                self._config.prediction_max_tokens_per_request + 1,
+                attention_max_tokens + 1,
                 self._config.kv_cache_prediction_granularity,
             )
             prefill_prefill_chunk_size_range = np.arange(
@@ -3817,6 +3870,19 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         return predictions
 
+    def _get_attention_prediction_max_tokens_per_request(self) -> int:
+        max_tokens = int(self._config.prediction_max_tokens_per_request)
+        model_config = getattr(self, "_model_config", None)
+        if model_config is None:
+            return max_tokens
+
+        for attr in ("max_model_len", "max_position_embeddings", "max_seq_len"):
+            value = getattr(model_config, attr, None)
+            if value is None:
+                continue
+            max_tokens = max(max_tokens, int(value))
+        return max_tokens
+
     def _predict_from_models(self) -> Dict[str, Any]:
         predictions = {}
 
@@ -3850,7 +3916,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         for request in batch.requests:
             if request._is_prefill_complete:
-                decode_kv_cache_sizes.append(request.num_processed_tokens)
+                decode_kv_cache_sizes.append(
+                    self._get_decode_attention_context_tokens(request)
+                )
 
         if not decode_kv_cache_sizes:
             batch._decode_params = (0, 0)
@@ -3877,6 +3945,26 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         batch._decode_params = (decode_batch_size, decode_avg_kv_cache_size)
 
         return batch._decode_params
+
+    @staticmethod
+    def _get_decode_attention_context_tokens(request: Request) -> int:
+        """Return the KV context visible to the next decode-attention step."""
+        context_tokens = int(request.num_processed_tokens)
+        processed_decode_tokens = int(request.num_processed_decode_tokens)
+        emitted_decode_tokens = int(request.num_emitted_decode_tokens)
+        if processed_decode_tokens < 0 or emitted_decode_tokens < 0:
+            raise ValueError(
+                "Decode token counters must be non-negative: "
+                f"processed={processed_decode_tokens}, emitted={emitted_decode_tokens}."
+            )
+        if emitted_decode_tokens < processed_decode_tokens:
+            raise ValueError(
+                "Emitted decode tokens cannot trail processed decode tokens: "
+                f"processed={processed_decode_tokens}, emitted={emitted_decode_tokens}."
+            )
+        if processed_decode_tokens == 0:
+            context_tokens += emitted_decode_tokens
+        return context_tokens
 
     def _get_batch_prefill_attention_params(
         self, batch: Batch

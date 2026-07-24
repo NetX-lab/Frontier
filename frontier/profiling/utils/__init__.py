@@ -217,6 +217,28 @@ def get_num_tokens_to_profile(
     return num_tokens_to_profile
 
 
+def build_profile_position_indices(
+    num_tokens: int,
+    max_position_embeddings: int,
+) -> List[int]:
+    """Build legal RoPE positions for flattened profiling workloads.
+
+    Linear-op profiling treats ``num_tokens`` as a flattened prefill workload,
+    which can exceed a model's context length. The position tensor is only used
+    to exercise position-dependent kernels such as RoPE; wrapping it keeps every
+    index inside the model's precomputed cache without changing the profiled
+    token count or operator shapes.
+    """
+    if num_tokens <= 0:
+        raise ValueError(f"num_tokens must be positive, got {num_tokens}")
+    if max_position_embeddings <= 0:
+        raise ValueError(
+            "max_position_embeddings must be positive, "
+            f"got {max_position_embeddings}"
+        )
+    return [index % max_position_embeddings for index in range(num_tokens)]
+
+
 def get_attention_batch_sizes_to_profile(
     min_batch_size: int,
     max_batch_size: int,

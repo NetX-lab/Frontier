@@ -1,18 +1,24 @@
-# Frontier: LLM Inference Simulator (Co-location + PDD Release)
+# Frontier: LLM Inference Simulator (Co-location + PDD + PD-AF Release)
 
-## Release Status: `pre-release-v0.2`
+## Modification History
 
-- Current public branch supports `co-location` and sequential PDD / `pd-disaggregation`.
-- AFD / `pd-af-disaggregation` remains outside this public release surface.
+| Date       | Summary of Changes |
+|------------|--------------------|
+| 2026-07-23 | Completed the `pre-release-v0.3` PD-AF dense, MoE, EP, and CUDA Graph example surface and documented deferred feature boundaries. |
+| 2026-07-22 | Documented sequential PD-AF runtime support. |
+
+## Release Status: `pre-release-v0.3`
+
+- Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
 - The co-location example suite uses `--cc_backend_config_type analytical` for one-click smoke runs without the optional network simulator; direct CLI experiments may still select `astra_sim_analytical` explicitly.
 - The PDD example suite also uses `--cc_backend_config_type analytical` and `--no-enable_parallel_clusters` for one-click sequential smoke runs.
 - collective_sim is optional. Initialize and build its submodule only when you explicitly select `--cc_backend_config_type collective_sim`.
 
-Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.2` branch supports the **co-location** architecture, where prefill and decode run in a single monolithic cluster, and sequential **PDD / `pd-disaggregation`**, where prefill and decode run in separate clusters with KV cache transfer between them.
+Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.3` branch supports the **co-location** architecture, sequential **PDD / `pd-disaggregation`**, and sequential **PD-AF / `pd-af-disaggregation`**. PD-AF uses separate `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` roles with KV and M2N transfer events.
 
 The supported PDD path requires sequential cluster execution. If a user selects `pd-disaggregation` with parallel clusters enabled, Frontier fails fast with message.
 
-If a user selects `pd-af-disaggregation` or other unsupported disaggregated research surfaces, Frontier still fails fast with the guarded disaggregation release error.
+Unsupported parallel disaggregation and other experimental surfaces still fail fast with explicit configuration errors.
 
 This AGENTS.md release guide is intended to be the **authoritative entry point** for users and developers. Older documents in the repo may contain deeper narrative explanations but may lag behind the current code.
 
@@ -52,11 +58,12 @@ Frontier models an LLM serving system as a set of clusters and replicas processi
 
 ## Key Features
 
-- `co-location` and sequential `pd-disaggregation` system architectures for this release
-- Runtime guard for `pd-af-disaggregation`, parallel PDD clusters, and unsupported disaggregated research surfaces
+- `co-location`, sequential `pd-disaggregation`, and sequential `pd-af-disaggregation` system architectures for this release
+- Runtime guard for parallel disaggregation and unsupported research surfaces
 - MoE support (EP synchronization, routing and imbalance modeling)
-- Speculative decoding support via `frontier/spec_decode/` and `ReplicaConfig.speculative_decoding_config`
-- Prefix caching for supported replica schedulers (`vllm_v1`, `sglang`)
+- Speculative decoding support via `frontier/spec_decode/` and `ReplicaConfig.speculative_decoding_config` on supported co-location/PDD paths
+- Prefix caching for supported replica schedulers (`vllm_v1`, `sglang`) on supported co-location/PDD paths
+- PD-AF dense, MoE, EP>1, and global CUDA Graph one-click examples in offline and online modes
 - Pluggable **communication-cost backend**:
   - ASTRA-Sim-inspired analytical backend (default for public examples and direct CLI defaults)
   - Collective-sim topology-aware backend (optional; requires explicit `--cc_backend_config_type collective_sim`)
@@ -67,10 +74,11 @@ Frontier models an LLM serving system as a set of clusters and replicas processi
 
 ## Supported System Architectures & Mode Compatibility
 
-This release supports two runtime architectures:
+This release supports three runtime architectures:
 
 - `co-location`: Monolithic mode with a single cluster.
 - `pd-disaggregation`: Sequential PDD mode with separate `PREFILL` and unified `DECODE` clusters. Public examples use `--no-enable_parallel_clusters`.
+- `pd-af-disaggregation`: Sequential PD-AF mode with separate `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` clusters. Public examples use `--no-enable_parallel_clusters`.
 
 The CLI/config parser still accepts the historical `sys_arch` choices so existing parameter parsing structures remain stable. Runtime behavior is stricter:
 
@@ -78,14 +86,15 @@ The CLI/config parser still accepts the historical `sys_arch` choices so existin
 - `online + co-location` is supported where the selected scheduler/runtime path supports online mode.
 - `offline + pd-disaggregation` is supported for the public PDD scripts.
 - `online + pd-disaggregation` is supported for the public PDD scripts.
-- `pd-af-disaggregation` aborts during `SimulationConfig.__post_init__()` with the guarded disaggregation release error.
 - `pd-disaggregation` aborts unless `--no-enable_parallel_clusters` is provided.
+- `pd-af-disaggregation` aborts unless `--no-enable_parallel_clusters` is provided.
 
 Important runtime constraints:
 
 - `sglang` is available only for `co-location` / `MONOLITHIC`.
 - `decode_cuda_graph_mode` is intended for `co-location` and `pd-disaggregation`.
-- `use_cuda_graph=True` is not part of this release because the guarded PD+AF path previously owned that setting.
+- PD-AF CUDA Graph examples use `--use_cuda_graph`, not `--decode_cuda_graph_mode`.
+- PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`.
 - When speculative decoding is enabled, Frontier currently requires `decode_cuda_graph_mode='none'` unless the diagnostic opt-in is explicitly enabled.
 
 ## Repository Layout
@@ -316,6 +325,20 @@ export VIDUR_DISABLE_WANDB=1
 bash examples/architecture/pdd/offline/dense_model_basic.sh
 ```
 
+### Example: PD-AF dense and MoE
+
+The sequential PD-AF examples use three role clusters and analytical transfer models. The CUDA Graph recipes exercise the PD-AF global `use_cuda_graph` path:
+
+```bash
+export PYTHONPATH=$PWD
+export WANDB_DISABLED=true
+export VIDUR_DISABLE_WANDB=1
+
+bash examples/architecture/pd-af-disagg/offline/dense_model_basic.sh
+bash examples/architecture/pd-af-disagg/offline/moe_model_ep.sh
+bash examples/architecture/pd-af-disagg/online/moe_cuda_graph_online.sh
+```
+
 ## Examples
 
 The release-supported example surface is split between runtime architecture recipes and profiling recipes:
@@ -342,7 +365,7 @@ examples/
 │   │       ├── thinking_mode_basic_online.sh
 │   │       ├── moe_spec_dec_online.sh
 │   │       └── moe_prefix_caching_online.sh
-│   └── co-location/
+│   ├── co-location/
 │       ├── run_all.sh
 │       ├── offline/
 │       │   ├── dense_model_basic.sh
@@ -356,6 +379,20 @@ examples/
 │           ├── thinking_mode_basic_online.sh
 │           ├── moe_spec_dec_online.sh
 │           └── moe_prefix_caching_online.sh
+│   └── pd-af-disagg/
+│       ├── run_all.sh
+│       ├── offline/
+│       │   ├── dense_model_basic.sh
+│       │   ├── moe_model_basic.sh
+│       │   ├── moe_model_ep.sh
+│       │   ├── dense_cuda_graph.sh
+│       │   └── moe_cuda_graph.sh
+│       └── online/
+│           ├── dense_model_basic_online.sh
+│           ├── moe_model_basic_online.sh
+│           ├── moe_model_ep_online.sh
+│           ├── dense_cuda_graph_online.sh
+│           └── moe_cuda_graph_online.sh
 └── profiling/
     ├── README.md
     ├── profile_linear_op.sh
@@ -395,6 +432,22 @@ Co-location recipes:
 | `examples/architecture/co-location/online/moe_spec_dec_online.sh`        | Online MoE Speculative Decoding / MTP recipe  | Mirrors the speculative decoding offline case with `--simulation_mode online`                                                       |
 | `examples/architecture/co-location/online/moe_prefix_caching_online.sh`  | Online MoE Prefix Caching recipe              | Replays the same prefix-cache fixture with `--simulation_mode online`                                                               |
 
+PD-AF recipes:
+
+| Script | Purpose | Default runtime behavior |
+|--------|---------|--------------------------|
+| `examples/architecture/pd-af-disagg/run_all.sh` | Full PD-AF suite | Runs five offline and five online sequential PD-AF cases |
+| `examples/architecture/pd-af-disagg/offline/dense_model_basic.sh` | Offline dense PD-AF baseline | Dense-safe topology, analytical KV/M2N, dummy predictor |
+| `examples/architecture/pd-af-disagg/offline/moe_model_basic.sh` | Offline MoE PD-AF baseline | EP=1 three-role topology, analytical KV/M2N, dummy predictor |
+| `examples/architecture/pd-af-disagg/offline/moe_model_ep.sh` | Offline MoE EP baseline | Legal EP=2 domains with fail-fast topology checks |
+| `examples/architecture/pd-af-disagg/offline/dense_cuda_graph.sh` | Offline dense CUDA Graph | Global `--use_cuda_graph` with capture sizes `8 16 32 64` |
+| `examples/architecture/pd-af-disagg/offline/moe_cuda_graph.sh` | Offline MoE CUDA Graph | EP=1 MoE with the same global CUDA Graph contract |
+| `examples/architecture/pd-af-disagg/online/dense_model_basic_online.sh` | Online dense PD-AF baseline | Mirrors the dense offline case with online arrivals |
+| `examples/architecture/pd-af-disagg/online/moe_model_basic_online.sh` | Online MoE PD-AF baseline | Mirrors the MoE offline case with online arrivals |
+| `examples/architecture/pd-af-disagg/online/moe_model_ep_online.sh` | Online MoE EP baseline | Mirrors the legal EP=2 offline topology |
+| `examples/architecture/pd-af-disagg/online/dense_cuda_graph_online.sh` | Online dense CUDA Graph | Dense online path with global CUDA Graph |
+| `examples/architecture/pd-af-disagg/online/moe_cuda_graph_online.sh` | Online MoE CUDA Graph | MoE online path with global CUDA Graph |
+
 Quick start with examples:
 
 ```bash
@@ -403,6 +456,9 @@ bash examples/architecture/pdd/offline/dense_model_basic.sh
 
 # Full PDD suite
 bash examples/architecture/pdd/run_all.sh
+
+# Full PD-AF suite
+bash examples/architecture/pd-af-disagg/run_all.sh
 
 # Basic co-location (monolithic) MoE example
 bash examples/architecture/co-location/offline/moe_model_basic.sh
@@ -414,7 +470,7 @@ bash examples/architecture/co-location/offline/moe_prefix_caching.sh
 
 The dense, MoE, Thinking Mode, Speculative Decoding / MTP, and Prefix Caching examples all default to `--cc_backend_config_type analytical`. `collective_sim` is optional: build `frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp` only when you explicitly select `--cc_backend_config_type collective_sim`.
 
-Dummy mode (`--random_forrest_execution_time_predictor_config_enable_dummy_mode`) skips ML predictor training and profiling metadata loading; it is suitable for smoke tests, not realistic latency prediction. For production simulations, disable dummy mode and provide matching CSV datasets under `data/profiling/compute/<device>/<model>/`.
+Dummy mode (`--random_forrest_execution_time_predictor_config_enable_dummy_mode`) skips ML predictor training and profiling metadata loading; it is suitable for structural smoke tests, not realistic latency prediction. In particular, dummy-mode evidence is not trained numerical parity. For production simulations, disable dummy mode and provide matching CSV datasets under `data/profiling/compute/<device>/<model>/`.
 
 Profiling examples cover three operator classes and write to the canonical compute taxonomy:
 
@@ -629,7 +685,7 @@ Start with:
 
 ## License
 
-Frontier `pre-release-v0.2` is released under the MIT License. See `LICENSE` for the full text.
+Frontier `pre-release-v0.3` is released under the MIT License. See `LICENSE` for the full text.
 
 ## Other Documentation
 

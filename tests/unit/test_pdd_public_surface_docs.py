@@ -16,50 +16,29 @@ def _read(relative_path: str) -> str:
     return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
 
 
-def test_public_architecture_readme_uses_clean_pdd_surface_terms() -> None:
-    forbidden_terms = (
-        "DECODE_ATTN",
-        "DECODE_FFN",
-    )
-    for relative_path in ("examples/README.md", "examples/architecture/README.md"):
-        readme_text = _read(relative_path)
-        for term in forbidden_terms:
-            assert term not in readme_text, (
-                f"Legacy public PDD term leaked from {relative_path}: {term}"
-            )
-
+def test_public_architecture_readme_documents_pdd_and_pdaf_surfaces() -> None:
     readme_text = _read("examples/architecture/README.md")
-    assert "pd-af-disaggregation" not in readme_text
-
     assert "PDD / `pd-disaggregation`" in readme_text
+    assert "pd-af-disaggregation" in readme_text
+    assert "DECODE_ATTN" in readme_text
+    assert "DECODE_FFN" in readme_text
     assert "`pdd/run_all.sh`" in readme_text
+    assert "`pd-af-disagg/run_all.sh`" in readme_text
     assert "--no-enable_parallel_clusters" in readme_text
 
 
-def test_public_architecture_entrypoints_stay_on_supported_pdd_path() -> None:
+def test_public_architecture_entrypoints_stay_on_supported_disaggregated_paths() -> None:
     architecture_dir = REPO_ROOT / "examples" / "architecture"
     assert (architecture_dir / "pdd").is_dir()
     assert (architecture_dir / "pdd" / "run_all.sh").is_file()
 
-    forbidden_path_fragments = (
-        "pd-af",
-        "pd_disaggregation",
-        "pd-disaggregation",
-        "decode_attn",
-        "decode-ffn",
-        "decode_ffn",
-        "decode-attn",
-    )
     public_paths = [
         path.relative_to(architecture_dir).as_posix()
         for path in architecture_dir.rglob("*")
     ]
-    for public_path in public_paths:
-        normalized = public_path.lower()
-        for fragment in forbidden_path_fragments:
-            assert fragment not in normalized, (
-                f"Unsupported public PDD entrypoint leaked: {public_path}"
-            )
+    assert "pd-af-disagg/run_all.sh" in public_paths
+    assert "pd-af-disagg/offline/moe_model_basic.sh" in public_paths
+    assert "pd-af-disagg/online/moe_model_basic_online.sh" in public_paths
 
 
 def test_top_level_docs_advertise_supported_pdd_without_upcoming_claims() -> None:
@@ -69,7 +48,7 @@ def test_top_level_docs_advertise_supported_pdd_without_upcoming_claims() -> Non
         assert "pdd/run_all.sh" in text, relative_path
 
     top_level_readme = _read("README.md")
-    assert "Prefill-Decode Disaggregation (PDD) version released" in top_level_readme
+    assert "Prefill-Decode Disaggregation (PDD) and sequential Attention-FFN Disaggregation" in top_level_readme
     assert "PDD serving" in top_level_readme
     assert "examples/architecture/pdd/offline/dense_model_basic.sh" in top_level_readme
     assert "examples/architecture/pdd/online/dense_model_basic_online.sh" in top_level_readme
@@ -87,6 +66,6 @@ def test_top_level_docs_advertise_supported_pdd_without_upcoming_claims() -> Non
         assert claim not in combined_docs, f"Stale PDD release claim leaked: {claim}"
 
     assert "pd-af-disaggregation" in _read("AGENTS.md")
-    assert "pd-af-disaggregation" not in _read("README.md")
-    assert "pd-af-disaggregation" not in _read("examples/README.md")
-    assert "pd-af-disaggregation" not in _read("examples/architecture/README.md")
+    assert "pd-af-disaggregation" in _read("README.md")
+    assert "pd-af-disaggregation" in _read("examples/README.md")
+    assert "pd-af-disaggregation" in _read("examples/architecture/README.md")

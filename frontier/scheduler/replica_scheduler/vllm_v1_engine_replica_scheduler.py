@@ -242,6 +242,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
 
         self._schedule_iteration_id = 0
         self._active_schedule_iteration_id = -1
+        self._decode_attn_next_cohort_id = 0
         self._current_iteration_token_budget = 0
         self._prefill_iteration_reserved_slots_remaining = 0
         self._prefill_iteration_reserved_tokens_remaining = 0
@@ -360,6 +361,207 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
 
     def _is_request_active_in_batch(self, request: Request) -> bool:
         return self._get_active_batch_request_counts().get(request.id, 0) > 0
+
+    def _get_decode_attn_active_cohort_states(self) -> Dict[int, Dict[str, object]]:
+        cohort_states = getattr(self, "_decode_attn_active_cohort_states", None)
+        if cohort_states is None:
+            cohort_states = {}
+            self._decode_attn_active_cohort_states = cohort_states
+        return cohort_states
+
+    def _allocate_decode_attn_cohort_id(self) -> int:
+        if self._cluster_type != ClusterType.DECODE_ATTN:
+            raise ValueError(
+                "DECODE_ATTN cohort IDs can only be allocated by a DECODE_ATTN scheduler"
+            )
+        cohort_id = int(getattr(self, "_decode_attn_next_cohort_id", 0))
+        self._decode_attn_next_cohort_id = cohort_id + 1
+        return cohort_id
+
+    @staticmethod
+    def _validate_decode_attn_cohort_stage_maps(
+        cohort_state: Dict[str, object],
+    ) -> tuple[set[int], Dict[int, str], Dict[int, int]]:
+        if type(cohort_state) is not dict:
+            raise RuntimeError("DECODE_ATTN active cohort state must be an exact dict")
+
+        active_stage_indices = cohort_state.get("active_stage_indices")
+        if type(active_stage_indices) is not set or not active_stage_indices:
+            raise RuntimeError(
+                "DECODE_ATTN active_stage_indices must be a non-empty exact set"
+            )
+        for stage_idx in active_stage_indices:
+            if type(stage_idx) is not int or stage_idx < 0:
+                raise RuntimeError(
+                    "DECODE_ATTN active stage index must be an exact non-negative "
+                    f"int, got {stage_idx!r}"
+                )
+
+        stage_phases = cohort_state.get("stage_phases")
+        if type(stage_phases) is not dict:
+            raise RuntimeError("DECODE_ATTN stage phases must be an exact dict")
+        for stage_idx, stage_phase in stage_phases.items():
+            if type(stage_idx) is not int or stage_idx < 0:
+                raise RuntimeError(
+                    "DECODE_ATTN stage phase index must be an exact non-negative "
+                    f"int, got {stage_idx!r}"
+                )
+            if type(stage_phase) is not str or stage_phase not in {
+                "local_attn",
+                "ffn_inflight",
+            }:
+                raise RuntimeError(
+                    "DECODE_ATTN stage phase must be local_attn or ffn_inflight, "
+                    f"got {stage_phase!r}"
+                )
+        if set(stage_phases) != active_stage_indices:
+            raise RuntimeError(
+                "DECODE_ATTN stage phase key set must exactly match active stages: "
+                f"phase_keys={sorted(stage_phases)}, "
+                f"active={sorted(active_stage_indices)}"
+            )
+
+        stage_layers = cohort_state.get("stage_current_layer_ids")
+        if type(stage_layers) is not dict:
+            raise RuntimeError("DECODE_ATTN stage layers must be an exact dict")
+        for stage_idx, stage_layer in stage_layers.items():
+            if type(stage_idx) is not int or stage_idx < 0:
+                raise RuntimeError(
+                    "DECODE_ATTN stage layer index must be an exact non-negative "
+                    f"int, got {stage_idx!r}"
+                )
+            if type(stage_layer) is not int or stage_layer < 0:
+                raise RuntimeError(
+                    "DECODE_ATTN stage layer must be an exact non-negative int, "
+                    f"got {stage_layer!r}"
+                )
+        if set(stage_layers) != active_stage_indices:
+            raise RuntimeError(
+                "DECODE_ATTN stage layer key set must exactly match active stages: "
+                f"layer_keys={sorted(stage_layers)}, "
+                f"active={sorted(active_stage_indices)}"
+            )
+
+        return active_stage_indices, stage_phases, stage_layers
+
+    def get_decode_attn_active_stage_slots(
+        self,
+        *,
+        phase: str | None = None,
+        layer_id: int | None = None,
+    ) -> tuple[int, ...]:
+        if self._cluster_type != ClusterType.DECODE_ATTN:
+            return tuple()
+        if phase is not None and type(phase) is not str:
+            raise ValueError(
+                "DECODE_ATTN active-stage phase filter must be an exact str, "
+                f"got {phase!r}"
+            )
+        if layer_id is not None and (
+            type(layer_id) is not int or layer_id < 0
+        ):
+            raise ValueError(
+                "DECODE_ATTN active-stage layer filter must be an exact "
+                f"non-negative int, got {layer_id!r}"
+            )
+
+        active_stage_slots: set[int] = set()
+        cohort_states = getattr(self, "_decode_attn_active_cohort_states", {})
+        if type(cohort_states) is not dict:
+            raise RuntimeError(
+                "DECODE_ATTN active cohort states must be an exact dict"
+            )
+        for cohort_id, state in cohort_states.items():
+            if type(cohort_id) is not int or cohort_id < 0:
+                raise RuntimeError(
+                    "DECODE_ATTN active cohort ID must be an exact non-negative "
+                    f"int, got {cohort_id!r}"
+                )
+            if type(state) is not dict:
+                raise RuntimeError(
+                    "DECODE_ATTN active cohort state must be an exact dict"
+                )
+            pending_request_ids = state.get("pending_request_ids")
+            if type(pending_request_ids) is not set:
+                raise RuntimeError(
+                    "DECODE_ATTN pending request IDs must be an exact set, "
+                    f"got {pending_request_ids!r}"
+                )
+            for request_id in pending_request_ids:
+                if type(request_id) is not int or request_id < 0:
+                    raise RuntimeError(
+                        "DECODE_ATTN pending request ID must be an exact "
+                        f"non-negative int, got {request_id!r}"
+                    )
+            if not pending_request_ids:
+                continue
+
+            active_indices, stage_phases, stage_layers = (
+                self._validate_decode_attn_cohort_stage_maps(state)
+            )
+            for stage_idx in active_indices:
+                stage_layer = stage_layers[stage_idx]
+                if (
+                    layer_id is not None
+                    and stage_layer != layer_id
+                ):
+                    continue
+                stage_phase = stage_phases[stage_idx]
+                if phase is not None and stage_phase != phase:
+                    continue
+                active_stage_slots.add(stage_idx)
+
+        return tuple(sorted(active_stage_slots))
+
+    def set_decode_attn_cohort_phase_for_batch(
+        self,
+        batch: Batch,
+        *,
+        phase: str,
+        layer_id: int | None = None,
+    ) -> None:
+        if self._cluster_type != ClusterType.DECODE_ATTN:
+            return
+
+        cohort_id = batch.decode_attn_cohort_id
+        if cohort_id is None:
+            return
+
+        normalized_phase = str(phase)
+        if normalized_phase not in {"local_attn", "ffn_inflight"}:
+            raise ValueError(
+                f"Unsupported DECODE_ATTN cohort phase: {normalized_phase}"
+            )
+
+        cohort_state = self._get_decode_attn_active_cohort_states().get(
+            int(cohort_id)
+        )
+        if cohort_state is None:
+            return
+
+        stage_idx = batch.afd_stage_idx
+        if stage_idx is None:
+            cohort_state["af_phase"] = normalized_phase
+            if layer_id is not None:
+                cohort_state["current_layer_id"] = int(layer_id)
+            return
+
+        active_stage_indices, stage_phases, stage_layers = (
+            self._validate_decode_attn_cohort_stage_maps(cohort_state)
+        )
+        normalized_stage_idx = int(stage_idx)
+        if normalized_stage_idx not in active_stage_indices:
+            raise ValueError(
+                "DECODE_ATTN cohort stage is not active: "
+                f"stage={normalized_stage_idx}, active={sorted(active_stage_indices)}"
+            )
+        stage_phases[normalized_stage_idx] = normalized_phase
+        if layer_id is not None:
+            stage_layers[normalized_stage_idx] = int(layer_id)
+            cohort_state["current_layer_id"] = int(layer_id)
+
+        phases = set(stage_phases.values())
+        cohort_state["af_phase"] = phases.pop() if len(phases) == 1 else "mixed"
 
     def _get_monolithic_pp_waiting_admission_delay_iters(self) -> Dict[int, int]:
         delay_iters = getattr(
@@ -1790,6 +1992,33 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
 
         for request in batch.requests:
             self._refresh_target_embedded_mtp_prefill_boundary_state(batch, request)
+            if self._cluster_type == ClusterType.DECODE_ATTN:
+                decode_attn_cohort_id = getattr(
+                    batch,
+                    "decode_attn_cohort_id",
+                    None,
+                )
+                if decode_attn_cohort_id is None:
+                    self._decode_attn_active_request_ids.discard(request.id)
+                else:
+                    cohort_states = self._get_decode_attn_active_cohort_states()
+                    cohort_state = cohort_states.get(int(decode_attn_cohort_id))
+                    if cohort_state is None:
+                        self._decode_attn_active_request_ids.discard(request.id)
+                    else:
+                        cohort_state["pending_request_ids"].discard(request.id)
+                        if not cohort_state["pending_request_ids"]:
+                            for cohort_request_id in cohort_state["all_request_ids"]:
+                                self._decode_attn_active_request_ids.discard(
+                                    cohort_request_id
+                                )
+                            cohort_states.pop(int(decode_attn_cohort_id), None)
+                            if (
+                                getattr(self, "_decode_attn_open_cohort_id", None)
+                                == decode_attn_cohort_id
+                            ):
+                                self._decode_attn_open_cohort_id = None
+
             if request.completed:
                 extra_release_iters = (
                     self._get_monolithic_pp_extra_terminal_release_iters()
@@ -3988,6 +4217,17 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
 
         return token_budget, scheduled, num_tokens_list
 
+    def _should_use_dense_decode_attn_metadata_wave(self) -> bool:
+        """Return whether dense PP=1 PDAF needs one DES macro-wave batch."""
+        if self._cluster_type != ClusterType.DECODE_ATTN:
+            return False
+        if self._replica_is_moe:
+            return False
+        return (
+            self._num_stages == 1
+            and self._af_pipeline_num_micro_batch > 1
+        )
+
     def _schedule_decode_attn_only(
         self, is_micro_batch: bool = True
     ) -> Optional[Batch]:
@@ -4186,6 +4426,34 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                     "af_pipeline_num_micro_batch must be positive for DECODE_ATTN"
                 )
 
+            replay_decode_token_index = int(
+                scheduled_requests[0].current_decode_token_index
+            )
+            decode_attn_cohort_id = self._allocate_decode_attn_cohort_id()
+            decode_attn_cohort_request_ids = tuple(
+                request.id for request in scheduled_requests
+            )
+            cohort_state = self._get_decode_attn_active_cohort_states().setdefault(
+                decode_attn_cohort_id,
+                {
+                    "all_request_ids": set(),
+                    "pending_request_ids": set(),
+                    "af_phase": "local_attn",
+                    "active_stage_indices": set(),
+                    "stage_phases": {},
+                    "stage_current_layer_ids": {},
+                },
+            )
+            cohort_state["all_request_ids"].update(
+                decode_attn_cohort_request_ids
+            )
+            cohort_state["pending_request_ids"].update(
+                decode_attn_cohort_request_ids
+            )
+            cohort_state["current_layer_id"] = int(
+                scheduled_requests[0].completed_layer_count
+            )
+
             # StepFun-vLLM partitioning: split requests by stage
             if num_reqs >= num_stages:
                 num_reqs_per_stage = num_reqs // num_stages
@@ -4225,15 +4493,51 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 )
 
             first_micro_batch = None
+            if self._should_use_dense_decode_attn_metadata_wave():
+                macro_batch = self._create_batch(
+                    scheduled_requests,
+                    scheduled_tokens,
+                )
+                macro_batch.afd_stage_idx = 0
+                macro_batch.afd_stage_represents_all_stages = True
+                macro_batch.replay_decode_token_index = replay_decode_token_index
+                macro_batch.decode_attn_cohort_id = decode_attn_cohort_id
+                macro_batch.decode_attn_cohort_request_ids = (
+                    decode_attn_cohort_request_ids
+                )
+                if afd_stage_metadata is not None:
+                    macro_batch.afd_stage_metadata = afd_stage_metadata
+                cohort_state["active_stage_indices"].add(0)
+                cohort_state["stage_phases"][0] = "local_attn"
+                cohort_state["stage_current_layer_ids"][0] = int(
+                    scheduled_requests[0].completed_layer_count
+                )
+                return macro_batch
+
+            shared_decode_attn_global_id = int(self._batch_creation_counter)
             for stage_idx in range(len(stage_reqs_start_loc) - 1):
                 start_idx = stage_reqs_start_loc[stage_idx]
                 end_idx = stage_reqs_start_loc[stage_idx + 1]
                 stage_requests = scheduled_requests[start_idx:end_idx]
                 stage_tokens = scheduled_tokens[start_idx:end_idx]
                 micro_batch = self._create_batch(stage_requests, stage_tokens)
+                micro_batch.set_global_id(shared_decode_attn_global_id)
                 micro_batch.afd_stage_idx = stage_idx
+                micro_batch.replay_decode_token_index = int(
+                    stage_requests[0].current_decode_token_index
+                )
+                micro_batch.decode_attn_cohort_id = decode_attn_cohort_id
+                micro_batch.decode_attn_cohort_request_ids = (
+                    decode_attn_cohort_request_ids
+                )
                 if afd_stage_metadata is not None:
                     micro_batch.afd_stage_metadata = afd_stage_metadata
+                normalized_stage_idx = int(stage_idx)
+                cohort_state["active_stage_indices"].add(normalized_stage_idx)
+                cohort_state["stage_phases"][normalized_stage_idx] = "local_attn"
+                cohort_state["stage_current_layer_ids"][normalized_stage_idx] = int(
+                    scheduled_requests[0].completed_layer_count
+                )
                 if first_micro_batch is None:
                     first_micro_batch = micro_batch
                 else:

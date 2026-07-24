@@ -59,6 +59,50 @@ def test_examples_docs_list_all_colocation_scripts_and_metrics_behavior() -> Non
     assert "--cc_backend_config_type analytical" in combined
 
 
+def test_public_docs_list_the_complete_pdaf_v03_surface_and_boundaries() -> None:
+    docs = {
+        relative: _read(relative)
+        for relative in (
+            "AGENTS.md",
+            "README.md",
+            "docs/cli/README.md",
+            "examples/README.md",
+            "examples/architecture/README.md",
+        )
+    }
+    combined = "\n".join(docs.values())
+
+    cases = (
+        "offline/dense_model_basic.sh",
+        "offline/moe_model_basic.sh",
+        "offline/moe_model_ep.sh",
+        "offline/dense_cuda_graph.sh",
+        "offline/moe_cuda_graph.sh",
+        "online/dense_model_basic_online.sh",
+        "online/moe_model_basic_online.sh",
+        "online/moe_model_ep_online.sh",
+        "online/dense_cuda_graph_online.sh",
+        "online/moe_cuda_graph_online.sh",
+    )
+    for case in cases:
+        full_path = f"examples/architecture/pd-af-disagg/{case}"
+        assert full_path in combined
+
+    for relative, text in docs.items():
+        assert "pre-release-v0.3" in text, relative
+        assert "pd-af-disaggregation" in text, relative
+
+    assert (
+        "PD-AF CUDA Graph examples use `--use_cuda_graph`, not "
+        "`--decode_cuda_graph_mode`."
+    ) in combined
+    assert (
+        "PD-AF does not support Thinking Mode, Speculative Decoding / MTP, "
+        "or Prefix Caching in `pre-release-v0.3`."
+    ) in combined
+    assert "dummy-mode evidence is not trained numerical parity" in combined
+
+
 def test_examples_docs_link_profiling_entrypoints_and_downstream_smokes() -> None:
     examples_readme = _read("examples/README.md")
     architecture_readme = _read("examples/architecture/README.md")

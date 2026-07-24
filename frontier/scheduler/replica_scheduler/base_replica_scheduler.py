@@ -346,6 +346,9 @@ class BaseReplicaScheduler(ABC):
         self._batch_creation_counter = 0
         self._decode_sync_batch_creation_counter = 0
         self._num_running_batches = 0
+        self._decode_attn_active_request_ids = set()
+        self._decode_attn_active_cohort_states = {}
+        self._decode_attn_open_cohort_id = None
 
         # Current schedule time for preemption tracking
         # This is set by on_schedule() and used by _preempt_request()
@@ -858,6 +861,7 @@ class BaseReplicaScheduler(ABC):
                     # Collect request IDs from this inflight batch
                     for req in micro_batch.requests:
                         scheduled_request_ids.add(req.id)
+                        self._decode_attn_active_request_ids.add(req.id)
                     # Inflight micro-batches already occupy a pipeline slot; do NOT increment _num_running_batches
                     scheduled_batches.append(micro_batch)
                     logger.info(
@@ -880,17 +884,31 @@ class BaseReplicaScheduler(ABC):
 
             # Note: the key point here is we use while to make sure we have enough micro-batches in pipeline
             # we add all mb needed to stage queue berfore the trigger after one mb is finished
+            allow_new_decode_attn_cohort = (
+                not bool(getattr(self, "_af_pending_micro_batches", None))
+                and not bool(self._decode_attn_active_request_ids)
+            )
             while self._num_running_batches < self._af_pipeline_num_micro_batch:
+                had_pending_before = bool(
+                    getattr(self, "_af_pending_micro_batches", None)
+                )
+                if not had_pending_before and not allow_new_decode_attn_cohort:
+                    break
+
                 # todo: make sure mb is created based on vllm v1's scheduler output and af_inflight_layer_count
                 # if we can schedule 24 reqs (get from scheduler output), each mb will be included by 24/8=3 (af_pipeline_num_micro_batch)
                 micro_batch = self._get_next_batch(is_micro_batch=True)
                 if not micro_batch:
                     break
+
+                if not had_pending_before:
+                    allow_new_decode_attn_cohort = False
                 
                 # CRITICAL FIX: Track newly scheduled requests to prevent duplicate scheduling
                 # in subsequent iterations of this Priority 2 loop
                 for req in micro_batch.requests:
                     scheduled_request_ids.add(req.id)
+                    self._decode_attn_active_request_ids.add(req.id)
                 # Update the set for next iteration
                 self._continuation_request_ids = scheduled_request_ids
                 
@@ -929,8 +947,43 @@ class BaseReplicaScheduler(ABC):
         return scheduled_batches
 
     def _create_m2n_transfer_events(self, batch: Batch, layer_id: int = None) -> List:
-        """Disaggregated M2N transfer events are not included in this release."""
-        raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+        """Create M2N transfer events for a completed decode cluster batch layer."""
+        if (self._cluster_scheduler is None or
+            not hasattr(self._cluster_scheduler, '_m2n_transfer_predictor') or
+            self._cluster_scheduler._m2n_transfer_predictor is None):
+            return []
+
+        from frontier.events.m2n_transfer_start_event import M2NTransferStartEvent
+
+        if self._cluster_type == ClusterType.DECODE_ATTN:
+            target_cluster_type = ClusterType.DECODE_FFN
+        elif self._cluster_type == ClusterType.DECODE_FFN:
+            target_cluster_type = ClusterType.DECODE_ATTN
+        else:
+            raise ValueError(f"Invalid source cluster type for M2N transfer: {self._cluster_type}")
+
+        activation_size, transfer_time = self._cluster_scheduler._m2n_transfer_predictor.get_transfer_info(
+            source_cluster_type=self._cluster_type,
+            target_cluster_type=target_cluster_type,
+            batch=batch,
+            replica_config=self._replica_config
+        )
+
+        current_time = float(getattr(batch, "time", 0.0) or 0.0)
+        transfer_start_event = M2NTransferStartEvent(
+            time=current_time,
+            source_replica_id=self._replica_id,
+            source_dp_id=self._dp_id,
+            source_cluster_type=self._cluster_type,
+            target_cluster_type=target_cluster_type,
+            batch=batch,
+            activation_size_bytes=activation_size,
+            transfer_time_ms=transfer_time,
+            layer_id=layer_id,
+            afd_stage_idx=batch.afd_stage_idx,
+        )
+
+        return [transfer_start_event]
 
     def should_decrement_running_batches_on_layer_end(self, batch: Batch) -> bool:
         """

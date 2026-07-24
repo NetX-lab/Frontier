@@ -6,6 +6,32 @@ import pandas as pd
 import pytest
 
 from frontier.profiling.linear_op import main as linear_op_main
+from frontier.profiling.utils import build_profile_position_indices
+
+
+def test_profile_position_indices_wrap_for_flattened_prefill_tokens() -> None:
+    positions = build_profile_position_indices(
+        num_tokens=16_384,
+        max_position_embeddings=8_192,
+    )
+
+    assert len(positions) == 16_384
+    assert positions[:4] == [0, 1, 2, 3]
+    assert positions[8_192:8_196] == [0, 1, 2, 3]
+    assert min(positions) == 0
+    assert max(positions) == 8_191
+
+
+@pytest.mark.parametrize(
+    ("num_tokens", "max_position_embeddings"),
+    [(0, 8_192), (16, 0), (16, -1), (-1, 8_192)],
+)
+def test_profile_position_indices_reject_invalid_dimensions(
+    num_tokens: int,
+    max_position_embeddings: int,
+) -> None:
+    with pytest.raises(ValueError):
+        build_profile_position_indices(num_tokens, max_position_embeddings)
 
 
 def test_attach_linear_op_output_metadata_writes_model_architecture_profile() -> None:

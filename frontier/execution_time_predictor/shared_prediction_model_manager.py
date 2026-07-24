@@ -283,6 +283,14 @@ class ExecutionTimePredictionModelManager:
     def _is_kernel_only_measurement_enabled_for_cluster(
         cluster_type: ClusterType,
     ) -> bool:
+        if global_vars.get_sys_arch() == "pd-af-disaggregation":
+            return cluster_type in (
+                ClusterType.DECODE,
+                ClusterType.DECODE_ATTN,
+                ClusterType.DECODE_FFN,
+                ClusterType.MONOLITHIC,
+            )
+
         decode_cuda_graph_mode = str(global_vars.get_decode_cuda_graph_mode()).lower()
         use_cuda_graph = bool(global_vars.get_use_cuda_graph())
 
@@ -297,6 +305,17 @@ class ExecutionTimePredictionModelManager:
     def _get_measurement_types_for_cluster(
         self, cluster_type: ClusterType
     ) -> List[MeasurementType]:
+        if global_vars.get_sys_arch() == "pd-af-disaggregation":
+            if cluster_type == ClusterType.PREFILL:
+                return [MeasurementType.CUDA_EVENT]
+            if cluster_type == ClusterType.DECODE_ATTN:
+                return [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY]
+            if cluster_type in (ClusterType.DECODE, ClusterType.DECODE_FFN):
+                return [MeasurementType.KERNEL_ONLY]
+            if cluster_type == ClusterType.MONOLITHIC:
+                return [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY]
+            raise ValueError(f"Unsupported cluster_type={cluster_type!r}")
+
         if cluster_type == ClusterType.PREFILL:
             return [MeasurementType.CUDA_EVENT]
         if cluster_type in (
@@ -383,6 +402,8 @@ class ExecutionTimePredictionModelManager:
         
         if execution_time_predictor_config.get_type() == ExecutionTimePredictorType.RANDOM_FORREST:
             from sklearn.ensemble import RandomForestRegressor
+            # Fix the predictor seed so model selection is independent of the
+            # process-global RNG stream and training order.
             estimator = RandomForestRegressor(random_state=0)
             grid_search_params = {
                 "n_estimators": execution_time_predictor_config.num_estimators,
@@ -551,17 +572,41 @@ class ExecutionTimePredictionModelManager:
         return combined_models
 
     def _get_ffn_tp_key(self, cluster_type: ClusterType, replica_config, is_moe_model: bool) -> int:
+        if cluster_type == ClusterType.DECODE_FFN:
+            # In the FFN-only PD-AF cluster, dense FFN tensor parallelism is
+            # carried by moe_tensor_parallel_size as the FFN-domain TP field.
+            # attn_tensor_parallel_size can remain at its default because this
+            # cluster owns no attention weights.  Use the FFN-domain TP for
+            # both dense and MoE DECODE_FFN profiling selection.
+            return replica_config.moe_tensor_parallel_size
         if (
             is_moe_model
             and cluster_type in {
                 ClusterType.PREFILL,
-                ClusterType.DECODE_FFN,
                 ClusterType.DECODE,
                 ClusterType.MONOLITHIC,
             }
         ):
             return replica_config.moe_tensor_parallel_size
         return replica_config.attn_tensor_parallel_size
+
+    @staticmethod
+    def _is_mixed_layer_moe_model(model_config, is_moe_model: bool) -> bool:
+        """Return whether a model needs both MoE and dense FFN predictors.
+
+        Some MoE architectures keep dense FFN layers at the model boundaries.
+        Their runtime dispatch is layer-specific, so model-level ``is_moe`` is
+        insufficient to decide which predictor families must be materialized.
+        Keep the legacy pure-MoE path unchanged when the layer-count contract
+        is unavailable.
+        """
+        if not is_moe_model or model_config is None:
+            return False
+        get_num_moe_layers = getattr(model_config, "get_num_moe_layers", None)
+        num_layers = getattr(model_config, "num_layers", None)
+        if callable(get_num_moe_layers) and isinstance(num_layers, int):
+            return int(get_num_moe_layers()) < int(num_layers)
+        return False
 
     def _get_linear_op_tp_key(self, op_name: str, cluster_type: ClusterType, replica_config, is_moe_model: bool) -> int:
         replicated_ops = set(get_family_profiling_name_set(MEMORY_FAMILY))
@@ -1048,30 +1093,46 @@ class ExecutionTimePredictionModelManager:
                         )
                         trained_model_signatures.add(model_signature)
                         logger.info(f"Trained {model_name} for {cluster_type}")
-        else:
-            # Dense MLP operations from linear_op.csv
-            if not os.path.exists(linear_ops_file):
-                raise FileNotFoundError(f"Linear ops input file {linear_ops_file} not found")
-            logger.info(f"Loading MLP data for {cluster_type} from: {linear_ops_file}")
-            linear_ops_df = self._load_linear_op_df(linear_ops_file, ffn_tp_key)
-            logger.info(f"Loaded {len(linear_ops_df)} rows for MLP training")
-            training_context['input_file'] = linear_ops_file
 
-            # MLP core operations
-            mlp_model_names = ["mlp_up_proj", "mlp_down_proj", "mlp_act"]
-            for model_name in mlp_model_names:
-                model_signature = f"{model_name}_{ffn_signature}"
-                if model_signature not in trained_model_signatures:
-                    models[model_name] = self._train_single_model(
-                        model_name=model_name,
-                        df=linear_ops_df,
-                        feature_cols=["num_tokens"],
-                        target_col=f"time_stats.{model_name}.median",
-                        execution_time_predictor_config=execution_time_predictor_config,
-                        training_context=training_context,
-                    )
-                    trained_model_signatures.add(model_signature)
-                    logger.info(f"Trained {model_name} for {cluster_type}")
+            # Mixed-layer MoE models (for example step-moe-noquant) also have
+            # dense boundary layers.  Train these additions after the legacy
+            # MoE/share-expert families so RandomForest training order remains
+            # compatible with the historical predictor artifact contract.
+            if self._is_mixed_layer_moe_model(model_config, is_moe_model):
+                dense_ffn_tp_key = self._get_ffn_tp_key(
+                    cluster_type, replica_config, is_moe_model=False
+                )
+                dense_ffn_signature = (
+                    f"ffn_{replica_config.device}_{replica_config.model_name}_{dense_ffn_tp_key}"
+                    f"_moeFalse_arch_profile{architecture_profile_id}"
+                    f"_family{self._measurement_family_name(active_measurement_type)}"
+                )
+                dense_training_context = dict(training_context)
+                dense_training_context["is_moe_model"] = False
+                dense_training_context["tensor_parallel_size"] = dense_ffn_tp_key
+                self._train_dense_mlp_models_for_cluster(
+                    cluster_type=cluster_type,
+                    replica_config=replica_config,
+                    execution_time_predictor_config=execution_time_predictor_config,
+                    linear_ops_file=linear_ops_file,
+                    ffn_signature=dense_ffn_signature,
+                    ffn_tp_key=dense_ffn_tp_key,
+                    training_context=dense_training_context,
+                    trained_model_signatures=trained_model_signatures,
+                    models=models,
+                )
+        else:
+            self._train_dense_mlp_models_for_cluster(
+                cluster_type=cluster_type,
+                replica_config=replica_config,
+                execution_time_predictor_config=execution_time_predictor_config,
+                linear_ops_file=linear_ops_file,
+                ffn_signature=ffn_signature,
+                ffn_tp_key=ffn_tp_key,
+                training_context=training_context,
+                trained_model_signatures=trained_model_signatures,
+                models=models,
+            )
 
         # Pre-FFN normalization (post_attention_layernorm) - always from linear_op.csv
         if not os.path.exists(linear_ops_file):
@@ -1104,6 +1165,44 @@ class ExecutionTimePredictionModelManager:
         # Mark this FFN configuration as trained
         trained_model_signatures.add(ffn_signature)
         return models
+
+    def _train_dense_mlp_models_for_cluster(
+        self,
+        *,
+        cluster_type: ClusterType,
+        replica_config,
+        execution_time_predictor_config,
+        linear_ops_file: str,
+        ffn_signature: str,
+        ffn_tp_key: int,
+        training_context: Dict[str, Any],
+        trained_model_signatures: set,
+        models: Dict[str, BaseEstimator],
+    ) -> None:
+        """Materialize dense MLP predictors from the linear-op profile."""
+        if not os.path.exists(linear_ops_file):
+            raise FileNotFoundError(f"Linear ops input file {linear_ops_file} not found")
+        logger.info(f"Loading MLP data for {cluster_type} from: {linear_ops_file}")
+        linear_ops_df = self._load_linear_op_df(linear_ops_file, ffn_tp_key)
+        logger.info(f"Loaded {len(linear_ops_df)} rows for MLP training")
+        dense_training_context = dict(training_context)
+        dense_training_context["input_file"] = linear_ops_file
+        dense_training_context["tensor_parallel_size"] = ffn_tp_key
+
+        for model_name in ("mlp_up_proj", "mlp_down_proj", "mlp_act"):
+            model_signature = f"{model_name}_{ffn_signature}"
+            if model_signature in trained_model_signatures:
+                continue
+            models[model_name] = self._train_single_model(
+                model_name=model_name,
+                df=linear_ops_df,
+                feature_cols=["num_tokens"],
+                target_col=f"time_stats.{model_name}.median",
+                execution_time_predictor_config=execution_time_predictor_config,
+                training_context=dense_training_context,
+            )
+            trained_model_signatures.add(model_signature)
+            logger.info(f"Trained {model_name} for {cluster_type}")
 
     def _train_attn_models_for_cluster(self, cluster_type: ClusterType, replica_config, execution_time_predictor_config, replica_scheduler_config, linear_ops_file: str, attn_file: str, trained_model_signatures: set) -> Dict[str, BaseEstimator]:
         """
@@ -3149,6 +3248,14 @@ class ExecutionTimePredictionModelManager:
         if cluster_type == ClusterType.PREFILL:
             return {"eager": dict(self._trained_models_eager), "kernel_only": {}}
         if cluster_type in [ClusterType.DECODE, ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN]:
+            if (
+                global_vars.get_sys_arch() == "pd-af-disaggregation"
+                and cluster_type == ClusterType.DECODE_ATTN
+            ):
+                return {
+                    "eager": dict(self._trained_models_eager),
+                    "kernel_only": dict(self._trained_models_kernel_only),
+                }
             if not self._is_kernel_only_measurement_enabled_for_cluster(cluster_type):
                 return {"eager": dict(self._trained_models_eager), "kernel_only": {}}
             return {"eager": {}, "kernel_only": dict(self._trained_models_kernel_only)}

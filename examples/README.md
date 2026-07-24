@@ -1,10 +1,17 @@
 # Frontier Examples
 
+## Modification History
+
+| Date       | Summary of Changes |
+|------------|--------------------|
+| 2026-07-23 | Added the complete PD-AF dense/MoE/EP/CUDA Graph offline and online example set. |
+| 2026-07-22 | Added the initial sequential PD-AF MoE examples. |
+
 This directory contains runnable examples for the release-supported Frontier simulator surface.
 
 ## Release Scope
 
-`pre-release-v0.2` foregrounds **PDD / `pd-disaggregation`** examples: prefill runs in the `PREFILL` cluster, decode runs in the unified `DECODE` cluster, and KV cache is transferred between them. The public PDD example path uses the sequential simulator mode through `--no-enable_parallel_clusters`.
+`pre-release-v0.3` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD transfers KV from `PREFILL` to unified `DECODE`; PD-AF adds separate `DECODE_ATTN` and `DECODE_FFN` roles with M2N activation transfer. Both paths use sequential execution through `--no-enable_parallel_clusters`.
 
 Additional disaggregated research prototypes outside the PDD path remain intentionally outside this examples release scope. Co-location examples are still kept as baseline comparison recipes and historical v0.1-compatible references.
 
@@ -24,6 +31,12 @@ For the complete PDD architecture suite, run:
 
 ```bash
 bash examples/architecture/pdd/run_all.sh
+
+# PD-AF five-offline/five-online suite and representative cases.
+bash examples/architecture/pd-af-disagg/run_all.sh
+bash examples/architecture/pd-af-disagg/offline/dense_model_basic.sh
+bash examples/architecture/pd-af-disagg/offline/moe_model_ep.sh
+bash examples/architecture/pd-af-disagg/online/moe_cuda_graph_online.sh
 ```
 
 PDD Thinking Mode examples are available in both modes:
@@ -93,6 +106,20 @@ examples/
 │           ├── thinking_mode_basic_online.sh
 │           ├── moe_spec_dec_online.sh
 │           └── moe_prefix_caching_online.sh
+│   └── pd-af-disagg/
+│       ├── run_all.sh
+│       ├── offline/
+│       │   ├── dense_model_basic.sh
+│       │   ├── moe_model_basic.sh
+│       │   ├── moe_model_ep.sh
+│       │   ├── dense_cuda_graph.sh
+│       │   └── moe_cuda_graph.sh
+│       └── online/
+│           ├── dense_model_basic_online.sh
+│           ├── moe_model_basic_online.sh
+│           ├── moe_model_ep_online.sh
+│           ├── dense_cuda_graph_online.sh
+│           └── moe_cuda_graph_online.sh
 └── profiling/
     ├── README.md
     ├── profile_linear_op.sh
@@ -112,8 +139,8 @@ Separate prefill and decode clusters model prefill/decode disaggregation through
 - `--sys_arch pd-disaggregation`
 - Uses `PREFILL` and unified `DECODE` clusters.
 - Supports Dense, MoE, Thinking Mode, Speculative Decoding / MTP, and Prefix Caching examples in offline and online modes.
-- Uses `--no-enable_parallel_clusters` because the pre-release-v0.2 public PDD path is the sequential simulator path; parallel cluster processing is still guarded.
-- Keeps experimental disaggregation variants and global `--use_cuda_graph` outside the v0.2 examples release surface.
+- Uses `--no-enable_parallel_clusters` because the pre-release-v0.3 public PDD and PD-AF paths are sequential simulator paths; parallel cluster processing is still guarded.
+- Uses `decode_cuda_graph_mode` for PDD; the separate global `--use_cuda_graph` flag belongs to PD-AF.
 
 ### Co-location
 
@@ -123,6 +150,19 @@ Single monolithic cluster handles all prefill and decode work. These examples ar
 - Supports dense and MoE model configs.
 - Supports both `--simulation_mode offline` and `--simulation_mode online`.
 - Supports the included Dense Thinking Mode smoke examples.
+
+### PD-AF / pd-af-disaggregation
+
+Three sequential roles model prefill, decode attention, and decode FFN/MoE. The public examples use analytical KV and M2N transfer models and dummy execution-time prediction so the smoke path does not require profiling CSVs.
+
+- `--sys_arch pd-af-disaggregation`
+- `--no-enable_parallel_clusters`
+- `PREFILL` → `DECODE_ATTN` KV transfer
+- `DECODE_ATTN` ↔ `DECODE_FFN` M2N activation transfer
+- EP topology checks fail fast before simulator startup
+- Dense, MoE, EP=2, and global CUDA Graph recipes in offline and online modes
+- PD-AF CUDA Graph examples use `--use_cuda_graph`, not `--decode_cuda_graph_mode`.
+- PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`.
 
 ## Key Configuration Options
 
@@ -171,11 +211,13 @@ PDD Thinking Mode can produce multiple prefill-to-decode handoffs for one user r
 
 Co-location examples also use dummy mode for quick testing without profiling data. These examples validate CLI/runtime plumbing and metrics artifact generation, not profiling fidelity. Use non-dummy profiling data before drawing hardware accuracy conclusions.
 
+PD-AF examples use the same dummy-mode boundary: they validate CLI wiring, three-role scheduling, and KV/M2N metrics, but dummy-mode evidence is not trained numerical parity.
+
 Baseline co-location scripts default to `decode_cuda_graph_mode=full_decode_only` and Chunked Prefill. The Speculative Decoding / MTP recipes use `decode_cuda_graph_mode=none` because speculative decoding currently conflicts with decode CUDA Graph modeling. The Prefix Caching recipes replay `examples/fixtures/prefix_cache_shared_session_trace.csv` to exercise cache-hit behavior.
 
 For production simulations, remove the dummy mode flag and ensure profiling data is available in `data/profiling/compute/<device>/<model>/`.
 
-All co-location examples write CSV/JSON metrics by default and disable only plots, Chrome trace, and JSON event trace outputs. PNG plot export is optional and requires `kaleido`. If `kaleido` is not installed, Plotly can warn about image export; CSV/JSON metrics are still produced.
+All co-location, PDD, and PD-AF examples write CSV/JSON metrics by default and disable only plots, Chrome trace, and JSON event trace outputs. PNG plot export is optional and requires `kaleido`. If `kaleido` is not installed, Plotly can warn about image export; CSV/JSON metrics are still produced.
 
 ## Cross-validation Criteria
 

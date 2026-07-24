@@ -27,7 +27,7 @@ def test_dummy_smoke_matrix_script_exists_and_is_shell_valid() -> None:
     assert result.returncode == 0, result.stderr
 
 
-def test_dummy_smoke_matrix_covers_dense_moe_colocation_pdd_online_offline() -> None:
+def test_dummy_smoke_matrix_covers_dense_moe_all_architectures_and_modes() -> None:
     text = _read(SCRIPT)
 
     expected_cases = [
@@ -39,6 +39,10 @@ def test_dummy_smoke_matrix_covers_dense_moe_colocation_pdd_online_offline() -> 
         "pdd/offline/moe_model_basic.sh",
         "pdd/online/dense_model_basic_online.sh",
         "pdd/online/moe_model_basic_online.sh",
+        "pd-af-disagg/offline/dense_model_basic.sh",
+        "pd-af-disagg/offline/moe_model_basic.sh",
+        "pd-af-disagg/online/dense_model_basic_online.sh",
+        "pd-af-disagg/online/moe_model_basic_online.sh",
     ]
     for case in expected_cases:
         assert f'"{case}"' in text
@@ -58,5 +62,5 @@ def test_architecture_readme_documents_dummy_smoke_matrix() -> None:
     assert "run_dummy_smoke_matrix.sh" in readme
     assert "does not consume profiling CSV datasets" in readme
     assert "dense/MoE" in readme
-    assert "co-location/PDD" in readme
+    assert "co-location/PDD/PD-AF" in readme
     assert "offline/online" in readme

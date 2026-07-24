@@ -26,11 +26,33 @@ class AFDStageMetadata:
     original_total_tokens: int
     padded_total_tokens: int
     ffn_compute_total_tokens: int
+    # Optional stage-local token lens for split AFD micro-batches.
+    # These are populated by the scheduler path that models StepFun-vLLM AFD
+    # stage partitioning and let each stage batch consume only its own padded
+    # token count instead of the full-batch total.
+    original_stage_token_lens: Optional[List[int]] = None
+    padded_stage_token_lens: Optional[List[int]] = None
+    ffn_compute_stage_token_lens: Optional[List[int]] = None
 
     @property
     def num_pad_tokens(self) -> int:
         """Number of padding tokens added."""
         return self.padded_total_tokens - self.original_total_tokens
+
+    def get_pipeline_wave_transfer_tokens(self) -> int:
+        """Return the transfer-sized AFD wave for a metadata-only DES batch.
+
+        Dense PDAF/PP=1 can collapse all logical AFD stages into one DES batch
+        so that the simulator does not serialize physical stage siblings on the
+        same stage scheduler.  That collapsed batch still represents one
+        pipelined A↔F transfer wave, not a single network transfer carrying the
+        sum of every virtual stage.  Use the largest stage-local padded hidden
+        state as the wire-duration proxy; fall back to the aggregate only when
+        stage-local metadata is unavailable.
+        """
+        if self.padded_stage_token_lens:
+            return max(self.padded_stage_token_lens)
+        return self.padded_total_tokens
 
     @staticmethod
     def _pad_total_tokens_to_capture_size(
@@ -195,7 +217,14 @@ class AFDStageMetadata:
         )
 
         ffn_compute_total_tokens = sum(padded_tokens_lens)
+        ffn_compute_stage_token_lens = list(padded_tokens_lens)
         if ffn_use_cuda_graph and ffn_cudagraph_capture_sizes:
+            ffn_compute_stage_token_lens = [
+                cls._pad_total_tokens_to_capture_size(
+                    n, ffn_cudagraph_capture_sizes
+                )
+                for n in padded_tokens_lens
+            ]
             ffn_compute_total_tokens = cls._pad_total_tokens_to_capture_size(
                 ffn_compute_total_tokens, ffn_cudagraph_capture_sizes
             )
@@ -205,6 +234,9 @@ class AFDStageMetadata:
             original_total_tokens=sum(stage_tokens_lens),
             padded_total_tokens=sum(padded_tokens_lens),
             ffn_compute_total_tokens=ffn_compute_total_tokens,
+            original_stage_token_lens=list(stage_tokens_lens),
+            padded_stage_token_lens=list(padded_tokens_lens),
+            ffn_compute_stage_token_lens=ffn_compute_stage_token_lens,
         )
 
     def with_dp_padding(
@@ -238,7 +270,14 @@ class AFDStageMetadata:
 
         padded_total = sum(dp_stage_max_tokens)
         ffn_total = padded_total
+        ffn_stage_tokens = list(dp_stage_max_tokens)
         if ffn_cudagraph_capture_sizes:
+            ffn_stage_tokens = [
+                self._pad_total_tokens_to_capture_size(
+                    n, ffn_cudagraph_capture_sizes
+                )
+                for n in dp_stage_max_tokens
+            ]
             ffn_total = self._pad_total_tokens_to_capture_size(
                 ffn_total, ffn_cudagraph_capture_sizes
             )
@@ -248,6 +287,9 @@ class AFDStageMetadata:
             original_total_tokens=self.original_total_tokens,
             padded_total_tokens=padded_total,
             ffn_compute_total_tokens=ffn_total,
+            original_stage_token_lens=self.original_stage_token_lens,
+            padded_stage_token_lens=list(dp_stage_max_tokens),
+            ffn_compute_stage_token_lens=ffn_stage_tokens,
         )
 
 
@@ -388,6 +430,10 @@ class Batch(BaseEntity):
         # preserve the original replica ID and DP ID for batches in decode-attn cluster
         self.decode_attn_original_replica_id: Optional[int] = None
         self.decode_attn_original_dp_id: Optional[int] = None
+        self.replay_decode_token_index: Optional[int] = None
+        self.decode_attn_cohort_id: Optional[int] = None
+        self.decode_attn_cohort_request_ids: Optional[tuple[int, ...]] = None
+        self.decode_ffn_layer_id: Optional[int] = None
 
         # In the DECODE_FFN cluster, an original batch is decomposed into multiple EP sub-batches:
         # Therefore, we need a global batch ID to track all the sub-batches
@@ -457,6 +503,11 @@ class Batch(BaseEntity):
         self.afd_stage_metadata: Optional[AFDStageMetadata] = None
         # AFD stage index for StepFun-vLLM alignment (micro-batch stage id)
         self.afd_stage_idx: Optional[int] = None
+        # Dense PDAF/PP=1 may represent all AFD stage slices as one DES batch.
+        # In that mode afd_stage_idx remains a routing identity (stage 0);
+        # aggregate compute uses metadata totals, while M2N transfer uses a
+        # pipeline-wave token count derived from stage-local metadata.
+        self.afd_stage_represents_all_stages: bool = False
         self.spec_decode_metadata: Optional[SpecDecodeBatchMetadata] = None
         self._spec_terminal_completion_delay_s_by_request: Dict[int, float] = {}
 
@@ -700,9 +751,34 @@ class Batch(BaseEntity):
                 )
 
         if self.afd_stage_metadata is not None:
+            afd_stage_represents_all_stages = bool(
+                getattr(self, "afd_stage_represents_all_stages", False)
+            )
             if cluster_type == ClusterType.DECODE_ATTN:
+                if afd_stage_represents_all_stages:
+                    return self.afd_stage_metadata.padded_total_tokens
+                stage_idx = getattr(self, "afd_stage_idx", None)
+                stage_tokens = self.afd_stage_metadata.padded_stage_token_lens
+                if stage_idx is not None and stage_tokens is not None:
+                    if stage_idx >= len(stage_tokens):
+                        raise ValueError(
+                            f"AFD stage index {stage_idx} out of range for "
+                            f"padded_stage_token_lens={stage_tokens}"
+                        )
+                    return stage_tokens[stage_idx]
                 return self.afd_stage_metadata.padded_total_tokens
             if cluster_type == ClusterType.DECODE_FFN:
+                if afd_stage_represents_all_stages:
+                    return self.afd_stage_metadata.ffn_compute_total_tokens
+                stage_idx = getattr(self, "afd_stage_idx", None)
+                stage_tokens = self.afd_stage_metadata.ffn_compute_stage_token_lens
+                if stage_idx is not None and stage_tokens is not None:
+                    if stage_idx >= len(stage_tokens):
+                        raise ValueError(
+                            f"AFD stage index {stage_idx} out of range for "
+                            f"ffn_compute_stage_token_lens={stage_tokens}"
+                        )
+                    return stage_tokens[stage_idx]
                 return self.afd_stage_metadata.ffn_compute_total_tokens
 
         spec_metadata = getattr(self, "spec_decode_metadata", None)
@@ -725,15 +801,32 @@ class Batch(BaseEntity):
     ) -> int:
         """Get effective total tokens for transfer size prediction.
 
-        For AFD-enabled batches in DECODE_ATTN/DECODE_FFN clusters, returns
-        attention-side padded_total_tokens. FFN batch-level CUDA Graph padding
-        does not affect transfer size.
+        For AFD-enabled physical stage batches in DECODE_ATTN/DECODE_FFN
+        clusters, returns the stage-local attention-side padded token count.
+        For dense metadata-only batches that represent all AFD stages, returns
+        the largest stage-local padded token count as the pipelined M2N wave
+        duration proxy. FFN batch-level CUDA Graph padding does not affect
+        transfer size.
         """
         # Import here to avoid circular imports
         from frontier.types import ClusterType
 
         if self.afd_stage_metadata is not None:
+            afd_stage_represents_all_stages = bool(
+                getattr(self, "afd_stage_represents_all_stages", False)
+            )
             if cluster_type in (ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN):
+                if afd_stage_represents_all_stages:
+                    return self.afd_stage_metadata.get_pipeline_wave_transfer_tokens()
+                stage_idx = getattr(self, "afd_stage_idx", None)
+                stage_tokens = self.afd_stage_metadata.padded_stage_token_lens
+                if stage_idx is not None and stage_tokens is not None:
+                    if stage_idx >= len(stage_tokens):
+                        raise ValueError(
+                            f"AFD stage index {stage_idx} out of range for "
+                            f"padded_stage_token_lens={stage_tokens}"
+                        )
+                    return stage_tokens[stage_idx]
                 return self.afd_stage_metadata.padded_total_tokens
 
         spec_metadata = getattr(self, "spec_decode_metadata", None)
@@ -1164,9 +1257,16 @@ class EPBatchGroup(Batch):
         self._source_batch_ids = source_batch_ids
         self._per_expert_tokens = per_expert_tokens
         self._cluster_type = cluster_type
-        # Store the actual execution time (expert computation time) for metrics recording
-        # This is set by ReplicaStageScheduleEvent after predict_and_create_stage()
+        # Full DECODE_FFN stage duration in seconds for request-level metrics.
+        # Expert-only compute is stored separately for runtime event scheduling.
         self._execution_time: float = 0.0
+        # Every EP lane shares the same pre-routing FFN work (norm, gating,
+        # dispatch bookkeeping, and shared-expert operations).  Keep that
+        # source-wave token count even when this lane receives zero routed
+        # expert tokens; predictor lookups must not collapse to a zero-token
+        # stage in that case.
+        self._moe_pre_routing_effective_total_tokens: Optional[int] = None
+        self._decode_ffn_execution_time_recorded_stage_ids: set[int] = set()
         self.activation_bytes: int = 0
     
     # to avoid per-request state mutation
@@ -1211,10 +1311,126 @@ class EPBatchGroup(Batch):
 
     @property
     def execution_time(self) -> float:
-        """Get the actual execution time (expert computation time) for this EP batch."""
+        """Return the accumulated full DECODE_FFN stage duration in seconds."""
         return self._execution_time
 
     @execution_time.setter
     def execution_time(self, value: float) -> None:
-        """Set the actual execution time (expert computation time) for this EP batch."""
+        """Set the accumulated full DECODE_FFN stage duration in seconds."""
         self._execution_time = value
+
+    @property
+    def moe_pre_routing_effective_total_tokens(self) -> Optional[int]:
+        return self._moe_pre_routing_effective_total_tokens
+
+    @moe_pre_routing_effective_total_tokens.setter
+    def moe_pre_routing_effective_total_tokens(self, value: Optional[int]) -> None:
+        if value is None:
+            self._moe_pre_routing_effective_total_tokens = None
+            return
+        value = int(value)
+        if value <= 0:
+            raise ValueError(
+                "moe_pre_routing_effective_total_tokens must be positive, "
+                f"got {value}"
+            )
+        self._moe_pre_routing_effective_total_tokens = value
+
+    def get_effective_total_tokens_for_compute(
+        self, cluster_type: "ClusterType" = None
+    ) -> int:
+        from frontier.types import ClusterType
+
+        if (
+            cluster_type == ClusterType.DECODE_FFN
+            and self._moe_pre_routing_effective_total_tokens is not None
+        ):
+            return self._moe_pre_routing_effective_total_tokens
+        return super().get_effective_total_tokens_for_compute(cluster_type)
+
+    def record_decode_ffn_stage_execution_time_once(
+        self,
+        stage_id: int,
+        execution_time_s: float,
+    ) -> None:
+        """Accumulate each pipeline stage duration exactly once."""
+        if stage_id in self._decode_ffn_execution_time_recorded_stage_ids:
+            return
+        self._execution_time += float(execution_time_s)
+        self._decode_ffn_execution_time_recorded_stage_ids.add(stage_id)
+
+
+class DenseFFNBatchGroup(Batch):
+    """Logical DECODE_FFN batch group for dense AFD/PDAF FFN execution.
+
+    Dense AFD uses the same A->F/F->A lifecycle as MoE AFD, but the FFN side is
+    ordinary dense MLP work: no router, no expert-token expansion, no EP all-to-all.
+    """
+
+    def __init__(
+        self,
+        requests: List[Request],
+        num_tokens: List[int],
+        replica_id: int,
+        lane_id: int,
+        time: float,
+        source_batch_ids: List[int],
+        cluster_type: "ClusterType",
+    ) -> None:
+        super().__init__(replica_id, requests, num_tokens, is_moe=False)
+        self._lane_id = lane_id
+        self._time = time
+        self._source_batch_ids = source_batch_ids
+        self._cluster_type = cluster_type
+        self._execution_time: float = 0.0
+        self._decode_ffn_execution_time_recorded_stage_ids: set[int] = set()
+        self.activation_bytes: int = 0
+
+    def on_schedule(
+        self,
+        time: float,
+        cluster_type: "ClusterType" = None,
+    ) -> None:
+        assert time >= 0, "Invalid scheduling time for DenseFFNBatchGroup"
+        self._scheduled_at = time
+        self._scheduled = True
+
+    @property
+    def lane_id(self) -> int:
+        return self._lane_id
+
+    @property
+    def time(self) -> float:
+        return self._time
+
+    @time.setter
+    def time(self, value: float) -> None:
+        self._time = value
+
+    @property
+    def source_batch_ids(self) -> List[int]:
+        return self._source_batch_ids
+
+    @property
+    def per_expert_tokens(self) -> Dict[int, int]:
+        return {}
+
+    @property
+    def cluster_type(self) -> "ClusterType":
+        return self._cluster_type
+
+    @property
+    def execution_time(self) -> float:
+        return self._execution_time
+
+    @execution_time.setter
+    def execution_time(self, value: float) -> None:
+        self._execution_time = value
+
+    def record_decode_ffn_stage_execution_time_once(
+        self, stage_id: int, execution_time_s: float
+    ) -> None:
+        if stage_id in self._decode_ffn_execution_time_recorded_stage_ids:
+            return
+        self._execution_time += float(execution_time_s)
+        self._decode_ffn_execution_time_recorded_stage_ids.add(stage_id)

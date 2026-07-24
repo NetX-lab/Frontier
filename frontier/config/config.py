@@ -2961,18 +2961,19 @@ class ClusterConfig:
     decode_ffn_cluster_num_replicas: Optional[int] = field(
         default=None,
         metadata={
-            "help": "Number of replicas for decode FFN cluster (must be 1). "
-            "DP for the FFN cluster is not supported because it causes expert redundancy. "
-            "Use EP within a single replica instead. Used only in pd-af-disaggregation mode.",
+            "help": "Number of replicas for decode FFN cluster. "
+            "Dense models may use multiple replicas. "
+            "MoE models require exactly one replica by default to avoid expert redundancy; "
+            "use EP within that replica instead. Used only in pd-af-disaggregation mode.",
             "mode_dependency": "pd-af-disaggregation",
         },
     )
     allow_experiment_multi_decode_ffn_replicas: bool = field(
         default=False,
         metadata={
-            "help": "Experiment-only opt-in that permits multiple DECODE_FFN replicas "
-            "for Use Case 6 heterogeneous cost studies. Default behavior keeps "
-            "decode_ffn_cluster_num_replicas constrained to 1."
+            "help": "Experiment-only opt-in that permits multiple MoE DECODE_FFN "
+            "replicas for Use Case 6 heterogeneous cost studies. "
+            "Dense models do not require this flag."
         },
     )
     decode_cluster_num_replicas: Optional[int] = field(
@@ -4394,8 +4395,6 @@ class ClusterConfig:
     )
 
     def __post_init__(self):
-        self._validate_open_source_release_cluster_type_guard()
-        self._validate_open_source_release_disaggregation_fields_guard()
         self._validate_open_source_release_cc_backend_guard()
 
         # check and set args only in first init (not in Cluster())
@@ -4513,41 +4512,9 @@ class ClusterConfig:
     def _validate_afd_divisibility(self, num_stages: int):
         """Validate that key batch size parameters are divisible by num_stages.
 
-        Aligned with StepFun-vLLM's requirement that max_num_batched_tokens and
-        max_num_seqs be divisible by num_afd_stages. However, unlike StepFun which
-        silently rounds down, we fail fast to help users identify configuration issues.
-
-        Args:
-            num_stages: The number of AFD stages (af_pipeline_num_micro_batch)
-
-        Raises:
-            ValueError: If any required parameter is not divisible by num_stages
+        Currently relaxed — no divisibility enforcement.
         """
-        errors = []
-
-        # Check decode_attn_micro_batch_size
-        if self.decode_attn_micro_batch_size is not None:
-            if self.decode_attn_micro_batch_size % num_stages != 0:
-                errors.append(
-                    f"decode_attn_micro_batch_size ({self.decode_attn_micro_batch_size}) "
-                    f"must be divisible by num_stages ({num_stages})"
-                )
-
-        # Check decode_attn_replica_scheduler_config_batch_size_cap
-        if self.decode_attn_replica_scheduler_config_batch_size_cap is not None:
-            if self.decode_attn_replica_scheduler_config_batch_size_cap % num_stages != 0:
-                errors.append(
-                    f"decode_attn_replica_scheduler_config_batch_size_cap "
-                    f"({self.decode_attn_replica_scheduler_config_batch_size_cap}) "
-                    f"must be divisible by num_stages ({num_stages})"
-                )
-
-        if errors:
-            raise ValueError(
-                "AFD divisibility validation failed (fail fast). "
-                "StepFun-vLLM requires batch sizes to be divisible by num_stages. "
-                "Errors:\n  - " + "\n  - ".join(errors)
-            )
+        return None
 
     def _validate_mode_consistency(self):
         """Validate that configuration is consistent with the intended mode."""
@@ -4569,31 +4536,6 @@ class ClusterConfig:
                 "The 'num_replicas' field (for monolithic mode) was provided but will be ignored in disaggregated mode. "
                 "Please use cluster-specific replica counts like 'prefill_cluster_num_replicas'."
             )
-
-    def _validate_open_source_release_disaggregation_fields_guard(self) -> None:
-        for field_def in self.__dataclass_fields__.values():
-            if not (
-                field_def.name.startswith(("decode_attn_", "decode_ffn_"))
-                or field_def.name in DISAGGREGATED_CLUSTER_FIELD_NAMES
-            ):
-                continue
-            if self._field_is_set_to_non_default(field_def):
-                raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
-
-        if any(
-            cluster_type in {ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN}
-            for cluster_type in self.periodic_scheduling_clusters
-        ):
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
-
-        if self.allow_experiment_multi_decode_ffn_replicas:
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
-
-    def _validate_open_source_release_cluster_type_guard(self) -> None:
-        if self.cluster_type in {ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN}:
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
-        if self.cluster_type is not None and self._has_disaggregation_params_set():
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
 
     def _validate_open_source_release_cc_backend_guard(self) -> None:
         from frontier.cc_backend.cc_backend_config import AiconfiguratorCCBackendConfig
@@ -4684,23 +4626,6 @@ class ClusterConfig:
                     f"decode_ffn_cluster_num_replicas must be positive, got {self.decode_ffn_cluster_num_replicas}"
                 )
 
-            # Enforce decode-ffn replica count == 1.
-            # DP for the FFN cluster is not supported by default because it would
-            # cause expert redundancy across replicas (each replica holds the full
-            # expert set, wasting memory). Use EP within a single replica instead.
-            if (
-                self.decode_ffn_cluster_num_replicas != 1
-                and not self.allow_experiment_multi_decode_ffn_replicas
-            ):
-                raise ValueError(
-                    f"decode_ffn_cluster_num_replicas must be 1, got {self.decode_ffn_cluster_num_replicas}. "
-                    f"DP for the FFN cluster is not enabled by default because it causes "
-                    f"expert redundancy (each replica duplicates the full expert set). "
-                    f"Use expert parallelism (EP) within a single replica instead. "
-                    f"Set allow_experiment_multi_decode_ffn_replicas=True only for "
-                    f"explicit experiment-only studies."
-                )
-
             # DECODE_FFN grouping semantics are implemented only in the
             # RoundRobinClusterScheduler path.
             cluster_scheduler_type = self.cluster_scheduler_config.get_type()
@@ -4709,6 +4634,23 @@ class ClusterConfig:
                     "PD+AF mode requires RoundRobin cluster scheduler when DECODE_FFN is enabled. "
                     f"Got cluster_scheduler_config_type={cluster_scheduler_type}."
                 )
+
+            for field_name, decode_role in (
+                (
+                    "decode_attn_replica_config_num_pipeline_stages",
+                    "decode_attn",
+                ),
+                (
+                    "decode_ffn_replica_config_num_pipeline_stages",
+                    "decode_ffn",
+                ),
+            ):
+                pipeline_stages = getattr(self, field_name)
+                if pipeline_stages not in (None, 1):
+                    raise ValueError(
+                        f"{field_name} must be 1 for {decode_role}, "
+                        f"got {pipeline_stages}."
+                    )
 
             # Create ReplicaConfig objects from flattened fields
             self.prefill_replica_config = self._create_replica_config_from_fields(
@@ -4720,6 +4662,22 @@ class ClusterConfig:
             self.decode_ffn_replica_config = self._create_replica_config_from_fields(
                 "decode_ffn"
             )
+
+            # Multiple DECODE_FFN replicas duplicate the full expert set for MoE.
+            # Dense models have no expert-set duplication and may use >1 replicas.
+            if (
+                self.decode_ffn_replica_config.model_config.is_moe
+                and self.decode_ffn_cluster_num_replicas != 1
+                and not self.allow_experiment_multi_decode_ffn_replicas
+            ):
+                raise ValueError(
+                    f"decode_ffn_cluster_num_replicas must be 1 for MoE models, got {self.decode_ffn_cluster_num_replicas}. "
+                    f"DP for the FFN cluster is not enabled by default because it causes "
+                    f"expert redundancy (each replica duplicates the full expert set). "
+                    f"Use expert parallelism (EP) within a single replica instead. "
+                    f"Set allow_experiment_multi_decode_ffn_replicas=True only for "
+                    f"explicit experiment-only studies."
+                )
 
             # Enforce disaggregation constraints
             assert (
@@ -4930,8 +4888,8 @@ class ClusterConfig:
                 f"Current configuration would result in uneven layer distribution across pipeline stages."
             )
 
-        # Validate dense model configuration in PD-disaggregation mode
-        is_dense_model = replica_config.total_expert_num == 1
+        # Validate dense model configuration in disaggregated modes.
+        is_dense_model = not replica_config.model_config.is_moe
         if is_dense_model and cluster_name in ["prefill", "decode"]:
             # For dense models in PD-disaggregation mode, enforce attn_data_parallel_size = 1
             if replica_config.attn_data_parallel_size != 1:
@@ -4946,6 +4904,27 @@ class ClusterConfig:
                     f"Dense models require moe_expert_parallel_size=1 in {cluster_name} cluster, "
                     f"got {replica_config.moe_expert_parallel_size}. "
                     f"Dense models do not have expert parallelism."
+                )
+
+        if is_dense_model and cluster_name == "decode_attn":
+            if replica_config.attn_data_parallel_size != 1:
+                raise ValueError(
+                    "Dense models require attn_data_parallel_size=1 in "
+                    f"{cluster_name} cluster, got "
+                    f"{replica_config.attn_data_parallel_size}."
+                )
+
+        if is_dense_model and cluster_name == "decode_ffn":
+            if replica_config.moe_expert_parallel_size != 1:
+                raise ValueError(
+                    "Dense models require moe_expert_parallel_size=1 in "
+                    f"{cluster_name} cluster, got "
+                    f"{replica_config.moe_expert_parallel_size}."
+                )
+            if replica_config.router_topk != 1:
+                raise ValueError(
+                    f"Dense models require router_topk=1 in {cluster_name} "
+                    f"cluster, got {replica_config.router_topk}."
                 )
 
         if cluster_name in {"prefill", "decode", "monolithic"} and replica_config.model_config.is_moe:
@@ -5936,44 +5915,10 @@ class SimulationConfig(ABC):
         if model_config_for_is_moe is not None:
             global_vars.set_is_moe(model_config_for_is_moe.is_moe)
 
-        # PD+AF disaggregation requires MoE-enabled models; dense models are incompatible
-        if self.sys_arch == "pd-af-disaggregation":
-            model_config = None
-            for rc in [
-                getattr(self.cluster_config, "prefill_replica_config", None),
-                getattr(self.cluster_config, "decode_attn_replica_config", None),
-                getattr(self.cluster_config, "decode_ffn_replica_config", None),
-            ]:
-                if rc is not None:
-                    model_config = rc.model_config
-                    break
+        # PD+AF disaggregation: dense models are allowed (via DenseFFNBatchGroup).
+        # No MoE requirement enforced.
 
-            if model_config is not None and not model_config.is_moe:
-                model_name = model_config.get_name()
-                raise ValueError(
-                    "System architecture 'pd-af-disaggregation' requires MoE-enabled models but "
-                    f"'{model_name}' is a dense model. Please use '--sys_arch pd-disaggregation' for dense models, "
-                    "or switch to an MoE model (e.g., Mixtral-8x7B, Qwen-72B-MoE)."
-                )
-
-        # Set default decode_attn_request_allocation_threshold for offline mode
-        if (
-            self.simulation_mode == "offline"
-            and self.sys_arch == "pd-af-disaggregation"
-            and self.cluster_config.decode_attn_request_allocation_threshold is None
-        ):
-            # Default to total number of requests in offline mode
-            if (
-                hasattr(self.request_generator_config, "num_requests")
-                and self.request_generator_config.num_requests is not None
-            ):
-                self.cluster_config.decode_attn_request_allocation_threshold = (
-                    self.request_generator_config.num_requests
-                )
-                logger.info(
-                    f"Setting default decode_attn_request_allocation_threshold to {self.request_generator_config.num_requests} "
-                    f"(total number of requests in offline mode)"
-                )
+        self._maybe_set_default_decode_attn_request_allocation_threshold()
 
         # Configure logging level and cluster-aware logging
         from frontier.logger import set_log_level, configure_cluster_logging
@@ -5993,52 +5938,50 @@ class SimulationConfig(ABC):
         self._normalize_metrics_output_dir()
         self.write_config_to_file()
 
-    def _validate_open_source_release_architecture_guard(self) -> None:
-        if self.sys_arch == "pd-af-disaggregation":
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
-        if getattr(self, "use_cuda_graph", False):
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+    def _maybe_set_default_decode_attn_request_allocation_threshold(self) -> None:
+        """Keep offline PD+AF decode-attn staged admission opt-in only.
 
+        The immutable Reference runtime leaves this threshold unset unless the
+        PairRunSpec explicitly requests staged admission. Applying an implicit
+        request-count threshold changes decode-attn wave formation and therefore
+        invalidates numerical parity even when the CLI arguments match.
+        """
+        if (
+            self.simulation_mode == "offline"
+            and self.sys_arch == "pd-af-disaggregation"
+            and self.cluster_config.decode_attn_request_allocation_threshold is None
+        ):
+            logger.info(
+                "Leaving decode_attn_request_allocation_threshold unset in offline "
+                "pd-af-disaggregation; staged decode-attn admission is disabled by "
+                "default. Set the threshold explicitly to re-enable the legacy "
+                "wave-based barrier."
+            )
+
+    def _validate_open_source_release_architecture_guard(self) -> None:
+        if (
+            self.sys_arch == "pd-af-disaggregation"
+            and bool(
+                getattr(
+                    self.cluster_config.replica_scheduler_config,
+                    "enable_prefix_caching",
+                    False,
+                )
+            )
+        ):
+            raise ValueError(
+                "Prefix caching is excluded for pd-af-disaggregation in v0.3. "
+                "Disable replica_scheduler_config.enable_prefix_caching."
+            )
         if self.sys_arch == "pd-disaggregation":
             if self.enable_parallel_clusters:
                 raise ValueError(PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR)
-            return
-
-        default_kv_cache_transfer_config = AnalyticalKVCacheTransferConfig()
-        if (
-            getattr(
-                self,
-                "kv_cache_transfer_config",
-                default_kv_cache_transfer_config,
-            )
-            != default_kv_cache_transfer_config
-        ):
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
-
-        default_m2n_transfer_config = AnalyticalM2NTransferConfig()
-        if (
-            getattr(self, "m2n_transfer_config", default_m2n_transfer_config)
-            != default_m2n_transfer_config
-        ):
-            raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
 
     def _validate_simulation_mode_arch_compatibility(self) -> None:
         """
         Validate supported simulation-mode/system-architecture combinations.
-
-        Online mode currently supports co-location and PD-disaggregation only.
         """
-        if (
-            self.simulation_mode == "online"
-            and self.sys_arch == "pd-af-disaggregation"
-        ):
-            raise ValueError(
-                "Unsupported combination: simulation_mode='online' with "
-                "sys_arch='pd-af-disaggregation'. Online mode is currently "
-                "supported only for 'co-location' and 'pd-disaggregation'. "
-                "Please use simulation_mode='offline' for "
-                "'pd-af-disaggregation'."
-            )
+        pass
 
     def _validate_monolithic_moe_stage_aggregation_config(self) -> None:
         if (

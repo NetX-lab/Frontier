@@ -255,6 +255,10 @@ class Simulator:
         # Initialize simulation mode (parallel or sequential)
         self._init_simulation_mode()
 
+    @staticmethod
+    def _get_disaggregated_entry_cluster(sys_arch: str) -> ClusterType:
+        return ClusterType.PREFILL
+
     @property
     def scheduler(self) -> BaseGlobalScheduler:
         return self._global_scheduler
