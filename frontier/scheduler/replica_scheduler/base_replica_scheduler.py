@@ -8,7 +8,7 @@ from frontier.config import (
 )
 from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
 from frontier.errors import FrontierMemoryOOMError
-from frontier.entities import Batch, Replica, Request
+from frontier.entities import Batch, EPBatchGroup, Replica, Request
 from frontier.execution_time_predictor import BaseExecutionTimePredictor
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_stage_scheduler import ReplicaStageScheduler
@@ -923,6 +923,50 @@ class BaseReplicaScheduler(ABC):
 
         elif self._cluster_type == ClusterType.DECODE_FFN:
             scheduled_batches.extend(self._m2n_immediate_batch_queue)
+
+            # M2N receipt records each request as waiting in DECODE_FFN. The
+            # logical FFN BatchGroup intentionally skips Request.on_batch_schedule()
+            # because token progression belongs to DECODE_ATTN, so close only
+            # the cluster waiting interval here when the replica drains the batch.
+            lifecycle_requests = []
+            for batch in scheduled_batches:
+                if isinstance(batch, EPBatchGroup):
+                    source_batches = getattr(batch, "source_batches", None)
+                    if type(source_batches) is not list or not source_batches:
+                        raise ValueError(
+                            "DECODE_FFN EP batch requires non-empty source_batches"
+                        )
+                    for source_batch in source_batches:
+                        if type(source_batch) is not Batch:
+                            raise ValueError(
+                                "DECODE_FFN EP source_batches must contain exact "
+                                "Batch objects"
+                            )
+                        source_requests = source_batch.requests
+                        if type(source_requests) is not list or not source_requests:
+                            raise ValueError(
+                                "DECODE_FFN EP source batch requires non-empty "
+                                "requests"
+                            )
+                        if any(
+                            type(request) is not Request
+                            for request in source_requests
+                        ):
+                            raise ValueError(
+                                "DECODE_FFN EP source batch requests must contain "
+                                "exact Request objects"
+                            )
+                        lifecycle_requests.extend(source_requests)
+                else:
+                    lifecycle_requests.extend(batch.requests)
+
+            scheduled_request_ids = set()
+            for request in lifecycle_requests:
+                if request.id in scheduled_request_ids:
+                    continue
+                request.on_leave_waiting_queue(time, self._cluster_type)
+                scheduled_request_ids.add(request.id)
+
             self._m2n_immediate_batch_queue.clear()
 
             self._num_running_batches += len(scheduled_batches)

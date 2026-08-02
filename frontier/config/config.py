@@ -83,6 +83,11 @@ PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR = (
     "pd-af-disaggregation is deferred in this release."
 )
 
+PD_AF_PREFIX_CACHING_RELEASE_ERROR = (
+    "Prefix caching is excluded for pd-af-disaggregation in v0.3. "
+    "Disable replica_scheduler_config.enable_prefix_caching."
+)
+
 AICONFIGURATOR_BACKEND_RELEASE_ERROR = (
     "Error: The aiconfigurator communication backend is not included in this release. "
     "Please use collective_sim, astra_sim_analytical, analytical, or vidur for current usage and testing."
@@ -6082,10 +6087,7 @@ class SimulationConfig(ABC):
                 )
             )
         ):
-            raise ValueError(
-                "Prefix caching is excluded for pd-af-disaggregation in v0.3. "
-                "Disable replica_scheduler_config.enable_prefix_caching."
-            )
+            raise ValueError(PD_AF_PREFIX_CACHING_RELEASE_ERROR)
         if self.sys_arch == "pd-af-disaggregation" and self.enable_parallel_clusters:
             raise ValueError(PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR)
         if self.sys_arch == "pd-disaggregation":

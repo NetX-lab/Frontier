@@ -2582,6 +2582,16 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         # amortize accepted-token KV growth without immediate draft-slot reserves.
         return 1
 
+    def _get_initial_allocation_num_blocks(
+        self, request: Request, reserved_tokens: int
+    ) -> int:
+        """Return the block count used to check and commit a first allocation."""
+        kv_accounted_tokens = self._get_kv_accounted_processed_tokens(request)
+        total_tokens = min(
+            kv_accounted_tokens + reserved_tokens, self._max_model_len
+        )
+        return ceil(total_tokens / self._config.block_size)
+
     def _can_allocate_request(
         self,
         request: Request,
@@ -2617,11 +2627,9 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             # (already processed + newly scheduled in this iteration), then
             # clamp by max_model_len to keep allocation semantics consistent
             # with chunked prefill scheduling.
-            kv_accounted_tokens = self._get_kv_accounted_processed_tokens(request)
-            total_tokens = min(
-                kv_accounted_tokens + reserved_tokens, self._max_model_len
+            num_required_blocks = self._get_initial_allocation_num_blocks(
+                request, reserved_tokens
             )
-            num_required_blocks = ceil(total_tokens / self._config.block_size)
             available_blocks = (
                 self._config.num_blocks
                 - self._num_allocated_blocks
@@ -2681,9 +2689,12 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         )
 
         if request.id not in self._allocation_map:
-            # New request - allocate blocks only for tokens scheduled in this iteration.
-            # This aligns with vLLM v1 allocate_slots(request, num_new_tokens + external_tokens).
-            num_required_blocks = ceil(reserved_tokens / self._config.block_size)
+            # Commit the exact block count used by the allocation preflight.
+            # This includes a transferred token frontier for a first
+            # DECODE_ATTN allocation after the PREFILL handoff.
+            num_required_blocks = self._get_initial_allocation_num_blocks(
+                request, reserved_tokens
+            )
             self.allocate(request.id, num_required_blocks)
             logger.debug(
                 f"[VLLMv1Engine] Allocated {num_required_blocks} blocks for request {request.id} "
@@ -2811,14 +2822,18 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         if victim.id in self._allocation_map:
             self._free_request_resources(victim)
 
-        # Mark as preempted and reset computed tokens
+        # Mark as preempted and reset the scheduler-visible computed frontier.
+        # DECODE_ATTN requests arrive after the PREFILL handoff in PD-AF mode;
+        # their Request-level token lifecycle must survive memory preemption.
+        # Rewinding `_num_processed_tokens` there would contradict
+        # `is_prefill_complete` and discard the handoff-emitted output token.
         victim._preempted = True
-        victim._num_processed_tokens = 0  # Reset computed tokens as in vLLM v1
+        if self._cluster_type != ClusterType.DECODE_ATTN:
+            victim._num_processed_tokens = 0  # Reset computed tokens as in vLLM v1
         self._scheduled_num_computed_tokens_by_request.pop(victim.id, None)
 
-        # Record re-entry to waiting queue for waiting time tracking
-        # This must be called AFTER resetting num_processed_tokens but BEFORE
-        # adding to the waiting queue
+        # Record re-entry to waiting queue for waiting time tracking after the
+        # lifecycle decision above and before adding the request to the queue.
         victim.on_enter_waiting_queue(self._current_schedule_time, self._cluster_type)
 
         # Add to front of appropriate waiting queue (prepend)
@@ -4404,8 +4419,11 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 # Allocate decode token
                 num_tokens = 1
                 if self._can_allocate_request(request, num_tokens):
-                    self._allocate_request(request, num_tokens)
                     self._waiting_requests.remove(request)
+                    request.on_leave_waiting_queue(
+                        self._current_schedule_time, self._cluster_type
+                    )
+                    self._allocate_request(request, num_tokens)
                     self._running_requests.append(request)
                     scheduled_requests.append(request)
                     scheduled_tokens.append(num_tokens)

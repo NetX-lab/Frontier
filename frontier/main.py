@@ -4,6 +4,9 @@ import sys
 from frontier.config import (
     AICONFIGURATOR_BACKEND_RELEASE_ERROR,
     DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR,
+    PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
+    PD_AF_PREFIX_CACHING_RELEASE_ERROR,
+    PD_AF_TRACE_REPLAY_DEFERRED_ERROR,
     PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
     SimulationConfig,
 )
@@ -77,12 +80,15 @@ def main() -> None:
         print(f"FRONTIER_MEMORY_OOM: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc
     except ValueError as exc:
-        if str(exc) in {
+        error_message = str(exc)
+        if error_message in {
             AICONFIGURATOR_BACKEND_RELEASE_ERROR,
             DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR,
+            PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
+            PD_AF_PREFIX_CACHING_RELEASE_ERROR,
             PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
-        }:
-            print(str(exc), file=sys.stderr)
+        } or error_message.startswith(PD_AF_TRACE_REPLAY_DEFERRED_ERROR):
+            print(error_message, file=sys.stderr)
             raise SystemExit(1) from exc
         raise
 

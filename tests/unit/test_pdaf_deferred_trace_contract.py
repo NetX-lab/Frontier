@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 from dataclasses import fields
 from pathlib import Path
 
@@ -24,6 +27,7 @@ DEFERRED_TRACE_FIELDS = (
     "decode_attn_steady_state_measurement_report_path",
 )
 DEFERRED_ERROR_MARKER = "pd-af-disaggregation v0.3 trace-replay is deferred"
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _build_pdaf_cluster(replica_config: ReplicaConfig) -> ClusterConfig:
@@ -146,6 +150,40 @@ def test_trace_driven_moe_routing_fails_without_silent_fallback(tmp_path: Path) 
 
     with pytest.raises(ValueError, match=DEFERRED_ERROR_MARKER):
         _build_config(tmp_path, replica_config=replica_config)
+
+
+def test_pdaf_deferred_trace_cli_exits_without_traceback() -> None:
+    env = os.environ.copy()
+    env.update(
+        {
+            "PYTHONPATH": str(REPO_ROOT),
+            "PYTHONDONTWRITEBYTECODE": "1",
+        }
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "frontier.main",
+            "--sys_arch",
+            "pd-af-disaggregation",
+            "--no-enable_parallel_clusters",
+            "--replica_config_moe_routing_trace_path",
+            "/data/ycfeng/tmp/deferred-trace.jsonl",
+        ],
+        cwd=REPO_ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 1
+    assert DEFERRED_ERROR_MARKER in result.stderr
+    assert "Configured fields: moe_routing_trace_path" in result.stderr
+    assert "Traceback" not in result.stderr
 
 
 @pytest.mark.parametrize("sys_arch", ("co-location", "pd-disaggregation"))

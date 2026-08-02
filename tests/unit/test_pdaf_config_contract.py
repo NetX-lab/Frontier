@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
 
+import frontier.main as frontier_main
 from frontier.config.config import (
     ClusterConfig,
     OrcaSchedulerConfig,
@@ -19,6 +24,9 @@ from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
 from frontier.types import ClusterType
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _build_pdaf_cluster_config(
@@ -170,6 +178,54 @@ def test_pdaf_rejects_prefix_caching_at_architecture_boundary() -> None:
         config._validate_open_source_release_architecture_guard()
 
 
+def test_pdaf_cli_prefix_caching_guard_exits_without_traceback() -> None:
+    env = os.environ.copy()
+    env.update(
+        {
+            "PYTHONPATH": str(REPO_ROOT),
+            "PYTHONDONTWRITEBYTECODE": "1",
+        }
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "frontier.main",
+            "--sys_arch",
+            "pd-af-disaggregation",
+            "--no-enable_parallel_clusters",
+            "--replica_scheduler_config_type",
+            "vllm_v1",
+            "--vllm_v1_scheduler_config_enable_prefix_caching",
+        ],
+        cwd=REPO_ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 1
+    assert "Prefix caching is excluded" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_cli_reraises_unrelated_value_error() -> None:
+    unrelated_error = ValueError("unrelated configuration defect")
+
+    with patch.object(
+        frontier_main.SimulationConfig,
+        "create_from_cli_args",
+        side_effect=unrelated_error,
+    ):
+        with pytest.raises(ValueError) as exc_info:
+            frontier_main.main()
+
+    assert exc_info.value is unrelated_error
+
+
 def test_pdaf_rejects_parallel_clusters_at_architecture_boundary() -> None:
     config = object.__new__(SimulationConfig)
     config.sys_arch = "pd-af-disaggregation"
@@ -182,6 +238,30 @@ def test_pdaf_rejects_parallel_clusters_at_architecture_boundary() -> None:
 
     with pytest.raises(ValueError, match="--no-enable_parallel_clusters"):
         config._validate_open_source_release_architecture_guard()
+
+
+def test_pdaf_cli_parallel_guard_exits_without_traceback() -> None:
+    env = os.environ.copy()
+    env.update(
+        {
+            "PYTHONPATH": str(REPO_ROOT),
+            "PYTHONDONTWRITEBYTECODE": "1",
+        }
+    )
+
+    result = subprocess.run(
+        [sys.executable, "-m", "frontier.main", "--sys_arch", "pd-af-disaggregation"],
+        cwd=REPO_ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 1
+    assert "--no-enable_parallel_clusters" in result.stderr
+    assert "Traceback" not in result.stderr
 
 
 @pytest.mark.parametrize(

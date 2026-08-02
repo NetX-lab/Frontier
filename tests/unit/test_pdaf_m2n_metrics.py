@@ -1,15 +1,23 @@
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
 from frontier.entities import Request
+from frontier.entities.batch import Batch, DenseFFNBatchGroup, EPBatchGroup
 from frontier.entities.m2n_transfer_info import M2NTransferInfo
 from frontier.events.m2n_transfer_end_event import M2NTransferEndEvent
 from frontier.events.m2n_transfer_start_event import M2NTransferStartEvent
 from frontier.metrics.metrics_store import MetricsStore
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
+    EPBatchGroupPlan,
+)
+from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
+    RoundRobinClusterScheduler,
+)
+from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
+    VLLMv1EngineReplicaScheduler,
 )
 from frontier.types import ClusterType
 
@@ -82,6 +90,242 @@ def _trace_replica_config() -> SimpleNamespace:
         num_pipeline_stages=1,
         router_topk=1,
     )
+
+
+def _decode_ffn_scheduler() -> VLLMv1EngineReplicaScheduler:
+    scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
+    scheduler._cluster_type = ClusterType.DECODE_FFN
+    scheduler._replica_id = 0
+    scheduler._dp_id = 0
+    scheduler._af_pipeline_num_micro_batch = 1
+    scheduler._num_running_batches = 0
+    scheduler._m2n_immediate_batch_queue = []
+    return scheduler
+
+
+def _dense_ffn_batch(request: Request, source_batch_id: int) -> DenseFFNBatchGroup:
+    return DenseFFNBatchGroup(
+        requests=[request],
+        num_tokens=[1],
+        replica_id=0,
+        lane_id=0,
+        time=1.0,
+        source_batch_ids=[source_batch_id],
+        cluster_type=ClusterType.DECODE_FFN,
+    )
+
+
+def _materialized_ep_ffn_batch(
+    source_batch: Batch,
+    ep_id: int,
+) -> EPBatchGroup:
+    cluster_scheduler = object.__new__(RoundRobinClusterScheduler)
+    cluster_scheduler._cluster_type = ClusterType.DECODE_FFN
+    cluster_scheduler._config = SimpleNamespace(
+        replica_config=SimpleNamespace(
+            model_config=SimpleNamespace(is_moe=True),
+        ),
+    )
+    plan = EPBatchGroupPlan(
+        replica_id=0,
+        ep_id=ep_id,
+        layer_global_id=0,
+        afd_stage_idx=0,
+        group_time=1.0,
+        pre_routing_effective_total_tokens=1,
+        source_batches=(source_batch,),
+        source_batch_ids=(source_batch.id,),
+        per_expert_tokens=((ep_id, 1),),
+    )
+    return cluster_scheduler._materialize_ep_batch_group(plan)
+
+
+def test_decode_ffn_schedule_records_m2n_waiting_time() -> None:
+    """The actual replica drain time includes barrier and periodic delay."""
+
+    scheduler = _decode_ffn_scheduler()
+
+    request = Request(arrived_at=0.0, num_prefill_tokens=16, num_decode_tokens=4)
+    request.on_arrival(1.0, ClusterType.DECODE_FFN)
+    batch = _dense_ffn_batch(request, 7)
+    scheduler._m2n_immediate_batch_queue = [batch]
+
+    scheduled_batches = scheduler.on_schedule(5.0)
+
+    assert scheduled_batches == [batch]
+    assert request.get_cluster_waiting_time(ClusterType.DECODE_FFN) == 4.0
+    assert request._is_waiting[ClusterType.DECODE_FFN] is False
+
+
+def test_decode_ffn_waiting_time_accumulates_across_m2n_rounds() -> None:
+    scheduler = _decode_ffn_scheduler()
+    request = Request(arrived_at=0.0, num_prefill_tokens=16, num_decode_tokens=4)
+
+    request.on_arrival(1.0, ClusterType.DECODE_FFN)
+    scheduler._m2n_immediate_batch_queue = [_dense_ffn_batch(request, 7)]
+    scheduler.on_schedule(5.0)
+
+    request.on_arrival(8.0, ClusterType.DECODE_FFN)
+    scheduler._m2n_immediate_batch_queue = [_dense_ffn_batch(request, 8)]
+    scheduler.on_schedule(11.0)
+
+    assert request.get_cluster_waiting_time(ClusterType.DECODE_FFN) == 7.0
+    assert request._is_waiting[ClusterType.DECODE_FFN] is False
+
+
+def test_decode_ffn_ep_lanes_accumulate_one_logical_waiting_interval() -> None:
+    request = Request(arrived_at=0.0, num_prefill_tokens=16, num_decode_tokens=4)
+    request.on_arrival(1.0, ClusterType.DECODE_FFN)
+    source_batch = Batch(
+        replica_id=0,
+        requests=[request],
+        num_tokens=[1],
+        is_moe=True,
+    )
+    batches = [
+        _materialized_ep_ffn_batch(source_batch, ep_id)
+        for ep_id in (0, 1)
+    ]
+    schedulers = [_decode_ffn_scheduler(), _decode_ffn_scheduler()]
+    for scheduler, batch in zip(schedulers, batches, strict=True):
+        scheduler._m2n_immediate_batch_queue = [batch]
+
+    assert all(batch.requests != [request] for batch in batches)
+    assert all(batch.source_batches == [source_batch] for batch in batches)
+
+    with patch.object(
+        request,
+        "on_leave_waiting_queue",
+        wraps=request.on_leave_waiting_queue,
+    ) as leave_waiting:
+        scheduled_batches = [
+            scheduler.on_schedule(5.0)
+            for scheduler in schedulers
+        ]
+
+    assert scheduled_batches == [[batches[0]], [batches[1]]]
+    assert leave_waiting.call_count == 2
+    leave_waiting.assert_called_with(5.0, ClusterType.DECODE_FFN)
+    assert request.get_cluster_waiting_time(ClusterType.DECODE_FFN) == 4.0
+
+
+def test_decode_ffn_invalid_ep_batch_does_not_partially_close_waiting() -> None:
+    scheduler = _decode_ffn_scheduler()
+    real_request = Request(
+        arrived_at=0.0,
+        num_prefill_tokens=16,
+        num_decode_tokens=4,
+    )
+    real_request.on_arrival(1.0, ClusterType.DECODE_FFN)
+    valid_dense_batch = _dense_ffn_batch(real_request, 6)
+    logic_request = Request(
+        arrived_at=0.0,
+        num_prefill_tokens=0,
+        num_decode_tokens=1,
+    )
+    batch = EPBatchGroup(
+        requests=[logic_request],
+        num_tokens=[1],
+        replica_id=0,
+        ep_id=0,
+        time=1.0,
+        source_batch_ids=[7],
+        per_expert_tokens={0: 1},
+        cluster_type=ClusterType.DECODE_FFN,
+        is_moe=True,
+    )
+    queued_batches = [valid_dense_batch, batch]
+    scheduler._m2n_immediate_batch_queue = list(queued_batches)
+
+    with pytest.raises(
+        ValueError,
+        match="DECODE_FFN EP batch requires non-empty source_batches",
+    ):
+        scheduler.on_schedule(5.0)
+
+    assert real_request.get_cluster_waiting_time(ClusterType.DECODE_FFN) == 0.0
+    assert real_request._is_waiting[ClusterType.DECODE_FFN] is True
+    assert scheduler._m2n_immediate_batch_queue == queued_batches
+    assert scheduler._num_running_batches == 0
+
+
+def test_decode_ffn_ep_source_batch_without_requests_fails_fast() -> None:
+    scheduler = _decode_ffn_scheduler()
+    logic_request = Request(
+        arrived_at=0.0,
+        num_prefill_tokens=0,
+        num_decode_tokens=1,
+    )
+    empty_source_batch = Batch(
+        replica_id=0,
+        requests=[],
+        num_tokens=[],
+        is_moe=True,
+    )
+    batch = EPBatchGroup(
+        requests=[logic_request],
+        num_tokens=[1],
+        replica_id=0,
+        ep_id=0,
+        time=1.0,
+        source_batch_ids=[empty_source_batch.id],
+        per_expert_tokens={0: 1},
+        cluster_type=ClusterType.DECODE_FFN,
+        is_moe=True,
+    )
+    batch.source_batches = [empty_source_batch]
+    scheduler._m2n_immediate_batch_queue = [batch]
+
+    with pytest.raises(
+        ValueError,
+        match="DECODE_FFN EP source batch requires non-empty requests",
+    ):
+        scheduler.on_schedule(5.0)
+
+    assert scheduler._m2n_immediate_batch_queue == [batch]
+    assert scheduler._num_running_batches == 0
+
+
+def test_decode_ffn_materialized_ep_waiting_accumulates_across_rounds() -> None:
+    request = Request(arrived_at=0.0, num_prefill_tokens=16, num_decode_tokens=4)
+
+    for arrival_time, schedule_time in ((1.0, 5.0), (8.0, 11.0)):
+        request.on_arrival(arrival_time, ClusterType.DECODE_FFN)
+        source_batch = Batch(
+            replica_id=0,
+            requests=[request],
+            num_tokens=[1],
+            is_moe=True,
+        )
+        for ep_id in (0, 1):
+            scheduler = _decode_ffn_scheduler()
+            scheduler._m2n_immediate_batch_queue = [
+                _materialized_ep_ffn_batch(source_batch, ep_id)
+            ]
+            scheduler.on_schedule(schedule_time)
+
+    assert request.get_cluster_waiting_time(ClusterType.DECODE_FFN) == 7.0
+    assert request._is_waiting[ClusterType.DECODE_FFN] is False
+
+
+def test_decode_ffn_idle_lane_does_not_close_real_request_waiting() -> None:
+    scheduler = _decode_ffn_scheduler()
+    request = Request(arrived_at=0.0, num_prefill_tokens=16, num_decode_tokens=4)
+    request.on_arrival(1.0, ClusterType.DECODE_FFN)
+    idle_batch = Batch(
+        replica_id=0,
+        requests=[],
+        num_tokens=[],
+        is_idle=True,
+        is_moe=True,
+    )
+    scheduler._m2n_immediate_batch_queue = [idle_batch]
+
+    scheduled_batches = scheduler.on_schedule(5.0)
+
+    assert scheduled_batches == [idle_batch]
+    assert request.get_cluster_waiting_time(ClusterType.DECODE_FFN) == 0.0
+    assert request._is_waiting[ClusterType.DECODE_FFN] is True
 
 
 @pytest.mark.parametrize(
