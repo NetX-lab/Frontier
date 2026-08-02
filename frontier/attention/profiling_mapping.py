@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import cache
 
 from frontier.attention.families import (
     LATENT_MLA_ATTENTION_FAMILY,
+    get_attention_family,
     iter_execution_enabled_families,
 )
 from frontier.attention.ops import (
@@ -185,7 +187,7 @@ def get_enabled_predictor_metric_names(
     return tuple(operator.name for operator in family.predictor_ops())
 
 
-def get_enabled_predictor_metric_name_by_role(
+def _resolve_enabled_predictor_metric_name_by_role(
     family: AttentionFamilySpec,
     role: AttentionOperatorRole,
 ) -> str:
@@ -200,6 +202,33 @@ def get_enabled_predictor_metric_name_by_role(
             f"found {len(matches)}: {list(matches)}"
         )
     return matches[0]
+
+
+@cache
+def _get_registered_enabled_predictor_metric_name_by_role(
+    family_id: str,
+    role: AttentionOperatorRole,
+) -> str:
+    return _resolve_enabled_predictor_metric_name_by_role(
+        get_attention_family(family_id),
+        role,
+    )
+
+
+def get_enabled_predictor_metric_name_by_role(
+    family: AttentionFamilySpec,
+    role: AttentionOperatorRole,
+) -> str:
+    try:
+        registered_family = get_attention_family(family.family_id)
+    except ValueError:
+        registered_family = None
+    if registered_family is not family:
+        return _resolve_enabled_predictor_metric_name_by_role(family, role)
+    return _get_registered_enabled_predictor_metric_name_by_role(
+        family.family_id,
+        role,
+    )
 
 
 def get_enabled_predictor_median_column_by_role(

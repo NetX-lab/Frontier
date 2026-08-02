@@ -173,6 +173,159 @@ def test_max_tokens_covers_vllm_v1_max_tokens_in_batch(tmp_path: Path) -> None:
     assert predictor._max_tokens >= scheduler_config.max_tokens_in_batch
 
 
+def test_prefill_max_tokens_covers_prediction_prefill_chunk_size(tmp_path: Path) -> None:
+    from frontier.config import (
+        MetricsConfig,
+        RandomForrestExecutionTimePredictorConfig,
+        ReplicaConfig,
+        VllmV1SchedulerConfig,
+    )
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+    from frontier.types import ClusterType
+
+    class _DummyPredictorImpl(SklearnExecutionTimePredictor):
+        def _get_grid_search_params(self):
+            return {}
+
+        def _get_estimator(self):
+            raise RuntimeError("Not used in dummy mode")
+
+    replica_config = ReplicaConfig(
+        model_name="step-moe-noquant",
+        device="a800",
+        network_device="a100_pairwise_nvlink",
+        attn_tensor_parallel_size=1,
+        attn_data_parallel_size=8,
+    )
+    model_config = replica_config.model_config
+    assert model_config is not None
+
+    predictor_config = RandomForrestExecutionTimePredictorConfig(
+        enable_dummy_mode=True,
+        prediction_max_tokens_per_request=4096,
+        prediction_max_prefill_chunk_size=16384,
+    )
+    predictor = _DummyPredictorImpl(
+        predictor_config=predictor_config,
+        replica_config=replica_config,
+        replica_scheduler_config=VllmV1SchedulerConfig(max_tokens_in_batch=4096),
+        metrics_config=MetricsConfig(output_dir=str(tmp_path / "sim_out")),
+        cluster_type=ClusterType.PREFILL,
+    )
+
+    assert predictor._max_tokens >= predictor_config.prediction_max_prefill_chunk_size
+
+
+def test_decode_attention_prediction_grid_covers_model_context_length() -> None:
+    from frontier.config import RandomForrestExecutionTimePredictorConfig
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+    from frontier.types import ClusterType, MeasurementType
+
+    class _DummyPredictorImpl(SklearnExecutionTimePredictor):
+        def _get_grid_search_params(self):
+            return {}
+
+        def _get_estimator(self):
+            raise RuntimeError("Not used in this unit test")
+
+    predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
+    predictor._cluster_type = ClusterType.DECODE_ATTN
+    predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
+    predictor._model_config = _dense_model_config()
+    predictor._model_config.max_position_embeddings = 16384
+    predictor._config = RandomForrestExecutionTimePredictorConfig(
+        prediction_max_batch_size=1,
+        prediction_max_tokens_per_request=4096,
+        kv_cache_prediction_granularity=64,
+    )
+    predictor._models = {"attn_decode": object()}
+
+    observed_max_kv_cache_size: list[int] = []
+
+    def _capture_prediction(_name: str, _model: object, features: pd.DataFrame):
+        observed_max_kv_cache_size.append(int(features["kv_cache_size"].max()))
+        return {}
+
+    predictor._get_model_prediction = _capture_prediction  # type: ignore[method-assign]
+
+    predictor._predict_for_attention_layer_models()
+
+    assert observed_max_kv_cache_size == [16384]
+
+
+def test_decode_attention_context_includes_unprocessed_handoff_token() -> None:
+    from types import SimpleNamespace
+
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+
+    class _DummyPredictorImpl(SklearnExecutionTimePredictor):
+        def _get_grid_search_params(self):
+            return {}
+
+        def _get_estimator(self):
+            raise RuntimeError("Not used in this unit test")
+
+    predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=64)
+    request = SimpleNamespace(
+        _is_prefill_complete=True,
+        num_processed_tokens=512,
+        num_processed_decode_tokens=0,
+        num_emitted_decode_tokens=1,
+    )
+    batch = SimpleNamespace(requests=[request])
+
+    assert predictor._get_batch_decode_attention_params(batch) == (1, 576)
+
+    no_handoff_request = SimpleNamespace(
+        _is_prefill_complete=True,
+        num_processed_tokens=512,
+        num_processed_decode_tokens=0,
+        num_emitted_decode_tokens=0,
+    )
+    assert predictor._get_batch_decode_attention_params(
+        SimpleNamespace(requests=[no_handoff_request])
+    ) == (1, 512)
+
+
+@pytest.mark.parametrize(
+    ("processed_decode_tokens", "emitted_decode_tokens"),
+    [(-1, 0), (2, 1)],
+)
+def test_decode_attention_context_rejects_invalid_token_counters(
+    processed_decode_tokens: int,
+    emitted_decode_tokens: int,
+) -> None:
+    from types import SimpleNamespace
+
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+
+    class _DummyPredictorImpl(SklearnExecutionTimePredictor):
+        def _get_grid_search_params(self):
+            return {}
+
+        def _get_estimator(self):
+            raise RuntimeError("Not used in this unit test")
+
+    predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
+    request = SimpleNamespace(
+        num_processed_tokens=512,
+        num_processed_decode_tokens=processed_decode_tokens,
+        num_emitted_decode_tokens=emitted_decode_tokens,
+    )
+
+    with pytest.raises(ValueError, match="(?i)decode token"):
+        predictor._get_decode_attention_context_tokens(request)
+
+
 def test_attention_layer_training_includes_mixed_prefill_model_when_features_exist() -> None:
     from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
         SklearnExecutionTimePredictor,

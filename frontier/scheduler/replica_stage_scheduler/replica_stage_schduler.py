@@ -3,6 +3,7 @@ import heapq
 import logging
 
 from frontier.entities import Batch, BatchStage, ExecutionTime, EPBatchGroup
+from frontier.entities.batch import DenseFFNBatchGroup
 from frontier.execution_time_predictor import BaseExecutionTimePredictor
 from frontier.types import ClusterType
 
@@ -248,6 +249,13 @@ class ReplicaStageScheduler:
         # overestimation (e.g., 61^2 = 3721x for a 61-layer model).
         if self._cluster_type in (ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN):
             num_layers = 1
+        layer_id = 0
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            layer_id = getattr(batch, "decode_ffn_layer_id", None)
+            if layer_id is None:
+                raise ValueError(
+                    "DECODE_FFN batch is missing decode_ffn_layer_id"
+                )
         effective_tokens_compute = batch.get_effective_total_tokens_for_compute(
             self._cluster_type
         )
@@ -257,7 +265,9 @@ class ReplicaStageScheduler:
         effective_tokens_rounded = batch.get_effective_total_tokens_rounded(
             self._cluster_type
         )
-        tokens_are_post_routing = isinstance(batch, EPBatchGroup)
+        tokens_are_post_routing = isinstance(
+            batch, (EPBatchGroup, DenseFFNBatchGroup)
+        )
 
         if not skip_get_execution_time:
             if info_logging_enabled:
@@ -272,6 +282,7 @@ class ReplicaStageScheduler:
                 self._stage_id,
                 cluster_type=self._cluster_type,
                 num_layers=num_layers,
+                layer_id=layer_id,
             )
             if info_logging_enabled:
                 debug_logger.info(

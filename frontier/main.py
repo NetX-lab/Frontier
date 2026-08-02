@@ -4,6 +4,9 @@ import sys
 from frontier.config import (
     AICONFIGURATOR_BACKEND_RELEASE_ERROR,
     DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR,
+    PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
+    PD_AF_PREFIX_CACHING_RELEASE_ERROR,
+    PD_AF_TRACE_REPLAY_DEFERRED_ERROR,
     PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
     SimulationConfig,
 )
@@ -12,24 +15,6 @@ from frontier.logger import set_log_level
 from frontier.utils.random import set_seeds
 
 
-_UNSUPPORTED_DISAGGREGATED_ARCHITECTURES = {"pd-af-disaggregation"}
-_PD_CLUSTER_OPTION_PREFIXES = (
-    "--cluster_config_prefill_",
-    "--cluster_config_decode_",
-)
-_UNSUPPORTED_DISAGGREGATED_CLUSTER_OPTION_PREFIXES = (
-    "--cluster_config_decode_attn_",
-    "--cluster_config_decode_ffn_",
-)
-_DISAGGREGATED_TRANSFER_OPTION_MARKERS = (
-    "kv_cache_transfer_config",
-    "m2n_transfer_config",
-)
-_UNSUPPORTED_DISAGGREGATED_CLUSTER_OPTIONS = frozenset(
-    {
-        "--cluster_config_af_pipeline_num_micro_batch",
-    }
-)
 _AICONFIGURATOR_BACKEND_CONFIG_OPTION_PREFIXES = (
     "--aiconfigurator_cc_backend_config_",
 )
@@ -44,61 +29,6 @@ _AICONFIGURATOR_BACKEND_TYPE_OPTIONS = frozenset(
     }
 )
 
-
-def _get_cli_option_value(argv: list[str], option: str) -> str | None:
-    for index, arg in enumerate(argv):
-        if arg == option:
-            if index + 1 >= len(argv):
-                return None
-            return argv[index + 1]
-        if arg.startswith(f"{option}="):
-            return arg.split("=", maxsplit=1)[1]
-    return None
-
-
-def _normalize_cli_option(option: str) -> str:
-    if option.startswith("--no-"):
-        return f"--{option[len('--no-'):]}"
-    return option
-
-
-def _has_disaggregated_cluster_option(argv: list[str]) -> bool:
-    for arg in argv:
-        option = _normalize_cli_option(arg.split("=", maxsplit=1)[0])
-        if option in _UNSUPPORTED_DISAGGREGATED_CLUSTER_OPTIONS:
-            return True
-        if option.startswith(_PD_CLUSTER_OPTION_PREFIXES):
-            return True
-        if option.startswith(_UNSUPPORTED_DISAGGREGATED_CLUSTER_OPTION_PREFIXES):
-            return True
-    return False
-
-
-def _has_unsupported_disaggregated_cluster_option(argv: list[str]) -> bool:
-    for arg in argv:
-        option = _normalize_cli_option(arg.split("=", maxsplit=1)[0])
-        if option in _UNSUPPORTED_DISAGGREGATED_CLUSTER_OPTIONS:
-            return True
-        if option.startswith(_UNSUPPORTED_DISAGGREGATED_CLUSTER_OPTION_PREFIXES):
-            return True
-    return False
-
-
-def _has_pd_cluster_option(argv: list[str]) -> bool:
-    for arg in argv:
-        option = _normalize_cli_option(arg.split("=", maxsplit=1)[0])
-        if option.startswith(_PD_CLUSTER_OPTION_PREFIXES):
-            return True
-    return False
-
-
-def _has_disaggregated_transfer_option(argv: list[str]) -> bool:
-    return any(
-        arg.startswith("--") and any(
-            marker in arg for marker in _DISAGGREGATED_TRANSFER_OPTION_MARKERS
-        )
-        for arg in argv
-    )
 
 
 def _has_aiconfigurator_backend_option(argv: list[str]) -> bool:
@@ -123,40 +53,6 @@ def _has_aiconfigurator_backend_option(argv: list[str]) -> bool:
     return False
 
 
-def _has_truthy_cli_bool(argv: list[str], option: str) -> bool:
-    for arg in argv:
-        if arg == option:
-            return True
-        if arg.startswith(f"{option}="):
-            value = arg.split("=", maxsplit=1)[1].strip().lower()
-            return value in {"1", "true", "yes", "on"}
-    return False
-
-
-def _exit_if_disaggregated_architecture_requested(argv: list[str]) -> None:
-    sys_arch = _get_cli_option_value(argv, "--sys_arch")
-    has_unsupported_disaggregated_cluster_args = (
-        _has_unsupported_disaggregated_cluster_option(argv)
-    )
-    has_pd_cluster_args_without_pd_arch = (
-        _has_pd_cluster_option(argv) and sys_arch != "pd-disaggregation"
-    )
-    has_disaggregated_transfer_args = _has_disaggregated_transfer_option(argv)
-    has_disaggregated_transfer_args_without_pd_arch = (
-        has_disaggregated_transfer_args and sys_arch != "pd-disaggregation"
-    )
-    has_pd_af_cuda_graph_arg = _has_truthy_cli_bool(argv, "--use_cuda_graph")
-    if (
-        sys_arch in _UNSUPPORTED_DISAGGREGATED_ARCHITECTURES
-        or has_unsupported_disaggregated_cluster_args
-        or has_pd_cluster_args_without_pd_arch
-        or has_disaggregated_transfer_args_without_pd_arch
-        or has_pd_af_cuda_graph_arg
-    ):
-        print(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR, file=sys.stderr)
-        raise SystemExit(1)
-
-
 def _exit_if_aiconfigurator_backend_requested(argv: list[str]) -> None:
     if _has_aiconfigurator_backend_option(argv):
         print(AICONFIGURATOR_BACKEND_RELEASE_ERROR, file=sys.stderr)
@@ -165,7 +61,6 @@ def _exit_if_aiconfigurator_backend_requested(argv: list[str]) -> None:
 
 def main() -> None:
     try:
-        _exit_if_disaggregated_architecture_requested(sys.argv[1:])
         _exit_if_aiconfigurator_backend_requested(sys.argv[1:])
         log_level = os.environ.get("FRONTIER_LOG_LEVEL")
         if log_level:
@@ -185,12 +80,15 @@ def main() -> None:
         print(f"FRONTIER_MEMORY_OOM: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc
     except ValueError as exc:
-        if str(exc) in {
+        error_message = str(exc)
+        if error_message in {
             AICONFIGURATOR_BACKEND_RELEASE_ERROR,
             DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR,
+            PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
+            PD_AF_PREFIX_CACHING_RELEASE_ERROR,
             PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
-        }:
-            print(str(exc), file=sys.stderr)
+        } or error_message.startswith(PD_AF_TRACE_REPLAY_DEFERRED_ERROR):
+            print(error_message, file=sys.stderr)
             raise SystemExit(1) from exc
         raise
 

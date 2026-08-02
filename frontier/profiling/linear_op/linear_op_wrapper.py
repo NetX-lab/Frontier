@@ -13,7 +13,11 @@ from frontier.profiling.common.utils import (
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
 from frontier.profiling.linear_op.linear_op_impl import GPTModel
 from frontier.profiling.linear_op.profiling_plan import _share_expert_profiling_names
-from frontier.profiling.utils import ProfileMethod, normalize_profile_method
+from frontier.profiling.utils import (
+    ProfileMethod,
+    build_profile_position_indices,
+    normalize_profile_method,
+)
 from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
 
 WARMUP_STEPS = 3
@@ -117,7 +121,14 @@ class LinearOpWrapper:
             device="cuda",
             dtype=torch.long,
         )
-        positions = torch.arange(num_tokens, device="cuda", dtype=torch.long)
+        positions = torch.tensor(
+            build_profile_position_indices(
+                num_tokens=num_tokens,
+                max_position_embeddings=self.model_config.max_position_embeddings,
+            ),
+            device="cuda",
+            dtype=torch.long,
+        )
 
         if self.profile_method == ProfileMethod.RECORD_FUNCTION.value:
             # Run the model once without capturing the graph.

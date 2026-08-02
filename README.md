@@ -7,20 +7,21 @@
 <h4>A Discrete-Event Simulator for Modern LLM Serving</h4>
 
 [![docs](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](./docs)
-[![version](https://img.shields.io/badge/release-pre--v0.2-green)](#latest-news-)
+[![version](https://img.shields.io/badge/release-pre--v0.3-green)](#latest-news-)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 [![arxiv](https://img.shields.io/badge/arXiv-2605.21312-b31b1b.svg)](https://arxiv.org/abs/2605.21312)
 
 <div align="left">
 
+
 ## Latest News 🎯
+📍[2026/08] Prefill-Decode Disaggregation (PDD) and sequential Attention-FFN Disaggregation (PD-AF) support is available in the new release.<br />
 📍[2026/07] We refactored the operator registration module to improve support and integration for diverse models and attn algorithms. More examples will be provided, including how to use Frontier for end-to-end simulation of a new/customized model.<br />
-📍[2026/06] Prefill-Decode Disaggregation (PDD) version released! Support for Attention-FFN Disaggregation (AFD) will be available soon.<br />
 📍[2026/06] Initial version released, with support for co-located serving and modern optimizations.<br />
 
 ## Frontier Overview
 
-Frontier is a discrete-event simulator for modern LLM serving. It is built for serving systems that combine complex parallelism, runtime optimizations, sparse model architectures (MoE), and stateful workloads (reasoning agents, RL rollouts). It currently simulates vLLM-style serving behavior, and we plan to include other serving engines soon.
+Frontier is a discrete-event simulator for modern LLM serving. It is built for serving systems that combine complex parallelism, runtime optimizations, sparse model architectures (MoE), and stateful workloads (reasoning agents, RL rollouts). It currently simulates vLLM-logic serving behavior, and we plan to include other serving engines soon.
 
 Frontier helps researchers and engineers better understand serving system designs and tradeoffs without the time and financial costs of repeatedly deploying on GPU clusters.
 
@@ -30,11 +31,11 @@ Frontier helps researchers and engineers better understand serving system design
 
 ### Key Features
 
-- **Co-located & Disaggregated Serving**: This branch supports monolithic co-location and PDD serving. AFD support is planned for a later public release.
+- **Co-located & Disaggregated Serving**: This branch supports monolithic co-location, PDD serving, and sequential PD-AF serving with separate prefill, decode-attention, and decode-FFN roles.
 - **Modern Runtime Optimizations**: Frontier captures production techniques such as CUDA Graph, speculative decoding / MTP, prefix caching, quantization, chunked prefill, and hierarchical caching as part of the scheduler-batch-engine loop. These optimizations change batch shape, memory state, and per-request progress, so Frontier models them as runtime behavior rather than simple speedup factors.
 - **Fidelity**: Frontier combines calibrated operator, communication, transfer, and KV-cache memory models to make simulation results useful for deployment decisions. This helps users compare configurations under SLA constraints, explore large GPU-scale design spaces ex-situ, and avoid conclusions that would be distorted by coarse average-case models.
 
-> AFD serving architecture is intentionally not included in this release and will be available in a later public release.
+> The public PDD and PD-AF (`pd-af-disaggregation`) paths currently require `--no-enable_parallel_clusters`; parallel disaggregated execution remains guarded.
 
 ## Minimum Hardware Requirements
 
@@ -81,15 +82,16 @@ python -m pip install -e '.[test]'
 PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 pytest tests/unit/test_examples_pdd_scripts.py -q -p no:cacheprovider
 ```
 
-Current release-facing PDD and co-location examples are split by simulation mode and default to the formula-based `analytical` backend for one-click smoke runs:
+Current release-facing co-location, PDD, and PD-AF examples are split by simulation mode and default to the formula-based `analytical` backend for one-click smoke runs:
 
-- `examples/architecture/pdd/offline/dense_model_basic.sh`
-- `examples/architecture/pdd/online/dense_model_basic_online.sh`
-- `examples/architecture/co-location/online/dense_model_basic_online.sh`
 - `examples/architecture/co-location/online/moe_model_basic_online.sh`
 - `examples/architecture/co-location/online/thinking_mode_basic_online.sh`
+- `examples/architecture/pdd/offline/dense_model_basic.sh`
+- `examples/architecture/pdd/online/dense_model_basic_online.sh`
+- `examples/architecture/pd-af-disagg/offline/moe_model_ep.sh`
+- `examples/architecture/pd-af-disagg/online/moe_cuda_graph_online.sh`
 
-These examples cover most runtime optimizations. Note that dummy analytical smoke runs only validate runtime plumbing, not profiling fidelity. Profiling outputs and reusable compute data are organized under data/profiling/compute.
+Dummy analytical smoke runs validate runtime plumbing.
 
 > Currently, only the `h800` and `rtx_pro_6000` datasets contain full-feature format profiles; we highly recommend re-collecting profiling data locally for your specific hardware.
 
@@ -102,7 +104,11 @@ examples/
 │   │   ├── run_all.sh
 │   │   ├── offline/
 │   │   └── online/
-│   └── co-location/
+│   ├── co-location/
+│       ├── run_all.sh
+│       ├── offline/
+│       └── online/
+│   └── pd-af-disagg/
 │       ├── run_all.sh
 │       ├── offline/
 │       └── online/

@@ -209,7 +209,7 @@ class Simulator:
             )
 
         m2n_transfer_predictor = None
-        if self._config.is_disaggregated_mode():
+        if self._config.sys_arch == "pd-af-disaggregation":
             from frontier.m2n_transfer import M2NTransferPredictorRegistry
 
             m2n_transfer_predictor = M2NTransferPredictorRegistry.get(
@@ -254,6 +254,10 @@ class Simulator:
 
         # Initialize simulation mode (parallel or sequential)
         self._init_simulation_mode()
+
+    @staticmethod
+    def _get_disaggregated_entry_cluster(sys_arch: str) -> ClusterType:
+        return ClusterType.PREFILL
 
     @property
     def scheduler(self) -> BaseGlobalScheduler:

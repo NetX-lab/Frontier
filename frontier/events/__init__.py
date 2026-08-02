@@ -16,6 +16,10 @@ from frontier.events.global_batch_end_event import GlobalBatchEndEvent
 from frontier.events.kv_cache_transfer_end_event import KVCacheTransferEndEvent
 from frontier.events.kv_cache_transfer_start_event import KVCacheTransferStartEvent
 from frontier.events.thinking_round_requeue_event import ThinkingRoundRequeueEvent
+from frontier.events.m2n_transfer_start_event import M2NTransferStartEvent
+from frontier.events.m2n_transfer_end_event import M2NTransferEndEvent
+from frontier.events.ep_alltoall_dispatch_ready_event import EPAllToAllDispatchReadyEvent
+from frontier.events.ep_alltoall_dispatch_collective_event import EPAllToAllDispatchCollectiveEvent
 
 
 __all__ = [
@@ -37,4 +41,8 @@ __all__ = [
     "KVCacheTransferEndEvent",
     "KVCacheTransferStartEvent",
     "ThinkingRoundRequeueEvent",
+    "M2NTransferStartEvent",
+    "M2NTransferEndEvent",
+    "EPAllToAllDispatchReadyEvent",
+    "EPAllToAllDispatchCollectiveEvent",
 ]

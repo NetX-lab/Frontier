@@ -22,11 +22,11 @@ class Replica(BaseEntity):
         self._device_config = replica_config.device_config
         self._generator_config = generator_config
         self._cluster_type = cluster_type
-
-        if self._cluster_type == ClusterType.DECODE_FFN:
-            # This replica only has FFN. Attention properties are not applicable.
-            self._model_config.num_q_heads = 0
-            self._model_config.num_kv_heads = 0
+        # ModelConfig is shared architecture metadata and must remain immutable here.
+        # FFN-only attention semantics are represented by this Replica-local state.
+        self._attention_not_applicable = (
+            self._cluster_type == ClusterType.DECODE_FFN
+        )
 
         # Validate pipeline parallelism configuration
         # This should have been caught earlier in ReplicaConfig.__post_init__, but we check again for safety
@@ -61,10 +61,14 @@ class Replica(BaseEntity):
 
     @property
     def num_q_heads(self) -> int:
+        if self._attention_not_applicable:
+            return 0
         return self._model_config.num_q_heads
 
     @property
     def num_kv_heads(self) -> int:
+        if self._attention_not_applicable:
+            return 0
         return self._model_config.num_kv_heads
 
     @property
@@ -93,12 +97,14 @@ class Replica(BaseEntity):
 
     @property
     def attention_head_dim(self) -> int:
-        if self.num_q_heads == 0:
+        if self._attention_not_applicable:
             return 0
         return self._model_config.get_runtime_head_size()
 
     @property
     def q_heads_per_tensor_parallel_worker(self) -> int:
+        if self._attention_not_applicable:
+            return 0
         if self.num_attn_tensor_parallel_workers == 0:
             return self._model_config.num_q_heads
         return (
@@ -107,7 +113,7 @@ class Replica(BaseEntity):
 
     @property
     def kv_heads_per_tensor_parallel_worker(self) -> int:
-        if self.num_kv_heads == 0:
+        if self._attention_not_applicable:
             return 0
         runtime_num_kv_heads = self._model_config.get_runtime_num_kv_heads()
         if self.num_attn_tensor_parallel_workers == 0:

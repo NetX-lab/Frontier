@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import cache
+
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
@@ -605,5 +607,18 @@ def get_family_profiling_names(family: OperatorFamilySpec) -> tuple[str, ...]:
     return tuple(dict.fromkeys(operator.profiling_name() for operator in family.profiling_ops()))
 
 
+@cache
+def _get_registered_family_profiling_name_set(
+    family_id: str,
+) -> frozenset[str]:
+    return frozenset(get_family_profiling_names(get_operator_family(family_id)))
+
+
 def get_family_profiling_name_set(family: OperatorFamilySpec) -> frozenset[str]:
-    return frozenset(get_family_profiling_names(family))
+    try:
+        registered_family = get_operator_family(family.family_id)
+    except ValueError:
+        registered_family = None
+    if registered_family is not family:
+        return frozenset(get_family_profiling_names(family))
+    return _get_registered_family_profiling_name_set(family.family_id)

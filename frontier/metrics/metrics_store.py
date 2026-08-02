@@ -46,6 +46,7 @@ from frontier.metrics.trace_store import TraceStore
 from frontier.metrics.op_trace_utils import (
     OpTraceContext,
     build_kv_cache_transfer_meta,
+    build_m2n_transfer_meta,
     build_parallel_context,
     compute_op_trace_meta,
 )
@@ -4388,7 +4389,93 @@ class MetricsStore:
         activation_size_bytes: int,
         transfer_info: Any,
     ) -> None:
-        raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+        if self._trace_store and self._config.enable_op_level_tracing:
+            from frontier.metrics.trace_store import TraceEvent
+
+            cluster_config = self._cluster_configs.get(source_cluster_type)
+            if cluster_config is None:
+                raise ValueError(
+                    f"Cluster config not found for {source_cluster_type}"
+                )
+            transfer_meta = build_m2n_transfer_meta(
+                transfer_info.batch,
+                cluster_config.replica_config,
+                source_cluster_type,
+                activation_size_bytes,
+            )
+            total_tokens = transfer_meta["total_tokens"]
+            trace_context = OpTraceContext(
+                cluster_type=source_cluster_type,
+                model_config=cluster_config.replica_config.model_config,
+                replica_config=cluster_config.replica_config,
+                total_tokens=total_tokens,
+                effective_tokens_compute=total_tokens,
+                effective_tokens_transfer=total_tokens,
+                effective_tokens_rounded=(total_tokens + 7) // 8 * 8,
+                tokens_are_post_routing=False,
+            )
+            request_ids = [
+                str(request.id) for request in transfer_info.batch.requests
+            ]
+            transfer_meta.update(
+                {
+                    "parallel_context": build_parallel_context(trace_context),
+                    "model_name": cluster_config.replica_config.model_name,
+                    "request_ids": request_ids,
+                    "source_dp_id": transfer_info.source_dp_id,
+                }
+            )
+            transfer_name = (
+                "m2n_transfer_attn_to_ffn"
+                if transfer_info.is_attn_to_ffn
+                else "m2n_transfer_ffn_to_attn"
+            )
+            self._trace_store.log_event(
+                TraceEvent(
+                    type="TRANSFER",
+                    name=transfer_name,
+                    ts_start=time,
+                    duration_ms=transfer_info.transfer_time_ms,
+                    cluster=source_cluster_type.name,
+                    replica_id=source_replica_id,
+                    batch_id=transfer_info.batch.id,
+                    target_cluster=target_cluster_type.name,
+                    layer_id=transfer_info.layer_id,
+                    meta=transfer_meta,
+                )
+            )
+
+        if not self._config.write_metrics:
+            return
+
+        if not hasattr(self, "_m2n_transfer_metrics"):
+            self._m2n_transfer_metrics = {
+                "transfer_count": 0,
+                "total_transfer_time": 0.0,
+                "total_data_transferred": 0,
+                "transfer_times": DataSeries(
+                    "Transfer ID",
+                    "Transfer Time (ms)",
+                    self._config.subsamples,
+                    self._config.save_table_to_wandb,
+                    self._config.store_plots,
+                ),
+                "transfer_sizes": DataSeries(
+                    "Transfer ID",
+                    "Transfer Size (bytes)",
+                    self._config.subsamples,
+                    self._config.save_table_to_wandb,
+                    self._config.store_plots,
+                ),
+                "attn_to_ffn_transfers": 0,
+                "ffn_to_attn_transfers": 0,
+            }
+
+        self._m2n_transfer_metrics["transfer_count"] += 1
+        if source_cluster_type == ClusterType.DECODE_ATTN:
+            self._m2n_transfer_metrics["attn_to_ffn_transfers"] += 1
+        else:
+            self._m2n_transfer_metrics["ffn_to_attn_transfers"] += 1
 
     def on_m2n_transfer_end(
         self,
@@ -4399,4 +4486,80 @@ class MetricsStore:
         target_cluster_type: ClusterType,
         transfer_info: Any,
     ) -> None:
-        raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+        if (
+            self._trace_store
+            and self._config.enable_op_level_tracing
+            and transfer_info.is_ffn_to_attn
+            and target_cluster_type == ClusterType.DECODE_ATTN
+        ):
+            from frontier.metrics.trace_store import TraceEvent
+
+            cluster_config = self._cluster_configs.get(target_cluster_type)
+            if cluster_config is None:
+                raise ValueError(
+                    f"Cluster config not found for {target_cluster_type}"
+                )
+            transfer_meta = build_m2n_transfer_meta(
+                transfer_info.batch,
+                cluster_config.replica_config,
+                target_cluster_type,
+                size_bytes,
+            )
+            total_tokens = transfer_meta["total_tokens"]
+            trace_context = OpTraceContext(
+                cluster_type=target_cluster_type,
+                model_config=cluster_config.replica_config.model_config,
+                replica_config=cluster_config.replica_config,
+                total_tokens=total_tokens,
+                effective_tokens_compute=total_tokens,
+                effective_tokens_transfer=total_tokens,
+                effective_tokens_rounded=(total_tokens + 7) // 8 * 8,
+                tokens_are_post_routing=False,
+            )
+            request_ids = [
+                str(request.id) for request in transfer_info.batch.requests
+            ]
+            transfer_meta.update(
+                {
+                    "parallel_context": build_parallel_context(trace_context),
+                    "model_name": cluster_config.replica_config.model_name,
+                    "request_ids": request_ids,
+                    "source_dp_id": transfer_info.source_dp_id,
+                    "source_cluster": source_cluster_type.name,
+                }
+            )
+            self._trace_store.log_event(
+                TraceEvent(
+                    type="TRANSFER",
+                    name="m2n_transfer_ffn_to_attn_recv",
+                    ts_start=transfer_info.transfer_start_time,
+                    duration_ms=transfer_info.transfer_time_ms,
+                    cluster=target_cluster_type.name,
+                    replica_id=transfer_info.source_replica_id,
+                    batch_id=transfer_info.batch.id,
+                    target_cluster=target_cluster_type.name,
+                    layer_id=transfer_info.layer_id,
+                    meta=transfer_meta,
+                )
+            )
+
+        if not self._config.write_metrics:
+            return
+        if not hasattr(self, "_m2n_transfer_metrics"):
+            raise ValueError(
+                "M2N transfer ended without a recorded transfer start"
+            )
+
+        self._m2n_transfer_metrics["total_transfer_time"] += duration
+        self._m2n_transfer_metrics["total_data_transferred"] += size_bytes
+
+        request_info = ""
+        if transfer_info.batch and transfer_info.batch.requests:
+            request_ids = [str(req.id) for req in transfer_info.batch.requests]
+            request_info = f"_req_{'_'.join(request_ids)}"
+        transfer_id = (
+            f"m2n_transfer_{self._m2n_transfer_metrics['transfer_count']}"
+            f"{request_info}"
+        )
+        self._m2n_transfer_metrics["transfer_times"].put(transfer_id, duration)
+        self._m2n_transfer_metrics["transfer_sizes"].put(transfer_id, size_bytes)

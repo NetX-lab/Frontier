@@ -135,6 +135,9 @@ class BatchStage(BaseEntity):
         self._scheduled_at = time
         self._scheduled = True
 
+        if self._tokens_are_post_routing:
+            return
+
         for request, runtime_epoch in zip(
             self._requests, self._request_runtime_epochs
         ):
@@ -159,6 +162,9 @@ class BatchStage(BaseEntity):
         ), f"{time} != {self._scheduled_at} + {self._execution_time}"
 
         self._completed_at = time
+
+        if self._tokens_are_post_routing:
+            return
 
         for request, runtime_epoch in zip(
             self._requests, self._request_runtime_epochs

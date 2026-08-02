@@ -6,6 +6,7 @@ to form complete ExecutionTime objects for different cluster types.
 """
 
 from dataclasses import dataclass, field
+from functools import cache
 from typing import Mapping
 
 from frontier.attention.families import iter_execution_enabled_families
@@ -69,9 +70,8 @@ def _communication_operator_execution_time_attrs() -> dict[str, str]:
     }
 
 
-def canonical_operator_execution_time_attrs() -> dict[str, str]:
-    """Return the canonical op_id -> ExecutionTime attribute mapping."""
-
+@cache
+def _canonical_operator_execution_time_attr_items() -> tuple[tuple[str, str], ...]:
     operator_attrs: dict[str, str] = {}
     for family in (
         *tuple(iter_execution_enabled_families()),
@@ -89,7 +89,13 @@ def canonical_operator_execution_time_attrs() -> dict[str, str]:
                     f"Duplicate ExecutionTime operator timing key: {operator.name}"
                 )
             operator_attrs[operator.name] = operator.execution_time_attr
-    return operator_attrs
+    return tuple(operator_attrs.items())
+
+
+def canonical_operator_execution_time_attrs() -> dict[str, str]:
+    """Return the canonical op_id -> ExecutionTime attribute mapping."""
+
+    return dict(_canonical_operator_execution_time_attr_items())
 
 
 def normalize_execution_op_times(op_times: Mapping[str, float]) -> dict[str, float]:

@@ -184,9 +184,14 @@ def test_unknown_model_uses_generic_profile_with_warning(caplog) -> None:
         model_arch="generic",
         model_architecture_profile=None,
     )
+    target_logger = logging.getLogger("frontier.model_architectures")
 
-    with caplog.at_level(logging.WARNING):
-        profile = get_model_architecture_profile(cfg)
+    target_logger.addHandler(caplog.handler)
+    try:
+        with caplog.at_level(logging.WARNING, logger=target_logger.name):
+            profile = get_model_architecture_profile(cfg)
+    finally:
+        target_logger.removeHandler(caplog.handler)
 
     assert profile.profile_id == "generic"
     assert "unit_unknown_transformer" in caplog.text
@@ -289,6 +294,37 @@ def test_ep_collective_resolver_uses_profile_not_step3_model_type() -> None:
             expected_ep_size=2,
         )
         is ExpertParallelCollective.ALLGATHER
+    )
+
+
+@pytest.mark.parametrize(
+    ("expected_ep_size", "expected_collective"),
+    [
+        (2, ExpertParallelCollective.ALLTOALL),
+        (1, ExpertParallelCollective.ALLGATHER),
+    ],
+)
+def test_step_moe_noquant_real_config_resolves_decode_ffn_collective(
+    expected_ep_size: int,
+    expected_collective: ExpertParallelCollective,
+) -> None:
+    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+        resolve_ep_collective_kind,
+    )
+
+    model_config = BaseModelConfig.create_from_name("step-moe-noquant")
+
+    assert model_config.get_name() == "step-moe-noquant"
+    assert model_config.model_type == "step3_text"
+    assert model_config.embedding_dim == 7168
+    assert model_config.get_model_architecture_profile().profile_id == "step3_text"
+    assert (
+        resolve_ep_collective_kind(
+            model_config,
+            ClusterType.DECODE_FFN,
+            expected_ep_size=expected_ep_size,
+        )
+        is expected_collective
     )
 
 

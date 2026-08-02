@@ -2,7 +2,7 @@
 # =============================================================================
 # Profiling-independent Architecture Dummy Smoke Matrix
 # =============================================================================
-# Runs the smallest dense/MoE smoke matrix across co-location/PDD and
+# Runs the smallest dense/MoE smoke matrix across co-location/PDD/PD-AF and
 # offline/online. The script forces dummy execution-time prediction and does not
 # pass profiling CSV input flags to the child examples.
 #
@@ -41,6 +41,10 @@ CASES=(
   "pdd/offline/moe_model_basic.sh"
   "pdd/online/dense_model_basic_online.sh"
   "pdd/online/moe_model_basic_online.sh"
+  "pd-af-disagg/offline/dense_model_basic.sh"
+  "pd-af-disagg/offline/moe_model_basic.sh"
+  "pd-af-disagg/online/dense_model_basic_online.sh"
+  "pd-af-disagg/online/moe_model_basic_online.sh"
 )
 
 EXTRA_ARGS=()

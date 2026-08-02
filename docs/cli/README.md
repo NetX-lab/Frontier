@@ -1,15 +1,17 @@
 # CLI User Guide
 
+## Modification History
+
+| Date       | Summary of Changes |
+|------------|--------------------|
+| 2026-07-23 | Added the complete PD-AF dense/MoE/EP/CUDA Graph entrypoint set and corrected v0.3 runtime boundaries. |
+| 2026-07-22 | Documented the sequential PD-AF CLI surface and one-click example entrypoints. |
+
 ## Scope
 
-This guide covers the public CLI surface for the `pre-release-v0.1` branch. The supported runtime architecture is `co-location`, where prefill and decode run in one monolithic cluster.
+This guide covers the public CLI surface for the `pre-release-v0.3` branch. The supported runtime architectures are `co-location`, sequential `pd-disaggregation`, and sequential `pd-af-disaggregation`.
 
-The parser still exposes older architecture fields for compatibility, but the release guard rejects these paths at startup:
-
-- `pd-disaggregation`
-- `pd-af-disaggregation`
-- disaggregated cluster-specific CLI fields such as `--cluster_config_prefill_*`
-- transfer config fields such as `--kv_cache_transfer_config_*` and `--m2n_transfer_config_*`
+The parser still exposes historical architecture fields for compatibility. Disaggregated runs must use `--no-enable_parallel_clusters`; parallel PDD/PD-AF execution remains guarded in this release. PD-AF supports dense, MoE, EP, and global CUDA Graph execution. PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`.
 
 Use the examples first. They set the required flags, disable optional services, and write metrics to a predictable location.
 
@@ -66,14 +68,29 @@ bash examples/architecture/co-location/online/moe_model_basic_online.sh
 bash examples/architecture/co-location/online/thinking_mode_basic_online.sh
 bash examples/architecture/co-location/online/moe_spec_dec_online.sh
 bash examples/architecture/co-location/online/moe_prefix_caching_online.sh
+
+# PD-AF / pd-af-disaggregation (sequential).
+bash examples/architecture/pd-af-disagg/run_all.sh
+bash examples/architecture/pd-af-disagg/offline/dense_model_basic.sh
+bash examples/architecture/pd-af-disagg/offline/moe_model_basic.sh
+bash examples/architecture/pd-af-disagg/offline/moe_model_ep.sh
+bash examples/architecture/pd-af-disagg/offline/dense_cuda_graph.sh
+bash examples/architecture/pd-af-disagg/offline/moe_cuda_graph.sh
+bash examples/architecture/pd-af-disagg/online/dense_model_basic_online.sh
+bash examples/architecture/pd-af-disagg/online/moe_model_basic_online.sh
+bash examples/architecture/pd-af-disagg/online/moe_model_ep_online.sh
+bash examples/architecture/pd-af-disagg/online/dense_cuda_graph_online.sh
+bash examples/architecture/pd-af-disagg/online/moe_cuda_graph_online.sh
 ```
 
-The baseline dense, MoE, and Thinking Mode scripts enable these runtime settings by default:
+The co-location/PDD baseline dense, MoE, and Thinking Mode scripts enable these runtime settings by default:
 
 - `--decode_cuda_graph_mode full_decode_only`
 - `--vllm_v1_scheduler_config_enable_chunked_prefill`
 - CSV/JSON metrics output
 - dummy execution-time predictor mode for fast smoke tests
+
+PD-AF basic and EP scripts use three sequential roles plus analytical KV/M2N transfer models. PD-AF CUDA Graph examples use `--use_cuda_graph`, not `--decode_cuda_graph_mode`. Their default capture sizes are `8 16 32 64`.
 
 The advanced MoE scripts are available in both `offline/` and `online/`:
 
@@ -131,6 +148,8 @@ Dummy predictor mode is useful for smoke tests. For latency studies, disable dum
 | `--simulation_mode offline` | Generate or replay requests inside the simulator. |
 | `--simulation_mode online` | Run online mode where supported by the selected scheduler path. |
 | `--sys_arch co-location` | Release-supported architecture. |
+| `--sys_arch pd-disaggregation` | Sequential PDD architecture; requires `--no-enable_parallel_clusters`. |
+| `--sys_arch pd-af-disaggregation` | Sequential PD-AF architecture; requires `--no-enable_parallel_clusters`. |
 
 ### Model and parallelism
 
@@ -151,8 +170,10 @@ Dummy predictor mode is useful for smoke tests. For latency studies, disable dum
 
 | Option | Use |
 |--------|-----|
-| `--decode_cuda_graph_mode full_decode_only` | Model decode CUDA Graph behavior for decode-only batches. |
+| `--decode_cuda_graph_mode full_decode_only` | Model decode CUDA Graph behavior for co-location/PDD decode-only batches. |
 | `--decode_cuda_graph_mode none` | Disable decode CUDA Graph modeling. Required by the Speculative Decoding example. |
+| `--use_cuda_graph` | Enable the global CUDA Graph model for PD-AF. |
+| `--cudagraph_capture_sizes 8 16 32 64` | Set the global CUDA Graph capture sizes used by PD-AF examples. |
 | `--vllm_v1_scheduler_config_enable_chunked_prefill` | Enable Chunked Prefill on the `vllm_v1` scheduler. |
 | `--vllm_v1_scheduler_config_enable_prefix_caching` | Enable Prefix Caching on supported scheduler paths. |
 | `--speculative_decoding_config_enabled` | Enable Speculative Decoding / MTP modeling. |
@@ -227,7 +248,7 @@ Common files include:
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Release guard exits for `pd-disaggregation` or `pd-af-disaggregation`. | Disaggregated architectures are not included in `pre-release-v0.1`. | Use `--sys_arch co-location`. |
+| Release guard exits for `pd-disaggregation` or `pd-af-disaggregation`. | Parallel clusters are enabled, or the selected feature is outside the architecture's v0.3 surface. | Add `--no-enable_parallel_clusters` and use only the supported feature set documented above. |
 | `htsim_ndp` is missing after selecting `--cc_backend_config_type collective_sim`. | The optional `collective_sim` submodule binary has not been built. | Build `frontier/cc_backend/backends/collective-sim/sim`, or use the default co-location example `analytical` backend. |
 | W&B tries to initialize. | Environment variables are not set. | Set `WANDB_DISABLED=true` and `VIDUR_DISABLE_WANDB=1`. |
 | Non-dummy run fails on a missing CSV or schema mismatch. | Predictor training needs matching profiling data. | Use the profiling guide and keep CSVs under `data/profiling/compute/<device>/<model>/`. |

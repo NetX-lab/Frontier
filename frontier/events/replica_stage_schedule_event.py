@@ -3,6 +3,7 @@ from typing import List, TYPE_CHECKING
 
 from frontier.events import BaseEvent
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
+from frontier.entities.batch import DenseFFNBatchGroup, EPBatchGroup
 from frontier.logger import init_logger
 from frontier.metrics import MetricsStore
 from frontier.scheduler import BaseClusterScheduler
@@ -249,6 +250,9 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         )
                         raise ValueError(f"Invalid attention_time_ms: {attention_time_ms}")
 
+                    batch._prefill_model_execution_components_ms_by_stage = {
+                        self._stage_id: [attention_time_ms]
+                    }
                     attention_time = attention_time_ms * 1e-3
 
                     debug_logger.info(
@@ -272,64 +276,15 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     ]
 
                 elif self._cluster_type == ClusterType.DECODE_FFN:
-                    # Decode FFN cluster with MoE: implement EP ReduceScatter + Expert Computation + EP combine sync
-                    batch_stage, execution_time = (
-                        stage_scheduler.predict_and_create_stage(batch)
-                    )
-                    self._batch_stage = batch_stage
-                    self._is_last_stage = stage_scheduler.is_last_stage
-
-                    # Step 1: Expert computation time - each EP replica processes its assigned experts
-                    # Predictor single-layer MoE components are in milliseconds;
-                    # event queue timestamps are in seconds.
-                    expert_comp_time_ms = (
-                        execution_time.get_single_layer_moe_comp_time()
-                        if hasattr(execution_time, "get_single_layer_moe_comp_time")
-                        else 1.0
-                    )
-                    expert_comp_time = expert_comp_time_ms * 1e-3
-
-                    # Diagnostic logging for execution time
-                    import math
-
-                    if (
-                        math.isnan(expert_comp_time)
-                        or math.isinf(expert_comp_time)
-                        or expert_comp_time < 0
-                    ):
-                        debug_logger.error(
-                            f"[EXEC_TIME_ERROR] Invalid expert_comp_time detected!"
+                    # Decode FFN cluster with MoE: implement EP dispatch + expert compute + EP combine sync
+                    if isinstance(batch, DenseFFNBatchGroup):
+                        batch_stage, execution_time = (
+                            stage_scheduler.predict_and_create_stage(batch)
                         )
-                        debug_logger.error(f"  Batch ID: {batch.id}")
-                        debug_logger.error(f"  Expert comp time: {expert_comp_time}")
-                        debug_logger.error(
-                            f"  Total time: {execution_time.total_time if execution_time else 'None'}"
-                        )
-                        debug_logger.error(
-                            f"  Model time: {execution_time.model_time if execution_time else 'None'}"
-                        )
-                        raise ValueError(
-                            f"Invalid expert_comp_time: {expert_comp_time}"
-                        )
+                        self._batch_stage = batch_stage
+                        self._is_last_stage = stage_scheduler.is_last_stage
 
-                    debug_logger.info(
-                        f"[EXEC_TIME_OK_FFN] batch_id={batch.id}, "
-                        f"expert_comp_time_ms={expert_comp_time_ms:.6f}, "
-                        f"expert_comp_time_s={expert_comp_time:.6f}"
-                    )
-
-                    # EP=1 OPTIMIZATION: Skip EP synchronization when all experts are on the same device
-                    # When moe_expert_parallel_size=1, there's no need for EP combine since
-                    # all experts are processed locally without distribution across devices.
-                    moe_ep_size = replica.num_moe_expert_parallel_size
-
-                    if moe_ep_size <= 1:
-                        # EP=1: All experts on same device, use direct batch processing
-                        # No EP synchronization needed - process batch directly like non-EP path
-                        debug_logger.info(
-                            f"[EP=1] Skipping EP sync for batch {batch.id} (moe_ep_size={moe_ep_size})"
-                        )
-
+                        batch.execution_time = self._batch_stage.execution_time
                         self._batch_stage.on_schedule(self.time)
                         metrics_store.on_replica_stage_schedule(
                             self.time,
@@ -341,11 +296,50 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             self._dp_id,
                         )
 
-                        # Store full stage execution time (seconds) for downstream
-                        # request-level metrics in both EP=1 and EP>1 paths.
-                        # Timeline scheduling still uses expert_comp_time separately.
-                        if hasattr(batch, "execution_time"):
-                            batch.execution_time = self._batch_stage.execution_time
+                        return [
+                            BatchStageEndEvent(
+                                self.time + self._batch_stage.execution_time,
+                                self._replica_id,
+                                self._stage_id,
+                                self._is_last_stage,
+                                self._batch,
+                                self._batch_stage,
+                                self._cluster_type,
+                                self._dp_id,
+                            )
+                        ]
+                    if not isinstance(batch, EPBatchGroup):
+                        raise ValueError(
+                            "MoE DECODE_FFN scheduling requires EPBatchGroup or "
+                            f"DenseFFNBatchGroup, got {type(batch).__name__}"
+                        )
+
+                    batch_stage, execution_time = (
+                        stage_scheduler.predict_and_create_stage(batch)
+                    )
+                    self._batch_stage = batch_stage
+                    self._is_last_stage = stage_scheduler.is_last_stage
+
+                    # EP=1 OPTIMIZATION: Skip EP synchronization when all experts are on the same device
+                    moe_ep_size = replica.num_moe_expert_parallel_size
+
+                    if moe_ep_size <= 1:
+                        # EP=1: All experts on same device, use direct batch processing
+                        debug_logger.info(
+                            f"[EP=1] Skipping EP sync for batch {batch.id} (moe_ep_size={moe_ep_size})"
+                        )
+
+                        batch.execution_time = self._batch_stage.execution_time
+                        self._batch_stage.on_schedule(self.time)
+                        metrics_store.on_replica_stage_schedule(
+                            self.time,
+                            self._replica_id,
+                            self._stage_id,
+                            self._batch_stage,
+                            execution_time,
+                            self._cluster_type,
+                            self._dp_id,
+                        )
 
                         return [
                             BatchStageEndEvent(
@@ -360,9 +354,41 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             ),
                         ]
 
-                    # EP > 1: Use EP synchronization path
-                    # Emit op-level traces for EP>1 before synchronization to align with EP=1 visibility.
+                    # EP > 1: Use EP dispatch -> expert compute -> combine path
+                    # FFN-EP runtime follows the explicit operation order:
+                    # share-expert + gating + shuffling -> dispatch -> grouped_gemm -> combine.
+                    pre_dispatch_compute_time_ms = (
+                        execution_time.get_single_layer_moe_pre_dispatch_time()
+                    )
+                    expert_comp_time_ms = (
+                        execution_time.get_single_layer_moe_post_dispatch_compute_time()
+                    )
+                    pre_dispatch_compute_time = pre_dispatch_compute_time_ms * 1e-3
+                    expert_comp_time = expert_comp_time_ms * 1e-3
+
+                    import math
+
+                    if (
+                        math.isnan(expert_comp_time)
+                        or math.isinf(expert_comp_time)
+                        or expert_comp_time < 0
+                    ):
+                        raise ValueError(
+                            f"Invalid expert_comp_time: {expert_comp_time}"
+                        )
+
+                    debug_logger.info(
+                        f"[EXEC_TIME_OK_FFN] batch_id={batch.id}, "
+                        f"pre_dispatch_ms={pre_dispatch_compute_time_ms:.6f}, "
+                        f"expert_comp_time_ms={expert_comp_time_ms:.6f}"
+                    )
+
+                    # Emit op-level traces for EP>1 before synchronization
                     self._batch_stage.on_schedule(self.time)
+                    batch.record_decode_ffn_stage_execution_time_once(
+                        self._stage_id,
+                        self._batch_stage.execution_time,
+                    )
                     metrics_store.on_replica_stage_schedule(
                         self.time,
                         self._replica_id,
@@ -373,32 +399,30 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._dp_id,
                     )
 
-                    # Update batch timing (reduce_scatter already accounted for in batch.time)
-                    # so up to here, batch.time is composed of reduce_scatter + expert_comp_time
-                    batch.time = self.time + expert_comp_time
+                    # Store expert compute time for use after dispatch collective completes
+                    batch.expert_compute_time = expert_comp_time
 
-                    # Store full stage execution time (seconds) for request metrics.
-                    # Collective readiness timing still follows expert_comp_time.
-                    if hasattr(batch, "execution_time"):
-                        batch.execution_time = self._batch_stage.execution_time
+                    if debug_logger.isEnabledFor(logging.INFO):
                         debug_logger.info(
-                            f"[EXEC_TIME_STORED] batch_id={batch.id}, "
-                            f"stored stage_execution_time={batch.execution_time:.6f}s, "
+                            f"[EXEC_TIME_STAGE] batch_id={batch.id}, "
+                            f"stage_execution_time={self._batch_stage.execution_time:.6f}s, "
+                            f"pre_dispatch_compute_time={pre_dispatch_compute_time:.6f}s, "
                             f"expert_comp_time={expert_comp_time:.6f}s"
                         )
 
-                    # Create EP AllToAll combine ready event - this will trigger collective synchronization
-                    from frontier.events.ep_alltoall_combine_ready_event import (
-                        EPAllToAllCombineReadyEvent,
+                    # Pre-dispatch compute must complete before EP dispatch collective starts
+                    batch.time = self.time + pre_dispatch_compute_time
+                    from frontier.events.ep_alltoall_dispatch_ready_event import (
+                        EPAllToAllDispatchReadyEvent,
                     )
 
-                    current_batch_timestamp = batch.time
                     debug_logger.info(
-                        f"[EP>1] Creating EPAllToAllCombineReadyEvent for batch {batch.id} (moe_ep_size={moe_ep_size})"
+                        f"[EP>1] Creating EPAllToAllDispatchReadyEvent for batch {batch.id} "
+                        f"(moe_ep_size={moe_ep_size})"
                     )
                     return [
-                        EPAllToAllCombineReadyEvent(
-                            current_batch_timestamp,
+                        EPAllToAllDispatchReadyEvent(
+                            batch.time,
                             self._replica_id,
                             self._stage_id,
                             batch,
@@ -531,6 +555,39 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     ),
                 ]
 
+            elif self._cluster_type == ClusterType.DECODE_FFN and not is_moe:
+                # Dense DECODE_FFN: single-layer direct execution, no EP dispatch/combine
+                batch_stage, execution_time = stage_scheduler.predict_and_create_stage(
+                    batch
+                )
+                self._batch_stage = batch_stage
+                self._is_last_stage = stage_scheduler.is_last_stage
+
+                batch.execution_time = self._batch_stage.execution_time
+                self._batch_stage.on_schedule(self.time)
+                metrics_store.on_replica_stage_schedule(
+                    self.time,
+                    self._replica_id,
+                    self._stage_id,
+                    self._batch_stage,
+                    execution_time,
+                    self._cluster_type,
+                    self._dp_id,
+                )
+
+                return [
+                    BatchStageEndEvent(
+                        self.time + self._batch_stage.execution_time,
+                        self._replica_id,
+                        self._stage_id,
+                        self._is_last_stage,
+                        self._batch,
+                        self._batch_stage,
+                        self._cluster_type,
+                        self._dp_id,
+                    ),
+                ]
+
             elif (
                 self._cluster_type in [ClusterType.PREFILL, ClusterType.DECODE]
                 and not is_moe
@@ -538,13 +595,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 # Dense model path: simplified processing without sync events
                 # This matches Vidur's approach for co-location mode
                 # All layers in the pipeline stage are processed in one shot
-
-                # Validate that DECODE_FFN is never used with dense models
-                if self._cluster_type == ClusterType.DECODE_FFN:
-                    raise ValueError(
-                        f"DECODE_FFN cluster should not be used with dense models. "
-                        f"Use DECODE cluster instead."
-                    )
 
                 debug_logger.info(
                     f"[DENSE_MODEL] Processing dense model in {self._cluster_type.name} cluster, "
@@ -567,7 +617,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 )
 
                 # Create batch stage
-                from frontier.entities import BatchStage, EPBatchGroup
+                from frontier.entities import BatchStage
 
                 total_execution_time = execution_time.total_time
                 model_execution_time = execution_time.model_time
