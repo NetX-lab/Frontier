@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-07 | Distinguished PDD parallel runtime support from the sequential example defaults and retained the PD-AF parallel guard. |
 | 2026-07-23 | Completed the five-offline/five-online PD-AF dense/MoE/EP/CUDA Graph recipe surface and dummy matrix coverage. |
 | 2026-07-22 | Added the `pd-af-disaggregation` offline/online MoE example surface and one-click smoke contract. |
 | 2026-07-05 | Added profiling-independent dummy smoke matrix runner documentation. |
@@ -14,7 +15,7 @@ This directory contains one-click architecture entrypoints for Frontier's releas
 
 ## Release Scope
 
-`pre-release-v0.3` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD uses `PREFILL` plus unified `DECODE`; PD-AF uses `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` with KV and M2N transfers. Both public disaggregated paths use `--no-enable_parallel_clusters`.
+`pre-release-v0.3` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD uses `PREFILL` plus unified `DECODE`; PD-AF uses `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` with KV and M2N transfers. PDD runtime supports both sequential and parallel cluster processing. The checked-in PDD examples remain sequential through `--no-enable_parallel_clusters` for reproducible one-click runs. PD-AF parallel cluster processing remains unsupported and fails fast.
 
 `co-location` examples remain available as baseline comparison recipes and v0.1-compatible architecture references. Additional disaggregated research prototypes outside the PDD path are not exposed as release examples.
 
@@ -68,6 +69,8 @@ All PDD scripts use these release-supported defaults unless overridden from the 
 - dummy execution-time prediction enabled by default
 - CSV/JSON metrics enabled by default through `--metrics_config_write_metrics` and `--metrics_config_store_request_metrics`
 - plots, Chrome trace, and JSON event trace disabled for lightweight one-click artifacts
+
+These are example defaults, not a PDD runtime restriction. Remove `--no-enable_parallel_clusters` when intentionally running the supported parallel PDD event processors.
 
 MoE PDD scripts also enforce that each role's attention and MoE parallel domains match before launching Frontier. This fail-fast check prevents known non-runnable MoE topology combinations from entering the simulator.
 

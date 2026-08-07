@@ -10,6 +10,13 @@ PUBLIC_DOCS = (
     "examples/README.md",
     "examples/architecture/README.md",
 )
+PDD_PARALLEL_CONTRACT_DOCS = (
+    "README.md",
+    "AGENTS.md",
+    "docs/cli/README.md",
+    "examples/README.md",
+    "examples/architecture/README.md",
+)
 
 
 def _read(relative_path: str) -> str:
@@ -48,7 +55,8 @@ def test_top_level_docs_advertise_supported_pdd_without_upcoming_claims() -> Non
         assert "pdd/run_all.sh" in text, relative_path
 
     top_level_readme = _read("README.md")
-    assert "Prefill-Decode Disaggregation (PDD) and sequential Attention-FFN Disaggregation" in top_level_readme
+    assert "Prefill-Decode Disaggregation (PDD)" in top_level_readme
+    assert "sequential Attention-FFN Disaggregation (PD-AF)" in top_level_readme
     assert "PDD serving" in top_level_readme
     assert "examples/architecture/pdd/offline/dense_model_basic.sh" in top_level_readme
     assert "examples/architecture/pdd/online/dense_model_basic_online.sh" in top_level_readme
@@ -69,3 +77,30 @@ def test_top_level_docs_advertise_supported_pdd_without_upcoming_claims() -> Non
     assert "pd-af-disaggregation" in _read("README.md")
     assert "pd-af-disaggregation" in _read("examples/README.md")
     assert "pd-af-disaggregation" in _read("examples/architecture/README.md")
+
+
+def test_public_docs_distinguish_parallel_pdd_runtime_from_sequential_examples() -> None:
+    for relative_path in PDD_PARALLEL_CONTRACT_DOCS:
+        text = _read(relative_path)
+        assert (
+            "PDD runtime supports both sequential and parallel cluster processing"
+            in text
+        ), relative_path
+        assert "PDD examples remain sequential" in text, relative_path
+        assert (
+            "PD-AF parallel cluster processing remains unsupported" in text
+        ), relative_path
+
+    combined_docs = "\n".join(
+        _read(relative_path) for relative_path in PDD_PARALLEL_CONTRACT_DOCS
+    )
+    stale_claims = (
+        "parallel disaggregated execution remains guarded",
+        "The supported PDD path requires sequential cluster execution",
+        "`pd-disaggregation` aborts unless `--no-enable_parallel_clusters`",
+        "Disaggregated runs must use `--no-enable_parallel_clusters`",
+        "Sequential PDD architecture; requires `--no-enable_parallel_clusters`",
+        "parallel cluster processing is still guarded",
+    )
+    for claim in stale_claims:
+        assert claim not in combined_docs, f"Stale PDD parallel claim leaked: {claim}"

@@ -7,11 +7,11 @@ import time
 from typing import Dict, List, Optional
 
 from frontier.config import (
-    DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR,
     SimulationConfig,
     get_quantization_manager,
     global_vars,
 )
+from frontier.cluster_simulator import ClusterSimulator
 from frontier.entities import Cluster
 from frontier.events import (
     BaseEvent,
@@ -279,8 +279,32 @@ class Simulator:
             self._init_sequential_mode()
 
     def _init_parallel_mode(self):
-        """Disaggregated parallel cluster mode is not included in this release."""
-        raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+        """Initialize per-cluster event processors for disaggregated simulation."""
+        logger.info("Initializing parallel cluster processing mode")
+
+        self._cluster_simulators: Dict[ClusterType, ClusterSimulator] = {}
+        for cluster_type in self._clusters:
+            cluster_scheduler = self._global_scheduler.get_cluster_scheduler(
+                cluster_type
+            )
+            self._cluster_simulators[cluster_type] = ClusterSimulator(
+                cluster_type=cluster_type,
+                cluster_scheduler=cluster_scheduler,
+                global_scheduler=self._global_scheduler,
+                metrics_store=self._metric_store,
+                enable_event_logging=self._config.enable_cluster_event_logging,
+                event_log_dir=self._config.cluster_event_log_dir,
+                event_log_level=self._config.cluster_event_log_level,
+                profiler=self._profiler,
+                can_process_event_time=self._can_parallel_cluster_process_event,
+            )
+
+        self._init_parallel_events()
+        self._parallel_mode = True
+        logger.info(
+            "Parallel mode initialized with %d cluster simulators",
+            len(self._cluster_simulators),
+        )
 
     def _can_parallel_cluster_process_event(
         self,

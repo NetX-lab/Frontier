@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-07 | Distinguished PDD parallel runtime support from the sequential example defaults and retained the PD-AF parallel guard. |
 | 2026-07-23 | Added the complete PD-AF dense/MoE/EP/CUDA Graph offline and online example set. |
 | 2026-07-22 | Added the initial sequential PD-AF MoE examples. |
 
@@ -11,7 +12,7 @@ This directory contains runnable examples for the release-supported Frontier sim
 
 ## Release Scope
 
-`pre-release-v0.3` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD transfers KV from `PREFILL` to unified `DECODE`; PD-AF adds separate `DECODE_ATTN` and `DECODE_FFN` roles with M2N activation transfer. Both paths use sequential execution through `--no-enable_parallel_clusters`.
+`pre-release-v0.3` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD transfers KV from `PREFILL` to unified `DECODE`; PD-AF adds separate `DECODE_ATTN` and `DECODE_FFN` roles with M2N activation transfer. PDD runtime supports both sequential and parallel cluster processing. The checked-in PDD examples remain sequential through `--no-enable_parallel_clusters` for reproducible one-click runs. PD-AF parallel cluster processing remains unsupported and fails fast.
 
 Additional disaggregated research prototypes outside the PDD path remain intentionally outside this examples release scope. Co-location examples are still kept as baseline comparison recipes and historical v0.1-compatible references.
 
@@ -139,7 +140,7 @@ Separate prefill and decode clusters model prefill/decode disaggregation through
 - `--sys_arch pd-disaggregation`
 - Uses `PREFILL` and unified `DECODE` clusters.
 - Supports Dense, MoE, Thinking Mode, Speculative Decoding / MTP, and Prefix Caching examples in offline and online modes.
-- Uses `--no-enable_parallel_clusters` because the pre-release-v0.3 public PDD and PD-AF paths are sequential simulator paths; parallel cluster processing is still guarded.
+- Uses `--no-enable_parallel_clusters` as the checked-in PDD example default for reproducible one-click execution; users may remove the flag to exercise supported PDD parallel cluster processing. PD-AF examples must retain the flag.
 - Uses `decode_cuda_graph_mode` for PDD; the separate global `--use_cuda_graph` flag belongs to PD-AF.
 
 ### Co-location

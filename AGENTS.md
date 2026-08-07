@@ -4,21 +4,22 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-07 | Corrected the PDD parallel runtime contract while retaining sequential public examples and the PD-AF parallel guard. |
 | 2026-07-23 | Completed the `pre-release-v0.3` PD-AF dense, MoE, EP, and CUDA Graph example surface and documented deferred feature boundaries. |
 | 2026-07-22 | Documented sequential PD-AF runtime support. |
 
 ## Release Status: `pre-release-v0.3`
 
-- Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
+- Current public branch supports `co-location`, sequential or parallel PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
 - The co-location example suite uses `--cc_backend_config_type analytical` for one-click smoke runs without the optional network simulator; direct CLI experiments may still select `astra_sim_analytical` explicitly.
 - The PDD example suite also uses `--cc_backend_config_type analytical` and `--no-enable_parallel_clusters` for one-click sequential smoke runs.
 - collective_sim is optional. Initialize and build its submodule only when you explicitly select `--cc_backend_config_type collective_sim`.
 
-Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.3` branch supports the **co-location** architecture, sequential **PDD / `pd-disaggregation`**, and sequential **PD-AF / `pd-af-disaggregation`**. PD-AF uses separate `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` roles with KV and M2N transfer events.
+Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.3` branch supports the **co-location** architecture, sequential or parallel **PDD / `pd-disaggregation`**, and sequential **PD-AF / `pd-af-disaggregation`**. PD-AF uses separate `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` roles with KV and M2N transfer events.
 
-The supported PDD path requires sequential cluster execution. If a user selects `pd-disaggregation` with parallel clusters enabled, Frontier fails fast with message.
+PDD runtime supports both sequential and parallel cluster processing. The checked-in PDD examples remain sequential by default for reproducible one-click runs. PD-AF parallel cluster processing remains unsupported and fails fast; PD-AF runs must use `--no-enable_parallel_clusters`.
 
-Unsupported parallel disaggregation and other experimental surfaces still fail fast with explicit configuration errors.
+Other unsupported experimental surfaces still fail fast with explicit configuration errors.
 
 This AGENTS.md release guide is intended to be the **authoritative entry point** for users and developers. Older documents in the repo may contain deeper narrative explanations but may lag behind the current code.
 
@@ -58,8 +59,8 @@ Frontier models an LLM serving system as a set of clusters and replicas processi
 
 ## Key Features
 
-- `co-location`, sequential `pd-disaggregation`, and sequential `pd-af-disaggregation` system architectures for this release
-- Runtime guard for parallel disaggregation and unsupported research surfaces
+- `co-location`, sequential or parallel `pd-disaggregation`, and sequential `pd-af-disaggregation` system architectures for this release
+- Runtime guard for parallel PD-AF and unsupported research surfaces
 - MoE support (EP synchronization, routing and imbalance modeling)
 - Speculative decoding support via `frontier/spec_decode/` and `ReplicaConfig.speculative_decoding_config` on supported co-location/PDD paths
 - Prefix caching for supported replica schedulers (`vllm_v1`, `sglang`) on supported co-location/PDD paths
@@ -77,16 +78,15 @@ Frontier models an LLM serving system as a set of clusters and replicas processi
 This release supports three runtime architectures:
 
 - `co-location`: Monolithic mode with a single cluster.
-- `pd-disaggregation`: Sequential PDD mode with separate `PREFILL` and unified `DECODE` clusters. Public examples use `--no-enable_parallel_clusters`.
+- `pd-disaggregation`: PDD mode with separate `PREFILL` and unified `DECODE` clusters; supports sequential or parallel cluster processing. Public examples use `--no-enable_parallel_clusters`.
 - `pd-af-disaggregation`: Sequential PD-AF mode with separate `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` clusters. Public examples use `--no-enable_parallel_clusters`.
 
 The CLI/config parser still accepts the historical `sys_arch` choices so existing parameter parsing structures remain stable. Runtime behavior is stricter:
 
 - `offline + co-location` is supported.
 - `online + co-location` is supported where the selected scheduler/runtime path supports online mode.
-- `offline + pd-disaggregation` is supported for the public PDD scripts.
-- `online + pd-disaggregation` is supported for the public PDD scripts.
-- `pd-disaggregation` aborts unless `--no-enable_parallel_clusters` is provided.
+- `offline + pd-disaggregation` supports sequential and parallel cluster processing.
+- `online + pd-disaggregation` supports sequential and parallel cluster processing.
 - `pd-af-disaggregation` aborts unless `--no-enable_parallel_clusters` is provided.
 
 Important runtime constraints:

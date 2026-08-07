@@ -71,12 +71,6 @@ DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR = (
     "It will be available in an upcoming version. Please use the co-located architecture for current usage and testing."
 )
 
-PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR = (
-    "Error: pd-disaggregation public release support requires "
-    "--no-enable_parallel_clusters. Parallel cluster processing for "
-    "pd-disaggregation is not included in this release."
-)
-
 PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR = (
     "Error: pd-af-disaggregation v0.3 requires "
     "--no-enable_parallel_clusters. Parallel cluster processing for "
@@ -6090,9 +6084,6 @@ class SimulationConfig(ABC):
             raise ValueError(PD_AF_PREFIX_CACHING_RELEASE_ERROR)
         if self.sys_arch == "pd-af-disaggregation" and self.enable_parallel_clusters:
             raise ValueError(PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR)
-        if self.sys_arch == "pd-disaggregation":
-            if self.enable_parallel_clusters:
-                raise ValueError(PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR)
 
     def _validate_simulation_mode_arch_compatibility(self) -> None:
         """
