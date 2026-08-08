@@ -17,6 +17,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-08 | Clarified that parallel PDD preserves sequential-DES correctness without promising wall-clock speedup. |
 | 2026-08-07 | Corrected the PDD parallel runtime contract while retaining sequential PDD examples and the PD-AF parallel guard. |
 
 ## Latest News 🎯
@@ -41,6 +42,8 @@ Frontier helps researchers and engineers better understand serving system design
 - **Fidelity**: Frontier combines calibrated operator, communication, transfer, and KV-cache memory models to make simulation results useful for deployment decisions. This helps users compare configurations under SLA constraints, explore large GPU-scale design spaces ex-situ, and avoid conclusions that would be distorted by coarse average-case models.
 
 > PDD runtime supports both sequential and parallel cluster processing. The checked-in PDD examples remain sequential by default for reproducible one-click runs. PD-AF parallel cluster processing remains unsupported and fails fast for `pd-af-disaggregation`; PD-AF runs must use `--no-enable_parallel_clusters`.
+>
+> Parallel PDD is a correctness-equivalent execution path: it preserves the sequential DES event order, but the current strict total-order gate does not promise wall-clock speedup.
 
 ## Minimum Hardware Requirements
 

@@ -19,6 +19,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, BinaryIO, Callable, Mapping, Sequence
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from tests.performance.sim_walltime_scaling.run_case import (
     PRIMARY_SHAPES,
     REQUIRED_RESULT_FIELDS,
@@ -36,7 +40,6 @@ TERMINATION_GRACE_S = 5.0
 DEFAULT_TEMP_ROOT = Path("/data/ycfeng/tmp")
 TEMP_ROOT_ENV = "FRONTIER_WALLTIME_TMPDIR"
 RUN_CASE_PATH = Path(__file__).with_name("run_case.py").resolve()
-REPO_ROOT = Path(__file__).resolve().parents[3]
 DENSE_MASTER_WRAPPER = (
     "systemd-run",
     "--user",

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
 import signal
 import subprocess
 import sys
@@ -1232,10 +1233,13 @@ def test_cli_rejects_invalid_shape_overrides(
 
 def test_cli_script_exposes_reproducible_help_entry_point() -> None:
     sweep = _load_sweep()
+    clean_env = os.environ.copy()
+    clean_env.pop("PYTHONPATH", None)
 
     result = subprocess.run(
         [sys.executable, str(Path(sweep.__file__).resolve()), "--help"],
         cwd=sweep.REPO_ROOT,
+        env=clean_env,
         text=True,
         capture_output=True,
         check=False,
@@ -1254,3 +1258,61 @@ def test_cli_script_exposes_reproducible_help_entry_point() -> None:
         "--shape-override",
     ):
         assert option in result.stdout
+
+
+def test_run_case_script_exposes_reproducible_help_entry_point() -> None:
+    sweep = _load_sweep()
+    clean_env = os.environ.copy()
+    clean_env.pop("PYTHONPATH", None)
+
+    result = subprocess.run(
+        [sys.executable, str(sweep.RUN_CASE_PATH), "--help"],
+        cwd=sweep.REPO_ROOT,
+        env=clean_env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "--case-json" in result.stdout
+    assert "--result-json" in result.stdout
+
+
+def test_lifecycle_reproducer_exposes_reproducible_help_entry_point() -> None:
+    sweep = _load_sweep()
+    reproducer_path = sweep.RUN_CASE_PATH.with_name(
+        "pd_moe_lifecycle_reproducer.py"
+    )
+    clean_env = os.environ.copy()
+    clean_env.pop("PYTHONPATH", None)
+
+    result = subprocess.run(
+        [sys.executable, str(reproducer_path), "--help"],
+        cwd=sweep.REPO_ROOT,
+        env=clean_env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "--case-json" in result.stdout
+    assert "--state-json" in result.stdout
+
+
+def test_sweep_child_runner_executes_run_case_without_pythonpath(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sweep = _load_sweep()
+    monkeypatch.delenv("PYTHONPATH", raising=False)
+
+    outcome = sweep._execute_child(
+        [sys.executable, str(sweep.RUN_CASE_PATH), "--help"],
+        timeout_s=30.0,
+    )
+
+    assert outcome.timed_out is False
+    assert outcome.returncode == 0, outcome.stderr_tail
+    assert "--case-json" in outcome.stdout_tail
+    assert "--result-json" in outcome.stdout_tail

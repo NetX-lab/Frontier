@@ -104,3 +104,14 @@ def test_public_docs_distinguish_parallel_pdd_runtime_from_sequential_examples()
     )
     for claim in stale_claims:
         assert claim not in combined_docs, f"Stale PDD parallel claim leaked: {claim}"
+
+
+def test_public_docs_state_parallel_pdd_correctness_and_speed_boundary() -> None:
+    contract = (
+        "Parallel PDD is a correctness-equivalent execution path: it preserves "
+        "the sequential DES event order, but the current strict total-order gate "
+        "does not promise wall-clock speedup."
+    )
+
+    for relative_path in PDD_PARALLEL_CONTRACT_DOCS:
+        assert contract in _read(relative_path), relative_path

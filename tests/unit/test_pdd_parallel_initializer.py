@@ -56,7 +56,7 @@ def test_init_parallel_mode_constructs_cluster_simulators_and_seeds_events(
         assert cluster_simulator._metrics_store is simulator._metric_store
         assert cluster_simulator._profiler is simulator._profiler
         assert cluster_simulator._enable_event_logging is False
-        callback = cluster_simulator._can_process_event_time
+        callback = cluster_simulator._can_process_event_priority
         assert callback.__self__ is simulator
         assert callback.__func__ is Simulator._can_parallel_cluster_process_event
 

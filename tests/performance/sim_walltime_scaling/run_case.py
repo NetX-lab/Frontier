@@ -19,11 +19,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterator, Sequence
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from frontier.errors import FrontierMemoryOOMError
 
 
 SCHEMA_VERSION = 1
-REPO_ROOT = Path(__file__).resolve().parents[3]
 MODEL_NAMES = {
     "dense": "llama3.3-70b",
     "moe": "Qwen3-235B-A22B",

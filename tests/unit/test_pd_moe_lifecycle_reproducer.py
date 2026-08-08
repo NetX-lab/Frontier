@@ -4,6 +4,7 @@ import re
 import pytest
 
 from tests.performance.sim_walltime_scaling.pd_moe_lifecycle_reproducer import (
+    summarize_claim_order,
     validate_lifecycle_state,
 )
 
@@ -61,6 +62,66 @@ def _healthy_state() -> dict:
 
 def test_validate_lifecycle_state_accepts_fully_clean_terminal_state() -> None:
     assert validate_lifecycle_state(_healthy_state()) == []
+
+
+def test_summarize_claim_order_reports_first_priority_inversion() -> None:
+    summary = summarize_claim_order(
+        [
+            (1.0, 1, 1),
+            (1.0, 3, 1),
+            (1.0, 2, 1),
+        ]
+    )
+
+    assert summary["claim_count"] == 3
+    assert summary["priority_inversion_count"] == 1
+    assert summary["monotonic"] is False
+    assert summary["first_priority"] == [1.0, 1, 1]
+    assert summary["last_priority"] == [1.0, 2, 1]
+    assert summary["first_inversion"] == {
+        "claim_index": 2,
+        "previous": [1.0, 3, 1],
+        "current": [1.0, 2, 1],
+    }
+    assert len(summary["priority_sequence_sha256"]) == 64
+
+
+def test_summarize_claim_order_reports_duplicate_priority_as_violation() -> None:
+    summary = summarize_claim_order(
+        [
+            (1.0, 1, 1),
+            (1.0, 1, 1),
+        ]
+    )
+
+    assert summary["claim_count"] == 2
+    assert summary["priority_inversion_count"] == 1
+    assert summary["monotonic"] is False
+    assert summary["first_inversion"] == {
+        "claim_index": 1,
+        "previous": [1.0, 1, 1],
+        "current": [1.0, 1, 1],
+    }
+
+
+def test_validate_lifecycle_state_reports_priority_inversion() -> None:
+    state = _healthy_state()
+    state["claim_order"] = {
+        "claim_count": 3,
+        "priority_inversion_count": 1,
+        "monotonic": False,
+        "first_inversion": {
+            "claim_index": 2,
+            "previous": [1.0, 3, 1],
+            "current": [1.0, 2, 1],
+        },
+    }
+
+    assert validate_lifecycle_state(state) == [
+        "parallel claim order contains 1 priority inversion(s): "
+        "first={'claim_index': 2, 'previous': [1.0, 3, 1], "
+        "'current': [1.0, 2, 1]}"
+    ]
 
 
 @pytest.mark.parametrize(

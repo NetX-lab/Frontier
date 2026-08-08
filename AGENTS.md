@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-08 | Clarified that parallel PDD preserves sequential-DES correctness without promising wall-clock speedup. |
 | 2026-08-07 | Corrected the PDD parallel runtime contract while retaining sequential public examples and the PD-AF parallel guard. |
 | 2026-07-23 | Completed the `pre-release-v0.3` PD-AF dense, MoE, EP, and CUDA Graph example surface and documented deferred feature boundaries. |
 | 2026-07-22 | Documented sequential PD-AF runtime support. |
@@ -18,6 +19,8 @@
 Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.3` branch supports the **co-location** architecture, sequential or parallel **PDD / `pd-disaggregation`**, and sequential **PD-AF / `pd-af-disaggregation`**. PD-AF uses separate `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` roles with KV and M2N transfer events.
 
 PDD runtime supports both sequential and parallel cluster processing. The checked-in PDD examples remain sequential by default for reproducible one-click runs. PD-AF parallel cluster processing remains unsupported and fails fast; PD-AF runs must use `--no-enable_parallel_clusters`.
+
+Parallel PDD is a correctness-equivalent execution path: it preserves the sequential DES event order, but the current strict total-order gate does not promise wall-clock speedup.
 
 Other unsupported experimental surfaces still fail fast with explicit configuration errors.
 

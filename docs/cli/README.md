@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-08 | Clarified the parallel-PDD correctness and wall-clock-speed boundary. |
 | 2026-08-07 | Corrected the PDD parallel CLI contract while retaining sequential examples and the PD-AF parallel guard. |
 | 2026-07-23 | Added the complete PD-AF dense/MoE/EP/CUDA Graph entrypoint set and corrected v0.3 runtime boundaries. |
 | 2026-07-22 | Documented the sequential PD-AF CLI surface and one-click example entrypoints. |
@@ -13,6 +14,8 @@
 This guide covers the public CLI surface for the `pre-release-v0.3` branch. The supported runtime architectures are `co-location`, sequential or parallel `pd-disaggregation`, and sequential `pd-af-disaggregation`.
 
 PDD runtime supports both sequential and parallel cluster processing. The checked-in PDD examples remain sequential by default for reproducible one-click runs. PD-AF parallel cluster processing remains unsupported and fails fast; PD-AF runs must use `--no-enable_parallel_clusters`. PD-AF supports dense, MoE, EP, and global CUDA Graph execution. PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`.
+
+Parallel PDD is a correctness-equivalent execution path: it preserves the sequential DES event order, but the current strict total-order gate does not promise wall-clock speedup.
 
 Use the examples first. They set the required flags, disable optional services, and write metrics to a predictable location.
 

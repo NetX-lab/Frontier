@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-08 | Clarified the parallel-PDD correctness and wall-clock-speed boundary. |
 | 2026-08-07 | Distinguished PDD parallel runtime support from the sequential example defaults and retained the PD-AF parallel guard. |
 | 2026-07-23 | Added the complete PD-AF dense/MoE/EP/CUDA Graph offline and online example set. |
 | 2026-07-22 | Added the initial sequential PD-AF MoE examples. |
@@ -13,6 +14,8 @@ This directory contains runnable examples for the release-supported Frontier sim
 ## Release Scope
 
 `pre-release-v0.3` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD transfers KV from `PREFILL` to unified `DECODE`; PD-AF adds separate `DECODE_ATTN` and `DECODE_FFN` roles with M2N activation transfer. PDD runtime supports both sequential and parallel cluster processing. The checked-in PDD examples remain sequential through `--no-enable_parallel_clusters` for reproducible one-click runs. PD-AF parallel cluster processing remains unsupported and fails fast.
+
+Parallel PDD is a correctness-equivalent execution path: it preserves the sequential DES event order, but the current strict total-order gate does not promise wall-clock speedup.
 
 Additional disaggregated research prototypes outside the PDD path remain intentionally outside this examples release scope. Co-location examples are still kept as baseline comparison recipes and historical v0.1-compatible references.
 

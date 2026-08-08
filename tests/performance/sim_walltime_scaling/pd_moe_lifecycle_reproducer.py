@@ -4,12 +4,18 @@ from __future__ import annotations
 
 import argparse
 from contextlib import contextmanager
+import hashlib
+import json
 import os
 from pathlib import Path
 import socket
 import sys
 import traceback
 from typing import Iterator, Sequence
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from tests.performance.sim_walltime_scaling.run_case import (
     CaseSpec,
@@ -48,6 +54,66 @@ def _count(collection_state: dict) -> int:
     return int(collection_state.get("count", 0))
 
 
+def _serialize_event_priority(priority: tuple) -> list[float | int]:
+    return [float(priority[0]), int(priority[1]), int(priority[2])]
+
+
+def summarize_claim_order(claimed_priorities: list[tuple]) -> dict:
+    """Return a compact, auditable summary of the global parallel claim order."""
+    serialized_priorities = [
+        _serialize_event_priority(priority) for priority in claimed_priorities
+    ]
+    inversion_count = 0
+    first_inversion = None
+    for index in range(1, len(serialized_priorities)):
+        if serialized_priorities[index] > serialized_priorities[index - 1]:
+            continue
+        inversion_count += 1
+        if first_inversion is None:
+            first_inversion = {
+                "claim_index": index,
+                "previous": serialized_priorities[index - 1],
+                "current": serialized_priorities[index],
+            }
+    sequence_payload = json.dumps(
+        serialized_priorities,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return {
+        "claim_count": len(serialized_priorities),
+        "priority_inversion_count": inversion_count,
+        "monotonic": inversion_count == 0,
+        "first_priority": (
+            serialized_priorities[0] if serialized_priorities else None
+        ),
+        "last_priority": (
+            serialized_priorities[-1] if serialized_priorities else None
+        ),
+        "first_inversion": first_inversion,
+        "priority_sequence_sha256": hashlib.sha256(sequence_payload).hexdigest(),
+    }
+
+
+@contextmanager
+def _capture_claimed_event_priorities() -> Iterator[list[tuple]]:
+    from frontier.cluster_simulator import ClusterSimulator
+
+    original_get_next_event = ClusterSimulator._get_next_event
+    claimed_priorities = []
+
+    def get_next_event_and_record(cluster_simulator):
+        event = original_get_next_event(cluster_simulator)
+        if event is not None:
+            claimed_priorities.append(tuple(event._priority_number))
+        return event
+
+    ClusterSimulator._get_next_event = get_next_event_and_record
+    try:
+        yield claimed_priorities
+    finally:
+        ClusterSimulator._get_next_event = original_get_next_event
+
+
 def validate_lifecycle_state(state: dict) -> list[str]:
     """Return terminal-state validation errors."""
     errors = []
@@ -69,6 +135,16 @@ def validate_lifecycle_state(state: dict) -> list[str]:
         )
     if not state["global_scheduler_is_empty"]:
         errors.append("global scheduler is not empty")
+
+    claim_order = state.get("claim_order")
+    if claim_order:
+        inversion_count = int(claim_order["priority_inversion_count"])
+        if inversion_count:
+            errors.append(
+                "parallel claim order contains "
+                f"{inversion_count} priority inversion(s): "
+                f"first={claim_order['first_inversion']}"
+            )
 
     for request in state["requests"]:
         request_id = request["id"]
@@ -250,6 +326,10 @@ def collect_lifecycle_state(
             "id": int(request.id),
             "completed": bool(request.completed),
             "completed_layer_count": int(request.completed_layer_count),
+            "arrived_at": float(request.arrived_at),
+            "scheduled_at": float(request.scheduled_at),
+            "prefill_completed_at": float(request.prefill_completed_at),
+            "completed_at": float(request.completed_at),
             "current_decode_token_index": int(
                 request.current_decode_token_index
             ),
@@ -257,6 +337,10 @@ def collect_lifecycle_state(
             "total_tokens": int(request.total_tokens),
             "spec_last_committed_tokens": int(
                 getattr(request, "_spec_last_committed_tokens", 0)
+            ),
+            "spec_total_iterations": int(request.spec_total_iterations),
+            "spec_total_committed_tokens": int(
+                request.spec_total_committed_tokens
             ),
             "active_memberships": active_memberships_by_request_id.get(
                 int(request.id),
@@ -299,18 +383,19 @@ def run_reproducer(case: CaseSpec, state_path: Path) -> dict:
     config = _default_config_factory(argv)
     validate_measurement_config(config)
 
-    with _capture_generated_requests() as requests:
-        simulator = Simulator(config)
+    with _capture_claimed_event_priorities() as claimed_priorities:
+        with _capture_generated_requests() as requests:
+            simulator = Simulator(config)
 
-    run_error = None
-    try:
-        simulator.run()
-    except Exception as exc:
-        run_error = {
-            "type": type(exc).__name__,
-            "message": str(exc),
-            "traceback": traceback.format_exc()[-20000:],
-        }
+        run_error = None
+        try:
+            simulator.run()
+        except Exception as exc:
+            run_error = {
+                "type": type(exc).__name__,
+                "message": str(exc),
+                "traceback": traceback.format_exc()[-20000:],
+            }
 
     state = collect_lifecycle_state(
         simulator,
@@ -318,6 +403,7 @@ def run_reproducer(case: CaseSpec, state_path: Path) -> dict:
         case=case,
         run_error=run_error,
     )
+    state["claim_order"] = summarize_claim_order(claimed_priorities)
     state["validation_errors"] = validate_lifecycle_state(state)
     write_json_atomic(state_path, state)
     return state
