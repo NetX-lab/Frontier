@@ -13,6 +13,7 @@
     "intermediate_size": 28672,
     "max_position_embeddings": 131072,
     "mlp_bias": false,
+    "model_architecture_profile": "generic",
     "model_type": "llama",
     "num_attention_heads": 64,
     "num_hidden_layers": 80,

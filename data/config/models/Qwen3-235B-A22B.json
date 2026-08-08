@@ -15,6 +15,7 @@
   "max_position_embeddings": 40960,
   "max_window_layers": 94,
   "mlp_only_layers": [],
+  "model_architecture_profile": "generic",
   "model_type": "qwen3_moe",
   "moe_intermediate_size": 1536,
   "norm_topk_prob": true,
