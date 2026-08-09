@@ -66,6 +66,7 @@ def _result(
         "attempt_index": attempt_index,
         "case_fingerprint": case.case_fingerprint,
         "git_sha": "a" * 40,
+        "runner_sha256": "b" * 64,
         "python_executable": sys.executable,
         "seed": case.seed,
         "model": model,
@@ -75,6 +76,7 @@ def _result(
         "shape": case.to_dict()["shape"],
         "replicas_per_cluster": case.replicas_per_cluster,
         "mode": case.mode,
+        "effective_parallel_mode": case.mode == "parallel",
         "host": "plot-test-host",
         "worker_job_id": "worker-1",
         "status": status,
@@ -233,6 +235,8 @@ def test_csv_serializes_nested_values_deterministically_and_keeps_numbers(tmp_pa
     assert records[0]["oom_evidence"] == ""
     assert "model_name" in records[0]
     assert "events_per_s" in records[0]
+    assert records[0]["runner_sha256"] == row["runner_sha256"]
+    assert records[0]["effective_parallel_mode"] == "False"
 
 
 def test_formal_completeness_requires_both_models_at_all_scales() -> None:

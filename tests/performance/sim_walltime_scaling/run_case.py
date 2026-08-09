@@ -26,7 +26,7 @@ if str(REPO_ROOT) not in sys.path:
 from frontier.errors import FrontierMemoryOOMError
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 MODEL_NAMES = {
     "dense": "llama3.3-70b",
     "moe": "Qwen3-235B-A22B",
@@ -81,6 +81,7 @@ REQUIRED_RESULT_FIELDS = frozenset(
         "attempt_index",
         "case_fingerprint",
         "git_sha",
+        "runner_sha256",
         "python_executable",
         "seed",
         "model",
@@ -90,6 +91,7 @@ REQUIRED_RESULT_FIELDS = frozenset(
         "shape",
         "replicas_per_cluster",
         "mode",
+        "effective_parallel_mode",
         "host",
         "worker_job_id",
         "status",
@@ -590,6 +592,10 @@ def _git_sha() -> str:
     return sha
 
 
+def _runner_sha256() -> str:
+    return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+
+
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -622,11 +628,16 @@ class _SequentialEventCounter:
         self.phase_times[phase_name] = duration
 
 
-def _collect_event_count(simulator: Any, sequential_counter: Any) -> int:
-    if getattr(simulator, "_parallel_mode", False):
-        cluster_simulators = getattr(simulator, "_cluster_simulators", {})
+def _collect_event_count(
+    simulator: Any,
+    sequential_counter: Any,
+    *,
+    parallel_mode: bool,
+) -> int:
+    if parallel_mode:
+        cluster_simulators = simulator._cluster_simulators
         return sum(
-            int(getattr(cluster_simulator, "_events_processed", 0))
+            int(cluster_simulator._events_processed)
             for cluster_simulator in cluster_simulators.values()
         )
     return int(sequential_counter.event_count)
@@ -654,6 +665,7 @@ def _base_result(
         "attempt_index": case.attempt_index,
         "case_fingerprint": case.case_fingerprint,
         "git_sha": _git_sha(),
+        "runner_sha256": _runner_sha256(),
         "python_executable": sys.executable,
         "seed": case.seed,
         "model": case.model,
@@ -663,6 +675,7 @@ def _base_result(
         "shape": asdict(case.shape),
         "replicas_per_cluster": case.replicas_per_cluster,
         "mode": case.mode,
+        "effective_parallel_mode": None,
         "host": socket.gethostname(),
         "worker_job_id": os.environ.get("FRONTIER_WORKER_JOB_ID"),
         "status": None,
@@ -733,7 +746,22 @@ def run_case(
         simulator = simulator_factory(config)
         result["init_s"] = time.perf_counter() - init_start
 
-        if not getattr(simulator, "_parallel_mode", False):
+        simulator_parallel_mode = getattr(simulator, "_parallel_mode", None)
+        if not isinstance(simulator_parallel_mode, bool):
+            raise RuntimeError(
+                "Simulator must expose a boolean _parallel_mode for wall-clock "
+                f"measurement, got {simulator_parallel_mode!r}"
+            )
+        result["effective_parallel_mode"] = simulator_parallel_mode
+        requested_parallel_mode = case.mode == "parallel"
+        if simulator_parallel_mode != requested_parallel_mode:
+            raise RuntimeError(
+                "Effective simulator mode does not match CaseSpec: "
+                f"requested_mode={case.mode}, "
+                f"simulator_parallel_mode={simulator_parallel_mode}"
+            )
+
+        if not simulator_parallel_mode:
             sequential_counter = _SequentialEventCounter()
             simulator._profiler = sequential_counter
 
@@ -744,7 +772,11 @@ def run_case(
         expected, completed = _collect_request_counts(simulator, case)
         result["expected_requests"] = expected
         result["completed_requests"] = completed
-        event_count = _collect_event_count(simulator, sequential_counter)
+        event_count = _collect_event_count(
+            simulator,
+            sequential_counter,
+            parallel_mode=simulator_parallel_mode,
+        )
         result["event_count"] = event_count
         result["events_per_s"] = event_count / result["sim_wallclock_s"]
 

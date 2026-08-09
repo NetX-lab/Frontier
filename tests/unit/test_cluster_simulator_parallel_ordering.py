@@ -292,6 +292,7 @@ def test_decode_waits_for_lower_prefill_priority_at_equal_timestamp() -> None:
 
     assert decode._claim_next_event() is None
     assert prefill._claim_next_event() is earlier_prefill_event
+    assert decode._claim_next_event() is None
 
 
 def test_in_flight_parent_priority_blocks_same_time_child_claim() -> None:

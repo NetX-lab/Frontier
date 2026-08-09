@@ -29,6 +29,7 @@ from tests.performance.sim_walltime_scaling.run_case import (
     SCHEMA_VERSION,
     CaseSpec,
     ParallelShape,
+    _runner_sha256,
     write_json_atomic,
 )
 
@@ -190,7 +191,28 @@ def _validate_result(path: Path, case: CaseSpec) -> dict[str, Any]:
         raise ValueError(
             f"Result status is not terminal at {path}: {status!r}"
         )
+    runner_sha256 = payload["runner_sha256"]
+    if not isinstance(runner_sha256, str) or re.fullmatch(
+        r"[0-9a-f]{64}", runner_sha256
+    ) is None:
+        raise ValueError(
+            f"Invalid runner SHA-256 at {path}: {runner_sha256!r}"
+        )
+    effective_parallel_mode = payload["effective_parallel_mode"]
+    if effective_parallel_mode is not None and not isinstance(
+        effective_parallel_mode, bool
+    ):
+        raise ValueError(
+            f"Invalid effective parallel mode at {path}: "
+            f"{effective_parallel_mode!r}"
+        )
     if status == "success":
+        expected_parallel_mode = case.mode == "parallel"
+        if effective_parallel_mode != expected_parallel_mode:
+            raise ValueError(
+                f"Invalid success effective parallel mode at {path}: "
+                f"{effective_parallel_mode!r}, expected {expected_parallel_mode!r}"
+            )
         request_counts = (
             payload["requests"],
             payload["expected_requests"],
@@ -479,6 +501,7 @@ def _parent_result(
         "attempt_index": case.attempt_index,
         "case_fingerprint": case.case_fingerprint,
         "git_sha": git_sha,
+        "runner_sha256": _runner_sha256(),
         "python_executable": python_executable,
         "seed": case.seed,
         "model": case.model,
@@ -488,6 +511,7 @@ def _parent_result(
         "shape": case.to_dict()["shape"],
         "replicas_per_cluster": case.replicas_per_cluster,
         "mode": case.mode,
+        "effective_parallel_mode": None,
         "host": socket.gethostname(),
         "worker_job_id": os.environ.get("FRONTIER_WORKER_JOB_ID"),
         "status": status,

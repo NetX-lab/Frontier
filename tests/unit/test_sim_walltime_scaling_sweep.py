@@ -61,6 +61,7 @@ def _terminal_result(case: CaseSpec, status: str) -> dict[str, Any]:
         "attempt_index": case.attempt_index,
         "case_fingerprint": case.case_fingerprint,
         "git_sha": "a" * 40,
+        "runner_sha256": "b" * 64,
         "python_executable": sys.executable,
         "seed": case.seed,
         "model": case.model,
@@ -70,6 +71,7 @@ def _terminal_result(case: CaseSpec, status: str) -> dict[str, Any]:
         "shape": case.to_dict()["shape"],
         "replicas_per_cluster": case.replicas_per_cluster,
         "mode": case.mode,
+        "effective_parallel_mode": case.mode == "parallel",
         "host": "test-host",
         "worker_job_id": None,
         "status": status,
@@ -967,6 +969,8 @@ def test_empty_simulated_oom_evidence_is_a_valid_terminal_record(
         ("sim_wallclock_s", 0.0),
         ("event_count", 0),
         ("events_per_s", 0.0),
+        ("runner_sha256", "not-a-sha256"),
+        ("effective_parallel_mode", True),
     ],
 )
 def test_invalid_child_success_record_is_rejected_without_replacement(

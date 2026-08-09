@@ -485,6 +485,196 @@ def test_run_case_counts_parallel_cluster_events(tmp_path) -> None:
     assert result["mode"] == "parallel"
     assert result["event_count"] == 7
     assert result["events_per_s"] > 0
+    assert result["effective_parallel_mode"] is True
+    assert len(result["runner_sha256"]) == 64
+    int(result["runner_sha256"], 16)
+
+
+def test_run_case_rejects_missing_parallel_cluster_event_counter(
+    tmp_path: Path,
+) -> None:
+    case = CaseSpec.for_scale(
+        model="moe",
+        total_gpus=32,
+        mode="parallel",
+        attempt_index=0,
+        num_requests=1,
+        prefill_tokens=16,
+        decode_tokens=2,
+        qps=1.0,
+    )
+
+    class IncompleteParallelSimulator:
+        _parallel_mode = True
+        _cluster_simulators = {
+            "prefill": SimpleNamespace(_events_processed=3),
+            "decode": SimpleNamespace(),
+        }
+        metric_store = SimpleNamespace(
+            get_total_requests=lambda: 1,
+            get_completed_requests=lambda: 1,
+        )
+
+        def __init__(self, _config) -> None:
+            self._profiler = SimpleNamespace()
+
+        def run(self) -> None:
+            return None
+
+    result = run_case(
+        case,
+        tmp_path / "missing-parallel-event-counter.json",
+        config_factory=lambda _argv: _measurement_config(),
+        simulator_factory=IncompleteParallelSimulator,
+    )
+
+    assert result["status"] == "bug"
+    assert result["failure_reason"] == "AttributeError"
+    assert "_events_processed" in result["stderr_tail"]
+
+
+@pytest.mark.parametrize(
+    ("requested_mode", "actual_parallel_mode"),
+    [
+        ("parallel", False),
+        ("sequential", True),
+    ],
+)
+def test_run_case_rejects_effective_mode_mismatch_before_run(
+    tmp_path: Path,
+    requested_mode: str,
+    actual_parallel_mode: bool,
+) -> None:
+    case = CaseSpec.for_scale(
+        model="dense",
+        total_gpus=32,
+        mode=requested_mode,
+        attempt_index=0,
+        num_requests=1,
+        prefill_tokens=16,
+        decode_tokens=2,
+        qps=1.0,
+    )
+    run_called = False
+
+    class WrongModeSimulator:
+        _parallel_mode = actual_parallel_mode
+        metric_store = SimpleNamespace(
+            get_total_requests=lambda: 1,
+            get_completed_requests=lambda: 0,
+        )
+
+        def __init__(self, _config) -> None:
+            self._profiler = SimpleNamespace()
+
+        def run(self) -> None:
+            nonlocal run_called
+            run_called = True
+
+    result = run_case(
+        case,
+        tmp_path / f"mode-mismatch-{requested_mode}.json",
+        config_factory=lambda _argv: _measurement_config(),
+        simulator_factory=WrongModeSimulator,
+    )
+
+    assert run_called is False
+    assert result["status"] == "bug"
+    assert result["failure_reason"] == "RuntimeError"
+    assert (
+        "Effective simulator mode does not match CaseSpec: "
+        f"requested_mode={requested_mode}, "
+        f"simulator_parallel_mode={actual_parallel_mode}"
+    ) in result["stderr_tail"]
+
+
+def test_run_case_rejects_non_boolean_effective_mode_before_run(
+    tmp_path: Path,
+) -> None:
+    case = CaseSpec.for_scale(
+        model="dense",
+        total_gpus=32,
+        mode="parallel",
+        attempt_index=0,
+        num_requests=1,
+        prefill_tokens=16,
+        decode_tokens=2,
+        qps=1.0,
+    )
+    run_called = False
+
+    class InvalidModeSimulator:
+        _parallel_mode = "parallel"
+        metric_store = SimpleNamespace(
+            get_total_requests=lambda: 1,
+            get_completed_requests=lambda: 0,
+        )
+
+        def __init__(self, _config) -> None:
+            self._profiler = SimpleNamespace()
+
+        def run(self) -> None:
+            nonlocal run_called
+            run_called = True
+
+    result = run_case(
+        case,
+        tmp_path / "non-boolean-mode.json",
+        config_factory=lambda _argv: _measurement_config(),
+        simulator_factory=InvalidModeSimulator,
+    )
+
+    assert run_called is False
+    assert result["status"] == "bug"
+    assert result["failure_reason"] == "RuntimeError"
+    assert (
+        "Simulator must expose a boolean _parallel_mode for wall-clock "
+        "measurement, got 'parallel'"
+    ) in result["stderr_tail"]
+
+
+def test_run_case_rejects_missing_effective_mode_before_run(
+    tmp_path: Path,
+) -> None:
+    case = CaseSpec.for_scale(
+        model="dense",
+        total_gpus=32,
+        mode="parallel",
+        attempt_index=0,
+        num_requests=1,
+        prefill_tokens=16,
+        decode_tokens=2,
+        qps=1.0,
+    )
+    run_called = False
+
+    class MissingModeSimulator:
+        metric_store = SimpleNamespace(
+            get_total_requests=lambda: 1,
+            get_completed_requests=lambda: 0,
+        )
+
+        def __init__(self, _config) -> None:
+            self._profiler = SimpleNamespace()
+
+        def run(self) -> None:
+            nonlocal run_called
+            run_called = True
+
+    result = run_case(
+        case,
+        tmp_path / "missing-mode.json",
+        config_factory=lambda _argv: _measurement_config(),
+        simulator_factory=MissingModeSimulator,
+    )
+
+    assert run_called is False
+    assert result["status"] == "bug"
+    assert result["failure_reason"] == "RuntimeError"
+    assert (
+        "Simulator must expose a boolean _parallel_mode for wall-clock "
+        "measurement, got None"
+    ) in result["stderr_tail"]
 
 
 def test_run_case_honors_falsey_factory_callables(tmp_path) -> None:
