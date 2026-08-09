@@ -30,16 +30,39 @@ try:
     import vllm
     VLLM_VERSION = vllm.__version__
 
-    # Import vLLM 0.10.x functions
+    # Import vLLM functions. Two of these were renamed after 0.10.x; import
+    # each separately so one renamed symbol does not make the whole block —
+    # and therefore all of load-imbalance profiling — look unavailable.
     from vllm.model_executor.layers.fused_moe.fused_moe import (
         fused_moe_kernel,
-        invoke_fused_moe_kernel,
         moe_align_block_size,
         try_get_optimal_moe_config,
-        get_config_dtype_str,
     )
 
-    VLLM_API_VERSION = "0.10.x"
+    try:
+        from vllm.model_executor.layers.fused_moe.fused_moe import (
+            invoke_fused_moe_kernel,
+        )
+
+        VLLM_API_VERSION = "0.10.x"
+    except ImportError:
+        # Renamed in vLLM >= 0.16. Verified keyword-for-keyword compatible with
+        # this module's call site, so it is a drop-in alias, not an adapter.
+        from vllm.model_executor.layers.fused_moe.fused_moe import (
+            dispatch_fused_moe_kernel as invoke_fused_moe_kernel,
+        )
+
+        VLLM_API_VERSION = "0.16.x"
+
+    try:
+        from vllm.model_executor.layers.fused_moe.fused_moe import (
+            get_config_dtype_str,
+        )
+    except ImportError:
+        from vllm.model_executor.layers.fused_moe.fused_moe import (
+            _get_config_dtype_str as get_config_dtype_str,
+        )
+
     VLLM_AVAILABLE = True
     print(f"vLLM {VLLM_VERSION} loaded successfully (API: {VLLM_API_VERSION})")
 

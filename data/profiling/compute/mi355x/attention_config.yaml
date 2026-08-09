@@ -1,0 +1,69 @@
+attention_backend: TORCH_SDPA
+batch_size_list: null
+block_shape: null
+block_size: 16
+decode_kv_cache_size_list: null
+device: mi355x
+disable_ray: true
+disable_replicated: false
+enable_chunked_prefill_grid_search: true
+enable_mixed_prefill: false
+enable_true_mixed: false
+fixed_chunked_prefill_size: 64
+max_batch_size: 16
+max_mixed_batch_size: 8
+max_model_len: 4096
+max_pipeline_parallel_size: 1
+max_seq_len: 2048
+min_batch_size: 1
+mixed_batch_size_list: null
+mixed_batch_size_max: 32
+mixed_batch_size_min: 2
+mixed_kv_cache_size_list:
+- 0
+mixed_mode: both
+mixed_num_samples: 3
+mixed_profile_strategy: default
+mixed_shapes_per_point: 2
+mixed_total_tokens_list: null
+mixed_total_tokens_max: 1055
+mixed_total_tokens_min: 1025
+model_architecture_profile: null
+models:
+- openai/gpt-oss-120b
+num_gpus: 8
+num_tensor_parallel_workers:
+- 1
+- 2
+- 4
+- 8
+output_dir: /home/dn/frontier_work/Frontier/data/profiling
+precision: null
+profile_method: cuda_event
+profile_only_decode: false
+profile_only_prefill: false
+skip_confirmation: true
+true_mixed_decode_batch_sizes:
+- 1
+- 2
+- 4
+- 8
+true_mixed_decode_kv_cache_sizes:
+- 128
+- 256
+- 512
+- 1024
+- 2048
+true_mixed_prefill_batch_sizes:
+- 1
+- 2
+- 4
+true_mixed_prefill_chunk_sizes:
+- 64
+- 128
+- 256
+- 512
+- 1024
+true_mixed_prefill_kv_cache_size: 0
+use_fp8: null
+vllm_mla_cuda_op_log: null

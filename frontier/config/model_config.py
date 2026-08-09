@@ -140,10 +140,24 @@ class QuantizationConfig:
                     f"got {weight_block_size}"
                 )
 
+        normalized_quant_method = cls._normalize_quant_method(config_dict.get("quant_method"))
+        raw_is_serialized = config_dict.get("is_checkpoint_fp8_serialized")
+        if raw_is_serialized is None:
+            # Real HF config.json files never carry this key — it's an
+            # internal vLLM concept, not a native HF field. Its presence in a
+            # genuine checkpoint's quantization_config with quant_method=fp8
+            # (e.g. DeepSeek-V3's real config.json) *is* the declaration that
+            # the checkpoint is fp8-serialized; defaulting to False here would
+            # make every real fp8 HF config fail this class's own block-fp8
+            # validation below.
+            is_checkpoint_fp8_serialized = normalized_quant_method == "fp8"
+        else:
+            is_checkpoint_fp8_serialized = bool(raw_is_serialized)
+
         return cls(
-            quant_method=cls._normalize_quant_method(config_dict.get("quant_method")),
+            quant_method=normalized_quant_method,
             activation_scheme=config_dict.get("activation_scheme"),
-            is_checkpoint_fp8_serialized=bool(config_dict.get("is_checkpoint_fp8_serialized", False)),
+            is_checkpoint_fp8_serialized=is_checkpoint_fp8_serialized,
             weight_block_size=weight_block_size,
             ignored_layers=list(config_dict.get("ignored_layers", [])),
         )
@@ -578,17 +592,23 @@ class BaseModelConfig(BaseFixedConfig):
             ("vocab_size", int),
             ("hidden_act", str),
         ]
+        # Expert count field name varies by model family: most HF configs use
+        # "num_experts" (Mixtral, Qwen-MoE, Phi-MoE), but DeepSeek-V2/V3 use
+        # "n_routed_experts" instead. Accept either, preferring the more
+        # common name when both are somehow present.
+        raw_num_experts = cfg.get("num_experts", cfg.get("n_routed_experts", 0))
+
         for k, _t in required:
             if k not in cfg:
                 # For MoE models, intermediate_size may be absent but moe_intermediate_size required instead.
-                if k == "intermediate_size" and ("num_experts" in cfg and isinstance(cfg["num_experts"], int) and cfg["num_experts"] > 1):
+                if k == "intermediate_size" and isinstance(raw_num_experts, int) and raw_num_experts > 1:
                     if "moe_intermediate_size" not in cfg:
                         raise ValueError(f"Missing required key 'moe_intermediate_size' in {file_path} for MoE model")
                     continue
                 raise ValueError(f"Missing required key '{k}' in {file_path}")
 
         # Detect MoE
-        is_moe = int(cfg.get("num_experts", 0)) > 1
+        is_moe = int(raw_num_experts) > 1
         model_type_lower = str(cfg.get("model_type", "")).lower()
 
         # Map common fields
@@ -738,7 +758,7 @@ class BaseModelConfig(BaseFixedConfig):
         )
 
         if is_moe:
-            num_experts = int(cfg["num_experts"])  # already validated
+            num_experts = int(raw_num_experts)  # already validated above
             num_experts_per_tok = int(cfg.get("num_experts_per_tok", 0))
             return MoEModelConfig(
                 **base_kwargs,
