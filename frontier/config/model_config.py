@@ -9,7 +9,10 @@ from frontier.attention.ops import AttentionMemoryLayout
 from frontier.config.base_fixed_config import BaseFixedConfig
 from frontier.config.precision_type import PrecisionType
 from frontier.logger import init_logger
-from frontier.model_architectures import get_model_architecture_profile
+from frontier.model_architectures import (
+    MODEL_ARCHITECTURE_REGISTRY,
+    get_model_architecture_profile,
+)
 from frontier.types import ActivationType, NormType
 
 logger = init_logger(__name__)
@@ -315,7 +318,10 @@ class BaseModelConfig(BaseFixedConfig):
                 f"Invalid model_arch '{self.model_arch}'. "
                 f"Must be one of: {ModelArch.VALID_ARCHS}"
             )
-        architecture_profile = self.get_model_architecture_profile()
+        architecture_profile = get_model_architecture_profile(self)
+        self._resolved_model_architecture_profile_id: str = (
+            architecture_profile.profile_id
+        )
 
         # Validate torch_dtype
         PrecisionType.from_torch_dtype(self.torch_dtype)
@@ -448,8 +454,10 @@ class BaseModelConfig(BaseFixedConfig):
         return self.model_arch
 
     def get_model_architecture_profile(self):
-        """Return plugin-style model architecture semantics for this config."""
-        return get_model_architecture_profile(self)
+        """Return this runtime config's construction-time profile snapshot."""
+        return MODEL_ARCHITECTURE_REGISTRY.get(
+            self._resolved_model_architecture_profile_id
+        )
 
     def supports_share_expert(self) -> bool:
         """Check if the model uses share_expert in the FFN path."""

@@ -421,6 +421,10 @@ for _profile in (
 
 
 def get_model_architecture_profile(config: Any) -> ModelArchitectureProfile:
-    """Resolve the model architecture profile for a runtime/profiling config."""
+    """Resolve a profile from the config's current declarative state.
+
+    Runtime ``BaseModelConfig`` consumers use the config-owned accessor so one
+    simulation instance retains its construction-time resolved identity.
+    """
 
     return MODEL_ARCHITECTURE_REGISTRY.resolve(config)

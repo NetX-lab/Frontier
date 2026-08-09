@@ -8,6 +8,7 @@ import pytest
 from frontier.events.ep_alltoall_combine_collective_event import (
     EPAllToAllCombineCollectiveEvent,
 )
+from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )
@@ -45,6 +46,9 @@ def _build_scheduler(
                 model_architecture_profile=architecture_profile,
                 model_type=architecture_profile,
                 embedding_dim=4096,
+                get_model_architecture_profile=lambda: (
+                    MODEL_ARCHITECTURE_REGISTRY.get(architecture_profile)
+                ),
             ),
             moe_expert_parallel_size=2,
         )

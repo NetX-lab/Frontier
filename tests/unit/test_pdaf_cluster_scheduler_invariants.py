@@ -17,6 +17,7 @@ from frontier.events.ep_alltoall_dispatch_collective_event import (
 )
 from frontier.events.m2n_transfer_end_event import M2NTransferEndEvent
 from frontier.events.global_batch_end_event import GlobalBatchEndEvent
+from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )
@@ -5586,6 +5587,9 @@ def _ep_scheduler(
                 embedding_dim=4096,
                 model_architecture_profile="step3_text",
                 model_type="step3_text",
+                get_model_architecture_profile=lambda: (
+                    MODEL_ARCHITECTURE_REGISTRY.get("step3_text")
+                ),
             ),
         )
     )

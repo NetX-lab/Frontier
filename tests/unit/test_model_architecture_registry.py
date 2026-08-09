@@ -1,16 +1,25 @@
 from __future__ import annotations
 
+import ast
+import copy
+import json
 import logging
+import pickle
+from contextlib import contextmanager
+from dataclasses import asdict, fields, replace
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Iterator
 
 import pytest
 
 from frontier.config.model_config import BaseModelConfig, MoEModelConfig, ModelArch
+from frontier.config.utils import dataclass_to_dict
 from frontier.model_architectures import (
     ExpertParallelCollective,
     LinearAttentionImplementation,
     LinearAttentionProfile,
+    MODEL_ARCHITECTURE_REGISTRY,
     ModelArchitectureProfile,
     ModelArchitectureRegistry,
     ResidualAddPolicy,
@@ -20,6 +29,105 @@ from frontier.model_architectures import (
 from frontier.profiling.common.model_config import ModelConfig as ProfilingModelConfig
 from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
 from frontier.types import ActivationType, ClusterType, NormType
+
+
+class _LogRecordCollector(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__()
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+@contextmanager
+def _capture_model_architecture_warnings() -> Iterator[list[logging.LogRecord]]:
+    target_logger = logging.getLogger("frontier.model_architectures")
+    collector = _LogRecordCollector()
+    previous_level = target_logger.level
+    target_logger.addHandler(collector)
+    target_logger.setLevel(logging.WARNING)
+    try:
+        yield collector.records
+    finally:
+        target_logger.removeHandler(collector)
+        target_logger.setLevel(previous_level)
+
+
+def _generic_fallback_records(
+    records: list[logging.LogRecord],
+) -> list[logging.LogRecord]:
+    return [
+        record
+        for record in records
+        if record.name == "frontier.model_architectures"
+        and record.getMessage().startswith(
+            "Model architecture profile fallback selected generic"
+        )
+    ]
+
+
+class _RawProfileResolutionCallCollector(ast.NodeVisitor):
+    def __init__(
+        self,
+        *,
+        function_aliases: set[str],
+        module_aliases: set[str],
+        registry_aliases: set[str],
+    ) -> None:
+        self._function_aliases = function_aliases
+        self._module_aliases = module_aliases
+        self._registry_aliases = registry_aliases
+        self._scope: list[str] = []
+        self.call_counts: dict[tuple[str, str], int] = {}
+
+    def _visit_scoped(self, node: ast.AST, name: str) -> None:
+        self._scope.append(name)
+        self.generic_visit(node)
+        self._scope.pop()
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self._visit_scoped(node, node.name)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self._visit_scoped(node, node.name)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self._visit_scoped(node, node.name)
+
+    def visit_Call(self, node: ast.Call) -> None:
+        call_kind: str | None = None
+        if (
+            isinstance(node.func, ast.Name)
+            and node.func.id in self._function_aliases
+        ):
+            call_kind = "helper"
+        elif (
+            isinstance(node.func, ast.Attribute)
+            and node.func.attr == "get_model_architecture_profile"
+            and ast.unparse(node.func.value) in self._module_aliases
+        ):
+            call_kind = "helper"
+        elif isinstance(node.func, ast.Attribute) and node.func.attr == "resolve":
+            registry_expression = node.func.value
+            if (
+                isinstance(registry_expression, ast.Name)
+                and registry_expression.id in self._registry_aliases
+            ):
+                call_kind = "registry.resolve"
+            elif (
+                isinstance(registry_expression, ast.Attribute)
+                and registry_expression.attr == "MODEL_ARCHITECTURE_REGISTRY"
+                and ast.unparse(registry_expression.value) in self._module_aliases
+            ):
+                call_kind = "registry.resolve"
+
+        if call_kind is not None:
+            scope = ".".join(self._scope) or "<module>"
+            key = (scope, call_kind)
+            self.call_counts[key] = self.call_counts.get(key, 0) + 1
+
+        self.generic_visit(node)
 
 
 def _profiling_config(**overrides):
@@ -198,6 +306,360 @@ def test_unknown_model_uses_generic_profile_with_warning(caplog) -> None:
     assert "generic" in caplog.text
 
 
+def test_runtime_model_config_resolves_implicit_profile_once() -> None:
+    with _capture_model_architecture_warnings() as records:
+        cfg = _runtime_model_config(
+            model_type="unit_unknown_transformer",
+            model_architecture_profile=None,
+        )
+        assert len(_generic_fallback_records(records)) == 1
+
+        profiles = [cfg.get_model_architecture_profile() for _ in range(5)]
+        share_expert_results = [cfg.supports_share_expert() for _ in range(5)]
+
+        assert len(_generic_fallback_records(records)) == 1
+
+    generic_profile = MODEL_ARCHITECTURE_REGISTRY.get("generic")
+    assert cfg.model_architecture_profile is None
+    assert all(profile is generic_profile for profile in profiles)
+    assert share_expert_results == [True] * 5
+
+
+def test_ep_collective_resolver_reuses_runtime_resolved_identity() -> None:
+    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+        resolve_ep_collective_kind,
+    )
+
+    with _capture_model_architecture_warnings() as records:
+        cfg = _runtime_model_config(
+            model_type="unit_unknown_transformer",
+            model_architecture_profile=None,
+        )
+        assert len(_generic_fallback_records(records)) == 1
+
+        collectives = [
+            resolve_ep_collective_kind(
+                cfg,
+                ClusterType.MONOLITHIC,
+                expected_ep_size=2,
+            )
+            for _ in range(5)
+        ]
+
+        assert len(_generic_fallback_records(records)) == 1
+
+    assert collectives == [ExpertParallelCollective.ALLGATHER] * 5
+
+
+def test_ep_collective_resolver_uses_runtime_snapshot_after_identity_mutation() -> None:
+    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+        resolve_ep_collective_kind,
+    )
+
+    cfg = _runtime_model_config(
+        model_type="unit_unknown_transformer",
+        model_architecture_profile=None,
+    )
+    generic_profile = MODEL_ARCHITECTURE_REGISTRY.get("generic")
+    step3_profile = MODEL_ARCHITECTURE_REGISTRY.get("step3_text")
+
+    assert cfg.get_model_architecture_profile() is generic_profile
+    assert get_model_architecture_profile(cfg) is generic_profile
+
+    cfg.model_type = "step3_text"
+    collective_after_mutation = resolve_ep_collective_kind(
+        cfg,
+        ClusterType.MONOLITHIC,
+        expected_ep_size=2,
+    )
+    reclassified = replace(cfg, **_step3_mfa_overrides())
+
+    assert cfg.get_model_architecture_profile() is generic_profile
+    assert get_model_architecture_profile(cfg) is step3_profile
+    assert collective_after_mutation is ExpertParallelCollective.ALLGATHER
+    assert reclassified.get_model_architecture_profile() is step3_profile
+    assert get_model_architecture_profile(reclassified) is step3_profile
+
+
+def test_ep_collective_resolver_requires_runtime_profile_accessor() -> None:
+    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+        resolve_ep_collective_kind,
+    )
+
+    with pytest.raises(
+        TypeError,
+        match=r"model_config\.get_model_architecture_profile\(\)",
+    ):
+        resolve_ep_collective_kind(
+            _profiling_config(model_architecture_profile="generic"),
+            ClusterType.MONOLITHIC,
+            expected_ep_size=2,
+        )
+
+
+def test_ep_collective_resolver_rejects_invalid_runtime_profile() -> None:
+    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+        resolve_ep_collective_kind,
+    )
+
+    model_config = SimpleNamespace(
+        model_type="unit_invalid_runtime_profile",
+        model_arch="generic",
+        model_architecture_profile="generic",
+        get_model_architecture_profile=lambda: object(),
+    )
+
+    with pytest.raises(
+        TypeError,
+        match=r"get_model_architecture_profile\(\) must return",
+    ):
+        resolve_ep_collective_kind(
+            model_config,
+            ClusterType.MONOLITHIC,
+            expected_ep_size=2,
+        )
+
+
+def test_attention_trainer_reuses_runtime_resolved_identity() -> None:
+    from frontier.training.attention_trainer import AttentionTrainer
+
+    with _capture_model_architecture_warnings() as records:
+        model_config = _runtime_model_config(
+            model_type="unit_unknown_transformer",
+            model_architecture_profile=None,
+        )
+        trainer = AttentionTrainer.__new__(AttentionTrainer)
+        trainer.model_config = model_config
+
+        required_column_sets = [
+            trainer._get_required_compute_dataset_columns() for _ in range(5)
+        ]
+
+        assert len(_generic_fallback_records(records)) == 1
+
+    assert all(columns == required_column_sets[0] for columns in required_column_sets)
+
+
+def test_raw_model_profile_resolution_callsites_are_allowlisted() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    expected_call_counts = {
+        # Construction binds the runtime snapshot from declarative config state.
+        ("frontier/config/model_config.py", "BaseModelConfig.__post_init__", "helper"): 1,
+        # Config-like prediction adapters may not own a BaseModelConfig snapshot.
+        (
+            "frontier/execution_time_predictor/shared_prediction_model_manager.py",
+            "_resolve_model_architecture_profile",
+            "helper",
+        ): 1,
+        (
+            "frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py",
+            "SklearnDisaggregationExecutionTimePredictor._resolve_model_architecture_profile_for_config",
+            "helper",
+        ): 1,
+        # Metrics accepts both runtime and structural/profiling config-like objects.
+        (
+            "frontier/metrics/capability_context.py",
+            "CapabilityContext.from_replica_config",
+            "helper",
+        ): 1,
+        # This is the single implementation boundary for raw registry resolution.
+        (
+            "frontier/model_architectures.py",
+            "get_model_architecture_profile",
+            "registry.resolve",
+        ): 1,
+        # Operator binding accepts structural/profiling config-like objects.
+        (
+            "frontier/operators/binding.py",
+            "_get_model_architecture_profile",
+            "helper",
+        ): 1,
+        # Profiling configs intentionally resolve their current declarative state.
+        (
+            "frontier/profiling/common/model_config.py",
+            "ModelConfig.get_model_architecture_profile",
+            "helper",
+        ): 1,
+        (
+            "frontier/profiling/linear_op/linear_op_impl.py",
+            "build_linear_op_attention_module",
+            "helper",
+        ): 1,
+        (
+            "frontier/profiling/linear_op/profiling_plan.py",
+            "build_profiling_plan",
+            "helper",
+        ): 1,
+        (
+            "frontier/profiling/utils/confirmation.py",
+            "build_linear_op_config_sections",
+            "helper",
+        ): 1,
+        # The MTP adapter wraps a profiling config rather than runtime state.
+        (
+            "frontier/spec_decode/mtp_runtime.py",
+            "StructuralModelConfigAdapter.get_model_architecture_profile",
+            "helper",
+        ): 1,
+    }
+    observed_call_counts: dict[tuple[str, str, str], int] = {}
+
+    for path in (repo_root / "frontier").rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        function_aliases: set[str] = set()
+        module_aliases: set[str] = set()
+        registry_aliases: set[str] = (
+            {"MODEL_ARCHITECTURE_REGISTRY"}
+            if path == repo_root / "frontier" / "model_architectures.py"
+            else set()
+        )
+
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.module == "frontier.model_architectures"
+            ):
+                function_aliases.update(
+                    imported.asname or imported.name
+                    for imported in node.names
+                    if imported.name == "get_model_architecture_profile"
+                )
+                registry_aliases.update(
+                    imported.asname or imported.name
+                    for imported in node.names
+                    if imported.name == "MODEL_ARCHITECTURE_REGISTRY"
+                )
+            elif isinstance(node, ast.ImportFrom) and node.module == "frontier":
+                module_aliases.update(
+                    imported.asname or imported.name
+                    for imported in node.names
+                    if imported.name == "model_architectures"
+                )
+            elif isinstance(node, ast.Import):
+                module_aliases.update(
+                    imported.asname or imported.name
+                    for imported in node.names
+                    if imported.name == "frontier.model_architectures"
+                )
+
+        collector = _RawProfileResolutionCallCollector(
+            function_aliases=function_aliases,
+            module_aliases=module_aliases,
+            registry_aliases=registry_aliases,
+        )
+        collector.visit(tree)
+        relative_path = str(path.relative_to(repo_root))
+        for (scope, call_kind), call_count in collector.call_counts.items():
+            observed_call_counts[(relative_path, scope, call_kind)] = call_count
+
+    assert observed_call_counts == expected_call_counts
+
+
+def test_runtime_model_config_replace_re_resolves_implicit_identity() -> None:
+    with _capture_model_architecture_warnings() as records:
+        cfg = _runtime_model_config(
+            model_type="unit_unknown_transformer",
+            model_architecture_profile=None,
+        )
+        reclassified = replace(
+            cfg,
+            model_type="step3_text",
+            **_step3_mfa_overrides(),
+        )
+        profile = reclassified.get_model_architecture_profile()
+
+    assert len(_generic_fallback_records(records)) == 1
+    assert profile is MODEL_ARCHITECTURE_REGISTRY.get("step3_text")
+    assert cfg.model_architecture_profile is None
+    assert reclassified.model_architecture_profile is None
+
+
+@pytest.mark.parametrize("model_name", ["Qwen3-235B-A22B", "llama3.3-70b"])
+def test_benchmark_model_metadata_declares_generic_profile(model_name: str) -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    payload = json.loads(
+        (repo_root / "data" / "config" / "models" / f"{model_name}.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert payload["model_architecture_profile"] == "generic"
+
+
+@pytest.mark.parametrize("model_name", ["Qwen3-235B-A22B", "llama3.3-70b"])
+def test_known_generic_model_config_avoids_fallback_warning(
+    model_name: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    monkeypatch.chdir(repo_root)
+
+    with _capture_model_architecture_warnings() as records:
+        cfg = BaseModelConfig.create_from_name(model_name)
+        profile = cfg.get_model_architecture_profile()
+        supports_share_expert = cfg.supports_share_expert()
+
+    assert _generic_fallback_records(records) == []
+    assert cfg.model_architecture_profile == "generic"
+    assert profile is MODEL_ARCHITECTURE_REGISTRY.get("generic")
+    assert supports_share_expert is False
+
+
+def test_runtime_model_profile_cache_preserves_copy_protocols() -> None:
+    with _capture_model_architecture_warnings() as records:
+        cfg = _runtime_model_config(
+            model_type="unit_unknown_transformer",
+            model_architecture_profile=None,
+        )
+        round_tripped = pickle.loads(pickle.dumps(cfg))
+        copied = copy.deepcopy(cfg)
+        replaced = replace(cfg)
+
+        configs = (cfg, round_tripped, copied, replaced)
+        profiles = [config.get_model_architecture_profile() for config in configs]
+
+    assert len(_generic_fallback_records(records)) == 2
+    assert all(config.model_architecture_profile is None for config in configs)
+    assert all(
+        profile is MODEL_ARCHITECTURE_REGISTRY.get("generic")
+        for profile in profiles
+    )
+
+
+def test_runtime_model_profile_cache_stays_out_of_dataclass_schema() -> None:
+    cfg = _runtime_model_config(model_architecture_profile="generic")
+    internal_name = "_resolved_model_architecture_profile_id"
+
+    assert internal_name not in {field.name for field in fields(BaseModelConfig)}
+    assert internal_name not in asdict(cfg)
+    assert internal_name not in dataclass_to_dict(cfg)
+    assert cfg.get_model_architecture_profile() is MODEL_ARCHITECTURE_REGISTRY.get(
+        "generic"
+    )
+
+
+def test_profiling_model_config_from_known_model_ignores_runtime_cache(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    monkeypatch.chdir(repo_root)
+
+    cfg = ProfilingModelConfig.from_model_name("Qwen3-235B-A22B")
+
+    assert cfg.model_architecture_profile == "generic"
+    assert cfg.get_model_architecture_profile() is MODEL_ARCHITECTURE_REGISTRY.get(
+        "generic"
+    )
+
+
+def test_runtime_config_explicit_unknown_profile_fails_fast() -> None:
+    with pytest.raises(ValueError, match="Unknown model architecture profile"):
+        _runtime_model_config(
+            model_type="unit_unknown_transformer",
+            model_architecture_profile="typo_step3_text",
+        )
+
+
 def test_explicit_unknown_profile_fails_fast_without_generic_downgrade() -> None:
     cfg = SimpleNamespace(
         model_type="unit_unknown_transformer",
@@ -270,11 +732,12 @@ def test_ep_collective_resolver_uses_profile_not_step3_model_type() -> None:
         resolve_ep_collective_kind,
     )
 
-    step3_alias_cfg = _profiling_config(
+    step3_alias_cfg = _runtime_model_config(
         model_type="unit_new_step3_like",
         model_architecture_profile="step3_text",
+        **_step3_mfa_overrides(),
     )
-    generic_named_step3_cfg = _profiling_config(
+    generic_named_step3_cfg = _runtime_model_config(
         model_type="step3_text",
         model_architecture_profile="generic",
     )

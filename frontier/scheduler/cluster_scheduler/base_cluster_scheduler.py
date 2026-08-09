@@ -17,7 +17,7 @@ from frontier.execution_time_predictor import (
 )
 from frontier.model_architectures import (
     ExpertParallelCollective,
-    get_model_architecture_profile,
+    ModelArchitectureProfile,
 )
 from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
     ReplicaSchedulerRegistry,
@@ -39,13 +39,24 @@ def resolve_ep_collective_kind(
     cluster_type: ClusterType,
     expected_ep_size: int,
 ) -> ExpertParallelCollective:
-    """Resolve the EP collective policy from the model architecture profile."""
+    """Resolve EP policy from the runtime config's profile snapshot."""
 
     if model_config is None:
         raise ValueError(
             "EP collective resolution requires replica_config.model_config"
         )
-    profile = get_model_architecture_profile(model_config)
+    profile_getter = getattr(model_config, "get_model_architecture_profile", None)
+    if not callable(profile_getter):
+        raise TypeError(
+            "EP collective resolution requires "
+            "model_config.get_model_architecture_profile()"
+        )
+    profile = profile_getter()
+    if not isinstance(profile, ModelArchitectureProfile):
+        raise TypeError(
+            "model_config.get_model_architecture_profile() must return "
+            "ModelArchitectureProfile"
+        )
     if profile.uses_expert_parallel_alltoall(cluster_type, expected_ep_size):
         return ExpertParallelCollective.ALLTOALL
     return ExpertParallelCollective.ALLGATHER
