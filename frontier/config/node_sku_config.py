@@ -100,3 +100,15 @@ class H20DgxNodeSKUConfig(BaseNodeSKUConfig):
     @staticmethod
     def get_type():
         return NodeSKUType.H20_DGX
+
+
+@dataclass
+class Mi355x8GpuNodeSKUConfig(BaseNodeSKUConfig):
+    # 8x MI355X in one node, fully connected over Infinity Fabric.
+    # Name matches data/profiling/network/mi355x_8gpu/.
+    device_sku_type: DeviceSKUType = DeviceSKUType.MI355X
+    num_devices_per_node: int = 8
+
+    @staticmethod
+    def get_type():
+        return NodeSKUType.MI355X_8GPU

@@ -25,9 +25,24 @@ from frontier.profiling.common.parallel_utils.tensor_parallel_layers import (
 )
 from frontier.profiling.common.utils import raise_if_fp8_requested
 try:
+    # vLLM has moved two of these since this module was written. Import each
+    # name independently: a single `from x import (a, b, c)` fails wholesale
+    # when only one name has moved, which makes an unrelated symbol look broken.
+    try:
+        from vllm.model_executor.layers.fused_moe.fused_moe import fused_topk
+    except ImportError:  # vLLM >= 0.16 moved it into the package namespace
+        from vllm.model_executor.layers.fused_moe import fused_topk
+
+    try:
+        from vllm.model_executor.layers.fused_moe.fused_moe import (
+            get_config_dtype_str,
+        )
+    except ImportError:  # renamed and relocated to fused_moe/config.py
+        from vllm.model_executor.layers.fused_moe.config import (
+            _get_config_dtype_str as get_config_dtype_str,
+        )
+
     from vllm.model_executor.layers.fused_moe.fused_moe import (
-        fused_topk,
-        get_config_dtype_str,
         try_get_optimal_moe_config,
     )
     from vllm.model_executor.layers.fused_moe.moe_align_block_size import (
@@ -47,6 +62,51 @@ try:
 except ImportError:
     ReplicatedLinear = None  # type: ignore[assignment]
     HAS_VLLM_REPLICATED_LINEAR = False
+
+
+_VLLM_PARALLEL_STATE_READY = False
+
+
+def _ensure_single_process_vllm_parallel_state() -> None:
+    """Initialize vLLM's distributed/model-parallel state for a lone process.
+
+    vLLM layers query the tensor-parallel group during weight construction even
+    when tensor parallelism is disabled. Frontier's profiling harness never
+    starts a vLLM engine, so that group does not exist. This sets up the
+    smallest honest version of it: a one-rank gloo group. Idempotent — safe to
+    call from every gating-network construction.
+    """
+    global _VLLM_PARALLEL_STATE_READY
+    if _VLLM_PARALLEL_STATE_READY:
+        return
+
+    from vllm.distributed import parallel_state
+
+    if parallel_state.model_parallel_is_initialized():
+        _VLLM_PARALLEL_STATE_READY = True
+        return
+
+    import os
+
+    os.environ.setdefault("MASTER_ADDR", "127.0.0.1")
+    # Port 0 lets the OS pick a free port, so concurrent per-GPU profiling
+    # workers on one host do not collide on a fixed one.
+    os.environ.setdefault("MASTER_PORT", "0")
+    os.environ.setdefault("RANK", "0")
+    os.environ.setdefault("WORLD_SIZE", "1")
+
+    parallel_state.init_distributed_environment(
+        world_size=1,
+        rank=0,
+        distributed_init_method="env://",
+        local_rank=0,
+        backend="gloo",
+    )
+    parallel_state.initialize_model_parallel(
+        tensor_model_parallel_size=1,
+        pipeline_model_parallel_size=1,
+    )
+    _VLLM_PARALLEL_STATE_READY = True
 
 
 def uniform_topk(
@@ -129,7 +189,14 @@ class MoEGatingNetwork(nn.Module):
 
         if self.use_vllm_fused_topk and HAS_VLLM_REPLICATED_LINEAR:
             # Align gating linear kernel family with vLLM runtime contract.
-            # disable_tp=True avoids requiring TP group initialization in profiling jobs.
+            # disable_tp=True was meant to avoid requiring TP group
+            # initialization in profiling jobs, but newer vLLM still queries
+            # get_tensor_model_parallel_rank() while constructing the weight,
+            # so construction raises "tensor model parallel group is not
+            # initialized". Satisfy the requirement with a single-process group
+            # rather than fighting it — profiling runs one process per GPU, so
+            # world_size=1 is the truthful description of this process.
+            _ensure_single_process_vllm_parallel_state()
             self.gate = ReplicatedLinear(
                 hidden_dim,
                 num_experts,
