@@ -307,6 +307,12 @@ class FixedRequestLengthGeneratorConfig(BaseRequestLengthGeneratorConfig):
             raise ValueError(f"decode_tokens must be >= 1, got {self.decode_tokens}")
         if self.prefill_tokens < 2:
             raise ValueError(f"prefill_tokens must be >1, got {self.prefill_tokens}")
+        # max_tokens (inherited, default 4096) caps scheduler admission downstream
+        # (VLLMv1EngineReplicaScheduler._max_model_len); below prefill+decode it
+        # silently truncates requests and deadlocks the scheduler mid-prefill.
+        required_max_tokens = self.prefill_tokens + self.decode_tokens
+        if self.max_tokens < required_max_tokens:
+            self.max_tokens = required_max_tokens
 
 
 @dataclass

@@ -11,3 +11,4 @@ class NodeSKUType(BaseIntEnum):
     A800_DGX = 7
     H800_DGX = 8
     H20_DGX = 9
+    MI355X_8GPU = 10

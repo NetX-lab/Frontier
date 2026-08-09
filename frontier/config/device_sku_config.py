@@ -94,3 +94,17 @@ class RtxPro6000DeviceSKUConfig(BaseDeviceSKUConfig):
     @staticmethod
     def get_type():
         return DeviceSKUType.RTX_PRO_6000
+
+
+@dataclass
+class Mi355xDeviceSKUConfig(BaseDeviceSKUConfig):
+    # AMD Instinct MI355X (CDNA4, gfx950): 288 GB HBM3E and 2.5 PFLOPS peak
+    # dense (non-sparse) FP16/BF16 matrix throughput per AMD's official specs.
+    # total_memory_gb matches what the driver reports on this box
+    # (309220868096 B = 288 GiB).
+    fp16_tflops: int = 2500
+    total_memory_gb: int = 288
+
+    @staticmethod
+    def get_type():
+        return DeviceSKUType.MI355X

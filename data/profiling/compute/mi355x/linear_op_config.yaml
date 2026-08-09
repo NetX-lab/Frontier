@@ -1,0 +1,25 @@
+attn_tp: null
+block_shape: null
+device: mi355x
+disable_ray: true
+disable_replicated: false
+extra_num_tokens: null
+ffn_tp: null
+include_target_embedded_mtp: false
+is_moe: true
+max_tokens: 4096
+models:
+- openai/gpt-oss-120b
+num_gpus: 8
+num_tensor_parallel_workers:
+- 1
+- 2
+- 4
+- 8
+num_tokens_list: null
+output_dir: /workspace/Frontier/data/profiling
+precision: null
+profile_method: cuda_event
+ray_enable_datasets_serializers: false
+skip_confirmation: true
+use_fp8: null
