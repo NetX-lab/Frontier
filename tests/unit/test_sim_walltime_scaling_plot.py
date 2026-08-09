@@ -239,6 +239,17 @@ def test_csv_serializes_nested_values_deterministically_and_keeps_numbers(tmp_pa
     assert records[0]["effective_parallel_mode"] == "False"
 
 
+def test_csv_refuses_to_replace_an_existing_artifact(tmp_path: Path) -> None:
+    path = tmp_path / "summary.csv"
+    original_bytes = b"signed-summary\n"
+    path.write_bytes(original_bytes)
+
+    with pytest.raises(FileExistsError, match="Refusing to overwrite"):
+        plot_module.write_summary_csv([_result("dense", 32)], path)
+
+    assert path.read_bytes() == original_bytes
+
+
 def test_formal_completeness_requires_both_models_at_all_scales() -> None:
     rows = _complete_rows()
     missing = [row for row in rows if not (row["model"] == "moe" and row["total_gpus"] == 4096)]
@@ -309,6 +320,19 @@ def test_plot_marks_a_nonselected_bug_attempt_alongside_success(tmp_path: Path) 
     assert "bug" in all_text
 
 
+def test_plot_refuses_to_replace_an_existing_artifact(tmp_path: Path) -> None:
+    png_path = tmp_path / "scaling.png"
+    pdf_path = tmp_path / "scaling.pdf"
+    original_bytes = b"signed-png\n"
+    png_path.write_bytes(original_bytes)
+
+    with pytest.raises(FileExistsError, match="Refusing to overwrite"):
+        plot_module.plot_scaling(_complete_rows(), png_path, pdf_path)
+
+    assert png_path.read_bytes() == original_bytes
+    assert not pdf_path.exists()
+
+
 def test_cli_passes_nonselected_failures_to_plotter(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -326,21 +350,120 @@ def test_cli_passes_nonselected_failures_to_plotter(
         return original_plotter(rows, png_path, pdf_path)
 
     monkeypatch.setattr(plot_module, "plot_scaling", spy_plotter)
-    assert plot_module.main(["--results-dir", str(results_dir)]) == 0
+    output_dir = tmp_path / "aggregates"
+    assert plot_module.main(
+        [
+            "--results-dir",
+            str(results_dir),
+            "--output-dir",
+            str(output_dir),
+        ]
+    ) == 0
     assert "bug" in observed_statuses
 
 
-def test_cli_writes_all_four_artifacts_after_formal_validation(tmp_path: Path) -> None:
+def test_cli_requires_an_explicit_output_directory(tmp_path: Path) -> None:
     results_dir = tmp_path / "results"
     for row in _complete_rows():
         _write_result(results_dir, row)
 
-    assert plot_module.main(["--results-dir", str(results_dir)]) == 0
+    with pytest.raises(SystemExit) as exc_info:
+        plot_module.main(["--results-dir", str(results_dir)])
+
+    assert exc_info.value.code == 2
+    assert not any(
+        (results_dir / name).exists()
+        for name in (
+            "attempts.csv",
+            "summary.csv",
+            "sim_walltime_scaling.png",
+            "sim_walltime_scaling.pdf",
+        )
+    )
+
+
+def test_cli_rejects_output_directory_equal_to_attempt_directory(
+    tmp_path: Path,
+) -> None:
+    results_dir = tmp_path / "results"
+    for row in _complete_rows():
+        _write_result(results_dir, row)
+
+    with pytest.raises(ValueError, match="separate from the attempt directory"):
+        plot_module.main(
+            [
+                "--results-dir",
+                str(results_dir),
+                "--output-dir",
+                str(results_dir),
+            ]
+        )
+
+    assert not any(
+        (results_dir / name).exists()
+        for name in (
+            "attempts.csv",
+            "summary.csv",
+            "sim_walltime_scaling.png",
+            "sim_walltime_scaling.pdf",
+        )
+    )
+
+
+def test_cli_refuses_to_replace_any_existing_aggregate(tmp_path: Path) -> None:
+    results_dir = tmp_path / "results"
+    output_dir = tmp_path / "aggregates"
+    for row in _complete_rows():
+        _write_result(results_dir, row)
+    output_dir.mkdir()
+    summary_path = output_dir / "summary.csv"
+    original_bytes = b"signed-summary\n"
+    summary_path.write_bytes(original_bytes)
+
+    with pytest.raises(FileExistsError, match="Refusing to overwrite"):
+        plot_module.main(
+            [
+                "--results-dir",
+                str(results_dir),
+                "--output-dir",
+                str(output_dir),
+            ]
+        )
+
+    assert summary_path.read_bytes() == original_bytes
+    assert not (output_dir / "attempts.csv").exists()
+    assert not (output_dir / "sim_walltime_scaling.png").exists()
+    assert not (output_dir / "sim_walltime_scaling.pdf").exists()
+
+
+def test_cli_writes_all_four_artifacts_after_formal_validation(tmp_path: Path) -> None:
+    results_dir = tmp_path / "results"
+    output_dir = tmp_path / "aggregates"
+    for row in _complete_rows():
+        _write_result(results_dir, row)
+    result_bytes = {
+        path.name: path.read_bytes()
+        for path in sorted(results_dir.glob("*.json"))
+    }
+
+    assert plot_module.main(
+        [
+            "--results-dir",
+            str(results_dir),
+            "--output-dir",
+            str(output_dir),
+        ]
+    ) == 0
     for name in (
         "attempts.csv",
         "summary.csv",
         "sim_walltime_scaling.png",
         "sim_walltime_scaling.pdf",
     ):
-        artifact = results_dir / name
+        artifact = output_dir / name
         assert artifact.exists() and artifact.stat().st_size > 0
+        assert not (results_dir / name).exists()
+    assert {
+        path.name: path.read_bytes()
+        for path in sorted(results_dir.glob("*.json"))
+    } == result_bytes

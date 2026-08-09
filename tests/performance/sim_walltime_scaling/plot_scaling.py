@@ -79,6 +79,21 @@ STATUS_STYLES = {
     "host-oom": {"color": "#dc2626", "marker": "X"},
     "bug": {"color": "#7c3aed", "marker": "P"},
 }
+AGGREGATE_FILENAMES = (
+    "attempts.csv",
+    "summary.csv",
+    "sim_walltime_scaling.png",
+    "sim_walltime_scaling.pdf",
+)
+
+
+def _require_new_artifact_paths(paths: Iterable[Path]) -> None:
+    existing_paths = sorted(str(Path(path)) for path in paths if Path(path).exists())
+    if existing_paths:
+        raise FileExistsError(
+            "Refusing to overwrite existing scaling artifacts: "
+            + ", ".join(existing_paths)
+        )
 
 
 def _case_from_result(row: dict[str, Any]) -> CaseSpec:
@@ -180,8 +195,15 @@ def write_summary_csv(rows: Iterable[dict[str, Any]], path: Path) -> None:
     """Write attempt or selected-summary rows with deterministic nested values."""
 
     path = Path(path)
+    _require_new_artifact_paths((path,))
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="") as handle:
+    try:
+        handle = path.open("x", encoding="utf-8", newline="")
+    except FileExistsError as exc:
+        raise FileExistsError(
+            f"Refusing to overwrite existing scaling artifact: {path}"
+        ) from exc
+    with handle:
         writer = csv.DictWriter(handle, fieldnames=CSV_FIELDS, extrasaction="ignore")
         writer.writeheader()
         for row in rows:
@@ -231,6 +253,9 @@ def _deduplicate_legend(axis: Any) -> None:
 def plot_scaling(rows: Iterable[dict[str, Any]], png_path: Path, pdf_path: Path) -> Figure:
     """Render dense and MoE wall-clock panels without fabricating failure times."""
 
+    png_path = Path(png_path)
+    pdf_path = Path(pdf_path)
+    _require_new_artifact_paths((png_path, pdf_path))
     all_rows = list(rows)
     selected = select_summary_rows(all_rows)
     failure_rows = [row for row in all_rows if row["status"] != "success"]
@@ -347,16 +372,29 @@ def plot_scaling(rows: Iterable[dict[str, Any]], png_path: Path, pdf_path: Path)
     figure.suptitle("Frontier PDD wall-clock weak scaling (sequential mode)")
     figure.subplots_adjust(bottom=0.2, top=0.86, wspace=0.08)
 
-    png_path = Path(png_path)
-    pdf_path = Path(pdf_path)
     png_path.parent.mkdir(parents=True, exist_ok=True)
     pdf_path.parent.mkdir(parents=True, exist_ok=True)
-    figure.savefig(png_path, dpi=180, bbox_inches="tight")
-    figure.savefig(
-        pdf_path,
-        bbox_inches="tight",
-        metadata={"CreationDate": None, "ModDate": None},
-    )
+    try:
+        png_handle = png_path.open("xb")
+    except FileExistsError as exc:
+        raise FileExistsError(
+            f"Refusing to overwrite existing scaling artifact: {png_path}"
+        ) from exc
+    with png_handle:
+        figure.savefig(png_handle, format="png", dpi=180, bbox_inches="tight")
+    try:
+        pdf_handle = pdf_path.open("xb")
+    except FileExistsError as exc:
+        raise FileExistsError(
+            f"Refusing to overwrite existing scaling artifact: {pdf_path}"
+        ) from exc
+    with pdf_handle:
+        figure.savefig(
+            pdf_handle,
+            format="pdf",
+            bbox_inches="tight",
+            metadata={"CreationDate": None, "ModDate": None},
+        )
     return figure
 
 
@@ -365,20 +403,33 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Aggregate Frontier wall-clock attempts and render scaling plots."
     )
     parser.add_argument("--results-dir", type=Path, required=True)
+    parser.add_argument("--output-dir", type=Path, required=True)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
+    attempts_dir = _attempts_directory(args.results_dir).resolve()
+    output_dir = args.output_dir.resolve()
+    if output_dir == attempts_dir:
+        raise ValueError(
+            "Aggregate output directory must be separate from the attempt directory: "
+            f"{attempts_dir}"
+        )
     rows = load_results(args.results_dir)
     validate_formal_completeness(rows)
     selected = select_summary_rows(rows)
-    write_summary_csv(rows, args.results_dir / "attempts.csv")
-    write_summary_csv(selected, args.results_dir / "summary.csv")
+    output_paths = {
+        name: output_dir / name
+        for name in AGGREGATE_FILENAMES
+    }
+    _require_new_artifact_paths(output_paths.values())
+    write_summary_csv(rows, output_paths["attempts.csv"])
+    write_summary_csv(selected, output_paths["summary.csv"])
     figure = plot_scaling(
         rows,
-        args.results_dir / "sim_walltime_scaling.png",
-        args.results_dir / "sim_walltime_scaling.pdf",
+        output_paths["sim_walltime_scaling.png"],
+        output_paths["sim_walltime_scaling.pdf"],
     )
     plt.close(figure)
     return 0
