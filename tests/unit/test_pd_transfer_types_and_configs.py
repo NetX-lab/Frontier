@@ -35,7 +35,7 @@ def test_analytical_transfer_configs_return_enum_types() -> None:
     assert AnalyticalM2NTransferConfig.get_name() == "analytical"
 
 
-def test_pd_disaggregation_release_guard_rejects_parallel_cluster_default() -> None:
+def test_pd_disaggregation_release_guard_allows_parallel_cluster_mode() -> None:
     from frontier.config.config import SimulationConfig
 
     config = object.__new__(SimulationConfig)
@@ -43,8 +43,7 @@ def test_pd_disaggregation_release_guard_rejects_parallel_cluster_default() -> N
     config.use_cuda_graph = False
     config.enable_parallel_clusters = True
 
-    with pytest.raises(ValueError, match="--no-enable_parallel_clusters"):
-        config._validate_open_source_release_architecture_guard()
+    config._validate_open_source_release_architecture_guard()
 
 
 def test_pd_disaggregation_release_guard_allows_explicit_sequential_mode() -> None:
@@ -58,17 +57,43 @@ def test_pd_disaggregation_release_guard_allows_explicit_sequential_mode() -> No
     config._validate_open_source_release_architecture_guard()
 
 
-def test_pd_disaggregation_cli_release_guard_exits_without_traceback() -> None:
+def test_pd_disaggregation_cli_config_accepts_parallel_cluster_mode(
+    tmp_path: Path,
+) -> None:
     env = os.environ.copy()
     env.update(
         {
+            "FRONTIER_LOG_LEVEL": "ERROR",
             "PYTHONPATH": str(REPO_ROOT),
             "PYTHONDONTWRITEBYTECODE": "1",
         }
     )
-
     result = subprocess.run(
-        [sys.executable, "-m", "frontier.main", "--sys_arch", "pd-disaggregation"],
+        [
+            sys.executable,
+            "-c",
+            (
+                "from frontier.config import SimulationConfig; "
+                "config = SimulationConfig.create_from_cli_args(); "
+                "print('CONFIG_OK', config.sys_arch, "
+                "config.enable_parallel_clusters, "
+                "sorted(cluster.name for cluster in config.get_clusters()))"
+            ),
+            "--sys_arch",
+            "pd-disaggregation",
+            "--cluster_config_prefill_cluster_num_replicas",
+            "1",
+            "--cluster_config_decode_cluster_num_replicas",
+            "1",
+            "--cc_backend_config_type",
+            "analytical",
+            "--random_forrest_execution_time_predictor_config_enable_dummy_mode",
+            "--vllm_v1_scheduler_config_num_blocks",
+            "128",
+            "--metrics_config_output_dir",
+            str(tmp_path / "metrics"),
+            "--no-metrics_config_write_metrics",
+        ],
         cwd=REPO_ROOT,
         env=env,
         text=True,
@@ -77,8 +102,9 @@ def test_pd_disaggregation_cli_release_guard_exits_without_traceback() -> None:
         timeout=30,
     )
 
-    assert result.returncode == 1
-    assert "--no-enable_parallel_clusters" in result.stderr
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "CONFIG_OK pd-disaggregation True ['DECODE', 'PREFILL']" in result.stdout
+    assert "Parallel cluster processing for pd-disaggregation" not in result.stderr
     assert "Traceback" not in result.stderr
 
 

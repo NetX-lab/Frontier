@@ -9,9 +9,15 @@ from frontier.types import ClusterType
 
 
 class _DecodeMoeRequest:
-    def __init__(self, completed_layer_count: int = 0) -> None:
-        self.id = 0
-        self.completed = False
+    def __init__(
+        self,
+        completed_layer_count: int = 0,
+        *,
+        request_id: int = 0,
+        completed: bool = False,
+    ) -> None:
+        self.id = request_id
+        self.completed = completed
         self.completed_layer_count = completed_layer_count
 
 
@@ -23,8 +29,17 @@ class _DecodeMoeBatch:
     request_mutation_signatures = [(0, 8, 1, 0)]
     thinking_round_start_times = [None]
 
-    def __init__(self, completed_layer_count: int = 0) -> None:
-        self.requests = [_DecodeMoeRequest(completed_layer_count)]
+    def __init__(
+        self,
+        completed_layer_count: int = 0,
+        *,
+        requests=None,
+    ) -> None:
+        self.requests = (
+            [_DecodeMoeRequest(completed_layer_count)]
+            if requests is None
+            else list(requests)
+        )
         self.cluster_stage_end_calls = []
 
     def on_cluster_stage_end(self, time: float, cluster_type: ClusterType) -> None:
@@ -106,26 +121,12 @@ def test_local_moe_decode_stage_emits_global_batch_end_after_all_layers() -> Non
     assert metrics_store.batch_end_calls == []
 
 
-@pytest.mark.parametrize(
-    "dp_size,ep_size,completed_layer_count,expected_event_cls,expected_batch_end_calls",
-    [
-        (1, 1, 0, GlobalBatchEndEvent, 0),
-        (2, 1, 0, ReplicaScheduleEvent, 1),
-        (1, 2, 0, ReplicaScheduleEvent, 1),
-        (2, 2, 0, ReplicaScheduleEvent, 1),
-        (2, 1, 7, GlobalBatchEndEvent, 0),
-        (1, 2, 7, GlobalBatchEndEvent, 0),
-        (2, 2, 7, GlobalBatchEndEvent, 0),
-    ],
-)
-def test_moe_decode_completion_path_is_exclusive_across_dp_ep_configs(
-    dp_size,
-    ep_size,
-    completed_layer_count,
-    expected_event_cls,
-    expected_batch_end_calls,
+@pytest.mark.parametrize("dp_size,ep_size", [(2, 1), (1, 2), (2, 2)])
+def test_distributed_moe_decode_completes_only_at_exact_total_layers(
+    dp_size: int,
+    ep_size: int,
 ) -> None:
-    batch = _DecodeMoeBatch(completed_layer_count=completed_layer_count)
+    batch = _DecodeMoeBatch(completed_layer_count=8)
     replica_scheduler = _DecodeMoeReplicaScheduler()
     cluster_scheduler = _DecodeMoeClusterScheduler(replica_scheduler)
     cluster_scheduler._cluster.replicas[1].dp_size = dp_size
@@ -144,7 +145,137 @@ def test_moe_decode_completion_path_is_exclusive_across_dp_ep_configs(
     next_events = event.handle_event(scheduler, metrics_store)
 
     assert len(next_events) == 1
-    assert isinstance(next_events[0], expected_event_cls)
-    assert len(metrics_store.batch_end_calls) == expected_batch_end_calls
+    assert isinstance(next_events[0], GlobalBatchEndEvent)
+    assert metrics_store.batch_end_calls == []
     assert batch.cluster_stage_end_calls == [(2.0, ClusterType.DECODE)]
     assert replica_scheduler.cluster_stage_end_batches == [batch.id]
+
+
+@pytest.mark.parametrize(
+    "completed_layer_count,error_match",
+    [(7, "undercount"), (9, "overflow")],
+)
+def test_distributed_moe_decode_rejects_non_exact_terminal_layer_count(
+    completed_layer_count: int,
+    error_match: str,
+) -> None:
+    batch = _DecodeMoeBatch(completed_layer_count=completed_layer_count)
+    replica_scheduler = _DecodeMoeReplicaScheduler()
+    cluster_scheduler = _DecodeMoeClusterScheduler(replica_scheduler)
+    cluster_scheduler._cluster.replicas[1].dp_size = 2
+    scheduler = _DecodeMoeGlobalScheduler(cluster_scheduler)
+    metrics_store = _DecodeMoeMetricsStore()
+    event = ClusterBatchEndEvent(
+        time=2.0,
+        replica_id=1,
+        batch=batch,
+        cluster_type=ClusterType.DECODE,
+        dp_id=0,
+    )
+
+    with pytest.raises(ValueError, match=error_match):
+        event.handle_event(scheduler, metrics_store)
+
+    assert metrics_store.batch_end_calls == []
+
+
+def test_distributed_moe_decode_rejects_terminal_batch_without_active_requests() -> None:
+    batch = _DecodeMoeBatch(
+        requests=[
+            _DecodeMoeRequest(
+                completed_layer_count=8,
+                completed=True,
+            )
+        ]
+    )
+    replica_scheduler = _DecodeMoeReplicaScheduler()
+    cluster_scheduler = _DecodeMoeClusterScheduler(replica_scheduler)
+    cluster_scheduler._cluster.replicas[1].dp_size = 2
+    scheduler = _DecodeMoeGlobalScheduler(cluster_scheduler)
+    metrics_store = _DecodeMoeMetricsStore()
+    event = ClusterBatchEndEvent(
+        time=2.0,
+        replica_id=1,
+        batch=batch,
+        cluster_type=ClusterType.DECODE,
+        dp_id=0,
+    )
+
+    with pytest.raises(ValueError, match="no active request"):
+        event.handle_event(scheduler, metrics_store)
+
+
+def test_distributed_moe_decode_rejects_inconsistent_active_layer_counts() -> None:
+    batch = _DecodeMoeBatch(
+        requests=[
+            _DecodeMoeRequest(completed_layer_count=8, request_id=1),
+            _DecodeMoeRequest(completed_layer_count=7, request_id=2),
+        ]
+    )
+    replica_scheduler = _DecodeMoeReplicaScheduler()
+    cluster_scheduler = _DecodeMoeClusterScheduler(replica_scheduler)
+    cluster_scheduler._cluster.replicas[1].num_moe_expert_parallel_size = 2
+    scheduler = _DecodeMoeGlobalScheduler(cluster_scheduler)
+    metrics_store = _DecodeMoeMetricsStore()
+    event = ClusterBatchEndEvent(
+        time=2.0,
+        replica_id=1,
+        batch=batch,
+        cluster_type=ClusterType.DECODE,
+        dp_id=0,
+    )
+
+    with pytest.raises(ValueError, match="inconsistent"):
+        event.handle_event(scheduler, metrics_store)
+
+
+def test_distributed_moe_decode_ignores_completed_request_layer_count() -> None:
+    batch = _DecodeMoeBatch(
+        requests=[
+            _DecodeMoeRequest(completed_layer_count=8, request_id=1),
+            _DecodeMoeRequest(
+                completed_layer_count=3,
+                request_id=2,
+                completed=True,
+            ),
+        ]
+    )
+    replica_scheduler = _DecodeMoeReplicaScheduler()
+    cluster_scheduler = _DecodeMoeClusterScheduler(replica_scheduler)
+    cluster_scheduler._cluster.replicas[1].dp_size = 2
+    scheduler = _DecodeMoeGlobalScheduler(cluster_scheduler)
+    metrics_store = _DecodeMoeMetricsStore()
+    event = ClusterBatchEndEvent(
+        time=2.0,
+        replica_id=1,
+        batch=batch,
+        cluster_type=ClusterType.DECODE,
+        dp_id=0,
+    )
+
+    next_events = event.handle_event(scheduler, metrics_store)
+
+    assert len(next_events) == 1
+    assert isinstance(next_events[0], GlobalBatchEndEvent)
+
+
+def test_stale_distributed_moe_cluster_end_does_not_mutate_or_emit() -> None:
+    batch = _DecodeMoeBatch(completed_layer_count=8)
+    replica_scheduler = _DecodeMoeReplicaScheduler()
+    cluster_scheduler = _DecodeMoeClusterScheduler(replica_scheduler)
+    cluster_scheduler._cluster.replicas[1].dp_size = 2
+    scheduler = _DecodeMoeGlobalScheduler(cluster_scheduler)
+    metrics_store = _DecodeMoeMetricsStore()
+    event = ClusterBatchEndEvent(
+        time=2.0,
+        replica_id=1,
+        batch=batch,
+        cluster_type=ClusterType.DECODE,
+        dp_id=0,
+    )
+    batch.schedule_epoch = 1
+
+    assert event.handle_event(scheduler, metrics_store) == []
+    assert batch.cluster_stage_end_calls == []
+    assert replica_scheduler.cluster_stage_end_batches == []
+    assert metrics_store.batch_end_calls == []

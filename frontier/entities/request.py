@@ -1246,6 +1246,7 @@ class Request(BaseEntity):
                         "Decode rollout requires committed_tokens > 0 when "
                         f"speculative decoding is disabled, got={committed_tokens}"
                     )
+                self._completed_layer_count = 0
                 self._spec_last_committed_tokens = 0
                 logger.info(
                     f"[TOKEN-ROLLOUT][ZERO-COMMIT] req={self._id} "
@@ -1300,6 +1301,7 @@ class Request(BaseEntity):
                             "unless speculative decoding is already active after the "
                             f"prefill boundary, got={committed_tokens}"
                         )
+                    self._completed_layer_count = 0
                     self._spec_last_committed_tokens = 0
                     logger.info(
                         f"[TOKEN-ROLLOUT][ZERO-COMMIT] req={self._id} "
