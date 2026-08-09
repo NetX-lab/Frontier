@@ -79,14 +79,17 @@ def test_top_level_docs_advertise_supported_pdd_without_upcoming_claims() -> Non
     assert "pd-af-disaggregation" in _read("examples/architecture/README.md")
 
 
-def test_public_docs_distinguish_parallel_pdd_runtime_from_sequential_examples() -> None:
+def test_public_docs_require_sequential_pdd_release_mode() -> None:
     for relative_path in PDD_PARALLEL_CONTRACT_DOCS:
         text = _read(relative_path)
         assert (
-            "PDD runtime supports both sequential and parallel cluster processing"
+            "PDD public release execution is sequential-only"
             in text
         ), relative_path
-        assert "PDD examples remain sequential" in text, relative_path
+        assert (
+            "`pd-disaggregation` aborts unless `--no-enable_parallel_clusters`"
+            in text
+        ), relative_path
         assert (
             "PD-AF parallel cluster processing remains unsupported" in text
         ), relative_path
@@ -94,24 +97,28 @@ def test_public_docs_distinguish_parallel_pdd_runtime_from_sequential_examples()
     combined_docs = "\n".join(
         _read(relative_path) for relative_path in PDD_PARALLEL_CONTRACT_DOCS
     )
-    stale_claims = (
-        "parallel disaggregated execution remains guarded",
-        "The supported PDD path requires sequential cluster execution",
-        "`pd-disaggregation` aborts unless `--no-enable_parallel_clusters`",
-        "Disaggregated runs must use `--no-enable_parallel_clusters`",
-        "Sequential PDD architecture; requires `--no-enable_parallel_clusters`",
-        "parallel cluster processing is still guarded",
+    unsupported_claims = (
+        "PDD runtime supports both sequential and parallel cluster processing",
+        "Remove `--no-enable_parallel_clusters` to exercise parallel PDD",
+        "remove `--no-enable_parallel_clusters` to exercise parallel PDD",
     )
-    for claim in stale_claims:
-        assert claim not in combined_docs, f"Stale PDD parallel claim leaked: {claim}"
+    for claim in unsupported_claims:
+        assert claim not in combined_docs, (
+            f"Unsupported public PDD parallel claim leaked: {claim}"
+        )
 
 
-def test_public_docs_state_parallel_pdd_correctness_and_speed_boundary() -> None:
-    contract = (
-        "Parallel PDD is a correctness-equivalent execution path: it preserves "
-        "the sequential DES event order, but the current strict total-order gate "
-        "does not promise wall-clock speedup."
+def test_public_docs_state_internal_parallel_pdd_boundary_and_current_evidence() -> None:
+    internal_contract = (
+        "The parallel PDD implementation remains covered by internal correctness "
+        "tests but is not a supported release path."
+    )
+    performance_contract = (
+        "Post-ISSUE-022 five-pair MoE-64 measurements observed paired-median "
+        "slowdowns of 35.29% for Simulator.run() and 24.81% for shell E2E."
     )
 
     for relative_path in PDD_PARALLEL_CONTRACT_DOCS:
-        assert contract in _read(relative_path), relative_path
+        text = _read(relative_path)
+        assert internal_contract in text, relative_path
+        assert performance_contract in text, relative_path

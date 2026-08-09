@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-09 | Restored the sequential-only public PDD guard and documented current post-ISSUE-022 slowdown evidence. |
 | 2026-08-08 | Clarified the parallel-PDD correctness and wall-clock-speed boundary. |
 | 2026-08-07 | Corrected the PDD parallel CLI contract while retaining sequential examples and the PD-AF parallel guard. |
 | 2026-07-23 | Added the complete PD-AF dense/MoE/EP/CUDA Graph entrypoint set and corrected v0.3 runtime boundaries. |
@@ -11,11 +12,15 @@
 
 ## Scope
 
-This guide covers the public CLI surface for the `pre-release-v0.3` branch. The supported runtime architectures are `co-location`, sequential or parallel `pd-disaggregation`, and sequential `pd-af-disaggregation`.
+This guide covers the public CLI surface for the `pre-release-v0.3` branch. The supported runtime architectures are `co-location`, sequential `pd-disaggregation`, and sequential `pd-af-disaggregation`.
 
-PDD runtime supports both sequential and parallel cluster processing. The checked-in PDD examples remain sequential by default for reproducible one-click runs. PD-AF parallel cluster processing remains unsupported and fails fast; PD-AF runs must use `--no-enable_parallel_clusters`. PD-AF supports dense, MoE, EP, and global CUDA Graph execution. PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`.
+PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`. PD-AF supports dense, MoE, EP, and global CUDA Graph execution. PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`.
 
-Parallel PDD is a correctness-equivalent execution path: it preserves the sequential DES event order, but the current strict total-order gate does not promise wall-clock speedup.
+The parallel PDD implementation remains covered by internal correctness tests but is not a supported release path.
+
+Post-ISSUE-022 five-pair MoE-64 measurements observed paired-median slowdowns of 35.29% for Simulator.run() and 24.81% for shell E2E.
+
+With globally unique full priorities, preloaded arrivals, and no asynchronous event source outside event handlers, the current total-order gate admits one handler at a time. Parallel threads therefore add coordination overhead without handler overlap.
 
 Use the examples first. They set the required flags, disable optional services, and write metrics to a predictable location.
 
@@ -152,7 +157,7 @@ Dummy predictor mode is useful for smoke tests. For latency studies, disable dum
 | `--simulation_mode offline` | Generate or replay requests inside the simulator. |
 | `--simulation_mode online` | Run online mode where supported by the selected scheduler path. |
 | `--sys_arch co-location` | Release-supported architecture. |
-| `--sys_arch pd-disaggregation` | PDD architecture; supports sequential or parallel cluster processing. Use `--no-enable_parallel_clusters` to select sequential execution. |
+| `--sys_arch pd-disaggregation` | Sequential PDD architecture; requires `--no-enable_parallel_clusters`. |
 | `--sys_arch pd-af-disaggregation` | Sequential PD-AF architecture; requires `--no-enable_parallel_clusters`. |
 
 ### Model and parallelism
@@ -252,7 +257,7 @@ Common files include:
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Release guard exits for `pd-af-disaggregation`. | Parallel clusters are enabled, or the selected feature is outside the PD-AF v0.3 surface. | Add `--no-enable_parallel_clusters` and use only the supported PD-AF feature set documented above. |
+| Release guard exits for `pd-disaggregation` or `pd-af-disaggregation`. | Parallel clusters are enabled, or the selected feature is outside the v0.3 surface. | Add `--no-enable_parallel_clusters` and use only the supported feature set documented above. |
 | `htsim_ndp` is missing after selecting `--cc_backend_config_type collective_sim`. | The optional `collective_sim` submodule binary has not been built. | Build `frontier/cc_backend/backends/collective-sim/sim`, or use the default co-location example `analytical` backend. |
 | W&B tries to initialize. | Environment variables are not set. | Set `WANDB_DISABLED=true` and `VIDUR_DISABLE_WANDB=1`. |
 | Non-dummy run fails on a missing CSV or schema mismatch. | Predictor training needs matching profiling data. | Use the profiling guide and keep CSVs under `data/profiling/compute/<device>/<model>/`. |

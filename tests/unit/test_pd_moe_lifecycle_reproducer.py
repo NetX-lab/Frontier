@@ -1,8 +1,12 @@
 from copy import deepcopy
+from concurrent.futures import ThreadPoolExecutor
+import json
+from pathlib import Path
 import re
 
 import pytest
 
+from tests.performance.sim_walltime_scaling import pd_moe_lifecycle_reproducer
 from tests.performance.sim_walltime_scaling.pd_moe_lifecycle_reproducer import (
     summarize_claim_order,
     validate_lifecycle_state,
@@ -102,6 +106,133 @@ def test_summarize_claim_order_reports_duplicate_priority_as_violation() -> None
         "previous": [1.0, 1, 1],
         "current": [1.0, 1, 1],
     }
+
+
+def test_internal_parallel_pdd_factory_is_explicitly_available() -> None:
+    factory = getattr(
+        pd_moe_lifecycle_reproducer,
+        "create_parallel_pdd_config_with_release_policy_suppressed",
+        None,
+    )
+
+    assert callable(factory)
+
+
+def test_lifecycle_reproducer_parser_requires_explicit_internal_policy_flag() -> None:
+    parser = pd_moe_lifecycle_reproducer._build_parser()
+    args = parser.parse_args(
+        [
+            "--case-json",
+            "case.json",
+            "--state-json",
+            "state.json",
+            "--suppress-pdd-release-policy-for-internal-test",
+        ]
+    )
+
+    assert args.suppress_pdd_release_policy_for_internal_test is True
+
+
+def _write_case(path: Path, *, mode: str) -> None:
+    path.write_text(
+        json.dumps(
+            {
+                "model": "moe",
+                "total_gpus": 32,
+                "mode": mode,
+                "attempt_index": 0,
+                "shape": {
+                    "attn_tp": 4,
+                    "attn_dp": 2,
+                    "moe_tp": 1,
+                    "moe_ep": 8,
+                    "pp": 2,
+                },
+                "num_requests": 1,
+                "qps": 8.0,
+                "prefill_tokens": 16,
+                "decode_tokens": 2,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_lifecycle_reproducer_rejects_parallel_case_without_internal_flag(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    case_path = tmp_path / "parallel.case.json"
+    _write_case(case_path, mode="parallel")
+    monkeypatch.setattr(
+        pd_moe_lifecycle_reproducer,
+        "run_reproducer",
+        lambda *args, **kwargs: pytest.fail("run_reproducer must not be called"),
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        pd_moe_lifecycle_reproducer.main(
+            [
+                "--case-json",
+                str(case_path),
+                "--state-json",
+                str(tmp_path / "state.json"),
+            ]
+        )
+
+    assert exc_info.value.code == 2
+    assert (
+        "parallel CaseSpec requires "
+        "--suppress-pdd-release-policy-for-internal-test"
+        in capsys.readouterr().err
+    )
+
+
+def test_lifecycle_reproducer_rejects_internal_flag_for_sequential_case(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    case_path = tmp_path / "sequential.case.json"
+    _write_case(case_path, mode="sequential")
+    monkeypatch.setattr(
+        pd_moe_lifecycle_reproducer,
+        "run_reproducer",
+        lambda *args, **kwargs: pytest.fail("run_reproducer must not be called"),
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        pd_moe_lifecycle_reproducer.main(
+            [
+                "--case-json",
+                str(case_path),
+                "--state-json",
+                str(tmp_path / "state.json"),
+                "--suppress-pdd-release-policy-for-internal-test",
+            ]
+        )
+
+    assert exc_info.value.code == 2
+    assert (
+        "--suppress-pdd-release-policy-for-internal-test may only be used "
+        "with a parallel CaseSpec"
+        in capsys.readouterr().err
+    )
+
+
+def test_internal_parallel_pdd_factory_rejects_non_main_thread() -> None:
+    factory = getattr(
+        pd_moe_lifecycle_reproducer,
+        "create_parallel_pdd_config_with_release_policy_suppressed",
+        None,
+    )
+    assert callable(factory)
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(factory, [])
+        with pytest.raises(RuntimeError, match="main thread"):
+            future.result()
 
 
 def test_validate_lifecycle_state_reports_priority_inversion() -> None:

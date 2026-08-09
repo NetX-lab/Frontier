@@ -7,6 +7,7 @@ from frontier.config import (
     PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
     PD_AF_PREFIX_CACHING_RELEASE_ERROR,
     PD_AF_TRACE_REPLAY_DEFERRED_ERROR,
+    PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
     SimulationConfig,
 )
 from frontier.errors import FrontierMemoryOOMError
@@ -85,6 +86,7 @@ def main() -> None:
             DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR,
             PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
             PD_AF_PREFIX_CACHING_RELEASE_ERROR,
+            PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR,
         } or error_message.startswith(PD_AF_TRACE_REPLAY_DEFERRED_ERROR):
             print(error_message, file=sys.stderr)
             raise SystemExit(1) from exc

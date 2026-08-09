@@ -14,6 +14,7 @@ from tests.performance.sim_walltime_scaling.pd_moe_lifecycle_reproducer import (
     summarize_claim_order,
     validate_lifecycle_state,
 )
+from tests.performance.sim_walltime_scaling import pd_moe_lifecycle_reproducer
 from tests.performance.sim_walltime_scaling.run_case import (
     CaseSpec,
     ParallelShape,
@@ -79,7 +80,23 @@ def _run_moe_case(
     argv = build_frontier_argv(case, output_root / "simulator-configs")
     if extra_argv:
         argv.extend(extra_argv)
-    config = _default_config_factory(argv)
+    internal_factory = getattr(
+        pd_moe_lifecycle_reproducer,
+        "create_parallel_pdd_config_with_release_policy_suppressed",
+        None,
+    )
+    assert callable(internal_factory)
+    config = (
+        internal_factory(argv)
+        if case.mode == "parallel"
+        else _default_config_factory(argv)
+    )
+    if case.mode == "parallel":
+        assert config.enable_parallel_clusters is True
+        assert config.__flat_config__.enable_parallel_clusters is True
+        config_json = Path(config.metrics_config.output_dir) / "config.json"
+        serialized_config = json.loads(config_json.read_text(encoding="utf-8"))
+        assert serialized_config["enable_parallel_clusters"] is True
     validate_measurement_config(config)
 
     with _capture_generated_requests() as requests:
@@ -91,6 +108,13 @@ def _run_moe_case(
         requests,
         case=case,
         run_error=None,
+        release_policy_suppressed_for_internal_test=(
+            case.mode == "parallel"
+        ),
+    )
+    assert state["schema_version"] == 2
+    assert state["release_policy_suppressed_for_internal_test"] is (
+        case.mode == "parallel"
     )
     state["validation_errors"] = validate_lifecycle_state(state)
     return state

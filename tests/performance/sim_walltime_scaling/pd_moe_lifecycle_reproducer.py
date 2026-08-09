@@ -10,8 +10,11 @@ import os
 from pathlib import Path
 import socket
 import sys
+import threading
 import traceback
+from types import SimpleNamespace
 from typing import Iterator, Sequence
+from unittest.mock import patch
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
@@ -46,6 +49,64 @@ def _capture_generated_requests() -> Iterator[list]:
         yield captured_requests
     finally:
         BaseRequestGenerator.generate = original_generate
+
+
+def create_parallel_pdd_config_with_release_policy_suppressed(
+    argv: Sequence[str],
+):
+    """Construct a real parallel PDD config for internal correctness tests."""
+
+    if threading.current_thread() is not threading.main_thread():
+        raise RuntimeError(
+            "Internal parallel PDD config construction must run on the main thread."
+        )
+
+    from frontier.config import SimulationConfig
+
+    original_guard = (
+        SimulationConfig._validate_open_source_release_architecture_guard
+    )
+
+    def validate_release_policy(config) -> None:
+        if (
+            config.sys_arch != "pd-disaggregation"
+            or not config.enable_parallel_clusters
+        ):
+            original_guard(config)
+            return
+
+        original_guard(
+            SimpleNamespace(
+                sys_arch=config.sys_arch,
+                enable_parallel_clusters=False,
+                cluster_config=config.cluster_config,
+            )
+        )
+
+    with patch.object(
+        SimulationConfig,
+        "_validate_open_source_release_architecture_guard",
+        validate_release_policy,
+    ):
+        config = _default_config_factory(argv)
+
+    if (
+        config.sys_arch != "pd-disaggregation"
+        or not config.enable_parallel_clusters
+    ):
+        raise ValueError(
+            "Internal release-policy suppression requires an explicit parallel "
+            "pd-disaggregation config."
+        )
+    flat_config = getattr(config, "__flat_config__", None)
+    if (
+        flat_config is None
+        or flat_config.enable_parallel_clusters is not True
+    ):
+        raise RuntimeError(
+            "Internal parallel PDD config lost its parsed parallel-mode provenance."
+        )
+    return config
 
 
 def _count(collection_state: dict) -> int:
@@ -263,6 +324,7 @@ def collect_lifecycle_state(
     *,
     case: CaseSpec,
     run_error: dict | None,
+    release_policy_suppressed_for_internal_test: bool,
 ) -> dict:
     cluster_schedulers = {}
     active_memberships_by_request_id = {
@@ -351,10 +413,13 @@ def collect_lifecycle_state(
     ]
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "host": socket.gethostname(),
         "python_executable": sys.executable,
         "case": case.to_dict(),
+        "release_policy_suppressed_for_internal_test": (
+            release_policy_suppressed_for_internal_test
+        ),
         "run_error": run_error,
         "expected_requests": int(simulator.metric_store.get_total_requests()),
         "completed_requests": int(
@@ -375,12 +440,18 @@ def collect_lifecycle_state(
     }
 
 
-def run_reproducer(case: CaseSpec, state_path: Path) -> dict:
+def run_reproducer(
+    case: CaseSpec,
+    state_path: Path,
+    *,
+    config_factory=_default_config_factory,
+    release_policy_suppressed_for_internal_test: bool = False,
+) -> dict:
     from frontier.simulator import Simulator
 
     state_path = Path(state_path)
     argv = build_frontier_argv(case, state_path.parent / "simulator-configs")
-    config = _default_config_factory(argv)
+    config = config_factory(argv)
     validate_measurement_config(config)
 
     with _capture_claimed_event_priorities() as claimed_priorities:
@@ -402,6 +473,9 @@ def run_reproducer(case: CaseSpec, state_path: Path) -> dict:
         requests,
         case=case,
         run_error=run_error,
+        release_policy_suppressed_for_internal_test=(
+            release_policy_suppressed_for_internal_test
+        ),
     )
     state["claim_order"] = summarize_claim_order(claimed_priorities)
     state["validation_errors"] = validate_lifecycle_state(state)
@@ -415,16 +489,48 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--case-json", type=Path, required=True)
     parser.add_argument("--state-json", type=Path, required=True)
+    parser.add_argument(
+        "--suppress-pdd-release-policy-for-internal-test",
+        action="store_true",
+        help=(
+            "Internal tests only: construct a real parallel PDD config while "
+            "suppressing the public release-policy rejection."
+        ),
+    )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    args = _build_parser().parse_args(argv)
+    parser = _build_parser()
+    args = parser.parse_args(argv)
     case = load_case(args.case_json)
+    suppress_release_policy = (
+        args.suppress_pdd_release_policy_for_internal_test
+    )
+    if case.mode == "parallel" and not suppress_release_policy:
+        parser.error(
+            "parallel CaseSpec requires "
+            "--suppress-pdd-release-policy-for-internal-test"
+        )
+    if case.mode != "parallel" and suppress_release_policy:
+        parser.error(
+            "--suppress-pdd-release-policy-for-internal-test may only be used "
+            "with a parallel CaseSpec"
+        )
+    config_factory = (
+        create_parallel_pdd_config_with_release_policy_suppressed
+        if suppress_release_policy
+        else _default_config_factory
+    )
     previous_log_level = os.environ.get("FRONTIER_LOG_LEVEL")
     os.environ["FRONTIER_LOG_LEVEL"] = "WARNING"
     try:
-        state = run_reproducer(case, args.state_json)
+        state = run_reproducer(
+            case,
+            args.state_json,
+            config_factory=config_factory,
+            release_policy_suppressed_for_internal_test=suppress_release_policy,
+        )
     finally:
         if previous_log_level is None:
             os.environ.pop("FRONTIER_LOG_LEVEL", None)
