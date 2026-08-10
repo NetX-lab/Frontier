@@ -7,11 +7,11 @@ import time
 from typing import Dict, List, Optional
 
 from frontier.config import (
-    DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR,
     SimulationConfig,
     get_quantization_manager,
     global_vars,
 )
+from frontier.cluster_simulator import ClusterSimulator
 from frontier.entities import Cluster
 from frontier.events import (
     BaseEvent,
@@ -279,13 +279,37 @@ class Simulator:
             self._init_sequential_mode()
 
     def _init_parallel_mode(self):
-        """Disaggregated parallel cluster mode is not included in this release."""
-        raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
+        """Initialize per-cluster event processors for disaggregated simulation."""
+        logger.info("Initializing parallel cluster processing mode")
+
+        self._cluster_simulators: Dict[ClusterType, ClusterSimulator] = {}
+        for cluster_type in self._clusters:
+            cluster_scheduler = self._global_scheduler.get_cluster_scheduler(
+                cluster_type
+            )
+            self._cluster_simulators[cluster_type] = ClusterSimulator(
+                cluster_type=cluster_type,
+                cluster_scheduler=cluster_scheduler,
+                global_scheduler=self._global_scheduler,
+                metrics_store=self._metric_store,
+                enable_event_logging=self._config.enable_cluster_event_logging,
+                event_log_dir=self._config.cluster_event_log_dir,
+                event_log_level=self._config.cluster_event_log_level,
+                profiler=self._profiler,
+                can_process_event_priority=self._can_parallel_cluster_process_event,
+            )
+
+        self._init_parallel_events()
+        self._parallel_mode = True
+        logger.info(
+            "Parallel mode initialized with %d cluster simulators",
+            len(self._cluster_simulators),
+        )
 
     def _can_parallel_cluster_process_event(
         self,
         cluster_type: ClusterType,
-        event_time: float,
+        event_priority: tuple,
     ) -> bool:
         """
         Conservatively gate parallel event claims against peer cluster frontiers.
@@ -293,24 +317,35 @@ class Simulator:
         Without this guard, a cluster can pop a future local event while another
         cluster is still processing or queueing a smaller-time event that will route
         an earlier inter-cluster message. That breaks the sequential DES ordering and
-        makes parallel online PD numerically unstable.
+        makes parallel online PD numerically unstable. Every comparison uses the
+        sequential heap's complete ``(time, id, event_type)`` priority.
         """
-        for other_cluster_type, other_cluster_simulator in self._cluster_simulators.items():
+        for other_cluster_type, other_cluster_simulator in (
+            self._cluster_simulators.items()
+        ):
             if other_cluster_type == cluster_type:
                 continue
 
             state = other_cluster_simulator.get_runtime_state()
-            current_event_time = state.get("current_event_time")
-            if (
-                state.get("is_processing_event")
-                and current_event_time is not None
-                and float(current_event_time) < event_time
-            ):
-                return False
+            if state.get("is_processing_event"):
+                current_event_priority = state.get("current_event_priority")
+                if current_event_priority is None:
+                    raise RuntimeError(
+                        "Processing cluster is missing its current event priority"
+                    )
+                if current_event_priority < event_priority:
+                    return False
 
-            next_event_time = state.get("next_event_time")
-            if next_event_time is not None and float(next_event_time) < event_time:
-                return False
+            next_event_priority = state.get("next_event_priority")
+            if next_event_priority is not None:
+                if next_event_priority < event_priority:
+                    return False
+
+        pending_priority = (
+            self._global_scheduler.get_pending_inter_cluster_event_frontier()
+        )
+        if pending_priority is not None and pending_priority < event_priority:
+            return False
 
         return True
 
@@ -984,43 +1019,39 @@ class Simulator:
         all_cluster_queues_empty = True
         any_cluster_processing = False
 
-        for cluster_type, cluster_simulator in self._cluster_simulators.items():
-            if hasattr(cluster_simulator, "get_runtime_state"):
+        coordination_lock = getattr(
+            self._global_scheduler, "_parallel_coordination_lock", None
+        )
+        if coordination_lock is None:
+            raise RuntimeError(
+                "Parallel quiescence diagnostics require a coordination lock"
+            )
+        stats_locked = getattr(
+            self._global_scheduler,
+            "_get_inter_cluster_communication_stats_locked",
+            None,
+        )
+        if not callable(stats_locked):
+            raise RuntimeError(
+                "Parallel quiescence diagnostics require the locked communication snapshot"
+            )
+
+        with coordination_lock:
+            for cluster_type, cluster_simulator in self._cluster_simulators.items():
                 state = cluster_simulator.get_runtime_state()
-            else:
-                queue_size = (
-                    cluster_simulator.get_queue_size()
-                    if hasattr(cluster_simulator, "get_queue_size")
-                    else (1 if cluster_simulator.has_events() else 0)
+
+                cluster_states[cluster_type] = state
+                all_cluster_queues_empty = (
+                    all_cluster_queues_empty and int(state.get("queue_size", 0)) == 0
                 )
-                state = {
-                    "cluster_type": cluster_type.name,
-                    "queue_size": queue_size,
-                    "local_time": cluster_simulator.get_local_time(),
-                    "is_running": getattr(cluster_simulator, "_running", False),
-                    "is_processing_event": (
-                        cluster_simulator.is_processing_event()
-                        if hasattr(cluster_simulator, "is_processing_event")
-                        else False
-                    ),
-                    "current_event_name": None,
-                }
+                any_cluster_processing = any_cluster_processing or bool(
+                    state.get("is_processing_event", False)
+                )
 
-            cluster_states[cluster_type] = state
-            all_cluster_queues_empty = (
-                all_cluster_queues_empty and int(state.get("queue_size", 0)) == 0
-            )
-            any_cluster_processing = any_cluster_processing or bool(
-                state.get("is_processing_event", False)
-            )
-
-        inter_cluster_stats = {}
-        if (
-            getattr(self._global_scheduler, "_enable_parallel_mode", False)
-            and hasattr(self._global_scheduler, "get_inter_cluster_communication_stats")
-        ):
             inter_cluster_stats = (
-                self._global_scheduler.get_inter_cluster_communication_stats()
+                stats_locked()
+                if getattr(self._global_scheduler, "_enable_parallel_mode", False)
+                else {}
             )
 
         inter_cluster_idle = (

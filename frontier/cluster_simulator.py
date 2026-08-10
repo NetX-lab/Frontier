@@ -42,7 +42,9 @@ class ClusterSimulator:
         event_log_dir: str = "logs/cluster_events",
         event_log_level: str = "INFO",
         profiler=None,
-        can_process_event_time: Optional[Callable[[ClusterType, float], bool]] = None,
+        can_process_event_priority: Optional[
+            Callable[[ClusterType, tuple], bool]
+        ] = None,
     ):
         """
         Initialize the cluster simulator.
@@ -56,16 +58,26 @@ class ClusterSimulator:
             event_log_dir: Directory for event log files
             event_log_level: Log level for event logging (DEBUG, INFO, WARNING, ERROR)
             profiler: Performance profiler instance (optional)
+            can_process_event_priority: Shared event-priority gate for
+                peer-cluster ordering
         """
         self._cluster_type = cluster_type
         self._cluster_scheduler = cluster_scheduler
         self._global_scheduler = global_scheduler
         self._metrics_store = metrics_store
         self._profiler = profiler
-        self._can_process_event_time = can_process_event_time
+        self._can_process_event_priority = can_process_event_priority
         self._parallel_coordination_lock = getattr(
             global_scheduler, "_parallel_coordination_lock", None
         )
+        if self._parallel_coordination_lock is None:
+            raise RuntimeError(
+                "ClusterSimulator requires a parallel coordination lock"
+            )
+        if not callable(self._can_process_event_priority):
+            raise RuntimeError(
+                "ClusterSimulator requires an event-priority gate callback"
+            )
         
         # Per-cluster event queue
         self._event_queue = []
@@ -83,6 +95,7 @@ class ClusterSimulator:
         self._is_processing_event = False
         self._current_event_name: Optional[str] = None
         self._current_event_time: Optional[float] = None
+        self._current_event_priority: Optional[tuple] = None
 
         # Instance-scoped cluster-tagged logger
         self._logger = get_cluster_logger(__name__, cluster_type.name)
@@ -175,11 +188,12 @@ class ClusterSimulator:
         return self._local_time
 
     def is_processing_event(self) -> bool:
-        """Return whether the cluster thread is currently inside an event handler."""
+        """Return whether the cluster has claimed or is processing an event."""
         return self._is_processing_event
 
     def get_runtime_state(self) -> dict:
         """Return lightweight runtime state for deadlock diagnostics."""
+        next_event_priority = self.peek_next_event_priority()
         return {
             "cluster_type": self._cluster_type.name,
             "queue_size": self.get_queue_size(),
@@ -188,7 +202,13 @@ class ClusterSimulator:
             "is_processing_event": self._is_processing_event,
             "current_event_name": self._current_event_name,
             "current_event_time": self._current_event_time,
-            "next_event_time": self.peek_next_event_time(),
+            "current_event_priority": self._current_event_priority,
+            "next_event_time": (
+                None
+                if next_event_priority is None
+                else float(next_event_priority[0])
+            ),
+            "next_event_priority": next_event_priority,
         }
     
     def _run_event_loop(self):
@@ -212,12 +232,10 @@ class ClusterSimulator:
                     time.sleep(0.001)  # 1ms sleep
                     continue
 
-                # Update local time
-                self._set_local_time(event.time)
-                self._is_processing_event = True
-                self._current_event_name = event.__class__.__name__
-                self._current_event_time = event.time
                 try:
+                    # Update local time after the claim is visible to peer clusters.
+                    self._set_local_time(event.time)
+
                     # Process the event with or without detailed logging based on configuration
                     if self._enable_event_logging:
                         new_events = self._handle_event_with_logging(event)
@@ -231,9 +249,12 @@ class ClusterSimulator:
                     self._events_processed += 1
                     self._last_event_time = event.time
                 finally:
-                    self._current_event_name = None
-                    self._is_processing_event = False
-                    self._current_event_time = None
+                    # Publish completion under the same lock used by claim snapshots.
+                    with self._parallel_coordination_lock:
+                        self._is_processing_event = False
+                        self._current_event_name = None
+                        self._current_event_time = None
+                        self._current_event_priority = None
 
         except Exception as e:
             # Fatal error: log and store for main thread to detect
@@ -267,52 +288,44 @@ class ClusterSimulator:
 
     def peek_next_event_time(self) -> Optional[float]:
         """Peek the earliest local event time without removing the event."""
+        event_priority = self.peek_next_event_priority()
+        if event_priority is None:
+            return None
+        return float(event_priority[0])
+
+    def peek_next_event_priority(self) -> Optional[tuple]:
+        """Peek the earliest local sequential-DES priority without removing it."""
         with self._queue_lock:
             if not self._event_queue:
                 return None
-            return float(self._event_queue[0][0][0])
+            return self._event_queue[0][0]
 
     def _claim_next_event(self) -> Optional["BaseEvent"]:
         """
-        Claim the next event if no peer cluster can still emit an earlier event.
+        Claim the next event if no peer cluster has an earlier event priority.
 
         In parallel PD online mode, target clusters can otherwise pop a future local
         event before another cluster finishes a smaller-time event that routes an
-        earlier inter-cluster message. The coordination lock plus frontier-time gate
-        makes the local pop observe a stable snapshot of peer frontiers.
+        earlier inter-cluster message. The coordination lock plus full-priority gate
+        makes the local pop observe the same ordering key as the sequential DES heap.
         """
-        coordination_lock = self._parallel_coordination_lock
-        if coordination_lock is None:
+        with self._parallel_coordination_lock:
             self._process_incoming_events()
-            return self._get_next_event()
-
-        with coordination_lock:
-            self._process_incoming_events()
-            next_event_time = self.peek_next_event_time()
-            if next_event_time is None:
+            next_event_priority = self.peek_next_event_priority()
+            if next_event_priority is None:
                 return None
 
-            if (
-                self._can_process_event_time is not None
-                and not self._can_process_event_time(self._cluster_type, next_event_time)
+            if not self._can_process_event_priority(
+                self._cluster_type, next_event_priority
             ):
                 return None
 
-            self._process_incoming_events()
-            refreshed_next_event_time = self.peek_next_event_time()
-            if refreshed_next_event_time is None:
-                return None
-            if refreshed_next_event_time < next_event_time:
-                next_event_time = refreshed_next_event_time
-                if (
-                    self._can_process_event_time is not None
-                    and not self._can_process_event_time(
-                        self._cluster_type, next_event_time
-                    )
-                ):
-                    return None
-
-            return self._get_next_event()
+            event = self._get_next_event()
+            self._current_event_name = event.__class__.__name__
+            self._current_event_time = event.time
+            self._current_event_priority = event._priority_number
+            self._is_processing_event = True
+            return event
 
     def _set_local_time(self, new_time: float):
         """Update the local time of this cluster."""
@@ -600,6 +613,25 @@ class ClusterSimulator:
         Args:
             events: List of events to be routed
         """
+        if not events:
+            return
+
+        parent_priority = self._current_event_priority
+        if parent_priority is None:
+            raise RuntimeError(
+                "Cannot route child events without a current parent event priority"
+            )
+
+        # The global gate uses the complete sequential-DES priority. Every child
+        # must be strictly later by that same ordering before any child is published.
+        for event in events:
+            if event._priority_number <= parent_priority:
+                raise RuntimeError(
+                    f"Child event {event.__class__.__name__} "
+                    f"priority={event._priority_number} is not later than parent "
+                    f"event priority={parent_priority}"
+                )
+
         for event in events:
             target_cluster = self._determine_target_cluster(event)
 

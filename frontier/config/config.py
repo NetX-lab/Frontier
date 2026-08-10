@@ -73,8 +73,11 @@ DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR = (
 
 PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR = (
     "Error: pd-disaggregation public release support requires "
-    "--no-enable_parallel_clusters. Parallel cluster processing for "
-    "pd-disaggregation is not included in this release."
+    "--no-enable_parallel_clusters. Parallel PDD is excluded from "
+    "pre-release-v0.3 because post-ISSUE-022 five-pair MoE-64 measurements "
+    "were slower than sequential: Simulator.run() by 35.29% and shell E2E "
+    "by 24.81% (paired medians). The implementation remains available only "
+    "to internal correctness tests."
 )
 
 PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR = (
@@ -5892,7 +5895,12 @@ class SimulationConfig(ABC):
     enable_parallel_clusters: bool = field(
         default=True,
         metadata={
-            "help": "Enable parallel processing of clusters in disaggregated mode."
+            "help": (
+                "Enable parallel cluster processing for internal correctness tests. "
+                "pre-release-v0.3 public pd-disaggregation and "
+                "pd-af-disaggregation runs require "
+                "--no-enable_parallel_clusters."
+            )
         },
     )
     cluster_sync_interval_ms: float = field(
@@ -6138,9 +6146,8 @@ class SimulationConfig(ABC):
             raise ValueError(PD_AF_PREFIX_CACHING_RELEASE_ERROR)
         if self.sys_arch == "pd-af-disaggregation" and self.enable_parallel_clusters:
             raise ValueError(PD_AF_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR)
-        if self.sys_arch == "pd-disaggregation":
-            if self.enable_parallel_clusters:
-                raise ValueError(PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR)
+        if self.sys_arch == "pd-disaggregation" and self.enable_parallel_clusters:
+            raise ValueError(PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR)
 
     def _validate_simulation_mode_arch_compatibility(self) -> None:
         """

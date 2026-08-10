@@ -3646,6 +3646,35 @@ class BaseClusterScheduler(ABC):
             )
             return events
 
+        total_layers = self._config.replica_config.model_config.num_layers
+        active_unique_requests = []
+        active_request_ids = set()
+        for batch in dp_batches.values():
+            if batch.is_idle:
+                continue
+            for request in batch.requests:
+                if request.completed or request.id in active_request_ids:
+                    continue
+                active_request_ids.add(request.id)
+                active_unique_requests.append(request)
+
+        for request in active_unique_requests:
+            if request.completed_layer_count >= total_layers:
+                raise ValueError(
+                    "Decode post_moe layer counter cannot advance: "
+                    f"request_id={request.id}, "
+                    f"completed_layer_count={request.completed_layer_count}, "
+                    f"total_layers={total_layers}, "
+                    "current_decode_token_index="
+                    f"{request.current_decode_token_index}, "
+                    "spec_last_committed_tokens="
+                    f"{getattr(request, '_spec_last_committed_tokens', None)}; "
+                    "possible missing prior decode-step reset"
+                )
+
+        for request in active_unique_requests:
+            request.mb_on_step_layer_count_increment(num_layers_completed=1)
+
         single_layer_execution_time = execution_time_predictor.predict_stage_execution_time(
             sample_batch,
             stage_id,
@@ -3676,7 +3705,6 @@ class BaseClusterScheduler(ABC):
             )
             attention_time = next_layer_execution_time.get_single_layer_attention_time() * 1e-3
 
-            incremented_requests = set()
             for participant_id, batch in dp_batches.items():
                 if batch.is_idle:
                     logger.info(
@@ -3684,11 +3712,6 @@ class BaseClusterScheduler(ABC):
                         f"(replica={replica_id}, lane={participant_id}, layer={layer_id})"
                     )
                     continue
-
-                for request in batch.requests:
-                    if request.id not in incremented_requests:
-                        request.mb_on_step_layer_count_increment(num_layers_completed=1)
-                        incremented_requests.add(request.id)
 
                 total_time_to_next_sync = post_moe_comm_time + attention_time
                 events.append(DecodeSyncEvent(
@@ -3704,7 +3727,7 @@ class BaseClusterScheduler(ABC):
                 ))
 
             logger.info(
-                f"[DECODE_SYNC][COLLECTIVE] post_moe completed, incremented layer count for {len(incremented_requests)} unique requests, "
+                f"[DECODE_SYNC][COLLECTIVE] post_moe completed, incremented layer count for {len(active_unique_requests)} unique requests, "
                 f"scheduled next layer pre_moe sync at t={time + post_moe_comm_time + attention_time:.6f}s"
             )
             return events

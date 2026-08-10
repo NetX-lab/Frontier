@@ -4,6 +4,9 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-09 | Restored the sequential-only public PDD guard and removed parallel-enablement instructions. |
+| 2026-08-08 | Clarified the parallel-PDD correctness and wall-clock-speed boundary. |
+| 2026-08-07 | Distinguished PDD parallel runtime support from the sequential example defaults and retained the PD-AF parallel guard. |
 | 2026-07-23 | Added the complete PD-AF dense/MoE/EP/CUDA Graph offline and online example set. |
 | 2026-07-22 | Added the initial sequential PD-AF MoE examples. |
 
@@ -11,7 +14,13 @@ This directory contains runnable examples for the release-supported Frontier sim
 
 ## Release Scope
 
-`pre-release-v0.3` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD transfers KV from `PREFILL` to unified `DECODE`; PD-AF adds separate `DECODE_ATTN` and `DECODE_FFN` roles with M2N activation transfer. Both paths use sequential execution through `--no-enable_parallel_clusters`.
+`pre-release-v0.3` includes sequential **PDD / `pd-disaggregation`** and **PD-AF / `pd-af-disaggregation`** examples. PDD transfers KV from `PREFILL` to unified `DECODE`; PD-AF adds separate `DECODE_ATTN` and `DECODE_FFN` roles with M2N activation transfer. PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`.
+
+The parallel PDD implementation remains covered by internal correctness tests but is not a supported release path.
+
+Post-ISSUE-022 five-pair MoE-64 measurements observed paired-median slowdowns of 35.29% for Simulator.run() and 24.81% for shell E2E.
+
+With globally unique full priorities, preloaded arrivals, and no asynchronous event source outside event handlers, the current total-order gate admits one handler at a time. Parallel threads therefore add coordination overhead without handler overlap.
 
 Additional disaggregated research prototypes outside the PDD path remain intentionally outside this examples release scope. Co-location examples are still kept as baseline comparison recipes and historical v0.1-compatible references.
 
@@ -139,7 +148,7 @@ Separate prefill and decode clusters model prefill/decode disaggregation through
 - `--sys_arch pd-disaggregation`
 - Uses `PREFILL` and unified `DECODE` clusters.
 - Supports Dense, MoE, Thinking Mode, Speculative Decoding / MTP, and Prefix Caching examples in offline and online modes.
-- Uses `--no-enable_parallel_clusters` because the pre-release-v0.3 public PDD and PD-AF paths are sequential simulator paths; parallel cluster processing is still guarded.
+- Requires `--no-enable_parallel_clusters` for every public PDD and PD-AF example in this release.
 - Uses `decode_cuda_graph_mode` for PDD; the separate global `--use_cuda_graph` flag belongs to PD-AF.
 
 ### Co-location
