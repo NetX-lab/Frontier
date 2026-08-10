@@ -4,6 +4,9 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-09 | Restored the sequential-only public PDD guard and documented current post-ISSUE-022 slowdown evidence. |
+| 2026-08-08 | Clarified that parallel PDD preserves sequential-DES correctness without promising wall-clock speedup. |
+| 2026-08-07 | Corrected the PDD parallel runtime contract while retaining sequential public examples and the PD-AF parallel guard. |
 | 2026-07-23 | Completed the `pre-release-v0.3` PD-AF dense, MoE, EP, and CUDA Graph example surface and documented deferred feature boundaries. |
 | 2026-07-22 | Documented sequential PD-AF runtime support. |
 
@@ -16,9 +19,15 @@
 
 Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.3` branch supports the **co-location** architecture, sequential **PDD / `pd-disaggregation`**, and sequential **PD-AF / `pd-af-disaggregation`**. PD-AF uses separate `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` roles with KV and M2N transfer events.
 
-The supported PDD path requires sequential cluster execution. If a user selects `pd-disaggregation` with parallel clusters enabled, Frontier fails fast with message.
+PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`.
 
-Unsupported parallel disaggregation and other experimental surfaces still fail fast with explicit configuration errors.
+The parallel PDD implementation remains covered by internal correctness tests but is not a supported release path.
+
+Post-ISSUE-022 five-pair MoE-64 measurements observed paired-median slowdowns of 35.29% for Simulator.run() and 24.81% for shell E2E.
+
+With globally unique full priorities, preloaded arrivals, and no asynchronous event source outside event handlers, the current total-order gate admits one handler at a time. Parallel threads therefore add coordination overhead without handler overlap.
+
+Other unsupported experimental surfaces still fail fast with explicit configuration errors.
 
 This AGENTS.md release guide is intended to be the **authoritative entry point** for users and developers. Older documents in the repo may contain deeper narrative explanations but may lag behind the current code.
 
@@ -58,8 +67,8 @@ Frontier models an LLM serving system as a set of clusters and replicas processi
 
 ## Key Features
 
-- `co-location`, sequential `pd-disaggregation`, and sequential `pd-af-disaggregation` system architectures for this release
-- Runtime guard for parallel disaggregation and unsupported research surfaces
+- `co-location`, sequential or parallel `pd-disaggregation`, and sequential `pd-af-disaggregation` system architectures for this release
+- Runtime guard for parallel PD-AF and unsupported research surfaces
 - MoE support (EP synchronization, routing and imbalance modeling)
 - Speculative decoding support via `frontier/spec_decode/` and `ReplicaConfig.speculative_decoding_config` on supported co-location/PDD paths
 - Prefix caching for supported replica schedulers (`vllm_v1`, `sglang`) on supported co-location/PDD paths
@@ -84,8 +93,8 @@ The CLI/config parser still accepts the historical `sys_arch` choices so existin
 
 - `offline + co-location` is supported.
 - `online + co-location` is supported where the selected scheduler/runtime path supports online mode.
-- `offline + pd-disaggregation` is supported for the public PDD scripts.
-- `online + pd-disaggregation` is supported for the public PDD scripts.
+- `offline + pd-disaggregation` is supported with `--no-enable_parallel_clusters`.
+- `online + pd-disaggregation` is supported with `--no-enable_parallel_clusters`.
 - `pd-disaggregation` aborts unless `--no-enable_parallel_clusters` is provided.
 - `pd-af-disaggregation` aborts unless `--no-enable_parallel_clusters` is provided.
 

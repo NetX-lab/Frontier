@@ -4,6 +4,9 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-09 | Restored the sequential-only public PDD guard and documented current post-ISSUE-022 slowdown evidence. |
+| 2026-08-08 | Clarified the parallel-PDD correctness and wall-clock-speed boundary. |
+| 2026-08-07 | Corrected the PDD parallel CLI contract while retaining sequential examples and the PD-AF parallel guard. |
 | 2026-07-23 | Added the complete PD-AF dense/MoE/EP/CUDA Graph entrypoint set and corrected v0.3 runtime boundaries. |
 | 2026-07-22 | Documented the sequential PD-AF CLI surface and one-click example entrypoints. |
 
@@ -11,7 +14,13 @@
 
 This guide covers the public CLI surface for the `pre-release-v0.3` branch. The supported runtime architectures are `co-location`, sequential `pd-disaggregation`, and sequential `pd-af-disaggregation`.
 
-The parser still exposes historical architecture fields for compatibility. Disaggregated runs must use `--no-enable_parallel_clusters`; parallel PDD/PD-AF execution remains guarded in this release. PD-AF supports dense, MoE, EP, and global CUDA Graph execution. PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`.
+PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported; PD-AF runs must also use `--no-enable_parallel_clusters`. PD-AF supports dense, MoE, EP, and global CUDA Graph execution. PD-AF does not support Thinking Mode, Speculative Decoding / MTP, or Prefix Caching in `pre-release-v0.3`.
+
+The parallel PDD implementation remains covered by internal correctness tests but is not a supported release path.
+
+Post-ISSUE-022 five-pair MoE-64 measurements observed paired-median slowdowns of 35.29% for Simulator.run() and 24.81% for shell E2E.
+
+With globally unique full priorities, preloaded arrivals, and no asynchronous event source outside event handlers, the current total-order gate admits one handler at a time. Parallel threads therefore add coordination overhead without handler overlap.
 
 Use the examples first. They set the required flags, disable optional services, and write metrics to a predictable location.
 
@@ -248,7 +257,7 @@ Common files include:
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Release guard exits for `pd-disaggregation` or `pd-af-disaggregation`. | Parallel clusters are enabled, or the selected feature is outside the architecture's v0.3 surface. | Add `--no-enable_parallel_clusters` and use only the supported feature set documented above. |
+| Release guard exits for `pd-disaggregation` or `pd-af-disaggregation`. | Parallel clusters are enabled, or the selected feature is outside the v0.3 surface. | Add `--no-enable_parallel_clusters` and use only the supported feature set documented above. |
 | `htsim_ndp` is missing after selecting `--cc_backend_config_type collective_sim`. | The optional `collective_sim` submodule binary has not been built. | Build `frontier/cc_backend/backends/collective-sim/sim`, or use the default co-location example `analytical` backend. |
 | W&B tries to initialize. | Environment variables are not set. | Set `WANDB_DISABLED=true` and `VIDUR_DISABLE_WANDB=1`. |
 | Non-dummy run fails on a missing CSV or schema mismatch. | Predictor training needs matching profiling data. | Use the profiling guide and keep CSVs under `data/profiling/compute/<device>/<model>/`. |

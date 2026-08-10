@@ -13,9 +13,16 @@
 
 <div align="left">
 
+## Modification History
+
+| Date       | Summary of Changes |
+|------------|--------------------|
+| 2026-08-09 | Restored the sequential-only public PDD guard and documented current post-ISSUE-022 slowdown evidence. |
+| 2026-08-08 | Clarified that parallel PDD preserves sequential-DES correctness without promising wall-clock speedup. |
+| 2026-08-07 | Corrected the PDD parallel runtime contract while retaining sequential PDD examples and the PD-AF parallel guard. |
 
 ## Latest News 🎯
-📍[2026/08] Prefill-Decode Disaggregation (PDD) and sequential Attention-FFN Disaggregation (PD-AF) support is available in the new release.<br />
+📍[2026/08] Sequential Prefill-Decode Disaggregation (PDD) and sequential Attention-FFN Disaggregation (PD-AF) support is available in the new release.<br />
 📍[2026/07] We refactored the operator registration module to improve support and integration for diverse models and attn algorithms. More examples will be provided, including how to use Frontier for end-to-end simulation of a new/customized model.<br />
 📍[2026/06] Initial version released, with support for co-located serving and modern optimizations.<br />
 
@@ -31,11 +38,17 @@ Frontier helps researchers and engineers better understand serving system design
 
 ### Key Features
 
-- **Co-located & Disaggregated Serving**: This branch supports monolithic co-location, PDD serving, and sequential PD-AF serving with separate prefill, decode-attention, and decode-FFN roles.
+- **Co-located & Disaggregated Serving**: This branch supports monolithic co-location, sequential PDD serving, and sequential PD-AF serving with separate prefill, decode-attention, and decode-FFN roles.
 - **Modern Runtime Optimizations**: Frontier captures production techniques such as CUDA Graph, speculative decoding / MTP, prefix caching, quantization, chunked prefill, and hierarchical caching as part of the scheduler-batch-engine loop. These optimizations change batch shape, memory state, and per-request progress, so Frontier models them as runtime behavior rather than simple speedup factors.
 - **Fidelity**: Frontier combines calibrated operator, communication, transfer, and KV-cache memory models to make simulation results useful for deployment decisions. This helps users compare configurations under SLA constraints, explore large GPU-scale design spaces ex-situ, and avoid conclusions that would be distorted by coarse average-case models.
 
-> The public PDD and PD-AF (`pd-af-disaggregation`) paths currently require `--no-enable_parallel_clusters`; parallel disaggregated execution remains guarded.
+> PDD public release execution is sequential-only: `pd-disaggregation` aborts unless `--no-enable_parallel_clusters`. PD-AF parallel cluster processing remains unsupported for `pd-af-disaggregation`; PD-AF runs must also use `--no-enable_parallel_clusters`.
+>
+> The parallel PDD implementation remains covered by internal correctness tests but is not a supported release path.
+>
+> Post-ISSUE-022 five-pair MoE-64 measurements observed paired-median slowdowns of 35.29% for Simulator.run() and 24.81% for shell E2E.
+>
+> With globally unique full priorities, preloaded arrivals, and no asynchronous event source outside event handlers, the current total-order gate admits one handler at a time. Parallel threads therefore add coordination overhead without handler overlap.
 
 ## Minimum Hardware Requirements
 

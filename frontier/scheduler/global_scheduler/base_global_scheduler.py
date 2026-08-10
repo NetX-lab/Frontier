@@ -275,34 +275,21 @@ class BaseGlobalScheduler(ABC):
             return
 
         with self._parallel_coordination_lock:
+            # A route and a claim are serialized by the same lock. Drain messages
+            # already staged by an earlier route before enqueueing the next one;
+            # this keeps the bounded queue from becoming a second blocking path.
+            self._process_inter_cluster_messages()
+            message = (event, target_cluster)
             try:
-                # Try to put the event in the inter-cluster queue
-                message = (event, target_cluster)
                 self._inter_cluster_queue.put(message, block=False)
-                self._events_sent += 1
-
-                logger.debug(f"Event {event.__class__.__name__} routed to {target_cluster.name}")
-
-            except queue.Full:
-                # Queue is full: do NOT drop events. Retry with a short blocking put; if still full,
-                # fall back to placing the event directly into the target cluster's buffer.
+            except queue.Full as exc:
                 self._queue_full_count += 1
-                try:
-                    # Block briefly to alleviate transient bursts
-                    self._inter_cluster_queue.put(message, block=True, timeout=0.1)
-                    self._events_sent += 1
-                    logger.debug(
-                        f"Inter-cluster queue was full; succeeded after retry for {event.__class__.__name__} → {target_cluster.name}"
-                    )
-                except queue.Full:
-                    # Fallback: place directly into buffer to guarantee delivery
-                    with self._buffer_lock:
-                        self._cluster_event_buffers[target_cluster].append(event)
-                    self._events_sent += 1
-                    logger.info(
-                        f"Inter-cluster queue still full after retry. Buffered event {event.__class__.__name__} directly to {target_cluster.name}. "
-                        f"Queue full count: {self._queue_full_count}"
-                    )
+                raise RuntimeError(
+                    "Inter-cluster queue remained full after the coordination-locked drain"
+                ) from exc
+
+            self._events_sent += 1
+            logger.debug(f"Event {event.__class__.__name__} routed to {target_cluster.name}")
 
     def get_events_for_cluster(self, cluster_type: ClusterType) -> List["BaseEvent"]:
         """
@@ -330,6 +317,36 @@ class BaseGlobalScheduler(ABC):
                 logger.debug(f"Delivered {len(events)} events to {cluster_type.name}")
 
             return events
+
+    def get_pending_inter_cluster_event_frontier(
+        self,
+    ) -> Optional[tuple]:
+        """Return the lowest event priority still outside a cluster-local heap.
+
+        The parallel claim path calls this method while holding
+        ``_parallel_coordination_lock`` after it has drained the shared queue.
+        The lock serializes routing, queue draining, and this snapshot, so the
+        per-target buffers are a stable view of all pending inter-cluster events
+        at the frontier gate.
+        """
+        if not self._enable_parallel_mode:
+            return None
+
+        if self._inter_cluster_queue.qsize() != 0:
+            raise RuntimeError(
+                "Inter-cluster queue was not drained before frontier inspection"
+            )
+
+        with self._buffer_lock:
+            pending_priorities = [
+                event._priority_number
+                for events in self._cluster_event_buffers.values()
+                for event in events
+            ]
+
+        if not pending_priorities:
+            return None
+        return min(pending_priorities)
 
     def _process_inter_cluster_messages(self):
         """
@@ -359,21 +376,31 @@ class BaseGlobalScheduler(ABC):
         if messages_processed > 0:
             logger.debug(f"Processed {messages_processed} inter-cluster messages")
 
-    def get_inter_cluster_communication_stats(self) -> dict:
-        """Get statistics about inter-cluster communication."""
-        if not self._enable_parallel_mode:
-            return {}
-
-        buffer_sizes = {}
+    def _get_inter_cluster_communication_stats_locked(self) -> dict:
+        """Read communication state while the coordination lock is held."""
+        queue_size = self._inter_cluster_queue.qsize()
         with self._buffer_lock:
-            buffer_sizes = {cluster_type.name: len(events)
-                           for cluster_type, events in self._cluster_event_buffers.items()}
+            buffer_sizes = {
+                cluster_type.name: len(events)
+                for cluster_type, events in self._cluster_event_buffers.items()
+            }
+            total_buffered_events = sum(
+                len(events) for events in self._cluster_event_buffers.values()
+            )
 
         return {
             "events_sent": self._events_sent,
             "events_delivered": self._events_delivered,
-            "queue_size": self._inter_cluster_queue.qsize(),
+            "queue_size": queue_size,
             "queue_full_count": self._queue_full_count,
             "buffer_sizes": buffer_sizes,
-            "total_buffered_events": sum(len(events) for events in self._cluster_event_buffers.values()),
+            "total_buffered_events": total_buffered_events,
         }
+
+    def get_inter_cluster_communication_stats(self) -> dict:
+        """Get an atomic snapshot of inter-cluster communication state."""
+        if not self._enable_parallel_mode:
+            return {}
+
+        with self._parallel_coordination_lock:
+            return self._get_inter_cluster_communication_stats_locked()
