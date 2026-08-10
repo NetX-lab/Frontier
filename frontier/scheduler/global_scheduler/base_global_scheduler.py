@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple, Optional, TYPE_CHECKING
 import threading
 import queue
-from collections import defaultdict
+from collections import defaultdict, deque
 
 from frontier.entities import Cluster, Replica, Request
 from frontier.config import BaseRequestGeneratorConfig
@@ -59,9 +59,36 @@ class BaseGlobalScheduler(ABC):
         }
         self._cluster_logical_time_lock = threading.Lock()
 
+        # Closed-loop (concurrency-capped) request generation: requests beyond
+        # max_concurrency wait here, released one at a time as in-flight requests
+        # complete (see GlobalBatchEndEvent). Empty/unused for every other
+        # request generator, so this is a no-op for all existing configs.
+        self._closed_loop_backlog: "deque[Request]" = deque()
+        self._closed_loop_cluster_type: Optional[ClusterType] = None
+
         # Parallel mode inter-cluster communication
         if self._enable_parallel_mode:
             self._init_parallel_communication(max_inter_cluster_queue_size)
+
+    def configure_closed_loop_backlog(
+        self, backlog_requests: List[Request], cluster_type: ClusterType
+    ) -> None:
+        """Register requests held back for closed-loop release (see
+        Simulator._init_event_queue), and the cluster type new arrivals should be
+        injected at."""
+        self._closed_loop_backlog = deque(backlog_requests)
+        self._closed_loop_cluster_type = cluster_type
+
+    def pop_next_closed_loop_request(self) -> Optional[Request]:
+        """Called when a request completes, to admit the next closed-loop backlog
+        request (if any). Returns None once the backlog is empty."""
+        if not self._closed_loop_backlog:
+            return None
+        return self._closed_loop_backlog.popleft()
+
+    @property
+    def closed_loop_cluster_type(self) -> Optional[ClusterType]:
+        return self._closed_loop_cluster_type
 
     def _sync_decode_ffn_lane_topology(
         self, request_generator_config: BaseRequestGeneratorConfig
