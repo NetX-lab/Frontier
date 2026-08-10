@@ -1,3 +1,6 @@
+from frontier.request_generator.closed_loop_request_generator import (
+    ClosedLoopRequestGenerator,
+)
 from frontier.request_generator.synthetic_request_generator import (
     SyntheticRequestGenerator,
 )
@@ -17,4 +20,7 @@ RequestGeneratorRegistry.register(
 )
 RequestGeneratorRegistry.register(
     RequestGeneratorType.TRACE_REPLAY, TraceReplayRequestGenerator
+)
+RequestGeneratorRegistry.register(
+    RequestGeneratorType.CLOSED_LOOP, ClosedLoopRequestGenerator
 )

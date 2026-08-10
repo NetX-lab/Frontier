@@ -391,6 +391,47 @@ class TraceRequestGeneratorConfig(BaseRequestGeneratorConfig):
 
 
 @dataclass
+class ClosedLoopRequestGeneratorConfig(BaseRequestGeneratorConfig):
+    """Closed-loop (concurrency-capped) request generation: matches a real benchmark
+    client issuing requests up to max_concurrency in flight, releasing the next
+    request the instant one completes -- as opposed to SyntheticRequestGeneratorConfig's
+    open-loop arrival timestamps, which are precomputed independent of completions."""
+
+    closed_loop_length_generator_config: BaseRequestLengthGeneratorConfig = field(
+        default_factory=FixedRequestLengthGeneratorConfig,
+        metadata={"help": "Length generator config for Closed-Loop Request Generator."},
+    )
+    max_concurrency: int = field(
+        default=1,
+        metadata={
+            "help": "Max in-flight requests (client-side admission cap). Matches "
+            "sglang's --max-concurrency with --request-rate inf: the first "
+            "max_concurrency requests are released immediately; each remaining "
+            "request is released the instant an in-flight request fully completes."
+        },
+    )
+    num_requests: int = field(
+        default=128,
+        metadata={"help": "Total number of requests for Closed-Loop Request Generator."},
+    )
+    default_priority: int = field(
+        default=0,
+        metadata={"help": "Default priority for all generated requests."},
+    )
+
+    def __post_init__(self):
+        self.max_tokens = self.closed_loop_length_generator_config.max_tokens
+        if self.max_concurrency < 1:
+            raise ValueError(f"max_concurrency must be >= 1, got {self.max_concurrency}")
+        if self.num_requests < 1:
+            raise ValueError(f"num_requests must be >= 1, got {self.num_requests}")
+
+    @staticmethod
+    def get_type():
+        return RequestGeneratorType.CLOSED_LOOP
+
+
+@dataclass
 class BaseReplicaSchedulerConfig(BasePolyConfig):
     batch_size_cap: int = field(
         default=128,
@@ -5968,6 +6009,7 @@ class SimulationConfig(ABC):
         self._validate_thinking_mode_config()
         self._validate_sequential_checkpoint_observer_config()
         self._validate_monolithic_moe_stage_aggregation_config()
+        self._validate_closed_loop_request_generator_config()
 
         global_vars.set_global_vars(self.simulation_mode, self.sys_arch)
         global_vars.set_monolithic_moe_stage_aggregation(
@@ -6114,6 +6156,17 @@ class SimulationConfig(ABC):
             raise ValueError(
                 "enable_monolithic_moe_stage_aggregation is supported only for "
                 "sys_arch='co-location'."
+            )
+
+    def _validate_closed_loop_request_generator_config(self) -> None:
+        if self.request_generator_config.get_type() != RequestGeneratorType.CLOSED_LOOP:
+            return
+        if self.simulation_mode == "offline":
+            raise ValueError(
+                "Closed-loop (concurrency-capped) request generation requires "
+                "simulation_mode='online'. It models a live client issuing requests "
+                "as concurrency slots free up, which is meaningless when every "
+                "request force-arrives at t=0 (offline mode)."
             )
 
     def _validate_thinking_mode_config(self) -> None:
