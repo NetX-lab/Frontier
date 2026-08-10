@@ -437,12 +437,28 @@ class Simulator:
                 )
         else:
             # Handle online mode for parallel processing
-            for request in requests:
-                cluster_type = (
-                    ClusterType.PREFILL
-                    if self._config.is_disaggregated_mode()
-                    else ClusterType.MONOLITHIC
+            cluster_type = (
+                ClusterType.PREFILL
+                if self._config.is_disaggregated_mode()
+                else ClusterType.MONOLITHIC
+            )
+            max_concurrency = getattr(
+                self._config.request_generator_config, "max_concurrency", None
+            )
+            if max_concurrency is not None:
+                # Closed-loop (concurrency-capped) request generation -- see the
+                # matching branch in _init_event_queue for the sequential-mode
+                # equivalent and full rationale.
+                initial_requests = requests[:max_concurrency]
+                backlog_requests = requests[max_concurrency:]
+                self._global_scheduler.configure_closed_loop_backlog(
+                    backlog_requests, cluster_type
                 )
+                requests_to_arrive = initial_requests
+            else:
+                requests_to_arrive = requests
+
+            for request in requests_to_arrive:
                 arrival_event = RequestArrivalEvent(
                     request.arrived_at, request, cluster_type
                 )
@@ -1375,17 +1391,35 @@ class Simulator:
             # Kick off the scheduling process.
             self._add_event(GlobalScheduleEvent(0))
         else:
-            for request in requests:
-                # In disaggregated mode, a request first arrives at the prefill cluster
-                # In monolithic mode, it arrives at the monolithic cluster
-                cluster_type = (
-                    ClusterType.PREFILL
-                    if self._config.is_disaggregated_mode()
-                    else ClusterType.MONOLITHIC
+            # In disaggregated mode, a request first arrives at the prefill cluster
+            # In monolithic mode, it arrives at the monolithic cluster
+            cluster_type = (
+                ClusterType.PREFILL
+                if self._config.is_disaggregated_mode()
+                else ClusterType.MONOLITHIC
+            )
+            max_concurrency = getattr(
+                self._config.request_generator_config, "max_concurrency", None
+            )
+            if max_concurrency is not None:
+                # Closed-loop (concurrency-capped) request generation: release only
+                # the first max_concurrency requests now; the rest wait in the
+                # scheduler's backlog, released one at a time as requests complete
+                # (see GlobalBatchEndEvent.handle_event).
+                initial_requests = requests[:max_concurrency]
+                backlog_requests = requests[max_concurrency:]
+                self._global_scheduler.configure_closed_loop_backlog(
+                    backlog_requests, cluster_type
                 )
-                self._add_event(
-                    RequestArrivalEvent(request.arrived_at, request, cluster_type)
-                )
+                for request in initial_requests:
+                    self._add_event(
+                        RequestArrivalEvent(request.arrived_at, request, cluster_type)
+                    )
+            else:
+                for request in requests:
+                    self._add_event(
+                        RequestArrivalEvent(request.arrived_at, request, cluster_type)
+                    )
 
     def _set_time(self, time: float) -> None:
         self._time = time
