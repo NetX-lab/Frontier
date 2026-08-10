@@ -13,14 +13,6 @@
 
 <div align="left">
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-08-09 | Restored the sequential-only public PDD guard and documented current post-ISSUE-022 slowdown evidence. |
-| 2026-08-08 | Clarified that parallel PDD preserves sequential-DES correctness without promising wall-clock speedup. |
-| 2026-08-07 | Corrected the PDD parallel runtime contract while retaining sequential PDD examples and the PD-AF parallel guard. |
-
 ## Latest News 🎯
 📍[2026/08] Sequential Prefill-Decode Disaggregation (PDD) and sequential Attention-FFN Disaggregation (PD-AF) support is available in the new release.<br />
 📍[2026/07] We refactored the operator registration module to improve support and integration for diverse models and attn algorithms. More examples will be provided, including how to use Frontier for end-to-end simulation of a new/customized model.<br />
