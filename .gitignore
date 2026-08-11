@@ -244,3 +244,6 @@ tests/debug/e2e-level/monolith_mode/output/
 worktrees/
 worktreess/
 .omx/
+
+tools/inference_bench/
+outputs/validation
