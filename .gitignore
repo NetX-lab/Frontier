@@ -170,6 +170,9 @@ settings.json
 # Task memory is local-only; do not vendor it.
 task_memory/
 
+# Local agent-review artifacts are not public release inputs.
+.codex/
+
 
 # Test runtime dependency sandboxes are regenerated locally; do not vendor site-packages.
 tests/**/.runtime_deps/
@@ -241,3 +244,6 @@ tests/debug/e2e-level/monolith_mode/output/
 worktrees/
 worktreess/
 .omx/
+
+tools/inference_bench/
+outputs/validation

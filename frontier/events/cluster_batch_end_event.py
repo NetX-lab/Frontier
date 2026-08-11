@@ -466,40 +466,61 @@ class ClusterBatchEndEvent(BaseEvent):
 
             model_config = cluster_scheduler._config.replica_config.model_config
             total_layers = model_config.num_layers
-            current_layer_id = self._get_current_layer_id_from_batch(self._batch)
-            is_final_layer = current_layer_id >= total_layers - 1
+            active_requests = []
+            active_request_ids = set()
+            for request in self._batch.requests:
+                if request.completed or request.id in active_request_ids:
+                    continue
+                active_request_ids.add(request.id)
+                active_requests.append(request)
 
-            if is_final_layer:
-                from frontier.events.global_batch_end_event import GlobalBatchEndEvent
-
-                next_events.append(
-                    GlobalBatchEndEvent(
-                        self.time,
-                        self._replica_id,
-                        self._dp_id,
-                        self._batch,
-                        self._cluster_type,
-                        batch_schedule_epoch=self._batch_schedule_epoch,
-                        request_execution_signatures=self._request_execution_signatures,
-                        request_mutation_signatures=self._request_mutation_signatures,
-                        thinking_round_start_times=self._thinking_round_start_times,
-                    )
+            if not active_requests:
+                raise ValueError(
+                    "Distributed MoE DECODE terminal batch has no active request: "
+                    f"batch_id={self._batch.id}, total_layers={total_layers}"
                 )
-            else:
-                memory_usage_percent = replica_scheduler.memory_usage_percent
-                metrics_store.on_batch_end(
+
+            layer_counts = {
+                request.id: request.completed_layer_count
+                for request in active_requests
+            }
+            unique_layer_counts = set(layer_counts.values())
+            if len(unique_layer_counts) != 1:
+                raise ValueError(
+                    "Distributed MoE DECODE terminal batch has inconsistent "
+                    f"active request layer counts: batch_id={self._batch.id}, "
+                    f"total_layers={total_layers}, layer_counts={layer_counts}"
+                )
+
+            completed_layer_count = next(iter(unique_layer_counts))
+            if completed_layer_count < total_layers:
+                raise ValueError(
+                    "Distributed MoE DECODE terminal layer undercount: "
+                    f"batch_id={self._batch.id}, total_layers={total_layers}, "
+                    f"layer_counts={layer_counts}"
+                )
+            if completed_layer_count > total_layers:
+                raise ValueError(
+                    "Distributed MoE DECODE terminal layer overflow: "
+                    f"batch_id={self._batch.id}, total_layers={total_layers}, "
+                    f"layer_counts={layer_counts}"
+                )
+
+            from frontier.events.global_batch_end_event import GlobalBatchEndEvent
+
+            next_events.append(
+                GlobalBatchEndEvent(
                     self.time,
-                    self._batch,
                     self._replica_id,
-                    memory_usage_percent,
-                    self._cluster_type,
                     self._dp_id,
+                    self._batch,
+                    self._cluster_type,
+                    batch_schedule_epoch=self._batch_schedule_epoch,
+                    request_execution_signatures=self._request_execution_signatures,
+                    request_mutation_signatures=self._request_mutation_signatures,
+                    thinking_round_start_times=self._thinking_round_start_times,
                 )
-                next_events.append(
-                    ReplicaScheduleEvent(
-                        self.time, self._replica_id, self._cluster_type, self._dp_id
-                    )
-                )
+            )
 
             return next_events
 

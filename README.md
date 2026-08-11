@@ -13,9 +13,8 @@
 
 <div align="left">
 
-
 ## Latest News 🎯
-📍[2026/08] Prefill-Decode Disaggregation (PDD) and sequential Attention-FFN Disaggregation (PD-AF) support is available in the new release.<br />
+📍[2026/08] Prefill-Decode Disaggregation (PDD) and Attention-FFN Disaggregation (AFD) support is available in the new release.<br />
 📍[2026/07] We refactored the operator registration module to improve support and integration for diverse models and attn algorithms. More examples will be provided, including how to use Frontier for end-to-end simulation of a new/customized model.<br />
 📍[2026/06] Initial version released, with support for co-located serving and modern optimizations.<br />
 
@@ -31,11 +30,9 @@ Frontier helps researchers and engineers better understand serving system design
 
 ### Key Features
 
-- **Co-located & Disaggregated Serving**: This branch supports monolithic co-location, PDD serving, and sequential PD-AF serving with separate prefill, decode-attention, and decode-FFN roles.
+- **Co-located & Disaggregated Serving**: This branch supports monolithic co-location, PDD serving, and AFD serving with separate prefill, decode-attention, and decode-FFN roles.
 - **Modern Runtime Optimizations**: Frontier captures production techniques such as CUDA Graph, speculative decoding / MTP, prefix caching, quantization, chunked prefill, and hierarchical caching as part of the scheduler-batch-engine loop. These optimizations change batch shape, memory state, and per-request progress, so Frontier models them as runtime behavior rather than simple speedup factors.
 - **Fidelity**: Frontier combines calibrated operator, communication, transfer, and KV-cache memory models to make simulation results useful for deployment decisions. This helps users compare configurations under SLA constraints, explore large GPU-scale design spaces ex-situ, and avoid conclusions that would be distorted by coarse average-case models.
-
-> The public PDD and PD-AF (`pd-af-disaggregation`) paths currently require `--no-enable_parallel_clusters`; parallel disaggregated execution remains guarded.
 
 ## Minimum Hardware Requirements
 
@@ -75,14 +72,10 @@ Frontier is designed for what-if studies that would be expensive or slow to run 
 
 ## Quick Start and Examples
 
-Install the release package and test extras from the repository root:
+Install the release package and test extras from the repository root.
 
-```bash
-python -m pip install -e '.[test]'
-PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 pytest tests/unit/test_examples_pdd_scripts.py -q -p no:cacheprovider
-```
 
-Current release-facing co-location, PDD, and PD-AF examples are split by simulation mode and default to the formula-based `analytical` backend for one-click smoke runs:
+Current release-facing co-location, PDD, and AFD (i.e., pd-af) examples are split by simulation mode and default to the formula-based `analytical` backend for one-click smoke runs:
 
 - `examples/architecture/co-location/online/moe_model_basic_online.sh`
 - `examples/architecture/co-location/online/thinking_mode_basic_online.sh`
@@ -130,7 +123,7 @@ The ASTRA-Sim-inspired topology model remains available for direct CLI experimen
 --cc_backend_config_type astra_sim_analytical
 ```
 
-`collective_sim` is optional and is used only when you explicitly select `--cc_backend_config_type collective_sim`.
+`collective_sim` (i.e., htsim) is optional and is used only when you explicitly select `--cc_backend_config_type collective_sim`.
 
 To enable the optional target-runtime backend:
 

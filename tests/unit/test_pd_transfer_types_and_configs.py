@@ -9,6 +9,14 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR = (
+    "Error: pd-disaggregation public release support requires "
+    "--no-enable_parallel_clusters. Parallel PDD is excluded from "
+    "pre-release-v0.3 because post-ISSUE-022 five-pair MoE-64 measurements "
+    "were slower than sequential: Simulator.run() by 35.29% and shell E2E "
+    "by 24.81% (paired medians). The implementation remains available only "
+    "to internal correctness tests."
+)
 
 
 def test_pd_transfer_types_are_exported_and_parse_analytical() -> None:
@@ -35,7 +43,7 @@ def test_analytical_transfer_configs_return_enum_types() -> None:
     assert AnalyticalM2NTransferConfig.get_name() == "analytical"
 
 
-def test_pd_disaggregation_release_guard_rejects_parallel_cluster_default() -> None:
+def test_pd_disaggregation_release_guard_rejects_parallel_cluster_mode() -> None:
     from frontier.config.config import SimulationConfig
 
     config = object.__new__(SimulationConfig)
@@ -43,8 +51,12 @@ def test_pd_disaggregation_release_guard_rejects_parallel_cluster_default() -> N
     config.use_cuda_graph = False
     config.enable_parallel_clusters = True
 
-    with pytest.raises(ValueError, match="--no-enable_parallel_clusters"):
+    with pytest.raises(ValueError) as exc_info:
         config._validate_open_source_release_architecture_guard()
+
+    assert str(exc_info.value) == (
+        PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR
+    )
 
 
 def test_pd_disaggregation_release_guard_allows_explicit_sequential_mode() -> None:
@@ -58,17 +70,86 @@ def test_pd_disaggregation_release_guard_allows_explicit_sequential_mode() -> No
     config._validate_open_source_release_architecture_guard()
 
 
-def test_pd_disaggregation_cli_release_guard_exits_without_traceback() -> None:
+def test_co_location_release_guard_allows_parallel_cluster_default() -> None:
+    from frontier.config.config import SimulationConfig
+
+    config = object.__new__(SimulationConfig)
+    config.sys_arch = "co-location"
+    config.use_cuda_graph = False
+    config.enable_parallel_clusters = True
+
+    config._validate_open_source_release_architecture_guard()
+
+
+def test_parallel_cluster_cli_help_states_public_release_boundary() -> None:
+    from dataclasses import fields
+
+    from frontier.config.config import SimulationConfig
+
+    field = next(
+        field
+        for field in fields(SimulationConfig)
+        if field.name == "enable_parallel_clusters"
+    )
+    help_text = field.metadata["help"]
+
+    assert "internal correctness tests" in help_text
+    assert "pre-release-v0.3" in help_text
+    assert "pd-disaggregation" in help_text
+    assert "pd-af-disaggregation" in help_text
+    assert "--no-enable_parallel_clusters" in help_text
+
+
+def _pdd_config_args(tmp_path: Path) -> list[str]:
+    return [
+        "--sys_arch",
+        "pd-disaggregation",
+        "--cluster_config_prefill_cluster_num_replicas",
+        "1",
+        "--cluster_config_decode_cluster_num_replicas",
+        "1",
+        "--cc_backend_config_type",
+        "analytical",
+        "--random_forrest_execution_time_predictor_config_enable_dummy_mode",
+        "--vllm_v1_scheduler_config_num_blocks",
+        "128",
+        "--metrics_config_output_dir",
+        str(tmp_path / "metrics"),
+        "--no-metrics_config_write_metrics",
+    ]
+
+
+def _run_pdd_config_probe(
+    tmp_path: Path,
+    *parallel_args: str,
+) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env.update(
         {
+            "FRONTIER_LOG_LEVEL": "ERROR",
             "PYTHONPATH": str(REPO_ROOT),
             "PYTHONDONTWRITEBYTECODE": "1",
         }
     )
-
-    result = subprocess.run(
-        [sys.executable, "-m", "frontier.main", "--sys_arch", "pd-disaggregation"],
+    return subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys; "
+                "from frontier.config import SimulationConfig; "
+                "\ntry:\n"
+                " config = SimulationConfig.create_from_cli_args()\n"
+                "except ValueError as exc:\n"
+                " print(str(exc), file=sys.stderr)\n"
+                " raise SystemExit(1)\n"
+                "print('CONFIG_OK', config.sys_arch, "
+                "config.enable_parallel_clusters, "
+                "sorted(cluster.name for cluster in config.get_clusters()))"
+            ),
+            *_pdd_config_args(tmp_path),
+            *parallel_args,
+        ],
         cwd=REPO_ROOT,
         env=env,
         text=True,
@@ -77,8 +158,74 @@ def test_pd_disaggregation_cli_release_guard_exits_without_traceback() -> None:
         timeout=30,
     )
 
-    assert result.returncode == 1
-    assert "--no-enable_parallel_clusters" in result.stderr
+
+@pytest.mark.parametrize(
+    "parallel_args",
+    [(), ("--enable_parallel_clusters",)],
+    ids=("omitted-default", "explicit-enable"),
+)
+def test_pd_disaggregation_cli_config_rejects_parallel_cluster_mode(
+    tmp_path: Path,
+    parallel_args: tuple[str, ...],
+) -> None:
+    result = _run_pdd_config_probe(tmp_path, *parallel_args)
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "CONFIG_OK" not in result.stdout
+    assert "CLUSTER CONFIGURATION SUMMARY" not in result.stdout
+    assert result.stderr.strip() == (
+        PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR
+    )
+    assert "Traceback" not in result.stderr
+
+
+def test_pd_disaggregation_cli_config_accepts_explicit_sequential_mode(
+    tmp_path: Path,
+) -> None:
+    result = _run_pdd_config_probe(
+        tmp_path,
+        "--no-enable_parallel_clusters",
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "CONFIG_OK pd-disaggregation False ['DECODE', 'PREFILL']" in result.stdout
+    assert PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR not in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_frontier_main_presents_parallel_pdd_release_error_without_traceback(
+    tmp_path: Path,
+) -> None:
+    env = os.environ.copy()
+    env.update(
+        {
+            "FRONTIER_LOG_LEVEL": "ERROR",
+            "PYTHONPATH": str(REPO_ROOT),
+            "PYTHONDONTWRITEBYTECODE": "1",
+            "WANDB_DISABLED": "true",
+            "VIDUR_DISABLE_WANDB": "1",
+        }
+    )
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "frontier.main",
+            *_pdd_config_args(tmp_path),
+        ],
+        cwd=REPO_ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "CLUSTER CONFIGURATION SUMMARY" not in result.stdout
+    assert result.stderr.strip() == (
+        PD_DISAGGREGATION_PARALLEL_CLUSTER_RELEASE_ERROR
+    )
     assert "Traceback" not in result.stderr
 
 
