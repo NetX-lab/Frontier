@@ -68,7 +68,7 @@ DECODE_FFN_MEMORY_MARGIN_FRACTION="${DECODE_FFN_MEMORY_MARGIN_FRACTION:-0.2}"
 # --- MoE configuration ---
 TOTAL_EXPERTS="${TOTAL_EXPERTS:-16}"
 ROUTER_TOPK="${ROUTER_TOPK:-2}"
-MOE_ROUTING_MODE="${MOE_ROUTING_MODE:-simulation}"
+MOE_ROUTING_DISTRIBUTION_TYPE="${MOE_ROUTING_DISTRIBUTION_TYPE:-balanced}"
 MOE_ROUTING_SEED="${MOE_ROUTING_SEED:-42}"
 
 # --- Per-cluster scheduler types ---
@@ -210,7 +210,7 @@ CMD=(
 
   # Model / MoE routing
   --replica_config_model_name "$MODEL_NAME"
-  --replica_config_moe_routing_mode "$MOE_ROUTING_MODE"
+  --replica_config_moe_routing_distribution_type "$MOE_ROUTING_DISTRIBUTION_TYPE"
   --replica_config_moe_routing_seed "$MOE_ROUTING_SEED"
 
   # Scheduler parameters
@@ -284,7 +284,7 @@ AF Pipeline: decode_attn_micro_batch=$DECODE_ATTN_AF_MICRO_BATCH, decode_ffn_mic
 Prefill parallelism: PP=$PREFILL_PP, Attn_TP=$PREFILL_ATTN_TP, Attn_DP=$PREFILL_ATTN_DP, MoE_TP=$PREFILL_MOE_TP, MoE_EP=$PREFILL_MOE_EP
 Decode-Attn parallelism: PP=$DECODE_ATTN_PP, Attn_TP=$DECODE_ATTN_TP, Attn_DP=$DECODE_ATTN_DP
 Decode-FFN parallelism: PP=$DECODE_FFN_PP, MoE_TP=$DECODE_FFN_MOE_TP, MoE_EP=$DECODE_FFN_MOE_EP
-MoE: total_experts=$TOTAL_EXPERTS, router_topk=$ROUTER_TOPK, routing=$MOE_ROUTING_MODE
+MoE: total_experts=$TOTAL_EXPERTS, router_topk=$ROUTER_TOPK, routing=$MOE_ROUTING_DISTRIBUTION_TYPE
 Schedulers: prefill=$PREFILL_SCHEDULER, decode_attn=$DECODE_ATTN_SCHEDULER, decode_ffn=$DECODE_FFN_SCHEDULER
 Requests: $NUM_REQUESTS (prefill=$PREFILL_TOKENS, decode=$DECODE_TOKENS, qps=$QPS)
 KV transfer: bandwidth_gbps=$KV_TRANSFER_BANDWIDTH_GBPS, latency_ms=$KV_TRANSFER_LATENCY_MS

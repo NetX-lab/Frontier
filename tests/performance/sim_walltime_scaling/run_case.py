@@ -434,7 +434,7 @@ def build_frontier_argv(case: CaseSpec, output_root: Path) -> list[str]:
         "--replica_config_moe_expert_parallel_size": shape.moe_ep,
         "--replica_config_total_expert_num": case.total_experts,
         "--replica_config_router_topk": case.router_topk,
-        "--replica_config_moe_routing_mode": "simulation",
+        "--replica_config_moe_routing_distribution_type": "balanced",
         "--replica_config_moe_routing_seed": case.seed,
     }
     for option, value in replica_values.items():

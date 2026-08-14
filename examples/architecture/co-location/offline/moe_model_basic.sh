@@ -30,7 +30,7 @@ PP="${PP:-1}"
 DP="${DP:-1}"
 TOTAL_EXPERTS="${TOTAL_EXPERTS:-8}"
 ROUTER_TOPK="${ROUTER_TOPK:-2}"
-MOE_ROUTING_MODE="${MOE_ROUTING_MODE:-simulation}"
+MOE_ROUTING_DISTRIBUTION_TYPE="${MOE_ROUTING_DISTRIBUTION_TYPE:-balanced}"
 MOE_ROUTING_SEED="${MOE_ROUTING_SEED:-42}"
 REPLICA_SCHEDULER="${REPLICA_SCHEDULER:-vllm_v1}"
 NUM_REQUESTS="${NUM_REQUESTS:-8}"
@@ -101,7 +101,7 @@ CMD=(
   --replica_config_attn_data_parallel_size "$DP"
   --replica_config_total_expert_num "$TOTAL_EXPERTS"
   --replica_config_router_topk "$ROUTER_TOPK"
-  --replica_config_moe_routing_mode "$MOE_ROUTING_MODE"
+  --replica_config_moe_routing_distribution_type "$MOE_ROUTING_DISTRIBUTION_TYPE"
   --replica_config_moe_routing_seed "$MOE_ROUTING_SEED"
   --replica_scheduler_config_type "$REPLICA_SCHEDULER"
   --decode_cuda_graph_mode "$DECODE_CUDA_GRAPH_MODE"
@@ -156,7 +156,7 @@ Architecture: $SYS_ARCH
 Backend: $CC_BACKEND
 Replicas: $NUM_REPLICAS
 Parallelism: Attn_TP=$ATTN_TP, MoE_TP=$MOE_TP, MoE_EP=$MOE_EP, PP=$PP, DP=$DP
-MoE: total_experts=$TOTAL_EXPERTS, router_topk=$ROUTER_TOPK, routing=$MOE_ROUTING_MODE, seed=$MOE_ROUTING_SEED
+MoE: total_experts=$TOTAL_EXPERTS, router_topk=$ROUTER_TOPK, routing=$MOE_ROUTING_DISTRIBUTION_TYPE, seed=$MOE_ROUTING_SEED
 Scheduler: $REPLICA_SCHEDULER
 Requests: $NUM_REQUESTS (prefill=$PREFILL_TOKENS, decode=$DECODE_TOKENS, qps=$QPS)
 Runtime Optimizations: decode_cuda_graph_mode=$DECODE_CUDA_GRAPH_MODE, chunked_prefill=$ENABLE_CHUNKED_PREFILL

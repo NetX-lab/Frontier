@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-14 | Replaced the removed MoE routing-mode CLI with `moe_routing_distribution_type`. |
 | 2026-08-09 | Restored the sequential-only public PDD guard and documented current post-ISSUE-022 slowdown evidence. |
 | 2026-08-08 | Clarified the parallel-PDD correctness and wall-clock-speed boundary. |
 | 2026-08-07 | Corrected the PDD parallel CLI contract while retaining sequential examples and the PD-AF parallel guard. |
@@ -173,7 +174,7 @@ Dummy predictor mode is useful for smoke tests. For latency studies, disable dum
 | `--replica_config_moe_expert_parallel_size` | MoE expert parallel size. |
 | `--replica_config_total_expert_num` | Total expert count for MoE models. |
 | `--replica_config_router_topk` | Number of routed experts per token. |
-| `--replica_config_moe_routing_mode` | MoE routing mode: `simulation`, `uniform_legacy`, or `uniform_random`. |
+| `--replica_config_moe_routing_distribution_type` | MoE expert-load distribution: `balanced`, `random`, `skewed`, or `zipf`. |
 
 ### Runtime optimization
 

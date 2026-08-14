@@ -1,5 +1,11 @@
 # Profiling User Guide
 
+## Modification History
+
+| Date | Summary of Changes |
+|------|--------------------|
+| 2026-08-14 | Updated MoE smoke documentation to use the canonical routing-distribution selector. |
+
 ## Scope
 
 This guide covers the user-facing profiling workflow for `pre-release-v0.1`.
@@ -167,7 +173,7 @@ data/profiling/compute/rtx_pro_6000/Qwen3-30B-A3B-tiny/attention.csv
 data/profiling/compute/rtx_pro_6000/Qwen3-30B-A3B-tiny/moe.csv
 ```
 
-The MoE smoke uses `--replica_config_moe_routing_mode uniform_random` because the checked-in tiny MoE dataset contains `routing_runtime_path=uniform_topk` rows. Keep the simulator routing mode aligned with the CSV contract. A mismatch should fail fast; do not work around it with a fallback dataset.
+The MoE smoke uses `--replica_config_moe_routing_distribution_type random` because the checked-in tiny MoE dataset contains `routing_runtime_path=uniform_topk` rows. Keep the canonical routing-distribution selector aligned with the CSV contract. A mismatch should fail fast; do not work around it with a fallback dataset.
 
 Override paths when testing new CSVs:
 
@@ -210,4 +216,4 @@ bash examples/profiling/smoke_simulator_moe_csv.sh \
 | Dry-run succeeds but real profiling fails during CUDA setup. | CUDA compiler/runtime paths are not configured. | Check `CUDA_HOME`, `PATH`, `LIBRARY_PATH`, and `LD_LIBRARY_PATH`. |
 | Expected CSV is missing after a run. | The profiler did not finish or wrote to a different output root. | Check `DATA_DIR_BASE`, `DEVICE`, and `MODEL`; the script prints the resolved output path. |
 | Simulator smoke fails on a missing CSV. | Required profile file is absent. | Generate the CSV or pass an explicit `--*-csv` path. |
-| MoE smoke fails on routing metadata. | Simulator routing mode does not match CSV metadata. | Align `moe_routing_mode` with the CSV `routing_runtime_path`. |
+| MoE smoke fails on routing metadata. | The routing distribution does not match CSV metadata. | Align `moe_routing_distribution_type` with the CSV `routing_runtime_path`. |

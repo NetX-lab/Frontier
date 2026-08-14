@@ -41,7 +41,7 @@ DECODE_DEVICE="${DECODE_DEVICE:-a800}"
 DECODE_MEMORY_MARGIN_FRACTION="${DECODE_MEMORY_MARGIN_FRACTION:-0.2}"
 TOTAL_EXPERTS="${TOTAL_EXPERTS:-8}"
 ROUTER_TOPK="${ROUTER_TOPK:-2}"
-MOE_ROUTING_MODE="${MOE_ROUTING_MODE:-simulation}"
+MOE_ROUTING_DISTRIBUTION_TYPE="${MOE_ROUTING_DISTRIBUTION_TYPE:-balanced}"
 MOE_ROUTING_SEED="${MOE_ROUTING_SEED:-42}"
 REPLICA_SCHEDULER="${REPLICA_SCHEDULER:-vllm_v1}"
 NUM_REQUESTS="${NUM_REQUESTS:-2}"
@@ -158,7 +158,7 @@ CMD=(
   --cluster_config_decode_replica_config_memory_margin_fraction "$DECODE_MEMORY_MARGIN_FRACTION"
   --cc_backend_config_type analytical
   --replica_config_model_name "$MODEL_NAME"
-  --replica_config_moe_routing_mode "$MOE_ROUTING_MODE"
+  --replica_config_moe_routing_distribution_type "$MOE_ROUTING_DISTRIBUTION_TYPE"
   --replica_config_moe_routing_seed "$MOE_ROUTING_SEED"
   --replica_scheduler_config_type "$REPLICA_SCHEDULER"
   --decode_cuda_graph_mode "$DECODE_CUDA_GRAPH_MODE"
@@ -218,7 +218,7 @@ Prefill cluster replicas: $PREFILL_REPLICAS
 Decode cluster replicas: $DECODE_REPLICAS
 Prefill parallelism: Attn_TP=$PREFILL_ATTN_TP, MoE_TP=$PREFILL_MOE_TP, MoE_EP=$PREFILL_MOE_EP, PP=$PREFILL_PP, DP=$PREFILL_ATTN_DP
 Decode parallelism: Attn_TP=$DECODE_ATTN_TP, MoE_TP=$DECODE_MOE_TP, MoE_EP=$DECODE_MOE_EP, PP=$DECODE_PP, DP=$DECODE_ATTN_DP
-MoE: total_experts=$TOTAL_EXPERTS, router_topk=$ROUTER_TOPK, routing=$MOE_ROUTING_MODE, seed=$MOE_ROUTING_SEED
+MoE: total_experts=$TOTAL_EXPERTS, router_topk=$ROUTER_TOPK, routing=$MOE_ROUTING_DISTRIBUTION_TYPE, seed=$MOE_ROUTING_SEED
 Scheduler: $REPLICA_SCHEDULER
 Trace: $TRACE_FILE
 Expected Trace Shape: requests=$EXPECTED_TRACE_REQUESTS from TRACE_FILE, repeated block_hash_ids produce cache-hit blocks

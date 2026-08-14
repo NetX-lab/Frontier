@@ -60,7 +60,7 @@ CMD=(
   --cluster_config_decode_ffn_replica_scheduler_config_type orca
   --m2n_transfer_config_type analytical
   --replica_config_model_name step-moe-noquant
-  --replica_config_moe_routing_mode uniform_random
+  --replica_config_moe_routing_distribution_type random
   --replica_config_moe_routing_seed 42
   --request_generator_config_type synthetic
   --synthetic_request_generator_config_num_requests 64
