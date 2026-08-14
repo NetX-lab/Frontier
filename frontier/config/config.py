@@ -4605,6 +4605,10 @@ class ClusterConfig:
         self.replica_config.data_parallel_size = (
             self.replica_config.attn_data_parallel_size
         )
+        # Predictor routing details are indexed by serving Replica identity.
+        # Keep that capacity dimension explicit instead of deriving it from
+        # attention-DP lanes.
+        self.replica_config.cluster_num_replicas = int(self.num_replicas)
 
         # Reuse the same parallel-domain validation used by disaggregated clusters so
         # monolithic MoE layouts fail fast when attention and MoE domains disagree.

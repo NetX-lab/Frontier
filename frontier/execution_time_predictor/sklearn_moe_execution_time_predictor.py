@@ -330,17 +330,23 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             cc_backend,
         )
 
-        # Pre-compute routing details for simulation mode
-        # Structure: {layer_id: {expert_id: allocation_ratio}}
-        # This is computed once at init and reused for all batches.
+        # Pre-compute one global routing source for simulation mode.  EP
+        # ownership is applied later by the shared per-layer materializer.
         self._routing_allocations: Optional[Dict[int, Dict[int, float]]] = None
         self._global_routing_allocations: Optional[Dict[int, Dict[int, float]]] = None
+        self._monolithic_routing_details = None
         if self._moe_routing_mode == "simulation":
-            self._routing_allocations = self._init_routing_allocations()
             self._global_routing_allocations = self._init_global_routing_allocations()
+            # Keep the old private accessor as an alias to the same source; do
+            # not generate a second distribution with a different owner.
+            self._routing_allocations = self._global_routing_allocations
+            if self._cluster_type == ClusterType.MONOLITHIC:
+                self._monolithic_routing_details = (
+                    self._build_shared_routing_details()
+                )
             logger.info(
                 f"[MoE Routing] Initialized routing allocations for simulation mode: "
-                f"seed={self._moe_routing_seed}, num_layers={len(self._routing_allocations)}"
+                f"seed={self._moe_routing_seed}, num_layers={len(self._global_routing_allocations)}"
             )
 
         self._share_expert_tp_allreduce_visibility_scale = float(
@@ -358,48 +364,13 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
     def _init_routing_allocations(self) -> Dict[int, Dict[int, float]]:
         """
-        Pre-compute expert allocation ratios for all layers.
+        Return the canonical global routing source.
 
-        Uses deterministic seed to ensure reproducible results across runs.
-        The allocations are computed once at init time and cached.
-
-        Returns:
-            Dictionary mapping layer_id -> {expert_id: allocation_ratio}
-            Allocation ratios sum to 1.0 across all experts for each layer.
+        This private name is retained for existing internal callers, but it
+        delegates to the single generator so local and global maps cannot
+        diverge.
         """
-        num_layers = self._model_config.num_layers
-        total_experts = self._replica_config.total_expert_num
-
-        # Get number of experts per device (after EP partitioning)
-        if self._moe_ep_size > 0:
-            num_experts_per_device = total_experts // self._moe_ep_size
-        else:
-            num_experts_per_device = total_experts
-
-        if num_experts_per_device <= 0:
-            logger.warning(
-                f"num_experts_per_device={num_experts_per_device}, cannot init routing."
-            )
-            return {}
-
-        allocations: Dict[int, Dict[int, float]] = {}
-        for layer_id in range(num_layers):
-            # Use deterministic seed derived from config seed + layer_id
-            layer_seed = self._moe_routing_seed + layer_id
-            np.random.seed(layer_seed)
-
-            # Generate random weights and normalize to get allocation ratios
-            # This simulates realistic load imbalance across experts
-            random_weights = np.random.uniform(0.1, 1.0, num_experts_per_device)
-            total_weight = np.sum(random_weights)
-            expert_ratios = random_weights / total_weight
-
-            allocations[layer_id] = {
-                expert_id: float(expert_ratios[expert_id])
-                for expert_id in range(num_experts_per_device)
-            }
-
-        return allocations
+        return self._init_global_routing_allocations()
 
     def _init_global_routing_allocations(self) -> Dict[int, Dict[int, float]]:
         """Pre-compute global expert allocation ratios for shared-domain EP sync.
@@ -410,12 +381,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         num_layers = self._model_config.num_layers
         total_experts = self._replica_config.total_expert_num
 
-        if total_experts <= 0:
-            logger.warning(
-                "total_experts=%s, cannot initialize global routing allocations",
-                total_experts,
+        if type(total_experts) is not int or total_experts <= 0:
+            raise ValueError(
+                "total_expert_num must be an exact positive int for routing; "
+                f"got {total_experts!r}"
             )
-            return {}
 
         allocations: Dict[int, Dict[int, float]] = {}
         for layer_id in range(num_layers):
@@ -430,6 +400,58 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             }
 
         return allocations
+
+    def _build_shared_routing_details(
+        self,
+    ) -> Dict[int, Dict[int, Dict[int, float]]]:
+        """Expose one immutable-shape routing source for monolithic schedulers.
+
+        ``_global_routing_allocations`` is generated once per model layer and is
+        intentionally replica-independent.  The scheduler, however, performs an
+        exact ``(replica_id, global_layer_id)`` lookup.  Materialize that lookup
+        shape here without generating a second distribution or assigning tokens
+        to requests.  Integer token accounting and EP ownership splitting remain
+        the responsibility of the shared per-layer materializer.
+
+        The current monolithic predictor is constructed from ``ReplicaConfig``
+        rather than ``ClusterConfig``.  The canonical cluster capacity is
+        injected as ``_cluster_num_replicas`` (or the explicit
+        ``ReplicaConfig.cluster_num_replicas`` field) before this method is
+        called.  A missing capacity is an invalid topology, not a condition to
+        infer from an attention-DP field.
+        """
+        allocations = getattr(self, "_global_routing_allocations", None)
+        if type(allocations) is not dict:
+            raise ValueError(
+                "_global_routing_allocations must be an exact dict before "
+                "building shared routing details"
+            )
+
+        replica_config = getattr(self, "_replica_config", None)
+        replica_count = getattr(self, "_cluster_num_replicas", None)
+        if replica_count is None:
+            replica_count = getattr(replica_config, "cluster_num_replicas", None)
+        if type(replica_count) is not int or replica_count <= 0:
+            raise ValueError(
+                "A positive cluster replica count is required to build shared "
+                f"routing details; got {replica_count!r}"
+            )
+
+        shared_details: Dict[int, Dict[int, Dict[int, float]]] = {}
+        for replica_id in range(replica_count):
+            per_layer: Dict[int, Dict[int, float]] = {}
+            for layer_id, expert_ratios in allocations.items():
+                if type(layer_id) is not int or layer_id < 0:
+                    raise ValueError(
+                        "Global routing layer IDs must be exact non-negative ints"
+                    )
+                if type(expert_ratios) is not dict:
+                    raise ValueError(
+                        "Global routing expert ratios must be exact dicts"
+                    )
+                per_layer[layer_id] = dict(expert_ratios)
+            shared_details[replica_id] = per_layer
+        return shared_details
 
     def _get_global_per_expert_tokens(
         self,

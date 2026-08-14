@@ -2428,6 +2428,7 @@ class BaseClusterScheduler(ABC):
             ClusterType.PREFILL: "_prefill_routing_details",
             ClusterType.DECODE: "_decode_routing_details",
             ClusterType.DECODE_FFN: "_decode_ffn_routing_details",
+            ClusterType.MONOLITHIC: "_monolithic_routing_details",
         }
         routing_attr = routing_attr_by_cluster.get(self._cluster_type)
         if routing_attr is None:
@@ -2646,7 +2647,7 @@ class BaseClusterScheduler(ABC):
     def _uses_shared_prefill_ep_wave(self, batch: Batch, layer_id: int) -> bool:
         """Return whether the canonical shared-domain PREFILL path is active."""
 
-        if self._cluster_type != ClusterType.PREFILL:
+        if self._cluster_type not in (ClusterType.PREFILL, ClusterType.MONOLITHIC):
             return False
         replica_config = getattr(self._config, "replica_config", None)
         model_config = getattr(replica_config, "model_config", None)
@@ -2658,9 +2659,171 @@ class BaseClusterScheduler(ABC):
             )
         if not isinstance(layer_id, int) or layer_id < 0:
             raise ValueError("PREFILL layer_id must be an exact non-negative int")
-        routing_details = getattr(self._predictor, "_prefill_routing_details", None)
+        if not model_config.is_moe_layer(layer_id):
+            return False
+        routing_attr = (
+            "_prefill_routing_details"
+            if self._cluster_type == ClusterType.PREFILL
+            else "_monolithic_routing_details"
+        )
+        routing_details = getattr(self._predictor, routing_attr, None)
         if routing_details is None:
-            raise ValueError("Missing _prefill_routing_details for MoE PREFILL")
+            raise ValueError(f"Missing {routing_attr} for MoE PREFILL")
+        return True
+
+    def _on_decode_ep_wave_ready(
+        self,
+        *,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch: Batch,
+        layer_id: int,
+    ) -> List:
+        """Run one unified-DECODE layer's local EP wave and barrier."""
+
+        from frontier.events.decode_sync_collective_event import (
+            DecodeSyncCollectiveEvent,
+        )
+
+        if type(time) not in (int, float) or not math.isfinite(float(time)):
+            raise ValueError("decode EP wave time must be finite")
+        model_config = self._config.replica_config.model_config
+        predictor = self._predictor
+        layer_workload = None
+        lane_times_ms: list[float] = []
+        lane_comm_times_ms: list[float] = []
+        if model_config.is_moe_layer(layer_id):
+            layer_workload = self._materialize_layer_ep_workload_for_batch(
+                batch=batch,
+                target_replica_id=replica_id,
+                global_layer_id=layer_id,
+            )
+            for ep_id in layer_workload.participant_ep_ids:
+                lane_batch = self._build_prefill_ep_lane_batch(
+                    source_batch=batch,
+                    layer_id=layer_id,
+                    ep_id=ep_id,
+                    layer_workload=layer_workload,
+                )
+                execution_time = predictor.predict_stage_execution_time(
+                    lane_batch,
+                    stage_id,
+                    cluster_type=self._cluster_type,
+                    num_layers=1,
+                    layer_id=layer_id,
+                )
+                post_attention_getter = getattr(
+                    execution_time,
+                    "get_single_layer_post_attention_time",
+                    None,
+                )
+                if not callable(post_attention_getter):
+                    raise ValueError(
+                        "Decode EP predictor result is missing post-attention timing"
+                    )
+                lane_time_ms = float(post_attention_getter())
+                if not math.isfinite(lane_time_ms) or lane_time_ms < 0:
+                    raise ValueError(
+                        "Decode EP lane post-attention time must be finite and non-negative"
+                    )
+                comm_getter = getattr(
+                    predictor,
+                    "_get_expert_parallel_communication_time",
+                    None,
+                )
+                if callable(comm_getter):
+                    lane_comm_ms = float(comm_getter(lane_batch))
+                else:
+                    lane_comm_ms = float(
+                        getattr(execution_time, "expert_parallel_communication_time", 0.0)
+                    )
+                if not math.isfinite(lane_comm_ms) or lane_comm_ms < 0:
+                    raise ValueError(
+                        "Decode EP lane communication time must be finite and non-negative"
+                    )
+                lane_times_ms.append(lane_time_ms)
+                lane_comm_times_ms.append(lane_comm_ms)
+        else:
+            execution_time = predictor.predict_stage_execution_time(
+                batch,
+                stage_id,
+                cluster_type=self._cluster_type,
+                num_layers=1,
+                layer_id=layer_id,
+            )
+            post_attention_getter = getattr(
+                execution_time,
+                "get_single_layer_post_attention_time",
+                None,
+            )
+            if not callable(post_attention_getter):
+                raise ValueError(
+                    "Decode dense predictor result is missing post-attention timing"
+                )
+            dense_time_ms = float(post_attention_getter())
+            if not math.isfinite(dense_time_ms) or dense_time_ms < 0:
+                raise ValueError(
+                    "Decode dense post-attention time must be finite and non-negative"
+                )
+            lane_times_ms.append(dense_time_ms)
+            lane_comm_times_ms.append(0.0)
+
+        if not lane_times_ms:
+            raise ValueError("Decode layer wave produced no participant timing")
+        barrier_time_ms = max(lane_times_ms)
+        batch._decode_ep_wave_lane_times_ms = tuple(lane_times_ms)
+        batch._decode_ep_wave_post_moe_comm_time_s = max(lane_comm_times_ms) * 1e-3
+
+        batch_global_id = self._get_decode_sync_wait_key(batch)
+        sync_room = self._decode_sync_waiting_room[replica_id][stage_id][
+            batch_global_id
+        ][layer_id]["post_moe"]
+        if sync_room["batches"]:
+            raise ValueError(
+                "DECODE EP wave post_moe room already contains a batch: "
+                f"replica={replica_id}, stage={stage_id}, layer={layer_id}, "
+                f"batch_global_id={batch_global_id}"
+            )
+        sync_room["batches"][0] = batch
+        sync_room["arrival_times"][0] = time + barrier_time_ms * 1e-3
+        return [
+            DecodeSyncCollectiveEvent(
+                time + barrier_time_ms * 1e-3,
+                replica_id,
+                stage_id,
+                batch_global_id,
+                "post_moe",
+                layer_id,
+                cluster_type=self._cluster_type,
+            )
+        ]
+
+    def _uses_shared_decode_ep_wave(self, batch: Batch, layer_id: int) -> bool:
+        """Return whether canonical PDD unified-DECODE EP waves are active."""
+
+        if self._cluster_type not in (ClusterType.DECODE, ClusterType.MONOLITHIC):
+            return False
+        replica_config = getattr(self._config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        if model_config is None or not getattr(model_config, "is_moe", False):
+            return False
+        if getattr(replica_config, "attn_data_parallel_size", None) != 1:
+            raise ValueError(
+                "Shared-domain MoE DECODE requires attn_data_parallel_size=1"
+            )
+        if not isinstance(layer_id, int) or layer_id < 0:
+            raise ValueError("DECODE layer_id must be an exact non-negative int")
+        if not model_config.is_moe_layer(layer_id):
+            return False
+        routing_attr = (
+            "_decode_routing_details"
+            if self._cluster_type == ClusterType.DECODE
+            else "_monolithic_routing_details"
+        )
+        routing_details = getattr(self._predictor, routing_attr, None)
+        if routing_details is None:
+            raise ValueError(f"Missing {routing_attr} for MoE DECODE")
         return True
 
     def on_prefill_sync(self, time: float, replica_id: int, stage_id: int, batch: Batch,
@@ -3660,6 +3823,18 @@ class BaseClusterScheduler(ABC):
                 f"Dense models should not use sync events."
             )
 
+        if sync_stage == "pre_moe" and self._uses_shared_decode_ep_wave(
+            batch,
+            layer_id,
+        ):
+            return self._on_decode_ep_wave_ready(
+                time=time,
+                replica_id=replica_id,
+                stage_id=stage_id,
+                batch=batch,
+                layer_id=layer_id,
+            )
+
         from frontier.events.decode_sync_collective_event import DecodeSyncCollectiveEvent
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name)
@@ -3902,14 +4077,25 @@ class BaseClusterScheduler(ABC):
 
         stage_scheduler = self.get_dp_replica_stage_scheduler(replica_id, 0, stage_id)
         execution_time_predictor = stage_scheduler._execution_time_predictor
-        replica = self.get_replica(replica_id)
-        participant_count = self._get_decode_sync_participant_count(replica, sample_batch)
-        shared_domain_sync = self._is_monolithic_decode_shared_domain_sync(sample_batch)
-        global_batch = self._create_virtual_global_batch(
-            sample_batch,
-            total_global_tokens,
-            total_global_prefill_tokens,
-        )
+        canonical_ep_wave = hasattr(sample_batch, "_decode_ep_wave_lane_times_ms")
+        if canonical_ep_wave:
+            participant_count = 1
+            shared_domain_sync = False
+            global_batch = sample_batch
+        else:
+            replica = self.get_replica(replica_id)
+            participant_count = self._get_decode_sync_participant_count(
+                replica,
+                sample_batch,
+            )
+            shared_domain_sync = self._is_monolithic_decode_shared_domain_sync(
+                sample_batch
+            )
+            global_batch = self._create_virtual_global_batch(
+                sample_batch,
+                total_global_tokens,
+                total_global_prefill_tokens,
+            )
         if shared_domain_sync:
             related_wait_ms = (
                 self._accumulate_monolithic_decode_shared_domain_related_wait_ms(
@@ -3928,6 +4114,10 @@ class BaseClusterScheduler(ABC):
                 )
 
         if sync_stage == "pre_moe":
+            if canonical_ep_wave:
+                raise ValueError(
+                    "Canonical PDD EP wave must enter DECODE post_moe directly"
+                )
             if shared_domain_sync:
                 if not hasattr(
                     execution_time_predictor,
@@ -4092,7 +4282,16 @@ class BaseClusterScheduler(ABC):
             num_layers=1,
             layer_id=layer_id,
         )
-        if hasattr(execution_time_predictor, "_get_expert_parallel_communication_time"):
+        if canonical_ep_wave:
+            post_moe_comm_time = float(
+                getattr(sample_batch, "_decode_ep_wave_post_moe_comm_time_s", 0.0)
+            )
+            if not math.isfinite(post_moe_comm_time) or post_moe_comm_time < 0:
+                raise ValueError(
+                    "Canonical DECODE EP wave post_moe communication time must be "
+                    "finite and non-negative"
+                )
+        elif hasattr(execution_time_predictor, "_get_expert_parallel_communication_time"):
             post_moe_comm_time = (
                 execution_time_predictor._get_expert_parallel_communication_time(global_batch)
                 * 1e-3

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -454,3 +455,41 @@ def test_step3_prefill_allgather_uses_per_device_bytes_in_moe_predictor() -> Non
         cluster_type=ClusterType.MONOLITHIC,
         comm_domain="MOE_TP",
     )
+
+
+def test_monolithic_predictor_exposes_global_per_replica_layer_routing_details() -> None:
+    predictor = object.__new__(_DummySklearnMoEPredictor)
+    predictor._global_routing_allocations = {
+        0: {0: 0.1, 1: 0.2, 2: 0.3, 3: 0.4},
+        1: {0: 0.4, 1: 0.3, 2: 0.2, 3: 0.1},
+    }
+    predictor._replica_config = SimpleNamespace(cluster_num_replicas=2)
+
+    details = predictor._build_shared_routing_details()
+
+    assert details == {
+        0: {
+            0: {0: 0.1, 1: 0.2, 2: 0.3, 3: 0.4},
+            1: {0: 0.4, 1: 0.3, 2: 0.2, 3: 0.1},
+        },
+        1: {
+            0: {0: 0.1, 1: 0.2, 2: 0.3, 3: 0.4},
+            1: {0: 0.4, 1: 0.3, 2: 0.2, 3: 0.1},
+        },
+    }
+
+
+def test_monolithic_routing_allocations_use_global_expert_ids() -> None:
+    predictor = object.__new__(_DummySklearnMoEPredictor)
+    predictor._model_config = SimpleNamespace(num_layers=2)
+    predictor._replica_config = SimpleNamespace(total_expert_num=4)
+    predictor._moe_ep_size = 2
+    predictor._moe_routing_seed = 7
+
+    allocations = predictor._init_routing_allocations()
+
+    assert set(allocations) == {0, 1}
+    assert set(allocations[0]) == {0, 1, 2, 3}
+    assert set(allocations[1]) == {0, 1, 2, 3}
+    assert sum(allocations[0].values()) == pytest.approx(1.0)
+    assert sum(allocations[1].values()) == pytest.approx(1.0)

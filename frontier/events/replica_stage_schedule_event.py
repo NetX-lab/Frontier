@@ -168,11 +168,10 @@ class ReplicaStageScheduleEvent(BaseEvent):
             and batch.num_prefill_tokens <= 0
             and batch.num_decode_tokens > 0
         )
-        # COMM_SKIP: MoE sync event not needed when dp_size == 1 and moe_ep_size <= 1
-        # (no cross-DP or cross-EP peer participates; TP comm is predictor-modeled)
-        moe_sync_required = (
-            replica.dp_size > 1 or replica.num_moe_expert_parallel_size > 1
-        )
+        # Every MoE layer uses the canonical per-layer protocol, including
+        # EP=1.  A one-lane wave still establishes the same dispatch/compute/
+        # combine ordering; dense models never enter this branch.
+        moe_sync_required = bool(is_moe)
         monolithic_moe_stage_aggregation_enabled = (
             self._cluster_type == ClusterType.MONOLITHIC
             and is_moe
@@ -320,41 +319,16 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     self._batch_stage = batch_stage
                     self._is_last_stage = stage_scheduler.is_last_stage
 
-                    # EP=1 OPTIMIZATION: Skip EP synchronization when all experts are on the same device
                     moe_ep_size = replica.num_moe_expert_parallel_size
-
-                    if moe_ep_size <= 1:
-                        # EP=1: All experts on same device, use direct batch processing
-                        debug_logger.info(
-                            f"[EP=1] Skipping EP sync for batch {batch.id} (moe_ep_size={moe_ep_size})"
+                    if type(moe_ep_size) is not int or moe_ep_size <= 0:
+                        raise ValueError(
+                            "MoE DECODE_FFN requires a positive integer "
+                            f"moe_expert_parallel_size, got {moe_ep_size!r}"
                         )
 
-                        batch.execution_time = self._batch_stage.execution_time
-                        self._batch_stage.on_schedule(self.time)
-                        metrics_store.on_replica_stage_schedule(
-                            self.time,
-                            self._replica_id,
-                            self._stage_id,
-                            self._batch_stage,
-                            execution_time,
-                            self._cluster_type,
-                            self._dp_id,
-                        )
-
-                        return [
-                            BatchStageEndEvent(
-                                self.time + self._batch_stage.execution_time,
-                                self._replica_id,
-                                self._stage_id,
-                                self._is_last_stage,
-                                self._batch,
-                                self._batch_stage,
-                                self._cluster_type,
-                                self._dp_id,
-                            ),
-                        ]
-
-                    # EP > 1: Use EP dispatch -> expert compute -> combine path
+                    # Use EP dispatch -> expert compute -> combine path for
+                    # every EP size.  EP=1 is a one-participant EP_WAVE, not a
+                    # dense shortcut.
                     # FFN-EP runtime follows the explicit operation order:
                     # share-expert + gating + shuffling -> dispatch -> grouped_gemm -> combine.
                     pre_dispatch_compute_time_ms = (
