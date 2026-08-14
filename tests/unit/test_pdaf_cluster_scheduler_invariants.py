@@ -5623,7 +5623,7 @@ def test_decode_attn_legal_final_return_preserves_global_end_contract() -> None:
     assert events[0].time == pytest.approx(1.0)
     assert events[0]._batch is batch
     assert events[0]._replica_id == 0
-    assert events[0]._dp_id is None
+    assert events[0]._replica_local_id is None
     assert isinstance(events[1], ClusterScheduleEvent)
     assert events[1].time == pytest.approx(1.0)
 

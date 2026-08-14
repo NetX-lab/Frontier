@@ -113,3 +113,13 @@ def test_cluster_batch_end_event_uses_replica_local_identity() -> None:
     assert "replica_local_id" in source
     assert "dp_id" not in source
     assert "_dp_id" not in source
+
+
+def test_global_batch_end_event_uses_replica_local_identity() -> None:
+    source = Path("frontier/events/global_batch_end_event.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "replica_local_id" in source
+    assert "dp_id" not in source
+    assert "_dp_id" not in source

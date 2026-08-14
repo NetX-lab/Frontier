@@ -50,7 +50,7 @@ class GlobalBatchEndEvent(BaseEvent):
         self,
         time: float,
         replica_id: int,
-        dp_id: int,
+        replica_local_id: int | None,
         batch: Batch,
         cluster_type: ClusterType = None,
         batch_schedule_epoch: int | None = None,
@@ -60,7 +60,7 @@ class GlobalBatchEndEvent(BaseEvent):
     ):
         super().__init__(time, EventType.GLOBAL_BATCH_END)
         self._replica_id = replica_id
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
         self._batch = batch
         self._cluster_type = (
             cluster_type if cluster_type is not None else ClusterType.MONOLITHIC
@@ -94,7 +94,7 @@ class GlobalBatchEndEvent(BaseEvent):
 
         logger = get_cluster_logger(__name__, self._cluster_type.name)
         cluster_scheduler: BaseClusterScheduler = scheduler.get_cluster_scheduler(self._cluster_type)
-        replica_scheduler: BaseReplicaScheduler = cluster_scheduler.get_replica_scheduler(self._replica_id, self._dp_id)
+        replica_scheduler: BaseReplicaScheduler = cluster_scheduler.get_replica_scheduler(self._replica_id, self._replica_local_id)
 
         if self._batch.schedule_epoch != self._batch_schedule_epoch:
             logger.warning(
@@ -113,7 +113,9 @@ class GlobalBatchEndEvent(BaseEvent):
                 for r in self._batch.requests
             ]
             logger.info(
-                f"[GLOBAL-END][ENTER] batch={getattr(self._batch,'id','?')} replica={self._replica_id} dp={self._dp_id} reqs={req_states}"
+                "[GLOBAL-END][ENTER] "
+                f"batch={getattr(self._batch,'id','?')} replica={self._replica_id} "
+                f"replica_local_id={self._replica_local_id} reqs={req_states}"
             )
         except Exception as e:
             logger.debug(f"[GLOBAL-END][ENTER] logging failed: {e}")
@@ -221,7 +223,10 @@ class GlobalBatchEndEvent(BaseEvent):
         # and lack a valid scheduled_at on decode-attn. Guard metric emission accordingly.
         try:
             logger.info(
-                f"[GLOBAL-END][EMIT] batch={getattr(self._batch,'id','?')} -> ReplicaScheduleEvent(replica={self._replica_id}, dp={self._dp_id})"
+                "[GLOBAL-END][EMIT] "
+                f"batch={getattr(self._batch,'id','?')} -> "
+                f"ReplicaScheduleEvent(replica={self._replica_id}, "
+                f"replica_local_id={self._replica_local_id})"
             )
         except Exception:
             pass
@@ -233,7 +238,7 @@ class GlobalBatchEndEvent(BaseEvent):
                 self._replica_id,
                 memory_usage_percent,
                 self._cluster_type,
-                self._dp_id,
+                self._replica_local_id,
             )
         else:
             logger.error("[GLOBAL-END] Skipping metrics_store.on_batch_end: batch was not scheduled on decode-attn")
@@ -246,9 +251,8 @@ class GlobalBatchEndEvent(BaseEvent):
                 continue
             metrics_store._on_request_end(self.time, request)
 
-        # Schedule next batch for this DP replica
-        # Note: Idle batch mechanism now handles MoE synchronization when num_requests < dp_size
-        next_events = [ReplicaScheduleEvent(self.time, self._replica_id, self._cluster_type, self._dp_id)]
+        # Schedule the next batch for the same execution scope.
+        next_events = [ReplicaScheduleEvent(self.time, self._replica_id, self._cluster_type, self._replica_local_id)]
 
         if self._cluster_type == ClusterType.DECODE_ATTN:
             on_decode_attn_global_batch_end = getattr(

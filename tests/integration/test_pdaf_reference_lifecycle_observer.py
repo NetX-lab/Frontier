@@ -445,7 +445,7 @@ def _complete_first_real_decode(
     event = GlobalBatchEndEvent(
         resolved_global_end_time_s,
         0,
-        0,
+        None,
         batch,
         ClusterType.DECODE_ATTN,
     )

@@ -199,7 +199,7 @@ def test_global_batch_end_emits_cluster_schedule_for_next_buffered_wave() -> Non
     events = GlobalBatchEndEvent(
         time=1.0,
         replica_id=0,
-        dp_id=None,
+        replica_local_id=None,
         batch=batch,
         cluster_type=ClusterType.DECODE_ATTN,
     ).handle_event(_FakeGlobalScheduler(scheduler), _FakeMetricsStore())
