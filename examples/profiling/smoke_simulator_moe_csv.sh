@@ -138,7 +138,6 @@ CMD=(
   --replica_config_moe_routing_distribution_type random
   --replica_config_moe_routing_seed 42
   --replica_config_num_pipeline_stages 1
-  --replica_config_attn_data_parallel_size 1
   --cc_backend_config_type "$CC_BACKEND_CONFIG_TYPE"
   --replica_scheduler_config_type vllm_v1
   --request_generator_config_type synthetic

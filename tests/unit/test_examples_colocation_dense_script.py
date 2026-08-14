@@ -25,11 +25,11 @@ _DENSE_SCRIPTS = (
 )
 
 
-def test_dense_colocation_example_uses_valid_attn_data_parallel_flag() -> None:
+def test_dense_colocation_example_omits_retired_attn_data_parallel_flag() -> None:
     script_text = _SCRIPT_PATH.read_text()
 
-    assert "--replica_config_attn_data_parallel_size" in script_text
-    assert '"$DP"' in script_text
+    assert "--replica_config_attn_data_parallel_size" not in script_text
+    assert "DP=\"${DP:-1}\"" not in script_text
     assert "--replica_config_attn_dataa t_parallel_size" not in script_text
 
 

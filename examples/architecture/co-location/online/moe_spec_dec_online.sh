@@ -30,7 +30,6 @@ ATTN_TP="${ATTN_TP:-4}"
 MOE_TP="${MOE_TP:-2}"
 MOE_EP="${MOE_EP:-2}"
 PP="${PP:-1}"
-DP="${DP:-1}"
 TOTAL_EXPERTS="${TOTAL_EXPERTS:-8}"
 ROUTER_TOPK="${ROUTER_TOPK:-2}"
 MOE_ROUTING_DISTRIBUTION_TYPE="${MOE_ROUTING_DISTRIBUTION_TYPE:-balanced}"
@@ -97,9 +96,9 @@ if [ "$DECODE_CUDA_GRAPH_MODE" != "none" ]; then
 fi
 
 
-if (( ATTN_TP * DP != MOE_TP * MOE_EP )); then
-  echo "ERROR: shared-domain MoE requires ATTN_TP * DP == MOE_TP * MOE_EP" >&2
-  echo "       got ATTN_TP=$ATTN_TP, DP=$DP, MOE_TP=$MOE_TP, MOE_EP=$MOE_EP" >&2
+if (( ATTN_TP != MOE_TP * MOE_EP )); then
+  echo "ERROR: shared-domain MoE requires ATTN_TP == MOE_TP * MOE_EP" >&2
+  echo "       got ATTN_TP=$ATTN_TP, MOE_TP=$MOE_TP, MOE_EP=$MOE_EP" >&2
   exit 2
 fi
 
@@ -139,7 +138,6 @@ CMD=(
   --replica_config_moe_tensor_parallel_size "$MOE_TP"
   --replica_config_moe_expert_parallel_size "$MOE_EP"
   --replica_config_num_pipeline_stages "$PP"
-  --replica_config_attn_data_parallel_size "$DP"
   --replica_config_total_expert_num "$TOTAL_EXPERTS"
   --replica_config_router_topk "$ROUTER_TOPK"
   --replica_config_moe_routing_distribution_type "$MOE_ROUTING_DISTRIBUTION_TYPE"
@@ -206,7 +204,7 @@ cat <<EOF
   Co-location Mode - MoE Speculative Decoding / MTP
 ============================================
 Model: $MODEL_NAME
-Parallelism: Attn_TP=$ATTN_TP, MoE_TP=$MOE_TP, MoE_EP=$MOE_EP, PP=$PP, DP=$DP
+Parallelism: Attn_TP=$ATTN_TP, MoE_TP=$MOE_TP, MoE_EP=$MOE_EP, PP=$PP
 Speculative Decoding: method=$SPEC_METHOD, num_speculative_tokens=$NUM_SPECULATIVE_TOKENS, committed_tokens_per_iteration=$COMMITTED_TOKENS_PER_ITERATION
 MTP: n_predict=$MTP_N_PREDICT, num_layers=$MTP_NUM_LAYERS
 Runtime Optimizations: decode_cuda_graph_mode=$DECODE_CUDA_GRAPH_MODE, chunked_prefill=$ENABLE_CHUNKED_PREFILL

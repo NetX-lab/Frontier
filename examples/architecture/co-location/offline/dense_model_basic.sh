@@ -34,7 +34,6 @@ DEVICE="${DEVICE:-a100}"
 NUM_REPLICAS="${NUM_REPLICAS:-1}"
 ATTN_TP="${ATTN_TP:-2}"
 PP="${PP:-1}"
-DP="${DP:-1}"
 REPLICA_SCHEDULER="${REPLICA_SCHEDULER:-vllm_v1}"
 NUM_REQUESTS="${NUM_REQUESTS:-16}"
 PREFILL_TOKENS="${PREFILL_TOKENS:-512}"
@@ -120,7 +119,6 @@ CMD=(
   --replica_config_model_name "$MODEL_NAME"
   --replica_config_attn_tensor_parallel_size "$ATTN_TP"
   --replica_config_num_pipeline_stages "$PP"
-  --replica_config_attn_data_parallel_size "$DP"
   --replica_scheduler_config_type "$REPLICA_SCHEDULER"
   --decode_cuda_graph_mode "$DECODE_CUDA_GRAPH_MODE"
   --vllm_v1_scheduler_config_max_tokens_in_batch "$MAX_TOKENS_IN_BATCH"
@@ -174,7 +172,7 @@ Device: $DEVICE
 Architecture: $SYS_ARCH
 Backend: $CC_BACKEND
 Replicas: $NUM_REPLICAS
-Parallelism: TP=$ATTN_TP, PP=$PP, DP=$DP
+Parallelism: TP=$ATTN_TP, PP=$PP
 Scheduler: $REPLICA_SCHEDULER
 Requests: $NUM_REQUESTS (prefill=$PREFILL_TOKENS, decode=$DECODE_TOKENS, qps=$QPS)
 Runtime Optimizations: decode_cuda_graph_mode=$DECODE_CUDA_GRAPH_MODE, chunked_prefill=$ENABLE_CHUNKED_PREFILL

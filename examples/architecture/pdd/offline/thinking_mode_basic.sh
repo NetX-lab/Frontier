@@ -25,14 +25,12 @@ SYS_ARCH="${SYS_ARCH:-pd-disaggregation}"
 PREFILL_REPLICAS="${PREFILL_REPLICAS:-2}"
 DECODE_REPLICAS="${DECODE_REPLICAS:-2}"
 PREFILL_ATTN_TP="${PREFILL_ATTN_TP:-1}"
-PREFILL_ATTN_DP="${PREFILL_ATTN_DP:-1}"
 PREFILL_MOE_TP="${PREFILL_MOE_TP:-1}"
 PREFILL_MOE_EP="${PREFILL_MOE_EP:-1}"
 PREFILL_PP="${PREFILL_PP:-1}"
 PREFILL_DEVICE="${PREFILL_DEVICE:-a800}"
 PREFILL_MEMORY_MARGIN_FRACTION="${PREFILL_MEMORY_MARGIN_FRACTION:-0.2}"
 DECODE_ATTN_TP="${DECODE_ATTN_TP:-1}"
-DECODE_ATTN_DP="${DECODE_ATTN_DP:-1}"
 DECODE_MOE_TP="${DECODE_MOE_TP:-1}"
 DECODE_MOE_EP="${DECODE_MOE_EP:-1}"
 DECODE_PP="${DECODE_PP:-1}"
@@ -120,7 +118,6 @@ CMD=(
   --cluster_config_decode_cluster_num_replicas "$DECODE_REPLICAS"
   --cluster_config_prefill_replica_config_num_pipeline_stages "$PREFILL_PP"
   --cluster_config_prefill_replica_config_attn_tensor_parallel_size "$PREFILL_ATTN_TP"
-  --cluster_config_prefill_replica_config_attn_data_parallel_size "$PREFILL_ATTN_DP"
   --cluster_config_prefill_replica_config_moe_tensor_parallel_size "$PREFILL_MOE_TP"
   --cluster_config_prefill_replica_config_moe_expert_parallel_size "$PREFILL_MOE_EP"
   --cluster_config_prefill_replica_config_total_expert_num "$TOTAL_EXPERTS"
@@ -129,7 +126,6 @@ CMD=(
   --cluster_config_prefill_replica_config_memory_margin_fraction "$PREFILL_MEMORY_MARGIN_FRACTION"
   --cluster_config_decode_replica_config_num_pipeline_stages "$DECODE_PP"
   --cluster_config_decode_replica_config_attn_tensor_parallel_size "$DECODE_ATTN_TP"
-  --cluster_config_decode_replica_config_attn_data_parallel_size "$DECODE_ATTN_DP"
   --cluster_config_decode_replica_config_moe_tensor_parallel_size "$DECODE_MOE_TP"
   --cluster_config_decode_replica_config_moe_expert_parallel_size "$DECODE_MOE_EP"
   --cluster_config_decode_replica_config_total_expert_num "$TOTAL_EXPERTS"
@@ -202,8 +198,8 @@ Architecture: $SYS_ARCH
 Simulation Mode: offline
 Prefill cluster replicas: $PREFILL_REPLICAS
 Decode cluster replicas: $DECODE_REPLICAS
-Prefill parallelism: Attn_TP=$PREFILL_ATTN_TP, MoE_TP=$PREFILL_MOE_TP, MoE_EP=$PREFILL_MOE_EP, PP=$PREFILL_PP, DP=$PREFILL_ATTN_DP
-Decode parallelism: Attn_TP=$DECODE_ATTN_TP, MoE_TP=$DECODE_MOE_TP, MoE_EP=$DECODE_MOE_EP, PP=$DECODE_PP, DP=$DECODE_ATTN_DP
+Prefill parallelism: Attn_TP=$PREFILL_ATTN_TP, MoE_TP=$PREFILL_MOE_TP, MoE_EP=$PREFILL_MOE_EP, PP=$PREFILL_PP
+Decode parallelism: Attn_TP=$DECODE_ATTN_TP, MoE_TP=$DECODE_MOE_TP, MoE_EP=$DECODE_MOE_EP, PP=$DECODE_PP
 MoE: total_experts=$TOTAL_EXPERTS, router_topk=$ROUTER_TOPK, routing=$MOE_ROUTING_DISTRIBUTION_TYPE, seed=$MOE_ROUTING_SEED
 Scheduler: $REPLICA_SCHEDULER
 Requests: $NUM_REQUESTS (prefill=$PREFILL_TOKENS, decode=$DECODE_TOKENS, qps=$QPS)

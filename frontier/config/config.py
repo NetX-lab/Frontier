@@ -1875,7 +1875,10 @@ class ReplicaConfig:
     )
     attn_data_parallel_size: int = field(
         default=1,
-        metadata={"help": "Attention data parallel size (attn_dp size)."},
+        metadata={
+            "help": "Retired attention-DP lane count; fixed internally to 1.",
+            "include_in_cli": False,
+        },
     )
     moe_tensor_parallel_size: int = field(
         default=1,
@@ -2551,13 +2554,6 @@ class ClusterConfig:
             "mode_dependency": "pd-af-disaggregation",
         },
     )
-    prefill_replica_config_attn_data_parallel_size: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": "Attention data parallel size for prefill cluster.",
-            "mode_dependency": "pd-af-disaggregation",
-        },
-    )
     prefill_replica_config_moe_tensor_parallel_size: Optional[int] = field(
         default=None,
         metadata={
@@ -2632,13 +2628,6 @@ class ClusterConfig:
         default=None,
         metadata={
             "help": "Attention tensor parallel size for decode attention cluster.",
-            "mode_dependency": "pd-af-disaggregation",
-        },
-    )
-    decode_attn_replica_config_attn_data_parallel_size: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": "Attention data parallel size for decode attention cluster.",
             "mode_dependency": "pd-af-disaggregation",
         },
     )
@@ -2746,13 +2735,6 @@ class ClusterConfig:
         default=None,
         metadata={
             "help": "Attention tensor parallel size for unified decode cluster.",
-            "mode_dependency": "pd-disaggregation",
-        },
-    )
-    decode_replica_config_attn_data_parallel_size: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": "Attention data parallel size for unified decode cluster.",
             "mode_dependency": "pd-disaggregation",
         },
     )
@@ -4683,11 +4665,6 @@ class ClusterConfig:
                 decode_ffn_replica_scheduler_config_block_size=self.decode_ffn_replica_scheduler_config_block_size,
                 decode_ffn_replica_scheduler_config_watermark_blocks_fraction=self.decode_ffn_replica_scheduler_config_watermark_blocks_fraction,
                 decode_attn_cluster_num_replicas=self.decode_attn_cluster_num_replicas,
-                decode_attn_replica_config_attn_data_parallel_size=(
-                    self.decode_attn_replica_config.attn_data_parallel_size
-                    if self.decode_attn_replica_config is not None
-                    else None
-                ),
             )
             # Propagate only the source Attention-Replica capacity.  AFD
             # grouping is Replica-level; it must not manufacture DP lanes.

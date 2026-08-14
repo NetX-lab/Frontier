@@ -385,8 +385,8 @@ def test_dense_pdaf_runtime_allows_multiple_decode_ffn_replicas() -> None:
 
     assert scheduler._ffn_replica_ids == [3, 4]
     assert scheduler._ffn_expected_lanes_by_target == {
-        3: [(1, 0)],
-        4: [(2, 0)],
+        3: [(1, None)],
+        4: [(2, None)],
     }
 
 

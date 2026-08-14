@@ -45,7 +45,6 @@ DECODE_ATTN_MICRO_BATCH_SIZE="${DECODE_ATTN_MICRO_BATCH_SIZE:-1}"
 # --- Prefill cluster parallelism (EP structure: attn_TP*attn_DP == moe_TP*moe_EP) ---
 PREFILL_PP="${PREFILL_PP:-1}"
 PREFILL_ATTN_TP="${PREFILL_ATTN_TP:-2}"
-PREFILL_ATTN_DP="${PREFILL_ATTN_DP:-1}"
 PREFILL_MOE_TP="${PREFILL_MOE_TP:-1}"
 PREFILL_MOE_EP="${PREFILL_MOE_EP:-2}"
 PREFILL_DEVICE="${PREFILL_DEVICE:-a800}"
@@ -54,7 +53,6 @@ PREFILL_MEMORY_MARGIN_FRACTION="${PREFILL_MEMORY_MARGIN_FRACTION:-0.2}"
 # --- Decode-Attn cluster parallelism ---
 DECODE_ATTN_PP="${DECODE_ATTN_PP:-1}"
 DECODE_ATTN_TP="${DECODE_ATTN_TP:-2}"
-DECODE_ATTN_DP="${DECODE_ATTN_DP:-1}"
 DECODE_ATTN_DEVICE="${DECODE_ATTN_DEVICE:-a800}"
 DECODE_ATTN_MEMORY_MARGIN_FRACTION="${DECODE_ATTN_MEMORY_MARGIN_FRACTION:-0.2}"
 
@@ -131,9 +129,9 @@ if [ "$SYS_ARCH" != "pd-af-disaggregation" ]; then
   exit 2
 fi
 
-if (( PREFILL_ATTN_TP * PREFILL_ATTN_DP != PREFILL_MOE_TP * PREFILL_MOE_EP )); then
-  echo "ERROR: prefill cluster requires PREFILL_ATTN_TP * PREFILL_ATTN_DP == PREFILL_MOE_TP * PREFILL_MOE_EP" >&2
-  echo "       got PREFILL_ATTN_TP=$PREFILL_ATTN_TP, PREFILL_ATTN_DP=$PREFILL_ATTN_DP, PREFILL_MOE_TP=$PREFILL_MOE_TP, PREFILL_MOE_EP=$PREFILL_MOE_EP" >&2
+if (( PREFILL_ATTN_TP != PREFILL_MOE_TP * PREFILL_MOE_EP )); then
+  echo "ERROR: prefill cluster requires PREFILL_ATTN_TP == PREFILL_MOE_TP * PREFILL_MOE_EP" >&2
+  echo "       got PREFILL_ATTN_TP=$PREFILL_ATTN_TP, PREFILL_MOE_TP=$PREFILL_MOE_TP, PREFILL_MOE_EP=$PREFILL_MOE_EP" >&2
   exit 2
 fi
 
@@ -175,7 +173,6 @@ CMD=(
   # Prefill cluster replica config
   --cluster_config_prefill_replica_config_num_pipeline_stages "$PREFILL_PP"
   --cluster_config_prefill_replica_config_attn_tensor_parallel_size "$PREFILL_ATTN_TP"
-  --cluster_config_prefill_replica_config_attn_data_parallel_size "$PREFILL_ATTN_DP"
   --cluster_config_prefill_replica_config_moe_tensor_parallel_size "$PREFILL_MOE_TP"
   --cluster_config_prefill_replica_config_moe_expert_parallel_size "$PREFILL_MOE_EP"
   --cluster_config_prefill_replica_config_total_expert_num "$TOTAL_EXPERTS"
@@ -186,7 +183,6 @@ CMD=(
   # Decode-Attn cluster replica config
   --cluster_config_decode_attn_replica_config_num_pipeline_stages "$DECODE_ATTN_PP"
   --cluster_config_decode_attn_replica_config_attn_tensor_parallel_size "$DECODE_ATTN_TP"
-  --cluster_config_decode_attn_replica_config_attn_data_parallel_size "$DECODE_ATTN_DP"
   --cluster_config_decode_attn_replica_config_device "$DECODE_ATTN_DEVICE"
   --cluster_config_decode_attn_replica_config_memory_margin_fraction "$DECODE_ATTN_MEMORY_MARGIN_FRACTION"
 
@@ -281,8 +277,8 @@ Prefill cluster replicas: $PREFILL_REPLICAS
 Decode-Attn cluster replicas: $DECODE_ATTN_REPLICAS
 Decode-FFN cluster replicas: $DECODE_FFN_REPLICAS
 AF Pipeline: decode_attn_micro_batch=$DECODE_ATTN_AF_MICRO_BATCH, decode_ffn_micro_batch=$DECODE_FFN_AF_MICRO_BATCH
-Prefill parallelism: PP=$PREFILL_PP, Attn_TP=$PREFILL_ATTN_TP, Attn_DP=$PREFILL_ATTN_DP, MoE_TP=$PREFILL_MOE_TP, MoE_EP=$PREFILL_MOE_EP
-Decode-Attn parallelism: PP=$DECODE_ATTN_PP, Attn_TP=$DECODE_ATTN_TP, Attn_DP=$DECODE_ATTN_DP
+Prefill parallelism: PP=$PREFILL_PP, Attn_TP=$PREFILL_ATTN_TP, MoE_TP=$PREFILL_MOE_TP, MoE_EP=$PREFILL_MOE_EP
+Decode-Attn parallelism: PP=$DECODE_ATTN_PP, Attn_TP=$DECODE_ATTN_TP
 Decode-FFN parallelism: PP=$DECODE_FFN_PP, MoE_TP=$DECODE_FFN_MOE_TP, MoE_EP=$DECODE_FFN_MOE_EP
 MoE: total_experts=$TOTAL_EXPERTS, router_topk=$ROUTER_TOPK, routing=$MOE_ROUTING_DISTRIBUTION_TYPE
 Schedulers: prefill=$PREFILL_SCHEDULER, decode_attn=$DECODE_ATTN_SCHEDULER, decode_ffn=$DECODE_FFN_SCHEDULER

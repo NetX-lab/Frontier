@@ -81,7 +81,7 @@ def resolve_frontier_parallelism_mapping(
     *,
     model_profile: str,
     tensor_parallel_size: int,
-    data_parallel_size: int,
+    num_replicas: int,
     enable_expert_parallel: bool,
 ) -> FrontierParallelismMapping:
     normalized_model_profile = str(model_profile).strip().lower()
@@ -91,20 +91,20 @@ def resolve_frontier_parallelism_mapping(
         )
 
     resolved_tp = _validate_positive("tensor_parallel_size", tensor_parallel_size)
-    resolved_dp = _validate_positive("data_parallel_size", data_parallel_size)
+    resolved_num_replicas = _validate_positive("num_replicas", num_replicas)
 
     if normalized_model_profile == "dense":
         if enable_expert_parallel:
             raise ValueError("Dense models do not support expert parallel")
         return FrontierParallelismMapping(
-            cluster_num_replicas=resolved_dp,
+            cluster_num_replicas=resolved_num_replicas,
             attn_tensor_parallel_size=resolved_tp,
             attn_data_parallel_size=1,
             moe_tensor_parallel_size=1,
             moe_expert_parallel_size=1,
         )
 
-    # ``data_parallel_size`` is the outer serving-capacity dimension. A
+    # ``num_replicas`` is the outer serving-capacity dimension. A
     # Replica never owns an attention-DP lane; MoE EP is always local to one
     # Replica and therefore must not absorb the Replica count.
     if enable_expert_parallel:
@@ -114,7 +114,7 @@ def resolve_frontier_parallelism_mapping(
         moe_tensor_parallel_size = resolved_tp
         moe_expert_parallel_size = 1
     mapping = FrontierParallelismMapping(
-        cluster_num_replicas=resolved_dp,
+        cluster_num_replicas=resolved_num_replicas,
         attn_tensor_parallel_size=resolved_tp,
         attn_data_parallel_size=1,
         moe_tensor_parallel_size=moe_tensor_parallel_size,

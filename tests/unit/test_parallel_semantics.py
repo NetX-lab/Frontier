@@ -9,11 +9,11 @@ from frontier.config.parallel_semantics import (
 )
 
 
-def test_moe_data_parallel_size_is_cluster_replica_capacity() -> None:
+def test_moe_num_replicas_is_cluster_replica_capacity() -> None:
     mapping = resolve_frontier_parallelism_mapping(
         model_profile="moe",
         tensor_parallel_size=4,
-        data_parallel_size=3,
+        num_replicas=3,
         enable_expert_parallel=True,
     )
 
@@ -25,11 +25,11 @@ def test_moe_data_parallel_size_is_cluster_replica_capacity() -> None:
     assert mapping.attention_parallel_size == mapping.moe_parallel_size == 4
 
 
-def test_dense_data_parallel_size_creates_replicas_without_ep_lanes() -> None:
+def test_dense_num_replicas_creates_replicas_without_ep_lanes() -> None:
     mapping = resolve_frontier_parallelism_mapping(
         model_profile="dense",
         tensor_parallel_size=4,
-        data_parallel_size=3,
+        num_replicas=3,
         enable_expert_parallel=False,
     )
 
@@ -42,7 +42,7 @@ def test_shared_domain_rejects_attention_dp_lanes() -> None:
     mapping = resolve_frontier_parallelism_mapping(
         model_profile="moe",
         tensor_parallel_size=4,
-        data_parallel_size=1,
+        num_replicas=1,
         enable_expert_parallel=True,
     )
     invalid = mapping.__class__(
@@ -61,7 +61,7 @@ def test_collective_sim_attention_dp_uses_cluster_capacity_only() -> None:
     mapping = resolve_frontier_parallelism_mapping(
         model_profile="moe",
         tensor_parallel_size=4,
-        data_parallel_size=3,
+        num_replicas=3,
         enable_expert_parallel=True,
     )
 

@@ -107,6 +107,10 @@ def test_pdaf_example_scripts_emit_the_release_cli_contract(
         "--enable_thinking_mode",
         "--replica_scheduler_config_enable_prefix_caching",
         "--speculative_decoding_config_enabled",
+        "--cluster_config_prefill_replica_config_attn_data_parallel_size",
+        "--cluster_config_decode_attn_replica_config_attn_data_parallel_size",
+        "--cluster_config_decode_replica_config_attn_data_parallel_size",
+        "--replica_config_attn_data_parallel_size",
     }
     assert forbidden_options.isdisjoint(argv)
 
@@ -161,9 +165,6 @@ def test_pdaf_ep_recipes_exercise_ep_greater_than_one_by_default(
         argv, "--cluster_config_prefill_replica_config_attn_tensor_parallel_size"
     ) == "2"
     assert _option_value(
-        argv, "--cluster_config_prefill_replica_config_attn_data_parallel_size"
-    ) == "1"
-    assert _option_value(
         argv, "--cluster_config_prefill_replica_config_moe_tensor_parallel_size"
     ) == "1"
     assert _option_value(
@@ -173,10 +174,6 @@ def test_pdaf_ep_recipes_exercise_ep_greater_than_one_by_default(
         argv,
         "--cluster_config_decode_attn_replica_config_attn_tensor_parallel_size",
     ) == "2"
-    assert _option_value(
-        argv,
-        "--cluster_config_decode_attn_replica_config_attn_data_parallel_size",
-    ) == "1"
     assert _option_value(
         argv, "--cluster_config_decode_ffn_replica_config_moe_tensor_parallel_size"
     ) == "1"

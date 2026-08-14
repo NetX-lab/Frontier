@@ -471,25 +471,19 @@ class BaseClusterScheduler(ABC):
             ] = {}
             self._m2n_ready_groups = deque()  # Deque[List[(batch, transfer_info)]]
             attn_num_replicas = getattr(self._config, "decode_attn_cluster_num_replicas", None)
-            attn_dp_size = getattr(
-                self._config, "decode_attn_replica_config_attn_data_parallel_size", None
-            )
-            if attn_num_replicas is None or attn_dp_size is None:
+            if attn_num_replicas is None:
                 raise ValueError(
-                    "decode_attn_cluster_num_replicas and explicit decode-attn "
-                    "attn_data_parallel_size must be set for DECODE_FFN grouping"
+                    "decode_attn_cluster_num_replicas must be set for DECODE_FFN grouping"
                 )
-            if int(attn_num_replicas) <= 0 or int(attn_dp_size) != 1:
+            if int(attn_num_replicas) <= 0:
                 raise ValueError(
-                    "DECODE_ATTN cluster capacity is represented by cluster-level "
-                    f"num_replicas and requires attn_data_parallel_size=1; got "
-                    f"replicas={attn_num_replicas}, attn_dp={attn_dp_size}"
+                    "DECODE_ATTN cluster capacity must be a positive cluster-level "
+                    f"num_replicas, got {attn_num_replicas}"
                 )
-            # AFD source identity is one tuple per attention Replica.  The
-            # second tuple field remains zero only as a transport-shape detail;
-            # it is not an attention-DP lane.
-            dp_lanes = int(attn_num_replicas)
-            self._ffn_group_micro_batches = dp_lanes
+            # AFD source identity is one full-stage tuple per attention Replica;
+            # no attention-DP lane dimension participates in this grouping.
+            source_replica_count = int(attn_num_replicas)
+            self._ffn_group_micro_batches = source_replica_count
             attn_replica_id_start = getattr(
                 self._config, "decode_attn_replica_id_start_for_ffn", None
             )
@@ -501,12 +495,12 @@ class BaseClusterScheduler(ABC):
             attn_replica_id_start = int(attn_replica_id_start)
             self._ffn_expected_lanes = [
                 (attn_replica_id_start + replica_ordinal, None)
-                for replica_ordinal in range(int(attn_num_replicas))
+                for replica_ordinal in range(source_replica_count)
             ]
-            if len(self._ffn_expected_lanes) != dp_lanes:
+            if len(self._ffn_expected_lanes) != source_replica_count:
                 raise ValueError(
                     "DECODE_ATTN Replica grouping mismatch with expected source topology: "
-                    f"expected={len(self._ffn_expected_lanes)} configured={dp_lanes}"
+                    f"expected={len(self._ffn_expected_lanes)} configured={source_replica_count}"
                 )
             self._ffn_replica_ids = sorted(self._cluster.replicas.keys())
             if not self._ffn_replica_ids:
@@ -548,7 +542,7 @@ class BaseClusterScheduler(ABC):
                         )
             self._ffn_outstanding_group_credit_per_lane = 0
             logger.info(
-                f"[FFN-GROUPING] Initialized with {dp_lanes} lanes for strict (layer_id, afd_stage_idx) grouping"
+                f"[FFN-GROUPING] Initialized with {source_replica_count} full-stage source Replicas for strict (layer_id, afd_stage_idx) grouping"
             )
 
             # EP waiting room for combine synchronization in decode-ffn cluster

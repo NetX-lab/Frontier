@@ -8,7 +8,7 @@
 #   2. Chunked Prefill via --vllm_v1_scheduler_config_enable_chunked_prefill.
 #
 # The shared-domain MoE invariant is enforced explicitly:
-#   ATTN_TP * DP == MOE_TP * MOE_EP
+#   ATTN_TP == MOE_TP * MOE_EP
 # =============================================================================
 
 set -euo pipefail
@@ -27,7 +27,6 @@ ATTN_TP="${ATTN_TP:-4}"
 MOE_TP="${MOE_TP:-2}"
 MOE_EP="${MOE_EP:-2}"
 PP="${PP:-1}"
-DP="${DP:-1}"
 TOTAL_EXPERTS="${TOTAL_EXPERTS:-8}"
 ROUTER_TOPK="${ROUTER_TOPK:-2}"
 MOE_ROUTING_DISTRIBUTION_TYPE="${MOE_ROUTING_DISTRIBUTION_TYPE:-balanced}"
@@ -63,9 +62,9 @@ if [ "$SYS_ARCH" != "co-location" ]; then
   exit 2
 fi
 
-if (( ATTN_TP * DP != MOE_TP * MOE_EP )); then
-  echo "ERROR: shared-domain MoE requires ATTN_TP * DP == MOE_TP * MOE_EP" >&2
-  echo "       got ATTN_TP=$ATTN_TP, DP=$DP, MOE_TP=$MOE_TP, MOE_EP=$MOE_EP" >&2
+if (( ATTN_TP != MOE_TP * MOE_EP )); then
+  echo "ERROR: shared-domain MoE requires ATTN_TP == MOE_TP * MOE_EP" >&2
+  echo "       got ATTN_TP=$ATTN_TP, MOE_TP=$MOE_TP, MOE_EP=$MOE_EP" >&2
   exit 2
 fi
 
@@ -98,7 +97,6 @@ CMD=(
   --replica_config_moe_tensor_parallel_size "$MOE_TP"
   --replica_config_moe_expert_parallel_size "$MOE_EP"
   --replica_config_num_pipeline_stages "$PP"
-  --replica_config_attn_data_parallel_size "$DP"
   --replica_config_total_expert_num "$TOTAL_EXPERTS"
   --replica_config_router_topk "$ROUTER_TOPK"
   --replica_config_moe_routing_distribution_type "$MOE_ROUTING_DISTRIBUTION_TYPE"
@@ -155,7 +153,7 @@ Model: $MODEL_NAME
 Architecture: $SYS_ARCH
 Backend: $CC_BACKEND
 Replicas: $NUM_REPLICAS
-Parallelism: Attn_TP=$ATTN_TP, MoE_TP=$MOE_TP, MoE_EP=$MOE_EP, PP=$PP, DP=$DP
+Parallelism: Attn_TP=$ATTN_TP, MoE_TP=$MOE_TP, MoE_EP=$MOE_EP, PP=$PP
 MoE: total_experts=$TOTAL_EXPERTS, router_topk=$ROUTER_TOPK, routing=$MOE_ROUTING_DISTRIBUTION_TYPE, seed=$MOE_ROUTING_SEED
 Scheduler: $REPLICA_SCHEDULER
 Requests: $NUM_REQUESTS (prefill=$PREFILL_TOKENS, decode=$DECODE_TOKENS, qps=$QPS)
