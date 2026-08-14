@@ -35,6 +35,12 @@ from frontier.moe_routing_runtime import (
     filter_moe_gating_routing_topk_rows,
     resolve_moe_gating_routing_runtime_path,
 )
+from frontier.moe_ep_workload import (
+    LayerEPWorkload,
+    build_contiguous_expert_ownership,
+    materialize_layer_ep_workload,
+    resolve_routing_details,
+)
 from frontier.operators.families import (
     MOE_FAMILY,
     get_family_profiling_names,
@@ -466,39 +472,74 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             shared_details[replica_id] = per_layer
         return shared_details
 
-    def _get_global_per_expert_tokens(
-        self,
-        total_routed_tokens: int,
-        layer_id: int,
+
+    def _get_routing_details_for_cluster(self, cluster_type: ClusterType):
+        """Return the exact pre-generated routing map for one serving role."""
+        attribute_by_cluster = {
+            ClusterType.MONOLITHIC: "_monolithic_routing_details",
+            ClusterType.PREFILL: "_prefill_routing_details",
+            ClusterType.DECODE: "_decode_routing_details",
+            ClusterType.DECODE_FFN: "_decode_ffn_routing_details",
+        }
+        attribute_name = attribute_by_cluster.get(cluster_type)
+        if attribute_name is None:
+            raise ValueError(
+                f"MoE routing materialization does not support cluster_type={cluster_type}"
+            )
+        routing_details = getattr(self, attribute_name, None)
+        if routing_details is None:
+            raise ValueError(
+                f"Missing pre-generated routing details for cluster_type={cluster_type}"
+            )
+        return routing_details
+
+    def _get_moe_replica_config_for_cluster(self, cluster_type: ClusterType):
+        if cluster_type == ClusterType.MONOLITHIC:
+            return self._replica_config
+        cluster_getter = getattr(self, "_get_cluster_replica_config", None)
+        if callable(cluster_getter):
+            return cluster_getter(cluster_type)
+        return self._replica_config
+
+    def _materialize_layer_ep_workload(
+        self, batch: Batch, cluster_type: ClusterType, layer_id: int
+    ) -> LayerEPWorkload:
+        """Materialize one exact Replica-local EP workload for a MoE layer."""
+        cluster_replica_config = self._get_moe_replica_config_for_cluster(cluster_type)
+        routing_details = self._get_routing_details_for_cluster(cluster_type)
+        target_replica_id = int(batch.replica_id)
+        global_layer_id = int(layer_id)
+        total_expert_num = int(cluster_replica_config.total_expert_num)
+        moe_ep_size = int(cluster_replica_config.moe_expert_parallel_size)
+        workload = materialize_layer_ep_workload(
+            routing_ratios=resolve_routing_details(
+                routing_details,
+                target_replica_id=target_replica_id,
+                global_layer_id=global_layer_id,
+            ),
+            target_replica_id=target_replica_id,
+            global_layer_id=global_layer_id,
+            routing_token_count=int(batch.total_num_tokens),
+            router_topk=int(cluster_replica_config.router_topk),
+            total_expert_num=total_expert_num,
+            moe_expert_parallel_size=moe_ep_size,
+            expert_to_ep=build_contiguous_expert_ownership(
+                total_expert_num,
+                moe_ep_size,
+            ),
+        )
+        return workload
+
+    def _calculate_expert_token_allocation(
+        self, batch: Batch, cluster_type: ClusterType, layer_id: int
     ) -> Dict[int, int]:
-        """Discretize routed tokens across global experts for the given layer."""
-        total_experts = int(self._replica_config.total_expert_num)
-        if total_experts <= 0:
-            raise ValueError(f"Invalid total_expert_num={total_experts}")
-        if type(total_routed_tokens) is not int or total_routed_tokens < 0:
-            raise ValueError(
-                "total_routed_tokens must be an exact non-negative int, got "
-                f"{total_routed_tokens!r}"
-            )
-
-        if self._global_routing_allocations is None:
-            raise ValueError(
-                "Global routing allocations are not initialized. "
-                "Ensure _init_global_routing_allocations() was called in __init__."
-            )
-
-        if type(layer_id) is not int or layer_id < 0:
-            raise ValueError("layer_id must be an exact non-negative int")
-        if layer_id not in self._global_routing_allocations:
-            raise ValueError(
-                f"No global routing allocations for layer {layer_id}. "
-                f"Available layers: {list(self._global_routing_allocations.keys())}"
-            )
-
-        allocation_ratios = self._global_routing_allocations[layer_id]
-        return self._build_proportional_per_expert_tokens(
-            total_routed_tokens=total_routed_tokens,
-            allocation_ratios=allocation_ratios,
+        """Return the shared materializer's global expert token map."""
+        return dict(
+            self._materialize_layer_ep_workload(
+                batch=batch,
+                cluster_type=cluster_type,
+                layer_id=layer_id,
+            ).global_per_expert_tokens
         )
 
     def predict_monolithic_decode_shared_domain_lane_moe_times_ms(
@@ -552,33 +593,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 )
             }
 
-        total_experts = int(self._replica_config.total_expert_num)
-        if total_experts <= 0 or total_experts % lane_count != 0:
-            raise ValueError(
-                "Monolithic decode shared-domain sync requires total_expert_num to be "
-                f"positive and divisible by moe_ep_size; got total_expert_num={total_experts}, "
-                f"moe_ep_size={lane_count}"
-            )
-
-        total_routed_tokens = int(
-            self._get_effective_moe_total_tokens(batch) * self._router_topk
-        )
-        if total_routed_tokens <= 0:
-            return {lane_id: 0.0 for lane_id in range(lane_count)}
-
-        experts_per_lane = total_experts // lane_count
-        global_per_expert_tokens = self._get_global_per_expert_tokens(
-            total_routed_tokens=total_routed_tokens,
+        workload = self._materialize_layer_ep_workload(
+            batch=batch,
+            cluster_type=ClusterType.MONOLITHIC,
             layer_id=layer_id,
         )
-
-        lane_per_expert_tokens: Dict[int, Dict[int, int]] = {
-            lane_id: {} for lane_id in range(lane_count)
-        }
-        for global_expert_id, token_count in global_per_expert_tokens.items():
-            lane_id = min(lane_count - 1, global_expert_id // experts_per_lane)
-            local_expert_id = global_expert_id % experts_per_lane
-            lane_per_expert_tokens[lane_id][local_expert_id] = int(token_count)
 
         post_attention_layernorm_time = self._get_mlp_norm_layer_act_execution_time(batch)
         gating_linear_time = self._get_gating_linear_time(batch)
@@ -593,10 +612,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         lane_times_ms: Dict[int, float] = {}
         for lane_id in range(lane_count):
-            per_expert_tokens = lane_per_expert_tokens[lane_id]
+            per_expert_tokens = dict(workload.per_ep_per_expert_tokens[lane_id])
             shuffling_time = 0.0
             grouped_gemm_time = 0.0
-            if per_expert_tokens:
+            if any(per_expert_tokens.values()):
                 shuffling_time = self._get_moe_shuffling_time(
                     batch,
                     moe_tokens_input=per_expert_tokens,
@@ -1078,30 +1097,16 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         return effective_tokens
 
     def _get_local_ep_routed_tokens(self, batch: Batch) -> int:
-        total_routed_tokens = int(
-            self._get_effective_moe_total_tokens(batch) * self._router_topk
-        )
-        if total_routed_tokens <= 0:
-            return 0
-
         from frontier.entities import EPBatchGroup
 
         if isinstance(batch, EPBatchGroup):
             per_expert_tokens = getattr(batch, "per_expert_tokens", None)
-            if per_expert_tokens:
+            if per_expert_tokens is not None:
                 return int(
                     sum(int(token_count) for token_count in per_expert_tokens.values())
                 )
             return int(batch.total_num_tokens)
-
-        moe_ep_size = int(getattr(self, "_moe_ep_size", 1))
-        if moe_ep_size <= 1:
-            return total_routed_tokens
-        if not bool(getattr(batch, "is_pure_decode_batch", False)):
-            return total_routed_tokens
-        if self._use_expert_parallel_alltoall_path(batch):
-            return total_routed_tokens
-        return max(1, (total_routed_tokens + moe_ep_size - 1) // moe_ep_size)
+        return int(batch.total_num_tokens) * int(self._router_topk)
 
     def _get_moe_tokens_input(
         self, batch: Batch, layer_id: int = 0
@@ -1125,7 +1130,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         Raises:
             ValueError: If the selected routing mode is not supported by the active predictor
         """
-        num_tokens = self._get_effective_moe_total_tokens(batch)
         explicit_per_expert_tokens = getattr(batch, "per_expert_tokens", None)
         if explicit_per_expert_tokens is not None:
             if not isinstance(explicit_per_expert_tokens, dict):
@@ -1140,54 +1144,24 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 raise ValueError(
                     "EP batch per_expert_tokens must contain non-negative counts"
                 )
-            if self._is_grouped_gemm_on_demand_mode():
-                return per_expert_tokens
-            if int(getattr(self, "_moe_ep_size", 1)) > 1:
-                raise ValueError(
-                    "Per-layer EP prediction requires moe_grouped_gemm load-imbalance "
-                    "features when moe_expert_parallel_size > 1"
-                )
-            return int(sum(per_expert_tokens.values()))
+            return per_expert_tokens
 
-        local_routed_tokens = self._get_local_ep_routed_tokens(batch)
-        if not self._is_grouped_gemm_on_demand_mode():
-            if int(getattr(self, "_moe_ep_size", 1)) > 1:
-                raise ValueError(
-                    "Per-layer EP prediction requires moe_grouped_gemm load-imbalance "
-                    "features when moe_expert_parallel_size > 1"
-                )
-            return int(num_tokens * self._router_topk)
-
-        if self._global_routing_allocations is None:
+        cluster_type = getattr(self, "_cluster_type", None)
+        if cluster_type is None:
             raise ValueError(
-                "Routing allocations not initialized. "
-                "Ensure _init_global_routing_allocations() was called in __init__."
+                "Canonical MoE token materialization requires an initialized cluster_type"
             )
-
-        if type(layer_id) is not int or layer_id < 0:
-            raise ValueError("layer_id must be an exact non-negative int")
-        if layer_id not in self._global_routing_allocations:
-            raise ValueError(
-                f"No routing allocations for layer {layer_id}. "
-                f"Available layers: {list(self._global_routing_allocations.keys())}"
-            )
-
-        allocation_ratios = self._global_routing_allocations[layer_id]
-        per_expert_tokens = self._build_proportional_per_expert_tokens(
-            total_routed_tokens=local_routed_tokens,
-            allocation_ratios=allocation_ratios,
+        per_expert_tokens = dict(
+            self._materialize_layer_ep_workload(
+                batch=batch,
+                cluster_type=cluster_type,
+                layer_id=layer_id,
+            ).global_per_expert_tokens
         )
 
-        actual_total = sum(per_expert_tokens.values())
-        if actual_total != local_routed_tokens:
-            raise ValueError(
-                "MoE routing token conservation failed after largest-remainder discretization: "
-                f"expected={local_routed_tokens}, got={actual_total}"
-            )
-
         logger.debug(
-            f"[_get_moe_tokens_input] layer={layer_id}, num_tokens={num_tokens}, "
-            f"local_routed_tokens={local_routed_tokens}, topk={self._router_topk}, "
+            f"[_get_moe_tokens_input] layer={layer_id}, "
+            f"routing_tokens={batch.total_num_tokens}, topk={self._router_topk}, "
             f"experts={len(per_expert_tokens)}"
         )
 
@@ -1249,121 +1223,24 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
         return self._predictions[model_name][(effective_tokens,)]
 
-    def _get_num_experts_per_device(self) -> int:
-        total_experts = int(self._replica_config.total_expert_num)
-        if total_experts <= 0:
-            raise ValueError(f"Invalid total_expert_num={total_experts}")
-        if self._moe_ep_size <= 0:
-            return total_experts
-        if total_experts % self._moe_ep_size != 0:
-            raise ValueError(
-                "total_expert_num must be divisible by moe_expert_parallel_size. "
-                f"total_expert_num={total_experts}, moe_ep_size={self._moe_ep_size}"
-            )
-        return total_experts // self._moe_ep_size
-
-    def _build_balanced_per_expert_tokens(
-        self,
-        total_routed_tokens: int,
-    ) -> Dict[int, int]:
-        if total_routed_tokens < 0:
-            raise ValueError(
-                f"total_routed_tokens must be non-negative, got {total_routed_tokens}"
-            )
-        if total_routed_tokens == 0:
-            return {}
-
-        num_experts_per_device = self._get_num_experts_per_device()
-        per_expert = total_routed_tokens // num_experts_per_device
-        remainder = total_routed_tokens % num_experts_per_device
-
-        per_expert_tokens: Dict[int, int] = {}
-        for expert_id in range(num_experts_per_device):
-            token_count = per_expert + (1 if expert_id < remainder else 0)
-            per_expert_tokens[expert_id] = token_count
-        return per_expert_tokens
-
-    def _build_proportional_per_expert_tokens(
-        self,
-        total_routed_tokens: int,
-        allocation_ratios: Dict[int, float],
-    ) -> Dict[int, int]:
-        """Discretize routing ratios with largest-remainder token conservation."""
-        if total_routed_tokens < 0:
-            raise ValueError(
-                f"total_routed_tokens must be non-negative, got {total_routed_tokens}"
-            )
-        if total_routed_tokens == 0:
-            return {}
-        if len(allocation_ratios) == 0:
-            raise ValueError("allocation_ratios must be non-empty")
-
-        ratio_sum = float(sum(float(ratio) for ratio in allocation_ratios.values()))
-        if ratio_sum <= 0.0:
-            raise ValueError(
-                f"allocation_ratios must sum to a positive value, got {ratio_sum}"
-            )
-
-        expert_base_allocation: Dict[int, int] = {}
-        expert_fractional_parts: Dict[int, float] = {}
-        total_base_allocated = 0
-
-        for expert_id in sorted(allocation_ratios):
-            normalized_ratio = float(allocation_ratios[expert_id]) / ratio_sum
-            exact_allocation = total_routed_tokens * normalized_ratio
-            base_allocation = int(exact_allocation)
-            fractional_part = exact_allocation - base_allocation
-
-            expert_base_allocation[expert_id] = base_allocation
-            expert_fractional_parts[expert_id] = fractional_part
-            total_base_allocated += base_allocation
-
-        remaining_tokens = total_routed_tokens - total_base_allocated
-        if remaining_tokens > 0:
-            sorted_experts = sorted(
-                expert_fractional_parts.keys(),
-                key=lambda expert_id: (
-                    -expert_fractional_parts[expert_id],
-                    expert_id,
-                ),
-            )
-            for index in range(remaining_tokens):
-                expert_id = sorted_experts[index % len(sorted_experts)]
-                expert_base_allocation[expert_id] += 1
-
-        total_allocated = sum(expert_base_allocation.values())
-        if total_allocated != total_routed_tokens:
-            raise ValueError(
-                "Largest-remainder MoE routing allocation failed token conservation: "
-                f"allocated={total_allocated}, expected={total_routed_tokens}"
-            )
-
-        return expert_base_allocation
-
     def _resolve_shuffling_per_expert_tokens(
         self,
         batch: Batch,
         moe_tokens_input: Optional[Union[int, Dict[int, int]]] = None,
     ) -> Dict[int, int]:
-        if isinstance(moe_tokens_input, dict):
-            normalized = {
-                int(expert_id): int(token_count)
-                for expert_id, token_count in moe_tokens_input.items()
-            }
-            if any(token_count < 0 for token_count in normalized.values()):
-                raise ValueError(
-                    f"Negative token count in moe_tokens_input={moe_tokens_input}"
-                )
-            return normalized
-
-        if isinstance(moe_tokens_input, int):
-            total_routed_tokens = moe_tokens_input
-        else:
-            total_routed_tokens = int(
-                self._get_effective_moe_total_tokens(batch) * self._router_topk
+        if not isinstance(moe_tokens_input, dict):
+            raise ValueError(
+                "Canonical MoE shuffling prediction requires an explicit per-expert token map"
             )
-
-        return self._build_balanced_per_expert_tokens(total_routed_tokens)
+        normalized = {
+            int(expert_id): int(token_count)
+            for expert_id, token_count in moe_tokens_input.items()
+        }
+        if any(token_count < 0 for token_count in normalized.values()):
+            raise ValueError(
+                f"Negative token count in moe_tokens_input={moe_tokens_input}"
+            )
+        return normalized
 
     def _build_moe_load_imbalance_features(
         self,
@@ -2203,9 +2080,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 else self._get_effective_moe_total_tokens(batch) * self._router_topk
             )
 
-            if (
-                abs(total_allocated_tokens - expected_tokens) > 1
-            ):  # Allow small rounding errors
+            if total_allocated_tokens != expected_tokens:
                 raise ValueError(
                     f"Token conservation violated in predict_moe_layer_time: "
                     f"allocated {total_allocated_tokens} tokens, "

@@ -4230,7 +4230,10 @@ class BaseClusterScheduler(ABC):
             )
 
             per_expert_tokens = None
-            if hasattr(global_batch, "per_expert_tokens") and global_batch.per_expert_tokens:
+            if (
+                hasattr(global_batch, "per_expert_tokens")
+                and global_batch.per_expert_tokens is not None
+            ):
                 per_expert_tokens = global_batch.per_expert_tokens
             elif hasattr(execution_time_predictor, "_calculate_expert_token_allocation"):
                 per_expert_tokens = execution_time_predictor._calculate_expert_token_allocation(
@@ -4243,17 +4246,12 @@ class BaseClusterScheduler(ABC):
                     global_batch,
                     layer_id=layer_id,
                 )
-                if isinstance(moe_tokens_input, dict):
-                    per_expert_tokens = moe_tokens_input
-                elif hasattr(execution_time_predictor, "_build_uniform_per_expert_tokens"):
-                    per_expert_tokens = execution_time_predictor._build_uniform_per_expert_tokens(
-                        int(moe_tokens_input)
-                    )
-                else:
+                if not isinstance(moe_tokens_input, dict):
                     raise ValueError(
-                        "predictor returned scalar moe_tokens_input but does not expose "
-                        "_build_uniform_per_expert_tokens for decode sync collective"
+                        "Canonical MoE decode sync requires an explicit per-expert token map; "
+                        f"predictor returned {type(moe_tokens_input).__name__}"
                     )
+                per_expert_tokens = moe_tokens_input
             else:
                 raise AttributeError(
                     f"{type(execution_time_predictor).__name__} does not expose a supported "

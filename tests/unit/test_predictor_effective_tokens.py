@@ -102,7 +102,7 @@ def test_sklearn_moe_predictor_uses_effective_tokens_for_gating():
     )
 
 
-def test_sklearn_moe_predictor_uses_effective_tokens_for_local_ep_routed_tokens():
+def test_sklearn_moe_predictor_uses_logical_tokens_for_local_ep_routed_tokens():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -111,37 +111,47 @@ def test_sklearn_moe_predictor_uses_effective_tokens_for_local_ep_routed_tokens(
     predictor._moe_ep_size = 4
     predictor._use_expert_parallel_alltoall_path = MagicMock(return_value=False)
 
+    effective_tokens = MagicMock(return_value=8)
     batch = SimpleNamespace(
         total_num_tokens=1,
         is_pure_decode_batch=True,
-        get_effective_total_tokens_rounded=lambda _cluster_type: 8,
+        get_effective_total_tokens_rounded=effective_tokens,
     )
 
     result = SklearnMoEExecutionTimePredictor._get_local_ep_routed_tokens(
         predictor, batch
     )
 
-    assert result == 4
+    assert result == 2
+    effective_tokens.assert_not_called()
 
 
-def test_sklearn_moe_predictor_uses_effective_tokens_for_single_count_tokens_input():
+def test_sklearn_moe_predictor_materializes_explicit_global_expert_tokens():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
     predictor._cluster_type = ClusterType.DECODE
     predictor._router_topk = 2
-    predictor._moe_routing_distribution_type = "balanced"
-    predictor._is_grouped_gemm_on_demand_mode = MagicMock(return_value=False)
-    predictor._get_local_ep_routed_tokens = MagicMock(return_value=8)
+    predictor._replica_config = SimpleNamespace(
+        total_expert_num=4,
+        moe_expert_parallel_size=1,
+        router_topk=2,
+    )
+    predictor._decode_routing_details = {
+        0: {0: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
+    }
 
+    effective_tokens = MagicMock(return_value=99)
     batch = SimpleNamespace(
-        total_num_tokens=1,
-        get_effective_total_tokens_rounded=lambda _cluster_type: 8,
+        replica_id=0,
+        total_num_tokens=8,
+        get_effective_total_tokens_rounded=effective_tokens,
     )
 
     result = SklearnMoEExecutionTimePredictor._get_moe_tokens_input(predictor, batch)
 
-    assert result == 16
+    assert result == {0: 4, 1: 4, 2: 4, 3: 4}
+    effective_tokens.assert_not_called()
 
 
 def test_sklearn_execution_time_predictor_applies_attn_pre_proj_calibration_scale():
@@ -573,7 +583,7 @@ def test_sklearn_moe_predictor_uses_raw_on_demand_shuffling_prediction() -> None
     result = SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(
         predictor,
         batch,
-        moe_tokens_input=80,
+        moe_tokens_input={0: 32, 1: 16, 2: 16, 3: 16},
     )
 
     assert result == 0.5
@@ -849,29 +859,16 @@ def test_sklearn_moe_predictor_ignores_moe_grouped_gemm_scales_for_mixed_batch()
     assert result == 4.0
 
 
-def test_sklearn_moe_predictor_uses_effective_tokens_for_shuffling_allocation() -> None:
+def test_sklearn_moe_predictor_rejects_missing_explicit_shuffling_allocation() -> None:
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
     predictor._cluster_type = ClusterType.DECODE
-    predictor._router_topk = 2
-    predictor._replica_config = SimpleNamespace(total_expert_num=2)
-    predictor._build_balanced_per_expert_tokens = MagicMock(
-        return_value={0: 8, 1: 8}
-    )
-
-    batch = SimpleNamespace(
-        total_num_tokens=1,
-        get_effective_total_tokens_rounded=lambda _cluster_type: 8,
-    )
-
-    result = SklearnMoEExecutionTimePredictor._resolve_shuffling_per_expert_tokens(
-        predictor,
-        batch,
-    )
-
-    assert result == {0: 8, 1: 8}
-    predictor._build_balanced_per_expert_tokens.assert_called_once_with(16)
+    with pytest.raises(ValueError, match="explicit per-expert token map"):
+        SklearnMoEExecutionTimePredictor._resolve_shuffling_per_expert_tokens(
+            predictor,
+            SimpleNamespace(total_num_tokens=1),
+        )
 
 
 def test_sklearn_moe_predictor_accepts_effective_token_conservation_for_padded_decode_batch() -> None:

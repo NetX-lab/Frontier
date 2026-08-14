@@ -459,14 +459,23 @@ def test_monolithic_routing_allocations_use_global_expert_ids() -> None:
     assert sum(allocations[1].values()) == pytest.approx(1.0)
 
 
-def test_global_routing_lookup_rejects_missing_layer_instead_of_using_layer_zero() -> None:
+def test_shared_materializer_rejects_missing_layer_instead_of_using_layer_zero() -> None:
     predictor = object.__new__(_DummySklearnMoEPredictor)
-    predictor._replica_config = SimpleNamespace(total_expert_num=2)
-    predictor._global_routing_allocations = {0: {0: 0.5, 1: 0.5}}
-    predictor._moe_routing_distribution_type = "balanced"
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._replica_config = SimpleNamespace(
+        total_expert_num=2,
+        moe_expert_parallel_size=1,
+        router_topk=1,
+    )
+    predictor._monolithic_routing_details = {0: {0: {0: 0.5, 1: 0.5}}}
+    batch = SimpleNamespace(replica_id=0, total_num_tokens=4)
 
-    with pytest.raises(ValueError, match="No global routing allocations for layer 3"):
-        predictor._get_global_per_expert_tokens(total_routed_tokens=4, layer_id=3)
+    with pytest.raises(ValueError, match="missing global_layer_id 3"):
+        predictor._materialize_layer_ep_workload(
+            batch=batch,
+            cluster_type=ClusterType.MONOLITHIC,
+            layer_id=3,
+        )
 
 
 def test_routing_initialization_rejects_non_divisible_ep_topology() -> None:
