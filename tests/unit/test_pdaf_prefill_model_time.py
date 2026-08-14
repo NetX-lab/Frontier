@@ -441,7 +441,7 @@ def test_prefill_stage_schedule_resets_component_ledger_for_pipeline_stage() -> 
         replica_id=0,
         stage_id=3,
         cluster_type=ClusterType.PREFILL,
-        dp_id=0,
+        replica_local_id=0,
     ).handle_event(global_scheduler, Mock())
 
     assert len(events) == 1

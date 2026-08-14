@@ -1362,7 +1362,7 @@ def _run_decode_ffn_stage_event(monkeypatch, batch: Batch):
         replica_id=0,
         stage_id=0,
         cluster_type=ClusterType.DECODE_FFN,
-        dp_id=0,
+        replica_local_id=0,
     )
     return event.handle_event(global_scheduler, Mock())
 

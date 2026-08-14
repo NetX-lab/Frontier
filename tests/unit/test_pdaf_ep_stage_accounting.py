@@ -146,7 +146,7 @@ def _run_ep_stage(
         replica_id=0,
         stage_id=stage_id,
         cluster_type=ClusterType.DECODE_FFN,
-        dp_id=batch.ep_id,
+        replica_local_id=batch.ep_id,
     ).handle_event(global_scheduler, Mock())
 
     assert events[0].time == pytest.approx(1.002)
@@ -256,7 +256,7 @@ def test_ep_combine_collective_reschedules_only_non_empty_stage_lanes() -> None:
     schedule_events = [
         event for event in events if isinstance(event, ReplicaStageScheduleEvent)
     ]
-    assert [event._dp_id for event in schedule_events] == [0]
+    assert [event._replica_local_id for event in schedule_events] == [0]
 
 
 @pytest.mark.parametrize(
@@ -656,7 +656,10 @@ def test_decode_ffn_completion_validates_routing_before_all_mutation() -> None:
     )
     metrics_store = Mock()
 
-    with pytest.raises(ValueError, match="missing decode_attn_original routing"):
+    with pytest.raises(
+        ValueError,
+        match="missing decode_attn_original_replica_id metadata",
+    ):
         event.handle_event(global_scheduler, metrics_store)
 
     assert cluster_scheduler._raw_batch_waiting_for_m2n_back == {10: raw}

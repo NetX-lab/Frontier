@@ -23,14 +23,14 @@ class ReplicaStageScheduleEvent(BaseEvent):
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
     ):
         super().__init__(time, EventType.REPLICA_STAGE_SCHEDULE)
 
         self._replica_id = replica_id
         self._stage_id = stage_id
         self._cluster_type = cluster_type
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
 
         self._batch = None
         self._batch_stage = None
@@ -42,11 +42,10 @@ class ReplicaStageScheduleEvent(BaseEvent):
         """
         Schedule the next batch for a replica stage and emit synchronization events.
 
-        Communication skip rules:
-        - DP sync for MoE is needed only when a replica has more than one DP lane.
-        - EP synchronization is needed only when moe_expert_parallel_size > 1.
-        - Local MoE (dp_size == 1 and moe_ep_size <= 1) uses direct stage
-          execution; TP communication remains an analytical predictor term.
+        Execution-scope rules:
+        - Dense work uses the full-stage identity ``None``.
+        - Every MoE layer enters a complete Replica-local EP wave, including EP=1.
+        - TP communication remains an analytical predictor term inside each scope.
         """
         from frontier.logger import get_cluster_logger
 
@@ -58,7 +57,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
         )
         stage_scheduler: ReplicaStageScheduler = (
             cluster_scheduler.get_replica_stage_scheduler(
-                self._replica_id, self._dp_id, self._stage_id
+                self._replica_id, self._replica_local_id, self._stage_id
             )
         )
 
@@ -66,7 +65,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
         if debug_logger.isEnabledFor(logging.INFO):
             debug_logger.info(
                 f"[STAGE] ReplicaStageScheduleEvent at {self.time:.3f}s: "
-                f"replica={self._replica_id}, dp_id={self._dp_id}, stage={self._stage_id}"
+                f"replica={self._replica_id}, replica_local_id={self._replica_local_id}, stage={self._stage_id}"
             )
             # Use get_queue_batches() to get batches in priority order
             queue_batches = stage_scheduler.get_queue_batches()
@@ -89,22 +88,22 @@ class ReplicaStageScheduleEvent(BaseEvent):
         if stale_drop_count > 0:
             replica_scheduler = cluster_scheduler.get_replica_scheduler(
                 self._replica_id,
-                self._dp_id,
+                self._replica_local_id,
             )
             if replica_scheduler.num_running_batches < stale_drop_count:
                 raise ValueError(
                     "Fully stale stage-drop would make num_running_batches negative: "
-                    f"replica={self._replica_id}, dp_id={self._dp_id}, "
+                    f"replica={self._replica_id}, replica_local_id={self._replica_local_id}, "
                     f"stage={self._stage_id}, stale_drop_count={stale_drop_count}, "
                     f"num_running_batches={replica_scheduler.num_running_batches}"
                 )
             for _ in range(stale_drop_count):
                 replica_scheduler.decrement_num_running_batches()
             debug_logger.info(
-                "[STAGE][STALE-DROP-ACCOUNTING] replica=%s dp_id=%s stage=%s "
+                "[STAGE][STALE-DROP-ACCOUNTING] replica=%s replica_local_id=%s stage=%s "
                 "dropped_batches=%s num_running_batches=%s",
                 self._replica_id,
-                self._dp_id,
+                self._replica_local_id,
                 self._stage_id,
                 stale_drop_count,
                 replica_scheduler.num_running_batches,
@@ -118,9 +117,9 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 from frontier.events.replica_schedule_event import ReplicaScheduleEvent
 
                 debug_logger.info(
-                    "[STAGE][STALE-DROP-RESCHEDULE] replica=%s dp_id=%s stage=%s",
+                    "[STAGE][STALE-DROP-RESCHEDULE] replica=%s replica_local_id=%s stage=%s",
                     self._replica_id,
-                    self._dp_id,
+                    self._replica_local_id,
                     self._stage_id,
                 )
                 return [
@@ -128,7 +127,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self.time,
                         self._replica_id,
                         self._cluster_type,
-                        self._dp_id,
+                        self._replica_local_id,
                     )
                 ]
             debug_logger.info(
@@ -137,7 +136,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
             )
             debug_logger.info(
                 f"No batch to schedule for replica {self._replica_id}, "
-                f"stage {self._stage_id}, dp_id {self._dp_id}"
+                f"stage {self._stage_id}, replica_local_id {self._replica_local_id}"
             )
             return []
 
@@ -252,7 +251,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             self._replica_id,
                             self._stage_id,
                             batch,
-                            self._dp_id,
+                            self._replica_local_id,
                             "pre_moe",
                             first_layer_id,
                             attention_time,
@@ -278,7 +277,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             self._batch_stage,
                             execution_time,
                             self._cluster_type,
-                            self._dp_id,
+                            self._replica_local_id,
                         )
 
                         return [
@@ -290,7 +289,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                                 self._batch,
                                 self._batch_stage,
                                 self._cluster_type,
-                                self._dp_id,
+                                self._replica_local_id,
                             )
                         ]
                     if not isinstance(batch, EPBatchGroup):
@@ -356,7 +355,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._batch_stage,
                         execution_time,
                         self._cluster_type,
-                        self._dp_id,
+                        self._replica_local_id,
                     )
 
                     # Store expert compute time for use after dispatch collective completes
@@ -386,7 +385,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             self._replica_id,
                             self._stage_id,
                             batch,
-                            self._dp_id,
+                            self._replica_local_id,
                         )
                     ]
 
@@ -450,7 +449,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             self._replica_id,
                             self._stage_id,
                             batch,
-                            self._dp_id,
+                            self._replica_local_id,
                             "pre_moe",
                             first_layer_id,
                             attention_time,
@@ -499,7 +498,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     self._batch_stage,
                     execution_time,
                     self._cluster_type,
-                    self._dp_id,
+                    self._replica_local_id,
                 )
 
                 return [
@@ -511,7 +510,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._batch,
                         self._batch_stage,
                         self._cluster_type,
-                        self._dp_id,
+                        self._replica_local_id,
                     ),
                 ]
 
@@ -532,7 +531,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     self._batch_stage,
                     execution_time,
                     self._cluster_type,
-                    self._dp_id,
+                    self._replica_local_id,
                 )
 
                 return [
@@ -544,7 +543,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._batch,
                         self._batch_stage,
                         self._cluster_type,
-                        self._dp_id,
+                        self._replica_local_id,
                     ),
                 ]
 
@@ -644,7 +643,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     self._batch_stage,
                     execution_time,
                     self._cluster_type,
-                    self._dp_id,
+                    self._replica_local_id,
                 )
 
                 # Schedule batch stage end event directly (no sync events)
@@ -657,7 +656,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._batch,
                         self._batch_stage,
                         self._cluster_type,
-                        self._dp_id,
+                        self._replica_local_id,
                     )
                 ]
 
@@ -713,7 +712,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
             self._batch_stage,
             execution_time,
             self._cluster_type,
-            self._dp_id,
+            self._replica_local_id,
         )
 
         return [
@@ -725,7 +724,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 self._batch,
                 self._batch_stage,
                 self._cluster_type,
-                self._dp_id,
+                self._replica_local_id,
             ),
         ]
 
@@ -738,7 +737,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
             "replica_id": self._replica_id,
             "stage_id": self._stage_id,
             "cluster_type": self._cluster_type.name,
-            "dp_id": self._dp_id,
+            "replica_local_id": self._replica_local_id,
             "batch_id": self._batch.id if self._batch else None,
             "batch_stage_id": self._batch_stage.id if self._batch_stage else None,
             "is_last_stage": self._is_last_stage,
