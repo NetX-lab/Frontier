@@ -21,7 +21,7 @@ class BatchStageEndEvent(BaseEvent):
         batch: Batch,
         batch_stage: BatchStage,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
     ):
         super().__init__(time, EventType.BATCH_STAGE_END)
 
@@ -29,7 +29,7 @@ class BatchStageEndEvent(BaseEvent):
         self._stage_id = stage_id
         self._is_last_stage = is_last_stage
         self._cluster_type = cluster_type
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
 
         self._batch = batch
         self._batch_stage = batch_stage
@@ -57,7 +57,7 @@ class BatchStageEndEvent(BaseEvent):
         # Get the appropriate cluster scheduler for this cluster-internal event
         cluster_scheduler = scheduler.get_cluster_scheduler(self._cluster_type)
         stage_scheduler = cluster_scheduler.get_replica_stage_scheduler(
-            self._replica_id, self._dp_id, self._stage_id
+            self._replica_id, self._replica_local_id, self._stage_id
         )
         stage_scheduler.on_stage_end() # update status: _is_busy
 
@@ -68,7 +68,7 @@ class BatchStageEndEvent(BaseEvent):
             self._replica_id,
             self._stage_id,
             self._cluster_type,
-            self._dp_id,
+            self._replica_local_id,
         )
         release_parent = getattr(
             cluster_scheduler,
@@ -88,7 +88,7 @@ class BatchStageEndEvent(BaseEvent):
                 self._replica_id,
                 self._stage_id,
                 self._cluster_type,
-                self._dp_id,
+                self._replica_local_id,
             ))
 
         if self._is_last_stage:
@@ -98,7 +98,7 @@ class BatchStageEndEvent(BaseEvent):
                     self._replica_id,
                     self._batch,
                     self._cluster_type,
-                    self._dp_id,
+                    self._replica_local_id,
                     batch_schedule_epoch=self._batch_schedule_epoch,
                     request_execution_signatures=self._request_execution_signatures,
                     thinking_round_start_times=self._thinking_round_start_times,
@@ -112,7 +112,7 @@ class BatchStageEndEvent(BaseEvent):
                 self._stage_id + 1,
                 self._batch,
                 self._cluster_type,
-                self._dp_id,
+                self._replica_local_id,
             )
         ]
 
@@ -126,7 +126,7 @@ class BatchStageEndEvent(BaseEvent):
             "batch_stage_id": self._batch_stage.id,
             "is_last_stage": self._is_last_stage,
             "cluster_type": self._cluster_type.name,
-            "dp_id": self._dp_id,
+            "replica_local_id": self._replica_local_id,
         }
 
     def to_chrome_trace(self) -> dict:

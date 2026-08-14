@@ -87,3 +87,19 @@ def test_replica_schedule_event_uses_replica_local_identity() -> None:
     assert "replica_local_id" in source
     assert "dp_id" not in source
     assert "_dp_id" not in source
+
+
+def test_batch_stage_events_use_replica_local_identity() -> None:
+    sources = [
+        Path("frontier/events/batch_stage_arrival_event.py").read_text(
+            encoding="utf-8"
+        ),
+        Path("frontier/events/batch_stage_end_event.py").read_text(
+            encoding="utf-8"
+        ),
+    ]
+
+    for source in sources:
+        assert "replica_local_id" in source
+        assert "dp_id" not in source
+        assert "_dp_id" not in source

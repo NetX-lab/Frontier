@@ -456,7 +456,7 @@ def test_stale_batch_stage_end_does_not_mutate_or_emit() -> None:
         batch=batch,
         batch_stage=batch_stage,
         cluster_type=ClusterType.DECODE,
-        dp_id=0,
+        replica_local_id=None,
     )
     batch._schedule_epoch += 1
     scheduler = SimpleNamespace(
