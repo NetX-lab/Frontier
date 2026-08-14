@@ -124,3 +124,14 @@ def test_round_robin_scheduler_has_no_legacy_token_distributor() -> None:
 
     assert "def _distribute_tokens_within_replica" not in source
     assert "def _distribute_batches_to_replicas_round_robin" not in source
+
+
+def test_base_scheduler_has_no_second_ep_integerizer() -> None:
+    source = Path(
+        "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"
+    ).read_text(encoding="utf-8")
+
+    assert "def _conserve_tokens_allocation" not in source
+    assert "def _get_ep_subset_routed_token_total" not in source
+    assert "def _get_cached_ep_subset_routed_token_allocation" not in source
+    assert "def _get_ep_subset_routed_token_allocation" not in source

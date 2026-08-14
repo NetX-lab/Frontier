@@ -1057,156 +1057,17 @@ class BaseClusterScheduler(ABC):
         return rq_len == 0 and af_q_len == 0 and all_empty
 
     @staticmethod
-    def _conserve_tokens_allocation(total_tokens: int, expert_ids: List[int], ratios: Dict[int, float]) -> Dict[int, int]:
-        """Allocate integer tokens per expert with strict conservation using the
-        Largest Remainder Method (Hamilton).
+    def _validate_token_conservation(
+        input_tokens: int,
+        per_expert_tokens: Dict[int, int],
+        context: str,
+    ) -> None:
+        """Validate exact conservation for one already-materialized EP subset.
 
-        Args:
-            total_tokens: Target total tokens to distribute (non-negative integer)
-            expert_ids: Ordered list of expert global IDs to allocate to
-            ratios: Mapping expert_id -> routing ratio (non-negative floats). Ratios
-                    are allowed to sum to a value different from 1.0; they will be
-                    normalized internally when total_tokens > 0.
-
-        Returns:
-            Dict[expert_id, tokens] with sum(values) == total_tokens.
-
-        Raises:
-            ValueError: If total_tokens < 0, or ratios contain negative values,
-                        or ratios sum to 0 while total_tokens > 0
-        """
-        if total_tokens < 0:
-            raise ValueError("total_tokens must be non-negative")
-        if any(r < 0.0 for r in ratios.values()):
-            raise ValueError("Routing ratios must be non-negative")
-
-        # Edge case: no tokens to distribute => all zeros
-        if total_tokens == 0:
-            return {eid: 0 for eid in expert_ids}
-
-        # Normalize ratios if necessary
-        sum_ratios = sum(ratios.get(eid, 0.0) for eid in expert_ids)
-        if sum_ratios <= 0.0:
-            # No routing mass but need to place tokens => fail fast
-            raise ValueError("Sum of routing ratios must be > 0 when total_tokens > 0")
-
-        normalized = {eid: (ratios.get(eid, 0.0) / sum_ratios) for eid in expert_ids}
-
-        # Initial allocation by floor
-        ideal = {eid: total_tokens * normalized[eid] for eid in expert_ids}
-        base = {eid: int(math.floor(ideal[eid])) for eid in expert_ids}
-        allocated = sum(base.values())
-        remainder = total_tokens - allocated
-
-        # Distribute remaining tokens to experts with largest fractional parts
-        # Deterministic tie-breaker: lower expert_id first
-        if remainder > 0:
-            ranked = sorted(
-                ((eid, ideal[eid] - base[eid]) for eid in expert_ids),
-                key=lambda x: (-x[1], x[0])
-            )
-            for i in range(remainder):
-                eid = ranked[i % len(ranked)][0]
-                base[eid] += 1
-
-        # Validation: non-negative and exact conservation
-        assert all(v >= 0 for v in base.values()), "Negative allocation detected"
-        assert sum(base.values()) == total_tokens, (
-            f"Token conservation violated: allocated={sum(base.values())}, target={total_tokens}"
-        )
-
-        return base
-
-    @staticmethod
-    def _get_ep_subset_routed_token_total(
-        total_routed_tokens: int,
-        expert_ids: List[int],
-        ratios: Dict[int, float],
-    ) -> int:
-        """Return the routed-token total that belongs to one EP expert subset.
-
-        ``ratios`` describes the global routing distribution across all experts.
-        A single EP lane owns only ``expert_ids``, so it must receive only the
-        routing mass covered by that subset. Allocating the full global token
-        count to every EP lane would multiply MoE work by ``ep_size`` and create
-        pathological O(total_tokens) remainder loops for large prefill batches.
-        """
-        allocation = BaseClusterScheduler._get_ep_subset_routed_token_allocation(
-            total_routed_tokens,
-            expert_ids,
-            ratios,
-        )
-        return sum(allocation.values())
-
-    def _get_cached_ep_subset_routed_token_allocation(
-        self,
-        total_routed_tokens: int,
-        expert_ids: List[int],
-        ratios: Dict[int, float],
-    ) -> Dict[int, int]:
-        """Allocate routed tokens for an EP subset using an exact global cache.
-
-        DECODE_FFN creates one EPBatchGroup per EP lane for the same ready group.
-        The Hamilton allocation across the global expert set is identical for all
-        EP lanes in that group, so recomputing it once per lane is pure overhead.
-        Cache the exact global allocation and then return the requested subset.
-        """
-        global_expert_ids = tuple(sorted(set(ratios.keys()) | set(expert_ids)))
-        cache_key = (id(ratios), int(total_routed_tokens), global_expert_ids)
-        cache = getattr(self, "_ep_routed_token_allocation_cache", None)
-        if cache is None:
-            cache = {}
-            self._ep_routed_token_allocation_cache = cache
-
-        global_allocation = cache.get(cache_key)
-        if global_allocation is None:
-            global_allocation = self._conserve_tokens_allocation(
-                total_routed_tokens,
-                list(global_expert_ids),
-                ratios,
-            )
-            cache[cache_key] = global_allocation
-
-        return {eid: global_allocation.get(eid, 0) for eid in expert_ids}
-
-    @staticmethod
-    def _get_ep_subset_routed_token_allocation(
-        total_routed_tokens: int,
-        expert_ids: List[int],
-        ratios: Dict[int, float],
-    ) -> Dict[int, int]:
-        """Allocate routed tokens to one EP subset from a global expert split.
-
-        The global expert allocation is computed once with strict conservation,
-        then restricted to the experts owned by the EP lane. This avoids
-        independent per-subset rounding, whose accumulated error can create or
-        drop routed tokens across the full EP group.
-        """
-        global_expert_ids = sorted(set(ratios.keys()) | set(expert_ids))
-        if not global_expert_ids:
-            if total_routed_tokens == 0:
-                return {}
-            raise ValueError(
-                "At least one expert ID is required when total_routed_tokens > 0"
-            )
-        global_allocation = BaseClusterScheduler._conserve_tokens_allocation(
-            total_routed_tokens,
-            global_expert_ids,
-            ratios,
-        )
-        return {eid: global_allocation.get(eid, 0) for eid in expert_ids}
-
-    def _validate_token_conservation(self, input_tokens: int, per_expert_tokens: Dict[int, int], context: str):
-        """
-        Phase 3 Task 2: Validate that tokens are conserved in MoE routing.
-
-        Args:
-            input_tokens: Total number of tokens entering MoE layer
-            per_expert_tokens: Dict mapping expert_id -> token_count
-            context: Description of where validation is happening (for error messages)
-
-        Raises:
-            ValueError: If token conservation is violated
+        The shared MoE materializer owns integerization.  The scheduler keeps
+        this small fail-fast check at the entity-construction boundary so a
+        malformed lane workload cannot enter the event queue.  It intentionally
+        does not allocate or rebalance tokens.
         """
         total_expert_tokens = sum(per_expert_tokens.values())
         if total_expert_tokens != input_tokens:
@@ -1216,6 +1077,7 @@ class BaseClusterScheduler(ABC):
                 f"Difference={input_tokens - total_expert_tokens}, "
                 f"Per-expert allocation={per_expert_tokens}"
             )
+
 
     def _materialize_ep_wave_workload(
         self,
