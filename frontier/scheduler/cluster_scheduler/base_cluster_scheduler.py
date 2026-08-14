@@ -2974,154 +2974,29 @@ class BaseClusterScheduler(ABC):
 
     def on_prefill_sync(self, time: float, replica_id: int, stage_id: int, batch: Batch,
                        dp_id: int, sync_stage: str, layer_id: int, stage_execution_time: float):
-        """
-        Handle prefill cluster synchronization points.
-
-        Args:
-            time: Current simulation time
-            replica_id: ID of the replica
-            stage_id: Pipeline stage ID
-            batch: The batch being processed
-            dp_id: Data parallel replica ID within the replica
-            sync_stage: "pre_moe" or "post_moe"
-            layer_id: Current layer being processed
-            stage_execution_time: Execution time for this stage
-        """
-        # Guard: This method should only be called for MoE models
+        del stage_execution_time, dp_id
         if self._prefill_sync_waiting_room is None:
             raise ValueError(
-                f"on_prefill_sync called for non-MoE model in PREFILL cluster. "
-                f"Dense models should not use sync events."
+                "PREFILL synchronization is unavailable for a dense model; "
+                "dense execution must use the full-stage protocol"
             )
-
-        if sync_stage == "pre_moe" and self._uses_shared_prefill_layer_protocol(
-            batch,
-            layer_id,
-        ):
-            return self._on_prefill_ep_wave_ready(
-                time=time,
-                replica_id=replica_id,
-                stage_id=stage_id,
-                batch=batch,
-                layer_id=layer_id,
-                dp_id=dp_id,
+        if sync_stage != "pre_moe":
+            raise ValueError(
+                "PREFILL synchronization entry must start at pre_moe; "
+                "post_moe completion is handled by PrefillSyncCollectiveEvent"
             )
-
-        from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveEvent
-        from frontier.logger import get_cluster_logger
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-
-        batch_global_id = batch.global_id
-        # DP waiting room for prefill cluster
-        sync_wait_room = self._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id][sync_stage]
-
-        # CRITICAL FIX: If this is an idle batch and there's already a real batch
-        # in the waiting room for this dp_id, skip the idle batch.
-        if batch.is_idle and dp_id in sync_wait_room["batches"]:
-            existing_batch = sync_wait_room["batches"][dp_id]
-            if not existing_batch.is_idle:
-                logger.info(
-                    f"[PREFILL_SYNC][IDLE_SKIP] Skipping idle batch {batch.id} for dp_id={dp_id} "
-                    f"because real batch {existing_batch.id} already exists in waiting room"
-                )
-                return []
-
-        sync_wait_room["batches"][dp_id] = batch
-        sync_wait_room["arrival_times"][dp_id] = time
-
-        # Get the replica to check dp_size
-        replica = self.get_replica(replica_id)
-        dp_size = 1
-
-        arrived = len(sync_wait_room["batches"])
-        logger.info(
-            f"[PREFILL_SYNC][ARRIVAL] stage={stage_id}, layer={layer_id}, sync_stage={sync_stage}, "
-            f"replica={replica_id}, dp_id={dp_id}, arrived={arrived}/{dp_size}, is_idle={batch.is_idle}, t={time:.6f}s"
+        if not self._uses_shared_prefill_layer_protocol(batch, layer_id):
+            raise RuntimeError(
+                "Legacy PREFILL DP synchronization is removed; "
+                "the current layer must use the canonical per-layer protocol"
+            )
+        return self._on_prefill_ep_wave_ready(
+            time=time,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            batch=batch,
+            layer_id=layer_id,
         )
-
-        # Check if all DP replicas in this replica have arrived
-        if arrived == dp_size:
-            # Synchronize to the maximum time across all DP replicas
-            sync_time = max(sync_wait_room["arrival_times"].values())
-            logger.info(
-                f"[PREFILL_SYNC][COLLECTIVE_READY] Scheduling PrefillSyncCollectiveEvent at t={sync_time:.6f}s "
-                f"for batch_global_id={batch_global_id}, stage={stage_id}, layer={layer_id}, sync_stage={sync_stage}"
-            )
-            return [
-                PrefillSyncCollectiveEvent(
-                    sync_time,
-                    replica_id,
-                    stage_id,
-                    batch_global_id,
-                    sync_stage,
-                    layer_id,
-                    cluster_type=self._cluster_type,
-                )
-            ]
-        else:
-            # Not all DP replicas have arrived yet.
-            # For pre_moe sync, create idle batches for missing DP lanes so the
-            # collective can complete when num_requests < dp_size.
-            if sync_stage == "pre_moe" and not batch.is_idle:
-                arrived_dp_ids = set(sync_wait_room["batches"].keys())
-                all_dp_ids = set(range(dp_size))
-                missing_dp_ids = all_dp_ids - arrived_dp_ids
-
-                if missing_dp_ids:
-                    logger.info(
-                        f"[PREFILL_SYNC][IDLE_CREATE] Creating idle batches for missing DP replicas: "
-                        f"missing_dp_ids={sorted(missing_dp_ids)}, arrived_dp_ids={sorted(arrived_dp_ids)}"
-                    )
-
-                    from frontier.events.prefill_sync_event import PrefillSyncEvent
-
-                    idle_batch_events = []
-                    for missing_dp_id in sorted(missing_dp_ids):
-                        if missing_dp_id in sync_wait_room["batches"]:
-                            logger.info(
-                                f"[PREFILL_SYNC][IDLE_SKIP] Skipping idle batch creation for dp_id={missing_dp_id} "
-                                f"(already exists in waiting room)"
-                            )
-                            continue
-
-                        idle_batch = Batch(
-                            replica_id=replica_id,
-                            requests=[],
-                            num_tokens=[],
-                            is_idle=True,
-                            is_moe=batch.is_moe,
-                        )
-                        idle_batch.set_global_id(batch_global_id)
-
-                        logger.info(
-                            f"[PREFILL_SYNC][IDLE_CREATE] Created idle batch {idle_batch.id} for "
-                            f"replica={replica_id}, dp_id={missing_dp_id}, "
-                            f"batch_global_id={batch_global_id}, layer={layer_id}"
-                        )
-
-                        idle_batch_events.append(
-                            PrefillSyncEvent(
-                                time=time,
-                                replica_id=replica_id,
-                                stage_id=stage_id,
-                                batch=idle_batch,
-                                dp_id=missing_dp_id,
-                                sync_stage=sync_stage,
-                                layer_id=layer_id,
-                                stage_execution_time=0.0,
-                                cluster_type=self._cluster_type,
-                            )
-                        )
-
-                    return idle_batch_events
-
-            logger.info(
-                f"[PREFILL_SYNC][WAITING] Not all DP replicas arrived yet: "
-                f"arrived={arrived}/{dp_size}, batch_global_id={batch_global_id}, "
-                f"layer={layer_id}, sync_stage={sync_stage}"
-            )
-
-        return []
 
     def on_dense_layer_complete(
         self,
