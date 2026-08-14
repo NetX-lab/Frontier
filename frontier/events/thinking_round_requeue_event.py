@@ -29,9 +29,9 @@ class ThinkingRoundRequeueEvent(BaseEvent):
         cluster_type = self._request.thinking_home_cluster_type
         replica_id = self._request.thinking_home_replica_id
         dp_id = self._request.thinking_home_dp_id
-        if cluster_type is None or replica_id is None or dp_id is None:
+        if cluster_type is None or replica_id is None:
             raise ValueError(
-                "ThinkingRoundRequeueEvent cannot run without full home-lane affinity."
+                "ThinkingRoundRequeueEvent cannot run without home Replica affinity."
             )
         if cluster_type not in [ClusterType.MONOLITHIC, ClusterType.PREFILL]:
             raise ValueError(

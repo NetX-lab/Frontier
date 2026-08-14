@@ -13,17 +13,19 @@ class StickyRoundRobinClusterScheduler(RoundRobinClusterScheduler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._session_counter = 0
-        self._session_to_target_map: dict[int, tuple[int, int]] = {}
+        self._session_to_target_map: dict[int, tuple[int, int | None]] = {}
 
-    def _get_ordered_targets(self) -> list[tuple[int, int]]:
+    def _get_ordered_targets(self) -> list[tuple[int, int | None]]:
         replica_ids = list(self._cluster.replicas.keys())
+        if self._cluster_type != ClusterType.DECODE_FFN:
+            return [(replica_id, None) for replica_id in replica_ids]
         return [
             (replica_id, dp_id)
             for replica_id in replica_ids
-            for dp_id in range(self._replica_dp_size)
+            for dp_id in range(self._replica_ep_size)
         ]
 
-    def _get_target_for_request(self, request: Request) -> tuple[int, int]:
+    def _get_target_for_request(self, request: Request) -> tuple[int, int | None]:
         if request.session_id is None:
             raise ValueError(
                 "session_id is required for sticky_round_robin cluster scheduler"
@@ -35,8 +37,8 @@ class StickyRoundRobinClusterScheduler(RoundRobinClusterScheduler):
             self._session_to_target_map[request.session_id] = target
         return self._session_to_target_map[request.session_id]
 
-    def _schedule_batch_mode(self) -> List[Tuple[int, int, Request]]:
-        request_mapping: List[Tuple[int, int, Request]] = []
+    def _schedule_batch_mode(self) -> List[Tuple[int, int | None, Request]]:
+        request_mapping: List[Tuple[int, int | None, Request]] = []
         while self._request_queue:
             request = self._request_queue.pop(0)
             replica_id, dp_id = self._get_target_for_request(request)

@@ -4268,7 +4268,6 @@ class BaseClusterScheduler(ABC):
         metrics_store,
         *,
         direct_batch: Optional[Batch] = None,
-        direct_dp_id: int = 0,
     ):
         """
         Handle collective synchronization completion in DECODE cluster.
@@ -4298,8 +4297,10 @@ class BaseClusterScheduler(ABC):
                     "Direct dense DECODE completion is valid only for post_moe transition"
                 )
             sync_wait_room = {
-                "batches": {direct_dp_id: direct_batch},
-                "arrival_times": {direct_dp_id: time},
+                # Dense completion is a full-stage handoff; EP0 is not a
+                # valid scheduler identity for the next layer.
+                "batches": {None: direct_batch},
+                "arrival_times": {None: time},
             }
             dp_batches = sync_wait_room["batches"]
         else:
@@ -4333,9 +4334,18 @@ class BaseClusterScheduler(ABC):
             total_global_tokens = sample_batch.total_num_tokens
             total_global_prefill_tokens = sample_batch.num_prefill_tokens
 
-        stage_scheduler = self.get_replica_stage_scheduler(replica_id, 0, stage_id)
-        execution_time_predictor = stage_scheduler._execution_time_predictor
         canonical_ep_wave = hasattr(sample_batch, "_decode_ep_wave_lane_times_ms")
+        stage_identity = (
+            None
+            if canonical_ep_wave
+            or direct_batch is not None
+            or self._cluster_type in (ClusterType.DECODE, ClusterType.MONOLITHIC)
+            else 0
+        )
+        stage_scheduler = self.get_replica_stage_scheduler(
+            replica_id, stage_identity, stage_id
+        )
+        execution_time_predictor = stage_scheduler._execution_time_predictor
         if canonical_ep_wave:
             participant_count = 1
             shared_domain_sync = False
@@ -4583,12 +4593,15 @@ class BaseClusterScheduler(ABC):
                     continue
 
                 total_time_to_next_sync = post_moe_comm_time + attention_time
+                transition_identity = (
+                    None if stage_identity is None else participant_id
+                )
                 events.append(DecodeSyncEvent(
                     time + total_time_to_next_sync,
                     replica_id,
                     stage_id,
                     batch,
-                    participant_id,
+                    transition_identity,
                     "pre_moe",
                     next_layer_id,
                     total_time_to_next_sync,
@@ -4655,7 +4668,10 @@ class BaseClusterScheduler(ABC):
                 mtp_terminal_overshoot_time,
             )
 
-            dp_stage_scheduler = self.get_replica_stage_scheduler(replica_id, participant_id, stage_id)
+            transition_identity = None if stage_identity is None else participant_id
+            dp_stage_scheduler = self.get_replica_stage_scheduler(
+                replica_id, transition_identity, stage_id
+            )
             batch_stage, _ = dp_stage_scheduler.predict_and_create_stage(batch, skip_get_execution_time=True)
 
             original_start_time = getattr(
@@ -4692,7 +4708,7 @@ class BaseClusterScheduler(ABC):
                 batch_stage,
                 corrected_execution_time,
                 self._cluster_type,
-                participant_id,
+                transition_identity,
             )
 
             events.append(BatchStageEndEvent(
@@ -4703,7 +4719,7 @@ class BaseClusterScheduler(ABC):
                 batch,
                 batch_stage,
                 self._cluster_type,
-                participant_id,
+                transition_identity,
             ))
 
         logger.info(

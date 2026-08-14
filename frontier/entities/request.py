@@ -1982,7 +1982,7 @@ class Request(BaseEntity):
         self,
         cluster_type: ClusterType,
         replica_id: int,
-        dp_id: int,
+        dp_id: int | None,
     ) -> None:
         if not self.is_thinking_mode_enabled:
             return
@@ -1994,12 +1994,17 @@ class Request(BaseEntity):
         if self._thinking_home_cluster_type is None:
             self._thinking_home_cluster_type = cluster_type
             self._thinking_home_replica_id = int(replica_id)
-            self._thinking_home_dp_id = int(dp_id)
+            if dp_id is not None and (type(dp_id) is not int or dp_id < 0):
+                raise ValueError(
+                    "Thinking Mode home queue local identity must be None or "
+                    f"an exact non-negative int, got={dp_id!r}"
+                )
+            self._thinking_home_dp_id = dp_id
             return
         if (
             self._thinking_home_cluster_type != cluster_type
             or self._thinking_home_replica_id != int(replica_id)
-            or self._thinking_home_dp_id != int(dp_id)
+            or self._thinking_home_dp_id != dp_id
         ):
             raise ValueError(
                 "Thinking Mode v1 home queue affinity changed unexpectedly for "
