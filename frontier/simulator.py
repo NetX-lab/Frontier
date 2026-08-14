@@ -836,13 +836,13 @@ class Simulator:
             ):
                 details["replica_id"] = batch.decode_attn_original_replica_id
 
-            if hasattr(event, "_dp_id"):
-                details["dp_id"] = getattr(event, "_dp_id")
+            if hasattr(event, "_replica_local_id"):
+                details["replica_local_id"] = getattr(event, "_replica_local_id")
             elif (
                 hasattr(batch, "decode_attn_original_replica_local_id")
                 and batch.decode_attn_original_replica_local_id is not None
             ):
-                details["dp_id"] = batch.decode_attn_original_replica_local_id
+                details["replica_local_id"] = batch.decode_attn_original_replica_local_id
 
             details["batch_size"] = getattr(batch, "size", "unknown")
             details["num_tokens"] = getattr(batch, "total_num_tokens", "unknown")
@@ -932,7 +932,7 @@ class Simulator:
                 "layer_id": layer_id,
                 "decode_step": details.get("decode_step", "unknown"),
                 "replica_id": details.get("replica_id", "unknown"),
-                "dp_id": details.get("dp_id", "unknown"),
+                "replica_local_id": details.get("replica_local_id", "unknown"),
                 "is_estimated_layer_marker": True,
                 "source_event_id": details.get("event_id", event.id),
             }
@@ -986,7 +986,7 @@ class Simulator:
             "request_decode_steps": request_decode_steps,
             "request_layer_ids": request_layer_ids,
             "replica_id": details.get("replica_id", "unknown"),
-            "dp_id": details.get("dp_id", "unknown"),
+            "replica_local_id": details.get("replica_local_id", "unknown"),
             "is_prefill_boundary_marker": True,
             "source_event_id": details.get("event_id", event.id),
         }

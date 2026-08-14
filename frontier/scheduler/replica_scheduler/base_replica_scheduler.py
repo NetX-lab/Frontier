@@ -206,7 +206,7 @@ class BaseReplicaScheduler(ABC):
             self._config.non_kv_cache_overhead_bytes = int(planner_overhead_bytes)
 
             logger.info(
-                "[RUNTIME_NON_KV_PROFILE_APPLIED] cluster_type=%s, dp_id=%s, "
+                "[RUNTIME_NON_KV_PROFILE_APPLIED] cluster_type=%s, replica_local_id=%s, "
                 "profile_max_num_batched_tokens=%s, weights_memory_source=%s, "
                 "input_weights_memory_bytes=%s, measured_weights_memory_bytes=%s, "
                 "use_analytical_param_memory=%s, non_kv_cache_overhead_bytes=%s",
@@ -436,7 +436,7 @@ class BaseReplicaScheduler(ABC):
         debug_msg = (
             f"[BATCH_CREATE] batch_id={batch.id}, global_id={batch.global_id}, "
             f"decode_sync_global_id={decode_sync_global_id}, "
-            f"replica_id={self._replica_id}, dp_id={self._replica_local_id}, "
+            f"replica_id={self._replica_id}, replica_local_id={self._replica_local_id}, "
             f"requests={request_ids}, num_requests={len(requests)}, "
             f"cluster={self._cluster_type.name if self._cluster_type else 'None'}"
         )
@@ -603,7 +603,7 @@ class BaseReplicaScheduler(ABC):
                 self._cluster_type.name if self._cluster_type is not None else None
             ),
             "replica_id": self._replica_id,
-            "dp_id": self._replica_local_id,
+            "replica_local_id": self._replica_local_id,
             "request_queue": self._debug_request_collection_state(
                 self._request_queue
             ),
@@ -828,9 +828,8 @@ class BaseReplicaScheduler(ABC):
         # Different batching logic based on cluster type
         if self._cluster_type == ClusterType.DECODE:
             # For unified DECODE cluster (PD-disaggregation mode):
-            # CRITICAL FIX: Each DP replica scheduler operates independently
-            # The batch capacity should be based on pipeline stages, NOT DP size
-            # Each DP replica (dp_id) has its own replica scheduler instance
+            # Each replica-local scheduler operates independently.
+            # Batch capacity is based on pipeline stages, not local identity.
             # and can run batches independently up to num_pipeline_stages
             #
             # This is different from DECODE_ATTN which uses micro-batch pipeline
@@ -851,7 +850,7 @@ class BaseReplicaScheduler(ABC):
                 request_ids = [req.id for req in batch.requests] if batch.requests else []
                 debug_msg = (
                     f"[BATCH_SCHEDULE][DECODE] batch_id={batch.id}, global_id={batch.global_id}, "
-                    f"replica_id={self._replica_id}, dp_id={self._replica_local_id}, "
+                    f"replica_id={self._replica_id}, replica_local_id={self._replica_local_id}, "
                     f"requests={request_ids}, num_running={self._num_running_batches}/{self._num_stages}"
                 )
                 logger.debug(debug_msg)
@@ -865,7 +864,7 @@ class BaseReplicaScheduler(ABC):
             # Priority 1: drain AF-immediate (F→A returned) inflight micro-batches
             if hasattr(self, '_af_immediate_batch_queue') and self._af_immediate_batch_queue:
                 logger.info(
-                    f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._replica_local_id}] Draining {len(self._af_immediate_batch_queue)} AF-immediate inflight micro-batches"
+                    f"[DECODE_ATTN][Replica {self._replica_id}][local={self._replica_local_id}] Draining {len(self._af_immediate_batch_queue)} AF-immediate inflight micro-batches"
                 )
                 while self._af_immediate_batch_queue:
                     micro_batch = self._af_immediate_batch_queue.pop(0)
@@ -876,7 +875,7 @@ class BaseReplicaScheduler(ABC):
                     # Inflight micro-batches already occupy a pipeline slot; do NOT increment _num_running_batches
                     scheduled_batches.append(micro_batch)
                     logger.info(
-                        f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._replica_local_id}] Scheduled inflight micro-batch {getattr(micro_batch,'id','?')} (no slot increment)"
+                        f"[DECODE_ATTN][Replica {self._replica_id}][local={self._replica_local_id}] Scheduled inflight micro-batch {getattr(micro_batch,'id','?')} (no slot increment)"
                     )
             
             # Store scheduled request IDs for use by _schedule_decode_attn_only()
@@ -884,7 +883,7 @@ class BaseReplicaScheduler(ABC):
             self._continuation_request_ids = scheduled_request_ids
             if scheduled_request_ids:
                 logger.debug(
-                    f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._replica_local_id}] "
+                    f"[DECODE_ATTN][Replica {self._replica_id}][local={self._replica_local_id}] "
                     f"Excluding {len(scheduled_request_ids)} requests from Priority 2: {scheduled_request_ids}"
                 )
 
@@ -926,7 +925,7 @@ class BaseReplicaScheduler(ABC):
                 scheduled_batches.append(micro_batch)
                 self._num_running_batches += 1
                 logger.info(
-                    f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._replica_local_id}] Scheduled NEW micro-batch {getattr(micro_batch,'id','?')} (num_running={self._num_running_batches}/{self._af_pipeline_num_micro_batch})"
+                    f"[DECODE_ATTN][Replica {self._replica_id}][local={self._replica_local_id}] Scheduled NEW micro-batch {getattr(micro_batch,'id','?')} (num_running={self._num_running_batches}/{self._af_pipeline_num_micro_batch})"
                 )
             
             # Clear the temporary attribute
@@ -1114,7 +1113,7 @@ class BaseReplicaScheduler(ABC):
 
         This method is used by the cluster scheduler to add batches returning from
         decode-ffn cluster directly to the replica scheduler's processing queue,
-        preserving batch integrity and original replica/DP assignment.
+        preserving batch integrity and original Replica/local assignment.
 
         Args:
             batch: The batch returning from decode-ffn cluster

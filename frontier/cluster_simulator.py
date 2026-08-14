@@ -522,10 +522,10 @@ class ClusterSimulator:
                 pass
 
             try:
-                if hasattr(event, '_dp_id'):
-                    details['dp_id'] = getattr(event, '_dp_id')
+                if hasattr(event, '_replica_local_id'):
+                    details['replica_local_id'] = getattr(event, '_replica_local_id')
                 elif hasattr(batch, 'decode_attn_original_replica_local_id') and batch.decode_attn_original_replica_local_id is not None:
-                    details['dp_id'] = batch.decode_attn_original_replica_local_id
+                    details['replica_local_id'] = batch.decode_attn_original_replica_local_id
             except Exception:
                 pass
 
@@ -566,15 +566,15 @@ class ClusterSimulator:
                     if getattr(b, 'decode_attn_original_replica_id', None) is not None:
                         details['replica_id'] = b.decode_attn_original_replica_id
                     if getattr(b, 'decode_attn_original_replica_local_id', None) is not None:
-                        details['dp_id'] = b.decode_attn_original_replica_local_id
+                        details['replica_local_id'] = b.decode_attn_original_replica_local_id
             except Exception:
                 pass
             # Fallback to transfer_info source ids
             try:
                 if 'replica_id' not in details and hasattr(transfer_info, 'source_replica_id'):
                     details['replica_id'] = transfer_info.source_replica_id
-                if 'dp_id' not in details and hasattr(transfer_info, 'source_replica_local_id'):
-                    details['dp_id'] = transfer_info.source_replica_local_id
+                if 'replica_local_id' not in details and hasattr(transfer_info, 'source_replica_local_id'):
+                    details['replica_local_id'] = transfer_info.source_replica_local_id
             except Exception:
                 pass
 

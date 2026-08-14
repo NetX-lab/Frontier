@@ -177,3 +177,16 @@ def test_thinking_mode_requeue_uses_replica_local_identity() -> None:
     assert "replica_local_id" in event_source
     assert "thinking_home_dp_id" not in event_source
     assert '"dp_id"' not in event_source
+
+
+def test_simulator_trace_identity_uses_replica_local_identity() -> None:
+    sources = [
+        Path("frontier/simulator.py").read_text(encoding="utf-8"),
+        Path("frontier/cluster_simulator.py").read_text(encoding="utf-8"),
+    ]
+
+    for source in sources:
+        assert "replica_local_id" in source
+        assert "_dp_id" not in source
+        assert '"dp_id"' not in source
+        assert "'dp_id'" not in source

@@ -83,17 +83,17 @@ class BaseGlobalScheduler(ABC):
             expected_lanes = [
                 (
                     int(replica_id),
-                    None if dp_id is None else int(dp_id),
+                    None if replica_local_id is None else int(replica_local_id),
                 )
-                for replica_id, dp_id in get_current_expected_lanes()
+                for replica_id, replica_local_id in get_current_expected_lanes()
             ]
         if not expected_lanes:
             expected_lanes = [
                 (
                     int(replica_id),
-                    None if dp_id is None else int(dp_id),
+                    None if replica_local_id is None else int(replica_local_id),
                 )
-                for replica_id, dp_id in getattr(
+                for replica_id, replica_local_id in getattr(
                     decode_attn_scheduler, "_a2f_expected_lanes", []
                 )
             ]
