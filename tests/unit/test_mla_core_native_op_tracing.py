@@ -366,7 +366,7 @@ def test_operation_metrics_record_mla_attention_ops() -> None:
         batch_stage=_DummyBatchStage(),
         execution_time=execution_time,
         cluster_type=ClusterType.MONOLITHIC,
-        dp_id=0,
+        replica_local_id=0,
     )
 
     per_batch = metrics_store._operation_metrics_per_batch[ClusterType.MONOLITHIC]
@@ -448,7 +448,7 @@ def test_operation_metrics_dense_attention_uses_shared_mapper(monkeypatch) -> No
         batch_stage=_DummyBatchStage(),
         execution_time=execution_time,
         cluster_type=ClusterType.MONOLITHIC,
-        dp_id=0,
+        replica_local_id=0,
     )
 
     per_batch = metrics_store._operation_metrics_per_batch[ClusterType.MONOLITHIC]
@@ -490,7 +490,7 @@ def test_frontier_stage_batch_ledger_uses_structured_mla_operator_times() -> Non
         replica_id=0,
         stage_id=0,
         cluster_type=ClusterType.MONOLITHIC,
-        dp_id=0,
+        replica_local_id=0,
         stage_end_time=1.0,
     )
 

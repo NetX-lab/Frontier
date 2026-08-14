@@ -2317,7 +2317,7 @@ class BaseClusterScheduler(ABC):
                     replica_id,
                     replica_scheduler.memory_usage_percent,
                     self._cluster_type,
-                    dp_id=ep_id,
+                    replica_local_id=ep_id,
                 )
 
         for ep_id, ep_batch in ep_batches.items():
@@ -2327,7 +2327,7 @@ class BaseClusterScheduler(ABC):
                 replica_id=replica_id,
                 stage_id=stage_id,
                 cluster_type=self._cluster_type,
-                dp_id=ep_id,
+                replica_local_id=ep_id,
                 completion_source="ep_alltoall_combine_collective",
             )
 

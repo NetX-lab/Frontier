@@ -115,7 +115,7 @@ def test_full_stage_ledger_key_preserves_absent_local_identity() -> None:
         replica_id=2,
         stage_id=1,
         cluster_type=ClusterType.DECODE_FFN,
-        dp_id=None,
+        replica_local_id=None,
     )
 
     assert key == (ClusterType.DECODE_FFN.name, 2, None, 1, 9)

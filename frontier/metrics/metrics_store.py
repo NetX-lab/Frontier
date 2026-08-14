@@ -1374,7 +1374,7 @@ class MetricsStore:
             for metric_name in CpuOperationMetrics
         }
 
-        # Utilization metrics - now support dp_id
+        # Utilization metrics support full-stage and Replica-local scopes.
         num_replicas = cluster_config.num_replicas
         num_pipeline_stages = cluster_config.replica_config.num_pipeline_stages
         dp_size = self._get_parallel_lane_count(cluster_type, cluster_config.replica_config)
@@ -3331,7 +3331,7 @@ class MetricsStore:
         replica_id: int,
         memory_usage_percent: int,
         cluster_type: ClusterType,
-        dp_id: int = 0,
+        replica_local_id: int | None = None,
     ) -> None:
         if (
             self._config.min_batch_index and batch.id < self._config.min_batch_index
@@ -3344,7 +3344,7 @@ class MetricsStore:
         if self._config.store_utilization_metrics:
             replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
             self._get_memory_usage_meter(
-                cluster_type, replica_index, dp_id
+                cluster_type, replica_index, replica_local_id
             ).put(time, memory_usage_percent)
 
         for request in batch.requests:
@@ -3388,7 +3388,7 @@ class MetricsStore:
         replica_id: int,
         memory_usage_percent: int,
         cluster_type: ClusterType,
-        dp_id: int = 0,
+        replica_local_id: int | None = None,
     ) -> None:
         if not self._config.store_utilization_metrics:
             return
@@ -3396,7 +3396,7 @@ class MetricsStore:
         # Convert global replica_id to cluster-relative index
         replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
         self._get_memory_usage_meter(
-            cluster_type, replica_index, dp_id
+            cluster_type, replica_index, replica_local_id
         ).put(
             time, memory_usage_percent
         )
@@ -3493,7 +3493,7 @@ class MetricsStore:
         batch_stage: BatchStage,
         execution_time: ExecutionTime,
         cluster_type: ClusterType,
-        dp_id: int = 0,
+        replica_local_id: int | None = None,
     ) -> None:
         # Emit op-level traces if enabled (independent of write_metrics flag)
         # This must be called FIRST because it uses the raw simulation time,
@@ -3530,7 +3530,7 @@ class MetricsStore:
                 replica_id=replica_id,
                 stage_id=stage_id,
                 cluster_type=cluster_type,
-                dp_id=dp_id,
+                replica_local_id=replica_local_id,
                 stage_end_time=time + batch_stage.execution_time,
             )
             ledger_key = self._frontier_stage_batch_ledger_key(
@@ -3538,7 +3538,7 @@ class MetricsStore:
                 replica_id=replica_id,
                 stage_id=stage_id,
                 cluster_type=cluster_type,
-                dp_id=dp_id,
+                replica_local_id=replica_local_id,
             )
             self._pending_frontier_stage_batch_ledger_rows[ledger_row_id] = ledger_row
             self._pending_frontier_stage_batch_ledger_row_keys[ledger_key] = ledger_row_id
@@ -3555,7 +3555,7 @@ class MetricsStore:
             cluster_type,
             replica_index,
             stage_id,
-            dp_id,
+            replica_local_id,
         )
         busy_meter.put(time, 100)
         mfu = self._mfu_calculator[cluster_type].get_mfu(batch_stage)
@@ -3772,7 +3772,7 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType,
-        dp_id: int = 0,
+        replica_local_id: int | None = None,
     ) -> None:
         if not self._config.store_utilization_metrics:
             return
@@ -3781,7 +3781,7 @@ class MetricsStore:
             cluster_type,
             replica_index,
             stage_id,
-            dp_id,
+            replica_local_id,
         )
         busy_meter.put(time, 0)
         mfu_meter.put(time, 0)
@@ -3794,7 +3794,7 @@ class MetricsStore:
                     replica_id=ledger_row["replica_id"],
                     stage_id=ledger_row["stage_id"],
                     cluster_type=ledger_row["cluster_type"],
-                    dp_id=ledger_row.get("replica_local_id"),
+                    replica_local_id=ledger_row.get("replica_local_id"),
                 ),
                 None,
             )
@@ -3937,7 +3937,7 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType | str,
-        dp_id: int | None,
+        replica_local_id: int | None,
     ) -> tuple[str, int, int | None, int, int]:
         cluster_type_name = (
             cluster_type.name if isinstance(cluster_type, ClusterType) else str(cluster_type)
@@ -3945,7 +3945,7 @@ class MetricsStore:
         return (
             cluster_type_name,
             int(replica_id),
-            None if dp_id is None else int(dp_id),
+            None if replica_local_id is None else int(replica_local_id),
             int(stage_id),
             int(batch_id),
         )
@@ -3958,7 +3958,7 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
         completion_source: str = "manual_flush",
     ) -> None:
         if (
@@ -3972,7 +3972,7 @@ class MetricsStore:
             replica_id=replica_id,
             stage_id=stage_id,
             cluster_type=cluster_type,
-            dp_id=dp_id,
+            replica_local_id=replica_local_id,
         )
         ledger_row = self._pending_frontier_stage_batch_ledger_rows_by_key.pop(
             ledger_key, None
@@ -3980,7 +3980,8 @@ class MetricsStore:
         if ledger_row is None:
             raise ValueError(
                 "Missing pending Frontier stage-batch ledger row for manual flush: "
-                f"cluster={cluster_type.name}, replica_id={replica_id}, dp_id={dp_id}, "
+                f"cluster={cluster_type.name}, replica_id={replica_id}, "
+                f"replica_local_id={replica_local_id}, "
                 f"stage_id={stage_id}, batch_id={batch_id}"
             )
         ledger_row_id = self._pending_frontier_stage_batch_ledger_row_keys.pop(
@@ -4008,7 +4009,7 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
         stage_end_time: float,
     ) -> dict[str, Any]:
         component_ledger_ms = self._build_frontier_stage_batch_component_ledger(execution_time)
@@ -4041,9 +4042,11 @@ class MetricsStore:
             "cluster_type": cluster_type.name,
             "replica_id": int(replica_id),
             "execution_scope": (
-                "FULL_STAGE_WORLD" if dp_id is None else "EP_WAVE_LANE"
+                "FULL_STAGE_WORLD" if replica_local_id is None else "EP_WAVE_LANE"
             ),
-            "replica_local_id": None if dp_id is None else int(dp_id),
+            "replica_local_id": (
+                None if replica_local_id is None else int(replica_local_id)
+            ),
             "request_ids": [str(request_id) for request_id in batch_stage.request_ids],
             "request_num_tokens": [int(token_count) for token_count in batch_stage.num_tokens],
             "stage_start_ts": float(batch_stage.scheduled_at),
@@ -4076,12 +4079,8 @@ class MetricsStore:
             ]
         if hasattr(batch_stage, "source_group_ready_ts"):
             row["source_group_ready_ts"] = float(batch_stage.source_group_ready_ts)
-        if dp_id is not None and hasattr(batch_stage, "ep_id"):
+        if replica_local_id is not None and hasattr(batch_stage, "ep_id"):
             row["ep_id"] = int(batch_stage.ep_id)
-        if dp_id is not None:
-            # Preserve the lane field for existing EP consumers; full-stage
-            # rows intentionally do not expose a fake lane identity.
-            row["dp_id"] = int(dp_id)
         if hasattr(batch_stage, "per_expert_tokens"):
             row["per_expert_tokens"] = {
                 str(expert_id): int(token_count)
@@ -4097,7 +4096,7 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
         stage_end_time: float,
     ) -> dict[str, Any]:
         if getattr(self._config, "store_frontier_stage_batch_ledger", True):
@@ -4107,7 +4106,7 @@ class MetricsStore:
                 replica_id=replica_id,
                 stage_id=stage_id,
                 cluster_type=cluster_type,
-                dp_id=dp_id,
+                replica_local_id=replica_local_id,
                 stage_end_time=stage_end_time,
             )
         return self._build_frontier_stage_batch_ledger_summary_row(
@@ -4116,7 +4115,7 @@ class MetricsStore:
             replica_id=replica_id,
             stage_id=stage_id,
             cluster_type=cluster_type,
-            dp_id=dp_id,
+            replica_local_id=replica_local_id,
             stage_end_time=stage_end_time,
         )
 
@@ -4128,7 +4127,7 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
         stage_end_time: float,
     ) -> dict[str, Any]:
         row = {
@@ -4137,17 +4136,17 @@ class MetricsStore:
             "cluster_type": cluster_type.name,
             "replica_id": int(replica_id),
             "execution_scope": (
-                "FULL_STAGE_WORLD" if dp_id is None else "EP_WAVE_LANE"
+                "FULL_STAGE_WORLD" if replica_local_id is None else "EP_WAVE_LANE"
             ),
-            "replica_local_id": None if dp_id is None else int(dp_id),
+            "replica_local_id": (
+                None if replica_local_id is None else int(replica_local_id)
+            ),
             "stage_start_ts": float(batch_stage.scheduled_at),
             "stage_end_ts": float(stage_end_time),
             "execution_time": {
                 "total_time_ms": _round_ledger_ms(execution_time.total_time * 1e3),
             },
         }
-        if dp_id is not None:
-            row["dp_id"] = int(dp_id)
         if hasattr(batch_stage, "source_batch_ids"):
             row["source_batch_ids"] = [
                 int(batch_id) for batch_id in batch_stage.source_batch_ids

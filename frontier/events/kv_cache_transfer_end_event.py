@@ -67,7 +67,7 @@ class KVCacheTransferEndEvent(BaseEvent):
                 self._transfer_info.source_replica_id,
                 memory_usage_percent,
                 self._transfer_info.source_cluster_type,
-                dp_id=self._transfer_info.source_replica_local_id,
+                replica_local_id=self._transfer_info.source_replica_local_id,
             )
 
             if source_replica_scheduler.should_schedule_after_kv_transfer_completion():
