@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from frontier.entities import Batch, Request
+from frontier.entities import Batch, EPBatchGroup, Request
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     FULL_STAGE_WORLD,
     EP_WAVE,
@@ -167,3 +167,60 @@ def test_cluster_scheduler_releases_parent_ticket_after_wave_cleanup() -> None:
 
     assert context.is_idle
     assert not hasattr(batch, "_stage_admission_ticket")
+
+
+def test_shared_domain_source_batch_gets_full_stage_ticket_before_queue_insert() -> None:
+    predictor = object()
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2)
+    stage = ReplicaStageScheduler(
+        replica_id=0,
+        stage_id=0,
+        is_last_stage=True,
+        is_moe=True,
+        execution_time_predictor=predictor,
+        cluster_type=ClusterType.PREFILL,
+        dp_id=0,
+        stage_execution_context=context,
+    )
+    request = Request(arrived_at=0.0, num_prefill_tokens=4, num_decode_tokens=0)
+    batch = Batch(0, [request], [4], is_moe=True)
+    batch.set_global_id(80)
+
+    stage.add_batch(batch)
+
+    ticket = getattr(batch, "_stage_admission_ticket", None)
+    assert ticket is not None
+    assert ticket.scope == FULL_STAGE_WORLD
+    assert stage.pop_batch_if_not_busy() is batch
+    assert context.active_operation_id == ("stage_batch", batch.id, batch.schedule_epoch)
+
+
+def test_decode_ffn_ep_batch_without_wave_ticket_fails_fast() -> None:
+    predictor = object()
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2)
+    stage = ReplicaStageScheduler(
+        replica_id=0,
+        stage_id=0,
+        is_last_stage=True,
+        is_moe=True,
+        execution_time_predictor=predictor,
+        cluster_type=ClusterType.DECODE_FFN,
+        dp_id=0,
+        stage_execution_context=context,
+    )
+    request = Request(arrived_at=0.0, num_prefill_tokens=0, num_decode_tokens=1)
+    batch = EPBatchGroup(
+        requests=[request],
+        num_tokens=[1],
+        replica_id=0,
+        ep_id=0,
+        time=0.0,
+        source_batch_ids=[1],
+        per_expert_tokens={0: 1},
+        cluster_type=ClusterType.DECODE_FFN,
+        is_moe=True,
+    )
+    batch.set_global_id(81)
+
+    with pytest.raises(ValueError, match="complete EP_WAVE admission ticket"):
+        stage.add_batch(batch)

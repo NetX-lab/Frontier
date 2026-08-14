@@ -129,6 +129,26 @@ class ReplicaStageScheduler:
         Args:
             batch: The batch to add to the queue
         """
+        if self._stage_execution_context is not None:
+            admission_ticket = getattr(batch, "_stage_admission_ticket", None)
+            if admission_ticket is None:
+                if self._cluster_type == ClusterType.DECODE_FFN and isinstance(
+                    batch, EPBatchGroup
+                ):
+                    raise ValueError(
+                        "DECODE_FFN EPBatchGroup must carry a complete EP_WAVE "
+                        "admission ticket before queue insertion"
+                    )
+                operation_id = (
+                    "stage_batch",
+                    int(batch.id),
+                    int(batch.schedule_epoch),
+                )
+                admission_ticket = self._stage_execution_context.enqueue_full_stage(
+                    operation_id=operation_id,
+                )
+                batch._stage_admission_ticket = admission_ticket
+
         # Use heapq to maintain priority queue invariant
         # Tuple comparison: (global_id, insertion_counter) ensures correct ordering
         heapq.heappush(
