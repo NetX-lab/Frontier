@@ -31,7 +31,7 @@ class BaseReplicaScheduler(ABC):
         replica: Replica,
         predictor: BaseExecutionTimePredictor,
         cluster_type: ClusterType = None,
-        dp_id: int = None,
+        replica_local_id: int = None,
         af_pipeline_num_micro_batch: int = -1,
         cluster_scheduler = None
     ) -> None:
@@ -44,7 +44,7 @@ class BaseReplicaScheduler(ABC):
         self._num_stages = replica.num_pipeline_stages
         self._predictor = predictor
         self._cluster_type = cluster_type
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
         self._af_pipeline_num_micro_batch = af_pipeline_num_micro_batch
         self._cluster_scheduler = cluster_scheduler
 
@@ -211,7 +211,7 @@ class BaseReplicaScheduler(ABC):
                 "input_weights_memory_bytes=%s, measured_weights_memory_bytes=%s, "
                 "use_analytical_param_memory=%s, non_kv_cache_overhead_bytes=%s",
                 cluster_type_for_profile.name,
-                self._dp_id,
+                self._replica_local_id,
                 profile_max_num_batched_tokens,
                 runtime_weights_memory_source,
                 input_weights_memory_bytes,
@@ -370,7 +370,7 @@ class BaseReplicaScheduler(ABC):
                 replica.is_moe,
                 self._predictor,
                 self._cluster_type,
-                self._dp_id,
+                self._replica_local_id,
                 stage_execution_context=(
                     cluster_scheduler.get_stage_execution_context(
                         replica.id,
@@ -400,7 +400,7 @@ class BaseReplicaScheduler(ABC):
             return int(
                 cluster_scheduler.make_decode_sync_global_id(
                     self._replica_id,
-                    self._dp_id,
+                    self._replica_local_id,
                     lane_decode_sync_counter,
                 )
             )
@@ -436,7 +436,7 @@ class BaseReplicaScheduler(ABC):
         debug_msg = (
             f"[BATCH_CREATE] batch_id={batch.id}, global_id={batch.global_id}, "
             f"decode_sync_global_id={decode_sync_global_id}, "
-            f"replica_id={self._replica_id}, dp_id={self._dp_id}, "
+            f"replica_id={self._replica_id}, dp_id={self._replica_local_id}, "
             f"requests={request_ids}, num_requests={len(requests)}, "
             f"cluster={self._cluster_type.name if self._cluster_type else 'None'}"
         )
@@ -444,7 +444,7 @@ class BaseReplicaScheduler(ABC):
 
         if self._cluster_type == ClusterType.DECODE_ATTN:
             batch.decode_attn_original_replica_id = self._replica_id
-            batch.decode_attn_original_dp_id = self._dp_id
+            batch.decode_attn_original_dp_id = self._replica_local_id
 
         return batch
 
@@ -603,7 +603,7 @@ class BaseReplicaScheduler(ABC):
                 self._cluster_type.name if self._cluster_type is not None else None
             ),
             "replica_id": self._replica_id,
-            "dp_id": self._dp_id,
+            "dp_id": self._replica_local_id,
             "request_queue": self._debug_request_collection_state(
                 self._request_queue
             ),
@@ -640,7 +640,7 @@ class BaseReplicaScheduler(ABC):
         )
         af_len = len(self._af_immediate_batch_queue) if hasattr(self, '_af_immediate_batch_queue') else 0
         logger.info(
-            f"[RS-IDLE-CHECK][replica={self._replica_id}][dp={self._dp_id}] "
+            f"[RS-IDLE-CHECK][replica={self._replica_id}][dp={self._replica_local_id}] "
             f"num_pending_requests={self.num_pending_requests}, allocated_blocks={len(self._allocation_map)}, "
             f"num_running_batches={self._num_running_batches}, stages_empty={stages_empty}, af_immediate_len={af_len}"
         )
@@ -823,7 +823,7 @@ class BaseReplicaScheduler(ABC):
             af_ids = [b.id for b in getattr(self, '_af_immediate_batch_queue', [])]
         except Exception:
             af_len, af_ids = 0, []
-        logger.info(f"[ON_SCHEDULE][{self._cluster_type.name}][replica={self._replica_id}][dp={self._dp_id}] af_immediate_len={af_len}, af_batch_ids={af_ids}, num_running={self._num_running_batches}, af_pipeline_cap={self._af_pipeline_num_micro_batch}")
+        logger.info(f"[ON_SCHEDULE][{self._cluster_type.name}][replica={self._replica_id}][dp={self._replica_local_id}] af_immediate_len={af_len}, af_batch_ids={af_ids}, num_running={self._num_running_batches}, af_pipeline_cap={self._af_pipeline_num_micro_batch}")
 
         # Different batching logic based on cluster type
         if self._cluster_type == ClusterType.DECODE:
@@ -851,7 +851,7 @@ class BaseReplicaScheduler(ABC):
                 request_ids = [req.id for req in batch.requests] if batch.requests else []
                 debug_msg = (
                     f"[BATCH_SCHEDULE][DECODE] batch_id={batch.id}, global_id={batch.global_id}, "
-                    f"replica_id={self._replica_id}, dp_id={self._dp_id}, "
+                    f"replica_id={self._replica_id}, dp_id={self._replica_local_id}, "
                     f"requests={request_ids}, num_running={self._num_running_batches}/{self._num_stages}"
                 )
                 logger.debug(debug_msg)
@@ -865,7 +865,7 @@ class BaseReplicaScheduler(ABC):
             # Priority 1: drain AF-immediate (F→A returned) inflight micro-batches
             if hasattr(self, '_af_immediate_batch_queue') and self._af_immediate_batch_queue:
                 logger.info(
-                    f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._dp_id}] Draining {len(self._af_immediate_batch_queue)} AF-immediate inflight micro-batches"
+                    f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._replica_local_id}] Draining {len(self._af_immediate_batch_queue)} AF-immediate inflight micro-batches"
                 )
                 while self._af_immediate_batch_queue:
                     micro_batch = self._af_immediate_batch_queue.pop(0)
@@ -876,7 +876,7 @@ class BaseReplicaScheduler(ABC):
                     # Inflight micro-batches already occupy a pipeline slot; do NOT increment _num_running_batches
                     scheduled_batches.append(micro_batch)
                     logger.info(
-                        f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._dp_id}] Scheduled inflight micro-batch {getattr(micro_batch,'id','?')} (no slot increment)"
+                        f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._replica_local_id}] Scheduled inflight micro-batch {getattr(micro_batch,'id','?')} (no slot increment)"
                     )
             
             # Store scheduled request IDs for use by _schedule_decode_attn_only()
@@ -884,7 +884,7 @@ class BaseReplicaScheduler(ABC):
             self._continuation_request_ids = scheduled_request_ids
             if scheduled_request_ids:
                 logger.debug(
-                    f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._dp_id}] "
+                    f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._replica_local_id}] "
                     f"Excluding {len(scheduled_request_ids)} requests from Priority 2: {scheduled_request_ids}"
                 )
 
@@ -926,7 +926,7 @@ class BaseReplicaScheduler(ABC):
                 scheduled_batches.append(micro_batch)
                 self._num_running_batches += 1
                 logger.info(
-                    f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._dp_id}] Scheduled NEW micro-batch {getattr(micro_batch,'id','?')} (num_running={self._num_running_batches}/{self._af_pipeline_num_micro_batch})"
+                    f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._replica_local_id}] Scheduled NEW micro-batch {getattr(micro_batch,'id','?')} (num_running={self._num_running_batches}/{self._af_pipeline_num_micro_batch})"
                 )
             
             # Clear the temporary attribute
@@ -1028,7 +1028,7 @@ class BaseReplicaScheduler(ABC):
         transfer_start_event = M2NTransferStartEvent(
             time=current_time,
             source_replica_id=self._replica_id,
-            source_dp_id=self._dp_id,
+            source_dp_id=self._replica_local_id,
             source_cluster_type=self._cluster_type,
             target_cluster_type=target_cluster_type,
             batch=batch,

@@ -32,7 +32,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         if self._cluster_type == ClusterType.DECODE_ATTN:
             replica_ids = list(self._cluster.replicas.keys())
             for replica_id in replica_ids:
-                for dp_id in range(self._replica_dp_size):
+                for dp_id in range(self._replica_scheduler_count):
                     self._replica_dp_load_tracker[(replica_id, dp_id)] = 0
 
         # Decode-attn initial request allocation setup state
@@ -303,7 +303,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         self._initial_allocation_buffer = self._initial_allocation_buffer[allocation_size:]
 
         replica_ids = list(self._cluster.replicas.keys())
-        dp_size = self._replica_dp_size
+        dp_size = self._replica_scheduler_count
         num_replicas = len(replica_ids)
 
         logger.info(
@@ -407,11 +407,11 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             # Distribute requests as evenly as possible among dp_ids.
             # For unified DECODE with MoE, missing sync participants are created by
             # decode-sync idle batches; a real request must not be replicated across lanes.
-            requests_per_dp = num_requests // self._replica_dp_size
-            extra_requests = num_requests % self._replica_dp_size
+            requests_per_dp = num_requests // self._replica_scheduler_count
+            extra_requests = num_requests % self._replica_scheduler_count
 
             current_idx = 0
-            for dp_id in range(self._replica_dp_size):
+            for dp_id in range(self._replica_scheduler_count):
                 # First 'extra_requests' dp_ids get one extra request
                 num_requests_for_this_dp = requests_per_dp + (1 if dp_id < extra_requests else 0)
 
@@ -471,7 +471,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             return []
 
         num_replicas = len(replica_ids)
-        total_lanes = num_replicas * self._replica_dp_size
+        total_lanes = num_replicas * self._replica_scheduler_count
         request_mapping: List[Tuple[int, int, Request]] = []
 
         request_idx = 0
@@ -608,7 +608,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             self._replica_dp_load_tracker = {}
             replica_ids = list(self._cluster.replicas.keys())
             for replica_id in replica_ids:
-                for dp_id in range(self._replica_dp_size):
+                for dp_id in range(self._replica_scheduler_count):
                     self._replica_dp_load_tracker[(replica_id, dp_id)] = 0
 
         # Update load tracker with current pending requests from replica schedulers

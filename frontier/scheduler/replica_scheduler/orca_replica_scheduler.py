@@ -88,7 +88,7 @@ class OrcaReplicaScheduler(BaseReplicaScheduler):
         if (not is_micro_batch) or (self._cluster_type != ClusterType.DECODE_ATTN):
             preempted_req_ids = [r.id for r in self._preempted_requests]
             if preempted_req_ids:
-                logger.info(f"[{self._cluster_type.name}][Replica {self._replica_id}][DP {self._dp_id}] "
+                logger.info(f"[{self._cluster_type.name}][Replica {self._replica_id}][DP {self._replica_local_id}] "
                             f"_get_next_batch: Found {len(preempted_req_ids)} requests in preempted queue: {preempted_req_ids}")
 
             # all preempted_requests will have prefill completed
@@ -102,7 +102,7 @@ class OrcaReplicaScheduler(BaseReplicaScheduler):
 
             request_queue_ids = [r.id for r in self._request_queue]
             if request_queue_ids:
-                logger.info(f"[{self._cluster_type.name}][Replica {self._replica_id}][DP {self._dp_id}] "
+                logger.info(f"[{self._cluster_type.name}][Replica {self._replica_id}][DP {self._replica_local_id}] "
                             f"_get_next_batch: Found {len(request_queue_ids)} requests in main queue: {request_queue_ids}")
 
             while self._request_queue:
@@ -121,7 +121,7 @@ class OrcaReplicaScheduler(BaseReplicaScheduler):
 
             new_batch = self._create_batch(requests, num_tokens)
             new_batch_req_ids = [r.id for r in new_batch.requests]
-            logger.info(f"[{self._cluster_type.name}][Replica {self._replica_id}][DP {self._dp_id}] "
+            logger.info(f"[{self._cluster_type.name}][Replica {self._replica_id}][DP {self._replica_local_id}] "
                         f"_get_next_batch: CREATED batch {new_batch.id} with requests {new_batch_req_ids}")
             return new_batch
 
@@ -130,7 +130,7 @@ class OrcaReplicaScheduler(BaseReplicaScheduler):
             pre_list = [f"id={r.id}|tok={getattr(r,'current_decode_token_index',None)}|layer={getattr(r,'completed_layer_count',None)}" for r in self._preempted_requests]
             main_list = [f"id={r.id}|tok={getattr(r,'current_decode_token_index',None)}|layer={getattr(r,'completed_layer_count',None)}" for r in self._request_queue]
             logger.info(
-                f"[MB-FORMATION][PRE-STATE][Replica {self._replica_id}][DP {self._dp_id}] preempted={pre_list} main={main_list}"
+                f"[MB-FORMATION][PRE-STATE][Replica {self._replica_id}][DP {self._replica_local_id}] preempted={pre_list} main={main_list}"
             )
         except Exception as e:
             logger.debug(f"[MB-FORMATION][PRE-STATE] logging failed: {e}")
@@ -175,7 +175,7 @@ class OrcaReplicaScheduler(BaseReplicaScheduler):
             return
 
         logger.info(
-            f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._dp_id}] _get_next_batch(MB) "
+            f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._replica_local_id}] _get_next_batch(MB) "
             f"pick layer={best_layer} candidates total={best_total} (preempted={best_preempted_count}, main={best_total - best_preempted_count}) "
             f"mb_size={batch_or_micro_batch_size}"
         )
@@ -218,7 +218,7 @@ class OrcaReplicaScheduler(BaseReplicaScheduler):
         new_batch = self._create_batch(requests, num_tokens)
         new_batch_req_ids = [r.id for r in new_batch.requests]
         logger.info(
-            f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._dp_id}] _get_next_batch(MB): CREATED batch {new_batch.id} "
+            f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._replica_local_id}] _get_next_batch(MB): CREATED batch {new_batch.id} "
             f"layer={best_layer} reqs={new_batch_req_ids}"
         )
         try:

@@ -1335,7 +1335,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                     f"request_id={request.id}, "
                     f"source_cluster={self._cluster_type.name}, "
                     f"source_replica={self._replica_id}, "
-                    f"source_dp={self._dp_id}"
+                    f"source_dp={self._replica_local_id}"
                 )
 
             if request.id in self._allocation_map:
@@ -4695,7 +4695,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         running_len = len(self._running_requests)
 
         logger.info(
-            f"[RS-IDLE-CHECK][replica={self._replica_id}][dp={self._dp_id}] "
+            f"[RS-IDLE-CHECK][replica={self._replica_id}][dp={self._replica_local_id}] "
             f"num_pending_requests={self.num_pending_requests}, waiting_requests={waiting_len}, "
             f"running_requests={running_len}, allocated_blocks={len(self._allocation_map)}, "
             f"num_running_batches={self._num_running_batches}, stages_empty={stages_empty}, af_immediate_len={af_len}"

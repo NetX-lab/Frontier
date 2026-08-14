@@ -135,3 +135,18 @@ def test_base_scheduler_has_no_second_ep_integerizer() -> None:
     assert "def _get_ep_subset_routed_token_total" not in source
     assert "def _get_cached_ep_subset_routed_token_allocation" not in source
     assert "def _get_ep_subset_routed_token_allocation" not in source
+
+
+def test_decode_ffn_scheduler_uses_replica_local_ep_capacity_name() -> None:
+    source = Path(
+        "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"
+    ).read_text(encoding="utf-8")
+    round_robin_source = Path(
+        "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py"
+    ).read_text(encoding="utf-8")
+
+    assert "self._replica_ep_size = int(" in source
+    assert "self._replica_dp_size" not in source
+    assert "_replica_dp_size" not in round_robin_source
+    assert "Use ep_id as dp_id for compatibility" not in source
+    assert "replica_local_id=ep_id" in source

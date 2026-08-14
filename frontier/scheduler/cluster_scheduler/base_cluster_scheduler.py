@@ -288,9 +288,10 @@ class BaseClusterScheduler(ABC):
         # ``len(cluster.replicas)``; every physical Replica owns one shared
         # attention world, while MoE-only work creates replica-local EP lanes.
         if self._cluster_type == ClusterType.DECODE_FFN:
-            self._replica_dp_size = int(
+            self._replica_ep_size = int(
                 self._config.replica_config.moe_expert_parallel_size
             )
+            self._replica_scheduler_count = self._replica_ep_size
         else:
             attn_dp = getattr(self._config.replica_config, "attn_data_parallel_size", None)
             if type(attn_dp) is not int or attn_dp != 1:
@@ -298,7 +299,8 @@ class BaseClusterScheduler(ABC):
                     "Replica-local attention DP lanes are retired; "
                     f"{self._cluster_type.name} requires attn_data_parallel_size=1, got {attn_dp!r}"
                 )
-            self._replica_dp_size = 1
+            self._replica_ep_size = None
+            self._replica_scheduler_count = 1
         self._available_clusters = available_clusters or set()
         self._request_generator_config = request_generator_config
         self._stage_execution_contexts = self._build_stage_execution_contexts()
@@ -310,12 +312,17 @@ class BaseClusterScheduler(ABC):
         logger = get_cluster_logger(__name__, self._cluster_type.name)
 
         # Validate the canonical replica-local lane count.
-        if self._replica_dp_size is None or self._replica_dp_size <= 0:
+        if (
+            type(self._replica_scheduler_count) is not int
+            or self._replica_scheduler_count <= 0
+        ):
             logger.error(
-                "Invalid replica-local lane count: %s", self._replica_dp_size
+                "Invalid replica-local scheduler count: %s",
+                self._replica_scheduler_count,
             )
             raise ValueError(
-                f"Invalid replica-local lane count: {self._replica_dp_size}"
+                "Invalid replica-local scheduler count: "
+                f"{self._replica_scheduler_count}"
             )
 
         # Initialize replica schedulers based on cluster type
@@ -354,14 +361,14 @@ class BaseClusterScheduler(ABC):
                         replica=replica,
                         predictor=self._predictor,
                         cluster_type=self._cluster_type,
-                        dp_id=ep_id,  # Use ep_id as dp_id for compatibility
+                        replica_local_id=ep_id,
                         af_pipeline_num_micro_batch=getattr(self._config, 'af_pipeline_num_micro_batch', -1),
                         cluster_scheduler=self,
                     )
         else:
             # For other clusters: use traditional DP concept
             for replica_id, replica in self._cluster.replicas.items():
-                for dp_id in range(self._replica_dp_size):
+                for dp_id in range(self._replica_scheduler_count):
                     scheduler_key = (replica_id, dp_id)
                     self._dp_replica_schedulers[scheduler_key] = ReplicaSchedulerRegistry.get(
                         cluster_specific_config.get_type(),
@@ -371,7 +378,7 @@ class BaseClusterScheduler(ABC):
                         replica=replica,
                         predictor=self._predictor,
                         cluster_type=self._cluster_type,
-                        dp_id=dp_id,
+                        replica_local_id=dp_id,
                         af_pipeline_num_micro_batch=getattr(self._config, 'af_pipeline_num_micro_batch', -1),
                         cluster_scheduler=self,
                     )
@@ -387,7 +394,7 @@ class BaseClusterScheduler(ABC):
             self._a2f_expected_lanes = [
                 (replica_id, dp_id)
                 for replica_id in list(self._cluster.replicas.keys())
-                for dp_id in range(int(self._replica_dp_size))
+                for dp_id in range(int(self._replica_scheduler_count))
             ]
             self._a2f_group_micro_batches = len(self._a2f_expected_lanes)
             # F→A waiting room keeps per-lane FIFO semantics scoped by next_layer
@@ -8734,14 +8741,17 @@ class BaseClusterScheduler(ABC):
                     if lane[0] == replica_id and lane not in idle_expected_lanes
                 ]
 
-        if type(self._replica_dp_size) is not int or self._replica_dp_size <= 0:
+        if (
+            type(self._replica_scheduler_count) is not int
+            or self._replica_scheduler_count <= 0
+        ):
             raise RuntimeError(
-                "DECODE_ATTN _replica_dp_size must be an exact positive int, "
-                f"got {self._replica_dp_size!r}"
+                "DECODE_ATTN replica scheduler count must be an exact positive int, "
+                f"got {self._replica_scheduler_count!r}"
             )
         return [
             (replica_id, dp_id)
-            for dp_id in range(self._replica_dp_size)
+            for dp_id in range(self._replica_scheduler_count)
             if (replica_id, dp_id) not in idle_expected_lanes
         ]
 

@@ -497,7 +497,7 @@ def test_m2n_arrival_routes_valid_target_to_matching_handler(
         )
         scheduler._f2a_expected_lanes = [(0, 0)]
         scheduler._decode_attn_idle_expected_lanes = set()
-        scheduler._replica_dp_size = 1
+        scheduler._replica_scheduler_count = 1
         scheduler._f2a_waiting_by_round = {}
         scheduler._cluster = SimpleNamespace(replicas={0: SimpleNamespace()})
         scheduler._dp_replica_schedulers = {
@@ -2101,7 +2101,7 @@ def _decode_attn_return_fixture(
     )
     scheduler._f2a_expected_lanes = [(0, 0)]
     scheduler._decode_attn_idle_expected_lanes = set()
-    scheduler._replica_dp_size = 1
+    scheduler._replica_scheduler_count = 1
     scheduler._f2a_waiting_by_round = {}
     scheduler._af_batch_queue = []
     scheduler._is_periodic_scheduling_enabled = False
@@ -2612,7 +2612,7 @@ def test_decode_attn_transfer_end_rejects_non_request_incoming_receipt_before_al
     )
     scheduler = incoming_fixture[0]
     scheduler._f2a_expected_lanes = [(0, 0), (0, 1)]
-    scheduler._replica_dp_size = 2
+    scheduler._replica_scheduler_count = 2
     global_scheduler = SimpleNamespace(
         get_cluster_scheduler=Mock(return_value=scheduler),
     )
@@ -3074,7 +3074,7 @@ def test_decode_attn_ordered_lane_subset_controls_full_release_order() -> None:
     ]
     scheduler = fixtures[0][0]
     scheduler._f2a_expected_lanes = [(0, 0), (0, 1), (0, 2)]
-    scheduler._replica_dp_size = 3
+    scheduler._replica_scheduler_count = 3
 
     for dp_id, fixture in enumerate(fixtures):
         _, batch, _, transfer_info, _, _, _ = fixture
@@ -3528,7 +3528,7 @@ def test_decode_attn_transfer_end_rejects_existing_round_contract_before_mutatio
         "expected_lanes": ((0, 0), (0, 1)),
     }
     scheduler._f2a_expected_lanes = [(0, 0), (0, 1)]
-    scheduler._replica_dp_size = 2
+    scheduler._replica_scheduler_count = 2
     scheduler._f2a_waiting_by_round[round_key] = existing_room
     before = _snapshot_decode_attn_return_state(
         scheduler,
@@ -3619,7 +3619,7 @@ def test_decode_attn_transfer_end_rejects_corrupt_queued_batch_before_mutation()
     batch.decode_attn_original_dp_id = 1
     transfer_info.source_dp_id = 1
     scheduler._f2a_expected_lanes = [(0, 0), (0, 1)]
-    scheduler._replica_dp_size = 2
+    scheduler._replica_scheduler_count = 2
     scheduler._dp_replica_schedulers[(0, 1)] = (
         scheduler._dp_replica_schedulers[(0, 0)]
     )
@@ -3727,7 +3727,7 @@ def test_decode_attn_transfer_end_rejects_corrupt_real_queued_batch_before_mutat
     )
     scheduler = lane0_fixture[0]
     scheduler._f2a_expected_lanes = [(0, 0), (0, 1)]
-    scheduler._replica_dp_size = 2
+    scheduler._replica_scheduler_count = 2
     shared_global_scheduler = SimpleNamespace(
         get_cluster_scheduler=Mock(return_value=scheduler),
     )
@@ -4468,9 +4468,9 @@ def test_decode_attn_stage_slot_reader_accepts_legal_legacy_cohort_states(
         "active_wave_lane_negative",
         "active_wave_request_lane_bool",
         "configured_lane_negative",
-        "replica_dp_size_bool",
-        "replica_dp_size_float",
-        "replica_dp_size_zero",
+        "replica_scheduler_count_bool",
+        "replica_scheduler_count_float",
+        "replica_scheduler_count_zero",
     ],
 )
 def test_decode_attn_transfer_end_rejects_each_invalid_topology_source(
@@ -4516,15 +4516,15 @@ def test_decode_attn_transfer_end_rejects_each_invalid_topology_source(
         }
     elif invalid_source == "configured_lane_negative":
         scheduler._f2a_expected_lanes = [(0, -1)]
-    elif invalid_source == "replica_dp_size_bool":
+    elif invalid_source == "replica_scheduler_count_bool":
         scheduler._f2a_expected_lanes = None
-        scheduler._replica_dp_size = True
-    elif invalid_source == "replica_dp_size_float":
+        scheduler._replica_scheduler_count = True
+    elif invalid_source == "replica_scheduler_count_float":
         scheduler._f2a_expected_lanes = None
-        scheduler._replica_dp_size = 1.0
-    elif invalid_source == "replica_dp_size_zero":
+        scheduler._replica_scheduler_count = 1.0
+    elif invalid_source == "replica_scheduler_count_zero":
         scheduler._f2a_expected_lanes = None
-        scheduler._replica_dp_size = 0
+        scheduler._replica_scheduler_count = 0
     else:
         raise AssertionError(f"Unhandled topology source: {invalid_source}")
 
@@ -4538,7 +4538,7 @@ def test_decode_attn_transfer_end_rejects_each_invalid_topology_source(
 
     with pytest.raises(
         (RuntimeError, TypeError, ValueError),
-        match="lane|topology|stage|replica scheduler|_replica_dp_size|exact",
+        match="lane|topology|stage|replica scheduler|replica_scheduler_count|exact",
     ):
         try:
             M2NTransferEndEvent(1.0, transfer_info).handle_event(
@@ -4566,7 +4566,7 @@ def test_decode_attn_transfer_end_rejects_each_invalid_topology_source(
         "active_wave_lanes",
         "active_wave_request_map",
         "configured_f2a_lanes",
-        "replica_dp_size",
+        "replica_scheduler_count",
     ],
 )
 def test_decode_attn_transfer_end_preserves_each_legal_topology_source(
@@ -4611,9 +4611,9 @@ def test_decode_attn_transfer_end_preserves_each_legal_topology_source(
         scheduler._f2a_expected_lanes = [(0, 1)]
     elif topology_source == "configured_f2a_lanes":
         scheduler._f2a_expected_lanes = [(0, 0)]
-    elif topology_source == "replica_dp_size":
+    elif topology_source == "replica_scheduler_count":
         scheduler._f2a_expected_lanes = None
-        scheduler._replica_dp_size = 1
+        scheduler._replica_scheduler_count = 1
     else:
         raise AssertionError(f"Unhandled topology source: {topology_source}")
 
@@ -4699,7 +4699,7 @@ def test_decode_attn_transfer_preflight_does_not_lazy_create_replica_state() -> 
     replica_scheduler._cluster_type = ClusterType.DECODE_ATTN
     scheduler._dp_replica_schedulers = {(0, 0): replica_scheduler}
     scheduler._f2a_expected_lanes = [(0, 1)]
-    scheduler._replica_dp_size = 2
+    scheduler._replica_scheduler_count = 2
     assert not hasattr(replica_scheduler, "_decode_attn_active_cohort_states")
     before = _snapshot_decode_attn_return_state(
         scheduler,
@@ -4826,7 +4826,7 @@ def _install_real_decode_attn_replica_state(
     replica_scheduler._decode_attn_active_cohort_states = {9: cohort_state}
     scheduler._dp_replica_schedulers = {(0, 0): replica_scheduler}
     scheduler._f2a_expected_lanes = [(0, 1)]
-    scheduler._replica_dp_size = 2
+    scheduler._replica_scheduler_count = 2
 
 
 @pytest.mark.parametrize("active_stage_indices", [{True}, {1.0}, {"1"}])
@@ -5326,7 +5326,7 @@ def test_decode_attn_legacy_unscoped_round_preserves_distinct_fifo_wave_identiti
     fixtures = [_decode_attn_return_fixture() for _ in range(4)]
     scheduler = fixtures[0][0]
     scheduler._f2a_expected_lanes = [(0, 0), (0, 1)]
-    scheduler._replica_dp_size = 2
+    scheduler._replica_scheduler_count = 2
     shared_global_scheduler = SimpleNamespace(
         get_cluster_scheduler=Mock(return_value=scheduler),
     )
@@ -5377,7 +5377,7 @@ def test_decode_attn_legacy_unscoped_round_rejects_cross_lane_identity_mismatch(
     lane1_fixture = _decode_attn_return_fixture()
     scheduler = lane0_fixture[0]
     scheduler._f2a_expected_lanes = [(0, 0), (0, 1)]
-    scheduler._replica_dp_size = 2
+    scheduler._replica_scheduler_count = 2
     shared_global_scheduler = SimpleNamespace(
         get_cluster_scheduler=Mock(return_value=scheduler),
     )
@@ -5471,7 +5471,7 @@ def test_decode_attn_legal_nonfinal_return_preserves_per_lane_fifo_release() -> 
     ]
     scheduler = fixtures[0][0]
     scheduler._f2a_expected_lanes = [(0, 0), (0, 1)]
-    scheduler._replica_dp_size = 2
+    scheduler._replica_scheduler_count = 2
 
     for index, fixture in enumerate(fixtures):
         _, batch, _, transfer_info, _, _, _ = fixture
