@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-15 | Removed retired attention-DP CLI examples and documented fixed `attn_dp=1` plus cluster/EP scope semantics. |
 | 2026-08-14 | Replaced the removed MoE routing-mode CLI with `moe_routing_distribution_type`. |
 | 2026-08-09 | Restored the sequential-only public PDD guard and documented current post-ISSUE-022 slowdown evidence. |
 | 2026-08-08 | Clarified the parallel-PDD correctness and wall-clock-speed boundary. |
@@ -125,7 +126,6 @@ python -m frontier.main \
   --replica_config_model_name meta-llama/Llama-2-7b-hf \
   --replica_config_attn_tensor_parallel_size 2 \
   --replica_config_num_pipeline_stages 1 \
-  --replica_config_attn_data_parallel_size 1 \
   --cc_backend_config_type astra_sim_analytical \
   --replica_scheduler_config_type vllm_v1 \
   --decode_cuda_graph_mode full_decode_only \
@@ -168,7 +168,7 @@ Dummy predictor mode is useful for smoke tests. For latency studies, disable dum
 | `--replica_config_model_name` | Model name used to resolve model config and output taxonomy. |
 | `--cluster_config_num_replicas` | Number of monolithic replicas. |
 | `--replica_config_attn_tensor_parallel_size` | Attention tensor parallel size. |
-| `--replica_config_attn_data_parallel_size` | Attention data parallel size. |
+Attention data parallelism is retired in Frontier's shared domains and is fixed internally to `1`; it is not a CLI option. Use cluster-level `num_replicas` for serving capacity and `moe_expert_parallel_size` for Replica-local EP lanes.
 | `--replica_config_num_pipeline_stages` | Pipeline parallel stages. |
 | `--replica_config_moe_tensor_parallel_size` | MoE tensor parallel size. |
 | `--replica_config_moe_expert_parallel_size` | MoE expert parallel size. |

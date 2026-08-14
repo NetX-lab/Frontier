@@ -31,14 +31,12 @@ CMD=(
   --cluster_config_decode_attn_micro_batch_size 8
   --cluster_config_prefill_replica_config_num_pipeline_stages 1
   --cluster_config_prefill_replica_config_attn_tensor_parallel_size 8
-  --cluster_config_prefill_replica_config_attn_data_parallel_size 1
   --cluster_config_prefill_replica_config_moe_tensor_parallel_size 2
   --cluster_config_prefill_replica_config_moe_expert_parallel_size 4
   --cluster_config_prefill_replica_config_device h800
   --cluster_config_prefill_replica_config_memory_margin_fraction 0.2
   --cluster_config_decode_attn_replica_config_num_pipeline_stages 1
   --cluster_config_decode_attn_replica_config_attn_tensor_parallel_size 8
-  --cluster_config_decode_attn_replica_config_attn_data_parallel_size 1
   --cluster_config_decode_attn_replica_config_device h800
   --cluster_config_decode_attn_replica_config_memory_margin_fraction 0.2
   --cluster_config_decode_ffn_replica_config_num_pipeline_stages 1
@@ -99,6 +97,9 @@ if [[ "$BRANCH_MODE" == "candidate" ]]; then
   )
 elif [[ "$BRANCH_MODE" == "reference" ]]; then
   CMD+=(
+    # Historical Reference parser only: current Frontier rejects these retired flags.
+    --cluster_config_prefill_replica_config_attn_data_parallel_size 1
+    --cluster_config_decode_attn_replica_config_attn_data_parallel_size 1
     --cluster_config_prefill_cc_backend_config_type analytical
     --cluster_config_decode_attn_cc_backend_config_type analytical
     --cluster_config_decode_ffn_cc_backend_config_type analytical

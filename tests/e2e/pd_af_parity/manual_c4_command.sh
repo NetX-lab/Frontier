@@ -40,14 +40,12 @@ CMD=(
   --cluster_config_decode_attn_micro_batch_size 8
   --cluster_config_prefill_replica_config_num_pipeline_stages 1
   --cluster_config_prefill_replica_config_attn_tensor_parallel_size 8
-  --cluster_config_prefill_replica_config_attn_data_parallel_size 1
   --cluster_config_prefill_replica_config_moe_tensor_parallel_size 1
   --cluster_config_prefill_replica_config_moe_expert_parallel_size 8
   --cluster_config_prefill_replica_config_device h800
   --cluster_config_prefill_replica_config_memory_margin_fraction 0.2
   --cluster_config_decode_attn_replica_config_num_pipeline_stages 1
   --cluster_config_decode_attn_replica_config_attn_tensor_parallel_size 8
-  --cluster_config_decode_attn_replica_config_attn_data_parallel_size 1
   --cluster_config_decode_attn_replica_config_device h800
   --cluster_config_decode_attn_replica_config_memory_margin_fraction 0.2
   --cluster_config_decode_ffn_replica_config_num_pipeline_stages 1
@@ -108,7 +106,17 @@ fi
 if [[ "$BRANCH_MODE" == "candidate" ]]; then
   CMD+=(--cc_backend_config_type analytical --length_generator_config_type fixed --interval_generator_config_type static --static_request_interval_generator_config_seed 42)
 elif [[ "$BRANCH_MODE" == "reference" ]]; then
-  CMD+=(--cluster_config_prefill_cc_backend_config_type analytical --cluster_config_decode_attn_cc_backend_config_type analytical --cluster_config_decode_ffn_cc_backend_config_type analytical --synthetic_request_generator_config_length_generator_config_type fixed --synthetic_request_generator_config_interval_generator_config_type static --static_request_interval_generator_config_seed 42)
+  CMD+=(
+    # Historical Reference parser only: current Frontier rejects these retired flags.
+    --cluster_config_prefill_replica_config_attn_data_parallel_size 1
+    --cluster_config_decode_attn_replica_config_attn_data_parallel_size 1
+    --cluster_config_prefill_cc_backend_config_type analytical
+    --cluster_config_decode_attn_cc_backend_config_type analytical
+    --cluster_config_decode_ffn_cc_backend_config_type analytical
+    --synthetic_request_generator_config_length_generator_config_type fixed
+    --synthetic_request_generator_config_interval_generator_config_type static
+    --static_request_interval_generator_config_seed 42
+  )
 else
   echo "unsupported BRANCH_MODE: $BRANCH_MODE" >&2
   exit 2
