@@ -301,19 +301,6 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         self._mlp_down_proj_calibration_scale = self._get_operator_calibration_scale(
             _get_operator_spec_by_name(FFN_FAMILY, "mlp_down_proj")
         )
-        self._moe_shuffling_calibration_scale = self._get_calibration_scale(
-            "_moe_shuffling_calibration_scale", "moe_shuffling_calibration_scale"
-        )
-        self._moe_grouped_gemm_calibration_scale = self._get_calibration_scale(
-            "_moe_grouped_gemm_calibration_scale",
-            "moe_grouped_gemm_calibration_scale",
-        )
-        self._expert_parallel_communication_calibration_scale = (
-            self._get_calibration_scale(
-                "_expert_parallel_communication_calibration_scale",
-                "expert_parallel_communication_calibration_scale",
-            )
-        )
         # Predictor caches are indexed by Batch.get_effective_total_tokens_rounded(), which is a
         # *batch-level* compute-effective token count (e.g., batch_size * seq_len for prefill).
         # The helper name is backward-compatible; token values follow exact compute semantics.

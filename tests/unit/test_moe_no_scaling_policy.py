@@ -7,6 +7,8 @@ import pytest
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
+from frontier.config import BaseExecutionTimePredictorConfig, ClusterConfig
+from frontier.model_architectures import ModelArchitectureProfile
 from frontier.types import ClusterType
 
 
@@ -100,3 +102,20 @@ def test_moe_predictor_source_has_no_empirical_visibility_or_calibration_hooks()
     assert "share_expert_tp_allreduce_visibility_scale" not in source
     assert "_get_moe_compute_calibration_scale" not in source
     assert "_get_expert_parallel_communication_calibration_scale" not in source
+
+
+def test_moe_scaling_fields_are_not_public_configuration() -> None:
+    forbidden = {
+        "moe_shuffling_calibration_scale",
+        "decode_phase_moe_shuffling_calibration_scale",
+        "moe_grouped_gemm_calibration_scale",
+        "decode_phase_moe_grouped_gemm_calibration_scale",
+        "expert_parallel_communication_calibration_scale",
+        "decode_phase_expert_parallel_communication_calibration_scale",
+        "late_decode_expert_parallel_communication_calibration_scale",
+        "share_expert_tp_allreduce_visibility_scale",
+    }
+
+    assert forbidden.isdisjoint(BaseExecutionTimePredictorConfig.__dataclass_fields__)
+    assert forbidden.isdisjoint(ClusterConfig.__dataclass_fields__)
+    assert not hasattr(ModelArchitectureProfile.generic(), "share_expert_tp_allreduce_visibility_scale")

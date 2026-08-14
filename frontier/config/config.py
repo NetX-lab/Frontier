@@ -2311,67 +2311,6 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
             )
         },
     )
-    moe_shuffling_calibration_scale: float = field(
-        default=1.0,
-        metadata={
-            "help": "Multiplicative calibration scale for moe_shuffling prediction. Must be > 0."
-        },
-    )
-    decode_phase_moe_shuffling_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative calibration scale for moe_shuffling "
-                "prediction when the batch contains decode tokens but no "
-                "prefill tokens. Must be > 0."
-            )
-        },
-    )
-    moe_grouped_gemm_calibration_scale: float = field(
-        default=1.0,
-        metadata={
-            "help": "Multiplicative calibration scale for moe_grouped_gemm prediction. Must be > 0."
-        },
-    )
-    decode_phase_moe_grouped_gemm_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative calibration scale for moe_grouped_gemm "
-                "prediction when the batch contains decode tokens but no "
-                "prefill tokens. Must be > 0."
-            )
-        },
-    )
-    expert_parallel_communication_calibration_scale: float = field(
-        default=1.0,
-        metadata={
-            "help": (
-                "Multiplicative calibration scale for expert parallel communication "
-                "prediction. Must be > 0."
-            )
-        },
-    )
-    decode_phase_expert_parallel_communication_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative calibration scale for expert parallel "
-                "communication prediction when the batch contains decode tokens "
-                "but no prefill tokens. Must be > 0."
-            )
-        },
-    )
-    late_decode_expert_parallel_communication_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative calibration scale for expert parallel "
-                "communication prediction when every request in a decode-only "
-                "batch is past the first pure decode token. Must be > 0."
-            )
-        },
-    )
     short_decode_request_length_threshold: Optional[int] = field(
         default=None,
         metadata={
@@ -2586,15 +2525,6 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
             )
         },
     )
-    share_expert_tp_allreduce_visibility_scale: float = field(
-        default=2.0 / 3.0,
-        metadata={
-            "help": (
-                "Visibility scale for Step3 share_expert TP allreduce overlap modeling. "
-                "Must be > 0."
-            )
-        },
-    )
     nccl_cpu_launch_overhead_ms: float = field(
         default=0.02,
         metadata={"help": "NCCL CPU launch overhead in ms."},
@@ -2641,20 +2571,12 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
             "prefill_phase_mlp_up_proj_calibration_scale",
             "mlp_down_proj_calibration_scale",
             "decode_phase_mlp_down_proj_calibration_scale",
-            "moe_shuffling_calibration_scale",
-            "decode_phase_moe_shuffling_calibration_scale",
-            "moe_grouped_gemm_calibration_scale",
-            "decode_phase_moe_grouped_gemm_calibration_scale",
-            "expert_parallel_communication_calibration_scale",
-            "decode_phase_expert_parallel_communication_calibration_scale",
-            "late_decode_expert_parallel_communication_calibration_scale",
             "short_decode_request_length_calibration_scale",
             "long_decode_request_length_calibration_scale",
             "low_prefill_short_decode_request_calibration_scale",
             "low_prefill_long_decode_request_calibration_scale",
             "high_prefill_mid_decode_request_calibration_scale",
             "low_prefill_decode_mix_request_calibration_scale",
-            "share_expert_tp_allreduce_visibility_scale",
         ):
             raw_value = getattr(self, field_name)
             if raw_value is None:
@@ -3759,42 +3681,6 @@ class ClusterConfig:
             "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
         },
     )
-    prefill_execution_time_predictor_config_moe_shuffling_calibration_scale: Optional[
-        float
-    ] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Override moe_shuffling calibration scale for the prefill cluster "
-                "execution-time predictor. Must be > 0."
-            ),
-            "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
-        },
-    )
-    prefill_execution_time_predictor_config_moe_grouped_gemm_calibration_scale: Optional[
-        float
-    ] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Override moe_grouped_gemm calibration scale for the prefill cluster "
-                "execution-time predictor. Must be > 0."
-            ),
-            "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
-        },
-    )
-    prefill_execution_time_predictor_config_expert_parallel_communication_calibration_scale: Optional[
-        float
-    ] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Override expert parallel communication calibration scale for "
-                "the prefill cluster execution-time predictor. Must be > 0."
-            ),
-            "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
-        },
-    )
     prefill_execution_time_predictor_config_mlp_down_proj_calibration_scale: Optional[
         float
     ] = field(
@@ -4024,42 +3910,6 @@ class ClusterConfig:
             "help": (
                 "Override attn_kv_cache_save calibration scale for the decode cluster "
                 "execution-time predictor. Must be > 0."
-            ),
-            "mode_dependency": "pd-disaggregation",
-        },
-    )
-    decode_execution_time_predictor_config_moe_shuffling_calibration_scale: Optional[
-        float
-    ] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Override moe_shuffling calibration scale for the decode cluster "
-                "execution-time predictor. Must be > 0."
-            ),
-            "mode_dependency": "pd-disaggregation",
-        },
-    )
-    decode_execution_time_predictor_config_moe_grouped_gemm_calibration_scale: Optional[
-        float
-    ] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Override moe_grouped_gemm calibration scale for the decode cluster "
-                "execution-time predictor. Must be > 0."
-            ),
-            "mode_dependency": "pd-disaggregation",
-        },
-    )
-    decode_execution_time_predictor_config_expert_parallel_communication_calibration_scale: Optional[
-        float
-    ] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Override expert parallel communication calibration scale for "
-                "the decode cluster execution-time predictor. Must be > 0."
             ),
             "mode_dependency": "pd-disaggregation",
         },
@@ -5283,9 +5133,6 @@ class ClusterConfig:
             "mlp_up_proj_calibration_scale",
             "mlp_down_proj_calibration_scale",
             "decode_phase_mlp_down_proj_calibration_scale",
-            "moe_shuffling_calibration_scale",
-            "moe_grouped_gemm_calibration_scale",
-            "expert_parallel_communication_calibration_scale",
         ):
             override_field = (
                 f"{cluster_prefix}_execution_time_predictor_config_"

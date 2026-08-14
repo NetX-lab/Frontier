@@ -115,7 +115,6 @@ class ModelArchitectureProfile:
     skip_decode_attn_residual: bool = False
     moe_tensor_parallel_allgather_op: str | None = None
     share_expert_tensor_parallel_allreduce_op: str | None = None
-    share_expert_tp_allreduce_visibility_scale: float | None = None
     always_supports_share_expert: bool = False
     counts_share_expert_param_memory: bool = False
     structural_requirements: tuple[StructuralRequirement, ...] = ()
@@ -222,7 +221,6 @@ class ModelArchitectureProfile:
             share_expert_tensor_parallel_allreduce_op=(
                 "share_expert_tensor_parallel_allreduce"
             ),
-            share_expert_tp_allreduce_visibility_scale=2.0 / 3.0,
             always_supports_share_expert=True,
             counts_share_expert_param_memory=True,
             structural_requirements=(
