@@ -398,87 +398,22 @@ class BaseExecutionTimePredictor(ABC):
         batch: Batch,
         cluster_type: ClusterType,
     ) -> tuple[float, float]:
-        """Predict canonical DP allreduce components (milliseconds) for MoE prefill semantics.
+        """Return zero for the retired attention-DP MoE communication scope.
 
-        The payload semantics follow stepfun-vllm:
-        1) DP input allreduce over (hidden_states + router_logits)
-        2) DP output allreduce over final hidden_states
+        MoE routing imbalance is modeled by Replica-local EP lanes.  The old
+        attention-DP gather/scatter domain is not a valid execution scope;
+        shared-domain roles require one attention world per serving Replica.
+        Keep this structural seam so callers receive an explicit zero instead
+        of deriving a second communication domain.
         """
-        dp_size = getattr(self._replica_config, "attn_data_parallel_size", 1)
-        # COMM_SKIP: dp_moe_allreduce not needed when dp_size <= 1 (no cross-DP communication)
-        if dp_size <= 1:
-            return 0.0, 0.0
-
-        # Only model this path for MoE prefill semantics to align co-location and PD-AF PREFILL.
-        if not getattr(self._model_config, "is_moe", False):
-            return 0.0, 0.0
-        if cluster_type not in (ClusterType.PREFILL, ClusterType.MONOLITHIC):
-            return 0.0, 0.0
-        if getattr(batch, "num_prefill_tokens", 0) <= 0:
-            return 0.0, 0.0
-
-        local_tokens = batch.get_effective_total_tokens_for_compute(cluster_type)
-        if local_tokens <= 0:
-            return 0.0, 0.0
-
-        total_tokens = int(local_tokens) * int(dp_size)
-        if total_tokens <= 0:
-            return 0.0, 0.0
-
-        hidden_dim = int(self._model_config.embedding_dim)
-        router_dim = int(getattr(self._model_config, "num_experts", 0) or 0)
-        bytes_per_elem = 2  # FP16/BF16 payload contract for comm modeling
-
-        input_payload_bytes = total_tokens * (hidden_dim + router_dim) * bytes_per_elem
-        output_payload_bytes = total_tokens * hidden_dim * bytes_per_elem
-
-        # COMM_SKIP: allreduce not needed when payload is degenerate (<= 1 byte)
-        if input_payload_bytes <= 1 and output_payload_bytes <= 1:
-            return 0.0, 0.0
-
-        quant_manager = None
-        try:
-            from frontier.config import get_quantization_manager
-
-            quant_manager = get_quantization_manager()
-        except Exception:  # pragma: no cover - defensive fallback for partially-initialized tests
-            quant_manager = None
-
-        if quant_manager is not None:
-            input_payload_bytes = quant_manager.adjust_tensor_size(
-                "allreduce", input_payload_bytes, cluster_type
+        del batch, cluster_type
+        attn_dp_size = int(getattr(self._replica_config, "attn_data_parallel_size", 1))
+        if attn_dp_size != 1:
+            raise ValueError(
+                "MoE attention-DP communication is retired; expected "
+                f"attn_data_parallel_size=1, got {attn_dp_size}"
             )
-            output_payload_bytes = quant_manager.adjust_tensor_size(
-                "allreduce", output_payload_bytes, cluster_type
-            )
-
-        dp_input_allreduce_ms = self.predict_allreduce_time(
-            data_size_bytes=input_payload_bytes,
-            num_devices=dp_size,
-            cluster_type=cluster_type,
-            comm_domain="DP",
-        )
-        dp_output_allreduce_ms = self.predict_allreduce_time(
-            data_size_bytes=output_payload_bytes,
-            num_devices=dp_size,
-            cluster_type=cluster_type,
-            comm_domain="DP",
-        )
-
-        logger.debug(
-            "[DP-MOE-COMM] cluster=%s, local_tokens=%d, dp_size=%d, total_tokens=%d, "
-            "input_payload=%.3fMB, output_payload=%.3fMB, input_allreduce=%.6fms, output_allreduce=%.6fms",
-            cluster_type,
-            local_tokens,
-            dp_size,
-            total_tokens,
-            input_payload_bytes / 1e6,
-            output_payload_bytes / 1e6,
-            dp_input_allreduce_ms,
-            dp_output_allreduce_ms,
-        )
-
-        return dp_input_allreduce_ms, dp_output_allreduce_ms
+        return 0.0, 0.0
 
     def predict_dp_gather_time(self, total_tokens: int, dp_size: int) -> float:
         """Backward-compatible DP gather time prediction in seconds.

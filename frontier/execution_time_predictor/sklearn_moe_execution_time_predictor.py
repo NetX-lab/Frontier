@@ -194,18 +194,18 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         # COMM_SKIP: EP all-to-all not needed when ep_size <= 1 (experts co-located)
         expert_parallel_comm_time = base_time if moe_ep_size > 1 else 0.0
 
-        # COMM_SKIP: DP allreduce not needed when dp_size <= 1 (no cross-DP communication)
-        dp_size = getattr(self._replica_config, "attn_data_parallel_size", 1)
-        cluster_type = getattr(self, "_cluster_type", None)
+        # Attention-DP MoE gather/scatter is retired.  MoE communication is
+        # represented by the Replica-local EP wave instead.
+        attn_dp_size = int(
+            getattr(self._replica_config, "attn_data_parallel_size", 1)
+        )
+        if attn_dp_size != 1:
+            raise ValueError(
+                "MoE attention-DP communication is retired; expected "
+                f"attn_data_parallel_size=1, got {attn_dp_size}"
+            )
         dp_input_allreduce_time = 0.0
         dp_output_allreduce_time = 0.0
-        if (
-            self._model_config.is_moe
-            and cluster_type in (ClusterType.PREFILL, ClusterType.MONOLITHIC)
-            and dp_size > 1
-        ):
-            dp_input_allreduce_time = base_time
-            dp_output_allreduce_time = base_time
 
         ffn_tp_allgather_time = 0.0
         share_expert_tp_allreduce_time = 0.0

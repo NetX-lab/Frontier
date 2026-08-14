@@ -646,7 +646,11 @@ class BaseClusterScheduler(ABC):
     def _build_stage_execution_contexts(self) -> dict[tuple[int, int], StageExecutionContext]:
         """Create one parent admission context for every physical Replica stage."""
 
-        replica_config = getattr(self._config, "replica_config", None)
+        replica_config = getattr(
+            getattr(self, "_config", None),
+            "replica_config",
+            None,
+        )
         model_config = getattr(replica_config, "model_config", None)
         if replica_config is None or model_config is None:
             raise ValueError(
@@ -3240,7 +3244,11 @@ class BaseClusterScheduler(ABC):
         # the materialized wave, not a scheduler lane for the layer
         # transition after combine.  All downstream stage/metrics/events must
         # therefore use the full-stage identity ``None``.
-        replica_config = getattr(self._config, "replica_config", None)
+        replica_config = getattr(
+            getattr(self, "_config", None),
+            "replica_config",
+            None,
+        )
         model_config = getattr(replica_config, "model_config", None)
         shared_full_stage_layer = (
             self._cluster_type in (ClusterType.PREFILL, ClusterType.MONOLITHIC)
