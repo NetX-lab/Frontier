@@ -57,7 +57,6 @@ def _replica_config(model_config: BaseModelConfig) -> SimpleNamespace:
         local_expert_num=16,
         router_topk=2,
         router_load_balancing_type="uniform_random",
-        extend_ep_across_dp=False,
         memory_margin_fraction=0.1,
     )
 

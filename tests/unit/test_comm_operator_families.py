@@ -478,8 +478,8 @@ def test_moe_stage_live_path_records_comm_operator_sequence_and_totals() -> None
             "comm_domain": "MOE_TP",
         },
         {
-            "collective_alias": "allreduce",
-            "data_size_bytes": 80,
+            "collective_alias": "alltoall",
+            "data_size_bytes": 160,
             "num_devices": 2,
             "cluster_type": ClusterType.MONOLITHIC,
             "comm_domain": "EP",
@@ -490,11 +490,11 @@ def test_moe_stage_live_path_records_comm_operator_sequence_and_totals() -> None
         "pipeline_parallel_send_recv": pytest.approx(0.04),
         "attn_tensor_parallel_allreduce": pytest.approx(4.08),
         "moe_tensor_parallel_allreduce": pytest.approx(2.08),
-        "expert_parallel_allreduce": pytest.approx(2.08),
+        "expert_parallel_alltoall": pytest.approx(2.04),
     }
-    assert execution_time.communication_time_component.total_time() == pytest.approx(8.28)
-    assert execution_time.model_time_ms == pytest.approx(8.28)
-    assert execution_time.total_time * 1e3 == pytest.approx(8.28)
+    assert execution_time.communication_time_component.total_time() == pytest.approx(8.24)
+    assert execution_time.model_time_ms == pytest.approx(8.24)
+    assert execution_time.total_time * 1e3 == pytest.approx(8.24)
 
 
 def test_moe_stage_num_layers_view_preserves_comm_operator_times() -> None:
@@ -505,7 +505,7 @@ def test_moe_stage_num_layers_view_preserves_comm_operator_times() -> None:
     predictor._require_predictions_for_measurement_type = lambda *_args: None
     predictor._activate_measurement_type = lambda _measurement_type: None
     predictor._model_config.is_moe_layer = lambda _layer_id: True
-    predictor._moe_routing_mode = "uniform_legacy"
+    predictor._moe_routing_distribution_type = "balanced"
     predictor._get_moe_tokens_input = lambda _batch, layer_id: 5
     predictor.predict_attention_layer_time = lambda **_kwargs: AttentionTime()
     predictor._get_gating_linear_time = lambda _batch: 0.0
@@ -545,13 +545,13 @@ def test_moe_stage_num_layers_view_preserves_comm_operator_times() -> None:
         "pipeline_parallel_send_recv": pytest.approx(0.04),
         "attn_tensor_parallel_allreduce": pytest.approx(4.08),
         "moe_tensor_parallel_allreduce": pytest.approx(2.08),
-        "expert_parallel_allreduce": pytest.approx(2.08),
+        "expert_parallel_alltoall": pytest.approx(2.04),
     }
     assert {
         "pipeline_parallel_send_recv",
         "attn_tensor_parallel_allreduce",
         "moe_tensor_parallel_allreduce",
-        "expert_parallel_allreduce",
+        "expert_parallel_alltoall",
     }.issubset(execution_time.op_times)
 
 
@@ -563,7 +563,7 @@ def test_moe_stage_preserves_attention_operator_times_for_fast_and_view_paths() 
     predictor._require_predictions_for_measurement_type = lambda *_args: None
     predictor._activate_measurement_type = lambda _measurement_type: None
     predictor._model_config.is_moe_layer = lambda _layer_id: True
-    predictor._moe_routing_mode = "uniform_legacy"
+    predictor._moe_routing_distribution_type = "balanced"
     predictor._get_moe_tokens_input = lambda _batch, layer_id: 5
     predictor.predict_attention_layer_time = lambda **_kwargs: AttentionTime(
         attention_prefill_execution_time=0.02,

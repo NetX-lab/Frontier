@@ -283,7 +283,21 @@ class BaseClusterScheduler(ABC):
         self._predictor = predictor
         self._kv_cache_transfer_predictor = kv_cache_transfer_predictor
         self._m2n_transfer_predictor = m2n_transfer_predictor
-        self._replica_dp_size = self._config.replica_config.data_parallel_size
+        # Attention-DP lanes are retired.  Cluster capacity is represented by
+        # ``len(cluster.replicas)``; every physical Replica owns one shared
+        # attention world, while MoE-only work creates replica-local EP lanes.
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            self._replica_dp_size = int(
+                self._config.replica_config.moe_expert_parallel_size
+            )
+        else:
+            attn_dp = getattr(self._config.replica_config, "attn_data_parallel_size", None)
+            if type(attn_dp) is not int or attn_dp != 1:
+                raise ValueError(
+                    "Replica-local attention DP lanes are retired; "
+                    f"{self._cluster_type.name} requires attn_data_parallel_size=1, got {attn_dp!r}"
+                )
+            self._replica_dp_size = 1
         self._available_clusters = available_clusters or set()
         self._request_generator_config = request_generator_config
         self._stage_execution_contexts = self._build_stage_execution_contexts()
@@ -294,10 +308,14 @@ class BaseClusterScheduler(ABC):
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name)
 
-        # Validate and fix data_parallel_size if needed
+        # Validate the canonical replica-local lane count.
         if self._replica_dp_size is None or self._replica_dp_size <= 0:
-            logger.error(f"Invalid data_parallel_size: {self._replica_dp_size}, defaulting to 1")
-            raise ValueError(f"Invalid data_parallel_size: {self._replica_dp_size}")
+            logger.error(
+                "Invalid replica-local lane count: %s", self._replica_dp_size
+            )
+            raise ValueError(
+                f"Invalid replica-local lane count: {self._replica_dp_size}"
+            )
 
         # Initialize replica schedulers based on cluster type
         # DECODE_FFN: Use EP (Expert Parallel) concept instead of DP
@@ -377,28 +395,6 @@ class BaseClusterScheduler(ABC):
             self._f2a_group_micro_batches = len(self._f2a_expected_lanes)
             self._decode_attn_barrier_round_counter = 0
         elif self._cluster_type == ClusterType.DECODE_FFN:
-            allow_multi_decode_ffn = bool(
-                getattr(
-                    self._config,
-                    "allow_experiment_multi_decode_ffn_replicas",
-                    False,
-                )
-            )
-            model_is_moe = self._config.replica_config.model_config.is_moe
-            # Fail fast at runtime as well: multiple MoE DECODE_FFN replicas
-            # duplicate the expert set. Dense replicas do not have that cost.
-            if (
-                model_is_moe
-                and self._num_replicas != 1
-                and not allow_multi_decode_ffn
-            ):
-                raise ValueError(
-                    "MoE DECODE_FFN cluster requires exactly one replica by default; "
-                    f"got {self._num_replicas} replicas. Set "
-                    "allow_experiment_multi_decode_ffn_replicas=True only for "
-                    "explicit experiment-only studies."
-                )
-
             # Per-key waiting rooms for grouping distinct lanes (attn→ffn arrivals)
             # key=(layer_id, afd_stage_idx[, barrier_round_id])
             # -> {per_lane_queues, lanes_rr_order, rr_cursor,
@@ -407,26 +403,26 @@ class BaseClusterScheduler(ABC):
                 tuple[int, int] | tuple[int, int, int], dict
             ] = {}
             self._m2n_ready_groups = deque()  # Deque[List[(batch, transfer_info)]]
-            # Determine grouping lanes for decode-ffn based on DECODE_ATTN configuration
-            # Prefer cross-cluster value propagated via config; fallback to local if absent
-            attn_dp_lanes = getattr(self._config, 'decode_attn_dp_lanes_for_ffn', None)
-            assert attn_dp_lanes is not None, "decode_attn_dp_lanes_for_ffn must be set for DECODE_FFN cluster"
-            dp_lanes = int(attn_dp_lanes)
-            dp_lanes = max(1, dp_lanes)
-            self._ffn_group_micro_batches = dp_lanes
             attn_num_replicas = getattr(self._config, "decode_attn_cluster_num_replicas", None)
             attn_dp_size = getattr(
                 self._config, "decode_attn_replica_config_attn_data_parallel_size", None
             )
             if attn_num_replicas is None or attn_dp_size is None:
                 raise ValueError(
-                    "decode_attn_cluster_num_replicas and decode_attn_replica_config_attn_data_parallel_size "
-                    "must be set for DECODE_FFN lane barrier"
+                    "decode_attn_cluster_num_replicas and explicit decode-attn "
+                    "attn_data_parallel_size must be set for DECODE_FFN grouping"
                 )
-            if int(attn_num_replicas) <= 0 or int(attn_dp_size) <= 0:
+            if int(attn_num_replicas) <= 0 or int(attn_dp_size) != 1:
                 raise ValueError(
-                    f"Invalid decode-attn lane config: replicas={attn_num_replicas}, dp_size={attn_dp_size}"
+                    "DECODE_ATTN cluster capacity is represented by cluster-level "
+                    f"num_replicas and requires attn_data_parallel_size=1; got "
+                    f"replicas={attn_num_replicas}, attn_dp={attn_dp_size}"
                 )
+            # AFD source identity is one tuple per attention Replica.  The
+            # second tuple field remains zero only as a transport-shape detail;
+            # it is not an attention-DP lane.
+            dp_lanes = int(attn_num_replicas)
+            self._ffn_group_micro_batches = dp_lanes
             attn_replica_id_start = getattr(
                 self._config, "decode_attn_replica_id_start_for_ffn", None
             )
@@ -437,13 +433,12 @@ class BaseClusterScheduler(ABC):
                 )
             attn_replica_id_start = int(attn_replica_id_start)
             self._ffn_expected_lanes = [
-                (attn_replica_id_start + replica_ordinal, dp_id)
+                (attn_replica_id_start + replica_ordinal, 0)
                 for replica_ordinal in range(int(attn_num_replicas))
-                for dp_id in range(int(attn_dp_size))
             ]
             if len(self._ffn_expected_lanes) != dp_lanes:
                 raise ValueError(
-                    "decode_attn_dp_lanes_for_ffn mismatch with expected lane topology: "
+                    "DECODE_ATTN Replica grouping mismatch with expected source topology: "
                     f"expected={len(self._ffn_expected_lanes)} configured={dp_lanes}"
                 )
             self._ffn_replica_ids = sorted(self._cluster.replicas.keys())
@@ -2939,7 +2934,7 @@ class BaseClusterScheduler(ABC):
 
         # Get the replica to check dp_size
         replica = self.get_replica(replica_id)
-        dp_size = replica.dp_size
+        dp_size = 1
 
         arrived = len(sync_wait_room["batches"])
         logger.info(
@@ -3086,7 +3081,7 @@ class BaseClusterScheduler(ABC):
             # Get DP size and aggregate tokens for observability.
             # Timing composition comes from canonical single-layer ExecutionTime.
             replica = self.get_replica(replica_id)
-            dp_size = replica.dp_size
+            dp_size = 1
             total_global_tokens = 0
             for dp_id, batch in dp_batches.items():
                 if not batch.is_idle:
@@ -3762,7 +3757,7 @@ class BaseClusterScheduler(ABC):
                 )
             return participant_count
 
-        participant_count = int(replica.dp_size)
+        participant_count = 1
         if participant_count <= 0:
             raise ValueError(
                 f"Invalid decode sync dp_size={participant_count} for replica={replica.id}"

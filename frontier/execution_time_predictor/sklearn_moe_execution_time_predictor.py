@@ -189,7 +189,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         expert_parallel_comm_time = base_time if moe_ep_size > 1 else 0.0
 
         # COMM_SKIP: DP allreduce not needed when dp_size <= 1 (no cross-DP communication)
-        dp_size = getattr(self._replica_config, "data_parallel_size", 1)
+        dp_size = getattr(self._replica_config, "attn_data_parallel_size", 1)
         cluster_type = getattr(self, "_cluster_type", None)
         dp_input_allreduce_time = 0.0
         dp_output_allreduce_time = 0.0
@@ -1072,8 +1072,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             return True
         if self._cluster_type == ClusterType.DECODE_FFN:
             return True
-        replica_config = getattr(self, "_replica_config", None)
-        return int(getattr(replica_config, "attn_data_parallel_size", 1)) > 1
+        # EP is replica-local and is independent of the retired attention-DP
+        # lane concept.  A full batch on any MoE serving role therefore uses
+        # the EP communication/accounting path whenever EP>1.
+        return True
 
     def _get_effective_moe_total_tokens(self, batch: Batch) -> int:
         effective_tokens = int(
@@ -2676,7 +2678,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 logger.debug(
                     "[EXEC_TIME_PREDICT_MOE] Using %s mode with post_routing_batch_tokens=%s, "
                     "layer_id=%s",
-                    self._moe_routing_mode,
+                    self._moe_routing_distribution_type,
                     moe_tokens_input,
                     layer_id,
                 )

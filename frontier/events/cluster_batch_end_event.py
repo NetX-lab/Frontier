@@ -442,9 +442,9 @@ class ClusterBatchEndEvent(BaseEvent):
 
             replica = cluster_scheduler._cluster.replicas[self._replica_id]
             is_moe = replica.is_moe
-            moe_sync_required = (
-                replica.dp_size > 1 or replica.num_moe_expert_parallel_size > 1
-            )
+            # MoE layer stepping is required even for EP=1; the complete
+            # one-lane EP_WAVE remains the canonical protocol.
+            moe_sync_required = bool(is_moe)
 
             if not is_moe or not moe_sync_required:
                 from frontier.events.global_batch_end_event import GlobalBatchEndEvent

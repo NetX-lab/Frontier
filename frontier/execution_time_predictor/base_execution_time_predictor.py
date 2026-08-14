@@ -404,7 +404,7 @@ class BaseExecutionTimePredictor(ABC):
         1) DP input allreduce over (hidden_states + router_logits)
         2) DP output allreduce over final hidden_states
         """
-        dp_size = getattr(self._replica_config, "data_parallel_size", 1)
+        dp_size = getattr(self._replica_config, "attn_data_parallel_size", 1)
         # COMM_SKIP: dp_moe_allreduce not needed when dp_size <= 1 (no cross-DP communication)
         if dp_size <= 1:
             return 0.0, 0.0

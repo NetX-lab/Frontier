@@ -5033,12 +5033,6 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             moe_routing_seed=int(
                 getattr(self._replica_config, "moe_routing_seed", 42)
             ),
-            extend_ep_across_dp=bool(
-                getattr(self._replica_config, "extend_ep_across_dp", False)
-            ),
-            data_parallel_size=int(
-                getattr(self._replica_config, "data_parallel_size", 1) or 1
-            ),
             cluster_prefix=getattr(self._replica_config, "cluster_prefix", None),
             requires_mtp_structural_compute_models=True,
             suppress_spec_decode_proposer_overhead=True,

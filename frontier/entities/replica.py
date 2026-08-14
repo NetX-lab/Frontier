@@ -194,15 +194,15 @@ class Replica(BaseEntity):
         return self._replica_config.router_load_balancing_type
 
     @property
-    def extend_ep_across_dp(self) -> bool:
-        if not self.is_moe:
-            return False
-        return self._replica_config.extend_ep_across_dp
-
-    @property
     def dp_size(self) -> int:
-        """Get the data parallel size (number of DP replicas within this replica)."""
-        return self._replica_config.attn_data_parallel_size
+        """Return the retired replica-local attention-DP lane count.
+
+        Serving capacity is owned by the containing Cluster's Replica count;
+        one physical Replica never contains additional attention-DP lanes.
+        Keep this read-only accessor at one for legacy internal callers while
+        all new MoE staggering code uses replica-local EP size explicitly.
+        """
+        return 1
 
     def to_dict(self) -> dict:
         return {

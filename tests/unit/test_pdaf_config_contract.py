@@ -365,18 +365,15 @@ def test_dense_pdaf_decode_role_invariants_accept_unit_parallelism() -> None:
     cluster_config._validate_replica_config(decode_ffn_config, "decode_ffn")
 
 
-def test_moe_pdaf_config_rejects_multiple_decode_ffn_replicas_by_default() -> None:
-    with pytest.raises(
-        ValueError,
-        match="decode_ffn_cluster_num_replicas must be 1 for MoE models",
-    ):
-        _build_pdaf_cluster_config(
-            model_name="step-moe-noquant",
-            decode_ffn_replicas=2,
-        )
+def test_moe_pdaf_config_accepts_multiple_decode_ffn_replicas_as_capacity() -> None:
+    config = _build_pdaf_cluster_config(
+        model_name="step-moe-noquant",
+        decode_ffn_replicas=2,
+    )
+    assert config.decode_ffn_cluster_num_replicas == 2
 
 
-def test_moe_pdaf_config_allows_explicit_multi_replica_experiment() -> None:
+def test_moe_pdaf_config_ignores_legacy_multi_replica_opt_in() -> None:
     config = _build_pdaf_cluster_config(
         model_name="step-moe-noquant",
         decode_ffn_replicas=2,
@@ -401,23 +398,18 @@ def test_dense_pdaf_runtime_allows_multiple_decode_ffn_replicas() -> None:
     }
 
 
-def test_moe_pdaf_runtime_rejects_multiple_decode_ffn_replicas_by_default() -> None:
+def test_moe_pdaf_runtime_accepts_multiple_decode_ffn_replicas() -> None:
     config = _build_pdaf_cluster_config(
         model_name="step-moe-noquant",
         decode_ffn_replicas=2,
         allow_experiment_multi_decode_ffn_replicas=True,
     )
-    # Bypass the already-tested config guard to exercise runtime defense in depth.
     config.allow_experiment_multi_decode_ffn_replicas = False
-
-    with pytest.raises(
-        ValueError,
-        match="MoE DECODE_FFN cluster requires exactly one replica by default",
-    ):
-        _build_decode_ffn_scheduler(config)
+    scheduler = _build_decode_ffn_scheduler(config)
+    assert scheduler._ffn_replica_ids == [3, 4]
 
 
-def test_moe_pdaf_runtime_allows_explicit_multi_replica_experiment() -> None:
+def test_moe_pdaf_runtime_preserves_multi_replica_capacity() -> None:
     config = _build_pdaf_cluster_config(
         model_name="step-moe-noquant",
         decode_ffn_replicas=2,
@@ -437,6 +429,5 @@ def test_decode_ffn_replica_help_distinguishes_dense_and_moe_contracts() -> None
         "allow_experiment_multi_decode_ffn_replicas"
     ].metadata["help"]
 
-    assert "Dense models may use multiple replicas" in help_text
-    assert "MoE models require exactly one replica by default" in help_text
-    assert "Dense models do not require this flag" in experiment_help_text
+    assert "independent FFN serving copy" in help_text
+    assert "Deprecated no-op" in experiment_help_text

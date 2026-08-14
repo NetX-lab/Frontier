@@ -1949,13 +1949,6 @@ class ReplicaConfig:
             "token-to-expert load skew without changing router_topk/model semantics."
         },
     )
-    # todo: remove this, shouldn't use in simulation in current version
-    extend_ep_across_dp: bool = field(
-        default=False,
-        metadata={
-            "help": "Whether to extend expert parallelism across data parallelism."
-        },
-    )
     device: str = field(
         default="a100",
         metadata={"help": "Device."},
@@ -1973,7 +1966,6 @@ class ReplicaConfig:
     cluster_prefix: str = None
     local_expert_num: int = None
     model_name: str = "meta-llama/Llama-2-7b-hf"
-    data_parallel_size: int = None  # to be set in monolithic mode
 
     def __post_init__(self):
         # Load model and device configs first (needed for validation)
@@ -3010,18 +3002,15 @@ class ClusterConfig:
         default=None,
         metadata={
             "help": "Number of replicas for decode FFN cluster. "
-            "Dense models may use multiple replicas. "
-            "MoE models require exactly one replica by default to avoid expert redundancy; "
-            "use EP within that replica instead. Used only in pd-af-disaggregation mode.",
+            "Each replica is an independent FFN serving copy; MoE EP lanes are "
+            "scoped inside the selected replica. Used only in pd-af-disaggregation mode.",
             "mode_dependency": "pd-af-disaggregation",
         },
     )
     allow_experiment_multi_decode_ffn_replicas: bool = field(
         default=False,
         metadata={
-            "help": "Experiment-only opt-in that permits multiple MoE DECODE_FFN "
-            "replicas for Use Case 6 heterogeneous cost studies. "
-            "Dense models do not require this flag."
+            "help": "Deprecated no-op; DECODE_FFN cluster replica capacity is always explicit."
         },
     )
     decode_cluster_num_replicas: Optional[int] = field(
@@ -3098,13 +3087,6 @@ class ClusterConfig:
         default=None,
         metadata={
             "help": "Router topk for prefill cluster.",
-            "mode_dependency": "pd-af-disaggregation",
-        },
-    )
-    prefill_replica_config_extend_ep_across_dp: Optional[bool] = field(
-        default=None,
-        metadata={
-            "help": "Whether to extend expert parallelism across data parallelism for prefill cluster.",
             "mode_dependency": "pd-af-disaggregation",
         },
     )
@@ -3220,13 +3202,6 @@ class ClusterConfig:
             "mode_dependency": "pd-af-disaggregation",
         },
     )
-    decode_ffn_replica_config_extend_ep_across_dp: Optional[bool] = field(
-        default=None,
-        metadata={
-            "help": "Whether to extend expert parallelism across data parallelism for decode FFN cluster.",
-            "mode_dependency": "pd-af-disaggregation",
-        },
-    )
     decode_ffn_replica_config_device: Optional[str] = field(
         default=None,
         metadata={
@@ -3313,13 +3288,6 @@ class ClusterConfig:
             "mode_dependency": "pd-disaggregation",
         },
     )
-    decode_replica_config_extend_ep_across_dp: Optional[bool] = field(
-        default=None,
-        metadata={
-            "help": "Whether to extend expert parallelism across data parallelism for unified decode cluster.",
-            "mode_dependency": "pd-disaggregation",
-        },
-    )
     decode_replica_config_device: Optional[str] = field(
         default=None,
         metadata={
@@ -3391,14 +3359,6 @@ class ClusterConfig:
         },
     )
 
-    # Derived cross-cluster parameter propagated for DECODE_FFN scheduling
-    # For decode-ffn cluster: number of DP lanes sourced from DECODE_ATTN config
-    decode_attn_dp_lanes_for_ffn: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": "Derived lanes = decode-attn num_replicas * decode-attn DP size; used by decode-ffn grouping.",
-        },
-    )
     decode_attn_replica_id_start_for_ffn: Optional[int] = field(
         default=None,
         metadata={
@@ -4600,11 +4560,6 @@ class ClusterConfig:
         # Set cluster type for monolithic mode
         self.cluster_type = ClusterType.MONOLITHIC
 
-        # Keep replica-local DP lanes aligned with attn_data_parallel_size in monolithic mode.
-        # Cluster-level scaling is already represented by num_replicas.
-        self.replica_config.data_parallel_size = (
-            self.replica_config.attn_data_parallel_size
-        )
         # Predictor routing details are indexed by serving Replica identity.
         # Keep that capacity dimension explicit instead of deriving it from
         # attention-DP lanes.
@@ -4623,9 +4578,6 @@ class ClusterConfig:
         self.decode_attn_cluster_num_replicas = None
         self.decode_ffn_cluster_num_replicas = None
 
-        # if self.replica_config.extend_ep_across_dp:
-        #     assert self.replica_config.expert_parallel_size == self.replica_config.data_parallel_size * \
-        #         self.replica_config.tensor_parallel_size, "For global MoE, expert_parallel_size must be equal to data_parallel_size * tensor_parallel_size"
         # else:
         #     assert self.replica_config.expert_parallel_size == self.replica_config.tensor_parallel_size, "For local MoE, expert_parallel_size must be equal to tensor_parallel_size"
 
@@ -4714,22 +4666,6 @@ class ClusterConfig:
             self.decode_ffn_replica_config = self._create_replica_config_from_fields(
                 "decode_ffn"
             )
-
-            # Multiple DECODE_FFN replicas duplicate the full expert set for MoE.
-            # Dense models have no expert-set duplication and may use >1 replicas.
-            if (
-                self.decode_ffn_replica_config.model_config.is_moe
-                and self.decode_ffn_cluster_num_replicas != 1
-                and not self.allow_experiment_multi_decode_ffn_replicas
-            ):
-                raise ValueError(
-                    f"decode_ffn_cluster_num_replicas must be 1 for MoE models, got {self.decode_ffn_cluster_num_replicas}. "
-                    f"DP for the FFN cluster is not enabled by default because it causes "
-                    f"expert redundancy (each replica duplicates the full expert set). "
-                    f"Use expert parallelism (EP) within a single replica instead. "
-                    f"Set allow_experiment_multi_decode_ffn_replicas=True only for "
-                    f"explicit experiment-only studies."
-                )
 
             # Enforce disaggregation constraints
             assert (
@@ -4877,7 +4813,6 @@ class ClusterConfig:
             num_pipeline_stages = 1
             router_load_balancing_type = None
             router_topk = None
-            extend_ep_across_dp = None
             moe_routing_distribution_type = get_field_value(
                 "moe_routing_distribution_type"
             )
@@ -4892,7 +4827,6 @@ class ClusterConfig:
             local_expert_num = get_field_value("local_expert_num")
             router_load_balancing_type = get_field_value("router_load_balancing_type")
             router_topk = get_field_value("router_topk")
-            extend_ep_across_dp = get_field_value("extend_ep_across_dp")
             moe_routing_distribution_type = get_field_value(
                 "moe_routing_distribution_type"
             )
@@ -4926,11 +4860,9 @@ class ClusterConfig:
                 "decode_attn_steady_state_measurement_report_path"
             ),
             moe_routing_distribution_type=moe_routing_distribution_type,
-            extend_ep_across_dp=extend_ep_across_dp,
             device=get_field_value("device"),
             network_device=get_field_value("network_device"),
             cluster_prefix=cluster_prefix,
-            data_parallel_size=attn_data_parallel_size,  # Set data_parallel_size for DP replica support
             speculative_decoding_config=main_config.speculative_decoding_config,
         )
 
@@ -5014,10 +4946,6 @@ class ClusterConfig:
 
         if cluster_name != "decode_attn":
             pass
-            # if replica_config.extend_ep_across_dp:
-            #     # Assuming data parallelism for MoE is attn_data_parallel_size
-            #     assert replica_config.moe_expert_parallel_size == replica_config.attn_data_parallel_size * \
-            #         replica_config.moe_tensor_parallel_size, f"For global MoE in {cluster_name} cluster, moe_expert_parallel_size must be equal to attn_data_parallel_size * moe_tensor_parallel_size"
             # else:
             #     assert replica_config.moe_expert_parallel_size == replica_config.moe_tensor_parallel_size, f"For local MoE in {cluster_name} cluster, moe_expert_parallel_size must be equal to moe_tensor_parallel_size"
         else:
@@ -5327,12 +5255,8 @@ class ClusterConfig:
                     self.allow_experiment_multi_decode_ffn_replicas
                 ),
             )
-            # Propagate DECODE_ATTN DP lanes for FFN grouping: dp_lanes = attn_num_replicas * attn_dp_size
-            attn_num_replicas = int(self.decode_attn_cluster_num_replicas)
-            attn_dp_size = int(self.decode_attn_replica_config.attn_data_parallel_size)
-            decode_ffn_config.decode_attn_dp_lanes_for_ffn = max(
-                1, attn_num_replicas * attn_dp_size
-            )
+            # Propagate only the source Attention-Replica capacity.  AFD
+            # grouping is Replica-level; it must not manufacture DP lanes.
             decode_ffn_config.decode_attn_replica_id_start_for_ffn = int(
                 self.prefill_cluster_num_replicas
             )
@@ -5700,10 +5624,8 @@ class ClusterConfig:
             moe_tensor_parallel_size=original_config.moe_tensor_parallel_size,
             moe_expert_parallel_size=original_config.moe_expert_parallel_size,
             total_expert_num=original_config.total_expert_num,
-            data_parallel_size=original_config.data_parallel_size,
             router_load_balancing_type=original_config.router_load_balancing_type,
             router_topk=original_config.router_topk,
-            extend_ep_across_dp=original_config.extend_ep_across_dp,
             moe_routing_mode=original_config.moe_routing_mode,
             moe_routing_seed=original_config.moe_routing_seed,
             moe_routing_trace_path=original_config.moe_routing_trace_path,

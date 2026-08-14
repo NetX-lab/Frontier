@@ -1268,14 +1268,16 @@ class MetricsStore:
     def _get_parallel_lane_count(cluster_type: ClusterType, replica_config) -> int:
         """Return the lane count used for utilization metrics indexing.
 
-        Frontier models DECODE_FFN with EP lanes (ep_id reused as dp_id in schedulers),
-        so utilization tensors must be sized by moe_expert_parallel_size there.
-        Other clusters keep data_parallel_size semantics.
+        Frontier models DECODE_FFN with replica-local EP lanes (the scheduler's
+        second key is an EP identity there), so utilization tensors are sized by
+        ``moe_expert_parallel_size``.  All other roles have one physical
+        attention/full-stage world per serving Replica; cluster capacity is
+        indexed by the outer Replica key, not by a local DP lane.
         """
         if cluster_type == ClusterType.DECODE_FFN:
             lane_count = int(replica_config.moe_expert_parallel_size)
         else:
-            lane_count = int(replica_config.data_parallel_size)
+            lane_count = 1
 
         if lane_count <= 0:
             raise ValueError(

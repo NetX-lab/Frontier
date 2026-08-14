@@ -691,8 +691,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
             )
             raise e
         
-        # if not replica.extend_ep_across_dp:
-        # extend_ep_across_dp CAN BE REMOVED
         batch_stage, execution_time = stage_scheduler.predict_and_create_stage(
             batch
         )
