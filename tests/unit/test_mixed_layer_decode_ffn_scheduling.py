@@ -1244,9 +1244,6 @@ def _run_decode_ffn_stage_event(monkeypatch, batch: Batch):
     from frontier.config import global_vars
 
     monkeypatch.setattr(global_vars, "is_disaggregated_mode", lambda: True)
-    monkeypatch.setattr(
-        global_vars, "get_monolithic_moe_stage_aggregation", lambda: False
-    )
 
     batch_stage = SimpleNamespace(execution_time=0.01, on_schedule=Mock())
     execution_time = SimpleNamespace(

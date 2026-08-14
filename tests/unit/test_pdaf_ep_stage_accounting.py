@@ -112,11 +112,6 @@ def _run_ep_stage(
     full_stage_time_s: float,
 ) -> None:
     monkeypatch.setattr(global_vars, "is_disaggregated_mode", lambda: True)
-    monkeypatch.setattr(
-        global_vars,
-        "get_monolithic_moe_stage_aggregation",
-        lambda: False,
-    )
     batch_stage = SimpleNamespace(
         id=stage_id,
         execution_time=full_stage_time_s,

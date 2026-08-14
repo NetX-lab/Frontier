@@ -150,10 +150,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
         # replica = scheduler.get_replica(self._replica_id)
 
         # pd-af-disagg and pd-disagg
-        from frontier.config.global_vars import (
-            get_monolithic_moe_stage_aggregation,
-            is_disaggregated_mode,
-        )
+        from frontier.config.global_vars import is_disaggregated_mode
 
         replica = cluster_scheduler.get_replica(self._replica_id)
         is_moe = replica.is_moe
@@ -172,27 +169,16 @@ class ReplicaStageScheduleEvent(BaseEvent):
         # EP=1.  A one-lane wave still establishes the same dispatch/compute/
         # combine ordering; dense models never enter this branch.
         moe_sync_required = bool(is_moe)
-        monolithic_moe_stage_aggregation_enabled = (
-            self._cluster_type == ClusterType.MONOLITHIC
-            and is_moe
-            and get_monolithic_moe_stage_aggregation()
-        )
         uses_prefill_sync_path = (
             (self._cluster_type == ClusterType.PREFILL and is_moe)
-            or (
-                is_monolithic_prefill_moe
-                and not monolithic_moe_stage_aggregation_enabled
-            )
+            or is_monolithic_prefill_moe
         ) and moe_sync_required
         uses_decode_sync_path = (
             self._cluster_type == ClusterType.DECODE_FFN and is_moe
         ) or (
             (
                 (self._cluster_type == ClusterType.DECODE and is_moe)
-                or (
-                    is_monolithic_decode_moe
-                    and not monolithic_moe_stage_aggregation_enabled
-                )
+                or is_monolithic_decode_moe
             )
             and moe_sync_required
         )

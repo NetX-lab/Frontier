@@ -5672,16 +5672,6 @@ class SimulationConfig(ABC):
             "diagnostics. Keeps the default speculative baseline eager-only.",
         },
     )
-    enable_monolithic_moe_stage_aggregation: bool = field(
-        default=False,
-        metadata={
-            "help": (
-                "Enable MONOLITHIC MoE accelerated stage-level execution. "
-                "When true, co-location MoE prefill/decode uses aggregated "
-                "stage timing instead of layer-by-layer sync events."
-            ),
-        },
-    )
     cudagraph_capture_sizes: Optional[List[int]] = field(
         default=None,
         metadata={
@@ -5887,12 +5877,7 @@ class SimulationConfig(ABC):
         self._validate_simulation_mode_arch_compatibility()
         self._validate_thinking_mode_config()
         self._validate_sequential_checkpoint_observer_config()
-        self._validate_monolithic_moe_stage_aggregation_config()
-
         global_vars.set_global_vars(self.simulation_mode, self.sys_arch)
-        global_vars.set_monolithic_moe_stage_aggregation(
-            self.enable_monolithic_moe_stage_aggregation
-        )
         self._validate_cuda_graph_config()
         global_vars.set_cuda_graph_config(
             self.use_cuda_graph,
@@ -6019,16 +6004,6 @@ class SimulationConfig(ABC):
         Validate supported simulation-mode/system-architecture combinations.
         """
         pass
-
-    def _validate_monolithic_moe_stage_aggregation_config(self) -> None:
-        if (
-            self.enable_monolithic_moe_stage_aggregation
-            and self.sys_arch != "co-location"
-        ):
-            raise ValueError(
-                "enable_monolithic_moe_stage_aggregation is supported only for "
-                "sys_arch='co-location'."
-            )
 
     def _validate_thinking_mode_config(self) -> None:
         if self.thinking_depth < 1:
