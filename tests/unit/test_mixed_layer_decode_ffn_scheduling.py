@@ -200,6 +200,9 @@ def _builder_scheduler(model_config):
         replica_config=SimpleNamespace(
             model_config=model_config,
             router_topk=1,
+            total_expert_num=1,
+            moe_expert_parallel_size=1,
+            local_expert_num=1,
         )
     )
     scheduler._raw_batch_waiting_for_m2n_back = {}
@@ -208,6 +211,73 @@ def _builder_scheduler(model_config):
     queue_sink = _QueuedBatchSink()
     scheduler.get_dp_replica_scheduler = Mock(return_value=queue_sink)
     return scheduler, queue_sink
+
+
+def test_ep_builder_uses_shared_layer_materializer(monkeypatch, mixed_model_config) -> None:
+    """DECODE_FFN must consume one shared global-to-local EP materialization."""
+
+    scheduler = object.__new__(RoundRobinClusterScheduler)
+    scheduler._cluster_type = ClusterType.DECODE_FFN
+    scheduler._cluster = SimpleNamespace(replicas={0: object()})
+    scheduler._config = SimpleNamespace(
+        replica_config=SimpleNamespace(
+            model_config=mixed_model_config,
+            router_topk=2,
+            moe_expert_parallel_size=2,
+            local_expert_num=2,
+            total_expert_num=4,
+        )
+    )
+    scheduler._raw_batch_waiting_for_m2n_back = {}
+    scheduler._batch_group_creation_counter = 0
+    scheduler._ep_routed_token_allocation_cache = {}
+
+    source_batch = _source_batch(layer_id=4)
+    source_batch._num_tokens = [3]
+    source_batch._total_num_tokens = 3
+    transfer_info = _transfer_info(layer_id=4, afd_stage_idx=2)
+
+    captured = {}
+
+    def fake_materializer(**kwargs):
+        captured.update(kwargs)
+        return SimpleNamespace(
+            per_ep_per_expert_tokens={
+                0: {0: 1, 1: 1},
+                1: {2: 2, 3: 2},
+            },
+            per_ep_routed_tokens={0: 2, 1: 4},
+        )
+
+    import frontier.scheduler.cluster_scheduler.base_cluster_scheduler as base_scheduler
+
+    monkeypatch.setattr(
+        base_scheduler,
+        "materialize_layer_ep_workload",
+        fake_materializer,
+        raising=False,
+    )
+
+    plan = scheduler._prepare_ep_batch_group_plan(
+        [(source_batch, transfer_info)],
+        replica_id=0,
+        ep_id=1,
+        expert_global_ids=[2, 3],
+        layer_global_id=4,
+        routing_details={0: {4: {0: 0.1, 1: 0.2, 2: 0.3, 3: 0.4}}},
+    )
+
+    assert captured == {
+        "routing_ratios": {0: 0.1, 1: 0.2, 2: 0.3, 3: 0.4},
+        "target_replica_id": 0,
+        "global_layer_id": 4,
+        "routing_token_count": 3,
+        "router_topk": 2,
+        "total_expert_num": 4,
+        "moe_expert_parallel_size": 2,
+        "expert_to_ep": {0: 0, 1: 0, 2: 1, 3: 1},
+    }
+    assert plan.per_expert_tokens == ((2, 2), (3, 2))
 
 
 def test_dense_builder_propagates_decode_ffn_layer_metadata(

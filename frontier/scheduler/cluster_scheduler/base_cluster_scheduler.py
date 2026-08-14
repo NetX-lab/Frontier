@@ -19,6 +19,11 @@ from frontier.model_architectures import (
     ExpertParallelCollective,
     ModelArchitectureProfile,
 )
+from frontier.moe_ep_workload import (
+    build_contiguous_expert_ownership,
+    materialize_layer_ep_workload,
+    resolve_routing_details,
+)
 from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
     ReplicaSchedulerRegistry,
 )
@@ -1246,28 +1251,61 @@ class BaseClusterScheduler(ABC):
                 "DECODE_FFN router_topk must be an exact positive int, "
                 f"got {router_topk!r}"
             )
-        ep_batch_group_total_num_token *= router_topk
-
         group_time = max((b.time or 0.0) for (b, _) in group)
 
-        replica_routing_details = routing_details.get(replica_id)
-        if type(replica_routing_details) is not dict:
-            raise ValueError(
-                "DECODE_FFN routing_details missing exact target replica mapping: "
-                f"replica_id={replica_id}"
-            )
-        global_routing_ratios = replica_routing_details.get(layer_global_id)
-        if type(global_routing_ratios) is not dict:
-            raise ValueError(
-                "DECODE_FFN routing_details missing exact layer mapping: "
-                f"replica_id={replica_id}, layer_global_id={layer_global_id}"
-            )
-        experts_tokens_mapping = self._get_ep_subset_routed_token_allocation(
-            ep_batch_group_total_num_token,
-            expert_global_ids,
-            global_routing_ratios,
+        replica_config = getattr(self._config, "replica_config", None)
+        if replica_config is None:
+            raise ValueError("DECODE_FFN requires replica_config for EP materialization")
+        total_expert_num = getattr(replica_config, "total_expert_num", None)
+        moe_expert_parallel_size = getattr(
+            replica_config,
+            "moe_expert_parallel_size",
+            None,
         )
-        ep_batch_group_total_num_token = sum(experts_tokens_mapping.values())
+        if type(total_expert_num) is not int or total_expert_num <= 0:
+            raise ValueError(
+                "DECODE_FFN total_expert_num must be an exact positive int for "
+                "EP materialization"
+            )
+        if type(moe_expert_parallel_size) is not int or moe_expert_parallel_size <= 0:
+            raise ValueError(
+                "DECODE_FFN moe_expert_parallel_size must be an exact positive int "
+                "for EP materialization"
+            )
+        expert_to_ep = build_contiguous_expert_ownership(
+            total_expert_num,
+            moe_expert_parallel_size,
+        )
+        expected_expert_ids = [
+            expert_id
+            for expert_id in range(total_expert_num)
+            if expert_to_ep[expert_id] == ep_id
+        ]
+        if sorted(expert_global_ids) != expected_expert_ids:
+            raise ValueError(
+                "DECODE_FFN expert_global_ids do not match contiguous ownership "
+                f"for ep_id={ep_id}: expected={expected_expert_ids}, "
+                f"got={expert_global_ids}"
+            )
+        global_routing_ratios = resolve_routing_details(
+            routing_details,
+            replica_id,
+            layer_global_id,
+        )
+        layer_workload = materialize_layer_ep_workload(
+            routing_ratios=global_routing_ratios,
+            target_replica_id=replica_id,
+            global_layer_id=layer_global_id,
+            routing_token_count=ep_batch_group_total_num_token,
+            router_topk=router_topk,
+            total_expert_num=total_expert_num,
+            moe_expert_parallel_size=moe_expert_parallel_size,
+            expert_to_ep=expert_to_ep,
+        )
+        experts_tokens_mapping = dict(
+            layer_workload.per_ep_per_expert_tokens[ep_id]
+        )
+        ep_batch_group_total_num_token = layer_workload.per_ep_routed_tokens[ep_id]
 
         self._validate_token_conservation(
             input_tokens=ep_batch_group_total_num_token,
