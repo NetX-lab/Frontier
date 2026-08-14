@@ -985,6 +985,15 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
                 f"routing_detail_replicas={rd_replicas}, layer_global_id={layer_global_id}"
             )
 
+            # Materialize the global routing vector exactly once for the complete
+            # EP wave, then reuse its ownership split for every lane.
+            shared_layer_workload = self._materialize_ep_wave_workload(
+                group,
+                target_replica_id,
+                layer_global_id,
+                routing_details,
+            )
+
             # Prepare a shared group_global_id so all EP sub-batches share the same global_id.
             # The counter is committed only after all queue writes succeed.
             shared_group_id = self._batch_group_creation_counter
@@ -1025,6 +1034,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
                     expert_global_ids,
                     layer_global_id,
                     routing_details,
+                    layer_workload=shared_layer_workload,
                 )
                 # Ensure all EP sub-batches share the same global_id for AllGather synchronization
                 ep_batch_group.set_global_id(shared_group_id)

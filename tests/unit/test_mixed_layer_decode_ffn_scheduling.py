@@ -20,6 +20,7 @@ from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEve
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
     SklearnDisaggregationExecutionTimePredictor,
 )
+from frontier.moe_ep_workload import LayerEPWorkload
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
@@ -140,6 +141,8 @@ def _branch_scheduler(model_config, *, layer_id: int):
             model_config=model_config,
             moe_expert_parallel_size=1,
             local_expert_num=1,
+            total_expert_num=1,
+            router_topk=1,
         )
     )
     scheduler._predictor = SimpleNamespace(
@@ -246,12 +249,20 @@ def test_ep_builder_uses_shared_layer_materializer(monkeypatch, mixed_model_conf
 
     def fake_materializer(**kwargs):
         captured.update(kwargs)
-        return SimpleNamespace(
+        return LayerEPWorkload(
+            target_replica_id=0,
+            global_layer_id=4,
+            routing_token_count=3,
+            router_topk=2,
+            total_routed_assignments=6,
+            global_per_expert_tokens={0: 1, 1: 1, 2: 2, 3: 2},
             per_ep_per_expert_tokens={
                 0: {0: 1, 1: 1},
                 1: {2: 2, 3: 2},
             },
             per_ep_routed_tokens={0: 2, 1: 4},
+            participant_ep_ids=(0, 1),
+            expert_to_ep={0: 0, 1: 0, 2: 1, 3: 1},
         )
 
     import frontier.scheduler.cluster_scheduler.base_cluster_scheduler as base_scheduler
@@ -283,6 +294,64 @@ def test_ep_builder_uses_shared_layer_materializer(monkeypatch, mixed_model_conf
         "expert_to_ep": {0: 0, 1: 0, 2: 1, 3: 1},
     }
     assert plan.per_expert_tokens == ((2, 2), (3, 2))
+
+
+def test_ep_wave_schedule_materializes_one_shared_workload_for_all_lanes(
+    monkeypatch,
+    mixed_model_config,
+) -> None:
+    scheduler, _ = _builder_scheduler(mixed_model_config)
+    source_batch = _source_batch(layer_id=4)
+    source_batch._num_tokens = [3]
+    source_batch._total_num_tokens = 3
+    scheduler._m2n_ready_groups = deque(
+        [[(source_batch, _transfer_info(layer_id=4, afd_stage_idx=2))]]
+    )
+    scheduler._predictor = SimpleNamespace(
+        _decode_ffn_routing_details={
+            0: {4: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
+        }
+    )
+    scheduler._replica_ep_size = 2
+    scheduler._config.replica_config.router_topk = 2
+    scheduler._config.replica_config.total_expert_num = 4
+    scheduler._config.replica_config.local_expert_num = 2
+    scheduler._config.replica_config.moe_expert_parallel_size = 2
+
+    queue_sinks = [_QueuedBatchSink(), _QueuedBatchSink()]
+    scheduler.get_dp_replica_scheduler = Mock(
+        side_effect=lambda _replica_id, ep_id: queue_sinks[ep_id]
+    )
+    materializer_calls = []
+
+    def fake_materializer(**kwargs):
+        materializer_calls.append(kwargs)
+        return LayerEPWorkload(
+            target_replica_id=0,
+            global_layer_id=4,
+            routing_token_count=3,
+            router_topk=2,
+            total_routed_assignments=6,
+            global_per_expert_tokens={0: 0, 1: 0, 2: 3, 3: 3},
+            per_ep_per_expert_tokens={
+                0: {0: 0, 1: 0},
+                1: {2: 3, 3: 3},
+            },
+            per_ep_routed_tokens={0: 0, 1: 6},
+            participant_ep_ids=(0, 1),
+            expert_to_ep={0: 0, 1: 0, 2: 1, 3: 1},
+        )
+
+    monkeypatch.setattr(
+        "frontier.scheduler.cluster_scheduler.base_cluster_scheduler.materialize_layer_ep_workload",
+        fake_materializer,
+    )
+
+    result = scheduler.schedule_ffn_with_m2n_immediate()
+
+    assert result == [(0, 0), (0, 1)]
+    assert len(materializer_calls) == 1
+    assert [len(sink._m2n_immediate_batch_queue) for sink in queue_sinks] == [1, 1]
 
 
 def test_dense_builder_propagates_decode_ffn_layer_metadata(

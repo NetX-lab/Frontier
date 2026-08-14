@@ -20,6 +20,7 @@ from frontier.model_architectures import (
     ModelArchitectureProfile,
 )
 from frontier.moe_ep_workload import (
+    LayerEPWorkload,
     build_contiguous_expert_ownership,
     materialize_layer_ep_workload,
     resolve_routing_details,
@@ -1216,6 +1217,72 @@ class BaseClusterScheduler(ABC):
                 f"Per-expert allocation={per_expert_tokens}"
             )
 
+    def _materialize_ep_wave_workload(
+        self,
+        group: List[Tuple[Batch, Any]],
+        replica_id: int,
+        layer_global_id: int,
+        routing_details,
+    ) -> LayerEPWorkload:
+        """Materialize one aggregate workload shared by every EP lane in a wave."""
+        if type(group) is not list or not group:
+            raise ValueError("DECODE_FFN EP wave group must be a non-empty list")
+        routing_token_count = 0
+        for entry in group:
+            if type(entry) is not tuple or len(entry) != 2:
+                raise ValueError(
+                    "DECODE_FFN EP wave group entries must be (batch, transfer_info) tuples"
+                )
+            batch = entry[0]
+            batch_tokens = getattr(batch, "total_num_tokens", None)
+            if type(batch_tokens) is not int or batch_tokens < 0:
+                raise ValueError(
+                    "DECODE_FFN EP wave source batch total_num_tokens must be a "
+                    f"non-negative int, got {batch_tokens!r}"
+                )
+            routing_token_count += batch_tokens
+
+        replica_config = getattr(self._config, "replica_config", None)
+        if replica_config is None:
+            raise ValueError("DECODE_FFN requires replica_config for EP materialization")
+        total_expert_num = getattr(replica_config, "total_expert_num", None)
+        moe_expert_parallel_size = getattr(
+            replica_config,
+            "moe_expert_parallel_size",
+            None,
+        )
+        router_topk = getattr(replica_config, "router_topk", None)
+        if type(total_expert_num) is not int or total_expert_num <= 0:
+            raise ValueError(
+                "DECODE_FFN total_expert_num must be an exact positive int for EP materialization"
+            )
+        if type(moe_expert_parallel_size) is not int or moe_expert_parallel_size <= 0:
+            raise ValueError(
+                "DECODE_FFN moe_expert_parallel_size must be an exact positive int for EP materialization"
+            )
+        if type(router_topk) is not int or router_topk <= 0:
+            raise ValueError(
+                "DECODE_FFN router_topk must be an exact positive int for EP materialization"
+            )
+        expert_to_ep = build_contiguous_expert_ownership(
+            total_expert_num,
+            moe_expert_parallel_size,
+        )
+        return materialize_layer_ep_workload(
+            routing_ratios=resolve_routing_details(
+                routing_details,
+                target_replica_id=replica_id,
+                global_layer_id=layer_global_id,
+            ),
+            target_replica_id=replica_id,
+            global_layer_id=layer_global_id,
+            routing_token_count=routing_token_count,
+            router_topk=router_topk,
+            total_expert_num=total_expert_num,
+            moe_expert_parallel_size=moe_expert_parallel_size,
+            expert_to_ep=expert_to_ep,
+        )
+
     def _prepare_ep_batch_group_plan(
         self,
         group: List[Batch],
@@ -1224,6 +1291,7 @@ class BaseClusterScheduler(ABC):
         expert_global_ids,
         layer_global_id,
         routing_details,
+        layer_workload: Optional[LayerEPWorkload] = None,
     ) -> EPBatchGroupPlan:
         """Prepare one EP batch without constructing entities or mutating caches."""
 
@@ -1372,21 +1440,33 @@ class BaseClusterScheduler(ABC):
                 f"for ep_id={ep_id}: expected={expected_expert_ids}, "
                 f"got={expert_global_ids}"
             )
-        global_routing_ratios = resolve_routing_details(
-            routing_details,
-            replica_id,
-            layer_global_id,
-        )
-        layer_workload = materialize_layer_ep_workload(
-            routing_ratios=global_routing_ratios,
-            target_replica_id=replica_id,
-            global_layer_id=layer_global_id,
-            routing_token_count=ep_batch_group_total_num_token,
-            router_topk=router_topk,
-            total_expert_num=total_expert_num,
-            moe_expert_parallel_size=moe_expert_parallel_size,
-            expert_to_ep=expert_to_ep,
-        )
+        if layer_workload is None:
+            layer_workload = self._materialize_ep_wave_workload(
+                group,
+                replica_id,
+                layer_global_id,
+                routing_details,
+            )
+        if not isinstance(layer_workload, LayerEPWorkload):
+            raise ValueError(
+                "DECODE_FFN shared EP workload must be a LayerEPWorkload instance"
+            )
+        if layer_workload.target_replica_id != replica_id:
+            raise ValueError(
+                "DECODE_FFN shared EP workload target replica mismatch: "
+                f"expected={replica_id}, got={layer_workload.target_replica_id}"
+            )
+        if layer_workload.global_layer_id != layer_global_id:
+            raise ValueError(
+                "DECODE_FFN shared EP workload layer mismatch: "
+                f"expected={layer_global_id}, got={layer_workload.global_layer_id}"
+            )
+        if layer_workload.routing_token_count != ep_batch_group_total_num_token:
+            raise ValueError(
+                "DECODE_FFN shared EP workload routing-token mismatch: "
+                f"expected={ep_batch_group_total_num_token}, "
+                f"got={layer_workload.routing_token_count}"
+            )
         experts_tokens_mapping = dict(
             layer_workload.per_ep_per_expert_tokens[ep_id]
         )
@@ -1451,6 +1531,7 @@ class BaseClusterScheduler(ABC):
         expert_global_ids,
         layer_global_id,
         routing_details,
+        layer_workload: Optional[LayerEPWorkload] = None,
     ) -> EPBatchGroup:
         """Build one EP batch without committing scheduler-owned state."""
 
@@ -1461,6 +1542,7 @@ class BaseClusterScheduler(ABC):
             expert_global_ids,
             layer_global_id,
             routing_details,
+            layer_workload=layer_workload,
         )
         return self._materialize_ep_batch_group(plan)
 
