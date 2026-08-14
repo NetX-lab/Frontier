@@ -485,6 +485,7 @@ def test_monolithic_routing_allocations_use_global_expert_ids() -> None:
     predictor._replica_config = SimpleNamespace(total_expert_num=4)
     predictor._moe_ep_size = 2
     predictor._moe_routing_seed = 7
+    predictor._moe_routing_distribution_type = "random"
 
     allocations = predictor._init_routing_allocations()
 
@@ -499,7 +500,7 @@ def test_global_routing_lookup_rejects_missing_layer_instead_of_using_layer_zero
     predictor = object.__new__(_DummySklearnMoEPredictor)
     predictor._replica_config = SimpleNamespace(total_expert_num=2)
     predictor._global_routing_allocations = {0: {0: 0.5, 1: 0.5}}
-    predictor._moe_routing_mode = "simulation"
+    predictor._moe_routing_distribution_type = "balanced"
 
     with pytest.raises(ValueError, match="No global routing allocations for layer 3"):
         predictor._get_global_per_expert_tokens(total_routed_tokens=4, layer_id=3)
@@ -511,6 +512,33 @@ def test_routing_initialization_rejects_non_divisible_ep_topology() -> None:
     predictor._replica_config = SimpleNamespace(total_expert_num=5)
     predictor._moe_ep_size = 2
     predictor._moe_routing_seed = 7
+    predictor._moe_routing_distribution_type = "balanced"
 
     with pytest.raises(ValueError, match="divisible"):
         predictor._init_global_routing_allocations()
+
+
+@pytest.mark.parametrize("distribution_type", ["balanced", "random", "skewed", "zipf"])
+def test_global_routing_allocations_use_canonical_distribution_types(
+    distribution_type: str,
+) -> None:
+    predictor = object.__new__(_DummySklearnMoEPredictor)
+    predictor._model_config = SimpleNamespace(num_layers=2)
+    predictor._replica_config = SimpleNamespace(total_expert_num=4)
+    predictor._moe_ep_size = 2
+    predictor._moe_routing_seed = 11
+    predictor._moe_routing_distribution_type = distribution_type
+
+    first = predictor._init_global_routing_allocations()
+    second = predictor._init_global_routing_allocations()
+
+    assert first == second
+    assert set(first) == {0, 1}
+    for ratios in first.values():
+        assert set(ratios) == {0, 1, 2, 3}
+        assert sum(ratios.values()) == pytest.approx(1.0)
+
+    if distribution_type == "balanced":
+        assert all(value == pytest.approx(0.25) for value in first[0].values())
+    else:
+        assert len(set(first[0].values())) > 1

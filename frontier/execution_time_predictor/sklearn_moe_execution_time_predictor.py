@@ -169,7 +169,7 @@ def _validate_moe_columns(moe_df: pd.DataFrame) -> None:
 class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
     def _get_requested_moe_gating_routing_runtime_path(self) -> str:
         return resolve_moe_gating_routing_runtime_path(
-            getattr(self, "_moe_routing_mode", "simulation")
+            getattr(self, "_moe_routing_distribution_type", "balanced")
         )
 
     def _get_dummy_execution_time(self, batch: Batch, pipeline_stage: int) -> ExecutionTime:
@@ -293,30 +293,28 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         self._moe_tp_size = replica_config.moe_tensor_parallel_size
         self._moe_ep_size = replica_config.moe_expert_parallel_size
 
-        # Initialize routing mode before parent init so independent training paths
-        # select the correct moe_gating_routing_topk profiling rows.
-        self._moe_routing_mode = getattr(replica_config, "moe_routing_mode", "simulation")
-        self._moe_routing_seed = getattr(replica_config, "moe_routing_seed", 42)
-        if self._moe_routing_mode not in (
-            "simulation",
-            "uniform_legacy",
-            "uniform_random",
-        ):
+        # Initialize the canonical distribution selector before parent init so
+        # profiling paths choose matching gating-runtime metadata.
+        self._moe_routing_distribution_type = str(
+            getattr(replica_config, "moe_routing_distribution_type", "balanced")
+        ).strip().lower()
+        valid_distribution_types = {"balanced", "random", "skewed", "zipf"}
+        if self._moe_routing_distribution_type not in valid_distribution_types:
             raise ValueError(
-                f"Invalid moe_routing_mode: '{self._moe_routing_mode}'. "
-                f"Must be 'simulation', 'uniform_legacy', or 'uniform_random'."
+                "moe_routing_distribution_type must be one of "
+                f"{sorted(valid_distribution_types)}, got "
+                f"{self._moe_routing_distribution_type!r}"
             )
-        if (
-            self._moe_routing_mode in ("simulation", "uniform_random")
-            and self._moe_routing_seed < 0
-        ):
+        self._moe_routing_seed = getattr(replica_config, "moe_routing_seed", 42)
+        if type(self._moe_routing_seed) is not int or self._moe_routing_seed < 0:
             raise ValueError(
-                "moe_routing_seed must be non-negative when "
-                "moe_routing_mode is 'simulation' or 'uniform_random', "
+                "moe_routing_seed must be an exact non-negative int, "
                 f"got {self._moe_routing_seed}."
             )
         self._moe_gating_routing_runtime_path = (
-            resolve_moe_gating_routing_runtime_path(self._moe_routing_mode)
+            resolve_moe_gating_routing_runtime_path(
+                self._moe_routing_distribution_type
+            )
         )
 
         super().__init__(
@@ -330,24 +328,20 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             cc_backend,
         )
 
-        # Pre-compute one global routing source for simulation mode.  EP
-        # ownership is applied later by the shared per-layer materializer.
-        self._routing_allocations: Optional[Dict[int, Dict[int, float]]] = None
+        # Pre-compute one global routing source. EP ownership is applied later
+        # by the shared per-layer materializer.
         self._global_routing_allocations: Optional[Dict[int, Dict[int, float]]] = None
         self._monolithic_routing_details = None
-        if self._moe_routing_mode == "simulation":
-            self._global_routing_allocations = self._init_global_routing_allocations()
-            # Keep the old private accessor as an alias to the same source; do
-            # not generate a second distribution with a different owner.
-            self._routing_allocations = self._global_routing_allocations
-            if self._cluster_type == ClusterType.MONOLITHIC:
-                self._monolithic_routing_details = (
-                    self._build_shared_routing_details()
-                )
-            logger.info(
-                f"[MoE Routing] Initialized routing allocations for simulation mode: "
-                f"seed={self._moe_routing_seed}, num_layers={len(self._global_routing_allocations)}"
-            )
+        self._global_routing_allocations = self._init_global_routing_allocations()
+        if self._cluster_type == ClusterType.MONOLITHIC:
+            self._monolithic_routing_details = self._build_shared_routing_details()
+        logger.info(
+            "[MoE Routing] Initialized global routing allocations: "
+            "distribution=%s, seed=%s, num_layers=%s",
+            self._moe_routing_distribution_type,
+            self._moe_routing_seed,
+            len(self._global_routing_allocations),
+        )
 
         self._share_expert_tp_allreduce_visibility_scale = float(
             getattr(
@@ -398,13 +392,34 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 f"moe_expert_parallel_size={self._moe_ep_size}"
             )
 
+        distribution_type = self._moe_routing_distribution_type
         allocations: Dict[int, Dict[int, float]] = {}
         for layer_id in range(num_layers):
             layer_seed = self._moe_routing_seed + layer_id
-            np.random.seed(layer_seed)
-            random_weights = np.random.uniform(0.1, 1.0, total_experts)
-            total_weight = np.sum(random_weights)
-            expert_ratios = random_weights / total_weight
+            rng = np.random.default_rng(layer_seed)
+            if distribution_type == "balanced":
+                weights = np.ones(total_experts, dtype=float)
+            elif distribution_type == "random":
+                weights = rng.uniform(0.1, 1.0, total_experts)
+            elif distribution_type == "skewed":
+                ranks = np.arange(1, total_experts + 1, dtype=float)
+                weights = 1.0 / np.power(ranks, 0.35)
+            elif distribution_type == "zipf":
+                ranks = np.arange(1, total_experts + 1, dtype=float)
+                weights = 1.0 / ranks
+            else:
+                raise ValueError(
+                    "Unsupported moe_routing_distribution_type="
+                    f"{distribution_type!r}"
+                )
+            total_weight = float(np.sum(weights))
+            if not np.isfinite(total_weight) or total_weight <= 0.0:
+                raise ValueError(
+                    "MoE routing distribution produced an invalid weight sum: "
+                    f"distribution={distribution_type!r}, layer_id={layer_id}, "
+                    f"sum={total_weight!r}"
+                )
+            expert_ratios = weights / total_weight
             allocations[layer_id] = {
                 expert_id: float(expert_ratios[expert_id])
                 for expert_id in range(total_experts)
@@ -470,30 +485,18 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         layer_id: int,
     ) -> Dict[int, int]:
         """Discretize routed tokens across global experts for the given layer."""
-        if total_routed_tokens <= 0:
-            return {}
-
         total_experts = int(self._replica_config.total_expert_num)
         if total_experts <= 0:
             raise ValueError(f"Invalid total_expert_num={total_experts}")
-
-        if self._moe_routing_mode == "uniform_legacy":
-            per_expert = total_routed_tokens // total_experts
-            remainder = total_routed_tokens % total_experts
-            return {
-                expert_id: per_expert + (1 if expert_id < remainder else 0)
-                for expert_id in range(total_experts)
-            }
-        if self._moe_routing_mode == "uniform_random":
-            return self._build_uniform_random_per_expert_tokens(
-                total_routed_tokens=total_routed_tokens,
-                num_experts=total_experts,
-                layer_id=layer_id,
+        if type(total_routed_tokens) is not int or total_routed_tokens < 0:
+            raise ValueError(
+                "total_routed_tokens must be an exact non-negative int, got "
+                f"{total_routed_tokens!r}"
             )
 
         if self._global_routing_allocations is None:
             raise ValueError(
-                "Global routing allocations not initialized for simulation mode. "
+                "Global routing allocations are not initialized. "
                 "Ensure _init_global_routing_allocations() was called in __init__."
             )
 
@@ -1119,72 +1122,70 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         """
         Unified entry point to get MoE tokens input for grouped GEMM prediction.
 
-        This method supports three comparison-time routing modes:
-        - 'uniform_legacy': evenly split routed tokens across experts
-        - 'uniform_random': deterministically sample experts uniformly at random
-        - 'simulation': use pre-computed proportional allocations
+        The method consumes the one canonical pre-generated global routing source
+        selected by ``moe_routing_distribution_type``. EP lane batches carry an
+        explicit aggregate expert map; that map is authoritative and is never
+        regenerated from a second random source.
 
         Args:
             batch: The batch being processed
             layer_id: The layer ID for which to get token allocation (default 0)
 
         Returns:
-            - In 'uniform_legacy' mode: int (post_routing_batch_tokens = num_tokens * topk)
-            - In 'uniform_random' mode with on-demand model: Dict[int, int] mapping expert_id to token count
-            - In 'simulation' mode with on-demand model: Dict[int, int] mapping expert_id to token count
-            - In 'uniform_legacy' mode without on-demand model: int (post_routing_batch_tokens)
+            - In load-imbalance mode: Dict[int, int] mapping expert_id to token count
+            - In single-token-count profiling mode: int for EP=1 only
 
         Raises:
             ValueError: If the selected routing mode is not supported by the active predictor
         """
         num_tokens = self._get_effective_moe_total_tokens(batch)
-        local_routed_tokens = self._get_local_ep_routed_tokens(batch)
-
-        if self._moe_routing_mode == "uniform_legacy":
-            post_routing_batch_tokens = num_tokens * self._router_topk
-
-            if self._is_grouped_gemm_on_demand_mode():
-                return self._build_uniform_per_expert_tokens(local_routed_tokens)
-
-            return post_routing_batch_tokens
-
-        if self._moe_routing_mode == "uniform_random":
-            if not self._is_grouped_gemm_on_demand_mode():
+        explicit_per_expert_tokens = getattr(batch, "per_expert_tokens", None)
+        if explicit_per_expert_tokens is not None:
+            if not isinstance(explicit_per_expert_tokens, dict):
                 raise ValueError(
-                    "moe_routing_mode='uniform_random' requires moe_grouped_gemm model trained with "
-                    "load-imbalance features (14 features). The current model appears to be trained "
-                    "with legacy 1D features only."
+                    "EP batch per_expert_tokens must be an exact dict when present"
                 )
-            return self._build_uniform_random_per_expert_tokens(
-                total_routed_tokens=local_routed_tokens,
-                num_experts=self._get_num_experts_per_device(),
-                layer_id=layer_id,
-            )
+            per_expert_tokens = {
+                int(expert_id): int(token_count)
+                for expert_id, token_count in explicit_per_expert_tokens.items()
+            }
+            if any(token_count < 0 for token_count in per_expert_tokens.values()):
+                raise ValueError(
+                    "EP batch per_expert_tokens must contain non-negative counts"
+                )
+            if self._is_grouped_gemm_on_demand_mode():
+                return per_expert_tokens
+            if int(getattr(self, "_moe_ep_size", 1)) > 1:
+                raise ValueError(
+                    "Per-layer EP prediction requires moe_grouped_gemm load-imbalance "
+                    "features when moe_expert_parallel_size > 1"
+                )
+            return int(sum(per_expert_tokens.values()))
 
+        local_routed_tokens = self._get_local_ep_routed_tokens(batch)
         if not self._is_grouped_gemm_on_demand_mode():
-            raise ValueError(
-                "moe_routing_mode='simulation' requires moe_grouped_gemm model trained with "
-                "load-imbalance features (14 features). The current model appears to be trained "
-                "with legacy 1D features only. Either:\n"
-                "  1. Use a model trained with load-imbalance features, or\n"
-                "  2. Set moe_routing_mode='uniform_legacy' to use legacy 1D mode."
-            )
+            if int(getattr(self, "_moe_ep_size", 1)) > 1:
+                raise ValueError(
+                    "Per-layer EP prediction requires moe_grouped_gemm load-imbalance "
+                    "features when moe_expert_parallel_size > 1"
+                )
+            return int(num_tokens * self._router_topk)
 
-        if self._routing_allocations is None:
+        if self._global_routing_allocations is None:
             raise ValueError(
                 "Routing allocations not initialized. "
-                "Ensure _init_routing_allocations() was called in __init__."
+                "Ensure _init_global_routing_allocations() was called in __init__."
             )
 
         if type(layer_id) is not int or layer_id < 0:
             raise ValueError("layer_id must be an exact non-negative int")
-        if layer_id not in self._routing_allocations:
+        if layer_id not in self._global_routing_allocations:
             raise ValueError(
                 f"No routing allocations for layer {layer_id}. "
-                f"Available layers: {list(self._routing_allocations.keys())}"
+                f"Available layers: {list(self._global_routing_allocations.keys())}"
             )
 
-        allocation_ratios = self._routing_allocations[layer_id]
+        allocation_ratios = self._global_routing_allocations[layer_id]
         per_expert_tokens = self._build_proportional_per_expert_tokens(
             total_routed_tokens=local_routed_tokens,
             allocation_ratios=allocation_ratios,
@@ -1274,7 +1275,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             )
         return total_experts // self._moe_ep_size
 
-    def _build_uniform_per_expert_tokens(
+    def _build_balanced_per_expert_tokens(
         self,
         total_routed_tokens: int,
     ) -> Dict[int, int]:
@@ -1294,34 +1295,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             token_count = per_expert + (1 if expert_id < remainder else 0)
             per_expert_tokens[expert_id] = token_count
         return per_expert_tokens
-
-    def _build_uniform_random_per_expert_tokens(
-        self,
-        total_routed_tokens: int,
-        num_experts: int,
-        layer_id: int,
-    ) -> Dict[int, int]:
-        if total_routed_tokens < 0:
-            raise ValueError(
-                f"total_routed_tokens must be non-negative, got {total_routed_tokens}"
-            )
-        if total_routed_tokens == 0:
-            return {}
-        if num_experts <= 0:
-            raise ValueError(f"num_experts must be positive, got {num_experts}")
-
-        rng = np.random.default_rng(int(self._moe_routing_seed) + int(layer_id))
-        sampled_expert_ids = rng.integers(
-            low=0,
-            high=num_experts,
-            size=total_routed_tokens,
-        )
-        expert_counts = np.bincount(sampled_expert_ids, minlength=num_experts)
-        return {
-            expert_id: int(expert_counts[expert_id])
-            for expert_id in range(num_experts)
-        }
-
 
     def _build_proportional_per_expert_tokens(
         self,
@@ -1346,7 +1319,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         expert_base_allocation: Dict[int, int] = {}
         expert_fractional_parts: Dict[int, float] = {}
-        normalized_ratios: Dict[int, float] = {}
         total_base_allocated = 0
 
         for expert_id in sorted(allocation_ratios):
@@ -1357,7 +1329,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
             expert_base_allocation[expert_id] = base_allocation
             expert_fractional_parts[expert_id] = fractional_part
-            normalized_ratios[expert_id] = normalized_ratio
             total_base_allocated += base_allocation
 
         remaining_tokens = total_routed_tokens - total_base_allocated
@@ -1366,7 +1337,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 expert_fractional_parts.keys(),
                 key=lambda expert_id: (
                     -expert_fractional_parts[expert_id],
-                    -normalized_ratios[expert_id],
                     expert_id,
                 ),
             )
@@ -1406,7 +1376,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 self._get_effective_moe_total_tokens(batch) * self._router_topk
             )
 
-        return self._build_uniform_per_expert_tokens(total_routed_tokens)
+        return self._build_balanced_per_expert_tokens(total_routed_tokens)
 
     def _build_moe_load_imbalance_features(
         self,
@@ -2660,10 +2630,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         moe_tokens_input = None
         if include_moe:
-            # Use unified _get_moe_tokens_input() for mode-aware input selection:
-            # - 'uniform_legacy' mode: returns int (post_routing_batch_tokens)
-            # - 'simulation' mode with on-demand: returns Dict[int, int] (per_expert_tokens)
-            # - 'simulation' mode without on-demand: returns int (post_routing_batch_tokens)
+            # Use the canonical distribution source for per-layer MoE input
+            # selection. EP lane batches carry their materialized map directly.
             moe_tokens_input = self._get_moe_tokens_input(batch, layer_id=layer_id)
 
             if isinstance(moe_tokens_input, dict):

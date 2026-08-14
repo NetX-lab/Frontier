@@ -855,7 +855,8 @@ def test_sklearn_moe_predictor_uses_effective_tokens_for_shuffling_allocation() 
     )
     predictor._cluster_type = ClusterType.DECODE
     predictor._router_topk = 2
-    predictor._build_uniform_per_expert_tokens = MagicMock(
+    predictor._replica_config = SimpleNamespace(total_expert_num=2)
+    predictor._build_balanced_per_expert_tokens = MagicMock(
         return_value={0: 8, 1: 8}
     )
 
@@ -870,7 +871,7 @@ def test_sklearn_moe_predictor_uses_effective_tokens_for_shuffling_allocation() 
     )
 
     assert result == {0: 8, 1: 8}
-    predictor._build_uniform_per_expert_tokens.assert_called_once_with(16)
+    predictor._build_balanced_per_expert_tokens.assert_called_once_with(16)
 
 
 def test_sklearn_moe_predictor_accepts_effective_token_conservation_for_padded_decode_batch() -> None:
