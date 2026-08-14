@@ -21,7 +21,7 @@ class ReplicaStageScheduler:
         is_moe: bool,
         execution_time_predictor: BaseExecutionTimePredictor,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
         stage_execution_context: StageExecutionContext | None = None,
     ) -> None:
         self._replica_id = replica_id
@@ -30,7 +30,7 @@ class ReplicaStageScheduler:
         self._is_moe = is_moe
         self._execution_time_predictor = execution_time_predictor
         self._cluster_type = cluster_type
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
         self._stage_execution_context = stage_execution_context
 
         # Priority queue implementation to prevent EP synchronization deadlock
@@ -62,7 +62,7 @@ class ReplicaStageScheduler:
         queued_batches = self.get_queue_batches()
         return {
             "replica_id": self._replica_id,
-            "dp_id": self._dp_id,
+            "replica_local_id": self._replica_local_id,
             "stage_id": self._stage_id,
             "is_busy": bool(self._is_busy),
             "is_empty": self.is_empty(),

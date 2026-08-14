@@ -105,7 +105,7 @@ def test_child_stage_schedulers_share_parent_ep_wave_ownership() -> None:
         is_moe=True,
         execution_time_predictor=predictor,
         cluster_type=ClusterType.DECODE_FFN,
-        dp_id=0,
+        replica_local_id=0,
         stage_execution_context=context,
     )
     lane_one = ReplicaStageScheduler(
@@ -115,7 +115,7 @@ def test_child_stage_schedulers_share_parent_ep_wave_ownership() -> None:
         is_moe=True,
         execution_time_predictor=predictor,
         cluster_type=ClusterType.DECODE_FFN,
-        dp_id=1,
+        replica_local_id=1,
         stage_execution_context=context,
     )
 
@@ -179,7 +179,7 @@ def test_shared_domain_source_batch_gets_full_stage_ticket_before_queue_insert()
         is_moe=True,
         execution_time_predictor=predictor,
         cluster_type=ClusterType.PREFILL,
-        dp_id=0,
+        replica_local_id=0,
         stage_execution_context=context,
     )
     request = Request(arrived_at=0.0, num_prefill_tokens=4, num_decode_tokens=0)
@@ -205,7 +205,7 @@ def test_decode_ffn_ep_batch_without_wave_ticket_fails_fast() -> None:
         is_moe=True,
         execution_time_predictor=predictor,
         cluster_type=ClusterType.DECODE_FFN,
-        dp_id=0,
+        replica_local_id=0,
         stage_execution_context=context,
     )
     request = Request(arrived_at=0.0, num_prefill_tokens=0, num_decode_tokens=1)

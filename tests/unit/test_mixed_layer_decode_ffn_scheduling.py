@@ -1217,7 +1217,7 @@ def _stage_scheduler(predictor: Mock) -> ReplicaStageScheduler:
         is_moe=True,
         execution_time_predictor=predictor,
         cluster_type=ClusterType.DECODE_FFN,
-        dp_id=0,
+        replica_local_id=0,
     )
 
 
