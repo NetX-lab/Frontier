@@ -680,11 +680,6 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
 
         base_time = self._dummy_execution_time
-        # PD+AF dummy-mode calibration: DECODE_FFN can otherwise appear far slower than
-        # DECODE_ATTN because its modeled MoE path hits additional scaling factors.
-        # Keep dummy-mode Te within the same order of magnitude as Ta for validation.
-        if cluster_type == ClusterType.DECODE_FFN:
-            base_time *= 0.02
 
         cluster_replica_config = self._get_cluster_replica_config(cluster_type)
         # Use model_config.is_moe for MoE detection - NOT parallelism settings
@@ -1520,9 +1515,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                             cluster_type=cluster_type,
                             comm_domain="MOE_TP",
                         )
-                        share_expert_tp_allreduce_time = self._apply_share_expert_tp_allreduce_overlap(
-                            raw_share_expert_tp_allreduce_time
-                        )
+                        share_expert_tp_allreduce_time = raw_share_expert_tp_allreduce_time
                 return ExecutionTime(
                     num_layers_per_pipeline_stage=num_layers,
                     mlp_norm_time=self._predict_one_op_time(
@@ -2303,9 +2296,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                                 cluster_type=cluster_type,
                                 comm_domain="MOE_TP",
                             )
-                            share_expert_tp_allreduce_time = self._apply_share_expert_tp_allreduce_overlap(
-                                raw_share_expert_tp_allreduce_time
-                            )
+                            share_expert_tp_allreduce_time = raw_share_expert_tp_allreduce_time
 
                 # Build ExecutionTime object for MoE model
                 exec_time = ExecutionTime(

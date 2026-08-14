@@ -75,9 +75,10 @@ def test_dummy_decode_ffn_tp_collectives_use_profile_capability_not_legacy_ident
         cluster_type=ClusterType.DECODE_FFN,
     )
 
-    # DECODE_FFN dummy mode applies its existing 0.02 calibration before capability logic.
-    assert execution_time.moe_tensor_parallel_allgather_time == 0.2
-    assert execution_time.share_expert_tensor_parallel_allreduce_time == 0.2
+    # DECODE_FFN dummy mode uses the configured per-operation time directly;
+    # no empirical stage correction is applied.
+    assert execution_time.moe_tensor_parallel_allgather_time == 10.0
+    assert execution_time.share_expert_tensor_parallel_allreduce_time == 10.0
 
 
 def test_pdd_predictor_has_no_direct_step3_identity_branches() -> None:

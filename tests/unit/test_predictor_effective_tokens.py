@@ -544,7 +544,7 @@ def test_sklearn_moe_predictor_uses_on_demand_moe_shuffling_prediction() -> None
     assert "load_imbalance_cv" in captured["features"]
 
 
-def test_sklearn_moe_predictor_builds_uniform_allocation_for_on_demand_shuffling() -> None:
+def test_sklearn_moe_predictor_uses_raw_on_demand_shuffling_prediction() -> None:
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -576,13 +576,13 @@ def test_sklearn_moe_predictor_builds_uniform_allocation_for_on_demand_shuffling
         moe_tokens_input=80,
     )
 
-    assert result == 1.0
+    assert result == 0.5
     assert captured["model_name"] == "moe_shuffling"
     assert captured["features"]["total_routed_tokens"] == 80
     assert captured["features"]["num_experts_per_device"] == 4
 
 
-def test_sklearn_moe_predictor_applies_moe_shuffling_calibration_scale():
+def test_sklearn_moe_predictor_ignores_moe_shuffling_calibration_scale():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -596,10 +596,10 @@ def test_sklearn_moe_predictor_applies_moe_shuffling_calibration_scale():
 
     result = SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(predictor, batch)
 
-    assert result == 1.0
+    assert result == 4.0
 
 
-def test_sklearn_moe_predictor_applies_decode_phase_moe_shuffling_scale_for_decode_only_batch():
+def test_sklearn_moe_predictor_ignores_decode_phase_moe_shuffling_scale_for_decode_only_batch():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -615,10 +615,10 @@ def test_sklearn_moe_predictor_applies_decode_phase_moe_shuffling_scale_for_deco
 
     result = SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(predictor, batch)
 
-    assert result == 6.0
+    assert result == 4.0
 
 
-def test_sklearn_moe_predictor_keeps_global_moe_shuffling_scale_for_mixed_batch():
+def test_sklearn_moe_predictor_ignores_moe_shuffling_scales_for_mixed_batch():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -634,7 +634,7 @@ def test_sklearn_moe_predictor_keeps_global_moe_shuffling_scale_for_mixed_batch(
 
     result = SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(predictor, batch)
 
-    assert result == 1.0
+    assert result == 4.0
 
 
 def test_sklearn_execution_time_predictor_uses_padded_decode_batch_size_for_attn_decode():
@@ -786,7 +786,7 @@ def test_sklearn_execution_time_predictor_keeps_first_pure_decode_on_global_scal
     assert result == 5.0
 
 
-def test_sklearn_moe_predictor_applies_moe_grouped_gemm_calibration_scale() -> None:
+def test_sklearn_moe_predictor_ignores_moe_grouped_gemm_calibration_scale() -> None:
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -800,10 +800,10 @@ def test_sklearn_moe_predictor_applies_moe_grouped_gemm_calibration_scale() -> N
         predictor, 16
     )
 
-    assert result == 7.0
+    assert result == 4.0
 
 
-def test_sklearn_moe_predictor_applies_decode_phase_moe_grouped_gemm_scale_for_decode_only_batch() -> None:
+def test_sklearn_moe_predictor_ignores_decode_phase_moe_grouped_gemm_scale_for_decode_only_batch() -> None:
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -823,10 +823,10 @@ def test_sklearn_moe_predictor_applies_decode_phase_moe_grouped_gemm_scale_for_d
         batch=batch,
     )
 
-    assert result == 6.0
+    assert result == 4.0
 
 
-def test_sklearn_moe_predictor_keeps_global_moe_grouped_gemm_scale_for_mixed_batch() -> None:
+def test_sklearn_moe_predictor_ignores_moe_grouped_gemm_scales_for_mixed_batch() -> None:
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -846,7 +846,7 @@ def test_sklearn_moe_predictor_keeps_global_moe_grouped_gemm_scale_for_mixed_bat
         batch=batch,
     )
 
-    assert result == 7.0
+    assert result == 4.0
 
 
 def test_sklearn_moe_predictor_uses_effective_tokens_for_shuffling_allocation() -> None:

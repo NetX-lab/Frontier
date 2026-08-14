@@ -70,11 +70,6 @@ class _DummyModelConfig:
         return self._architecture_profile.supports_share_expert(self)
 
 
-class _DummyReplicaConfig:
-    def __init__(self, model_config: _DummyModelConfig | None) -> None:
-        self.model_config = model_config
-
-
 def _build_base_execution_time() -> ExecutionTime:
     return ExecutionTime(
         num_layers_per_pipeline_stage=61,
@@ -343,43 +338,11 @@ def test_monolithic_decode_shared_domain_lane_moe_times_respects_dummy_mode() ->
     }
 
 
-def test_share_expert_overlap_scaling_applies_for_step3_model() -> None:
-    predictor = _build_predictor()
-    predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.step3_text())
-
-    assert predictor._apply_share_expert_tp_allreduce_overlap(3.0) == pytest.approx(2.0)
-
-
-def test_share_expert_overlap_scaling_skips_non_step3_model() -> None:
-    predictor = _build_predictor()
-    predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.generic())
-
-    assert predictor._apply_share_expert_tp_allreduce_overlap(3.0) == pytest.approx(3.0)
-
-
-def test_share_expert_overlap_scaling_uses_replica_model_config_when_needed() -> None:
-    predictor = _build_predictor()
-    predictor._model_config = None
-    predictor._replica_config = _DummyReplicaConfig(
-        model_config=_DummyModelConfig(ModelArchitectureProfile.step3_text())
+def test_share_expert_visibility_scaling_hook_is_removed() -> None:
+    assert not hasattr(
+        SklearnMoEExecutionTimePredictor,
+        "_apply_share_expert_tp_allreduce_overlap",
     )
-
-    assert predictor._apply_share_expert_tp_allreduce_overlap(3.0) == pytest.approx(2.0)
-
-
-def test_share_expert_overlap_scaling_handles_non_positive_time() -> None:
-    predictor = _build_predictor()
-
-    assert predictor._apply_share_expert_tp_allreduce_overlap(0.0) == pytest.approx(0.0)
-    assert predictor._apply_share_expert_tp_allreduce_overlap(-1.0) == pytest.approx(0.0)
-
-
-def test_share_expert_overlap_scaling_uses_configured_visibility_scale() -> None:
-    predictor = _build_predictor()
-    predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.step3_text())
-    predictor._share_expert_tp_allreduce_visibility_scale = 0.5
-
-    assert predictor._apply_share_expert_tp_allreduce_overlap(3.0) == pytest.approx(1.5)
 
 
 def test_step3_prefill_allgather_uses_per_device_bytes_in_moe_predictor() -> None:

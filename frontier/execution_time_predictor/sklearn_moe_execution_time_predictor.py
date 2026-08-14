@@ -20,7 +20,7 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
 from frontier.logger import init_logger
-from frontier.model_architectures import ModelArchitectureProfile, ResidualAddPolicy
+from frontier.model_architectures import ResidualAddPolicy
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
     PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
@@ -342,19 +342,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             self._moe_routing_seed,
             len(self._global_routing_allocations),
         )
-
-        self._share_expert_tp_allreduce_visibility_scale = float(
-            getattr(
-                self._config,
-                "share_expert_tp_allreduce_visibility_scale",
-                2.0 / 3.0,
-            )
-        )
-        if self._share_expert_tp_allreduce_visibility_scale <= 0.0:
-            raise ValueError(
-                "share_expert_tp_allreduce_visibility_scale must be > 0, "
-                f"got={self._share_expert_tp_allreduce_visibility_scale}"
-            )
 
     def _init_routing_allocations(self) -> Dict[int, Dict[int, float]]:
         """
@@ -1416,32 +1403,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         features.pop("load_distribution", None)
         return features
 
-    def _get_moe_compute_calibration_scale(
-        self,
-        batch: Optional[Batch],
-        decode_phase_attr_name: str,
-        decode_phase_field_name: str,
-        global_attr_name: str,
-        global_field_name: str,
-    ) -> float:
-        if batch is None:
-            return self._get_calibration_scale(global_attr_name, global_field_name)
-
-        decode_phase_scale = self._get_decode_phase_only_calibration_scale(
-            batch,
-            decode_phase_attr_name,
-            decode_phase_field_name,
-        )
-        if decode_phase_scale is not None:
-            scale = decode_phase_scale
-        else:
-            scale = self._get_calibration_scale(global_attr_name, global_field_name)
-
-        request_length_scale = self._get_decode_request_length_calibration_scale(batch)
-        if request_length_scale is not None:
-            scale *= request_length_scale
-        return scale
-
     def _get_moe_shuffling_time(
         self,
         batch: Batch,
@@ -1511,69 +1472,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
             raw_time = self._predictions["moe_shuffling"][(effective_tokens,)]
 
-        scale = self._get_moe_compute_calibration_scale(
-            batch,
-            "_decode_phase_moe_shuffling_calibration_scale",
-            "decode_phase_moe_shuffling_calibration_scale",
-            "_moe_shuffling_calibration_scale",
-            "moe_shuffling_calibration_scale",
-        )
-        return raw_time * scale
-
-    def _apply_share_expert_tp_allreduce_overlap(self, raw_time_ms: float) -> float:
-        """Apply profile-declared overlap scaling for share_expert TP allreduce.
-
-        vLLM records ``share_expert_tp_allreduce`` around an NCCL call that can overlap
-        with subsequent MoE kernels on separate streams. Architecture profiles opt in
-        by declaring the calibrated visibility scale.
-        """
-        if raw_time_ms <= 0.0:
-            return 0.0
-
-        model_config = getattr(self, "_model_config", None)
-        if model_config is None:
-            replica_config = getattr(self, "_replica_config", None)
-            model_config = getattr(replica_config, "model_config", None)
-
-        if model_config is None:
-            return raw_time_ms
-        architecture_getter = getattr(model_config, "get_model_architecture_profile", None)
-        if not callable(architecture_getter):
-            raise TypeError(
-                "MoE share-expert TP allreduce overlap requires "
-                "model_config.get_model_architecture_profile()"
-            )
-        architecture_profile = architecture_getter()
-        if not isinstance(architecture_profile, ModelArchitectureProfile):
-            raise TypeError(
-                "model_config.get_model_architecture_profile() must return "
-                "ModelArchitectureProfile"
-            )
-        overlap_visibility_scale = (
-            architecture_profile.share_expert_tp_allreduce_visibility_scale
-        )
-        if overlap_visibility_scale is None:
-            return raw_time_ms
-        configured_visibility_scale = getattr(
-            self,
-            "_share_expert_tp_allreduce_visibility_scale",
-            None,
-        )
-        if configured_visibility_scale is not None:
-            overlap_visibility_scale = float(configured_visibility_scale)
-        return raw_time_ms * float(overlap_visibility_scale)
-
-
-    def _apply_moe_grouped_gemm_decode_visibility(
-        self,
-        raw_time_ms: float,
-        batch: Batch,
-    ) -> float:
-        """Return raw grouped-GEMM time for runtime-only CUDA Graph modeling."""
-        if raw_time_ms <= 0.0:
-            return 0.0
-        return raw_time_ms
-
+        return raw_time
 
     def _get_moe_tensor_parallel_allreduce_time(self, batch: Batch) -> float:
         """
@@ -1627,27 +1526,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             f"Current state: cc_backend=None, enable_dummy_mode={self._enable_dummy_mode}"
         )
 
-    def _get_expert_parallel_communication_calibration_scale(self, batch: Batch) -> float:
-        late_decode_scale = self._get_late_decode_only_calibration_scale(
-            batch,
-            "_late_decode_expert_parallel_communication_calibration_scale",
-            "late_decode_expert_parallel_communication_calibration_scale",
-        )
-        if late_decode_scale is not None:
-            return late_decode_scale
-
-        decode_phase_scale = self._get_decode_phase_only_calibration_scale(
-            batch,
-            "_decode_phase_expert_parallel_communication_calibration_scale",
-            "decode_phase_expert_parallel_communication_calibration_scale",
-        )
-        if decode_phase_scale is not None:
-            return decode_phase_scale
-        return self._get_calibration_scale(
-            "_expert_parallel_communication_calibration_scale",
-            "expert_parallel_communication_calibration_scale",
-        )
-
     def _get_expert_parallel_communication_time(self, batch: Batch) -> float:
         """
         Get expert parallel communication time.
@@ -1688,9 +1566,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                     f"data_size={data_size_bytes}, num_devices={self._moe_ep_size}, "
                     f"result={result:.6f} ms"
                 )
-                return result * self._get_expert_parallel_communication_calibration_scale(
-                    batch
-                )
+                return result
 
             data_size_bytes = self._model_config.embedding_dim * 2 * effective_tokens
             data_size_bytes = quant_manager.adjust_tensor_size(
@@ -1713,9 +1589,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 f"data_size={data_size_bytes}, num_devices={self._moe_ep_size}, "
                 f"result={result:.6f} ms"
             )
-            return result * self._get_expert_parallel_communication_calibration_scale(
-                batch
-            )
+            return result
 
         if self._enable_dummy_mode:
             logger.debug(
@@ -1850,14 +1724,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 # Use the shared on-demand prediction path (with runtime caching and strict feature checks).
                 raw_time = self._get_on_demand_prediction("moe_grouped_gemm", features)
                 runtime_cache[cache_key] = raw_time
-            scale = self._get_moe_compute_calibration_scale(
-                batch,
-                "_decode_phase_moe_grouped_gemm_calibration_scale",
-                "decode_phase_moe_grouped_gemm_calibration_scale",
-                "_moe_grouped_gemm_calibration_scale",
-                "moe_grouped_gemm_calibration_scale",
-            )
-            return raw_time * scale
+            return raw_time
 
         def _get_cached_grouped_gemm_prediction(rounded_tokens: int) -> float:
             cache_key = (rounded_tokens,)
@@ -1890,14 +1757,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             )
             rounded_tokens = self._round_to_valid_key(approx_num_tokens)
             raw_time = _get_cached_grouped_gemm_prediction(rounded_tokens)
-            scale = self._get_moe_compute_calibration_scale(
-                batch,
-                "_decode_phase_moe_grouped_gemm_calibration_scale",
-                "decode_phase_moe_grouped_gemm_calibration_scale",
-                "_moe_grouped_gemm_calibration_scale",
-                "moe_grouped_gemm_calibration_scale",
-            )
-            return raw_time * scale
+            return raw_time
 
         # Backward compatibility: single number of tokens
         num_tokens = num_tokens_or_allocation
@@ -1905,14 +1765,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             return 0.0
         rounded_tokens = self._round_to_valid_key(num_tokens)
         raw_time = _get_cached_grouped_gemm_prediction(rounded_tokens)
-        scale = self._get_moe_compute_calibration_scale(
-            batch,
-            "_decode_phase_moe_grouped_gemm_calibration_scale",
-            "decode_phase_moe_grouped_gemm_calibration_scale",
-            "_moe_grouped_gemm_calibration_scale",
-            "moe_grouped_gemm_calibration_scale",
-        )
-        return raw_time * scale
+        return raw_time
 
     # This is now a private method used internally for MoE-specific logic
     def _get_execution_time_internal(
@@ -2010,12 +1863,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                     if self._use_expert_parallel_alltoall_path(batch)
                     else "expert_parallel_allreduce"
                 )
-                expert_parallel_communication_time = (
-                    self._predict_comm_operator(
-                        get_comm_operator(expert_parallel_operator_name),
-                        batch,
-                    )
-                    * self._get_expert_parallel_communication_calibration_scale(batch)
+                expert_parallel_communication_time = self._predict_comm_operator(
+                    get_comm_operator(expert_parallel_operator_name),
+                    batch,
                 )
                 communication_operator_times[expert_parallel_operator_name] = (
                     expert_parallel_communication_time
@@ -2038,10 +1888,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             moe_grouped_gemm_time = self._get_grouped_gemm_time(
                 moe_tokens_input,
                 batch=batch,
-            )
-            moe_grouped_gemm_time = self._apply_moe_grouped_gemm_decode_visibility(
-                moe_grouped_gemm_time,
-                batch,
             )
         else:
             # Dense FFN branch for mixed-layer MoE models.
@@ -2086,9 +1932,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                         get_comm_operator(share_expert_tp_allreduce_op),
                         batch,
                     )
-                    share_expert_tp_allreduce_time = self._apply_share_expert_tp_allreduce_overlap(
-                        raw_share_expert_tp_allreduce_time
-                    )
+                    share_expert_tp_allreduce_time = raw_share_expert_tp_allreduce_time
                     communication_operator_times[
                         share_expert_tp_allreduce_op
                     ] = share_expert_tp_allreduce_time

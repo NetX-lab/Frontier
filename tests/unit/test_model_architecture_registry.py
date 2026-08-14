@@ -946,33 +946,15 @@ def test_predictor_rejects_invalid_architecture_profile_contract() -> None:
         raise AssertionError("Expected invalid architecture profile contract to fail")
 
 
-def test_moe_predictor_rejects_invalid_architecture_profile_contract() -> None:
-    from typing import cast
-
+def test_moe_predictor_has_no_visibility_scaling_hook() -> None:
     from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
         SklearnMoEExecutionTimePredictor,
     )
 
-    class _ConcreteMoEPredictor(SklearnMoEExecutionTimePredictor):
-        def _get_estimator(self):
-            raise AssertionError("not used")
-
-        def _get_grid_search_params(self):
-            raise AssertionError("not used")
-
-    predictor = object.__new__(_ConcreteMoEPredictor)
-    # This test intentionally injects a malformed structural config.
-    predictor._model_config = cast(
-        BaseModelConfig,
-        SimpleNamespace(get_model_architecture_profile=lambda: object()),
+    assert not hasattr(
+        SklearnMoEExecutionTimePredictor,
+        "_apply_share_expert_tp_allreduce_overlap",
     )
-
-    try:
-        predictor._apply_share_expert_tp_allreduce_overlap(1.0)
-    except TypeError as exc:
-        assert "must return ModelArchitectureProfile" in str(exc)
-    else:
-        raise AssertionError("Expected invalid architecture profile contract to fail")
 
 
 def test_step3_profile_requires_moe_runtime_config() -> None:
