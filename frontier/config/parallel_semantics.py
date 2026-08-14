@@ -65,6 +65,11 @@ def _validate_positive(name: str, value: int) -> int:
 def validate_frontier_shared_parallel_domains(
     mapping: FrontierParallelismMapping,
 ) -> None:
+    if mapping.attn_data_parallel_size != 1:
+        raise ValueError(
+            "Frontier shared attention/MoE parallel domain requires "
+            "attn_data_parallel_size=1"
+        )
     if mapping.attention_parallel_size != mapping.moe_parallel_size:
         raise ValueError(
             "Frontier shared attention/MoE parallel domain requires "
@@ -99,22 +104,22 @@ def resolve_frontier_parallelism_mapping(
             moe_expert_parallel_size=1,
         )
 
+    # ``data_parallel_size`` is the outer serving-capacity dimension. A
+    # Replica never owns an attention-DP lane; MoE EP is always local to one
+    # Replica and therefore must not absorb the Replica count.
     if enable_expert_parallel:
-        mapping = FrontierParallelismMapping(
-            cluster_num_replicas=1,
-            attn_tensor_parallel_size=resolved_tp,
-            attn_data_parallel_size=resolved_dp,
-            moe_tensor_parallel_size=1,
-            moe_expert_parallel_size=resolved_tp * resolved_dp,
-        )
+        moe_tensor_parallel_size = 1
+        moe_expert_parallel_size = resolved_tp
     else:
-        mapping = FrontierParallelismMapping(
-            cluster_num_replicas=1,
-            attn_tensor_parallel_size=resolved_tp,
-            attn_data_parallel_size=resolved_dp,
-            moe_tensor_parallel_size=resolved_tp * resolved_dp,
-            moe_expert_parallel_size=1,
-        )
+        moe_tensor_parallel_size = resolved_tp
+        moe_expert_parallel_size = 1
+    mapping = FrontierParallelismMapping(
+        cluster_num_replicas=resolved_dp,
+        attn_tensor_parallel_size=resolved_tp,
+        attn_data_parallel_size=1,
+        moe_tensor_parallel_size=moe_tensor_parallel_size,
+        moe_expert_parallel_size=moe_expert_parallel_size,
+    )
 
     validate_frontier_shared_parallel_domains(mapping)
     return mapping
@@ -137,7 +142,7 @@ def build_collective_sim_layout(
             cp=resolved_pp,
             dp=_validate_positive(
                 "attention_dp",
-                mapping.attn_data_parallel_size * mapping.cluster_num_replicas,
+                mapping.cluster_num_replicas,
             ),
             ep=1,
         )
