@@ -291,6 +291,17 @@ class MetricsStore:
             ClusterType, List[List[List[SeriesAverageMeter]]]
         ] = {}
         self._replica_mfu: Dict[ClusterType, List[List[List[SeriesAverageMeter]]]] = {}
+        # Dense/full-stage work has no replica-local EP identity.  Keep its
+        # utilization series separate instead of encoding it as EP0.
+        self._replica_full_stage_memory_usage: Dict[
+            ClusterType, List[SeriesAverageMeter]
+        ] = {}
+        self._replica_full_stage_busy_time: Dict[
+            ClusterType, List[List[SeriesAverageMeter]]
+        ] = {}
+        self._replica_full_stage_mfu: Dict[
+            ClusterType, List[List[SeriesAverageMeter]]
+        ] = {}
         self._mfu_calculator: Dict[ClusterType, MFUCalculator] = {}
         self._pending_frontier_stage_batch_ledger_rows: Dict[int, dict[str, Any]] = {}
         self._pending_frontier_stage_batch_ledger_row_keys: Dict[
@@ -1371,11 +1382,49 @@ class MetricsStore:
         self._replica_memory_usage[cluster_type] = []
         self._replica_busy_time[cluster_type] = []
         self._replica_mfu[cluster_type] = []
+        self._replica_full_stage_memory_usage[cluster_type] = []
+        self._replica_full_stage_busy_time[cluster_type] = []
+        self._replica_full_stage_mfu[cluster_type] = []
         self._mfu_calculator[cluster_type] = MFUCalculator(
             cluster_config.replica_config, cluster_type
         )
 
         for replica_idx in range(num_replicas):
+            full_stage_memory = SeriesAverageMeter(
+                TIME_STR,
+                MEMORY_USAGE_STR,
+                save_table_to_wandb=self._config.save_table_to_wandb,
+                store_data_series=self._should_store_memory_time_series(),
+            )
+            full_stage_memory.put(0, 0)
+            self._replica_full_stage_memory_usage[cluster_type].append(
+                full_stage_memory
+            )
+
+            full_stage_busy = []
+            full_stage_mfu = []
+            for stage_idx in range(num_pipeline_stages):
+                busy_meter = SeriesAverageMeter(
+                    TIME_STR,
+                    BUSY_TIME_PERCENT,
+                    save_table_to_wandb=self._config.save_table_to_wandb,
+                )
+                busy_meter.put(0, 0)
+                full_stage_busy.append(busy_meter)
+
+                mfu_meter = SeriesAverageMeter(
+                    TIME_STR,
+                    UTILIZATION_STR,
+                    save_table_to_wandb=self._config.save_table_to_wandb,
+                )
+                mfu_meter.put(0, 0)
+                full_stage_mfu.append(mfu_meter)
+
+            self._replica_full_stage_busy_time[cluster_type].append(
+                full_stage_busy
+            )
+            self._replica_full_stage_mfu[cluster_type].append(full_stage_mfu)
+
             # Create dp_size slots for each replica
             self._replica_memory_usage[cluster_type].append([])
             self._replica_busy_time[cluster_type].append([])
@@ -1848,6 +1897,26 @@ class MetricsStore:
                 dp_size = self._get_parallel_lane_count(cluster_type, cluster_config.replica_config)
 
                 for replica_idx in range(num_replicas):
+                    self._replica_full_stage_memory_usage[cluster_type][
+                        replica_idx
+                    ].print_stats(
+                        f"replica_{replica_idx + 1}_full_stage_world_memory_usage",
+                        cluster_plot_path,
+                    )
+                    for stage_idx in range(num_pipeline_stages):
+                        self._replica_full_stage_busy_time[cluster_type][replica_idx][
+                            stage_idx
+                        ].print_stats(
+                            f"replica_{replica_idx + 1}_full_stage_world_stage_{stage_idx + 1}_busy_time_percent",
+                            cluster_plot_path,
+                        )
+                        self._replica_full_stage_mfu[cluster_type][replica_idx][
+                            stage_idx
+                        ].print_stats(
+                            f"replica_{replica_idx + 1}_full_stage_world_stage_{stage_idx + 1}_mfu",
+                            cluster_plot_path,
+                        )
+
                     for dp_idx in range(dp_size):
                         self._replica_memory_usage[cluster_type][replica_idx][
                             dp_idx
@@ -3274,9 +3343,9 @@ class MetricsStore:
 
         if self._config.store_utilization_metrics:
             replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
-            self._replica_memory_usage[cluster_type][replica_index][dp_id].put(
-                time, memory_usage_percent
-            )
+            self._get_memory_usage_meter(
+                cluster_type, replica_index, dp_id
+            ).put(time, memory_usage_percent)
 
         for request in batch.requests:
             self._update_per_token_execution_times(time, request, batch)
@@ -3326,7 +3395,9 @@ class MetricsStore:
 
         # Convert global replica_id to cluster-relative index
         replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
-        self._replica_memory_usage[cluster_type][replica_index][dp_id].put(
+        self._get_memory_usage_meter(
+            cluster_type, replica_index, dp_id
+        ).put(
             time, memory_usage_percent
         )
 
@@ -3366,6 +3437,53 @@ class MetricsStore:
             )
 
         return replica_index
+
+    def _get_memory_usage_meter(
+        self,
+        cluster_type: ClusterType,
+        replica_index: int,
+        replica_local_id: int | None,
+    ) -> SeriesAverageMeter:
+        if replica_local_id is None:
+            return self._replica_full_stage_memory_usage[cluster_type][replica_index]
+
+        lane_meters = self._replica_memory_usage[cluster_type][replica_index]
+        if replica_local_id < 0 or replica_local_id >= len(lane_meters):
+            raise ValueError(
+                f"Invalid replica-local id for utilization metrics: "
+                f"cluster={cluster_type.name} replica_index={replica_index} "
+                f"replica_local_id={replica_local_id} available={len(lane_meters)}"
+            )
+        return lane_meters[replica_local_id]
+
+    def _get_stage_utilization_meters(
+        self,
+        cluster_type: ClusterType,
+        replica_index: int,
+        stage_id: int,
+        replica_local_id: int | None,
+    ) -> tuple[SeriesAverageMeter, SeriesAverageMeter]:
+        if replica_local_id is None:
+            busy_meters = self._replica_full_stage_busy_time[cluster_type][
+                replica_index
+            ]
+            mfu_meters = self._replica_full_stage_mfu[cluster_type][replica_index]
+        else:
+            busy_meters = self._replica_busy_time[cluster_type][replica_index][
+                replica_local_id
+            ]
+            mfu_meters = self._replica_mfu[cluster_type][replica_index][
+                replica_local_id
+            ]
+
+        if stage_id < 0 or stage_id >= len(busy_meters):
+            scope = "full-stage" if replica_local_id is None else "replica-local"
+            raise ValueError(
+                f"Invalid stage id for {scope} utilization metrics: "
+                f"cluster={cluster_type.name} replica={replica_index} "
+                f"stage={stage_id} available_stages={len(busy_meters)}"
+            )
+        return busy_meters[stage_id], mfu_meters[stage_id]
 
     def on_replica_stage_schedule(
         self,
@@ -3433,26 +3551,15 @@ class MetricsStore:
             return
 
         replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
-        dp_stage_busy = self._replica_busy_time[cluster_type][replica_index]
-        if dp_id < 0 or dp_id >= len(dp_stage_busy):
-            raise ValueError(
-                f"Invalid lane id for utilization metrics: cluster={cluster_type.name} "
-                f"replica={replica_id} lane={dp_id} available_lanes={len(dp_stage_busy)}"
-            )
-        if stage_id < 0 or stage_id >= len(dp_stage_busy[dp_id]):
-            raise ValueError(
-                f"Invalid stage id for utilization metrics: cluster={cluster_type.name} "
-                f"replica={replica_id} lane={dp_id} stage={stage_id} "
-                f"available_stages={len(dp_stage_busy[dp_id])}"
-            )
-
-        self._replica_busy_time[cluster_type][replica_index][dp_id][stage_id].put(
-            time, 100
+        busy_meter, mfu_meter = self._get_stage_utilization_meters(
+            cluster_type,
+            replica_index,
+            stage_id,
+            dp_id,
         )
+        busy_meter.put(time, 100)
         mfu = self._mfu_calculator[cluster_type].get_mfu(batch_stage)
-        self._replica_mfu[cluster_type][replica_index][dp_id][stage_id].put(
-            time, mfu
-        )
+        mfu_meter.put(time, mfu)
 
         if not self._config.store_operation_metrics:
             return
@@ -3670,23 +3777,14 @@ class MetricsStore:
         if not self._config.store_utilization_metrics:
             return
         replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
-        dp_stage_busy = self._replica_busy_time[cluster_type][replica_index]
-        if dp_id < 0 or dp_id >= len(dp_stage_busy):
-            raise ValueError(
-                f"Invalid lane id for utilization metrics end hook: cluster={cluster_type.name} "
-                f"replica={replica_id} lane={dp_id} available_lanes={len(dp_stage_busy)}"
-            )
-        if stage_id < 0 or stage_id >= len(dp_stage_busy[dp_id]):
-            raise ValueError(
-                f"Invalid stage id for utilization metrics end hook: cluster={cluster_type.name} "
-                f"replica={replica_id} lane={dp_id} stage={stage_id} "
-                f"available_stages={len(dp_stage_busy[dp_id])}"
-            )
-
-        self._replica_busy_time[cluster_type][replica_index][dp_id][stage_id].put(
-            time, 0
+        busy_meter, mfu_meter = self._get_stage_utilization_meters(
+            cluster_type,
+            replica_index,
+            stage_id,
+            dp_id,
         )
-        self._replica_mfu[cluster_type][replica_index][dp_id][stage_id].put(time, 0)
+        busy_meter.put(time, 0)
+        mfu_meter.put(time, 0)
 
         ledger_row = self._pending_frontier_stage_batch_ledger_rows.pop(id(batch_stage), None)
         if ledger_row is not None:
