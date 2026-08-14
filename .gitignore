@@ -170,6 +170,9 @@ settings.json
 # Task memory is local-only; do not vendor it.
 task_memory/
 
+# Local linked worktrees used for isolated feature implementation.
+.worktrees/
+
 # Local agent-review artifacts are not public release inputs.
 .codex/
 
