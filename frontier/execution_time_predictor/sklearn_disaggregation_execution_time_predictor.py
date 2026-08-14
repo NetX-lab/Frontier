@@ -278,6 +278,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         else:
             raise NotImplementedError(f"Unsupported cluster_type: {cluster_type}")
 
+        if getattr(cluster_replica_config.model_config, "is_moe", None) is False:
+            return {}
+
         # In dummy mode, generate a valid uniform routing map instead of returning an empty dict
         if self._enable_dummy_mode:
             logger.debug(

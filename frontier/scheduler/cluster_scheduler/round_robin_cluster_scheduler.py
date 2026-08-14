@@ -26,14 +26,13 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         super().__init__(*args, **kwargs)
         self._request_counter = 0
 
-        # For decode-attn cluster: track load per (replica_id, dp_id) for dynamic scheduling
-        # This maintains the current load state for load-aware round-robin scheduling
+        # DECODE_ATTN load is tracked per serving Replica.  There is no
+        # intra-Replica attention-DP lane dimension.
         self._replica_dp_load_tracker = {}
         if self._cluster_type == ClusterType.DECODE_ATTN:
             replica_ids = list(self._cluster.replicas.keys())
             for replica_id in replica_ids:
-                for dp_id in range(self._replica_scheduler_count):
-                    self._replica_dp_load_tracker[(replica_id, dp_id)] = 0
+                self._replica_dp_load_tracker[(replica_id, None)] = 0
 
         # Decode-attn initial request allocation setup state
         self._decode_attn_initial_allocation_done = False
@@ -303,12 +302,11 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         self._initial_allocation_buffer = self._initial_allocation_buffer[allocation_size:]
 
         replica_ids = list(self._cluster.replicas.keys())
-        dp_size = self._replica_scheduler_count
         num_replicas = len(replica_ids)
 
         logger.info(
             f"[INITIAL_ALLOCATION] Starting two-level request allocation: "
-            f"total_requests={len(requests_to_allocate)}, num_replicas={num_replicas}, dp_size={dp_size}"
+            f"total_requests={len(requests_to_allocate)}, num_replicas={num_replicas}"
         )
 
         # Level 1: Distribute requests to replicas using round-robin
@@ -317,34 +315,17 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             replica_idx = idx % num_replicas
             replica_requests[replica_idx].append(request)
 
-        # Level 2: Within each replica, distribute to DP replicas
+        # Each serving Replica has one full-stage scheduler.  The old
+        # second-level attention-DP split is retired.
         request_mapping = []
         for replica_idx, requests in enumerate(replica_requests):
             if not requests:
                 continue
 
             replica_id = replica_ids[replica_idx]
-            num_requests = len(requests)
-
-            # Calculate requests per DP replica
-            requests_per_dp = num_requests // dp_size
-            extra_requests = num_requests % dp_size
-
-            logger.info(
-                f"[INITIAL_ALLOCATION] Replica {replica_id}: "
-                f"total_requests={num_requests}, requests_per_dp={requests_per_dp}, extra={extra_requests}"
+            request_mapping.extend(
+                (replica_id, None, request) for request in requests
             )
-
-            # Distribute requests to DP replicas
-            current_idx = 0
-            for dp_id in range(dp_size):
-                # First 'extra_requests' dp_ids get one extra request
-                num_requests_for_this_dp = requests_per_dp + (1 if dp_id < extra_requests else 0)
-
-                for _ in range(num_requests_for_this_dp):
-                    if current_idx < len(requests):
-                        request_mapping.append((replica_id, dp_id, requests[current_idx]))
-                        current_idx += 1
 
         logger.info(
             f"[INITIAL_ALLOCATION] Completed: allocated {len(request_mapping)} requests, "
@@ -395,30 +376,16 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         self._request_counter += request_idx
 
-        # Then, distribute requests within each replica to dp_ids as evenly as possible
+        # Requests stay on the selected serving Replica's full-stage scheduler.
         request_mapping = []
         for replica_idx, requests in enumerate(replica_requests):
             if not requests:
                 continue
 
             replica_id = replica_ids[replica_idx]
-            num_requests = len(requests)
-
-            # Distribute requests as evenly as possible among dp_ids.
-            # For unified DECODE with MoE, missing sync participants are created by
-            # decode-sync idle batches; a real request must not be replicated across lanes.
-            requests_per_dp = num_requests // self._replica_scheduler_count
-            extra_requests = num_requests % self._replica_scheduler_count
-
-            current_idx = 0
-            for dp_id in range(self._replica_scheduler_count):
-                # First 'extra_requests' dp_ids get one extra request
-                num_requests_for_this_dp = requests_per_dp + (1 if dp_id < extra_requests else 0)
-
-                for _ in range(num_requests_for_this_dp):
-                    if current_idx < len(requests):
-                        request_mapping.append((replica_id, dp_id, requests[current_idx]))
-                        current_idx += 1
+            request_mapping.extend(
+                (replica_id, None, request) for request in requests
+            )
 
         return request_mapping
 
@@ -458,29 +425,24 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         return request_mapping
 
-    def _schedule_decode_lane_round_robin(self) -> List[Tuple[int, int, Request]]:
-        """Schedule unified PD decode requests across flattened replica-DP lanes.
+    def _schedule_decode_lane_round_robin(self) -> List[Tuple[int, None, Request]]:
+        """Schedule unified PD decode requests across serving Replicas.
 
-        The lane order preserves the historical replica-level round-robin first:
-        (replica0, dp0), (replica1, dp0), ..., then (replica0, dp1), ...
-        Thus ``dp_size == 1`` keeps the previous behavior, while ``dp_size > 1``
-        avoids pinning repeated one-request scheduling cycles to ``dp_id == 0``.
+        The retired attention-DP dimension is absent from the mapping; each
+        selected Replica receives the request through its full-stage scheduler.
         """
         replica_ids = list(self._cluster.replicas.keys())
         if not replica_ids:
             return []
 
         num_replicas = len(replica_ids)
-        total_lanes = num_replicas * self._replica_scheduler_count
-        request_mapping: List[Tuple[int, int, Request]] = []
+        request_mapping: List[Tuple[int, None, Request]] = []
 
         request_idx = 0
         while self._request_queue:
             request = self._request_queue.pop(0)
-            lane_idx = (self._request_counter + request_idx) % total_lanes
-            replica_idx = lane_idx % num_replicas
-            dp_id = lane_idx // num_replicas
-            request_mapping.append((replica_ids[replica_idx], dp_id, request))
+            replica_idx = (self._request_counter + request_idx) % num_replicas
+            request_mapping.append((replica_ids[replica_idx], None, request))
             request_idx += 1
 
         self._request_counter += request_idx
@@ -562,21 +524,18 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
             # Process each batch returning from decode-ffn cluster
             for batch in af_batches:
-                # Preserve batch integrity by scheduling the entire batch to its original replica/DP assignment
-                # The batch should maintain its original replica_id from when it was first scheduled in decode-attn
-                if (
-                    batch.decode_attn_original_replica_id is None
-                    or batch.decode_attn_original_dp_id is None
-                ):
+                # Preserve batch integrity by returning to the original
+                # attention-serving Replica.  There is no local DP lane to
+                # restore; the target uses its full-stage scheduler.
+                if batch.decode_attn_original_replica_id is None:
                     raise ValueError(
                         f"Batch {batch.id} returning to DECODE_ATTN cluster without original assignment."
                     )
 
                 target_replica_id = batch.decode_attn_original_replica_id
-                target_dp_id = batch.decode_attn_original_dp_id
 
-                # Schedule the entire batch to the original replica and target DP
-                scheduler_key = (target_replica_id, target_dp_id)
+                # Schedule the entire batch to the original Replica.
+                scheduler_key = (target_replica_id, None)
 
                 # Add the complete batch to the replica scheduler's immediate queue
                 # This preserves batch integrity and avoids re-batching overhead
@@ -588,7 +547,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
                 # Track the affected replica for event scheduling
                 # Return the scheduler key as a tuple for ReplicaScheduleEvent creation
-                request_mapping.append((target_replica_id, target_dp_id, None))  # None indicates batch-level scheduling
+                request_mapping.append((target_replica_id, None, None))
 
         # Schedule newly arrived requests from PREFILL using the dynamic load-aware policy.
         if self._request_queue:
@@ -596,20 +555,19 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         return request_mapping
 
-    def _get_least_loaded_replica(self) -> Tuple[int, int]:
+    def _get_least_loaded_replica(self) -> Tuple[int, None]:
         """
-        Find the (replica_id, dp_id) combination with the least load.
+        Find the serving Replica with the least load.
 
         Returns:
-            Tuple[int, int]: (replica_id, dp_id) with minimum load
+            Tuple[int, None]: (replica_id, None) for the full-stage scheduler
         """
         # Initialize load tracker if not exists
         if not hasattr(self, '_replica_dp_load_tracker') or not self._replica_dp_load_tracker:
             self._replica_dp_load_tracker = {}
             replica_ids = list(self._cluster.replicas.keys())
             for replica_id in replica_ids:
-                for dp_id in range(self._replica_scheduler_count):
-                    self._replica_dp_load_tracker[(replica_id, dp_id)] = 0
+                self._replica_dp_load_tracker[(replica_id, None)] = 0
 
         # Update load tracker with current pending requests from replica schedulers
         self._update_load_tracker()

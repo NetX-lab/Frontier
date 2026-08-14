@@ -305,10 +305,10 @@ class MetricsStore:
         self._mfu_calculator: Dict[ClusterType, MFUCalculator] = {}
         self._pending_frontier_stage_batch_ledger_rows: Dict[int, dict[str, Any]] = {}
         self._pending_frontier_stage_batch_ledger_row_keys: Dict[
-            tuple[str, int, int, int, int], int
+            tuple[str, int, int | None, int, int], int
         ] = {}
         self._pending_frontier_stage_batch_ledger_rows_by_key: Dict[
-            tuple[str, int, int, int, int], dict[str, Any]
+            tuple[str, int, int | None, int, int], dict[str, Any]
         ] = {}
         self._frontier_stage_batch_ledger_rows: list[dict[str, Any]] = []
         self._frontier_stage_batch_ledger_summary = (
@@ -3794,7 +3794,7 @@ class MetricsStore:
                     replica_id=ledger_row["replica_id"],
                     stage_id=ledger_row["stage_id"],
                     cluster_type=ledger_row["cluster_type"],
-                    dp_id=ledger_row["dp_id"],
+                    dp_id=ledger_row.get("replica_local_id"),
                 ),
                 None,
             )
@@ -3937,15 +3937,15 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType | str,
-        dp_id: int,
-    ) -> tuple[str, int, int, int, int]:
+        dp_id: int | None,
+    ) -> tuple[str, int, int | None, int, int]:
         cluster_type_name = (
             cluster_type.name if isinstance(cluster_type, ClusterType) else str(cluster_type)
         )
         return (
             cluster_type_name,
             int(replica_id),
-            int(dp_id),
+            None if dp_id is None else int(dp_id),
             int(stage_id),
             int(batch_id),
         )
@@ -4040,7 +4040,10 @@ class MetricsStore:
             "stage_id": int(stage_id),
             "cluster_type": cluster_type.name,
             "replica_id": int(replica_id),
-            "dp_id": int(dp_id),
+            "execution_scope": (
+                "FULL_STAGE_WORLD" if dp_id is None else "EP_WAVE_LANE"
+            ),
+            "replica_local_id": None if dp_id is None else int(dp_id),
             "request_ids": [str(request_id) for request_id in batch_stage.request_ids],
             "request_num_tokens": [int(token_count) for token_count in batch_stage.num_tokens],
             "stage_start_ts": float(batch_stage.scheduled_at),
@@ -4073,8 +4076,12 @@ class MetricsStore:
             ]
         if hasattr(batch_stage, "source_group_ready_ts"):
             row["source_group_ready_ts"] = float(batch_stage.source_group_ready_ts)
-        if hasattr(batch_stage, "ep_id"):
+        if dp_id is not None and hasattr(batch_stage, "ep_id"):
             row["ep_id"] = int(batch_stage.ep_id)
+        if dp_id is not None:
+            # Preserve the lane field for existing EP consumers; full-stage
+            # rows intentionally do not expose a fake lane identity.
+            row["dp_id"] = int(dp_id)
         if hasattr(batch_stage, "per_expert_tokens"):
             row["per_expert_tokens"] = {
                 str(expert_id): int(token_count)
@@ -4129,13 +4136,18 @@ class MetricsStore:
             "stage_id": int(stage_id),
             "cluster_type": cluster_type.name,
             "replica_id": int(replica_id),
-            "dp_id": int(dp_id),
+            "execution_scope": (
+                "FULL_STAGE_WORLD" if dp_id is None else "EP_WAVE_LANE"
+            ),
+            "replica_local_id": None if dp_id is None else int(dp_id),
             "stage_start_ts": float(batch_stage.scheduled_at),
             "stage_end_ts": float(stage_end_time),
             "execution_time": {
                 "total_time_ms": _round_ledger_ms(execution_time.total_time * 1e3),
             },
         }
+        if dp_id is not None:
+            row["dp_id"] = int(dp_id)
         if hasattr(batch_stage, "source_batch_ids"):
             row["source_batch_ids"] = [
                 int(batch_id) for batch_id in batch_stage.source_batch_ids

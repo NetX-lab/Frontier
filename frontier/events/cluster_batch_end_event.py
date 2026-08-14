@@ -159,11 +159,10 @@ class ClusterBatchEndEvent(BaseEvent):
                 )
                 if (
                     batch_for_transfer.decode_attn_original_replica_id is None
-                    or batch_for_transfer.decode_attn_original_dp_id is None
                 ):
                     raise ValueError(
                         f"Batch {batch_for_transfer.id} missing "
-                        "decode_attn_original routing metadata"
+                        "decode_attn_original_replica_id metadata"
                     )
 
                 activation_size, transfer_time = m2n_pred.get_transfer_info(

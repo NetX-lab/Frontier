@@ -11,11 +11,22 @@ from frontier.entities.execution_time import ExecutionTime
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
+from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
+    SklearnDisaggregationExecutionTimePredictor,
+)
 from frontier.model_architectures import ModelArchitectureProfile
 from frontier.types import ClusterType
 
 
 class _DummySklearnMoEPredictor(SklearnMoEExecutionTimePredictor):
+    def _get_estimator(self):
+        return None
+
+    def _get_grid_search_params(self):
+        return {}
+
+
+class _DummyDisaggregationPredictor(SklearnDisaggregationExecutionTimePredictor):
     def _get_estimator(self):
         return None
 
@@ -488,6 +499,36 @@ def test_routing_initialization_rejects_non_divisible_ep_topology() -> None:
 
     with pytest.raises(ValueError, match="divisible"):
         predictor._init_global_routing_allocations()
+
+
+def test_dense_model_skips_global_routing_initialization() -> None:
+    predictor = object.__new__(_DummySklearnMoEPredictor)
+    predictor._model_config = SimpleNamespace(num_layers=2, is_moe=False)
+    predictor._replica_config = SimpleNamespace(
+        total_expert_num=0,
+        moe_expert_parallel_size=1,
+    )
+    predictor._moe_ep_size = 1
+    predictor._moe_routing_seed = 7
+    predictor._moe_routing_distribution_type = "balanced"
+
+    assert predictor._init_global_routing_allocations() == {}
+
+
+def test_disaggregation_dense_model_has_no_routing_details() -> None:
+    predictor = object.__new__(_DummyDisaggregationPredictor)
+    predictor._enable_dummy_mode = True
+    predictor._actual_replica_ids = [0]
+    predictor._cluster_config = SimpleNamespace(
+        prefill_replica_config=SimpleNamespace(
+            model_config=SimpleNamespace(num_layers=2, is_moe=False),
+            total_expert_num=0,
+            moe_expert_parallel_size=1,
+        ),
+        prefill_cluster_num_replicas=1,
+    )
+
+    assert predictor._simulate_and_store_routing(ClusterType.PREFILL) == {}
 
 
 @pytest.mark.parametrize("distribution_type", ["balanced", "random", "skewed", "zipf"])

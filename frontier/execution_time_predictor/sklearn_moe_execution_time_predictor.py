@@ -339,7 +339,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         self._global_routing_allocations: Optional[Dict[int, Dict[int, float]]] = None
         self._monolithic_routing_details = None
         self._global_routing_allocations = self._init_global_routing_allocations()
-        if self._cluster_type == ClusterType.MONOLITHIC:
+        if self._cluster_type == ClusterType.MONOLITHIC and getattr(
+            self._model_config, "is_moe", True
+        ) is not False:
             self._monolithic_routing_details = self._build_shared_routing_details()
         logger.info(
             "[MoE Routing] Initialized global routing allocations: "
@@ -365,8 +367,13 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         Monolithic decode with EP enabled needs a global view across all experts to
         derive per-lane post-MoE arrival skew before the shared-domain all-reduce.
         """
-        num_layers = self._model_config.num_layers
         total_experts = self._replica_config.total_expert_num
+        cluster_type = getattr(self, "_cluster_type", None)
+        if cluster_type == ClusterType.DECODE_ATTN or getattr(
+            self._model_config, "is_moe", None
+        ) is False:
+            return {}
+        num_layers = self._model_config.num_layers
 
         if type(total_experts) is not int or total_experts <= 0:
             raise ValueError(

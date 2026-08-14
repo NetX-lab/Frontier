@@ -105,3 +105,17 @@ def test_dense_full_stage_memory_metrics_use_separate_series() -> None:
     )
 
     assert full_stage_memory.points == [(3.0, 42)]
+
+
+def test_full_stage_ledger_key_preserves_absent_local_identity() -> None:
+    store = object.__new__(MetricsStore)
+
+    key = store._frontier_stage_batch_ledger_key(
+        batch_id=9,
+        replica_id=2,
+        stage_id=1,
+        cluster_type=ClusterType.DECODE_FFN,
+        dp_id=None,
+    )
+
+    assert key == (ClusterType.DECODE_FFN.name, 2, None, 1, 9)

@@ -81,12 +81,18 @@ class BaseGlobalScheduler(ABC):
         expected_lanes = []
         if callable(get_current_expected_lanes):
             expected_lanes = [
-                (int(replica_id), int(dp_id))
+                (
+                    int(replica_id),
+                    None if dp_id is None else int(dp_id),
+                )
                 for replica_id, dp_id in get_current_expected_lanes()
             ]
         if not expected_lanes:
             expected_lanes = [
-                (int(replica_id), int(dp_id))
+                (
+                    int(replica_id),
+                    None if dp_id is None else int(dp_id),
+                )
                 for replica_id, dp_id in getattr(
                     decode_attn_scheduler, "_a2f_expected_lanes", []
                 )
@@ -99,9 +105,8 @@ class BaseGlobalScheduler(ABC):
                     "Unable to derive DECODE_FFN barrier lanes from DECODE_ATTN scheduler"
                 )
             expected_lanes = [
-                (int(replica_id), dp_id)
+                (int(replica_id), None)
                 for replica_id in attn_replica_ids
-                for dp_id in range(attn_dp_size)
             ]
 
         configured_group_size = len(expected_lanes)
