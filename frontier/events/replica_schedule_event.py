@@ -10,12 +10,18 @@ logger = init_logger(__name__)
 
 
 class ReplicaScheduleEvent(BaseEvent):
-    def __init__(self, time: float, replica_id: int, cluster_type: ClusterType, dp_id: int):
+    def __init__(
+        self,
+        time: float,
+        replica_id: int,
+        cluster_type: ClusterType,
+        replica_local_id: int | None,
+    ):
         super().__init__(time, EventType.REPLICA_SCHEDULE)
 
         self._replica_id = replica_id
         self._cluster_type = cluster_type
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
 
         self._batches = []
 
@@ -29,12 +35,12 @@ class ReplicaScheduleEvent(BaseEvent):
 
         # Get the appropriate cluster scheduler for this cluster-internal event
         cluster_scheduler: BaseClusterScheduler = scheduler.get_cluster_scheduler(self._cluster_type)
-        replica_scheduler: BaseReplicaScheduler = cluster_scheduler.get_replica_scheduler(self._replica_id, self._dp_id)
+        replica_scheduler: BaseReplicaScheduler = cluster_scheduler.get_replica_scheduler(self._replica_id, self._replica_local_id)
 
         # Log replica scheduling details
         pending_requests = replica_scheduler.num_pending_requests
         logger.info(f"Replica scheduling started at {self.time:.3f}s: "
-                   f"{self._cluster_type.name} cluster, replica {self._replica_id}, dp_id {self._dp_id}, "
+                   f"{self._cluster_type.name} cluster, replica {self._replica_id}, replica_local_id {self._replica_local_id}, "
                    f"pending_requests={pending_requests}")
 
         waiting_requests = []
@@ -45,11 +51,11 @@ class ReplicaScheduleEvent(BaseEvent):
             if latest_arrival > self.time + 1e-9:
                 logger.warning(
                     "[STALE-REPLICA-SCHEDULE] Skipping schedule event at %.6fs for "
-                    "replica=%s dp=%s cluster=%s because request %s has a newer "
+                    "replica=%s replica_local_id=%s cluster=%s because request %s has a newer "
                     "arrival %.6fs",
                     self.time,
                     self._replica_id,
-                    self._dp_id,
+                    self._replica_local_id,
                     self._cluster_type.name,
                     request.id,
                     latest_arrival,
@@ -70,11 +76,11 @@ class ReplicaScheduleEvent(BaseEvent):
                 if thinking_home_arrival > self.time + 1e-9:
                     logger.warning(
                         "[STALE-REPLICA-SCHEDULE-HOME-QUEUE] Skipping schedule event "
-                        "at %.6fs for replica=%s dp=%s cluster=%s because request %s "
+                        "at %.6fs for replica=%s replica_local_id=%s cluster=%s because request %s "
                         "has a newer thinking-home arrival %.6fs in %s",
                         self.time,
                         self._replica_id,
-                        self._dp_id,
+                        self._replica_local_id,
                         self._cluster_type.name,
                         request.id,
                         thinking_home_arrival,
@@ -105,7 +111,7 @@ class ReplicaScheduleEvent(BaseEvent):
                         self.time,
                         self._replica_id,
                         self._cluster_type,
-                        self._dp_id,
+                        self._replica_local_id,
                     )
                 ]
             if (
@@ -124,7 +130,7 @@ class ReplicaScheduleEvent(BaseEvent):
                         self.time,
                         self._replica_id,
                         self._cluster_type,
-                        self._dp_id,
+                        self._replica_local_id,
                     )
                 ]
             return []
@@ -170,7 +176,7 @@ class ReplicaScheduleEvent(BaseEvent):
                 0,  # stage_id
                 batch,
                 self._cluster_type,
-                self._dp_id,
+                self._replica_local_id,
             )
             for batch in self._batches
         ]
@@ -182,5 +188,5 @@ class ReplicaScheduleEvent(BaseEvent):
             "replica_id": self._replica_id,
             "cluster_type": self._cluster_type.name,
             "batch_ids": [batch.id for batch in self._batches],
-            "dp_id": self._dp_id,
+            "replica_local_id": self._replica_local_id,
         }
