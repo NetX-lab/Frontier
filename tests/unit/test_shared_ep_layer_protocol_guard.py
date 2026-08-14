@@ -212,9 +212,7 @@ def test_dense_prefill_completion_advances_to_next_layer_without_collective() ->
     assert 1 not in scheduler._prefill_sync_waiting_room[0][0][3]
 
 
-def test_dense_decode_completion_advances_to_next_layer_without_collective(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_dense_decode_completion_advances_to_next_layer_without_collective() -> None:
     scheduler = _scheduler(ClusterType.MONOLITHIC)
     predictor = _LayerPredictor()
     scheduler._predictor = predictor
@@ -224,13 +222,6 @@ def test_dense_decode_completion_advances_to_next_layer_without_collective(
         is_last_stage=False,
     )
     scheduler.get_replica = lambda _replica_id: SimpleNamespace(ep_size=1)
-    monkeypatch.setattr(
-        scheduler,
-        "_create_virtual_global_batch",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(
-            AssertionError("dense completion must not create a virtual global batch")
-        ),
-    )
     request = Request(0.0, 0, 4)
     request._is_prefill_complete = True
     batch = Batch(0, [request], [4], is_moe=True)

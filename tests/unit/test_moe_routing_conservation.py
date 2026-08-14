@@ -183,3 +183,15 @@ def test_round_robin_decode_attn_load_tracker_is_replica_scoped() -> None:
     assert "_replica_load_tracker" in source
     assert "_replica_dp_load_tracker" not in source
     assert "intra-Replica attention-DP" in source
+
+
+def test_decode_collective_has_no_legacy_aggregate_helpers() -> None:
+    source = Path(
+        "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"
+    ).read_text(encoding="utf-8")
+
+    assert "def _create_virtual_global_batch" not in source
+    assert "def _get_decode_sync_participant_count" not in source
+    assert "predict_dp_gather_time" not in source
+    assert "predict_dp_scatter_time" not in source
+    assert "Legacy DECODE aggregate synchronization is removed" in source

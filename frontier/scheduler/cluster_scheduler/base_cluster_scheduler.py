@@ -340,9 +340,6 @@ class BaseClusterScheduler(ABC):
         self._available_clusters = available_clusters or set()
         self._request_generator_config = request_generator_config
         self._stage_execution_contexts = self._build_stage_execution_contexts()
-        self._decode_shared_domain_related_wait_ms_by_batch: Dict[
-            Tuple[int, int, int], float
-        ] = defaultdict(float)
 
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name)
@@ -3691,448 +3688,54 @@ class BaseClusterScheduler(ABC):
         """Disaggregated KV cache transfer events are not included in this release."""
         raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
 
-    def _create_virtual_global_batch(
-        self,
-        sample_batch: Batch,
-        total_global_tokens: int,
-        total_global_prefill_tokens: int,
-    ) -> Batch:
-        """
-        Create a virtual global batch for MoE execution time prediction.
-
-        In DP-based MoE processing, all DP replicas gather their tokens into a global buffer
-        before MoE computation. This method creates a virtual batch that represents this
-        global token set for accurate execution time prediction.
-
-        Args:
-            sample_batch: A sample batch from one DP replica (used for metadata)
-            total_global_tokens: Total number of tokens across all DP replicas
-            total_global_prefill_tokens: Aggregated prefill tokens across all
-                non-idle DP participants. The virtual batch preserves this split
-                so decode-only runtime paths keep their decode semantics.
-
-        Returns:
-            A virtual Batch object with total_global_tokens for execution time prediction
-
-        Note:
-            - The virtual batch reuses the sample_batch's replica_id and other metadata
-            - Only the token count is modified to reflect the global aggregation
-            - This batch should ONLY be used for execution time prediction, not actual processing
-        """
-        import copy
-        from dataclasses import replace
-        from frontier.entities.batch import DecodeCudaGraphMetadata
-
-        # Create a shallow copy of the sample batch
-        virtual_batch = copy.copy(sample_batch)
-
-        # Override token count to reflect global aggregation
-        # Use a single-element list with total tokens
-        virtual_batch._num_tokens = [total_global_tokens]
-        virtual_batch._total_num_tokens = total_global_tokens
-
-        if total_global_prefill_tokens < 0 or total_global_prefill_tokens > total_global_tokens:
-            raise ValueError(
-                "Virtual global batch requires prefill tokens to be within the "
-                f"aggregated token range, got total_global_prefill_tokens="
-                f"{total_global_prefill_tokens}, total_global_tokens={total_global_tokens}"
-            )
-
-        # Preserve the aggregated prefill/decode split.
-        # This is critical for decode CUDA graph semantics because pure-decode
-        # batches must keep num_decode_tokens > 0 for launch-overhead stripping.
-        virtual_batch._num_prefill_tokens = total_global_prefill_tokens
-
-        # Decode CUDA Graph metadata is attached per scheduler-visible local lane.
-        # A virtual global sync batch represents the DP-gathered token domain, so
-        # it must not reuse one lane's local token count for MoE/communication
-        # prediction. Preserve the runtime mode but rebase token-count fields to
-        # the aggregated batch domain.
-        metadata = getattr(virtual_batch, "decode_cuda_graph_metadata", None)
-        if metadata is not None and total_global_tokens != sample_batch.total_num_tokens:
-            if not isinstance(metadata, DecodeCudaGraphMetadata):
-                raise TypeError(
-                    "decode_cuda_graph_metadata must be DecodeCudaGraphMetadata "
-                    f"when rebasing virtual global batch tokens, got {type(metadata).__name__}"
-                )
-            global_decode_tokens = total_global_tokens - total_global_prefill_tokens
-            virtual_batch.decode_cuda_graph_metadata = replace(
-                metadata,
-                original_total_tokens=total_global_tokens,
-                padded_total_tokens=total_global_tokens,
-                original_decode_batch_size=global_decode_tokens,
-                padded_decode_batch_size=global_decode_tokens,
-            )
-
-        # Keep other attributes unchanged (replica_id, requests, etc.)
-        # These are used for metadata but not for token-based predictions
-
-        from frontier.logger import get_cluster_logger
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-        logger.debug(
-            f"[VIRTUAL-BATCH] Created virtual global batch: "
-            f"sample_batch_id={sample_batch.id}, total_global_tokens={total_global_tokens}, "
-            f"num_prefill_tokens={total_global_prefill_tokens}, "
-            f"num_decode_tokens={total_global_tokens - total_global_prefill_tokens}"
-        )
-
-        return virtual_batch
-
-
-    def _is_monolithic_decode_shared_domain_sync(self, batch: Batch) -> bool:
-        """Return whether decode sync should use shared-domain EP lanes."""
-        model_config = getattr(getattr(self, "_config", None), "replica_config", None)
-        model_config = getattr(model_config, "model_config", None)
-        model_is_moe = model_config is not None and model_config.is_moe
-        if not model_is_moe:
-            return False
-        if self._cluster_type != ClusterType.MONOLITHIC:
-            return False
-
-        ep_size = getattr(self, "_replica_ep_size", None)
-        if ep_size is None and hasattr(self, "_config"):
-            ep_size = getattr(self._config.replica_config, "moe_expert_parallel_size", 1)
-        ep_size = int(ep_size or 1)
-        if ep_size <= 1:
-            return False
-
-        if batch.is_idle:
-            return True
-        return batch.num_prefill_tokens == 0 and batch.num_decode_tokens > 0
-
-    def _get_decode_sync_participant_count(self, replica: Replica, batch: Batch) -> int:
-        """Return the synchronization cardinality for the current decode sync event."""
-        if self._is_monolithic_decode_shared_domain_sync(batch):
-            participant_count = getattr(replica, "ep_size", None)
-            if participant_count is None:
-                participant_count = getattr(self, "_replica_ep_size", None)
-            if participant_count is None and hasattr(self, "_config"):
-                participant_count = getattr(
-                    self._config.replica_config,
-                    "moe_expert_parallel_size",
-                    1,
-                )
-            participant_count = int(participant_count)
-            if participant_count <= 0:
-                raise ValueError(
-                    f"Invalid shared-domain decode sync participant_count={participant_count}"
-                )
-            return participant_count
-
-        participant_count = 1
-        if participant_count <= 0:
-            raise ValueError(
-                f"Invalid decode sync dp_size={participant_count} for replica={replica.id}"
-            )
-        return participant_count
-
     def _get_decode_sync_wait_key(self, batch: Batch) -> int:
-        if self._is_monolithic_decode_shared_domain_sync(batch):
-            if batch.is_idle:
-                return int(batch.global_id)
-            if not hasattr(batch, "decode_sync_global_id"):
-                raise ValueError(
-                    "MONOLITHIC MoE decode shared-domain batch is missing "
-                    "decode_sync_global_id; real decode batches must be created "
-                    "through BaseReplicaScheduler._create_batch so lane-scoped "
-                    "decode sync ids are assigned."
-                )
-            return int(batch.decode_sync_global_id)
+        decode_sync_global_id = getattr(batch, "decode_sync_global_id", None)
+        if decode_sync_global_id is not None:
+            return int(decode_sync_global_id)
         return int(batch.global_id)
 
-    def _build_monolithic_decode_shared_domain_trace_execution_time(
+    def on_decode_sync(
         self,
-        base_execution_time,
-        related_wait_ms: float,
-    ):
-        """Clone trace payload and attach shared-domain wait as a separate trace component."""
-        import copy
-
-        trace_execution_time = copy.deepcopy(base_execution_time)
-        merged_wait_ms = max(0.0, float(related_wait_ms))
-        num_layers = max(
-            1,
-            int(getattr(base_execution_time, "_num_layers_per_pipeline_stage", 1)),
-        )
-        per_layer_wait_ms = merged_wait_ms / num_layers
-        trace_execution_time._shared_domain_wait_merged_ms = merged_wait_ms
-        trace_execution_time._trace_related_collective_waits = []
-        if merged_wait_ms > 0.0:
-            trace_execution_time._trace_related_collective_waits = [
-                {
-                    "op_name": "expert_parallel_allreduce",
-                    "related_wait_ms": merged_wait_ms,
-                    "per_layer_related_wait_ms": per_layer_wait_ms,
-                    "collective_domain": "EP_SHARED_DOMAIN",
-                    "scope_alignment_mode": "wait_inclusive",
-                    "reason": "monolithic_decode_shared_domain_sync_wait",
-                }
-            ]
-        return trace_execution_time
-
-    def _accumulate_monolithic_decode_shared_domain_related_wait_ms(
-        self,
-        *,
+        time: float,
         replica_id: int,
         stage_id: int,
-        batch_global_id: int,
+        batch: Batch,
+        dp_id: int,
         sync_stage: str,
-        sync_wait_room: dict,
-    ) -> float:
-        """Accumulate decode shared-domain wait from sync arrival skew."""
-        if sync_stage != "post_moe":
-            return 0.0
+        layer_id: int,
+        stage_execution_time: float,
+    ):
+        """Enter the canonical layer-local DECODE MoE protocol.
 
-        arrival_times = sync_wait_room.get("arrival_times")
-        if not isinstance(arrival_times, dict) or not arrival_times:
-            return 0.0
-
-        sync_time = max(float(arrival_time) for arrival_time in arrival_times.values())
-        related_wait_ms = 0.0
-        for arrival_time in arrival_times.values():
-            wait_s = max(0.0, sync_time - float(arrival_time))
-            related_wait_ms += wait_s * 1e3
-
-        key = (int(replica_id), int(stage_id), int(batch_global_id))
-        self._decode_shared_domain_related_wait_ms_by_batch[key] += related_wait_ms
-        return related_wait_ms
-
-    def _pop_monolithic_decode_shared_domain_related_wait_ms(
-        self,
-        *,
-        replica_id: int,
-        stage_id: int,
-        batch_global_id: int,
-    ) -> float:
-        """Pop accumulated decode shared-domain wait for one batch lifecycle."""
-        key = (int(replica_id), int(stage_id), int(batch_global_id))
-        related_wait_ms = float(
-            self._decode_shared_domain_related_wait_ms_by_batch.pop(key, 0.0) or 0.0
-        )
-        return max(0.0, related_wait_ms)
-
-    def on_decode_sync(self, time: float, replica_id: int, stage_id: int, batch: Batch,
-                      dp_id: int, sync_stage: str, layer_id: int, stage_execution_time: float):
+        A DECODE sync entry is valid only before the current layer's EP wave.
+        The old DP waiting-room and aggregate scalar path is retired; the
+        complete replica-local EP participant set is materialized by
+        ``_on_decode_ep_wave_ready`` and its collective completion event owns
+        the layer transition.
         """
-        Handle DECODE cluster synchronization points.
-
-        Similar to on_prefill_sync(), this method handles DP synchronization in the
-        unified DECODE cluster when MoE is enabled.
-
-        Args:
-            time: Current simulation time
-            replica_id: ID of the replica
-            stage_id: Pipeline stage ID
-            batch: The batch being processed
-            dp_id: Data parallel replica ID within the replica
-            sync_stage: "pre_moe" or "post_moe"
-            layer_id: Current layer being processed
-            stage_execution_time: Execution time for this stage
-        """
+        del stage_execution_time, dp_id
         if self._decode_sync_waiting_room is None:
             raise ValueError(
-                f"on_decode_sync called for non-MoE model in DECODE cluster. "
-                f"Dense models should not use sync events."
+                "DECODE synchronization is unavailable for a dense model; "
+                "dense execution must use the full-stage protocol"
             )
-
-        if sync_stage == "pre_moe" and self._uses_shared_decode_layer_protocol(
-            batch,
-            layer_id,
-        ):
-            return self._on_decode_ep_wave_ready(
-                time=time,
-                replica_id=replica_id,
-                stage_id=stage_id,
-                batch=batch,
-                layer_id=layer_id,
-                dp_id=dp_id,
+        if sync_stage != "pre_moe":
+            raise ValueError(
+                "DECODE synchronization entry must start at pre_moe; "
+                "post_moe completion is handled by DecodeSyncCollectiveEvent"
             )
-
-        from frontier.events.decode_sync_collective_event import DecodeSyncCollectiveEvent
-        from frontier.logger import get_cluster_logger
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-
-        batch_global_id = self._get_decode_sync_wait_key(batch)
-        sync_wait_room = self._decode_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id][sync_stage]
-
-        if batch.is_idle and dp_id in sync_wait_room["batches"]:
-            existing_batch = sync_wait_room["batches"][dp_id]
-            if not existing_batch.is_idle:
-                logger.info(
-                    f"[IDLE_BATCH][SKIP] Skipping idle batch {batch.id} for dp_id={dp_id} "
-                    f"because real batch {existing_batch.id} already exists in waiting room"
-                )
-                return []
-
-        sync_wait_room["batches"][dp_id] = batch
-        sync_wait_room["arrival_times"][dp_id] = time
-
-        replica = self.get_replica(replica_id)
-        participant_count = self._get_decode_sync_participant_count(replica, batch)
-        participant_domain = (
-            "EP_SHARED_DOMAIN"
-            if self._is_monolithic_decode_shared_domain_sync(batch)
-            else "DP"
+        if not self._uses_shared_decode_layer_protocol(batch, layer_id):
+            raise RuntimeError(
+                "Legacy DECODE DP synchronization is removed; "
+                "the current layer must use the canonical per-layer protocol"
+            )
+        return self._on_decode_ep_wave_ready(
+            time=time,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            batch=batch,
+            layer_id=layer_id,
         )
-
-        arrived = len(sync_wait_room["batches"])
-
-        request_ids = [req.id for req in batch.requests] if batch.requests else []
-        waiting_room_key = f"[{replica_id}][{stage_id}][{batch_global_id}][{layer_id}][{sync_stage}]"
-        participant_ids_in_room = list(sync_wait_room["batches"].keys())
-        debug_msg = (
-            f"[DECODE_SYNC][ARRIVAL] batch_id={batch.id}, global_id={batch_global_id}, "
-            f"requests={request_ids}, replica={replica_id}, dp_id={dp_id}, "
-            f"stage={stage_id}, layer={layer_id}, sync_stage={sync_stage}, "
-            f"arrived={arrived}/{participant_count}, participant_domain={participant_domain}, "
-            f"participant_ids_in_room={participant_ids_in_room}, "
-            f"waiting_room_key={waiting_room_key}, is_idle={batch.is_idle}, t={time:.6f}s"
-        )
-        logger.info(debug_msg)
-
-        if arrived == participant_count:
-            sync_time = max(sync_wait_room["arrival_times"].values())
-            logger.info(
-                f"[DECODE_SYNC][COLLECTIVE_READY] Scheduling DecodeSyncCollectiveEvent at t={sync_time:.6f}s "
-                f"for batch_global_id={batch_global_id}, stage={stage_id}, layer={layer_id}, "
-                f"sync_stage={sync_stage}, participant_domain={participant_domain}"
-            )
-            return [
-                DecodeSyncCollectiveEvent(
-                    sync_time,
-                    replica_id,
-                    stage_id,
-                    batch_global_id,
-                    sync_stage,
-                    layer_id,
-                    cluster_type=self._cluster_type,
-                )
-            ]
-
-        if (
-            sync_stage == "pre_moe"
-            and not batch.is_idle
-            and self._is_monolithic_decode_shared_domain_sync(batch)
-        ):
-            arrived_participant_ids = set(sync_wait_room["batches"].keys())
-            all_participant_ids = set(range(participant_count))
-            missing_participant_ids = all_participant_ids - arrived_participant_ids
-
-            if missing_participant_ids:
-                logger.info(
-                    f"[DECODE_SYNC][IDLE_COMPACT] Compacting missing shared-domain lanes into waiting room: "
-                    f"missing_participant_ids={sorted(missing_participant_ids)}, "
-                    f"arrived_participant_ids={sorted(arrived_participant_ids)}, "
-                    f"participant_domain={participant_domain}"
-                )
-
-                for missing_participant_id in sorted(missing_participant_ids):
-                    if missing_participant_id in sync_wait_room["batches"]:
-                        logger.info(
-                            f"[DECODE_SYNC][IDLE_COMPACT][SKIP] Lane {missing_participant_id} already exists in waiting room"
-                        )
-                        continue
-
-                    idle_batch = Batch(
-                        replica_id=replica_id,
-                        requests=[],
-                        num_tokens=[],
-                        is_idle=True,
-                        is_moe=self._config.replica_config.model_config.is_moe,
-                    )
-                    idle_batch.set_global_id(batch_global_id)
-                    sync_wait_room["batches"][missing_participant_id] = idle_batch
-                    sync_wait_room["arrival_times"][missing_participant_id] = time
-
-                    logger.info(
-                        f"[DECODE_SYNC][IDLE_COMPACT] Inserted idle batch {idle_batch.id} for "
-                        f"replica={replica_id}, dp_id={missing_participant_id}, "
-                        f"batch_global_id={batch_global_id}, layer={layer_id}, "
-                        f"participant_domain={participant_domain}"
-                    )
-
-                compact_arrived = len(sync_wait_room["batches"])
-                if compact_arrived != participant_count:
-                    raise ValueError(
-                        f"Shared-domain decode idle compaction produced arrived={compact_arrived} "
-                        f"but expected participant_count={participant_count} "
-                        f"for replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, "
-                        f"layer={layer_id}, sync_stage={sync_stage}"
-                    )
-
-                sync_time = max(sync_wait_room["arrival_times"].values())
-                logger.info(
-                    f"[DECODE_SYNC][COLLECTIVE_READY][IDLE_COMPACT] Scheduling DecodeSyncCollectiveEvent at "
-                    f"t={sync_time:.6f}s for batch_global_id={batch_global_id}, stage={stage_id}, "
-                    f"layer={layer_id}, sync_stage={sync_stage}, participant_domain={participant_domain}"
-                )
-                return [
-                    DecodeSyncCollectiveEvent(
-                        sync_time,
-                        replica_id,
-                        stage_id,
-                        batch_global_id,
-                        sync_stage,
-                        layer_id,
-                        cluster_type=self._cluster_type,
-                    )
-                ]
-
-        if sync_stage == "pre_moe" and not batch.is_idle:
-            arrived_participant_ids = set(sync_wait_room["batches"].keys())
-            all_participant_ids = set(range(participant_count))
-            missing_participant_ids = all_participant_ids - arrived_participant_ids
-
-            if missing_participant_ids:
-                logger.info(
-                    f"[IDLE_BATCH] Creating idle batches for missing decode sync participants: "
-                    f"missing_participant_ids={sorted(missing_participant_ids)}, "
-                    f"arrived_participant_ids={sorted(arrived_participant_ids)}, "
-                    f"participant_domain={participant_domain}"
-                )
-
-                from frontier.events.decode_sync_event import DecodeSyncEvent
-                idle_batch_events = []
-
-                for missing_participant_id in sorted(missing_participant_ids):
-                    if missing_participant_id not in sync_wait_room["batches"]:
-                        idle_batch = Batch(
-                            replica_id=replica_id,
-                            requests=[],
-                            num_tokens=[],
-                            is_idle=True,
-                            is_moe=self._config.replica_config.model_config.is_moe,
-                        )
-                        idle_batch.set_global_id(batch_global_id)
-
-                        logger.info(
-                            f"[IDLE_BATCH] Created idle batch {idle_batch.id} for "
-                            f"replica={replica_id}, dp_id={missing_participant_id}, "
-                            f"batch_global_id={batch_global_id}, layer={layer_id}, "
-                            f"participant_domain={participant_domain}"
-                        )
-
-                        idle_sync_event = DecodeSyncEvent(
-                            time=time,
-                            replica_id=replica_id,
-                            stage_id=stage_id,
-                            batch=idle_batch,
-                            replica_local_id=missing_participant_id,
-                            sync_stage=sync_stage,
-                            layer_id=layer_id,
-                            stage_execution_time=0.0,
-                            cluster_type=self._cluster_type,
-                        )
-                        idle_batch_events.append(idle_sync_event)
-                    else:
-                        logger.info(
-                            f"[IDLE_BATCH] Skipping idle batch creation for dp_id={missing_participant_id} "
-                            f"(already exists in waiting room)"
-                        )
-
-                return idle_batch_events
-
-        return []
 
     def on_decode_sync_collective(
         self,
@@ -4203,195 +3806,23 @@ class BaseClusterScheduler(ABC):
         events = []
         non_idle_batches = [batch for batch in dp_batches.values() if not batch.is_idle]
         sample_batch = non_idle_batches[0] if non_idle_batches else next(iter(dp_batches.values()))
-        total_global_tokens = sum(batch.total_num_tokens for batch in non_idle_batches)
-        total_global_prefill_tokens = sum(
-            batch.num_prefill_tokens for batch in non_idle_batches
-        )
-        if total_global_tokens <= 0:
-            total_global_tokens = sample_batch.total_num_tokens
-            total_global_prefill_tokens = sample_batch.num_prefill_tokens
-
         canonical_ep_wave = hasattr(sample_batch, "_decode_ep_wave_lane_times_ms")
-        stage_identity = (
-            None
-            if canonical_ep_wave
-            or direct_batch is not None
-            or self._cluster_type in (ClusterType.DECODE, ClusterType.MONOLITHIC)
-            else 0
-        )
+        if direct_batch is None and not canonical_ep_wave:
+            raise RuntimeError(
+                "Legacy DECODE aggregate synchronization is removed; "
+                "collective completion requires a canonical EP_WAVE or dense full-stage handoff"
+            )
+        stage_identity = None
         stage_scheduler = self.get_replica_stage_scheduler(
             replica_id, stage_identity, stage_id
         )
         execution_time_predictor = stage_scheduler._execution_time_predictor
-        if canonical_ep_wave:
-            participant_count = 1
-            shared_domain_sync = False
-            global_batch = sample_batch
-        elif direct_batch is not None:
-            participant_count = 1
-            shared_domain_sync = False
-            global_batch = sample_batch
-        else:
-            replica = self.get_replica(replica_id)
-            participant_count = self._get_decode_sync_participant_count(
-                replica,
-                sample_batch,
-            )
-            shared_domain_sync = self._is_monolithic_decode_shared_domain_sync(
-                sample_batch
-            )
-            global_batch = self._create_virtual_global_batch(
-                sample_batch,
-                total_global_tokens,
-                total_global_prefill_tokens,
-            )
-        if shared_domain_sync:
-            related_wait_ms = (
-                self._accumulate_monolithic_decode_shared_domain_related_wait_ms(
-                    replica_id=replica_id,
-                    stage_id=stage_id,
-                    batch_global_id=batch_global_id,
-                    sync_stage=sync_stage,
-                    sync_wait_room=sync_wait_room,
-                )
-            )
-            if related_wait_ms > 0.0:
-                logger.info(
-                    f"[MONOLITHIC_DECODE_SYNC][WAIT] batch_global_id={batch_global_id}, "
-                    f"stage={stage_id}, layer={layer_id}, sync_stage={sync_stage}, "
-                    f"related_wait_ms={related_wait_ms:.6f}"
-                )
 
         if sync_stage == "pre_moe":
-            if canonical_ep_wave:
-                raise ValueError(
-                    "Canonical PDD EP wave must enter DECODE post_moe directly"
-                )
-            if shared_domain_sync:
-                if not hasattr(
-                    execution_time_predictor,
-                    "predict_monolithic_decode_shared_domain_lane_moe_times_ms",
-                ):
-                    raise AttributeError(
-                        f"{type(execution_time_predictor).__name__} does not expose "
-                        "predict_monolithic_decode_shared_domain_lane_moe_times_ms required for "
-                        "monolithic decode shared-domain sync"
-                    )
-
-                lane_times_ms = (
-                    execution_time_predictor
-                    .predict_monolithic_decode_shared_domain_lane_moe_times_ms(
-                        global_batch,
-                        layer_id,
-                    )
-                )
-                expected_lane_ids = set(dp_batches.keys())
-                missing_lane_ids = expected_lane_ids - set(lane_times_ms.keys())
-                if missing_lane_ids:
-                    raise ValueError(
-                        "predict_monolithic_decode_shared_domain_lane_moe_times_ms did not return "
-                        f"timings for lane_ids={sorted(missing_lane_ids)}"
-                    )
-
-                logger.info(
-                    f"[MONOLITHIC_DECODE_SYNC][PRE_MOE] total_global_tokens={total_global_tokens}, "
-                    f"participant_count={participant_count}, lane_times_ms={lane_times_ms}"
-                )
-
-                for participant_id, batch in dp_batches.items():
-                    lane_time_ms = float(lane_times_ms[participant_id])
-                    if lane_time_ms < 0.0:
-                        raise ValueError(
-                            f"Negative shared-domain lane_time_ms={lane_time_ms} for lane={participant_id}"
-                        )
-                    lane_time_s = lane_time_ms * 1e-3
-                    events.append(DecodeSyncEvent(
-                        time + lane_time_s,
-                        replica_id,
-                        stage_id,
-                        batch,
-                        participant_id,
-                        "post_moe",
-                        layer_id,
-                        lane_time_s,
-                        cluster_type=self._cluster_type,
-                    ))
-
-                logger.info(
-                    f"[DECODE_SYNC][COLLECTIVE] pre_moe shared-domain completed, "
-                    f"scheduled post_moe sync arrivals using lane-specific times"
-                )
-                return events
-
-            dp_gather_time = execution_time_predictor.predict_dp_gather_time(
-                total_global_tokens,
-                participant_count,
+            raise ValueError(
+                "DECODE collective completion cannot start at pre_moe; "
+                "the canonical EP_WAVE enters this method at post_moe"
             )
-
-            per_expert_tokens = None
-            if (
-                hasattr(global_batch, "per_expert_tokens")
-                and global_batch.per_expert_tokens is not None
-            ):
-                per_expert_tokens = global_batch.per_expert_tokens
-            elif hasattr(execution_time_predictor, "_calculate_expert_token_allocation"):
-                per_expert_tokens = execution_time_predictor._calculate_expert_token_allocation(
-                    batch=global_batch,
-                    cluster_type=self._cluster_type,
-                    layer_id=layer_id,
-                )
-            elif hasattr(execution_time_predictor, "_get_moe_tokens_input"):
-                moe_tokens_input = execution_time_predictor._get_moe_tokens_input(
-                    global_batch,
-                    layer_id=layer_id,
-                )
-                if not isinstance(moe_tokens_input, dict):
-                    raise ValueError(
-                        "Canonical MoE decode sync requires an explicit per-expert token map; "
-                        f"predictor returned {type(moe_tokens_input).__name__}"
-                    )
-                per_expert_tokens = moe_tokens_input
-            else:
-                raise AttributeError(
-                    f"{type(execution_time_predictor).__name__} does not expose a supported "
-                    "MoE token-allocation API for decode sync collective"
-                )
-
-            moe_time = execution_time_predictor.predict_moe_layer_time(
-                global_batch,
-                layer_id,
-                self._cluster_type,
-                per_expert_tokens=per_expert_tokens,
-            )
-            dp_scatter_time = execution_time_predictor.predict_dp_scatter_time(
-                total_global_tokens,
-                participant_count,
-            )
-            moe_compute_time = moe_time.total_time() * 1e-3
-            moe_stage_time = dp_gather_time + moe_compute_time + dp_scatter_time
-
-            logger.info(
-                f"[MoE_TIME_BREAKDOWN] dp_gather={dp_gather_time:.6f}s, moe_comp={moe_compute_time:.6f}s, "
-                f"dp_scatter={dp_scatter_time:.6f}s, total={moe_stage_time:.6f}s"
-            )
-
-            for participant_id, batch in dp_batches.items():
-                events.append(DecodeSyncEvent(
-                    time + moe_stage_time,
-                    replica_id,
-                    stage_id,
-                    batch,
-                    participant_id,
-                    "post_moe",
-                    layer_id,
-                    moe_stage_time,
-                    cluster_type=self._cluster_type,
-                ))
-
-            logger.info(
-                f"[DECODE_SYNC][COLLECTIVE] pre_moe completed, scheduled post_moe sync at t={time + moe_stage_time:.6f}s"
-            )
-            return events
 
         total_layers = self._config.replica_config.model_config.num_layers
         active_unique_requests = []
@@ -4422,14 +3853,9 @@ class BaseClusterScheduler(ABC):
         for request in active_unique_requests:
             request.mb_on_step_layer_count_increment(num_layers_completed=1)
 
-        single_layer_execution_time = execution_time_predictor.predict_stage_execution_time(
-            sample_batch,
-            stage_id,
-            self._cluster_type,
-            num_layers=1,
-            layer_id=layer_id,
-        )
-        if canonical_ep_wave:
+        if direct_batch is not None:
+            post_moe_comm_time = 0.0
+        else:
             post_moe_comm_time = float(
                 getattr(sample_batch, "_decode_ep_wave_post_moe_comm_time_s", 0.0)
             )
@@ -4438,15 +3864,6 @@ class BaseClusterScheduler(ABC):
                     "Canonical DECODE EP wave post_moe communication time must be "
                     "finite and non-negative"
                 )
-        elif hasattr(execution_time_predictor, "_get_expert_parallel_communication_time"):
-            post_moe_comm_time = (
-                execution_time_predictor._get_expert_parallel_communication_time(global_batch)
-                * 1e-3
-            )
-        else:
-            post_moe_comm_time = (
-                single_layer_execution_time.expert_parallel_communication_time * 1e-3
-            )
 
         num_layers = execution_time_predictor._num_layers_per_pipeline_stage
         next_layer_id = layer_id + 1
@@ -4523,16 +3940,6 @@ class BaseClusterScheduler(ABC):
             + cpu_overhead_time
             + decode_draft_proposer_time
         )
-        shared_domain_related_wait_ms = 0.0
-        if shared_domain_sync:
-            shared_domain_related_wait_ms = (
-                self._pop_monolithic_decode_shared_domain_related_wait_ms(
-                    replica_id=replica_id,
-                    stage_id=stage_id,
-                    batch_global_id=batch_global_id,
-                )
-            )
-
         for participant_id, batch in dp_batches.items():
             if batch.is_idle:
                 logger.info(
@@ -4569,13 +3976,6 @@ class BaseClusterScheduler(ABC):
                 original_start_time,
             )
             trace_execution_time = full_stage_execution_time
-            if shared_domain_sync:
-                trace_execution_time = (
-                    self._build_monolithic_decode_shared_domain_trace_execution_time(
-                        full_stage_execution_time,
-                        related_wait_ms=shared_domain_related_wait_ms,
-                    )
-                )
             corrected_execution_time._trace_execution_time_override = trace_execution_time
 
             metrics_store.on_replica_stage_schedule(

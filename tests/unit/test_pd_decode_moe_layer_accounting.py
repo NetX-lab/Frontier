@@ -211,6 +211,10 @@ def _batch(requests: list[Request], *, is_idle: bool = False) -> Batch:
         is_moe=True,
     )
     batch.set_global_id(41)
+    # This fixture represents a completed canonical EP_WAVE.  The collective
+    # completion path no longer accepts the retired aggregate/DP scalar input.
+    batch._decode_ep_wave_lane_times_ms = (0.0,)
+    batch._decode_ep_wave_post_moe_comm_time_s = 0.0
     return batch
 
 
