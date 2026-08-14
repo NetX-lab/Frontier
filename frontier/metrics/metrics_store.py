@@ -1276,8 +1276,8 @@ class MetricsStore:
         return True
 
     @staticmethod
-    def _get_parallel_lane_count(cluster_type: ClusterType, replica_config) -> int:
-        """Return the lane count used for utilization metrics indexing.
+    def _get_replica_local_scope_count(cluster_type: ClusterType, replica_config) -> int:
+        """Return the Replica-local scope count used for utilization indexing.
 
         Frontier models DECODE_FFN with replica-local EP lanes (the scheduler's
         second key is an EP identity there), so utilization tensors are sized by
@@ -1286,16 +1286,17 @@ class MetricsStore:
         indexed by the outer Replica key, not by a local DP lane.
         """
         if cluster_type == ClusterType.DECODE_FFN:
-            lane_count = int(replica_config.moe_expert_parallel_size)
+            local_scope_count = int(replica_config.moe_expert_parallel_size)
         else:
-            lane_count = 1
+            local_scope_count = 0
 
-        if lane_count <= 0:
+        if local_scope_count < 0:
             raise ValueError(
-                f"Invalid lane count for {cluster_type.name}: {lane_count}"
+                f"Invalid Replica-local scope count for {cluster_type.name}: "
+                f"{local_scope_count}"
             )
 
-        return lane_count
+        return local_scope_count
 
     def _init_per_cluster_metrics(self, cluster_type: ClusterType, cluster_config):
         # Batch metrics
@@ -1377,7 +1378,9 @@ class MetricsStore:
         # Utilization metrics support full-stage and Replica-local scopes.
         num_replicas = cluster_config.num_replicas
         num_pipeline_stages = cluster_config.replica_config.num_pipeline_stages
-        dp_size = self._get_parallel_lane_count(cluster_type, cluster_config.replica_config)
+        local_scope_count = self._get_replica_local_scope_count(
+            cluster_type, cluster_config.replica_config
+        )
 
         self._replica_memory_usage[cluster_type] = []
         self._replica_busy_time[cluster_type] = []
@@ -1425,12 +1428,13 @@ class MetricsStore:
             )
             self._replica_full_stage_mfu[cluster_type].append(full_stage_mfu)
 
-            # Create dp_size slots for each replica
+            # Create only the Replica-local EP scopes for DECODE_FFN. Other
+            # roles use the full-stage world and therefore have no local lane.
             self._replica_memory_usage[cluster_type].append([])
             self._replica_busy_time[cluster_type].append([])
             self._replica_mfu[cluster_type].append([])
 
-            for dp_idx in range(dp_size):
+            for replica_local_id in range(local_scope_count):
                 self._replica_memory_usage[cluster_type][replica_idx].append(
                     SeriesAverageMeter(
                         TIME_STR,
@@ -1439,31 +1443,31 @@ class MetricsStore:
                         store_data_series=self._should_store_memory_time_series(),
                     )
                 )
-                self._replica_memory_usage[cluster_type][replica_idx][dp_idx].put(0, 0)
+                self._replica_memory_usage[cluster_type][replica_idx][replica_local_id].put(0, 0)
 
                 self._replica_busy_time[cluster_type][replica_idx].append([])
                 self._replica_mfu[cluster_type][replica_idx].append([])
 
                 for stage_idx in range(num_pipeline_stages):
-                    self._replica_busy_time[cluster_type][replica_idx][dp_idx].append(
+                    self._replica_busy_time[cluster_type][replica_idx][replica_local_id].append(
                         SeriesAverageMeter(
                             TIME_STR,
                             BUSY_TIME_PERCENT,
                             save_table_to_wandb=self._config.save_table_to_wandb,
                         )
                     )
-                    self._replica_busy_time[cluster_type][replica_idx][dp_idx][
+                    self._replica_busy_time[cluster_type][replica_idx][replica_local_id][
                         stage_idx
                     ].put(0, 0)
 
-                    self._replica_mfu[cluster_type][replica_idx][dp_idx].append(
+                    self._replica_mfu[cluster_type][replica_idx][replica_local_id].append(
                         SeriesAverageMeter(
                             TIME_STR,
                             UTILIZATION_STR,
                             save_table_to_wandb=self._config.save_table_to_wandb,
                         )
                     )
-                    self._replica_mfu[cluster_type][replica_idx][dp_idx][stage_idx].put(
+                    self._replica_mfu[cluster_type][replica_idx][replica_local_id][stage_idx].put(
                         0, 0
                     )
 
@@ -1894,7 +1898,9 @@ class MetricsStore:
                 os.makedirs(cluster_plot_path, exist_ok=True)
                 num_replicas = cluster_config.num_replicas
                 num_pipeline_stages = cluster_config.replica_config.num_pipeline_stages
-                dp_size = self._get_parallel_lane_count(cluster_type, cluster_config.replica_config)
+                local_scope_count = self._get_replica_local_scope_count(
+                    cluster_type, cluster_config.replica_config
+                )
 
                 for replica_idx in range(num_replicas):
                     self._replica_full_stage_memory_usage[cluster_type][
@@ -1917,24 +1923,24 @@ class MetricsStore:
                             cluster_plot_path,
                         )
 
-                    for dp_idx in range(dp_size):
+                    for replica_local_id in range(local_scope_count):
                         self._replica_memory_usage[cluster_type][replica_idx][
-                            dp_idx
+                            replica_local_id
                         ].print_stats(
-                            f"replica_{replica_idx + 1}_dp_{dp_idx}_memory_usage",
+                            f"replica_{replica_idx + 1}_local_{replica_local_id}_memory_usage",
                             cluster_plot_path,
                         )
                         for stage_idx in range(num_pipeline_stages):
-                            self._replica_busy_time[cluster_type][replica_idx][dp_idx][
+                            self._replica_busy_time[cluster_type][replica_idx][replica_local_id][
                                 stage_idx
                             ].print_stats(
-                                f"replica_{replica_idx + 1}_dp_{dp_idx}_stage_{stage_idx + 1}_busy_time_percent",
+                                f"replica_{replica_idx + 1}_local_{replica_local_id}_stage_{stage_idx + 1}_busy_time_percent",
                                 cluster_plot_path,
                             )
-                            self._replica_mfu[cluster_type][replica_idx][dp_idx][
+                            self._replica_mfu[cluster_type][replica_idx][replica_local_id][
                                 stage_idx
                             ].print_stats(
-                                f"replica_{replica_idx + 1}_dp_{dp_idx}_stage_{stage_idx + 1}_mfu",
+                                f"replica_{replica_idx + 1}_local_{replica_local_id}_stage_{stage_idx + 1}_mfu",
                                 cluster_plot_path,
                             )
 
