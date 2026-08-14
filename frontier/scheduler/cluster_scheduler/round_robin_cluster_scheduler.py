@@ -538,7 +538,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         """
         for (replica_id, dp_id) in self._replica_dp_load_tracker.keys():
             scheduler_key = (replica_id, dp_id)
-            current_pending = self._dp_replica_schedulers[scheduler_key].num_pending_requests
+            current_pending = self._replica_schedulers[scheduler_key].num_pending_requests
             self._replica_dp_load_tracker[(replica_id, dp_id)] = current_pending
 
     def _schedule_dynamic_with_af_priority(self) -> List[Tuple[int, int, Request]]:
@@ -580,7 +580,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
                 # Add the complete batch to the replica scheduler's immediate queue
                 # This preserves batch integrity and avoids re-batching overhead
-                replica_scheduler = self._dp_replica_schedulers[scheduler_key]
+                replica_scheduler = self._replica_schedulers[scheduler_key]
 
                 # Add batch directly to replica scheduler for immediate processing
                 # This follows the pattern from schedule_ffn_with_m2n_immediate()
@@ -1012,7 +1012,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             replica_schedulers = []
             for ep_id in range(ep_size):
                 try:
-                    replica_scheduler = self.get_dp_replica_scheduler(
+                    replica_scheduler = self.get_replica_scheduler(
                         target_replica_id,
                         ep_id,
                     )
@@ -1141,7 +1141,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         shared_group_id = self._batch_group_creation_counter
 
         try:
-            replica_scheduler = self.get_dp_replica_scheduler(
+            replica_scheduler = self.get_replica_scheduler(
                 target_replica_id,
                 0,
             )

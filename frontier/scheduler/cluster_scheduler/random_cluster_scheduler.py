@@ -123,8 +123,8 @@ class RandomClusterScheduler(BaseClusterScheduler):
                 scheduler_key = (original_replica_id, target_dp_id)
 
                 # Add the complete batch to the replica scheduler's immediate queue
-                if scheduler_key in self._dp_replica_schedulers:
-                    replica_scheduler = self._dp_replica_schedulers[scheduler_key]
+                if scheduler_key in self._replica_schedulers:
+                    replica_scheduler = self._replica_schedulers[scheduler_key]
                     replica_scheduler.add_batch_to_immediate_queue(batch)
 
                     # Track the affected replica for event scheduling

@@ -71,7 +71,7 @@ def test_prefill_final_sync_records_elapsed_model_time_not_full_stage_prediction
     scheduler._prefill_sync_waiting_room = {
         0: {0: {9: {31: {"post_moe": {"batches": {0: batch}}}}}}
     }
-    scheduler.get_dp_replica_stage_scheduler = Mock(return_value=stage_scheduler)
+    scheduler.get_replica_stage_scheduler = Mock(return_value=stage_scheduler)
     scheduler.get_replica = Mock(return_value=SimpleNamespace(dp_size=1))
     scheduler._create_prefill_corrected_execution_time_for_metrics = Mock(
         return_value=_ExecutionTime()
@@ -177,7 +177,7 @@ def _make_final_sync_scheduler(
             }
         }
     }
-    scheduler.get_dp_replica_stage_scheduler = Mock(return_value=stage_scheduler)
+    scheduler.get_replica_stage_scheduler = Mock(return_value=stage_scheduler)
     scheduler.get_replica = Mock(return_value=SimpleNamespace(dp_size=1))
     scheduler._create_prefill_corrected_execution_time_for_metrics = Mock(
         return_value=execution_time
@@ -324,7 +324,7 @@ def test_prefill_sync_records_heterogeneous_layer_components_once() -> None:
     scheduler = object.__new__(_ConcreteClusterScheduler)
     scheduler._cluster_type = ClusterType.PREFILL
     scheduler._predictor = predictor
-    scheduler.get_dp_replica_stage_scheduler = Mock(return_value=stage_scheduler)
+    scheduler.get_replica_stage_scheduler = Mock(return_value=stage_scheduler)
     scheduler.get_replica = Mock(return_value=SimpleNamespace(dp_size=1))
     scheduler._create_prefill_corrected_execution_time_for_metrics = Mock(
         return_value=layer_times[1]
@@ -423,7 +423,7 @@ def test_prefill_stage_schedule_resets_component_ledger_for_pipeline_stage() -> 
         _execution_time_predictor=predictor,
     )
     cluster_scheduler = SimpleNamespace(
-        get_dp_replica_stage_scheduler=Mock(return_value=stage_scheduler),
+        get_replica_stage_scheduler=Mock(return_value=stage_scheduler),
         get_replica=Mock(
             return_value=SimpleNamespace(
                 is_moe=True,

@@ -83,7 +83,7 @@ def _scheduler() -> tuple[RoundRobinClusterScheduler, _LanePredictor, Batch]:
             )
         )
     )
-    scheduler.get_dp_replica_stage_scheduler = lambda *_args: SimpleNamespace(
+    scheduler.get_replica_stage_scheduler = lambda *_args: SimpleNamespace(
         _execution_time_predictor=predictor,
     )
     request = Request(arrived_at=0.0, num_prefill_tokens=4, num_decode_tokens=0)

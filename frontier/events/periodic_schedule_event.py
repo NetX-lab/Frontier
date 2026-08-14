@@ -109,7 +109,7 @@ class PeriodicScheduleEvent(BaseEvent):
             # Only add individual requests to replica scheduler
             # Batch-level assignments (request=None) are already handled by the cluster scheduler
             if request is not None:
-                cluster_scheduler.get_dp_replica_scheduler(
+                cluster_scheduler.get_replica_scheduler(
                     replica_id, dp_id
                 ).add_request(request)
 

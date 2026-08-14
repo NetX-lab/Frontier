@@ -500,7 +500,7 @@ def test_m2n_arrival_routes_valid_target_to_matching_handler(
         scheduler._replica_scheduler_count = 1
         scheduler._f2a_waiting_by_round = {}
         scheduler._cluster = SimpleNamespace(replicas={0: SimpleNamespace()})
-        scheduler._dp_replica_schedulers = {
+        scheduler._replica_schedulers = {
             (0, 0): SimpleNamespace(
                 _decode_attn_active_cohort_states={
                     9: {
@@ -1094,7 +1094,7 @@ def _a2f_waiting_room_scheduler(room: dict) -> _ConcreteClusterScheduler:
         decode_ffn_cluster_num_replicas=1,
     )
     scheduler._a2f_expected_lanes = [(0, 0), (1, 0)]
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         (0, 0): SimpleNamespace(_decode_attn_active_cohort_states={}),
         (1, 0): SimpleNamespace(_decode_attn_active_cohort_states={}),
     }
@@ -1142,7 +1142,7 @@ def _dense_a2f_scheduler() -> tuple[_ConcreteClusterScheduler, dict]:
     scheduler = _a2f_waiting_room_scheduler(room)
     scheduler._config.replica_config.model_config.is_moe = False
     scheduler._a2f_expected_lanes = [(1, 0)]
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         (1, 0): SimpleNamespace(_decode_attn_active_cohort_states={}),
     }
     scheduler._a2f_waiting_by_layer = {}
@@ -1268,7 +1268,7 @@ def test_decode_attn_a2f_dense_rejects_missing_local_attn_topology_without_fallb
     batch = _dense_a2f_batch()
     batch.decode_attn_cohort_id = 9
     batch.decode_attn_cohort_request_ids = tuple(request.id for request in batch.requests)
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         (1, 0): SimpleNamespace(_decode_attn_active_cohort_states=active_state),
     }
     state_before = _dense_a2f_state_snapshot(scheduler, batch, room)
@@ -1300,7 +1300,7 @@ def _dense_a2f_cohort_fixture() -> tuple[_ConcreteClusterScheduler, dict, Batch,
         "stage_current_layer_ids": {1: 4},
         "afd_stage_idx": 1,
     }
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         (1, 0): SimpleNamespace(_decode_attn_active_cohort_states={9: cohort_state}),
     }
     return scheduler, room, batch, cohort_state
@@ -1502,7 +1502,7 @@ def test_decode_attn_a2f_moe_cohort_apply_failure_is_atomic() -> None:
         }
         for lane in ((0, 0), (1, 0))
     }
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         lane: SimpleNamespace(
             _decode_attn_active_cohort_states={9: cohort_state}
         )
@@ -1818,7 +1818,7 @@ def test_decode_attn_a2f_predictor_failure_preserves_runtime_state(
     if workflow == "dense":
         scheduler._config.replica_config.model_config.is_moe = False
         scheduler._a2f_expected_lanes = [(1, 0)]
-        scheduler._dp_replica_schedulers = {
+        scheduler._replica_schedulers = {
             (1, 0): SimpleNamespace(_decode_attn_active_cohort_states={}),
         }
         scheduler._a2f_waiting_by_layer = {}
@@ -1885,7 +1885,7 @@ def test_decode_attn_a2f_moe_incomplete_barrier_commits_incoming_and_idle() -> N
         }
     )
     scheduler._a2f_expected_lanes = [(0, 0), (1, 0), (2, 0)]
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         lane: SimpleNamespace(_decode_attn_active_cohort_states={})
         for lane in scheduler._a2f_expected_lanes
     }
@@ -1983,7 +1983,7 @@ def test_decode_attn_a2f_single_batch_complete_drain_removes_waiting_room() -> N
     }
     scheduler = _a2f_waiting_room_scheduler(room)
     scheduler._a2f_expected_lanes = [(0, 0)]
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         (0, 0): SimpleNamespace(_decode_attn_active_cohort_states={}),
     }
     scheduler._decode_attn_idle_expected_lanes = {(0, 0)}
@@ -2024,7 +2024,7 @@ def test_decode_attn_a2f_dense_accepts_zero_cost_predictor_result() -> None:
     )
     scheduler._config.replica_config.model_config.is_moe = False
     scheduler._a2f_expected_lanes = [(1, 0)]
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         (1, 0): SimpleNamespace(_decode_attn_active_cohort_states={}),
     }
     scheduler._a2f_waiting_by_layer = {}
@@ -2106,7 +2106,7 @@ def _decode_attn_return_fixture(
     scheduler._af_batch_queue = []
     scheduler._is_periodic_scheduling_enabled = False
     scheduler._cluster = SimpleNamespace(replicas={0: SimpleNamespace()})
-    scheduler._dp_replica_schedulers = {(0, 0): replica_scheduler}
+    scheduler._replica_schedulers = {(0, 0): replica_scheduler}
 
     transfer_info = _transfer_info(
         batch=batch,
@@ -2269,7 +2269,7 @@ def _install_decode_attn_cohort_registries_by_lane(scheduler, fixtures) -> None:
         cohort_id = 9 + len(cohort_states)
         batch.decode_attn_cohort_id = cohort_id
         cohort_states[cohort_id] = cohort_state
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         lane: SimpleNamespace(_decode_attn_active_cohort_states=cohort_states)
         for lane, cohort_states in cohort_states_by_lane.items()
     }
@@ -2293,7 +2293,7 @@ def _snapshot_decode_attn_cohort_registries_by_lane(scheduler) -> tuple:
             ),
         )
         for lane, replica_scheduler in sorted(
-            scheduler._dp_replica_schedulers.items()
+            scheduler._replica_schedulers.items()
         )
     )
 
@@ -3620,8 +3620,8 @@ def test_decode_attn_transfer_end_rejects_corrupt_queued_batch_before_mutation()
     transfer_info.source_dp_id = 1
     scheduler._f2a_expected_lanes = [(0, 0), (0, 1)]
     scheduler._replica_scheduler_count = 2
-    scheduler._dp_replica_schedulers[(0, 1)] = (
-        scheduler._dp_replica_schedulers[(0, 0)]
+    scheduler._replica_schedulers[(0, 1)] = (
+        scheduler._replica_schedulers[(0, 0)]
     )
     round_key = (0, 1, 1, 7)
     corrupt_room = {
@@ -4341,7 +4341,7 @@ def test_decode_attn_transfer_end_rejects_falsey_invalid_legacy_cohort_states_be
         metrics_store,
         cohort_state,
     ) = _decode_attn_return_fixture()
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         (0, 0): SimpleNamespace(
             _decode_attn_active_cohort_states=invalid_cohort_states,
         ),
@@ -4388,7 +4388,7 @@ def test_decode_attn_transfer_end_rejects_falsey_invalid_legacy_cohort_state_bef
         metrics_store,
         cohort_state,
     ) = _decode_attn_return_fixture()
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         (0, 0): SimpleNamespace(
             _decode_attn_active_cohort_states={9: invalid_cohort_state},
         ),
@@ -4438,7 +4438,7 @@ def test_decode_attn_stage_slot_reader_accepts_legal_legacy_cohort_states(
                 "current_layer_id": 0,
             },
         }
-    scheduler._dp_replica_schedulers = {(0, 0): legacy_scheduler}
+    scheduler._replica_schedulers = {(0, 0): legacy_scheduler}
 
     active_lanes = scheduler._get_decode_attn_stage_slot_active_lanes(
         1,
@@ -4491,13 +4491,13 @@ def test_decode_attn_transfer_end_rejects_each_invalid_topology_source(
     elif invalid_source == "idle_lane_negative":
         scheduler._decode_attn_idle_expected_lanes = {(-1, 0)}
     elif invalid_source == "replica_scheduler_mapping_type":
-        scheduler._dp_replica_schedulers = []
+        scheduler._replica_schedulers = []
     elif invalid_source == "replica_scheduler_lane_bool":
-        scheduler._dp_replica_schedulers = {
+        scheduler._replica_schedulers = {
             (0, False): SimpleNamespace(),
         }
     elif invalid_source == "active_stage_slot_bool":
-        scheduler._dp_replica_schedulers = {
+        scheduler._replica_schedulers = {
             (0, 0): SimpleNamespace(
                 get_decode_attn_active_stage_slots=Mock(return_value={True}),
             ),
@@ -4585,14 +4585,14 @@ def test_decode_attn_transfer_end_preserves_each_legal_topology_source(
     if topology_source == "idle_lanes":
         scheduler._decode_attn_idle_expected_lanes = {(1, 0)}
     elif topology_source == "replica_scheduler_map":
-        scheduler._dp_replica_schedulers = {
+        scheduler._replica_schedulers = {
             (0, 0): SimpleNamespace(
                 _decode_attn_active_cohort_states={9: cohort_state},
                 get_decode_attn_active_stage_slots=Mock(return_value=()),
             ),
         }
     elif topology_source == "active_stage_slots":
-        scheduler._dp_replica_schedulers = {
+        scheduler._replica_schedulers = {
             (0, 0): SimpleNamespace(
                 _decode_attn_active_cohort_states={9: cohort_state},
                 get_decode_attn_active_stage_slots=Mock(return_value=(1,)),
@@ -4697,7 +4697,7 @@ def test_decode_attn_transfer_preflight_does_not_lazy_create_replica_state() -> 
     ) = _decode_attn_return_fixture()
     replica_scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
     replica_scheduler._cluster_type = ClusterType.DECODE_ATTN
-    scheduler._dp_replica_schedulers = {(0, 0): replica_scheduler}
+    scheduler._replica_schedulers = {(0, 0): replica_scheduler}
     scheduler._f2a_expected_lanes = [(0, 1)]
     scheduler._replica_scheduler_count = 2
     assert not hasattr(replica_scheduler, "_decode_attn_active_cohort_states")
@@ -4824,7 +4824,7 @@ def _install_real_decode_attn_replica_state(
         {1: 0} if stage_layers is None else stage_layers
     )
     replica_scheduler._decode_attn_active_cohort_states = {9: cohort_state}
-    scheduler._dp_replica_schedulers = {(0, 0): replica_scheduler}
+    scheduler._replica_schedulers = {(0, 0): replica_scheduler}
     scheduler._f2a_expected_lanes = [(0, 1)]
     scheduler._replica_scheduler_count = 2
 
@@ -5133,7 +5133,7 @@ def test_decode_attn_cluster_phase_prepare_rejects_incomplete_stage_maps_without
     )
     scheduler = _scheduler()
     scheduler._cluster_type = ClusterType.DECODE_ATTN
-    scheduler._dp_replica_schedulers = {(0, 0): replica_scheduler}
+    scheduler._replica_schedulers = {(0, 0): replica_scheduler}
     batch = SimpleNamespace(
         decode_attn_cohort_id=9,
         decode_attn_original_replica_id=0,
@@ -5171,7 +5171,7 @@ def test_decode_attn_cluster_phase_update_preserves_untouched_stage_visibility()
     replica_scheduler._decode_attn_active_cohort_states = {9: cohort_state}
     scheduler = _scheduler()
     scheduler._cluster_type = ClusterType.DECODE_ATTN
-    scheduler._dp_replica_schedulers = {(0, 0): replica_scheduler}
+    scheduler._replica_schedulers = {(0, 0): replica_scheduler}
     batch = SimpleNamespace(
         decode_attn_cohort_id=9,
         decode_attn_original_replica_id=0,

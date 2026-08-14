@@ -63,7 +63,7 @@ class ClusterBatchEndEvent(BaseEvent):
         from frontier.events.replica_schedule_event import ReplicaScheduleEvent
 
         cluster_scheduler = scheduler.get_cluster_scheduler(self._cluster_type)
-        replica_scheduler = cluster_scheduler.get_dp_replica_scheduler(
+        replica_scheduler = cluster_scheduler.get_replica_scheduler(
             self._replica_id, self._dp_id
         )
 

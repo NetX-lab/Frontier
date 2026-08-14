@@ -29,7 +29,7 @@ class ReplicaScheduleEvent(BaseEvent):
 
         # Get the appropriate cluster scheduler for this cluster-internal event
         cluster_scheduler: BaseClusterScheduler = scheduler.get_cluster_scheduler(self._cluster_type)
-        replica_scheduler: BaseReplicaScheduler = cluster_scheduler.get_dp_replica_scheduler(self._replica_id, self._dp_id)
+        replica_scheduler: BaseReplicaScheduler = cluster_scheduler.get_replica_scheduler(self._replica_id, self._dp_id)
 
         # Log replica scheduling details
         pending_requests = replica_scheduler.num_pending_requests

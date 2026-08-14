@@ -64,7 +64,7 @@ class ClusterScheduleEvent(BaseEvent):
                     request.bind_thinking_home_queue(
                         self._cluster_type, replica_id, dp_id
                     )
-                cluster_scheduler.get_dp_replica_scheduler(replica_id, dp_id).add_request(request)
+                cluster_scheduler.get_replica_scheduler(replica_id, dp_id).add_request(request)
 
         # For each (replica_id, dp_id) that has been assigned a request, trigger a replica schedule event.
         return [

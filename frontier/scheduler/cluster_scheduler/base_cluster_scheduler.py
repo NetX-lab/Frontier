@@ -328,7 +328,7 @@ class BaseClusterScheduler(ABC):
         # Initialize replica schedulers based on cluster type
         # DECODE_FFN: Use EP (Expert Parallel) concept instead of DP
         # Other clusters: Use DP (Data Parallel) concept
-        self._dp_replica_schedulers = {}
+        self._replica_schedulers = {}
 
         # Get cluster-specific replica scheduler configuration
         cluster_specific_config = self._get_cluster_specific_replica_scheduler_config(
@@ -353,7 +353,7 @@ class BaseClusterScheduler(ABC):
             for replica_id, replica in self._cluster.replicas.items():
                 for ep_id in range(self._replica_ep_size):
                     scheduler_key = (replica_id, ep_id)
-                    self._dp_replica_schedulers[scheduler_key] = ReplicaSchedulerRegistry.get(
+                    self._replica_schedulers[scheduler_key] = ReplicaSchedulerRegistry.get(
                         cluster_specific_config.get_type(),
                         replica_config=self._config.replica_config,
                         replica_scheduler_config=cluster_specific_config,
@@ -370,7 +370,7 @@ class BaseClusterScheduler(ABC):
             for replica_id, replica in self._cluster.replicas.items():
                 for dp_id in range(self._replica_scheduler_count):
                     scheduler_key = (replica_id, dp_id)
-                    self._dp_replica_schedulers[scheduler_key] = ReplicaSchedulerRegistry.get(
+                    self._replica_schedulers[scheduler_key] = ReplicaSchedulerRegistry.get(
                         cluster_specific_config.get_type(),
                         replica_config=self._config.replica_config,
                         replica_scheduler_config=cluster_specific_config,
@@ -674,11 +674,15 @@ class BaseClusterScheduler(ABC):
     def get_replica(self, replica_id: int) -> Replica:
         return self._cluster.replicas[replica_id]
 
-    def get_dp_replica_scheduler(self, replica_id: int, dp_id: int):
-        return self._dp_replica_schedulers[(replica_id, dp_id)]
+    def get_replica_scheduler(self, replica_id: int, replica_local_id: int):
+        return self._replica_schedulers[(replica_id, replica_local_id)]
 
-    def get_dp_replica_stage_scheduler(self, replica_id: int, dp_id: int, stage_id: int):
-        return self._dp_replica_schedulers[(replica_id, dp_id)].get_replica_stage_scheduler(
+    def get_replica_stage_scheduler(
+        self, replica_id: int, replica_local_id: int, stage_id: int
+    ):
+        return self._replica_schedulers[
+            (replica_id, replica_local_id)
+        ].get_replica_stage_scheduler(
             stage_id
         )
 
@@ -988,7 +992,7 @@ class BaseClusterScheduler(ABC):
         required_attrs = [
             "_cluster_type",
             "_request_queue",
-            "_dp_replica_schedulers",
+            "_replica_schedulers",
             "_raw_batch_waiting_for_m2n_back",
         ]
         for attr_name in required_attrs:
@@ -1021,7 +1025,7 @@ class BaseClusterScheduler(ABC):
 
         replica_states = {}
         for scheduler_key, replica_scheduler in sorted(
-            self._dp_replica_schedulers.items(), key=lambda item: str(item[0])
+            self._replica_schedulers.items(), key=lambda item: str(item[0])
         ):
             if not hasattr(replica_scheduler, "get_debug_state"):
                 raise RuntimeError(
@@ -1053,7 +1057,7 @@ class BaseClusterScheduler(ABC):
 
         replica_states = []
         all_empty = True
-        for key, replica_scheduler in self._dp_replica_schedulers.items():
+        for key, replica_scheduler in self._replica_schedulers.items():
             rs_empty = replica_scheduler.is_empty()
             replica_states.append((key, rs_empty))
             all_empty = all_empty and rs_empty
@@ -2116,13 +2120,13 @@ class BaseClusterScheduler(ABC):
             raw_batches.append((batch_id, raw_batch))
 
         stage_schedulers = {
-            ep_id: self.get_dp_replica_stage_scheduler(
+            ep_id: self.get_replica_stage_scheduler(
                 replica_id, ep_id, stage_id
             )
             for ep_id in ep_batches.keys()
         }
         replica_schedulers = {
-            ep_id: self.get_dp_replica_scheduler(replica_id, ep_id)
+            ep_id: self.get_replica_scheduler(replica_id, ep_id)
             for ep_id in ep_batches.keys()
         }
         activation_bytes_by_ep_id = {}
@@ -3169,7 +3173,7 @@ class BaseClusterScheduler(ABC):
                     f"stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
                 )
 
-            stage_scheduler = self.get_dp_replica_stage_scheduler(replica_id, 0, stage_id)
+            stage_scheduler = self.get_replica_stage_scheduler(replica_id, 0, stage_id)
             execution_time_predictor = stage_scheduler._execution_time_predictor
 
             # Canonical post-attention already includes MoE computation + DP comm semantics.
@@ -3342,7 +3346,7 @@ class BaseClusterScheduler(ABC):
                         )
                         continue
 
-                    stage_scheduler = self.get_dp_replica_stage_scheduler(replica_id, dp_id, stage_id)
+                    stage_scheduler = self.get_replica_stage_scheduler(replica_id, dp_id, stage_id)
                     is_last_stage = stage_scheduler.is_last_stage
                     pipeline_time = execution_time.pipeline_time * 1e-3
                     if not hasattr(batch, "_prefill_stage_start_time"):
@@ -4217,7 +4221,7 @@ class BaseClusterScheduler(ABC):
             total_global_tokens = sample_batch.total_num_tokens
             total_global_prefill_tokens = sample_batch.num_prefill_tokens
 
-        stage_scheduler = self.get_dp_replica_stage_scheduler(replica_id, 0, stage_id)
+        stage_scheduler = self.get_replica_stage_scheduler(replica_id, 0, stage_id)
         execution_time_predictor = stage_scheduler._execution_time_predictor
         canonical_ep_wave = hasattr(sample_batch, "_decode_ep_wave_lane_times_ms")
         if canonical_ep_wave:
@@ -4539,7 +4543,7 @@ class BaseClusterScheduler(ABC):
                 mtp_terminal_overshoot_time,
             )
 
-            dp_stage_scheduler = self.get_dp_replica_stage_scheduler(replica_id, participant_id, stage_id)
+            dp_stage_scheduler = self.get_replica_stage_scheduler(replica_id, participant_id, stage_id)
             batch_stage, _ = dp_stage_scheduler.predict_and_create_stage(batch, skip_get_execution_time=True)
 
             original_start_time = getattr(
@@ -5391,7 +5395,7 @@ class BaseClusterScheduler(ABC):
             getattr(batch, "decode_attn_cohort_id", None),
             f"DECODE_ATTN {context} decode_attn_cohort_id",
         )
-        replica_schedulers = getattr(self, "_dp_replica_schedulers", None)
+        replica_schedulers = getattr(self, "_replica_schedulers", None)
         if type(replica_schedulers) is not dict:
             raise RuntimeError(
                 "DECODE_ATTN replica scheduler topology must be an exact dict"
@@ -7262,7 +7266,7 @@ class BaseClusterScheduler(ABC):
             getattr(batch, "decode_attn_original_replica_id", None),
             getattr(batch, "decode_attn_original_dp_id", None),
         )
-        replica_schedulers = getattr(self, "_dp_replica_schedulers", None)
+        replica_schedulers = getattr(self, "_replica_schedulers", None)
         if type(replica_schedulers) is not dict or lane not in replica_schedulers:
             raise ValueError(
                 f"DECODE_ATTN A-to-F {context} cohort lane is absent from the "
@@ -8164,7 +8168,7 @@ class BaseClusterScheduler(ABC):
                 f"got {layer_id!r}"
             )
 
-        replica_schedulers = getattr(self, "_dp_replica_schedulers", None)
+        replica_schedulers = getattr(self, "_replica_schedulers", None)
         if type(replica_schedulers) is not dict:
             raise RuntimeError(
                 "DECODE_ATTN replica scheduler topology must be an exact dict"
@@ -8367,7 +8371,7 @@ class BaseClusterScheduler(ABC):
             field_name="active local-attn layer_id",
         )
 
-        replica_schedulers = getattr(self, "_dp_replica_schedulers", None)
+        replica_schedulers = getattr(self, "_replica_schedulers", None)
         if type(replica_schedulers) is not dict:
             raise RuntimeError(
                 "DECODE_ATTN A-to-F replica scheduler topology must be an exact dict"
@@ -8543,7 +8547,7 @@ class BaseClusterScheduler(ABC):
             )
 
         active_lanes: List[tuple[int, int]] = []
-        replica_schedulers = getattr(self, "_dp_replica_schedulers", {})
+        replica_schedulers = getattr(self, "_replica_schedulers", {})
         if type(replica_schedulers) is not dict:
             raise RuntimeError(
                 "DECODE_ATTN replica scheduler topology must be an exact dict"
@@ -8851,7 +8855,7 @@ class BaseClusterScheduler(ABC):
                 "trace_replay_initial_hydration_moe_head_consumed",
                 False,
             ):
-                self.get_dp_replica_scheduler(
+                self.get_replica_scheduler(
                     int(ready_batch.decode_attn_original_replica_id),
                     int(ready_batch.decode_attn_original_dp_id),
                 ).on_batch_end(ready_batch)

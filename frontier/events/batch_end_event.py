@@ -30,7 +30,7 @@ class BatchEndEvent(BaseEvent):
 
         # Get the appropriate cluster scheduler for this cluster-internal event
         cluster_scheduler = scheduler.get_cluster_scheduler(self._cluster_type)
-        replica_scheduler = cluster_scheduler.get_dp_replica_scheduler(self._replica_id, self._dp_id)
+        replica_scheduler = cluster_scheduler.get_replica_scheduler(self._replica_id, self._dp_id)
 
         self._batch.on_batch_end(self.time)
         replica_scheduler.on_batch_end(self._batch)

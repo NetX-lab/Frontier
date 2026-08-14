@@ -74,7 +74,7 @@ class _DecodeMoeClusterScheduler:
             )
         )
 
-    def get_dp_replica_scheduler(self, replica_id: int, dp_id: int):
+    def get_replica_scheduler(self, replica_id: int, dp_id: int):
         assert replica_id == 1
         assert dp_id == 0
         return self._replica_scheduler

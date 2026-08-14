@@ -55,7 +55,7 @@ class KVCacheTransferEndEvent(BaseEvent):
             source_cluster_scheduler = scheduler.get_cluster_scheduler(
                 self._transfer_info.source_cluster_type
             )
-            source_replica_scheduler = source_cluster_scheduler.get_dp_replica_scheduler(
+            source_replica_scheduler = source_cluster_scheduler.get_replica_scheduler(
                 self._transfer_info.source_replica_id,
                 self._transfer_info.source_dp_id,
             )

@@ -92,10 +92,10 @@ def _combine_scheduler(
         )
         for ep_id in batches
     }
-    scheduler.get_dp_replica_stage_scheduler = Mock(
+    scheduler.get_replica_stage_scheduler = Mock(
         side_effect=lambda _replica_id, ep_id, _stage_id: stage_schedulers[ep_id]
     )
-    scheduler.get_dp_replica_scheduler = Mock(
+    scheduler.get_replica_scheduler = Mock(
         side_effect=lambda _replica_id, ep_id: replica_schedulers[ep_id]
     )
     scheduler._create_m2n_transfer_events_for_aggregated_batch = Mock(
@@ -132,7 +132,7 @@ def _run_ep_stage(
     stage_scheduler.is_last_stage = True
     stage_scheduler.is_busy = False
     cluster_scheduler = Mock()
-    cluster_scheduler.get_dp_replica_stage_scheduler.return_value = stage_scheduler
+    cluster_scheduler.get_replica_stage_scheduler.return_value = stage_scheduler
     cluster_scheduler.get_replica.return_value = SimpleNamespace(
         is_moe=True,
         dp_size=1,
@@ -306,8 +306,8 @@ def test_ep_combine_collective_rejects_invalid_source_id_cohort_before_lookup_or
             assert raw.time == 1.0
             raw_inventory_spy.get.assert_not_called()
             raw_inventory_spy.pop.assert_not_called()
-            scheduler.get_dp_replica_stage_scheduler.assert_not_called()
-            scheduler.get_dp_replica_scheduler.assert_not_called()
+            scheduler.get_replica_stage_scheduler.assert_not_called()
+            scheduler.get_replica_scheduler.assert_not_called()
             scheduler._create_m2n_transfer_events_for_aggregated_batch.assert_not_called()
             raw_request.on_batch_stage_end.assert_not_called()
             for stage_scheduler in stage_schedulers.values():
@@ -515,7 +515,7 @@ def _dense_ffn_completion_fixture(
         memory_usage_percent=25.0,
     )
     cluster_scheduler = SimpleNamespace(
-        get_dp_replica_scheduler=Mock(return_value=replica_scheduler),
+        get_replica_scheduler=Mock(return_value=replica_scheduler),
         _m2n_transfer_predictor=Mock(),
         _config=SimpleNamespace(replica_config=SimpleNamespace()),
         _raw_batch_waiting_for_m2n_back=dict(raw_batches),

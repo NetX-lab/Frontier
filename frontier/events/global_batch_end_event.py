@@ -94,7 +94,7 @@ class GlobalBatchEndEvent(BaseEvent):
 
         logger = get_cluster_logger(__name__, self._cluster_type.name)
         cluster_scheduler: BaseClusterScheduler = scheduler.get_cluster_scheduler(self._cluster_type)
-        replica_scheduler: BaseReplicaScheduler = cluster_scheduler.get_dp_replica_scheduler(self._replica_id, self._dp_id)
+        replica_scheduler: BaseReplicaScheduler = cluster_scheduler.get_replica_scheduler(self._replica_id, self._dp_id)
 
         if self._batch.schedule_epoch != self._batch_schedule_epoch:
             logger.warning(

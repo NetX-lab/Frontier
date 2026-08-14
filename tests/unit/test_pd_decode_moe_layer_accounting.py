@@ -125,7 +125,7 @@ class _DecodeSyncScheduler:
             "arrival_times": {participant_id: 0.0 for participant_id in batches},
         }
 
-    def get_dp_replica_stage_scheduler(
+    def get_replica_stage_scheduler(
         self,
         replica_id: int,
         dp_id: int,

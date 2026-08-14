@@ -40,7 +40,7 @@ class ThinkingRoundRequeueEvent(BaseEvent):
             )
 
         cluster_scheduler = scheduler.get_cluster_scheduler(cluster_type)
-        replica_scheduler = cluster_scheduler.get_dp_replica_scheduler(replica_id, dp_id)
+        replica_scheduler = cluster_scheduler.get_replica_scheduler(replica_id, dp_id)
 
         self._request.finish_thinking_tool_wait_and_requeue(self.time)
         replica_scheduler.add_request(self._request)

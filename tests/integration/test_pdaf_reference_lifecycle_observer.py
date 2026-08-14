@@ -364,7 +364,7 @@ def _build_cluster_scheduler(
         RoundRobinClusterScheduler
     )
     scheduler._cluster_type = ClusterType.DECODE_ATTN
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         (0, 0): replica_scheduler,
     }
 

@@ -58,7 +58,7 @@ def _build_scheduler(*, threshold: int, num_requests: int) -> RoundRobinClusterS
     scheduler._request_queue = []
     scheduler._af_batch_queue = []
     scheduler._replica_dp_load_tracker = {(0, 0): 0}
-    scheduler._dp_replica_schedulers = {(0, 0): _FakeReplicaScheduler()}
+    scheduler._replica_schedulers = {(0, 0): _FakeReplicaScheduler()}
     scheduler._request_generator_config = SimpleNamespace(num_requests=num_requests)
     scheduler._decode_attn_expected_total_requests = num_requests
     scheduler._decode_attn_initial_allocation_done = False

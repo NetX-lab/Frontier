@@ -33,7 +33,7 @@ class BatchStageArrivalEvent(BaseEvent):
 
         # Get the appropriate cluster scheduler for this cluster-internal event
         cluster_scheduler: BaseClusterScheduler = scheduler.get_cluster_scheduler(self._cluster_type)
-        stage_scheduler = cluster_scheduler.get_dp_replica_stage_scheduler(
+        stage_scheduler = cluster_scheduler.get_replica_stage_scheduler(
             self._replica_id, self._dp_id, self._stage_id
         )
         if self._batch.schedule_epoch != self._batch_schedule_epoch:

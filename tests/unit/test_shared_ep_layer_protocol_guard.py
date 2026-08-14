@@ -146,7 +146,7 @@ def test_monolithic_decode_dense_layer_uses_full_stage_protocol_without_ep_mater
     predictor = _LayerPredictor()
     scheduler._predictor = predictor
     scheduler._decode_sync_waiting_room = _room()
-    scheduler.get_dp_replica_stage_scheduler = lambda *_args: SimpleNamespace(
+    scheduler.get_replica_stage_scheduler = lambda *_args: SimpleNamespace(
         _execution_time_predictor=predictor,
         is_last_stage=False,
     )
@@ -220,7 +220,7 @@ def test_dense_decode_completion_advances_to_next_layer_without_collective(
     predictor = _LayerPredictor()
     scheduler._predictor = predictor
     scheduler._decode_sync_waiting_room = _room()
-    scheduler.get_dp_replica_stage_scheduler = lambda *_args: SimpleNamespace(
+    scheduler.get_replica_stage_scheduler = lambda *_args: SimpleNamespace(
         _execution_time_predictor=predictor,
         is_last_stage=False,
     )

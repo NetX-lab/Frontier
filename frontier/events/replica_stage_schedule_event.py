@@ -57,7 +57,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
             self._cluster_type
         )
         stage_scheduler: ReplicaStageScheduler = (
-            cluster_scheduler.get_dp_replica_stage_scheduler(
+            cluster_scheduler.get_replica_stage_scheduler(
                 self._replica_id, self._dp_id, self._stage_id
             )
         )
@@ -87,7 +87,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
         )
         replica_scheduler = None
         if stale_drop_count > 0:
-            replica_scheduler = cluster_scheduler.get_dp_replica_scheduler(
+            replica_scheduler = cluster_scheduler.get_replica_scheduler(
                 self._replica_id,
                 self._dp_id,
             )

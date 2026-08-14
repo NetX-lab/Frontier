@@ -158,7 +158,7 @@ def _branch_scheduler(model_config, *, layer_id: int):
     ep_batch = _SyntheticEPBatch()
     scheduler._distribute_tokens_within_ep_replica = Mock(return_value=ep_batch)
     queue_sink = _QueuedBatchSink()
-    scheduler.get_dp_replica_scheduler = Mock(return_value=queue_sink)
+    scheduler.get_replica_scheduler = Mock(return_value=queue_sink)
     return scheduler, dense_result
 
 
@@ -217,7 +217,7 @@ def _builder_scheduler(model_config):
     scheduler._batch_group_creation_counter = 0
     scheduler._ep_routed_token_allocation_cache = {}
     queue_sink = _QueuedBatchSink()
-    scheduler.get_dp_replica_scheduler = Mock(return_value=queue_sink)
+    scheduler.get_replica_scheduler = Mock(return_value=queue_sink)
     return scheduler, queue_sink
 
 
@@ -319,7 +319,7 @@ def test_ep_wave_schedule_materializes_one_shared_workload_for_all_lanes(
     scheduler._config.replica_config.moe_expert_parallel_size = 2
 
     queue_sinks = [_QueuedBatchSink(), _QueuedBatchSink()]
-    scheduler.get_dp_replica_scheduler = Mock(
+    scheduler.get_replica_scheduler = Mock(
         side_effect=lambda _replica_id, ep_id: queue_sinks[ep_id]
     )
     materializer_calls = []
@@ -442,7 +442,7 @@ def test_moe_ready_group_validation_is_atomic_before_consumption(
     scheduler._replica_ep_size = 1
     scheduler._batch_group_creation_counter = 7
     scheduler._raw_batch_waiting_for_m2n_back = {}
-    scheduler.get_dp_replica_scheduler = Mock(return_value=queue_sink)
+    scheduler.get_replica_scheduler = Mock(return_value=queue_sink)
 
     with pytest.raises(ValueError, match="target replica is not available"):
         scheduler.schedule_ffn_with_m2n_immediate()
@@ -471,7 +471,7 @@ def test_dense_ready_group_validation_is_atomic_before_consumption(
     scheduler, _ = _builder_scheduler(mixed_model_config)
     scheduler._batch_group_creation_counter = 7
     scheduler._m2n_ready_groups = ready_groups
-    scheduler.get_dp_replica_scheduler = Mock(return_value=queue_sink)
+    scheduler.get_replica_scheduler = Mock(return_value=queue_sink)
 
     with pytest.raises(ValueError, match="afd_stage_idx missing"):
         scheduler._schedule_dense_ffn_from_m2n_group(ready_groups, Mock())
@@ -518,7 +518,7 @@ def _atomicity_scheduler(
     if queue_factory is None:
         queue_factory = lambda _ep_id: _QueuedBatchSink()
     queue_sinks = {ep_id: queue_factory(ep_id) for ep_id in range(ep_size)}
-    scheduler.get_dp_replica_scheduler = Mock(
+    scheduler.get_replica_scheduler = Mock(
         side_effect=lambda _replica_id, ep_id: queue_sinks[ep_id]
     )
     return scheduler, source_batch, transfer_info, queue_sinks
@@ -712,7 +712,7 @@ def test_decode_ffn_rejects_malformed_source_before_target_lookup_or_constructio
 
     exc = _capture_decode_ffn_exception(scheduler)
 
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
     create_group.assert_not_called()
     _assert_atomicity_snapshot_unchanged(
         before, scheduler, source_batch, queue_sinks
@@ -787,7 +787,7 @@ def test_decode_ffn_rejects_nonexact_metadata_before_target_lookup_or_constructi
 
     exc = _capture_decode_ffn_exception(scheduler)
 
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
     create_group.assert_not_called()
     _assert_atomicity_snapshot_unchanged(
         before, scheduler, source_batch, queue_sinks
@@ -810,7 +810,7 @@ def test_decode_ffn_rejects_transfer_and_source_stage_mismatch_before_target_loo
 
     exc = _capture_decode_ffn_exception(scheduler)
 
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
     create_group.assert_not_called()
     _assert_atomicity_snapshot_unchanged(
         before, scheduler, source_batch, queue_sinks
@@ -853,7 +853,7 @@ def test_decode_ffn_validates_later_group_entries_before_target_lookup_or_constr
 
     exc = _capture_decode_ffn_exception(scheduler)
 
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
     create_group.assert_not_called()
     _assert_atomicity_snapshot_unchanged(
         before, scheduler, source_batch, queue_sinks
@@ -885,7 +885,7 @@ def test_decode_ffn_rejects_invalid_group_counter_before_construction(
         scheduler.schedule_ffn_with_m2n_immediate()
 
     _assert_atomicity_snapshot_unchanged(before, scheduler, source_batch, queue_sinks)
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
 
 
 @pytest.mark.parametrize("container", [list, tuple])
@@ -903,7 +903,7 @@ def test_decode_ffn_requires_exact_ready_group_deque_before_construction(
         scheduler.schedule_ffn_with_m2n_immediate()
 
     _assert_atomicity_snapshot_unchanged(before, scheduler, source_batch, queue_sinks)
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
 
 
 @pytest.mark.parametrize("layer_id", [3, 4])
@@ -921,7 +921,7 @@ def test_decode_ffn_rejects_raw_batch_collision_before_construction(
         scheduler.schedule_ffn_with_m2n_immediate()
 
     _assert_atomicity_snapshot_unchanged(before, scheduler, source_batch, queue_sinks)
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
 
 
 @pytest.mark.parametrize("bad_id", [True, 0.0, -1, "1"])
@@ -939,7 +939,7 @@ def test_decode_ffn_rejects_nonexact_source_batch_id_before_construction(
         scheduler.schedule_ffn_with_m2n_immediate()
 
     _assert_atomicity_snapshot_unchanged(before, scheduler, source_batch, queue_sinks)
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
 
 
 @pytest.mark.parametrize("layer_id", [3, 4])
@@ -956,7 +956,7 @@ def test_decode_ffn_rejects_activation_size_before_construction(
         scheduler.schedule_ffn_with_m2n_immediate()
 
     _assert_atomicity_snapshot_unchanged(before, scheduler, source_batch, queue_sinks)
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
 
 
 @pytest.mark.parametrize("layer_id", [3, 4])
@@ -977,7 +977,7 @@ def test_decode_ffn_rejects_duplicate_source_ids_before_construction(
         scheduler.schedule_ffn_with_m2n_immediate()
 
     _assert_atomicity_snapshot_unchanged(before, scheduler, source_batch, queue_sinks)
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
 
 
 def test_decode_ffn_second_ep_construction_failure_does_not_commit_scheduler_state(
@@ -1057,7 +1057,7 @@ def test_decode_ffn_preflights_all_ep_target_queues_before_construction(
             raise KeyError("missing EP target queue")
         return queue_sinks[ep_id]
 
-    scheduler.get_dp_replica_scheduler = Mock(side_effect=fail_second_queue_lookup)
+    scheduler.get_replica_scheduler = Mock(side_effect=fail_second_queue_lookup)
     create_group = Mock(wraps=scheduler._create_batch_group)
     scheduler._create_batch_group = create_group
     before = _atomicity_snapshot(scheduler, source_batch, queue_sinks)
@@ -1331,7 +1331,7 @@ def _run_decode_ffn_stage_event(monkeypatch, batch: Batch):
     stage_scheduler.is_busy = False
 
     cluster_scheduler = Mock()
-    cluster_scheduler.get_dp_replica_stage_scheduler.return_value = stage_scheduler
+    cluster_scheduler.get_replica_stage_scheduler.return_value = stage_scheduler
     cluster_scheduler.get_replica.return_value = SimpleNamespace(
         is_moe=True,
         dp_size=1,

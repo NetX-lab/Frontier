@@ -90,7 +90,7 @@ class _SourceClusterScheduler:
     def __init__(self, replica_scheduler) -> None:
         self.replica_scheduler = replica_scheduler
 
-    def get_dp_replica_scheduler(self, replica_id: int, dp_id: int):
+    def get_replica_scheduler(self, replica_id: int, dp_id: int):
         assert replica_id == 3
         assert dp_id == 1
         return self.replica_scheduler
@@ -151,7 +151,7 @@ class _HookReplicaScheduler:
 
 
 class _HookClusterScheduler:
-    def get_dp_replica_scheduler(self, replica_id: int, dp_id: int):
+    def get_replica_scheduler(self, replica_id: int, dp_id: int):
         assert replica_id == 0
         assert dp_id == 0
         return _HookReplicaScheduler()

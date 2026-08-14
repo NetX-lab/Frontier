@@ -337,7 +337,7 @@ def collect_lifecycle_state(
         debug_state = cluster_scheduler.get_debug_state()
         replica_states = {}
         for scheduler_key, replica_scheduler in sorted(
-            cluster_scheduler._dp_replica_schedulers.items(),
+            cluster_scheduler._replica_schedulers.items(),
             key=lambda item: str(item[0]),
         ):
             scheduler_key_text = str(scheduler_key)

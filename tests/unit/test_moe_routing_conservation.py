@@ -150,3 +150,26 @@ def test_decode_ffn_scheduler_uses_replica_local_ep_capacity_name() -> None:
     assert "_replica_dp_size" not in round_robin_source
     assert "Use ep_id as dp_id for compatibility" not in source
     assert "replica_local_id=ep_id" in source
+
+
+def test_cluster_scheduler_child_map_uses_replica_local_identity() -> None:
+    production_paths = [
+        Path("frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"),
+        Path("frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py"),
+        Path("frontier/scheduler/cluster_scheduler/lor_cluster_scheduler.py"),
+        Path("frontier/scheduler/cluster_scheduler/random_cluster_scheduler.py"),
+        Path("frontier/scheduler/cluster_scheduler/sticky_lor_cluster_scheduler.py"),
+        Path(
+            "frontier/scheduler/cluster_scheduler/sticky_round_robin_cluster_scheduler.py"
+        ),
+    ]
+    combined = "\n".join(
+        path.read_text(encoding="utf-8") for path in production_paths
+    )
+
+    assert "_dp_replica_schedulers" not in combined
+    assert "get_dp_replica_scheduler" not in combined
+    assert "get_dp_replica_stage_scheduler" not in combined
+    assert "self._replica_schedulers" in combined
+    assert "def get_replica_scheduler(" in combined
+    assert "def get_replica_stage_scheduler(" in combined

@@ -35,7 +35,7 @@ class LORClusterScheduler(BaseClusterScheduler):
             total_pending = 0
             for dp_id in range(self._replica_dp_size):
                 scheduler_key = (replica_id, dp_id)
-                total_pending += self._dp_replica_schedulers[scheduler_key].num_pending_requests
+                total_pending += self._replica_schedulers[scheduler_key].num_pending_requests
             pending_requests_map[replica_id] = total_pending
 
         # Distribute requests using LOR strategy
@@ -91,7 +91,7 @@ class LORClusterScheduler(BaseClusterScheduler):
                 total_pending = 0
                 for dp_id in range(self._replica_dp_size):
                     scheduler_key = (replica_id, dp_id)
-                    total_pending += self._dp_replica_schedulers[scheduler_key].num_pending_requests
+                    total_pending += self._replica_schedulers[scheduler_key].num_pending_requests
                 pending_requests_map[replica_id] = total_pending
 
             for batch in m2n_batches:
@@ -103,7 +103,7 @@ class LORClusterScheduler(BaseClusterScheduler):
                     min_pending = float('inf')
                     for dp in range(self._replica_dp_size):
                         scheduler_key = (replica_id, dp)
-                        pending = self._dp_replica_schedulers[scheduler_key].num_pending_requests
+                        pending = self._replica_schedulers[scheduler_key].num_pending_requests
                         if pending < min_pending:
                             min_pending = pending
                             dp_id = dp
@@ -154,8 +154,8 @@ class LORClusterScheduler(BaseClusterScheduler):
                 scheduler_key = (original_replica_id, target_dp_id)
 
                 # Add the complete batch to the replica scheduler's immediate queue
-                if scheduler_key in self._dp_replica_schedulers:
-                    replica_scheduler = self._dp_replica_schedulers[scheduler_key]
+                if scheduler_key in self._replica_schedulers:
+                    replica_scheduler = self._replica_schedulers[scheduler_key]
                     replica_scheduler.add_batch_to_immediate_queue(batch)
 
                     # Track the affected replica for event scheduling
@@ -182,7 +182,7 @@ class LORClusterScheduler(BaseClusterScheduler):
         min_pending = float('inf')
         best_replica_id, best_dp_id = 0, 0
 
-        for (replica_id, dp_id), scheduler in self._dp_replica_schedulers.items():
+        for (replica_id, dp_id), scheduler in self._replica_schedulers.items():
             pending = scheduler.num_pending_requests
             if pending < min_pending:
                 min_pending = pending
