@@ -800,7 +800,7 @@ class BaseClusterScheduler(ABC):
     def make_decode_sync_global_id(
         self,
         replica_id: int,
-        dp_id: int,
+        replica_local_id: int,
         lane_decode_sync_counter: int,
     ) -> int:
         """Encode a MONOLITHIC MoE decode-sync id with lane scope."""
@@ -815,13 +815,17 @@ class BaseClusterScheduler(ABC):
             )
         ep_participant_count = max(1, int(ep_participant_count or 1))
 
-        lane_id = int(dp_id or 0)
+        lane_id = int(replica_local_id or 0)
         if lane_id < 0:
-            raise ValueError(f"dp_id must be non-negative, got {dp_id!r}")
+            raise ValueError(
+                "replica_local_id must be non-negative, "
+                f"got {replica_local_id!r}"
+            )
         if lane_id >= ep_participant_count:
             raise ValueError(
                 "MONOLITHIC decode sync lane id must be within the EP participant "
-                f"domain, got dp_id={lane_id}, ep_participant_count={ep_participant_count}"
+                f"domain, got replica_local_id={lane_id}, "
+                f"ep_participant_count={ep_participant_count}"
             )
 
         lane_counter = int(lane_decode_sync_counter or 0)
@@ -937,7 +941,10 @@ class BaseClusterScheduler(ABC):
     @staticmethod
     def _debug_lane_tuple(lane: Any) -> List[Any]:
         if not isinstance(lane, tuple) or len(lane) != 2:
-            raise TypeError(f"Expected lane tuple(replica_id, dp_id), got {lane!r}")
+            raise TypeError(
+                "Expected lane tuple(replica_id, replica_local_id), "
+                f"got {lane!r}"
+            )
         return [lane[0], lane[1]]
 
     @classmethod
@@ -2572,7 +2579,7 @@ class BaseClusterScheduler(ABC):
         stage_id: int,
         batch: Batch,
         layer_id: int,
-        dp_id: int = 0,
+        replica_local_id: int | None = None,
     ) -> List:
         """Run one layer's FFN wave and schedule its slowest-lane barrier."""
 
@@ -2784,7 +2791,7 @@ class BaseClusterScheduler(ABC):
         stage_id: int,
         batch: Batch,
         layer_id: int,
-        dp_id: int = 0,
+        replica_local_id: int | None = None,
     ) -> List:
         """Run one unified-DECODE layer's local EP wave and barrier."""
 
@@ -2970,8 +2977,8 @@ class BaseClusterScheduler(ABC):
         return True
 
     def on_prefill_sync(self, time: float, replica_id: int, stage_id: int, batch: Batch,
-                       dp_id: int, sync_stage: str, layer_id: int, stage_execution_time: float):
-        del stage_execution_time, dp_id
+                       replica_local_id: int | None, sync_stage: str, layer_id: int, stage_execution_time: float):
+        del stage_execution_time, replica_local_id
         if self._prefill_sync_waiting_room is None:
             raise ValueError(
                 "PREFILL synchronization is unavailable for a dense model; "
@@ -3700,7 +3707,7 @@ class BaseClusterScheduler(ABC):
         replica_id: int,
         stage_id: int,
         batch: Batch,
-        dp_id: int,
+        replica_local_id: int | None,
         sync_stage: str,
         layer_id: int,
         stage_execution_time: float,
@@ -3713,7 +3720,7 @@ class BaseClusterScheduler(ABC):
         ``_on_decode_ep_wave_ready`` and its collective completion event owns
         the layer transition.
         """
-        del stage_execution_time, dp_id
+        del stage_execution_time, replica_local_id
         if self._decode_sync_waiting_room is None:
             raise ValueError(
                 "DECODE synchronization is unavailable for a dense model; "
