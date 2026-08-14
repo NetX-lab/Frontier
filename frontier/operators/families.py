@@ -112,7 +112,6 @@ MOE_FAMILY = OperatorFamilySpec(
             resource_class=ResourceClass.MEMORY,
             tp_mode=TensorParallelMode.MOE_TP,
             ep_agnostic=True,
-            calibration_key="moe_shuffling",
         ),
         OperatorSpec(
             name="moe_grouped_gemm",
@@ -123,7 +122,6 @@ MOE_FAMILY = OperatorFamilySpec(
             resource_class=ResourceClass.COMP,
             tp_mode=TensorParallelMode.MOE_TP,
             projection_ownership=ProjectionOwnership.OUTSIDE_ATTENTION,
-            calibration_key="moe_grouped_gemm",
         ),
     ),
 )

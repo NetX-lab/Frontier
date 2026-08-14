@@ -9,6 +9,7 @@ from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor impo
 )
 from frontier.config import BaseExecutionTimePredictorConfig, ClusterConfig
 from frontier.model_architectures import ModelArchitectureProfile
+from frontier.operators.families import MOE_FAMILY
 from frontier.types import ClusterType
 
 
@@ -98,10 +99,15 @@ def test_moe_predictor_source_has_no_empirical_visibility_or_calibration_hooks()
             "frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py"
         ).read_text(encoding="utf-8")
     )
+    base_source = __import__("pathlib").Path(
+        "frontier/execution_time_predictor/sklearn_execution_time_predictor.py"
+    ).read_text(encoding="utf-8")
 
     assert "share_expert_tp_allreduce_visibility_scale" not in source
+    assert "_get_decode_request_length_calibration_scale" not in source
     assert "_get_moe_compute_calibration_scale" not in source
     assert "_get_expert_parallel_communication_calibration_scale" not in source
+    assert "_get_decode_request_length_calibration_scale" not in base_source
 
 
 def test_moe_scaling_fields_are_not_public_configuration() -> None:
@@ -114,8 +120,31 @@ def test_moe_scaling_fields_are_not_public_configuration() -> None:
         "decode_phase_expert_parallel_communication_calibration_scale",
         "late_decode_expert_parallel_communication_calibration_scale",
         "share_expert_tp_allreduce_visibility_scale",
+        "short_decode_request_length_threshold",
+        "short_decode_request_length_calibration_scale",
+        "long_decode_request_length_threshold",
+        "long_decode_request_length_calibration_scale",
+        "low_prefill_short_decode_request_prefill_threshold",
+        "low_prefill_short_decode_request_decode_threshold",
+        "low_prefill_short_decode_request_calibration_scale",
+        "low_prefill_decode_mix_request_prefill_threshold",
+        "low_prefill_decode_mix_request_decode_min",
+        "low_prefill_decode_mix_request_decode_max",
+        "low_prefill_decode_mix_request_min_match_ratio",
+        "low_prefill_decode_mix_request_max_match_ratio",
+        "low_prefill_decode_mix_request_calibration_scale",
+        "low_prefill_decode_mix_request_include_mixed_batches",
+        "low_prefill_long_decode_request_prefill_threshold",
+        "low_prefill_long_decode_request_decode_threshold",
+        "low_prefill_long_decode_request_calibration_scale",
+        "low_prefill_long_decode_request_include_mixed_batches",
+        "high_prefill_mid_decode_request_prefill_threshold",
+        "high_prefill_mid_decode_request_decode_min",
+        "high_prefill_mid_decode_request_decode_max",
+        "high_prefill_mid_decode_request_calibration_scale",
     }
 
     assert forbidden.isdisjoint(BaseExecutionTimePredictorConfig.__dataclass_fields__)
     assert forbidden.isdisjoint(ClusterConfig.__dataclass_fields__)
     assert not hasattr(ModelArchitectureProfile.generic(), "share_expert_tp_allreduce_visibility_scale")
+    assert all(operator.calibration_key is None for operator in MOE_FAMILY.operators)
