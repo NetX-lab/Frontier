@@ -363,8 +363,9 @@ class BaseClusterScheduler(ABC):
 
         # Initialize replica schedulers based on cluster type
         # DECODE_FFN: Use EP (Expert Parallel) concept instead of DP
-        # Other clusters: Use DP (Data Parallel) concept
+        # Other clusters: one full-model child scheduler per Replica.
         self._replica_schedulers = {}
+        self._full_stage_replica_schedulers = {}
 
         # Get cluster-specific replica scheduler configuration
         cluster_specific_config = self._get_cluster_specific_replica_scheduler_config(
@@ -383,8 +384,7 @@ class BaseClusterScheduler(ABC):
                 )
 
         if self._cluster_type == ClusterType.DECODE_FFN:
-            # For DECODE_FFN cluster: use EP (Expert Parallel) instead of DP
-            # Each replica has ep_size EP replicas for expert parallelism
+            # MoE routed-expert work owns explicit local EP children.
             self._replica_ep_size = self._config.replica_config.moe_expert_parallel_size
             for replica_id, replica in self._cluster.replicas.items():
                 for ep_id in range(self._replica_ep_size):
@@ -401,6 +401,24 @@ class BaseClusterScheduler(ABC):
                         af_pipeline_num_micro_batch=getattr(self._config, 'af_pipeline_num_micro_batch', -1),
                         cluster_scheduler=self,
                     )
+                # Dense FFN work owns the complete stage world and therefore
+                # uses a separate child scheduler keyed by no EP lane.
+                self._full_stage_replica_schedulers[replica_id] = (
+                    ReplicaSchedulerRegistry.get(
+                        cluster_specific_config.get_type(),
+                        replica_config=self._config.replica_config,
+                        replica_scheduler_config=cluster_specific_config,
+                        request_generator_config=request_generator_config,
+                        replica=replica,
+                        predictor=self._predictor,
+                        cluster_type=self._cluster_type,
+                        replica_local_id=None,
+                        af_pipeline_num_micro_batch=getattr(
+                            self._config, "af_pipeline_num_micro_batch", -1
+                        ),
+                        cluster_scheduler=self,
+                    )
+                )
         else:
             # For other clusters: use traditional DP concept
             for replica_id, replica in self._cluster.replicas.items():
@@ -709,17 +727,30 @@ class BaseClusterScheduler(ABC):
     def get_replica(self, replica_id: int) -> Replica:
         return self._cluster.replicas[replica_id]
 
-    def get_replica_scheduler(self, replica_id: int, replica_local_id: int):
+    def get_full_stage_replica_scheduler(self, replica_id: int):
+        try:
+            return self._full_stage_replica_schedulers[replica_id]
+        except KeyError as exc:
+            raise ValueError(
+                "Full-stage Replica scheduler is unavailable: "
+                f"replica_id={replica_id}"
+            ) from exc
+
+    def get_replica_scheduler(self, replica_id: int, replica_local_id: int | None):
+        if replica_local_id is None:
+            return self.get_full_stage_replica_scheduler(replica_id)
         return self._replica_schedulers[(replica_id, replica_local_id)]
 
     def get_replica_stage_scheduler(
-        self, replica_id: int, replica_local_id: int, stage_id: int
+        self, replica_id: int, replica_local_id: int | None, stage_id: int
     ):
+        if replica_local_id is None:
+            return self.get_full_stage_replica_scheduler(
+                replica_id
+            ).get_replica_stage_scheduler(stage_id)
         return self._replica_schedulers[
             (replica_id, replica_local_id)
-        ].get_replica_stage_scheduler(
-            stage_id
-        )
+        ].get_replica_stage_scheduler(stage_id)
 
     def get_stage_execution_context(
         self, replica_id: int, stage_id: int
@@ -1059,8 +1090,15 @@ class BaseClusterScheduler(ABC):
             m2n_ready_groups = {"status": "not_applicable"}
 
         replica_states = {}
+        scheduler_items = list(self._replica_schedulers.items())
+        scheduler_items.extend(
+            ((replica_id, None), replica_scheduler)
+            for replica_id, replica_scheduler in getattr(
+                self, "_full_stage_replica_schedulers", {}
+            ).items()
+        )
         for scheduler_key, replica_scheduler in sorted(
-            self._replica_schedulers.items(), key=lambda item: str(item[0])
+            scheduler_items, key=lambda item: str(item[0])
         ):
             if not hasattr(replica_scheduler, "get_debug_state"):
                 raise RuntimeError(
@@ -1092,7 +1130,14 @@ class BaseClusterScheduler(ABC):
 
         replica_states = []
         all_empty = True
-        for key, replica_scheduler in self._replica_schedulers.items():
+        scheduler_items = list(self._replica_schedulers.items())
+        scheduler_items.extend(
+            ((replica_id, None), replica_scheduler)
+            for replica_id, replica_scheduler in getattr(
+                self, "_full_stage_replica_schedulers", {}
+            ).items()
+        )
+        for key, replica_scheduler in scheduler_items:
             rs_empty = replica_scheduler.is_empty()
             replica_states.append((key, rs_empty))
             all_empty = all_empty and rs_empty

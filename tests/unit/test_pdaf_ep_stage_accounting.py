@@ -499,7 +499,6 @@ def _dense_ffn_completion_fixture(
         requests=[_request()],
         num_tokens=[1],
         replica_id=0,
-        lane_id=0,
         time=1.0,
         source_batch_ids=source_batch_ids,
         cluster_type=ClusterType.DECODE_FFN,

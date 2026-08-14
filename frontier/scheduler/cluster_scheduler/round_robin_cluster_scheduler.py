@@ -1121,8 +1121,8 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         """Schedule a dense (non-MoE) FFN batch from the M2N ready group.
 
         For dense models there is no expert routing, no EP dispatch/combine,
-        and no all-to-all. We simply aggregate the group into a single
-        DenseFFNBatchGroup and queue it on the target replica at dp_id=0.
+        and no all-to-all. We aggregate the group into one full-stage batch
+        and queue it on the target Replica's dedicated full-stage scheduler.
         """
         from frontier.entities.batch import DenseFFNBatchGroup
 
@@ -1141,14 +1141,13 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         shared_group_id = self._batch_group_creation_counter
 
         try:
-            replica_scheduler = self.get_replica_scheduler(
-                target_replica_id,
-                0,
+            replica_scheduler = self.get_full_stage_replica_scheduler(
+                target_replica_id
             )
         except (KeyError, IndexError) as exc:
             raise RuntimeError(
                 "DECODE_FFN target replica scheduler is unavailable: "
-                f"replica_id={target_replica_id}, ep_id=0"
+                f"replica_id={target_replica_id}"
             ) from exc
         self._preflight_decode_ffn_queue_target(replica_scheduler)
 
@@ -1156,7 +1155,6 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             requests=all_requests,
             num_tokens=all_num_tokens,
             replica_id=target_replica_id,
-            lane_id=0,
             time=0.0,
             source_batch_ids=source_batch_ids,
             cluster_type=self._cluster_type,
@@ -1202,7 +1200,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         self._batch_group_creation_counter = shared_group_id + 1
         ready_groups.popleft()
 
-        return [(target_replica_id, 0)]
+        return [(target_replica_id, None)]
 
     @staticmethod
     def _get_ffn_layer_id_from_group(group: List[Tuple["Batch", Any]]) -> int:

@@ -1372,13 +1372,11 @@ class DenseFFNBatchGroup(Batch):
         requests: List[Request],
         num_tokens: List[int],
         replica_id: int,
-        lane_id: int,
         time: float,
         source_batch_ids: List[int],
         cluster_type: "ClusterType",
     ) -> None:
         super().__init__(replica_id, requests, num_tokens, is_moe=False)
-        self._lane_id = lane_id
         self._time = time
         self._source_batch_ids = source_batch_ids
         self._cluster_type = cluster_type
@@ -1394,10 +1392,6 @@ class DenseFFNBatchGroup(Batch):
         assert time >= 0, "Invalid scheduling time for DenseFFNBatchGroup"
         self._scheduled_at = time
         self._scheduled = True
-
-    @property
-    def lane_id(self) -> int:
-        return self._lane_id
 
     @property
     def time(self) -> float:

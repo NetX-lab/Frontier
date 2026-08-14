@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -33,6 +34,17 @@ from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     StageExecutionContext,
 )
 from frontier.types import ClusterType
+
+
+def test_dense_ffn_batch_group_has_no_ep_lane_identity() -> None:
+    source = Path("frontier/entities/batch.py").read_text(encoding="utf-8")
+    scheduler_source = Path(
+        "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py"
+    ).read_text(encoding="utf-8")
+
+    assert "lane_id: int" not in source[source.index("class DenseFFNBatchGroup"):]
+    assert "lane_id=0" not in scheduler_source
+    assert "get_full_stage_replica_scheduler" in scheduler_source
 
 
 class _ConcreteDisaggregationPredictor(
@@ -217,7 +229,8 @@ def _builder_scheduler(model_config):
     scheduler._batch_group_creation_counter = 0
     scheduler._ep_routed_token_allocation_cache = {}
     queue_sink = _QueuedBatchSink()
-    scheduler.get_replica_scheduler = Mock(return_value=queue_sink)
+    scheduler._full_stage_replica_schedulers = {0: queue_sink}
+    scheduler.get_full_stage_replica_scheduler = Mock(return_value=queue_sink)
     return scheduler, queue_sink
 
 
@@ -366,7 +379,7 @@ def test_dense_builder_propagates_decode_ffn_layer_metadata(
         ready_groups, Mock()
     )
 
-    assert result == [(0, 0)]
+    assert result == [(0, None)]
     assert len(queue_sink._m2n_immediate_batch_queue) == 1
     dense_batch = queue_sink._m2n_immediate_batch_queue[0]
     assert isinstance(dense_batch, DenseFFNBatchGroup)
@@ -442,7 +455,8 @@ def test_moe_ready_group_validation_is_atomic_before_consumption(
     scheduler._replica_ep_size = 1
     scheduler._batch_group_creation_counter = 7
     scheduler._raw_batch_waiting_for_m2n_back = {}
-    scheduler.get_replica_scheduler = Mock(return_value=queue_sink)
+    scheduler._full_stage_replica_schedulers = {0: queue_sink}
+    scheduler.get_full_stage_replica_scheduler = Mock(return_value=queue_sink)
 
     with pytest.raises(ValueError, match="target replica is not available"):
         scheduler.schedule_ffn_with_m2n_immediate()
@@ -518,6 +532,10 @@ def _atomicity_scheduler(
     if queue_factory is None:
         queue_factory = lambda _ep_id: _QueuedBatchSink()
     queue_sinks = {ep_id: queue_factory(ep_id) for ep_id in range(ep_size)}
+    scheduler._full_stage_replica_schedulers = {0: queue_sinks[0]}
+    scheduler.get_full_stage_replica_scheduler = Mock(
+        return_value=queue_sinks[0]
+    )
     scheduler.get_replica_scheduler = Mock(
         side_effect=lambda _replica_id, ep_id: queue_sinks[ep_id]
     )
@@ -1240,7 +1258,6 @@ def test_dense_ffn_batch_stage_tokens_are_post_routing() -> None:
         requests=[_decode_request()],
         num_tokens=[1],
         replica_id=0,
-        lane_id=0,
         time=0.0,
         source_batch_ids=[1],
         cluster_type=ClusterType.DECODE_FFN,
@@ -1355,7 +1372,6 @@ def test_mixed_dense_ffn_event_uses_direct_stage_lifecycle(monkeypatch) -> None:
         requests=[_decode_request()],
         num_tokens=[1],
         replica_id=0,
-        lane_id=0,
         time=0.0,
         source_batch_ids=[1],
         cluster_type=ClusterType.DECODE_FFN,

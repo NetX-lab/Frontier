@@ -96,7 +96,7 @@ def _decode_ffn_scheduler() -> VLLMv1EngineReplicaScheduler:
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
     scheduler._cluster_type = ClusterType.DECODE_FFN
     scheduler._replica_id = 0
-    scheduler._dp_id = 0
+    scheduler._replica_local_id = 0
     scheduler._af_pipeline_num_micro_batch = 1
     scheduler._num_running_batches = 0
     scheduler._m2n_immediate_batch_queue = []
@@ -108,7 +108,6 @@ def _dense_ffn_batch(request: Request, source_batch_id: int) -> DenseFFNBatchGro
         requests=[request],
         num_tokens=[1],
         replica_id=0,
-        lane_id=0,
         time=1.0,
         source_batch_ids=[source_batch_id],
         cluster_type=ClusterType.DECODE_FFN,
