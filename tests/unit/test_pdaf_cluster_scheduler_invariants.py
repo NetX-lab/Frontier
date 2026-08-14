@@ -758,7 +758,7 @@ def test_decode_ffn_empty_metadata_accepts_configured_lane() -> None:
         ([[0, 0]], "exact 2-tuples"),
         ([(0, None), (0, None)], "duplicate"),
         ([(0, None), (-1, 0)], "replica_id"),
-        ([(0, None), (1, True)], "dp_id"),
+        ([(0, None), (1, True)], "replica_local_id"),
     ],
     ids=["none", "empty", "list-lane", "duplicate", "negative", "bool"],
 )
@@ -1278,7 +1278,7 @@ def test_decode_attn_a2f_dense_rejects_invalid_batch_before_side_effects(
             1.25,
             batch,
             replica_id=1,
-            dp_id=None,
+            replica_local_id=None,
             layer_id=4,
             logger=Mock(),
         )
@@ -1308,7 +1308,7 @@ def test_decode_attn_a2f_dense_rejects_missing_local_attn_topology_without_fallb
             1.25,
             batch,
             replica_id=1,
-            dp_id=None,
+            replica_local_id=None,
             layer_id=4,
             logger=Mock(),
         )
@@ -1363,7 +1363,7 @@ def test_decode_attn_a2f_dense_event_constructor_failure_is_atomic() -> None:
                 1.25,
                 batch,
                 replica_id=1,
-                dp_id=None,
+                replica_local_id=None,
                 layer_id=4,
                 logger=Mock(),
             )
@@ -1381,7 +1381,7 @@ def test_decode_attn_a2f_accepts_numpy_real_event_time() -> None:
         np.float64(1.25),
         batch,
         replica_id=1,
-        dp_id=None,
+        replica_local_id=None,
         layer_id=4,
         logger=Mock(),
     )
@@ -1406,7 +1406,7 @@ def test_decode_attn_a2f_dense_cohort_setter_failure_is_atomic() -> None:
                 1.25,
                 batch,
                 replica_id=1,
-                dp_id=None,
+                replica_local_id=None,
                 layer_id=4,
                 logger=Mock(),
             )
@@ -1429,7 +1429,7 @@ def test_decode_attn_a2f_dense_cohort_apply_failure_is_atomic() -> None:
                 1.25,
                 batch,
                 replica_id=1,
-                dp_id=None,
+                replica_local_id=None,
                 layer_id=4,
                 logger=Mock(),
             )
@@ -1476,7 +1476,7 @@ def test_decode_attn_a2f_moe_event_constructor_failure_is_atomic() -> None:
                 1.25,
                 incoming_batch,
                 replica_id=1,
-                dp_id=None,
+                replica_local_id=None,
                 layer_id=4,
                 logger=Mock(),
             )
@@ -1556,7 +1556,7 @@ def test_decode_attn_a2f_moe_cohort_apply_failure_is_atomic() -> None:
                 1.25,
                 incoming_batch,
                 replica_id=1,
-                dp_id=None,
+                replica_local_id=None,
                 layer_id=4,
                 logger=Mock(),
             )
@@ -1601,7 +1601,7 @@ def test_decode_attn_a2f_rejects_corrupt_existing_queue_before_mutation() -> Non
                 1.25,
                 incoming_batch,
                 replica_id=1,
-                dp_id=None,
+                replica_local_id=None,
                 layer_id=4,
                 logger=Mock(),
             )
@@ -1651,7 +1651,7 @@ def test_decode_attn_a2f_rejects_stale_existing_queue_before_event_mix() -> None
                 1.25,
                 incoming_batch,
                 replica_id=1,
-                dp_id=None,
+                replica_local_id=None,
                 layer_id=4,
                 logger=Mock(),
             )
@@ -1672,8 +1672,8 @@ def test_decode_attn_a2f_rejects_stale_existing_queue_before_event_mix() -> None
         ("layer_id", 4.0, {}, "layer_id"),
         ("afd_stage_idx", True, {}, "afd_stage_idx"),
         ("afd_stage_idx", 1.0, {}, "afd_stage_idx"),
-        ("replica_id", True, {"dp_id": 0}, "replica_id"),
-            ("dp_id", 0.0, {"replica_id": 1}, "replica_local_id"),
+        ("replica_id", True, {"replica_local_id": 0}, "replica_id"),
+        ("replica_local_id", 0.0, {"replica_id": 1}, "replica_local_id"),
     ],
 )
 def test_decode_attn_a2f_rejects_coercible_topology_before_mutation(
@@ -1703,11 +1703,11 @@ def test_decode_attn_a2f_rejects_coercible_topology_before_mutation(
 
     call_kwargs = {
         "replica_id": 1,
-        "dp_id": 0,
+        "replica_local_id": 0,
         "layer_id": 4,
         "logger": Mock(),
     }
-    if field in {"layer_id", "replica_id", "dp_id"}:
+    if field in {"layer_id", "replica_id", "replica_local_id"}:
         call_kwargs[field] = value
     else:
         setattr(incoming_batch, field, value)
@@ -1749,7 +1749,7 @@ def test_decode_attn_a2f_rejects_existing_room_without_lane_contract() -> None:
             1.25,
             incoming_batch,
             replica_id=1,
-            dp_id=None,
+            replica_local_id=None,
             layer_id=4,
             logger=Mock(),
         )
@@ -1787,13 +1787,13 @@ def test_decode_attn_a2f_rejects_coercible_expected_lane_topology(
 
     with pytest.raises(
         (RuntimeError, TypeError, ValueError),
-        match="lane topology|replica_id|dp_id|exact non-negative int",
+        match="lane topology|replica_id|replica_local_id|exact non-negative int",
     ):
         scheduler.on_decode_attn_a2f_ready(
             1.25,
             incoming_batch,
             replica_id=1,
-            dp_id=None,
+            replica_local_id=None,
             layer_id=4,
             logger=Mock(),
         )
@@ -1884,7 +1884,7 @@ def test_decode_attn_a2f_predictor_failure_preserves_runtime_state(
             1.25,
             incoming_batch,
             replica_id=1,
-            dp_id=None,
+            replica_local_id=None,
             layer_id=4,
             logger=Mock(),
         )
@@ -1926,7 +1926,7 @@ def test_decode_attn_a2f_moe_incomplete_barrier_commits_incoming_and_idle() -> N
         1.25,
         incoming_batch,
         replica_id=0,
-        dp_id=None,
+        replica_local_id=None,
         layer_id=4,
         logger=Mock(),
     )
@@ -1982,7 +1982,7 @@ def test_decode_attn_a2f_complete_barrier_preserves_lane_fifo() -> None:
         1.25,
         incoming_batch,
         replica_id=1,
-        dp_id=None,
+        replica_local_id=None,
         layer_id=4,
         logger=Mock(),
     )
@@ -2023,7 +2023,7 @@ def test_decode_attn_a2f_single_batch_complete_drain_removes_waiting_room() -> N
         1.25,
         incoming_batch,
         replica_id=0,
-        dp_id=None,
+        replica_local_id=None,
         layer_id=4,
         logger=Mock(),
     )
@@ -2066,7 +2066,7 @@ def test_decode_attn_a2f_dense_accepts_zero_cost_predictor_result() -> None:
         1.25,
         incoming_batch,
         replica_id=1,
-        dp_id=None,
+        replica_local_id=None,
         layer_id=4,
         logger=Mock(),
     )
@@ -3293,9 +3293,9 @@ def test_decode_attn_transfer_end_preserves_legal_active_and_completed_request_c
     ("expected_lanes", "error_match"),
     [
         (((0, None), (0, None)), "duplicate"),
-        (((0, True),), "dp_id|expected lane"),
+        (((0, True),), "replica_local_id|expected lane"),
         (((True, 0),), "replica_id|expected lane"),
-        (((0, -1),), "dp_id|expected lane"),
+        (((0, -1),), "replica_local_id|expected lane"),
         (((-1, 0),), "replica_id|expected lane"),
         (([0, 0],), "2-tuples|expected lane"),
     ],
@@ -5195,7 +5195,7 @@ def test_decode_attn_cluster_phase_prepare_rejects_incomplete_stage_maps_without
             batch,
             phase="ffn_inflight",
             replica_id=0,
-            dp_id=None,
+            replica_local_id=None,
             layer_id=0,
         )
 
@@ -5230,7 +5230,7 @@ def test_decode_attn_cluster_phase_update_preserves_untouched_stage_visibility()
         batch,
         phase="ffn_inflight",
         replica_id=0,
-        dp_id=None,
+        replica_local_id=None,
         layer_id=0,
     )
 

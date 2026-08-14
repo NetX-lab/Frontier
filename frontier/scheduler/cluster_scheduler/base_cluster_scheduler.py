@@ -558,7 +558,7 @@ class BaseClusterScheduler(ABC):
                 )
             )
         elif self._cluster_type in [ClusterType.PREFILL, ClusterType.MONOLITHIC]:
-            # Prefill sync waiting room: replica_id -> stage_id -> batch_global_id -> layer_id -> sync_stage -> {dp_id: {batch, time}}
+            # Prefill sync waiting room: replica_id -> stage_id -> batch_global_id -> layer_id -> sync_stage -> {replica_local_id: {batch, time}}
             # Used by disaggregated PREFILL and monolithic MoE prefill layer-by-layer paths.
             # MONOLITHIC MoE decode now also reuses the decode sync waiting-room path.
             model_is_moe = (
@@ -592,7 +592,7 @@ class BaseClusterScheduler(ABC):
                 self._prefill_sync_waiting_room = None
                 self._decode_sync_waiting_room = None
         elif self._cluster_type == ClusterType.DECODE:
-            # Decode sync waiting room: replica_id -> stage_id -> batch_global_id -> layer_id -> sync_stage -> {dp_id: {batch, time}}
+            # Decode sync waiting room: replica_id -> stage_id -> batch_global_id -> layer_id -> sync_stage -> {replica_local_id: {batch, time}}
             # Similar to PREFILL, used for DP synchronization in unified DECODE cluster with MoE
             # Only initialize for MoE models (dense models don't need sync)
             # Use model_config.is_moe for MoE detection - NOT parallelism settings
@@ -1306,13 +1306,13 @@ class BaseClusterScheduler(ABC):
         if self._cluster_type == ClusterType.DECODE_FFN:
             for (batch, _) in group:
                 orig_replica_id = getattr(batch, 'decode_attn_original_replica_id', None)
-                orig_dp_id = getattr(batch, 'decode_attn_original_replica_local_id', None)
+                orig_replica_local_id = getattr(batch, 'decode_attn_original_replica_local_id', None)
                 if orig_replica_id is None:
                     raise ValueError(
                         f"[ISSUE-007] Batch {batch.id} entering DECODE_FFN without "
                         "decode_attn_original_replica_id. "
                         f"decode_attn_original_replica_id={orig_replica_id}, "
-                        f"decode_attn_original_replica_local_id={orig_dp_id}. "
+                        f"decode_attn_original_replica_local_id={orig_replica_local_id}. "
                         "The A→F source identity is the attention serving Replica; "
                         "its full-stage local identity is None."
                     )
@@ -1321,12 +1321,12 @@ class BaseClusterScheduler(ABC):
                         "DECODE_FFN source decode_attn_original_replica_id must be "
                         f"an exact non-negative int, got {orig_replica_id!r}"
                     )
-                if orig_dp_id is not None and (
-                    type(orig_dp_id) is not int or orig_dp_id < 0
+                if orig_replica_local_id is not None and (
+                    type(orig_replica_local_id) is not int or orig_replica_local_id < 0
                 ):
                     raise ValueError(
                         "DECODE_FFN source decode_attn_original_replica_local_id must be None "
-                        f"or an exact non-negative int, got {orig_dp_id!r}"
+                        f"or an exact non-negative int, got {orig_replica_local_id!r}"
                     )
 
         source_batches = []
@@ -4285,7 +4285,7 @@ class BaseClusterScheduler(ABC):
                 raise ValueError(
                     f"{field_name} must contain exact 2-tuples, got {raw_lane!r}"
                 )
-            lane_replica_id, lane_dp_id = raw_lane
+            lane_replica_id, lane_replica_local_id = raw_lane
             if type(lane_replica_id) is not int or lane_replica_id < 0:
                 raise ValueError(
                     f"{field_name} replica_id must be an exact non-negative int, "
@@ -4298,19 +4298,19 @@ class BaseClusterScheduler(ABC):
             allow_full_stage_identity = field_name.startswith(
                 ("DECODE_ATTN", "DECODE_FFN")
             )
-            if lane_dp_id is not None and (
-                type(lane_dp_id) is not int or lane_dp_id < 0
+            if lane_replica_local_id is not None and (
+                type(lane_replica_local_id) is not int or lane_replica_local_id < 0
             ):
                 raise ValueError(
-                    f"{field_name} dp_id must be an exact non-negative int, "
-                    f"got {lane_dp_id!r}"
+                    f"{field_name} replica_local_id must be an exact "
+                    f"non-negative int, got {lane_replica_local_id!r}"
                 )
-            if lane_dp_id is None and not allow_full_stage_identity:
+            if lane_replica_local_id is None and not allow_full_stage_identity:
                 raise ValueError(
-                    f"{field_name} dp_id cannot be None outside a full-stage "
+                    f"{field_name} replica_local_id cannot be None outside a full-stage "
                     "DECODE_ATTN identity"
                 )
-            lane = (lane_replica_id, lane_dp_id)
+            lane = (lane_replica_id, lane_replica_local_id)
             if lane in seen_lanes:
                 raise ValueError(f"{field_name} contains duplicate lane {lane!r}")
             seen_lanes.add(lane)
@@ -5051,10 +5051,10 @@ class BaseClusterScheduler(ABC):
             getattr(batch, "decode_attn_original_replica_id", None),
             "DECODE_ATTN receipt decode_attn_original_replica_id",
         )
-        dp_id = getattr(batch, "decode_attn_original_replica_local_id", None)
-        if dp_id is not None:
-            dp_id = require_non_negative_int(
-                dp_id,
+        replica_local_id = getattr(batch, "decode_attn_original_replica_local_id", None)
+        if replica_local_id is not None:
+            replica_local_id = require_non_negative_int(
+                replica_local_id,
                 "DECODE_ATTN receipt decode_attn_original_replica_local_id",
             )
         batch_global_id = require_non_negative_int(
@@ -5065,7 +5065,7 @@ class BaseClusterScheduler(ABC):
             getattr(batch, "afd_stage_idx", None),
             "DECODE_ATTN receipt batch.afd_stage_idx",
         )
-        lane = (replica_id, dp_id)
+        lane = (replica_id, replica_local_id)
         source_lane = (source_replica_id, source_replica_local_id)
         if source_lane != lane:
             raise ValueError(
@@ -5456,7 +5456,7 @@ class BaseClusterScheduler(ABC):
             "current_layer_id": current_layer_id,
             "next_layer_id": next_layer_id,
             "replica_id": replica_id,
-            "dp_id": dp_id,
+            "replica_local_id": replica_local_id,
             "lane": lane,
             "batch_global_id": batch_global_id,
             "decode_token_index": decode_token_index,
@@ -5512,7 +5512,7 @@ class BaseClusterScheduler(ABC):
                 queued_lane[0],
                 require_non_negative_int(
                     queued_lane[1],
-                    "DECODE_ATTN F-to-A queued batch original dp_id",
+                    "DECODE_ATTN F-to-A queued batch original replica_local_id",
                 ),
             )
         if queued_lane != queue_lane or queued_lane not in expected_lanes:
@@ -6312,7 +6312,7 @@ class BaseClusterScheduler(ABC):
         )
 
         replica_id = receipt["replica_id"]
-        dp_id = receipt["dp_id"]
+        replica_local_id = receipt["replica_local_id"]
 
         ready_for_reschedule = False
         if not is_mb_last_layer:
@@ -6328,7 +6328,8 @@ class BaseClusterScheduler(ABC):
             )
             logger.info(
                 f"[AF-ARRIVAL][FINAL-LAYER] mb={micro_batch.id} emitting GlobalBatchEndEvent; "
-                f"replica={replica_id}, dp={dp_id}, global_end_time={global_end_time}"
+                f"replica={replica_id}, replica_local_id={replica_local_id}, "
+                f"global_end_time={global_end_time}"
             )
             current_exec_sigs = [
                 Batch._get_request_execution_signature(r) for r in micro_batch.requests
@@ -6340,7 +6341,7 @@ class BaseClusterScheduler(ABC):
                 GlobalBatchEndEvent(
                     global_end_time,
                     replica_id,
-                    dp_id,
+                    replica_local_id,
                     micro_batch,
                     self._cluster_type,
                     request_execution_signatures=current_exec_sigs,
@@ -6950,7 +6951,7 @@ class BaseClusterScheduler(ABC):
                     "decode_attn_original_replica_id",
                     None,
                 )
-                queued_dp_id = getattr(
+                queued_replica_local_id = getattr(
                     queued_batch,
                     "decode_attn_original_replica_local_id",
                     None,
@@ -6958,15 +6959,15 @@ class BaseClusterScheduler(ABC):
                 if (
                     type(queued_replica_id) is not int
                     or (
-                        queued_dp_id is not None
-                        and type(queued_dp_id) is not int
+                        queued_replica_local_id is not None
+                        and type(queued_replica_local_id) is not int
                     )
-                    or (queued_replica_id, queued_dp_id) != queue_lane
+                    or (queued_replica_id, queued_replica_local_id) != queue_lane
                 ):
                     raise RuntimeError(
                         "DECODE_ATTN A-to-F waiting-room queued batch lane "
                         f"mismatch: queue={queue_lane}, batch="
-                        f"{(queued_replica_id, queued_dp_id)}"
+                        f"{(queued_replica_id, queued_replica_local_id)}"
                     )
 
                 self._validate_decode_attn_a2f_batch_entry(
@@ -7113,7 +7114,7 @@ class BaseClusterScheduler(ABC):
         batch: Batch,
         *,
         replica_id: int,
-        dp_id: int,
+        replica_local_id: int | None,
         layer_id: int,
         logger,
     ) -> List:
@@ -7121,7 +7122,7 @@ class BaseClusterScheduler(ABC):
         from frontier.events.m2n_transfer_start_event import M2NTransferStartEvent
         from frontier.events.replica_schedule_event import ReplicaScheduleEvent
 
-        lane = (replica_id, dp_id)
+        lane = (replica_id, replica_local_id)
         barrier_round_id = self._peek_decode_attn_barrier_round_id()
         activation_size, transfer_time = (
             self._validate_decode_attn_a2f_predictor_result(
@@ -7137,7 +7138,7 @@ class BaseClusterScheduler(ABC):
         transfer_event = M2NTransferStartEvent(
             time=time,
             source_replica_id=replica_id,
-            source_replica_local_id=dp_id,
+            source_replica_local_id=replica_local_id,
             source_cluster_type=ClusterType.DECODE_ATTN,
             target_cluster_type=ClusterType.DECODE_FFN,
             batch=batch,
@@ -7150,13 +7151,13 @@ class BaseClusterScheduler(ABC):
             time,
             replica_id,
             self._cluster_type,
-            dp_id,
+            replica_local_id,
         )
         prepared_cohort_update = self._set_decode_attn_batch_cohort_phase(
             batch,
             phase="ffn_inflight",
             replica_id=replica_id,
-            dp_id=dp_id,
+            replica_local_id=replica_local_id,
             layer_id=layer_id,
             prepare_only=True,
         )
@@ -7177,7 +7178,7 @@ class BaseClusterScheduler(ABC):
         batch: Batch,
         *,
         replica_id: int,
-        dp_id: int,
+        replica_local_id: int | None,
         layer_id: int,
         logger,
     ) -> List:
@@ -7209,10 +7210,10 @@ class BaseClusterScheduler(ABC):
         # DECODE_ATTN has one full-stage scheduler per serving Replica.  The
         # second tuple coordinate is intentionally absent; it is not an
         # attention-DP lane and must remain ``None`` on A→F transport.
-        if dp_id is not None:
+        if replica_local_id is not None:
             raise ValueError(
                 "DECODE_ATTN A-to-F requires full-stage identity with "
-                f"replica_local_id=None, got {dp_id!r}"
+                f"replica_local_id=None, got {replica_local_id!r}"
             )
         if (
             not isinstance(time, Real)
@@ -7278,7 +7279,7 @@ class BaseClusterScheduler(ABC):
 
         self._validate_decode_attn_a2f_batch_entry(
             batch=batch,
-            lane=(replica_id, dp_id),
+            lane=(replica_id, replica_local_id),
             layer_id=layer_id,
             afd_stage_idx=afd_stage_idx,
             model_is_moe=model_is_moe,
@@ -7321,7 +7322,7 @@ class BaseClusterScheduler(ABC):
             )
 
         group_key = (layer_id, afd_stage_idx)
-        lane = (replica_id, dp_id)
+        lane = (replica_id, replica_local_id)
         if lane not in expected_lane_contract:
             raise ValueError(
                 "Unexpected lane observed in DECODE_ATTN A→F waiting room: "
@@ -7352,7 +7353,7 @@ class BaseClusterScheduler(ABC):
                 time,
                 batch,
                 replica_id=replica_id,
-                dp_id=dp_id,
+                replica_local_id=replica_local_id,
                 layer_id=layer_id,
                 logger=logger,
             )
@@ -7527,7 +7528,7 @@ class BaseClusterScheduler(ABC):
                         ready_batch,
                         phase="ffn_inflight",
                         replica_id=source_replica_id,
-                        dp_id=source_replica_local_id,
+                        replica_local_id=source_replica_local_id,
                         layer_id=ready_layer_id,
                         prepare_only=True,
                     )
@@ -7602,7 +7603,7 @@ class BaseClusterScheduler(ABC):
         *,
         phase: str,
         replica_id: int,
-        dp_id: int,
+        replica_local_id: int | None,
         layer_id: int | None = None,
     ) -> Optional[dict[str, Any]]:
         """Prepare a cohort phase update without mutating cohort state."""
@@ -7622,20 +7623,22 @@ class BaseClusterScheduler(ABC):
             raise ValueError(f"Unsupported DECODE_ATTN cohort phase: {phase!r}")
 
         batch_replica_id = getattr(batch, "decode_attn_original_replica_id", None)
-        batch_dp_id = getattr(batch, "decode_attn_original_replica_local_id", None)
+        batch_replica_local_id = getattr(
+            batch, "decode_attn_original_replica_local_id", None
+        )
         if batch_replica_id is None:
             batch_replica_id = replica_id
-        if dp_id is not None:
+        if replica_local_id is not None:
             raise ValueError(
                 "DECODE_ATTN cohort phase requires full-stage identity with "
-                f"replica_local_id=None, got {dp_id!r}"
+                f"replica_local_id=None, got {replica_local_id!r}"
             )
-        if batch_dp_id is not None:
+        if batch_replica_local_id is not None:
             raise ValueError(
                 "DECODE_ATTN cohort batch requires full-stage identity with "
-                f"replica_local_id=None, got {batch_dp_id!r}"
+                f"replica_local_id=None, got {batch_replica_local_id!r}"
             )
-        batch_dp_id = None
+        batch_replica_local_id = None
         if type(batch_replica_id) is not int or batch_replica_id < 0:
             raise ValueError(
                 "DECODE_ATTN cohort lane replica_id must be an exact "
@@ -7657,7 +7660,7 @@ class BaseClusterScheduler(ABC):
             raise RuntimeError(
                 "DECODE_ATTN replica scheduler topology must be an exact dict"
             )
-        lane = (batch_replica_id, batch_dp_id)
+        lane = (batch_replica_id, batch_replica_local_id)
         if lane not in replica_schedulers:
             raise ValueError(
                 "DECODE_ATTN cohort lane is absent from the replica scheduler "
@@ -7791,7 +7794,7 @@ class BaseClusterScheduler(ABC):
         *,
         phase: str,
         replica_id: int,
-        dp_id: int,
+        replica_local_id: int | None,
         layer_id: int | None = None,
         prepare_only: bool = False,
     ) -> Optional[dict[str, Any]]:
@@ -7799,7 +7802,7 @@ class BaseClusterScheduler(ABC):
             batch,
             phase=phase,
             replica_id=replica_id,
-            dp_id=dp_id,
+            replica_local_id=replica_local_id,
             layer_id=layer_id,
         )
         if prepare_only:
@@ -8328,7 +8331,7 @@ class BaseClusterScheduler(ABC):
                 ready_batch,
                 phase="local_attn",
                 replica_id=int(ready_batch.decode_attn_original_replica_id),
-                dp_id=ready_batch.decode_attn_original_replica_local_id,
+                replica_local_id=ready_batch.decode_attn_original_replica_local_id,
                 layer_id=int(ready_batch.af_inflight_layer_count),
             )
             if getattr(
