@@ -3690,7 +3690,7 @@ class BaseClusterScheduler(ABC):
         time: float,
         batch: Batch,
         replica_id: int,
-        dp_id: int
+        replica_local_id: int | None,
     ) -> List:
         """Disaggregated KV cache transfer events are not included in this release."""
         raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
@@ -8044,10 +8044,12 @@ class BaseClusterScheduler(ABC):
             field_name="DECODE_ATTN replica scheduler lane topology",
             require_nonempty=False,
         )
-        for lane_replica_id, lane_dp_id in scheduler_lanes:
+        for lane_replica_id, lane_replica_local_id in scheduler_lanes:
             if replica_id is not None and lane_replica_id != replica_id:
                 continue
-            replica_scheduler = replica_schedulers[(lane_replica_id, lane_dp_id)]
+            replica_scheduler = replica_schedulers[
+                (lane_replica_id, lane_replica_local_id)
+            ]
 
             get_active_stage_slots = getattr(
                 replica_scheduler,
@@ -8105,7 +8107,7 @@ class BaseClusterScheduler(ABC):
                 active_stage_slots.add(active_stage_idx)
 
             if afd_stage_idx in active_stage_slots:
-                active_lanes.append((lane_replica_id, lane_dp_id))
+                active_lanes.append((lane_replica_id, lane_replica_local_id))
 
         return active_lanes
 
