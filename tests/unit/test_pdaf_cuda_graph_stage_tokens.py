@@ -54,7 +54,7 @@ def _make_decode_attn_scheduler(
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
     scheduler._cluster_type = ClusterType.DECODE_ATTN
     scheduler._replica_id = 0
-    scheduler._dp_id = 0
+    scheduler._replica_local_id = 0
     scheduler._replica_is_moe = is_moe
     scheduler._num_stages = 1
     scheduler._micro_batch_size = len(requests)
