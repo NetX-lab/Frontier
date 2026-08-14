@@ -2671,6 +2671,37 @@ class BaseClusterScheduler(ABC):
             raise ValueError(f"Missing {routing_attr} for MoE PREFILL")
         return True
 
+    def _uses_shared_prefill_layer_protocol(self, batch: Batch, layer_id: int) -> bool:
+        """Return whether a shared-domain MoE model needs layer stepping.
+
+        Mixed models use the same per-layer event loop for both protocols.  The
+        dense branch is still a full-stage operation and bypasses routing and EP
+        materialization inside ``_on_prefill_ep_wave_ready``; this predicate is
+        deliberately broader than ``_uses_shared_prefill_ep_wave`` so dense
+        layers cannot fall into the legacy aggregate MoE path.
+        """
+        if self._cluster_type not in (ClusterType.PREFILL, ClusterType.MONOLITHIC):
+            return False
+        replica_config = getattr(self._config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        if model_config is None or not getattr(model_config, "is_moe", False):
+            return False
+        if getattr(replica_config, "attn_data_parallel_size", None) != 1:
+            raise ValueError(
+                "Shared-domain MoE PREFILL requires attn_data_parallel_size=1"
+            )
+        if not isinstance(layer_id, int) or layer_id < 0:
+            raise ValueError("PREFILL layer_id must be an exact non-negative int")
+        if model_config.is_moe_layer(layer_id):
+            routing_attr = (
+                "_prefill_routing_details"
+                if self._cluster_type == ClusterType.PREFILL
+                else "_monolithic_routing_details"
+            )
+            if getattr(self._predictor, routing_attr, None) is None:
+                raise ValueError(f"Missing {routing_attr} for MoE PREFILL")
+        return True
+
     def _on_decode_ep_wave_ready(
         self,
         *,
@@ -2826,6 +2857,30 @@ class BaseClusterScheduler(ABC):
             raise ValueError(f"Missing {routing_attr} for MoE DECODE")
         return True
 
+    def _uses_shared_decode_layer_protocol(self, batch: Batch, layer_id: int) -> bool:
+        """Return whether a shared-domain DECODE model needs layer stepping."""
+        if self._cluster_type not in (ClusterType.DECODE, ClusterType.MONOLITHIC):
+            return False
+        replica_config = getattr(self._config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        if model_config is None or not getattr(model_config, "is_moe", False):
+            return False
+        if getattr(replica_config, "attn_data_parallel_size", None) != 1:
+            raise ValueError(
+                "Shared-domain MoE DECODE requires attn_data_parallel_size=1"
+            )
+        if not isinstance(layer_id, int) or layer_id < 0:
+            raise ValueError("DECODE layer_id must be an exact non-negative int")
+        if model_config.is_moe_layer(layer_id):
+            routing_attr = (
+                "_decode_routing_details"
+                if self._cluster_type == ClusterType.DECODE
+                else "_monolithic_routing_details"
+            )
+            if getattr(self._predictor, routing_attr, None) is None:
+                raise ValueError(f"Missing {routing_attr} for MoE DECODE")
+        return True
+
     def on_prefill_sync(self, time: float, replica_id: int, stage_id: int, batch: Batch,
                        dp_id: int, sync_stage: str, layer_id: int, stage_execution_time: float):
         """
@@ -2848,7 +2903,7 @@ class BaseClusterScheduler(ABC):
                 f"Dense models should not use sync events."
             )
 
-        if sync_stage == "pre_moe" and self._uses_shared_prefill_ep_wave(
+        if sync_stage == "pre_moe" and self._uses_shared_prefill_layer_protocol(
             batch,
             layer_id,
         ):
@@ -3823,7 +3878,7 @@ class BaseClusterScheduler(ABC):
                 f"Dense models should not use sync events."
             )
 
-        if sync_stage == "pre_moe" and self._uses_shared_decode_ep_wave(
+        if sync_stage == "pre_moe" and self._uses_shared_decode_layer_protocol(
             batch,
             layer_id,
         ):

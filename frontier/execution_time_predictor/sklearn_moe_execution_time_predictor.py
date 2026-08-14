@@ -386,6 +386,17 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "total_expert_num must be an exact positive int for routing; "
                 f"got {total_experts!r}"
             )
+        if type(self._moe_ep_size) is not int or self._moe_ep_size <= 0:
+            raise ValueError(
+                "moe_expert_parallel_size must be an exact positive int for routing; "
+                f"got {self._moe_ep_size!r}"
+            )
+        if total_experts % self._moe_ep_size != 0:
+            raise ValueError(
+                "total_expert_num must be divisible by moe_expert_parallel_size; "
+                f"got total_expert_num={total_experts}, "
+                f"moe_expert_parallel_size={self._moe_ep_size}"
+            )
 
         allocations: Dict[int, Dict[int, float]] = {}
         for layer_id in range(num_layers):
@@ -486,16 +497,15 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "Ensure _init_global_routing_allocations() was called in __init__."
             )
 
-        effective_layer_id = (
-            layer_id if layer_id in self._global_routing_allocations else 0
-        )
-        if effective_layer_id not in self._global_routing_allocations:
+        if type(layer_id) is not int or layer_id < 0:
+            raise ValueError("layer_id must be an exact non-negative int")
+        if layer_id not in self._global_routing_allocations:
             raise ValueError(
-                f"No global routing allocations for layer {layer_id} or fallback layer 0. "
+                f"No global routing allocations for layer {layer_id}. "
                 f"Available layers: {list(self._global_routing_allocations.keys())}"
             )
 
-        allocation_ratios = self._global_routing_allocations[effective_layer_id]
+        allocation_ratios = self._global_routing_allocations[layer_id]
         return self._build_proportional_per_expert_tokens(
             total_routed_tokens=total_routed_tokens,
             allocation_ratios=allocation_ratios,
@@ -1164,14 +1174,15 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "Ensure _init_routing_allocations() was called in __init__."
             )
 
-        effective_layer_id = layer_id if layer_id in self._routing_allocations else 0
-        if effective_layer_id not in self._routing_allocations:
+        if type(layer_id) is not int or layer_id < 0:
+            raise ValueError("layer_id must be an exact non-negative int")
+        if layer_id not in self._routing_allocations:
             raise ValueError(
-                f"No routing allocations for layer {layer_id} or fallback layer 0. "
+                f"No routing allocations for layer {layer_id}. "
                 f"Available layers: {list(self._routing_allocations.keys())}"
             )
 
-        allocation_ratios = self._routing_allocations[effective_layer_id]
+        allocation_ratios = self._routing_allocations[layer_id]
         per_expert_tokens = self._build_proportional_per_expert_tokens(
             total_routed_tokens=local_routed_tokens,
             allocation_ratios=allocation_ratios,
@@ -1185,7 +1196,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             )
 
         logger.debug(
-            f"[_get_moe_tokens_input] layer={effective_layer_id}, num_tokens={num_tokens}, "
+            f"[_get_moe_tokens_input] layer={layer_id}, num_tokens={num_tokens}, "
             f"local_routed_tokens={local_routed_tokens}, topk={self._router_topk}, "
             f"experts={len(per_expert_tokens)}"
         )

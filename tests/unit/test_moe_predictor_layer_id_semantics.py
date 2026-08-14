@@ -493,3 +493,24 @@ def test_monolithic_routing_allocations_use_global_expert_ids() -> None:
     assert set(allocations[1]) == {0, 1, 2, 3}
     assert sum(allocations[0].values()) == pytest.approx(1.0)
     assert sum(allocations[1].values()) == pytest.approx(1.0)
+
+
+def test_global_routing_lookup_rejects_missing_layer_instead_of_using_layer_zero() -> None:
+    predictor = object.__new__(_DummySklearnMoEPredictor)
+    predictor._replica_config = SimpleNamespace(total_expert_num=2)
+    predictor._global_routing_allocations = {0: {0: 0.5, 1: 0.5}}
+    predictor._moe_routing_mode = "simulation"
+
+    with pytest.raises(ValueError, match="No global routing allocations for layer 3"):
+        predictor._get_global_per_expert_tokens(total_routed_tokens=4, layer_id=3)
+
+
+def test_routing_initialization_rejects_non_divisible_ep_topology() -> None:
+    predictor = object.__new__(_DummySklearnMoEPredictor)
+    predictor._model_config = SimpleNamespace(num_layers=2)
+    predictor._replica_config = SimpleNamespace(total_expert_num=5)
+    predictor._moe_ep_size = 2
+    predictor._moe_routing_seed = 7
+
+    with pytest.raises(ValueError, match="divisible"):
+        predictor._init_global_routing_allocations()
