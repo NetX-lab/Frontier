@@ -74,9 +74,13 @@ class _DecodeMoeClusterScheduler:
             )
         )
 
-    def get_replica_scheduler(self, replica_id: int, dp_id: int):
+    def get_replica_scheduler(
+        self,
+        replica_id: int,
+        replica_local_id: int | None,
+    ):
         assert replica_id == 1
-        assert dp_id == 0
+        assert replica_local_id is None
         return self._replica_scheduler
 
 
@@ -111,7 +115,7 @@ def test_local_moe_decode_stage_emits_global_batch_end_after_all_layers() -> Non
         replica_id=1,
         batch=batch,
         cluster_type=ClusterType.DECODE,
-        dp_id=0,
+        replica_local_id=None,
     )
 
     next_events = event.handle_event(scheduler, metrics_store)
@@ -141,7 +145,7 @@ def test_distributed_moe_decode_completes_only_at_exact_total_layers(
         replica_id=1,
         batch=batch,
         cluster_type=ClusterType.DECODE,
-        dp_id=0,
+        replica_local_id=None,
     )
 
     next_events = event.handle_event(scheduler, metrics_store)
@@ -172,7 +176,7 @@ def test_distributed_moe_decode_rejects_non_exact_terminal_layer_count(
         replica_id=1,
         batch=batch,
         cluster_type=ClusterType.DECODE,
-        dp_id=0,
+        replica_local_id=None,
     )
 
     with pytest.raises(ValueError, match=error_match):
@@ -200,7 +204,7 @@ def test_distributed_moe_decode_rejects_terminal_batch_without_active_requests()
         replica_id=1,
         batch=batch,
         cluster_type=ClusterType.DECODE,
-        dp_id=0,
+        replica_local_id=None,
     )
 
     with pytest.raises(ValueError, match="no active request"):
@@ -224,7 +228,7 @@ def test_distributed_moe_decode_rejects_inconsistent_active_layer_counts() -> No
         replica_id=1,
         batch=batch,
         cluster_type=ClusterType.DECODE,
-        dp_id=0,
+        replica_local_id=None,
     )
 
     with pytest.raises(ValueError, match="inconsistent"):
@@ -252,7 +256,7 @@ def test_distributed_moe_decode_ignores_completed_request_layer_count() -> None:
         replica_id=1,
         batch=batch,
         cluster_type=ClusterType.DECODE,
-        dp_id=0,
+        replica_local_id=None,
     )
 
     next_events = event.handle_event(scheduler, metrics_store)
@@ -273,7 +277,7 @@ def test_stale_distributed_moe_cluster_end_does_not_mutate_or_emit() -> None:
         replica_id=1,
         batch=batch,
         cluster_type=ClusterType.DECODE,
-        dp_id=0,
+        replica_local_id=None,
     )
     batch.schedule_epoch = 1
 

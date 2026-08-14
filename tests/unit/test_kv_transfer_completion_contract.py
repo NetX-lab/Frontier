@@ -151,9 +151,13 @@ class _HookReplicaScheduler:
 
 
 class _HookClusterScheduler:
-    def get_replica_scheduler(self, replica_id: int, dp_id: int):
+    def get_replica_scheduler(
+        self,
+        replica_id: int,
+        replica_local_id: int | None,
+    ):
         assert replica_id == 0
-        assert dp_id == 0
+        assert replica_local_id is None
         return _HookReplicaScheduler()
 
 
@@ -169,7 +173,7 @@ def test_cluster_batch_end_fails_fast_when_stage_hook_fails() -> None:
         replica_id=0,
         batch=_HookFailingBatch(),
         cluster_type=ClusterType.DECODE_ATTN,
-        dp_id=0,
+        replica_local_id=None,
     )
 
     with pytest.raises(RuntimeError, match="stage hook failed"):

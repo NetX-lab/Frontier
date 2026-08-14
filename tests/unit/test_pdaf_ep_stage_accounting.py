@@ -527,7 +527,7 @@ def _dense_ffn_completion_fixture(
         replica_id=0,
         batch=batch,
         cluster_type=ClusterType.DECODE_FFN,
-        dp_id=0,
+        replica_local_id=None,
     )
     return event, batch, cluster_scheduler, replica_scheduler, global_scheduler
 

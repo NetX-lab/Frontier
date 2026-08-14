@@ -22,7 +22,7 @@ class ClusterBatchEndEvent(BaseEvent):
         replica_id: int,
         batch: Batch,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
         batch_schedule_epoch: int | None = None,
         request_execution_signatures: list[tuple[int, int, int]] | None = None,
         request_mutation_signatures: list[tuple[int, int, int, int]] | None = None,
@@ -32,7 +32,7 @@ class ClusterBatchEndEvent(BaseEvent):
         self._replica_id = replica_id
         self._batch = batch
         self._cluster_type = cluster_type
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
         self._batch_schedule_epoch = (
             batch.schedule_epoch
             if batch_schedule_epoch is None
@@ -64,7 +64,7 @@ class ClusterBatchEndEvent(BaseEvent):
 
         cluster_scheduler = scheduler.get_cluster_scheduler(self._cluster_type)
         replica_scheduler = cluster_scheduler.get_replica_scheduler(
-            self._replica_id, self._dp_id
+            self._replica_id, self._replica_local_id
         )
 
         logger = get_cluster_logger(__name__, self._cluster_type.name)
@@ -179,7 +179,8 @@ class ClusterBatchEndEvent(BaseEvent):
                         f"batch_global_id={getattr(batch_for_transfer, 'global_id', '?')} "
                         "decode_attn_orig="
                         f"(replica={getattr(batch_for_transfer, 'decode_attn_original_replica_id', '?')},"
-                        f"dp={getattr(batch_for_transfer, 'decode_attn_original_replica_local_id', '?')}) "
+                        "replica_local_id="
+                        f"{getattr(batch_for_transfer, 'decode_attn_original_replica_local_id', '?')}) "
                         f"target={ClusterType.DECODE_ATTN.name} "
                         f"size={activation_size}B t_ms={transfer_time:.3f}"
                     )
@@ -212,7 +213,7 @@ class ClusterBatchEndEvent(BaseEvent):
                 self.time,
                 self._replica_id,
                 self._cluster_type,
-                self._dp_id,
+                self._replica_local_id,
             )
 
         # Always record cluster-internal stage completion hooks.
@@ -235,7 +236,7 @@ class ClusterBatchEndEvent(BaseEvent):
                 self._replica_id,
                 memory_usage_percent,
                 self._cluster_type,
-                self._dp_id,
+                self._replica_local_id,
             )
 
             kv_pred = cluster_scheduler._kv_cache_transfer_predictor
@@ -270,7 +271,7 @@ class ClusterBatchEndEvent(BaseEvent):
                         KVCacheTransferStartEvent(
                             self.time,
                             source_replica_id=self._replica_id,
-                            source_replica_local_id=self._dp_id,
+                            source_replica_local_id=self._replica_local_id,
                             target_cluster_type=target_cluster,
                             batch=single_request_batch,
                             kv_cache_size_bytes=kv_cache_size_bytes,
@@ -281,7 +282,7 @@ class ClusterBatchEndEvent(BaseEvent):
 
             next_events.append(
                 ReplicaScheduleEvent(
-                    self.time, self._replica_id, self._cluster_type, self._dp_id
+                    self.time, self._replica_id, self._cluster_type, self._replica_local_id
                 )
             )
             return next_events
@@ -309,14 +310,14 @@ class ClusterBatchEndEvent(BaseEvent):
                     GlobalBatchEndEvent(
                         global_end_time,
                         self._replica_id,
-                        self._dp_id,
+                        self._replica_local_id,
                         self._batch,
                         self._cluster_type,
                     )
                 )
                 next_events.append(
                     ReplicaScheduleEvent(
-                        self.time, self._replica_id, self._cluster_type, self._dp_id
+                        self.time, self._replica_id, self._cluster_type, self._replica_local_id
                     )
                 )
                 return next_events
@@ -349,14 +350,14 @@ class ClusterBatchEndEvent(BaseEvent):
                     GlobalBatchEndEvent(
                         global_end_time,
                         self._replica_id,
-                        self._dp_id,
+                        self._replica_local_id,
                         self._batch,
                         self._cluster_type,
                     )
                 )
                 next_events.append(
                     ReplicaScheduleEvent(
-                        self.time, self._replica_id, self._cluster_type, self._dp_id
+                        self.time, self._replica_id, self._cluster_type, self._replica_local_id
                     )
                 )
                 return next_events
@@ -372,7 +373,7 @@ class ClusterBatchEndEvent(BaseEvent):
                         self.time,
                         self._batch,
                         replica_id=self._replica_id,
-                        dp_id=self._dp_id,
+                        replica_local_id=self._replica_local_id,
                         layer_id=current_layer_id,
                         logger=logger,
                     )
@@ -407,7 +408,7 @@ class ClusterBatchEndEvent(BaseEvent):
                     self._replica_id,
                     memory_usage_percent,
                     ClusterType.DECODE_FFN,
-                    self._dp_id,
+                    self._replica_local_id,
                 )
 
             replica_scheduler.decrement_num_running_batches()
@@ -420,7 +421,7 @@ class ClusterBatchEndEvent(BaseEvent):
                     self._replica_id,
                     replica_scheduler.memory_usage_percent,
                     ClusterType.DECODE_FFN,
-                    dp_id=self._dp_id,
+                    replica_local_id=self._replica_local_id,
                 )
 
             next_events.extend(prepared_m2n_events)
@@ -434,7 +435,7 @@ class ClusterBatchEndEvent(BaseEvent):
                 )
                 next_events.append(
                     ReplicaScheduleEvent(
-                        self.time, self._replica_id, self._cluster_type, self._dp_id
+                        self.time, self._replica_id, self._cluster_type, self._replica_local_id
                     )
                 )
                 return next_events
@@ -452,7 +453,7 @@ class ClusterBatchEndEvent(BaseEvent):
                     GlobalBatchEndEvent(
                         self.time,
                         self._replica_id,
-                        self._dp_id,
+                        self._replica_local_id,
                         self._batch,
                         self._cluster_type,
                         batch_schedule_epoch=self._batch_schedule_epoch,
@@ -511,7 +512,7 @@ class ClusterBatchEndEvent(BaseEvent):
                 GlobalBatchEndEvent(
                     self.time,
                     self._replica_id,
-                    self._dp_id,
+                    self._replica_local_id,
                     self._batch,
                     self._cluster_type,
                     batch_schedule_epoch=self._batch_schedule_epoch,
@@ -537,7 +538,7 @@ class ClusterBatchEndEvent(BaseEvent):
                 )
                 next_events.append(
                     ReplicaScheduleEvent(
-                        self.time, self._replica_id, self._cluster_type, self._dp_id
+                        self.time, self._replica_id, self._cluster_type, self._replica_local_id
                     )
                 )
                 return next_events
@@ -559,7 +560,7 @@ class ClusterBatchEndEvent(BaseEvent):
                 GlobalBatchEndEvent(
                     self.time,
                     self._replica_id,
-                    self._dp_id,
+                    self._replica_local_id,
                     self._batch,
                     self._cluster_type,
                     batch_schedule_epoch=self._batch_schedule_epoch,
