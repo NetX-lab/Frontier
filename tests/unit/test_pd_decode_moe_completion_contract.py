@@ -98,7 +98,9 @@ class _DecodeMoeMetricsStore:
 
 
 def test_local_moe_decode_stage_emits_global_batch_end_after_all_layers() -> None:
-    batch = _DecodeMoeBatch()
+    # EP=1 still follows the canonical layer-by-layer MoE protocol; terminal
+    # completion is valid only after every model layer has been accounted for.
+    batch = _DecodeMoeBatch(completed_layer_count=8)
     replica_scheduler = _DecodeMoeReplicaScheduler()
     cluster_scheduler = _DecodeMoeClusterScheduler(replica_scheduler)
     scheduler = _DecodeMoeGlobalScheduler(cluster_scheduler)
