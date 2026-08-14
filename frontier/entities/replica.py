@@ -193,17 +193,6 @@ class Replica(BaseEntity):
     def router_load_balancing_type(self) -> str:
         return self._replica_config.router_load_balancing_type
 
-    @property
-    def dp_size(self) -> int:
-        """Return the retired replica-local attention-DP lane count.
-
-        Serving capacity is owned by the containing Cluster's Replica count;
-        one physical Replica never contains additional attention-DP lanes.
-        Keep this read-only accessor at one for legacy internal callers while
-        all new MoE staggering code uses replica-local EP size explicitly.
-        """
-        return 1
-
     def to_dict(self) -> dict:
         return {
             "id": self.id,
