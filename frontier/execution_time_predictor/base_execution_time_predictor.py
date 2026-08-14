@@ -371,28 +371,6 @@ class BaseExecutionTimePredictor(ABC):
         """
         pass
 
-    def _predict_dp_allreduce_time_seconds(
-        self,
-        data_size_bytes: int,
-        dp_size: int,
-        cluster_type: ClusterType,
-    ) -> float:
-        """Predict one DP allreduce in seconds using the canonical allreduce interface."""
-        # COMM_SKIP: allreduce not needed when dp_size <= 1 (no cross-DP communication)
-        if dp_size <= 1:
-            return 0.0
-        # COMM_SKIP: allreduce not needed when payload is degenerate (<= 1 byte)
-        if data_size_bytes <= 1:
-            return 0.0
-
-        comm_time_ms = self.predict_allreduce_time(
-            data_size_bytes=data_size_bytes,
-            num_devices=dp_size,
-            cluster_type=cluster_type,
-            comm_domain="DP",
-        )
-        return comm_time_ms * 1e-3
-
     def predict_dp_moe_allreduce_times(
         self,
         batch: Batch,
@@ -414,29 +392,6 @@ class BaseExecutionTimePredictor(ABC):
                 f"attn_data_parallel_size=1, got {attn_dp_size}"
             )
         return 0.0, 0.0
-
-    def predict_dp_gather_time(self, total_tokens: int, dp_size: int) -> float:
-        """Backward-compatible DP gather time prediction in seconds.
-
-        This legacy helper is retained for decode sync path compatibility.
-        It now uses the canonical allreduce communication interface.
-        """
-        if total_tokens <= 0:
-            return 0.0
-        data_size_bytes = int(total_tokens) * int(self._model_config.embedding_dim) * 2
-        cluster_type = getattr(self, "_cluster_type", ClusterType.PREFILL)
-        return self._predict_dp_allreduce_time_seconds(
-            data_size_bytes=data_size_bytes,
-            dp_size=dp_size,
-            cluster_type=cluster_type,
-        )
-
-    def predict_dp_scatter_time(self, total_tokens: int, dp_size: int) -> float:
-        """Backward-compatible DP scatter time prediction in seconds.
-
-        For allreduce-based modeling, scatter cost equals gather cost.
-        """
-        return self.predict_dp_gather_time(total_tokens, dp_size)
 
     @abstractmethod
     def predict_stage_execution_time(
