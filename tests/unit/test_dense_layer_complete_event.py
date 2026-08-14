@@ -14,7 +14,6 @@ def test_dense_layer_complete_event_dispatches_to_stage_transition() -> None:
         replica_id=2,
         stage_id=3,
         batch=batch,
-        dp_id=0,
         layer_id=7,
         phase="decode",
         cluster_type=ClusterType.MONOLITHIC,
@@ -40,7 +39,6 @@ def test_dense_layer_complete_event_dispatches_to_stage_transition() -> None:
             2,
             3,
             batch,
-            0,
             7,
             "decode",
             metrics,
@@ -48,3 +46,4 @@ def test_dense_layer_complete_event_dispatches_to_stage_transition() -> None:
     ]
     assert event.event_type is EventType.DENSE_LAYER_COMPLETE
     assert event.to_dict()["protocol"] == "FULL_STAGE_WORLD"
+    assert "dp_id" not in event.to_dict()

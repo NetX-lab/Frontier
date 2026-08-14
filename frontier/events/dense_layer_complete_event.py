@@ -17,7 +17,6 @@ class DenseLayerCompleteEvent(BaseEvent):
         replica_id: int,
         stage_id: int,
         batch,
-        dp_id: int,
         layer_id: int,
         phase: str,
         cluster_type: ClusterType,
@@ -38,7 +37,6 @@ class DenseLayerCompleteEvent(BaseEvent):
         self._replica_id = replica_id
         self._stage_id = stage_id
         self._batch = batch
-        self._dp_id = dp_id
         self._layer_id = layer_id
         self._phase = phase
         self._cluster_type = cluster_type
@@ -54,7 +52,6 @@ class DenseLayerCompleteEvent(BaseEvent):
             self._replica_id,
             self._stage_id,
             self._batch,
-            self._dp_id,
             self._layer_id,
             self._phase,
             metrics_store,
@@ -71,7 +68,6 @@ class DenseLayerCompleteEvent(BaseEvent):
             "replica_id": self._replica_id,
             "stage_id": self._stage_id,
             "batch_id": self._batch.id,
-            "dp_id": self._dp_id,
             "layer_id": self._layer_id,
             "phase": self._phase,
             "protocol": "FULL_STAGE_WORLD",

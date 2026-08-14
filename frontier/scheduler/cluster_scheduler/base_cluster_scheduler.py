@@ -2609,7 +2609,6 @@ class BaseClusterScheduler(ABC):
                     replica_id,
                     stage_id,
                     batch,
-                    dp_id,
                     layer_id,
                     "prefill",
                     self._cluster_type,
@@ -2824,7 +2823,6 @@ class BaseClusterScheduler(ABC):
                     replica_id,
                     stage_id,
                     batch,
-                    dp_id,
                     layer_id,
                     "decode",
                     self._cluster_type,
@@ -3069,7 +3067,6 @@ class BaseClusterScheduler(ABC):
         replica_id: int,
         stage_id: int,
         batch: Batch,
-        dp_id: int,
         layer_id: int,
         phase: str,
         metrics_store,
@@ -3093,7 +3090,6 @@ class BaseClusterScheduler(ABC):
                 layer_id,
                 metrics_store,
                 direct_batch=batch,
-                direct_dp_id=dp_id,
             )
 
         if phase == "decode":
@@ -3107,7 +3103,6 @@ class BaseClusterScheduler(ABC):
                 layer_id,
                 metrics_store,
                 direct_batch=batch,
-                direct_dp_id=dp_id,
             )
 
         raise ValueError(f"Unsupported dense layer completion phase: {phase!r}")
