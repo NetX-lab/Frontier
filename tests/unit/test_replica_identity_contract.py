@@ -47,3 +47,13 @@ def test_afd_transport_identity_has_no_dp_named_fields() -> None:
 
     assert "decode_attn_original_dp_id" not in combined
     assert "source_dp_id" not in combined
+
+
+def test_decode_sync_event_uses_replica_local_identity() -> None:
+    source = Path("frontier/events/decode_sync_event.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "self._dp_id" not in source
+    assert '"dp_id"' not in source
+    assert "replica_local_id" in source

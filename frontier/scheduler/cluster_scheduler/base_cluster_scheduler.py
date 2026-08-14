@@ -4234,7 +4234,7 @@ class BaseClusterScheduler(ABC):
                             replica_id=replica_id,
                             stage_id=stage_id,
                             batch=idle_batch,
-                            dp_id=missing_participant_id,
+                            replica_local_id=missing_participant_id,
                             sync_stage=sync_stage,
                             layer_id=layer_id,
                             stage_execution_time=0.0,
