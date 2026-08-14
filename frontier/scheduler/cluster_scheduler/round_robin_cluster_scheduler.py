@@ -28,11 +28,11 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         # DECODE_ATTN load is tracked per serving Replica.  There is no
         # intra-Replica attention-DP lane dimension.
-        self._replica_dp_load_tracker = {}
+        self._replica_load_tracker = {}
         if self._cluster_type == ClusterType.DECODE_ATTN:
             replica_ids = list(self._cluster.replicas.keys())
             for replica_id in replica_ids:
-                self._replica_dp_load_tracker[(replica_id, None)] = 0
+                self._replica_load_tracker[replica_id] = 0
 
         # Decode-attn initial request allocation setup state
         self._decode_attn_initial_allocation_done = False
@@ -92,7 +92,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         Returns:
             - [] when still waiting for enough requests (defers scheduling)
-            - list[(replica_id, dp_id, request)] when requests are allocated
+            - list[(replica_id, replica_local_id, request)] when requests are allocated
             - None when feature is disabled or already completed (fall back to normal flow)
         """
         from frontier.logger import get_cluster_logger
@@ -271,10 +271,10 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         Two-level distribution:
         - Level 1: Distribute requests to replica schedulers (round-robin)
-        - Level 2: Within each replica, distribute to DP replicas (round-robin)
+        - Level 2: no intra-Replica lane distribution; each request uses the full-stage scheduler
 
         Returns:
-            List of (replica_id, dp_id, request) tuples representing request-level assignments
+            List of (replica_id, replica_local_id, request) tuples representing request-level assignments
         """
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name)
@@ -403,7 +403,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         - Form new batches from the request queue when replicas are idle
 
         Returns:
-            List of (replica_id, dp_id, request) tuples for scheduling
+            List of (replica_id, replica_local_id, request) tuples for scheduling
         """
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name)
@@ -416,9 +416,8 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         # KV-cache arrivals in online PD mode are often emitted per request.
         # If each scheduling cycle contains one request, the generic batch-mode
-        # split restarts its intra-replica DP allocation from dp_id=0 every time,
-        # leaving decode DP lanes 1..N idle. Use a flattened (replica, dp) round
-        # robin for DECODE so single-arrival cycles still exercise all DP lanes.
+        # split still selects the serving Replica deterministically. There is no
+        # retired intra-Replica attention-DP allocation to flatten here.
         request_mapping = self._schedule_decode_lane_round_robin()
 
         logger.debug(f"[DECODE-PRIORITY] Scheduled {len(request_mapping)} requests across replicas")
@@ -454,8 +453,8 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         This method handles the case where requests arrive incrementally from
         prefill cluster via KV cache transfer. It maintains load awareness
-        across (replica_id, dp_id) combinations and assigns requests to the
-        least loaded replicas in a round-robin fashion.
+        across serving Replicas and assigns requests to the least loaded Replica
+        in a round-robin fashion.
         """
         request_mapping = []
 
@@ -466,24 +465,24 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         while self._request_queue:
             request = self._request_queue.pop(0)
 
-            # Find the (replica_id, dp_id) combination with minimum load
+            # Find the serving Replica with minimum load.
             # In case of ties, use round-robin to break ties
-            min_load = min(self._replica_dp_load_tracker.values())
+            min_load = min(self._replica_load_tracker.values())
             candidates = [
-                (replica_id, dp_id) for (replica_id, dp_id), load
-                in self._replica_dp_load_tracker.items()
+                replica_id
+                for replica_id, load in self._replica_load_tracker.items()
                 if load == min_load
             ]
 
             # Use round-robin among candidates with minimum load
             selected_idx = self._request_counter % len(candidates)
-            selected_replica_id, selected_dp_id = candidates[selected_idx]
+            selected_replica_id = candidates[selected_idx]
 
             # Assign request to selected replica
-            request_mapping.append((selected_replica_id, selected_dp_id, request))
+            request_mapping.append((selected_replica_id, None, request))
 
             # Update load tracker for the selected replica
-            self._replica_dp_load_tracker[(selected_replica_id, selected_dp_id)] += 1
+            self._replica_load_tracker[selected_replica_id] += 1
 
             # Increment request counter for round-robin tie-breaking
             self._request_counter += 1
@@ -498,10 +497,10 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         including requests that may have been processed or completed since
         the last scheduling round.
         """
-        for (replica_id, dp_id) in self._replica_dp_load_tracker.keys():
-            scheduler_key = (replica_id, dp_id)
+        for replica_id in self._replica_load_tracker.keys():
+            scheduler_key = (replica_id, None)
             current_pending = self._replica_schedulers[scheduler_key].num_pending_requests
-            self._replica_dp_load_tracker[(replica_id, dp_id)] = current_pending
+            self._replica_load_tracker[replica_id] = current_pending
 
     def _schedule_dynamic_with_af_priority(self) -> List[Tuple[int, int, Request]]:
         """
@@ -563,26 +562,26 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             Tuple[int, None]: (replica_id, None) for the full-stage scheduler
         """
         # Initialize load tracker if not exists
-        if not hasattr(self, '_replica_dp_load_tracker') or not self._replica_dp_load_tracker:
-            self._replica_dp_load_tracker = {}
+        if not hasattr(self, '_replica_load_tracker') or not self._replica_load_tracker:
+            self._replica_load_tracker = {}
             replica_ids = list(self._cluster.replicas.keys())
             for replica_id in replica_ids:
-                self._replica_dp_load_tracker[(replica_id, None)] = 0
+                self._replica_load_tracker[replica_id] = 0
 
         # Update load tracker with current pending requests from replica schedulers
         self._update_load_tracker()
 
-        # Find the (replica_id, dp_id) combination with minimum load
-        min_load = min(self._replica_dp_load_tracker.values())
+        # Find the serving Replica with minimum load.
+        min_load = min(self._replica_load_tracker.values())
         candidates = [
-            (replica_id, dp_id) for (replica_id, dp_id), load
-            in self._replica_dp_load_tracker.items()
+            replica_id
+            for replica_id, load in self._replica_load_tracker.items()
             if load == min_load
         ]
 
         # Use round-robin among candidates with minimum load
         selected_idx = self._request_counter % len(candidates)
-        return candidates[selected_idx]
+        return candidates[selected_idx], None
 
     def _commit_decode_ffn_m2n_queue_operations(self, operations) -> None:
         """Commit prepared DECODE_FFN queue writes as one validated batch."""

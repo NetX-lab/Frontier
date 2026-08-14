@@ -173,3 +173,13 @@ def test_cluster_scheduler_child_map_uses_replica_local_identity() -> None:
     assert "self._replica_schedulers" in combined
     assert "def get_replica_scheduler(" in combined
     assert "def get_replica_stage_scheduler(" in combined
+
+
+def test_round_robin_decode_attn_load_tracker_is_replica_scoped() -> None:
+    source = Path(
+        "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py"
+    ).read_text(encoding="utf-8")
+
+    assert "_replica_load_tracker" in source
+    assert "_replica_dp_load_tracker" not in source
+    assert "intra-Replica attention-DP" in source
