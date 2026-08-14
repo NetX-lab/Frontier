@@ -27,6 +27,9 @@ from frontier.moe_ep_workload import (
 from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
     ReplicaSchedulerRegistry,
 )
+from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
+    StageExecutionContext,
+)
 from frontier.types import (
     ClusterType,
     ClusterSchedulerType,
@@ -283,6 +286,7 @@ class BaseClusterScheduler(ABC):
         self._replica_dp_size = self._config.replica_config.data_parallel_size
         self._available_clusters = available_clusters or set()
         self._request_generator_config = request_generator_config
+        self._stage_execution_contexts = self._build_stage_execution_contexts()
         self._decode_shared_domain_related_wait_ms_by_batch: Dict[
             Tuple[int, int, int], float
         ] = defaultdict(float)
@@ -584,6 +588,48 @@ class BaseClusterScheduler(ABC):
 
         self._batch_group_creation_counter = 0
 
+    def _build_stage_execution_contexts(self) -> dict[tuple[int, int], StageExecutionContext]:
+        """Create one parent admission context for every physical Replica stage."""
+
+        replica_config = getattr(self._config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        if replica_config is None or model_config is None:
+            raise ValueError(
+                "Stage execution contexts require replica_config.model_config"
+            )
+        model_is_moe = bool(getattr(model_config, "is_moe", False))
+        configured_ep_size = getattr(replica_config, "moe_expert_parallel_size", None)
+        if model_is_moe:
+            if type(configured_ep_size) is not int or configured_ep_size <= 0:
+                raise ValueError(
+                    "MoE stage execution contexts require an exact positive "
+                    "moe_expert_parallel_size"
+                )
+            ep_size = configured_ep_size
+        else:
+            ep_size = 1
+
+        contexts: dict[tuple[int, int], StageExecutionContext] = {}
+        for replica_id, replica in self._cluster.replicas.items():
+            if type(replica_id) is not int or replica_id < 0:
+                raise ValueError(
+                    "Cluster Replica IDs must be exact non-negative ints"
+                )
+            num_stages = getattr(replica, "num_pipeline_stages", None)
+            if num_stages is None:
+                num_stages = getattr(replica_config, "num_pipeline_stages", None)
+            if type(num_stages) is not int or num_stages <= 0:
+                raise ValueError(
+                    "Replica num_pipeline_stages must be an exact positive int"
+                )
+            for stage_id in range(num_stages):
+                contexts[(replica_id, stage_id)] = StageExecutionContext(
+                    replica_id=replica_id,
+                    stage_id=stage_id,
+                    ep_size=ep_size,
+                )
+        return contexts
+
 
     def sort_requests(self) -> None:
         self._request_queue.sort(key=lambda request: request._arrived_at)
@@ -632,6 +678,50 @@ class BaseClusterScheduler(ABC):
         return self._dp_replica_schedulers[(replica_id, dp_id)].get_replica_stage_scheduler(
             stage_id
         )
+
+    def get_stage_execution_context(
+        self, replica_id: int, stage_id: int
+    ) -> StageExecutionContext:
+        """Return the parent admission owner for one physical Replica stage."""
+
+        if type(replica_id) is not int or replica_id < 0:
+            raise ValueError("replica_id must be an exact non-negative int")
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError("stage_id must be an exact non-negative int")
+        contexts = getattr(self, "_stage_execution_contexts", None)
+        if type(contexts) is not dict:
+            raise RuntimeError("Stage execution contexts were not initialized")
+        try:
+            return contexts[(replica_id, stage_id)]
+        except KeyError as exc:
+            raise ValueError(
+                "Unknown Replica/stage admission context: "
+                f"replica_id={replica_id}, stage_id={stage_id}"
+            ) from exc
+
+    def release_stage_admission_for_batch(
+        self,
+        batch: Batch,
+        *,
+        stage_id: int | None = None,
+    ) -> None:
+        """Release a batch's parent stage owner at its true completion boundary."""
+
+        ticket = getattr(batch, "_stage_admission_ticket", None)
+        if ticket is None:
+            return
+        if stage_id is None:
+            stage_id = getattr(batch, "afd_stage_idx", None)
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError(
+                "stage_id is required to release a stage admission ticket"
+            )
+        context = self.get_stage_execution_context(
+            int(ticket.replica_id),
+            stage_id,
+        )
+        context.release(ticket)
+        batch.__dict__.pop("_stage_admission_ticket", None)
 
     def make_decode_sync_global_id(
         self,
@@ -2230,6 +2320,14 @@ class BaseClusterScheduler(ABC):
             )
 
             raw_batch.time = time
+
+        # Parent ownership is released only after combine, transfer creation,
+        # request accounting, and activation cleanup have all completed.
+        canonical_ep_batch = ep_batches[canonical_ep_id]
+        self.release_stage_admission_for_batch(
+            canonical_ep_batch,
+            stage_id=stage_id,
+        )
         logger.info(f"[DEBUG] Created {len(m2n_events)} M2N transfer events: "
                     f"{[event.event_type.name if event and hasattr(event, 'event_type') and event.event_type else 'Unknown' for event in m2n_events]}")
 

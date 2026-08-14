@@ -371,6 +371,17 @@ class BaseReplicaScheduler(ABC):
                 self._predictor,
                 self._cluster_type,
                 self._dp_id,
+                stage_execution_context=(
+                    cluster_scheduler.get_stage_execution_context(
+                        replica.id,
+                        stage_id,
+                    )
+                    if cluster_scheduler is not None
+                    and callable(
+                        getattr(cluster_scheduler, "get_stage_execution_context", None)
+                    )
+                    else None
+                ),
             )
             for stage_id in range(self._num_stages)
         }

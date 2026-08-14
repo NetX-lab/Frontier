@@ -951,6 +951,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         source_batch_ids = group_preflight.source_batch_ids
         group_activation_bytes = group_preflight.group_activation_bytes
         layer_global_id = group_preflight.layer_global_id
+        afd_stage_idx = group_preflight.afd_stage_idx
         target_replica_id = group_preflight.target_replica_id
 
         model_config = self._config.replica_config.model_config
@@ -1069,7 +1070,32 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
                 "[FFN-GROUP] Affected EP lanes prepared for commit: "
                 f"{sorted(affected_ep_pairs)}"
             )
-            self._commit_decode_ffn_m2n_queue_operations(queue_operations)
+            stage_context = None
+            stage_context_getter = getattr(self, "get_stage_execution_context", None)
+            if callable(stage_context_getter) and (
+                hasattr(self, "_stage_execution_contexts")
+                or "get_stage_execution_context" in self.__dict__
+            ):
+                stage_context = stage_context_getter(
+                    target_replica_id,
+                    afd_stage_idx,
+                )
+            stage_ticket = None
+            if stage_context is not None:
+                stage_ticket = stage_context.enqueue_ep_wave(
+                    operation_id=shared_group_id,
+                    participant_ep_ids=tuple(range(ep_size)),
+                )
+                for _, ep_batch_group in ep_batch_groups:
+                    ep_batch_group._stage_admission_ticket = stage_ticket
+            try:
+                self._commit_decode_ffn_m2n_queue_operations(queue_operations)
+            except Exception:
+                if stage_ticket is not None:
+                    for _, ep_batch_group in ep_batch_groups:
+                        ep_batch_group.__dict__.pop("_stage_admission_ticket", None)
+                    stage_context.cancel(stage_ticket)
+                raise
             for source_batch in raw_batches:
                 self._raw_batch_waiting_for_m2n_back[source_batch.id] = source_batch
             self._batch_group_creation_counter = shared_group_id + 1
@@ -1136,9 +1162,31 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
             f"layer={layer_global_id} source_batches={source_batch_ids} "
             f"total_tokens={sum(all_num_tokens)}"
         )
-        self._commit_decode_ffn_m2n_queue_operations(
-            [(replica_scheduler, dense_batch)]
-        )
+        stage_context = None
+        stage_context_getter = getattr(self, "get_stage_execution_context", None)
+        if callable(stage_context_getter) and (
+            hasattr(self, "_stage_execution_contexts")
+            or "get_stage_execution_context" in self.__dict__
+        ):
+            stage_context = stage_context_getter(
+                target_replica_id,
+                afd_stage_idx,
+            )
+        stage_ticket = None
+        if stage_context is not None:
+            stage_ticket = stage_context.enqueue_full_stage(
+                operation_id=shared_group_id,
+            )
+            dense_batch._stage_admission_ticket = stage_ticket
+        try:
+            self._commit_decode_ffn_m2n_queue_operations(
+                [(replica_scheduler, dense_batch)]
+            )
+        except Exception:
+            if stage_ticket is not None:
+                dense_batch.__dict__.pop("_stage_admission_ticket", None)
+                stage_context.cancel(stage_ticket)
+            raise
         for batch in raw_batches:
             self._raw_batch_waiting_for_m2n_back[batch.id] = batch
         self._batch_group_creation_counter = shared_group_id + 1

@@ -70,6 +70,13 @@ class BatchStageEndEvent(BaseEvent):
             self._cluster_type,
             self._dp_id,
         )
+        release_parent = getattr(
+            cluster_scheduler,
+            "release_stage_admission_for_batch",
+            None,
+        )
+        if callable(release_parent):
+            release_parent(self._batch, stage_id=self._stage_id)
 
         next_events = []
 

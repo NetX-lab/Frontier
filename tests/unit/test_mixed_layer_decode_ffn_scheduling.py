@@ -26,6 +26,11 @@ from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
 from frontier.scheduler.replica_stage_scheduler.replica_stage_schduler import (
     ReplicaStageScheduler,
 )
+from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
+    EP_WAVE,
+    FULL_STAGE_WORLD,
+    StageExecutionContext,
+)
 from frontier.types import ClusterType
 
 
@@ -300,6 +305,26 @@ def test_dense_builder_propagates_decode_ffn_layer_metadata(
     assert dense_batch.afd_stage_idx == 2
 
 
+def test_dense_ffn_batch_uses_full_stage_parent_scope(
+    mixed_model_config,
+) -> None:
+    scheduler, queue_sink = _builder_scheduler(mixed_model_config)
+    context = StageExecutionContext(replica_id=0, stage_id=2, ep_size=2)
+    scheduler.get_stage_execution_context = Mock(return_value=context)
+    source_batch = _source_batch(layer_id=3, afd_stage_idx=2)
+
+    scheduler._schedule_dense_ffn_from_m2n_group(
+        deque([[(source_batch, _transfer_info(layer_id=3, afd_stage_idx=2))]]),
+        Mock(),
+    )
+
+    dense_batch = queue_sink._m2n_immediate_batch_queue[0]
+    ticket = dense_batch._stage_admission_ticket
+    assert ticket.scope == FULL_STAGE_WORLD
+    assert ticket.participant_ep_ids == ()
+    assert context.queued_tickets == (ticket,)
+
+
 def test_dense_builder_rejects_mismatched_afd_stage_idx(
     mixed_model_config,
 ) -> None:
@@ -428,6 +453,31 @@ def _atomicity_scheduler(
         side_effect=lambda _replica_id, ep_id: queue_sinks[ep_id]
     )
     return scheduler, source_batch, transfer_info, queue_sinks
+
+
+def test_decode_ffn_wave_materialization_attaches_one_parent_ticket(
+    mixed_model_config,
+) -> None:
+    scheduler, _, _, queue_sinks = _atomicity_scheduler(
+        mixed_model_config,
+        layer_id=4,
+        ep_size=2,
+    )
+    context = StageExecutionContext(replica_id=0, stage_id=2, ep_size=2)
+    scheduler.get_stage_execution_context = Mock(return_value=context)
+
+    affected = scheduler.schedule_ffn_with_m2n_immediate()
+
+    assert affected == [(0, 0), (0, 1)]
+    lane_batches = [
+        queue_sinks[ep_id]._m2n_immediate_batch_queue[0]
+        for ep_id in (0, 1)
+    ]
+    tickets = [batch._stage_admission_ticket for batch in lane_batches]
+    assert tickets[0] == tickets[1]
+    assert tickets[0].scope == EP_WAVE
+    assert tickets[0].participant_ep_ids == (0, 1)
+    assert context.queued_tickets == (tickets[0],)
 
 
 def _atomicity_snapshot(

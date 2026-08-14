@@ -5,6 +5,10 @@ import logging
 from frontier.entities import Batch, BatchStage, ExecutionTime, EPBatchGroup
 from frontier.entities.batch import DenseFFNBatchGroup
 from frontier.execution_time_predictor import BaseExecutionTimePredictor
+from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
+    StageAdmissionTicket,
+    StageExecutionContext,
+)
 from frontier.types import ClusterType
 
 
@@ -18,6 +22,7 @@ class ReplicaStageScheduler:
         execution_time_predictor: BaseExecutionTimePredictor,
         cluster_type: ClusterType,
         dp_id: int,
+        stage_execution_context: StageExecutionContext | None = None,
     ) -> None:
         self._replica_id = replica_id
         self._stage_id = stage_id
@@ -26,6 +31,7 @@ class ReplicaStageScheduler:
         self._execution_time_predictor = execution_time_predictor
         self._cluster_type = cluster_type
         self._dp_id = dp_id
+        self._stage_execution_context = stage_execution_context
 
         # Priority queue implementation to prevent EP synchronization deadlock
         # Batches are ordered by (global_id, insertion_order) to ensure:
@@ -179,6 +185,8 @@ class ReplicaStageScheduler:
         live_batch._thinking_round_start_times = [
             batch.thinking_round_start_times[index] for index in live_indices
         ]
+        if hasattr(batch, "_stage_admission_ticket"):
+            live_batch._stage_admission_ticket = batch._stage_admission_ticket
         return live_batch
 
     def pop_batch_if_not_busy(self) -> Batch:
@@ -195,6 +203,23 @@ class ReplicaStageScheduler:
         self._last_stale_drop_count = 0
         if self._is_busy or not self._batch_queue:
             return None
+        # A complete operation may have been queued on several child lanes.
+        # Acquire its stage parent before any child marks itself busy or starts
+        # pre-dispatch work.  The first lane acquires the ticket; sibling lanes
+        # observe that the same parent already owns it.
+        _, _, expected_schedule_epoch, queued_batch = self._batch_queue[0]
+        admission_ticket = getattr(queued_batch, "_stage_admission_ticket", None)
+        parent_acquired = False
+        if admission_ticket is not None:
+            if self._stage_execution_context is None:
+                raise ValueError(
+                    "Batch carries a stage admission ticket but no StageExecutionContext"
+                )
+            if queued_batch.schedule_epoch == expected_schedule_epoch:
+                if not self._stage_execution_context.owns(admission_ticket):
+                    if not self._stage_execution_context.try_acquire(admission_ticket):
+                        return None
+                    parent_acquired = True
         while self._batch_queue:
             # heappop returns the smallest element:
             # (global_id, insertion_counter, schedule_epoch, batch)
@@ -204,6 +229,8 @@ class ReplicaStageScheduler:
                 continue
             live_batch = self._materialize_runtime_live_batch(batch)
             if live_batch is None:
+                if parent_acquired:
+                    self._stage_execution_context.release(admission_ticket)
                 self._last_stale_drop_count += 1
                 continue
             self._is_busy = True
