@@ -162,3 +162,18 @@ def test_sticky_round_robin_uses_ep_identity_for_ffn_targets() -> None:
 
     assert "ep_id" in source
     assert "dp_id" not in source
+
+
+def test_thinking_mode_requeue_uses_replica_local_identity() -> None:
+    request_source = Path("frontier/entities/request.py").read_text(
+        encoding="utf-8"
+    )
+    event_source = Path(
+        "frontier/events/thinking_round_requeue_event.py"
+    ).read_text(encoding="utf-8")
+
+    assert "thinking_home_replica_local_id" in request_source
+    assert "thinking_home_dp_id" not in request_source
+    assert "replica_local_id" in event_source
+    assert "thinking_home_dp_id" not in event_source
+    assert '"dp_id"' not in event_source
