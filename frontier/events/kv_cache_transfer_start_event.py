@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from frontier.events.base_event import BaseEvent
 from frontier.types import ClusterType, EventType
@@ -16,7 +16,7 @@ class KVCacheTransferStartEvent(BaseEvent):
         self,
         time: float,
         source_replica_id: int,
-        source_dp_id: int,
+        source_replica_local_id: Optional[int],
         target_cluster_type: ClusterType,
         batch: "Batch",
         kv_cache_size_bytes: int,
@@ -25,7 +25,7 @@ class KVCacheTransferStartEvent(BaseEvent):
     ) -> None:
         super().__init__(time, EventType.KV_CACHE_TRANSFER_START)
         self._source_replica_id = source_replica_id
-        self._source_dp_id = source_dp_id
+        self._source_replica_local_id = source_replica_local_id
         self._source_cluster_type = source_cluster_type
         self._target_cluster_type = target_cluster_type
         self._batch = batch
@@ -45,7 +45,7 @@ class KVCacheTransferStartEvent(BaseEvent):
             source_cluster_type=self._source_cluster_type,
             target_cluster_type=self._target_cluster_type,
             source_replica_id=self._source_replica_id,
-            source_dp_id=self._source_dp_id,
+            source_replica_local_id=self._source_replica_local_id,
             kv_cache_size_bytes=self._kv_cache_size_bytes,
             transfer_time_ms=self._transfer_time_ms,
             transfer_start_time=self.time,
@@ -54,7 +54,7 @@ class KVCacheTransferStartEvent(BaseEvent):
         metrics_store.on_kv_cache_transfer_start(
             self.time,
             self._source_replica_id,
-            self._source_dp_id,
+            self._source_replica_local_id,
             self._target_cluster_type,
             self._kv_cache_size_bytes,
             transfer_info,

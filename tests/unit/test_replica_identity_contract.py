@@ -30,3 +30,20 @@ def test_production_scheduler_surface_has_no_retired_replica_dp_size() -> None:
 
     assert "def dp_size(" not in combined
     assert "_replica_dp_size" not in combined
+
+
+def test_afd_transport_identity_has_no_dp_named_fields() -> None:
+    production_paths = [
+        Path("frontier/entities/batch.py"),
+        Path("frontier/entities/m2n_transfer_info.py"),
+        Path("frontier/entities/kv_cache_transfer_info.py"),
+        Path("frontier/events/m2n_transfer_start_event.py"),
+        Path("frontier/events/kv_cache_transfer_start_event.py"),
+        Path("frontier/events/cluster_batch_end_event.py"),
+    ]
+    combined = "\n".join(
+        path.read_text(encoding="utf-8") for path in production_paths
+    )
+
+    assert "decode_attn_original_dp_id" not in combined
+    assert "source_dp_id" not in combined

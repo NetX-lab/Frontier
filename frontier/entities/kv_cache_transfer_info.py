@@ -15,7 +15,7 @@ class KVCacheTransferInfo:
     source_cluster_type: ClusterType
     target_cluster_type: ClusterType
     source_replica_id: int
-    source_dp_id: int
+    source_replica_local_id: Optional[int]
     kv_cache_size_bytes: int
     transfer_time_ms: float
     transfer_start_time: float

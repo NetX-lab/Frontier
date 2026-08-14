@@ -839,10 +839,10 @@ class Simulator:
             if hasattr(event, "_dp_id"):
                 details["dp_id"] = getattr(event, "_dp_id")
             elif (
-                hasattr(batch, "decode_attn_original_dp_id")
-                and batch.decode_attn_original_dp_id is not None
+                hasattr(batch, "decode_attn_original_replica_local_id")
+                and batch.decode_attn_original_replica_local_id is not None
             ):
-                details["dp_id"] = batch.decode_attn_original_dp_id
+                details["dp_id"] = batch.decode_attn_original_replica_local_id
 
             details["batch_size"] = getattr(batch, "size", "unknown")
             details["num_tokens"] = getattr(batch, "total_num_tokens", "unknown")

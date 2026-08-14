@@ -15,7 +15,7 @@ class M2NTransferStartEvent(BaseEvent):
         self,
         time: float,
         source_replica_id: int,
-        source_dp_id: int,
+        source_replica_local_id: Optional[int],
         source_cluster_type: ClusterType,
         target_cluster_type: ClusterType,
         batch: "Batch",
@@ -27,7 +27,7 @@ class M2NTransferStartEvent(BaseEvent):
         super().__init__(time, EventType.M2N_TRANSFER_START)
 
         self._source_replica_id = source_replica_id
-        self._source_dp_id = source_dp_id
+        self._source_replica_local_id = source_replica_local_id
         self._source_cluster_type = source_cluster_type
         self._target_cluster_type = target_cluster_type
         self._batch = batch
@@ -61,7 +61,7 @@ class M2NTransferStartEvent(BaseEvent):
             source_cluster_type=self._source_cluster_type,
             target_cluster_type=self._target_cluster_type,
             source_replica_id=self._source_replica_id,
-            source_dp_id=self._source_dp_id,
+            source_replica_local_id=self._source_replica_local_id,
             activation_size_bytes=self._activation_size_bytes,
             transfer_time_ms=self._transfer_time_ms,
             transfer_start_time=self.time,

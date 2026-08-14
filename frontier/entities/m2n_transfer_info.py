@@ -15,7 +15,7 @@ class M2NTransferInfo:
     source_cluster_type: ClusterType
     target_cluster_type: ClusterType
     source_replica_id: int
-    source_dp_id: int
+    source_replica_local_id: Optional[int]
     activation_size_bytes: int
     transfer_time_ms: float
     transfer_start_time: float
@@ -92,7 +92,7 @@ class M2NTransferInfo:
             "source_cluster_type": self.source_cluster_type.name,
             "target_cluster_type": self.target_cluster_type.name,
             "source_replica_id": self.source_replica_id,
-            "source_dp_id": self.source_dp_id,
+            "source_replica_local_id": self.source_replica_local_id,
             "activation_size_bytes": self.activation_size_bytes,
             "effective_data_size_bytes": self.effective_data_size_bytes,
             "transfer_time_ms": self.transfer_time_ms,

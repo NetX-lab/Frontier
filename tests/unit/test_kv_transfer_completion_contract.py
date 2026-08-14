@@ -191,7 +191,7 @@ def test_kv_transfer_end_uses_public_scheduler_completion_contract() -> None:
         target_cluster_type=ClusterType.DECODE,
         source_cluster_type=ClusterType.PREFILL,
         source_replica_id=3,
-        source_dp_id=1,
+        source_replica_local_id=1,
         transfer_time_ms=2.0,
         batch=batch,
     )
@@ -226,7 +226,7 @@ def test_kv_transfer_end_reschedules_source_when_pending_work_remains() -> None:
         target_cluster_type=ClusterType.DECODE,
         source_cluster_type=ClusterType.PREFILL,
         source_replica_id=3,
-        source_dp_id=1,
+        source_replica_local_id=1,
         transfer_time_ms=2.0,
         batch=batch,
     )
@@ -269,7 +269,7 @@ def test_kv_transfer_end_uses_scheduler_reschedule_contract() -> None:
         target_cluster_type=ClusterType.DECODE,
         source_cluster_type=ClusterType.PREFILL,
         source_replica_id=3,
-        source_dp_id=1,
+        source_replica_local_id=1,
         transfer_time_ms=2.0,
         batch=batch,
     )
@@ -316,7 +316,7 @@ def test_replica_scheduler_completion_releases_allocation_and_pending_state(
     scheduler._allocation_map = {request.id: 2}
     scheduler._cluster_type = ClusterType.PREFILL
     scheduler._replica_id = 3
-    scheduler._dp_id = 1
+    scheduler._replica_local_id = 1
     freed_request_ids = []
 
     def _free_request_resources(freed_request) -> None:
@@ -345,7 +345,7 @@ def test_replica_scheduler_completion_requires_pending_transfer_state(
     scheduler._allocation_map = {request.id: 1}
     scheduler._cluster_type = ClusterType.PREFILL
     scheduler._replica_id = 3
-    scheduler._dp_id = 1
+    scheduler._replica_local_id = 1
 
     with pytest.raises(ValueError, match="without pending transfer state"):
         scheduler.complete_kv_transfer_for_requests([request])
@@ -368,7 +368,7 @@ def test_legacy_scheduler_completion_releases_allocation_and_pending_state(
     scheduler._allocation_map = {request.id: 2}
     scheduler._cluster_type = ClusterType.PREFILL
     scheduler._replica_id = 3
-    scheduler._dp_id = 1
+    scheduler._replica_local_id = 1
     freed_request_ids = []
 
     def _free_request_resources(freed_request) -> None:
@@ -440,7 +440,7 @@ def test_kv_transfer_end_does_not_reschedule_source_for_transfer_only_state() ->
         target_cluster_type=ClusterType.DECODE,
         source_cluster_type=ClusterType.PREFILL,
         source_replica_id=3,
-        source_dp_id=1,
+        source_replica_local_id=1,
         transfer_time_ms=2.0,
         batch=batch,
     )

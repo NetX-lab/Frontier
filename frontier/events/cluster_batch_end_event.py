@@ -179,7 +179,7 @@ class ClusterBatchEndEvent(BaseEvent):
                         f"batch_global_id={getattr(batch_for_transfer, 'global_id', '?')} "
                         "decode_attn_orig="
                         f"(replica={getattr(batch_for_transfer, 'decode_attn_original_replica_id', '?')},"
-                        f"dp={getattr(batch_for_transfer, 'decode_attn_original_dp_id', '?')}) "
+                        f"dp={getattr(batch_for_transfer, 'decode_attn_original_replica_local_id', '?')}) "
                         f"target={ClusterType.DECODE_ATTN.name} "
                         f"size={activation_size}B t_ms={transfer_time:.3f}"
                     )
@@ -195,8 +195,8 @@ class ClusterBatchEndEvent(BaseEvent):
                         source_replica_id=(
                             batch_for_transfer.decode_attn_original_replica_id
                         ),
-                        source_dp_id=(
-                            batch_for_transfer.decode_attn_original_dp_id
+                        source_replica_local_id=(
+                            batch_for_transfer.decode_attn_original_replica_local_id
                         ),
                         source_cluster_type=ClusterType.DECODE_FFN,
                         target_cluster_type=ClusterType.DECODE_ATTN,
@@ -270,7 +270,7 @@ class ClusterBatchEndEvent(BaseEvent):
                         KVCacheTransferStartEvent(
                             self.time,
                             source_replica_id=self._replica_id,
-                            source_dp_id=self._dp_id,
+                            source_replica_local_id=self._dp_id,
                             target_cluster_type=target_cluster,
                             batch=single_request_batch,
                             kv_cache_size_bytes=kv_cache_size_bytes,
@@ -364,7 +364,7 @@ class ClusterBatchEndEvent(BaseEvent):
                 logger.info(
                     f"[ISSUE-007][A2F][READY] batch_id={self._batch.id}, "
                     f"decode_attn_original_replica_id={getattr(self._batch, 'decode_attn_original_replica_id', 'MISSING')}, "
-                    f"decode_attn_original_dp_id={getattr(self._batch, 'decode_attn_original_dp_id', 'MISSING')}, "
+                    f"decode_attn_original_replica_local_id={getattr(self._batch, 'decode_attn_original_replica_local_id', 'MISSING')}, "
                     f"layer_id={current_layer_id}"
                 )
                 next_events.extend(

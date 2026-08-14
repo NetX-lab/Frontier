@@ -4406,7 +4406,7 @@ class MetricsStore:
         self,
         time: float,
         source_replica_id: int,
-        source_dp_id: int,
+        source_replica_local_id: int,
         target_cluster_type: ClusterType,
         kv_cache_size_bytes: int,
         transfer_info: Any,
@@ -4446,7 +4446,7 @@ class MetricsStore:
             transfer_meta["parallel_context"] = build_parallel_context(trace_context)
             transfer_meta["model_name"] = cluster_config.replica_config.model_name
             transfer_meta["request_ids"] = request_ids
-            transfer_meta["source_dp_id"] = source_dp_id
+            transfer_meta["source_replica_local_id"] = source_replica_local_id
 
             event = TraceEvent(
                 type="TRANSFER",
@@ -4534,7 +4534,7 @@ class MetricsStore:
                     "parallel_context": build_parallel_context(trace_context),
                     "model_name": cluster_config.replica_config.model_name,
                     "request_ids": request_ids,
-                    "source_dp_id": transfer_info.source_dp_id,
+                    "source_replica_local_id": transfer_info.source_replica_local_id,
                 }
             )
             transfer_name = (
@@ -4636,7 +4636,7 @@ class MetricsStore:
                     "parallel_context": build_parallel_context(trace_context),
                     "model_name": cluster_config.replica_config.model_name,
                     "request_ids": request_ids,
-                    "source_dp_id": transfer_info.source_dp_id,
+                    "source_replica_local_id": transfer_info.source_replica_local_id,
                     "source_cluster": source_cluster_type.name,
                 }
             )

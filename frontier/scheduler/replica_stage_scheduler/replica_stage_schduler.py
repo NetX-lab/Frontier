@@ -190,7 +190,7 @@ class ReplicaStageScheduler:
         live_batch.decode_attn_original_replica_id = (
             batch.decode_attn_original_replica_id
         )
-        live_batch.decode_attn_original_dp_id = batch.decode_attn_original_dp_id
+        live_batch.decode_attn_original_replica_local_id = batch.decode_attn_original_replica_local_id
         live_batch.decode_cuda_graph_metadata = batch.decode_cuda_graph_metadata
         live_batch.afd_stage_idx = batch.afd_stage_idx
         live_batch.afd_stage_metadata = batch.afd_stage_metadata

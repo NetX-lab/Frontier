@@ -547,7 +547,7 @@ def _event_raw_batch(
         requests=[request],
         time=1.0,
         decode_attn_original_replica_id=decode_attn_original_replica_id,
-        decode_attn_original_dp_id=0,
+        decode_attn_original_replica_local_id=0,
         afd_stage_idx=0,
     )
 

@@ -128,7 +128,7 @@ def _source_batch(*, layer_id: int, afd_stage_idx: int = 2) -> Batch:
     batch = Batch(replica_id=0, requests=[request], num_tokens=[1], is_moe=True)
     batch.afd_stage_idx = afd_stage_idx
     batch.decode_attn_original_replica_id = 0
-    batch.decode_attn_original_dp_id = 0
+    batch.decode_attn_original_replica_local_id = 0
     batch.time = 0.0
     return batch
 
@@ -653,7 +653,7 @@ def _corrupt_decode_ffn_source_batch(
             total_num_tokens=source_batch.total_num_tokens,
             afd_stage_idx=source_batch.afd_stage_idx,
             decode_attn_original_replica_id=0,
-            decode_attn_original_dp_id=0,
+            decode_attn_original_replica_local_id=0,
             time=0.0,
             _num_routing_tokens=-1,
         )

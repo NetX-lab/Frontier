@@ -90,7 +90,7 @@ class M2NTransferEndEvent(BaseEvent):
                     f"[M2N][F2A][ARRIVE][PRE] batch_id={b.id} reqs={req_ids} "
                     f"batch_global_id={getattr(b, 'global_id', '?')} "
                     f"decode_attn_orig=(replica={getattr(b, 'decode_attn_original_replica_id', '?')},"
-                    f"dp={getattr(b, 'decode_attn_original_dp_id', '?')})"
+                    f"dp={getattr(b, 'decode_attn_original_replica_local_id', '?')})"
                 )
         except Exception as _e:
             logger.debug(f"[M2N][F2A][ARRIVE] pre-log error: {_e}")

@@ -119,10 +119,10 @@ class LORClusterScheduler(BaseClusterScheduler):
                     raise ValueError(
                         f"Batch {batch.id} returning to DECODE_ATTN cluster without original Replica assignment."
                     )
-                if batch.decode_attn_original_dp_id is not None:
+                if batch.decode_attn_original_replica_local_id is not None:
                     raise ValueError(
                         "DECODE_ATTN A-to-F uses full-stage identity; "
-                        f"expected original local identity None, got {batch.decode_attn_original_dp_id!r}"
+                        f"expected original local identity None, got {batch.decode_attn_original_replica_local_id!r}"
                     )
                 
                 original_replica_id = batch.decode_attn_original_replica_id

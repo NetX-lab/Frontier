@@ -444,7 +444,7 @@ class BaseReplicaScheduler(ABC):
 
         if self._cluster_type == ClusterType.DECODE_ATTN:
             batch.decode_attn_original_replica_id = self._replica_id
-            batch.decode_attn_original_dp_id = self._replica_local_id
+            batch.decode_attn_original_replica_local_id = self._replica_local_id
 
         return batch
 
@@ -1028,7 +1028,7 @@ class BaseReplicaScheduler(ABC):
         transfer_start_event = M2NTransferStartEvent(
             time=current_time,
             source_replica_id=self._replica_id,
-            source_dp_id=self._replica_local_id,
+            source_replica_local_id=self._replica_local_id,
             source_cluster_type=self._cluster_type,
             target_cluster_type=target_cluster_type,
             batch=batch,

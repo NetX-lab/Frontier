@@ -427,9 +427,9 @@ class Batch(BaseEntity):
         self._id = Batch.generate_id()
 
         # PD-AF Disaggregation support
-        # preserve the original replica ID and DP ID for batches in decode-attn cluster
+        # Preserve the source attention Replica and its full-stage local identity.
         self.decode_attn_original_replica_id: Optional[int] = None
-        self.decode_attn_original_dp_id: Optional[int] = None
+        self.decode_attn_original_replica_local_id: Optional[int] = None
         self.replay_decode_token_index: Optional[int] = None
         self.decode_attn_cohort_id: Optional[int] = None
         self.decode_attn_cohort_request_ids: Optional[tuple[int, ...]] = None
@@ -1204,7 +1204,7 @@ class Batch(BaseEntity):
         lines.append(f"batch id = {self._id}")
         lines.append(
             f"decode_attn_original_replica_id={self.decode_attn_original_replica_id}, "
-            f"decode_attn_original_dp_id={self.decode_attn_original_dp_id}"
+            f"decode_attn_original_replica_local_id={self.decode_attn_original_replica_local_id}"
         )
         lines.append(f"num req = {self.size}, {self.request_ids}")
         lines.append("------------")
