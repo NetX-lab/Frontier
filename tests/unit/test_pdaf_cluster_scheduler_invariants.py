@@ -32,6 +32,37 @@ class _ConcreteClusterScheduler(BaseClusterScheduler):
         raise NotImplementedError
 
 
+def test_pdaf_source_replica_ordinal_maps_sticky_to_target_ffn_replica() -> None:
+    target_ids = [4, 7, 9]
+
+    assert BaseClusterScheduler._map_source_attn_replica_to_ffn_replica(
+        0, target_ids
+    ) == 4
+    assert BaseClusterScheduler._map_source_attn_replica_to_ffn_replica(
+        1, target_ids
+    ) == 7
+    assert BaseClusterScheduler._map_source_attn_replica_to_ffn_replica(
+        2, target_ids
+    ) == 9
+    assert BaseClusterScheduler._map_source_attn_replica_to_ffn_replica(
+        3, target_ids
+    ) == 4
+
+
+def test_pdaf_source_replica_mapping_allows_idle_target_ffn_replicas() -> None:
+    target_ids = [4, 7, 9]
+
+    assigned = {
+        BaseClusterScheduler._map_source_attn_replica_to_ffn_replica(
+            source_ordinal, target_ids
+        )
+        for source_ordinal in range(2)
+    }
+
+    assert assigned == {4, 7}
+    assert 9 not in assigned
+
+
 def _scheduler() -> _ConcreteClusterScheduler:
     return object.__new__(_ConcreteClusterScheduler)
 

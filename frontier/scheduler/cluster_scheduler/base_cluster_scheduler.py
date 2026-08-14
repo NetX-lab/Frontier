@@ -86,6 +86,42 @@ class EPBatchGroupPlan(NamedTuple):
 
 
 class BaseClusterScheduler(ABC):
+    @staticmethod
+    def _map_source_attn_replica_to_ffn_replica(
+        source_replica_ordinal: int,
+        target_ffn_replica_ids: List[int] | Tuple[int, ...],
+    ) -> int:
+        """Map one Attention-Replica ordinal to a sticky FFN Replica.
+
+        The mapping is intentionally based on the source Replica ordinal, not
+        on a retired attention-DP lane.  A target list may be larger than the
+        source population; those extra FFN Replicas remain valid and idle.
+        """
+        if type(source_replica_ordinal) is not int or source_replica_ordinal < 0:
+            raise ValueError(
+                "source_replica_ordinal must be an exact non-negative int, "
+                f"got {source_replica_ordinal!r}"
+            )
+        if type(target_ffn_replica_ids) not in {list, tuple}:
+            raise ValueError(
+                "target_ffn_replica_ids must be an exact list or tuple, "
+                f"got {target_ffn_replica_ids!r}"
+            )
+        if not target_ffn_replica_ids:
+            raise ValueError("target_ffn_replica_ids must not be empty")
+        if any(
+            type(replica_id) is not int or replica_id < 0
+            for replica_id in target_ffn_replica_ids
+        ):
+            raise ValueError(
+                "target_ffn_replica_ids must contain exact non-negative ints"
+            )
+        if len(set(target_ffn_replica_ids)) != len(target_ffn_replica_ids):
+            raise ValueError("target_ffn_replica_ids must not contain duplicates")
+        return target_ffn_replica_ids[
+            source_replica_ordinal % len(target_ffn_replica_ids)
+        ]
+
     def _validate_prefix_cache_cluster_config(self, replica_scheduler_config) -> None:
         prefix_enabled = bool(
             getattr(replica_scheduler_config, "enable_prefix_caching", False)
@@ -462,21 +498,20 @@ class BaseClusterScheduler(ABC):
             }
             self._ffn_lane_to_target_replica: Dict[Tuple[int, int], int] = {}
             for lane_ordinal, lane in enumerate(self._ffn_expected_lanes):
-                target_replica_id = self._ffn_replica_ids[
-                    lane_ordinal % len(self._ffn_replica_ids)
-                ]
+                target_replica_id = self._map_source_attn_replica_to_ffn_replica(
+                    lane_ordinal,
+                    self._ffn_replica_ids,
+                )
                 self._ffn_lane_to_target_replica[lane] = target_replica_id
                 self._ffn_expected_lanes_by_target[target_replica_id].append(lane)
             expected_group_sizes = {
                 replica_id: len(lanes)
                 for replica_id, lanes in self._ffn_expected_lanes_by_target.items()
             }
-            if any(group_size <= 0 for group_size in expected_group_sizes.values()):
-                raise ValueError(
-                    "DECODE_FFN experiment lane assignment must give every target "
-                    f"replica at least one decode-attn lane, got {expected_group_sizes}"
-                )
-            self._ffn_group_micro_batches = max(expected_group_sizes.values())
+            self._ffn_group_micro_batches = max(
+                expected_group_sizes.values(),
+                default=1,
+            )
             self._ffn_idle_lanes = set()
             total_requests = getattr(self._request_generator_config, "num_requests", None)
             if total_requests is not None:
