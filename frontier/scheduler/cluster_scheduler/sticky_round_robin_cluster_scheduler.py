@@ -20,9 +20,9 @@ class StickyRoundRobinClusterScheduler(RoundRobinClusterScheduler):
         if self._cluster_type != ClusterType.DECODE_FFN:
             return [(replica_id, None) for replica_id in replica_ids]
         return [
-            (replica_id, dp_id)
+            (replica_id, ep_id)
             for replica_id in replica_ids
-            for dp_id in range(self._replica_ep_size)
+            for ep_id in range(self._replica_ep_size)
         ]
 
     def _get_target_for_request(self, request: Request) -> tuple[int, int | None]:
@@ -41,8 +41,8 @@ class StickyRoundRobinClusterScheduler(RoundRobinClusterScheduler):
         request_mapping: List[Tuple[int, int | None, Request]] = []
         while self._request_queue:
             request = self._request_queue.pop(0)
-            replica_id, dp_id = self._get_target_for_request(request)
-            request_mapping.append((replica_id, dp_id, request))
+            replica_id, ep_id = self._get_target_for_request(request)
+            request_mapping.append((replica_id, ep_id, request))
         return request_mapping
 
     def schedule(self) -> List[Tuple[int, int, Request]]:

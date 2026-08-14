@@ -153,3 +153,12 @@ def test_cluster_schedule_events_use_replica_local_identity() -> None:
         assert "replica_local_id" in source
         assert "dp_id" not in source
         assert "_dp_replica_set" not in source
+
+
+def test_sticky_round_robin_uses_ep_identity_for_ffn_targets() -> None:
+    source = Path(
+        "frontier/scheduler/cluster_scheduler/sticky_round_robin_cluster_scheduler.py"
+    ).read_text(encoding="utf-8")
+
+    assert "ep_id" in source
+    assert "dp_id" not in source

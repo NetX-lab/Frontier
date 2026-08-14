@@ -150,7 +150,7 @@ class LORClusterScheduler(BaseClusterScheduler):
 
     def _get_least_loaded_replica_lor(self) -> Tuple[int, Optional[int]]:
         """
-        Find the (replica_id, dp_id) combination with least outstanding requests using LOR strategy.
+        Find the least-loaded serving Replica using LOR strategy.
 
         Returns:
             Tuple[int, Optional[int]]: (replica_id, None) with minimum pending requests
