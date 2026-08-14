@@ -303,6 +303,24 @@ def test_dense_pdaf_decode_attn_rejects_data_parallelism() -> None:
         cluster_config._validate_replica_config(replica_config, "decode_attn")
 
 
+@pytest.mark.parametrize("cluster_name", ["prefill", "decode", "monolithic"])
+def test_shared_moe_roles_reject_attention_data_parallelism(
+    cluster_name: str,
+) -> None:
+    replica_config = ReplicaConfig(
+        model_name="step-moe-noquant",
+        cluster_prefix=cluster_name,
+        attn_tensor_parallel_size=2,
+        attn_data_parallel_size=2,
+        moe_tensor_parallel_size=2,
+        moe_expert_parallel_size=2,
+    )
+    cluster_config = object.__new__(ClusterConfig)
+
+    with pytest.raises(ValueError, match="attn_data_parallel_size=1"):
+        cluster_config._validate_replica_config(replica_config, cluster_name)
+
+
 @pytest.mark.parametrize(
     ("replica_kwargs", "expected_field"),
     [

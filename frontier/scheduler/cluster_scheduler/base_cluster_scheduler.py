@@ -2401,6 +2401,268 @@ class BaseClusterScheduler(ABC):
     Layer N-1: attn → sync → moe_comm → moe_comp → sync → moe_comm
     Pipeline: pipeline_time
     """
+    def _materialize_layer_ep_workload_for_batch(
+        self,
+        *,
+        batch: Batch,
+        target_replica_id: int,
+        global_layer_id: int,
+    ):
+        """Materialize one canonical per-layer workload for a full-model MoE batch."""
+
+        replica_config = getattr(self._config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        if replica_config is None or model_config is None:
+            raise ValueError(
+                "Per-layer EP materialization requires replica_config.model_config"
+            )
+        if not model_config.is_moe:
+            raise ValueError(
+                "Per-layer EP materialization is invalid for a dense model"
+            )
+        if type(target_replica_id) is not int or target_replica_id < 0:
+            raise ValueError("target_replica_id must be an exact non-negative int")
+        if type(global_layer_id) is not int or global_layer_id < 0:
+            raise ValueError("global_layer_id must be an exact non-negative int")
+        routing_attr_by_cluster = {
+            ClusterType.PREFILL: "_prefill_routing_details",
+            ClusterType.DECODE: "_decode_routing_details",
+            ClusterType.DECODE_FFN: "_decode_ffn_routing_details",
+        }
+        routing_attr = routing_attr_by_cluster.get(self._cluster_type)
+        if routing_attr is None:
+            raise ValueError(
+                "Per-layer EP materialization is unsupported for cluster "
+                f"{self._cluster_type!r}"
+            )
+        routing_details = getattr(self._predictor, routing_attr, None)
+        if routing_details is None:
+            raise ValueError(
+                f"Missing {routing_attr} for {self._cluster_type.name} EP materialization"
+            )
+        total_expert_num = getattr(replica_config, "total_expert_num", None)
+        moe_ep_size = getattr(replica_config, "moe_expert_parallel_size", None)
+        router_topk = getattr(replica_config, "router_topk", None)
+        if type(total_expert_num) is not int or total_expert_num <= 0:
+            raise ValueError("total_expert_num must be an exact positive int")
+        if type(moe_ep_size) is not int or moe_ep_size <= 0:
+            raise ValueError("moe_expert_parallel_size must be an exact positive int")
+        if type(router_topk) is not int or router_topk <= 0:
+            raise ValueError("router_topk must be an exact positive int")
+        routing_token_count = getattr(batch, "total_num_tokens", None)
+        if type(routing_token_count) is not int or routing_token_count < 0:
+            raise ValueError(
+                "batch.total_num_tokens must be an exact non-negative int for routing"
+            )
+        expert_to_ep = build_contiguous_expert_ownership(
+            total_expert_num,
+            moe_ep_size,
+        )
+        routing_ratios = resolve_routing_details(
+            routing_details,
+            target_replica_id,
+            global_layer_id,
+        )
+        return materialize_layer_ep_workload(
+            routing_ratios=routing_ratios,
+            target_replica_id=target_replica_id,
+            global_layer_id=global_layer_id,
+            routing_token_count=routing_token_count,
+            router_topk=router_topk,
+            total_expert_num=total_expert_num,
+            moe_expert_parallel_size=moe_ep_size,
+            expert_to_ep=expert_to_ep,
+        )
+
+    def _build_prefill_ep_lane_batch(
+        self,
+        *,
+        source_batch: Batch,
+        layer_id: int,
+        ep_id: int,
+        layer_workload,
+    ) -> EPBatchGroup:
+        """Build an EP lane batch for predictor evaluation without request mutation."""
+
+        per_expert_tokens = dict(layer_workload.per_ep_per_expert_tokens[ep_id])
+        logic_num_tokens = list(per_expert_tokens.values())
+        logic_requests = [
+            Request(0.0, 0, num_tokens) for num_tokens in logic_num_tokens
+        ]
+        lane_batch = self._create_batch_group(
+            logic_requests,
+            logic_num_tokens,
+            source_batch.replica_id,
+            ep_id,
+            getattr(source_batch, "time", 0.0) or 0.0,
+            [source_batch.id],
+            per_expert_tokens,
+        )
+        lane_batch.set_global_id(source_batch.global_id)
+        lane_batch.source_batches = [source_batch]
+        lane_batch.decode_ffn_layer_id = layer_id
+        lane_batch.afd_stage_idx = getattr(source_batch, "afd_stage_idx", None)
+        effective_tokens_getter = getattr(
+            source_batch,
+            "get_effective_total_tokens_for_compute",
+            None,
+        )
+        effective_tokens = (
+            int(effective_tokens_getter(self._cluster_type))
+            if callable(effective_tokens_getter)
+            else int(source_batch.total_num_tokens)
+        )
+        if effective_tokens <= 0:
+            raise ValueError(
+                "Prefill EP lane requires positive pre-routing effective tokens"
+            )
+        lane_batch.moe_pre_routing_effective_total_tokens = effective_tokens
+        return lane_batch
+
+    def _on_prefill_ep_wave_ready(
+        self,
+        *,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch: Batch,
+        layer_id: int,
+    ) -> List:
+        """Run one layer's FFN wave and schedule its slowest-lane barrier."""
+
+        from frontier.events.prefill_sync_collective_event import (
+            PrefillSyncCollectiveEvent,
+        )
+
+        if type(time) not in (int, float) or not math.isfinite(float(time)):
+            raise ValueError("prefill EP wave time must be finite")
+        model_config = self._config.replica_config.model_config
+        predictor = self._predictor
+        layer_workload = None
+        lane_times_ms: list[float] = []
+        if model_config.is_moe_layer(layer_id):
+            layer_workload = self._materialize_layer_ep_workload_for_batch(
+                batch=batch,
+                target_replica_id=replica_id,
+                global_layer_id=layer_id,
+            )
+            for ep_id in layer_workload.participant_ep_ids:
+                lane_batch = self._build_prefill_ep_lane_batch(
+                    source_batch=batch,
+                    layer_id=layer_id,
+                    ep_id=ep_id,
+                    layer_workload=layer_workload,
+                )
+                execution_time = predictor.predict_stage_execution_time(
+                    lane_batch,
+                    stage_id,
+                    cluster_type=self._cluster_type,
+                    num_layers=1,
+                    layer_id=layer_id,
+                )
+                post_attention_getter = getattr(
+                    execution_time,
+                    "get_single_layer_post_attention_time",
+                    None,
+                )
+                if not callable(post_attention_getter):
+                    raise ValueError(
+                        "Prefill EP predictor result is missing post-attention timing"
+                    )
+                lane_time_ms = float(post_attention_getter())
+                if not math.isfinite(lane_time_ms) or lane_time_ms < 0:
+                    raise ValueError(
+                        "Prefill EP lane post-attention time must be finite and non-negative"
+                    )
+                lane_times_ms.append(lane_time_ms)
+        else:
+            execution_time = predictor.predict_stage_execution_time(
+                batch,
+                stage_id,
+                cluster_type=self._cluster_type,
+                num_layers=1,
+                layer_id=layer_id,
+            )
+            post_attention_getter = getattr(
+                execution_time,
+                "get_single_layer_post_attention_time",
+                None,
+            )
+            if not callable(post_attention_getter):
+                raise ValueError(
+                    "Prefill dense predictor result is missing post-attention timing"
+                )
+            dense_time_ms = float(post_attention_getter())
+            if not math.isfinite(dense_time_ms) or dense_time_ms < 0:
+                raise ValueError(
+                    "Prefill dense post-attention time must be finite and non-negative"
+                )
+            lane_times_ms.append(dense_time_ms)
+
+        if not lane_times_ms:
+            raise ValueError("Prefill layer wave produced no participant timing")
+        barrier_time_ms = max(lane_times_ms)
+        component_ledger = getattr(
+            batch,
+            "_prefill_model_execution_components_ms_by_stage",
+            None,
+        )
+        if (
+            not isinstance(component_ledger, dict)
+            or stage_id not in component_ledger
+            or not isinstance(component_ledger[stage_id], list)
+        ):
+            raise ValueError(
+                "missing PREFILL model-execution component ledger for EP wave: "
+                f"replica={replica_id}, stage={stage_id}, layer={layer_id}, batch={batch.id}"
+            )
+        component_ledger[stage_id].append(barrier_time_ms)
+        batch._prefill_ep_wave_lane_times_ms = tuple(lane_times_ms)
+        batch._prefill_ep_wave_workload = layer_workload
+
+        sync_room = self._prefill_sync_waiting_room[replica_id][stage_id][
+            batch.global_id
+        ][layer_id]["post_moe"]
+        if sync_room["batches"]:
+            raise ValueError(
+                "PREFILL EP wave post_moe room already contains a batch: "
+                f"replica={replica_id}, stage={stage_id}, layer={layer_id}, "
+                f"batch_global_id={batch.global_id}"
+            )
+        sync_room["batches"][0] = batch
+        sync_room["arrival_times"][0] = time + barrier_time_ms * 1e-3
+        return [
+            PrefillSyncCollectiveEvent(
+                time + barrier_time_ms * 1e-3,
+                replica_id,
+                stage_id,
+                batch.global_id,
+                "post_moe",
+                layer_id,
+                cluster_type=self._cluster_type,
+            )
+        ]
+
+    def _uses_shared_prefill_ep_wave(self, batch: Batch, layer_id: int) -> bool:
+        """Return whether the canonical shared-domain PREFILL path is active."""
+
+        if self._cluster_type != ClusterType.PREFILL:
+            return False
+        replica_config = getattr(self._config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        if model_config is None or not getattr(model_config, "is_moe", False):
+            return False
+        if getattr(replica_config, "attn_data_parallel_size", None) != 1:
+            raise ValueError(
+                "Shared-domain MoE PREFILL requires attn_data_parallel_size=1"
+            )
+        if not isinstance(layer_id, int) or layer_id < 0:
+            raise ValueError("PREFILL layer_id must be an exact non-negative int")
+        routing_details = getattr(self._predictor, "_prefill_routing_details", None)
+        if routing_details is None:
+            raise ValueError("Missing _prefill_routing_details for MoE PREFILL")
+        return True
+
     def on_prefill_sync(self, time: float, replica_id: int, stage_id: int, batch: Batch,
                        dp_id: int, sync_stage: str, layer_id: int, stage_execution_time: float):
         """
@@ -2421,6 +2683,18 @@ class BaseClusterScheduler(ABC):
             raise ValueError(
                 f"on_prefill_sync called for non-MoE model in PREFILL cluster. "
                 f"Dense models should not use sync events."
+            )
+
+        if sync_stage == "pre_moe" and self._uses_shared_prefill_ep_wave(
+            batch,
+            layer_id,
+        ):
+            return self._on_prefill_ep_wave_ready(
+                time=time,
+                replica_id=replica_id,
+                stage_id=stage_id,
+                batch=batch,
+                layer_id=layer_id,
             )
 
         from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveEvent

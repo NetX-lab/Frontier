@@ -4985,7 +4985,19 @@ class ClusterConfig:
                     f"cluster, got {replica_config.router_topk}."
                 )
 
-        if cluster_name in {"prefill", "decode", "monolithic"} and replica_config.model_config.is_moe:
+        normalized_cluster_name = str(cluster_name).strip().lower()
+        if (
+            normalized_cluster_name in {"prefill", "decode", "monolithic"}
+            and replica_config.model_config.is_moe
+            and replica_config.attn_data_parallel_size != 1
+        ):
+            raise ValueError(
+                "MoE shared-domain roles require "
+                f"attn_data_parallel_size=1 in {cluster_name} cluster, got "
+                f"{replica_config.attn_data_parallel_size}."
+            )
+
+        if normalized_cluster_name in {"prefill", "decode", "monolithic"} and replica_config.model_config.is_moe:
             validate_frontier_shared_parallel_domains(
                 FrontierParallelismMapping(
                     cluster_num_replicas=1,
