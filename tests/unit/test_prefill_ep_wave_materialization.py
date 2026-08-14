@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from frontier.entities import Batch, Request
+from frontier.events.dense_layer_complete_event import DenseLayerCompleteEvent
 from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveEvent
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
@@ -138,5 +139,6 @@ def test_prefill_dense_layer_bypasses_ep_materializer(monkeypatch):
     )
 
     assert len(events) == 1
+    assert isinstance(events[0], DenseLayerCompleteEvent)
     assert events[0].time == pytest.approx(0.003)
     assert predictor.calls == [(3, {})]

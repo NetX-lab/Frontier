@@ -2523,6 +2523,7 @@ class BaseClusterScheduler(ABC):
         stage_id: int,
         batch: Batch,
         layer_id: int,
+        dp_id: int = 0,
     ) -> List:
         """Run one layer's FFN wave and schedule its slowest-lane barrier."""
 
@@ -2593,7 +2594,37 @@ class BaseClusterScheduler(ABC):
                 raise ValueError(
                     "Prefill dense post-attention time must be finite and non-negative"
                 )
-            lane_times_ms.append(dense_time_ms)
+            component_ledger = getattr(
+                batch,
+                "_prefill_model_execution_components_ms_by_stage",
+                None,
+            )
+            if (
+                not isinstance(component_ledger, dict)
+                or stage_id not in component_ledger
+                or not isinstance(component_ledger[stage_id], list)
+            ):
+                raise ValueError(
+                    "missing PREFILL model-execution component ledger for dense layer: "
+                    f"replica={replica_id}, stage={stage_id}, layer={layer_id}, batch={batch.id}"
+                )
+            component_ledger[stage_id].append(dense_time_ms)
+            from frontier.events.dense_layer_complete_event import (
+                DenseLayerCompleteEvent,
+            )
+
+            return [
+                DenseLayerCompleteEvent(
+                    time + dense_time_ms * 1e-3,
+                    replica_id,
+                    stage_id,
+                    batch,
+                    dp_id,
+                    layer_id,
+                    "prefill",
+                    self._cluster_type,
+                )
+            ]
 
         if not lane_times_ms:
             raise ValueError("Prefill layer wave produced no participant timing")
@@ -2705,6 +2736,7 @@ class BaseClusterScheduler(ABC):
         stage_id: int,
         batch: Batch,
         layer_id: int,
+        dp_id: int = 0,
     ) -> List:
         """Run one unified-DECODE layer's local EP wave and barrier."""
 
@@ -2792,8 +2824,22 @@ class BaseClusterScheduler(ABC):
                 raise ValueError(
                     "Decode dense post-attention time must be finite and non-negative"
                 )
-            lane_times_ms.append(dense_time_ms)
-            lane_comm_times_ms.append(0.0)
+            from frontier.events.dense_layer_complete_event import (
+                DenseLayerCompleteEvent,
+            )
+
+            return [
+                DenseLayerCompleteEvent(
+                    time + dense_time_ms * 1e-3,
+                    replica_id,
+                    stage_id,
+                    batch,
+                    dp_id,
+                    layer_id,
+                    "decode",
+                    self._cluster_type,
+                )
+            ]
 
         if not lane_times_ms:
             raise ValueError("Decode layer wave produced no participant timing")
@@ -2908,6 +2954,7 @@ class BaseClusterScheduler(ABC):
                 stage_id=stage_id,
                 batch=batch,
                 layer_id=layer_id,
+                dp_id=dp_id,
             )
 
         from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveEvent
@@ -3026,8 +3073,68 @@ class BaseClusterScheduler(ABC):
 
         return []
 
-    def on_prefill_sync_collective(self, time: float, replica_id: int, stage_id: int,
-                                  batch_global_id: int, sync_stage: str, layer_id: int, metrics_store):
+    def on_dense_layer_complete(
+        self,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch: Batch,
+        dp_id: int,
+        layer_id: int,
+        phase: str,
+        metrics_store,
+    ) -> List:
+        """Advance a dense layer without emitting or waiting on an EP collective.
+
+        The existing layer-transition code is shared with the post-MoE path so
+        request counters, per-layer attention scheduling, and final stage
+        accounting stay identical.  A single local entry is used only as an
+        internal handoff to that transition helper; no collective event is
+        created and no EP participant is admitted.
+        """
+        if phase == "prefill":
+            batch_global_id = int(batch.global_id)
+            return self.on_prefill_sync_collective(
+                time,
+                replica_id,
+                stage_id,
+                batch_global_id,
+                "post_moe",
+                layer_id,
+                metrics_store,
+                direct_batch=batch,
+                direct_dp_id=dp_id,
+            )
+
+        if phase == "decode":
+            batch_global_id = self._get_decode_sync_wait_key(batch)
+            return self.on_decode_sync_collective(
+                time,
+                replica_id,
+                stage_id,
+                batch_global_id,
+                "post_moe",
+                layer_id,
+                metrics_store,
+                direct_batch=batch,
+                direct_dp_id=dp_id,
+            )
+
+        raise ValueError(f"Unsupported dense layer completion phase: {phase!r}")
+
+    def on_prefill_sync_collective(
+        self,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch_global_id: int,
+        sync_stage: str,
+        layer_id: int,
+        metrics_store,
+        *,
+        direct_batch: Optional[Batch] = None,
+        direct_dp_id: int = 0,
+    ):
         """
         Handle collective synchronization completion in prefill cluster.
 
@@ -3051,16 +3158,27 @@ class BaseClusterScheduler(ABC):
 
         # Check if this sync_stage has already been processed by another replica
         # This can happen when multiple replicas reach the same sync point and each creates a PrefillSyncCollectiveEvent
-        if sync_stage not in self._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id]:
-            logger.debug(
-                f"[PREFILL_SYNC][COLLECTIVE_SKIP] sync_stage={sync_stage} already processed for "
-                f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
-            )
-            return []
+        if direct_batch is not None:
+            if sync_stage != "post_moe":
+                raise ValueError(
+                    "Direct dense PREFILL completion is valid only for post_moe transition"
+                )
+            sync_wait_room = {
+                "batches": {direct_dp_id: direct_batch},
+                "arrival_times": {direct_dp_id: time},
+            }
+            dp_batches = sync_wait_room["batches"]
+        else:
+            if sync_stage not in self._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id]:
+                logger.debug(
+                    f"[PREFILL_SYNC][COLLECTIVE_SKIP] sync_stage={sync_stage} already processed for "
+                    f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
+                )
+                return []
 
-        # Get the synchronized batches and clean up waiting room
-        sync_wait_room = self._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id].pop(sync_stage)
-        dp_batches = sync_wait_room["batches"]
+            # Get the synchronized batches and clean up waiting room
+            sync_wait_room = self._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id].pop(sync_stage)
+            dp_batches = sync_wait_room["batches"]
 
         try:
             dp_keys = list(dp_batches.keys())
@@ -3883,6 +4001,7 @@ class BaseClusterScheduler(ABC):
                 stage_id=stage_id,
                 batch=batch,
                 layer_id=layer_id,
+                dp_id=dp_id,
             )
 
         from frontier.events.decode_sync_collective_event import DecodeSyncCollectiveEvent
@@ -4071,8 +4190,19 @@ class BaseClusterScheduler(ABC):
 
         return []
 
-    def on_decode_sync_collective(self, time: float, replica_id: int, stage_id: int,
-                                  batch_global_id: int, sync_stage: str, layer_id: int, metrics_store):
+    def on_decode_sync_collective(
+        self,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch_global_id: int,
+        sync_stage: str,
+        layer_id: int,
+        metrics_store,
+        *,
+        direct_batch: Optional[Batch] = None,
+        direct_dp_id: int = 0,
+    ):
         """
         Handle collective synchronization completion in DECODE cluster.
 
@@ -4095,15 +4225,26 @@ class BaseClusterScheduler(ABC):
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name)
 
-        if sync_stage not in self._decode_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id]:
-            logger.debug(
-                f"[DECODE_SYNC][COLLECTIVE_SKIP] sync_stage={sync_stage} already processed for "
-                f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
-            )
-            return []
+        if direct_batch is not None:
+            if sync_stage != "post_moe":
+                raise ValueError(
+                    "Direct dense DECODE completion is valid only for post_moe transition"
+                )
+            sync_wait_room = {
+                "batches": {direct_dp_id: direct_batch},
+                "arrival_times": {direct_dp_id: time},
+            }
+            dp_batches = sync_wait_room["batches"]
+        else:
+            if sync_stage not in self._decode_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id]:
+                logger.debug(
+                    f"[DECODE_SYNC][COLLECTIVE_SKIP] sync_stage={sync_stage} already processed for "
+                    f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
+                )
+                return []
 
-        sync_wait_room = self._decode_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id].pop(sync_stage)
-        dp_batches = sync_wait_room["batches"]
+            sync_wait_room = self._decode_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id].pop(sync_stage)
+            dp_batches = sync_wait_room["batches"]
 
         try:
             dp_keys = list(dp_batches.keys())
@@ -4129,6 +4270,10 @@ class BaseClusterScheduler(ABC):
         execution_time_predictor = stage_scheduler._execution_time_predictor
         canonical_ep_wave = hasattr(sample_batch, "_decode_ep_wave_lane_times_ms")
         if canonical_ep_wave:
+            participant_count = 1
+            shared_domain_sync = False
+            global_batch = sample_batch
+        elif direct_batch is not None:
             participant_count = 1
             shared_domain_sync = False
             global_batch = sample_batch
