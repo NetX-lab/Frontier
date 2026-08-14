@@ -743,7 +743,7 @@ class ExecutionTimePredictionModelManager:
             }
         )
         requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
-            getattr(replica_config, "moe_routing_mode", "simulation")
+            getattr(replica_config, "moe_routing_distribution_type", "balanced")
         )
 
         missing_requirements: List[str] = []
@@ -885,7 +885,7 @@ class ExecutionTimePredictionModelManager:
                 cluster_type,
             )
             requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
-                getattr(replica_config, "moe_routing_mode", "simulation")
+                getattr(replica_config, "moe_routing_distribution_type", "balanced")
             )
 
             moe_df_cache: Dict[

@@ -145,7 +145,7 @@ def test_deferred_trace_fields_are_preserved_by_replica_config_copy() -> None:
 def test_trace_driven_moe_routing_fails_without_silent_fallback(tmp_path: Path) -> None:
     replica_config = ReplicaConfig(
         model_name="llama2_7b_dense_example",
-        moe_routing_mode="trace_driven",
+        moe_routing_trace_path="/data/ycfeng/tmp/deferred-trace.jsonl",
     )
 
     with pytest.raises(ValueError, match=DEFERRED_ERROR_MARKER):

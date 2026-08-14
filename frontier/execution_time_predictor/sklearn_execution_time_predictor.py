@@ -5025,10 +5025,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 or getattr(proposer_model_config, "num_experts_per_tok", 1)
                 or 1
             ),
-            moe_routing_mode=getattr(
+            moe_routing_distribution_type=getattr(
                 self._replica_config,
-                "moe_routing_mode",
-                "simulation",
+                "moe_routing_distribution_type",
+                "balanced",
             ),
             moe_routing_seed=int(
                 getattr(self._replica_config, "moe_routing_seed", 42)

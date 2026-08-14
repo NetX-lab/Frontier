@@ -33,7 +33,6 @@ def _build_pdaf_cluster_config(
     *,
     model_name: str,
     decode_ffn_replicas: int = 1,
-    allow_experiment_multi_decode_ffn_replicas: bool = False,
     **overrides,
 ) -> ClusterConfig:
     config_kwargs = dict(
@@ -43,9 +42,6 @@ def _build_pdaf_cluster_config(
         prefill_cluster_num_replicas=1,
         decode_attn_cluster_num_replicas=2,
         decode_ffn_cluster_num_replicas=decode_ffn_replicas,
-        allow_experiment_multi_decode_ffn_replicas=(
-            allow_experiment_multi_decode_ffn_replicas
-        ),
         decode_attn_af_pipeline_num_micro_batch=1,
         decode_ffn_af_pipeline_num_micro_batch=1,
     )
@@ -373,14 +369,10 @@ def test_moe_pdaf_config_accepts_multiple_decode_ffn_replicas_as_capacity() -> N
     assert config.decode_ffn_cluster_num_replicas == 2
 
 
-def test_moe_pdaf_config_ignores_legacy_multi_replica_opt_in() -> None:
-    config = _build_pdaf_cluster_config(
-        model_name="step-moe-noquant",
-        decode_ffn_replicas=2,
-        allow_experiment_multi_decode_ffn_replicas=True,
+def test_removed_multi_replica_opt_in_is_not_a_config_field() -> None:
+    assert "allow_experiment_multi_decode_ffn_replicas" not in (
+        ClusterConfig.__dataclass_fields__
     )
-
-    assert config.decode_ffn_cluster_num_replicas == 2
 
 
 def test_dense_pdaf_runtime_allows_multiple_decode_ffn_replicas() -> None:
@@ -402,9 +394,7 @@ def test_moe_pdaf_runtime_accepts_multiple_decode_ffn_replicas() -> None:
     config = _build_pdaf_cluster_config(
         model_name="step-moe-noquant",
         decode_ffn_replicas=2,
-        allow_experiment_multi_decode_ffn_replicas=True,
     )
-    config.allow_experiment_multi_decode_ffn_replicas = False
     scheduler = _build_decode_ffn_scheduler(config)
     assert scheduler._ffn_replica_ids == [3, 4]
 
@@ -413,7 +403,6 @@ def test_moe_pdaf_runtime_preserves_multi_replica_capacity() -> None:
     config = _build_pdaf_cluster_config(
         model_name="step-moe-noquant",
         decode_ffn_replicas=2,
-        allow_experiment_multi_decode_ffn_replicas=True,
     )
 
     scheduler = _build_decode_ffn_scheduler(config)
@@ -425,9 +414,4 @@ def test_decode_ffn_replica_help_distinguishes_dense_and_moe_contracts() -> None
     help_text = ClusterConfig.__dataclass_fields__[
         "decode_ffn_cluster_num_replicas"
     ].metadata["help"]
-    experiment_help_text = ClusterConfig.__dataclass_fields__[
-        "allow_experiment_multi_decode_ffn_replicas"
-    ].metadata["help"]
-
     assert "independent FFN serving copy" in help_text
-    assert "Deprecated no-op" in experiment_help_text

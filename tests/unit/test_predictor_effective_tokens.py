@@ -124,13 +124,13 @@ def test_sklearn_moe_predictor_uses_effective_tokens_for_local_ep_routed_tokens(
     assert result == 4
 
 
-def test_sklearn_moe_predictor_uses_effective_tokens_for_uniform_legacy_tokens_input():
+def test_sklearn_moe_predictor_uses_effective_tokens_for_single_count_tokens_input():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
     predictor._cluster_type = ClusterType.DECODE
     predictor._router_topk = 2
-    predictor._moe_routing_mode = "uniform_legacy"
+    predictor._moe_routing_distribution_type = "balanced"
     predictor._is_grouped_gemm_on_demand_mode = MagicMock(return_value=False)
     predictor._get_local_ep_routed_tokens = MagicMock(return_value=8)
 

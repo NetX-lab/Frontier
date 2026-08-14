@@ -167,7 +167,7 @@ def _build_predictor() -> _DummySklearnMoEPredictor:
     predictor._dummy_execution_time = 0.0
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._num_layers_per_pipeline_stage = 61
-    predictor._moe_routing_mode = "simulation"
+    predictor._moe_routing_distribution_type = "random"
     predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.generic())
     predictor._predictions_eager = {"loaded": True}
     predictor._predictions_kernel_only = {"loaded": True}

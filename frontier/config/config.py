@@ -1897,27 +1897,18 @@ class ReplicaConfig:
         default=0,
         metadata={"help": "Router topk. Set to 0 to inherit from model config."},
     )
-    moe_routing_mode: str = field(
-        default="simulation",
-        metadata={
-            "help": "MoE routing mode for grouped GEMM prediction. "
-            "'simulation': Pre-compute routing details via simulation for realistic load imbalance (default). "
-            "'uniform_legacy': Use uniform token distribution (legacy 1D mode for backward compatibility). "
-            "'uniform_random': Comparison-only deterministic uniform-random expert assignment mirroring vLLM routing simulation."
-        },
-    )
     moe_routing_seed: int = field(
         default=42,
         metadata={
-            "help": "Random seed for MoE routing simulation. Must be a non-negative integer. "
-            "Used when moe_routing_mode is 'simulation' or 'uniform_random' to ensure deterministic and reproducible results."
+            "help": "Random seed for deterministic MoE routing distribution generation. "
+            "Must be a non-negative integer."
         },
     )
     moe_routing_trace_path: str = field(
         default="",
         metadata={
-            "help": "Optional StepFun merged trace JSONL for trace-driven MoE routing. "
-            "Required when moe_routing_mode='trace_driven'."
+            "help": "Deferred StepFun merged trace JSONL for unsupported trace replay. "
+            "A non-empty path fails fast at the architecture boundary."
         },
     )
     decode_attn_initial_lane_trace_path: str = field(
@@ -3005,12 +2996,6 @@ class ClusterConfig:
             "Each replica is an independent FFN serving copy; MoE EP lanes are "
             "scoped inside the selected replica. Used only in pd-af-disaggregation mode.",
             "mode_dependency": "pd-af-disaggregation",
-        },
-    )
-    allow_experiment_multi_decode_ffn_replicas: bool = field(
-        default=False,
-        metadata={
-            "help": "Deprecated no-op; DECODE_FFN cluster replica capacity is always explicit."
         },
     )
     decode_cluster_num_replicas: Optional[int] = field(
@@ -4790,7 +4775,7 @@ class ClusterConfig:
             for cluster_type in self.periodic_scheduling_clusters
         ):
             return True
-        return bool(self.allow_experiment_multi_decode_ffn_replicas)
+        return False
 
     def _create_replica_config_from_fields(self, cluster_prefix: str) -> ReplicaConfig:
         """Create ReplicaConfig object from flattened fields."""
@@ -4847,7 +4832,6 @@ class ClusterConfig:
             local_expert_num=local_expert_num,
             router_load_balancing_type=router_load_balancing_type,
             router_topk=router_topk,
-            moe_routing_mode=get_field_value("moe_routing_mode"),
             moe_routing_seed=get_field_value("moe_routing_seed"),
             moe_routing_trace_path=get_field_value("moe_routing_trace_path"),
             decode_attn_initial_lane_trace_path=get_field_value(
@@ -5251,9 +5235,6 @@ class ClusterConfig:
                     if self.decode_attn_replica_config is not None
                     else None
                 ),
-                allow_experiment_multi_decode_ffn_replicas=(
-                    self.allow_experiment_multi_decode_ffn_replicas
-                ),
             )
             # Propagate only the source Attention-Replica capacity.  AFD
             # grouping is Replica-level; it must not manufacture DP lanes.
@@ -5626,7 +5607,6 @@ class ClusterConfig:
             total_expert_num=original_config.total_expert_num,
             router_load_balancing_type=original_config.router_load_balancing_type,
             router_topk=original_config.router_topk,
-            moe_routing_mode=original_config.moe_routing_mode,
             moe_routing_seed=original_config.moe_routing_seed,
             moe_routing_trace_path=original_config.moe_routing_trace_path,
             decode_attn_initial_lane_trace_path=(
@@ -5984,16 +5964,11 @@ class SimulationConfig(ABC):
                 value = getattr(replica_config, field_name, "")
                 if value is not None and str(value).strip():
                     configured_fields.add(field_name)
-            if (
-                str(getattr(replica_config, "moe_routing_mode", ""))
-                .strip()
-                .lower()
-                == "trace_driven"
-            ):
+            if str(getattr(replica_config, "moe_routing_trace_path", "")).strip():
                 trace_driven = True
 
         if trace_driven:
-            configured_fields.add("moe_routing_mode='trace_driven'")
+            configured_fields.add("moe_routing_trace_path")
         if not configured_fields:
             return
 

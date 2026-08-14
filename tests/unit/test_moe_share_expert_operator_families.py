@@ -466,7 +466,7 @@ def test_shared_manager_moe_dataset_contract_uses_pdd_legacy_auxiliary_tp_key(
         ),
         moe_tensor_parallel_size=4,
         moe_expert_parallel_size=1,
-        moe_routing_mode="simulation",
+        moe_routing_distribution_type="balanced",
     )
 
     manager._validate_moe_dataset_contract(
