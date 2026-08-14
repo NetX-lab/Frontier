@@ -309,7 +309,7 @@ def test_prefill_sync_records_heterogeneous_layer_components_once() -> None:
         is_idle=False,
         total_num_tokens=8,
         _prefill_stage_start_time=stage_start_time,
-        _prefill_model_execution_components_ms_by_stage={0: [1.25]},
+        _prefill_model_execution_components_ms_by_stage={0: [1.25, 2.5]},
         schedule_epoch=0,
         request_execution_signatures=[],
         request_mutation_signatures=[],
@@ -344,20 +344,9 @@ def test_prefill_sync_records_heterogeneous_layer_components_once() -> None:
             }
         }
 
-    set_waiting_room(0, "pre_moe")
-    events = scheduler.on_prefill_sync_collective(
-        time=stage_start_time + 0.00125,
-        replica_id=0,
-        stage_id=0,
-        batch_global_id=9,
-        sync_stage="pre_moe",
-        layer_id=0,
-        metrics_store=Mock(),
-    )
-
     set_waiting_room(0, "post_moe")
     events = scheduler.on_prefill_sync_collective(
-        time=events[0].time,
+        time=stage_start_time + 0.0025,
         replica_id=0,
         stage_id=0,
         batch_global_id=9,
@@ -366,20 +355,10 @@ def test_prefill_sync_records_heterogeneous_layer_components_once() -> None:
         metrics_store=Mock(),
     )
 
-    set_waiting_room(1, "pre_moe")
-    events = scheduler.on_prefill_sync_collective(
-        time=events[0].time,
-        replica_id=0,
-        stage_id=0,
-        batch_global_id=9,
-        sync_stage="pre_moe",
-        layer_id=1,
-        metrics_store=Mock(),
-    )
-
+    batch._prefill_model_execution_components_ms_by_stage[0].append(4.5)
     set_waiting_room(1, "post_moe")
     scheduler.on_prefill_sync_collective(
-        time=events[0].time,
+        time=stage_start_time + 0.00625,
         replica_id=0,
         stage_id=0,
         batch_global_id=9,

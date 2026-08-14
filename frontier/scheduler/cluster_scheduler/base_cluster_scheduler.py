@@ -3063,16 +3063,17 @@ class BaseClusterScheduler(ABC):
         """
         Handle collective synchronization completion in prefill cluster.
 
-        This method implements the exact layer-by-layer processing flow:
-        - pre_moe sync: execute get_moe_comm_time() + get_moe_comp_time(), then schedule post_moe sync
-        - post_moe sync: execute get_moe_comm_time(), then continue to next layer or finish
+        This method handles completion of a canonical layer-local PREFILL wave.
+        The entry side is materialized and predicted by
+        ``_on_prefill_ep_wave_ready``; this method receives only the resulting
+        ``post_moe`` completion and advances to the next layer or handoff.
 
         Args:
-            time: Synchronized time when all DP replicas have reached this point
+            time: Synchronized time when the complete EP wave has reached this point
             replica_id: ID of the replica
             stage_id: Pipeline stage ID
             batch_global_id: Global ID of the batch
-            sync_stage: "pre_moe" or "post_moe"
+            sync_stage: only "post_moe" is valid here
             layer_id: Current layer being processed
             metrics_store: Metrics store for recording performance data
         """
@@ -3095,7 +3096,7 @@ class BaseClusterScheduler(ABC):
                 "batches": {None: direct_batch},
                 "arrival_times": {None: time},
             }
-            dp_batches = sync_wait_room["batches"]
+            participant_batches = sync_wait_room["batches"]
         else:
             if sync_stage not in self._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id]:
                 logger.debug(
@@ -3106,146 +3107,39 @@ class BaseClusterScheduler(ABC):
 
             # Get the synchronized batches and clean up waiting room
             sync_wait_room = self._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id].pop(sync_stage)
-            dp_batches = sync_wait_room["batches"]
+            participant_batches = sync_wait_room["batches"]
 
         try:
-            dp_keys = list(dp_batches.keys())
+            participant_keys = list(participant_batches.keys())
         except Exception:
-            dp_keys = []
+            participant_keys = []
         logger.info(
             f"[PREFILL_SYNC][COLLECTIVE] ENTER: t={time:.6f}s, replica={replica_id}, stage={stage_id}, "
-            f"layer={layer_id}, sync_stage={sync_stage}, batch_global_id={batch_global_id}, dp_keys={dp_keys}, "
-            f"dp_batches_type={type(dp_batches).__name__}"
+            f"layer={layer_id}, sync_stage={sync_stage}, batch_global_id={batch_global_id}, "
+            f"participant_keys={participant_keys}, "
+            f"participant_batches_type={type(participant_batches).__name__}"
         )
+
+        if sync_stage != "post_moe":
+            raise ValueError(
+                "PREFILL collective completion accepts only post_moe for the "
+                "canonical per-layer EP protocol"
+            )
 
         # Shared-domain PREFILL/MONOLITHIC MoE uses the canonical per-layer
         # protocol.  The EP key (currently 0 in the waiting room) identifies
         # the materialized wave, not a scheduler lane for the layer
         # transition after combine.  All downstream stage/metrics/events must
         # therefore use the full-stage identity ``None``.
-        replica_config = getattr(
-            getattr(self, "_config", None),
-            "replica_config",
-            None,
-        )
-        model_config = getattr(replica_config, "model_config", None)
-        shared_full_stage_layer = (
-            self._cluster_type in (ClusterType.PREFILL, ClusterType.MONOLITHIC)
-            and bool(getattr(model_config, "is_moe", False))
-            and getattr(replica_config, "attn_data_parallel_size", None) == 1
-        )
-
         events = []
 
-        if sync_stage == "pre_moe":
-            # After pre_moe sync, execute: DP Gather + MoE computation + DP Scatter
-            # Then schedule post_moe sync
-
-            # Get DP size and aggregate tokens for observability.
-            # Timing composition comes from canonical single-layer ExecutionTime.
-            replica = self.get_replica(replica_id)
-            dp_size = 1
-            total_global_tokens = 0
-            for dp_id, batch in dp_batches.items():
-                if not batch.is_idle:
-                    total_global_tokens += batch.total_num_tokens
-
-            logger.info(
-                f"[GLOBAL_TOKEN_AGGREGATION] total_global_tokens={total_global_tokens}, "
-                f"dp_size={dp_size}, batches={[(dp_id, batch.total_num_tokens, batch.is_idle) for dp_id, batch in dp_batches.items()]}"
-            )
-
-            # Use one non-idle batch to derive shared layer timings for all DP lanes.
-            sample_batch = next((b for b in dp_batches.values() if not b.is_idle), None)
-            if sample_batch is None:
-                raise ValueError(
-                    f"pre_moe collective has no non-idle batch for replica={replica_id}, "
-                    f"stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
-                )
-
-            stage_scheduler = self.get_replica_stage_scheduler(replica_id, 0, stage_id)
-            execution_time_predictor = stage_scheduler._execution_time_predictor
-
-            # Canonical post-attention already includes MoE computation + DP comm semantics.
-            # Predictor returns milliseconds for single-layer components.
-            execution_time = execution_time_predictor.predict_stage_execution_time(
-                sample_batch,
-                stage_id,
-                cluster_type=self._cluster_type,
-                num_layers=1,
-                layer_id=layer_id,
-            )
-            post_attention_time_ms = (
-                execution_time.get_single_layer_post_attention_time()
-            )
-            moe_stage_time = post_attention_time_ms * 1e-3
-            dp_input_allreduce_time = (
-                execution_time.get_single_layer_dp_input_allreduce_time() * 1e-3
-            )
-            dp_output_allreduce_time = (
-                execution_time.get_single_layer_dp_output_allreduce_time() * 1e-3
-            )
-
-            logger.info(
-                f"[MoE_TIME_BREAKDOWN] post_attention={moe_stage_time:.6f}s, "
-                f"dp_input_allreduce={dp_input_allreduce_time:.6f}s, "
-                f"dp_output_allreduce={dp_output_allreduce_time:.6f}s"
-            )
-
-            for dp_id, batch in dp_batches.items():
-                if not batch.is_idle:
-                    component_ledger = getattr(
-                        batch,
-                        "_prefill_model_execution_components_ms_by_stage",
-                        None,
-                    )
-                    if (
-                        not isinstance(component_ledger, dict)
-                        or stage_id not in component_ledger
-                        or not isinstance(component_ledger[stage_id], list)
-                    ):
-                        raise ValueError(
-                            "missing PREFILL model-execution component ledger: "
-                            f"replica={replica_id}, dp_id={dp_id}, "
-                            f"stage={stage_id}, layer={layer_id}, "
-                            f"batch_global_id={batch_global_id}, batch_id={batch.id}"
-                        )
-                    component_ledger[stage_id].append(post_attention_time_ms)
-
-                # Schedule post_moe sync for this layer
-                events.append(
-                    PrefillSyncEvent(
-                        time + moe_stage_time,
-                        replica_id,
-                        stage_id,
-                        batch,
-                        None if shared_full_stage_layer else dp_id,
-                        "post_moe",
-                        layer_id,
-                        moe_stage_time,
-                        cluster_type=self._cluster_type,
-                    )
-                )
-
-            # for dp_id, batch in batches.items():
-            #     execution_time = self._predictor.get_execution_time(batch, stage_id, self._cluster_type)
-
-            #     # Calculate MoE stage time: ONLY pre_moe_comm + moe_comp
-            #     moe_comm_time = execution_time.get_single_layer_moe_comm_time()
-            #     moe_comp_time = execution_time.get_single_layer_moe_comp_time()
-            #     moe_stage_time = moe_comm_time + moe_comp_time
-
-            #     # Schedule post_moe sync for this layer
-            #     events.append(PrefillSyncEvent(
-            #         time + moe_stage_time, replica_id, stage_id, batch,
-            #         dp_id, "post_moe", layer_id, moe_stage_time
-            #     ))
-
-        elif sync_stage == "post_moe":
+        if sync_stage == "post_moe":
             # post_moe is a synchronization boundary. Model execution for this layer has
             # already been accounted in pre_moe; only layer transition / pipeline handoff
             # remains after this collective.
-            sample_batch = next((b for b in dp_batches.values() if not b.is_idle), None)
+            sample_batch = next(
+                (b for b in participant_batches.values() if not b.is_idle), None
+            )
             if sample_batch is None:
                 logger.warning(
                     f"[PREFILL_SYNC][COLLECTIVE] post_moe has no non-idle batch for "
@@ -3287,11 +3181,12 @@ class BaseClusterScheduler(ABC):
                 attention_time = attention_time_ms * 1e-3
                 total_time_to_next_sync = attention_time
 
-                for dp_id, batch in dp_batches.items():
+                for replica_local_id, batch in participant_batches.items():
                     if batch.is_idle:
                         logger.info(
                             f"[PREFILL_SYNC][IDLE_SKIP] Skip next-layer pre_moe scheduling for idle batch {batch.id} "
-                            f"(replica={replica_id}, dp_id={dp_id}, layer={layer_id})"
+                            f"(replica={replica_id}, replica_local_id={replica_local_id}, "
+                            f"layer={layer_id})"
                         )
                         continue
                     component_ledger = getattr(
@@ -3306,7 +3201,7 @@ class BaseClusterScheduler(ABC):
                     ):
                         raise ValueError(
                             "missing PREFILL model-execution component ledger: "
-                            f"replica={replica_id}, dp_id={dp_id}, "
+                            f"replica={replica_id}, replica_local_id={replica_local_id}, "
                             f"stage={stage_id}, layer={layer_id}, "
                             f"batch_global_id={batch_global_id}, batch_id={batch.id}"
                         )
@@ -3317,7 +3212,7 @@ class BaseClusterScheduler(ABC):
                             replica_id,
                             stage_id,
                             batch,
-                            None if shared_full_stage_layer else dp_id,
+                            None,
                             "pre_moe",
                             next_layer_id,
                             total_time_to_next_sync,
@@ -3328,15 +3223,16 @@ class BaseClusterScheduler(ABC):
                 # Last layer completed, proceed to pipeline communication.
                 # Idle batches are synthetic synchronization placeholders and should not
                 # create stage-end / kv-transfer events in PREFILL.
-                for dp_id, batch in dp_batches.items():
+                for replica_local_id, batch in participant_batches.items():
                     if batch.is_idle:
                         logger.info(
                             f"[PREFILL_SYNC][IDLE_SKIP] Skip final stage-end for idle batch {batch.id} "
-                            f"(replica={replica_id}, dp_id={dp_id}, layer={layer_id})"
+                            f"(replica={replica_id}, replica_local_id={replica_local_id}, "
+                            f"layer={layer_id})"
                         )
                         continue
 
-                    stage_identity = None if shared_full_stage_layer else dp_id
+                    stage_identity = None
                     stage_scheduler = self.get_replica_stage_scheduler(
                         replica_id, stage_identity, stage_id
                     )
@@ -3345,7 +3241,7 @@ class BaseClusterScheduler(ABC):
                     if not hasattr(batch, "_prefill_stage_start_time"):
                         raise ValueError(
                             "missing PREFILL stage start time: "
-                            f"replica={replica_id}, dp_id={dp_id}, "
+                            f"replica={replica_id}, replica_local_id={replica_local_id}, "
                             f"stage={stage_id}, layer={layer_id}, "
                             f"batch_global_id={batch_global_id}, batch_id={batch.id}"
                         )
@@ -3355,7 +3251,8 @@ class BaseClusterScheduler(ABC):
                         raise ValueError(
                             "Prefill sync completion time is earlier than the recorded "
                             "stage start time: "
-                            f"replica={replica_id}, dp_id={dp_id}, stage={stage_id}, "
+                            f"replica={replica_id}, replica_local_id={replica_local_id}, "
+                            f"stage={stage_id}, "
                             f"layer={layer_id}, batch_global_id={batch_global_id}, "
                             f"time={time}, original_start_time={original_start_time}, "
                             f"elapsed_stage_wall_time={elapsed_stage_wall_time}"
@@ -3374,7 +3271,7 @@ class BaseClusterScheduler(ABC):
                     ):
                         raise ValueError(
                             "missing PREFILL model-execution component ledger: "
-                            f"replica={replica_id}, dp_id={dp_id}, "
+                            f"replica={replica_id}, replica_local_id={replica_local_id}, "
                             f"stage={stage_id}, layer={layer_id}, "
                             f"batch_global_id={batch_global_id}, batch_id={batch.id}"
                         )
@@ -3386,7 +3283,8 @@ class BaseClusterScheduler(ABC):
                     if stage_cpu_overhead < 0:
                         raise ValueError(
                             "Prefill stage CPU overhead cannot be negative: "
-                            f"replica={replica_id}, dp_id={dp_id}, stage={stage_id}, "
+                            f"replica={replica_id}, replica_local_id={replica_local_id}, "
+                            f"stage={stage_id}, "
                             f"layer={layer_id}, batch_global_id={batch_global_id}, "
                             f"total_time={execution_time.total_time}, "
                             f"model_time={execution_time.model_time}, "
