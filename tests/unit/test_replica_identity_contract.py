@@ -137,3 +137,19 @@ def test_batch_end_and_prefill_sync_events_use_replica_local_identity() -> None:
         assert "replica_local_id" in source
         assert "dp_id" not in source
         assert "_dp_id" not in source
+
+
+def test_cluster_schedule_events_use_replica_local_identity() -> None:
+    sources = [
+        Path("frontier/events/cluster_schedule_event.py").read_text(
+            encoding="utf-8"
+        ),
+        Path("frontier/events/periodic_schedule_event.py").read_text(
+            encoding="utf-8"
+        ),
+    ]
+
+    for source in sources:
+        assert "replica_local_id" in source
+        assert "dp_id" not in source
+        assert "_dp_replica_set" not in source

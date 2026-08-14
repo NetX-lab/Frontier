@@ -26,8 +26,7 @@ class ClusterScheduleEvent(BaseEvent):
 
         logger = get_cluster_logger(__name__, self._cluster_type.name)
 
-        self._dp_replica_set = set()
-        self._ep_replica_set = set()
+        self._replica_local_set = set()
         cluster_scheduler: BaseClusterScheduler = scheduler.get_cluster_scheduler(self._cluster_type)
 
         # For DECODE_FFN, use EP-aware MoE routing inside the cluster scheduler; log M2N queue size
@@ -44,8 +43,8 @@ class ClusterScheduleEvent(BaseEvent):
 
         # DEBUG: Log request mapping
         mapping_summary = {}
-        for replica_id, dp_id, request in self._request_mapping:
-            key = (replica_id, dp_id)
+        for replica_id, replica_local_id, request in self._request_mapping:
+            key = (replica_id, replica_local_id)
             if key not in mapping_summary:
                 mapping_summary[key] = []
             if request is not None:
@@ -54,22 +53,22 @@ class ClusterScheduleEvent(BaseEvent):
         debug_msg = f"[CLUSTER_SCHEDULE] cluster={self._cluster_type.name}, request_mapping={mapping_summary}"
         logger.debug(debug_msg)
 
-        # replica[num_replica][dp_size]
-        for replica_id, dp_id, request in self._request_mapping:
-            self._dp_replica_set.add((replica_id, dp_id))
+        # Each mapping selects one serving Replica and its local execution scope.
+        for replica_id, replica_local_id, request in self._request_mapping:
+            self._replica_local_set.add((replica_id, replica_local_id))
             # Only add individual requests to replica scheduler
             # Batch-level assignments (request=None) are already handled by the cluster scheduler
             if request is not None:
                 if self._cluster_type in [ClusterType.MONOLITHIC, ClusterType.PREFILL]:
                     request.bind_thinking_home_queue(
-                        self._cluster_type, replica_id, dp_id
+                        self._cluster_type, replica_id, replica_local_id
                     )
-                cluster_scheduler.get_replica_scheduler(replica_id, dp_id).add_request(request)
+                cluster_scheduler.get_replica_scheduler(replica_id, replica_local_id).add_request(request)
 
-        # For each (replica_id, dp_id) that has been assigned a request, trigger a replica schedule event.
+        # For each (replica_id, replica_local_id) that has been assigned a request, trigger a replica schedule event.
         return [
-            ReplicaScheduleEvent(self.time, replica_id, self._cluster_type, dp_id)
-            for replica_id, dp_id in self._dp_replica_set
+            ReplicaScheduleEvent(self.time, replica_id, self._cluster_type, replica_local_id)
+            for replica_id, replica_local_id in self._replica_local_set
         ]
 
 
@@ -78,10 +77,9 @@ class ClusterScheduleEvent(BaseEvent):
             "time": self.time,
             "event_type": str(self.event_type),
             "cluster_type": str(self._cluster_type),
-            "replica_dp_set": list(self._dp_replica_set),
-            "replica_ep_set": list(self._ep_replica_set),
+            "replica_local_set": list(self._replica_local_set),
             "request_mapping": [
-                (replica_id, dp_id, (request.id if request is not None else None))
-                for replica_id, dp_id, request in self._request_mapping
+                (replica_id, replica_local_id, (request.id if request is not None else None))
+                for replica_id, replica_local_id, request in self._request_mapping
             ],
         }
