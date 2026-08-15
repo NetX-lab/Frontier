@@ -6,6 +6,9 @@ from types import SimpleNamespace
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
     SklearnDisaggregationExecutionTimePredictor,
 )
+from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
+    SklearnMoEExecutionTimePredictor,
+)
 from frontier.model_architectures import ModelArchitectureProfile
 from frontier.types import ClusterType
 
@@ -124,3 +127,23 @@ def test_pdd_predictor_uses_profile_not_step3_named_legacy_identity() -> None:
     assert decode_attn_time.add_attn_residual_time == 10.0
     assert decode_ffn_time.moe_tensor_parallel_allgather_time == 0.0
     assert decode_ffn_time.share_expert_tensor_parallel_allreduce_time == 0.0
+
+
+def test_disaggregation_grouped_gemm_delegates_with_lane_batch(monkeypatch) -> None:
+    predictor = _DummyDisaggregationPredictor.__new__(_DummyDisaggregationPredictor)
+    expected = 3.5
+
+    def _base_grouped_gemm(_self, allocation, *, batch=None):
+        assert allocation == {0: 2, 1: 4}
+        assert batch is not None
+        return expected
+
+    monkeypatch.setattr(
+        SklearnMoEExecutionTimePredictor,
+        "_get_grouped_gemm_time",
+        _base_grouped_gemm,
+    )
+
+    assert predictor._get_grouped_gemm_time(
+        {0: 2, 1: 4}, batch=SimpleNamespace(id=7)
+    ) == expected

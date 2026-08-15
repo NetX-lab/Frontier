@@ -552,8 +552,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         Returns:
             Predicted grouped GEMM execution time in milliseconds.
         """
-        if batch is None:
-            return super()._get_grouped_gemm_time(num_tokens_or_allocation)
+        return super()._get_grouped_gemm_time(
+            num_tokens_or_allocation,
+            batch=batch,
+        )
 
     def _get_dummy_execution_time_for_cluster(
         self, batch: Batch, pipeline_stage: int, cluster_type: ClusterType = None
