@@ -49,9 +49,10 @@ def test_prefill_final_sync_records_elapsed_model_time_not_full_stage_prediction
             num_layers,
             layer_id,
             include_moe=None,
+            include_ffn=True,
         ):
             assert cluster_type is ClusterType.PREFILL
-            assert include_moe is False
+            assert include_ffn is False
             if num_layers == 32:
                 return SimpleNamespace(
                     pipeline_time=2.0,
@@ -149,11 +150,12 @@ class _LayerPredictor:
         num_layers,
         layer_id=None,
         include_moe=None,
+        include_ffn=True,
     ):
         assert cluster_type is ClusterType.PREFILL
         assert num_layers == 1
         assert layer_id is not None
-        assert include_moe is False
+        assert include_ffn is False
         self.calls.append((num_layers, layer_id))
         return self._layer_times[layer_id]
 

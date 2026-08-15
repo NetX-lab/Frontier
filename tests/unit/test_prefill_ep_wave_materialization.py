@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from types import SimpleNamespace
 
+import numpy as np
 import pytest
 
 from frontier.entities import Batch, Request
@@ -131,6 +132,21 @@ def test_prefill_moe_layer_materializes_global_distribution_once_and_waits_for_s
     assert batch._stage_admission_scope_history[-1]["participant_ep_ids"] == (0, 1)
     room = scheduler._prefill_sync_waiting_room[0][0][9][4]["post_moe"]
     assert room["batches"] == {0: batch}
+
+
+def test_prefill_ep_wave_accepts_numpy_timestamp_from_non_dummy_predictor():
+    scheduler, _predictor, batch = _scheduler()
+
+    events = scheduler._on_prefill_ep_wave_ready(
+        time=np.float64(0.001),
+        replica_id=0,
+        stage_id=0,
+        batch=batch,
+        layer_id=4,
+    )
+
+    assert len(events) == 1
+    assert events[0].time == pytest.approx(0.008)
 
 
 def test_prefill_dense_layer_bypasses_ep_materializer(monkeypatch):

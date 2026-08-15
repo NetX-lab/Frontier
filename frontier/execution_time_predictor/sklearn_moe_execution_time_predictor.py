@@ -1666,6 +1666,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         pipeline_stage: int,
         moe_tokens_input: "int | Dict[int, int] | None" = None,
         include_moe: bool = True,
+        include_ffn: bool = True,
     ) -> "ExecutionTime":
         """
         Calculate execution time for a pipeline stage.
@@ -1676,8 +1677,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             moe_tokens_input: Input for MoE grouped GEMM time calculation.
                 - For standard mode (1 feature): int (post_routing_batch_tokens)
                 - For on-demand mode (14 features): Dict[int, int] (per_expert_tokens)
-                - None is only valid when include_moe=False
+                - None is valid for attention-only and dense-layer calls
             include_moe: Whether to include MoE-specific calculations
+            include_ffn: Whether to include the post-attention FFN block.  When
+                false, only attention and stage-level communication/overhead are
+                constructed; no MLP/MoE profiling lookup is allowed.
 
         Returns:
             ExecutionTime with all component times
@@ -1685,6 +1689,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         Raises:
             ValueError: If include_moe=True but moe_tokens_input is None (fail-fast)
         """
+        if type(include_ffn) is not bool:
+            raise ValueError("include_ffn must be a bool")
+        if not include_ffn and include_moe:
+            raise ValueError("include_moe cannot be true when include_ffn is false")
+
         attention_time = self.predict_attention_layer_time(
             batch=batch,
             layer_id=0,
@@ -1721,7 +1730,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         # Dense-FFN (non-MoE layer) path still uses FFN TP allreduce semantics.
         # Keep it aligned with dense predictor behavior for mixed-layer models.
         moe_tp_allreduce_time = 0.0
-        if include_moe and self._replica_config.moe_tensor_parallel_size > 1:
+        if include_ffn and include_moe and self._replica_config.moe_tensor_parallel_size > 1:
             moe_tp_allreduce_time = self._predict_comm_operator(
                 get_comm_operator("moe_tensor_parallel_allreduce"),
                 batch,
@@ -1729,7 +1738,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             communication_operator_times["moe_tensor_parallel_allreduce"] = (
                 moe_tp_allreduce_time
             )
-        elif self._replica_config.attn_tensor_parallel_size > 1:
+        elif include_ffn and self._replica_config.attn_tensor_parallel_size > 1:
             moe_tp_allreduce_time = attn_tp_allreduce_time
             communication_operator_times["mlp_tensor_parallel_allreduce"] = (
                 moe_tp_allreduce_time
@@ -1738,7 +1747,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         share_expert_up_proj_time = 0.0
         share_expert_down_proj_time = 0.0
         share_expert_act_time = 0.0
-        if include_moe and self._model_config.supports_share_expert():
+        if include_ffn and include_moe and self._model_config.supports_share_expert():
             share_expert_up_proj_time = self._get_share_expert_up_proj_execution_time(batch)
             share_expert_down_proj_time = self._get_share_expert_down_proj_execution_time(batch)
             share_expert_act_time = self._get_share_expert_act_execution_time(batch)
@@ -1747,7 +1756,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         mlp_down_proj_time = 0.0
         mlp_act_time = 0.0
 
-        if include_moe:
+        if include_ffn and include_moe:
             expert_parallel_communication_time = 0.0
             if self._moe_ep_size > 1:
                 expert_parallel_operator_name = (
@@ -1781,7 +1790,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 moe_tokens_input,
                 batch=batch,
             )
-        else:
+        elif include_ffn:
             # Dense FFN branch for mixed-layer MoE models.
             expert_parallel_communication_time = 0.0
             moe_gating_time = 0.0
@@ -1792,8 +1801,16 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             mlp_up_proj_time = self._get_mlp_layer_up_proj_execution_time(batch)
             mlp_down_proj_time = self._get_mlp_layer_down_proj_execution_time(batch)
             mlp_act_time = self._get_mlp_layer_act_execution_time(batch)
+        else:
+            # Attention-only probe: no FFN/MoE operation or profiling lookup.
+            expert_parallel_communication_time = 0.0
+            moe_gating_time = 0.0
+            moe_gating_linear_time = 0.0
+            moe_gating_routing_topk_time = 0.0
+            moe_shuffling_time = 0.0
+            moe_grouped_gemm_time = 0.0
 
-        add_time = self._get_add_layer_act_execution_time(batch)
+        add_time = self._get_add_layer_act_execution_time(batch) if include_ffn else 0.0
         add_attn_residual_time = 0.0
         add_ffn_residual_time = 0.0
         architecture_profile = self._get_model_architecture_profile()
@@ -1805,7 +1822,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         ffn_tp_allgather_time = 0.0
         share_expert_tp_allreduce_time = 0.0
         moe_tp_allgather_op = architecture_profile.moe_tensor_parallel_allgather_op
-        if include_moe and moe_tp_allgather_op:
+        if include_ffn and include_moe and moe_tp_allgather_op:
             moe_tp_size = self._replica_config.moe_tensor_parallel_size
             if moe_tp_size > 1:
                 ffn_tp_allgather_time = self._predict_comm_operator(
@@ -1831,7 +1848,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         dp_input_allreduce_time = 0.0
         dp_output_allreduce_time = 0.0
-        if include_moe and self._cluster_type is not None:
+        if include_ffn and include_moe and self._cluster_type is not None:
             dp_input_allreduce_time, dp_output_allreduce_time = (
                 self.predict_dp_moe_allreduce_times(batch, self._cluster_type)
             )
@@ -1869,7 +1886,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             f"stage={pipeline_stage}",
         )
 
-        mlp_norm_time = self._get_mlp_norm_layer_act_execution_time(batch)
+        mlp_norm_time = (
+            self._get_mlp_norm_layer_act_execution_time(batch) if include_ffn else 0.0
+        )
 
         return ExecutionTime(
             num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
@@ -1907,7 +1926,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             pp_stage_boundary_handoff_time=self._get_pp_stage_boundary_handoff_time(
                 batch, pipeline_stage
             ),
-            is_moe=include_moe,
+            is_moe=bool(include_ffn and include_moe),
             mlp_layer_up_proj_execution_time=mlp_up_proj_time,
             mlp_layer_down_proj_execution_time=mlp_down_proj_time,
             mlp_layer_act_execution_time=mlp_act_time,
@@ -1936,7 +1955,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                     share_expert_down_proj_time=share_expert_down_proj_time,
                     include_share_expert=self._model_config.supports_share_expert(),
                 )
-                if include_moe
+                if include_ffn and include_moe
                 else None
             ),
         )
@@ -2318,6 +2337,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         num_layers: int = 1,
         layer_id: int = 0,
         include_moe: bool | None = None,
+        include_ffn: bool = True,
     ) -> ExecutionTime:
         """
         Predict execution time for MoE models using per-layer component semantics.
@@ -2344,6 +2364,12 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         if num_layers < 1:
             raise ValueError(f"num_layers must be >= 1, got {num_layers}")
+        if type(include_ffn) is not bool:
+            raise ValueError("include_ffn must be a bool")
+        if not include_ffn and include_moe is not None:
+            raise ValueError(
+                "include_moe must be None for an attention-only stage probe"
+            )
 
         measurement_type = self._select_measurement_type_for_batch(batch)
         self._require_predictions_for_measurement_type(measurement_type, batch)
@@ -2361,7 +2387,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         # for single-layer prediction calls (num_layers == 1).  An explicit
         # override is used by attention-only probes so the predictor does not
         # materialize a routed workload that the caller will not execute.
-        if include_moe is None:
+        if not include_ffn:
+            include_moe_for_layer = False
+        elif include_moe is None:
             include_moe_for_layer = True
             if num_layers == 1:
                 include_moe_for_layer = self._model_config.is_moe_layer(layer_id)
@@ -2404,6 +2432,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             stage_id,
             moe_tokens_input=moe_tokens_input,
             include_moe=include_moe_for_layer,
+            include_ffn=include_ffn,
         )
 
         # Communication OP-TRACE: log per-layer allreduce times for op-level comparison

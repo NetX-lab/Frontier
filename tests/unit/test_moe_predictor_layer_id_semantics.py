@@ -8,6 +8,7 @@ import pytest
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.execution_time_predictor import sklearn_moe_execution_time_predictor
 from frontier.entities.execution_time import ExecutionTime
+from frontier.entities.time_components import AttentionTime
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
@@ -256,6 +257,67 @@ def test_predict_stage_execution_time_skips_moe_tokens_for_dense_layer() -> None
     assert result._is_moe is False
     assert result._moe_grouped_gemm_time == pytest.approx(0.0)
     assert result._mlp_layer_up_proj_execution_time == pytest.approx(1.1)
+
+
+def test_attention_only_probe_does_not_lookup_dense_ffn_profile() -> None:
+    """Attention-only probes must not require dense FFN profiling rows."""
+
+    predictor = _DummySklearnMoEPredictor.__new__(_DummySklearnMoEPredictor)
+    predictor._enable_dummy_mode = False
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._num_layers_per_pipeline_stage = 1
+    predictor._moe_ep_size = 2
+    predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.generic())
+    predictor._replica_config = SimpleNamespace(
+        num_pipeline_stages=1,
+        attn_tensor_parallel_size=1,
+        moe_tensor_parallel_size=1,
+        attn_dp=1,
+    )
+    predictor._predictions_eager = {"loaded": True}
+    predictor._predictions_kernel_only = {"loaded": True}
+    predictor._moe_routing_distribution_type = "random"
+    predictor._supports_operation = lambda _operation: True
+    predictor._select_measurement_type_for_batch = lambda _batch: None
+    predictor._require_predictions_for_measurement_type = lambda *_args: None
+    predictor._activate_measurement_type = lambda *_args: None
+    predictor.predict_attention_layer_time = lambda **_kwargs: AttentionTime(
+        attention_prefill_execution_time=2.0,
+        attn_norm_time=1.0,
+    )
+    predictor._get_pp_producer_send_path_runtime_time = lambda *_args: 0.0
+    predictor._get_pp_receiver_head_runtime_time = lambda *_args: 0.0
+    predictor._get_pp_prefill_consumer_active_runtime_time = lambda *_args: 0.0
+    predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
+    predictor._get_mtp_terminal_overshoot_time = lambda *_args, **_kwargs: 0.0
+    predictor._should_include_spec_decode_proposer_overhead = lambda _batch: False
+    predictor._get_schedule_time = lambda _batch: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch: 0.0
+    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor._model_config.supports_share_expert = lambda: False
+
+    def _unexpected_ffn_lookup(_batch):
+        raise AssertionError("attention-only prediction looked up a dense FFN row")
+
+    predictor._get_mlp_layer_up_proj_execution_time = _unexpected_ffn_lookup
+    predictor._get_mlp_layer_down_proj_execution_time = _unexpected_ffn_lookup
+    predictor._get_mlp_layer_act_execution_time = _unexpected_ffn_lookup
+    predictor._get_mlp_norm_layer_act_execution_time = _unexpected_ffn_lookup
+    predictor._get_add_layer_act_execution_time = _unexpected_ffn_lookup
+
+    result = predictor.predict_stage_execution_time(
+        _DummyBatch(),
+        stage_id=0,
+        cluster_type=ClusterType.MONOLITHIC,
+        num_layers=1,
+        layer_id=0,
+        include_ffn=False,
+    )
+
+    assert result.get_single_layer_attention_time() == pytest.approx(3.0)
+    assert result.get_single_layer_post_attention_time() == pytest.approx(0.0)
 
 
 def test_predict_stage_execution_time_keeps_per_layer_components_and_scales_linearly() -> None:

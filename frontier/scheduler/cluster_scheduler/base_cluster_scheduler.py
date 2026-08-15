@@ -2690,8 +2690,9 @@ class BaseClusterScheduler(ABC):
             PrefillSyncCollectiveEvent,
         )
 
-        if type(time) not in (int, float) or not math.isfinite(float(time)):
+        if not isinstance(time, Real) or not math.isfinite(float(time)):
             raise ValueError("prefill EP wave time must be finite")
+        time = float(time)
         model_config = self._config.replica_config.model_config
         predictor = self._predictor
         layer_workload = None
@@ -2915,8 +2916,9 @@ class BaseClusterScheduler(ABC):
             DecodeSyncCollectiveEvent,
         )
 
-        if type(time) not in (int, float) or not math.isfinite(float(time)):
+        if not isinstance(time, Real) or not math.isfinite(float(time)):
             raise ValueError("decode EP wave time must be finite")
+        time = float(time)
         model_config = self._config.replica_config.model_config
         predictor = self._predictor
         layer_workload = None
@@ -3294,7 +3296,7 @@ class BaseClusterScheduler(ABC):
                 cluster_type=self._cluster_type,
                 num_layers=1,  # Single-layer granularity for prefill sync
                 layer_id=layer_id,
-                include_moe=False,
+                include_ffn=False,
             )
 
             # IMPORTANT: execution_time here is a single-layer prediction (num_layers=1)
@@ -3321,7 +3323,7 @@ class BaseClusterScheduler(ABC):
                     cluster_type=self._cluster_type,
                     num_layers=1,
                     layer_id=next_layer_id,
-                    include_moe=False,
+                    include_ffn=False,
                 )
                 attention_time_ms = (
                     next_layer_execution_time.get_single_layer_attention_time()
@@ -3934,7 +3936,7 @@ class BaseClusterScheduler(ABC):
                 self._cluster_type,
                 num_layers=1,
                 layer_id=next_layer_id,
-                include_moe=False,
+                include_ffn=False,
             )
             attention_time = next_layer_execution_time.get_single_layer_attention_time() * 1e-3
 
@@ -3973,7 +3975,7 @@ class BaseClusterScheduler(ABC):
             stage_id,
             self._cluster_type,
             num_layers=num_layers,
-            include_moe=False,
+            include_ffn=False,
         )
         is_last_stage = stage_scheduler.is_last_stage
         pipeline_time = full_stage_execution_time.pipeline_time * 1e-3

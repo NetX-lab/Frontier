@@ -6841,6 +6841,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         num_layers: int = 1,
         layer_id: int = 0,
         include_moe: bool | None = None,
+        include_ffn: bool = True,
     ) -> ExecutionTime:
         """
         Predict aggregated execution time for one or more transformer layers.
@@ -6866,6 +6867,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         """
         if include_moe is not None and type(include_moe) is not bool:
             raise ValueError("include_moe must be a bool or None")
+        if type(include_ffn) is not bool:
+            raise ValueError("include_ffn must be a bool")
+        if not include_ffn and include_moe is not None:
+            raise ValueError(
+                "include_moe must be None for an attention-only stage probe"
+            )
         if self._enable_dummy_mode:
             return self._get_dummy_execution_time(batch, stage_id)
 
@@ -6908,9 +6915,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             communication_operator_times["attn_tensor_parallel_allreduce"] = (
                 tensor_parallel_communication_time
             )
-            communication_operator_times["mlp_tensor_parallel_allreduce"] = (
-                tensor_parallel_communication_time
-            )
+            if include_ffn:
+                communication_operator_times["mlp_tensor_parallel_allreduce"] = (
+                    tensor_parallel_communication_time
+                )
 
         # Build base ExecutionTime for single layer.
         # IMPORTANT: attention must come from predict_attention_layer_time()
@@ -6957,42 +6965,51 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             batch,
             f"stage={stage_id}",
         )
-        mlp_up_proj_time = self._validate_prediction_value(
-            self._get_mlp_layer_up_proj_execution_time(batch),
-            "mlp_up_proj",
-            batch,
-            f"stage={stage_id}",
-        )
-        mlp_down_proj_time = self._validate_prediction_value(
-            self._get_mlp_layer_down_proj_execution_time(batch),
-            "mlp_down_proj",
-            batch,
-            f"stage={stage_id}",
-        )
-        mlp_act_time = self._validate_prediction_value(
-            self._get_mlp_layer_act_execution_time(batch),
-            "mlp_act",
-            batch,
-            f"stage={stage_id}",
-        )
+        if include_ffn:
+            mlp_up_proj_time = self._validate_prediction_value(
+                self._get_mlp_layer_up_proj_execution_time(batch),
+                "mlp_up_proj",
+                batch,
+                f"stage={stage_id}",
+            )
+            mlp_down_proj_time = self._validate_prediction_value(
+                self._get_mlp_layer_down_proj_execution_time(batch),
+                "mlp_down_proj",
+                batch,
+                f"stage={stage_id}",
+            )
+            mlp_act_time = self._validate_prediction_value(
+                self._get_mlp_layer_act_execution_time(batch),
+                "mlp_act",
+                batch,
+                f"stage={stage_id}",
+            )
+        else:
+            mlp_up_proj_time = 0.0
+            mlp_down_proj_time = 0.0
+            mlp_act_time = 0.0
         attn_norm_time = self._validate_prediction_value(
             attention_time.attn_norm_time,
             "attn_norm",
             batch,
             f"stage={stage_id}",
         )
-        mlp_norm_time = self._validate_prediction_value(
-            self._get_mlp_norm_layer_act_execution_time(batch),
-            "mlp_norm",
-            batch,
-            f"stage={stage_id}",
-        )
-        add_time = self._validate_prediction_value(
-            self._get_add_layer_act_execution_time(batch),
-            "add",
-            batch,
-            f"stage={stage_id}",
-        )
+        if include_ffn:
+            mlp_norm_time = self._validate_prediction_value(
+                self._get_mlp_norm_layer_act_execution_time(batch),
+                "mlp_norm",
+                batch,
+                f"stage={stage_id}",
+            )
+            add_time = self._validate_prediction_value(
+                self._get_add_layer_act_execution_time(batch),
+                "add",
+                batch,
+                f"stage={stage_id}",
+            )
+        else:
+            mlp_norm_time = 0.0
+            add_time = 0.0
         schedule_time = self._validate_prediction_value(
             self._get_schedule_time(batch), "schedule", batch, f"stage={stage_id}"
         )
@@ -7088,29 +7105,31 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         attn_post_proj_time = quant_manager.adjust_compute_time(
             "attn_post_proj", attn_post_proj_time, self._cluster_type
         )
-        mlp_up_proj_time = quant_manager.adjust_compute_time(
-            "mlp_up_proj", mlp_up_proj_time, self._cluster_type
-        )
-        mlp_down_proj_time = quant_manager.adjust_compute_time(
-            "mlp_down_proj", mlp_down_proj_time, self._cluster_type
-        )
-        mlp_act_time = quant_manager.adjust_compute_time(
-            "mlp_act", mlp_act_time, self._cluster_type
-        )
+        if include_ffn:
+            mlp_up_proj_time = quant_manager.adjust_compute_time(
+                "mlp_up_proj", mlp_up_proj_time, self._cluster_type
+            )
+            mlp_down_proj_time = quant_manager.adjust_compute_time(
+                "mlp_down_proj", mlp_down_proj_time, self._cluster_type
+            )
+            mlp_act_time = quant_manager.adjust_compute_time(
+                "mlp_act", mlp_act_time, self._cluster_type
+            )
         attn_norm_time = quant_manager.adjust_compute_time(
             "input_layernorm", attn_norm_time, self._cluster_type
         )
-        mlp_norm_time = quant_manager.adjust_compute_time(
-            "post_attention_layernorm", mlp_norm_time, self._cluster_type
-        )
-        add_time = quant_manager.adjust_compute_time(
-            "add", add_time, self._cluster_type
-        )
+        if include_ffn:
+            mlp_norm_time = quant_manager.adjust_compute_time(
+                "post_attention_layernorm", mlp_norm_time, self._cluster_type
+            )
+            add_time = quant_manager.adjust_compute_time(
+                "add", add_time, self._cluster_type
+            )
 
         # Communication times already predicted by CC backend paths (or explicit dummy mode)
         tp_comm_time = tensor_parallel_communication_time
         attn_tp_allreduce_time = tp_comm_time
-        ffn_tp_allreduce_time = tp_comm_time
+        ffn_tp_allreduce_time = tp_comm_time if include_ffn else 0.0
         pp_comm_time = pipeline_parallel_communication_time
 
         logger.debug(

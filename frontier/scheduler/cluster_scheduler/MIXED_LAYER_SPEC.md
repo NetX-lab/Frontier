@@ -45,7 +45,7 @@ which is derived from the `moe_layers_enum` config field.
 |--------|---------------------|-------------|
 | Dispatch event | Emitted (all-to-all send) | Skipped entirely |
 | Combine event | Emitted (all-to-all recv) | Skipped entirely |
-| Single-EP MoE | Also skipped (EP == 1) | N/A |
+| Single-EP MoE | Emitted as a one-participant wave (EP == 1) | N/A |
 
 ### 5. FFN Compute
 
@@ -53,7 +53,12 @@ which is derived from the `moe_layers_enum` config field.
 |--------|-----------|-------------|
 | Computation | Grouped-GEMM over routed tokens per expert | Standard dense FFN (2x or 3x GEMM) |
 | Token count | Post-routing (top_k * batch_tokens / EP) | batch_tokens (unchanged) |
-| Predictor call | `include_moe=True`, passes moe_tokens_input | `include_moe=False` |
+| Predictor call | `include_moe=True`, passes `moe_tokens_input` | `include_moe=False` (dense FFN) |
+
+Shared PREFILL/DECODE layer entry probes use `include_ffn=False` to obtain
+attention timing only. This probe must not read either dense FFN or routed-expert
+profiling rows; the actual dense or EP operation is predicted once after the
+layer protocol is selected.
 
 ### 6. F2A Return (FFN-to-Attention transition)
 

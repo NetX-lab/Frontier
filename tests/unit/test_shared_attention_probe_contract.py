@@ -6,8 +6,7 @@ EVENT_SOURCE = Path(
 ).read_text()
 
 
-def test_shared_layer_attention_probe_disables_moe_prediction() -> None:
-    """The first attention-only probe must not materialize a MoE workload."""
+def test_shared_layer_attention_probe_disables_ffn_prediction() -> None:
+    """The first attention-only probe must not materialize an FFN workload."""
 
-    assert "include_moe=False" in EVENT_SOURCE
-
+    assert "include_ffn=False" in EVENT_SOURCE

@@ -208,7 +208,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._cluster_type,
                         num_layers=1,
                         layer_id=first_layer_id,
-                        include_moe=False,
+                        include_ffn=False,
                     )
                     # Predictor single-layer components are in milliseconds.
                     # Event queue timestamps are in seconds.
@@ -404,7 +404,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._cluster_type,
                         num_layers=1,
                         layer_id=0,
-                        include_moe=False,
+                        include_ffn=False,
                     )
 
                     # Use layer-by-layer DP sync path for MoE processing.
