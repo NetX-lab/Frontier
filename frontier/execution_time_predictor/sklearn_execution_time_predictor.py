@@ -59,6 +59,7 @@ from frontier.execution_time_predictor.base_execution_time_predictor import (
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )
+from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
@@ -2532,7 +2533,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         ).write_lock():
             # store model in cache
             cache_file = f"{self._cache_dir}/{model_name}_{model_hash}.pkl"
-            pickle.dump(model, open(cache_file, "wb"), protocol=pickle.HIGHEST_PROTOCOL)
+            atomic_pickle_dump(model, cache_file)
 
     def _store_training_prediction_data(
         self,
@@ -2643,9 +2644,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             cache_file = (
                 f"{self._cache_dir}/{model_name}_{prediction_hash}_predictions.pkl"
             )
-            pickle.dump(
-                predictions, open(cache_file, "wb"), protocol=pickle.HIGHEST_PROTOCOL
-            )
+            atomic_pickle_dump(predictions, cache_file)
 
     def _load_model_predication_cache(
         self, model_name: str, prediction_hash: str

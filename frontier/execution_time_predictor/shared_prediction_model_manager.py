@@ -34,6 +34,7 @@ from frontier.types import ClusterType, CCBackendType, MeasurementType
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
+from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
 from frontier.execution_time_predictor.attention_dataset_contract import (
     enforce_mixed_attention_input_contract,
 )
@@ -3225,7 +3226,7 @@ class ExecutionTimePredictionModelManager:
     def _store_model_in_cache(self, model_name: str, model_hash: str, model: BaseEstimator) -> None:
         with InterProcessReaderWriterLock(f"{self._cache_dir}/{model_hash}_model_lock.file").write_lock():
             cache_file = f"{self._cache_dir}/{model_name}_{model_hash}.pkl"
-            pickle.dump(model, open(cache_file, "wb"), protocol=pickle.HIGHEST_PROTOCOL)
+            atomic_pickle_dump(model, cache_file)
             logger.info(f"✓ Saved trained model '{model_name}' to cache (hash: {model_hash})")
             logger.info(f"  Cache file: {cache_file}")
 
