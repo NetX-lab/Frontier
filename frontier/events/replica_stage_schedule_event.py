@@ -335,10 +335,20 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         )
                     lane_comm_ms = float(lane_comm_ms)
                     lane_compute_ms = pre_dispatch_compute_time_ms + expert_comp_time_ms
-                    source_batch_ids = tuple(
-                        int(batch_id)
-                        for batch_id in getattr(batch, "source_batch_ids", ())
-                    )
+                    raw_source_batch_ids = getattr(batch, "source_batch_ids", ())
+                    if not isinstance(raw_source_batch_ids, (list, tuple)):
+                        raise ValueError(
+                            "DECODE_FFN EP batch source_batch_ids must be a list or tuple"
+                        )
+                    if any(
+                        type(batch_id) is not int or batch_id < 0
+                        for batch_id in raw_source_batch_ids
+                    ):
+                        raise ValueError(
+                            "DECODE_FFN EP batch source_batch_ids must contain "
+                            "exact non-negative integers"
+                        )
+                    source_batch_ids = tuple(int(batch_id) for batch_id in raw_source_batch_ids)
                     layer_id = getattr(batch, "decode_ffn_layer_id", None)
                     if type(layer_id) is not int or layer_id < 0:
                         raise ValueError(

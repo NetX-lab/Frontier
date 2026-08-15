@@ -201,6 +201,19 @@ def test_ep_dispatch_preserves_full_stage_execution_time(
     )
 
 
+def test_ep_workload_trace_rejects_invalid_source_batch_identity(monkeypatch) -> None:
+    batch = _batch(0)
+    batch.source_batch_ids[:] = [-1, 2]
+
+    with pytest.raises(ValueError, match="source_batch_ids"):
+        _run_ep_stage(
+            monkeypatch,
+            batch,
+            stage_id=0,
+            full_stage_time_s=0.010,
+        )
+
+
 def test_ep_dispatch_collective_validates_all_lanes_before_mutation() -> None:
     batches = {ep_id: _batch(ep_id) for ep_id in range(2)}
     batches[0].expert_compute_time = 0.25
