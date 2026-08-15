@@ -98,6 +98,11 @@ def _combine_scheduler(
     scheduler.get_replica_scheduler = Mock(
         side_effect=lambda _replica_id, ep_id: replica_schedulers[ep_id]
     )
+    full_stage_scheduler = Mock()
+    full_stage_scheduler.is_empty.return_value = True
+    scheduler.get_full_stage_replica_scheduler = Mock(
+        return_value=full_stage_scheduler
+    )
     scheduler._create_m2n_transfer_events_for_aggregated_batch = Mock(
         return_value=[]
     )
@@ -257,6 +262,50 @@ def test_ep_combine_collective_reschedules_only_non_empty_stage_lanes() -> None:
         event for event in events if isinstance(event, ReplicaStageScheduleEvent)
     ]
     assert [event._replica_local_id for event in schedule_events] == [0]
+
+
+def test_ep_combine_collective_reschedules_pending_dense_full_stage_queue() -> None:
+    """A completed EP wave must wake a queued dense full-stage operation.
+
+    DECODE_FFN owns both explicit EP children and one lane-free full-stage
+    child.  The parent stage admission ticket serializes them, but the EP
+    combine path bypasses ``BatchStageEndEvent``; it therefore has to emit a
+    follow-up schedule event for the full-stage child when dense work is
+    waiting.  Without that event the dense queue can remain stranded after the
+    EP wave releases the parent scope.
+    """
+
+    batches = {
+        0: _combine_batch(0, source_batch_ids=[10]),
+        1: _combine_batch(1, source_batch_ids=[10]),
+    }
+    raw = _raw_batch(10)
+    scheduler, room, stage_schedulers, _ = _combine_scheduler(
+        batches,
+        raw_batches={10: raw},
+    )
+    stage_schedulers[0].is_empty.return_value = False
+    stage_schedulers[1].is_empty.return_value = True
+
+    full_stage_scheduler = Mock()
+    full_stage_scheduler.is_empty.return_value = False
+    scheduler.get_full_stage_replica_scheduler = Mock(
+        return_value=full_stage_scheduler
+    )
+
+    events = scheduler.on_ep_alltoall_combine_collective_schedule(
+        time=5.0,
+        replica_id=0,
+        stage_id=0,
+        batch_global_id=10,
+        metrics_store=Mock(),
+    )
+
+    schedule_events = [
+        event for event in events if isinstance(event, ReplicaStageScheduleEvent)
+    ]
+    assert [event._replica_local_id for event in schedule_events] == [0, None]
+    full_stage_scheduler.is_empty.assert_called_once_with()
 
 
 @pytest.mark.parametrize(

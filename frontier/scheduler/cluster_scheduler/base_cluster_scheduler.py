@@ -2358,6 +2358,29 @@ class BaseClusterScheduler(ABC):
             or not bool(stage_scheduler.is_empty())
         ]
 
+        # DECODE_FFN owns one additional lane-free scheduler for dense FFN
+        # operations.  The EP path bypasses ``BatchStageEndEvent`` and thus
+        # cannot rely on that event to wake a queued full-stage batch.  Once
+        # the EP parent ticket is released below, emit the corresponding
+        # schedule event when dense work is waiting; the stage admission FIFO
+        # still decides whether it may start at this timestamp.
+        full_stage_scheduler = self.get_full_stage_replica_scheduler(replica_id)
+        full_stage_is_empty = getattr(full_stage_scheduler, "is_empty", None)
+        if not callable(full_stage_is_empty):
+            raise ValueError(
+                "DECODE_FFN full-stage Replica scheduler must expose is_empty()"
+            )
+        if not bool(full_stage_is_empty()):
+            schedule_events.append(
+                ReplicaStageScheduleEvent(
+                    time,
+                    replica_id,
+                    stage_id,
+                    self._cluster_type,
+                    None,
+                )
+            )
+
         self._ep_allgather_waiting_room[replica_id][stage_id].pop(
             batch_global_id
         )
