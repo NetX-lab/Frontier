@@ -168,6 +168,22 @@ def test_deferred_trace_fields_are_preserved_by_replica_config_copy() -> None:
     } == expected
 
 
+def test_replica_config_copy_preserves_moe_routing_distribution_type() -> None:
+    source = ReplicaConfig(
+        model_name="Phi-tiny-MoE-instruct",
+        moe_routing_distribution_type="skewed",
+    )
+    cluster_config = ClusterConfig(
+        num_replicas=1,
+        replica_config=source,
+        replica_scheduler_config=OrcaSchedulerConfig(),
+    )
+
+    copied = cluster_config._create_replica_config_copy()
+
+    assert copied.moe_routing_distribution_type == "skewed"
+
+
 def test_trace_driven_moe_routing_fails_without_silent_fallback(tmp_path: Path) -> None:
     replica_config = ReplicaConfig(
         model_name="llama2_7b_dense_example",

@@ -5035,6 +5035,7 @@ class ClusterConfig:
             router_load_balancing_type=original_config.router_load_balancing_type,
             router_topk=original_config.router_topk,
             moe_routing_seed=original_config.moe_routing_seed,
+            moe_routing_distribution_type=original_config.moe_routing_distribution_type,
             moe_routing_trace_path=original_config.moe_routing_trace_path,
             decode_attn_initial_lane_trace_path=(
                 original_config.decode_attn_initial_lane_trace_path
