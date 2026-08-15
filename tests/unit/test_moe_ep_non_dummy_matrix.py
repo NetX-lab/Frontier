@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from tests.e2e.moe_ep_non_dummy_matrix import (
+    _merge_result_rows,
     build_matrix,
     build_shell_command,
     check_case_log,
@@ -179,3 +180,22 @@ def test_dense_checker_does_not_require_moe_layer_granularity(tmp_path: Path) ->
     result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
 
     assert result["status"] == "PASS"
+
+
+def test_result_ledger_merges_partial_runs_without_erasing_prior_cases() -> None:
+    existing = [
+        {"case_id": "case-a", "status": "PASS", "attempt": 1},
+        {"case_id": "case-b", "status": "FAIL", "attempt": 1},
+    ]
+    rerun = [{"case_id": "case-b", "status": "PASS", "attempt": 2}]
+
+    merged = _merge_result_rows(
+        existing,
+        rerun,
+        expected_case_ids=("case-a", "case-b", "case-c"),
+    )
+
+    assert [row["case_id"] for row in merged] == ["case-a", "case-b"]
+    assert merged[0]["attempt"] == 1
+    assert merged[1]["status"] == "PASS"
+    assert merged[1]["attempt"] == 2

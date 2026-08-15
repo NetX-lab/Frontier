@@ -613,6 +613,62 @@ def _write_jsonl(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
     )
 
 
+def _load_result_rows(path: Path) -> list[dict[str, Any]]:
+    """Load an existing result ledger, failing on malformed evidence."""
+
+    if not path.is_file():
+        return []
+    rows: list[dict[str, Any]] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"invalid result ledger JSON at {path}:{line_number}") from exc
+        if not isinstance(row, dict):
+            raise ValueError(f"result ledger row is not an object at {path}:{line_number}")
+        rows.append(row)
+    return rows
+
+
+def _merge_result_rows(
+    existing_rows: Sequence[Mapping[str, Any]],
+    new_rows: Sequence[Mapping[str, Any]],
+    *,
+    expected_case_ids: Sequence[str],
+) -> list[dict[str, Any]]:
+    """Merge rerun rows without losing prior case evidence.
+
+    Existing and new rows must refer only to the current manifest and must have
+    unique case IDs within each input.  A rerun replaces the prior row for the
+    same case; cases not selected in the current invocation remain intact.
+    Output follows manifest order and omits cases that have not run yet.
+    """
+
+    expected = tuple(expected_case_ids)
+    expected_set = set(expected)
+    if len(expected) != len(expected_set):
+        raise ValueError("manifest contains duplicate case IDs")
+
+    merged: dict[str, dict[str, Any]] = {}
+    for source_name, rows in (("existing", existing_rows), ("new", new_rows)):
+        seen: set[str] = set()
+        for row in rows:
+            case_id = row.get("case_id")
+            if not isinstance(case_id, str) or not case_id:
+                raise ValueError(f"{source_name} result row has no non-empty case_id")
+            if case_id not in expected_set:
+                raise ValueError(
+                    f"{source_name} result row has unknown case_id={case_id!r}"
+                )
+            if case_id in seen:
+                raise ValueError(f"{source_name} result rows repeat case_id={case_id!r}")
+            seen.add(case_id)
+            merged[case_id] = dict(row)
+    return [merged[case_id] for case_id in expected if case_id in merged]
+
+
 def write_manifest(path: Path, cases: Sequence[MatrixCase]) -> None:
     _write_jsonl(path, [asdict(case) for case in cases])
 
@@ -640,6 +696,12 @@ def run_cases(
     continue_on_failure: bool = False,
 ) -> list[dict[str, Any]]:
     selected = list(cases[start : (start + limit) if limit is not None else None])
+    expected_case_ids = tuple(case.case_id for case in cases)
+    persisted = _merge_result_rows(
+        _load_result_rows(results_path),
+        (),
+        expected_case_ids=expected_case_ids,
+    )
     results: list[dict[str, Any]] = []
     for case in selected:
         validate_profile_inputs(case, repo_root)
@@ -714,7 +776,12 @@ def run_cases(
             "check": check,
         }
         results.append(result)
-        _write_jsonl(results_path, results)
+        persisted = _merge_result_rows(
+            persisted,
+            (result,),
+            expected_case_ids=expected_case_ids,
+        )
+        _write_jsonl(results_path, persisted)
         if status != "PASS" and not continue_on_failure:
             raise RuntimeError(f"matrix case failed: {json.dumps(result, sort_keys=True)}")
     return results
