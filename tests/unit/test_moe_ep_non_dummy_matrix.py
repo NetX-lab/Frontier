@@ -70,6 +70,7 @@ def test_matrix_enforces_dense_topology_and_card_limit() -> None:
 
     assert all(case.total_cards <= 32 for case in cases)
     assert all(case.total_cards > 0 for case in cases)
+    assert all(case.prefill_tokens > 1 for case in cases)
     assert all(case.ep_size == 1 for case in cases if case.model_kind == "dense")
     assert all(
         case.moe_tensor_parallel_size == (4 if case.model_kind == "mixed" else 1)

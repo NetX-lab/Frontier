@@ -63,9 +63,9 @@ MODEL_SPECS: Mapping[str, Mapping[str, Any]] = {
 ROUTING_DISTRIBUTIONS = ("balanced", "random", "skewed", "zipf")
 WORKLOADS: Mapping[str, tuple[int, int, int]] = {
     "prefill-heavy": (8, 1, 1),
-    "decode-heavy": (1, 4, 1),
+    "decode-heavy": (2, 4, 1),
     "mixed": (4, 4, 2),
-    "zero-routed": (1, 2, 1),
+    "zero-routed": (2, 2, 1),
 }
 VARIANTS = (
     ("balanced", "prefill-heavy"),
