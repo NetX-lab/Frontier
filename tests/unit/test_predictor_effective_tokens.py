@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from frontier.entities import EPBatchGroup, Request
 from frontier.types import ClusterType, MeasurementType
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
@@ -539,8 +540,17 @@ def test_sklearn_moe_predictor_uses_on_demand_moe_shuffling_prediction() -> None
 
     predictor._get_on_demand_prediction = _fake_get_on_demand_prediction
 
-    batch = MagicMock()
-    batch.total_num_tokens = 12
+    batch = EPBatchGroup(
+        requests=[Request(0.0, 0, 96)],
+        num_tokens=[96],
+        replica_id=0,
+        ep_id=0,
+        time=0.0,
+        source_batch_ids=[1],
+        per_expert_tokens={0: 64, 1: 32},
+        cluster_type=ClusterType.MONOLITHIC,
+        is_moe=True,
+    )
 
     result = SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(
         predictor,
@@ -577,8 +587,17 @@ def test_sklearn_moe_predictor_uses_raw_on_demand_shuffling_prediction() -> None
 
     predictor._get_on_demand_prediction = _fake_get_on_demand_prediction
 
-    batch = MagicMock()
-    batch.total_num_tokens = 12
+    batch = EPBatchGroup(
+        requests=[Request(0.0, 0, 80)],
+        num_tokens=[80],
+        replica_id=0,
+        ep_id=0,
+        time=0.0,
+        source_batch_ids=[1],
+        per_expert_tokens={0: 32, 1: 16, 2: 16, 3: 16},
+        cluster_type=ClusterType.MONOLITHIC,
+        is_moe=True,
+    )
 
     result = SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(
         predictor,
@@ -590,6 +609,32 @@ def test_sklearn_moe_predictor_uses_raw_on_demand_shuffling_prediction() -> None
     assert captured["model_name"] == "moe_shuffling"
     assert captured["features"]["total_routed_tokens"] == 80
     assert captured["features"]["num_experts_per_device"] == 4
+
+
+def test_on_demand_shuffling_rejects_global_map_without_ep_lane_identity() -> None:
+    """A global expert map cannot be treated as one device's profile input."""
+
+    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
+        DummySklearnMoEExecutionTimePredictor
+    )
+    predictor._cluster_type = ClusterType.PREFILL
+    predictor._supports_operation = MagicMock(return_value=True)
+    predictor._predictions = {"moe_shuffling": {"_on_demand_prediction": True}}
+    predictor._router_topk = 2
+    predictor._moe_ep_size = 2
+    predictor._replica_config = SimpleNamespace(total_expert_num=4)
+    predictor._model_config = SimpleNamespace(embedding_dim=2048, mlp_hidden_dim=768)
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+
+    batch = MagicMock()
+    batch.total_num_tokens = 8
+
+    with pytest.raises(ValueError, match="EP lane"):
+        SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(
+            predictor,
+            batch,
+            moe_tokens_input={0: 4, 1: 4, 2: 4, 3: 4},
+        )
 
 
 def test_sklearn_moe_predictor_ignores_moe_shuffling_calibration_scale():

@@ -1308,6 +1308,14 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         if isinstance(prediction_cache, dict) and prediction_cache.get(
             "_on_demand_prediction", False
         ):
+            from frontier.entities import EPBatchGroup
+
+            if not isinstance(batch, EPBatchGroup):
+                raise ValueError(
+                    "On-demand MoE shuffling prediction requires an EP lane "
+                    "batch with local per-expert tokens; a global expert map "
+                    "cannot be used as one device's profile input"
+                )
             per_expert_tokens = self._resolve_shuffling_per_expert_tokens(
                 batch,
                 moe_tokens_input=moe_tokens_input,
