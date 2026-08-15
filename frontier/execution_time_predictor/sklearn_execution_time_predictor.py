@@ -4768,7 +4768,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             speculative_decoding_config=disabled_spec_config,
             num_pipeline_stages=1,
             attn_tensor_parallel_size=int(self._replica_config.attn_tensor_parallel_size),
-            attn_data_parallel_size=int(getattr(self._replica_config, "attn_data_parallel_size", 1)),
+            attn_dp=int(getattr(self._replica_config, "attn_dp", 1)),
             moe_tensor_parallel_size=int(getattr(self._replica_config, "moe_tensor_parallel_size", 1)),
             moe_expert_parallel_size=moe_ep_size,
             total_expert_num=total_expert_num,

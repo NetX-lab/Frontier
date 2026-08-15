@@ -242,8 +242,8 @@ def _case_parallelism(case: Mapping[str, Any]) -> GoldenParallelism:
         attn_tensor_parallel_size=int(
             raw_parallelism.get("attn_tensor_parallel_size", 1)
         ),
-        attn_data_parallel_size=int(
-            raw_parallelism.get("attn_data_parallel_size", 1)
+        attn_dp=int(
+            raw_parallelism.get("attn_dp", 1)
         ),
         moe_tensor_parallel_size=int(
             raw_parallelism.get("moe_tensor_parallel_size", 1)

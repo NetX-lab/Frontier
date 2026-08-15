@@ -84,7 +84,7 @@ def _trace_replica_config() -> SimpleNamespace:
         model_config=model_config,
         model_name="unit-model",
         attn_tensor_parallel_size=1,
-        attn_data_parallel_size=1,
+        attn_dp=1,
         moe_tensor_parallel_size=1,
         moe_expert_parallel_size=1,
         num_pipeline_stages=1,

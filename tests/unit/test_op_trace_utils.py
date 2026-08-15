@@ -79,7 +79,7 @@ def _build_context(is_moe: bool = False, tokens_are_post_routing: bool = False):
 
     replica_config = MagicMock()
     replica_config.attn_tensor_parallel_size = 2
-    replica_config.attn_data_parallel_size = 1
+    replica_config.attn_dp = 1
     replica_config.moe_tensor_parallel_size = 2
     replica_config.moe_expert_parallel_size = 2
     replica_config.num_pipeline_stages = 1
@@ -126,7 +126,7 @@ def _build_mla_context():
 
     replica_config = MagicMock()
     replica_config.attn_tensor_parallel_size = 2
-    replica_config.attn_data_parallel_size = 1
+    replica_config.attn_dp = 1
     replica_config.moe_tensor_parallel_size = 1
     replica_config.moe_expert_parallel_size = 1
     replica_config.num_pipeline_stages = 1
@@ -219,7 +219,7 @@ def test_attention_kv_replication_shapes_for_tp8():
 
     replica_config = MagicMock()
     replica_config.attn_tensor_parallel_size = 8
-    replica_config.attn_data_parallel_size = 1
+    replica_config.attn_dp = 1
     replica_config.moe_tensor_parallel_size = 1
     replica_config.moe_expert_parallel_size = 1
     replica_config.num_pipeline_stages = 1
@@ -262,7 +262,7 @@ def test_attention_kv_replication_requires_divisible_tp_ratio():
 
     replica_config = MagicMock()
     replica_config.attn_tensor_parallel_size = 8
-    replica_config.attn_data_parallel_size = 1
+    replica_config.attn_dp = 1
     replica_config.moe_tensor_parallel_size = 1
     replica_config.moe_expert_parallel_size = 1
     replica_config.num_pipeline_stages = 1
@@ -365,7 +365,7 @@ def test_moe_shuffling_non_divisible_tokens():
 
     replica_config = MagicMock()
     replica_config.attn_tensor_parallel_size = 1
-    replica_config.attn_data_parallel_size = 1
+    replica_config.attn_dp = 1
     replica_config.moe_tensor_parallel_size = 1
     replica_config.moe_expert_parallel_size = 2
     replica_config.num_pipeline_stages = 1
@@ -410,7 +410,7 @@ def test_share_expert_trace_shapes():
 
     replica_config = MagicMock()
     replica_config.attn_tensor_parallel_size = 1
-    replica_config.attn_data_parallel_size = 1
+    replica_config.attn_dp = 1
     replica_config.moe_tensor_parallel_size = 2
     replica_config.moe_expert_parallel_size = 2
     replica_config.num_pipeline_stages = 1
@@ -457,7 +457,7 @@ def test_share_expert_requires_dim():
 
     replica_config = MagicMock()
     replica_config.attn_tensor_parallel_size = 1
-    replica_config.attn_data_parallel_size = 1
+    replica_config.attn_dp = 1
     replica_config.moe_tensor_parallel_size = 2
     replica_config.moe_expert_parallel_size = 2
     replica_config.num_pipeline_stages = 1

@@ -81,7 +81,7 @@ def test_max_tokens_covers_vllm_v1_max_tokens_in_batch(tmp_path: Path) -> None:
         device="a800",
         network_device="a100_pairwise_nvlink",
         attn_tensor_parallel_size=1,
-        attn_data_parallel_size=8,
+        attn_dp=1,
     )
     model_config = replica_config.model_config
     assert model_config is not None
@@ -197,7 +197,7 @@ def test_prefill_max_tokens_covers_prediction_prefill_chunk_size(tmp_path: Path)
         device="a800",
         network_device="a100_pairwise_nvlink",
         attn_tensor_parallel_size=1,
-        attn_data_parallel_size=8,
+        attn_dp=1,
     )
     model_config = replica_config.model_config
     assert model_config is not None

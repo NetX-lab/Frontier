@@ -197,12 +197,12 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         # Attention-DP MoE gather/scatter is retired.  MoE communication is
         # represented by the Replica-local EP wave instead.
         attn_dp_size = int(
-            getattr(self._replica_config, "attn_data_parallel_size", 1)
+            getattr(self._replica_config, "attn_dp", 1)
         )
         if attn_dp_size != 1:
             raise ValueError(
                 "MoE attention-DP communication is retired; expected "
-                f"attn_data_parallel_size=1, got {attn_dp_size}"
+                f"attn_dp=1, got {attn_dp_size}"
             )
         dp_input_allreduce_time = 0.0
         dp_output_allreduce_time = 0.0

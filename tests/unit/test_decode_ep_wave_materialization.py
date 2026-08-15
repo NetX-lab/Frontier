@@ -91,7 +91,7 @@ def _scheduler() -> tuple[RoundRobinClusterScheduler, _LanePredictor, Batch]:
             moe_expert_parallel_size=2,
             moe_tensor_parallel_size=1,
             router_topk=1,
-            attn_data_parallel_size=1,
+            attn_dp=1,
         )
     )
     scheduler._predictor = predictor

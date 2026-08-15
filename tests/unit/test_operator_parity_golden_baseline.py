@@ -120,7 +120,7 @@ def test_step_moe_case_uses_pinned_parallelism_for_colocation_and_pdd() -> None:
     }
     parallelism = {
         "attn_tensor_parallel_size": 4,
-        "attn_data_parallel_size": 1,
+        "attn_dp": 1,
         "moe_tensor_parallel_size": 4,
         "moe_expert_parallel_size": 1,
         "num_pipeline_stages": 1,

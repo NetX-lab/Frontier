@@ -59,7 +59,7 @@ def _scheduler(cluster_type: ClusterType):
     scheduler._config = SimpleNamespace(
         replica_config=SimpleNamespace(
             model_config=_MixedModelConfig(),
-            attn_data_parallel_size=1,
+            attn_dp=1,
         )
     )
     scheduler._predictor = SimpleNamespace(

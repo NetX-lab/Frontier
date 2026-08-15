@@ -331,11 +331,11 @@ class BaseClusterScheduler(ABC):
             )
             self._replica_scheduler_count = self._replica_ep_size
         else:
-            attn_dp = getattr(self._config.replica_config, "attn_data_parallel_size", None)
+            attn_dp = getattr(self._config.replica_config, "attn_dp", None)
             if type(attn_dp) is not int or attn_dp != 1:
                 raise ValueError(
                     "Replica-local attention DP lanes are retired; "
-                    f"{self._cluster_type.name} requires attn_data_parallel_size=1, got {attn_dp!r}"
+                    f"{self._cluster_type.name} requires attn_dp=1, got {attn_dp!r}"
                 )
             self._replica_ep_size = None
             self._replica_scheduler_count = 1
@@ -2827,9 +2827,9 @@ class BaseClusterScheduler(ABC):
         model_config = getattr(replica_config, "model_config", None)
         if model_config is None or not getattr(model_config, "is_moe", False):
             return False
-        if getattr(replica_config, "attn_data_parallel_size", None) != 1:
+        if getattr(replica_config, "attn_dp", None) != 1:
             raise ValueError(
-                "Shared-domain MoE PREFILL requires attn_data_parallel_size=1"
+                "Shared-domain MoE PREFILL requires attn_dp=1"
             )
         if not isinstance(layer_id, int) or layer_id < 0:
             raise ValueError("PREFILL layer_id must be an exact non-negative int")
@@ -2860,9 +2860,9 @@ class BaseClusterScheduler(ABC):
         model_config = getattr(replica_config, "model_config", None)
         if model_config is None or not getattr(model_config, "is_moe", False):
             return False
-        if getattr(replica_config, "attn_data_parallel_size", None) != 1:
+        if getattr(replica_config, "attn_dp", None) != 1:
             raise ValueError(
-                "Shared-domain MoE PREFILL requires attn_data_parallel_size=1"
+                "Shared-domain MoE PREFILL requires attn_dp=1"
             )
         if not isinstance(layer_id, int) or layer_id < 0:
             raise ValueError("PREFILL layer_id must be an exact non-negative int")
@@ -3051,9 +3051,9 @@ class BaseClusterScheduler(ABC):
         model_config = getattr(replica_config, "model_config", None)
         if model_config is None or not getattr(model_config, "is_moe", False):
             return False
-        if getattr(replica_config, "attn_data_parallel_size", None) != 1:
+        if getattr(replica_config, "attn_dp", None) != 1:
             raise ValueError(
-                "Shared-domain MoE DECODE requires attn_data_parallel_size=1"
+                "Shared-domain MoE DECODE requires attn_dp=1"
             )
         if not isinstance(layer_id, int) or layer_id < 0:
             raise ValueError("DECODE layer_id must be an exact non-negative int")
@@ -3077,9 +3077,9 @@ class BaseClusterScheduler(ABC):
         model_config = getattr(replica_config, "model_config", None)
         if model_config is None or not getattr(model_config, "is_moe", False):
             return False
-        if getattr(replica_config, "attn_data_parallel_size", None) != 1:
+        if getattr(replica_config, "attn_dp", None) != 1:
             raise ValueError(
-                "Shared-domain MoE DECODE requires attn_data_parallel_size=1"
+                "Shared-domain MoE DECODE requires attn_dp=1"
             )
         if not isinstance(layer_id, int) or layer_id < 0:
             raise ValueError("DECODE layer_id must be an exact non-negative int")

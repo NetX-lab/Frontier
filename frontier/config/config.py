@@ -1873,10 +1873,10 @@ class ReplicaConfig:
         default=1,
         metadata={"help": "Attention tensor parallel size (attn_tp size)."},
     )
-    attn_data_parallel_size: int = field(
+    attn_dp: int = field(
         default=1,
         metadata={
-            "help": "Retired attention-DP lane count; fixed internally to 1.",
+            "help": "Fixed attention data-parallel domain for one Replica.",
             "include_in_cli": False,
         },
     )
@@ -1962,6 +1962,11 @@ class ReplicaConfig:
     model_name: str = "meta-llama/Llama-2-7b-hf"
 
     def __post_init__(self):
+        if type(self.attn_dp) is not int or self.attn_dp != 1:
+            raise ValueError(
+                "attn_dp is retired as a selectable technology dimension and "
+                f"must be fixed to 1, got {self.attn_dp!r}"
+            )
         # Load model and device configs first (needed for validation)
         self.model_config: BaseModelConfig = BaseModelConfig.create_from_name(
             self.model_name
@@ -2025,13 +2030,13 @@ class ReplicaConfig:
             self.world_size = (
                 self.num_pipeline_stages
                 * self.attn_tensor_parallel_size
-                * self.attn_data_parallel_size
+                * self.attn_dp
             )
         elif self.cluster_prefix == "decode_attn":
             self.world_size = (
                 self.num_pipeline_stages
                 * self.attn_tensor_parallel_size
-                * self.attn_data_parallel_size
+                * self.attn_dp
             )
         elif self.cluster_prefix == "decode_ffn":
             self.world_size = (
@@ -2044,13 +2049,13 @@ class ReplicaConfig:
             self.world_size = (
                 self.num_pipeline_stages
                 * self.attn_tensor_parallel_size
-                * self.attn_data_parallel_size
+                * self.attn_dp
             )
         else:  # Monolithic
             self.world_size = (
                 self.num_pipeline_stages
                 * self.attn_tensor_parallel_size
-                * self.attn_data_parallel_size
+                * self.attn_dp
             )
 
         # Validate expert parallelism configuration for MoE models
@@ -4237,10 +4242,10 @@ class ClusterConfig:
                 "moe_routing_distribution_type"
             )
             attn_tensor_parallel_size = get_field_value("attn_tensor_parallel_size")
-            attn_data_parallel_size = get_field_value("attn_data_parallel_size")
+            attn_dp = get_field_value("attn_dp")
         else:
             attn_tensor_parallel_size = get_field_value("attn_tensor_parallel_size")
-            attn_data_parallel_size = get_field_value("attn_data_parallel_size")
+            attn_dp = get_field_value("attn_dp")
             moe_tensor_parallel_size = get_field_value("moe_tensor_parallel_size")
             moe_expert_parallel_size = get_field_value("moe_expert_parallel_size")
             total_expert_num = get_field_value("total_expert_num")
@@ -4260,7 +4265,7 @@ class ClusterConfig:
             memory_margin_fraction=get_field_value("memory_margin_fraction"),
             num_pipeline_stages=num_pipeline_stages,
             attn_tensor_parallel_size=attn_tensor_parallel_size,
-            attn_data_parallel_size=attn_data_parallel_size,
+            attn_dp=attn_dp,
             moe_tensor_parallel_size=moe_tensor_parallel_size,
             moe_expert_parallel_size=moe_expert_parallel_size,
             total_expert_num=total_expert_num,
@@ -4304,11 +4309,11 @@ class ClusterConfig:
         # Validate dense model configuration in disaggregated modes.
         is_dense_model = not replica_config.model_config.is_moe
         if is_dense_model and cluster_name in ["prefill", "decode"]:
-            # For dense models in PD-disaggregation mode, enforce attn_data_parallel_size = 1
-            if replica_config.attn_data_parallel_size != 1:
+            # For dense models in PD-disaggregation mode, enforce attn_dp = 1
+            if replica_config.attn_dp != 1:
                 raise ValueError(
-                    f"Dense models in PD-disaggregation mode require attn_data_parallel_size=1 "
-                    f"in {cluster_name} cluster, got {replica_config.attn_data_parallel_size}. "
+                    f"Dense models in PD-disaggregation mode require attn_dp=1 "
+                    f"in {cluster_name} cluster, got {replica_config.attn_dp}. "
                     f"Dense models do not support attn data parallelism in disaggregated mode."
                 )
             # Ensure MoE parallelism is disabled for dense models
@@ -4320,11 +4325,11 @@ class ClusterConfig:
                 )
 
         if is_dense_model and cluster_name == "decode_attn":
-            if replica_config.attn_data_parallel_size != 1:
+            if replica_config.attn_dp != 1:
                 raise ValueError(
-                    "Dense models require attn_data_parallel_size=1 in "
+                    "Dense models require attn_dp=1 in "
                     f"{cluster_name} cluster, got "
-                    f"{replica_config.attn_data_parallel_size}."
+                    f"{replica_config.attn_dp}."
                 )
 
         if is_dense_model and cluster_name == "decode_ffn":
@@ -4344,12 +4349,12 @@ class ClusterConfig:
         if (
             normalized_cluster_name in {"prefill", "decode", "monolithic"}
             and replica_config.model_config.is_moe
-            and replica_config.attn_data_parallel_size != 1
+            and replica_config.attn_dp != 1
         ):
             raise ValueError(
                 "MoE shared-domain roles require "
-                f"attn_data_parallel_size=1 in {cluster_name} cluster, got "
-                f"{replica_config.attn_data_parallel_size}."
+                f"attn_dp=1 in {cluster_name} cluster, got "
+                f"{replica_config.attn_dp}."
             )
 
         if normalized_cluster_name in {"prefill", "decode", "monolithic"} and replica_config.model_config.is_moe:
@@ -4357,7 +4362,7 @@ class ClusterConfig:
                 FrontierParallelismMapping(
                     cluster_num_replicas=1,
                     attn_tensor_parallel_size=replica_config.attn_tensor_parallel_size,
-                    attn_data_parallel_size=replica_config.attn_data_parallel_size,
+                    attn_dp=replica_config.attn_dp,
                     moe_tensor_parallel_size=replica_config.moe_tensor_parallel_size,
                     moe_expert_parallel_size=replica_config.moe_expert_parallel_size,
                 )
@@ -4553,13 +4558,13 @@ class ClusterConfig:
                 or cluster_name == "DECODE"
             ):
                 print(
-                    f"   Configuration: PP{replica_config.num_pipeline_stages} × (Attn_TP{replica_config.attn_tensor_parallel_size} x Attn_DP{replica_config.attn_data_parallel_size}) | (MoE_TP{replica_config.moe_tensor_parallel_size} x MoE_EP{replica_config.moe_expert_parallel_size})"
+                    f"   Configuration: PP{replica_config.num_pipeline_stages} × (Attn_TP{replica_config.attn_tensor_parallel_size} x Attn_DP{replica_config.attn_dp}) | (MoE_TP{replica_config.moe_tensor_parallel_size} x MoE_EP{replica_config.moe_expert_parallel_size})"
                 )
                 print(f"   Total Expert Num: {replica_config.total_expert_num}")
                 print(f"   Local Expert Num: {replica_config.local_expert_num}")
             elif cluster_name == "DECODE_ATTN":
                 print(
-                    f"   Configuration: PP{replica_config.num_pipeline_stages} × Attn_TP{replica_config.attn_tensor_parallel_size} x Attn_DP{replica_config.attn_data_parallel_size}"
+                    f"   Configuration: PP{replica_config.num_pipeline_stages} × Attn_TP{replica_config.attn_tensor_parallel_size} x Attn_DP{replica_config.attn_dp}"
                 )
             elif cluster_name == "DECODE_FFN":
                 print(
@@ -5028,7 +5033,7 @@ class ClusterConfig:
             memory_margin_fraction=original_config.memory_margin_fraction,
             num_pipeline_stages=original_config.num_pipeline_stages,
             attn_tensor_parallel_size=original_config.attn_tensor_parallel_size,
-            attn_data_parallel_size=original_config.attn_data_parallel_size,
+            attn_dp=original_config.attn_dp,
             moe_tensor_parallel_size=original_config.moe_tensor_parallel_size,
             moe_expert_parallel_size=original_config.moe_expert_parallel_size,
             total_expert_num=original_config.total_expert_num,

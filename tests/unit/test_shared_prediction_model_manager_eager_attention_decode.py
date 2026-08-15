@@ -47,7 +47,7 @@ def _make_dense_replica_config() -> ReplicaConfig:
         device="h800",
         network_device="h800_dgx",
         attn_tensor_parallel_size=1,
-        attn_data_parallel_size=1,
+        attn_dp=1,
         moe_tensor_parallel_size=1,
         moe_expert_parallel_size=1,
     )

@@ -11,13 +11,13 @@ from pathlib import Path
 class FrontierParallelismMapping:
     cluster_num_replicas: int
     attn_tensor_parallel_size: int
-    attn_data_parallel_size: int
+    attn_dp: int
     moe_tensor_parallel_size: int
     moe_expert_parallel_size: int
 
     @property
     def attention_parallel_size(self) -> int:
-        return self.attn_tensor_parallel_size * self.attn_data_parallel_size
+        return self.attn_tensor_parallel_size * self.attn_dp
 
     @property
     def moe_parallel_size(self) -> int:
@@ -65,10 +65,10 @@ def _validate_positive(name: str, value: int) -> int:
 def validate_frontier_shared_parallel_domains(
     mapping: FrontierParallelismMapping,
 ) -> None:
-    if mapping.attn_data_parallel_size != 1:
+    if mapping.attn_dp != 1:
         raise ValueError(
             "Frontier shared attention/MoE parallel domain requires "
-            "attn_data_parallel_size=1"
+            "attn_dp=1"
         )
     if mapping.attention_parallel_size != mapping.moe_parallel_size:
         raise ValueError(
@@ -99,7 +99,7 @@ def resolve_frontier_parallelism_mapping(
         return FrontierParallelismMapping(
             cluster_num_replicas=resolved_num_replicas,
             attn_tensor_parallel_size=resolved_tp,
-            attn_data_parallel_size=1,
+            attn_dp=1,
             moe_tensor_parallel_size=1,
             moe_expert_parallel_size=1,
         )
@@ -116,7 +116,7 @@ def resolve_frontier_parallelism_mapping(
     mapping = FrontierParallelismMapping(
         cluster_num_replicas=resolved_num_replicas,
         attn_tensor_parallel_size=resolved_tp,
-        attn_data_parallel_size=1,
+        attn_dp=1,
         moe_tensor_parallel_size=moe_tensor_parallel_size,
         moe_expert_parallel_size=moe_expert_parallel_size,
     )

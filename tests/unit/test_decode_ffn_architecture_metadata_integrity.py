@@ -50,7 +50,7 @@ def _replica_config(model_config: BaseModelConfig) -> SimpleNamespace:
         device_config=SimpleNamespace(total_memory_gb=80, fp16_tflops=1.0),
         num_pipeline_stages=1,
         attn_tensor_parallel_size=1,
-        attn_data_parallel_size=1,
+        attn_dp=1,
         moe_tensor_parallel_size=1,
         moe_expert_parallel_size=1,
         total_expert_num=16,

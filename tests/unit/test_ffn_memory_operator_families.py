@@ -328,7 +328,7 @@ def _op_trace_context() -> Any:
         model_config=_base_model_config(is_moe=False),
         replica_config=SimpleNamespace(
             attn_tensor_parallel_size=1,
-            attn_data_parallel_size=1,
+            attn_dp=1,
             moe_tensor_parallel_size=1,
             moe_expert_parallel_size=1,
             num_pipeline_stages=1,

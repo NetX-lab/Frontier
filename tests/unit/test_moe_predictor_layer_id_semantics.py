@@ -36,7 +36,7 @@ class _DummyDisaggregationPredictor(SklearnDisaggregationExecutionTimePredictor)
 
 def test_attention_dp_moe_communication_is_rejected_when_not_one() -> None:
     predictor = object.__new__(_DummySklearnMoEPredictor)
-    predictor._replica_config = SimpleNamespace(attn_data_parallel_size=2)
+    predictor._replica_config = SimpleNamespace(attn_dp=2)
 
     with pytest.raises(ValueError, match="attention-DP communication is retired"):
         predictor.predict_dp_moe_allreduce_times(

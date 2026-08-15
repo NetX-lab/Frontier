@@ -84,7 +84,7 @@ class _DummyReplicaConfig:
     moe_tensor_parallel_size = 1
     moe_expert_parallel_size = 1
     attn_tensor_parallel_size = 2
-    attn_data_parallel_size = 1
+    attn_dp = 1
     num_pipeline_stages = 1
     router_topk = 1
     model_config = None

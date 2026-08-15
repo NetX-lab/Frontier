@@ -213,7 +213,7 @@ class CollectiveSimCCBackend(BaseCCBackend):
             cfg.runtime_num_replicas,
             cfg.runtime_num_pipeline_stages,
             cfg.runtime_attn_tensor_parallel_size,
-            cfg.runtime_attn_data_parallel_size,
+            cfg.runtime_attn_dp,
             cfg.runtime_moe_tensor_parallel_size,
             cfg.runtime_moe_expert_parallel_size,
         )
@@ -227,7 +227,7 @@ class CollectiveSimCCBackend(BaseCCBackend):
         return {
             "TP": int(cfg.runtime_attn_tensor_parallel_size),
             "CP": int(cfg.runtime_num_pipeline_stages),
-            "DP": int(cfg.runtime_attn_data_parallel_size) * int(cfg.runtime_num_replicas),
+            "DP": int(cfg.runtime_attn_dp) * int(cfg.runtime_num_replicas),
             "EP": 1,
         }
 

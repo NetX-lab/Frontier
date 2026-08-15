@@ -796,7 +796,7 @@ class MetricsStore:
         if cluster_config is None:
             return False
         return int(
-            getattr(cluster_config.replica_config, "attn_data_parallel_size", 1)
+            getattr(cluster_config.replica_config, "attn_dp", 1)
         ) > 1
 
     def _emit_aggregated_traces(
