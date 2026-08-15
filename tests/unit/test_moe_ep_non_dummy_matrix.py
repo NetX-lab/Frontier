@@ -12,6 +12,7 @@ import pytest
 from tests.e2e.moe_ep_non_dummy_matrix import (
     _find_metrics_dir,
     _merge_result_rows,
+    _parse_ep_conservation_records,
     _parse_ep_barrier_records,
     _parse_ep_workload_records,
     _validate_result_ledger_provenance,
@@ -167,6 +168,7 @@ def test_log_checker_requires_layer_trace_and_finite_metrics(tmp_path: Path) -> 
                 "[OP-TRACE][DECODE_FFN][MOE][TOTAL] batch_id=1, layer_id=0, total_moe_time_ms=1.0",
                 "[EP-WORKLOAD][DECODE_FFN] batch_id=1, layer_id=0, ep_id=0, moe_ep_size=1, per_expert_tokens={0: 1, 1: 0}, lane_compute_ms=0.2, lane_comm_ms=0.0",
                 "[EP-BARRIER][DECODE_FFN] batch_id=1, layer_id=0, phase=combine, expected_ep_ids=[0], arrived_ep_ids=[0], max_lane_time_ms=0.2, barrier_time_ms=0.2, barrier_end_time_s=0.001",
+                "[EP-CONSERVATION][DECODE_FFN] batch_id=1, layer_id=0, routing_token_count=1, router_topk=1, total_routed_assignments=1, per_ep_routed_tokens={0: 1}",
                 "[DECODE_FFN] per_expert_tokens extracted: {0: 1, 1: 0}",
             ]
         ),
@@ -251,6 +253,27 @@ def test_ep_barrier_parser_accepts_logger_prefix() -> None:
     ]
 
 
+def test_ep_conservation_parser_accepts_logger_prefix() -> None:
+    records = _parse_ep_conservation_records(
+        "INFO 12:00:00 scheduler.py:1] "
+        "[EP-CONSERVATION][DECODE_FFN] batch_id=7, layer_id=3, "
+        "routing_token_count=2, router_topk=2, total_routed_assignments=4, "
+        "per_ep_routed_tokens={0: 1, 1: 3}"
+    )
+
+    assert records == [
+        {
+            "cluster": "DECODE_FFN",
+            "batch_id": 7,
+            "layer_id": 3,
+            "routing_token_count": 2,
+            "router_topk": 2,
+            "total_routed_assignments": 4,
+            "per_ep_routed_tokens": {0: 1, 1: 3},
+        }
+    ]
+
+
 def test_strict_checker_does_not_merge_ep_ids_from_different_waves(tmp_path: Path) -> None:
     case = next(
         replace(case, num_layers=1, moe_layer_ids=(0,))
@@ -312,6 +335,7 @@ def test_strict_shared_checker_requires_layer_barrier_evidence(tmp_path: Path) -
                 "moe_ep_size=2, per_expert_tokens={0: 1}, lane_compute_ms=1.0, lane_comm_ms=0.0",
                 "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, ep_id=1, "
                 "moe_ep_size=2, per_expert_tokens={1: 1}, lane_compute_ms=2.0, lane_comm_ms=0.0",
+                "[EP-CONSERVATION][MONOLITHIC] batch_id=10, layer_id=0, routing_token_count=1, router_topk=2, total_routed_assignments=2, per_ep_routed_tokens={0: 1, 1: 1}",
             ]
         ),
         encoding="utf-8",

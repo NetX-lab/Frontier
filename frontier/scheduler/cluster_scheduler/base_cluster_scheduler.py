@@ -93,6 +93,54 @@ class EPBatchGroupPlan(NamedTuple):
 
 class BaseClusterScheduler(ABC):
     @staticmethod
+    def _resolve_ep_trace_identity(
+        ep_batches: Dict[int, Any],
+        batch_global_id: int,
+    ) -> tuple[int, int]:
+        """Resolve one logical batch/layer identity for a completed EP wave."""
+
+        if not isinstance(ep_batches, dict) or not ep_batches:
+            raise ValueError("EP trace identity requires a non-empty batch map")
+        if type(batch_global_id) is not int or batch_global_id < 0:
+            raise ValueError(
+                "EP trace identity batch_global_id must be a non-negative int"
+            )
+
+        layer_ids: set[int] = set()
+        source_id_lists: list[tuple[int, ...]] = []
+        for ep_id, ep_batch in ep_batches.items():
+            if type(ep_id) is not int or ep_id < 0:
+                raise ValueError(f"EP trace identity has invalid ep_id={ep_id!r}")
+            layer_id = getattr(ep_batch, "decode_ffn_layer_id", None)
+            if type(layer_id) is not int or layer_id < 0:
+                raise ValueError(
+                    "EP trace identity requires decode_ffn_layer_id on every lane"
+                )
+            layer_ids.add(layer_id)
+            raw_source_ids = getattr(ep_batch, "source_batch_ids", None)
+            if not isinstance(raw_source_ids, (list, tuple)):
+                raise ValueError(
+                    "EP trace identity requires source_batch_ids on every lane"
+                )
+            source_ids = tuple(raw_source_ids)
+            if any(type(source_id) is not int or source_id < 0 for source_id in source_ids):
+                raise ValueError(
+                    "EP trace identity source_batch_ids must be non-negative ints"
+                )
+            source_id_lists.append(source_ids)
+
+        if len(layer_ids) != 1:
+            raise ValueError(
+                f"EP trace identity has inconsistent layer IDs: {sorted(layer_ids)}"
+            )
+        logical_batch_id = batch_global_id
+        if source_id_lists and all(len(ids) == 1 for ids in source_id_lists):
+            source_ids = {ids[0] for ids in source_id_lists}
+            if len(source_ids) == 1:
+                logical_batch_id = next(iter(source_ids))
+        return logical_batch_id, next(iter(layer_ids))
+
+    @staticmethod
     def _log_ep_workload_trace(
         *,
         cluster_type: ClusterType,
@@ -223,6 +271,64 @@ class BaseClusterScheduler(ABC):
             float(max_lane_time_ms),
             float(barrier_time_ms),
             float(barrier_end_time_s),
+        )
+
+    @staticmethod
+    def _log_ep_conservation_trace(
+        *,
+        cluster_type: ClusterType,
+        batch_id: int,
+        layer_id: int,
+        routing_token_count: int,
+        router_topk: int,
+        total_routed_assignments: int,
+        per_ep_routed_tokens: Dict[int, int],
+    ) -> None:
+        """Emit exact routing-to-EP token conservation for one layer wave."""
+
+        if type(batch_id) is not int or batch_id < 0:
+            raise ValueError("EP conservation batch_id must be non-negative")
+        if type(layer_id) is not int or layer_id < 0:
+            raise ValueError("EP conservation layer_id must be non-negative")
+        for name, value, minimum in (
+            ("routing_token_count", routing_token_count, 0),
+            ("router_topk", router_topk, 1),
+            ("total_routed_assignments", total_routed_assignments, 0),
+        ):
+            if type(value) is not int or value < minimum:
+                raise ValueError(f"EP conservation {name} is invalid: {value!r}")
+        if routing_token_count * router_topk != total_routed_assignments:
+            raise ValueError(
+                "EP conservation total must equal routing_token_count * router_topk"
+            )
+        if not isinstance(per_ep_routed_tokens, dict) or not per_ep_routed_tokens:
+            raise ValueError("EP conservation requires a non-empty per-EP map")
+        normalized: dict[int, int] = {}
+        for ep_id, token_count in per_ep_routed_tokens.items():
+            if (
+                type(ep_id) is not int
+                or ep_id < 0
+                or type(token_count) is not int
+                or token_count < 0
+            ):
+                raise ValueError("EP conservation per-EP values must be non-negative ints")
+            normalized[ep_id] = token_count
+        if sum(normalized.values()) != total_routed_assignments:
+            raise ValueError(
+                "EP conservation per-EP total does not match routed assignments"
+            )
+        cluster_name = getattr(cluster_type, "name", str(cluster_type))
+        logger.info(
+            "[EP-CONSERVATION][%s] batch_id=%d, layer_id=%d, "
+            "routing_token_count=%d, router_topk=%d, "
+            "total_routed_assignments=%d, per_ep_routed_tokens=%s",
+            cluster_name,
+            batch_id,
+            layer_id,
+            routing_token_count,
+            router_topk,
+            total_routed_assignments,
+            dict(sorted(normalized.items())),
         )
 
     @staticmethod
@@ -1714,6 +1820,17 @@ class BaseClusterScheduler(ABC):
         )
         ep_batch_group.afd_stage_idx = plan.afd_stage_idx
         ep_batch_group.decode_ffn_layer_id = plan.layer_global_id
+        routing_token_count = sum(
+            int(source_batch.total_num_tokens) for source_batch in plan.source_batches
+        )
+        router_topk = getattr(self._config.replica_config, "router_topk", None)
+        if type(router_topk) is not int or router_topk <= 0:
+            raise ValueError(
+                "DECODE_FFN EP group requires a positive integer router_topk"
+            )
+        ep_batch_group.routing_token_count = routing_token_count
+        ep_batch_group.router_topk = router_topk
+        ep_batch_group.total_routed_assignments = routing_token_count * router_topk
         ep_batch_group.moe_pre_routing_effective_total_tokens = (
             plan.pre_routing_effective_total_tokens
         )
@@ -2054,6 +2171,55 @@ class BaseClusterScheduler(ABC):
             sync_time=ep_collective_sync_time,
         )
 
+        trace_batch_id, trace_layer_id = self._resolve_ep_trace_identity(
+            prospective_batches,
+            batch_global_id,
+        )
+        trace_routing_token_count = getattr(
+            next(iter(prospective_batches.values())), "routing_token_count", None
+        )
+        trace_router_topk = getattr(
+            next(iter(prospective_batches.values())), "router_topk", None
+        )
+        trace_total_routed_assignments = getattr(
+            next(iter(prospective_batches.values())),
+            "total_routed_assignments",
+            None,
+        )
+        if any(
+            getattr(ep_batch, "routing_token_count", None)
+            != trace_routing_token_count
+            or getattr(ep_batch, "router_topk", None) != trace_router_topk
+            or getattr(ep_batch, "total_routed_assignments", None)
+            != trace_total_routed_assignments
+            for ep_batch in prospective_batches.values()
+        ):
+            raise ValueError("EP dispatch lanes disagree on routing metadata")
+        self._log_ep_conservation_trace(
+            cluster_type=self._cluster_type,
+            batch_id=trace_batch_id,
+            layer_id=trace_layer_id,
+            routing_token_count=trace_routing_token_count,
+            router_topk=trace_router_topk,
+            total_routed_assignments=trace_total_routed_assignments,
+            per_ep_routed_tokens={
+                int(ep_id): sum(getattr(ep_batch, "per_expert_tokens", {}).values())
+                for ep_id, ep_batch in prospective_batches.items()
+            },
+        )
+        trace_origin_s = min(prospective_arrival_times.values())
+        self._log_ep_barrier_trace(
+            cluster_type=self._cluster_type,
+            batch_id=trace_batch_id,
+            layer_id=trace_layer_id,
+            phase="dispatch",
+            expected_ep_ids=tuple(sorted(expected_ep_ids)),
+            arrived_ep_ids=tuple(sorted(expected_ep_ids)),
+            max_lane_time_ms=(ep_collective_sync_time - trace_origin_s) * 1000.0,
+            barrier_time_ms=(collective_event_time - trace_origin_s) * 1000.0,
+            barrier_end_time_s=collective_event_time,
+        )
+
         if dispatch_wait_room is None:
             dispatch_wait_room = self._ep_alltoall_dispatch_waiting_room[
                 replica_id
@@ -2383,6 +2549,35 @@ class BaseClusterScheduler(ABC):
             raise ValueError(
                 "EP all-to-all collective reached with empty ep_batches"
             )
+
+        arrival_times = ep_wait_room.get("arrival_times")
+        if not isinstance(arrival_times, dict) or set(arrival_times) != set(ep_batches):
+            raise ValueError(
+                "EP combine collective requires one arrival time for every lane"
+            )
+        trace_batch_id, trace_layer_id = self._resolve_ep_trace_identity(
+            ep_batches,
+            batch_global_id,
+        )
+        trace_origin_s = min(arrival_times.values())
+        trace_sync_s = max(arrival_times.values())
+        if not isinstance(time, Real) or isinstance(time, bool) or not math.isfinite(float(time)):
+            raise ValueError("EP combine collective time must be finite")
+        if float(time) < trace_sync_s:
+            raise ValueError(
+                "EP combine collective time cannot precede the slowest lane"
+            )
+        self._log_ep_barrier_trace(
+            cluster_type=self._cluster_type,
+            batch_id=trace_batch_id,
+            layer_id=trace_layer_id,
+            phase="combine",
+            expected_ep_ids=tuple(sorted(ep_batches)),
+            arrived_ep_ids=tuple(sorted(ep_batches)),
+            max_lane_time_ms=(trace_sync_s - trace_origin_s) * 1000.0,
+            barrier_time_ms=(float(time) - trace_origin_s) * 1000.0,
+            barrier_end_time_s=float(time),
+        )
 
         logger.info(f"[DEBUG] Retrieved {len(ep_batches)} EP batches from waiting room: "
                    f"ep_ids={list(ep_batches.keys())}")
@@ -2847,6 +3042,15 @@ class BaseClusterScheduler(ABC):
                 target_replica_id=replica_id,
                 global_layer_id=layer_id,
             )
+            self._log_ep_conservation_trace(
+                cluster_type=self._cluster_type,
+                batch_id=int(batch.id),
+                layer_id=layer_id,
+                routing_token_count=int(layer_workload.routing_token_count),
+                router_topk=int(layer_workload.router_topk),
+                total_routed_assignments=int(layer_workload.total_routed_assignments),
+                per_ep_routed_tokens=dict(layer_workload.per_ep_routed_tokens),
+            )
             for ep_id in layer_workload.participant_ep_ids:
                 lane_batch = self._build_prefill_ep_lane_batch(
                     source_batch=batch,
@@ -3115,6 +3319,15 @@ class BaseClusterScheduler(ABC):
                 batch=batch,
                 target_replica_id=replica_id,
                 global_layer_id=layer_id,
+            )
+            self._log_ep_conservation_trace(
+                cluster_type=self._cluster_type,
+                batch_id=int(batch.id),
+                layer_id=layer_id,
+                routing_token_count=int(layer_workload.routing_token_count),
+                router_topk=int(layer_workload.router_topk),
+                total_routed_assignments=int(layer_workload.total_routed_assignments),
+                per_ep_routed_tokens=dict(layer_workload.per_ep_routed_tokens),
             )
             for ep_id in layer_workload.participant_ep_ids:
                 lane_batch = self._build_prefill_ep_lane_batch(

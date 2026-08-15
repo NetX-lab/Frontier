@@ -113,6 +113,15 @@ _EP_BARRIER_LINE_RE = re.compile(
     r"barrier_end_time_s=(?P<barrier_end_time_s>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
     r"\s*$"
 )
+_EP_CONSERVATION_LINE_RE = re.compile(
+    r"\[EP-CONSERVATION\]\[(?P<cluster>[^\]]+)\]\s+"
+    r"batch_id=(?P<batch_id>-?\d+),\s+"
+    r"layer_id=(?P<layer_id>-?\d+),\s+"
+    r"routing_token_count=(?P<routing_token_count>\d+),\s+"
+    r"router_topk=(?P<router_topk>\d+),\s+"
+    r"total_routed_assignments=(?P<total_routed_assignments>\d+),\s+"
+    r"per_ep_routed_tokens=(?P<per_ep_routed_tokens>\{.*\})\s*$"
+)
 
 
 @dataclass(frozen=True)
@@ -725,6 +734,65 @@ def _parse_ep_barrier_records(text: str) -> list[dict[str, Any]]:
     return records
 
 
+def _parse_ep_conservation_records(text: str) -> list[dict[str, Any]]:
+    """Parse one exact routing-conservation record per materialized EP wave."""
+
+    records: list[dict[str, Any]] = []
+    for line in text.splitlines():
+        match = _EP_CONSERVATION_LINE_RE.search(line)
+        if match is None:
+            continue
+        groups = match.groupdict()
+        try:
+            per_ep_routed_tokens = ast.literal_eval(groups["per_ep_routed_tokens"])
+        except (SyntaxError, ValueError) as exc:
+            raise ValueError("invalid per_ep_routed_tokens literal") from exc
+        if not isinstance(per_ep_routed_tokens, dict):
+            raise ValueError("per_ep_routed_tokens must be a dict")
+        normalized: dict[int, int] = {}
+        for ep_id, token_count in per_ep_routed_tokens.items():
+            if (
+                type(ep_id) is not int
+                or type(token_count) is not int
+                or ep_id < 0
+                or token_count < 0
+            ):
+                raise ValueError(
+                    "per_ep_routed_tokens must map non-negative integer IDs "
+                    "to non-negative integer counts"
+                )
+            normalized[int(ep_id)] = int(token_count)
+        batch_id = int(groups["batch_id"])
+        layer_id = int(groups["layer_id"])
+        routing_token_count = int(groups["routing_token_count"])
+        router_topk = int(groups["router_topk"])
+        total_routed_assignments = int(groups["total_routed_assignments"])
+        if batch_id < 0 or layer_id < 0:
+            raise ValueError("conservation batch_id/layer_id must be non-negative")
+        if router_topk <= 0:
+            raise ValueError("conservation router_topk must be positive")
+        if routing_token_count * router_topk != total_routed_assignments:
+            raise ValueError(
+                "conservation total does not equal routing_token_count * router_topk"
+            )
+        if sum(normalized.values()) != total_routed_assignments:
+            raise ValueError(
+                "conservation per_ep_routed_tokens total is inconsistent"
+            )
+        records.append(
+            {
+                "cluster": groups["cluster"],
+                "batch_id": batch_id,
+                "layer_id": layer_id,
+                "routing_token_count": routing_token_count,
+                "router_topk": router_topk,
+                "total_routed_assignments": total_routed_assignments,
+                "per_ep_routed_tokens": normalized,
+            }
+        )
+    return records
+
+
 def check_case_log(
     case: MatrixCase,
     log_path: Path,
@@ -786,6 +854,11 @@ def check_case_log(
     except ValueError as exc:
         ep_barrier_records = []
         errors.append(f"invalid EP barrier trace: {exc}")
+    try:
+        ep_conservation_records = _parse_ep_conservation_records(text)
+    except ValueError as exc:
+        ep_conservation_records = []
+        errors.append(f"invalid EP conservation trace: {exc}")
     if case.is_moe:
         if "moe_grouped_gemm" not in text or "moe_shuffling" not in text:
             errors.append("missing MoE grouped-gemm/shuffling trace")
@@ -838,18 +911,86 @@ def check_case_log(
                         "EP workload has no complete participant wave "
                         f"for layer={expected_layer_id}"
                     )
-            if case.architecture in {"co-location", "pd-disaggregation"}:
-                barrier_layers = {
+            conservation_by_wave = {
+                (
+                    str(record["cluster"]).upper(),
+                    int(record["batch_id"]),
+                    int(record["layer_id"]),
+                ): record
+                for record in ep_conservation_records
+            }
+            conservation_layers_by_cluster: dict[str, set[int]] = {}
+            for record in ep_conservation_records:
+                cluster_name = str(record["cluster"]).upper()
+                conservation_layers_by_cluster.setdefault(cluster_name, set()).add(
                     int(record["layer_id"])
-                    for record in ep_barrier_records
-                    if record["phase"] == "combine"
-                }
-                missing_barrier_layers = sorted(expected_moe_layers - barrier_layers)
-                if missing_barrier_layers:
+                )
+            for wave_key, wave_records in records_by_wave.items():
+                conservation = conservation_by_wave.get(wave_key)
+                if conservation is None:
                     errors.append(
-                        "missing EP barrier evidence for MoE layers "
-                        f"{missing_barrier_layers}"
+                        "missing EP conservation evidence for wave "
+                        f"cluster={wave_key[0]} batch_id={wave_key[1]} layer={wave_key[2]}"
                     )
+                    continue
+                expected_ep_size = _expected_ep_size_for_cluster(case, wave_key[0])
+                expected_ep_ids = set(range(expected_ep_size or 0))
+                per_ep_totals = {
+                    int(record["ep_id"]): sum(record["per_expert_tokens"].values())
+                    for record in wave_records
+                }
+                if set(per_ep_totals) != expected_ep_ids:
+                    errors.append(
+                        "EP conservation workload participant IDs do not match "
+                        f"cluster={wave_key[0]} layer={wave_key[2]}"
+                    )
+                if per_ep_totals != dict(conservation["per_ep_routed_tokens"]):
+                    errors.append(
+                        "EP conservation per-lane totals disagree with workload "
+                        f"cluster={wave_key[0]} batch_id={wave_key[1]} layer={wave_key[2]}"
+                    )
+                if sum(per_ep_totals.values()) != int(
+                    conservation["total_routed_assignments"]
+                ):
+                    errors.append(
+                        "EP conservation total disagrees with lane workload "
+                        f"cluster={wave_key[0]} batch_id={wave_key[1]} layer={wave_key[2]}"
+                    )
+            workload_clusters = {
+                str(record["cluster"]).upper() for record in ep_workload_records
+            }
+            for cluster_name in sorted(workload_clusters):
+                missing_conservation_layers = sorted(
+                    expected_moe_layers
+                    - conservation_layers_by_cluster.get(cluster_name, set())
+                )
+                if missing_conservation_layers:
+                    errors.append(
+                        "EP conservation has no complete layer evidence "
+                        f"cluster={cluster_name} layers={missing_conservation_layers}"
+                    )
+
+            barrier_layers_by_phase: dict[tuple[str, str], set[int]] = {}
+            for record in ep_barrier_records:
+                barrier_layers_by_phase.setdefault(
+                    (str(record["cluster"]).upper(), str(record["phase"])),
+                    set(),
+                ).add(int(record["layer_id"]))
+            required_phases = ("combine",)
+            if case.architecture == "pd-af-disaggregation":
+                required_phases = ("dispatch", "combine")
+            for cluster_name in sorted(workload_clusters):
+                for phase in required_phases:
+                    missing_barrier_layers = sorted(
+                        expected_moe_layers
+                        - barrier_layers_by_phase.get((cluster_name, phase), set())
+                    )
+                    if missing_barrier_layers:
+                        errors.append(
+                            "missing EP barrier evidence for MoE layers "
+                            f"cluster={cluster_name} phase={phase} "
+                            f"layers={missing_barrier_layers}"
+                        )
         if case.architecture == "pd-af-disaggregation" and ep_participant_records == 0:
             errors.append("missing DECODE_FFN EP participant maps")
         if case.expects_zero_routed_lane and not any(
@@ -887,6 +1028,7 @@ def check_case_log(
         "ep_participant_records": ep_participant_records,
         "ep_workload_records": len(ep_workload_records),
         "ep_barrier_records": len(ep_barrier_records),
+        "ep_conservation_records": len(ep_conservation_records),
         "numeric_metric_count": numeric_metric_count,
         "ttft_mean_ms": _stat_value("ttft_statistics"),
         "e2e_mean_ms": _stat_value("request_e2e_time_statistics"),

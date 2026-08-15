@@ -44,6 +44,9 @@ def _batch(ep_id: int) -> EPBatchGroup:
     )
     batch.set_global_id(10)
     batch.decode_ffn_layer_id = 4
+    batch.routing_token_count = 2
+    batch.router_topk = 1
+    batch.total_routed_assignments = 2
     return batch
 
 
@@ -56,8 +59,16 @@ def _combine_batch(
 ) -> SimpleNamespace:
     return SimpleNamespace(
         id=100 + ep_id,
+        global_id=10,
+        replica_id=0,
+        ep_id=ep_id,
+        decode_ffn_layer_id=4,
         source_batch_ids=list(source_batch_ids),
         per_expert_tokens={},
+        total_num_tokens=1,
+        routing_token_count=1,
+        router_topk=1,
+        total_routed_assignments=1,
         execution_time=execution_time,
         activation_bytes=activation_bytes,
     )
@@ -79,7 +90,10 @@ def _combine_scheduler(
 ):
     scheduler = object.__new__(_ConcreteClusterScheduler)
     scheduler._cluster_type = ClusterType.DECODE_FFN
-    room = {"batches": batches}
+    room = {
+        "batches": batches,
+        "arrival_times": {ep_id: 4.0 + ep_id * 0.001 for ep_id in batches},
+    }
     scheduler._ep_allgather_waiting_room = {0: {0: {10: room}}}
     scheduler._raw_batch_waiting_for_m2n_back = dict(raw_batches or {})
 
@@ -198,6 +212,52 @@ def test_ep_dispatch_preserves_full_stage_execution_time(
         and "lane_compute_ms=3.000000" in line
         and "lane_comm_ms=0.500000" in line
         for line in workload_lines
+    )
+
+
+def test_pdaf_dispatch_emits_unified_ep_barrier_trace(monkeypatch) -> None:
+    import frontier.logger as frontier_logging
+
+    log_stream = io.StringIO()
+    monkeypatch.setattr(frontier_logging._default_handler, "stream", log_stream)
+    batches = {ep_id: _batch(ep_id) for ep_id in range(2)}
+    for batch in batches.values():
+        batch.expert_compute_time = 0.25
+
+    scheduler = object.__new__(_ConcreteClusterScheduler)
+    scheduler._cluster_type = ClusterType.DECODE_FFN
+    scheduler._config = SimpleNamespace(
+        replica_config=SimpleNamespace(
+            moe_expert_parallel_size=2,
+            model_config=SimpleNamespace(embedding_dim=16),
+        )
+    )
+    scheduler._predictor = SimpleNamespace(
+        predict_alltoall_time=Mock(return_value=0.5)
+    )
+    scheduler.get_replica = Mock(return_value=SimpleNamespace(ep_size=2))
+    scheduler._ep_alltoall_dispatch_waiting_room = {
+        0: {
+            0: {
+                10: {
+                    "batches": {},
+                    "arrival_times": {},
+                }
+            }
+        }
+    }
+
+    assert scheduler.on_ep_alltoall_dispatch_ready(
+        1.0, 0, 0, batches[0], 0
+    ) == []
+    events = scheduler.on_ep_alltoall_dispatch_ready(
+        1.1, 0, 0, batches[1], 1
+    )
+
+    assert len(events) == 1
+    assert any(
+        "[EP-BARRIER][DECODE_FFN]" in line and "phase=dispatch" in line
+        for line in log_stream.getvalue().splitlines()
     )
 
 
