@@ -147,3 +147,36 @@ def test_disaggregation_grouped_gemm_delegates_with_lane_batch(monkeypatch) -> N
     assert predictor._get_grouped_gemm_time(
         {0: 2, 1: 4}, batch=SimpleNamespace(id=7)
     ) == expected
+
+
+def test_disaggregation_dense_layer_uses_shared_expert_profile_rows() -> None:
+    predictor = _DummyDisaggregationPredictor.__new__(_DummyDisaggregationPredictor)
+    predictor._enable_dummy_mode = False
+    predictor._model_config = _ProfileOnlyStep3ModelConfig()
+    predictor._supports_operation = lambda operation: operation in {
+        "share_expert_up_proj",
+        "share_expert_down_proj",
+        "share_expert_act",
+        "post_attention_layernorm",
+    }
+    predictor._get_share_expert_up_proj_execution_time = lambda _batch: 1.0
+    predictor._get_share_expert_down_proj_execution_time = lambda _batch: 2.0
+    predictor._get_share_expert_act_execution_time = lambda _batch: 3.0
+    predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 4.0
+    predictor._get_mlp_layer_up_proj_execution_time = lambda _batch: (_ for _ in ()).throw(
+        AssertionError("standard MLP profile must not be requested")
+    )
+    batch = SimpleNamespace(
+        id=9,
+        total_num_tokens=8,
+        requests=[SimpleNamespace(id=1, num_prefill_tokens=8)],
+    )
+
+    result = predictor.predict_mlp_layer_time(
+        batch, layer_id=2, cluster_type=ClusterType.PREFILL
+    )
+
+    assert result.mlp_layer_up_proj_execution_time == 1.0
+    assert result.mlp_layer_down_proj_execution_time == 2.0
+    assert result.mlp_layer_act_execution_time == 3.0
+    assert result.mlp_norm_time == 4.0

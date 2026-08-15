@@ -6544,7 +6544,26 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 mlp_norm_time=base_time,
             )
 
-        if not self._supports_operation("mlp_up_proj"):
+        supports_share_expert = bool(
+            getattr(self._model_config, "supports_share_expert", lambda: False)()
+        )
+        if supports_share_expert:
+            required_operations = (
+                "share_expert_up_proj",
+                "share_expert_down_proj",
+                "share_expert_act",
+            )
+            missing_operations = [
+                operation
+                for operation in required_operations
+                if not self._supports_operation(operation)
+            ]
+            if missing_operations:
+                raise NotImplementedError(
+                    "Shared-expert dense FFN operations are incomplete for "
+                    f"cluster type {cluster_type}: {missing_operations}"
+                )
+        elif not self._supports_operation("mlp_up_proj"):
             raise NotImplementedError(
                 f"MLP operations not supported for cluster type {cluster_type}"
             )
@@ -6560,9 +6579,17 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
 
         # Get individual MLP operation times for detailed tracing
-        mlp_up_proj_time = self._get_mlp_layer_up_proj_execution_time(batch)
-        mlp_down_proj_time = self._get_mlp_layer_down_proj_execution_time(batch)
-        mlp_act_time = self._get_mlp_layer_act_execution_time(batch)
+        if supports_share_expert:
+            # Step2Mini/Step3 dense boundary layers use the profiled shared
+            # expert operators.  They remain a dense FULL_STAGE_WORLD
+            # operation; only the profile row names differ.
+            mlp_up_proj_time = self._get_share_expert_up_proj_execution_time(batch)
+            mlp_down_proj_time = self._get_share_expert_down_proj_execution_time(batch)
+            mlp_act_time = self._get_share_expert_act_execution_time(batch)
+        else:
+            mlp_up_proj_time = self._get_mlp_layer_up_proj_execution_time(batch)
+            mlp_down_proj_time = self._get_mlp_layer_down_proj_execution_time(batch)
+            mlp_act_time = self._get_mlp_layer_act_execution_time(batch)
         mlp_norm_time = self._get_mlp_norm_layer_act_execution_time(batch)
 
         # Operation-level tracing for MLP (dense model FFN) operations
@@ -6571,27 +6598,28 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         cluster_name = cluster_type.name
 
         # Header log with batch details
+        trace_family = "DENSE_FFN" if supports_share_expert else "MLP"
         logger.info(
-            f"[OP-TRACE][{cluster_name}][MLP] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][{trace_family}] batch_id={batch.id}, layer_id={layer_id}, "
             f"num_tokens={batch.total_num_tokens}, batch_size={len(batch.requests)}, "
             f"batch_input_lens={batch_input_lens}, model_type=dense"
         )
 
         # Individual operation logs
         logger.info(
-            f"[OP-TRACE][{cluster_name}][MLP][post_attention_layernorm] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][{trace_family}][post_attention_layernorm] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={mlp_norm_time:.6f}"
         )
         logger.info(
-            f"[OP-TRACE][{cluster_name}][MLP][mlp_up_proj] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][{trace_family}][mlp_up_proj] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={mlp_up_proj_time:.6f}"
         )
         logger.info(
-            f"[OP-TRACE][{cluster_name}][MLP][mlp_act] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][{trace_family}][mlp_act] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={mlp_act_time:.6f}"
         )
         logger.info(
-            f"[OP-TRACE][{cluster_name}][MLP][mlp_down_proj] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][{trace_family}][mlp_down_proj] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={mlp_down_proj_time:.6f}"
         )
 
@@ -6600,7 +6628,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             mlp_norm_time + mlp_up_proj_time + mlp_act_time + mlp_down_proj_time
         )
         logger.info(
-            f"[OP-TRACE][{cluster_name}][MLP][TOTAL] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][{trace_family}][TOTAL] batch_id={batch.id}, layer_id={layer_id}, "
             f"total_mlp_time_ms={total_mlp_time:.6f}"
         )
 
