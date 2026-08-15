@@ -815,6 +815,7 @@ class BaseClusterScheduler(ABC):
         *,
         stage_id: int,
         layer_id: int,
+        operation_kind: str,
         scope: str,
         participant_ep_ids: tuple[int, ...] = (),
     ) -> None:
@@ -836,6 +837,11 @@ class BaseClusterScheduler(ABC):
             raise ValueError("stage_id must be an exact non-negative int")
         if type(layer_id) is not int or layer_id < 0:
             raise ValueError("layer_id must be an exact non-negative int")
+        if operation_kind not in ("attention", "ffn"):
+            raise ValueError(
+                "operation_kind must be 'attention' or 'ffn', "
+                f"got {operation_kind!r}"
+            )
         ticket = getattr(batch, "_stage_admission_ticket", None)
         contexts = getattr(self, "_stage_execution_contexts", None)
         if ticket is None and contexts is None:
@@ -854,6 +860,7 @@ class BaseClusterScheduler(ABC):
             int(batch.schedule_epoch),
             int(stage_id),
             int(layer_id),
+            operation_kind,
             scope,
         )
         next_ticket = context.transition_active_scope(
@@ -2736,6 +2743,7 @@ class BaseClusterScheduler(ABC):
                 batch,
                 stage_id=stage_id,
                 layer_id=layer_id,
+                operation_kind="ffn",
                 scope=EP_WAVE,
                 participant_ep_ids=tuple(layer_workload.participant_ep_ids),
             )
@@ -2765,6 +2773,7 @@ class BaseClusterScheduler(ABC):
                 batch,
                 stage_id=stage_id,
                 layer_id=layer_id,
+                operation_kind="ffn",
                 scope=FULL_STAGE_WORLD,
             )
             component_ledger = getattr(
@@ -2990,6 +2999,7 @@ class BaseClusterScheduler(ABC):
                 batch,
                 stage_id=stage_id,
                 layer_id=layer_id,
+                operation_kind="ffn",
                 scope=EP_WAVE,
                 participant_ep_ids=tuple(layer_workload.participant_ep_ids),
             )
@@ -3019,6 +3029,7 @@ class BaseClusterScheduler(ABC):
                 batch,
                 stage_id=stage_id,
                 layer_id=layer_id,
+                operation_kind="ffn",
                 scope=FULL_STAGE_WORLD,
             )
             from frontier.events.dense_layer_complete_event import (
@@ -3315,6 +3326,7 @@ class BaseClusterScheduler(ABC):
                     sample_batch,
                     stage_id=stage_id,
                     layer_id=next_layer_id,
+                    operation_kind="attention",
                     scope=FULL_STAGE_WORLD,
                 )
                 next_layer_execution_time = self._predictor.predict_stage_execution_time(
@@ -3928,6 +3940,7 @@ class BaseClusterScheduler(ABC):
                 sample_batch,
                 stage_id=stage_id,
                 layer_id=next_layer_id,
+                operation_kind="attention",
                 scope=FULL_STAGE_WORLD,
             )
             next_layer_execution_time = execution_time_predictor.predict_stage_execution_time(

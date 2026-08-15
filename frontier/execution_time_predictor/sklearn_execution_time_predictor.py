@@ -2350,6 +2350,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         if not getattr(self._model_config, "is_moe", False):
             return True
 
+        supports_share_expert = getattr(
+            self._model_config, "supports_share_expert", None
+        )
+        if callable(supports_share_expert) and supports_share_expert():
+            # Step2Mini/Step3 mixed layers use the profiled shared-expert FFN
+            # path for their non-routed layers.  They do not expose the
+            # standard mlp_* profiling rows, so requesting those models would
+            # make a valid non-dummy profile fail at runtime.
+            return False
+
         get_num_moe_layers = getattr(self._model_config, "get_num_moe_layers", None)
         num_layers = getattr(self._model_config, "num_layers", None)
         if callable(get_num_moe_layers) and isinstance(num_layers, int):

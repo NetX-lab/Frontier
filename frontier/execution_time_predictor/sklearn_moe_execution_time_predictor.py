@@ -1798,9 +1798,18 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             moe_gating_routing_topk_time = 0.0
             moe_shuffling_time = 0.0
             moe_grouped_gemm_time = 0.0
-            mlp_up_proj_time = self._get_mlp_layer_up_proj_execution_time(batch)
-            mlp_down_proj_time = self._get_mlp_layer_down_proj_execution_time(batch)
-            mlp_act_time = self._get_mlp_layer_act_execution_time(batch)
+            if self._model_config.supports_share_expert():
+                # Step2Mini/Step3 dense layers are the shared-expert FFN.  Map
+                # those profiled operations into the dense MLP component
+                # fields so the layer remains a FULL_STAGE_WORLD operation and
+                # does not acquire MoE routing or EP collective semantics.
+                mlp_up_proj_time = self._get_share_expert_up_proj_execution_time(batch)
+                mlp_down_proj_time = self._get_share_expert_down_proj_execution_time(batch)
+                mlp_act_time = self._get_share_expert_act_execution_time(batch)
+            else:
+                mlp_up_proj_time = self._get_mlp_layer_up_proj_execution_time(batch)
+                mlp_down_proj_time = self._get_mlp_layer_down_proj_execution_time(batch)
+                mlp_act_time = self._get_mlp_layer_act_execution_time(batch)
         else:
             # Attention-only probe: no FFN/MoE operation or profiling lookup.
             expert_parallel_communication_time = 0.0
@@ -2488,43 +2497,78 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             f"layer_id={layer_id}, predicted_time_ms={et._attention_layer_post_proj_execution_time:.6f}"
         )
 
-        # MOE OP-TRACE: log per-layer MoE op times
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][post_attention_layernorm] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._mlp_norm_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][moe_gating] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._moe_gating_routing_topk_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][moe_gating_linear] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._moe_gating_linear_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][moe_gating_routing_topk] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._moe_gating_routing_topk_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][moe_shuffling] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._moe_shuffling_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][moe_grouped_gemm] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._moe_grouped_gemm_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][add] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._add_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][add_attn_residual] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._add_attn_residual_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][add_ffn_residual] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._add_ffn_residual_time:.6f}"
-        )
+        if include_ffn and include_moe_for_layer:
+            # MOE OP-TRACE: log only the routed-expert protocol for an actual
+            # MoE layer.  Dense layers in a mixed model must not be counted as
+            # EP work merely because the model has an MoE-capable topology.
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][post_attention_layernorm] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._mlp_norm_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][moe_gating] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._moe_gating_routing_topk_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][moe_gating_linear] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._moe_gating_linear_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][moe_gating_routing_topk] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._moe_gating_routing_topk_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][moe_shuffling] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._moe_shuffling_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][moe_grouped_gemm] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._moe_grouped_gemm_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][add] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._add_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][add_attn_residual] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._add_attn_residual_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][add_ffn_residual] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._add_ffn_residual_time:.6f}"
+            )
+        elif include_ffn:
+            # Dense OP-TRACE: this is a FULL_STAGE_WORLD FFN operation.  The
+            # component fields may be populated from shared-expert profile
+            # rows for Step2Mini/Step3 models, but the protocol remains dense.
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][post_attention_layernorm] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._mlp_norm_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][mlp_up_proj] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._mlp_layer_up_proj_execution_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][mlp_down_proj] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._mlp_layer_down_proj_execution_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][mlp_act] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._mlp_layer_act_execution_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][add] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._add_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][add_attn_residual] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._add_attn_residual_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][add_ffn_residual] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._add_ffn_residual_time:.6f}"
+            )
         logger.info(
             f"[OP-TRACE][{cluster_name}][SPEC_DECODE][decode_draft_proposer] "
             f"batch_id={batch.id}, layer_id={layer_id}, predicted_time_ms="

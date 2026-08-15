@@ -259,6 +259,60 @@ def test_predict_stage_execution_time_skips_moe_tokens_for_dense_layer() -> None
     assert result._mlp_layer_up_proj_execution_time == pytest.approx(1.1)
 
 
+def test_mixed_share_expert_dense_layer_uses_shared_expert_profile_rows() -> None:
+    """Step3 mixed dense layers use shared-expert rows, not absent MLP rows."""
+
+    predictor = _DummySklearnMoEPredictor.__new__(_DummySklearnMoEPredictor)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._num_layers_per_pipeline_stage = 1
+    predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.step3_text())
+    predictor._replica_config = SimpleNamespace(
+        num_pipeline_stages=1,
+        attn_tensor_parallel_size=1,
+        moe_tensor_parallel_size=1,
+        attn_dp=1,
+    )
+    predictor.predict_attention_layer_time = lambda **_kwargs: AttentionTime()
+    predictor._get_model_architecture_profile = lambda: ModelArchitectureProfile.step3_text()
+    predictor._get_share_expert_up_proj_execution_time = lambda _batch: 1.0
+    predictor._get_share_expert_down_proj_execution_time = lambda _batch: 2.0
+    predictor._get_share_expert_act_execution_time = lambda _batch: 3.0
+    predictor._get_mlp_layer_up_proj_execution_time = lambda _batch: (_ for _ in ()).throw(
+        AssertionError("dense Step3 layer looked up mlp_up_proj")
+    )
+    predictor._get_mlp_layer_down_proj_execution_time = lambda _batch: (_ for _ in ()).throw(
+        AssertionError("dense Step3 layer looked up mlp_down_proj")
+    )
+    predictor._get_mlp_layer_act_execution_time = lambda _batch: (_ for _ in ()).throw(
+        AssertionError("dense Step3 layer looked up mlp_act")
+    )
+    predictor._get_add_layer_act_execution_time = lambda _batch: 0.0
+    predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 0.0
+    predictor._get_schedule_time = lambda _batch: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch: 0.0
+    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor._get_pp_producer_send_path_runtime_time = lambda *_args: 0.0
+    predictor._get_pp_receiver_head_runtime_time = lambda *_args: 0.0
+    predictor._get_pp_prefill_consumer_active_runtime_time = lambda *_args: 0.0
+    predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
+    predictor._get_mtp_terminal_overshoot_time = lambda *_args, **_kwargs: 0.0
+    predictor._should_include_spec_decode_proposer_overhead = lambda _batch: False
+
+    execution_time = predictor._get_execution_time_internal(
+        _DummyBatch(),
+        pipeline_stage=0,
+        include_moe=False,
+        include_ffn=True,
+    )
+
+    assert execution_time._is_moe is False
+    assert execution_time._mlp_layer_up_proj_execution_time == pytest.approx(1.0)
+    assert execution_time._mlp_layer_down_proj_execution_time == pytest.approx(2.0)
+    assert execution_time._mlp_layer_act_execution_time == pytest.approx(3.0)
+
+
 def test_attention_only_probe_does_not_lookup_dense_ffn_profile() -> None:
     """Attention-only probes must not require dense FFN profiling rows."""
 
@@ -381,6 +435,41 @@ def test_moe_predictor_attention_op_trace_labels_use_dense_role_names(
     assert "[ATTENTION][role_cache]" in log_text
     assert "[ATTENTION][attn_prefill]" not in log_text
     assert "[ATTENTION][attn_kv_cache_save]" not in log_text
+
+
+def test_mixed_dense_layer_trace_is_not_labeled_as_moe(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    predictor = _build_predictor()
+    predictor._model_config = _DummyModelConfig(
+        ModelArchitectureProfile.generic(),
+        moe_layer_ids={4, 5, 6},
+    )
+    predictor._get_execution_time_internal = MagicMock(
+        return_value=_build_dense_execution_time()
+    )
+    messages: list[str] = []
+    monkeypatch.setattr(
+        sklearn_moe_execution_time_predictor.logger,
+        "info",
+        lambda message, *args, **_kwargs: messages.append(
+            message % args if args else message
+        ),
+    )
+
+    predictor.predict_stage_execution_time(
+        _DummyBatch(),
+        stage_id=0,
+        cluster_type=ClusterType.MONOLITHIC,
+        num_layers=1,
+        layer_id=1,
+    )
+
+    log_text = "\n".join(messages)
+    assert "[DENSE_FFN][mlp_up_proj]" in log_text
+    assert "[DENSE_FFN][mlp_down_proj]" in log_text
+    assert "[DENSE_FFN][mlp_act]" in log_text
+    assert "[MOE][moe_grouped_gemm]" not in log_text
 
 
 def test_monolithic_decode_shared_domain_lane_moe_times_respects_dummy_mode() -> None:

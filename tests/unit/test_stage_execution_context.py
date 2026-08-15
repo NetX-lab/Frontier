@@ -264,6 +264,54 @@ def test_active_stage_scope_can_transition_between_layer_operations() -> None:
     context.release(dense)
 
 
+def test_shared_layer_transition_distinguishes_attention_and_dense_ffn() -> None:
+    """Consecutive dense layers need two distinct FULL_STAGE_WORLD operations."""
+
+    class _ProbeScheduler(BaseClusterScheduler):
+        def schedule(self):
+            return []
+
+    scheduler = object.__new__(_ProbeScheduler)
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
+    scheduler._stage_execution_contexts = {(0, 0): context}
+    batch = SimpleNamespace(id=0, schedule_epoch=1)
+    ticket = context.enqueue_full_stage(operation_id=("stage_batch", 0, 1))
+    assert context.try_acquire(ticket) is True
+    batch._stage_admission_ticket = ticket
+
+    scheduler.transition_stage_admission_for_layer(
+        batch,
+        stage_id=0,
+        layer_id=0,
+        operation_kind="ffn",
+        scope=FULL_STAGE_WORLD,
+    )
+    scheduler.transition_stage_admission_for_layer(
+        batch,
+        stage_id=0,
+        layer_id=1,
+        operation_kind="attention",
+        scope=FULL_STAGE_WORLD,
+    )
+    scheduler.transition_stage_admission_for_layer(
+        batch,
+        stage_id=0,
+        layer_id=1,
+        operation_kind="ffn",
+        scope=FULL_STAGE_WORLD,
+    )
+
+    assert context.active_operation_id == (
+        "shared_layer",
+        0,
+        1,
+        0,
+        1,
+        "ffn",
+        FULL_STAGE_WORLD,
+    )
+
+
 def test_shared_moe_stage_context_uses_replica_local_ep_size() -> None:
     class _ProbeScheduler(BaseClusterScheduler):
         def schedule(self):
