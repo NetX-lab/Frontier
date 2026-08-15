@@ -551,9 +551,25 @@ def _profile_routing_runtime_paths(path: Path) -> frozenset[str]:
         )
 
 
-def _find_metrics_dir(output_root: Path, case: MatrixCase) -> Path:
+def _find_metrics_dir(
+    output_root: Path,
+    case: MatrixCase,
+    *,
+    started_at_ns: int | None = None,
+) -> Path:
     root = output_root / case.case_id
     candidates = sorted(root.rglob("system_metrics.json"))
+    if started_at_ns is not None:
+        candidates = [
+            path
+            for path in candidates
+            if path.stat().st_mtime_ns >= started_at_ns
+        ]
+        if not candidates:
+            raise FileNotFoundError(
+                f"no fresh system_metrics.json for {case.case_id} "
+                f"under {output_root}"
+            )
     if len(candidates) != 1:
         raise FileNotFoundError(
             f"expected exactly one system_metrics.json for {case.case_id}, found {len(candidates)}"
@@ -904,6 +920,43 @@ def _load_result_rows(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def _validate_result_ledger_provenance(
+    rows: Sequence[Mapping[str, Any]],
+    *,
+    output_root: Path,
+    results_path: Path,
+) -> None:
+    """Reject ledger rows produced by another run/output generation.
+
+    A case ID is not a sufficient identity for evidence: two worktrees can
+    produce the same ID with identical metrics but different scheduler traces.
+    Every persisted row must therefore carry the canonical output and ledger
+    paths used by the current invocation.
+    """
+
+    expected_output = output_root.resolve()
+    expected_results = results_path.resolve()
+    for row in rows:
+        case_id = row.get("case_id", "<missing>")
+        row_output = row.get("output_root")
+        row_results = row.get("results_path")
+        if not isinstance(row_output, str) or not isinstance(row_results, str):
+            raise ValueError(
+                "result ledger row is missing canonical provenance: "
+                f"case_id={case_id!r}"
+            )
+        if Path(row_output).resolve() != expected_output:
+            raise ValueError(
+                "result ledger output_root provenance mismatch: "
+                f"case_id={case_id!r}, row={row_output!r}, expected={str(expected_output)!r}"
+            )
+        if Path(row_results).resolve() != expected_results:
+            raise ValueError(
+                "result ledger results_path provenance mismatch: "
+                f"case_id={case_id!r}, row={row_results!r}, expected={str(expected_results)!r}"
+            )
+
+
 def _merge_result_rows(
     existing_rows: Sequence[Mapping[str, Any]],
     new_rows: Sequence[Mapping[str, Any]],
@@ -967,10 +1020,19 @@ def run_cases(
     timeout_seconds: int = 600,
     continue_on_failure: bool = False,
 ) -> list[dict[str, Any]]:
+    repo_root = repo_root.resolve()
+    output_root = output_root.resolve()
+    results_path = results_path.resolve()
     selected = list(cases[start : (start + limit) if limit is not None else None])
     expected_case_ids = tuple(case.case_id for case in cases)
+    existing_rows = _load_result_rows(results_path)
+    _validate_result_ledger_provenance(
+        existing_rows,
+        output_root=output_root,
+        results_path=results_path,
+    )
     persisted = _merge_result_rows(
-        _load_result_rows(results_path),
+        existing_rows,
         (),
         expected_case_ids=expected_case_ids,
     )
@@ -982,6 +1044,8 @@ def run_cases(
         case_dir.mkdir(parents=True, exist_ok=True)
         log_path = case_dir / f"{case.case_id}.log"
         metadata_path = case_dir / "case_metadata.json"
+        run_started_at_ns = time.time_ns()
+        run_started_at_s = time.time()
         metadata_path.write_text(
             json.dumps(
                 {
@@ -1000,6 +1064,11 @@ def run_cases(
                         )
                         if key in env
                     },
+                    "repo_root": str(repo_root),
+                    "output_root": str(output_root),
+                    "results_path": str(results_path),
+                    "run_started_at_unix_s": run_started_at_s,
+                    "trace_schema_version": 1,
                 },
                 indent=2,
                 sort_keys=True,
@@ -1026,9 +1095,18 @@ def run_cases(
                 exit_code = 124
                 stream.write(f"MATRIX_TIMEOUT after {timeout_seconds}s\n")
         elapsed = time.monotonic() - started
+        run_finished_at_s = time.time()
         check: dict[str, Any]
         try:
-            metrics_dir = _find_metrics_dir(output_root, case)
+            if not log_path.is_file() or log_path.stat().st_mtime_ns < run_started_at_ns:
+                raise FileNotFoundError(
+                    f"no fresh case log for {case.case_id} under {output_root}"
+                )
+            metrics_dir = _find_metrics_dir(
+                output_root,
+                case,
+                started_at_ns=run_started_at_ns,
+            )
             check = check_case_log(case, log_path, metrics_dir, strict_layers=True)
             metrics_path = str(metrics_dir)
         except (FileNotFoundError, OSError) as exc:
@@ -1044,6 +1122,12 @@ def run_cases(
             "elapsed_seconds": round(elapsed, 3),
             "log_path": str(log_path),
             "metrics_path": metrics_path,
+            "repo_root": str(repo_root),
+            "output_root": str(output_root),
+            "results_path": str(results_path),
+            "run_started_at_unix_s": run_started_at_s,
+            "run_finished_at_unix_s": run_finished_at_s,
+            "trace_schema_version": 1,
             "status": status,
             "check": check,
         }
@@ -1073,6 +1157,15 @@ def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
         type=Path,
         default=Path("/data/ycfeng/tmp/frontier_non_dummy_matrix"),
     )
+    parser.add_argument(
+        "--results-path",
+        type=Path,
+        default=None,
+        help=(
+            "Canonical JSONL ledger path. Required when resuming a ledger; "
+            "rows from another output root or worktree are rejected."
+        ),
+    )
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--timeout-seconds", type=int, default=600)
@@ -1085,7 +1178,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     repo_root = args.repo_root.resolve()
     task_dir = args.task_dir if args.task_dir.is_absolute() else repo_root / args.task_dir
     manifest_path = task_dir / "moe_ep_non_dummy_matrix_manifest.jsonl"
-    results_path = task_dir / "moe_ep_non_dummy_matrix_results.jsonl"
+    results_path = (
+        args.results_path
+        if args.results_path is not None
+        else task_dir / "moe_ep_non_dummy_matrix_results.jsonl"
+    )
     cases = build_matrix(repo_root)
     write_manifest(manifest_path, cases)
     print(f"manifest={manifest_path} cases={len(cases)}")

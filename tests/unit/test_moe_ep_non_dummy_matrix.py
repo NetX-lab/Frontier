@@ -10,9 +10,11 @@ from pathlib import Path
 import pytest
 
 from tests.e2e.moe_ep_non_dummy_matrix import (
+    _find_metrics_dir,
     _merge_result_rows,
     _parse_ep_barrier_records,
     _parse_ep_workload_records,
+    _validate_result_ledger_provenance,
     build_matrix,
     build_shell_command,
     check_case_log,
@@ -378,3 +380,41 @@ def test_result_ledger_merges_partial_runs_without_erasing_prior_cases() -> None
     assert merged[0]["attempt"] == 1
     assert merged[1]["status"] == "PASS"
     assert merged[1]["attempt"] == 2
+
+
+def test_result_ledger_rejects_rows_without_canonical_provenance(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="provenance"):
+        _validate_result_ledger_provenance(
+            [{"case_id": "case-a", "status": "PASS"}],
+            output_root=tmp_path / "output",
+            results_path=tmp_path / "results.jsonl",
+        )
+
+
+def test_result_ledger_rejects_rows_from_another_output_root(tmp_path: Path) -> None:
+    output_root = tmp_path / "output"
+    results_path = tmp_path / "results.jsonl"
+    with pytest.raises(ValueError, match="output_root"):
+        _validate_result_ledger_provenance(
+            [
+                {
+                    "case_id": "case-a",
+                    "status": "PASS",
+                    "output_root": str(tmp_path / "old-output"),
+                    "results_path": str(results_path),
+                }
+            ],
+            output_root=output_root,
+            results_path=results_path,
+        )
+
+
+def test_find_metrics_dir_rejects_stale_metrics(tmp_path: Path) -> None:
+    case = next(iter(build_matrix(REPO_ROOT)))
+    case_root = tmp_path / case.case_id / "metrics" / "run"
+    case_root.mkdir(parents=True)
+    metrics_path = case_root / "system_metrics.json"
+    metrics_path.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(FileNotFoundError, match="fresh"):
+        _find_metrics_dir(tmp_path, case, started_at_ns=metrics_path.stat().st_mtime_ns + 1)
