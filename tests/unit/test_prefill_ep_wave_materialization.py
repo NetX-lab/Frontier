@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-import logging
+import io
 from types import SimpleNamespace
 
 import numpy as np
@@ -112,13 +112,13 @@ def _scheduler() -> tuple[RoundRobinClusterScheduler, _LanePredictor, Batch]:
 
 
 def test_prefill_moe_layer_materializes_global_distribution_once_and_waits_for_slowest_ep(
-    caplog,
+    monkeypatch,
 ):
     scheduler, predictor, batch = _scheduler()
-    caplog.set_level(
-        logging.INFO,
-        logger="frontier.scheduler.cluster_scheduler.base_cluster_scheduler",
-    )
+    import frontier.logger as frontier_logging
+
+    log_stream = io.StringIO()
+    monkeypatch.setattr(frontier_logging._default_handler, "stream", log_stream)
 
     events = scheduler._on_prefill_ep_wave_ready(
         time=0.001,
@@ -140,22 +140,15 @@ def test_prefill_moe_layer_materializes_global_distribution_once_and_waits_for_s
     assert batch._stage_admission_scope_history[-1]["participant_ep_ids"] == (0, 1)
     room = scheduler._prefill_sync_waiting_room[0][0][9][4]["post_moe"]
     assert room["batches"] == {0: batch}
-    workload_lines = [
-        record.message
-        for record in caplog.records
-        if record.message.startswith("[EP-WORKLOAD]")
-    ]
+    captured = log_stream.getvalue().splitlines()
+    workload_lines = [line for line in captured if "[EP-WORKLOAD]" in line]
     assert len(workload_lines) == 2
     assert "[EP-WORKLOAD][PREFILL]" in workload_lines[0]
     assert "ep_id=0" in workload_lines[0]
     assert "per_expert_tokens={0: 0, 1: 0}" in workload_lines[0]
     assert "lane_compute_ms=2.000000" in workload_lines[0]
     assert "lane_comm_ms=0.000000" in workload_lines[0]
-    barrier_lines = [
-        record.message
-        for record in caplog.records
-        if record.message.startswith("[EP-BARRIER]")
-    ]
+    barrier_lines = [line for line in captured if "[EP-BARRIER]" in line]
     assert len(barrier_lines) == 1
     assert "[EP-BARRIER][PREFILL]" in barrier_lines[0]
     assert "phase=combine" in barrier_lines[0]

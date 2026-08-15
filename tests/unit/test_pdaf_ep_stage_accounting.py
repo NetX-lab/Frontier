@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 from unittest.mock import Mock, call
-import logging
+import io
 
 import pytest
 
@@ -161,12 +161,11 @@ def _run_ep_stage(
 
 def test_ep_dispatch_preserves_full_stage_execution_time(
     monkeypatch: pytest.MonkeyPatch,
-    caplog,
 ) -> None:
-    caplog.set_level(
-        logging.INFO,
-        logger="frontier.events.replica_stage_schedule_event",
-    )
+    import frontier.logger as frontier_logging
+
+    log_stream = io.StringIO()
+    monkeypatch.setattr(frontier_logging._default_handler, "stream", log_stream)
     batches = {ep_id: _batch(ep_id) for ep_id in range(2)}
     for batch in batches.values():
         _run_ep_stage(
@@ -190,11 +189,8 @@ def test_ep_dispatch_preserves_full_stage_execution_time(
     assert [event.time for event in ready_events] == pytest.approx([1.006, 1.006])
     for batch in batches.values():
         assert batch.execution_time == pytest.approx(0.010)
-    workload_lines = [
-        record.message
-        for record in caplog.records
-        if record.message.startswith("[EP-WORKLOAD]")
-    ]
+    captured = log_stream.getvalue().splitlines()
+    workload_lines = [line for line in captured if "[EP-WORKLOAD]" in line]
     assert len(workload_lines) == 2
     assert any(
         "[EP-WORKLOAD][DECODE_FFN]" in line
