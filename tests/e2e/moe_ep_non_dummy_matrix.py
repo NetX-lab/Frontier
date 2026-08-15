@@ -318,7 +318,14 @@ def build_shell_command(
                 "DECODE_FFN_PP": "1",
             }
         )
-    command = shlex.join(["bash", str(script)])
+    command_parts = ["bash", str(script)]
+    # The co-location MoE wrapper predates the explicit DEVICE environment
+    # contract used by the dense/PDD/PD-AF wrappers.  Pass the device as a
+    # regular CLI override so non-dummy profile lookup cannot silently fall
+    # back to a different SKU.
+    if case.architecture == "co-location" and case.model_kind != "dense":
+        command_parts.extend(["--", "--replica_config_device", case.device])
+    command = shlex.join(command_parts)
     return command, env
 
 

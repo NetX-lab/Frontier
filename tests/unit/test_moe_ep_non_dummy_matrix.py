@@ -62,6 +62,7 @@ def test_non_dummy_command_has_no_dummy_switch() -> None:
     command, env = build_shell_command(case, REPO_ROOT, Path("/data/ycfeng/tmp/matrix"))
 
     assert "--random_forrest_execution_time_predictor_config_enable_dummy_mode" not in command
+    assert "--replica_config_device h800" in command
     assert env["ENABLE_DUMMY_MODE"] == "false"
     assert env["DECODE_CUDA_GRAPH_MODE"] == "none"
 
