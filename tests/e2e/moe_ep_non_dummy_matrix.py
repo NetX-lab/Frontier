@@ -23,7 +23,16 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 
-ARCHITECTURES = ("co-location", "pd-disaggregation", "pd-af-disaggregation")
+ARCHITECTURE_CASE_COUNTS = {
+    # The vLLM reference currently covers co-location and PDD.  PD-AF is kept
+    # as a smaller Frontier-only structural sample until a vLLM PD-AF runtime
+    # exists for a meaningful numerical comparison.
+    "co-location": 50,
+    "pd-disaggregation": 50,
+    "pd-af-disaggregation": 10,
+}
+MODEL_ORDER = ("dense", "moe", "mixed")
+PD_AF_VARIANT_INDICES = (0, 1, 2, 3, 4, 5, 6, 7, 10, 11)
 MODEL_SPECS: Mapping[str, Mapping[str, Any]] = {
     "dense": {
         "model_name": "llama2_7b_dense_example",
@@ -164,68 +173,114 @@ def _case_cards(
     raise ValueError(f"unsupported architecture: {architecture}")
 
 
+def validate_case_parallel_semantics(case: MatrixCase) -> None:
+    """Apply the same shared-domain mapping contract used by Frontier/vLLM."""
+
+    from frontier.config.parallel_semantics import (
+        FrontierParallelismMapping,
+        validate_frontier_shared_parallel_domains,
+    )
+
+    if case.architecture in {"co-location", "pd-disaggregation"}:
+        mapping = FrontierParallelismMapping(
+            cluster_num_replicas=case.replica_count,
+            attn_tensor_parallel_size=case.attn_tensor_parallel_size,
+            attn_dp=1,
+            moe_tensor_parallel_size=case.moe_tensor_parallel_size,
+            moe_expert_parallel_size=case.ep_size,
+        )
+        validate_frontier_shared_parallel_domains(mapping)
+        return
+
+    # PD-AF PREFILL is a shared full-model domain and follows the same
+    # invariant.  DECODE_ATTN and DECODE_FFN are independent domains; do not
+    # compare their capacities across roles.  The FFN local world must still
+    # be a positive TP×EP product.
+    prefill_mapping = FrontierParallelismMapping(
+        cluster_num_replicas=case.prefill_replicas,
+        attn_tensor_parallel_size=case.prefill_attn_tensor_parallel_size,
+        attn_dp=1,
+        moe_tensor_parallel_size=case.prefill_moe_tensor_parallel_size,
+        moe_expert_parallel_size=case.prefill_moe_expert_parallel_size,
+    )
+    validate_frontier_shared_parallel_domains(prefill_mapping)
+    if case.decode_moe_tensor_parallel_size * case.decode_moe_expert_parallel_size <= 0:
+        raise ValueError(f"invalid PD-AF DECODE_FFN local world for {case.case_id}")
+
+
 def build_matrix(repo_root: Path) -> list[MatrixCase]:
-    """Build the deterministic 108-case matrix and validate its topology."""
+    """Build the deterministic 110-case matrix and validate its topology."""
 
     cases: list[MatrixCase] = []
-    for architecture in ARCHITECTURES:
-        for model_kind, spec in MODEL_SPECS.items():
+    for architecture, case_count in ARCHITECTURE_CASE_COUNTS.items():
+        for ordinal in range(case_count):
+            model_kind = MODEL_ORDER[ordinal % len(MODEL_ORDER)]
+            spec = MODEL_SPECS[model_kind]
+            variant_index = (
+                PD_AF_VARIANT_INDICES[ordinal % len(PD_AF_VARIANT_INDICES)]
+                if architecture == "pd-af-disaggregation"
+                else ordinal % len(VARIANTS)
+            )
+            distribution, workload_kind = VARIANTS[variant_index]
             num_layers, moe_layer_ids = _model_layer_shape(str(spec["model_name"]))
-            for variant_index, (distribution, workload_kind) in enumerate(VARIANTS):
-                is_moe = model_kind != "dense"
-                ep_size = (1, 2, 4)[variant_index % 3] if is_moe else 1
-                moe_tp = 2 if model_kind == "mixed" else 1
-                replica_count = (1, 2, 4)[variant_index % 3]
-                total_cards, topology = _case_cards(
-                    architecture, replica_count, ep_size, moe_tp
+            is_moe = model_kind != "dense"
+            model_ordinal = ordinal // len(MODEL_ORDER)
+            ep_size = (1, 2, 4)[model_ordinal % 3] if is_moe else 1
+            moe_tp = 2 if model_kind == "mixed" else 1
+            replica_count = (1, 2, 4)[model_ordinal % 3]
+            total_cards, topology = _case_cards(
+                architecture, replica_count, ep_size, moe_tp
+            )
+            if total_cards > 32:
+                raise AssertionError(
+                    f"matrix topology exceeds 32 cards: {architecture} {model_kind} "
+                    f"variant={variant_index} cards={total_cards}"
                 )
-                if total_cards > 32:
-                    raise AssertionError(
-                        f"matrix topology exceeds 32 cards: {architecture} {model_kind} "
-                        f"variant={variant_index} cards={total_cards}"
-                    )
-                prefill_tokens, decode_tokens, num_requests = WORKLOADS[workload_kind]
-                case_id = f"{architecture.replace('-', '_')}_{model_kind}_v{variant_index:02d}"
-                baseline_id = f"{architecture.replace('-', '_')}_{model_kind}_v00"
-                cases.append(
-                    MatrixCase(
-                        case_id=case_id,
-                        baseline_case_id=baseline_id,
-                        architecture=architecture,
-                        model_kind=model_kind,
-                        model_name=str(spec["model_name"]),
-                        device="h800",
-                        routing_distribution=distribution if is_moe else "balanced",
-                        seed=42 + variant_index,
-                        workload_kind=workload_kind,
-                        prefill_tokens=prefill_tokens,
-                        decode_tokens=decode_tokens,
-                        num_requests=num_requests,
-                        ep_size=ep_size,
-                        moe_tensor_parallel_size=moe_tp,
-                        total_experts=int(spec["total_experts"]),
-                        router_topk=int(spec["router_topk"]),
-                        replica_count=replica_count,
-                        prefill_replicas=topology["prefill_replicas"],
-                        decode_replicas=topology["decode_replicas"],
-                        decode_attn_replicas=topology["decode_attn_replicas"],
-                        decode_ffn_replicas=topology["decode_ffn_replicas"],
-                        attn_tensor_parallel_size=1 if not is_moe else topology["attn_tp"],
-                        prefill_attn_tensor_parallel_size=topology["prefill_attn_tp"],
-                        decode_attn_tensor_parallel_size=topology["decode_attn_tp"],
-                        prefill_moe_tensor_parallel_size=moe_tp,
-                        decode_moe_tensor_parallel_size=moe_tp,
-                        prefill_moe_expert_parallel_size=ep_size,
-                        decode_moe_expert_parallel_size=ep_size,
-                        total_cards=total_cards
-                        if is_moe
-                        else _case_cards(architecture, replica_count, 1, 1)[0],
-                        num_layers=num_layers,
-                        moe_layer_ids=moe_layer_ids,
-                    )
-                )
-    if len(cases) != 108:
-        raise AssertionError(f"expected 108 matrix cases, got {len(cases)}")
+            prefill_tokens, decode_tokens, num_requests = WORKLOADS[workload_kind]
+            case_id = (
+                f"{architecture.replace('-', '_')}_{model_kind}"
+                f"_n{ordinal:02d}_v{variant_index:02d}"
+            )
+            baseline_id = f"{architecture.replace('-', '_')}_{model_kind}_baseline"
+            case = MatrixCase(
+                case_id=case_id,
+                baseline_case_id=baseline_id,
+                architecture=architecture,
+                model_kind=model_kind,
+                model_name=str(spec["model_name"]),
+                device="h800",
+                routing_distribution=distribution if is_moe else "balanced",
+                seed=42 + ordinal,
+                workload_kind=workload_kind,
+                prefill_tokens=prefill_tokens,
+                decode_tokens=decode_tokens,
+                num_requests=num_requests,
+                ep_size=ep_size,
+                moe_tensor_parallel_size=moe_tp,
+                total_experts=int(spec["total_experts"]),
+                router_topk=int(spec["router_topk"]),
+                replica_count=replica_count,
+                prefill_replicas=topology["prefill_replicas"],
+                decode_replicas=topology["decode_replicas"],
+                decode_attn_replicas=topology["decode_attn_replicas"],
+                decode_ffn_replicas=topology["decode_ffn_replicas"],
+                attn_tensor_parallel_size=1 if not is_moe else topology["attn_tp"],
+                prefill_attn_tensor_parallel_size=topology["prefill_attn_tp"],
+                decode_attn_tensor_parallel_size=topology["decode_attn_tp"],
+                prefill_moe_tensor_parallel_size=moe_tp,
+                decode_moe_tensor_parallel_size=moe_tp,
+                prefill_moe_expert_parallel_size=ep_size,
+                decode_moe_expert_parallel_size=ep_size,
+                total_cards=total_cards
+                if is_moe
+                else _case_cards(architecture, replica_count, 1, 1)[0],
+                num_layers=num_layers,
+                moe_layer_ids=moe_layer_ids,
+            )
+            validate_case_parallel_semantics(case)
+            cases.append(case)
+    if len(cases) != 110:
+        raise AssertionError(f"expected 110 matrix cases, got {len(cases)}")
     return cases
 
 

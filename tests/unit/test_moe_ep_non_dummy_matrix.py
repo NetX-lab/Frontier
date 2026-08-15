@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -11,6 +12,7 @@ from tests.e2e.moe_ep_non_dummy_matrix import (
     build_matrix,
     build_shell_command,
     check_case_log,
+    validate_case_parallel_semantics,
     validate_profile_inputs,
 )
 
@@ -22,11 +24,13 @@ def test_matrix_has_required_cross_architecture_coverage() -> None:
     cases = build_matrix(REPO_ROOT)
 
     assert len(cases) >= 100
-    assert {case.architecture for case in cases} == {
-        "co-location",
-        "pd-disaggregation",
-        "pd-af-disaggregation",
-    }
+    assert Counter(case.architecture for case in cases) == Counter(
+        {
+            "co-location": 50,
+            "pd-disaggregation": 50,
+            "pd-af-disaggregation": 10,
+        }
+    )
     assert {case.model_kind for case in cases} == {"dense", "moe", "mixed"}
     assert {case.routing_distribution for case in cases if case.model_kind != "dense"} >= {
         "balanced",
@@ -41,6 +45,11 @@ def test_matrix_has_required_cross_architecture_coverage() -> None:
         "mixed",
         "zero-routed",
     }
+
+
+def test_matrix_uses_frontier_vllm_parallel_semantics() -> None:
+    for case in build_matrix(REPO_ROOT):
+        validate_case_parallel_semantics(case)
 
 
 def test_matrix_enforces_dense_topology_and_card_limit() -> None:
