@@ -40,8 +40,18 @@ def test_prefill_final_sync_records_elapsed_model_time_not_full_stage_prediction
     class _Predictor:
         _num_layers_per_pipeline_stage = 32
 
-        def predict_stage_execution_time(self, _batch, _stage_id, *, cluster_type, num_layers, layer_id):
+        def predict_stage_execution_time(
+            self,
+            _batch,
+            _stage_id,
+            *,
+            cluster_type,
+            num_layers,
+            layer_id,
+            include_moe=None,
+        ):
             assert cluster_type is ClusterType.PREFILL
+            assert include_moe is False
             if num_layers == 32:
                 return SimpleNamespace(
                     pipeline_time=2.0,
@@ -138,10 +148,12 @@ class _LayerPredictor:
         *,
         num_layers,
         layer_id=None,
+        include_moe=None,
     ):
         assert cluster_type is ClusterType.PREFILL
         assert num_layers == 1
         assert layer_id is not None
+        assert include_moe is False
         self.calls.append((num_layers, layer_id))
         return self._layer_times[layer_id]
 
