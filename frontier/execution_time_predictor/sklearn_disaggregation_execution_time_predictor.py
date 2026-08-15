@@ -1683,7 +1683,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 # This uses the routing distribution that was computed during predictor initialization
                 # via _simulate_and_store_routing() method.
                 per_expert_tokens = None
-                if hasattr(batch, "per_expert_tokens") and batch.per_expert_tokens:
+                if getattr(batch, "per_expert_tokens", None) is not None:
                     # EPBatchGroup case: use actual expert allocation from batch
                     per_expert_tokens = batch.per_expert_tokens
                     logger.debug(
@@ -2096,7 +2096,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 # This uses the routing distribution that was computed during predictor initialization
                 # via _simulate_and_store_routing() method.
                 per_expert_tokens = None
-                if hasattr(batch, "per_expert_tokens") and batch.per_expert_tokens:
+                if getattr(batch, "per_expert_tokens", None) is not None:
                     # EPBatchGroup case: use actual expert allocation from batch
                     per_expert_tokens = batch.per_expert_tokens
                     logger.debug(

@@ -137,6 +137,14 @@ def test_base_scheduler_has_no_second_ep_integerizer() -> None:
     assert "def _get_ep_subset_routed_token_allocation" not in source
 
 
+def test_disaggregation_predictor_preserves_present_all_zero_expert_map() -> None:
+    source = Path(
+        "frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'hasattr(batch, "per_expert_tokens") and batch.per_expert_tokens' not in source
+
+
 def test_decode_ffn_scheduler_uses_replica_local_ep_capacity_name() -> None:
     source = Path(
         "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"
