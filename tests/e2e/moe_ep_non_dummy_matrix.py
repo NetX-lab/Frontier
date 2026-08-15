@@ -476,13 +476,20 @@ def build_shell_command(
                 "DECODE_FFN_PP": str(case.pipeline_stages),
             }
         )
-    command_parts = ["bash", str(script)]
+    command_parts = ["bash", str(script), "--"]
     # The co-location MoE wrapper predates the explicit DEVICE environment
     # contract used by the dense/PDD/PD-AF wrappers.  Pass the device as a
     # regular CLI override so non-dummy profile lookup cannot silently fall
     # back to a different SKU.
     if case.architecture == "co-location" and case.model_kind != "dense":
-        command_parts.extend(["--", "--replica_config_device", case.device])
+        command_parts.extend(["--replica_config_device", case.device])
+    # Keep predictor artifacts isolated from the repository's shared cache. A
+    # previously interrupted non-dummy run can leave a truncated pickle there;
+    # reusing it would make an otherwise valid case fail with an unrelated
+    # deserialization error. The caller chooses a fresh output root for each
+    # matrix campaign, so this path is deterministic and provenance-visible.
+    predictor_cache_dir = (output_root / "_predictor_cache").resolve()
+    command_parts.extend(["--metrics_config_cache_dir", str(predictor_cache_dir)])
     command = shlex.join(command_parts)
     return command, env
 

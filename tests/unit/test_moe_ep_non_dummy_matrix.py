@@ -109,6 +109,21 @@ def test_non_dummy_command_has_no_dummy_switch() -> None:
     assert env["DECODE_CUDA_GRAPH_MODE"] == "none"
 
 
+def test_non_dummy_command_uses_output_scoped_predictor_cache(tmp_path: Path) -> None:
+    case = next(
+        case
+        for case in build_matrix(REPO_ROOT)
+        if case.architecture == "co-location" and case.model_kind == "moe"
+    )
+    output_root = tmp_path / "matrix-output"
+
+    command, _ = build_shell_command(case, REPO_ROOT, output_root)
+
+    expected_cache = (output_root / "_predictor_cache").resolve()
+    assert "--metrics_config_cache_dir" in command
+    assert str(expected_cache) in command
+
+
 def test_profile_validation_is_fail_fast(tmp_path: Path) -> None:
     case = next(
         case
