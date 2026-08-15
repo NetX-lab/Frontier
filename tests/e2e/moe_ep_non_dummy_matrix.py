@@ -81,6 +81,13 @@ VARIANTS = (
     ("skewed", "zero-routed"),
     ("zipf", "zero-routed"),
 )
+REQUIRED_PROFILE_METADATA_COLUMNS = (
+    "profiling_precision",
+    "model_arch",
+    "model_architecture_profile",
+    "quant_signature",
+    "measurement_type",
+)
 
 
 @dataclass(frozen=True)
@@ -464,6 +471,8 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
         raise FileNotFoundError(
             "Missing required non-dummy profiling files:\n" + "\n".join(str(p) for p in missing)
         )
+    for path in required:
+        _validate_profile_metadata(path)
     if case.is_moe:
         expected_runtime_path = (
             "uniform_topk" if case.routing_distribution == "random" else "standard_fused_topk"
@@ -475,6 +484,33 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
                 f"but {model_dir / 'moe.csv'} provides {sorted(available_paths)!r}"
             )
     return required
+
+
+@lru_cache(maxsize=None)
+def _validate_profile_metadata(path: Path) -> None:
+    """Require the predictor's immutable metadata contract before a run."""
+
+    with path.open("r", encoding="utf-8", newline="") as stream:
+        reader = csv.DictReader(stream)
+        fieldnames = tuple(reader.fieldnames or ())
+        missing = sorted(set(REQUIRED_PROFILE_METADATA_COLUMNS) - set(fieldnames))
+        if missing:
+            raise ValueError(
+                f"{path} missing required profiling metadata columns: {', '.join(missing)}"
+            )
+        rows = list(reader)
+
+    if not rows:
+        raise ValueError(f"{path} contains no profiling rows")
+    empty = [
+        column
+        for column in REQUIRED_PROFILE_METADATA_COLUMNS
+        if any(not str(row.get(column, "")).strip() for row in rows)
+    ]
+    if empty:
+        raise ValueError(
+            f"{path} contains empty required profiling metadata columns: {', '.join(empty)}"
+        )
 
 
 @lru_cache(maxsize=None)

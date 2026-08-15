@@ -104,6 +104,36 @@ def test_profile_validation_is_fail_fast(tmp_path: Path) -> None:
         validate_profile_inputs(case, tmp_path)
 
 
+def test_profile_validation_rejects_missing_architecture_metadata(tmp_path: Path) -> None:
+    case = next(
+        case
+        for case in build_matrix(REPO_ROOT)
+        if case.architecture == "co-location" and case.model_kind == "moe"
+    )
+    model_dir = tmp_path / case.device / case.model_name
+    model_dir.mkdir(parents=True)
+    (model_dir / "attention.csv").write_text(
+        "profiling_precision,model_arch,quant_signature,measurement_type\n"
+        "BF16,generic,none,CUDA_EVENT\n",
+        encoding="utf-8",
+    )
+    (model_dir / "linear_op.csv").write_text(
+        "profiling_precision,model_arch,quant_signature,measurement_type\n"
+        "BF16,generic,none,CUDA_EVENT\n",
+        encoding="utf-8",
+    )
+    (model_dir / "moe.csv").write_text(
+        "profiling_precision,model_arch,quant_signature,measurement_type,"
+        "model_architecture_profile,routing_runtime_path\n"
+        "BF16,generic,none,CUDA_EVENT,generic,standard_fused_topk\n"
+        "BF16,generic,none,CUDA_EVENT,generic,uniform_topk\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="model_architecture_profile"):
+        validate_profile_inputs(case, tmp_path)
+
+
 def test_log_checker_requires_layer_trace_and_finite_metrics(tmp_path: Path) -> None:
     case = next(
         case
