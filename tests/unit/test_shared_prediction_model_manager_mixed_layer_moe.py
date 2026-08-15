@@ -220,6 +220,43 @@ def test_mixed_layer_dense_training_does_not_reorder_legacy_share_expert_models(
     assert names.index("share_expert_up_proj") < names.index("mlp_up_proj")
 
 
+def test_shared_expert_only_profile_skips_standard_dense_mlp_training(
+    tmp_path,
+) -> None:
+    """Step3 profiles without standard MLP columns must use shared-expert rows."""
+
+    linear_file = tmp_path / "linear_op.csv"
+    linear_file.write_text("placeholder\n", encoding="utf-8")
+    model_config = SimpleNamespace(supports_share_expert=lambda: True)
+    replica_config = SimpleNamespace(model_config=model_config)
+    linear_df = pd.DataFrame(
+        {
+            "num_tokens": [1, 2],
+            "time_stats.share_expert_up_proj.median": [1.0, 2.0],
+            "time_stats.share_expert_down_proj.median": [1.0, 2.0],
+            "time_stats.share_expert_act.median": [1.0, 2.0],
+        }
+    )
+    manager = object.__new__(ExecutionTimePredictionModelManager)
+    manager._load_linear_op_df = lambda _path, _tp: linear_df
+    trained: list[str] = []
+    manager._train_single_model = lambda **kwargs: trained.append(kwargs["model_name"])
+
+    manager._train_dense_mlp_models_for_cluster(
+        cluster_type=ClusterType.PREFILL,
+        replica_config=replica_config,
+        execution_time_predictor_config=SimpleNamespace(),
+        linear_ops_file=str(linear_file),
+        ffn_signature="mixed",
+        ffn_tp_key=4,
+        training_context={},
+        trained_model_signatures=set(),
+        models={},
+    )
+
+    assert trained == []
+
+
 def test_random_forest_estimator_uses_fixed_predictor_seed() -> None:
     """The shared manager must use the deterministic predictor RNG contract."""
     from frontier.types import ExecutionTimePredictorType

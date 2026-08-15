@@ -1189,7 +1189,32 @@ class ExecutionTimePredictionModelManager:
         dense_training_context["input_file"] = linear_ops_file
         dense_training_context["tensor_parallel_size"] = ffn_tp_key
 
-        for model_name in ("mlp_up_proj", "mlp_down_proj", "mlp_act"):
+        dense_model_names = ("mlp_up_proj", "mlp_down_proj", "mlp_act")
+        missing_standard_columns = [
+            f"time_stats.{model_name}.median"
+            for model_name in dense_model_names
+            if f"time_stats.{model_name}.median" not in linear_ops_df.columns
+        ]
+        if missing_standard_columns:
+            model_config = getattr(replica_config, "model_config", None)
+            supports_share_expert = bool(
+                model_config is not None
+                and model_config.supports_share_expert()
+            )
+            if supports_share_expert:
+                logger.info(
+                    "Skipping standard dense MLP training for %s: profile provides "
+                    "shared-expert operations instead; missing columns=%s",
+                    cluster_type,
+                    missing_standard_columns,
+                )
+                return
+            raise ValueError(
+                "Dense MLP profiling data is incomplete; missing columns: "
+                + ", ".join(missing_standard_columns)
+            )
+
+        for model_name in dense_model_names:
             model_signature = f"{model_name}_{ffn_signature}"
             if model_signature in trained_model_signatures:
                 continue
