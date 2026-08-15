@@ -38,6 +38,18 @@ def test_matrix_has_required_cross_architecture_coverage() -> None:
         "skewed",
         "zipf",
     }
+    assert all(
+        case.model_name == "step-moe-noquant-small"
+        and case.routing_distribution == "random"
+        for case in cases
+        if case.model_kind == "mixed"
+    )
+    assert all(
+        case.model_name == "qwen3-a3b-30b-moe"
+        and case.device == "a800"
+        for case in cases
+        if case.model_kind == "moe" and case.routing_distribution != "random"
+    )
     assert {case.ep_size for case in cases if case.model_kind != "dense"} >= {1, 2, 4}
     assert {case.workload_kind for case in cases} >= {
         "prefill-heavy",
@@ -59,9 +71,10 @@ def test_matrix_enforces_dense_topology_and_card_limit() -> None:
     assert all(case.total_cards > 0 for case in cases)
     assert all(case.ep_size == 1 for case in cases if case.model_kind == "dense")
     assert all(
-        case.moe_tensor_parallel_size == (2 if case.model_kind == "mixed" else 1)
+        case.moe_tensor_parallel_size == (4 if case.model_kind == "mixed" else 1)
         for case in cases
     )
+    assert all(case.pipeline_stages == 1 for case in cases)
 
 
 def test_non_dummy_command_has_no_dummy_switch() -> None:

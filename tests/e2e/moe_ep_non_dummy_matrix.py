@@ -10,6 +10,7 @@ read-only baseline worktree.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import math
 import os
@@ -19,6 +20,7 @@ import subprocess
 import sys
 import time
 from dataclasses import asdict, dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -41,11 +43,19 @@ MODEL_SPECS: Mapping[str, Mapping[str, Any]] = {
     },
     "moe": {
         "model_name": "Phi-tiny-MoE-instruct",
+        "device": "h800",
         "total_experts": 16,
         "router_topk": 2,
     },
+    "moe_standard": {
+        "model_name": "qwen3-a3b-30b-moe",
+        "device": "a800",
+        "total_experts": 128,
+        "router_topk": 8,
+    },
     "mixed": {
         "model_name": "step-moe-noquant-small",
+        "device": "h800",
         "total_experts": 24,
         "router_topk": 3,
     },
@@ -91,6 +101,7 @@ class MatrixCase:
     moe_tensor_parallel_size: int
     total_experts: int
     router_topk: int
+    pipeline_stages: int
     replica_count: int
     prefill_replicas: int
     decode_replicas: int
@@ -126,23 +137,32 @@ def _model_layer_shape(model_name: str) -> tuple[int, tuple[int, ...]]:
 
 
 def _case_cards(
-    architecture: str, replica_count: int, ep_size: int, moe_tp: int
+    architecture: str,
+    replica_count: int,
+    ep_size: int,
+    moe_tp: int,
+    pipeline_stages: int,
 ) -> tuple[int, dict[str, int]]:
     if architecture == "co-location":
         attn_tp = moe_tp * ep_size
-        return replica_count * attn_tp, {
+        effective_replicas = min(
+            replica_count, max(1, 32 // (attn_tp * pipeline_stages))
+        )
+        return effective_replicas * attn_tp * pipeline_stages, {
             "attn_tp": attn_tp,
             "prefill_attn_tp": attn_tp,
             "decode_attn_tp": attn_tp,
-            "prefill_replicas": replica_count,
-            "decode_replicas": replica_count,
-            "decode_attn_replicas": replica_count,
-            "decode_ffn_replicas": replica_count,
+            "prefill_replicas": effective_replicas,
+            "decode_replicas": effective_replicas,
+            "decode_attn_replicas": effective_replicas,
+            "decode_ffn_replicas": effective_replicas,
         }
     if architecture == "pd-disaggregation":
         attn_tp = moe_tp * ep_size
-        effective_replicas = min(replica_count, max(1, 32 // (2 * attn_tp)))
-        return 2 * effective_replicas * attn_tp, {
+        effective_replicas = min(
+            replica_count, max(1, 32 // (2 * attn_tp * pipeline_stages))
+        )
+        return 2 * effective_replicas * attn_tp * pipeline_stages, {
             "attn_tp": attn_tp,
             "prefill_attn_tp": attn_tp,
             "decode_attn_tp": attn_tp,
@@ -158,9 +178,21 @@ def _case_cards(
         decode_attn_tp = 1
         role_replicas = min(
             replica_count,
-            max(1, 32 // (prefill_attn_tp + decode_attn_tp + moe_tp * ep_size)),
+            max(
+                1,
+                32
+                // (
+                    prefill_attn_tp * pipeline_stages
+                    + decode_attn_tp
+                    + moe_tp * ep_size * pipeline_stages
+                ),
+            ),
         )
-        cards = role_replicas * (prefill_attn_tp + decode_attn_tp + ep_size)
+        cards = role_replicas * (
+            prefill_attn_tp * pipeline_stages
+            + decode_attn_tp
+            + moe_tp * ep_size * pipeline_stages
+        )
         return cards, {
             "attn_tp": prefill_attn_tp,
             "prefill_attn_tp": prefill_attn_tp,
@@ -222,14 +254,35 @@ def build_matrix(repo_root: Path) -> list[MatrixCase]:
                 else ordinal % len(VARIANTS)
             )
             distribution, workload_kind = VARIANTS[variant_index]
+            if model_kind == "mixed":
+                # The checked-in Step profile exposes only uniform_topk rows.
+                distribution = "random"
+            spec = (
+                MODEL_SPECS["moe_standard"]
+                if model_kind == "moe" and distribution != "random"
+                else MODEL_SPECS[model_kind]
+            )
             num_layers, moe_layer_ids = _model_layer_shape(str(spec["model_name"]))
             is_moe = model_kind != "dense"
             model_ordinal = ordinal // len(MODEL_ORDER)
-            ep_size = (1, 2, 4)[model_ordinal % 3] if is_moe else 1
-            moe_tp = 2 if model_kind == "mixed" else 1
+            if not is_moe:
+                ep_size = 1
+            elif architecture == "pd-af-disaggregation" and model_kind == "mixed":
+                # The PD-AF sample is intentionally small while vLLM has no
+                # corresponding AFD implementation.  TP=4 mixed FFN would
+                # exceed 32 cards even for one role Replica; EP=4 remains
+                # covered by the full co-location/PDD populations.
+                ep_size = (1, 2, 2)[model_ordinal % 3]
+            else:
+                ep_size = (1, 2, 4)[model_ordinal % 3]
+            # The mixed profile is too large for one H800 device at TP=1.
+            # TP=2 is a legal shared-domain shape (attn_tp == moe_tp×ep)
+            # and is covered by the Frontier release contract tests.
+            moe_tp = 4 if model_kind == "mixed" else 1
+            pipeline_stages = 1
             replica_count = (1, 2, 4)[model_ordinal % 3]
             total_cards, topology = _case_cards(
-                architecture, replica_count, ep_size, moe_tp
+                architecture, replica_count, ep_size, moe_tp, pipeline_stages
             )
             if total_cards > 32:
                 raise AssertionError(
@@ -248,7 +301,7 @@ def build_matrix(repo_root: Path) -> list[MatrixCase]:
                 architecture=architecture,
                 model_kind=model_kind,
                 model_name=str(spec["model_name"]),
-                device="h800",
+                device=str(spec.get("device", "h800")),
                 routing_distribution=distribution if is_moe else "balanced",
                 seed=42 + ordinal,
                 workload_kind=workload_kind,
@@ -259,6 +312,7 @@ def build_matrix(repo_root: Path) -> list[MatrixCase]:
                 moe_tensor_parallel_size=moe_tp,
                 total_experts=int(spec["total_experts"]),
                 router_topk=int(spec["router_topk"]),
+                pipeline_stages=pipeline_stages,
                 replica_count=replica_count,
                 prefill_replicas=topology["prefill_replicas"],
                 decode_replicas=topology["decode_replicas"],
@@ -273,7 +327,7 @@ def build_matrix(repo_root: Path) -> list[MatrixCase]:
                 decode_moe_expert_parallel_size=ep_size,
                 total_cards=total_cards
                 if is_moe
-                else _case_cards(architecture, replica_count, 1, 1)[0],
+                else _case_cards(architecture, replica_count, 1, 1, 1)[0],
                 num_layers=num_layers,
                 moe_layer_ids=moe_layer_ids,
             )
@@ -343,7 +397,7 @@ def build_shell_command(
                 "ATTN_TP": str(case.attn_tensor_parallel_size),
                 "MOE_TP": str(case.moe_tensor_parallel_size),
                 "MOE_EP": str(case.ep_size),
-                "PP": "1",
+                "PP": str(case.pipeline_stages),
                 "DEVICE": case.device,
             }
         )
@@ -360,8 +414,8 @@ def build_shell_command(
                 "DECODE_MOE_EP": str(case.decode_moe_expert_parallel_size),
                 "PREFILL_DEVICE": case.device,
                 "DECODE_DEVICE": case.device,
-                "PREFILL_PP": "1",
-                "DECODE_PP": "1",
+                "PREFILL_PP": str(case.pipeline_stages),
+                "DECODE_PP": str(case.pipeline_stages),
             }
         )
     else:
@@ -379,9 +433,9 @@ def build_shell_command(
                 "PREFILL_DEVICE": case.device,
                 "DECODE_ATTN_DEVICE": case.device,
                 "DECODE_FFN_DEVICE": case.device,
-                "PREFILL_PP": "1",
+                "PREFILL_PP": str(case.pipeline_stages),
                 "DECODE_ATTN_PP": "1",
-                "DECODE_FFN_PP": "1",
+                "DECODE_FFN_PP": str(case.pipeline_stages),
             }
         )
     command_parts = ["bash", str(script)]
@@ -410,7 +464,30 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
         raise FileNotFoundError(
             "Missing required non-dummy profiling files:\n" + "\n".join(str(p) for p in missing)
         )
+    if case.is_moe:
+        expected_runtime_path = (
+            "uniform_topk" if case.routing_distribution == "random" else "standard_fused_topk"
+        )
+        available_paths = _profile_routing_runtime_paths(model_dir / "moe.csv")
+        if expected_runtime_path not in available_paths:
+            raise ValueError(
+                f"{case.case_id} requires routing_runtime_path={expected_runtime_path!r}, "
+                f"but {model_dir / 'moe.csv'} provides {sorted(available_paths)!r}"
+            )
     return required
+
+
+@lru_cache(maxsize=None)
+def _profile_routing_runtime_paths(path: Path) -> frozenset[str]:
+    with path.open("r", encoding="utf-8", newline="") as stream:
+        reader = csv.DictReader(stream)
+        if "routing_runtime_path" not in (reader.fieldnames or []):
+            raise ValueError(f"missing routing_runtime_path column in {path}")
+        return frozenset(
+            str(row.get("routing_runtime_path", "")).strip()
+            for row in reader
+            if str(row.get("routing_runtime_path", "")).strip()
+        )
 
 
 def _find_metrics_dir(output_root: Path, case: MatrixCase) -> Path:
