@@ -2948,7 +2948,18 @@ class BaseClusterScheduler(ABC):
                     raise ValueError(
                         "Decode EP lane communication time must be finite and non-negative"
                     )
-                lane_times_ms.append(lane_time_ms)
+                # ``get_single_layer_post_attention_time()`` is the complete
+                # post-attention block and therefore already contains the EP
+                # communication component.  Keep lane prediction as compute
+                # only; the explicit post-MoE transition below accounts for
+                # the collective exactly once.
+                lane_compute_ms = lane_time_ms - lane_comm_ms
+                if not math.isfinite(lane_compute_ms) or lane_compute_ms < 0:
+                    raise ValueError(
+                        "Decode EP lane compute time must remain non-negative "
+                        "after removing the explicit EP collective"
+                    )
+                lane_times_ms.append(lane_compute_ms)
                 lane_comm_times_ms.append(lane_comm_ms)
             self.transition_stage_admission_for_layer(
                 batch,

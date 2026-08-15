@@ -72,6 +72,10 @@ class _MetricsStore:
 
 
 class _DecodeSyncScheduler:
+    transition_stage_admission_for_layer = (
+        BaseClusterScheduler.transition_stage_admission_for_layer
+    )
+
     def __init__(
         self,
         *,
