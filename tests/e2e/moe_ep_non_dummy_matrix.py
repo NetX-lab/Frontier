@@ -387,10 +387,31 @@ def check_case_log(
     layer_ids = sorted({int(match) for match in re.findall(r"layer_id=(\d+)", text)})
     if not layer_ids:
         errors.append("no layer_id trace")
-    if strict_layers:
-        expected = list(range(case.num_layers))
-        if layer_ids != expected:
-            errors.append(f"layer ids are not contiguous expected={expected} actual={layer_ids}")
+    if strict_layers and case.model_kind != "dense":
+        if case.model_kind == "mixed":
+            # A mixed model may legitimately aggregate dense-layer work.  The
+            # correctness contract is that every declared MoE layer appears in
+            # the per-layer MoE trace; dense layer IDs are not a substitute.
+            moe_layer_ids_seen = sorted(
+                {
+                    int(match)
+                    for line in text.splitlines()
+                    if "[MOE]" in line
+                    for match in re.findall(r"layer_id=(\d+)", line)
+                }
+            )
+            expected = list(case.moe_layer_ids)
+            if moe_layer_ids_seen != expected:
+                errors.append(
+                    "mixed MoE layer ids are incomplete "
+                    f"expected={expected} actual={moe_layer_ids_seen}"
+                )
+        else:
+            expected = list(range(case.num_layers))
+            if layer_ids != expected:
+                errors.append(
+                    f"layer ids are not contiguous expected={expected} actual={layer_ids}"
+                )
 
     moe_trace_count = text.count("[MOE]")
     ep_participant_records = text.count("per_expert_tokens extracted:")

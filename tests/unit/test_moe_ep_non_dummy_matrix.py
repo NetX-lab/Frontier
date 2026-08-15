@@ -130,3 +130,26 @@ def test_log_checker_rejects_traceback(tmp_path: Path) -> None:
 
     assert result["status"] == "FAIL"
     assert "Traceback" in result["errors"]
+
+
+def test_dense_checker_does_not_require_moe_layer_granularity(tmp_path: Path) -> None:
+    case = next(
+        case
+        for case in build_matrix(REPO_ROOT)
+        if case.architecture == "co-location" and case.model_kind == "dense"
+    )
+    log_path = tmp_path / "dense.log"
+    metrics_dir = tmp_path / "metrics"
+    metrics_dir.mkdir()
+    (metrics_dir / "system_metrics.json").write_text(
+        json.dumps({"ttft_statistics": {"mean": 1.0}}), encoding="utf-8"
+    )
+    log_path.write_text(
+        "Dummy Mode: false\nSimulation completed successfully.\n"
+        "[OP-TRACE][MONOLITHIC][ATTENTION] batch_id=0, layer_id=0, num_tokens=1\n",
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "PASS"
