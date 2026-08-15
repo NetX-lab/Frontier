@@ -79,7 +79,7 @@ def test_matrix_enforces_dense_topology_and_card_limit() -> None:
     assert all(case.prefill_tokens > 1 for case in cases)
     assert all(case.ep_size == 1 for case in cases if case.model_kind == "dense")
     assert all(
-        case.moe_tensor_parallel_size == (2 if case.model_kind == "mixed" else 1)
+        case.moe_tensor_parallel_size == (4 if case.model_kind == "mixed" else 1)
         for case in cases
     )
     assert all(case.pipeline_stages == 1 for case in cases)
@@ -89,7 +89,8 @@ def test_mixed_matrix_shapes_stay_within_step_profile_tp_domain() -> None:
     mixed_cases = [case for case in build_matrix(REPO_ROOT) if case.model_kind == "mixed"]
 
     assert mixed_cases
-    assert all(case.moe_tensor_parallel_size == 2 for case in mixed_cases)
+    assert all(case.moe_tensor_parallel_size == 4 for case in mixed_cases)
+    assert all(case.ep_size <= 2 for case in mixed_cases)
     assert all(case.attn_tensor_parallel_size <= 8 for case in mixed_cases)
 
 
@@ -418,6 +419,7 @@ def test_result_ledger_rejects_rows_without_canonical_provenance(tmp_path: Path)
     with pytest.raises(ValueError, match="provenance"):
         _validate_result_ledger_provenance(
             [{"case_id": "case-a", "status": "PASS"}],
+            repo_root=tmp_path / "repo",
             output_root=tmp_path / "output",
             results_path=tmp_path / "results.jsonl",
         )
@@ -432,10 +434,37 @@ def test_result_ledger_rejects_rows_from_another_output_root(tmp_path: Path) -> 
                 {
                     "case_id": "case-a",
                     "status": "PASS",
+                    "repo_root": str(tmp_path / "repo"),
                     "output_root": str(tmp_path / "old-output"),
                     "results_path": str(results_path),
+                    "log_path": str(output_root / "case-a" / "case-a.log"),
+                    "metrics_path": str(output_root / "case-a" / "metrics"),
                 }
             ],
+            repo_root=tmp_path / "repo",
+            output_root=output_root,
+            results_path=results_path,
+        )
+
+
+def test_result_ledger_rejects_external_log_and_metrics_paths(tmp_path: Path) -> None:
+    output_root = tmp_path / "output"
+    case_root = output_root / "case-a"
+    results_path = tmp_path / "results.jsonl"
+    with pytest.raises(ValueError, match="log_path"):
+        _validate_result_ledger_provenance(
+            [
+                {
+                    "case_id": "case-a",
+                    "status": "PASS",
+                    "repo_root": str(tmp_path / "repo"),
+                    "output_root": str(output_root),
+                    "results_path": str(results_path),
+                    "log_path": str(tmp_path / "old.log"),
+                    "metrics_path": str(case_root / "metrics"),
+                }
+            ],
+            repo_root=tmp_path / "repo",
             output_root=output_root,
             results_path=results_path,
         )

@@ -308,18 +308,15 @@ def build_matrix(repo_root: Path) -> list[MatrixCase]:
             model_ordinal = ordinal // len(MODEL_ORDER)
             if not is_moe:
                 ep_size = 1
-            elif architecture == "pd-af-disaggregation" and model_kind == "mixed":
-                # The PD-AF sample is intentionally small while vLLM has no
-                # corresponding AFD implementation.  TP=4 mixed FFN would
-                # exceed 32 cards even for one role Replica; EP=4 remains
-                # covered by the full co-location/PDD populations.
+            elif model_kind == "mixed":
+                # Step's mixed profile needs TP=4 to fit the model shard in an
+                # H800.  Its real linear/attention rows stop at TP=8, so the
+                # mixed matrix uses EP<=2 (TP×EP<=8).  EP=4 remains covered by
+                # the Phi/Qwen MoE populations.
                 ep_size = (1, 2, 2)[model_ordinal % 3]
             else:
                 ep_size = (1, 2, 4)[model_ordinal % 3]
-            # The Step mixed profile contains tensor-parallel rows through
-            # TP=8.  Keep the shared-domain product within that real profile
-            # domain even for EP=4; no synthetic TP=16 row is permitted.
-            moe_tp = 2 if model_kind == "mixed" else 1
+            moe_tp = 4 if model_kind == "mixed" else 1
             pipeline_stages = 1
             replica_count = (1, 2, 4)[model_ordinal % 3]
             total_cards, topology = _case_cards(
@@ -1065,6 +1062,7 @@ def _load_result_rows(path: Path) -> list[dict[str, Any]]:
 def _validate_result_ledger_provenance(
     rows: Sequence[Mapping[str, Any]],
     *,
+    repo_root: Path,
     output_root: Path,
     results_path: Path,
 ) -> None:
@@ -1076,16 +1074,28 @@ def _validate_result_ledger_provenance(
     paths used by the current invocation.
     """
 
+    expected_repo = repo_root.resolve()
     expected_output = output_root.resolve()
     expected_results = results_path.resolve()
     for row in rows:
         case_id = row.get("case_id", "<missing>")
+        row_repo = row.get("repo_root")
         row_output = row.get("output_root")
         row_results = row.get("results_path")
-        if not isinstance(row_output, str) or not isinstance(row_results, str):
+        row_log = row.get("log_path")
+        row_metrics = row.get("metrics_path")
+        if not all(
+            isinstance(value, str)
+            for value in (row_repo, row_output, row_results, row_log, row_metrics)
+        ):
             raise ValueError(
                 "result ledger row is missing canonical provenance: "
                 f"case_id={case_id!r}"
+            )
+        if Path(row_repo).resolve() != expected_repo:
+            raise ValueError(
+                "result ledger repo_root provenance mismatch: "
+                f"case_id={case_id!r}, row={row_repo!r}, expected={str(expected_repo)!r}"
             )
         if Path(row_output).resolve() != expected_output:
             raise ValueError(
@@ -1096,6 +1106,27 @@ def _validate_result_ledger_provenance(
             raise ValueError(
                 "result ledger results_path provenance mismatch: "
                 f"case_id={case_id!r}, row={row_results!r}, expected={str(expected_results)!r}"
+            )
+        if not case_id or not isinstance(case_id, str):
+            raise ValueError("result ledger case_id must be a non-empty string")
+        case_root = expected_output / case_id
+        log_path = Path(row_log).resolve()
+        if not log_path.is_relative_to(case_root):
+            raise ValueError(
+                "result ledger log_path is outside its canonical case directory: "
+                f"case_id={case_id!r}, path={row_log!r}"
+            )
+        if row_metrics:
+            metrics_path = Path(row_metrics).resolve()
+            if not metrics_path.is_relative_to(case_root):
+                raise ValueError(
+                    "result ledger metrics_path is outside its canonical case directory: "
+                    f"case_id={case_id!r}, path={row_metrics!r}"
+                )
+        elif row.get("status") == "PASS":
+            raise ValueError(
+                "result ledger PASS row has no canonical metrics_path: "
+                f"case_id={case_id!r}"
             )
 
 
@@ -1170,6 +1201,7 @@ def run_cases(
     existing_rows = _load_result_rows(results_path)
     _validate_result_ledger_provenance(
         existing_rows,
+        repo_root=repo_root,
         output_root=output_root,
         results_path=results_path,
     )
