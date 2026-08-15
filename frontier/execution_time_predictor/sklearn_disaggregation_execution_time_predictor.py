@@ -1035,6 +1035,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         cluster_type: ClusterType,
         num_layers: int = 1,
         layer_id: int = 0,
+        include_moe: bool | None = None,
     ) -> ExecutionTime:
         """
         Predict aggregated execution time for one or more transformer layers (disaggregated architecture).
@@ -1137,6 +1138,8 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
 
         if num_layers < 1:
             raise ValueError(f"num_layers must be >= 1, got {num_layers}")
+        if include_moe is not None and type(include_moe) is not bool:
+            raise ValueError("include_moe must be a bool or None")
 
         if self._is_zero_token_decode_ffn_ep_barrier(batch, cluster_type):
             logger.debug(
@@ -1312,6 +1315,8 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 and model_config.is_moe
                 and model_config.is_moe_layer(layer_id)
             )
+            if include_moe is not None:
+                is_moe_layer = include_moe
 
             if is_moe_layer:
                 # MoE layer: use MoE operations
@@ -1662,7 +1667,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             is_moe_model = (
                 cluster_replica_config.model_config is not None
                 and cluster_replica_config.model_config.is_moe
+                and cluster_replica_config.model_config.is_moe_layer(layer_id)
             )
+            if include_moe is not None:
+                is_moe_model = include_moe
 
             if is_moe_model:
                 # MoE model: use MoE operations
@@ -2074,6 +2082,8 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 and model_config.is_moe
                 and model_config.is_moe_layer(layer_id)
             )
+            if include_moe is not None:
+                is_moe_model = include_moe
 
             if is_moe_model:
                 # MoE model: use MoE operations for FFN

@@ -2309,6 +2309,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         cluster_type: ClusterType,
         num_layers: int = 1,
         layer_id: int = 0,
+        include_moe: bool | None = None,
     ) -> ExecutionTime:
         """
         Predict execution time for MoE models using per-layer component semantics.
@@ -2349,13 +2350,20 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         # Mixed-layer MoE models (e.g., Step3) have dense FFN layers where MoE
         # ops must be disabled. The runtime scheduler provides explicit layer_id
-        # for single-layer prediction calls (num_layers == 1).
-        include_moe = True
-        if num_layers == 1:
-            include_moe = self._model_config.is_moe_layer(layer_id)
+        # for single-layer prediction calls (num_layers == 1).  An explicit
+        # override is used by attention-only probes so the predictor does not
+        # materialize a routed workload that the caller will not execute.
+        if include_moe is None:
+            include_moe_for_layer = True
+            if num_layers == 1:
+                include_moe_for_layer = self._model_config.is_moe_layer(layer_id)
+        elif type(include_moe) is bool:
+            include_moe_for_layer = include_moe
+        else:
+            raise ValueError("include_moe must be a bool or None")
 
         moe_tokens_input = None
-        if include_moe:
+        if include_moe_for_layer:
             # Use the canonical distribution source for per-layer MoE input
             # selection. EP lane batches carry their materialized map directly.
             moe_tokens_input = self._get_moe_tokens_input(batch, layer_id=layer_id)
@@ -2387,7 +2395,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             batch,
             stage_id,
             moe_tokens_input=moe_tokens_input,
-            include_moe=include_moe,
+            include_moe=include_moe_for_layer,
         )
 
         # Communication OP-TRACE: log per-layer allreduce times for op-level comparison

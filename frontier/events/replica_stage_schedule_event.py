@@ -208,6 +208,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._cluster_type,
                         num_layers=1,
                         layer_id=first_layer_id,
+                        include_moe=False,
                     )
                     # Predictor single-layer components are in milliseconds.
                     # Event queue timestamps are in seconds.
@@ -398,7 +399,12 @@ class ReplicaStageScheduleEvent(BaseEvent):
 
                     # Get execution time components for all layers in this pipeline stage
                     execution_time = stage_scheduler._execution_time_predictor.predict_stage_execution_time(
-                        batch, self._stage_id, self._cluster_type, num_layers=num_layers
+                        batch,
+                        self._stage_id,
+                        self._cluster_type,
+                        num_layers=1,
+                        layer_id=0,
+                        include_moe=False,
                     )
 
                     # Use layer-by-layer DP sync path for MoE processing.

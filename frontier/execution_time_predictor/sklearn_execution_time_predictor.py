@@ -6840,6 +6840,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         cluster_type: ClusterType,
         num_layers: int = 1,
         layer_id: int = 0,
+        include_moe: bool | None = None,
     ) -> ExecutionTime:
         """
         Predict aggregated execution time for one or more transformer layers.
@@ -6863,6 +6864,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         - layer_id is accepted for API compatibility with MoE per-layer routing flows.
           Dense execution-time prediction is layer-homogeneous and ignores this value.
         """
+        if include_moe is not None and type(include_moe) is not bool:
+            raise ValueError("include_moe must be a bool or None")
         if self._enable_dummy_mode:
             return self._get_dummy_execution_time(batch, stage_id)
 

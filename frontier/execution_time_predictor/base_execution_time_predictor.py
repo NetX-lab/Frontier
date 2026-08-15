@@ -401,6 +401,7 @@ class BaseExecutionTimePredictor(ABC):
         cluster_type: ClusterType,
         num_layers: int = 1,
         layer_id: int = 0,
+        include_moe: bool | None = None,
     ) -> ExecutionTime:
         """
         Predict aggregated execution time for one or more transformer layers.
@@ -417,6 +418,9 @@ class BaseExecutionTimePredictor(ABC):
                        For monolithic: may be > 1
             layer_id: Layer index used by per-layer MoE routing simulation.
                      Callers that do not model per-layer routing may keep default 0.
+            include_moe: Optional explicit protocol selector. ``False`` is used by
+                         attention-only probes so they do not materialize a routed
+                         expert workload before the canonical per-layer EP wave.
 
         Returns:
             ExecutionTime object with aggregated times
