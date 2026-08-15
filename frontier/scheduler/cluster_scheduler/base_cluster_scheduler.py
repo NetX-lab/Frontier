@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from copy import deepcopy
 import csv
+import logging
 import math
 from pathlib import Path
 from numbers import Real
@@ -39,6 +40,9 @@ from frontier.types import (
     ReplicaSchedulerType,
     RequestGeneratorType,
 )
+
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from frontier.kv_cache_transfer import BaseKVCacheTransferPredictor
@@ -88,6 +92,77 @@ class EPBatchGroupPlan(NamedTuple):
 
 
 class BaseClusterScheduler(ABC):
+    @staticmethod
+    def _log_ep_workload_trace(
+        *,
+        cluster_type: ClusterType,
+        batch_id: int,
+        layer_id: int,
+        ep_id: int,
+        moe_ep_size: int,
+        per_expert_tokens: Dict[int, int],
+        lane_compute_ms: float,
+        lane_comm_ms: float,
+    ) -> None:
+        """Emit one source-level record for a materialized EP participant.
+
+        This is observability only.  The values are the already-computed lane
+        prediction and the explicit EP collective time; no timing is changed
+        and no synthetic contribution is introduced.
+        """
+
+        if type(batch_id) is not int or batch_id < 0:
+            raise ValueError(f"EP workload batch_id must be a non-negative int, got {batch_id!r}")
+        if type(layer_id) is not int or layer_id < 0:
+            raise ValueError(f"EP workload layer_id must be a non-negative int, got {layer_id!r}")
+        if type(ep_id) is not int or ep_id < 0:
+            raise ValueError(f"EP workload ep_id must be a non-negative int, got {ep_id!r}")
+        if type(moe_ep_size) is not int or moe_ep_size <= 0 or ep_id >= moe_ep_size:
+            raise ValueError(
+                "EP workload moe_ep_size/ep_id are inconsistent: "
+                f"ep_id={ep_id!r}, moe_ep_size={moe_ep_size!r}"
+            )
+        if not isinstance(per_expert_tokens, dict):
+            raise ValueError("EP workload per_expert_tokens must be a dict")
+        normalized_tokens: dict[int, int] = {}
+        for expert_id, token_count in per_expert_tokens.items():
+            if (
+                type(expert_id) is not int
+                or type(token_count) is not int
+                or expert_id < 0
+                or token_count < 0
+            ):
+                raise ValueError(
+                    "EP workload per_expert_tokens must contain non-negative integer pairs"
+                )
+            normalized_tokens[int(expert_id)] = int(token_count)
+        for name, value in (
+            ("lane_compute_ms", lane_compute_ms),
+            ("lane_comm_ms", lane_comm_ms),
+        ):
+            if not isinstance(value, Real) or isinstance(value, bool):
+                raise ValueError(f"EP workload {name} must be a real number")
+            value = float(value)
+            if not math.isfinite(value) or value < 0:
+                raise ValueError(
+                    f"EP workload {name} must be finite and non-negative, got {value!r}"
+                )
+
+        cluster_name = getattr(cluster_type, "name", str(cluster_type))
+        logger.info(
+            "[EP-WORKLOAD][%s] batch_id=%d, layer_id=%d, ep_id=%d, "
+            "moe_ep_size=%d, per_expert_tokens=%s, lane_compute_ms=%.6f, "
+            "lane_comm_ms=%.6f",
+            cluster_name,
+            batch_id,
+            layer_id,
+            ep_id,
+            moe_ep_size,
+            dict(sorted(normalized_tokens.items())),
+            float(lane_compute_ms),
+            float(lane_comm_ms),
+        )
+
     @staticmethod
     def _map_source_attn_replica_to_ffn_replica(
         source_replica_ordinal: int,
@@ -2738,6 +2813,34 @@ class BaseClusterScheduler(ABC):
                     raise ValueError(
                         "Prefill EP lane post-attention time must be finite and non-negative"
                     )
+                lane_comm_ms = getattr(
+                    execution_time, "expert_parallel_communication_time", None
+                )
+                if lane_comm_ms is None:
+                    raise ValueError(
+                        "Prefill EP lane prediction is missing explicit EP communication time"
+                    )
+                lane_comm_ms = float(lane_comm_ms)
+                if not math.isfinite(lane_comm_ms) or lane_comm_ms < 0:
+                    raise ValueError(
+                        "Prefill EP lane communication time must be finite and non-negative"
+                    )
+                lane_compute_ms = lane_time_ms - lane_comm_ms
+                if not math.isfinite(lane_compute_ms) or lane_compute_ms < 0:
+                    raise ValueError(
+                        "Prefill EP lane compute time must remain non-negative "
+                        "after removing the explicit EP collective"
+                    )
+                self._log_ep_workload_trace(
+                    cluster_type=self._cluster_type,
+                    batch_id=int(batch.id),
+                    layer_id=layer_id,
+                    ep_id=int(ep_id),
+                    moe_ep_size=int(self._config.replica_config.moe_expert_parallel_size),
+                    per_expert_tokens=dict(lane_batch.per_expert_tokens),
+                    lane_compute_ms=lane_compute_ms,
+                    lane_comm_ms=lane_comm_ms,
+                )
                 lane_times_ms.append(lane_time_ms)
             self.transition_stage_admission_for_layer(
                 batch,
@@ -2993,6 +3096,16 @@ class BaseClusterScheduler(ABC):
                         "Decode EP lane compute time must remain non-negative "
                         "after removing the explicit EP collective"
                     )
+                self._log_ep_workload_trace(
+                    cluster_type=self._cluster_type,
+                    batch_id=int(batch.id),
+                    layer_id=layer_id,
+                    ep_id=int(ep_id),
+                    moe_ep_size=int(self._config.replica_config.moe_expert_parallel_size),
+                    per_expert_tokens=dict(lane_batch.per_expert_tokens),
+                    lane_compute_ms=lane_compute_ms,
+                    lane_comm_ms=lane_comm_ms,
+                )
                 lane_times_ms.append(lane_compute_ms)
                 lane_comm_times_ms.append(lane_comm_ms)
             self.transition_stage_admission_for_layer(

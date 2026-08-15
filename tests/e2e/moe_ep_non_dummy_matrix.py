@@ -10,6 +10,7 @@ read-only baseline worktree.
 from __future__ import annotations
 
 import argparse
+import ast
 import csv
 import json
 import math
@@ -87,6 +88,18 @@ REQUIRED_PROFILE_METADATA_COLUMNS = (
     "model_architecture_profile",
     "quant_signature",
     "measurement_type",
+)
+
+
+_EP_WORKLOAD_LINE_RE = re.compile(
+    r"\[EP-WORKLOAD\]\[(?P<cluster>[^\]]+)\]\s+"
+    r"batch_id=(?P<batch_id>-?\d+),\s+"
+    r"layer_id=(?P<layer_id>-?\d+),\s+"
+    r"ep_id=(?P<ep_id>-?\d+),\s+"
+    r"moe_ep_size=(?P<moe_ep_size>\d+),\s+"
+    r"per_expert_tokens=(?P<per_expert_tokens>\{.*\}),\s+"
+    r"lane_compute_ms=(?P<lane_compute_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"lane_comm_ms=(?P<lane_comm_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*$"
 )
 
 
@@ -550,6 +563,88 @@ def _finite_metric_values(value: Any) -> Iterable[float]:
         yield number
 
 
+def _parse_ep_workload_records(text: str) -> list[dict[str, Any]]:
+    """Parse scheduler-emitted per-lane MoE workload records.
+
+    The parser is deliberately strict: malformed records are ignored by the
+    caller only as missing evidence, while a syntactically matching record is
+    validated here so a negative/non-finite lane value cannot be mistaken for
+    a successful workflow trace.
+    """
+
+    records: list[dict[str, Any]] = []
+    for line in text.splitlines():
+        match = _EP_WORKLOAD_LINE_RE.search(line)
+        if match is None:
+            continue
+        groups = match.groupdict()
+        try:
+            per_expert_tokens = ast.literal_eval(groups["per_expert_tokens"])
+        except (SyntaxError, ValueError) as exc:
+            raise ValueError(
+                "invalid per_expert_tokens literal in EP workload trace"
+            ) from exc
+        if not isinstance(per_expert_tokens, dict):
+            raise ValueError("EP workload per_expert_tokens must be a dict")
+        normalized_tokens: dict[int, int] = {}
+        for expert_id, token_count in per_expert_tokens.items():
+            if (
+                type(expert_id) is not int
+                or type(token_count) is not int
+                or token_count < 0
+            ):
+                raise ValueError(
+                    "EP workload per_expert_tokens must map exact integer expert IDs "
+                    "to non-negative integer token counts"
+                )
+            normalized_tokens[int(expert_id)] = int(token_count)
+
+        lane_compute_ms = float(groups["lane_compute_ms"])
+        lane_comm_ms = float(groups["lane_comm_ms"])
+        ep_id = int(groups["ep_id"])
+        moe_ep_size = int(groups["moe_ep_size"])
+        if moe_ep_size <= 0 or ep_id < 0 or ep_id >= moe_ep_size:
+            raise ValueError(
+                "EP workload ep_id must be within the declared moe_ep_size"
+            )
+        if not math.isfinite(lane_compute_ms) or lane_compute_ms < 0:
+            raise ValueError("EP workload lane_compute_ms must be finite and non-negative")
+        if not math.isfinite(lane_comm_ms) or lane_comm_ms < 0:
+            raise ValueError("EP workload lane_comm_ms must be finite and non-negative")
+
+        records.append(
+            {
+                "cluster": groups["cluster"],
+                "batch_id": int(groups["batch_id"]),
+                "layer_id": int(groups["layer_id"]),
+                "ep_id": ep_id,
+                "moe_ep_size": moe_ep_size,
+                "per_expert_tokens": normalized_tokens,
+                "lane_compute_ms": lane_compute_ms,
+                "lane_comm_ms": lane_comm_ms,
+            }
+        )
+    return records
+
+
+def _expected_ep_size_for_cluster(case: MatrixCase, cluster: str) -> int | None:
+    """Return the EP cardinality for one physical cluster role."""
+
+    cluster_name = str(cluster).upper()
+    if case.architecture == "pd-af-disaggregation":
+        if cluster_name == "PREFILL":
+            return int(case.prefill_moe_expert_parallel_size)
+        if cluster_name == "DECODE_FFN":
+            return int(case.decode_moe_expert_parallel_size)
+        return None
+    if case.architecture == "pd-disaggregation":
+        if cluster_name == "PREFILL":
+            return int(case.prefill_moe_expert_parallel_size)
+        if cluster_name == "DECODE":
+            return int(case.decode_moe_expert_parallel_size)
+    return int(case.ep_size)
+
+
 def check_case_log(
     case: MatrixCase,
     log_path: Path,
@@ -601,12 +696,70 @@ def check_case_log(
 
     moe_trace_count = text.count("[MOE]")
     ep_participant_records = text.count("per_expert_tokens extracted:")
+    try:
+        ep_workload_records = _parse_ep_workload_records(text)
+    except ValueError as exc:
+        ep_workload_records = []
+        errors.append(f"invalid EP workload trace: {exc}")
     if case.is_moe:
         if "moe_grouped_gemm" not in text or "moe_shuffling" not in text:
             errors.append("missing MoE grouped-gemm/shuffling trace")
+        if not ep_workload_records:
+            errors.append("missing EP workload trace")
+        elif strict_layers:
+            expected_moe_layers = set(int(layer_id) for layer_id in case.moe_layer_ids)
+            records_by_wave: dict[tuple[str, int, int], list[dict[str, Any]]] = {}
+            for record in ep_workload_records:
+                cluster_name = str(record["cluster"]).upper()
+                records_by_wave.setdefault(
+                    (
+                        cluster_name,
+                        int(record["batch_id"]),
+                        int(record["layer_id"]),
+                    ),
+                    [],
+                ).append(record)
+            complete_layers: set[int] = set()
+            for (cluster_name, _batch_id, layer_id), wave_records in records_by_wave.items():
+                expected_ep_size = _expected_ep_size_for_cluster(case, cluster_name)
+                if expected_ep_size is None:
+                    errors.append(
+                        "EP workload uses an unsupported cluster role "
+                        f"architecture={case.architecture} cluster={cluster_name}"
+                    )
+                    continue
+                expected_ep_ids = set(range(expected_ep_size))
+                actual_ep_ids = {int(record["ep_id"]) for record in wave_records}
+                if actual_ep_ids == expected_ep_ids:
+                    complete_layers.add(layer_id)
+                if any(
+                    int(record["moe_ep_size"]) != expected_ep_size
+                    for record in wave_records
+                ):
+                    errors.append(
+                        "EP workload moe_ep_size mismatch "
+                        f"cluster={cluster_name} layer={layer_id} "
+                        f"expected={expected_ep_size}"
+                    )
+                if actual_ep_ids != expected_ep_ids:
+                    errors.append(
+                        "EP workload participants are incomplete "
+                        f"cluster={cluster_name} batch_id={_batch_id} layer={layer_id} "
+                        f"expected={sorted(expected_ep_ids)} actual={sorted(actual_ep_ids)}"
+                    )
+            for expected_layer_id in sorted(expected_moe_layers):
+                if expected_layer_id not in complete_layers:
+                    errors.append(
+                        "EP workload has no complete participant wave "
+                        f"for layer={expected_layer_id}"
+                    )
         if case.architecture == "pd-af-disaggregation" and ep_participant_records == 0:
             errors.append("missing DECODE_FFN EP participant maps")
-        if case.expects_zero_routed_lane and "0}" not in text and ": 0" not in text:
+        if case.expects_zero_routed_lane and not any(
+            token_count == 0
+            for record in ep_workload_records
+            for token_count in record["per_expert_tokens"].values()
+        ) and "0}" not in text and ": 0" not in text:
             errors.append("zero-routed case has no zero-token participant evidence")
 
     metric_path = metrics_dir / "system_metrics.json"
@@ -635,6 +788,7 @@ def check_case_log(
         "layer_ids": layer_ids,
         "moe_trace_count": moe_trace_count,
         "ep_participant_records": ep_participant_records,
+        "ep_workload_records": len(ep_workload_records),
         "numeric_metric_count": numeric_metric_count,
         "ttft_mean_ms": _stat_value("ttft_statistics"),
         "e2e_mean_ms": _stat_value("request_e2e_time_statistics"),

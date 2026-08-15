@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from unittest.mock import Mock, call
+import logging
 
 import pytest
 
@@ -125,6 +126,7 @@ def _run_ep_stage(
     execution_time = SimpleNamespace(
         get_single_layer_moe_pre_dispatch_time=lambda: 2.0,
         get_single_layer_moe_post_dispatch_compute_time=lambda: 1.0,
+        expert_parallel_communication_time=0.5,
     )
     stage_scheduler = Mock()
     stage_scheduler.get_queue_batches.return_value = [batch]
@@ -159,7 +161,12 @@ def _run_ep_stage(
 
 def test_ep_dispatch_preserves_full_stage_execution_time(
     monkeypatch: pytest.MonkeyPatch,
+    caplog,
 ) -> None:
+    caplog.set_level(
+        logging.INFO,
+        logger="frontier.events.replica_stage_schedule_event",
+    )
     batches = {ep_id: _batch(ep_id) for ep_id in range(2)}
     for batch in batches.values():
         _run_ep_stage(
@@ -183,6 +190,19 @@ def test_ep_dispatch_preserves_full_stage_execution_time(
     assert [event.time for event in ready_events] == pytest.approx([1.006, 1.006])
     for batch in batches.values():
         assert batch.execution_time == pytest.approx(0.010)
+    workload_lines = [
+        record.message
+        for record in caplog.records
+        if record.message.startswith("[EP-WORKLOAD]")
+    ]
+    assert len(workload_lines) == 2
+    assert any(
+        "[EP-WORKLOAD][DECODE_FFN]" in line
+        and "ep_id=0" in line
+        and "lane_compute_ms=3.000000" in line
+        and "lane_comm_ms=0.500000" in line
+        for line in workload_lines
+    )
 
 
 def test_ep_dispatch_collective_validates_all_lanes_before_mutation() -> None:

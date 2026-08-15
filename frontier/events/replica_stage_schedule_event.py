@@ -326,6 +326,57 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     pre_dispatch_compute_time = pre_dispatch_compute_time_ms * 1e-3
                     expert_comp_time = expert_comp_time_ms * 1e-3
 
+                    lane_comm_ms = getattr(
+                        execution_time, "expert_parallel_communication_time", None
+                    )
+                    if lane_comm_ms is None:
+                        raise ValueError(
+                            "DECODE_FFN EP prediction is missing explicit EP communication time"
+                        )
+                    lane_comm_ms = float(lane_comm_ms)
+                    lane_compute_ms = pre_dispatch_compute_time_ms + expert_comp_time_ms
+                    source_batch_ids = tuple(
+                        int(batch_id)
+                        for batch_id in getattr(batch, "source_batch_ids", ())
+                    )
+                    layer_id = getattr(batch, "decode_ffn_layer_id", None)
+                    if type(layer_id) is not int or layer_id < 0:
+                        raise ValueError(
+                            "DECODE_FFN EP batch must carry an exact non-negative "
+                            f"decode_ffn_layer_id, got {layer_id!r}"
+                        )
+                    if not source_batch_ids:
+                        global_id = getattr(batch, "global_id", None)
+                        if type(global_id) is not int or global_id < 0:
+                            raise ValueError(
+                                "DECODE_FFN EP batch without source_batch_ids must "
+                                "carry an exact non-negative global_id"
+                            )
+                        # A multi-source EP group has no single source batch ID;
+                        # its global ID is the stable logical wave identity.
+                        logical_batch_id = int(global_id)
+                    else:
+                        if len(source_batch_ids) == 1:
+                            logical_batch_id = source_batch_ids[0]
+                        else:
+                            global_id = getattr(batch, "global_id", None)
+                            if type(global_id) is not int or global_id < 0:
+                                raise ValueError(
+                                    "DECODE_FFN multi-source EP batch must carry an "
+                                    "exact non-negative global_id"
+                                )
+                            logical_batch_id = int(global_id)
+                    BaseClusterScheduler._log_ep_workload_trace(
+                        cluster_type=self._cluster_type,
+                        batch_id=logical_batch_id,
+                        layer_id=layer_id,
+                        ep_id=int(batch.ep_id),
+                        moe_ep_size=int(moe_ep_size),
+                        per_expert_tokens=dict(batch.per_expert_tokens),
+                        lane_compute_ms=lane_compute_ms,
+                        lane_comm_ms=lane_comm_ms,
+                    )
+
                     import math
 
                     if (

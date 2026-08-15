@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
 from tests.e2e.moe_ep_non_dummy_matrix import (
     _merge_result_rows,
+    _parse_ep_workload_records,
     build_matrix,
     build_shell_command,
     check_case_log,
@@ -160,6 +162,7 @@ def test_log_checker_requires_layer_trace_and_finite_metrics(tmp_path: Path) -> 
                 "[OP-TRACE][DECODE_FFN][MOE][moe_shuffling] batch_id=1, layer_id=0, predicted_time_ms=0.1",
                 "[OP-TRACE][DECODE_FFN][MOE][moe_grouped_gemm] batch_id=1, layer_id=0, predicted_time_ms=0.2",
                 "[OP-TRACE][DECODE_FFN][MOE][TOTAL] batch_id=1, layer_id=0, total_moe_time_ms=1.0",
+                "[EP-WORKLOAD][DECODE_FFN] batch_id=1, layer_id=0, ep_id=0, moe_ep_size=1, per_expert_tokens={0: 1, 1: 0}, lane_compute_ms=0.2, lane_comm_ms=0.0",
                 "[DECODE_FFN] per_expert_tokens extracted: {0: 1, 1: 0}",
             ]
         ),
@@ -170,7 +173,90 @@ def test_log_checker_requires_layer_trace_and_finite_metrics(tmp_path: Path) -> 
 
     assert result["status"] == "PASS"
     assert result["layer_ids"] == [0]
+    assert result["ep_workload_records"] == 1
     assert result["numeric_metric_count"] == 2
+
+
+def test_shared_moe_checker_requires_ep_workload_trace(tmp_path: Path) -> None:
+    case = next(
+        case
+        for case in build_matrix(REPO_ROOT)
+        if case.architecture == "co-location" and case.model_kind == "moe"
+    )
+    log_path = tmp_path / "shared_moe.log"
+    metrics_dir = tmp_path / "metrics"
+    metrics_dir.mkdir()
+    (metrics_dir / "system_metrics.json").write_text(
+        json.dumps({"ttft_statistics": {"mean": 1.0}}), encoding="utf-8"
+    )
+    log_path.write_text(
+        "Dummy Mode: false\nSimulation completed successfully.\n"
+        "[OP-TRACE][MONOLITHIC][MOE][moe_grouped_gemm] batch_id=1, layer_id=0, predicted_time_ms=0.2\n",
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir)
+
+    assert result["status"] == "FAIL"
+    assert "EP workload" in result["errors"]
+
+
+def test_ep_workload_parser_accepts_logger_prefix() -> None:
+    records = _parse_ep_workload_records(
+        "INFO 12:00:00 scheduler.py:1] "
+        "[EP-WORKLOAD][DECODE] batch_id=7, layer_id=3, ep_id=1, "
+        "moe_ep_size=2, per_expert_tokens={0: 0, 1: 4}, "
+        "lane_compute_ms=1.25, lane_comm_ms=0.5"
+    )
+
+    assert records == [
+        {
+            "cluster": "DECODE",
+            "batch_id": 7,
+            "layer_id": 3,
+            "ep_id": 1,
+            "moe_ep_size": 2,
+            "per_expert_tokens": {0: 0, 1: 4},
+            "lane_compute_ms": 1.25,
+            "lane_comm_ms": 0.5,
+        }
+    ]
+
+
+def test_strict_checker_does_not_merge_ep_ids_from_different_waves(tmp_path: Path) -> None:
+    case = next(
+        replace(case, num_layers=1, moe_layer_ids=(0,))
+        for case in build_matrix(REPO_ROOT)
+        if case.architecture == "co-location"
+        and case.model_kind == "moe"
+        and case.ep_size == 2
+    )
+    log_path = tmp_path / "split_wave.log"
+    metrics_dir = tmp_path / "metrics"
+    metrics_dir.mkdir()
+    (metrics_dir / "system_metrics.json").write_text(
+        json.dumps({"ttft_statistics": {"mean": 1.0}}), encoding="utf-8"
+    )
+    log_path.write_text(
+        "\n".join(
+            [
+                "Dummy Mode: false",
+                "Simulation completed successfully.",
+                "[OP-TRACE][MONOLITHIC][MOE][moe_shuffling] layer_id=0",
+                "[OP-TRACE][MONOLITHIC][MOE][moe_grouped_gemm] layer_id=0",
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, ep_id=0, "
+                "moe_ep_size=2, per_expert_tokens={0: 1}, lane_compute_ms=1.0, lane_comm_ms=0.0",
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=11, layer_id=0, ep_id=1, "
+                "moe_ep_size=2, per_expert_tokens={1: 1}, lane_compute_ms=1.0, lane_comm_ms=0.0",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "participants are incomplete" in result["errors"]
 
 
 def test_log_checker_rejects_traceback(tmp_path: Path) -> None:

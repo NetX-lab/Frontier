@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import logging
 from types import SimpleNamespace
 
 import pytest
@@ -121,8 +122,12 @@ def _scheduler() -> tuple[RoundRobinClusterScheduler, _LanePredictor, Batch]:
     return scheduler, predictor, batch
 
 
-def test_decode_moe_layer_uses_local_ep_wave_and_slowest_lane_barrier() -> None:
+def test_decode_moe_layer_uses_local_ep_wave_and_slowest_lane_barrier(caplog) -> None:
     scheduler, predictor, batch = _scheduler()
+    caplog.set_level(
+        logging.INFO,
+        logger="frontier.scheduler.cluster_scheduler.base_cluster_scheduler",
+    )
 
     events = scheduler._on_decode_ep_wave_ready(
         time=0.01,
@@ -145,6 +150,16 @@ def test_decode_moe_layer_uses_local_ep_wave_and_slowest_lane_barrier() -> None:
     assert batch._stage_admission_scope_history[-1]["participant_ep_ids"] == (0, 1)
     room = scheduler._decode_sync_waiting_room[0][0][7][2]["post_moe"]
     assert room["batches"] == {0: batch}
+    workload_lines = [
+        record.message
+        for record in caplog.records
+        if record.message.startswith("[EP-WORKLOAD]")
+    ]
+    assert len(workload_lines) == 2
+    assert "[EP-WORKLOAD][DECODE]" in workload_lines[0]
+    assert "ep_id=0" in workload_lines[0]
+    assert "lane_compute_ms=2.000000" in workload_lines[0]
+    assert "lane_comm_ms=1.000000" in workload_lines[0]
 
 
 def test_decode_dense_layer_bypasses_ep_materializer(monkeypatch) -> None:

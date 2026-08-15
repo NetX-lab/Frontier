@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import logging
 from types import SimpleNamespace
 
 import numpy as np
@@ -29,8 +30,9 @@ class _ModelConfig:
 
 
 class _ExecutionTime:
-    def __init__(self, post_attention_ms: float) -> None:
+    def __init__(self, post_attention_ms: float, ep_comm_ms: float = 0.0) -> None:
         self._post_attention_ms = post_attention_ms
+        self.expert_parallel_communication_time = ep_comm_ms
 
     def get_single_layer_post_attention_time(self) -> float:
         return self._post_attention_ms
@@ -109,8 +111,14 @@ def _scheduler() -> tuple[RoundRobinClusterScheduler, _LanePredictor, Batch]:
     return scheduler, predictor, batch
 
 
-def test_prefill_moe_layer_materializes_global_distribution_once_and_waits_for_slowest_ep():
+def test_prefill_moe_layer_materializes_global_distribution_once_and_waits_for_slowest_ep(
+    caplog,
+):
     scheduler, predictor, batch = _scheduler()
+    caplog.set_level(
+        logging.INFO,
+        logger="frontier.scheduler.cluster_scheduler.base_cluster_scheduler",
+    )
 
     events = scheduler._on_prefill_ep_wave_ready(
         time=0.001,
@@ -132,6 +140,17 @@ def test_prefill_moe_layer_materializes_global_distribution_once_and_waits_for_s
     assert batch._stage_admission_scope_history[-1]["participant_ep_ids"] == (0, 1)
     room = scheduler._prefill_sync_waiting_room[0][0][9][4]["post_moe"]
     assert room["batches"] == {0: batch}
+    workload_lines = [
+        record.message
+        for record in caplog.records
+        if record.message.startswith("[EP-WORKLOAD]")
+    ]
+    assert len(workload_lines) == 2
+    assert "[EP-WORKLOAD][PREFILL]" in workload_lines[0]
+    assert "ep_id=0" in workload_lines[0]
+    assert "per_expert_tokens={0: 0, 1: 0}" in workload_lines[0]
+    assert "lane_compute_ms=2.000000" in workload_lines[0]
+    assert "lane_comm_ms=0.000000" in workload_lines[0]
 
 
 def test_prefill_ep_wave_accepts_numpy_timestamp_from_non_dummy_predictor():
