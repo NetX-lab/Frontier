@@ -316,10 +316,10 @@ def build_matrix(repo_root: Path) -> list[MatrixCase]:
                 ep_size = (1, 2, 2)[model_ordinal % 3]
             else:
                 ep_size = (1, 2, 4)[model_ordinal % 3]
-            # The mixed profile is too large for one H800 device at TP=1.
-            # TP=2 is a legal shared-domain shape (attn_tp == moe_tp×ep)
-            # and is covered by the Frontier release contract tests.
-            moe_tp = 4 if model_kind == "mixed" else 1
+            # The Step mixed profile contains tensor-parallel rows through
+            # TP=8.  Keep the shared-domain product within that real profile
+            # domain even for EP=4; no synthetic TP=16 row is permitted.
+            moe_tp = 2 if model_kind == "mixed" else 1
             pipeline_stages = 1
             replica_count = (1, 2, 4)[model_ordinal % 3]
             total_cards, topology = _case_cards(

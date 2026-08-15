@@ -79,10 +79,18 @@ def test_matrix_enforces_dense_topology_and_card_limit() -> None:
     assert all(case.prefill_tokens > 1 for case in cases)
     assert all(case.ep_size == 1 for case in cases if case.model_kind == "dense")
     assert all(
-        case.moe_tensor_parallel_size == (4 if case.model_kind == "mixed" else 1)
+        case.moe_tensor_parallel_size == (2 if case.model_kind == "mixed" else 1)
         for case in cases
     )
     assert all(case.pipeline_stages == 1 for case in cases)
+
+
+def test_mixed_matrix_shapes_stay_within_step_profile_tp_domain() -> None:
+    mixed_cases = [case for case in build_matrix(REPO_ROOT) if case.model_kind == "mixed"]
+
+    assert mixed_cases
+    assert all(case.moe_tensor_parallel_size == 2 for case in mixed_cases)
+    assert all(case.attn_tensor_parallel_size <= 8 for case in mixed_cases)
 
 
 def test_non_dummy_command_has_no_dummy_switch() -> None:
