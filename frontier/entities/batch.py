@@ -1339,12 +1339,12 @@ class EPBatchGroup(Batch):
     def get_effective_total_tokens_for_compute(
         self, cluster_type: "ClusterType" = None
     ) -> int:
-        from frontier.types import ClusterType
-
-        if (
-            cluster_type == ClusterType.DECODE_FFN
-            and self._moe_pre_routing_effective_total_tokens is not None
-        ):
+        # The local routed token count is used for grouped-GEMM and collective
+        # payloads, but every EP lane shares the source batch's pre-routing
+        # work (gating, shuffling, and shared experts).  This metadata is
+        # therefore valid for shared PREFILL/DECODE lanes as well as the
+        # PD-AF DECODE_FFN lane; it is attached only to synthetic EP groups.
+        if self._moe_pre_routing_effective_total_tokens is not None:
             return self._moe_pre_routing_effective_total_tokens
         return super().get_effective_total_tokens_for_compute(cluster_type)
 
