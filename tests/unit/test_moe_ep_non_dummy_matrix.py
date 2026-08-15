@@ -49,7 +49,10 @@ def test_matrix_enforces_dense_topology_and_card_limit() -> None:
     assert all(case.total_cards <= 32 for case in cases)
     assert all(case.total_cards > 0 for case in cases)
     assert all(case.ep_size == 1 for case in cases if case.model_kind == "dense")
-    assert all(case.moe_tensor_parallel_size == 1 for case in cases)
+    assert all(
+        case.moe_tensor_parallel_size == (2 if case.model_kind == "mixed" else 1)
+        for case in cases
+    )
 
 
 def test_non_dummy_command_has_no_dummy_switch() -> None:

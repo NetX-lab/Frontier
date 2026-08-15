@@ -116,9 +116,11 @@ def _model_layer_shape(model_name: str) -> tuple[int, tuple[int, ...]]:
     return int(config.num_layers), tuple(int(x) for x in config.get_moe_layer_ids())
 
 
-def _case_cards(architecture: str, replica_count: int, ep_size: int) -> tuple[int, dict[str, int]]:
+def _case_cards(
+    architecture: str, replica_count: int, ep_size: int, moe_tp: int
+) -> tuple[int, dict[str, int]]:
     if architecture == "co-location":
-        attn_tp = ep_size
+        attn_tp = moe_tp * ep_size
         return replica_count * attn_tp, {
             "attn_tp": attn_tp,
             "prefill_attn_tp": attn_tp,
@@ -129,22 +131,26 @@ def _case_cards(architecture: str, replica_count: int, ep_size: int) -> tuple[in
             "decode_ffn_replicas": replica_count,
         }
     if architecture == "pd-disaggregation":
-        attn_tp = ep_size
-        return 2 * replica_count * attn_tp, {
+        attn_tp = moe_tp * ep_size
+        effective_replicas = min(replica_count, max(1, 32 // (2 * attn_tp)))
+        return 2 * effective_replicas * attn_tp, {
             "attn_tp": attn_tp,
             "prefill_attn_tp": attn_tp,
             "decode_attn_tp": attn_tp,
-            "prefill_replicas": replica_count,
-            "decode_replicas": replica_count,
-            "decode_attn_replicas": replica_count,
-            "decode_ffn_replicas": replica_count,
+            "prefill_replicas": effective_replicas,
+            "decode_replicas": effective_replicas,
+            "decode_attn_replicas": effective_replicas,
+            "decode_ffn_replicas": effective_replicas,
         }
     if architecture == "pd-af-disaggregation":
         # Decode-attention is an independent role domain.  Keep it at TP=1 in
         # this matrix so the FFN EP capacity is the dimension under test.
-        role_replicas = replica_count if ep_size == 1 else min(replica_count, 2)
-        prefill_attn_tp = ep_size
+        prefill_attn_tp = moe_tp * ep_size
         decode_attn_tp = 1
+        role_replicas = min(
+            replica_count,
+            max(1, 32 // (prefill_attn_tp + decode_attn_tp + moe_tp * ep_size)),
+        )
         cards = role_replicas * (prefill_attn_tp + decode_attn_tp + ep_size)
         return cards, {
             "attn_tp": prefill_attn_tp,
@@ -168,8 +174,11 @@ def build_matrix(repo_root: Path) -> list[MatrixCase]:
             for variant_index, (distribution, workload_kind) in enumerate(VARIANTS):
                 is_moe = model_kind != "dense"
                 ep_size = (1, 2, 4)[variant_index % 3] if is_moe else 1
+                moe_tp = 2 if model_kind == "mixed" else 1
                 replica_count = (1, 2, 4)[variant_index % 3]
-                total_cards, topology = _case_cards(architecture, replica_count, ep_size)
+                total_cards, topology = _case_cards(
+                    architecture, replica_count, ep_size, moe_tp
+                )
                 if total_cards > 32:
                     raise AssertionError(
                         f"matrix topology exceeds 32 cards: {architecture} {model_kind} "
@@ -193,7 +202,7 @@ def build_matrix(repo_root: Path) -> list[MatrixCase]:
                         decode_tokens=decode_tokens,
                         num_requests=num_requests,
                         ep_size=ep_size,
-                        moe_tensor_parallel_size=1,
+                        moe_tensor_parallel_size=moe_tp,
                         total_experts=int(spec["total_experts"]),
                         router_topk=int(spec["router_topk"]),
                         replica_count=replica_count,
@@ -204,11 +213,13 @@ def build_matrix(repo_root: Path) -> list[MatrixCase]:
                         attn_tensor_parallel_size=1 if not is_moe else topology["attn_tp"],
                         prefill_attn_tensor_parallel_size=topology["prefill_attn_tp"],
                         decode_attn_tensor_parallel_size=topology["decode_attn_tp"],
-                        prefill_moe_tensor_parallel_size=1,
-                        decode_moe_tensor_parallel_size=1,
+                        prefill_moe_tensor_parallel_size=moe_tp,
+                        decode_moe_tensor_parallel_size=moe_tp,
                         prefill_moe_expert_parallel_size=ep_size,
                         decode_moe_expert_parallel_size=ep_size,
-                        total_cards=total_cards if is_moe else _case_cards(architecture, replica_count, 1)[0],
+                        total_cards=total_cards
+                        if is_moe
+                        else _case_cards(architecture, replica_count, 1, 1)[0],
                         num_layers=num_layers,
                         moe_layer_ids=moe_layer_ids,
                     )
