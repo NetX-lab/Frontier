@@ -29,6 +29,8 @@ from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
     ReplicaSchedulerRegistry,
 )
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
+    EP_WAVE,
+    FULL_STAGE_WORLD,
     StageExecutionContext,
 )
 from frontier.types import (
@@ -806,6 +808,74 @@ class BaseClusterScheduler(ABC):
         )
         context.release(ticket)
         batch.__dict__.pop("_stage_admission_ticket", None)
+
+    def transition_stage_admission_for_layer(
+        self,
+        batch: Batch,
+        *,
+        stage_id: int,
+        layer_id: int,
+        scope: str,
+        participant_ep_ids: tuple[int, ...] = (),
+    ) -> None:
+        """Switch a shared batch's active parent scope at a layer boundary.
+
+        Shared co-location/PDD execution keeps the outer batch admitted to one
+        pipeline stage, but its layer operation alternates between full-stage
+        attention/dense work and a complete local EP wave.  The active ticket is
+        replaced atomically so the stage never becomes idle between those
+        dependent operations.
+
+        Direct unit probes may call the pure layer helpers without constructing a
+        cluster scheduler.  Such probes have neither a context registry nor a
+        ticket; production schedulers always have both, and missing state there
+        is an explicit error rather than a fallback.
+        """
+
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError("stage_id must be an exact non-negative int")
+        if type(layer_id) is not int or layer_id < 0:
+            raise ValueError("layer_id must be an exact non-negative int")
+        ticket = getattr(batch, "_stage_admission_ticket", None)
+        contexts = getattr(self, "_stage_execution_contexts", None)
+        if ticket is None and contexts is None:
+            # Standalone materializer tests intentionally omit the outer DES
+            # scheduler.  They do not claim stage ownership and therefore have
+            # no scope to transition.
+            return
+        if ticket is None:
+            raise ValueError(
+                "shared layer operation is missing its stage admission ticket"
+            )
+        context = self.get_stage_execution_context(ticket.replica_id, stage_id)
+        operation_id = (
+            "shared_layer",
+            int(batch.id),
+            int(batch.schedule_epoch),
+            int(stage_id),
+            int(layer_id),
+            scope,
+        )
+        next_ticket = context.transition_active_scope(
+            ticket,
+            operation_id=operation_id,
+            scope=scope,
+            participant_ep_ids=participant_ep_ids,
+        )
+        batch._stage_admission_ticket = next_ticket
+        history = getattr(batch, "_stage_admission_scope_history", None)
+        if history is None:
+            history = []
+            batch._stage_admission_scope_history = history
+        history.append(
+            {
+                "stage_id": int(stage_id),
+                "layer_id": int(layer_id),
+                "scope": scope,
+                "admission_seq": int(next_ticket.admission_seq),
+                "participant_ep_ids": tuple(next_ticket.participant_ep_ids),
+            }
+        )
 
     def make_decode_sync_global_id(
         self,
@@ -2638,6 +2708,13 @@ class BaseClusterScheduler(ABC):
                         "Prefill EP lane post-attention time must be finite and non-negative"
                     )
                 lane_times_ms.append(lane_time_ms)
+            self.transition_stage_admission_for_layer(
+                batch,
+                stage_id=stage_id,
+                layer_id=layer_id,
+                scope=EP_WAVE,
+                participant_ep_ids=tuple(layer_workload.participant_ep_ids),
+            )
         else:
             execution_time = predictor.predict_stage_execution_time(
                 batch,
@@ -2660,6 +2737,12 @@ class BaseClusterScheduler(ABC):
                 raise ValueError(
                     "Prefill dense post-attention time must be finite and non-negative"
                 )
+            self.transition_stage_admission_for_layer(
+                batch,
+                stage_id=stage_id,
+                layer_id=layer_id,
+                scope=FULL_STAGE_WORLD,
+            )
             component_ledger = getattr(
                 batch,
                 "_prefill_model_execution_components_ms_by_stage",
@@ -2867,6 +2950,13 @@ class BaseClusterScheduler(ABC):
                     )
                 lane_times_ms.append(lane_time_ms)
                 lane_comm_times_ms.append(lane_comm_ms)
+            self.transition_stage_admission_for_layer(
+                batch,
+                stage_id=stage_id,
+                layer_id=layer_id,
+                scope=EP_WAVE,
+                participant_ep_ids=tuple(layer_workload.participant_ep_ids),
+            )
         else:
             execution_time = predictor.predict_stage_execution_time(
                 batch,
@@ -2889,6 +2979,12 @@ class BaseClusterScheduler(ABC):
                 raise ValueError(
                     "Decode dense post-attention time must be finite and non-negative"
                 )
+            self.transition_stage_admission_for_layer(
+                batch,
+                stage_id=stage_id,
+                layer_id=layer_id,
+                scope=FULL_STAGE_WORLD,
+            )
             from frontier.events.dense_layer_complete_event import (
                 DenseLayerCompleteEvent,
             )
@@ -3179,6 +3275,12 @@ class BaseClusterScheduler(ABC):
             if layer_id < num_layers - 1:
                 # Not the last layer, continue to next layer by paying next-layer attention.
                 next_layer_id = layer_id + 1
+                self.transition_stage_admission_for_layer(
+                    sample_batch,
+                    stage_id=stage_id,
+                    layer_id=next_layer_id,
+                    scope=FULL_STAGE_WORLD,
+                )
                 next_layer_execution_time = self._predictor.predict_stage_execution_time(
                     sample_batch,
                     stage_id,
@@ -3786,6 +3888,12 @@ class BaseClusterScheduler(ABC):
         next_layer_id = layer_id + 1
 
         if next_layer_id < num_layers:
+            self.transition_stage_admission_for_layer(
+                sample_batch,
+                stage_id=stage_id,
+                layer_id=next_layer_id,
+                scope=FULL_STAGE_WORLD,
+            )
             next_layer_execution_time = execution_time_predictor.predict_stage_execution_time(
                 sample_batch,
                 stage_id,

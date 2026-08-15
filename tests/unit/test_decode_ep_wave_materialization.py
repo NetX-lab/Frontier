@@ -11,6 +11,11 @@ from frontier.events.decode_sync_collective_event import DecodeSyncCollectiveEve
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
+from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
+    EP_WAVE,
+    FULL_STAGE_WORLD,
+    StageExecutionContext,
+)
 from frontier.types import ClusterType
 
 
@@ -98,6 +103,13 @@ def _scheduler() -> tuple[RoundRobinClusterScheduler, _LanePredictor, Batch]:
     batch = Batch(0, [request], [4], is_moe=True)
     batch.set_global_id(7)
     batch.time = 0.0
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2)
+    ticket = context.enqueue_full_stage(
+        operation_id=("stage_batch", batch.id, batch.schedule_epoch)
+    )
+    assert context.try_acquire(ticket) is True
+    scheduler._stage_execution_contexts = {(0, 0): context}
+    batch._stage_admission_ticket = ticket
     return scheduler, predictor, batch
 
 
@@ -121,6 +133,8 @@ def test_decode_moe_layer_uses_local_ep_wave_and_slowest_lane_barrier() -> None:
     ]
     assert batch._decode_ep_wave_lane_times_ms == (3.0, 9.0)
     assert batch._decode_ep_wave_post_moe_comm_time_s == pytest.approx(0.004)
+    assert batch._stage_admission_ticket.scope == EP_WAVE
+    assert batch._stage_admission_scope_history[-1]["participant_ep_ids"] == (0, 1)
     room = scheduler._decode_sync_waiting_room[0][0][7][2]["post_moe"]
     assert room["batches"] == {0: batch}
 
@@ -147,3 +161,4 @@ def test_decode_dense_layer_bypasses_ep_materializer(monkeypatch) -> None:
     assert isinstance(events[0], DenseLayerCompleteEvent)
     assert events[0].time == pytest.approx(0.013)
     assert predictor.calls == [(1, {})]
+    assert batch._stage_admission_ticket.scope == FULL_STAGE_WORLD

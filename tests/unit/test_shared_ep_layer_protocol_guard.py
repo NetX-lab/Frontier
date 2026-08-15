@@ -46,7 +46,7 @@ class _LayerPredictor:
         self._monolithic_routing_details = {0: {2: {0: 1.0}}}
 
     def predict_stage_execution_time(
-        self, _batch, _stage_id, cluster_type, num_layers, layer_id
+        self, _batch, _stage_id, cluster_type, num_layers, layer_id, **_kwargs
     ):
         assert num_layers == 1
         self.calls.append(layer_id)
