@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 
 from frontier.entities import Batch, EPBatchGroup, Request
@@ -10,6 +12,9 @@ from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
 )
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
+)
+from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+    BaseClusterScheduler,
 )
 from frontier.scheduler.replica_stage_scheduler.replica_stage_schduler import (
     ReplicaStageScheduler,
@@ -224,3 +229,59 @@ def test_decode_ffn_ep_batch_without_wave_ticket_fails_fast() -> None:
 
     with pytest.raises(ValueError, match="complete EP_WAVE admission ticket"):
         stage.add_batch(batch)
+
+
+def test_active_stage_scope_can_transition_between_layer_operations() -> None:
+    """A lockstep shared-domain batch must expose the current layer scope."""
+
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2)
+    attention = context.enqueue_full_stage(operation_id=("batch", 1, "attention", 0))
+    assert context.try_acquire(attention) is True
+
+    moe = context.transition_active_scope(
+        attention,
+        operation_id=("batch", 1, "moe", 0),
+        scope=EP_WAVE,
+        participant_ep_ids=(0, 1),
+    )
+    assert moe.scope == EP_WAVE
+    assert moe.admission_seq > attention.admission_seq
+    assert context.active_scope == EP_WAVE
+    assert context.active_operation_id == ("batch", 1, "moe", 0)
+
+    dense = context.enqueue_full_stage(operation_id=("batch", 2, "dense", 0))
+    assert context.try_acquire(dense) is False
+
+    dense_layer = context.transition_active_scope(
+        moe,
+        operation_id=("batch", 1, "dense", 1),
+        scope=FULL_STAGE_WORLD,
+    )
+    assert dense_layer.scope == FULL_STAGE_WORLD
+    assert context.active_scope == FULL_STAGE_WORLD
+    context.release(dense_layer)
+    assert context.try_acquire(dense) is True
+    context.release(dense)
+
+
+def test_shared_moe_stage_context_uses_replica_local_ep_size() -> None:
+    class _ProbeScheduler(BaseClusterScheduler):
+        def schedule(self):
+            return []
+
+    scheduler = object.__new__(_ProbeScheduler)
+    scheduler._cluster_type = ClusterType.PREFILL
+    scheduler._config = SimpleNamespace(
+        replica_config=SimpleNamespace(
+            model_config=SimpleNamespace(is_moe=True),
+            moe_expert_parallel_size=4,
+            num_pipeline_stages=1,
+        )
+    )
+    scheduler._cluster = SimpleNamespace(
+        replicas={0: SimpleNamespace(num_pipeline_stages=1)}
+    )
+
+    contexts = scheduler._build_stage_execution_contexts()
+
+    assert contexts[(0, 0)].ep_size == 4

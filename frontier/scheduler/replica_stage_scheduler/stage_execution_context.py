@@ -172,6 +172,56 @@ class StageExecutionContext:
             participant_ep_ids=participants,
         )
 
+    def transition_active_scope(
+        self,
+        ticket: StageAdmissionTicket,
+        *,
+        operation_id: Hashable,
+        scope: str,
+        participant_ep_ids: Iterable[int] = (),
+    ) -> StageAdmissionTicket:
+        """Replace the active layer operation without releasing the stage.
+
+        Shared co-location/PDD batches remain admitted to one pipeline stage while
+        they walk layers in lockstep.  Their attention/dense and MoE operations
+        therefore need a scope transition, not a momentary ``IDLE`` window that
+        could let another operation claim the stage.  The transition keeps the
+        parent ownership active, allocates a fresh admission sequence for the
+        dependent layer operation, and leaves unrelated ready operations queued.
+
+        This is deliberately an active-owner transition: callers must first have
+        acquired ``ticket`` and must replace their stored ticket with the returned
+        value.  It does not allow a child lane to bypass the parent FIFO or create
+        a partial EP wave.
+        """
+
+        self._validate_ticket(ticket)
+        if self._active_ticket != ticket:
+            raise ValueError(
+                "cannot transition a stage admission ticket that is not active"
+            )
+        if scope == FULL_STAGE_WORLD:
+            participants = ()
+        elif scope == EP_WAVE:
+            participants = self._normalize_participants(participant_ep_ids)
+        else:
+            raise ValueError(f"unknown stage admission scope: {scope!r}")
+
+        self._validate_operation_id(operation_id)
+        next_ticket = StageAdmissionTicket(
+            replica_id=self._replica_id,
+            stage_id=self._stage_id,
+            admission_seq=self._next_admission_seq,
+            operation_id=operation_id,
+            scope=scope,
+            participant_ep_ids=participants,
+        )
+        self._next_admission_seq += 1
+        self._operation_ids.remove(ticket.operation_id)
+        self._operation_ids.add(operation_id)
+        self._active_ticket = next_ticket
+        return next_ticket
+
     def _validate_ticket(self, ticket: StageAdmissionTicket) -> None:
         if not isinstance(ticket, StageAdmissionTicket):
             raise ValueError("stage admission requires a StageAdmissionTicket")

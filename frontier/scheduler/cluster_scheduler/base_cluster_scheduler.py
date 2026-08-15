@@ -654,7 +654,17 @@ class BaseClusterScheduler(ABC):
                 "Stage execution contexts require replica_config.model_config"
             )
         model_is_moe = bool(getattr(model_config, "is_moe", False))
-        has_local_ep_domain = self._cluster_type == ClusterType.DECODE_FFN
+        # Shared full-model roles (co-location, PDD PREFILL/DECODE) execute
+        # routed-expert work inline, while PD-AF DECODE_FFN uses explicit EP
+        # children.  All of those MoE operation paths must validate the same
+        # Replica-local participant domain.  DECODE_ATTN has no routed-expert
+        # operation and therefore keeps the dense/full-stage singleton scope.
+        has_local_ep_domain = model_is_moe and self._cluster_type in (
+            ClusterType.MONOLITHIC,
+            ClusterType.PREFILL,
+            ClusterType.DECODE,
+            ClusterType.DECODE_FFN,
+        )
         configured_ep_size = getattr(replica_config, "moe_expert_parallel_size", None)
         if model_is_moe and has_local_ep_domain:
             if type(configured_ep_size) is not int or configured_ep_size <= 0:
