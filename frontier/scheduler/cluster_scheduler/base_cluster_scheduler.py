@@ -164,6 +164,68 @@ class BaseClusterScheduler(ABC):
         )
 
     @staticmethod
+    def _log_ep_barrier_trace(
+        *,
+        cluster_type: ClusterType,
+        batch_id: int,
+        layer_id: int,
+        phase: str,
+        expected_ep_ids: Tuple[int, ...],
+        arrived_ep_ids: Tuple[int, ...],
+        max_lane_time_ms: float,
+        barrier_time_ms: float,
+        barrier_end_time_s: float,
+    ) -> None:
+        """Emit the completed per-layer EP barrier without changing timing."""
+
+        if phase not in {"dispatch", "combine"}:
+            raise ValueError(f"unsupported EP barrier phase: {phase!r}")
+        if type(batch_id) is not int or batch_id < 0:
+            raise ValueError("EP barrier batch_id must be a non-negative int")
+        if type(layer_id) is not int or layer_id < 0:
+            raise ValueError("EP barrier layer_id must be a non-negative int")
+        expected = tuple(sorted(expected_ep_ids))
+        arrived = tuple(sorted(arrived_ep_ids))
+        if not expected or arrived != expected:
+            raise ValueError(
+                "EP barrier must log the complete participant set: "
+                f"expected={expected!r}, arrived={arrived!r}"
+            )
+        for name, value in (
+            ("max_lane_time_ms", max_lane_time_ms),
+            ("barrier_time_ms", barrier_time_ms),
+            ("barrier_end_time_s", barrier_end_time_s),
+        ):
+            if not isinstance(value, Real) or isinstance(value, bool):
+                raise ValueError(f"EP barrier {name} must be a real number")
+            value = float(value)
+            if not math.isfinite(value) or value < 0:
+                raise ValueError(
+                    f"EP barrier {name} must be finite and non-negative, got {value!r}"
+                )
+        if float(barrier_time_ms) < float(max_lane_time_ms):
+            raise ValueError(
+                "EP barrier time cannot be shorter than the slowest lane: "
+                f"barrier={barrier_time_ms!r}, max_lane={max_lane_time_ms!r}"
+            )
+
+        cluster_name = getattr(cluster_type, "name", str(cluster_type))
+        logger.info(
+            "[EP-BARRIER][%s] batch_id=%d, layer_id=%d, phase=%s, "
+            "expected_ep_ids=%s, arrived_ep_ids=%s, max_lane_time_ms=%.6f, "
+            "barrier_time_ms=%.6f, barrier_end_time_s=%.6f",
+            cluster_name,
+            batch_id,
+            layer_id,
+            phase,
+            list(expected),
+            list(arrived),
+            float(max_lane_time_ms),
+            float(barrier_time_ms),
+            float(barrier_end_time_s),
+        )
+
+    @staticmethod
     def _map_source_attn_replica_to_ffn_replica(
         source_replica_ordinal: int,
         target_ffn_replica_ids: List[int] | Tuple[int, ...],
@@ -2913,6 +2975,18 @@ class BaseClusterScheduler(ABC):
         if not lane_times_ms:
             raise ValueError("Prefill layer wave produced no participant timing")
         barrier_time_ms = max(lane_times_ms)
+        barrier_end_time_s = time + barrier_time_ms * 1e-3
+        self._log_ep_barrier_trace(
+            cluster_type=self._cluster_type,
+            batch_id=int(batch.id),
+            layer_id=layer_id,
+            phase="combine",
+            expected_ep_ids=tuple(layer_workload.participant_ep_ids),
+            arrived_ep_ids=tuple(layer_workload.participant_ep_ids),
+            max_lane_time_ms=barrier_time_ms,
+            barrier_time_ms=barrier_time_ms,
+            barrier_end_time_s=barrier_end_time_s,
+        )
         component_ledger = getattr(
             batch,
             "_prefill_model_execution_components_ms_by_stage",
@@ -2941,10 +3015,10 @@ class BaseClusterScheduler(ABC):
                 f"batch_global_id={batch.global_id}"
             )
         sync_room["batches"][0] = batch
-        sync_room["arrival_times"][0] = time + barrier_time_ms * 1e-3
+        sync_room["arrival_times"][0] = barrier_end_time_s
         return [
             PrefillSyncCollectiveEvent(
-                time + barrier_time_ms * 1e-3,
+                barrier_end_time_s,
                 replica_id,
                 stage_id,
                 batch.global_id,
@@ -3164,6 +3238,18 @@ class BaseClusterScheduler(ABC):
         if not lane_times_ms:
             raise ValueError("Decode layer wave produced no participant timing")
         barrier_time_ms = max(lane_times_ms)
+        barrier_end_time_s = time + barrier_time_ms * 1e-3
+        self._log_ep_barrier_trace(
+            cluster_type=self._cluster_type,
+            batch_id=int(batch.id),
+            layer_id=layer_id,
+            phase="combine",
+            expected_ep_ids=tuple(layer_workload.participant_ep_ids),
+            arrived_ep_ids=tuple(layer_workload.participant_ep_ids),
+            max_lane_time_ms=barrier_time_ms,
+            barrier_time_ms=barrier_time_ms,
+            barrier_end_time_s=barrier_end_time_s,
+        )
         batch._decode_ep_wave_lane_times_ms = tuple(lane_times_ms)
         batch._decode_ep_wave_post_moe_comm_time_s = max(lane_comm_times_ms) * 1e-3
 
@@ -3178,10 +3264,10 @@ class BaseClusterScheduler(ABC):
                 f"batch_global_id={batch_global_id}"
             )
         sync_room["batches"][0] = batch
-        sync_room["arrival_times"][0] = time + barrier_time_ms * 1e-3
+        sync_room["arrival_times"][0] = barrier_end_time_s
         return [
             DecodeSyncCollectiveEvent(
-                time + barrier_time_ms * 1e-3,
+                barrier_end_time_s,
                 replica_id,
                 stage_id,
                 batch_global_id,

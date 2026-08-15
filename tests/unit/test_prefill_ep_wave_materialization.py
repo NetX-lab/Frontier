@@ -151,6 +151,18 @@ def test_prefill_moe_layer_materializes_global_distribution_once_and_waits_for_s
     assert "per_expert_tokens={0: 0, 1: 0}" in workload_lines[0]
     assert "lane_compute_ms=2.000000" in workload_lines[0]
     assert "lane_comm_ms=0.000000" in workload_lines[0]
+    barrier_lines = [
+        record.message
+        for record in caplog.records
+        if record.message.startswith("[EP-BARRIER]")
+    ]
+    assert len(barrier_lines) == 1
+    assert "[EP-BARRIER][PREFILL]" in barrier_lines[0]
+    assert "phase=combine" in barrier_lines[0]
+    assert "expected_ep_ids=[0, 1]" in barrier_lines[0]
+    assert "arrived_ep_ids=[0, 1]" in barrier_lines[0]
+    assert "max_lane_time_ms=7.000000" in barrier_lines[0]
+    assert "barrier_end_time_s=0.008000" in barrier_lines[0]
 
 
 def test_prefill_ep_wave_accepts_numpy_timestamp_from_non_dummy_predictor():

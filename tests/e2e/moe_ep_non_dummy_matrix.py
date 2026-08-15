@@ -101,6 +101,18 @@ _EP_WORKLOAD_LINE_RE = re.compile(
     r"lane_compute_ms=(?P<lane_compute_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
     r"lane_comm_ms=(?P<lane_comm_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*$"
 )
+_EP_BARRIER_LINE_RE = re.compile(
+    r"\[EP-BARRIER\]\[(?P<cluster>[^\]]+)\]\s+"
+    r"batch_id=(?P<batch_id>-?\d+),\s+"
+    r"layer_id=(?P<layer_id>-?\d+),\s+"
+    r"phase=(?P<phase>dispatch|combine),\s+"
+    r"expected_ep_ids=(?P<expected_ep_ids>\[[^\]]*\]),\s+"
+    r"arrived_ep_ids=(?P<arrived_ep_ids>\[[^\]]*\]),\s+"
+    r"max_lane_time_ms=(?P<max_lane_time_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"barrier_time_ms=(?P<barrier_time_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"barrier_end_time_s=(?P<barrier_end_time_s>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
+    r"\s*$"
+)
 
 
 @dataclass(frozen=True)
@@ -645,6 +657,58 @@ def _expected_ep_size_for_cluster(case: MatrixCase, cluster: str) -> int | None:
     return int(case.ep_size)
 
 
+def _parse_ep_barrier_records(text: str) -> list[dict[str, Any]]:
+    """Parse completed per-layer EP barrier records from a simulator log."""
+
+    records: list[dict[str, Any]] = []
+    for line in text.splitlines():
+        match = _EP_BARRIER_LINE_RE.search(line)
+        if match is None:
+            continue
+        groups = match.groupdict()
+        try:
+            expected_ep_ids = ast.literal_eval(groups["expected_ep_ids"])
+            arrived_ep_ids = ast.literal_eval(groups["arrived_ep_ids"])
+        except (SyntaxError, ValueError) as exc:
+            raise ValueError("invalid EP barrier participant list") from exc
+        if not isinstance(expected_ep_ids, list) or not isinstance(arrived_ep_ids, list):
+            raise ValueError("EP barrier participant lists must be lists")
+        if any(type(ep_id) is not int or ep_id < 0 for ep_id in expected_ep_ids):
+            raise ValueError("EP barrier expected_ep_ids must be non-negative ints")
+        if any(type(ep_id) is not int or ep_id < 0 for ep_id in arrived_ep_ids):
+            raise ValueError("EP barrier arrived_ep_ids must be non-negative ints")
+        if sorted(expected_ep_ids) != sorted(set(expected_ep_ids)):
+            raise ValueError("EP barrier expected_ep_ids must be unique")
+        if sorted(arrived_ep_ids) != sorted(set(arrived_ep_ids)):
+            raise ValueError("EP barrier arrived_ep_ids must be unique")
+        if sorted(expected_ep_ids) != sorted(arrived_ep_ids):
+            raise ValueError("EP barrier arrived_ep_ids must equal expected_ep_ids")
+        values = {
+            name: float(groups[name])
+            for name in ("max_lane_time_ms", "barrier_time_ms", "barrier_end_time_s")
+        }
+        if any(not math.isfinite(value) or value < 0 for value in values.values()):
+            raise ValueError("EP barrier times must be finite and non-negative")
+        if values["barrier_time_ms"] < values["max_lane_time_ms"]:
+            raise ValueError("EP barrier time is shorter than the slowest lane")
+        batch_id = int(groups["batch_id"])
+        layer_id = int(groups["layer_id"])
+        if batch_id < 0 or layer_id < 0:
+            raise ValueError("EP barrier batch_id/layer_id must be non-negative")
+        records.append(
+            {
+                "cluster": groups["cluster"],
+                "batch_id": batch_id,
+                "layer_id": layer_id,
+                "phase": groups["phase"],
+                "expected_ep_ids": [int(ep_id) for ep_id in expected_ep_ids],
+                "arrived_ep_ids": [int(ep_id) for ep_id in arrived_ep_ids],
+                **values,
+            }
+        )
+    return records
+
+
 def check_case_log(
     case: MatrixCase,
     log_path: Path,
@@ -701,6 +765,11 @@ def check_case_log(
     except ValueError as exc:
         ep_workload_records = []
         errors.append(f"invalid EP workload trace: {exc}")
+    try:
+        ep_barrier_records = _parse_ep_barrier_records(text)
+    except ValueError as exc:
+        ep_barrier_records = []
+        errors.append(f"invalid EP barrier trace: {exc}")
     if case.is_moe:
         if "moe_grouped_gemm" not in text or "moe_shuffling" not in text:
             errors.append("missing MoE grouped-gemm/shuffling trace")
@@ -753,6 +822,18 @@ def check_case_log(
                         "EP workload has no complete participant wave "
                         f"for layer={expected_layer_id}"
                     )
+            if case.architecture in {"co-location", "pd-disaggregation"}:
+                barrier_layers = {
+                    int(record["layer_id"])
+                    for record in ep_barrier_records
+                    if record["phase"] == "combine"
+                }
+                missing_barrier_layers = sorted(expected_moe_layers - barrier_layers)
+                if missing_barrier_layers:
+                    errors.append(
+                        "missing EP barrier evidence for MoE layers "
+                        f"{missing_barrier_layers}"
+                    )
         if case.architecture == "pd-af-disaggregation" and ep_participant_records == 0:
             errors.append("missing DECODE_FFN EP participant maps")
         if case.expects_zero_routed_lane and not any(
@@ -789,6 +870,7 @@ def check_case_log(
         "moe_trace_count": moe_trace_count,
         "ep_participant_records": ep_participant_records,
         "ep_workload_records": len(ep_workload_records),
+        "ep_barrier_records": len(ep_barrier_records),
         "numeric_metric_count": numeric_metric_count,
         "ttft_mean_ms": _stat_value("ttft_statistics"),
         "e2e_mean_ms": _stat_value("request_e2e_time_statistics"),

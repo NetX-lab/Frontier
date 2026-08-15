@@ -160,6 +160,18 @@ def test_decode_moe_layer_uses_local_ep_wave_and_slowest_lane_barrier(caplog) ->
     assert "ep_id=0" in workload_lines[0]
     assert "lane_compute_ms=2.000000" in workload_lines[0]
     assert "lane_comm_ms=1.000000" in workload_lines[0]
+    barrier_lines = [
+        record.message
+        for record in caplog.records
+        if record.message.startswith("[EP-BARRIER]")
+    ]
+    assert len(barrier_lines) == 1
+    assert "[EP-BARRIER][DECODE]" in barrier_lines[0]
+    assert "phase=combine" in barrier_lines[0]
+    assert "expected_ep_ids=[0, 1]" in barrier_lines[0]
+    assert "arrived_ep_ids=[0, 1]" in barrier_lines[0]
+    assert "max_lane_time_ms=5.000000" in barrier_lines[0]
+    assert "barrier_end_time_s=0.015000" in barrier_lines[0]
 
 
 def test_decode_dense_layer_bypasses_ep_materializer(monkeypatch) -> None:
