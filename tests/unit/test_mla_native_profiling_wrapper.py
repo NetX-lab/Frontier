@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import torch
 
 from frontier.attention.families import LATENT_MLA_ATTENTION_FAMILY
 from frontier.profiling.attention.attention_input import AttentionInput
@@ -130,6 +131,10 @@ def _construct_attention_wrapper(
         parallel_config=ParallelConfig(pipeline_parallel_size=1, tensor_parallel_size=8),
         max_num_blocks=max_num_blocks,
         max_model_len=4096,
+        # Keep the fake cache allocation physically sufficient for this
+        # shape-focused unit fixture; production profiling derives this from
+        # the requested profile_max_seq_len.
+        profile_max_seq_len=256,
         block_size=64,
         attention_backend="FLASHINFER",
         dtype="bfloat16",
@@ -202,7 +207,7 @@ def test_attention_wrapper_allows_mla_only_for_explicit_mla_capable_backend(
     assert fake_backend.init_args is not None
     assert fake_backend.cache_kwargs == {
         "num_blocks": 4,
-        "dtype": "bfloat16",
+        "dtype": torch.bfloat16,
         "device": "cuda",
     }
 
@@ -230,7 +235,7 @@ def test_attention_wrapper_uses_mla_qk_dim_for_query_and_latent_kv_cache(
 
     assert fake_backend.cache_kwargs == {
         "num_blocks": 4,
-        "dtype": "bfloat16",
+        "dtype": torch.bfloat16,
         "device": "cuda",
     }
     assert wrapper._head_dim == 576
@@ -245,7 +250,7 @@ def test_attention_wrapper_uses_mla_qk_dim_for_query_and_latent_kv_cache(
     assert query["shape"] == (32, 16 * 192)
     assert key["shape"] == (32, 1 * 512)
     assert value["shape"] == (32, 1 * 64)
-    assert kv_cache == ("cache", 4, {"dtype": "bfloat16", "device": "cuda"})
+    assert kv_cache == ("cache", 4, {"dtype": torch.bfloat16, "device": "cuda"})
     assert len(seq_metadata_list) == 2
 
 

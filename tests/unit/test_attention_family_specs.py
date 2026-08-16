@@ -35,6 +35,11 @@ from frontier.attention.profiling_mapping import (
     validate_attention_catalog_alignment,
 )
 from frontier.training.attention_trainer import AttentionTrainer
+from frontier.attention.training_partition import (
+    DENSE_MIXED_PREFILL_FEATURES,
+    build_dense_mixed_prefill_training_rows,
+    partition_dense_attention_rows,
+)
 from frontier.metrics.constants import OperationMetrics as E2EOperationMetrics
 from frontier.profiling.common.constants import (
     OperationMetrics as ProfilingOperationMetrics,
@@ -254,6 +259,12 @@ def test_dense_enabled_predictor_feature_columns_come_from_family_spec() -> None
         "attn_prefill": ("kv_cache_size", "prefill_chunk_size_squared"),
         "attn_decode": ("batch_size", "kv_cache_size"),
     }
+
+
+def test_dense_shared_predictor_cache_write_schema_is_runtime_compatible() -> None:
+    assert get_enabled_shared_predictor_feature_columns(DENSE_ATTENTION_FAMILY)[
+        "attn_kv_cache_save"
+    ] == ("total_tokens", "kv_cache_size", "batch_size")
 
 
 def test_dense_predictor_feature_columns_use_roles_not_operator_names() -> None:
@@ -655,10 +666,94 @@ def test_attention_trainer_loader_fills_role_derived_cache_column(
 def test_attention_trainer_dense_layer_features_follow_family_catalog() -> None:
     trainer = AttentionTrainer.__new__(AttentionTrainer)
 
-    feature_columns = get_enabled_predictor_feature_columns(DENSE_ATTENTION_FAMILY)
+    feature_columns = get_enabled_shared_predictor_feature_columns(DENSE_ATTENTION_FAMILY)
 
     for model_name, expected_columns in feature_columns.items():
         assert tuple(trainer._get_feature_cols(model_name)) == expected_columns
+
+
+def test_attention_trainer_dense_layer_features_match_e2e_shared_schema() -> None:
+    trainer = AttentionTrainer.__new__(AttentionTrainer)
+
+    assert {
+        name: tuple(trainer._get_feature_cols(name))
+        for name in get_enabled_shared_predictor_feature_columns(
+            DENSE_ATTENTION_FAMILY
+        )
+    } == get_enabled_shared_predictor_feature_columns(DENSE_ATTENTION_FAMILY)
+
+
+def test_dense_attention_training_partition_is_shared_by_standalone_and_e2e() -> None:
+    frame = pd.DataFrame(
+        {
+            "is_decode": [False, False, True, False],
+            "is_mixed_batch": [False, True, False, False],
+            "is_true_mixed_batch": [False, False, False, True],
+            "batch_size": [1, 2, 1, 2],
+            "prefill_chunk_size": [8, 8, 0, 8],
+        }
+    )
+
+    partitions = partition_dense_attention_rows(frame)
+
+    assert len(partitions["all"]) == 4
+    assert len(partitions["standard"]) == 2
+    assert len(partitions["mixed_prefill"]) == 1
+    assert len(partitions["true_mixed"]) == 1
+    assert len(partitions["prefill"]) == 1
+    assert len(partitions["decode"]) == 1
+
+
+def test_dense_mixed_prefill_training_rows_include_true_mixed_prefill_overlay() -> None:
+    frame = pd.DataFrame(
+        [
+            {
+                "is_decode": False,
+                "is_mixed_batch": True,
+                "is_true_mixed_batch": False,
+                "batch_size": 2,
+                "prefill_chunk_size": 8,
+                "kv_cache_size": 64,
+                "total_tokens": 12,
+                "avg_seq_len": 6.0,
+                "min_seq_len": 4,
+                "max_seq_len": 8,
+                "total_tokens_squared": 144,
+                "seq_len_variance": 4.0,
+                "seq_len_cv": 1 / 3,
+                "seq_len_range": 4,
+                "batch_variance_interaction": 8.0,
+                "batch_cv_interaction": 2 / 3,
+                "time_stats.attn_prefill.median": 0.2,
+            },
+            {
+                "is_decode": False,
+                "is_mixed_batch": False,
+                "is_true_mixed_batch": True,
+                "batch_size": 3,
+                "prefill_chunk_size": 0,
+                "prefill_seq_lens": "[8, 12]",
+                "prefill_kv_cache_sizes": "[128, 256]",
+                "time_stats.attn_prefill.median": 0.3,
+            },
+        ]
+    )
+    partitions = partition_dense_attention_rows(frame)
+
+    mixed = build_dense_mixed_prefill_training_rows(
+        partitions,
+        kv_cache_prediction_granularity=64,
+        target_col="time_stats.attn_prefill.median",
+    )
+
+    assert len(mixed) == 2
+    true_mixed = mixed[mixed["is_true_mixed_batch"]].iloc[0]
+    assert true_mixed["batch_size"] == 2
+    assert true_mixed["kv_cache_size"] == 192
+    assert true_mixed["total_tokens"] == 20
+    assert true_mixed["avg_seq_len"] == 10.0
+    assert true_mixed["seq_len_range"] == 4
+    assert true_mixed[list(DENSE_MIXED_PREFILL_FEATURES)].notna().all()
 
 
 def test_attention_trainer_dense_layer_features_return_fresh_lists() -> None:

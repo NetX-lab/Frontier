@@ -17,7 +17,11 @@ from pathlib import Path
 from frontier.logger import init_logger
 from frontier.training.moe_trainer import MoETrainer, create_moe_trainer_from_model_config
 from frontier.training.linear_op_trainer import LinearOpTrainer, create_linear_op_trainer_from_model_config
-from frontier.training.attention_trainer import AttentionTrainer, create_attention_trainer_from_model_config
+from frontier.training.attention_trainer import (
+    AttentionTrainer,
+    create_attention_trainer_from_model_config,
+    validate_kv_cache_prediction_granularity,
+)
 from frontier.types import MeasurementType
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
@@ -26,6 +30,10 @@ from frontier.moe_gating_runtime import (
 from frontier.moe_routing_runtime import (
     STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH,
     UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH,
+)
+from frontier.profiling.common.parallel_config import (
+    validate_prediction_min_kv_cache_size,
+    validate_profile_tp_sizes,
 )
 
 logger = init_logger(__name__)
@@ -381,6 +389,21 @@ Examples:
         default=16,
         help="Block size for KV cache (default: 16)"
     )
+    attention_parser.add_argument(
+        "--kv_cache_prediction_granularity",
+        type=int,
+        default=64,
+        help="KV-cache feature granularity (default: 64)",
+    )
+    attention_parser.add_argument(
+        "--prediction_min_kv_cache_size",
+        type=int,
+        default=0,
+        help=(
+            "Explicit lower bound for the finite attention KV prediction grid "
+            "(default: 0; must be covered by the profiling domain)"
+        ),
+    )
 
     # Predictor configuration
     attention_parser.add_argument(
@@ -428,7 +451,29 @@ Examples:
         help="Min samples split for Random Forest (default: [2, 5, 10])"
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    # Standalone training consumes the same profile-backed compute datasets as
+    # the GPU profiling entrypoints.  Reject unsupported TP values immediately,
+    # before dataset loading or estimator construction.
+    if args.structure in {"linear_op", "mlp"}:
+        validate_profile_tp_sizes(
+            [getattr(args, "tensor_parallel_size", 1)],
+            argument_name="tensor_parallel_size",
+        )
+    elif args.structure == "attention":
+        validate_profile_tp_sizes(
+            [args.tensor_parallel_size], argument_name="tensor_parallel_size"
+        )
+        validate_kv_cache_prediction_granularity(
+            args.kv_cache_prediction_granularity
+        )
+        validate_prediction_min_kv_cache_size(args.prediction_min_kv_cache_size)
+    elif args.structure == "moe":
+        validate_profile_tp_sizes(
+            [args.moe_tensor_parallel_size],
+            argument_name="moe_tensor_parallel_size",
+        )
+    return args
 
 
 def train_moe(args):
@@ -601,6 +646,10 @@ def train_attention(args):
         "num_estimators": args.num_estimators,
         "max_depth": args.max_depth,
         "min_samples_split": args.min_samples_split,
+        "kv_cache_prediction_granularity": args.kv_cache_prediction_granularity,
+        "prediction_min_kv_cache_size": getattr(
+            args, "prediction_min_kv_cache_size", 0
+        ),
     }
 
     # Create trainer using model configuration

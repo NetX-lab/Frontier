@@ -12,6 +12,7 @@ import pandas as pd
 
 from frontier.training.base_trainer import BaseTrainer
 from frontier.logger import init_logger
+from frontier.profiling.common.parallel_config import validate_profile_tp_sizes
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
     PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
@@ -159,6 +160,10 @@ class MoETrainer(BaseTrainer):
             device: Device SKU (optional, for consistency with other trainers)
             **kwargs: Additional configuration parameters
         """
+        validate_profile_tp_sizes(
+            [moe_tensor_parallel_size],
+            argument_name="moe_tensor_parallel_size",
+        )
         super().__init__(dataset_path, output_dir, predictor_type, **kwargs)
 
         # MoE-specific configuration
@@ -559,6 +564,11 @@ def create_moe_trainer_from_model_config(
         Configured MoETrainer instance
     """
     from frontier.config.model_config import BaseModelConfig
+
+    validate_profile_tp_sizes(
+        [moe_tensor_parallel_size],
+        argument_name="moe_tensor_parallel_size",
+    )
 
     # Load model configuration
     model_config = BaseModelConfig.create_from_name(model_name)

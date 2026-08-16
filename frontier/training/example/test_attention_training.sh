@@ -206,7 +206,7 @@ else:
 
 # Verify feature columns for different model types
 test_cases = [
-    ("attn_kv_cache_save", ["num_tokens"]),
+    ("attn_kv_cache_save", ["total_tokens", "kv_cache_size", "batch_size"]),
     ("attn_prefill", ["kv_cache_size", "prefill_chunk_size_squared"]),
     ("attn_decode", ["batch_size", "kv_cache_size"]),
 ]

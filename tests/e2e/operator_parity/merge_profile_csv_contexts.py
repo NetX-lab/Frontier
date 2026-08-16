@@ -6,7 +6,36 @@ import argparse
 import csv
 import json
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable, Mapping
+
+from frontier.profiling.attention.provenance import (
+    publish_attention_merge,
+    validate_attention_run_sidecar,
+)
+
+
+_ATTENTION_ALIASES = {
+    "attention.csv": "attention_combined.csv",
+    "attention_kernel_only.csv": "attention_combined_kernel_only.csv",
+}
+_ATTENTION_MEASUREMENT_TYPES = {
+    "attention.csv": "CUDA_EVENT",
+    "attention_kernel_only.csv": "KERNEL_ONLY",
+}
+_ATTENTION_OUTPUT_ONLY_FILENAMES = frozenset(_ATTENTION_ALIASES.values())
+_ATTENTION_PARTITION_FILENAMES = frozenset(
+    {
+        "attention_mixed.csv",
+        "attention_mixed_kernel_only.csv",
+        "attention_true_mixed.csv",
+        "attention_true_mixed_kernel_only.csv",
+    }
+)
+_ATTENTION_BOUND_PATH_FIELDS = (
+    "artifact_csv",
+    "source_run_csv",
+    "source_run_sidecar",
+)
 
 
 def _read_csv(path: Path) -> tuple[list[str], list[dict[str, str]]]:
@@ -133,6 +162,129 @@ def merge_profile_csvs(
     }
 
 
+def _validate_csv_filename(filename: str) -> str:
+    if (
+        not isinstance(filename, str)
+        or not filename
+        or Path(filename).name != filename
+        or Path(filename).suffix != ".csv"
+    ):
+        raise ValueError(
+            "--filenames entries must be plain CSV basenames without directories: "
+            f"{filename!r}."
+        )
+    if filename in _ATTENTION_OUTPUT_ONLY_FILENAMES:
+        raise ValueError(
+            "Attention compatibility aliases are output-only and cannot be merged "
+            f"as inputs: {filename!r}."
+        )
+    if filename in _ATTENTION_PARTITION_FILENAMES:
+        raise ValueError(
+            "Attention partition CSVs cannot use the generic merge surface. "
+            "Map the partition into attention.csv or attention_kernel_only.csv "
+            f"and publish it with run sidecars: {filename!r}."
+        )
+    return filename
+
+
+def _load_attention_source_payload(
+    *,
+    csv_path: Path,
+    sidecar_path: Path,
+    expected_model: str,
+    expected_measurement_type: str,
+    label: str,
+) -> dict[str, Any]:
+    validate_attention_run_sidecar(
+        csv_path=csv_path,
+        sidecar_path=sidecar_path,
+    )
+    try:
+        payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(
+            f"Invalid attention {label} run sidecar: {sidecar_path}"
+        ) from exc
+    if not isinstance(payload, Mapping):
+        raise ValueError(
+            f"Attention {label} run sidecar must contain a JSON object: "
+            f"{sidecar_path}."
+        )
+    if payload.get("model") != expected_model:
+        raise ValueError(
+            f"Attention {label} source model identity mismatch: "
+            f"expected={expected_model!r}, actual={payload.get('model')!r}."
+        )
+    if payload.get("measurement_type") != expected_measurement_type:
+        raise ValueError(
+            f"Attention {label} source measurement family mismatch: "
+            f"expected={expected_measurement_type!r}, "
+            f"actual={payload.get('measurement_type')!r}."
+        )
+    if payload.get("is_native_profile_allocation", True) is not True:
+        raise ValueError(
+            f"Attention {label} source requires native allocation provenance."
+        )
+    return dict(payload)
+
+
+def _attention_bound_artifact_paths(payload: Mapping[str, Any]) -> set[Path]:
+    paths: set[Path] = set()
+    for field in _ATTENTION_BOUND_PATH_FIELDS:
+        value = payload.get(field)
+        if value is None:
+            continue
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(
+                f"Attention provenance field {field!r} must be a non-empty path."
+            )
+        paths.add(Path(value))
+    return paths
+
+
+def _validate_json_out_path(
+    *,
+    json_out: Path | None,
+    artifact_paths: Iterable[Path],
+    directory_paths: Iterable[Path] = (),
+) -> None:
+    if json_out is None:
+        return
+    resolved_json_out = json_out.resolve()
+    if json_out.exists() and json_out.is_dir():
+        raise ValueError(
+            f"--json-out must be a file path, not a directory: {json_out}."
+        )
+    artifact_collisions = {
+        path.resolve()
+        for path in artifact_paths
+        if path is not None
+    }
+    reserved_directories = {
+        path.resolve()
+        for path in directory_paths
+        if path is not None
+    }
+    if (
+        any(
+            resolved_json_out == artifact
+            or resolved_json_out in artifact.parents
+            or artifact in resolved_json_out.parents
+            for artifact in artifact_collisions
+        )
+        or any(
+            resolved_json_out == directory
+            or resolved_json_out in directory.parents
+            or directory in resolved_json_out.parents
+            for directory in reserved_directories
+        )
+    ):
+        raise ValueError(
+            "--json-out must not overwrite a merge source, source sidecar, "
+            f"publication artifact, or publication directory: {json_out}."
+        )
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -172,12 +324,31 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="Explicitly allow writing merged CSVs back into --canonical-root.",
     )
+    parser.add_argument(
+        "--canonical-sidecar",
+        type=Path,
+        default=None,
+        help=(
+            "Run sidecar for the canonical attention source. Attention publication "
+            "accepts exactly one model/file per invocation."
+        ),
+    )
+    parser.add_argument(
+        "--supplement-sidecar",
+        type=Path,
+        default=None,
+        help=(
+            "Run sidecar for the supplement attention source. Attention publication "
+            "accepts exactly one model/file per invocation."
+        ),
+    )
     parser.add_argument("--json-out", type=Path, default=None)
     return parser.parse_args()
 
 
 def main() -> int:
     args = _parse_args()
+    filenames = tuple(_validate_csv_filename(name) for name in args.filenames)
     if args.output_root is None and not args.allow_in_place:
         raise ValueError(
             "Refusing in-place merge without --allow-in-place. "
@@ -185,10 +356,44 @@ def main() -> int:
         )
     if args.output_root is not None and args.allow_in_place:
         raise ValueError("Use either --output-root or --allow-in-place, not both.")
+    attention_filenames = [
+        filename for filename in filenames if filename in _ATTENTION_ALIASES
+    ]
+    has_any_sidecar = (
+        args.canonical_sidecar is not None or args.supplement_sidecar is not None
+    )
+    if attention_filenames and not has_any_sidecar:
+        raise ValueError(
+            "Attention merge publication requires --canonical-sidecar and "
+            "--supplement-sidecar."
+        )
+    if has_any_sidecar:
+        if args.canonical_sidecar is None or args.supplement_sidecar is None:
+            raise ValueError(
+                "Use --canonical-sidecar and --supplement-sidecar together."
+            )
+        if (
+            len(args.models) != 1
+            or len(filenames) != 1
+            or filenames[0] not in _ATTENTION_ALIASES
+        ):
+            raise ValueError(
+                "Attention sidecar publication accepts exactly one model and one "
+                "attention filename per invocation."
+            )
+        if args.output_root is None or args.allow_in_place:
+            raise ValueError(
+                "Attention sidecar publication requires --output-root and does not "
+                "allow in-place source replacement."
+            )
 
-    reports: list[dict[str, object]] = []
+    plans: list[dict[str, Any]] = []
+    artifact_paths: list[Path] = []
+    publication_directories: list[Path] = []
+    if args.output_root is not None:
+        publication_directories.append(args.output_root)
     for model in args.models:
-        for filename in args.filenames:
+        for filename in filenames:
             canonical_csv = args.canonical_root / model / filename
             supplement_csv = args.supplement_root / model / filename
             output_csv = (
@@ -201,6 +406,101 @@ def main() -> int:
                     "Refusing in-place merge without --allow-in-place. "
                     "Pass --output-root for a safe non-mutating merge."
                 )
+            plan: dict[str, Any] = {
+                "model": model,
+                "filename": filename,
+                "canonical_csv": canonical_csv,
+                "supplement_csv": supplement_csv,
+                "output_csv": output_csv,
+            }
+            artifact_paths.extend((canonical_csv, supplement_csv, output_csv))
+            publication_directories.append(output_csv.parent)
+            if filename in _ATTENTION_ALIASES:
+                expected_measurement_type = _ATTENTION_MEASUREMENT_TYPES[filename]
+                alias_csv = output_csv.with_name(_ATTENTION_ALIASES[filename])
+                sidecar_path = output_csv.with_name(
+                    f"{Path(filename).stem}.merge_provenance.json"
+                )
+                canonical_sidecar = Path(args.canonical_sidecar)
+                supplement_sidecar = Path(args.supplement_sidecar)
+                canonical_payload = _load_attention_source_payload(
+                    csv_path=canonical_csv,
+                    sidecar_path=canonical_sidecar,
+                    expected_model=model,
+                    expected_measurement_type=expected_measurement_type,
+                    label="canonical",
+                )
+                supplement_payload = _load_attention_source_payload(
+                    csv_path=supplement_csv,
+                    sidecar_path=supplement_sidecar,
+                    expected_model=model,
+                    expected_measurement_type=expected_measurement_type,
+                    label="supplement",
+                )
+                plan.update(
+                    {
+                        "alias_csv": alias_csv,
+                        "sidecar_path": sidecar_path,
+                        "canonical_sidecar": canonical_sidecar,
+                        "supplement_sidecar": supplement_sidecar,
+                    }
+                )
+                artifact_paths.extend(
+                    (
+                        canonical_sidecar,
+                        supplement_sidecar,
+                        alias_csv,
+                        sidecar_path,
+                        *_attention_bound_artifact_paths(canonical_payload),
+                        *_attention_bound_artifact_paths(supplement_payload),
+                    )
+                )
+            plans.append(plan)
+
+    _validate_json_out_path(
+        json_out=args.json_out,
+        artifact_paths=artifact_paths,
+        directory_paths=publication_directories,
+    )
+
+    reports: list[dict[str, object]] = []
+    for plan in plans:
+        filename = str(plan["filename"])
+        canonical_csv = Path(plan["canonical_csv"])
+        supplement_csv = Path(plan["supplement_csv"])
+        output_csv = Path(plan["output_csv"])
+        if filename in _ATTENTION_ALIASES:
+            alias_csv = Path(plan["alias_csv"])
+            sidecar_path = Path(plan["sidecar_path"])
+            published = publish_attention_merge(
+                output_csv=output_csv,
+                alias_csv=alias_csv,
+                sidecar_path=sidecar_path,
+                sources=[
+                    {
+                        "label": "base",
+                        "csv_path": canonical_csv,
+                        "sidecar_path": plan["canonical_sidecar"],
+                    },
+                    {
+                        "label": "supplement",
+                        "csv_path": supplement_csv,
+                        "sidecar_path": plan["supplement_sidecar"],
+                    },
+                ],
+            )
+            report = dict(published["report"])
+            report.update(
+                {
+                    "canonical_csv": str(canonical_csv),
+                    "supplement_csv": str(supplement_csv),
+                    "output_csv": str(published["canonical"]),
+                    "alias_csv": str(published["alias"]),
+                    "sidecar_path": str(published["sidecar"]),
+                }
+            )
+            reports.append(report)
+        else:
             reports.append(
                 merge_profile_csvs(
                     canonical_csv=canonical_csv,

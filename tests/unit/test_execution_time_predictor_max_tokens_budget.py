@@ -218,7 +218,45 @@ def test_prefill_max_tokens_covers_prediction_prefill_chunk_size(tmp_path: Path)
     assert predictor._max_tokens >= predictor_config.prediction_max_prefill_chunk_size
 
 
-def test_decode_attention_prediction_grid_covers_model_context_length() -> None:
+def test_diagnostics_disabled_does_not_allocate_aggregate_state(tmp_path: Path) -> None:
+    from frontier.config import (
+        MetricsConfig,
+        RandomForrestExecutionTimePredictorConfig,
+        ReplicaConfig,
+        VllmV1SchedulerConfig,
+    )
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+    from frontier.types import ClusterType
+
+    class _DummyPredictorImpl(SklearnExecutionTimePredictor):
+        def _get_grid_search_params(self):
+            return {}
+
+        def _get_estimator(self):
+            raise RuntimeError("Not used in dummy mode")
+
+    predictor = _DummyPredictorImpl(
+        predictor_config=RandomForrestExecutionTimePredictorConfig(
+            enable_dummy_mode=True,
+            enable_prediction_domain_diagnostics=False,
+        ),
+        replica_config=ReplicaConfig(
+            model_name="llama2_7b_dense_example",
+            device="a800",
+            network_device="a100_pairwise_nvlink",
+            attn_tensor_parallel_size=1,
+        ),
+        replica_scheduler_config=VllmV1SchedulerConfig(max_tokens_in_batch=4096),
+        metrics_config=MetricsConfig(output_dir=str(tmp_path / "sim_out")),
+        cluster_type=ClusterType.MONOLITHIC,
+    )
+
+    assert not hasattr(predictor, "_prediction_domain_diagnostics")
+
+
+def test_decode_attention_prediction_grid_does_not_expand_to_architecture_cap() -> None:
     from frontier.config import RandomForrestExecutionTimePredictorConfig
     from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
         SklearnExecutionTimePredictor,
@@ -237,6 +275,7 @@ def test_decode_attention_prediction_grid_covers_model_context_length() -> None:
     predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
     predictor._model_config = _dense_model_config()
     predictor._model_config.max_position_embeddings = 16384
+    predictor._serving_max_tokens_per_request = 4096
     predictor._config = RandomForrestExecutionTimePredictorConfig(
         prediction_max_batch_size=1,
         prediction_max_tokens_per_request=4096,
@@ -254,7 +293,152 @@ def test_decode_attention_prediction_grid_covers_model_context_length() -> None:
 
     predictor._predict_for_attention_layer_models()
 
-    assert observed_max_kv_cache_size == [16384]
+    assert observed_max_kv_cache_size == [4096]
+
+
+def test_attention_prediction_grid_honors_explicit_measured_kv_start() -> None:
+    from frontier.config import RandomForrestExecutionTimePredictorConfig
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+    from frontier.types import ClusterType, MeasurementType
+
+    class _DummyPredictorImpl(SklearnExecutionTimePredictor):
+        def _get_grid_search_params(self):
+            return {}
+
+        def _get_estimator(self):
+            raise RuntimeError("Not used in this unit test")
+
+    predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
+    predictor._cluster_type = ClusterType.DECODE_ATTN
+    predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
+    predictor._model_config = _dense_model_config()
+    predictor._serving_max_tokens_per_request = 64
+    predictor._config = RandomForrestExecutionTimePredictorConfig(
+        prediction_max_batch_size=1,
+        prediction_max_tokens_per_request=64,
+        prediction_min_kv_cache_size=1,
+        kv_cache_prediction_granularity=1,
+    )
+    predictor._models = {"attn_decode": object()}
+    observed_min_kv_cache_size: list[int] = []
+
+    def _capture_prediction(_name: str, _model: object, features: pd.DataFrame):
+        observed_min_kv_cache_size.append(int(features["kv_cache_size"].min()))
+        return {}
+
+    predictor._get_model_prediction = _capture_prediction  # type: ignore[method-assign]
+    predictor._predict_for_attention_layer_models()
+    assert observed_min_kv_cache_size == [1]
+
+
+def test_attention_prediction_grid_rejects_negative_measured_kv_start() -> None:
+    from frontier.config import RandomForrestExecutionTimePredictorConfig
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+
+    class _DummyPredictorImpl(SklearnExecutionTimePredictor):
+        def _get_grid_search_params(self):
+            return {}
+
+        def _get_estimator(self):
+            raise RuntimeError("Not used in this unit test")
+
+    with pytest.raises(ValueError, match="prediction_min_kv_cache_size"):
+        RandomForrestExecutionTimePredictorConfig(prediction_min_kv_cache_size=-1)
+
+
+def test_attention_prediction_limit_rejects_serving_range_larger_than_materialization() -> None:
+    from frontier.config import RandomForrestExecutionTimePredictorConfig
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+
+    class _DummyPredictorImpl(SklearnExecutionTimePredictor):
+        def _get_grid_search_params(self):
+            return {}
+
+        def _get_estimator(self):
+            raise RuntimeError("Not used in this unit test")
+
+    predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
+    predictor._config = RandomForrestExecutionTimePredictorConfig(
+        prediction_max_tokens_per_request=128,
+        kv_cache_prediction_granularity=64,
+    )
+    predictor._model_config = _dense_model_config()
+    predictor._model_config.max_position_embeddings = 40960
+    predictor._serving_max_tokens_per_request = 129
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"serving_max_tokens_per_request=129.*"
+            r"prediction_max_tokens_per_request=128"
+        ),
+    ):
+        predictor._get_attention_prediction_max_tokens_per_request()
+
+
+def test_attention_prediction_limit_rejects_serving_range_over_architecture_cap() -> None:
+    from frontier.config import RandomForrestExecutionTimePredictorConfig
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+
+    class _DummyPredictorImpl(SklearnExecutionTimePredictor):
+        def _get_grid_search_params(self):
+            return {}
+
+        def _get_estimator(self):
+            raise RuntimeError("Not used in this unit test")
+
+    predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
+    predictor._config = RandomForrestExecutionTimePredictorConfig(
+        prediction_max_tokens_per_request=256,
+        kv_cache_prediction_granularity=64,
+    )
+    predictor._model_config = _dense_model_config()
+    predictor._model_config.max_position_embeddings = 128
+    predictor._serving_max_tokens_per_request = 129
+
+    with pytest.raises(
+        ValueError,
+        match=r"serving_max_tokens_per_request=129.*architecture_cap=128",
+    ):
+        predictor._get_attention_prediction_max_tokens_per_request()
+
+
+def test_execution_time_predictor_registry_forwards_explicit_serving_limit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import frontier.execution_time_predictor.execution_time_predictor_registry as registry_module
+
+    captured: dict[str, object] = {}
+
+    def _fake_predictor(*_args, **kwargs):
+        captured.update(kwargs)
+        return "predictor"
+
+    monkeypatch.setattr(
+        registry_module,
+        "SklearnExecutionTimePredictor",
+        _fake_predictor,
+    )
+
+    result = registry_module.ExecutionTimePredictorRegistry.get(
+        predictor_type="sklearn",
+        predictor_config=SimpleNamespace(),
+        replica_config=SimpleNamespace(),
+        replica_scheduler_config=SimpleNamespace(),
+        metrics_config=SimpleNamespace(),
+        serving_max_tokens_per_request=128,
+    )
+
+    assert result == "predictor"
+    assert captured["serving_max_tokens_per_request"] == 128
 
 
 def test_decode_attention_context_includes_unprocessed_handoff_token() -> None:
@@ -341,6 +525,7 @@ def test_attention_layer_training_includes_mixed_prefill_model_when_features_exi
     predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
     predictor._attention_input_file = "unused.csv"
     predictor._model_config = _dense_model_config()
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=64)
 
     predictor._load_attention_df = lambda _path: pd.DataFrame(  # type: ignore[attr-defined]
         {
@@ -406,6 +591,7 @@ def test_attention_layer_training_honors_is_prefill_for_mixed_rows() -> None:
     predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
     predictor._attention_input_file = "unused.csv"
     predictor._model_config = _dense_model_config()
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=64)
 
     predictor._load_attention_df = lambda _path: pd.DataFrame(  # type: ignore[attr-defined]
         {
@@ -460,6 +646,7 @@ def test_attention_layer_training_includes_decode_in_mixed_model_when_true_mixed
     predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
     predictor._attention_input_file = "unused.csv"
     predictor._model_config = _dense_model_config()
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=64)
 
     predictor._load_attention_df = lambda _path: pd.DataFrame(  # type: ignore[attr-defined]
         {
@@ -665,6 +852,22 @@ def test_prefill_mixed_on_demand_prediction_uses_model_feature_names() -> None:
             "m_feature",
         ],
     )
+    from frontier.execution_time_predictor.prediction_cache_contract import (
+        attach_feature_domain,
+    )
+
+    attach_feature_domain(
+        model,
+        pd.DataFrame(
+            {
+                "z_feature": [1.0, 2.0],
+                "a_feature": [1.0, 2.0],
+                "m_feature": [1.0, 2.0],
+            }
+        ),
+        model._frontier_feature_names,
+        operator_name="attn_prefill_mixed",
+    )
 
     predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
     predictor._cluster_type = ClusterType.MONOLITHIC
@@ -711,6 +914,11 @@ def test_on_demand_prediction_uses_dataframe_feature_names() -> None:
     )
     model = RandomForestRegressor(n_estimators=1, random_state=0)
     model.fit(training_df, [0.1, 0.2])
+    from frontier.execution_time_predictor.prediction_cache_contract import (
+        attach_feature_domain,
+    )
+
+    attach_feature_domain(model, training_df, feature_names)
 
     predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
     predictor._active_measurement_type = None

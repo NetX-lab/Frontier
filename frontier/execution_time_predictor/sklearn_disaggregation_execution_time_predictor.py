@@ -78,6 +78,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         training_file_paths: Dict[str, str] = None,
         actual_replica_ids: Optional[list] = None,
         cc_backend: Optional["BaseCCBackend"] = None,
+        serving_max_tokens_per_request: Optional[int] = None,
     ) -> None:
         # We still call super() with one of the configs to set up the basic models.
         # The prefill config is a good representative as it's a full model.
@@ -90,6 +91,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             cluster_type,
             training_file_paths,
             cc_backend,
+            serving_max_tokens_per_request,
         )
 
         assert (

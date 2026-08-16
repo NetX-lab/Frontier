@@ -9,6 +9,8 @@ from typing import List, Optional
 from dataclasses import dataclass
 import numpy as np
 
+from frontier.profiling.attention.attention_input import required_blocks_for_lengths
+
 
 @dataclass
 class MixedAttentionInput:
@@ -150,18 +152,28 @@ class MixedAttentionInput:
         
         return True
     
-    def is_under_memory_limit(self, max_num_tokens: int) -> bool:
-        """
-        Check if this input fits within memory constraints.
-        
-        Args:
-            max_num_tokens: Maximum total tokens (including KV cache).
-        
-        Returns:
-            True if within limits, False otherwise.
-        """
-        total_with_cache = self.total_tokens + self.batch_size * self.kv_cache_size
-        return total_with_cache <= max_num_tokens
+    def required_blocks(self, *, block_size: int) -> int:
+        """Return total physical KV blocks for independently paged sequences."""
+
+        sequence_lengths = [
+            seq_len + self.kv_cache_size for seq_len in self.seq_lens
+        ]
+        return required_blocks_for_lengths(sequence_lengths, block_size=block_size)
+
+    def is_under_memory_limit(self, max_num_blocks: int, *, block_size: int) -> bool:
+        """Return whether all mixed sequences fit the available KV blocks."""
+
+        if isinstance(max_num_blocks, bool) or not isinstance(max_num_blocks, int):
+            raise ValueError(
+                "max_num_blocks must be a non-negative integer, "
+                f"got {max_num_blocks!r}."
+            )
+        if max_num_blocks < 0:
+            raise ValueError(
+                "max_num_blocks must be a non-negative integer, "
+                f"got {max_num_blocks!r}."
+            )
+        return self.required_blocks(block_size=block_size) <= max_num_blocks
     
     def __str__(self) -> str:
         """Human-readable string representation."""

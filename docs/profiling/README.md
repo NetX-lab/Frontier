@@ -1,5 +1,11 @@
 # Profiling User Guide
 
+## Modification History
+
+| Date       | Summary of Changes |
+|------------|--------------------|
+| 2026-08-13 | Documented canonical attention union/alias semantics, run-scoped provenance, and explicit measured-domain runtime grid bounds |
+
 ## Scope
 
 This guide covers the user-facing profiling workflow for `pre-release-v0.1`.
@@ -32,6 +38,21 @@ export PYTHONPATH=$PWD
 If you already have `torch`, `vllm`, `flashinfer`, and CUDA tools installed in another environment, you can use that environment instead. Run commands from the repository root and set `PYTHONPATH=$PWD`.
 
 Dry-run commands do not launch GPU kernels. They check command construction, path routing, and argument parsing.
+
+## Attention artifact ownership
+
+For new attention runs, the canonical compute artifact is `attention.csv` (or
+`attention_kernel_only.csv` for `KERNEL_ONLY`). The corresponding
+`attention_combined*.csv` file is a byte-identical compatibility alias, not an
+independent supplement. The profiler also keeps a run-scoped copy under
+`runs/<run_id>/` and writes a JSON sidecar containing CSV/config digests,
+requested tuple coverage, and numeric KV-block allocation facts. Consumers must
+validate the sidecar before training or simulator initialization.
+
+Use `--run_id` when a stable external run name is needed. If a dataset does not
+measure the runtime's initial KV context, set the predictor's explicit
+`prediction_min_kv_cache_size` to a measured value or collect the missing point;
+the runtime will reject an out-of-domain grid before calling sklearn.
 
 ## Output Taxonomy
 

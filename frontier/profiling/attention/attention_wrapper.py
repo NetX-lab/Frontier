@@ -16,7 +16,10 @@ from frontier.profiling.attention.backends import (
 )
 from frontier.profiling.common.parallel_config import ParallelConfig
 
-from frontier.profiling.attention.attention_input import AttentionInput
+from frontier.profiling.attention.attention_input import (
+    AttentionInput,
+    validate_profile_kv_capacity,
+)
 from frontier.profiling.attention.sequence_proxy import SequenceMetadataProxy
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
@@ -48,6 +51,7 @@ class AttentionWrapper:
         dtype: torch.dtype,
         profile_method: str = "record_function",
         output_dir: str = "data/profiling",
+        profile_max_seq_len: int | None = None,
     ):
         self.profile_method = normalize_profile_method(profile_method)
         self.time_stats_store = TimerStatsStore(profile_method=self.profile_method)
@@ -57,6 +61,14 @@ class AttentionWrapper:
         self._model_config = model_config
         configure_quantization_manager_for_model_name(self._model_config.name)
         self._parallel_config = parallel_config
+        if isinstance(dtype, str):
+            dtype_name = dtype.rsplit(".", 1)[-1].strip().lower()
+            resolved_dtype = getattr(torch, dtype_name, None)
+            if not isinstance(resolved_dtype, torch.dtype):
+                raise ValueError(f"Unsupported torch dtype string: {dtype!r}.")
+            dtype = resolved_dtype
+        if not isinstance(dtype, torch.dtype):
+            raise ValueError(f"Attention profiling dtype must be torch.dtype, got {dtype!r}.")
         self._dtype = dtype
         self._device = torch.device("cuda")
         self._attention_binding = bind_attention_family(self._model_config)
@@ -66,7 +78,17 @@ class AttentionWrapper:
             self._attention_family.memory_layout is AttentionMemoryLayout.LATENT_MLA
         )
 
+        if max_model_len <= 0:
+            raise ValueError(f"max_model_len must be positive, got {max_model_len}.")
         self._max_model_len = max_model_len
+        self._profile_max_seq_len = (
+            max_model_len if profile_max_seq_len is None else profile_max_seq_len
+        )
+        if self._profile_max_seq_len <= 0:
+            raise ValueError(
+                "profile_max_seq_len must be positive, "
+                f"got {self._profile_max_seq_len}."
+            )
         self._n_worker_q_heads = self._model_config.get_num_q_heads(
             self._parallel_config
         )
@@ -99,15 +121,25 @@ class AttentionWrapper:
                 f"supported by backend {backend_name}. Add an explicit "
                 "MLA-capable profiling backend before enabling this family."
             )
+
+        # Validate the declared profiling range before initializing the backend.
+        # Backend initialization may allocate CUDA workspaces, so a physically
+        # impossible request must fail before crossing that allocation boundary.
+        self.max_num_blocks = validate_profile_kv_capacity(
+            max_num_blocks=max_num_blocks,
+            profile_max_seq_len=self._profile_max_seq_len,
+            block_size=self._block_size,
+        )
+        self._max_blocks_per_sequence = ceil(
+            self._profile_max_seq_len / self._block_size
+        )
         attention_backend_wrapper.init(
             self._model_config,
             self._parallel_config,
             self._block_size,
             self._device,
         )
-        self._max_blocks_per_sequence = ceil(max_model_len / self._block_size)
         # We create (big) KV tensors and reuse them
-        self.max_num_blocks = max_num_blocks
         self.kv_cache = attention_backend_wrapper.get_cache_block(
             self.max_num_blocks, dtype=self._dtype, device=self._device
         )
@@ -197,23 +229,33 @@ class AttentionWrapper:
         query, key, value = self._make_qkv_tensors(total_tokens)
         # Create SequenceMetadataProxy objects corresponding to AttentionInput
         seq_metadata_list: List[SequenceMetadataProxy] = []
+        next_block_index = 0
         for _ in range(attention_input.batch_size):
             num_blocks = ceil(
                 (num_tokens_per_seq + attention_input.kv_cache_size) / self._block_size
             )
-            if num_blocks > self.max_num_blocks:
+            if next_block_index + num_blocks > self.max_num_blocks:
                 raise ValueError(
                     "Requested block_table size exceeds max_num_blocks: "
-                    f"num_blocks={num_blocks} max_num_blocks={self.max_num_blocks}"
+                    f"num_blocks={next_block_index + num_blocks} "
+                    f"max_num_blocks={self.max_num_blocks}"
                 )
             seq_metadata = SequenceMetadataProxy(
                 is_prompt=attention_input.is_prefill,
                 total_len=num_tokens_per_seq + attention_input.kv_cache_size,
                 processed_len=attention_input.kv_cache_size,
-                block_table=list(range(num_blocks)),
+                block_table=list(
+                    range(next_block_index, next_block_index + num_blocks)
+                ),
             )
             seq_metadata_list.append(seq_metadata)
+            next_block_index += num_blocks
         return seq_metadata_list, query, key, value, self.kv_cache
+
+    def _is_valid_attention_input(self, attention_input: AttentionInput) -> bool:
+        """Validate a standard input against the declared profiling context."""
+
+        return attention_input.is_valid(self._profile_max_seq_len)
 
     def _get_mixed_input_tensors(
         self,
@@ -235,15 +277,17 @@ class AttentionWrapper:
         
         # Create SequenceMetadataProxy objects for each sequence
         seq_metadata_list: List[SequenceMetadataProxy] = []
+        next_block_index = 0
         for seq_len in seq_lens:
             # Calculate number of blocks needed for this sequence
             num_blocks = ceil(
                 (seq_len + mixed_input.kv_cache_size) / self._block_size
             )
-            if num_blocks > self.max_num_blocks:
+            if next_block_index + num_blocks > self.max_num_blocks:
                 raise ValueError(
                     "Requested block_table size exceeds max_num_blocks: "
-                    f"num_blocks={num_blocks} max_num_blocks={self.max_num_blocks}"
+                    f"num_blocks={next_block_index + num_blocks} "
+                    f"max_num_blocks={self.max_num_blocks}"
                 )
 
             # Create metadata for this sequence
@@ -251,9 +295,12 @@ class AttentionWrapper:
                 is_prompt=True,  # All sequences are prefill
                 total_len=seq_len + mixed_input.kv_cache_size,
                 processed_len=mixed_input.kv_cache_size,
-                block_table=list(range(num_blocks)),
+                block_table=list(
+                    range(next_block_index, next_block_index + num_blocks)
+                ),
             )
             seq_metadata_list.append(seq_metadata)
+            next_block_index += num_blocks
         
         return seq_metadata_list, query, key, value, self.kv_cache
 
@@ -324,7 +371,12 @@ class AttentionWrapper:
         attention_input: AttentionInput,
     ):
         # batch size is always 1 for prefill and can be different for decode
-        assert attention_input.is_valid(self._max_model_len)
+        if not self._is_valid_attention_input(attention_input):
+            raise ValueError(
+                "Invalid standard attention profiling input: "
+                f"{attention_input}; "
+                f"profile_max_seq_len={self._profile_max_seq_len}."
+            )
         self._validate_precision()
 
         seq_metadata_list, query, key, value, kv_cache = self._get_input_tensors(
@@ -393,6 +445,7 @@ class AttentionWrapper:
             "block_size": self._block_size,
             "num_tensor_parallel_workers": self._parallel_config.tensor_parallel_size,
             "max_model_len": self._max_model_len,
+            "profile_max_seq_len": self._profile_max_seq_len,
             "batch_size": attention_input.batch_size,
             "prefill_chunk_size": attention_input.prefill_chunk_size,
             "kv_cache_size": attention_input.kv_cache_size,
@@ -433,7 +486,7 @@ class AttentionWrapper:
         from frontier.profiling.attention.mixed_attention_input import MixedAttentionInput
         
         # Validate input
-        if not mixed_input.is_valid(self._max_model_len, max_batch_size=128):
+        if not mixed_input.is_valid(self._profile_max_seq_len, max_batch_size=128):
             raise ValueError(f"Invalid mixed input: {mixed_input}")
         self._validate_precision()
         
@@ -497,6 +550,7 @@ class AttentionWrapper:
             "block_size": self._block_size,
             "num_tensor_parallel_workers": self._parallel_config.tensor_parallel_size,
             "max_model_len": self._max_model_len,
+            "profile_max_seq_len": self._profile_max_seq_len,
             "attention_backend": self._attention_backend,
             # Standard fields (for compatibility)
             "is_prefill": True,
@@ -514,7 +568,10 @@ class AttentionWrapper:
         true_mixed_input: "TrueMixedBatchInput",
     ):
         """Profile a batch containing both prefill and decode sequences."""
-        if not true_mixed_input.is_valid(self._max_model_len, max_batch_size=128):
+        if not true_mixed_input.is_valid(
+            self._profile_max_seq_len,
+            max_batch_size=128,
+        ):
             raise ValueError(f"Invalid true mixed input: {true_mixed_input}")
         self._validate_precision()
 
@@ -568,6 +625,7 @@ class AttentionWrapper:
             "block_size": self._block_size,
             "num_tensor_parallel_workers": self._parallel_config.tensor_parallel_size,
             "max_model_len": self._max_model_len,
+            "profile_max_seq_len": self._profile_max_seq_len,
             "attention_backend": self._attention_backend,
         }
         result.update(true_mixed_input.to_dict())

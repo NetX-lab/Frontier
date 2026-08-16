@@ -51,18 +51,20 @@ class ExecutionTimePredictorRegistry(BaseRegistry):
         training_file_paths: Dict[str, str] = None,
         actual_replica_ids: Optional[list] = None,
         cc_backend: Optional["BaseCCBackend"] = None,
+        serving_max_tokens_per_request: Optional[int] = None,
     ) -> BaseExecutionTimePredictor:
         # Handle legacy sklearn type
         if predictor_type == "sklearn":
             return SklearnExecutionTimePredictor(
-                predictor_config,
-                replica_config,
-                replica_scheduler_config,
-                metrics_config,
-                model_manager,
-                cluster_type,
-                training_file_paths,
-                cc_backend,
+                predictor_config=predictor_config,
+                replica_config=replica_config,
+                replica_scheduler_config=replica_scheduler_config,
+                metrics_config=metrics_config,
+                model_manager=model_manager,
+                cluster_type=cluster_type,
+                training_file_paths=training_file_paths,
+                cc_backend=cc_backend,
+                serving_max_tokens_per_request=serving_max_tokens_per_request,
             )
 
         # Use registry for registered types
@@ -86,6 +88,7 @@ class ExecutionTimePredictorRegistry(BaseRegistry):
                 training_file_paths=training_file_paths,
                 actual_replica_ids=actual_replica_ids,
                 cc_backend=cc_backend,
+                serving_max_tokens_per_request=serving_max_tokens_per_request,
             )
         except Exception as e:
             raise ValueError(

@@ -24,6 +24,7 @@ from frontier.execution_time_predictor.attention_tp_policy import (
 from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_same_tp_linear_op
 from frontier.training.base_trainer import BaseTrainer
 from frontier.logger import init_logger
+from frontier.profiling.common.parallel_config import validate_profile_tp_sizes
 
 logger = init_logger(__name__)
 
@@ -64,6 +65,9 @@ class LinearOpTrainer(BaseTrainer):
             is_moe: If True, skip training (MoE models use expert layers instead of dense MLP)
             **kwargs: Additional configuration parameters
         """
+        validate_profile_tp_sizes(
+            [tensor_parallel_size], argument_name="tensor_parallel_size"
+        )
         super().__init__(dataset_path, output_dir, predictor_type, **kwargs)
         
         # Linear operation-specific configuration
@@ -438,6 +442,10 @@ def create_linear_op_trainer_from_model_config(
         Configured LinearOpTrainer instance
     """
     from frontier.config.model_config import BaseModelConfig
+
+    validate_profile_tp_sizes(
+        [tensor_parallel_size], argument_name="tensor_parallel_size"
+    )
 
     # Load model configuration
     model_config = BaseModelConfig.create_from_name(model_name)

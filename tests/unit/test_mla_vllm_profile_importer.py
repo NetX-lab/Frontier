@@ -680,7 +680,48 @@ def test_attention_profile_main_imports_vllm_mla_log_to_canonical_csv(
     assert df.loc[0, "profiling_precision"] == "bf16"
     assert df.loc[0, "measurement_type"] == "CUDA_EVENT"
     assert df.loc[0, "attention_backend"] == "FLASHINFER_MLA"
+    assert df.loc[0, "profile_max_seq_len"] == 65
+    assert df.loc[0, "profile_input_grid_max_seq_len"] == 65
+    assert bool(df.loc[0, "is_native_profile_allocation"]) is False
+    assert "allocated_max_num_blocks" not in df.columns
     assert df.loc[0, "time_stats.attn_mla_decode.median"] == pytest.approx(0.05)
+
+
+def test_vllm_mla_import_rejects_declared_limit_below_source_context(
+    tmp_path: Path,
+) -> None:
+    from argparse import Namespace
+
+    from frontier.profiling.attention.main import _run_vllm_mla_profile_import
+
+    input_log = tmp_path / "cuda_ops.jsonl"
+    _write_jsonl(input_log, _sample_rows())
+    args = Namespace(
+        vllm_mla_cuda_op_log=input_log,
+        models=["deepseek-ai/DeepSeek-V2-Lite"],
+        model_arch="deepseek_v2",
+        precision="BF16",
+        output_dir=str(tmp_path / "profiling"),
+        device="h100",
+        profile_method="cuda_event",
+        num_tensor_parallel_workers=[1],
+        max_model_len=163840,
+        max_seq_len=64,
+        profile_max_seq_len=64,
+        attention_backend="FLASHINFER_MLA",
+        profile_only_prefill=False,
+        profile_only_decode=False,
+        enable_mixed_prefill=False,
+        enable_true_mixed=False,
+        model_architecture_profile="generic",
+        decode_kv_cache_size_list=None,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"source.*max_seqlen_k=65.*profile_max_seq_len=64",
+    ):
+        _run_vllm_mla_profile_import(args)
 
 
 def test_vllm_mla_import_mode_rejects_ambiguous_cli_shape(tmp_path: Path) -> None:

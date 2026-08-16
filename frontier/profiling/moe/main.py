@@ -57,6 +57,7 @@ except ImportError:
     ray = None
 
 from frontier.profiling.common.model_config import ModelConfig
+from frontier.profiling.common.parallel_config import validate_profile_tp_sizes
 from frontier.profiling.utils import (
     EXPORTABLE_PROFILE_METHOD_CHOICES,
     ProfileMethod,
@@ -345,6 +346,7 @@ def parse_args():
         ),
     )
     args = parser.parse_args()
+    validate_profile_tp_sizes(args.num_tensor_parallel_workers)
     args.profile_method = normalize_profile_method(args.profile_method)
 
     return args, args.enable_load_imbalance
@@ -558,6 +560,7 @@ def profile_model(
     - Non-Ray mode with num_gpus > 1: Uses ProcessPoolExecutor for multi-GPU profiling
     - Non-Ray mode with num_gpus = 1: Sequential single-GPU profiling
     """
+    validate_profile_tp_sizes(args.num_tensor_parallel_workers)
     from frontier.profiling.moe.moe_impl import get_routing_runtime_metadata
     moe_wrapper_class = _get_moe_wrapper_class()
 

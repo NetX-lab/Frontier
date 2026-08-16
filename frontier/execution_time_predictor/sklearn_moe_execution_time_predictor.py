@@ -1,5 +1,7 @@
 from typing import Any, Dict, List, Optional, TYPE_CHECKING, Union
 import os
+from numbers import Integral
+import math
 
 import numpy as np
 import pandas as pd
@@ -88,6 +90,33 @@ def _get_prefill_hot_moe_gating_model_names() -> list[str]:
         f"{model_name}__prefill_hot"
         for model_name in _get_moe_gating_family_model_names()
     ]
+
+
+def _validate_per_expert_token_allocation(
+    allocation: Dict[int, Any],
+) -> list[int]:
+    """Validate the integer token counts supplied to standard MoE lookups."""
+
+    if not isinstance(allocation, dict):
+        raise ValueError(
+            "per-expert token allocation must be a dictionary, "
+            f"got {type(allocation).__name__}."
+        )
+    counts: list[int] = []
+    for expert_id, value in allocation.items():
+        if isinstance(value, bool) or not isinstance(value, Integral):
+            raise ValueError(
+                "per-expert token allocation values must be finite non-negative "
+                f"integers: expert={expert_id!r}, value={value!r}."
+            )
+        numeric = int(value)
+        if not math.isfinite(float(numeric)) or numeric < 0:
+            raise ValueError(
+                "per-expert token allocation values must be finite non-negative "
+                f"integers: expert={expert_id!r}, value={value!r}."
+            )
+        counts.append(numeric)
+    return counts
 
 
 def _is_moe_gating_family_model_name(model_name: str) -> bool:
@@ -287,6 +316,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         cluster_type: ClusterType = None,
         training_file_paths: Dict[str, str] = None,
         cc_backend: Optional["BaseCCBackend"] = None,
+        serving_max_tokens_per_request: Optional[int] = None,
     ) -> None:
         self._is_moe = True
         self._router_topk = replica_config.router_topk
@@ -328,6 +358,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             cluster_type,
             training_file_paths,
             cc_backend,
+            serving_max_tokens_per_request,
         )
 
         # Pre-compute routing details for simulation mode
@@ -1203,7 +1234,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "MoE gating linear is not supported for cluster type"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions[model_name][(effective_tokens,)]
+        return self._get_lookup_or_predict(
+            model_name, (int(effective_tokens),), ["num_tokens"]
+        )
 
     def _get_gating_routing_topk_time(self, batch: Batch) -> float:
         """
@@ -1224,7 +1257,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "MoE gating routing topk is not supported for cluster type"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions[model_name][(effective_tokens,)]
+        return self._get_lookup_or_predict(
+            model_name, (int(effective_tokens),), ["num_tokens"]
+        )
 
     def _get_num_experts_per_device(self) -> int:
         total_experts = int(self._replica_config.total_expert_num)
@@ -1384,7 +1419,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         from frontier.profiling.moe.moe_input import MoELoadImbalanceInput
 
-        expert_token_counts = [int(v) for v in per_expert_tokens.values()]
+        # Expert IDs are not model features.  Sort the distribution before
+        # constructing the feature vector so equivalent allocations have one
+        # canonical runtime-cache key regardless of caller dictionary order.
+        expert_token_counts = sorted(int(v) for v in per_expert_tokens.values())
         if any(v < 0 for v in expert_token_counts):
             raise ValueError(
                 f"Negative token count in per_expert_tokens={per_expert_tokens}"
@@ -1409,6 +1447,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         )
         features = load_input.to_features_dict()
         features.pop("load_distribution", None)
+        features.pop("seed", None)
         return features
 
     def _get_moe_compute_calibration_scale(
@@ -1465,46 +1504,17 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             if len(per_expert_tokens) == 0:
                 raw_time = 0.0
             else:
-                runtime_cache = getattr(
-                    self, "_runtime_moe_shuffling_on_demand_prediction_cache", None
+                features = self._build_moe_load_imbalance_features(
+                    per_expert_tokens
                 )
-                if runtime_cache is None:
-                    runtime_cache = {}
-                    self._runtime_moe_shuffling_on_demand_prediction_cache = (
-                        runtime_cache
-                    )
-                family_name = self._measurement_family_name(
-                    self._active_measurement_type
+                raw_time = self._get_on_demand_prediction(
+                    "moe_shuffling", features
                 )
-                # The on-demand MoE feature vector only contains aggregate load
-                # statistics, so expert IDs and insertion order are not prediction
-                # inputs. Canonicalize by token-count distribution to maximize
-                # result-equivalent cache hits without changing predicted values.
-                distribution_key = tuple(
-                    sorted(
-                        int(token_count)
-                        for token_count in per_expert_tokens.values()
-                    )
-                )
-                cache_key = (
-                    family_name,
-                    distribution_key,
-                    int(self._model_config.embedding_dim),
-                    int(self._model_config.mlp_hidden_dim),
-                    int(self._router_topk),
-                )
-                raw_time = runtime_cache.get(cache_key)
-                if raw_time is None:
-                    features = self._build_moe_load_imbalance_features(
-                        per_expert_tokens
-                    )
-                    raw_time = self._get_on_demand_prediction(
-                        "moe_shuffling", features
-                    )
-                    runtime_cache[cache_key] = raw_time
         else:
             effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-            raw_time = self._predictions["moe_shuffling"][(effective_tokens,)]
+            raw_time = self._get_lookup_or_predict(
+                "moe_shuffling", (int(effective_tokens),), ["num_tokens"]
+            )
 
         scale = self._get_moe_compute_calibration_scale(
             batch,
@@ -1729,15 +1739,17 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
     def _round_to_valid_key(self, num_tokens: int) -> int:
         """
-        Round num_tokens to the nearest valid key in prediction cache.
+        Normalize a finite lookup key without silently clamping it.
 
-        This handles cases where the exact token count is not in the cache.
+        The old implementation replaced values above ``_max_tokens`` with the
+        maximum cached key.  That hid profiling coverage gaps and returned a
+        lower-token prediction for a larger workload.  Ordinary lookup callers
+        now pass this value to ``_get_lookup_or_predict``, which reports a
+        descriptive ``ValueError`` when the key is not materialized.
         """
         if num_tokens <= 0:
             return 1  # Minimum valid token count
-        if num_tokens > self._max_tokens:
-            return self._max_tokens
-        return num_tokens
+        return int(num_tokens)
 
     def _is_grouped_gemm_on_demand_mode(self) -> bool:
         """
@@ -1797,11 +1809,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             if len(per_expert_tokens) == 0:
                 return 0.0
 
-            expert_token_counts = [int(v) for v in per_expert_tokens.values()]
-            if any(v < 0 for v in expert_token_counts):
-                raise ValueError(
-                    f"Negative token count in per_expert_tokens: {per_expert_tokens}"
-                )
+            expert_token_counts = _validate_per_expert_token_allocation(
+                per_expert_tokens
+            )
 
             total_routed_tokens = int(sum(expert_token_counts))
             if total_routed_tokens == 0:
@@ -1817,34 +1827,12 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 1, int(round(total_routed_tokens / float(self._router_topk)))
             )
 
-            runtime_cache = getattr(
-                self, "_runtime_grouped_gemm_on_demand_prediction_cache", None
-            )
-            if runtime_cache is None:
-                runtime_cache = {}
-                self._runtime_grouped_gemm_on_demand_prediction_cache = runtime_cache
-            family_name = self._measurement_family_name(
-                self._active_measurement_type
-            )
-            # The load-imbalance predictor consumes aggregate distribution
-            # statistics, not expert identity/order. Sort token counts so
-            # equivalent allocations share one raw-prediction cache entry.
-            distribution_key = tuple(sorted(expert_token_counts))
-            cache_key = (
-                family_name,
-                distribution_key,
-                approx_num_tokens,
-                int(self._model_config.embedding_dim),
-                int(self._model_config.mlp_hidden_dim),
-                int(self._router_topk),
-            )
-            raw_time = runtime_cache.get(cache_key)
-            if raw_time is None:
-                features = self._build_moe_load_imbalance_features(per_expert_tokens)
+            features = self._build_moe_load_imbalance_features(per_expert_tokens)
 
-                # Use the shared on-demand prediction path (with runtime caching and strict feature checks).
-                raw_time = self._get_on_demand_prediction("moe_grouped_gemm", features)
-                runtime_cache[cache_key] = raw_time
+            # Use the canonical on-demand path for validation, diagnostics, and
+            # current-process memoization.  There is deliberately no second
+            # operator-specific result cache here.
+            raw_time = self._get_on_demand_prediction("moe_grouped_gemm", features)
             scale = self._get_moe_compute_calibration_scale(
                 batch,
                 "_decode_phase_moe_grouped_gemm_calibration_scale",
@@ -1855,19 +1843,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             return raw_time * scale
 
         def _get_cached_grouped_gemm_prediction(rounded_tokens: int) -> float:
-            cache_key = (rounded_tokens,)
-            if cache_key not in prediction_cache:
-                raise KeyError(
-                    "Missing moe_grouped_gemm cached prediction for "
-                    f"tokens={rounded_tokens}. This indicates a profiling coverage gap. "
-                    "Please regenerate profiling data or enable on-demand prediction."
-                )
-            value = float(prediction_cache[cache_key])
-            if value < 0:
-                raise ValueError(
-                    f"Invalid moe_grouped_gemm cached prediction {value} for tokens={rounded_tokens}"
-                )
-            return value
+            return self._get_lookup_or_predict(
+                "moe_grouped_gemm", (int(rounded_tokens),), ["num_tokens"]
+            )
 
         # Standard cache lookup mode (trained with num_tokens only)
         if isinstance(num_tokens_or_allocation, dict):
@@ -1875,7 +1853,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             # iteration for one MoE layer, keyed by pre-routing num_tokens. They are not
             # per-expert unit costs, so allocation input must be collapsed back to the
             # corresponding pre-routing token count instead of summing per-expert lookups.
-            total_routed_tokens = int(sum(num_tokens_or_allocation.values()))
+            expert_token_counts = _validate_per_expert_token_allocation(
+                num_tokens_or_allocation
+            )
+            total_routed_tokens = int(sum(expert_token_counts))
             if total_routed_tokens == 0:
                 return 0.0
             if self._router_topk <= 0:

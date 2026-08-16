@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from types import SimpleNamespace
 
 import pandas as pd
@@ -124,6 +125,62 @@ def test_build_attention_combined_df_returns_empty_when_no_partitions() -> None:
         pd.DataFrame(),
     )
     assert combined.empty
+
+
+def test_build_attention_run_provenance_keeps_per_tp_allocation_facts() -> None:
+    args = SimpleNamespace(
+        device="h800",
+        max_model_len=4096,
+        max_seq_len=8192,
+        profile_max_seq_len=8192,
+        block_size=16,
+        profile_method="cuda_event",
+        attention_backend="FLASHINFER",
+        run_id="probe-a",
+    )
+    payload = attention_main._build_attention_run_provenance(  # pylint: disable=protected-access
+        args=args,
+        model="Qwen/probe",
+        measurement_type="CUDA_EVENT",
+        profiling_precision="BF16",
+        quant_signature="none",
+        model_architecture_profile="generic",
+        attention_backend="FLASHINFER",
+        physical_max_num_blocks_by_tp={1: 100, 2: 80},
+        selected_max_num_blocks_by_tp={1: 18, 2: 20},
+        required_max_num_blocks_by_tp={1: 18, 2: 19},
+        backend_workspace_reservation_bytes=64,
+    )
+    assert payload["tensor_parallel_sizes"] == [1, 2]
+    assert payload["allocation_by_tp"]["2"]["selected_max_num_blocks"] == 20
+    assert payload["profile_max_seq_len"] == 8192
+    assert payload["profiling_precision"] == "BF16"
+    assert payload["quant_signature"] == "none"
+    assert payload["model_architecture_profile"] == "generic"
+    assert payload["attention_backend"] == "FLASHINFER"
+
+
+def test_attention_cli_rejects_parent_directory_run_id_before_output_creation(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    output_dir = tmp_path / "profile-output"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "frontier.profiling.attention.main",
+            "--output_dir",
+            str(output_dir),
+            "--run_id",
+            "..",
+        ],
+    )
+
+    with pytest.raises(ValueError, match="run_id"):
+        attention_main.parse_args()
+
+    assert not output_dir.exists()
 
 
 @pytest.mark.parametrize("measurement_type", ["CUDA_EVENT", "KERNEL_ONLY"])

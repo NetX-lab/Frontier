@@ -10,6 +10,7 @@ This module provides a trainer for Attention-specific models, including:
 """
 
 import os
+from numbers import Integral
 from typing import Dict, List
 
 import pandas as pd
@@ -18,20 +19,43 @@ from sklearn.base import BaseEstimator
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.string_coercion import coerce_truthy_bool
+from frontier.attention.training_partition import (
+    DENSE_MIXED_PREFILL_FEATURES,
+    build_dense_mixed_prefill_training_rows,
+    partition_dense_attention_rows,
+)
 from frontier.attention.profiling_mapping import (
-    get_enabled_predictor_feature_columns,
     get_enabled_predictor_median_column_by_role,
     get_enabled_predictor_median_columns,
     get_enabled_predictor_metric_names,
-    get_enabled_predictor_required_feature_columns,
+    get_enabled_shared_predictor_feature_columns,
+    get_enabled_shared_predictor_required_feature_columns,
 )
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
+)
+from frontier.profiling.common.parallel_config import (
+    validate_prediction_min_kv_cache_size,
+    validate_profile_tp_sizes,
 )
 from frontier.logger import init_logger
 from frontier.training.base_trainer import BaseTrainer
 
 logger = init_logger(__name__)
+
+
+def validate_kv_cache_prediction_granularity(
+    value: int,
+    *,
+    argument_name: str = "kv_cache_prediction_granularity",
+) -> int:
+    """Validate the KV-cache feature quantization used by attention training."""
+
+    if isinstance(value, bool) or not isinstance(value, Integral) or int(value) <= 0:
+        raise ValueError(
+            f"{argument_name} must be a positive integer, got {value!r}."
+        )
+    return int(value)
 
 
 class AttentionTrainer(BaseTrainer):
@@ -62,10 +86,13 @@ class AttentionTrainer(BaseTrainer):
     DENSE_LAYER_TARGET_COLUMN_BY_MODEL = dict(
         zip(DENSE_LAYER_MODELS, DENSE_LAYER_TARGET_COLUMNS)
     )
-    DENSE_LAYER_FEATURE_COLUMNS = get_enabled_predictor_feature_columns(
+    # Standalone attention training writes artifacts consumed by the E2E/shared
+    # predictor path.  Keep the cache-write schema identical across producers;
+    # the legacy one-feature ``num_tokens`` schema cannot pre-warm that cache.
+    DENSE_LAYER_FEATURE_COLUMNS = get_enabled_shared_predictor_feature_columns(
         DENSE_ATTENTION_FAMILY
     )
-    DENSE_LAYER_REQUIRED_FEATURE_COLUMNS = get_enabled_predictor_required_feature_columns(
+    DENSE_LAYER_REQUIRED_FEATURE_COLUMNS = get_enabled_shared_predictor_required_feature_columns(
         DENSE_ATTENTION_FAMILY
     )
     DENSE_LAYER_CACHE_WRITE_TARGET_COLUMN = (
@@ -84,7 +111,9 @@ class AttentionTrainer(BaseTrainer):
         compute_dataset_path: str = None,
         tensor_parallel_size: int = 1,
         block_size: int = 16,
+        kv_cache_prediction_granularity: int = 64,
         predictor_type: str = "random_forest",
+        prediction_min_kv_cache_size: int = 0,
         **kwargs
     ):
         """
@@ -102,9 +131,24 @@ class AttentionTrainer(BaseTrainer):
             predictor_type: Type of predictor ("random_forest" or "linear_regression")
             **kwargs: Additional training parameters
         """
+        prediction_min_kv_cache_size = validate_prediction_min_kv_cache_size(
+            prediction_min_kv_cache_size
+        )
         # Use layer dataset path as the primary dataset path for base class
         # (compute_dataset_path is now optional)
-        super().__init__(layer_dataset_path, output_dir, predictor_type, **kwargs)
+        validate_profile_tp_sizes(
+            [tensor_parallel_size], argument_name="tensor_parallel_size"
+        )
+        kv_cache_prediction_granularity = validate_kv_cache_prediction_granularity(
+            kv_cache_prediction_granularity
+        )
+        super().__init__(
+            layer_dataset_path,
+            output_dir,
+            predictor_type,
+            prediction_min_kv_cache_size=prediction_min_kv_cache_size,
+            **kwargs,
+        )
 
         self.compute_dataset_path = compute_dataset_path
         self.layer_dataset_path = layer_dataset_path
@@ -112,6 +156,8 @@ class AttentionTrainer(BaseTrainer):
         self.device = device
         self.tensor_parallel_size = tensor_parallel_size
         self.block_size = block_size
+        self.kv_cache_prediction_granularity = kv_cache_prediction_granularity
+        self.prediction_min_kv_cache_size = prediction_min_kv_cache_size
 
         # Track whether compute models should be trained
         self.train_compute_models = compute_dataset_path is not None
@@ -282,7 +328,9 @@ class AttentionTrainer(BaseTrainer):
                 df_with_features["is_mixed_batch"]
             )
         else:
-            df_with_features["is_mixed_batch"] = False
+            df_with_features["is_mixed_batch"] = (
+                ~df_with_features["is_decode"]
+            ) & (df_with_features["batch_size"] > 1)
 
         if "is_true_mixed_batch" in df_with_features.columns:
             df_with_features["is_true_mixed_batch"] = _normalize_bool_series(
@@ -458,17 +506,52 @@ class AttentionTrainer(BaseTrainer):
     
     def _verify_layer_dataset_columns(self, df: pd.DataFrame):
         """Verify that layer dataset has all required columns."""
-        required_columns = [
-            "is_decode",
-            *self.DENSE_LAYER_REQUIRED_FEATURE_COLUMNS,
-            *self.DENSE_LAYER_TARGET_COLUMNS,
+        missing_common_columns = [
+            column for column in ("is_decode",) if column not in df.columns
         ]
-        
-        missing_columns = [col for col in required_columns if col not in df.columns]
-        
-        if missing_columns:
+        missing_features_by_model = {
+            model_name: [
+                column for column in feature_columns if column not in df.columns
+            ]
+            for model_name, feature_columns in self.DENSE_LAYER_FEATURE_COLUMNS.items()
+        }
+        missing_features_by_model = {
+            model_name: columns
+            for model_name, columns in missing_features_by_model.items()
+            if columns
+        }
+        missing_catalog_features = [
+            column
+            for column in self.DENSE_LAYER_REQUIRED_FEATURE_COLUMNS
+            if column not in df.columns
+            and not any(
+                column in columns
+                for columns in missing_features_by_model.values()
+            )
+        ]
+        if missing_catalog_features:
+            missing_features_by_model["attention_family"] = (
+                missing_catalog_features
+            )
+        missing_targets_by_model = {
+            model_name: [target_column]
+            for model_name, target_column in self.DENSE_LAYER_TARGET_COLUMN_BY_MODEL.items()
+            if target_column not in df.columns
+        }
+
+        if (
+            missing_common_columns
+            or missing_features_by_model
+            or missing_targets_by_model
+        ):
             raise ValueError(
-                f"Layer dataset is missing required columns: {missing_columns}\n"
+                "Layer dataset schema is incomplete for required profile-backed "
+                "attention models. "
+                f"Affected feature models: {missing_features_by_model}. "
+                f"Affected target models: {missing_targets_by_model}. "
+                f"Missing common columns: {missing_common_columns}. "
+                f"Dataset: {getattr(self, 'layer_dataset_path', '<unknown>')!r}. "
+                "Re-run attention profiling with the current feature schema. "
                 f"Available columns: {list(df.columns)}"
             )
         
@@ -528,24 +611,7 @@ class AttentionTrainer(BaseTrainer):
             return list(self.DENSE_LAYER_FEATURE_COLUMNS[model_name])
         
         elif model_name == "attn_prefill_mixed":
-            # Mixed-batch prefill uses rich feature set
-            return [
-                # Core features
-                "batch_size",
-                "kv_cache_size",
-                "total_tokens",
-                "avg_seq_len",
-                "min_seq_len",
-                "max_seq_len",
-                "total_tokens_squared",
-                # Heterogeneity features
-                "seq_len_variance",
-                "seq_len_cv",
-                "seq_len_range",
-                # Interaction features
-                "batch_variance_interaction",
-                "batch_cv_interaction",
-            ]
+            return list(DENSE_MIXED_PREFILL_FEATURES)
 
         elif model_name == "attn_decode_in_mixed":
             return [
@@ -609,23 +675,20 @@ class AttentionTrainer(BaseTrainer):
         layer_df = self._load_layer_dataset()
         logger.info(f"Loaded {len(layer_df)} rows for layer models")
 
-        if "is_true_mixed_batch" in layer_df.columns:
-            true_mixed_mask = layer_df["is_true_mixed_batch"].fillna(False).astype(bool)
-        else:
-            true_mixed_mask = pd.Series(False, index=layer_df.index)
-
-        if "is_mixed_batch" in layer_df.columns:
-            mixed_batch_mask = layer_df["is_mixed_batch"].fillna(False).astype(bool)
-        else:
-            mixed_batch_mask = (~layer_df["is_decode"]) & (layer_df["batch_size"] > 1)
-
-        mixed_prefill_mask = mixed_batch_mask & (~true_mixed_mask)
-
-        standard_df = layer_df[~mixed_prefill_mask & ~true_mixed_mask].copy()
-        mixed_batch_df = layer_df[mixed_prefill_mask].copy()
-        true_mixed_df = layer_df[true_mixed_mask].copy()
-        prefill_df = standard_df[~standard_df["is_decode"]].copy()
-        decode_df = standard_df[standard_df["is_decode"]].copy()
+        partitions = partition_dense_attention_rows(layer_df)
+        all_layer_df = partitions["all"]
+        standard_df = partitions["standard"]
+        mixed_batch_df = build_dense_mixed_prefill_training_rows(
+            partitions,
+            kv_cache_prediction_granularity=(
+                self.kv_cache_prediction_granularity
+            ),
+            target_col="time_stats.attn_prefill.median",
+            dataset_path=self.layer_dataset_path,
+        )
+        true_mixed_df = partitions["true_mixed"]
+        prefill_df = partitions["prefill"]
+        decode_df = partitions["decode"]
 
         logger.info("Split layer data by contract:")
         logger.info(f"  - Standard data: {len(standard_df)} rows")
@@ -654,9 +717,9 @@ class AttentionTrainer(BaseTrainer):
                 )
 
             elif model_name == "attn_kv_cache_save":
-                # KV cache save uses full standard layer dataset
-                df = standard_df
-                logger.info(f"Using standard layer dataset ({len(df)} rows)")
+                # Cache writes occur for every batch composition.
+                df = all_layer_df
+                logger.info(f"Using full layer dataset ({len(df)} rows)")
 
             elif model_name == "attn_prefill":
                 # Prefill uses standard prefill subset
@@ -696,11 +759,22 @@ class AttentionTrainer(BaseTrainer):
             # Verify features exist in dataframe
             missing_features = [col for col in feature_cols if col not in df.columns]
             if missing_features:
-                logger.warning(
-                    f"Model {model_name} requires features {missing_features} that are not in the dataset. "
-                    f"Skipping this model."
+                if model_name in {
+                    "attn_pre_proj",
+                    "attn_post_proj",
+                    "attn_rope",
+                    "input_layernorm",
+                    "post_attention_layernorm",
+                    "add",
+                }:
+                    dataset_path = self.compute_dataset_path
+                else:
+                    dataset_path = self.layer_dataset_path
+                raise ValueError(
+                    f"Model {model_name} requires features {missing_features} that are not "
+                    f"in dataset {dataset_path!r}. Re-run the corresponding profiling "
+                    "producer with the current feature schema."
                 )
-                continue
 
             # Train model
             models[model_name] = self._train_single_model(
@@ -726,7 +800,9 @@ def create_attention_trainer_from_model_config(
     compute_dataset_path: str = None,
     tensor_parallel_size: int = 1,
     block_size: int = 16,
+    kv_cache_prediction_granularity: int = 64,
     predictor_type: str = "random_forest",
+    prediction_min_kv_cache_size: int = 0,
     **kwargs
 ) -> AttentionTrainer:
     """
@@ -746,6 +822,7 @@ def create_attention_trainer_from_model_config(
                               input_layernorm, post_attention_layernorm, add
         tensor_parallel_size: Tensor parallel size (default: 1)
         block_size: Block size for KV cache (default: 16)
+        kv_cache_prediction_granularity: KV-cache feature granularity (default: 64)
         predictor_type: Type of predictor (default: "random_forest")
         **kwargs: Additional training parameters
 
@@ -774,6 +851,16 @@ def create_attention_trainer_from_model_config(
     """
     from frontier.config.model_config import BaseModelConfig
 
+    prediction_min_kv_cache_size = validate_prediction_min_kv_cache_size(
+        prediction_min_kv_cache_size
+    )
+    validate_profile_tp_sizes(
+        [tensor_parallel_size], argument_name="tensor_parallel_size"
+    )
+    kv_cache_prediction_granularity = validate_kv_cache_prediction_granularity(
+        kv_cache_prediction_granularity
+    )
+
     # Load model configuration
     model_config = BaseModelConfig.create_from_name(model_name)
 
@@ -797,6 +884,8 @@ def create_attention_trainer_from_model_config(
         compute_dataset_path=compute_dataset_path,
         tensor_parallel_size=tensor_parallel_size,
         block_size=block_size,
+        kv_cache_prediction_granularity=kv_cache_prediction_granularity,
+        prediction_min_kv_cache_size=prediction_min_kv_cache_size,
         predictor_type=predictor_type,
         **kwargs
     )

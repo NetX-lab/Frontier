@@ -164,6 +164,7 @@ def test_kernel_only_attention_trains_true_mixed_decode_when_real_rows_exist(
     predictor = object.__new__(_ConcreteSklearnExecutionTimePredictor)
     predictor._active_measurement_type = MeasurementType.KERNEL_ONLY
     predictor._attention_input_file = "unused.csv"
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=64)
 
     attention_df = pd.DataFrame(
         {
@@ -250,6 +251,21 @@ def test_kernel_only_attention_registers_true_mixed_decode_prediction(
             _frontier_feature_names=mixed_feature_names,
         ),
     }
+    from frontier.execution_time_predictor.prediction_cache_contract import (
+        attach_feature_domain,
+    )
+
+    attach_feature_domain(
+        predictor._models["attn_decode_in_mixed"],
+        pd.DataFrame(
+            {
+                feature_name: [1.0, 2.0]
+                for feature_name in mixed_feature_names
+            }
+        ),
+        mixed_feature_names,
+        operator_name="attn_decode_in_mixed",
+    )
 
     monkeypatch.setattr(predictor, "_is_mla_attention_family", lambda: False)
     monkeypatch.setattr(predictor, "_dense_attention_decode_op_name", lambda: "attn_decode")

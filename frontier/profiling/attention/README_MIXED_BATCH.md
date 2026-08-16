@@ -4,6 +4,8 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-13 | Defined canonical attention union/alias publication, run-scoped provenance sidecars, and explicit measured-domain KV-grid starts |
+| 2026-08-12 | Documented the independent serving and profiling context limits for mixed-batch attention profiling |
 | 2026-06-06 | Replaced private checkout path with a repo-relative profiling example; refreshed legacy CSV naming note for release docs |
 | 2026-02-22 | Added true mixed (`--enable_true_mixed`) full CLI parameter set, output files, and mixed dataset fail-fast input contract notes |
 | 2025-12-06 | Added multi-GPU mode documentation; updated CSV naming from legacy MLP naming to `linear_op.csv`; added --disable_ray usage; documented optional --compute_dataset_path |
@@ -20,6 +22,20 @@
 ## 概述
 
 支持混合长度 batch 的 attention prefill profiling 和预测，更贴近真实 serving 场景。
+
+### Canonical output and provenance contract
+
+每次 profiling run 都按 partition rank `standard → mixed → true_mixed` 生成稳定顺序的 canonical union：
+
+- `attention.csv`（`CUDA_EVENT`）或 `attention_kernel_only.csv`（`KERNEL_ONLY`）是唯一 canonical CSV；
+- `attention_combined.csv` / `attention_combined_kernel_only.csv` 是与 canonical CSV **逐字节相同**的兼容 alias，不是额外 supplement；
+- `runs/<run_id>/<canonical-name>` 保存本次 run 的不可覆盖 CSV；
+- `<canonical-stem>.<run_id>.json` 保存 `csv_sha256`、requested tuple digest、row count，以及 physical/requested/selected/required block allocation。字符串 sentinel（例如 `physical_max`）会直接报错；
+- 通过 `--run_id` 可指定 run ID；未指定时 CLI 自动生成唯一 ID。
+
+新的 run 会为 standard、mixed、true-mixed 行写入显式 `is_mixed_batch` / `is_true_mixed_batch` marker。训练和 simulator 应读取 canonical CSV；alias 只用于兼容旧路径。
+
+如果现有 profile 没有 `kv_cache_size=0`，runtime prediction grid 不得偷偷补值或 clamp。请通过 predictor config 的 `prediction_min_kv_cache_size` 显式把 materialization 起点设为已测 domain 内的值，或重新 profiling 补齐缺失点。
 
 ## 核心特性
 
@@ -79,6 +95,17 @@ python -m frontier.profiling.attention.main \
 # - attention_true_mixed.csv (prefill+decode 同批)
 # - attention_combined.csv (合并)
 ```
+
+### Profiling context limits
+
+`--max_seq_len` controls the generated mixed-batch input grid. The optional
+`--profile_max_seq_len` controls the context limit used by profiling input
+validation and KV block-table safety checks; it defaults to `--max_seq_len` and
+may be larger than the serving `--max_model_len`. `--max_model_len` is retained
+as serving-context metadata and is not an automatic profiling upper bound. A
+profile larger than the serving context is valid only when the selected backend
+and available GPU KV-cache capacity can execute it; physical allocation checks
+remain fail-fast.
 
 ### 2. Training
 

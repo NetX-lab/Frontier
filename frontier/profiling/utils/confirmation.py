@@ -355,6 +355,10 @@ def build_attention_config_sections(
         ("Profiling Range", [
             ("Max Model Length", str(args.max_model_len)),
             ("Max Sequence Length", str(args.max_seq_len)),
+            (
+                "Profile Max Sequence Length",
+                str(getattr(args, "profile_max_seq_len", args.max_seq_len)),
+            ),
             ("Batch Size Range", f"{args.min_batch_size} - {args.max_batch_size}"),
             ("Block Size", str(args.block_size)),
             ("Profile Only Prefill", _format_value(args.profile_only_prefill)),

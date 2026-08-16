@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-13 | Documented canonical attention union/alias publication and run-scoped provenance sidecars for legacy scripts. |
 | 2026-06-07 | Marked this directory as legacy/internal and directed release users to `examples/profiling/`. |
 | 2026-06-06 | Updated visible examples to current release paths, linear_op script names, canonical compute output schema, and user-controlled GPU/arch selection. |
 | 2026-03-13 | Align example script docs with measurement-aware profiling contract |
@@ -19,6 +20,12 @@ This directory contains independent profiling scripts for the three operator fam
 - `test_profiling_moe.sh` for MoE operators.
 
 The scripts profile model architecture components rather than deployment topology. Each run records data for one hardware label and writes canonical CSV files under `data/profiling/compute/<device>/<model>/`.
+
+For attention, `attention.csv` (or `attention_kernel_only.csv`) is the
+canonical union. `attention_combined*.csv` is a byte-identical compatibility
+alias, not a second supplement. New runs retain an immutable CSV under
+`runs/<run_id>/` and a numeric, digest-bound JSON sidecar; pass `--run_id` when
+the legacy script output must be audited or reused for training.
 
 ## Important: Single-Device-Type Profiling
 

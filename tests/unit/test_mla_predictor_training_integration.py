@@ -17,6 +17,13 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
     _build_exact_feature_lookup,
 )
+from frontier.execution_time_predictor.shared_prediction_model_manager import (
+    _build_exact_feature_lookup as _build_shared_exact_feature_lookup,
+)
+from frontier.execution_time_predictor.prediction_cache_contract import (
+    ON_DEMAND_DOMAIN_POLICY_UNBOUNDED,
+    attach_feature_domain,
+)
 from frontier.profiling.attention.vllm_mla_profile_importer import (
     build_frontier_mla_profile_dataframe,
 )
@@ -239,6 +246,13 @@ def test_mla_predict_for_attention_layer_models_exposes_on_demand_exact_lookup()
             feature_cols,
             target_columns[op_name],
         )
+        attach_feature_domain(
+            model,
+            df.dropna(subset=feature_cols),
+            feature_cols,
+            operator_name=op_name,
+            on_demand_policy=ON_DEMAND_DOMAIN_POLICY_UNBOUNDED,
+        )
         predictor._models[op_name] = model
 
     predictions = predictor._predict_for_attention_layer_models()
@@ -378,6 +392,48 @@ def test_exact_feature_lookup_rejects_non_scalar_request_token_vectors() -> None
         _build_exact_feature_lookup(
             malformed_df,
             ["batch_num_tokens", "batch_request_num_tokens"],
+            "time_stats.attn_mla_decode.median",
+        )
+
+
+def test_exact_feature_lookup_omits_unobserved_nan_targets() -> None:
+    frame = pd.DataFrame(
+        {
+            "batch_num_tokens": [1, 2],
+            "time_stats.attn_mla_decode.median": [0.1, float("nan")],
+        }
+    )
+
+    lookup = _build_exact_feature_lookup(
+        frame,
+        ["batch_num_tokens"],
+        "time_stats.attn_mla_decode.median",
+    )
+
+    assert lookup == {(1.0,): 0.1}
+    assert _build_shared_exact_feature_lookup(
+        frame,
+        ["batch_num_tokens"],
+        "time_stats.attn_mla_decode.median",
+    ) == {(1.0,): 0.1}
+
+
+@pytest.mark.parametrize(
+    "builder",
+    [_build_exact_feature_lookup, _build_shared_exact_feature_lookup],
+)
+def test_exact_feature_lookup_rejects_negative_observed_timing(builder) -> None:
+    frame = pd.DataFrame(
+        {
+            "batch_num_tokens": [1],
+            "time_stats.attn_mla_decode.median": [-0.1],
+        }
+    )
+
+    with pytest.raises(ValueError, match="negative"):
+        builder(
+            frame,
+            ["batch_num_tokens"],
             "time_stats.attn_mla_decode.median",
         )
 
