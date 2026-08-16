@@ -3517,7 +3517,6 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         # Build only the grids we actually need to avoid unnecessary compute/memory.
         decode_df = None
-        prefill_df = None
         attention_max_tokens = self._get_attention_prediction_max_tokens_per_request()
 
         decode_op_name = self._dense_attention_decode_op_name()
@@ -3549,33 +3548,38 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
 
         if need_prefill and prefill_op_name in self._models:
-            prefill_kv_cache_size_range = np.arange(
-                0,
-                attention_max_tokens + 1,
-                self._config.kv_cache_prediction_granularity,
+            model = self._models[prefill_op_name]
+            feature_names = list(
+                getattr(
+                    model,
+                    "_frontier_feature_names",
+                    [
+                        "kv_cache_size",
+                        "prefill_chunk_size_squared",
+                    ],
+                )
             )
-            prefill_prefill_chunk_size_range = np.arange(
-                1, self._config.prediction_max_prefill_chunk_size + 1
-            )
-            # PREFILL training data uses batch_size=1 for per-request prediction in this cache.
-            prefill_df = pd.DataFrame(
-                {
-                    "kv_cache_size": np.repeat(
-                        prefill_kv_cache_size_range,
-                        len(prefill_prefill_chunk_size_range),
-                    ),
-                    "prefill_chunk_size_squared": np.tile(
-                        prefill_prefill_chunk_size_range,
-                        len(prefill_kv_cache_size_range),
-                    )
-                    ** 2,
-                }
-            )
-            predictions[prefill_op_name] = self._get_model_prediction(
-                prefill_op_name,
-                self._models[prefill_op_name],
-                prefill_df[["kv_cache_size", "prefill_chunk_size_squared"]],
-            )
+            n_features = int(getattr(model, "n_features_in_", len(feature_names)))
+            if feature_names != [
+                "kv_cache_size",
+                "prefill_chunk_size_squared",
+            ]:
+                raise ValueError(
+                    "Attention prefill model feature schema mismatch: "
+                    f"expected ['kv_cache_size', 'prefill_chunk_size_squared'], "
+                    f"got {feature_names}"
+                )
+            if n_features != len(feature_names):
+                raise ValueError(
+                    "Attention prefill model feature count mismatch: "
+                    f"expected {len(feature_names)}, got {n_features}"
+                )
+            predictions[prefill_op_name] = {
+                "_on_demand_prediction": True,
+                "_n_features": n_features,
+                "_model": model,
+                "_feature_names": feature_names,
+            }
 
         # Handle attn_prefill_mixed: high-dimensional model requiring on-demand prediction
         # This model uses 12 features and cannot be pre-computed efficiently
@@ -5414,9 +5418,25 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         agg_kv_cache_size = sum(kv_cache_sizes)
         agg_prefill_chunk_size = sum([x**2 for x in prefill_chunk_sizes]) ** 0.5
 
-        return self._predictions[prefill_op_name][
-            (agg_kv_cache_size, round(agg_prefill_chunk_size) ** 2)
-        ] * (
+        model_info = self._predictions[prefill_op_name]
+        if not (
+            isinstance(model_info, dict)
+            and model_info.get("_on_demand_prediction")
+        ):
+            raise ValueError(
+                f"{prefill_op_name} must use on-demand prediction for "
+                f"cluster {self._cluster_type}"
+            )
+        raw_time = self._get_on_demand_prediction(
+            prefill_op_name,
+            {
+                "kv_cache_size": int(agg_kv_cache_size),
+                "prefill_chunk_size_squared": int(
+                    round(agg_prefill_chunk_size) ** 2
+                ),
+            },
+        )
+        return raw_time * (
             1
             + self._attention_prefill_batching_overhead_fraction
             * int(len(prefill_params) > 1)
@@ -5475,6 +5495,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             raise ValueError(
                 f"attention prefill prediction cache not found for cluster {self._cluster_type}"
             )
+        model_info = self._predictions[prefill_op_name]
+        if not (
+            isinstance(model_info, dict)
+            and model_info.get("_on_demand_prediction")
+        ):
+            raise ValueError(
+                f"{prefill_op_name} must use on-demand prediction for "
+                f"cluster {self._cluster_type}"
+            )
 
         total_verify_prefill_time = 0.0
         for request, verify_tokens in verify_entries:
@@ -5490,13 +5519,13 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             # attn_prefill cache uses prefill_chunk_size_squared as its second
             # dimension in this codebase. For speculative verify, query_len is
             # verify_tokens, so we map to verify_tokens**2 here.
-            key = (int(kv_cache_size), int(verify_tokens**2))
-            if key not in self._predictions[prefill_op_name]:
-                raise ValueError(
-                    "Speculative verify prefill key missing from attn_prefill cache: "
-                    f"key={key}, request_id={request.id}, verify_tokens={verify_tokens}"
-                )
-            total_verify_prefill_time += self._predictions[prefill_op_name][key]
+            total_verify_prefill_time += self._get_on_demand_prediction(
+                prefill_op_name,
+                {
+                    "kv_cache_size": int(kv_cache_size),
+                    "prefill_chunk_size_squared": int(verify_tokens**2),
+                },
+            )
 
         return total_verify_prefill_time
 

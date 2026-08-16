@@ -837,11 +837,29 @@ def test_sklearn_runtime_dense_attention_cache_reads_follow_role_names(
     }
     predictor._predictions = {
         "runtime_cache": {(5,): 1.25},
-        "runtime_prefill": {(16, 9): 2.5},
+        "runtime_prefill": {
+            "_on_demand_prediction": True,
+            "_n_features": 2,
+            "_model": object(),
+            "_feature_names": [
+                "kv_cache_size",
+                "prefill_chunk_size_squared",
+            ],
+        },
         "runtime_decode": {(2, 32): 3.75},
     }
     predictor._get_batch_prefill_attention_params = lambda _batch: [(16, 3)]
     predictor._get_batch_decode_attention_params = lambda _batch: (2, 32)
+
+    def _predict_prefill_on_demand(model_name, features):
+        assert model_name == "runtime_prefill"
+        assert features == {
+            "kv_cache_size": 16,
+            "prefill_chunk_size_squared": 9,
+        }
+        return 2.5
+
+    predictor._get_on_demand_prediction = _predict_prefill_on_demand
 
     kv_batch = SimpleNamespace(
         total_num_tokens=5,
@@ -904,7 +922,13 @@ def test_sklearn_runtime_prediction_caches_follow_role_names(monkeypatch) -> Non
 
     assert compute_predictions["runtime_cache"] == {"source_model": "runtime_cache"}
     assert attention_predictions["runtime_prefill"] == {
-        "source_model": "runtime_prefill"
+        "_on_demand_prediction": True,
+        "_n_features": 2,
+        "_model": predictor._models["runtime_prefill"],
+        "_feature_names": [
+            "kv_cache_size",
+            "prefill_chunk_size_squared",
+        ],
     }
     assert attention_predictions["runtime_decode"] == {"source_model": "runtime_decode"}
     assert "attn_kv_cache_save" not in compute_predictions

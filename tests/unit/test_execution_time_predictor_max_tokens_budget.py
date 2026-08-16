@@ -257,6 +257,174 @@ def test_decode_attention_prediction_grid_covers_model_context_length() -> None:
     assert observed_max_kv_cache_size == [16384]
 
 
+def test_prefill_attention_prediction_uses_on_demand_model_for_large_context() -> None:
+    from frontier.config import RandomForrestExecutionTimePredictorConfig
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+    from frontier.types import ClusterType, MeasurementType
+
+    class _DummyPredictorImpl(SklearnExecutionTimePredictor):
+        def _get_grid_search_params(self):
+            return {}
+
+        def _get_estimator(self):
+            raise RuntimeError("Not used in this unit test")
+
+    predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._model_config = _dense_model_config()
+    predictor._model_config.max_position_embeddings = 262144
+    predictor._config = RandomForrestExecutionTimePredictorConfig(
+        prediction_max_tokens_per_request=4096,
+        prediction_max_prefill_chunk_size=4096,
+        kv_cache_prediction_granularity=64,
+    )
+    prefill_model = SimpleNamespace(
+        n_features_in_=2,
+        _frontier_feature_names=[
+            "kv_cache_size",
+            "prefill_chunk_size_squared",
+        ],
+    )
+    predictor._models = {"attn_prefill": prefill_model}
+
+    def _reject_prefill_grid(*_args, **_kwargs):
+        raise AssertionError("attn_prefill must not materialize a Cartesian grid")
+
+    predictor._get_model_prediction = _reject_prefill_grid  # type: ignore[method-assign]
+
+    predictions = predictor._predict_for_attention_layer_models()
+
+    assert predictions["attn_prefill"] == {
+        "_on_demand_prediction": True,
+        "_n_features": 2,
+        "_model": prefill_model,
+        "_feature_names": [
+            "kv_cache_size",
+            "prefill_chunk_size_squared",
+        ],
+    }
+
+
+def test_attention_prefill_execution_time_uses_on_demand_prediction() -> None:
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+    from frontier.types import ClusterType
+
+    class _DummyPredictorImpl(SklearnExecutionTimePredictor):
+        def _get_grid_search_params(self):
+            return {}
+
+        def _get_estimator(self):
+            raise RuntimeError("Not used in this unit test")
+
+    predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=64)
+    predictor._attention_prefill_batching_overhead_fraction = 0.0
+    predictor._supports_operation = lambda _operation: True
+    predictor._predictions = {
+        "attn_prefill": {
+            "_on_demand_prediction": True,
+            "_n_features": 2,
+            "_model": object(),
+            "_feature_names": [
+                "kv_cache_size",
+                "prefill_chunk_size_squared",
+            ],
+        }
+    }
+    predictor._get_batch_prefill_attention_params = lambda _batch: [(262144, 2)]
+    observed: list[tuple[str, dict[str, float]]] = []
+
+    def _predict(model_name: str, features: dict[str, float]) -> float:
+        observed.append((model_name, dict(features)))
+        return 2.5
+
+    predictor._get_on_demand_prediction = _predict
+    batch = SimpleNamespace(
+        id=1,
+        num_prefill_tokens=2,
+        num_tokens=[2],
+        requests=[object()],
+    )
+
+    assert predictor._get_attention_prefill_execution_time(batch) == 2.5
+    assert observed == [
+        (
+            "attn_prefill",
+            {
+                "kv_cache_size": 262144,
+                "prefill_chunk_size_squared": 4,
+            },
+        )
+    ]
+
+
+def test_spec_verify_attention_prefill_uses_on_demand_prediction() -> None:
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+    from frontier.types import ClusterType
+
+    class _DummyPredictorImpl(SklearnExecutionTimePredictor):
+        def _get_grid_search_params(self):
+            return {}
+
+        def _get_estimator(self):
+            raise RuntimeError("Not used in this unit test")
+
+    predictor = _DummyPredictorImpl.__new__(_DummyPredictorImpl)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=64)
+    predictor._supports_operation = lambda _operation: True
+    predictor._predictions = {
+        "attn_prefill": {
+            "_on_demand_prediction": True,
+            "_n_features": 2,
+            "_model": object(),
+            "_feature_names": [
+                "kv_cache_size",
+                "prefill_chunk_size_squared",
+            ],
+        }
+    }
+    observed: list[tuple[str, dict[str, float]]] = []
+
+    def _predict(model_name: str, features: dict[str, float]) -> float:
+        observed.append((model_name, dict(features)))
+        return 7.0
+
+    predictor._get_on_demand_prediction = _predict
+    request = SimpleNamespace(
+        id=9,
+        is_prefill_complete=True,
+        num_processed_tokens=262143,
+    )
+    metadata = SimpleNamespace(
+        verify_tokens_per_request=[3],
+        validate=lambda request_count: request_count == 1,
+    )
+    batch = SimpleNamespace(
+        requests=[request],
+        spec_decode_metadata=metadata,
+    )
+
+    assert predictor._get_spec_verify_attention_prefill_execution_time(batch) == 7.0
+    assert observed == [
+        (
+            "attn_prefill",
+            {
+                "kv_cache_size": 262144,
+                "prefill_chunk_size_squared": 9,
+            },
+        )
+    ]
+
+
 def test_decode_attention_context_includes_unprocessed_handoff_token() -> None:
     from types import SimpleNamespace
 
