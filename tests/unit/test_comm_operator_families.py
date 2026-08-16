@@ -484,17 +484,28 @@ def test_moe_stage_live_path_records_comm_operator_sequence_and_totals() -> None
             "cluster_type": ClusterType.MONOLITHIC,
             "comm_domain": "EP",
         },
+        {
+            "collective_alias": "alltoall",
+            "data_size_bytes": 160,
+            "num_devices": 2,
+            "cluster_type": ClusterType.MONOLITHIC,
+            "comm_domain": "EP",
+        },
     ]
     assert execution_time.communication_operator_times is not None
     assert execution_time.communication_operator_times.op_times == {
         "pipeline_parallel_send_recv": pytest.approx(0.04),
         "attn_tensor_parallel_allreduce": pytest.approx(4.08),
         "moe_tensor_parallel_allreduce": pytest.approx(2.08),
-        "expert_parallel_alltoall": pytest.approx(2.04),
+        "expert_parallel_alltoall_dispatch": pytest.approx(2.04),
+        "expert_parallel_alltoall_combine": pytest.approx(2.04),
     }
-    assert execution_time.communication_time_component.total_time() == pytest.approx(8.24)
-    assert execution_time.model_time_ms == pytest.approx(8.24)
-    assert execution_time.total_time * 1e3 == pytest.approx(8.24)
+    assert execution_time.get_single_layer_moe_dispatch_time() == pytest.approx(2.04)
+    assert execution_time.get_single_layer_moe_combine_time() == pytest.approx(2.04)
+    assert execution_time.expert_parallel_communication_time == pytest.approx(4.08)
+    assert execution_time.communication_time_component.total_time() == pytest.approx(10.28)
+    assert execution_time.model_time_ms == pytest.approx(10.28)
+    assert execution_time.total_time * 1e3 == pytest.approx(10.28)
 
 
 def test_moe_stage_num_layers_view_preserves_comm_operator_times() -> None:
@@ -545,13 +556,15 @@ def test_moe_stage_num_layers_view_preserves_comm_operator_times() -> None:
         "pipeline_parallel_send_recv": pytest.approx(0.04),
         "attn_tensor_parallel_allreduce": pytest.approx(4.08),
         "moe_tensor_parallel_allreduce": pytest.approx(2.08),
-        "expert_parallel_alltoall": pytest.approx(2.04),
+        "expert_parallel_alltoall_dispatch": pytest.approx(2.04),
+        "expert_parallel_alltoall_combine": pytest.approx(2.04),
     }
     assert {
         "pipeline_parallel_send_recv",
         "attn_tensor_parallel_allreduce",
         "moe_tensor_parallel_allreduce",
-        "expert_parallel_alltoall",
+        "expert_parallel_alltoall_dispatch",
+        "expert_parallel_alltoall_combine",
     }.issubset(execution_time.op_times)
 
 

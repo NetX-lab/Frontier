@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
     SklearnDisaggregationExecutionTimePredictor,
 )
@@ -52,6 +54,7 @@ def _dummy_predictor(model_config: object) -> SklearnDisaggregationExecutionTime
         model_config=model_config,
         attn_tensor_parallel_size=2,
         moe_tensor_parallel_size=2,
+        moe_expert_parallel_size=2,
         num_pipeline_stages=1,
     )
     return predictor
@@ -82,6 +85,26 @@ def test_dummy_decode_ffn_tp_collectives_use_profile_capability_not_legacy_ident
     # no empirical stage correction is applied.
     assert execution_time.moe_tensor_parallel_allgather_time == 10.0
     assert execution_time.share_expert_tensor_parallel_allreduce_time == 10.0
+
+
+@pytest.mark.parametrize(
+    "cluster_type",
+    (ClusterType.PREFILL, ClusterType.DECODE, ClusterType.DECODE_FFN),
+)
+def test_dummy_moe_clusters_publish_named_ep_phase_times(
+    cluster_type: ClusterType,
+) -> None:
+    predictor = _dummy_predictor(_ProfileOnlyStep3ModelConfig())
+
+    execution_time = predictor._get_dummy_execution_time_for_cluster(
+        batch=SimpleNamespace(),
+        pipeline_stage=0,
+        cluster_type=cluster_type,
+    )
+
+    assert execution_time.get_single_layer_moe_dispatch_time() == pytest.approx(10.0)
+    assert execution_time.get_single_layer_moe_combine_time() == pytest.approx(10.0)
+    assert execution_time.expert_parallel_communication_time == pytest.approx(20.0)
 
 
 def test_pdd_predictor_has_no_direct_step3_identity_branches() -> None:

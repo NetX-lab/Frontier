@@ -332,6 +332,77 @@ class BaseClusterScheduler(ABC):
         )
 
     @staticmethod
+    def _get_shared_ep_phase_times_ms(
+        execution_time,
+        *,
+        cluster_type: ClusterType,
+        batch_id: int,
+        layer_id: int,
+        ep_id: int,
+    ) -> tuple[float, float, float, float]:
+        """Read and validate one lane's exact four-phase MoE decomposition."""
+
+        getter_names = (
+            "get_single_layer_moe_pre_dispatch_time",
+            "get_single_layer_moe_dispatch_time",
+            "get_single_layer_moe_post_dispatch_compute_time",
+            "get_single_layer_moe_combine_time",
+        )
+        phase_times: list[float] = []
+        for getter_name in getter_names:
+            getter = getattr(execution_time, getter_name, None)
+            if not callable(getter):
+                raise ValueError(
+                    "Shared EP predictor result is missing phase accessor "
+                    f"{getter_name}: cluster={cluster_type}, batch={batch_id}, "
+                    f"layer={layer_id}, ep_id={ep_id}"
+                )
+            phase_time = getter()
+            if (
+                not isinstance(phase_time, Real)
+                or isinstance(phase_time, bool)
+                or not math.isfinite(float(phase_time))
+                or float(phase_time) < 0
+            ):
+                raise ValueError(
+                    "Shared EP phase time must be finite and non-negative: "
+                    f"accessor={getter_name}, value={phase_time!r}, "
+                    f"cluster={cluster_type}, batch={batch_id}, "
+                    f"layer={layer_id}, ep_id={ep_id}"
+                )
+            phase_times.append(float(phase_time))
+
+        post_attention_getter = getattr(
+            execution_time,
+            "get_single_layer_post_attention_time",
+            None,
+        )
+        if not callable(post_attention_getter):
+            raise ValueError(
+                "Shared EP predictor result is missing post-attention timing"
+            )
+        post_attention_time_ms = float(post_attention_getter())
+        decomposed_time_ms = math.fsum(phase_times)
+        if (
+            not math.isfinite(post_attention_time_ms)
+            or post_attention_time_ms < 0
+            or not math.isclose(
+                decomposed_time_ms,
+                post_attention_time_ms,
+                rel_tol=1e-12,
+                abs_tol=1e-9,
+            )
+        ):
+            raise ValueError(
+                "Shared EP phase decomposition does not conserve post-attention "
+                f"time: phases={tuple(phase_times)!r}, "
+                f"post_attention_ms={post_attention_time_ms!r}, "
+                f"cluster={cluster_type}, batch={batch_id}, "
+                f"layer={layer_id}, ep_id={ep_id}"
+            )
+        return tuple(phase_times)
+
+    @staticmethod
     def _map_source_attn_replica_to_ffn_replica(
         source_replica_ordinal: int,
         target_ffn_replica_ids: List[int] | Tuple[int, ...],
@@ -3035,7 +3106,11 @@ class BaseClusterScheduler(ABC):
         model_config = self._config.replica_config.model_config
         predictor = self._predictor
         layer_workload = None
-        lane_times_ms: list[float] = []
+        lane_compute_times_ms: list[float] = []
+        pre_dispatch_times_ms: list[float] = []
+        dispatch_times_ms: list[float] = []
+        routed_compute_times_ms: list[float] = []
+        combine_times_ms: list[float] = []
         if model_config.is_moe_layer(layer_id):
             layer_workload = self._materialize_layer_ep_workload_for_batch(
                 batch=batch,
@@ -3065,38 +3140,20 @@ class BaseClusterScheduler(ABC):
                     num_layers=1,
                     layer_id=layer_id,
                 )
-                post_attention_getter = getattr(
+                (
+                    pre_dispatch_ms,
+                    dispatch_ms,
+                    routed_compute_ms,
+                    combine_ms,
+                ) = self._get_shared_ep_phase_times_ms(
                     execution_time,
-                    "get_single_layer_post_attention_time",
-                    None,
+                    cluster_type=self._cluster_type,
+                    batch_id=int(batch.id),
+                    layer_id=layer_id,
+                    ep_id=int(ep_id),
                 )
-                if not callable(post_attention_getter):
-                    raise ValueError(
-                        "Prefill EP predictor result is missing post-attention timing"
-                    )
-                lane_time_ms = float(post_attention_getter())
-                if not math.isfinite(lane_time_ms) or lane_time_ms < 0:
-                    raise ValueError(
-                        "Prefill EP lane post-attention time must be finite and non-negative"
-                    )
-                lane_comm_ms = getattr(
-                    execution_time, "expert_parallel_communication_time", None
-                )
-                if lane_comm_ms is None:
-                    raise ValueError(
-                        "Prefill EP lane prediction is missing explicit EP communication time"
-                    )
-                lane_comm_ms = float(lane_comm_ms)
-                if not math.isfinite(lane_comm_ms) or lane_comm_ms < 0:
-                    raise ValueError(
-                        "Prefill EP lane communication time must be finite and non-negative"
-                    )
-                lane_compute_ms = lane_time_ms - lane_comm_ms
-                if not math.isfinite(lane_compute_ms) or lane_compute_ms < 0:
-                    raise ValueError(
-                        "Prefill EP lane compute time must remain non-negative "
-                        "after removing the explicit EP collective"
-                    )
+                lane_compute_ms = pre_dispatch_ms + routed_compute_ms
+                lane_comm_ms = dispatch_ms + combine_ms
                 self._log_ep_workload_trace(
                     cluster_type=self._cluster_type,
                     batch_id=int(batch.id),
@@ -3107,7 +3164,11 @@ class BaseClusterScheduler(ABC):
                     lane_compute_ms=lane_compute_ms,
                     lane_comm_ms=lane_comm_ms,
                 )
-                lane_times_ms.append(lane_time_ms)
+                lane_compute_times_ms.append(lane_compute_ms)
+                pre_dispatch_times_ms.append(pre_dispatch_ms)
+                dispatch_times_ms.append(dispatch_ms)
+                routed_compute_times_ms.append(routed_compute_ms)
+                combine_times_ms.append(combine_ms)
             self.transition_stage_admission_for_layer(
                 batch,
                 stage_id=stage_id,
@@ -3176,21 +3237,42 @@ class BaseClusterScheduler(ABC):
                 )
             ]
 
-        if not lane_times_ms:
+        if not lane_compute_times_ms:
             raise ValueError("Prefill layer wave produced no participant timing")
-        barrier_time_ms = max(lane_times_ms)
-        barrier_end_time_s = time + barrier_time_ms * 1e-3
+        max_pre_dispatch_ms = max(pre_dispatch_times_ms)
+        max_dispatch_ms = max(dispatch_times_ms)
+        dispatch_barrier_time_ms = max_pre_dispatch_ms + max_dispatch_ms
+        dispatch_barrier_end_time_s = time + dispatch_barrier_time_ms * 1e-3
+        participant_ep_ids = tuple(layer_workload.participant_ep_ids)
+        self._log_ep_barrier_trace(
+            cluster_type=self._cluster_type,
+            batch_id=int(batch.id),
+            layer_id=layer_id,
+            phase="dispatch",
+            expected_ep_ids=participant_ep_ids,
+            arrived_ep_ids=participant_ep_ids,
+            max_lane_time_ms=max_pre_dispatch_ms,
+            barrier_time_ms=dispatch_barrier_time_ms,
+            barrier_end_time_s=dispatch_barrier_end_time_s,
+        )
+        max_routed_compute_ms = max(routed_compute_times_ms)
+        max_combine_ms = max(combine_times_ms)
+        combine_barrier_time_ms = max_routed_compute_ms + max_combine_ms
+        barrier_end_time_s = (
+            dispatch_barrier_end_time_s + combine_barrier_time_ms * 1e-3
+        )
         self._log_ep_barrier_trace(
             cluster_type=self._cluster_type,
             batch_id=int(batch.id),
             layer_id=layer_id,
             phase="combine",
-            expected_ep_ids=tuple(layer_workload.participant_ep_ids),
-            arrived_ep_ids=tuple(layer_workload.participant_ep_ids),
-            max_lane_time_ms=barrier_time_ms,
-            barrier_time_ms=barrier_time_ms,
+            expected_ep_ids=participant_ep_ids,
+            arrived_ep_ids=participant_ep_ids,
+            max_lane_time_ms=max_routed_compute_ms,
+            barrier_time_ms=combine_barrier_time_ms,
             barrier_end_time_s=barrier_end_time_s,
         )
+        wave_time_ms = dispatch_barrier_time_ms + combine_barrier_time_ms
         component_ledger = getattr(
             batch,
             "_prefill_model_execution_components_ms_by_stage",
@@ -3205,8 +3287,8 @@ class BaseClusterScheduler(ABC):
                 "missing PREFILL model-execution component ledger for EP wave: "
                 f"replica={replica_id}, stage={stage_id}, layer={layer_id}, batch={batch.id}"
             )
-        component_ledger[stage_id].append(barrier_time_ms)
-        batch._prefill_ep_wave_lane_times_ms = tuple(lane_times_ms)
+        component_ledger[stage_id].append(wave_time_ms)
+        batch._prefill_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
         batch._prefill_ep_wave_workload = layer_workload
 
         sync_room = self._prefill_sync_waiting_room[replica_id][stage_id][
@@ -3312,8 +3394,11 @@ class BaseClusterScheduler(ABC):
         model_config = self._config.replica_config.model_config
         predictor = self._predictor
         layer_workload = None
-        lane_times_ms: list[float] = []
-        lane_comm_times_ms: list[float] = []
+        lane_compute_times_ms: list[float] = []
+        pre_dispatch_times_ms: list[float] = []
+        dispatch_times_ms: list[float] = []
+        routed_compute_times_ms: list[float] = []
+        combine_times_ms: list[float] = []
         if model_config.is_moe_layer(layer_id):
             layer_workload = self._materialize_layer_ep_workload_for_batch(
                 batch=batch,
@@ -3343,46 +3428,20 @@ class BaseClusterScheduler(ABC):
                     num_layers=1,
                     layer_id=layer_id,
                 )
-                post_attention_getter = getattr(
+                (
+                    pre_dispatch_ms,
+                    dispatch_ms,
+                    routed_compute_ms,
+                    combine_ms,
+                ) = self._get_shared_ep_phase_times_ms(
                     execution_time,
-                    "get_single_layer_post_attention_time",
-                    None,
+                    cluster_type=self._cluster_type,
+                    batch_id=int(batch.id),
+                    layer_id=layer_id,
+                    ep_id=int(ep_id),
                 )
-                if not callable(post_attention_getter):
-                    raise ValueError(
-                        "Decode EP predictor result is missing post-attention timing"
-                    )
-                lane_time_ms = float(post_attention_getter())
-                if not math.isfinite(lane_time_ms) or lane_time_ms < 0:
-                    raise ValueError(
-                        "Decode EP lane post-attention time must be finite and non-negative"
-                    )
-                comm_getter = getattr(
-                    predictor,
-                    "_get_expert_parallel_communication_time",
-                    None,
-                )
-                if callable(comm_getter):
-                    lane_comm_ms = float(comm_getter(lane_batch))
-                else:
-                    lane_comm_ms = float(
-                        getattr(execution_time, "expert_parallel_communication_time", 0.0)
-                    )
-                if not math.isfinite(lane_comm_ms) or lane_comm_ms < 0:
-                    raise ValueError(
-                        "Decode EP lane communication time must be finite and non-negative"
-                    )
-                # ``get_single_layer_post_attention_time()`` is the complete
-                # post-attention block and therefore already contains the EP
-                # communication component.  Keep lane prediction as compute
-                # only; the explicit post-MoE transition below accounts for
-                # the collective exactly once.
-                lane_compute_ms = lane_time_ms - lane_comm_ms
-                if not math.isfinite(lane_compute_ms) or lane_compute_ms < 0:
-                    raise ValueError(
-                        "Decode EP lane compute time must remain non-negative "
-                        "after removing the explicit EP collective"
-                    )
+                lane_compute_ms = pre_dispatch_ms + routed_compute_ms
+                lane_comm_ms = dispatch_ms + combine_ms
                 self._log_ep_workload_trace(
                     cluster_type=self._cluster_type,
                     batch_id=int(batch.id),
@@ -3393,8 +3452,11 @@ class BaseClusterScheduler(ABC):
                     lane_compute_ms=lane_compute_ms,
                     lane_comm_ms=lane_comm_ms,
                 )
-                lane_times_ms.append(lane_compute_ms)
-                lane_comm_times_ms.append(lane_comm_ms)
+                lane_compute_times_ms.append(lane_compute_ms)
+                pre_dispatch_times_ms.append(pre_dispatch_ms)
+                dispatch_times_ms.append(dispatch_ms)
+                routed_compute_times_ms.append(routed_compute_ms)
+                combine_times_ms.append(combine_ms)
             self.transition_stage_admission_for_layer(
                 batch,
                 stage_id=stage_id,
@@ -3448,23 +3510,42 @@ class BaseClusterScheduler(ABC):
                 )
             ]
 
-        if not lane_times_ms:
+        if not lane_compute_times_ms:
             raise ValueError("Decode layer wave produced no participant timing")
-        barrier_time_ms = max(lane_times_ms)
-        barrier_end_time_s = time + barrier_time_ms * 1e-3
+        max_pre_dispatch_ms = max(pre_dispatch_times_ms)
+        max_dispatch_ms = max(dispatch_times_ms)
+        dispatch_barrier_time_ms = max_pre_dispatch_ms + max_dispatch_ms
+        dispatch_barrier_end_time_s = time + dispatch_barrier_time_ms * 1e-3
+        participant_ep_ids = tuple(layer_workload.participant_ep_ids)
+        self._log_ep_barrier_trace(
+            cluster_type=self._cluster_type,
+            batch_id=int(batch.id),
+            layer_id=layer_id,
+            phase="dispatch",
+            expected_ep_ids=participant_ep_ids,
+            arrived_ep_ids=participant_ep_ids,
+            max_lane_time_ms=max_pre_dispatch_ms,
+            barrier_time_ms=dispatch_barrier_time_ms,
+            barrier_end_time_s=dispatch_barrier_end_time_s,
+        )
+        max_routed_compute_ms = max(routed_compute_times_ms)
+        max_combine_ms = max(combine_times_ms)
+        combine_barrier_time_ms = max_routed_compute_ms + max_combine_ms
+        barrier_end_time_s = (
+            dispatch_barrier_end_time_s + combine_barrier_time_ms * 1e-3
+        )
         self._log_ep_barrier_trace(
             cluster_type=self._cluster_type,
             batch_id=int(batch.id),
             layer_id=layer_id,
             phase="combine",
-            expected_ep_ids=tuple(layer_workload.participant_ep_ids),
-            arrived_ep_ids=tuple(layer_workload.participant_ep_ids),
-            max_lane_time_ms=barrier_time_ms,
-            barrier_time_ms=barrier_time_ms,
+            expected_ep_ids=participant_ep_ids,
+            arrived_ep_ids=participant_ep_ids,
+            max_lane_time_ms=max_routed_compute_ms,
+            barrier_time_ms=combine_barrier_time_ms,
             barrier_end_time_s=barrier_end_time_s,
         )
-        batch._decode_ep_wave_lane_times_ms = tuple(lane_times_ms)
-        batch._decode_ep_wave_post_moe_comm_time_s = max(lane_comm_times_ms) * 1e-3
+        batch._decode_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
 
         batch_global_id = self._get_decode_sync_wait_key(batch)
         sync_room = self._decode_sync_waiting_room[replica_id][stage_id][
@@ -4233,8 +4314,8 @@ class BaseClusterScheduler(ABC):
 
         Similar to on_prefill_sync_collective(), this method implements the layer-by-layer
         processing flow for the unified DECODE cluster with MoE:
-        - pre_moe sync: execute pre-collective MoE work, then schedule post_moe sync
-        - post_moe sync: execute post-MoE communication, then continue to next layer or finish
+        - pre_moe sync: execute the canonical EP wave, then schedule post_moe sync
+        - post_moe sync: continue to the next layer or finish after combine completion
 
         Args:
             time: Current simulation time
@@ -4332,18 +4413,6 @@ class BaseClusterScheduler(ABC):
         for request in active_unique_requests:
             request.mb_on_step_layer_count_increment(num_layers_completed=1)
 
-        if direct_batch is not None:
-            post_moe_comm_time = 0.0
-        else:
-            post_moe_comm_time = float(
-                getattr(sample_batch, "_decode_ep_wave_post_moe_comm_time_s", 0.0)
-            )
-            if not math.isfinite(post_moe_comm_time) or post_moe_comm_time < 0:
-                raise ValueError(
-                    "Canonical DECODE EP wave post_moe communication time must be "
-                    "finite and non-negative"
-                )
-
         num_layers = execution_time_predictor._num_layers_per_pipeline_stage
         next_layer_id = layer_id + 1
 
@@ -4373,7 +4442,7 @@ class BaseClusterScheduler(ABC):
                     )
                     continue
 
-                total_time_to_next_sync = post_moe_comm_time + attention_time
+                total_time_to_next_sync = attention_time
                 transition_identity = (
                     None if stage_identity is None else participant_id
                 )
@@ -4391,7 +4460,7 @@ class BaseClusterScheduler(ABC):
 
             logger.info(
                 f"[DECODE_SYNC][COLLECTIVE] post_moe completed, incremented layer count for {len(active_unique_requests)} unique requests, "
-                f"scheduled next layer pre_moe sync at t={time + post_moe_comm_time + attention_time:.6f}s"
+                f"scheduled next layer pre_moe sync at t={time + attention_time:.6f}s"
             )
             return events
 
@@ -4423,8 +4492,7 @@ class BaseClusterScheduler(ABC):
             * 1e-3
         )
         total_final_time = (
-            post_moe_comm_time
-            + pipeline_time
+            pipeline_time
             + cpu_overhead_time
             + decode_draft_proposer_time
         )

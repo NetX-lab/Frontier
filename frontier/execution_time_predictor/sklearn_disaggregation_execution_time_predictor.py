@@ -19,7 +19,10 @@ from frontier.config import (
 )
 from frontier.config import global_vars
 from frontier.entities import Batch, EPBatchGroup, ExecutionTime
-from frontier.entities.time_components import OverheadTime
+from frontier.entities.time_components import (
+    CommunicationOperatorTimes,
+    OverheadTime,
+)
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
@@ -573,6 +576,26 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         # A MoE model remains MoE regardless of moe_expert_parallel_size
         model_config = cluster_replica_config.model_config
         is_moe_model = model_config is not None and model_config.is_moe
+        moe_ep_size = cluster_replica_config.moe_expert_parallel_size
+        if type(moe_ep_size) is not int or moe_ep_size <= 0:
+            raise ValueError(
+                "Dummy MoE prediction requires a positive integer "
+                f"moe_expert_parallel_size, got {moe_ep_size!r}"
+            )
+        ep_phase_time = (
+            base_time if is_moe_model and moe_ep_size > 1 else 0.0
+        )
+        ep_communication_time = ep_phase_time * 2
+        ep_operator_times = (
+            CommunicationOperatorTimes(
+                {
+                    "expert_parallel_alltoall_dispatch": ep_phase_time,
+                    "expert_parallel_alltoall_combine": ep_phase_time,
+                }
+            )
+            if is_moe_model
+            else None
+        )
         architecture_profile = self._get_cluster_model_architecture_profile(cluster_type)
         share_expert_enabled = (
             is_moe_model
@@ -622,7 +645,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 add_time=base_time,
                 tensor_parallel_communication_time=tp_comm_time,
                 pipeline_parallel_communication_time=base_time,
-                expert_parallel_communication_time=base_time,
+                expert_parallel_communication_time=ep_communication_time,
                 moe_gating_time=base_time,
                 moe_shuffling_time=base_time,
                 schedule_time=base_time,
@@ -639,6 +662,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 share_expert_up_proj_time=share_expert_time,
                 share_expert_down_proj_time=share_expert_time,
                 share_expert_act_time=share_expert_time,
+                communication_operator_times=ep_operator_times,
             )
         elif cluster_type == ClusterType.DECODE:
             # Unified DECODE cluster (PD-disaggregation mode): attention + (MLP/MoE)
@@ -655,7 +679,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 add_time=base_time,
                 tensor_parallel_communication_time=tp_comm_time,
                 pipeline_parallel_communication_time=base_time,
-                expert_parallel_communication_time=base_time,
+                expert_parallel_communication_time=ep_communication_time,
                 moe_gating_time=base_time,
                 moe_shuffling_time=base_time,
                 schedule_time=base_time,
@@ -672,6 +696,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 share_expert_up_proj_time=share_expert_time,
                 share_expert_down_proj_time=share_expert_time,
                 share_expert_act_time=share_expert_time,
+                communication_operator_times=ep_operator_times,
             )
         elif cluster_type == ClusterType.DECODE_ATTN:
             # DECODE_ATTN cluster only handles attention operations
@@ -723,7 +748,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 add_time=base_time,
                 tensor_parallel_communication_time=tp_comm_time,
                 pipeline_parallel_communication_time=0.0,
-                expert_parallel_communication_time=base_time,
+                expert_parallel_communication_time=ep_communication_time,
                 # In dummy mode, keep the per-layer MoE compute (gating + grouped_gemm)
                 # roughly equal to base_time to avoid artificial Te >> Ta imbalance.
                 moe_gating_time=base_time * 0.5,
@@ -744,6 +769,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 share_expert_act_time=share_expert_time,
                 tensor_parallel_allgather_time=ffn_tp_allgather_time,
                 share_expert_tensor_parallel_allreduce_time=share_expert_tp_allreduce_time,
+                communication_operator_times=ep_operator_times,
             )
 
         raise ValueError(
@@ -854,6 +880,12 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             attn_tensor_parallel_allreduce_time=0.0,
             moe_tensor_parallel_allreduce_time=0.0,
             pp_stage_boundary_handoff_time=0.0,
+            communication_operator_times=CommunicationOperatorTimes(
+                {
+                    "expert_parallel_alltoall_dispatch": 0.0,
+                    "expert_parallel_alltoall_combine": 0.0,
+                }
+            ),
         )
 
     # Phase 2.5: Removed deprecated get_moe_stage_execution_details() method
@@ -1030,6 +1062,27 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             context=f"cluster={cluster_type}, stage={stage_id}, num_layers={num_layers}",
         )
 
+    def _predict_named_ep_phase_operator_times(
+        self,
+        *,
+        batch: Batch,
+        stage_id: int,
+        cluster_type: ClusterType,
+        num_layers: int,
+    ) -> dict[str, float]:
+        phase_times = self._predict_expert_parallel_phase_operator_times(batch)
+        return {
+            op_name: self._predict_one_op_time(
+                op_name,
+                phase_time_ms,
+                batch,
+                stage_id,
+                cluster_type,
+                num_layers,
+            )
+            for op_name, phase_time_ms in phase_times.items()
+        }
+
     def _predict_attention_only_stage_execution_time(
         self,
         batch: Batch,
@@ -1205,6 +1258,19 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 )
 
             scale_factor = num_layers / dummy_exec_time.num_layers
+            scaled_communication_operator_times = None
+            if dummy_exec_time._is_moe:
+                source_operator_times = dummy_exec_time.communication_operator_times
+                if source_operator_times is None:
+                    raise ValueError(
+                        "Dummy MoE ExecutionTime is missing named EP phase times"
+                    )
+                scaled_communication_operator_times = CommunicationOperatorTimes(
+                    {
+                        op_name: time_ms * scale_factor
+                        for op_name, time_ms in source_operator_times.op_times.items()
+                    }
+                )
 
             # Create scaled ExecutionTime
             return ExecutionTime(
@@ -1260,6 +1326,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 * scale_factor,
                 share_expert_act_time=dummy_exec_time._share_expert_act_time
                 * scale_factor,
+                communication_operator_times=scaled_communication_operator_times,
             )
 
         logger.debug(
@@ -1515,8 +1582,13 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     add_attn_residual_time = 0.0
                     add_ffn_residual_time = add_time
                     add_time = 0.0
-                # Get expert parallel communication time separately (not from MoETime)
-                ep_comm_time = self._get_expert_parallel_communication_time(batch)
+                ep_operator_times = self._predict_named_ep_phase_operator_times(
+                    batch=batch,
+                    stage_id=stage_id,
+                    cluster_type=cluster_type,
+                    num_layers=num_layers,
+                )
+                ep_comm_time = sum(ep_operator_times.values())
                 ffn_tp_allgather_time = 0.0
                 share_expert_tp_allreduce_time = 0.0
                 moe_tp_size = cluster_replica_config.moe_tensor_parallel_size
@@ -1604,6 +1676,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         stage_id,
                         cluster_type,
                         num_layers,
+                    ),
+                    communication_operator_times=CommunicationOperatorTimes(
+                        ep_operator_times
                     ),
                     moe_gating_time=self._predict_one_op_time(
                         "moe_gating_time",
@@ -1862,8 +1937,13 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_norm_time = self._get_mlp_norm_layer_act_execution_time(batch)
                 # Get residual add time (both residual connections)
                 add_time = self._get_add_layer_act_execution_time(batch)
-                # Get expert parallel communication time separately (not from MoETime)
-                ep_comm_time = self._get_expert_parallel_communication_time(batch)
+                ep_operator_times = self._predict_named_ep_phase_operator_times(
+                    batch=batch,
+                    stage_id=stage_id,
+                    cluster_type=cluster_type,
+                    num_layers=num_layers,
+                )
+                ep_comm_time = sum(ep_operator_times.values())
 
                 # Calculate MoE TP allreduce time using moe_tensor_parallel_size
                 # (communication_time.tensor_parallel_time uses attn_tensor_parallel_size,
@@ -1986,6 +2066,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         stage_id,
                         cluster_type,
                         num_layers,
+                    ),
+                    communication_operator_times=CommunicationOperatorTimes(
+                        ep_operator_times
                     ),
                     moe_gating_time=self._predict_one_op_time(
                         "moe_gating_time",
@@ -2276,8 +2359,13 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_norm_time = self._get_mlp_norm_layer_act_execution_time(batch)
                 # Get residual add time (both residual connections in full model)
                 add_time = self._get_add_layer_act_execution_time(batch)
-                # Get expert parallel communication time separately (not from MoETime)
-                ep_comm_time = self._get_expert_parallel_communication_time(batch)
+                ep_operator_times = self._predict_named_ep_phase_operator_times(
+                    batch=batch,
+                    stage_id=stage_id,
+                    cluster_type=cluster_type,
+                    num_layers=num_layers,
+                )
+                ep_comm_time = sum(ep_operator_times.values())
                 (
                     dp_input_allreduce_time,
                     dp_output_allreduce_time,
@@ -2432,6 +2520,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         stage_id,
                         cluster_type,
                         num_layers,
+                    ),
+                    communication_operator_times=CommunicationOperatorTimes(
+                        ep_operator_times
                     ),
                     moe_gating_time=self._predict_one_op_time(
                         "moe_gating_time",

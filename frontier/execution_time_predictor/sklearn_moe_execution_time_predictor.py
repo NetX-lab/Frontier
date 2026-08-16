@@ -191,8 +191,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         # COMM_SKIP: TP all-reduce not needed when tp_size <= 1 (no tensor sharding)
         attn_tp_allreduce_time = base_time if attn_tp_size > 1 else 0.0
         moe_tp_allreduce_time = base_time if moe_tp_size > 1 else 0.0
-        # COMM_SKIP: EP all-to-all not needed when ep_size <= 1 (experts co-located)
-        expert_parallel_comm_time = base_time if moe_ep_size > 1 else 0.0
+        # EP=1 retains the named protocol phases with zero collective cost.
+        expert_parallel_phase_time = base_time if moe_ep_size > 1 else 0.0
+        expert_parallel_comm_time = expert_parallel_phase_time * 2
 
         # Attention-DP MoE gather/scatter is retired.  MoE communication is
         # represented by the Replica-local EP wave instead.
@@ -270,6 +271,16 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             share_expert_tensor_parallel_allreduce_time=share_expert_tp_allreduce_time,
             dp_input_allreduce_time=dp_input_allreduce_time,
             dp_output_allreduce_time=dp_output_allreduce_time,
+            communication_operator_times=CommunicationOperatorTimes(
+                {
+                    "expert_parallel_alltoall_dispatch": (
+                        expert_parallel_phase_time
+                    ),
+                    "expert_parallel_alltoall_combine": (
+                        expert_parallel_phase_time
+                    ),
+                }
+            ),
             moe_operator_times=_build_moe_operator_times(
                 mlp_norm_time=base_time,
                 moe_gating_linear_time=base_time * 0.5,
@@ -1093,6 +1104,33 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         # the EP communication/accounting path whenever EP>1.
         return True
 
+    def _predict_expert_parallel_phase_operator_times(
+        self,
+        batch: Batch,
+    ) -> dict[str, float]:
+        """Predict exact dispatch and combine collectives for one MoE layer."""
+
+        if self._moe_ep_size <= 1:
+            return {
+                "expert_parallel_alltoall_dispatch": 0.0,
+                "expert_parallel_alltoall_combine": 0.0,
+            }
+        if not self._use_expert_parallel_alltoall_path(batch):
+            raise ValueError(
+                "Canonical MoE EP execution requires named all-to-all dispatch "
+                "and combine phases"
+            )
+        return {
+            op_name: self._predict_comm_operator(
+                get_comm_operator(op_name),
+                batch,
+            )
+            for op_name in (
+                "expert_parallel_alltoall_dispatch",
+                "expert_parallel_alltoall_combine",
+            )
+        }
+
     def _get_effective_moe_total_tokens(self, batch: Batch) -> int:
         effective_tokens = int(
             batch.get_effective_total_tokens_rounded(self._cluster_type)
@@ -1757,20 +1795,13 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         mlp_act_time = 0.0
 
         if include_ffn and include_moe:
-            expert_parallel_communication_time = 0.0
-            if self._moe_ep_size > 1:
-                expert_parallel_operator_name = (
-                    "expert_parallel_alltoall"
-                    if self._use_expert_parallel_alltoall_path(batch)
-                    else "expert_parallel_allreduce"
-                )
-                expert_parallel_communication_time = self._predict_comm_operator(
-                    get_comm_operator(expert_parallel_operator_name),
-                    batch,
-                )
-                communication_operator_times[expert_parallel_operator_name] = (
-                    expert_parallel_communication_time
-                )
+            expert_parallel_operator_times = (
+                self._predict_expert_parallel_phase_operator_times(batch)
+            )
+            communication_operator_times.update(expert_parallel_operator_times)
+            expert_parallel_communication_time = sum(
+                expert_parallel_operator_times.values()
+            )
             moe_gating_linear_time = self._get_gating_linear_time(batch)
             moe_gating_routing_topk_time = self._get_gating_routing_topk_time(batch)
             moe_gating_time = moe_gating_linear_time + moe_gating_routing_topk_time

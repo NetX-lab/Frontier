@@ -891,13 +891,19 @@ class MetricsStore:
                     emit(
                         "COMM",
                         "expert_parallel_alltoall",
-                        execution_time.expert_parallel_communication_time / 2,
+                        (
+                            execution_time.get_single_layer_moe_dispatch_time()
+                            * execution_time.num_layers
+                        ),
                     )
                 elif use_ep_alltoall_dispatch_combine:
                     emit(
                         "COMM",
                         "expert_parallel_alltoall_dispatch",
-                        execution_time.expert_parallel_communication_time / 2,
+                        (
+                            execution_time.get_single_layer_moe_dispatch_time()
+                            * execution_time.num_layers
+                        ),
                     )
             for op_name, duration_ms in _iter_family_execution_times(
                 MOE_FAMILY,
@@ -909,7 +915,10 @@ class MetricsStore:
                     emit(
                         "COMM",
                         "expert_parallel_alltoall_combine",
-                        execution_time.expert_parallel_communication_time / 2,
+                        (
+                            execution_time.get_single_layer_moe_combine_time()
+                            * execution_time.num_layers
+                        ),
                     )
                 else:
                     emit(
@@ -1031,9 +1040,10 @@ class MetricsStore:
                     execution_time,
                 )
             )
-            per_layer_ep_comm = (
-                execution_time.expert_parallel_communication_time / num_layers
+            per_layer_ep_dispatch = (
+                execution_time.get_single_layer_moe_dispatch_time()
             )
+            per_layer_ep_combine = execution_time.get_single_layer_moe_combine_time()
             per_layer_moe_tp_allreduce = execution_time.mlp_all_reduce_time / num_layers
         else:
             per_layer_mlp_up = (
@@ -1157,7 +1167,7 @@ class MetricsStore:
                         emit(
                             "COMM",
                             "expert_parallel_alltoall",
-                            per_layer_ep_comm / 2,
+                            per_layer_ep_dispatch,
                             layer_idx,
                             layer_meta,
                         )
@@ -1165,7 +1175,7 @@ class MetricsStore:
                         emit(
                             "COMM",
                             "expert_parallel_alltoall_dispatch",
-                            per_layer_ep_comm / 2,
+                            per_layer_ep_dispatch,
                             layer_idx,
                             layer_meta,
                         )
@@ -1176,7 +1186,7 @@ class MetricsStore:
                         emit(
                             "COMM",
                             "expert_parallel_alltoall_combine",
-                            per_layer_ep_comm / 2,
+                            per_layer_ep_combine,
                             layer_idx,
                             layer_meta,
                         )
@@ -1184,7 +1194,7 @@ class MetricsStore:
                         emit(
                             "COMM",
                             "expert_parallel_allreduce",
-                            per_layer_ep_comm,
+                            per_layer_ep_dispatch + per_layer_ep_combine,
                             layer_idx,
                             layer_meta,
                         )
@@ -3737,7 +3747,7 @@ class MetricsStore:
                 self._push_metric(
                     OperationMetrics.EXPERT_PARALLEL_ALLTOALL_DISPATCH,
                     batch_id,
-                    execution_time.expert_parallel_communication_time / 2,
+                    execution_time.get_single_layer_moe_dispatch_time(),
                     cluster_type,
                 )
             for op_name, metric_value in _iter_family_execution_times(
@@ -3756,7 +3766,7 @@ class MetricsStore:
                 self._push_metric(
                     OperationMetrics.EXPERT_PARALLEL_ALLTOALL_COMBINE,
                     batch_id,
-                    execution_time.expert_parallel_communication_time / 2,
+                    execution_time.get_single_layer_moe_combine_time(),
                     cluster_type,
                 )
             for op_name, metric_value in _iter_family_execution_times(

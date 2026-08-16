@@ -1431,6 +1431,7 @@ def _trained_predictor(model_config, *, isolate_branch: bool = True):
         moe_expert_parallel_size=1,
         moe_tensor_parallel_size=1,
     )
+    predictor._moe_ep_size = predictor._replica_config.moe_expert_parallel_size
     predictor._get_cluster_replica_config = lambda _cluster_type: predictor._replica_config
     predictor._get_cluster_model_architecture_profile = (
         lambda _cluster_type: model_config.get_model_architecture_profile()

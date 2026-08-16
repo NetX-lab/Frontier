@@ -6120,6 +6120,12 @@ def test_ep_dispatch_valid_exact_lanes_preserve_collective_payload_and_time() ->
         ep_id=0,
         replica_id=3,
         total_num_tokens=100,
+        decode_ffn_layer_id=4,
+        source_batch_ids=[0],
+        routing_token_count=300,
+        router_topk=1,
+        total_routed_assignments=300,
+        per_expert_tokens={0: 100},
     )
     second_batch = SimpleNamespace(
         id=11,
@@ -6127,6 +6133,12 @@ def test_ep_dispatch_valid_exact_lanes_preserve_collective_payload_and_time() ->
         ep_id=1,
         replica_id=3,
         total_num_tokens=200,
+        decode_ffn_layer_id=4,
+        source_batch_ids=[0],
+        routing_token_count=300,
+        router_topk=1,
+        total_routed_assignments=300,
+        per_expert_tokens={1: 200},
     )
 
     first_events = scheduler.on_ep_alltoall_dispatch_ready(

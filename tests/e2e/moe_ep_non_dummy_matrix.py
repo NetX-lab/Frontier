@@ -980,9 +980,7 @@ def check_case_log(
                     (str(record["cluster"]).upper(), str(record["phase"])),
                     set(),
                 ).add(int(record["layer_id"]))
-            required_phases = ("combine",)
-            if case.architecture == "pd-af-disaggregation":
-                required_phases = ("dispatch", "combine")
+            required_phases = ("dispatch", "combine")
             for cluster_name in sorted(workload_clusters):
                 for phase in required_phases:
                     missing_barrier_layers = sorted(

@@ -232,6 +232,47 @@ def test_shared_moe_checker_requires_ep_workload_trace(tmp_path: Path) -> None:
     assert "EP workload" in result["errors"]
 
 
+def test_shared_moe_checker_requires_dispatch_and_combine_barriers(
+    tmp_path: Path,
+) -> None:
+    case = replace(
+        next(
+            case
+            for case in build_matrix(REPO_ROOT)
+            if case.architecture == "co-location"
+            and case.model_kind == "moe"
+            and case.ep_size == 1
+        ),
+        num_layers=1,
+        moe_layer_ids=(0,),
+    )
+    log_path = tmp_path / "shared_barrier.log"
+    metrics_dir = tmp_path / "metrics"
+    metrics_dir.mkdir()
+    (metrics_dir / "system_metrics.json").write_text(
+        json.dumps({"ttft_statistics": {"mean": 1.0}}), encoding="utf-8"
+    )
+    log_path.write_text(
+        "\n".join(
+            [
+                "Dummy Mode: false",
+                "Simulation completed successfully.",
+                "[OP-TRACE][MONOLITHIC][MOE][moe_shuffling] batch_id=1, layer_id=0, predicted_time_ms=0.1",
+                "[OP-TRACE][MONOLITHIC][MOE][moe_grouped_gemm] batch_id=1, layer_id=0, predicted_time_ms=0.2",
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=1, layer_id=0, ep_id=0, moe_ep_size=1, per_expert_tokens={0: 1}, lane_compute_ms=0.2, lane_comm_ms=0.0",
+                "[EP-CONSERVATION][MONOLITHIC] batch_id=1, layer_id=0, routing_token_count=1, router_topk=1, total_routed_assignments=1, per_ep_routed_tokens={0: 1}",
+                "[EP-BARRIER][MONOLITHIC] batch_id=1, layer_id=0, phase=combine, expected_ep_ids=[0], arrived_ep_ids=[0], max_lane_time_ms=0.2, barrier_time_ms=0.2, barrier_end_time_s=0.001",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "cluster=MONOLITHIC phase=dispatch layers=[0]" in result["errors"]
+
+
 def test_ep_workload_parser_accepts_logger_prefix() -> None:
     records = _parse_ep_workload_records(
         "INFO 12:00:00 scheduler.py:1] "

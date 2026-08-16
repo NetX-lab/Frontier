@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 from copy import deepcopy
+import math
 from types import MappingProxyType
 from typing import Union
 
@@ -806,18 +807,61 @@ class ExecutionTime(BaseEntity):
             + self._moe_or_mlp_time.moe_shuffling_time
         )
 
+    def _get_required_moe_ep_phase_time(self, op_name: str) -> float:
+        if not isinstance(self._moe_or_mlp_time, MoETime):
+            raise ValueError("MoE EP phase time is only available for MoE models")
+        operator_times = self._communication_time.operator_times
+        if operator_times is None:
+            raise ValueError(
+                "ExecutionTime is missing structured communication operator "
+                f"timing for {op_name}"
+            )
+        phase_time_ms = operator_times.get_required_time(op_name)
+        if not math.isfinite(phase_time_ms) or phase_time_ms < 0:
+            raise ValueError(
+                f"Invalid structured communication timing for {op_name}: "
+                f"{phase_time_ms}"
+            )
+        return phase_time_ms
+
+    def get_single_layer_moe_dispatch_time(self) -> float:
+        """Get the exact named EP dispatch latency for one MoE layer."""
+
+        return self._get_required_moe_ep_phase_time(
+            "expert_parallel_alltoall_dispatch"
+        )
+
     def get_single_layer_moe_post_dispatch_compute_time(self) -> float:
         """
-        Get the MoE runtime that remains after EP dispatch finishes.
+        Get non-collective MoE work after the explicit pre-dispatch segment.
 
-        In the explicit FFN-EP workflow, only the routed grouped GEMM executes
-        between dispatch and combine.
+        This is derived from the complete post-attention block so norm,
+        residual, TP, and other modeled components cannot disappear when the
+        scheduler expands one layer into explicit EP phases.
         """
         if not isinstance(self._moe_or_mlp_time, MoETime):
             raise ValueError(
                 "MoE post-dispatch compute time is only available for MoE models"
             )
-        return self._moe_or_mlp_time.moe_grouped_gemm_time
+        remaining_time_ms = (
+            self.get_single_layer_post_attention_time()
+            - self.get_single_layer_moe_pre_dispatch_time()
+            - self.get_single_layer_moe_dispatch_time()
+            - self.get_single_layer_moe_combine_time()
+        )
+        if not math.isfinite(remaining_time_ms) or remaining_time_ms < 0:
+            raise ValueError(
+                "MoE phase decomposition leaves invalid post-dispatch work: "
+                f"{remaining_time_ms} ms"
+            )
+        return remaining_time_ms
+
+    def get_single_layer_moe_combine_time(self) -> float:
+        """Get the exact named EP combine latency for one MoE layer."""
+
+        return self._get_required_moe_ep_phase_time(
+            "expert_parallel_alltoall_combine"
+        )
 
     def get_single_layer_moe_comm_time(self) -> float:
         """
