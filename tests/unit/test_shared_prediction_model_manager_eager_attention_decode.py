@@ -3,12 +3,16 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pandas as pd
+import pytest
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
 from frontier.attention.ops import AttentionOperatorRole
-from frontier.config import ReplicaConfig
+from frontier.config import ReplicaConfig, global_vars
 from frontier.execution_time_predictor import shared_prediction_model_manager
 from frontier.execution_time_predictor import sklearn_execution_time_predictor
+from frontier.execution_time_predictor.prediction_cache_contract import (
+    attach_feature_domain,
+)
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )
@@ -35,9 +39,285 @@ def _make_manager_without_init() -> ExecutionTimePredictionModelManager:
     manager = ExecutionTimePredictionModelManager.__new__(
         ExecutionTimePredictionModelManager
     )
+    manager._all_dummy_mode = False
     manager._active_measurement_type = MeasurementType.CUDA_EVENT
     manager._attention_tp_warning_cache = set()
+    manager._trained_models_eager = {}
+    manager._trained_models_kernel_only = {}
+    manager._models_by_precision_eager = {}
+    manager._models_by_precision_kernel_only = {}
+    manager._model_profiling_precision_eager = {}
+    manager._model_profiling_precision_kernel_only = {}
+    manager._models_by_precision = {}
+    manager._model_profiling_precision = {}
+    manager._trained_models_by_cluster = {}
+    manager._models_by_precision_by_cluster = {}
+    manager._model_profiling_precision_by_cluster = {}
+    manager._ambiguous_global_model_names = {
+        "eager": set(),
+        "kernel_only": set(),
+    }
     return manager
+
+
+def test_shared_manager_rejects_conflicting_same_name_artifacts() -> None:
+    manager = _make_manager_without_init()
+
+    first = SimpleNamespace(
+        _frontier_model_hash="hash-a",
+        _frontier_operator_binding={"tp": 1},
+    )
+    second = SimpleNamespace(
+        _frontier_model_hash="hash-b",
+        _frontier_operator_binding={"tp": 2},
+    )
+    manager._store_model_precision("attn_decode", "FP16", first)
+    with pytest.raises(ValueError, match="conflicting.*attn_decode"):
+        manager._store_model_precision("attn_decode", "FP16", second)
+    assert manager._trained_models_eager["attn_decode"] is first
+
+
+def _heterogeneous_artifact(
+    artifact_hash: str,
+    *,
+    device: str,
+    tensor_parallel_size: int,
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        _frontier_model_hash=artifact_hash,
+        _frontier_operator_binding={
+            "device": device,
+            "tensor_parallel_size": tensor_parallel_size,
+        },
+        _frontier_feature_domain={
+            "features": ["num_tokens"],
+            "minimum": 1,
+            "maximum": 4096,
+        },
+    )
+
+
+def test_shared_manager_routes_same_name_artifacts_to_heterogeneous_pdd_clusters() -> None:
+    manager = _make_manager_without_init()
+    prefill = _heterogeneous_artifact(
+        "prefill-a800-tp1",
+        device="a800",
+        tensor_parallel_size=1,
+    )
+    decode = _heterogeneous_artifact(
+        "decode-h800-tp2",
+        device="h800",
+        tensor_parallel_size=2,
+    )
+
+    global_vars.set_global_vars("offline", "pd-disaggregation")
+    global_vars.set_cuda_graph_config(False, [1, 2, 4], "none")
+    try:
+        manager._store_model_precision(
+            "attn_pre_proj",
+            "BF16",
+            prefill,
+            cluster_type=ClusterType.PREFILL,
+        )
+        manager._store_model_precision(
+            "attn_pre_proj",
+            "BF16",
+            decode,
+            cluster_type=ClusterType.DECODE,
+        )
+
+        prefill_models = manager.get_models_for_cluster(ClusterType.PREFILL)
+        decode_models = manager.get_models_for_cluster(ClusterType.DECODE)
+        assert prefill_models["eager"]["attn_pre_proj"] is prefill
+        assert decode_models["eager"]["attn_pre_proj"] is decode
+        assert (
+            manager.get_model(
+                "attn_pre_proj",
+                precision="BF16",
+                cluster_type=ClusterType.PREFILL,
+            )
+            is prefill
+        )
+        assert (
+            manager.get_model(
+                "attn_pre_proj",
+                precision="BF16",
+                cluster_type=ClusterType.DECODE,
+            )
+            is decode
+        )
+    finally:
+        global_vars.reset_global_vars()
+
+
+def test_shared_manager_routes_all_heterogeneous_pd_af_compute_roles() -> None:
+    manager = _make_manager_without_init()
+    prefill = _heterogeneous_artifact(
+        "prefill-a800-tp1",
+        device="a800",
+        tensor_parallel_size=1,
+    )
+    decode_attn_eager = _heterogeneous_artifact(
+        "decode-attn-h800-tp2-eager",
+        device="h800",
+        tensor_parallel_size=2,
+    )
+    decode_attn_kernel = _heterogeneous_artifact(
+        "decode-attn-h800-tp2-kernel",
+        device="h800",
+        tensor_parallel_size=2,
+    )
+    decode_ffn_kernel = _heterogeneous_artifact(
+        "decode-ffn-rtx-tp4-kernel",
+        device="rtx_pro_6000",
+        tensor_parallel_size=4,
+    )
+
+    global_vars.set_global_vars("offline", "pd-af-disaggregation")
+    try:
+        manager._store_model_precision(
+            "add",
+            "BF16",
+            prefill,
+            cluster_type=ClusterType.PREFILL,
+        )
+        manager._store_model_precision(
+            "add",
+            "BF16",
+            decode_attn_eager,
+            cluster_type=ClusterType.DECODE_ATTN,
+        )
+        manager._active_measurement_type = MeasurementType.KERNEL_ONLY
+        manager._store_model_precision(
+            "add",
+            "BF16",
+            decode_attn_kernel,
+            cluster_type=ClusterType.DECODE_ATTN,
+        )
+        manager._store_model_precision(
+            "add",
+            "BF16",
+            decode_ffn_kernel,
+            cluster_type=ClusterType.DECODE_FFN,
+        )
+
+        prefill_models = manager.get_models_for_cluster(ClusterType.PREFILL)
+        decode_attn_models = manager.get_models_for_cluster(ClusterType.DECODE_ATTN)
+        decode_ffn_models = manager.get_models_for_cluster(ClusterType.DECODE_FFN)
+        assert prefill_models == {
+            "eager": {"add": prefill},
+            "kernel_only": {},
+        }
+        assert decode_attn_models == {
+            "eager": {"add": decode_attn_eager},
+            "kernel_only": {"add": decode_attn_kernel},
+        }
+        assert decode_ffn_models == {
+            "eager": {},
+            "kernel_only": {"add": decode_ffn_kernel},
+        }
+    finally:
+        global_vars.reset_global_vars()
+
+
+def test_shared_manager_rejects_conflicting_artifacts_within_one_cluster() -> None:
+    manager = _make_manager_without_init()
+    first = _heterogeneous_artifact(
+        "prefill-a800-tp1",
+        device="a800",
+        tensor_parallel_size=1,
+    )
+    conflicting = _heterogeneous_artifact(
+        "prefill-h800-tp2",
+        device="h800",
+        tensor_parallel_size=2,
+    )
+
+    manager._store_model_precision(
+        "attn_pre_proj",
+        "BF16",
+        first,
+        cluster_type=ClusterType.PREFILL,
+    )
+    with pytest.raises(ValueError, match="conflicting.*PREFILL.*attn_pre_proj"):
+        manager._store_model_precision(
+            "attn_pre_proj",
+            "BF16",
+            conflicting,
+            cluster_type=ClusterType.PREFILL,
+        )
+
+
+def test_shared_manager_rejects_unscoped_access_to_ambiguous_artifacts() -> None:
+    manager = _make_manager_without_init()
+    manager._store_model_precision(
+        "attn_pre_proj",
+        "BF16",
+        _heterogeneous_artifact(
+            "prefill-a800-tp1",
+            device="a800",
+            tensor_parallel_size=1,
+        ),
+        cluster_type=ClusterType.PREFILL,
+    )
+    manager._store_model_precision(
+        "attn_pre_proj",
+        "BF16",
+        _heterogeneous_artifact(
+            "decode-h800-tp2",
+            device="h800",
+            tensor_parallel_size=2,
+        ),
+        cluster_type=ClusterType.DECODE,
+    )
+
+    with pytest.raises(ValueError, match="ambiguous.*attn_pre_proj"):
+        manager.get_model("attn_pre_proj")
+    with pytest.raises(ValueError, match="ambiguous.*attn_pre_proj"):
+        manager.get_models()
+
+
+def test_shared_manager_registers_cached_training_artifact_for_owning_cluster() -> None:
+    manager = _make_manager_without_init()
+    artifact = _heterogeneous_artifact(
+        "prefill-a800-tp1",
+        device="a800",
+        tensor_parallel_size=1,
+    )
+    manager._get_model_hash = lambda *_args, **_kwargs: "prefill-a800-tp1"  # type: ignore[method-assign]
+    manager._load_model_from_cache = lambda *_args, **_kwargs: artifact  # type: ignore[method-assign]
+    dataframe = pd.DataFrame(
+        {
+            "num_tokens": [1, 2],
+            "num_tensor_parallel_workers": [1, 1],
+            "profiling_precision": ["BF16", "BF16"],
+            "measurement_type": ["CUDA_EVENT", "CUDA_EVENT"],
+            "time_stats.attn_pre_proj.median": [0.1, 0.2],
+        }
+    )
+
+    result = manager._train_single_model(
+        model_name="attn_pre_proj",
+        df=dataframe,
+        feature_cols=["num_tokens"],
+        target_col="time_stats.attn_pre_proj.median",
+        execution_time_predictor_config=SimpleNamespace(),
+        training_context={
+            "cluster_type": ClusterType.PREFILL,
+            "device": "a800",
+            "model_name": "llama2_7b_dense_example",
+            "tensor_parallel_size": 1,
+            "input_file": "attention.csv",
+        },
+    )
+
+    assert result is artifact
+    assert (
+        manager._trained_models_by_cluster[ClusterType.PREFILL]["eager"][
+            "attn_pre_proj"
+        ]
+        is artifact
+    )
 
 
 def _make_dense_replica_config() -> ReplicaConfig:
@@ -105,7 +385,9 @@ def test_shared_manager_trains_eager_attention_decode_for_pd_decode_cluster(
     manager._train_attn_models_for_cluster(  # type: ignore[attr-defined]
         cluster_type=ClusterType.DECODE,
         replica_config=replica_config,
-        execution_time_predictor_config=SimpleNamespace(),
+        execution_time_predictor_config=SimpleNamespace(
+            kv_cache_prediction_granularity=64
+        ),
         replica_scheduler_config=SimpleNamespace(block_size=16),
         linear_ops_file=str(linear_ops_file),
         attn_file=str(attn_file),
@@ -113,6 +395,80 @@ def test_shared_manager_trains_eager_attention_decode_for_pd_decode_cluster(
     )
 
     assert "attn_decode" in trained_ops
+
+
+def test_shared_manager_trains_pdaf_decode_attn_post_attention_layernorm(
+    tmp_path,
+) -> None:
+    manager = _make_manager_without_init()
+    manager._active_measurement_type = MeasurementType.KERNEL_ONLY
+    replica_config = _make_dense_replica_config()
+
+    linear_ops_file = tmp_path / "linear_op_kernel_only.csv"
+    attn_file = tmp_path / "attention_kernel_only.csv"
+    linear_ops_file.write_text("", encoding="utf-8")
+    attn_file.write_text("", encoding="utf-8")
+
+    manager._load_linear_op_df = lambda *_args, **_kwargs: pd.DataFrame(  # type: ignore[attr-defined]
+        {
+            "num_tokens": [1, 2],
+            "time_stats.input_layernorm.median": [0.1, 0.2],
+            "time_stats.post_attention_layernorm.median": [0.1, 0.2],
+            "time_stats.attn_pre_proj.median": [0.1, 0.2],
+            "time_stats.attn_post_proj.median": [0.1, 0.2],
+            "time_stats.attn_rope.median": [0.1, 0.2],
+        }
+    )
+    manager._load_attention_df = lambda *_args, **_kwargs: pd.DataFrame(  # type: ignore[attr-defined]
+        {
+            "is_decode": [False, True],
+            "is_mixed_batch": [False, False],
+            "is_true_mixed_batch": [False, False],
+            "num_tokens": [16, 2],
+            "total_tokens": [16, 2],
+            "batch_size": [1, 2],
+            "kv_cache_size": [0, 256],
+            "prefill_chunk_size": [16, 0],
+            "time_stats.attn_kv_cache_save.median": [0.1, 0.2],
+            "time_stats.attn_prefill.median": [0.3, 0.0],
+            "time_stats.attn_decode.median": [0.0, 0.4],
+        }
+    )
+    manager._get_attention_df_with_derived_features = (  # type: ignore[attr-defined]
+        lambda df: df.assign(
+            prefill_chunk_size_squared=df["prefill_chunk_size"] ** 2
+        )
+    )
+
+    trained_contexts: dict[str, dict[str, object]] = {}
+
+    def _fake_train_single_model(
+        *,
+        model_name: str,
+        training_context: dict[str, object],
+        **_kwargs,
+    ) -> SimpleNamespace:
+        trained_contexts[model_name] = training_context
+        return SimpleNamespace()
+
+    manager._train_single_model = _fake_train_single_model  # type: ignore[attr-defined]
+
+    manager._train_attn_models_for_cluster(  # type: ignore[attr-defined]
+        cluster_type=ClusterType.DECODE_ATTN,
+        replica_config=replica_config,
+        execution_time_predictor_config=SimpleNamespace(
+            kv_cache_prediction_granularity=64
+        ),
+        replica_scheduler_config=SimpleNamespace(block_size=16),
+        linear_ops_file=str(linear_ops_file),
+        attn_file=str(attn_file),
+        trained_model_signatures=set(),
+    )
+
+    post_norm_context = trained_contexts["post_attention_layernorm"]
+    assert post_norm_context["cluster_type"] is ClusterType.DECODE_ATTN
+    assert post_norm_context["tensor_parallel_size"] == 1
+    assert post_norm_context["input_file"] == str(linear_ops_file)
 
 
 def test_shared_manager_dense_physical_attention_models_follow_family_mapping(
@@ -227,7 +583,9 @@ def test_shared_manager_dense_physical_attention_models_follow_family_mapping(
     manager._train_attn_models_for_cluster(  # type: ignore[attr-defined]
         cluster_type=ClusterType.DECODE,
         replica_config=replica_config,
-        execution_time_predictor_config=SimpleNamespace(),
+        execution_time_predictor_config=SimpleNamespace(
+            kv_cache_prediction_granularity=64
+        ),
         replica_scheduler_config=SimpleNamespace(block_size=16),
         linear_ops_file=str(linear_ops_file),
         attn_file=str(attn_file),
@@ -359,7 +717,9 @@ def test_shared_manager_dense_physical_attention_roles_do_not_depend_on_family_o
     manager._train_attn_models_for_cluster(  # type: ignore[attr-defined]
         cluster_type=ClusterType.DECODE,
         replica_config=replica_config,
-        execution_time_predictor_config=SimpleNamespace(),
+        execution_time_predictor_config=SimpleNamespace(
+            kv_cache_prediction_granularity=64
+        ),
         replica_scheduler_config=SimpleNamespace(block_size=16),
         linear_ops_file=str(linear_ops_file),
         attn_file=str(attn_file),
@@ -607,6 +967,7 @@ def test_sklearn_prefill_and_decode_training_use_shared_family_mapping(
     predictor._attention_input_file = "unused.csv"
     predictor._active_measurement_type = MeasurementType.CUDA_EVENT
     predictor._model_config = _dense_model_config()
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=64)
 
     predictor._load_attention_df = lambda _path: pd.DataFrame(  # type: ignore[attr-defined]
         {
@@ -707,6 +1068,7 @@ def test_sklearn_prefill_and_decode_training_use_roles_not_family_order(
     predictor._attention_input_file = "unused.csv"
     predictor._active_measurement_type = MeasurementType.CUDA_EVENT
     predictor._model_config = _dense_model_config()
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=64)
 
     predictor._load_attention_df = lambda _path: pd.DataFrame(  # type: ignore[attr-defined]
         {
@@ -803,6 +1165,51 @@ def test_sklearn_prefill_and_decode_training_use_roles_not_family_order(
     }
 
 
+def test_sklearn_standard_prefill_training_excludes_mixed_prefill_rows(
+    monkeypatch,
+) -> None:
+    predictor = _ConcreteSklearnPredictor.__new__(_ConcreteSklearnPredictor)
+    predictor._attention_input_file = "unused.csv"
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._model_config = _dense_model_config()
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=64)
+    predictor._load_attention_df = lambda _path: pd.DataFrame(  # type: ignore[attr-defined]
+        {
+            "is_decode": [False, False, True],
+            "is_mixed_batch": [False, True, False],
+            "is_true_mixed_batch": [False, False, False],
+            "batch_size": [1, 2, 1],
+            "prefill_chunk_size": [16, 16, 0],
+            "kv_cache_size": [0, 0, 16],
+            "prefill_chunk_size_squared": [256, 256, 0],
+            "avg_seq_len": [16.0, 8.0, 1.0],
+            "batch_cv_interaction": [0.0, 0.0, 0.0],
+            "batch_variance_interaction": [0.0, 0.0, 0.0],
+            "max_seq_len": [16, 8, 1],
+            "min_seq_len": [16, 8, 1],
+            "seq_len_cv": [0.0, 0.0, 0.0],
+            "seq_len_range": [0, 0, 0],
+            "seq_len_variance": [0.0, 0.0, 0.0],
+            "total_tokens": [16, 16, 1],
+            "total_tokens_squared": [256, 256, 1],
+            "time_stats.attn_prefill.median": [0.3, 0.5, 0.0],
+            "time_stats.attn_decode.median": [0.0, 0.0, 0.4],
+        }
+    )
+    predictor._get_attention_df_with_derived_features = lambda df: df  # type: ignore[attr-defined]
+    trained_rows: dict[str, int] = {}
+
+    def _fake_train_model(*, model_name: str, df: pd.DataFrame, **_kwargs):
+        trained_rows[model_name] = len(df)
+        return SimpleNamespace()
+
+    predictor._train_model = _fake_train_model  # type: ignore[attr-defined]
+
+    predictor._train_attention_layer_models()
+
+    assert trained_rows["attn_prefill"] == 1
+
+
 def _patch_sklearn_dense_runtime_role_names(monkeypatch) -> None:
     monkeypatch.setattr(
         sklearn_execution_time_predictor,
@@ -836,7 +1243,7 @@ def test_sklearn_runtime_dense_attention_cache_reads_follow_role_names(
         "runtime_decode",
     }
     predictor._predictions = {
-        "runtime_cache": {(5,): 1.25},
+        "runtime_cache": {(5, 0, 1): 1.25},
         "runtime_prefill": {(16, 9): 2.5},
         "runtime_decode": {(2, 32): 3.75},
     }
@@ -867,6 +1274,77 @@ def test_sklearn_runtime_dense_attention_cache_reads_follow_role_names(
     assert predictor._get_attention_decode_execution_time(decode_batch) == 3.75
 
 
+def test_multi_prefill_requires_explicit_mixed_prediction_contract(monkeypatch) -> None:
+    _patch_sklearn_dense_runtime_role_names(monkeypatch)
+
+    predictor = _ConcreteSklearnPredictor.__new__(_ConcreteSklearnPredictor)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=16)
+    predictor._model_config = _dense_model_config()
+    predictor._attention_prefill_batching_overhead_fraction = 0.0
+    predictor._supports_operation = lambda operation: operation == "runtime_prefill"
+    predictor._predictions = {
+        "runtime_prefill": {(64, 16**2): 2.5},
+    }
+    predictor._get_batch_prefill_attention_params = lambda _batch: [
+        (64, 16),
+        (64, 16),
+    ]
+
+    batch = SimpleNamespace(
+        id=11,
+        num_prefill_tokens=32,
+        num_decode_tokens=0,
+        num_tokens=[16, 16],
+        requests=[object(), object()],
+    )
+
+    with pytest.raises(ValueError, match="multi-request prefill.*mixed"):
+        predictor._get_attention_prefill_execution_time(batch)
+
+
+def test_single_prefill_in_true_mixed_batch_uses_mixed_prediction_contract(
+    monkeypatch,
+) -> None:
+    _patch_sklearn_dense_runtime_role_names(monkeypatch)
+
+    predictor = _ConcreteSklearnPredictor.__new__(_ConcreteSklearnPredictor)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=16)
+    predictor._model_config = _dense_model_config()
+    predictor._attention_prefill_batching_overhead_fraction = 0.0
+    predictor._supports_operation = lambda operation: operation == "runtime_prefill"
+    predictor._predictions = {
+        "runtime_prefill": {(64, 16**2): 2.5},
+        "attn_prefill_mixed": {"_on_demand_prediction": True},
+    }
+    predictor._get_batch_prefill_attention_params = lambda _batch: [(64, 16)]
+    expected_features = {
+        "num_prefill_seqs": 1.0,
+        "num_decode_seqs": 1.0,
+    }
+    predictor._get_batch_prefill_mixed_features = lambda _batch: expected_features
+    observed_calls = []
+
+    def _predict(model_name, features):
+        observed_calls.append((model_name, features))
+        return 4.25
+
+    predictor._get_on_demand_prediction = _predict
+    batch = SimpleNamespace(
+        id=12,
+        num_prefill_tokens=16,
+        num_decode_tokens=1,
+        num_tokens=[16, 1],
+        requests=[object(), object()],
+    )
+
+    assert predictor._get_attention_prefill_execution_time(batch) == 4.25
+    assert observed_calls == [("attn_prefill_mixed", expected_features)]
+
+
 def test_sklearn_runtime_prediction_caches_follow_role_names(monkeypatch) -> None:
     _patch_sklearn_dense_runtime_role_names(monkeypatch)
 
@@ -887,10 +1365,32 @@ def test_sklearn_runtime_prediction_caches_follow_role_names(monkeypatch) -> Non
     predictor._get_model_prediction = lambda model_name, _model, _features: {
         "source_model": model_name
     }
+    runtime_prefill = SimpleNamespace()
+    attach_feature_domain(
+        runtime_prefill,
+        pd.DataFrame(
+            {
+                "kv_cache_size": [0, 16],
+                "prefill_chunk_size_squared": [1, 4],
+            }
+        ),
+        ["kv_cache_size", "prefill_chunk_size_squared"],
+    )
+    runtime_decode = SimpleNamespace()
+    attach_feature_domain(
+        runtime_decode,
+        pd.DataFrame(
+            {
+                "batch_size": [1, 1, 2, 2],
+                "kv_cache_size": [0, 16, 0, 16],
+            }
+        ),
+        ["batch_size", "kv_cache_size"],
+    )
     predictor._models = {
         "runtime_cache": SimpleNamespace(n_features_in_=1),
-        "runtime_prefill": SimpleNamespace(),
-        "runtime_decode": SimpleNamespace(),
+        "runtime_prefill": runtime_prefill,
+        "runtime_decode": runtime_decode,
         "attn_pre_proj": SimpleNamespace(n_features_in_=1),
         "attn_post_proj": SimpleNamespace(n_features_in_=1),
         "attn_rope": SimpleNamespace(n_features_in_=1),
@@ -965,3 +1465,127 @@ def test_sklearn_runtime_dense_attention_support_gates_follow_role_names(
     assert attention_time.attention_prefill_execution_time == 7.0
     assert attention_time.attention_decode_execution_time == 11.0
     assert attention_time.attention_kv_cache_save_execution_time == 13.0
+
+
+def _run_shared_dense_attention_training(
+    tmp_path,
+    attention_df: pd.DataFrame,
+) -> dict[str, object]:
+    manager = _make_manager_without_init()
+    replica_config = _make_dense_replica_config()
+    linear_ops_file = tmp_path / "linear_op.csv"
+    attention_file = tmp_path / "attention.csv"
+    linear_ops_file.write_text("", encoding="utf-8")
+    attention_file.write_text("", encoding="utf-8")
+
+    manager._load_linear_op_df = lambda *_args, **_kwargs: pd.DataFrame(  # type: ignore[attr-defined]
+        {
+            "num_tokens": [1, 2],
+            "time_stats.input_layernorm.median": [0.1, 0.2],
+            "time_stats.attn_pre_proj.median": [0.1, 0.2],
+            "time_stats.attn_post_proj.median": [0.1, 0.2],
+            "time_stats.attn_rope.median": [0.1, 0.2],
+        }
+    )
+    manager._load_attention_df = (  # type: ignore[attr-defined]
+        lambda *_args, **_kwargs: attention_df.copy()
+    )
+
+    def _add_minimal_derived_features(df: pd.DataFrame) -> pd.DataFrame:
+        derived = df.copy()
+        if "prefill_chunk_size_squared" not in derived.columns:
+            derived["prefill_chunk_size_squared"] = (
+                derived["prefill_chunk_size"] ** 2
+            )
+        return derived
+
+    manager._get_attention_df_with_derived_features = (  # type: ignore[attr-defined]
+        _add_minimal_derived_features
+    )
+    manager._train_single_model = (  # type: ignore[attr-defined]
+        lambda *, model_name, **_kwargs: SimpleNamespace(model_name=model_name)
+    )
+
+    return manager._train_attn_models_for_cluster(  # type: ignore[attr-defined]
+        cluster_type=ClusterType.DECODE,
+        replica_config=replica_config,
+        execution_time_predictor_config=SimpleNamespace(
+            kv_cache_prediction_granularity=64
+        ),
+        replica_scheduler_config=SimpleNamespace(block_size=16),
+        linear_ops_file=str(linear_ops_file),
+        attn_file=str(attention_file),
+        trained_model_signatures=set(),
+    )
+
+
+def test_shared_manager_rejects_decode_rows_with_incomplete_schema(tmp_path) -> None:
+    attention_df = pd.DataFrame(
+        {
+            "is_decode": [False, True],
+            "is_mixed_batch": [False, False],
+            "is_true_mixed_batch": [False, False],
+            "total_tokens": [16, 2],
+            "batch_size": [1, 2],
+            "kv_cache_size": [0, 256],
+            "prefill_chunk_size": [16, 0],
+            "time_stats.attn_kv_cache_save.median": [0.1, 0.2],
+            "time_stats.attn_prefill.median": [0.3, 0.0],
+        }
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"attn_decode.*time_stats\.attn_decode\.median.*attention\.csv.*Re-run",
+    ):
+        _run_shared_dense_attention_training(tmp_path, attention_df)
+
+
+def test_shared_manager_rejects_mixed_prefill_rows_with_incomplete_schema(
+    tmp_path,
+) -> None:
+    attention_df = pd.DataFrame(
+        {
+            "is_decode": [False, False],
+            "is_mixed_batch": [False, True],
+            "is_true_mixed_batch": [False, False],
+            "total_tokens": [16, 24],
+            "batch_size": [1, 2],
+            "kv_cache_size": [0, 128],
+            "prefill_chunk_size": [16, 12],
+            "time_stats.attn_kv_cache_save.median": [0.1, 0.2],
+            "time_stats.attn_prefill.median": [0.3, 0.4],
+            "time_stats.attn_decode.median": [0.0, 0.0],
+        }
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"attn_prefill_mixed.*avg_seq_len.*attention\.csv.*Re-run",
+    ):
+        _run_shared_dense_attention_training(tmp_path, attention_df)
+
+
+def test_shared_manager_rejects_true_mixed_decode_rows_with_incomplete_schema(
+    tmp_path,
+) -> None:
+    attention_df = pd.DataFrame(
+        {
+            "is_decode": [False, False],
+            "is_mixed_batch": [False, True],
+            "is_true_mixed_batch": [False, True],
+            "total_tokens": [16, 24],
+            "batch_size": [1, 2],
+            "kv_cache_size": [0, 128],
+            "prefill_chunk_size": [16, 12],
+            "time_stats.attn_kv_cache_save.median": [0.1, 0.2],
+            "time_stats.attn_prefill.median": [0.3, 0.4],
+            "time_stats.attn_decode.median": [0.0, 0.5],
+        }
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=r"attn_decode_in_mixed.*decode_batch_size.*attention\.csv.*Re-run",
+    ):
+        _run_shared_dense_attention_training(tmp_path, attention_df)

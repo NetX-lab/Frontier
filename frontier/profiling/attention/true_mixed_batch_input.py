@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 from typing import List
 
+from frontier.profiling.attention.attention_input import required_blocks_for_lengths
+
 
 @dataclass
 class TrueMixedBatchInput:
@@ -90,14 +92,35 @@ class TrueMixedBatchInput:
             and all(x <= max_seq_len for x in decode_total_lens)
         )
 
-    def is_under_memory_limit(self, max_num_tokens: int) -> bool:
-        total_with_cache = (
-            self.total_prefill_tokens
-            + sum(self.prefill_kv_cache_sizes)
-            + self.total_decode_tokens
-            + sum(self.decode_kv_cache_sizes)
+    def required_blocks(self, *, block_size: int) -> int:
+        """Return total physical KV blocks for prefill and decode sequences."""
+
+        sequence_lengths = [
+            seq_len + kv_cache_size
+            for seq_len, kv_cache_size in zip(
+                self.prefill_seq_lens,
+                self.prefill_kv_cache_sizes,
+            )
+        ]
+        sequence_lengths.extend(
+            kv_cache_size + 1 for kv_cache_size in self.decode_kv_cache_sizes
         )
-        return total_with_cache <= max_num_tokens
+        return required_blocks_for_lengths(sequence_lengths, block_size=block_size)
+
+    def is_under_memory_limit(self, max_num_blocks: int, *, block_size: int) -> bool:
+        """Return whether all true-mixed sequences fit the available KV blocks."""
+
+        if isinstance(max_num_blocks, bool) or not isinstance(max_num_blocks, int):
+            raise ValueError(
+                "max_num_blocks must be a non-negative integer, "
+                f"got {max_num_blocks!r}."
+            )
+        if max_num_blocks < 0:
+            raise ValueError(
+                "max_num_blocks must be a non-negative integer, "
+                f"got {max_num_blocks!r}."
+            )
+        return self.required_blocks(block_size=block_size) <= max_num_blocks
 
     def to_dict(self) -> dict:
         return {

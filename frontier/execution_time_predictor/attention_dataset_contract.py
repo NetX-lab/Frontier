@@ -6,12 +6,18 @@ MIXED_ATTENTION_FILE_NAMES = (
     "attention_mixed.csv",
     "attention_true_mixed.csv",
     "attention_combined.csv",
+    "attention_combined_kernel_only.csv",
 )
 
 TRUE_MIXED_SUPPLEMENT_FILE_NAMES = (
     "attention_true_mixed.csv",
     "attention_true_mixed_kernel_only.csv",
 )
+
+CANONICAL_ALIAS_BY_NAME = {
+    "attention.csv": "attention_combined.csv",
+    "attention_kernel_only.csv": "attention_combined_kernel_only.csv",
+}
 
 # Any of these columns indicates that the configured attention input includes
 # mixed-batch profiling metadata.
@@ -51,6 +57,24 @@ def enforce_mixed_attention_input_contract(
     if not existing_mixed_files:
         return
 
+    attention_basename = os.path.basename(attention_file_path)
+    alias_name = CANONICAL_ALIAS_BY_NAME.get(attention_basename)
+    if alias_name is not None:
+        alias_path = os.path.join(
+            os.path.dirname(os.path.abspath(attention_file_path)), alias_name
+        )
+        if os.path.exists(alias_path) and os.path.exists(attention_file_path):
+            with open(attention_file_path, "rb") as canonical_stream:
+                canonical_bytes = canonical_stream.read()
+            with open(alias_path, "rb") as alias_stream:
+                alias_bytes = alias_stream.read()
+            if canonical_bytes != alias_bytes:
+                raise ValueError(
+                    "Attention canonical CSV and compatibility alias must be "
+                    f"byte-identical: canonical={attention_file_path}, "
+                    f"alias={alias_path}."
+                )
+
     column_set = set(available_columns)
     has_mixed_columns = any(
         column in column_set for column in MIXED_ATTENTION_MARKER_COLUMNS
@@ -71,5 +95,6 @@ def enforce_mixed_attention_input_contract(
         f"required_any_column={list(MIXED_ATTENTION_MARKER_COLUMNS)}. "
         "Use canonical attention.csv / attention_kernel_only.csv after merging "
         f"true-mixed supplement files={true_mixed_supplements}. "
-        "Do not use attention_combined*.csv as the true-mixed supplement source."
+        "Do not use attention_combined*.csv as the true-mixed supplement source; "
+        "it is only a byte-identical compatibility alias."
     )

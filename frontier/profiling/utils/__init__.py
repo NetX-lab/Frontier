@@ -5,6 +5,7 @@ import os
 import re
 from itertools import product
 from math import floor
+from numbers import Integral, Real
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
@@ -251,6 +252,11 @@ def get_attention_batch_sizes_to_profile(
         normalized = []
         seen = set()
         for value in batch_size_list:
+            if isinstance(value, bool) or not isinstance(value, Integral):
+                raise ValueError(
+                    "batch_size_list values must be integers, "
+                    f"got {value!r}."
+                )
             batch_size = int(value)
             if batch_size < min_batch_size or batch_size > max_batch_size:
                 raise ValueError(
@@ -329,17 +335,23 @@ def get_attention_input_combinations(
         raise ValueError(
             "fixed_chunked_prefill_size must be a positive integer or -1 to disable chunking."
         )
+    if fixed_chunked_prefill_size > max_seq_len:
+        raise ValueError(
+            "fixed_chunked_prefill_size cannot exceed max_seq_len: "
+            f"fixed_chunked_prefill_size={fixed_chunked_prefill_size}, "
+            f"max_seq_len={max_seq_len}."
+        )
 
     def _resolve_prefill_chunk_sizes():
         # Grid search enabled: use either provided fixed size or the full sweep.
         if enable_chunked_prefill_grid_search:
             if fixed_chunked_prefill_size > 0:
-                return [min(fixed_chunked_prefill_size, max_seq_len)]
+                return [fixed_chunked_prefill_size]
             return get_attention_prefill_chunk_sizes_to_profile(max_seq_len)
 
         # Grid search disabled: use a single fixed chunk size (default to full length).
         if fixed_chunked_prefill_size > 0:
-            return [min(fixed_chunked_prefill_size, max_seq_len)]
+            return [fixed_chunked_prefill_size]
         return [max_seq_len]
 
     # Chunked Prefills
@@ -366,12 +378,13 @@ def get_attention_input_combinations(
         oversized_kv_cache_sizes = [
             kv_cache_size
             for kv_cache_size in kv_cache_sizes_to_profile
-            if kv_cache_size > max_seq_len
+            if kv_cache_size + 1 > max_seq_len
         ]
         if oversized_kv_cache_sizes:
             raise ValueError(
-                "decode_kv_cache_size_list values must be <= max_seq_len, "
-                f"got {oversized_kv_cache_sizes} > {max_seq_len}"
+                "decode_kv_cache_size_list values must leave room for the new "
+                "decode token (kv_cache_size + 1 <= max_seq_len), "
+                f"got {oversized_kv_cache_sizes} for max_seq_len={max_seq_len}"
             )
     else:
         kv_cache_sizes_to_profile = get_seq_lengths_to_profile(max_seq_len)
@@ -383,6 +396,7 @@ def get_attention_input_combinations(
     )
 
     valid_input_combinations = []
+    seen_input_keys = set()
     for input_combination in input_combinations:
         prefill_chunk_size, kv_cache_size, batch_size, is_prefill = input_combination
 
@@ -400,14 +414,66 @@ def get_attention_input_combinations(
         )
 
         if attention_input.is_valid(max_seq_len):
+            input_key = (
+                attention_input.prefill_chunk_size,
+                attention_input.kv_cache_size,
+                attention_input.batch_size,
+                attention_input.is_prefill,
+            )
+            if input_key in seen_input_keys:
+                continue
+            seen_input_keys.add(input_key)
             valid_input_combinations.append(attention_input)
     return valid_input_combinations
 
 
-"""
-    For a given model and parallel config, get the maximum number of blocks that can be allocated.
-    This doesn't take into account the weights and activations.
-"""
+def calculate_max_num_blocks_from_memory(
+    *,
+    free_memory_bytes: int,
+    block_memory_bytes: int,
+    gpu_memory_utilization: float,
+    reserved_memory_bytes: int = 0,
+) -> int:
+    """Calculate a KV-block budget from free memory after explicit reserves."""
+
+    for name, value, allow_zero in (
+        ("free_memory_bytes", free_memory_bytes, False),
+        ("block_memory_bytes", block_memory_bytes, False),
+        ("reserved_memory_bytes", reserved_memory_bytes, True),
+    ):
+        if isinstance(value, bool) or not isinstance(value, Integral):
+            raise ValueError(f"{name} must be an integer, got {value!r}.")
+        if int(value) < (0 if allow_zero else 1):
+            comparator = "non-negative" if allow_zero else "positive"
+            raise ValueError(f"{name} must be {comparator}, got {value!r}.")
+    if isinstance(gpu_memory_utilization, bool) or not isinstance(
+        gpu_memory_utilization, Real
+    ):
+        raise ValueError(
+            "gpu_memory_utilization must be numeric, "
+            f"got {gpu_memory_utilization!r}."
+        )
+    utilization = float(gpu_memory_utilization)
+    if not 0.0 < utilization <= 1.0:
+        raise ValueError(
+            "gpu_memory_utilization must be in (0, 1], "
+            f"got {gpu_memory_utilization!r}."
+        )
+
+    usable_memory_bytes = floor(int(free_memory_bytes) * utilization)
+    allocatable_memory_bytes = usable_memory_bytes - int(reserved_memory_bytes)
+    if allocatable_memory_bytes <= 0:
+        raise ValueError(
+            "reserved_memory_bytes leaves no usable GPU memory for KV cache: "
+            f"free_memory_bytes={free_memory_bytes}, "
+            f"gpu_memory_utilization={utilization}, "
+            f"usable_memory_bytes={usable_memory_bytes}, "
+            f"reserved_memory_bytes={reserved_memory_bytes}."
+        )
+    return floor(allocatable_memory_bytes / int(block_memory_bytes))
+
+
+"""Return the maximum KV blocks that fit the current free-memory budget."""
 
 
 def get_max_num_blocks(
@@ -417,8 +483,19 @@ def get_max_num_blocks(
     dtype: "torch.dtype",
     gpu_memory_utilization: float = 0.9,
     max_pipeline_parallel_size: int = 8,
+    reserved_memory_bytes: int = 0,
 ):
     import torch
+
+    if (
+        isinstance(max_pipeline_parallel_size, bool)
+        or not isinstance(max_pipeline_parallel_size, Integral)
+        or int(max_pipeline_parallel_size) <= 0
+    ):
+        raise ValueError(
+            "max_pipeline_parallel_size must be a positive integer, "
+            f"got {max_pipeline_parallel_size!r}."
+        )
 
     element_size = torch.randn(1, dtype=dtype).element_size()
     block_memory_size = (
@@ -428,12 +505,21 @@ def get_max_num_blocks(
         * model_config.get_head_size()
         * element_size
     )
-    assert model_config.num_layers % max_pipeline_parallel_size == 0
+    if model_config.num_layers % max_pipeline_parallel_size != 0:
+        raise ValueError(
+            "Model layers must be evenly divisible by max_pipeline_parallel_size: "
+            f"num_layers={model_config.num_layers}, "
+            f"max_pipeline_parallel_size={max_pipeline_parallel_size}."
+        )
     block_memory_total = block_memory_size * (
         model_config.num_layers // max_pipeline_parallel_size
     )
-    return floor(
-        (torch.cuda.mem_get_info()[1] * gpu_memory_utilization) / (block_memory_total)
+    free_memory_bytes, _total_memory_bytes = torch.cuda.mem_get_info()
+    return calculate_max_num_blocks_from_memory(
+        free_memory_bytes=int(free_memory_bytes),
+        block_memory_bytes=int(block_memory_total),
+        gpu_memory_utilization=gpu_memory_utilization,
+        reserved_memory_bytes=reserved_memory_bytes,
     )
 
 
@@ -549,8 +635,32 @@ def get_mixed_prefill_input_combinations(
         raise ValueError("kv_cache_sizes cannot be empty.")
     if any(kv_cache_size < 0 for kv_cache_size in kv_cache_sizes):
         raise ValueError("All kv_cache_sizes must be non-negative.")
+    if any(kv_cache_size >= max_seq_len for kv_cache_size in kv_cache_sizes):
+        raise ValueError(
+            "kv_cache_sizes must leave room for at least one prefill token: "
+            f"kv_cache_sizes={kv_cache_sizes!r}, max_seq_len={max_seq_len}."
+        )
 
     input_combinations = []
+    seen_structural_workloads: set[tuple[tuple[int, ...], int, str]] = set()
+
+    def append_unique(seq_lens: list[int], kv_cache_size: int, mode: str) -> None:
+        """Append one workload shape, rejecting generator-induced duplicates."""
+        identity = (
+            tuple(int(length) for length in seq_lens),
+            int(kv_cache_size),
+            str(mode),
+        )
+        if identity in seen_structural_workloads:
+            return
+        seen_structural_workloads.add(identity)
+        input_combinations.append(
+            MixedAttentionInput(
+                seq_lens=list(identity[0]),
+                kv_cache_size=identity[1],
+                mode=identity[2],
+            )
+        )
     modes_to_generate = []
     
     if mode == "both":
@@ -581,13 +691,7 @@ def get_mixed_prefill_input_combinations(
                         if seq_len + kv_cache_size > max_seq_len:
                             continue
                         seq_lens = [seq_len] * batch_size
-                        input_combinations.append(
-                            MixedAttentionInput(
-                                seq_lens=seq_lens,
-                                kv_cache_size=kv_cache_size,
-                                mode="even"
-                            )
-                        )
+                        append_unique(seq_lens, kv_cache_size, "even")
         
         elif current_mode == "random":
             # Random mode: sequences have varied lengths
@@ -646,13 +750,7 @@ def get_mixed_prefill_input_combinations(
                                 min(s, effective_max_len_with_cache) for s in seq_lens
                             ]
 
-                            input_combinations.append(
-                                MixedAttentionInput(
-                                    seq_lens=seq_lens,
-                                    kv_cache_size=kv_cache_size,
-                                    mode="random"
-                                )
-                            )
+                            append_unique(seq_lens, kv_cache_size, "random")
     
     return input_combinations
 
@@ -747,6 +845,10 @@ def _normalize_positive_int_list(
 
     normalized = set()
     for value in values:
+        if isinstance(value, bool) or not isinstance(value, Integral):
+            raise ValueError(
+                f"{name} values must be integers, got {value!r}."
+            )
         int_value = int(value)
         if int_value < minimum:
             raise ValueError(
@@ -915,21 +1017,51 @@ def get_true_mixed_attention_input_combinations(
                 raise ValueError(
                     f"Invalid prefill chunk size: {prefill_chunk_size}"
                 )
+            prefill_total_len = prefill_chunk_size + prefill_kv_cache_size
+            if prefill_total_len > max_seq_len:
+                raise ValueError(
+                    "True-mixed explicit prefill shape exceeds max_seq_len: "
+                    f"prefill total_len={prefill_total_len}, "
+                    f"prefill_chunk_size={prefill_chunk_size}, "
+                    f"prefill_kv_cache_size={prefill_kv_cache_size}, "
+                    f"max_seq_len={max_seq_len}."
+                )
             for decode_bs in decode_batch_sizes:
                 if decode_bs <= 0:
                     raise ValueError(f"Invalid decode batch size: {decode_bs}")
+                total_batch_size = prefill_bs + decode_bs
+                if total_batch_size > 128:
+                    raise ValueError(
+                        "True-mixed explicit batch exceeds the profiling batch "
+                        f"limit: total_batch_size={total_batch_size}, max_batch_size=128."
+                    )
                 for decode_kv_cache_size in decode_kv_cache_sizes:
                     if decode_kv_cache_size < 0:
                         raise ValueError(
                             f"Invalid decode kv cache size: {decode_kv_cache_size}"
+                        )
+                    decode_total_len = decode_kv_cache_size + 1
+                    if decode_total_len > max_seq_len:
+                        raise ValueError(
+                            "True-mixed explicit decode shape exceeds max_seq_len: "
+                            f"decode total_len={decode_total_len}, "
+                            f"decode_kv_cache_size={decode_kv_cache_size}, "
+                            f"max_seq_len={max_seq_len}."
                         )
                     candidate = TrueMixedBatchInput(
                         prefill_seq_lens=[prefill_chunk_size] * prefill_bs,
                         prefill_kv_cache_sizes=[prefill_kv_cache_size] * prefill_bs,
                         decode_kv_cache_sizes=[decode_kv_cache_size] * decode_bs,
                     )
-                    if candidate.is_valid(max_seq_len=max_seq_len, max_batch_size=128):
-                        combinations.append(candidate)
+                    if not candidate.is_valid(
+                        max_seq_len=max_seq_len,
+                        max_batch_size=128,
+                    ):
+                        raise ValueError(
+                            "True-mixed explicit shape failed validation after "
+                            f"construction: {candidate!r}."
+                        )
+                    combinations.append(candidate)
     return combinations
 
 

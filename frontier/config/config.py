@@ -42,6 +42,10 @@ from frontier.config.parallel_semantics import (
     resolve_collective_sim_physical_topology,
     validate_frontier_shared_parallel_domains,
 )
+from frontier.profiling.common.parallel_config import (
+    validate_prediction_min_kv_cache_size,
+    validate_profile_backed_runtime_tp_sizes,
+)
 from frontier.spec_decode.proposer_profile import (
     load_decode_draft_proposer_latency_profile,
 )
@@ -2202,9 +2206,28 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
         default=False,
         metadata={"help": "Whether to cache prediction models."},
     )
+    enable_prediction_domain_diagnostics: bool = field(
+        default=False,
+        metadata={
+            "help": (
+                "Record lightweight aggregate counts for measured, interpolated, "
+                "extrapolated, and sparse-gap ML predictions."
+            )
+        },
+    )
     kv_cache_prediction_granularity: int = field(
         default=64,
         metadata={"help": "KV cache prediction granularity."},
+    )
+    prediction_min_kv_cache_size: int = field(
+        default=0,
+        metadata={
+            "help": (
+                "Explicit lower bound for the finite attention prediction KV grid. "
+                "Use a measured-domain value when profiling does not contain kv=0; "
+                "the domain contract still validates every emitted tuple."
+            )
+        },
     )
     prediction_max_prefill_chunk_size: int = field(
         default=4096,
@@ -2644,6 +2667,12 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
     )
 
     def __post_init__(self) -> None:
+        self.prediction_min_kv_cache_size = validate_prediction_min_kv_cache_size(
+            self.prediction_min_kv_cache_size,
+            argument_name=(
+                f"{self.__class__.__name__}.prediction_min_kv_cache_size"
+            ),
+        )
         for field_name in (
             "attn_pre_proj_calibration_scale",
             "prefill_phase_attn_pre_proj_calibration_scale",
@@ -4934,6 +4963,31 @@ class ClusterConfig:
         self, replica_config: ReplicaConfig, cluster_name: str
     ):
         """Validate replica configuration for specific cluster."""
+        # This is the earliest configuration boundary where cluster role,
+        # model family, and predictor dummy-mode policy are all available.  Do
+        # not put the release TP cap in ``ReplicaConfig.__post_init__``: that
+        # object is also used by communication-only and dummy paths whose
+        # unused TP fields may legitimately be zero or otherwise unprofiled.
+        validate_profile_backed_runtime_tp_sizes(
+            replica_config,
+            cluster_type=cluster_name,
+            model_is_moe=getattr(
+                getattr(replica_config, "model_config", None), "is_moe", None
+            ),
+            enable_dummy_mode=bool(
+                getattr(
+                    getattr(self, "execution_time_predictor_config", None),
+                    "enable_dummy_mode",
+                    False,
+                )
+            ),
+            communication_only=cluster_name in {
+                "trans",
+                "transfer",
+                "communication",
+                "communication_only",
+            },
+        )
         # Validate pipeline parallelism configuration (double-check, should already be validated in __post_init__)
         if (
             replica_config.model_config.num_layers % replica_config.num_pipeline_stages

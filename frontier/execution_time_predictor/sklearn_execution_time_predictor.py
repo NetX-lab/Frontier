@@ -8,8 +8,10 @@ from abc import abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
 from itertools import product
-from typing import Any, Dict, List, Optional, Set, Tuple, TYPE_CHECKING
+from types import SimpleNamespace
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple, TYPE_CHECKING
 import math
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -26,6 +28,13 @@ from frontier.attention.model_binding import bind_attention_family
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.ops import AttentionPhase
 from frontier.attention.string_coercion import coerce_truthy_bool, coerce_truthy_int
+from frontier.attention.training_partition import (
+    DENSE_MIXED_PREFILL_FEATURES,
+    build_dense_mixed_prefill_training_rows,
+    prepare_dense_cache_write_training_rows,
+    partition_dense_attention_rows,
+    validate_cache_write_target_consistency,
+)
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_feature_columns,
     get_enabled_predictor_median_column_by_role,
@@ -59,8 +68,42 @@ from frontier.execution_time_predictor.base_execution_time_predictor import (
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )
+from frontier.execution_time_predictor.prediction_cache_contract import (
+    CanonicalPredictionGrid,
+    DOMAIN_KIND_CONDITIONAL,
+    DOMAIN_KIND_EXACT_ROWS,
+    DOMAIN_KIND_REGRESSION,
+    PREDICTION_CLASS_DIRECT_MEASURED,
+    PREDICTION_DOMAIN_POLICY_ALLOW_MODEL_PREDICTION,
+    ON_DEMAND_DOMAIN_POLICY_BOUNDED,
+    PREDICTION_CACHE_CONTRACT_VERSION,
+    attach_feature_domain,
+    build_feature_domain_descriptor,
+    build_on_demand_prediction_record,
+    canonicalize_prediction_key,
+    classify_prediction_key,
+    filter_prediction_grid_to_domain,
+    prediction_grid_digest,
+    prediction_grid_from_dataframe,
+    validate_prediction_cache,
+    validate_feature_domain_descriptor,
+    validate_prediction_grid_domain,
+    validate_on_demand_domain_policy,
+)
+from frontier.execution_time_predictor.model_cache_contract import (
+    attach_model_cache_metadata,
+    build_exact_feature_lookup,
+    build_model_cache_hash,
+    build_runtime_operator_binding,
+    build_training_options,
+    resolve_training_cv_splits,
+    validate_cached_model,
+)
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
+)
+from frontier.profiling.common.parallel_config import (
+    validate_prediction_min_kv_cache_size,
 )
 from frontier.execution_time_predictor.attention_dataset_contract import (
     enforce_mixed_attention_input_contract,
@@ -90,6 +133,9 @@ from frontier.profiling.other_overhead.validation import (
     validate_pp_receiver_head_dataframe,
     validate_pp_stage_boundary_dataframe,
 )
+from frontier.profiling.common.parallel_config import (
+    validate_profile_backed_runtime_tp_sizes,
+)
 from frontier.spec_decode import (
     build_mtp_runtime_contract,
     get_decode_draft_proposer_latency_ms,
@@ -116,26 +162,9 @@ def _build_exact_feature_lookup(
     feature_cols: List[str],
     target_col: str,
 ) -> Dict[Tuple[float, ...], float]:
-    """Build exact profiling-row lookups before falling back to regression."""
-    if df.empty:
-        return {}
-    for feature_col in feature_cols:
-        non_scalar_rows = df[feature_col].map(
-            lambda value: isinstance(value, (list, tuple, dict, set))
-        )
-        if bool(non_scalar_rows.any()):
-            raise ValueError(
-                "Exact feature lookup requires scalar numeric feature values; "
-                f"column {feature_col!r} contains non-scalar values. "
-                "Keep request-token vectors such as batch_request_num_tokens "
-                "out of numeric exact keys until a vector-key schema is designed."
-            )
-    grouped = df.groupby(feature_cols, dropna=False)[target_col].mean()
-    lookup: Dict[Tuple[float, ...], float] = {}
-    for key, value in grouped.items():
-        key_tuple = key if isinstance(key, tuple) else (key,)
-        lookup[tuple(float(item) for item in key_tuple)] = float(value)
-    return lookup
+    """Compatibility alias for the shared exact-row producer contract."""
+
+    return build_exact_feature_lookup(df, feature_cols, target_col)
 
 
 if TYPE_CHECKING:
@@ -227,7 +256,34 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         cluster_type: ClusterType = None,
         training_file_paths: Dict[str, str] = None,
         cc_backend: Optional["BaseCCBackend"] = None,
+        serving_max_tokens_per_request: Optional[int] = None,
     ) -> None:
+        # Validate profile-backed compute TP before BaseExecutionTimePredictor
+        # initializes dummy/normal paths.  This keeps an unsupported TP from
+        # triggering model loading or training first.
+        validate_profile_backed_runtime_tp_sizes(
+            replica_config,
+            cluster_type=cluster_type,
+            model_is_moe=getattr(
+                getattr(replica_config, "model_config", None), "is_moe", None
+            ),
+            enable_dummy_mode=bool(
+                getattr(predictor_config, "enable_dummy_mode", False)
+            ),
+            communication_only=(cluster_type == ClusterType.TRANS),
+        )
+
+        if serving_max_tokens_per_request is not None:
+            if isinstance(serving_max_tokens_per_request, bool) or int(
+                serving_max_tokens_per_request
+            ) <= 0:
+                raise ValueError(
+                    "serving_max_tokens_per_request must be a positive integer, "
+                    f"got {serving_max_tokens_per_request!r}."
+                )
+            serving_max_tokens_per_request = int(serving_max_tokens_per_request)
+        self._serving_max_tokens_per_request = serving_max_tokens_per_request
+
         super().__init__(
             predictor_config=predictor_config,
             replica_config=replica_config,
@@ -419,6 +475,19 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         self._runtime_cache: Dict[str, Dict[str, Dict[tuple, float]]] = defaultdict(
             lambda: defaultdict(dict)
         )
+        # Diagnostics are opt-in observability.  Do not allocate aggregate
+        # state when disabled; the normal prediction path must remain a pure
+        # cache/model lookup with no per-call bookkeeping.
+        if bool(
+            getattr(
+                getattr(self, "_config", None),
+                "enable_prediction_domain_diagnostics",
+                False,
+            )
+        ):
+            self._prediction_domain_diagnostics: Dict[
+                str, Dict[str, Dict[str, Dict[str, Any]]]
+            ] = defaultdict(lambda: defaultdict(dict))
         self._activate_measurement_type(self._get_default_measurement_type_for_cluster())
 
 
@@ -2341,7 +2410,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 df_with_derived_features["is_mixed_batch"]
             )
         else:
-            df_with_derived_features["is_mixed_batch"] = False
+            df_with_derived_features["is_mixed_batch"] = (
+                ~df_with_derived_features["is_decode"]
+            ) & (df_with_derived_features["batch_size"] > 1)
 
         if "is_true_mixed_batch" in df_with_derived_features.columns:
             df_with_derived_features["is_true_mixed_batch"] = _normalize_bool_series(
@@ -2726,18 +2797,86 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _get_estimator(self) -> BaseEstimator:
         pass
 
-    def _get_model_hash(self, model_name: str, df: pd.DataFrame = None) -> str:
-        config_str = str(self.to_dict())
+    def _get_model_hash(
+        self,
+        model_name: str,
+        df: pd.DataFrame,
+        feature_cols: Optional[List[str]] = None,
+        target_col: Optional[str] = None,
+        *,
+        operator_binding: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        if feature_cols is None or target_col is None:
+            raise ValueError(
+                "Model cache identity requires feature_cols and target_col; "
+                "call _get_model_hash from a model training path."
+            )
+        if self._active_measurement_type is None:
+            raise ValueError("Model cache identity requires an active measurement type.")
+        if "profiling_precision" not in df.columns:
+            raise ValueError(
+                f"Model cache identity requires profiling_precision metadata for {model_name}."
+            )
+        precision_values = df["profiling_precision"].dropna().unique().tolist()
+        if len(precision_values) != 1:
+            raise ValueError(
+                f"Model cache identity requires one profiling_precision for {model_name}; "
+                f"found {precision_values!r}."
+            )
+        if operator_binding is None:
+            operator_binding = build_runtime_operator_binding(
+                model_name,
+                dataframe=df,
+                model_config=getattr(self, "_model_config", None),
+                replica_config=getattr(self, "_replica_config", None),
+                cluster_type=getattr(self, "_cluster_type", None),
+            )
+        return build_model_cache_hash(
+            model_name=model_name,
+            dataframe=df,
+            profiling_precision=precision_values[0],
+            measurement_type=self._active_measurement_type,
+            feature_names=feature_cols,
+            target_col=target_col,
+            estimator=self._get_estimator(),
+            hyperparameter_grid=self._get_grid_search_params(),
+            training_options=build_training_options(
+                model_name,
+                k_fold_cv_splits=self._config.k_fold_cv_splits,
+                kv_cache_prediction_granularity=getattr(
+                    self._config,
+                    "kv_cache_prediction_granularity",
+                    None,
+                ),
+            ),
+            operator_binding=operator_binding,
+            feature_domain=build_feature_domain_descriptor(
+                df,
+                feature_cols,
+                operator_name=model_name,
+            ),
+        )
 
-        if df is None:
-            combined_str = f"{config_str}_{model_name}_{self._active_measurement_type.value}"
-        else:
-            df_hash_str = hashlib.md5(df.to_json().encode("utf-8")).hexdigest()
-            combined_str = f"{config_str}_{model_name}_{df_hash_str}_{self._active_measurement_type.value}"
+    def _get_prediction_context_hash(self, model_name: str) -> str:
+        """Hash predictor-level context without pretending it is model identity."""
+        payload = {
+            "contract_version": PREDICTION_CACHE_CONTRACT_VERSION,
+            "model_name": model_name,
+            "measurement_type": self._active_measurement_type.value,
+            "predictor": self.to_dict(),
+        }
+        encoded = json.dumps(payload, sort_keys=True, default=str, separators=(",", ":"))
+        return hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:16]
 
-        return hashlib.md5(combined_str.encode("utf-8")).hexdigest()[0:8]
-
-    def _load_model_from_cache(self, model_name: str, model_hash: str) -> BaseEstimator:
+    def _load_model_from_cache(
+        self,
+        model_name: str,
+        model_hash: str,
+        *,
+        feature_cols: List[str],
+        target_col: str,
+        operator_binding: Optional[Dict[str, Any]] = None,
+    ) -> BaseEstimator:
         with InterProcessReaderWriterLock(
             f"{self._cache_dir}/{model_hash}_model_lock.file"
         ).read_lock():
@@ -2749,12 +2888,33 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 return
 
             logger.debug(f"Found model {model_name} in cache")
-            model = pickle.load(open(cache_file, "rb"))
-            return model
+            with open(cache_file, "rb") as cache_stream:
+                model = pickle.load(cache_stream)
+            return validate_cached_model(
+                model_name,
+                model,
+                expected_model_hash=model_hash,
+                feature_names=feature_cols,
+                target_col=target_col,
+                operator_binding=operator_binding,
+            )
 
     def _store_model_in_cache(
-        self, model_name: str, model_hash: str, model: BaseEstimator
+        self,
+        model_name: str,
+        model_hash: str,
+        model: BaseEstimator,
+        *,
+        operator_binding: Optional[Dict[str, Any]] = None,
     ) -> None:
+        validate_cached_model(
+            model_name,
+            model,
+            expected_model_hash=model_hash,
+            feature_names=getattr(model, "_frontier_feature_names", ()),
+            target_col=getattr(model, "_frontier_target_col", ""),
+            operator_binding=operator_binding,
+        )
         with InterProcessReaderWriterLock(
             f"{self._cache_dir}/{model_hash}_model_lock.file"
         ).write_lock():
@@ -2782,6 +2942,33 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             index=False,
         )
 
+    def _training_dataset_path(self, model_name: str) -> str:
+        """Return the profiling dataset that owns one trained model schema."""
+
+        attention_layer_models = {
+            "attn_kv_cache_save",
+            "attn_prefill",
+            "attn_decode",
+            "attn_prefill_mixed",
+            "attn_decode_in_mixed",
+        }
+        cpu_overhead_models = {
+            "schedule",
+            "sampler_e2e",
+            "prepare_inputs_e2e",
+            "process_model_outputs",
+            "ray_comm_time",
+        }
+        if model_name in attention_layer_models or model_name.startswith("attn_mla_"):
+            attribute = "_attention_input_file"
+        elif model_name in cpu_overhead_models:
+            attribute = "_cpu_overhead_input_file"
+        elif model_name.startswith("moe_"):
+            attribute = "_moe_input_file"
+        else:
+            attribute = "_compute_input_file"
+        return str(getattr(self, attribute, "<unknown>"))
+
     def _train_model(
         self,
         model_name: str,
@@ -2792,7 +2979,20 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         if len(df) == 0:
             raise Exception(f"Training data for model {model_name} is empty")
 
+        if model_name == "attn_kv_cache_save":
+            df = prepare_dense_cache_write_training_rows(
+                df,
+                dataset_path=self._training_dataset_path(model_name),
+            )
+
         required_cols = feature_cols + [target_col]
+        missing_cols = [column for column in required_cols if column not in df.columns]
+        if missing_cols:
+            raise ValueError(
+                f"Training data for model {model_name} is missing required columns "
+                f"{missing_cols}; dataset={self._training_dataset_path(model_name)!r}. "
+                "Re-run profiling with the current feature schema."
+            )
         nan_row_mask = df[required_cols].isna().any(axis=1)
         nan_row_count = int(nan_row_mask.sum())
         if nan_row_count > 0:
@@ -2811,19 +3011,46 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"(target={target_col})."
             )
 
-        model_hash = self._get_model_hash(model_name, df)
+        if model_name == "attn_kv_cache_save":
+            validate_cache_write_target_consistency(
+                df,
+                target_col=target_col,
+                allow_repeated_measurements=True,
+            )
 
-        cached_model = self._load_model_from_cache(model_name, model_hash)
+        operator_binding = build_runtime_operator_binding(
+            model_name,
+            dataframe=df,
+            model_config=getattr(self, "_model_config", None),
+            replica_config=getattr(self, "_replica_config", None),
+            cluster_type=getattr(self, "_cluster_type", None),
+        )
+        model_hash = self._get_model_hash(
+            model_name,
+            df,
+            feature_cols,
+            target_col,
+            operator_binding=operator_binding,
+        )
+
+        cached_model = self._load_model_from_cache(
+            model_name,
+            model_hash,
+            feature_cols=feature_cols,
+            target_col=target_col,
+            operator_binding=operator_binding,
+        )
         if cached_model:
+            if len(feature_cols) > 1:
+                cached_model._frontier_exact_lookup = build_exact_feature_lookup(
+                    df, feature_cols, target_col
+                )
             return cached_model
 
         model = self._get_estimator()
         grid_search_params = self._get_grid_search_params()
 
-        if len(df) < self._config.k_fold_cv_splits:
-            cv = 2
-        else:
-            cv = self._config.k_fold_cv_splits
+        cv = resolve_training_cv_splits(self._config.k_fold_cv_splits, len(df))
 
         grid_search = GridSearchCV(
             estimator=model,
@@ -2846,11 +3073,32 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
 
         best_estimator = grid_search.best_estimator_
-        # Attach model identity so prediction cache can stay in sync with the actual estimator.
-        setattr(best_estimator, "_frontier_model_hash", model_hash)
-        setattr(best_estimator, "_frontier_feature_names", list(feature_cols))
+        attach_feature_domain(
+            best_estimator,
+            df,
+            feature_cols,
+            operator_name=model_name,
+        )
+        if len(feature_cols) > 1:
+            best_estimator._frontier_exact_lookup = build_exact_feature_lookup(
+                df, feature_cols, target_col
+            )
+        attach_model_cache_metadata(
+            best_estimator,
+            model_name=model_name,
+            model_hash=model_hash,
+            feature_names=feature_cols,
+            target_col=target_col,
+            feature_domain=best_estimator._frontier_feature_domain,
+            operator_binding=operator_binding,
+        )
 
-        self._store_model_in_cache(model_name, model_hash, best_estimator)
+        self._store_model_in_cache(
+            model_name,
+            model_hash,
+            best_estimator,
+            operator_binding=operator_binding,
+        )
 
         self._store_training_prediction_data(
             model_name=model_name,
@@ -2895,49 +3143,139 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             predictions = pickle.load(open(cache_file, "rb"))
             return predictions
 
-    def _get_prediction_cache_hash(self, model_name: str, model: BaseEstimator) -> str:
+    def _get_prediction_cache_hash(
+        self,
+        model_name: str,
+        model: BaseEstimator,
+        *,
+        feature_names: Optional[List[str]] = None,
+        requested_keys: Optional[List[Tuple[Any, ...]]] = None,
+        canonical_grid: CanonicalPredictionGrid | None = None,
+    ) -> str:
         """
         Build a prediction-cache hash that binds together:
         1) predictor configuration (same as the old behavior)
         2) model identity (to prevent stale caches when model changes)
         """
-        import pickle as _pkl
-
-        config_hash = self._get_model_hash(model_name, df=None)
+        config_hash = self._get_prediction_context_hash(model_name)
 
         # Prefer explicit model hash attached during training/cache load
         model_identity = getattr(model, "_frontier_model_hash", None)
-        if model_identity is None:
-            # Fallback: hash model bytes to avoid reusing old prediction cache across model changes
-            try:
-                model_identity = _pkl.dumps(model, protocol=_pkl.HIGHEST_PROTOCOL)
-                model_identity = hashlib.md5(model_identity).hexdigest()[0:8]
-            except Exception:
-                model_identity = "no_model_hash"
+        if not isinstance(model_identity, str) or not model_identity:
+            raise ValueError(
+                f"{model_name} estimator lacks _frontier_model_hash; "
+                "load or train it through the model cache contract before "
+                "materializing prediction cache."
+            )
 
-        combined = f"{config_hash}_{model_identity}"
+        if canonical_grid is not None:
+            grid_identity = canonical_grid.digest
+        elif feature_names is None or requested_keys is None:
+            grid_identity = "legacy-no-grid"
+        else:
+            grid_identity = prediction_grid_digest(feature_names, requested_keys)
+
+        combined = (
+            f"{PREDICTION_CACHE_CONTRACT_VERSION}_{config_hash}_"
+            f"{model_identity}_{grid_identity}"
+        )
         return hashlib.md5(combined.encode("utf-8")).hexdigest()[0:8]
 
     def _get_model_prediction(
         self, model_name: str, model: BaseEstimator, X: pd.DataFrame
     ) -> Dict[Tuple, float]:
-        prediction_hash = self._get_prediction_cache_hash(model_name, model)
+        # The estimator passed by a caller must be the same object registered
+        # for this model name.  Previously the method validated/hash-bound one
+        # estimator and then silently predicted with ``self._models``' other
+        # estimator, which could poison a correctly named prediction cache.
+        registered_models = getattr(self, "_models", None)
+        if not isinstance(registered_models, dict) or model_name not in registered_models:
+            raise ValueError(
+                f"{model_name} has no canonical registered estimator; "
+                "register the model before materializing predictions."
+            )
+        canonical_model = registered_models[model_name]
+        if canonical_model is not model:
+            raise ValueError(
+                f"{model_name} estimator identity mismatch: prediction materialization "
+                "must use the canonical registered model instance."
+            )
+        canonical_grid = prediction_grid_from_dataframe(
+            X,
+            return_metadata=True,
+        )
+        if not isinstance(canonical_grid, CanonicalPredictionGrid):
+            raise AssertionError("Canonical prediction-grid metadata was not returned.")
+        feature_names = canonical_grid.feature_names
+        requested_keys = canonical_grid.keys
+        measurement_family = self._measurement_family_name(
+            getattr(self, "_active_measurement_type", MeasurementType.CUDA_EVENT)
+        )
+        validate_prediction_grid_domain(
+            model_name,
+            model,
+            X,
+            measurement_family=measurement_family,
+            canonical_grid=canonical_grid,
+            runtime_physical_bounds=self._get_runtime_prediction_physical_bounds(
+                model_name,
+                feature_names,
+            ),
+            runtime_constraints=self._get_runtime_prediction_constraints(feature_names),
+        )
+        prediction_hash = self._get_prediction_cache_hash(
+            model_name,
+            model,
+            canonical_grid=canonical_grid,
+        )
 
         predictions = self._load_model_predication_cache(model_name, prediction_hash)
         if predictions is not None:
+            validate_prediction_cache(
+                model_name,
+                predictions,
+                requested_keys,
+                feature_names,
+                measurement_family=measurement_family,
+                canonical_grid=canonical_grid,
+            )
             return predictions
 
         logger.info(f"Predicting execution time for model {model_name}")
 
-        model = self._models[model_name]
         X = X.copy()
-        predictions_array = model.predict(X)
+        predictions_array = canonical_model.predict(X)
 
         # turn this into a dict, so we can store use it as a cache
         # the key is tuple for each row of X
-        predictions = dict(zip([tuple(x) for x in X.values], predictions_array))
+        predictions = dict(zip(canonical_grid.ordered_keys, predictions_array))
+        validate_prediction_cache(
+            model_name,
+            predictions,
+            requested_keys,
+            feature_names,
+            measurement_family=measurement_family,
+            canonical_grid=canonical_grid,
+            prediction_keys_are_canonical=True,
+        )
 
         self._store_model_predication_cache(model_name, prediction_hash, predictions)
+
+        if bool(
+            getattr(
+                getattr(self, "_config", None),
+                "enable_prediction_domain_diagnostics",
+                False,
+            )
+        ):
+            for key in canonical_grid.ordered_keys:
+                self._record_prediction_domain_diagnostic(
+                    model_name,
+                    model,
+                    key,
+                    measurement_family=measurement_family,
+                    value_source="model_prediction",
+                )
 
         X["prediction"] = predictions_array
         X.to_csv(
@@ -3188,10 +3526,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         attention_df = self._load_attention_df(self._attention_input_file)
         attention_df = self._get_attention_df_with_derived_features(attention_df)
-        true_mixed_df = attention_df[attention_df["is_true_mixed_batch"]].copy()
-        standard_df = attention_df[~attention_df["is_true_mixed_batch"]].copy()
-        prefill_df = standard_df[~standard_df["is_decode"]].copy()
-        decode_df = standard_df[standard_df["is_decode"]].copy()
+        partitions = partition_dense_attention_rows(attention_df)
+        true_mixed_df = partitions["true_mixed"]
+        mixed_batch_df = build_dense_mixed_prefill_training_rows(
+            partitions,
+            kv_cache_prediction_granularity=(
+                self._config.kv_cache_prediction_granularity
+            ),
+            target_col="time_stats.attn_prefill.median",
+            dataset_path=self._attention_input_file,
+        )
+        prefill_df = partitions["prefill"]
+        decode_df = partitions["decode"]
 
         models = {}
         measurement_type = getattr(self, "_active_measurement_type", MeasurementType.CUDA_EVENT)
@@ -3247,139 +3593,50 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     if col not in decode_df.columns
                 ]
                 if missing_decode_cols:
-                    logger.info(
-                        "Skipping eager %s training: missing decode feature columns %s",
-                        decode_model_name,
-                        missing_decode_cols,
+                    raise ValueError(
+                        f"Model {decode_model_name} has profiling rows but is "
+                        f"missing required columns {missing_decode_cols}; "
+                        f"dataset={self._attention_input_file!r}. Re-run attention "
+                        "profiling with the current decode schema."
                     )
-                else:
-                    models[decode_model_name] = self._train_model(
-                        model_name=decode_model_name,
-                        df=decode_df,
-                        feature_cols=decode_feature_cols,
-                        target_col=dense_attention_target_columns[decode_model_name],
-                    )
+                models[decode_model_name] = self._train_model(
+                    model_name=decode_model_name,
+                    df=decode_df,
+                    feature_cols=decode_feature_cols,
+                    target_col=dense_attention_target_columns[decode_model_name],
+                )
             else:
                 logger.info(
                     "Skipping eager %s training: no standard decode rows",
                     decode_model_name,
                 )
 
-            mixed_feature_cols = [
-                "avg_seq_len",
-                "batch_cv_interaction",
-                "batch_size",
-                "batch_variance_interaction",
-                "kv_cache_size",
-                "max_seq_len",
-                "min_seq_len",
-                "seq_len_cv",
-                "seq_len_range",
-                "seq_len_variance",
-                "total_tokens",
-                "total_tokens_squared",
+            mixed_feature_cols = list(DENSE_MIXED_PREFILL_FEATURES)
+            missing_mixed_cols = [
+                column
+                for column in [*mixed_feature_cols, "time_stats.attn_prefill.median"]
+                if column not in mixed_batch_df.columns
             ]
-            if all(col in prefill_df.columns for col in mixed_feature_cols):
-                mixed_prefill_sources = [
-                    prefill_df[
-                        prefill_df["is_mixed_batch"] | (prefill_df["batch_size"] > 1)
-                    ].copy()
-                ]
-                true_mixed_prefill_feature_map = {
-                    "avg_seq_len": "prefill_mixed_avg_seq_len",
-                    "batch_cv_interaction": "prefill_mixed_batch_cv_interaction",
-                    "batch_size": "prefill_mixed_batch_size",
-                    "batch_variance_interaction": (
-                        "prefill_mixed_batch_variance_interaction"
-                    ),
-                    "kv_cache_size": "prefill_mixed_kv_cache_size",
-                    "max_seq_len": "prefill_mixed_max_seq_len",
-                    "min_seq_len": "prefill_mixed_min_seq_len",
-                    "seq_len_cv": "prefill_mixed_seq_len_cv",
-                    "seq_len_range": "prefill_mixed_seq_len_range",
-                    "seq_len_variance": "prefill_mixed_seq_len_variance",
-                    "total_tokens": "prefill_mixed_total_tokens",
-                    "total_tokens_squared": "prefill_mixed_total_tokens_squared",
-                }
-                true_mixed_required_cols = [
-                    *true_mixed_prefill_feature_map.values(),
-                    "time_stats.attn_prefill.median",
-                ]
-                if len(true_mixed_df) > 0 and all(
-                    col in true_mixed_df.columns for col in true_mixed_required_cols
-                ):
-                    true_mixed_prefill_df = true_mixed_df[
-                        true_mixed_df["time_stats.attn_prefill.median"].notna()
-                    ].copy()
-                    if len(true_mixed_prefill_df) > 0:
-                        for (
-                            training_col,
-                            source_col,
-                        ) in true_mixed_prefill_feature_map.items():
-                            true_mixed_prefill_df[training_col] = (
-                                true_mixed_prefill_df[source_col]
-                            )
-                        valid_feature_mask = true_mixed_prefill_df[
-                            [*mixed_feature_cols, "time_stats.attn_prefill.median"]
-                        ].notna().all(axis=1)
-                        invalid_count = int((~valid_feature_mask).sum())
-                        if invalid_count:
-                            logger.warning(
-                                "Dropping %d/%d true-mixed rows with incomplete "
-                                "prefill-side mixed features before training "
-                                "attn_prefill_mixed.",
-                                invalid_count,
-                                len(true_mixed_prefill_df),
-                            )
-                        true_mixed_prefill_df = true_mixed_prefill_df.loc[
-                            valid_feature_mask
-                        ].copy()
-                        if len(true_mixed_prefill_df) == 0:
-                            raise ValueError(
-                                "True-mixed attention profiling data contains "
-                                "attn_prefill targets but no rows with complete "
-                                "prefill-side mixed features for attn_prefill_mixed."
-                            )
-                        mixed_prefill_sources.append(true_mixed_prefill_df)
-                elif len(true_mixed_df) > 0 and all(
-                    col in true_mixed_df.columns
-                    for col in [*mixed_feature_cols, "time_stats.attn_prefill.median"]
-                ):
-                    true_mixed_prefill_df = true_mixed_df[
-                        true_mixed_df["time_stats.attn_prefill.median"].notna()
-                    ].copy()
-                    valid_feature_mask = true_mixed_prefill_df[
-                        [*mixed_feature_cols, "time_stats.attn_prefill.median"]
-                    ].notna().all(axis=1)
-                    true_mixed_prefill_df = true_mixed_prefill_df.loc[
-                        valid_feature_mask
-                    ].copy()
-                    if len(true_mixed_prefill_df) > 0:
-                        mixed_prefill_sources.append(true_mixed_prefill_df)
-                mixed_prefill_df = pd.concat(
-                    mixed_prefill_sources,
-                    ignore_index=True,
-                )
-                if len(mixed_prefill_df) > 0:
-                    models["attn_prefill_mixed"] = self._train_model(
-                        model_name="attn_prefill_mixed",
-                        df=mixed_prefill_df,
-                        feature_cols=mixed_feature_cols,
-                        target_col="time_stats.attn_prefill.median",
-                    )
-                    logger.info(
-                        "Trained model attn_prefill_mixed with %d mixed-batch samples",
-                        len(mixed_prefill_df),
-                    )
-                else:
-                    logger.info(
-                        "Skipping attn_prefill_mixed training: no rows with batch_size > 1"
-                    )
-            else:
-                missing_cols = [c for c in mixed_feature_cols if c not in prefill_df.columns]
+            if missing_mixed_cols:
                 logger.info(
-                    "Skipping attn_prefill_mixed training: missing mixed-batch feature columns %s",
-                    missing_cols,
+                    "Skipping attn_prefill_mixed training: missing mixed-batch "
+                    "feature columns %s",
+                    missing_mixed_cols,
+                )
+            elif len(mixed_batch_df) > 0:
+                models["attn_prefill_mixed"] = self._train_model(
+                    model_name="attn_prefill_mixed",
+                    df=mixed_batch_df,
+                    feature_cols=mixed_feature_cols,
+                    target_col="time_stats.attn_prefill.median",
+                )
+                logger.info(
+                    "Trained model attn_prefill_mixed with %d mixed-batch samples",
+                    len(mixed_batch_df),
+                )
+            else:
+                logger.info(
+                    "Skipping attn_prefill_mixed training: no rows with batch_size > 1"
                 )
 
             decode_in_mixed_feature_cols = [
@@ -3411,10 +3668,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 missing_cols = [
                     c for c in decode_in_mixed_feature_cols if c not in true_mixed_df.columns
                 ]
-                logger.info(
-                    "Skipping attn_decode_in_mixed training: missing true mixed feature columns %s",
-                    missing_cols,
-                )
+                if len(true_mixed_df) > 0:
+                    raise ValueError(
+                        "Model attn_decode_in_mixed has profiling rows but is "
+                        f"missing required columns {missing_cols}; "
+                        f"dataset={self._attention_input_file!r}. Re-run attention "
+                        "profiling with the current true-mixed decode schema."
+                    )
+                logger.info("Skipping attn_decode_in_mixed training: no true mixed rows")
 
             return models
 
@@ -3462,9 +3723,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             missing_cols = [
                 c for c in decode_in_mixed_feature_cols if c not in true_mixed_df.columns
             ]
+            if len(true_mixed_df) > 0:
+                raise ValueError(
+                    "Model attn_decode_in_mixed has profiling rows but is missing "
+                    f"required columns {missing_cols}; "
+                    f"dataset={self._attention_input_file!r}. Re-run attention "
+                    "profiling with the current true-mixed decode schema."
+                )
             logger.info(
-                "Skipping kernel-only attn_decode_in_mixed training: missing true mixed feature columns %s",
-                missing_cols,
+                "Skipping kernel-only attn_decode_in_mixed training: no true mixed rows"
             )
         return models
 
@@ -3608,12 +3875,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     f"n_features_in_={n_features}, feature_names_in_={feature_names}"
                 )
 
-            predictions[model_name] = {
-                "_on_demand_prediction": True,
-                "_n_features": int(n_features),
-                "_model": model,
-                "_feature_names": list(feature_names),
-            }
+            predictions[model_name] = build_on_demand_prediction_record(
+                model_name,
+                model,
+                feature_names,
+                exact_lookup=getattr(model, "_frontier_exact_lookup", {}),
+            )
 
         return predictions
 
@@ -3659,13 +3926,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                         f"n_features_in_={n_features}, feature_names_in_={feature_names}"
                     )
 
-                predictions[model_name] = {
-                    "_on_demand_prediction": True,
-                    "_n_features": int(n_features),
-                    "_model": model,
-                    "_feature_names": list(feature_names),
-                    "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
-                }
+                predictions[model_name] = build_on_demand_prediction_record(
+                    model_name,
+                    model,
+                    feature_names,
+                    exact_lookup=getattr(model, "_frontier_exact_lookup", {}),
+                )
 
         return predictions
 
@@ -3711,13 +3977,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                         f"{model_name}: expected {len(expected_feature_names)}, "
                         f"got {n_features}"
                     )
-                predictions[model_name] = {
-                    "_on_demand_prediction": True,
-                    "_n_features": int(n_features),
-                    "_model": model,
-                    "_feature_names": expected_feature_names,
-                    "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
-                }
+                predictions[model_name] = build_on_demand_prediction_record(
+                    model_name,
+                    model,
+                    expected_feature_names,
+                    exact_lookup=getattr(model, "_frontier_exact_lookup", {}),
+                )
             return predictions
 
         measurement_type = getattr(self, "_active_measurement_type", MeasurementType.CUDA_EVENT)
@@ -3751,23 +4016,21 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         decode_op_name = self._dense_attention_decode_op_name()
         prefill_op_name = self._dense_attention_prefill_op_name()
+        kv_cache_size_range = self._get_attention_prediction_kv_cache_size_range(
+            attention_max_tokens
+        )
 
         if need_decode and decode_op_name in self._models:
             decode_batch_size_range = np.arange(
                 1, self._config.prediction_max_batch_size + 1
             )
-            decode_kv_cache_size_range = np.arange(
-                0,
-                attention_max_tokens + 1,
-                self._config.kv_cache_prediction_granularity,
-            )
             decode_df = pd.DataFrame(
                 {
                     "batch_size": np.repeat(
-                        decode_batch_size_range, len(decode_kv_cache_size_range)
+                        decode_batch_size_range, len(kv_cache_size_range)
                     ),
                     "kv_cache_size": np.tile(
-                        decode_kv_cache_size_range, len(decode_batch_size_range)
+                        kv_cache_size_range, len(decode_batch_size_range)
                     ),
                 }
             )
@@ -3778,27 +4041,42 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
 
         if need_prefill and prefill_op_name in self._models:
-            prefill_kv_cache_size_range = np.arange(
-                0,
-                attention_max_tokens + 1,
-                self._config.kv_cache_prediction_granularity,
-            )
-            prefill_prefill_chunk_size_range = np.arange(
-                1, self._config.prediction_max_prefill_chunk_size + 1
+            prefill_prefill_chunk_size_range = (
+                self._get_attention_prefill_chunk_size_range(
+                    self._models[prefill_op_name]
+                )
             )
             # PREFILL training data uses batch_size=1 for per-request prediction in this cache.
             prefill_df = pd.DataFrame(
                 {
                     "kv_cache_size": np.repeat(
-                        prefill_kv_cache_size_range,
+                        kv_cache_size_range,
                         len(prefill_prefill_chunk_size_range),
                     ),
                     "prefill_chunk_size_squared": np.tile(
                         prefill_prefill_chunk_size_range,
-                        len(prefill_kv_cache_size_range),
+                        len(kv_cache_size_range),
                     )
                     ** 2,
                 }
+            )
+            # Standard prefill starts from a Cartesian axis grid, but its
+            # profiling domain has a relational context limit.  Remove only
+            # tuples that violate that declared relation before hashing and
+            # materializing the finite cache; axis-bound mismatches still fail
+            # fast inside the contract helper.
+            prefill_df = filter_prediction_grid_to_domain(
+                prefill_op_name,
+                self._models[prefill_op_name],
+                prefill_df[["kv_cache_size", "prefill_chunk_size_squared"]],
+                measurement_family=self._measurement_family_name(measurement_type),
+                runtime_physical_bounds=self._get_runtime_prediction_physical_bounds(
+                    prefill_op_name,
+                    ["kv_cache_size", "prefill_chunk_size_squared"],
+                ),
+                runtime_constraints=self._get_runtime_prediction_constraints(
+                    ["kv_cache_size", "prefill_chunk_size_squared"]
+                ),
             )
             predictions[prefill_op_name] = self._get_model_prediction(
                 prefill_op_name,
@@ -3836,12 +4114,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Prediction will be computed on-demand instead of using a lookup cache."
             )
             # Store the model and feature names for on-demand prediction
-            predictions["attn_prefill_mixed"] = {
-                "_on_demand_prediction": True,
-                "_n_features": n_features,
-                "_model": model,  # Store model for on-demand prediction
-                "_feature_names": feature_names,
-            }
+            predictions["attn_prefill_mixed"] = build_on_demand_prediction_record(
+                "attn_prefill_mixed",
+                model,
+                feature_names,
+            )
 
         need_true_mixed_decode = self._cluster_type == ClusterType.MONOLITHIC
         if need_true_mixed_decode and "attn_decode_in_mixed" in self._models:
@@ -3861,27 +4138,165 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     ],
                 )
             )
-            predictions["attn_decode_in_mixed"] = {
-                "_on_demand_prediction": True,
-                "_n_features": getattr(model, "n_features_in_", len(feature_names)),
-                "_model": model,
-                "_feature_names": feature_names,
-            }
+            predictions["attn_decode_in_mixed"] = (
+                build_on_demand_prediction_record(
+                    "attn_decode_in_mixed",
+                    model,
+                    feature_names,
+                )
+            )
 
         return predictions
 
     def _get_attention_prediction_max_tokens_per_request(self) -> int:
-        max_tokens = int(self._config.prediction_max_tokens_per_request)
-        model_config = getattr(self, "_model_config", None)
-        if model_config is None:
-            return max_tokens
+        prediction_limit = int(self._config.prediction_max_tokens_per_request)
+        if prediction_limit <= 0:
+            raise ValueError(
+                "prediction_max_tokens_per_request must be positive, "
+                f"got {prediction_limit}."
+            )
 
-        for attr in ("max_model_len", "max_position_embeddings", "max_seq_len"):
-            value = getattr(model_config, attr, None)
-            if value is None:
-                continue
-            max_tokens = max(max_tokens, int(value))
-        return max_tokens
+        serving_limit = getattr(self, "_serving_max_tokens_per_request", None)
+        if serving_limit is not None:
+            if isinstance(serving_limit, bool):
+                raise ValueError(
+                    "serving_max_tokens_per_request must be a positive integer, "
+                    f"got {serving_limit!r}."
+                )
+            serving_limit = int(serving_limit)
+            if serving_limit <= 0:
+                raise ValueError(
+                    "serving_max_tokens_per_request must be positive, "
+                    f"got {serving_limit}."
+                )
+
+            architecture_cap = getattr(
+                getattr(self, "_model_config", None),
+                "max_position_embeddings",
+                None,
+            )
+            if architecture_cap is not None and serving_limit > int(architecture_cap):
+                raise ValueError(
+                    "Attention serving range exceeds the model architecture cap: "
+                    f"serving_max_tokens_per_request={serving_limit}, "
+                    f"architecture_cap={int(architecture_cap)}."
+                )
+            if serving_limit > prediction_limit:
+                raise ValueError(
+                    "Attention serving range exceeds the configured prediction "
+                    "materialization range: "
+                    f"serving_max_tokens_per_request={serving_limit}, "
+                    f"prediction_max_tokens_per_request={prediction_limit}. "
+                    "Increase the prediction limit only when the declared profiling "
+                    "domain covers it."
+                )
+
+        granularity = int(self._config.kv_cache_prediction_granularity)
+        if granularity <= 0:
+            raise ValueError(
+                "kv_cache_prediction_granularity must be positive, "
+                f"got {granularity}."
+            )
+        self._get_attention_prediction_min_kv_cache_size()
+        return (
+            (prediction_limit + granularity - 1) // granularity
+        ) * granularity
+
+    def _get_attention_prediction_min_kv_cache_size(self) -> int:
+        """Return the explicit lower bound of the finite attention KV grid."""
+
+        value = validate_prediction_min_kv_cache_size(
+            getattr(self._config, "prediction_min_kv_cache_size", 0)
+        )
+        prediction_limit = int(self._config.prediction_max_tokens_per_request)
+        if value > prediction_limit:
+            raise ValueError(
+                "prediction_min_kv_cache_size cannot exceed "
+                "prediction_max_tokens_per_request: "
+                f"min={value}, max={prediction_limit}."
+            )
+        return value
+
+    def _get_attention_prediction_kv_cache_size_range(
+        self,
+        attention_max_tokens: Optional[int] = None,
+    ) -> np.ndarray:
+        """Build the finite KV axis in the same quantization lattice as runtime.
+
+        Runtime attention keys round positive KV contexts up to zero-anchored
+        multiples of ``kv_cache_prediction_granularity``.  The declared lower
+        bound selects the first such key at or above that bound; it must not
+        shift the lattice itself (for example, min=1 and granularity=32 yields
+        32, 64, 96 rather than 1, 33, 65).  A declared zero keeps the existing
+        zero key for empty-context prefill/decode shapes.
+        """
+
+        granularity = int(self._config.kv_cache_prediction_granularity)
+        if granularity <= 0:
+            raise ValueError(
+                "kv_cache_prediction_granularity must be positive, "
+                f"got {granularity}."
+            )
+        minimum = self._get_attention_prediction_min_kv_cache_size()
+        aligned_minimum = (
+            (minimum + granularity - 1) // granularity
+        ) * granularity
+        maximum = (
+            self._get_attention_prediction_max_tokens_per_request()
+            if attention_max_tokens is None
+            else int(attention_max_tokens)
+        )
+        return np.arange(
+            aligned_minimum,
+            maximum + 1,
+            granularity,
+            dtype=np.int64,
+        )
+
+    def _get_attention_prefill_chunk_size_range(
+        self,
+        model: BaseEstimator,
+    ) -> np.ndarray:
+        """Build the standard-prefill chunk axis for the legal runtime range.
+
+        The measured lower bound is advisory under the model-prediction policy:
+        a profile that starts at chunk ``32`` must still be able to predict a
+        legal chunk ``1``.  Physical context and configured upper bounds are
+        checked by the domain validator; no measured-range filtering is used.
+        """
+
+        maximum = int(self._config.prediction_max_prefill_chunk_size)
+        if maximum <= 0:
+            raise ValueError(
+                "prediction_max_prefill_chunk_size must be positive, "
+                f"got {maximum}."
+            )
+
+        feature_names = ["kv_cache_size", "prefill_chunk_size_squared"]
+        _names, bounds, domain_kind = validate_feature_domain_descriptor(
+            getattr(model, "_frontier_feature_domain", None),
+            feature_names,
+            model_name="attn_prefill",
+            operator_name="attn_prefill",
+        )
+        lower = 1
+        runtime_policy = getattr(model, "_frontier_feature_domain", {}).get(
+            "runtime_prediction_policy"
+        )
+        if (
+            domain_kind == DOMAIN_KIND_CONDITIONAL
+            and runtime_policy == "measured_only"
+        ):
+            squared_lower = float(bounds["prefill_chunk_size_squared"][0])
+            lower = max(1, int(math.ceil(math.sqrt(squared_lower))))
+
+        if maximum < lower:
+            raise ValueError(
+                "attn_prefill prediction materialization range starts below the "
+                "declared profile domain: "
+                f"configured_max_chunk={maximum}, profile_min_chunk={lower}."
+            )
+        return np.arange(lower, maximum + 1, dtype=np.int64)
 
     def _predict_from_models(self) -> Dict[str, Any]:
         predictions = {}
@@ -4136,6 +4551,417 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         batch._decode_mixed_features = features
         return features
 
+    def _get_runtime_prediction_physical_bounds(
+        self,
+        model_name: str,
+        feature_names: List[str] | Tuple[str, ...],
+    ) -> Dict[str, Dict[str, float]]:
+        """Return runtime/configuration caps distinct from measured extrema."""
+
+        def _positive_int(value: Any, label: str) -> int:
+            # Runtime bounds are safety limits.  Do not turn zero, negative,
+            # fractional, or boolean configuration values into a silently
+            # corrected bound with ``max(..., 1)``.
+            if isinstance(value, bool) or not isinstance(value, (int, np.integer)):
+                raise ValueError(
+                    f"{label} must be a positive integer, got {value!r}."
+                )
+            normalized = int(value)
+            if normalized <= 0:
+                raise ValueError(
+                    f"{label} must be positive, got {value!r}."
+                )
+            return normalized
+
+        config = getattr(self, "_config", None)
+        model_config = getattr(self, "_model_config", None)
+        prediction_limit = _positive_int(
+            getattr(config, "prediction_max_tokens_per_request", 4096),
+            "prediction_max_tokens_per_request",
+        )
+        architecture_limit = getattr(model_config, "max_model_len", None)
+        if architecture_limit is None:
+            architecture_limit = getattr(model_config, "max_position_embeddings", None)
+        if architecture_limit is not None:
+            prediction_limit = min(
+                prediction_limit,
+                _positive_int(architecture_limit, "model architecture context cap"),
+            )
+        batch_limit = _positive_int(
+            getattr(config, "prediction_max_batch_size", 128),
+            "prediction_max_batch_size",
+        )
+        token_limit = _positive_int(
+            getattr(self, "_max_tokens", prediction_limit),
+            "runtime token cap",
+        )
+        chunk_limit = _positive_int(
+            getattr(config, "prediction_max_prefill_chunk_size", prediction_limit),
+            "prediction_max_prefill_chunk_size",
+        )
+        granularity = _positive_int(
+            getattr(config, "kv_cache_prediction_granularity", 64),
+            "kv_cache_prediction_granularity",
+        )
+        aligned_prediction_limit = (
+            (prediction_limit + granularity - 1) // granularity
+        ) * granularity
+
+        bounds: Dict[str, Dict[str, float]] = {}
+        for name in feature_names:
+            if name in {"num_tokens", "total_tokens"}:
+                bounds[name] = {"min": 1.0, "max": float(token_limit)}
+            elif name in {"batch_size", "decode_batch_size", "total_batch_size"}:
+                bounds[name] = {"min": 1.0, "max": float(batch_limit)}
+            elif name in {
+                "kv_cache_size",
+                "decode_avg_kv_cache_size",
+            }:
+                # Runtime KV features are rounded to the configured lattice;
+                # permit the final rounded block even when the raw request cap
+                # is not itself a multiple of that granularity.
+                bounds[name] = {
+                    "min": 0.0,
+                    "max": float(aligned_prediction_limit),
+                }
+            elif name in {"max_seq_len", "min_seq_len"}:
+                bounds[name] = {"min": 0.0, "max": float(prediction_limit)}
+            elif name == "prefill_chunk_size_squared":
+                bounds[name] = {"min": 1.0, "max": float(chunk_limit**2)}
+        return bounds
+
+    def _validate_lookup_key_without_model_domain(
+        self,
+        model_name: str,
+        key: Sequence[Any],
+        feature_names: Sequence[str],
+    ) -> None:
+        """Apply runtime physical checks when only a finite cache is loaded.
+
+        Normal profile-backed predictors load the canonical estimator alongside
+        the finite result table and therefore use the full persisted domain
+        validator.  A legacy/cache-only caller has no domain metadata to
+        validate; it still must not return a physically impossible key.
+        """
+
+        bounds = self._get_runtime_prediction_physical_bounds(
+            model_name,
+            list(feature_names),
+        )
+        for name, value in zip(feature_names, key):
+            numeric = float(value)
+            pair = bounds.get(name)
+            if numeric < 0.0:
+                raise ValueError(
+                    f"{model_name} lookup key has negative physical feature "
+                    f"{name}={numeric!r}."
+                )
+            if pair is not None:
+                lower = pair.get("min")
+                upper = pair.get("max")
+                if lower is not None and numeric < float(lower):
+                    raise ValueError(
+                        f"{model_name} lookup key violates physical minimum for "
+                        f"{name}: value={numeric}, min={lower}."
+                    )
+                if upper is not None and numeric > float(upper):
+                    raise ValueError(
+                        f"{model_name} lookup key violates physical maximum for "
+                        f"{name}: value={numeric}, max={upper}."
+                    )
+
+        # The only runtime relation currently supplied without a model domain
+        # is the standard attention prefill context cap.  Preserve it here so
+        # cache-only callers cannot bypass the same physical invariant.
+        for constraint in self._get_runtime_prediction_constraints(
+            list(feature_names)
+        ):
+            if constraint.get("type") != "sum_lte":
+                continue
+            total = 0.0
+            for feature in constraint.get("features", ()):
+                if feature in feature_names:
+                    total += float(key[list(feature_names).index(feature)])
+                else:
+                    derived = constraint.get("derived_features", {}).get(feature)
+                    if isinstance(derived, Mapping) and "sqrt" in derived:
+                        source = derived["sqrt"]
+                        if source not in feature_names:
+                            raise ValueError(
+                                f"{model_name} runtime constraint references unknown "
+                                f"feature {source!r}."
+                            )
+                        source_value = float(
+                            key[list(feature_names).index(source)]
+                        )
+                        if source_value < 0.0:
+                            raise ValueError(
+                                f"{model_name} runtime constraint has negative "
+                                f"square-root source {source!r}."
+                            )
+                        total += math.sqrt(source_value)
+            maximum = constraint.get("max")
+            if maximum is not None and total > float(maximum):
+                raise ValueError(
+                    f"{model_name} lookup key violates physical constraint: "
+                    f"sum={total}, max={maximum}."
+                )
+
+    def _get_runtime_prediction_constraints(
+        self,
+        feature_names: List[str] | Tuple[str, ...],
+    ) -> List[Dict[str, Any]]:
+        """Return physical relational constraints for runtime validation."""
+
+        if tuple(feature_names) != ("kv_cache_size", "prefill_chunk_size_squared"):
+            return []
+        model_config = getattr(self, "_model_config", None)
+        config = getattr(self, "_config", None)
+        physical_context = getattr(model_config, "max_model_len", None)
+        if physical_context is None:
+            physical_context = getattr(model_config, "max_position_embeddings", None)
+        serving_limit = getattr(self, "_serving_max_tokens_per_request", None)
+        if serving_limit is not None:
+            if isinstance(serving_limit, bool) or not isinstance(
+                serving_limit, (int, np.integer)
+            ):
+                raise ValueError(
+                    "serving_max_tokens_per_request must be a positive integer, "
+                    f"got {serving_limit!r}."
+                )
+            serving_limit = int(serving_limit)
+            if serving_limit <= 0:
+                raise ValueError(
+                    "serving_max_tokens_per_request must be positive, "
+                    f"got {serving_limit}."
+                )
+            if physical_context is None:
+                physical_context = serving_limit
+            else:
+                physical_context = min(int(physical_context), serving_limit)
+        if physical_context is None:
+            physical_context = max(
+                int(getattr(config, "prediction_max_tokens_per_request", 4096)),
+                int(getattr(config, "prediction_max_prefill_chunk_size", 4096)),
+            )
+        # The prefill kernel receives the existing KV context plus the newly
+        # appended chunk; serving max_model_len=4096 therefore needs the
+        # profiled endpoint at sequence length 4097 for a one-token chunk.
+        physical_context = int(physical_context) + 1
+        return [
+            {
+                "type": "sum_lte",
+                "features": ["kv_cache_size", "prefill_chunk_size"],
+                "derived_features": {
+                    "prefill_chunk_size": {"sqrt": "prefill_chunk_size_squared"}
+                },
+                "max": float(physical_context),
+                "enforce_during_extrapolation": True,
+            }
+        ]
+
+    def _record_prediction_domain_diagnostic(
+        self,
+        model_name: str,
+        model: Any,
+        key: Sequence[Any],
+        *,
+        measurement_family: str,
+        value_source: str = "model_prediction",
+    ) -> None:
+        config = getattr(self, "_config", None)
+        if not bool(getattr(config, "enable_prediction_domain_diagnostics", False)):
+            return
+        domain = getattr(model, "_frontier_feature_domain", None)
+        if not isinstance(domain, Mapping):
+            return
+        info = classify_prediction_key(domain, key)
+        classification = str(info["classification"])
+        diagnostics = getattr(self, "_prediction_domain_diagnostics", None)
+        if diagnostics is None:
+            diagnostics = {}
+            self._prediction_domain_diagnostics = diagnostics
+        family_bucket = diagnostics.setdefault(
+            measurement_family,
+            {},
+        )
+        operator_bucket = family_bucket.setdefault(model_name, {})
+        record = operator_bucket.setdefault(
+            classification,
+            {
+                "count": 0,
+                "sparse_gap": bool(info.get("sparse_gap")),
+                "max_axis_gap": 0.0,
+                "value_sources": {},
+            },
+        )
+        record["count"] = int(record.get("count", 0)) + 1
+        record["sparse_gap"] = bool(record.get("sparse_gap", False) or info.get("sparse_gap"))
+        value_sources = record.setdefault("value_sources", {})
+        value_sources[value_source] = int(value_sources.get(value_source, 0)) + 1
+        axis_gap = info.get("axis_gap", {})
+        if axis_gap:
+            record["max_axis_gap"] = max(
+                float(record.get("max_axis_gap", 0.0)),
+                max(float(value) for value in axis_gap.values()),
+            )
+
+    def get_prediction_domain_diagnostics(self) -> Dict[str, Any]:
+        """Return a detached aggregate diagnostics snapshot."""
+
+        diagnostics = getattr(self, "_prediction_domain_diagnostics", {})
+        return copy.deepcopy(dict(diagnostics))
+
+    def _get_lookup_or_predict(
+        self,
+        model_name: str,
+        key: Tuple[Any, ...],
+        feature_names: List[str],
+    ) -> float:
+        """Read a finite cache, or call its canonical model for a legal gap.
+
+        The miss path is an explicit model prediction policy.  It validates the
+        feature schema, physical runtime bounds, and domain constraints before
+        calling the registered estimator; it never substitutes a nearby row or
+        clamps the request.
+        """
+        try:
+            canonical_key = canonicalize_prediction_key(key)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"{model_name} lookup key has invalid feature values: {exc}"
+            ) from exc
+        if len(canonical_key) != len(feature_names):
+            raise ValueError(
+                f"{model_name} lookup key/schema length mismatch: "
+                f"key={canonical_key!r}, feature_names={feature_names!r}."
+            )
+        predictions = self._predictions.get(model_name)
+        measurement_family = self._measurement_family_name(
+            getattr(self, "_active_measurement_type", MeasurementType.CUDA_EVENT)
+        )
+        if predictions is None:
+            raise ValueError(
+                f"{model_name} prediction cache not found "
+                f"(measurement_family={measurement_family!r}, key={key!r})."
+            )
+        if not isinstance(predictions, dict) or predictions.get(
+            "_on_demand_prediction", False
+        ):
+            raise ValueError(
+                f"{model_name} is not a finite lookup prediction cache "
+                f"(measurement_family={measurement_family!r}, key={key!r}, "
+                f"feature_names={feature_names!r})."
+            )
+        runtime_cache = getattr(self, "_runtime_cache", None)
+        if runtime_cache is None:
+            runtime_cache = defaultdict(lambda: defaultdict(dict))
+            self._runtime_cache = runtime_cache
+        family_cache = runtime_cache[measurement_family][model_name]
+
+        # Validate schema/domain/physical constraints before either result
+        # cache can return a value.  Previously this block ran only on a miss,
+        # allowing an invalid key already present in a finite/runtime cache to
+        # bypass fail-fast validation.
+        model = getattr(self, "_models", {}).get(model_name)
+        feature_frame = pd.DataFrame([list(canonical_key)], columns=feature_names)
+        if model is None:
+            self._validate_lookup_key_without_model_domain(
+                model_name,
+                canonical_key,
+                feature_names,
+            )
+        else:
+            if isinstance(model, Mapping) or getattr(model, "_on_demand_prediction", False):
+                raise ValueError(
+                    f"{model_name} ordinary lookup cannot use an on-demand record; "
+                    "route the operator through _get_on_demand_prediction explicitly."
+                )
+            declared_names = getattr(model, "_frontier_feature_names", None)
+            if declared_names is None:
+                declared_names = getattr(model, "feature_names_in_", None)
+            if declared_names is None or tuple(map(str, declared_names)) != tuple(feature_names):
+                raise ValueError(
+                    f"{model_name} lookup model feature schema mismatch: "
+                    f"expected={tuple(feature_names)!r}, actual={declared_names!r}."
+                )
+            validate_prediction_grid_domain(
+                model_name,
+                model,
+                feature_frame,
+                measurement_family=measurement_family,
+                runtime_physical_bounds=self._get_runtime_prediction_physical_bounds(
+                    model_name,
+                    feature_names,
+                ),
+                runtime_constraints=self._get_runtime_prediction_constraints(feature_names),
+            )
+
+        if canonical_key in predictions:
+            value = float(predictions[canonical_key])
+            if not math.isfinite(value) or value < 0.0:
+                raise ValueError(
+                    f"{model_name} lookup cache contains invalid prediction {value!r} "
+                    f"(measurement_family={measurement_family!r}, key={canonical_key!r})."
+                )
+            self._record_prediction_domain_diagnostic(
+                model_name,
+                model,
+                canonical_key,
+                measurement_family=measurement_family,
+                value_source="finite_cache",
+            )
+            return value
+
+        if canonical_key in family_cache:
+            value = float(family_cache[canonical_key])
+            if not math.isfinite(value) or value < 0.0:
+                raise ValueError(
+                    f"{model_name} runtime prediction cache contains invalid value "
+                    f"{value!r} for key={canonical_key!r}."
+                )
+            self._record_prediction_domain_diagnostic(
+                model_name,
+                model,
+                canonical_key,
+                measurement_family=measurement_family,
+                value_source="runtime_cache",
+            )
+            return value
+
+        if model is None:
+            raise ValueError(
+                f"{model_name} lookup key is not materialized and no canonical model "
+                f"is registered (measurement_family={measurement_family!r}, "
+                f"key={canonical_key!r}, feature_names={feature_names!r}, "
+                f"cache_keys={len(predictions)})."
+            )
+        if isinstance(model, Mapping) or getattr(model, "_on_demand_prediction", False):
+            raise ValueError(
+                f"{model_name} ordinary lookup miss cannot use an on-demand record; "
+                "route the operator through _get_on_demand_prediction explicitly."
+            )
+        raw_predictions = model.predict(feature_frame)
+        if len(raw_predictions) < 1:
+            raise ValueError(
+                f"{model_name} canonical model returned no prediction for key={canonical_key!r}."
+            )
+        value = float(raw_predictions[0])
+        if not math.isfinite(value) or value < 0.0:
+            raise ValueError(
+                f"{model_name} canonical model returned invalid prediction {value!r} "
+                f"(measurement_family={measurement_family!r}, key={canonical_key!r})."
+            )
+        family_cache[canonical_key] = value
+        self._record_prediction_domain_diagnostic(
+            model_name,
+            model,
+            canonical_key,
+            measurement_family=measurement_family,
+            value_source="model_prediction",
+        )
+        return value
+
     def _get_on_demand_prediction(
         self, model_name: str, features: Dict[str, float]
     ) -> float:
@@ -4152,17 +4978,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         Returns:
             Predicted execution time in seconds
         """
-        # Create cache key from features (must be hashable)
-        # Use sorted keys for consistent ordering
-        cache_key = tuple(features[k] for k in sorted(features.keys()))
+        if not isinstance(features, dict):
+            raise ValueError(
+                f"On-demand features for {model_name} must be a mapping, "
+                f"got {type(features).__name__}."
+            )
 
-        family_name = self._measurement_family_name(self._active_measurement_type)
-
-        # Check runtime cache first
-        if cache_key in self._runtime_cache[family_name][model_name]:
-            return self._runtime_cache[family_name][model_name][cache_key]
-
-        # Get model from predictions dict
+        # Resolve and validate the model contract before constructing a cache
+        # key.  Building a sorted-key tuple first allowed malformed feature
+        # mappings to collide with a valid runtime cache entry.
         model_info = self._predictions.get(model_name)
         if model_info is None:
             raise ValueError(f"Model {model_name} not found in predictions")
@@ -4177,7 +5001,32 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
 
         model = model_info.get("_model")
-        feature_names = model_info.get("_feature_names", [])
+        feature_names_raw = model_info.get("_feature_names")
+        if not isinstance(feature_names_raw, (list, tuple)):
+            raise ValueError(
+                f"On-demand model {model_name} has invalid feature schema metadata."
+            )
+        feature_names = tuple(str(name) for name in feature_names_raw)
+        if (
+            not feature_names
+            or len(set(feature_names)) != len(feature_names)
+            or any(not name for name in feature_names)
+        ):
+            raise ValueError(
+                f"On-demand model {model_name} has invalid feature schema: "
+                f"{feature_names!r}."
+            )
+        declared_n_features = model_info.get("_n_features")
+        if declared_n_features is not None:
+            if (
+                isinstance(declared_n_features, bool)
+                or not isinstance(declared_n_features, (int, np.integer))
+                or int(declared_n_features) != len(feature_names)
+            ):
+                raise ValueError(
+                    f"On-demand model {model_name} feature-count metadata mismatch: "
+                    f"declared={declared_n_features!r}, schema={len(feature_names)}."
+                )
 
         # Build feature vector in correct order.
         # Fail-fast if any required feature is missing (no silent defaults).
@@ -4188,31 +5037,187 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Provided keys: {sorted(list(features.keys()))}"
             )
 
-        feature_key = tuple(float(features[fn]) for fn in feature_names)
-        exact_lookup = model_info.get("_exact_lookup") or {}
+        unknown = sorted(set(features) - set(feature_names))
+        if unknown:
+            raise ValueError(
+                f"On-demand prediction received unknown features for {model_name}: "
+                f"{unknown}. Expected exactly: {list(feature_names)}"
+            )
+
+        try:
+            feature_key = canonicalize_prediction_key(
+                tuple(features[fn] for fn in feature_names)
+            )
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"On-demand prediction features for {model_name} must be finite numeric "
+                f"values: {exc}"
+            ) from exc
+
+        # Explicit on-demand models must declare whether runtime inputs are
+        # bounded by the measured profile domain or intentionally unbounded.
+        # Missing metadata is never interpreted as permission to extrapolate.
+        feature_domain = model_info.get("_feature_domain")
+        domain_owner = model
+        if feature_domain is None:
+            feature_domain = getattr(model, "_frontier_feature_domain", None)
+        else:
+            # Runtime records may carry the contract separately from a wrapped
+            # estimator (for example, a test/draft model replacement).  Keep
+            # validation side-effect free by using a tiny metadata owner.
+            domain_owner = SimpleNamespace(_frontier_feature_domain=feature_domain)
+        if not isinstance(feature_domain, Mapping):
+            raise ValueError(
+                f"On-demand model {model_name} has invalid/missing feature-domain metadata; "
+                "retrain it with an explicit domain policy."
+            )
+        declared_policy = model_info.get("_on_demand_domain_policy")
+        domain_policy = feature_domain.get("on_demand_policy")
+        if declared_policy is None:
+            declared_policy = getattr(
+                model, "_frontier_on_demand_domain_policy", None
+            )
+        if declared_policy is None:
+            declared_policy = domain_policy
+        policy = validate_on_demand_domain_policy(
+            declared_policy,
+            model_name=model_name,
+        )
+        if domain_policy is not None and policy != domain_policy:
+            raise ValueError(
+                f"On-demand model {model_name} domain policy mismatch: "
+                f"model_info={policy!r}, feature_domain={domain_policy!r}."
+            )
+
+        if (
+            "runtime_prediction_policy" not in feature_domain
+            and policy == ON_DEMAND_DOMAIN_POLICY_BOUNDED
+            and model_name != "attn_kv_cache_save"
+        ):
+            feature_domain = dict(feature_domain)
+            feature_domain["runtime_prediction_policy"] = "measured_only"
+            domain_owner = SimpleNamespace(_frontier_feature_domain=feature_domain)
+
+        # Validate descriptor structure for both policies.  The runtime policy
+        # decides whether measured bounds are advisory, but physical bounds and
+        # relational constraints are always enforced.
+        try:
+            validate_feature_domain_descriptor(
+                feature_domain,
+                feature_names,
+                model_name=f"On-demand model {model_name}",
+                operator_name=model_name,
+            )
+        except ValueError as exc:
+            raise ValueError(str(exc)) from exc
+        feature_vector = pd.DataFrame(
+            [list(feature_key)],
+            columns=feature_names,
+        )
+        validate_prediction_grid_domain(
+            model_name,
+            domain_owner,
+            feature_vector,
+            measurement_family=self._measurement_family_name(
+                self._active_measurement_type
+            ),
+            runtime_physical_bounds=self._get_runtime_prediction_physical_bounds(
+                model_name,
+                feature_names,
+            ),
+            runtime_constraints=self._get_runtime_prediction_constraints(feature_names),
+        )
+
+        family_name = self._measurement_family_name(self._active_measurement_type)
+        runtime_cache = self._runtime_cache[family_name][model_name]
+
+        # A validated exact lookup is the direct-result stage of the canonical
+        # flow.  It must precede the runtime memoization stage so a stale model
+        # prediction cannot mask a measured value for the same key.
+        exact_lookup = model_info.get("_exact_lookup", {})
+        if exact_lookup is None:
+            exact_lookup = {}
+        if not isinstance(exact_lookup, Mapping):
+            raise ValueError(
+                f"On-demand model {model_name} has invalid exact lookup metadata."
+            )
         if feature_key in exact_lookup:
-            prediction = float(exact_lookup[feature_key])
-            self._runtime_cache[family_name][model_name][cache_key] = prediction
-            return prediction
+            raw_exact_value = exact_lookup[feature_key]
+            try:
+                prediction_value = float(raw_exact_value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"On-demand model {model_name} exact lookup value for "
+                    f"key={feature_key!r} is non-numeric: {raw_exact_value!r}."
+                ) from exc
+            if not math.isfinite(prediction_value) or prediction_value < 0.0:
+                raise ValueError(
+                    f"On-demand model {model_name} exact lookup value for "
+                    f"key={feature_key!r} is invalid: {raw_exact_value!r}."
+                )
+            self._record_prediction_domain_diagnostic(
+                model_name,
+                domain_owner,
+                feature_key,
+                measurement_family=family_name,
+                value_source="exact_lookup",
+            )
+            return prediction_value
+
+        # Check runtime cache only after schema/value/domain validation and the
+        # direct exact-result stage.  A runtime hit is still classified against
+        # the persisted profile domain when diagnostics are enabled.
+        if feature_key in runtime_cache:
+            cached = runtime_cache[feature_key]
+            try:
+                cached_value = float(cached)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"On-demand runtime cache contains a non-numeric prediction "
+                    f"for {model_name}, key={feature_key!r}."
+                ) from exc
+            if not math.isfinite(cached_value) or cached_value < 0.0:
+                raise ValueError(
+                    f"On-demand runtime cache contains an invalid prediction "
+                    f"for {model_name}, key={feature_key!r}: {cached!r}."
+                )
+            self._record_prediction_domain_diagnostic(
+                model_name,
+                domain_owner,
+                feature_key,
+                measurement_family=family_name,
+                value_source="runtime_cache",
+            )
+            return cached_value
 
         if model is None:
             raise ValueError(f"Model {model_name} has no trained model available")
 
-        feature_vector = pd.DataFrame(
-            [[features[fn] for fn in feature_names]],
-            columns=feature_names,
-        )
-
         # Make prediction
         try:
-            prediction = float(model.predict(feature_vector)[0])
-            # Ensure non-negative prediction
-            prediction = max(0.0, prediction)
+            raw_predictions = model.predict(feature_vector)
+            if len(raw_predictions) < 1:
+                raise ValueError("model returned no prediction")
+            prediction = float(raw_predictions[0])
         except Exception as e:
-            raise ValueError(f"On-demand prediction failed for {model_name}: {e}")
+            raise ValueError(f"On-demand prediction failed for {model_name}: {e}") from e
+
+        if not math.isfinite(prediction) or prediction < 0.0:
+            raise ValueError(
+                f"On-demand prediction returned an invalid non-negative finite value "
+                f"for {model_name}, key={feature_key!r}: {prediction!r}."
+            )
 
         # Cache the result
-        self._runtime_cache[family_name][model_name][cache_key] = prediction
+        runtime_cache[feature_key] = prediction
+
+        self._record_prediction_domain_diagnostic(
+            model_name,
+            model,
+            feature_key,
+            measurement_family=family_name,
+            value_source="model_prediction",
+        )
 
         return prediction
 
@@ -4397,7 +5402,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention pre-projection operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions["attn_pre_proj"][(effective_tokens,)]
+        raw_time = self._get_lookup_or_predict(
+            "attn_pre_proj", (effective_tokens,), ["num_tokens"]
+        )
         if getattr(batch, "num_prefill_tokens", 0) > 0:
             prefill_phase_scale = self._get_optional_calibration_scale(
                 "_prefill_phase_attn_pre_proj_calibration_scale",
@@ -4416,7 +5423,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention post-projection operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions["attn_post_proj"][(effective_tokens,)]
+        raw_time = self._get_lookup_or_predict(
+            "attn_post_proj", (effective_tokens,), ["num_tokens"]
+        )
         if getattr(batch, "num_prefill_tokens", 0) > 0:
             prefill_phase_scale = self._get_optional_calibration_scale(
                 "_prefill_phase_attn_post_proj_calibration_scale",
@@ -4436,7 +5445,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
         operator = _get_operator_spec_by_name(FFN_FAMILY, "mlp_up_proj")
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions[operator.profiling_name()][(effective_tokens,)]
+        op_name = operator.profiling_name()
+        raw_time = self._get_lookup_or_predict(
+            op_name, (effective_tokens,), ["num_tokens"]
+        )
         if getattr(batch, "num_prefill_tokens", 0) > 0:
             prefill_phase_scale = self._get_optional_operator_phase_calibration_scale(
                 operator,
@@ -4454,7 +5466,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
         operator = _get_operator_spec_by_name(FFN_FAMILY, "mlp_down_proj")
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions[operator.profiling_name()][(effective_tokens,)]
+        op_name = operator.profiling_name()
+        raw_time = self._get_lookup_or_predict(
+            op_name, (effective_tokens,), ["num_tokens"]
+        )
         decode_phase_scale = None
         if getattr(batch, "num_prefill_tokens", 0) == 0:
             decode_phase_scale = self._get_optional_operator_phase_calibration_scale(
@@ -4472,7 +5487,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"MLP activation operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["mlp_act"][(effective_tokens,)]
+        return self._get_lookup_or_predict(
+            "mlp_act", (effective_tokens,), ["num_tokens"]
+        )
 
     def _get_attn_norm_layer_act_execution_time(self, batch: Batch) -> float:
         if not self._supports_operation("input_layernorm"):
@@ -4480,7 +5497,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"input layernorm operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["input_layernorm"][(effective_tokens,)]
+        return self._get_lookup_or_predict(
+            "input_layernorm", (effective_tokens,), ["num_tokens"]
+        )
 
     def _get_mlp_norm_layer_act_execution_time(self, batch: Batch) -> float:
         if not self._model_config.post_attn_norm:
@@ -4492,7 +5511,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"post-attention layernorm operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["post_attention_layernorm"][(effective_tokens,)]
+        return self._get_lookup_or_predict(
+            "post_attention_layernorm", (effective_tokens,), ["num_tokens"]
+        )
 
     def _get_add_layer_act_execution_time(self, batch: Batch) -> float:
         if self._model_config.uses_fused_add_norm:
@@ -4502,7 +5523,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"add operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["add"][(effective_tokens,)]
+        return self._get_lookup_or_predict("add", (effective_tokens,), ["num_tokens"])
 
     def _get_named_linear_op_execution_time(
         self,
@@ -4516,12 +5537,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "Ensure matching profiling data is available."
             )
         key = (int(num_tokens),)
-        if key not in self._predictions[op_name]:
-            raise ValueError(
-                f"{op_name} prediction key not found for num_tokens={num_tokens}. "
-                "Ensure matching profiling rows exist."
-            )
-        return float(self._predictions[op_name][key])
+        return self._get_lookup_or_predict(op_name, key, ["num_tokens"])
 
     @staticmethod
     def _get_mtp_active_request_indices(
@@ -5065,6 +6081,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             cluster_type=self._cluster_type,
             training_file_paths=training_file_paths,
             cc_backend=self._cc_backend,
+            serving_max_tokens_per_request=self._serving_max_tokens_per_request,
         )
         self._mtp_secondary_predictors[cache_key] = predictor
         return predictor
@@ -5168,7 +6185,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure architecture-profile profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["attn_inter_norm"][(effective_tokens,)]
+        return self._get_lookup_or_predict(
+            "attn_inter_norm", (effective_tokens,), ["num_tokens"]
+        )
 
     def _get_attn_wq_proj_execution_time(self, batch: Batch) -> float:
         """Get architecture-profile WQ projection execution time."""
@@ -5183,7 +6202,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure architecture-profile profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["attn_wq_proj"][(effective_tokens,)]
+        return self._get_lookup_or_predict(
+            "attn_wq_proj", (effective_tokens,), ["num_tokens"]
+        )
 
     def _get_share_expert_up_proj_execution_time(self, batch: Batch) -> float:
         """Get shared-expert up projection execution time."""
@@ -5198,7 +6219,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure shared-expert MoE profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["share_expert_up_proj"][(effective_tokens,)]
+        return self._get_lookup_or_predict(
+            "share_expert_up_proj", (effective_tokens,), ["num_tokens"]
+        )
 
     def _get_share_expert_down_proj_execution_time(self, batch: Batch) -> float:
         """Get shared-expert down projection execution time."""
@@ -5213,7 +6236,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure shared-expert MoE profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["share_expert_down_proj"][(effective_tokens,)]
+        return self._get_lookup_or_predict(
+            "share_expert_down_proj", (effective_tokens,), ["num_tokens"]
+        )
 
     def _get_share_expert_act_execution_time(self, batch: Batch) -> float:
         """Get shared-expert activation execution time."""
@@ -5228,7 +6253,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure shared-expert MoE profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["share_expert_act"][(effective_tokens,)]
+        return self._get_lookup_or_predict(
+            "share_expert_act", (effective_tokens,), ["num_tokens"]
+        )
 
     def _validate_prediction_value(
         self, value: float, operation_name: str, batch: Batch, context: str = ""
@@ -5494,7 +6521,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention rope prediction cache not found for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["attn_rope"][(effective_tokens,)]
+        return self._get_lookup_or_predict(
+            "attn_rope", (effective_tokens,), ["num_tokens"]
+        )
 
     def _get_attention_kv_cache_save_execution_time(self, batch: Batch) -> float:
         cache_write_op_name = self._dense_attention_cache_write_op_name()
@@ -5507,14 +6536,23 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention kv cache save prediction cache not found for cluster {self._cluster_type}"
             )
         prediction_info = self._predictions[cache_write_op_name]
+        # Dense cache-write models use the shared producer/consumer schema.
+        # Keep this runtime key identical to the standalone trainer, shared
+        # model manager, and explicit on-demand path.
+        total_tokens = int(batch.total_num_tokens)
+        batch_size = len(batch.requests)
+        kv_cache_size = 0
+        if batch.num_decode_tokens > 0:
+            _, kv_cache_size = self._get_batch_decode_attention_params(batch)
+        cache_write_feature_names = [
+            "total_tokens",
+            "kv_cache_size",
+            "batch_size",
+        ]
+        cache_write_key = (total_tokens, int(kv_cache_size), int(batch_size))
         if isinstance(prediction_info, dict) and prediction_info.get(
             "_on_demand_prediction", False
         ):
-            total_tokens = batch.total_num_tokens
-            batch_size = len(batch.requests)
-            kv_cache_size = 0
-            if batch.num_decode_tokens > 0:
-                _, kv_cache_size = self._get_batch_decode_attention_params(batch)
             features = {
                 "total_tokens": total_tokens,
                 "kv_cache_size": kv_cache_size,
@@ -5533,10 +6571,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "attn_kv_cache_save_calibration_scale",
             )
 
-        # don't use round up to the nearest multiple of 8 here, because we want to
-        # predict the execution time for the exact number of tokens
-        num_tokens = batch.total_num_tokens
-        raw_time = prediction_info[(num_tokens,)]
+        # Do not round or clamp the shared cache-write tuple.  A physically
+        # legal tuple that is absent from measured rows is sent to the
+        # canonical regression estimator; only schema, identity, physical, or
+        # malformed-output violations fail fast.
+        raw_time = self._get_lookup_or_predict(
+            cache_write_op_name,
+            cache_write_key,
+            cache_write_feature_names,
+        )
         if getattr(batch, "num_prefill_tokens", 0) > 0:
             prefill_phase_scale = self._get_optional_calibration_scale(
                 "_prefill_phase_attn_kv_cache_save_calibration_scale",
@@ -5590,9 +6633,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention decode prediction cache not found for cluster {self._cluster_type}"
             )
 
-        raw_time = self._predictions[decode_op_name][
-            (decode_batch_size, decode_avg_kv_cache_size)
-        ] * (
+        raw_time = self._get_lookup_or_predict(
+            decode_op_name,
+            (decode_batch_size, decode_avg_kv_cache_size),
+            ["batch_size", "kv_cache_size"],
+        ) * (
             1
             + self._attention_decode_batching_overhead_fraction
             * int(decode_batch_size > 1)
@@ -5627,18 +6672,35 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention prefill operation not supported for cluster {self._cluster_type}"
             )
 
-        # Check if we should use attn_prefill_mixed for mixed-batch prediction
-        # Use attn_prefill_mixed when:
-        # 1. The model is available
-        # 2. There are multiple prefill requests (mixed batch)
-        if len(prefill_params) > 1 and "attn_prefill_mixed" in self._predictions:
-            model_info = self._predictions["attn_prefill_mixed"]
-            if isinstance(model_info, dict) and model_info.get("_on_demand_prediction"):
-                # Extract mixed-prefill features, including live KV cache context
-                features = self._get_batch_prefill_mixed_features(batch)
-                return self._get_on_demand_prediction("attn_prefill_mixed", features)
+        is_true_mixed_batch = int(getattr(batch, "num_decode_tokens", 0)) > 0
+        if is_true_mixed_batch and self._cluster_type != ClusterType.MONOLITHIC:
+            raise ValueError(
+                "True mixed prefill+decode batches are only supported in "
+                "co-location (ClusterType.MONOLITHIC), but got "
+                f"cluster={self._cluster_type}."
+            )
 
-        # Fall back to original attn_prefill model for single-request prefill
+        # Multiple prefill requests and every true prefill+decode batch have
+        # aggregate/mixed semantics. They must use the explicitly trained
+        # mixed-prefill contract; sending even a single prefill request from a
+        # true-mixed batch through ``attn_prefill`` would use the wrong target.
+        if len(prefill_params) > 1 or is_true_mixed_batch:
+            model_info = self._predictions.get("attn_prefill_mixed")
+            if not (
+                isinstance(model_info, dict)
+                and model_info.get("_on_demand_prediction")
+            ):
+                raise ValueError(
+                    "multi-request prefill or true-mixed prefill requires an explicit "
+                    "on-demand "
+                    "attn_prefill_mixed prediction contract; the standard "
+                    f"{prefill_op_name} model cannot consume aggregate keys."
+                )
+            # Extract mixed-prefill features, including live KV cache context.
+            features = self._get_batch_prefill_mixed_features(batch)
+            return self._get_on_demand_prediction("attn_prefill_mixed", features)
+
+        # Pure single-request prefill uses the original attn_prefill model.
         if prefill_op_name not in self._predictions:
             raise ValueError(
                 f"attention prefill prediction cache not found for cluster {self._cluster_type}"
@@ -5649,9 +6711,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         agg_kv_cache_size = sum(kv_cache_sizes)
         agg_prefill_chunk_size = sum([x**2 for x in prefill_chunk_sizes]) ** 0.5
 
-        return self._predictions[prefill_op_name][
-            (agg_kv_cache_size, round(agg_prefill_chunk_size) ** 2)
-        ] * (
+        return self._get_lookup_or_predict(
+            prefill_op_name,
+            (agg_kv_cache_size, round(agg_prefill_chunk_size) ** 2),
+            ["kv_cache_size", "prefill_chunk_size_squared"],
+        ) * (
             1
             + self._attention_prefill_batching_overhead_fraction
             * int(len(prefill_params) > 1)
@@ -5726,12 +6790,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             # dimension in this codebase. For speculative verify, query_len is
             # verify_tokens, so we map to verify_tokens**2 here.
             key = (int(kv_cache_size), int(verify_tokens**2))
-            if key not in self._predictions[prefill_op_name]:
-                raise ValueError(
-                    "Speculative verify prefill key missing from attn_prefill cache: "
-                    f"key={key}, request_id={request.id}, verify_tokens={verify_tokens}"
+            try:
+                total_verify_prefill_time += self._get_lookup_or_predict(
+                    prefill_op_name,
+                    key,
+                    ["kv_cache_size", "prefill_chunk_size_squared"],
                 )
-            total_verify_prefill_time += self._predictions[prefill_op_name][key]
+            except ValueError as exc:
+                raise ValueError(
+                    "Speculative verify prefill key is outside the attn_prefill "
+                    f"cache: key={key}, request_id={request.id}, "
+                    f"verify_tokens={verify_tokens}; {exc}"
+                ) from exc
 
         return total_verify_prefill_time
 
@@ -5840,13 +6910,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         ) * self._config.kv_cache_prediction_granularity
 
         key = (int(decode_batch_size), int(decode_avg_kv_cache_size))
-        if key not in self._predictions[decode_op_name]:
-            raise ValueError(
-                "Speculative decode key missing from attn_decode cache: "
-                f"key={key}, decode_batch_size={decode_batch_size}"
-            )
-
-        raw_time = self._predictions[decode_op_name][key] * (
+        raw_time = self._get_lookup_or_predict(
+            decode_op_name,
+            key,
+            ["batch_size", "kv_cache_size"],
+        ) * (
             1
             + self._attention_decode_batching_overhead_fraction
             * int(decode_batch_size > 1)
@@ -6059,14 +7127,6 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             "_on_demand_prediction"
         ):
             features = self._get_cpu_overhead_features(batch)
-            feature_key = (
-                float(features["batch_size"]),
-                float(features["num_prefill_tokens"]),
-                float(features["num_decode_tokens"]),
-            )
-            exact_lookup = metric_predictions.get("_exact_lookup") or {}
-            if feature_key in exact_lookup:
-                return float(exact_lookup[feature_key])
             try:
                 return self._get_on_demand_prediction(metric_name, features)
             except Exception:
@@ -6154,6 +7214,22 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             "vocab_size": self._model_config.vocab_size,
             "block_size": self._block_size,
             "max_tokens": self._max_tokens,
+            "prediction_max_tokens_per_request": self._config.prediction_max_tokens_per_request,
+            "serving_max_tokens_per_request": getattr(
+                self, "_serving_max_tokens_per_request", None
+            ),
+            "model_max_model_len": getattr(self._model_config, "max_model_len", None),
+            "model_max_position_embeddings": getattr(
+                self._model_config, "max_position_embeddings", None
+            ),
+            "scheduler_max_tokens_in_batch": getattr(
+                getattr(self, "_replica_scheduler_config", None),
+                "max_tokens_in_batch",
+                None,
+            ),
+            "runtime_prediction_policy_version": (
+                f"allow_model_prediction_v{PREDICTION_CACHE_CONTRACT_VERSION}"
+            ),
             "active_measurement_type": self._active_measurement_type.value,
             "compute_input_file": self._compute_input_file,
             "attention_input_file": self._attention_input_file,
@@ -6169,6 +7245,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             "pp_producer_send_path_input_file": self._pp_producer_send_path_input_file,
             "pp_prefill_consumer_active_input_file": self._pp_prefill_consumer_active_input_file,
             "prediction_max_prefill_chunk_size": self._config.prediction_max_prefill_chunk_size,
+            "prediction_min_kv_cache_size": getattr(
+                self._config, "prediction_min_kv_cache_size", 0
+            ),
+            "kv_cache_prediction_granularity": self._config.kv_cache_prediction_granularity,
             "max_batch_size": self._config.prediction_max_batch_size,
             "using_shared_models": self._model_manager is not None,
         }
@@ -6507,20 +7587,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     f"{op_name}: expected {expected_feature_names}, got "
                     f"{feature_names}"
                 )
-            exact_key = tuple(float(features[name]) for name in feature_names)
-            exact_lookup = model_info.get("_exact_lookup") or {}
-            if exact_key in exact_lookup:
-                op_times[op_name] = float(exact_lookup[exact_key])
-                continue
-
-            model = model_info.get("_model")
-            if model is None or getattr(model, "_frontier_model_hash", None) is None:
-                raise ValueError(
-                    f"No exact MLA profiling row for {op_name}: "
-                    f"features={dict(zip(feature_names, exact_key))}. "
-                    "No trained MLA prediction model is available for exact-miss "
-                    "prediction."
-                )
+            # Route both exact measured rows and legal unmeasured rows through
+            # the canonical on-demand flow.  The helper validates schema,
+            # identity/domain/physical constraints, gives direct exact values
+            # precedence over runtime memoization, and invokes the model only
+            # on a legal miss.
             op_times[op_name] = self._get_on_demand_prediction(op_name, features)
         return AttentionOperatorTimes(op_times)
 

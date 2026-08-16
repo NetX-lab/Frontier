@@ -177,6 +177,9 @@ class Simulator:
                         self._clusters[cluster_type].replicas.keys()
                     ),
                     cc_backend=cc_backend,
+                    serving_max_tokens_per_request=(
+                        self._config.request_generator_config.max_tokens
+                    ),
                 )
         else:
             # For monolithic mode, create single predictor without model manager
@@ -196,6 +199,9 @@ class Simulator:
                     model_manager=None,
                     cluster_type=ClusterType.MONOLITHIC,
                     cc_backend=cc_backend,
+                    serving_max_tokens_per_request=(
+                        self._config.request_generator_config.max_tokens
+                    ),
                 )
             )
 

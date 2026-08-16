@@ -57,6 +57,7 @@ class LinearRegressionExecutionTimePredictor:
         training_file_paths: Dict[str, str] = None,
         actual_replica_ids: Optional[list] = None,
         cc_backend: Optional["BaseCCBackend"] = None,
+        serving_max_tokens_per_request: Optional[int] = None,
     ):
         base_class = _get_base_class(replica_config)
 
@@ -87,6 +88,7 @@ class LinearRegressionExecutionTimePredictor:
             "cluster_type": cluster_type,
             "training_file_paths": training_file_paths,
             "cc_backend": cc_backend,
+            "serving_max_tokens_per_request": serving_max_tokens_per_request,
         }
 
         # Only pass cluster_config and actual_replica_ids for disaggregated mode

@@ -30,10 +30,13 @@ Usage:
 from __future__ import annotations
 
 import argparse
+from collections import Counter
+from numbers import Integral
 import os
 import sys
+import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing as mp
 
@@ -46,14 +49,28 @@ except ImportError:
     torch = None
 
 from frontier.config.precision_type import PrecisionType
-# Conditionally import ray - only needed when not using --disable_ray
-try:
-    import ray
+def _try_import_ray():
+    """Load optional Ray without breaking the independent ProcessPool path.
 
-    RAY_AVAILABLE = True
-except ImportError:
-    RAY_AVAILABLE = False
-    ray = None
+    Ray is imported from a compiled extension.  An environment with an
+    incompatible glibc can raise ``OSError`` during import (rather than the
+    usual ``ImportError``).  Attention profiling with ``--disable_ray`` does
+    not need Ray at all, so both optional-dependency failure forms must be
+    represented as an unavailable Ray mode and deferred to the explicit Ray
+    branch in ``main``.
+    """
+
+    try:
+        import ray as ray_module
+    except (ImportError, OSError):
+        return None
+    return ray_module
+
+
+# Keep module import usable for the non-Ray profiling path.  The explicit Ray
+# branch below still fails fast when Ray cannot be loaded.
+ray = _try_import_ray()
+RAY_AVAILABLE = ray is not None
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
 from frontier.attention.profiling_mapping import (
@@ -62,9 +79,20 @@ from frontier.attention.profiling_mapping import (
 from frontier.attention.string_coercion import coerce_truthy_bool
 from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
 from frontier.profiling.attention.backends import AttentionBackend
-from frontier.profiling.common.parallel_config import ParallelConfig
+from frontier.profiling.common.parallel_config import (
+    ParallelConfig,
+    validate_profile_tp_sizes,
+)
 
 from frontier.profiling.attention.attention_input import AttentionInput
+from frontier.profiling.attention.memory_budget import (
+    get_attention_backend_workspace_reservation_bytes,
+    resolve_requested_max_num_blocks,
+)
+from frontier.profiling.attention.provenance import (
+    publish_attention_union_and_alias,
+    validate_attention_run_id,
+)
 from frontier.profiling.attention.metadata_utils import add_chunked_prefill_metadata
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.utils import (
@@ -90,6 +118,205 @@ def _ensure_torch_available():
             "environment before running this entrypoint."
         )
     return torch
+
+
+def _require_inputs_fit_kv_capacity(
+    attention_inputs: Iterable[Any],
+    *,
+    model: str,
+    tensor_parallel_size: int,
+    workload_family: str,
+    max_num_blocks: int,
+    block_size: int,
+    profile_max_seq_len: int,
+) -> list[Any]:
+    """Reject any requested profiling shape that exceeds physical KV capacity."""
+
+    inputs = list(attention_inputs)
+    for attention_input in inputs:
+        required_blocks_fn = getattr(attention_input, "required_blocks", None)
+        if not callable(required_blocks_fn):
+            raise TypeError(
+                "Attention profiling inputs must expose required_blocks(block_size=...)."
+            )
+        required_blocks = int(required_blocks_fn(block_size=block_size))
+        if required_blocks > int(max_num_blocks):
+            raise ValueError(
+                "Requested attention profiling shape exceeds physical KV-cache "
+                f"capacity: model={model!r}, TP={tensor_parallel_size}, "
+                f"workload_family={workload_family!r}, "
+                f"requested_shape={attention_input}, "
+                f"required_blocks={required_blocks}, "
+                f"available_blocks={max_num_blocks}, block_size={block_size}, "
+                f"profile_max_seq_len={profile_max_seq_len}. Reduce the requested "
+                "profiling range or allocate enough GPU memory."
+            )
+    return inputs
+
+
+def _required_max_num_blocks(
+    attention_inputs: Iterable[Any],
+    *,
+    block_size: int,
+) -> int:
+    """Return the largest allocation required by the requested workload."""
+
+    inputs = list(attention_inputs)
+    if not inputs:
+        return 0
+    required_values: list[int] = []
+    for attention_input in inputs:
+        required_blocks_fn = getattr(attention_input, "required_blocks", None)
+        if not callable(required_blocks_fn):
+            raise TypeError(
+                "Attention profiling inputs must expose required_blocks(block_size=...)."
+            )
+        required = int(required_blocks_fn(block_size=block_size))
+        if required <= 0:
+            raise ValueError(
+                "Attention profiling input returned a non-positive block requirement: "
+                f"input={attention_input}, required_blocks={required}."
+            )
+        required_values.append(required)
+    return max(required_values)
+
+
+def _get_physical_max_num_blocks_across_gpus(
+    *,
+    model_config: ModelConfig,
+    parallel_config: ParallelConfig,
+    block_size: int,
+    dtype: Any,
+    gpu_ids: Iterable[int],
+    max_pipeline_parallel_size: int,
+    reserved_memory_bytes: int,
+) -> int:
+    """Return the safe KV-block capacity shared by all profiling workers.
+
+    Native attention allocation is replicated on every worker.  A capacity
+    measured only on the parent process's current device can therefore be too
+    large for another visible GPU.  Probe each local CUDA device and use the
+    minimum; no worker is allowed to receive an allocation that another worker
+    cannot satisfy.
+    """
+
+    torch_module = _ensure_torch_available()
+    gpu_ids = list(gpu_ids)
+    if not gpu_ids:
+        raise ValueError("At least one GPU is required for attention capacity probing.")
+    gpu_local_idx_map = _get_gpu_local_index_map(gpu_ids)
+    capacities: list[int] = []
+    for gpu_id in gpu_ids:
+        with torch_module.cuda.device(gpu_local_idx_map[gpu_id]):
+            capacity = get_max_num_blocks(
+                model_config,
+                parallel_config,
+                block_size,
+                dtype,
+                max_pipeline_parallel_size=max_pipeline_parallel_size,
+                reserved_memory_bytes=reserved_memory_bytes,
+            )
+        capacities.append(int(capacity))
+        if capacity <= 0:
+            raise ValueError(
+                "GPU physical attention KV capacity must be positive: "
+                f"gpu_id={gpu_id}, capacity={capacity}."
+            )
+    if len(set(capacities)) > 1:
+        print(
+            "[INFO] Attention profiling workers have heterogeneous physical KV "
+            f"capacity; using the minimum across GPUs: {dict(zip(gpu_ids, capacities))}"
+        )
+    return min(capacities)
+
+
+def _attention_profile_structural_key(
+    workload_family: str,
+    value: Any,
+) -> tuple[Any, ...]:
+    """Return the requested/emitted identity for one attention sample."""
+
+    def field(name: str) -> Any:
+        if isinstance(value, Mapping):
+            if name not in value:
+                raise ValueError(
+                    f"{workload_family} attention result is missing structural "
+                    f"field {name!r}."
+                )
+            return value[name]
+        if not hasattr(value, name):
+            raise ValueError(
+                f"{workload_family} attention input is missing structural "
+                f"field {name!r}."
+            )
+        return getattr(value, name)
+
+    if workload_family == "standard":
+        return (
+            int(field("prefill_chunk_size")),
+            int(field("kv_cache_size")),
+            int(field("batch_size")),
+            bool(field("is_prefill")),
+        )
+    if workload_family == "mixed_prefill":
+        return (
+            tuple(int(item) for item in field("seq_lens")),
+            int(field("kv_cache_size")),
+            str(field("mode")),
+        )
+    if workload_family == "true_mixed":
+        return (
+            tuple(int(item) for item in field("prefill_seq_lens")),
+            tuple(int(item) for item in field("prefill_kv_cache_sizes")),
+            tuple(int(item) for item in field("decode_kv_cache_sizes")),
+        )
+    raise ValueError(f"Unsupported attention workload_family={workload_family!r}.")
+
+
+def _validate_attention_profile_results(
+    *,
+    workload_family: str,
+    requested_inputs: Iterable[Any],
+    results: Iterable[Mapping[str, Any] | None],
+) -> list[Mapping[str, Any]]:
+    """Require the emitted structural tuple multiset to equal the request."""
+
+    requested = list(requested_inputs)
+    raw_results = list(results)
+    none_count = sum(result is None for result in raw_results)
+    emitted = [result for result in raw_results if result is not None]
+    if none_count:
+        raise ValueError(
+            f"{workload_family} attention profiling returned {none_count} None "
+            f"result(s): requested={len(requested)}, emitted={len(emitted)}."
+        )
+
+    requested_keys = [
+        _attention_profile_structural_key(workload_family, item)
+        for item in requested
+    ]
+    emitted_keys = [
+        _attention_profile_structural_key(workload_family, item)
+        for item in emitted
+    ]
+    requested_counter = Counter(requested_keys)
+    emitted_counter = Counter(emitted_keys)
+    if requested_counter != emitted_counter:
+        missing = list((requested_counter - emitted_counter).elements())
+        extra = list((emitted_counter - requested_counter).elements())
+        raise ValueError(
+            f"{workload_family} attention profiling tuple mismatch: "
+            f"requested={len(requested)}, emitted={len(emitted)}, "
+            f"missing={len(missing)}, extra={len(extra)}, "
+            f"missing_examples={missing[:3]!r}, extra_examples={extra[:3]!r}."
+        )
+
+    return sorted(
+        emitted,
+        key=lambda result: _attention_profile_structural_key(
+            workload_family, result
+        ),
+    )
 
 
 def _get_available_gpus(num_gpus: int) -> List[int]:
@@ -151,6 +378,25 @@ def _get_available_gpus(num_gpus: int) -> List[int]:
         )
 
     return available[:num_gpus]
+
+
+def _get_gpu_local_index_map(gpu_ids: Iterable[int]) -> dict[int, int]:
+    """Map recorded physical IDs to CUDA indices visible to this process."""
+
+    normalized_ids = [int(gpu_id) for gpu_id in gpu_ids]
+    if not normalized_ids:
+        raise ValueError("At least one GPU ID is required for CUDA index mapping.")
+    if len(set(normalized_ids)) != len(normalized_ids):
+        raise ValueError(f"GPU IDs must be unique, got {normalized_ids!r}.")
+    if any(gpu_id < 0 for gpu_id in normalized_ids):
+        raise ValueError(f"GPU IDs must be non-negative, got {normalized_ids!r}.")
+
+    if os.environ.get("CUDA_VISIBLE_DEVICES", "").strip():
+        return {
+            gpu_id: local_index
+            for local_index, gpu_id in enumerate(normalized_ids)
+        }
+    return {gpu_id: gpu_id for gpu_id in normalized_ids}
 
 
 # Global variable to track if CUDA has been initialized in this process
@@ -239,6 +485,7 @@ def _worker_profile_attention_task(
         parallel_config=parallel_config,
         max_num_blocks=wrapper_args["max_num_blocks"],
         max_model_len=wrapper_args["max_model_len"],
+        profile_max_seq_len=wrapper_args["profile_max_seq_len"],
         block_size=wrapper_args["block_size"],
         attention_backend=wrapper_args["attention_backend"],
         dtype=wrapper_args["dtype"],
@@ -306,6 +553,7 @@ def _worker_profile_mixed_attention_task(
         parallel_config=parallel_config,
         max_num_blocks=wrapper_args["max_num_blocks"],
         max_model_len=wrapper_args["max_model_len"],
+        profile_max_seq_len=wrapper_args["profile_max_seq_len"],
         block_size=wrapper_args["block_size"],
         attention_backend=wrapper_args["attention_backend"],
         dtype=wrapper_args["dtype"],
@@ -358,6 +606,7 @@ def _worker_profile_true_mixed_attention_task(
         parallel_config=parallel_config,
         max_num_blocks=wrapper_args["max_num_blocks"],
         max_model_len=wrapper_args["max_model_len"],
+        profile_max_seq_len=wrapper_args["profile_max_seq_len"],
         block_size=wrapper_args["block_size"],
         attention_backend=wrapper_args["attention_backend"],
         dtype=wrapper_args["dtype"],
@@ -386,6 +635,15 @@ def parse_args():
         type=str,
         default="data/profiling",
         help="Root output directory for profiling results (default: data/profiling)",
+    )
+    parser.add_argument(
+        "--run_id",
+        type=str,
+        default=None,
+        help=(
+            "Optional path-safe identifier for this profiling run. Run-scoped "
+            "CSV/provenance artifacts are retained under the model output directory."
+        ),
     )
     parser.add_argument(
         "--device",
@@ -425,6 +683,26 @@ def parse_args():
         type=int,
         default=4096,
         help="Maximum context length of input",
+    )
+    parser.add_argument(
+        "--profile_max_seq_len",
+        type=int,
+        default=None,
+        help=(
+            "Maximum context length allocated and validated for profiling. "
+            "Defaults to --max_seq_len and may exceed --max_model_len; "
+            "--max_seq_len still controls the generated input grid."
+        ),
+    )
+    parser.add_argument(
+        "--max_num_blocks",
+        type=int,
+        default=None,
+        help=(
+            "Optional explicit KV-cache block allocation cap. It must be no larger "
+            "than the physical free-memory budget and large enough for one "
+            "profile_max_seq_len sequence; requested batch shapes are checked separately."
+        ),
     )
     parser.add_argument(
         "--min_batch_size",
@@ -703,6 +981,33 @@ def parse_args():
         help="Profiling method: cuda_event (wall-clock GPU time) or record_function (pure kernel time via profiler trace)",
     )
     args = parser.parse_args()
+    if args.run_id is not None:
+        args.run_id = validate_attention_run_id(args.run_id)
+    validate_profile_tp_sizes(args.num_tensor_parallel_workers)
+    if args.max_model_len <= 0:
+        raise ValueError(
+            f"max_model_len must be positive, got {args.max_model_len}."
+        )
+    if args.max_seq_len <= 0:
+        raise ValueError(f"max_seq_len must be positive, got {args.max_seq_len}.")
+    if args.profile_max_seq_len is None:
+        args.profile_max_seq_len = args.max_seq_len
+    if args.profile_max_seq_len <= 0:
+        raise ValueError(
+            "profile_max_seq_len must be positive, "
+            f"got {args.profile_max_seq_len}."
+        )
+    if args.max_num_blocks is not None and args.max_num_blocks <= 0:
+        raise ValueError(
+            "max_num_blocks must be a positive integer when provided, "
+            f"got {args.max_num_blocks}."
+        )
+    if args.max_seq_len > args.profile_max_seq_len:
+        raise ValueError(
+            "max_seq_len cannot exceed profile_max_seq_len: "
+            f"max_seq_len={args.max_seq_len}, "
+            f"profile_max_seq_len={args.profile_max_seq_len}."
+        )
     args.profile_method = normalize_profile_method(args.profile_method)
     os.makedirs(args.output_dir, exist_ok=True)
 
@@ -773,6 +1078,7 @@ def _resolve_fp8_settings(
 
 def _validate_cli_conflicts(args: argparse.Namespace) -> None:
     """Validate unsupported argument combinations with fail-fast behavior."""
+    validate_profile_tp_sizes(args.num_tensor_parallel_workers)
     if args.profile_only_prefill and args.profile_only_decode:
         raise ValueError(
             "profile_only_prefill and profile_only_decode cannot both be enabled."
@@ -832,6 +1138,117 @@ def _attach_attention_output_metadata(
         model_architecture_profile,
     )
     _fill_metadata_column(output_df, "quant_signature", quant_signature)
+    return output_df
+
+
+def _attach_native_attention_run_provenance(
+    df: pd.DataFrame,
+    *,
+    profile_input_grid_max_seq_len: int,
+    profile_max_seq_len: int,
+    max_num_blocks: int | None = None,
+    physical_max_num_blocks: int | None = None,
+    requested_max_num_blocks: int | None = None,
+    selected_max_num_blocks: int | None = None,
+    required_max_num_blocks: int | None = None,
+    block_size: int,
+    backend_workspace_reservation_bytes: int,
+) -> pd.DataFrame:
+    """Attach native allocation facts needed to audit measured coverage."""
+
+    output_df = df.copy()
+    selected = selected_max_num_blocks
+    if selected is None:
+        if max_num_blocks is None:
+            raise ValueError(
+                "selected_max_num_blocks or max_num_blocks must be provided."
+            )
+        selected = max_num_blocks
+    physical = selected if physical_max_num_blocks is None else physical_max_num_blocks
+    required = (
+        (int(profile_max_seq_len) + int(block_size) - 1) // int(block_size)
+        if required_max_num_blocks is None
+        else required_max_num_blocks
+    )
+    for name, value in (
+        ("physical_max_num_blocks", physical),
+        ("selected_max_num_blocks", selected),
+        ("required_max_num_blocks", required),
+    ):
+        if isinstance(value, bool) or not isinstance(value, Integral) or value <= 0:
+            raise ValueError(f"{name} must be a positive integer, got {value!r}.")
+    physical = int(physical)
+    selected = int(selected)
+    required = int(required)
+    if requested_max_num_blocks is not None:
+        if (
+            isinstance(requested_max_num_blocks, bool)
+            or not isinstance(requested_max_num_blocks, Integral)
+            or requested_max_num_blocks <= 0
+        ):
+            raise ValueError(
+                "requested_max_num_blocks must be a positive integer or None, "
+                f"got {requested_max_num_blocks!r}."
+            )
+        requested_max_num_blocks = int(requested_max_num_blocks)
+        if requested_max_num_blocks != selected:
+            raise ValueError(
+                "selected_max_num_blocks must equal the explicit request: "
+                f"requested={requested_max_num_blocks}, selected={selected}."
+            )
+    if selected > physical:
+        raise ValueError(
+            "selected_max_num_blocks exceeds physical_max_num_blocks: "
+            f"selected={selected}, physical={physical}."
+        )
+    if selected < required:
+        raise ValueError(
+            "selected_max_num_blocks cannot cover required_max_num_blocks: "
+            f"selected={selected}, required={required}."
+        )
+    metadata = {
+        "profile_input_grid_max_seq_len": int(profile_input_grid_max_seq_len),
+        "profile_max_seq_len": int(profile_max_seq_len),
+        "physical_max_num_blocks": physical,
+        "selected_max_num_blocks": int(selected),
+        "required_max_num_blocks": required,
+        "allocated_max_num_blocks": int(selected),
+        "allocated_kv_token_capacity": int(selected) * int(block_size),
+        "backend_workspace_reservation_bytes": int(
+            backend_workspace_reservation_bytes
+        ),
+        "is_native_profile_allocation": True,
+    }
+    for column, expected_value in metadata.items():
+        if column in output_df.columns:
+            observed = output_df[column].dropna().unique().tolist()
+            conflicts = [value for value in observed if value != expected_value]
+            if conflicts:
+                raise ValueError(
+                    f"{column} contains conflicting profiling provenance values "
+                    f"{conflicts!r}; expected {expected_value!r}."
+                )
+        output_df[column] = expected_value
+    requested_series = pd.Series(
+        [requested_max_num_blocks] * len(output_df),
+        index=output_df.index,
+        dtype="Int64",
+    )
+    if "requested_max_num_blocks" in output_df.columns:
+        try:
+            observed_numeric = pd.to_numeric(
+                output_df["requested_max_num_blocks"], errors="raise"
+            )
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                "requested_max_num_blocks provenance must be numeric or null."
+            ) from exc
+        observed = observed_numeric.astype("Int64")
+        if not observed.equals(requested_series):
+            raise ValueError(
+                "requested_max_num_blocks contains conflicting profiling provenance."
+            )
+    output_df["requested_max_num_blocks"] = requested_series
     return output_df
 
 
@@ -945,6 +1362,37 @@ def _run_vllm_mla_profile_import(args: argparse.Namespace) -> Path:
         num_tensor_parallel_workers=args.num_tensor_parallel_workers[0],
         max_model_len=args.max_model_len,
     )
+    if "max_seqlen_k" not in df.columns or df.empty:
+        raise ValueError(
+            "Imported vLLM MLA rows must contain measured max_seqlen_k values."
+        )
+    source_profile_max_seq_len = int(
+        pd.to_numeric(df["max_seqlen_k"], errors="raise").max()
+    )
+    declared_profile_max_seq_len = getattr(args, "profile_max_seq_len", None)
+    if (
+        declared_profile_max_seq_len is not None
+        and int(declared_profile_max_seq_len) <= 0
+    ):
+        raise ValueError(
+            "profile_max_seq_len must be positive, "
+            f"got {declared_profile_max_seq_len}."
+        )
+    if (
+        declared_profile_max_seq_len is not None
+        and source_profile_max_seq_len > int(declared_profile_max_seq_len)
+    ):
+        raise ValueError(
+            "Imported vLLM MLA source exceeds the declared profiling limit: "
+            f"source max_seqlen_k={source_profile_max_seq_len}, "
+            f"profile_max_seq_len={int(declared_profile_max_seq_len)}."
+        )
+    # This import path did not allocate Frontier's native KV cache.  Persist
+    # only the context actually present in the source rows and never advertise
+    # the CLI bound as native measured coverage.
+    df["profile_max_seq_len"] = source_profile_max_seq_len
+    df["profile_input_grid_max_seq_len"] = source_profile_max_seq_len
+    df["is_native_profile_allocation"] = False
     df = _attach_attention_output_metadata(
         df,
         precision_str=precision_str,
@@ -963,7 +1411,35 @@ def _run_vllm_mla_profile_import(args: argparse.Namespace) -> Path:
         profile_method=args.profile_method,
     )
     output_file.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(output_file, index=False)
+    run_id = getattr(args, "run_id", None) or "vllm-mla-import"
+    alias_name = (
+        "attention_combined_kernel_only.csv"
+        if measurement_type == "KERNEL_ONLY"
+        else "attention_combined.csv"
+    )
+    publish_attention_union_and_alias(
+        output_dir=output_file.parent,
+        standard_df=df,
+        mixed_df=pd.DataFrame(),
+        true_mixed_df=pd.DataFrame(),
+        run_id=run_id,
+        canonical_name=output_file.name,
+        alias_name=alias_name,
+        provenance={
+            "model": model,
+            "device": args.device,
+            "tensor_parallel_size": args.num_tensor_parallel_workers[0],
+            "measurement_type": measurement_type,
+            "max_model_len": args.max_model_len,
+            "profile_input_grid_max_seq_len": source_profile_max_seq_len,
+            "profile_max_seq_len": source_profile_max_seq_len,
+            "is_native_profile_allocation": False,
+            "physical_max_num_blocks": None,
+            "requested_max_num_blocks": None,
+            "selected_max_num_blocks": None,
+            "required_max_num_blocks": None,
+        },
+    )
     comparison_file = output_file.with_name(
         f"{output_file.stem}_vllm_mla_groundtruth_comparison.csv"
     )
@@ -1043,6 +1519,73 @@ def _build_attention_combined_df(
     return pd.concat(partitions, ignore_index=True)
 
 
+def _build_attention_run_provenance(
+    *,
+    args: argparse.Namespace,
+    model: str,
+    measurement_type: str,
+    profiling_precision: str,
+    quant_signature: str,
+    model_architecture_profile: str,
+    attention_backend: str,
+    physical_max_num_blocks_by_tp: Mapping[int, int],
+    selected_max_num_blocks_by_tp: Mapping[int, int],
+    required_max_num_blocks_by_tp: Mapping[int, int],
+    backend_workspace_reservation_bytes: int,
+) -> dict[str, Any]:
+    """Build an artifact-scoped provenance payload for one model run."""
+
+    tensor_parallel_sizes = sorted(
+        set(physical_max_num_blocks_by_tp)
+        | set(selected_max_num_blocks_by_tp)
+        | set(required_max_num_blocks_by_tp)
+    )
+    if not tensor_parallel_sizes:
+        raise ValueError("Attention provenance requires at least one TP allocation.")
+    if not (
+        set(tensor_parallel_sizes) == set(physical_max_num_blocks_by_tp)
+        == set(selected_max_num_blocks_by_tp)
+        == set(required_max_num_blocks_by_tp)
+    ):
+        raise ValueError("Attention provenance TP allocation maps must have identical keys.")
+
+    requested_max_num_blocks = getattr(args, "max_num_blocks", None)
+    allocation_by_tp: dict[str, dict[str, Any]] = {}
+    for tp in tensor_parallel_sizes:
+        selected = selected_max_num_blocks_by_tp[tp]
+        allocation_by_tp[str(tp)] = {
+            "physical_max_num_blocks": physical_max_num_blocks_by_tp[tp],
+            "requested_max_num_blocks": requested_max_num_blocks,
+            "selected_max_num_blocks": selected,
+            "required_max_num_blocks": required_max_num_blocks_by_tp[tp],
+            "block_size": args.block_size,
+            "allocated_max_num_blocks": selected,
+            "allocated_kv_token_capacity": selected * args.block_size,
+        }
+
+    payload: dict[str, Any] = {
+        "model": model,
+        "device": args.device,
+        "tensor_parallel_sizes": tensor_parallel_sizes,
+        "measurement_type": measurement_type,
+        "profiling_precision": profiling_precision,
+        "quant_signature": quant_signature,
+        "model_architecture_profile": model_architecture_profile,
+        "attention_backend": attention_backend,
+        "max_model_len": args.max_model_len,
+        "profile_input_grid_max_seq_len": args.max_seq_len,
+        "profile_max_seq_len": args.profile_max_seq_len,
+        "block_size": args.block_size,
+        "backend_workspace_reservation_bytes": backend_workspace_reservation_bytes,
+        "allocation_by_tp_semantics": "per_tp_column_max_v1",
+        "allocation_by_tp": allocation_by_tp,
+    }
+    if len(tensor_parallel_sizes) == 1:
+        tp = tensor_parallel_sizes[0]
+        payload.update(allocation_by_tp[str(tp)])
+    return payload
+
+
 def profile_model(
     args: argparse.Namespace,
     model: str,
@@ -1060,6 +1603,7 @@ def profile_model(
     - Non-Ray mode with num_gpus > 1: Uses ProcessPoolExecutor for multi-GPU profiling
     - Non-Ray mode with num_gpus = 1: Sequential single-GPU profiling
     """
+    validate_profile_tp_sizes([num_tensor_parallel_workers])
     from frontier.profiling.attention.attention_wrapper import AttentionWrapper
 
     model_config = ModelConfig.from_model_name(model)
@@ -1087,6 +1631,7 @@ def profile_model(
         "tensor_parallel_size": num_tensor_parallel_workers,
         "max_num_blocks": max_num_blocks,
         "max_model_len": args.max_model_len,
+        "profile_max_seq_len": args.profile_max_seq_len,
         "block_size": args.block_size,
         "attention_backend": args.attention_backend,
         "dtype": dtype,
@@ -1121,6 +1666,7 @@ def profile_model(
                 dtype,
                 args.profile_method,
                 args.output_dir,
+                profile_max_seq_len=args.profile_max_seq_len,
             )
             for _ in range(args.num_gpus)
         ]
@@ -1144,9 +1690,7 @@ def profile_model(
     elif actual_num_gpus > 1:
         # Non-Ray multi-GPU mode: use multiple single-worker executors
         # Each executor is bound to a specific GPU
-        gpu_local_idx_map = {
-            gpu_id: local_idx for local_idx, gpu_id in enumerate(available_gpus)
-        }
+        gpu_local_idx_map = _get_gpu_local_index_map(available_gpus)
         tasks_by_gpu = {gpu_id: [] for gpu_id in available_gpus}
         for idx, attention_input in enumerate(input_combinations):
             gpu_id = available_gpus[idx % actual_num_gpus]
@@ -1205,15 +1749,16 @@ def profile_model(
                 executor.shutdown(wait=True, cancel_futures=True)
     else:
         # Single-GPU sequential mode
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(available_gpus[0])
         torch_module = _ensure_torch_available()
-        torch_module.cuda.set_device(0)
+        gpu_local_idx_map = _get_gpu_local_index_map(available_gpus)
+        torch_module.cuda.set_device(gpu_local_idx_map[available_gpus[0]])
 
         wrapper = AttentionWrapper(
             model_config=model_config,
             parallel_config=parallel_config,
             max_num_blocks=max_num_blocks,
             max_model_len=args.max_model_len,
+            profile_max_seq_len=args.profile_max_seq_len,
             block_size=args.block_size,
             attention_backend=args.attention_backend,
             dtype=dtype,
@@ -1226,8 +1771,11 @@ def profile_model(
             all_results.append(result)
             pbar.update(1)
 
-    # Filter out None results
-    all_results = list(filter(None, all_results))
+    all_results = _validate_attention_profile_results(
+        workload_family="standard",
+        requested_inputs=input_combinations,
+        results=all_results,
+    )
 
     if not all_results:
         return pd.DataFrame()
@@ -1275,6 +1823,7 @@ def profile_mixed_prefill(
     Returns:
         DataFrame containing profiling results.
     """
+    validate_profile_tp_sizes([num_tensor_parallel_workers])
     from frontier.profiling.attention.attention_wrapper import AttentionWrapper
 
     model_config = ModelConfig.from_model_name(model)
@@ -1296,6 +1845,7 @@ def profile_mixed_prefill(
         "tensor_parallel_size": num_tensor_parallel_workers,
         "max_num_blocks": max_num_blocks,
         "max_model_len": args.max_model_len,
+        "profile_max_seq_len": args.profile_max_seq_len,
         "block_size": args.block_size,
         "attention_backend": args.attention_backend,
         "dtype": dtype,
@@ -1330,6 +1880,7 @@ def profile_mixed_prefill(
                 dtype,
                 args.profile_method,
                 args.output_dir,
+                profile_max_seq_len=args.profile_max_seq_len,
             )
             for _ in range(args.num_gpus)
         ]
@@ -1353,9 +1904,7 @@ def profile_mixed_prefill(
     elif actual_num_gpus > 1:
         # Non-Ray multi-GPU mode: use multiple single-worker executors
         # Each executor is bound to a specific GPU
-        gpu_local_idx_map = {
-            gpu_id: local_idx for local_idx, gpu_id in enumerate(available_gpus)
-        }
+        gpu_local_idx_map = _get_gpu_local_index_map(available_gpus)
         tasks_by_gpu = {gpu_id: [] for gpu_id in available_gpus}
         for idx, mixed_input in enumerate(mixed_input_combinations):
             gpu_id = available_gpus[idx % actual_num_gpus]
@@ -1412,15 +1961,16 @@ def profile_mixed_prefill(
                 executor.shutdown(wait=True, cancel_futures=True)
     else:
         # Single-GPU sequential mode
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(available_gpus[0])
         torch_module = _ensure_torch_available()
-        torch_module.cuda.set_device(0)
+        gpu_local_idx_map = _get_gpu_local_index_map(available_gpus)
+        torch_module.cuda.set_device(gpu_local_idx_map[available_gpus[0]])
 
         wrapper = AttentionWrapper(
             model_config=model_config,
             parallel_config=parallel_config,
             max_num_blocks=max_num_blocks,
             max_model_len=args.max_model_len,
+            profile_max_seq_len=args.profile_max_seq_len,
             block_size=args.block_size,
             attention_backend=args.attention_backend,
             dtype=dtype,
@@ -1433,8 +1983,11 @@ def profile_mixed_prefill(
             all_results.append(result)
             pbar.update(1)
 
-    # Filter out None results
-    all_results = list(filter(None, all_results))
+    all_results = _validate_attention_profile_results(
+        workload_family="mixed_prefill",
+        requested_inputs=mixed_input_combinations,
+        results=all_results,
+    )
 
     if not all_results:
         return pd.DataFrame()
@@ -1449,7 +2002,6 @@ def profile_mixed_prefill(
         .join(df.drop(columns=["time_stats"]))
     )
     df = add_chunked_prefill_metadata(df)
-
     return df
 
 
@@ -1463,6 +2015,7 @@ def profile_true_mixed_batches(
     pbar: Any,
 ):
     """Profile true mixed prefill+decode batches."""
+    validate_profile_tp_sizes([num_tensor_parallel_workers])
     from frontier.profiling.attention.attention_wrapper import AttentionWrapper
 
     model_config = ModelConfig.from_model_name(model)
@@ -1481,6 +2034,7 @@ def profile_true_mixed_batches(
         "tensor_parallel_size": num_tensor_parallel_workers,
         "max_num_blocks": max_num_blocks,
         "max_model_len": args.max_model_len,
+        "profile_max_seq_len": args.profile_max_seq_len,
         "block_size": args.block_size,
         "attention_backend": args.attention_backend,
         "dtype": dtype,
@@ -1507,6 +2061,7 @@ def profile_true_mixed_batches(
                 dtype,
                 args.profile_method,
                 args.output_dir,
+                profile_max_seq_len=args.profile_max_seq_len,
             )
             for _ in range(args.num_gpus)
         ]
@@ -1521,9 +2076,7 @@ def profile_true_mixed_batches(
         if promises:
             all_results.extend(ray.get(promises))
     elif actual_num_gpus > 1:
-        gpu_local_idx_map = {
-            gpu_id: local_idx for local_idx, gpu_id in enumerate(available_gpus)
-        }
+        gpu_local_idx_map = _get_gpu_local_index_map(available_gpus)
         tasks_by_gpu = {gpu_id: [] for gpu_id in available_gpus}
         for idx, true_mixed_input in enumerate(true_mixed_input_combinations):
             gpu_id = available_gpus[idx % actual_num_gpus]
@@ -1583,14 +2136,15 @@ def profile_true_mixed_batches(
             for executor in executors:
                 executor.shutdown(wait=True, cancel_futures=True)
     else:
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(available_gpus[0])
         torch_module = _ensure_torch_available()
-        torch_module.cuda.set_device(0)
+        gpu_local_idx_map = _get_gpu_local_index_map(available_gpus)
+        torch_module.cuda.set_device(gpu_local_idx_map[available_gpus[0]])
         wrapper = AttentionWrapper(
             model_config=model_config,
             parallel_config=parallel_config,
             max_num_blocks=max_num_blocks,
             max_model_len=args.max_model_len,
+            profile_max_seq_len=args.profile_max_seq_len,
             block_size=args.block_size,
             attention_backend=args.attention_backend,
             dtype=dtype,
@@ -1601,7 +2155,11 @@ def profile_true_mixed_batches(
             all_results.append(wrapper.profile_true_mixed(true_mixed_input))
             pbar.update(1)
 
-    all_results = list(filter(None, all_results))
+    all_results = _validate_attention_profile_results(
+        workload_family="true_mixed",
+        requested_inputs=true_mixed_input_combinations,
+        results=all_results,
+    )
     if not all_results:
         return pd.DataFrame()
 
@@ -1617,6 +2175,10 @@ def profile_true_mixed_batches(
 
 def main():
     args = parse_args()
+    if args.run_id is None:
+        # Keep repeated invocations independently auditable while preserving the
+        # stable canonical CSV/alias consumed by existing simulator configs.
+        args.run_id = f"{args.profile_method}-{uuid.uuid4().hex[:12]}"
     _validate_cli_conflicts(args)
     if args.vllm_mla_cuda_op_log is not None:
         _run_vllm_mla_profile_import(args)
@@ -1647,6 +2209,10 @@ def main():
             raise RuntimeError("Ray is not available. Use --disable_ray flag.")
         print(f"\n=== Ray Mode ===")
         print(f"Using {args.num_gpus} GPUs via Ray")
+
+    # Capacity preflight must inspect every GPU that may host a profiling
+    # worker, not just whichever CUDA device happens to be current in the parent.
+    profiling_gpu_ids = _get_available_gpus(args.num_gpus)
 
     model_configs = {}
     model_dtypes = {}
@@ -1760,100 +2326,101 @@ def main():
         torch_dtype=first_dtype,
     )
 
+    backend_workspace_reservation_bytes = (
+        get_attention_backend_workspace_reservation_bytes(args.attention_backend)
+    )
+
+    # Resolve physical/selected capacity once per (model, TP), then validate
+    # every requested workload against that same allocation.  A shorter emitted
+    # list would silently misrepresent the requested profiling domain.
+    filtered_mixed_combinations = {}
+    filtered_true_mixed_combinations = {}
+    total_combos = {}
+    physical_max_num_blocks_dict: dict[tuple[str, int], int] = {}
+    max_num_blocks_dict: dict[tuple[str, int], int] = {}
+    required_max_num_blocks_dict: dict[tuple[str, int], int] = {}
+    for model in args.models:
+        model_config = model_configs[model]
+        dtype = model_dtypes[model]
+        for num_tensor_parallel_workers in args.num_tensor_parallel_workers:
+            key = (model, num_tensor_parallel_workers)
+            physical_max_num_blocks = _get_physical_max_num_blocks_across_gpus(
+                model_config=model_config,
+                parallel_config=ParallelConfig(
+                    tensor_parallel_size=num_tensor_parallel_workers,
+                    pipeline_parallel_size=1,
+                ),
+                block_size=args.block_size,
+                dtype=dtype,
+                gpu_ids=profiling_gpu_ids,
+                max_pipeline_parallel_size=args.max_pipeline_parallel_size,
+                reserved_memory_bytes=backend_workspace_reservation_bytes,
+            )
+            requested_workloads: list[Iterable[Any]] = [input_combinations]
+            if args.enable_mixed_prefill:
+                requested_workloads.append(mixed_input_combinations)
+            if args.enable_true_mixed:
+                requested_workloads.append(true_mixed_input_combinations)
+            required_max_num_blocks = max(
+                [
+                    _required_max_num_blocks(workload, block_size=args.block_size)
+                    for workload in requested_workloads
+                    if workload
+                ]
+                or [
+                    (args.profile_max_seq_len + args.block_size - 1)
+                    // args.block_size
+                ]
+            )
+            max_num_blocks = resolve_requested_max_num_blocks(
+                physical_max_num_blocks=physical_max_num_blocks,
+                requested_max_num_blocks=args.max_num_blocks,
+                required_max_num_blocks=required_max_num_blocks,
+                profile_max_seq_len=args.profile_max_seq_len,
+                block_size=args.block_size,
+            )
+            physical_max_num_blocks_dict[key] = int(physical_max_num_blocks)
+            max_num_blocks_dict[key] = int(max_num_blocks)
+            required_max_num_blocks_dict[key] = int(required_max_num_blocks)
+            total_combos[key] = _require_inputs_fit_kv_capacity(
+                input_combinations,
+                model=model,
+                tensor_parallel_size=num_tensor_parallel_workers,
+                workload_family="standard",
+                max_num_blocks=max_num_blocks,
+                block_size=args.block_size,
+                profile_max_seq_len=args.profile_max_seq_len,
+            )
+            if args.enable_mixed_prefill:
+                filtered_mixed_combinations[key] = _require_inputs_fit_kv_capacity(
+                    mixed_input_combinations,
+                    model=model,
+                    tensor_parallel_size=num_tensor_parallel_workers,
+                    workload_family="mixed_prefill",
+                    max_num_blocks=max_num_blocks,
+                    block_size=args.block_size,
+                    profile_max_seq_len=args.profile_max_seq_len,
+                )
+            if args.enable_true_mixed:
+                filtered_true_mixed_combinations[key] = _require_inputs_fit_kv_capacity(
+                    true_mixed_input_combinations,
+                    model=model,
+                    tensor_parallel_size=num_tensor_parallel_workers,
+                    workload_family="true_mixed",
+                    max_num_blocks=max_num_blocks,
+                    block_size=args.block_size,
+                    profile_max_seq_len=args.profile_max_seq_len,
+                )
+
+    # Capacity and requested-shape validation must complete before asking the
+    # user to confirm.  A rejected allocation is a configuration error, not a
+    # profiling run that should wait for interactive input.
     if not confirm_profiling_execution(
         module_name="Attention",
         config_sections=config_sections,
         skip_confirmation=args.skip_confirmation,
     ):
         sys.exit(0)
-
-    # Filter mixed combinations based on memory limits
-    filtered_mixed_combinations = {}
-    if args.enable_mixed_prefill:
-        for model in args.models:
-            model_config = model_configs[model]
-            dtype = model_dtypes[model]
-            for num_tensor_parallel_workers in args.num_tensor_parallel_workers:
-                max_num_blocks = get_max_num_blocks(
-                    model_config,
-                    ParallelConfig(
-                        tensor_parallel_size=num_tensor_parallel_workers,
-                        pipeline_parallel_size=1,
-                    ),
-                    args.block_size,
-                    dtype,
-                    max_pipeline_parallel_size=args.max_pipeline_parallel_size,
-                )
-                
-                filtered_mixed_combinations[(model, num_tensor_parallel_workers)] = list(
-                    filter(
-                        lambda mixed_input: mixed_input.is_under_memory_limit(
-                            max_num_blocks * args.block_size
-                        ),
-                        mixed_input_combinations,
-                    )
-                )
-        
-        print(f"After memory filtering: {sum(len(v) for v in filtered_mixed_combinations.values())} test cases")
-
-    # Filter true mixed combinations based on memory limits
-    filtered_true_mixed_combinations = {}
-    if args.enable_true_mixed:
-        for model in args.models:
-            model_config = model_configs[model]
-            dtype = model_dtypes[model]
-            for num_tensor_parallel_workers in args.num_tensor_parallel_workers:
-                max_num_blocks = get_max_num_blocks(
-                    model_config,
-                    ParallelConfig(
-                        tensor_parallel_size=num_tensor_parallel_workers,
-                        pipeline_parallel_size=1,
-                    ),
-                    args.block_size,
-                    dtype,
-                    max_pipeline_parallel_size=args.max_pipeline_parallel_size,
-                )
-
-                filtered_true_mixed_combinations[(model, num_tensor_parallel_workers)] = list(
-                    filter(
-                        lambda true_mixed_input: true_mixed_input.is_under_memory_limit(
-                            max_num_blocks * args.block_size
-                        ),
-                        true_mixed_input_combinations,
-                    )
-                )
-
-        print(
-            "After true-mixed memory filtering: "
-            f"{sum(len(v) for v in filtered_true_mixed_combinations.values())} test cases"
-        )
-
-    # Filter standard combinations by memory
-    total_combos = {}
-    max_num_blocks_dict = {}
-    for model in args.models:
-        model_config = model_configs[model]
-        dtype = model_dtypes[model]
-        for num_tensor_parallel_workers in args.num_tensor_parallel_workers:
-            max_num_blocks = get_max_num_blocks(
-                model_config,
-                ParallelConfig(
-                    tensor_parallel_size=num_tensor_parallel_workers,
-                    pipeline_parallel_size=1,
-                ),
-                args.block_size,
-                dtype,
-                max_pipeline_parallel_size=args.max_pipeline_parallel_size,
-            )
-            max_num_blocks_dict[(model, num_tensor_parallel_workers)] = max_num_blocks
-            total_combos[(model, num_tensor_parallel_workers)] = list(
-                filter(
-                    lambda input_combination: input_combination.is_under_memory_limit(
-                        max_num_blocks * args.block_size
-                    ),
-                    input_combinations,
-                )
-            )
 
     # Calculate total work for progress bar
     total_work = sum(len(v) for v in total_combos.values())
@@ -1881,6 +2448,24 @@ def main():
                         model_dtypes[model],
                         pbar,
                 )
+                if not standard_df.empty:
+                    standard_df = _attach_native_attention_run_provenance(
+                        standard_df,
+                        profile_input_grid_max_seq_len=args.max_seq_len,
+                        profile_max_seq_len=args.profile_max_seq_len,
+                        physical_max_num_blocks=physical_max_num_blocks_dict[
+                            (model, num_tensor_parallel_workers)
+                        ],
+                        requested_max_num_blocks=args.max_num_blocks,
+                        selected_max_num_blocks=max_num_blocks_dict[
+                            (model, num_tensor_parallel_workers)
+                        ],
+                        required_max_num_blocks=required_max_num_blocks_dict[
+                            (model, num_tensor_parallel_workers)
+                        ],
+                        block_size=args.block_size,
+                        backend_workspace_reservation_bytes=backend_workspace_reservation_bytes,
+                    )
                 result_df = pd.concat([result_df, standard_df])
             
             # Profile mixed-length batch prefill
@@ -1892,8 +2477,26 @@ def main():
                     filtered_mixed_combinations[(model, num_tensor_parallel_workers)],
                     max_num_blocks_dict[(model, num_tensor_parallel_workers)],
                     model_dtypes[model],
-                    pbar,
+                        pbar,
                 )
+                if not mixed_df.empty:
+                    mixed_df = _attach_native_attention_run_provenance(
+                        mixed_df,
+                        profile_input_grid_max_seq_len=args.max_seq_len,
+                        profile_max_seq_len=args.profile_max_seq_len,
+                        physical_max_num_blocks=physical_max_num_blocks_dict[
+                            (model, num_tensor_parallel_workers)
+                        ],
+                        requested_max_num_blocks=args.max_num_blocks,
+                        selected_max_num_blocks=max_num_blocks_dict[
+                            (model, num_tensor_parallel_workers)
+                        ],
+                        required_max_num_blocks=required_max_num_blocks_dict[
+                            (model, num_tensor_parallel_workers)
+                        ],
+                        block_size=args.block_size,
+                        backend_workspace_reservation_bytes=backend_workspace_reservation_bytes,
+                    )
                 mixed_result_df = pd.concat([mixed_result_df, mixed_df])
 
             # Profile true mixed prefill+decode batches (co-location scenario)
@@ -1905,26 +2508,38 @@ def main():
                     filtered_true_mixed_combinations[(model, num_tensor_parallel_workers)],
                     max_num_blocks_dict[(model, num_tensor_parallel_workers)],
                     model_dtypes[model],
-                    pbar,
+                        pbar,
                 )
+                if not true_mixed_df.empty:
+                    true_mixed_df = _attach_native_attention_run_provenance(
+                        true_mixed_df,
+                        profile_input_grid_max_seq_len=args.max_seq_len,
+                        profile_max_seq_len=args.profile_max_seq_len,
+                        physical_max_num_blocks=physical_max_num_blocks_dict[
+                            (model, num_tensor_parallel_workers)
+                        ],
+                        requested_max_num_blocks=args.max_num_blocks,
+                        selected_max_num_blocks=max_num_blocks_dict[
+                            (model, num_tensor_parallel_workers)
+                        ],
+                        required_max_num_blocks=required_max_num_blocks_dict[
+                            (model, num_tensor_parallel_workers)
+                        ],
+                        block_size=args.block_size,
+                        backend_workspace_reservation_bytes=backend_workspace_reservation_bytes,
+                    )
                 true_mixed_result_df = pd.concat([true_mixed_result_df, true_mixed_df])
         
-        model_output_dir = build_profile_method_output_path(
+        model_output_file = build_profile_method_output_path(
             output_root=args.output_dir,
             profiling_type="compute",
             hardware=args.device,
             model_name=model,
             op_name="attention",
             profile_method=args.profile_method,
-        ).parent
+        )
+        model_output_dir = model_output_file.parent
         model_output_dir.mkdir(parents=True, exist_ok=True)
-        with (Path(args.output_dir) / "compute" / args.device / "attention_config.yaml").open(
-            "w",
-            encoding="utf-8",
-        ) as config_file:
-            import yaml
-
-            yaml.dump(vars(args), config_file)
 
         # Load model config for metadata columns
         model_config = model_configs[model]
@@ -2002,23 +2617,51 @@ def main():
                 f"{true_mixed_output_file}"
             )
 
-        # Always export a combined file when any partition is available.
-        combined_df = _build_attention_combined_df(
-            result_df,
-            mixed_result_df,
-            true_mixed_result_df,
-        )
-        if not combined_df.empty:
-            combined_output_file = build_profile_method_output_path(
-                output_root=args.output_dir,
-                profiling_type="compute",
-                hardware=args.device,
-                model_name=model,
-                op_name="attention_combined",
-                profile_method=args.profile_method,
+        # Publish one deterministic canonical union and a byte-identical
+        # compatibility alias.  The sidecar is scoped to this model/measurement
+        # run and records per-TP physical/selected/required allocation facts.
+        if not (result_df.empty and mixed_result_df.empty and true_mixed_result_df.empty):
+            canonical_name = model_output_file.name
+            alias_name = (
+                "attention_combined_kernel_only.csv"
+                if measurement_type == "KERNEL_ONLY"
+                else "attention_combined.csv"
             )
-            combined_df.to_csv(combined_output_file, index=False)
-            print(f"Saved combined results to {combined_output_file}")
+            provenance = _build_attention_run_provenance(
+                args=args,
+                model=model,
+                measurement_type=measurement_type,
+                profiling_precision=precision_str,
+                quant_signature=quant_signature,
+                model_architecture_profile=model_architecture_profile,
+                attention_backend=args.attention_backend,
+                physical_max_num_blocks_by_tp={
+                    tp: physical_max_num_blocks_dict[(model, tp)]
+                    for tp in args.num_tensor_parallel_workers
+                },
+                selected_max_num_blocks_by_tp={
+                    tp: max_num_blocks_dict[(model, tp)]
+                    for tp in args.num_tensor_parallel_workers
+                },
+                required_max_num_blocks_by_tp={
+                    tp: required_max_num_blocks_dict[(model, tp)]
+                    for tp in args.num_tensor_parallel_workers
+                },
+                backend_workspace_reservation_bytes=backend_workspace_reservation_bytes,
+            )
+            published = publish_attention_union_and_alias(
+                output_dir=model_output_dir,
+                standard_df=result_df,
+                mixed_df=mixed_result_df,
+                true_mixed_df=true_mixed_result_df,
+                run_id=args.run_id,
+                canonical_name=canonical_name,
+                alias_name=alias_name,
+                provenance=provenance,
+            )
+            print(f"Saved canonical attention union to {published['canonical']}")
+            print(f"Saved compatibility alias to {published['alias']}")
+            print(f"Saved attention run sidecar to {published['sidecar']}")
     
     pbar.close()
     print("\n=== Profiling Complete ===")

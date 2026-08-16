@@ -16,6 +16,10 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
     _build_exact_feature_lookup,
 )
+from frontier.execution_time_predictor.prediction_cache_contract import (
+    ON_DEMAND_DOMAIN_POLICY_UNBOUNDED,
+    attach_feature_domain,
+)
 from frontier.model_architectures import ModelArchitectureProfile
 from frontier.profiling.attention.vllm_mla_profile_importer import (
     build_frontier_mla_profile_dataframe,
@@ -244,6 +248,12 @@ def _build_mla_predictor(rows: list[dict[str, object]] | None = None):
         target_column = target_columns[op_name]
         source_value = float(df[target_column].dropna().iloc[0])
         model = _ConstantExactModel(source_value + 1.0, feature_columns)
+        attach_feature_domain(
+            model,
+            df.dropna(subset=list(feature_columns)),
+            list(feature_columns),
+            on_demand_policy=ON_DEMAND_DOMAIN_POLICY_UNBOUNDED,
+        )
         predictions[op_name] = {
             "_on_demand_prediction": True,
             "_n_features": len(feature_columns),
@@ -390,7 +400,7 @@ def test_mla_runtime_predicts_prefill_shape_from_imported_exact_row(monkeypatch)
     )
 
 
-def test_mla_runtime_fails_fast_when_imported_feature_row_is_missing() -> None:
+def test_mla_runtime_predicts_when_imported_feature_row_is_missing() -> None:
     predictor = _build_mla_predictor()
     missing_row_batch = _DummyBatch()
     missing_row_batch.requests = [
@@ -404,15 +414,22 @@ def test_mla_runtime_fails_fast_when_imported_feature_row_is_missing() -> None:
         )
     ]
 
-    with pytest.raises(ValueError, match="No exact MLA profiling row"):
-        predictor.predict_attention_layer_time(
-            batch=missing_row_batch,
-            layer_id=0,
-            cluster_type=ClusterType.MONOLITHIC,
-        )
+    attention_time = predictor.predict_attention_layer_time(
+        batch=missing_row_batch,
+        layer_id=0,
+        cluster_type=ClusterType.MONOLITHIC,
+    )
+
+    assert attention_time.operator_times is not None
+    assert attention_time.operator_times.op_times["attn_mla_kv_cache_save"] == pytest.approx(
+        1.01
+    )
+    assert attention_time.operator_times.op_times["attn_mla_decode"] == pytest.approx(
+        1.05
+    )
 
 
-def test_mla_runtime_exact_miss_rejects_model_without_frontier_model_hash() -> None:
+def test_mla_runtime_exact_miss_allows_schema_valid_model_without_persisted_hash() -> None:
     predictor = _build_mla_predictor()
     missing_row_batch = _DummyBatch()
     missing_row_batch.requests = [
@@ -426,17 +443,25 @@ def test_mla_runtime_exact_miss_rejects_model_without_frontier_model_hash() -> N
         )
     ]
     for model_info in predictor._predictions.values():
-        model_info["_model"] = _ConstantExactModel(
+        replacement = _ConstantExactModel(
             0.123,
             tuple(model_info["_feature_names"]),
         )
-
-    with pytest.raises(ValueError, match="No trained MLA prediction model"):
-        predictor.predict_attention_layer_time(
-            batch=missing_row_batch,
-            layer_id=0,
-            cluster_type=ClusterType.MONOLITHIC,
+        replacement._frontier_feature_domain = dict(
+            model_info["_model"]._frontier_feature_domain
         )
+        model_info["_model"] = replacement
+
+    attention_time = predictor.predict_attention_layer_time(
+        batch=missing_row_batch,
+        layer_id=0,
+        cluster_type=ClusterType.MONOLITHIC,
+    )
+
+    assert attention_time.operator_times is not None
+    assert attention_time.operator_times.op_times["attn_mla_decode"] == pytest.approx(
+        0.123
+    )
 
 
 def test_mla_runtime_exact_miss_uses_trained_model_when_schema_matches(
@@ -473,6 +498,9 @@ def test_mla_runtime_exact_miss_uses_trained_model_when_schema_matches(
             tuple(model_info["_feature_names"]),
         )
         trained_model._frontier_model_hash = f"trained-{op_name}"
+        trained_model._frontier_feature_domain = dict(
+            model_info["_model"]._frontier_feature_domain
+        )
         model_info["_model"] = trained_model
 
     attention_time = predictor.predict_attention_layer_time(
@@ -506,7 +534,7 @@ def test_mla_runtime_fails_fast_when_query_shape_differs_but_kv_extent_matches()
         )
     ]
 
-    with pytest.raises(ValueError, match="No exact MLA profiling row"):
+    with pytest.raises(ValueError, match="enumerated axis|declared domain"):
         predictor.predict_attention_layer_time(
             batch=mismatched_query_batch,
             layer_id=0,
@@ -639,11 +667,13 @@ def test_mla_exact_hit_uses_measured_row_even_when_trained_model_is_available(
 
     predictor = _build_mla_predictor(h800_mla_mixed_rows())
     for op_name, model_info in predictor._predictions.items():
+        feature_domain = dict(model_info["_model"]._frontier_feature_domain)
         trained_model = _ConstantExactModel(
             999.0,
             tuple(model_info["_feature_names"]),
         )
         trained_model._frontier_model_hash = f"trained-h800-{op_name}"
+        trained_model._frontier_feature_domain = feature_domain
         model_info["_model"] = trained_model
 
     attention_time = predictor.predict_attention_layer_time(

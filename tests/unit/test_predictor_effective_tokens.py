@@ -274,7 +274,7 @@ def test_sklearn_execution_time_predictor_applies_attn_kv_cache_save_calibration
     )
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
-    predictor._predictions = {"attn_kv_cache_save": {(4,): 3.0}}
+    predictor._predictions = {"attn_kv_cache_save": {(4, 0, 2): 3.0}}
     predictor._attn_kv_cache_save_calibration_scale = 1.5
 
     batch = MagicMock()
@@ -296,7 +296,7 @@ def test_sklearn_execution_time_predictor_applies_prefill_phase_attn_kv_cache_sa
     )
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
-    predictor._predictions = {"attn_kv_cache_save": {(4,): 3.0}}
+    predictor._predictions = {"attn_kv_cache_save": {(4, 0, 2): 3.0}}
     predictor._attn_kv_cache_save_calibration_scale = 1.0
     predictor._prefill_phase_attn_kv_cache_save_calibration_scale = 1.8
 
@@ -319,7 +319,7 @@ def test_sklearn_execution_time_predictor_keeps_global_attn_kv_cache_save_scale_
     )
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
-    predictor._predictions = {"attn_kv_cache_save": {(4,): 3.0}}
+    predictor._predictions = {"attn_kv_cache_save": {(4, 16, 2): 3.0}}
     predictor._attn_kv_cache_save_calibration_scale = 1.5
     predictor._prefill_phase_attn_kv_cache_save_calibration_scale = 1.8
 
@@ -328,6 +328,7 @@ def test_sklearn_execution_time_predictor_keeps_global_attn_kv_cache_save_scale_
     batch.num_decode_tokens = 4
     batch.num_prefill_tokens = 0
     batch.requests = [object(), object()]
+    predictor._get_batch_decode_attention_params = MagicMock(return_value=(2, 16))
 
     result = SklearnExecutionTimePredictor._get_attention_kv_cache_save_execution_time(
         predictor, batch

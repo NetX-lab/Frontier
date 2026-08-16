@@ -4,7 +4,6 @@
 """Flashinfer attention wrapper for profiling."""
 
 from typing import List, Optional
-import os
 
 import torch
 
@@ -37,6 +36,9 @@ from frontier.profiling.attention.backends.base_attention_wrapper import (
 from frontier.attention.model_binding import bind_attention_family
 from frontier.attention.ops import AttentionMemoryLayout
 from frontier.profiling.attention.sequence_metadata import SequenceMetadata
+from frontier.profiling.attention.memory_budget import (
+    get_flashinfer_workspace_sizes_bytes,
+)
 from frontier.profiling.common.constants import OperationMetrics
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.common.parallel_config import ParallelConfig
@@ -109,12 +111,7 @@ class FlashinferAttentionWrapper(BaseAttentionWrapper):
         # buffer (default is small, e.g. 8MB in 0.3.0) that can overflow for
         # large mixed prefill/decode planning workloads. We explicitly enlarge it
         # via reset_workspace_buffer below.
-        workspace_gb = int(os.environ.get("FRONTIER_FLASHINFER_WORKSPACE_GB", "4"))
-        int_workspace_mb = int(
-            os.environ.get("FRONTIER_FLASHINFER_INT_WORKSPACE_MB", "512")
-        )
-        workspace_size = workspace_gb * 1024 * 1024 * 1024
-        int_workspace_size = int_workspace_mb * 1024 * 1024
+        workspace_size, int_workspace_size = get_flashinfer_workspace_sizes_bytes()
         prefill_workspace_buffer = torch.empty(
             workspace_size, dtype=torch.uint8, device=device
         )

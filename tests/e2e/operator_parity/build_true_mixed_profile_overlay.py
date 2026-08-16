@@ -9,8 +9,12 @@ import hashlib
 import json
 import shutil
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
+from frontier.profiling.attention.provenance import (
+    validate_attention_partition_source,
+    write_attention_partition_run_sidecar,
+)
 from tests.e2e.operator_parity.audit_true_mixed_attention_stage import (
     DEFAULT_MODELS,
     audit_stage,
@@ -22,6 +26,15 @@ SOURCE_TO_CANONICAL_FILENAME: dict[str, str] = {
     "attention_true_mixed.csv": "attention.csv",
     "attention_true_mixed_kernel_only.csv": "attention_kernel_only.csv",
 }
+SOURCE_MEASUREMENT_TYPES: dict[str, str] = {
+    "attention_true_mixed.csv": "CUDA_EVENT",
+    "attention_true_mixed_kernel_only.csv": "KERNEL_ONLY",
+}
+ATTENTION_BOUND_PATH_FIELDS = (
+    "artifact_csv",
+    "source_run_csv",
+    "source_run_sidecar",
+)
 
 
 def _sha256(path: Path) -> str:
@@ -52,6 +65,119 @@ def _validate_source_rows(path: Path) -> tuple[int, int]:
     return len(rows), len(true_mixed_rows)
 
 
+def _paths_overlap(first: Path, second: Path) -> bool:
+    first_resolved = first.resolve()
+    second_resolved = second.resolve()
+    return (
+        first_resolved == second_resolved
+        or first_resolved in second_resolved.parents
+        or second_resolved in first_resolved.parents
+    )
+
+
+def _validate_root_isolation(
+    *,
+    canonical_root: Path,
+    stage_root: Path,
+    overlay_root: Path,
+    supplement_root: Path,
+) -> None:
+    roots = (
+        ("canonical_root", canonical_root),
+        ("stage_root", stage_root),
+        ("overlay_root", overlay_root),
+        ("supplement_root", supplement_root),
+    )
+    for index, (first_name, first_path) in enumerate(roots):
+        for second_name, second_path in roots[index + 1 :]:
+            if _paths_overlap(first_path, second_path):
+                raise ValueError(
+                    "Overlay source and publication roots must be disjoint: "
+                    f"{first_name}={first_path}, {second_name}={second_path}."
+                )
+
+
+def _sidecar_bound_artifact_paths(sidecar_path: Path) -> set[Path]:
+    try:
+        payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(
+            f"Invalid attention source run sidecar: {sidecar_path}"
+        ) from exc
+    if not isinstance(payload, Mapping):
+        raise ValueError(
+            f"Attention source run sidecar must contain a JSON object: {sidecar_path}"
+        )
+    paths: set[Path] = set()
+    for field in ATTENTION_BOUND_PATH_FIELDS:
+        value = payload.get(field)
+        if value is None:
+            continue
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(
+                f"Attention provenance field {field!r} must be a non-empty path."
+            )
+        paths.add(Path(value))
+    return paths
+
+
+def _validate_json_out_path(
+    *,
+    json_out: Path | None,
+    canonical_root: Path,
+    stage_root: Path,
+    overlay_root: Path,
+    supplement_root: Path,
+    partition_plans: Sequence[Mapping[str, Any]],
+) -> None:
+    if json_out is None:
+        return
+    if json_out.exists() and json_out.is_dir():
+        raise ValueError(
+            f"--json-out must be a file path, not a directory: {json_out}."
+        )
+    artifact_paths: set[Path] = set()
+    publication_directories = {
+        overlay_root.resolve(),
+        supplement_root.resolve(),
+        *(Path(plan["target"]).parent.resolve() for plan in partition_plans),
+    }
+    for canonical_path in canonical_root.rglob("*"):
+        overlay_path = overlay_root / canonical_path.relative_to(canonical_root)
+        if canonical_path.is_dir():
+            publication_directories.add(overlay_path.resolve())
+            continue
+        artifact_paths.add(canonical_path.resolve())
+        artifact_paths.add(overlay_path.resolve())
+    for plan in partition_plans:
+        for field in (
+            "source",
+            "source_sidecar",
+            "target",
+            "target_sidecar",
+        ):
+            artifact_paths.add(Path(plan[field]).resolve())
+        artifact_paths.update(
+            Path(path).resolve()
+            for path in plan["bound_artifact_paths"]
+        )
+    resolved_json_out = json_out.resolve()
+    if (
+        any(_paths_overlap(resolved_json_out, path) for path in artifact_paths)
+        or any(
+            resolved_json_out == directory
+            or resolved_json_out in directory.parents
+            or directory in resolved_json_out.parents
+            for directory in publication_directories
+        )
+    ):
+        raise ValueError(
+            "--json-out must not overwrite a canonical source, staged source, "
+            "source sidecar, bound parent artifact, overlay publication artifact, "
+            f"or publication directory: {json_out}."
+        )
+
+
 def build_overlay(
     *,
     canonical_root: Path,
@@ -61,7 +187,15 @@ def build_overlay(
     models: Sequence[str] = DEFAULT_MODELS,
     expected_true_mixed_rows_per_file: int | None = None,
     expected_tp_values: Sequence[int] = (1, 2, 4, 8),
+    source_sidecars: Mapping[tuple[str, str], Path] | None = None,
+    json_out: Path | None = None,
 ) -> dict[str, Any]:
+    _validate_root_isolation(
+        canonical_root=canonical_root,
+        stage_root=stage_root,
+        overlay_root=overlay_root,
+        supplement_root=supplement_root,
+    )
     if overlay_root.exists():
         raise FileExistsError(f"overlay root already exists: {overlay_root}")
     if supplement_root.exists():
@@ -83,32 +217,98 @@ def build_overlay(
             f"fail_count={audit_summary['fail_count']}"
         )
 
-    shutil.copytree(canonical_root, overlay_root)
-
-    reports: list[dict[str, Any]] = []
+    partition_plans: list[dict[str, Any]] = []
     for model in models:
         for source_filename, target_filename in SOURCE_TO_CANONICAL_FILENAME.items():
             source = stage_root / model / source_filename
             target = supplement_root / model / target_filename
             if not source.is_file():
                 raise FileNotFoundError(source)
+            source_sidecar_key = (model, source_filename)
+            if (
+                source_sidecars is None
+                or source_sidecar_key not in source_sidecars
+            ):
+                raise ValueError(
+                    "A validated source run sidecar is required for every "
+                    "true-mixed partition: "
+                    f"model={model!r}, source_filename={source_filename!r}."
+                )
             row_count, true_mixed_row_count = _validate_source_rows(source)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
-            reports.append(
+            source_sidecar = Path(source_sidecars[source_sidecar_key])
+            expected_measurement_type = SOURCE_MEASUREMENT_TYPES[source_filename]
+            validate_attention_partition_source(
+                source_sidecar_path=source_sidecar,
+                partition_csv=source,
+                partition="true_mixed",
+                expected_model=model,
+                expected_measurement_type=expected_measurement_type,
+            )
+            bound_artifact_paths = _sidecar_bound_artifact_paths(
+                source_sidecar
+            )
+            target_sidecar = target.with_name(
+                f"{target.stem}.run_provenance.json"
+            )
+            partition_plans.append(
                 {
                     "model": model,
-                    "source": str(source),
-                    "target": str(target),
+                    "source": source,
+                    "target": target,
                     "source_filename": source_filename,
                     "target_filename": target_filename,
                     "row_count": row_count,
                     "true_mixed_row_count": true_mixed_row_count,
-                    "source_sha256": _sha256(source),
-                    "target_sha256": _sha256(target),
-                    "target_size_bytes": target.stat().st_size,
+                    "source_sidecar": source_sidecar,
+                    "target_sidecar": target_sidecar,
+                    "expected_measurement_type": expected_measurement_type,
+                    "bound_artifact_paths": bound_artifact_paths,
                 }
             )
+
+    _validate_json_out_path(
+        json_out=json_out,
+        canonical_root=canonical_root,
+        stage_root=stage_root,
+        overlay_root=overlay_root,
+        supplement_root=supplement_root,
+        partition_plans=partition_plans,
+    )
+
+    shutil.copytree(canonical_root, overlay_root)
+
+    reports: list[dict[str, Any]] = []
+    for plan in partition_plans:
+        source = Path(plan["source"])
+        target = Path(plan["target"])
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+        target_sidecar = Path(plan["target_sidecar"])
+        write_attention_partition_run_sidecar(
+            source_sidecar_path=plan["source_sidecar"],
+            partition_csv=target,
+            sidecar_path=target_sidecar,
+            partition="true_mixed",
+            expected_model=str(plan["model"]),
+            expected_measurement_type=str(plan["expected_measurement_type"]),
+        )
+        reports.append(
+            {
+                "model": plan["model"],
+                "source": str(source),
+                "target": str(target),
+                "source_filename": plan["source_filename"],
+                "target_filename": plan["target_filename"],
+                "row_count": plan["row_count"],
+                "true_mixed_row_count": plan["true_mixed_row_count"],
+                "source_sha256": _sha256(source),
+                "target_sha256": _sha256(target),
+                "target_size_bytes": target.stat().st_size,
+                "source_sidecar": str(plan["source_sidecar"]),
+                "target_sidecar": str(target_sidecar),
+                "target_sidecar_sha256": _sha256(target_sidecar),
+            }
+        )
 
     return {
         "status": "PASS",
@@ -160,12 +360,32 @@ def _parse_args() -> argparse.Namespace:
         default=(1, 2, 4, 8),
         help="Strict expected TP values in every staged file.",
     )
+    parser.add_argument(
+        "--source-sidecar",
+        action="append",
+        nargs=3,
+        required=True,
+        metavar=("MODEL", "SOURCE_FILENAME", "PATH"),
+        help=(
+            "Validated source run sidecar for one staged true-mixed partition. "
+            "Repeat once per model and source filename."
+        ),
+    )
     parser.add_argument("--json-out", type=Path, default=None)
     return parser.parse_args()
 
 
 def main() -> int:
     args = _parse_args()
+    source_sidecars: dict[tuple[str, str], Path] = {}
+    for model, source_filename, raw_path in args.source_sidecar:
+        key = (model, source_filename)
+        if key in source_sidecars:
+            raise ValueError(
+                "Duplicate --source-sidecar binding for "
+                f"model={model!r}, source_filename={source_filename!r}."
+            )
+        source_sidecars[key] = Path(raw_path)
     summary = build_overlay(
         canonical_root=args.canonical_root,
         stage_root=args.stage_root,
@@ -174,6 +394,8 @@ def main() -> int:
         models=tuple(args.models),
         expected_true_mixed_rows_per_file=args.expected_true_mixed_rows_per_file,
         expected_tp_values=tuple(args.expected_tp_values),
+        source_sidecars=source_sidecars,
+        json_out=args.json_out,
     )
     output = json.dumps(summary, indent=2, sort_keys=True)
     print(output)

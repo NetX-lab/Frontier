@@ -27,3 +27,21 @@ def test_mixed_attention_contract_recommends_true_mixed_merge_not_combined_suppl
     assert "attention_kernel_only.csv" in message
     assert "Do not use attention_combined*.csv as the true-mixed supplement source" in message
     assert "recommended: " not in message
+
+
+def test_mixed_attention_contract_rejects_nonidentical_combined_alias(
+    tmp_path: Path,
+) -> None:
+    attention_file = tmp_path / "attention.csv"
+    attention_file.write_text(
+        "is_mixed_batch,is_true_mixed_batch\nFalse,False\n", encoding="utf-8"
+    )
+    (tmp_path / "attention_combined.csv").write_text(
+        "is_mixed_batch,is_true_mixed_batch\nTrue,False\n", encoding="utf-8"
+    )
+
+    with pytest.raises(ValueError, match="byte-identical"):
+        enforce_mixed_attention_input_contract(
+            str(attention_file),
+            available_columns=("is_mixed_batch", "is_true_mixed_batch"),
+        )

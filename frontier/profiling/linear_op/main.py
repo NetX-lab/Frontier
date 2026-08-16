@@ -64,6 +64,7 @@ except ImportError:
     ray = None
 
 from frontier.profiling.common.model_config import ModelConfig
+from frontier.profiling.common.parallel_config import validate_profile_tp_sizes
 from frontier.profiling.linear_op.ray_setup_hook import (
     disable_ray_datasets_serializers,
 )
@@ -382,6 +383,11 @@ def parse_args():
         ),
     )
     args = parser.parse_args()
+    validate_profile_tp_sizes(args.num_tensor_parallel_workers)
+    if args.attn_tp is not None:
+        validate_profile_tp_sizes(args.attn_tp, argument_name="attn_tp")
+    if args.ffn_tp is not None:
+        validate_profile_tp_sizes(args.ffn_tp, argument_name="ffn_tp")
     args.profile_method = normalize_profile_method(args.profile_method)
     os.makedirs(args.output_dir, exist_ok=True)
 
@@ -390,8 +396,15 @@ def parse_args():
 
 def _resolve_tp_ranges(args: argparse.Namespace) -> Tuple[List[int], List[int], List[int]]:
     """Resolve TP ranges for attention, FFN, and overall profiling loop."""
-    attn_tp = args.attn_tp or args.num_tensor_parallel_workers
-    ffn_tp = args.ffn_tp or args.num_tensor_parallel_workers
+    base_tp = validate_profile_tp_sizes(args.num_tensor_parallel_workers)
+    attn_tp = validate_profile_tp_sizes(
+        base_tp if args.attn_tp is None else args.attn_tp,
+        argument_name="attn_tp",
+    )
+    ffn_tp = validate_profile_tp_sizes(
+        base_tp if args.ffn_tp is None else args.ffn_tp,
+        argument_name="ffn_tp",
+    )
     all_tps = set(attn_tp + ffn_tp)
     return attn_tp, ffn_tp, sorted(all_tps)
 
@@ -526,6 +539,7 @@ def profile_model(
     - Non-Ray mode with num_gpus > 1: Uses ProcessPoolExecutor for multi-GPU profiling
     - Non-Ray mode with num_gpus = 1: Sequential single-GPU profiling
     """
+    attn_tp, ffn_tp, all_tps = _resolve_tp_ranges(args)
     from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper
 
     model_config = ModelConfig.from_model_name(model)
@@ -555,8 +569,6 @@ def profile_model(
         op_name="linear_op",
         profile_method=args.profile_method,
     ).parent
-
-    attn_tp, ffn_tp, all_tps = _resolve_tp_ranges(args)
 
     for num_tensor_parallel_workers in all_tps:
         profiling_plan = build_profiling_plan(

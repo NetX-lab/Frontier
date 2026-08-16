@@ -4,6 +4,8 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-13 | Added deterministic canonical/alias output, run-scoped sidecar checks, explicit block allocation provenance, and measured KV-grid start guidance |
+| 2026-08-12 | Separated serving `max_model_len` from profiling `max_seq_len`/`profile_max_seq_len`; documented strict TP sizes and profile-context validation |
 | 2026-06-06 | Replaced private checkout path with a repo-relative profiling example; refreshed legacy CSV naming note for release docs |
 | 2026-01-16 | Documented `--batch_size_list` for explicit batch-size profiling control.          |
 | 2025-12-06 | Added multi-GPU mode documentation; updated CSV naming from legacy MLP naming to `linear_op.csv`; added --disable_ray usage; updated --compute_dataset_path as optional |
@@ -20,6 +22,19 @@
 ## 📋 测试命令和参数详解
 
 本文档提供详细的测试命令、参数说明和测试场景，帮助验证 mixed batch prefill profiling 功能的正确性。
+
+## Output/provenance assertions
+
+一个成功的 attention run 应同时满足：
+
+1. `attention.csv`（或 `attention_kernel_only.csv`）是 standard/mixed/true-mixed 的 deterministic union；
+2. `attention_combined*.csv` 与 canonical 文件 bytes 完全相同，不能把它当作第二份 supplement；
+3. `runs/<run_id>/` 下保留本次不可覆盖的 CSV，sidecar 的 `csv_sha256` 必须匹配该文件；
+4. sidecar 中 `physical_max_num_blocks`、`selected_max_num_blocks`、`required_max_num_blocks` 是正整数，`requested_max_num_blocks` 只能是正整数或 JSON `null`；
+5. requested/emitted structural tuple multiset 完全相等，不能有 missing、extra 或重复；
+6. `TP` 只允许 `{1, 2, 4, 8}`（communication-only / dummy 例外）。
+
+若 serving `max_model_len` 小于显式 `profile_max_seq_len`，仍可 profiling；后者必须有实际 GPU capacity。runtime materialization 的每个 tuple 仍须落在模型 sidecar/domain 声明范围内，不允许 nearest、clamp 或 generic predict-on-miss。
 
 ---
 
@@ -81,9 +96,10 @@ python -m frontier.profiling.attention.main \
 |------|--------|------|
 | `--models` | 多个 | 模型列表，如 "meta-llama/Llama-2-7b-hf" |
 | `--num_gpus` | 8 | GPU 数量 |
-| `--num_tensor_parallel_workers` | [1,2,4,8] | Tensor 并行度列表 |
-| `--max_seq_len` | 4096 | 最大序列长度 |
-| `--max_model_len` | 4096 | 模型最大上下文长度<br>**注意**: 需 >= max_seq_len |
+| `--num_tensor_parallel_workers` | [1,2,4,8] | Tensor 并行度列表；profile-backed compute 只支持 `1/2/4/8`，其他值在 GPU 初始化前拒绝 |
+| `--max_seq_len` | 4096 | 本次 profiling 生成的输入 grid 最大序列长度；必须 `<= profile_max_seq_len` |
+| `--profile_max_seq_len` | `max_seq_len` | Profiling workload 的 context 上限，用于 input validity 和 KV block-table 安全检查；可以大于 serving 的 `max_model_len`，但不能超过实际 backend/显存可执行范围 |
+| `--max_model_len` | 4096 | Serving context metadata；不是 profiling 的硬上限，可小于 `max_seq_len` |
 | `--min_batch_size` | 1 | 最小 decode batch size |
 | `--max_batch_size` | 128 | 最大 decode batch size |
 | `--batch_size_list` | None | 显式指定 batch size 列表（覆盖 min/max） |
@@ -302,15 +318,17 @@ print(f'Layers: {config.num_layers}')
 --max_pipeline_parallel_size 4
 ```
 
-### 问题 2: AssertionError: prefill_chunk_size + kv_cache_size > max_seq_len
+### 问题 2: AssertionError: prefill_chunk_size + kv_cache_size > profile_max_seq_len
 
-**原因**: `max_seq_len` > `max_model_len`
+**原因**: 生成的 prefill 输入组合超过了声明的 profiling context。`max_seq_len` 控制生成的输入 grid，`profile_max_seq_len` 控制 wrapper 的 validity 和 KV block-table 检查；`max_model_len` 只记录当前 serving context，不再自动限制 profiling 范围。
 
 **解决**:
 ```bash
-# 确保 max_model_len >= max_seq_len
---max_seq_len 6400 --max_model_len 12800
+# 让生成 grid 不超过 profiling context；serving context 可以独立设置
+--max_seq_len 6400 --profile_max_seq_len 12800 --max_model_len 4096
 ```
+
+只有在模型 backend、GPU KV-cache capacity 和实际 kernel 都能执行该 profile workload 时，才应使用大于 serving context 的 profiling 范围。若超过可分配的 `max_num_blocks`，profiling 会明确失败，不会静默截断或降级。
 
 ### 问题 3: KeyError: 'time_stats.attn_prefill_mixed.median'
 

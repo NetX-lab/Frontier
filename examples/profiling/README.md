@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-13 | Clarified attention canonical union/alias files, run-scoped sidecars, and explicit runtime KV-grid lower bounds |
 | 2026-06-07 | Added support matrix clarifying wrapper defaults, measurement family, checked-in CSV smokes, and dry-run scope. |
 | 2026-06-07 | Clarified release-facing simulator smoke output defaults and smoke script CLI override behavior. |
 | 2026-06-07 | Documented MoE downstream `uniform_random` routing alignment for checked-in `uniform_topk` profiling rows. |
@@ -21,6 +22,12 @@ data/profiling/compute/<device>/<model>/
 ├── attention.csv
 └── moe.csv
 ```
+
+Attention profiling additionally emits a byte-identical
+`attention_combined.csv` compatibility alias, a run-scoped CSV under
+`runs/<run_id>/`, and a digest-bound `<canonical-stem>.<run_id>.json` sidecar.
+Do not merge the alias as a second supplement. The sidecar's requested/emitted
+tuple count and numeric block allocation are part of the acceptance check.
 
 You can override `PYTHON_BIN`, `MODEL`, `DEVICE`, `DATA_DIR_BASE`, and script-specific sizing variables from the shell or via CLI flags. Smoke scripts reject unknown CLI arguments before running dependency checks, so mistyped validation commands fail fast instead of silently validating a different target.
 

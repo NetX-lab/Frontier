@@ -1,6 +1,6 @@
-import hashlib
 import os
 import pickle
+import json
 from itertools import product
 from typing import Dict, Set, List, Any, Tuple, Optional
 
@@ -21,6 +21,13 @@ from frontier.attention.string_coercion import (
     coerce_truthy_bool,
     coerce_truthy_int,
 )
+from frontier.attention.training_partition import (
+    DENSE_MIXED_PREFILL_FEATURES,
+    build_dense_mixed_prefill_training_rows,
+    prepare_dense_cache_write_training_rows,
+    partition_dense_attention_rows,
+    validate_cache_write_target_consistency,
+)
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_median_column_by_role,
     get_enabled_predictor_median_columns,
@@ -36,6 +43,19 @@ from frontier.execution_time_predictor.attention_tp_policy import (
 )
 from frontier.execution_time_predictor.attention_dataset_contract import (
     enforce_mixed_attention_input_contract,
+)
+from frontier.execution_time_predictor.prediction_cache_contract import (
+    attach_feature_domain,
+    build_feature_domain_descriptor,
+)
+from frontier.execution_time_predictor.model_cache_contract import (
+    attach_model_cache_metadata,
+    build_exact_feature_lookup,
+    build_model_cache_hash,
+    build_canonical_operator_binding,
+    build_training_options,
+    resolve_training_cv_splits,
+    validate_cached_model,
 )
 from frontier.logger import init_logger
 from frontier.model_architectures import get_model_architecture_profile
@@ -64,6 +84,9 @@ from frontier.operators.families import (
 from frontier.profiling.cpu_overhead.validation import (
     apply_cpu_overhead_schema_v2_defaults,
     validate_cpu_overhead_dataframe,
+)
+from frontier.profiling.common.parallel_config import (
+    validate_profile_backed_runtime_tp_sizes,
 )
 from frontier.spec_decode.runtime import is_target_embedded_mtp_enabled
 from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_same_tp_linear_op
@@ -131,15 +154,9 @@ def _build_exact_feature_lookup(
     feature_cols: List[str],
     target_col: str,
 ) -> Dict[Tuple[float, ...], float]:
-    """Build exact profiling-row lookups before falling back to regression."""
-    if df.empty:
-        return {}
-    grouped = df.groupby(feature_cols, dropna=False)[target_col].mean()
-    lookup: Dict[Tuple[float, ...], float] = {}
-    for key, value in grouped.items():
-        key_tuple = key if isinstance(key, tuple) else (key,)
-        lookup[tuple(float(item) for item in key_tuple)] = float(value)
-    return lookup
+    """Compatibility alias for the shared exact-row producer contract."""
+
+    return build_exact_feature_lookup(df, feature_cols, target_col)
 
 
 class ExecutionTimePredictionModelManager:
@@ -175,6 +192,20 @@ class ExecutionTimePredictionModelManager:
         self._models_by_precision_kernel_only = {}
         self._model_profiling_precision_eager = {}
         self._model_profiling_precision_kernel_only = {}
+        self._trained_models_by_cluster: Dict[
+            ClusterType, Dict[str, Dict[str, BaseEstimator]]
+        ] = {}
+        self._models_by_precision_by_cluster: Dict[
+            ClusterType,
+            Dict[str, Dict[str, Dict[str, BaseEstimator]]],
+        ] = {}
+        self._model_profiling_precision_by_cluster: Dict[
+            ClusterType, Dict[str, Dict[str, str]]
+        ] = {}
+        self._ambiguous_global_model_names: Dict[str, Set[str]] = {
+            "eager": set(),
+            "kernel_only": set(),
+        }
 
         if self._all_dummy_mode:
             logger.info("ExecutionTimePredictionModelManager running in DUMMY mode")
@@ -184,6 +215,7 @@ class ExecutionTimePredictionModelManager:
             self._models_by_precision = {}
             self._model_profiling_precision = {}
         else:
+            self._validate_profile_backed_runtime_tp_sizes()
             # Analyze all cluster configurations to determine required prediction model capabilities
             # Required capabilities are retained for diagnostics; trained_model_signatures is the active cache key.
             self._required_capabilities = self._analyze_cluster_requirements()
@@ -194,6 +226,30 @@ class ExecutionTimePredictionModelManager:
             self._trained_models = self._train_all_required_models()
 
             logger.info(f"ExecutionTimePredictionModelManager initialized with capabilities: {self._required_capabilities}")
+
+    def _validate_profile_backed_runtime_tp_sizes(self) -> None:
+        """Reject runtime compute TP values without release profiling support."""
+
+        for cluster_type, cluster_config in self._cluster_configs.items():
+            replica_config = cluster_config.replica_config
+            model_config = getattr(replica_config, "model_config", None)
+            validate_profile_backed_runtime_tp_sizes(
+                replica_config,
+                cluster_type=cluster_type,
+                model_is_moe=(
+                    getattr(model_config, "is_moe", None)
+                    if model_config is not None
+                    else None
+                ),
+                enable_dummy_mode=bool(
+                    getattr(
+                        getattr(cluster_config, "execution_time_predictor_config", None),
+                        "enable_dummy_mode",
+                        False,
+                    )
+                ),
+                communication_only=(cluster_type == ClusterType.TRANS),
+            )
 
     def _check_all_dummy_mode(self) -> bool:
         """Check if all clusters are configured for dummy mode."""
@@ -446,12 +502,15 @@ class ExecutionTimePredictionModelManager:
     def _train_all_required_models(self) -> Dict[str, BaseEstimator]:
         """Train all prediction models required by cluster configurations."""
         combined_models: Dict[str, BaseEstimator] = {}
-        trained_model_signatures = set()
 
         logger.info("=== ExecutionTimePredictionModelManager Training Summary ===")
         logger.info(f"Total clusters to process: {len(self._cluster_configs)}")
 
         for cluster_type, cluster_config in self._cluster_configs.items():
+            # Deduplicate repeated requirements inside one cluster only. A second
+            # cluster with the same physical artifact must still load/register
+            # that artifact so ownership remains explicit for both clusters.
+            trained_model_signatures = set()
             replica_config = cluster_config.replica_config
             execution_time_predictor_config = cluster_config.execution_time_predictor_config
             replica_scheduler_config = cluster_config.replica_scheduler_config
@@ -564,10 +623,13 @@ class ExecutionTimePredictionModelManager:
                 family_models.update(cpu_overhead_models)
 
                 for model_name, model in family_models.items():
-                    combined_models[f"{family_name}:{model_name}"] = model
+                    combined_models[
+                        f"{cluster_type.name}:{family_name}:{model_name}"
+                    ] = model
 
         logger.info(
-            "Trained %d family-scoped models in total across all clusters", len(combined_models)
+            "Trained %d cluster- and family-scoped models in total",
+            len(combined_models),
         )
         return combined_models
 
@@ -826,7 +888,7 @@ class ExecutionTimePredictionModelManager:
 
         # Build training context for error messages
         training_context = {
-            'cluster_type': str(cluster_type),
+            'cluster_type': cluster_type,
             'device': replica_config.device,
             'model_name': replica_config.model_name,
             'tensor_parallel_size': tp_size,
@@ -1012,6 +1074,21 @@ class ExecutionTimePredictionModelManager:
                             f for f in self.MOE_LOAD_IMBALANCE_FEATURES
                             if f in op_moe_df.columns
                         ]
+                        if 0 < len(available_load_features) < len(
+                            self.MOE_LOAD_IMBALANCE_FEATURES
+                        ):
+                            missing_features = [
+                                feature
+                                for feature in self.MOE_LOAD_IMBALANCE_FEATURES
+                                if feature not in op_moe_df.columns
+                            ]
+                            raise ValueError(
+                                "Partial load imbalance features found "
+                                f"({len(available_load_features)}/"
+                                f"{len(self.MOE_LOAD_IMBALANCE_FEATURES)}) for "
+                                f"{model_name} at TP={moe_tp_key}. Missing: "
+                                f"{missing_features}."
+                            )
                         if len(available_load_features) == len(self.MOE_LOAD_IMBALANCE_FEATURES):
                             op_feature_cols = available_load_features
                             logger.info(
@@ -1019,8 +1096,8 @@ class ExecutionTimePredictionModelManager:
                                 f"({len(op_feature_cols)} features, TP={moe_tp_key})"
                             )
                         else:
-                            # For shuffling we allow partial/legacy datasets and fall back to
-                            # num_tokens-only training when the full load feature set is absent.
+                            # A true legacy dataset contains none of the enhanced
+                            # fields and remains a one-feature model.
                             op_feature_cols = ["num_tokens"]
                             logger.info(
                                 f"  {model_name}: Full load imbalance features unavailable; "
@@ -1212,6 +1289,7 @@ class ExecutionTimePredictionModelManager:
         - Pre-attention normalization (from linear_op.csv): input_layernorm
         - Attention projections (from linear_op.csv): attn_pre_proj, attn_post_proj, attn_rope
         - Attention core operations (from attention.csv): attn_kv_cache_save, attn_prefill, attn_decode
+        - PD-AF attention-side normalization (from linear_op.csv): post_attention_layernorm
 
         Transformer layer context:
             Input → [input_layernorm] → [attn_pre_proj → attn_rope → attn_prefill/decode → attn_kv_cache_save → attn_post_proj] → add → ...
@@ -1234,7 +1312,7 @@ class ExecutionTimePredictionModelManager:
 
         # Build training context for error messages
         training_context = {
-            'cluster_type': str(cluster_type),
+            'cluster_type': cluster_type,
             'device': replica_config.device,
             'model_name': replica_config.model_name,
             'tensor_parallel_size': tp_size,
@@ -1297,6 +1375,53 @@ class ExecutionTimePredictionModelManager:
             )
             trained_model_signatures.add(layernorm_signature)
             logger.info(f"Trained {layernorm_model_name} for {cluster_type}")
+
+        # PD-AF accounts post-attention normalization on DECODE_ATTN. Register
+        # the artifact from this cluster's own device-bound linear-op profile
+        # instead of depending on another role's registry entry.
+        if cluster_type == ClusterType.DECODE_ATTN:
+            post_layernorm_model_name = "post_attention_layernorm"
+            post_layernorm_tp_key = self._get_linear_op_tp_key(
+                post_layernorm_model_name,
+                cluster_type,
+                replica_config,
+                is_moe_model=False,
+            )
+            post_layernorm_df = self._load_linear_op_df(
+                linear_ops_file,
+                post_layernorm_tp_key,
+                required_columns=[
+                    f"time_stats.{post_layernorm_model_name}.median"
+                ],
+                training_context=training_context,
+            )
+            post_layernorm_context = dict(training_context)
+            post_layernorm_context["input_file"] = linear_ops_file
+            post_layernorm_context["tensor_parallel_size"] = (
+                post_layernorm_tp_key
+            )
+            post_layernorm_signature = (
+                f"{post_layernorm_model_name}_{attention_signature}"
+            )
+            if post_layernorm_signature not in trained_model_signatures:
+                models[post_layernorm_model_name] = self._train_single_model(
+                    model_name=post_layernorm_model_name,
+                    df=post_layernorm_df,
+                    feature_cols=["num_tokens"],
+                    target_col=(
+                        f"time_stats.{post_layernorm_model_name}.median"
+                    ),
+                    execution_time_predictor_config=(
+                        execution_time_predictor_config
+                    ),
+                    training_context=post_layernorm_context,
+                )
+                trained_model_signatures.add(post_layernorm_signature)
+                logger.info(
+                    "Trained %s for %s",
+                    post_layernorm_model_name,
+                    cluster_type,
+                )
 
         # Attention projections: attn_pre_proj, attn_post_proj, attn_rope
         attn_proj_context = dict(training_context)
@@ -1468,13 +1593,19 @@ class ExecutionTimePredictionModelManager:
             trained_model_signatures.add(kv_cache_model_signature)
             logger.info(f"Trained {kv_cache_model_name} for {cluster_type}")
 
-        # Split data for prefill and decode.
-        # Mixed-batch prefill rows in attention_combined.csv use prefill_chunk_size=0,
-        # so standard prefill training must keep only rows with positive chunk size.
-        true_mixed_df = attention_df[attention_df["is_true_mixed_batch"]].copy()
-        standard_df = attention_df[~attention_df["is_true_mixed_batch"]].copy()
-        prefill_df = standard_df[~standard_df["is_decode"]].copy()
-        decode_df = standard_df[standard_df["is_decode"]].copy()
+        # Select exactly the same training rows as the standalone producer.
+        partitions = partition_dense_attention_rows(attention_df)
+        true_mixed_df = partitions["true_mixed"]
+        mixed_batch_df = build_dense_mixed_prefill_training_rows(
+            partitions,
+            kv_cache_prediction_granularity=(
+                execution_time_predictor_config.kv_cache_prediction_granularity
+            ),
+            target_col="time_stats.attn_prefill.median",
+            dataset_path=attn_file,
+        )
+        prefill_df = partitions["prefill"]
+        decode_df = partitions["decode"]
         standard_prefill_df = pd.DataFrame()
         if measurement_type == MeasurementType.CUDA_EVENT:
             if "prefill_chunk_size" not in prefill_df.columns:
@@ -1529,23 +1660,22 @@ class ExecutionTimePredictionModelManager:
                         if col not in decode_df.columns
                     ]
                     if missing_decode_cols:
-                        logger.info(
-                            "Skipping eager %s training for %s - missing decode feature columns %s",
-                            decode_model_name,
-                            cluster_type,
-                            missing_decode_cols,
+                        raise ValueError(
+                            f"Model {decode_model_name} has profiling rows but is "
+                            f"missing required columns {missing_decode_cols}; "
+                            f"dataset={attn_file!r}. Re-run attention profiling "
+                            "with the current decode schema."
                         )
-                    else:
-                        models[decode_model_name] = self._train_single_model(
-                            model_name=decode_model_name,
-                            df=decode_df,
-                            feature_cols=decode_feature_cols,
-                            target_col=dense_attention_target_columns[decode_model_name],
-                            execution_time_predictor_config=execution_time_predictor_config,
-                            training_context=training_context,
-                        )
-                        trained_model_signatures.add(decode_model_signature)
-                        logger.info(f"Trained eager {decode_model_name} for {cluster_type}")
+                    models[decode_model_name] = self._train_single_model(
+                        model_name=decode_model_name,
+                        df=decode_df,
+                        feature_cols=decode_feature_cols,
+                        target_col=dense_attention_target_columns[decode_model_name],
+                        execution_time_predictor_config=execution_time_predictor_config,
+                        training_context=training_context,
+                    )
+                    trained_model_signatures.add(decode_model_signature)
+                    logger.info(f"Trained eager {decode_model_name} for {cluster_type}")
         elif measurement_type == MeasurementType.KERNEL_ONLY:
             decode_model_name = get_enabled_predictor_metric_name_by_role(
                 DENSE_ATTENTION_FAMILY,
@@ -1577,15 +1707,12 @@ class ExecutionTimePredictionModelManager:
         if measurement_type == MeasurementType.CUDA_EVENT and mixed_batch_model_signature not in trained_model_signatures:
             # Check for mixed-batch specific columns in the dataframe
             required_mixed_features = self.ATTN_PREFILL_MIXED_FEATURES
-            has_mixed_batch_data = all(feat in prefill_df.columns for feat in required_mixed_features)
+            has_mixed_batch_data = all(
+                feat in mixed_batch_df.columns for feat in required_mixed_features
+            )
             
             if has_mixed_batch_data:
                 logger.info(f"Training attn_prefill_mixed with {len(required_mixed_features)} features for {cluster_type}")
-                
-                # Filter for mixed-prefill rows (exclude true mixed prefill+decode rows)
-                mixed_batch_df = prefill_df[
-                    prefill_df["is_mixed_batch"] | (prefill_df["batch_size"] > 1)
-                ].copy()
                 
                 if len(mixed_batch_df) > 0:
                     models["attn_prefill_mixed"] = self._train_single_model(
@@ -1602,7 +1729,11 @@ class ExecutionTimePredictionModelManager:
                     logger.warning(f"No mixed-batch data (batch_size > 1) available for attn_prefill_mixed in {cluster_type}")
             else:
                 missing_features = [f for f in required_mixed_features if f not in prefill_df.columns]
-                logger.info(f"Skipping attn_prefill_mixed for {cluster_type} - missing features: {missing_features}")
+                raise ValueError(
+                    "Model attn_prefill_mixed has profiling rows but is missing "
+                    f"required columns {missing_features}; dataset={attn_file!r}. "
+                    "Re-run attention profiling with the current mixed-prefill schema."
+                )
 
         decode_in_mixed_signature = f"attn_decode_in_mixed_{attention_signature}"
         if measurement_type == MeasurementType.CUDA_EVENT and decode_in_mixed_signature not in trained_model_signatures:
@@ -1632,8 +1763,16 @@ class ExecutionTimePredictionModelManager:
                 missing_features = [
                     f for f in required_decode_mixed_features if f not in true_mixed_df.columns
                 ]
+                if len(true_mixed_df) > 0:
+                    raise ValueError(
+                        "Model attn_decode_in_mixed has profiling rows but is "
+                        f"missing required columns {missing_features}; "
+                        f"dataset={attn_file!r}. Re-run attention profiling "
+                        "with the current true-mixed decode schema."
+                    )
                 logger.info(
-                    f"Skipping attn_decode_in_mixed for {cluster_type} - missing features: {missing_features}"
+                    "Skipping attn_decode_in_mixed for %s - no true mixed rows",
+                    cluster_type,
                 )
 
         trained_model_signatures.add(attention_signature)
@@ -1872,7 +2011,7 @@ class ExecutionTimePredictionModelManager:
 
         # Build training context for error messages
         training_context = {
-            'cluster_type': str(cluster_type),
+            'cluster_type': cluster_type,
             'device': replica_config.device,
             'model_name': replica_config.model_name,
             'tensor_parallel_size': tp_size,
@@ -1915,7 +2054,7 @@ class ExecutionTimePredictionModelManager:
 
         # Build training context for error messages
         training_context = {
-            'cluster_type': str(cluster_type),
+            'cluster_type': cluster_type,
             'device': replica_config.device,
             'model_name': replica_config.model_name,
             'pipeline_stages': replica_config.num_pipeline_stages,
@@ -2009,7 +2148,7 @@ class ExecutionTimePredictionModelManager:
 
         # Build training context for error messages
         training_context = {
-            'cluster_type': str(cluster_type),
+            'cluster_type': cluster_type,
             'device': replica_config.device,
             'model_name': replica_config.model_name,
             'tensor_parallel_size': replica_config.attn_tensor_parallel_size,
@@ -2076,7 +2215,35 @@ class ExecutionTimePredictionModelManager:
 
             raise Exception(f"Training data for model {model_name} is empty.{context_info}")
 
+        cluster_type = (
+            training_context.get("cluster_type")
+            if training_context is not None
+            else None
+        )
+
+        if model_name == "attn_kv_cache_save":
+            df = prepare_dense_cache_write_training_rows(
+                df,
+                dataset_path=(
+                    training_context.get("input_file")
+                    if training_context
+                    else None
+                ),
+            )
+
         required_cols = feature_cols + [target_col]
+        missing_cols = [column for column in required_cols if column not in df.columns]
+        if missing_cols:
+            dataset_path = (
+                training_context.get("input_file", "<unknown>")
+                if training_context
+                else "<unknown>"
+            )
+            raise ValueError(
+                f"Training data for model {model_name} is missing required columns "
+                f"{missing_cols}; dataset={dataset_path!r}. Re-run profiling with "
+                "the current feature schema."
+            )
         nan_row_mask = df[required_cols].isna().any(axis=1)
         nan_row_count = int(nan_row_mask.sum())
         if nan_row_count > 0:
@@ -2095,18 +2262,56 @@ class ExecutionTimePredictionModelManager:
                 f"(target={target_col})."
             )
 
+        if model_name == "attn_kv_cache_save":
+            validate_cache_write_target_consistency(
+                df,
+                target_col=target_col,
+                allow_repeated_measurements=True,
+            )
+
+        if not isinstance(cluster_type, ClusterType):
+            raise ValueError(
+                "Shared model training requires training_context['cluster_type'] "
+                "to be a ClusterType so the artifact has an exact owning cluster; "
+                f"got {cluster_type!r} for model {model_name!r}."
+            )
+
         profiling_precision = self._get_profiling_precision_from_df(df)
         measurement_type = self._validate_active_measurement_type(df)
+        operator_binding = build_canonical_operator_binding(
+            model_name,
+            context=training_context or {},
+            dataframe=df,
+        )
         model_hash = self._get_model_hash(
             model_name,
             df,
             execution_time_predictor_config,
             profiling_precision,
             measurement_type,
+            feature_cols=feature_cols,
+            target_col=target_col,
+            operator_binding=operator_binding,
+            training_context=training_context,
         )
-        cached_model = self._load_model_from_cache(model_name, model_hash)
+        cached_model = self._load_model_from_cache(
+            model_name,
+            model_hash,
+            feature_cols=feature_cols,
+            target_col=target_col,
+            operator_binding=operator_binding,
+        )
         if cached_model:
-            self._store_model_precision(model_name, profiling_precision, cached_model)
+            if len(feature_cols) > 1:
+                cached_model._frontier_exact_lookup = build_exact_feature_lookup(
+                    df, feature_cols, target_col
+                )
+            self._store_model_precision(
+                model_name,
+                profiling_precision,
+                cached_model,
+                cluster_type=cluster_type,
+            )
             return cached_model
 
         # ============================================================
@@ -2172,7 +2377,10 @@ class ExecutionTimePredictionModelManager:
 
         estimator, grid_search_params = self._create_estimator_and_params(execution_time_predictor_config)
 
-        cv = min(execution_time_predictor_config.k_fold_cv_splits, len(df)) if len(df) >= 2 else 2
+        cv = resolve_training_cv_splits(
+            execution_time_predictor_config.k_fold_cv_splits,
+            len(df),
+        )
 
         grid_search = GridSearchCV(
             estimator=estimator,
@@ -2189,14 +2397,39 @@ class ExecutionTimePredictionModelManager:
         logger.info(f"✓ Trained model {model_name} with MAPE {-score}%")
 
         best_estimator = grid_search.best_estimator_
-        # Persist feature metadata for runtime on-demand prediction (e.g., moe_grouped_gemm load imbalance mode).
-        setattr(best_estimator, "_frontier_feature_names", list(feature_cols))
-        setattr(best_estimator, "_frontier_target_col", target_col)
-        # Tie the trained estimator to its cache hash so prediction caches can include model identity.
-        setattr(best_estimator, "_frontier_model_hash", model_hash)
+        # Persist the complete model identity and domain metadata together.
+        attach_feature_domain(
+            best_estimator,
+            df,
+            feature_cols,
+            operator_name=model_name,
+        )
+        if len(feature_cols) > 1:
+            best_estimator._frontier_exact_lookup = build_exact_feature_lookup(
+                df, feature_cols, target_col
+            )
+        attach_model_cache_metadata(
+            best_estimator,
+            model_name=model_name,
+            model_hash=model_hash,
+            feature_names=feature_cols,
+            target_col=target_col,
+            feature_domain=best_estimator._frontier_feature_domain,
+            operator_binding=operator_binding,
+        )
 
-        self._store_model_in_cache(model_name, model_hash, best_estimator)
-        self._store_model_precision(model_name, profiling_precision, best_estimator)
+        self._store_model_in_cache(
+            model_name,
+            model_hash,
+            best_estimator,
+            operator_binding=operator_binding,
+        )
+        self._store_model_precision(
+            model_name,
+            profiling_precision,
+            best_estimator,
+            cluster_type=cluster_type,
+        )
         return best_estimator
 
     # ========================================================================
@@ -2678,23 +2911,7 @@ class ExecutionTimePredictionModelManager:
     # These features capture batch heterogeneity characteristics together with
     # the uniform KV-cache context used by MixedAttentionInput profiling.
     # Reference: frontier/training/attention_trainer.py lines 362-375 (authoritative source)
-    ATTN_PREFILL_MIXED_FEATURES = [
-        # Core features (7)
-        "batch_size",               # Number of sequences in batch
-        "kv_cache_size",            # Uniform KV cache context for the mixed batch
-        "total_tokens",             # Total tokens across all sequences
-        "avg_seq_len",              # Average sequence length
-        "min_seq_len",              # Minimum sequence length
-        "max_seq_len",              # Maximum sequence length
-        "total_tokens_squared",     # Computational complexity proxy
-        # Heterogeneity features (3)
-        "seq_len_variance",         # Variance of sequence lengths
-        "seq_len_cv",               # Coefficient of variation (std/mean)
-        "seq_len_range",            # max_seq_len - min_seq_len
-        # Interaction features (2)
-        "batch_variance_interaction",   # batch_size * seq_len_variance
-        "batch_cv_interaction",         # batch_size * seq_len_cv
-    ]
+    ATTN_PREFILL_MIXED_FEATURES = list(DENSE_MIXED_PREFILL_FEATURES)
 
     ATTN_DECODE_IN_MIXED_FEATURES = [
         "decode_batch_size",
@@ -2892,7 +3109,9 @@ class ExecutionTimePredictionModelManager:
                 df_with_derived_features["is_mixed_batch"]
             )
         else:
-            df_with_derived_features["is_mixed_batch"] = False
+            df_with_derived_features["is_mixed_batch"] = (
+                ~df_with_derived_features["is_decode"]
+            ) & (df_with_derived_features["batch_size"] > 1)
 
         if "is_true_mixed_batch" in df_with_derived_features.columns:
             df_with_derived_features["is_true_mixed_batch"] = _normalize_bool_series(
@@ -3032,6 +3251,7 @@ class ExecutionTimePredictionModelManager:
 
             # Category 2: Prediction range parameters
             'kv_cache_prediction_granularity': config.kv_cache_prediction_granularity,
+            'prediction_min_kv_cache_size': getattr(config, 'prediction_min_kv_cache_size', 0),
             'prediction_max_prefill_chunk_size': config.prediction_max_prefill_chunk_size,
             'prediction_max_batch_size': config.prediction_max_batch_size,
             'prediction_max_tokens_per_request': config.prediction_max_tokens_per_request,
@@ -3095,7 +3315,19 @@ class ExecutionTimePredictionModelManager:
 
         return hash_relevant_params
 
-    def _get_model_hash(self, model_name: str, df: pd.DataFrame, execution_time_predictor_config, profiling_precision: str, measurement_type: MeasurementType) -> str:
+    def _get_model_hash(
+        self,
+        model_name: str,
+        df: pd.DataFrame,
+        execution_time_predictor_config,
+        profiling_precision: str,
+        measurement_type: MeasurementType,
+        *,
+        feature_cols: List[str] | None = None,
+        target_col: str | None = None,
+        operator_binding: Dict[str, Any] | None = None,
+        training_context: Dict[str, Any] | None = None,
+    ) -> str:
         """
         Calculate hash for model caching based on configuration and data.
 
@@ -3107,26 +3339,45 @@ class ExecutionTimePredictionModelManager:
         This ensures that only changes to parameters that affect model performance
         will invalidate the cache.
         """
-        # Extract only hash-relevant parameters
-        hash_relevant_config = self._get_hash_relevant_config(execution_time_predictor_config)
-        config_str = str(sorted(hash_relevant_config.items()))  # Sort for deterministic ordering
-
-        # Calculate DataFrame hash
-        df_hash_str = hashlib.md5(df.to_json().encode("utf-8")).hexdigest()
-
-        # Combine all components
-        combined_str = f"{config_str}_{model_name}_{df_hash_str}_{profiling_precision}_{measurement_type.value}"
-        hash_value = hashlib.md5(combined_str.encode("utf-8")).hexdigest()[0:8]
-
-        # Debug output for hash calculation
-        if model_name == "attn_pre_proj":
-            logger.info(f"[DEBUG] Hash calculation for {model_name}:")
-            logger.info(f"  - DataFrame shape: {df.shape}")
-            logger.info(f"  - DataFrame hash: {df_hash_str[:16]}...")
-            logger.info(f"  - Hash-relevant config keys: {sorted(hash_relevant_config.keys())}")
-            logger.info(f"  - Final hash: {hash_value}")
-
-        return hash_value
+        if feature_cols is None or target_col is None:
+            raise ValueError(
+                "Model cache identity requires feature_cols and target_col; "
+                "call _get_model_hash from a model training path."
+            )
+        estimator, grid_search_params = self._create_estimator_and_params(
+            execution_time_predictor_config
+        )
+        if operator_binding is None:
+            operator_binding = build_canonical_operator_binding(
+                model_name,
+                context=training_context or {},
+                dataframe=df,
+            )
+        return build_model_cache_hash(
+            model_name=model_name,
+            dataframe=df,
+            profiling_precision=profiling_precision,
+            measurement_type=measurement_type,
+            feature_names=feature_cols,
+            target_col=target_col,
+            estimator=estimator,
+            hyperparameter_grid=grid_search_params,
+            training_options=build_training_options(
+                model_name,
+                k_fold_cv_splits=execution_time_predictor_config.k_fold_cv_splits,
+                kv_cache_prediction_granularity=getattr(
+                    execution_time_predictor_config,
+                    "kv_cache_prediction_granularity",
+                    None,
+                ),
+            ),
+            operator_binding=operator_binding,
+            feature_domain=build_feature_domain_descriptor(
+                df,
+                feature_cols,
+                operator_name=model_name,
+            ),
+        )
 
     def _get_profiling_precision_from_df(self, df: pd.DataFrame) -> str:
         """Extract profiling precision from DataFrame.
@@ -3174,56 +3425,350 @@ class ExecutionTimePredictionModelManager:
             )
         return measurement_type
 
-    def _store_model_precision(self, model_name: str, precision: str, model: BaseEstimator) -> None:
+    @staticmethod
+    def _artifact_identity(model: BaseEstimator) -> str | None:
+        metadata = {
+            "model_hash": getattr(model, "_frontier_model_hash", None),
+            "operator_binding": getattr(
+                model, "_frontier_operator_binding", None
+            ),
+            "feature_domain": getattr(model, "_frontier_feature_domain", None),
+        }
+        if all(value is None for value in metadata.values()):
+            return None
+        return json.dumps(
+            metadata,
+            sort_keys=True,
+            default=str,
+            separators=(",", ":"),
+        )
+
+    def _coalesce_same_scope_artifact(
+        self,
+        *,
+        existing: BaseEstimator | None,
+        incoming: BaseEstimator,
+        model_name: str,
+        family_name: str,
+        scope_description: str,
+    ) -> BaseEstimator:
+        if existing is None or existing is incoming:
+            return incoming
+
+        existing_identity = self._artifact_identity(existing)
+        incoming_identity = self._artifact_identity(incoming)
+        if (
+            existing_identity is None
+            or incoming_identity is None
+            or existing_identity != incoming_identity
+        ):
+            raise ValueError(
+                "conflicting shared prediction artifacts "
+                f"{scope_description} for operator {model_name!r} in "
+                f"measurement family {family_name!r}; same-name models in one "
+                "scope must have identical model hash, operator binding, and "
+                "feature domain."
+            )
+
+        # Keep the first estimator instance when two loads describe the exact
+        # same persisted artifact.
+        return existing
+
+    def _global_family_registries(
+        self, family_name: str
+    ) -> Tuple[
+        Dict[str, BaseEstimator],
+        Dict[str, Dict[str, BaseEstimator]],
+        Dict[str, str],
+    ]:
+        if family_name == "eager":
+            return (
+                self._trained_models_eager,
+                self._models_by_precision_eager,
+                self._model_profiling_precision_eager,
+            )
+        if family_name == "kernel_only":
+            return (
+                self._trained_models_kernel_only,
+                self._models_by_precision_kernel_only,
+                self._model_profiling_precision_kernel_only,
+            )
+        raise ValueError(f"Unsupported family_name={family_name!r}")
+
+    def _refresh_global_model_projection(
+        self, family_name: str, model_name: str
+    ) -> None:
+        """Keep only unambiguous cluster-owned artifacts in legacy global views."""
+
+        owners: List[Tuple[ClusterType, BaseEstimator, str]] = []
+        for cluster_type, family_models in self._trained_models_by_cluster.items():
+            model = family_models.get(family_name, {}).get(model_name)
+            if model is None:
+                continue
+            precision = (
+                self._model_profiling_precision_by_cluster
+                .get(cluster_type, {})
+                .get(family_name, {})
+                .get(model_name)
+            )
+            if precision is None:
+                raise RuntimeError(
+                    "Missing cluster-scoped profiling precision for "
+                    f"{cluster_type.name}/{family_name}/{model_name}."
+                )
+            owners.append((cluster_type, model, precision))
+
+        registry, precision_registry, profiling_precision_registry = (
+            self._global_family_registries(family_name)
+        )
+        for models_at_precision in precision_registry.values():
+            models_at_precision.pop(model_name, None)
+        profiling_precision_registry.pop(model_name, None)
+
+        if not owners:
+            registry.pop(model_name, None)
+            self._ambiguous_global_model_names[family_name].discard(model_name)
+            return
+
+        first_model = owners[0][1]
+        same_object = all(model is first_model for _, model, _ in owners)
+        identities = [self._artifact_identity(model) for _, model, _ in owners]
+        same_identity = (
+            all(identity is not None for identity in identities)
+            and len(set(identities)) == 1
+        )
+        precisions = {precision for _, _, precision in owners}
+        is_ambiguous = (
+            len(owners) > 1
+            and (not (same_object or same_identity) or len(precisions) != 1)
+        )
+
+        if is_ambiguous:
+            registry.pop(model_name, None)
+            self._ambiguous_global_model_names[family_name].add(model_name)
+            return
+
+        precision_key = owners[0][2]
+        registry[model_name] = first_model
+        precision_registry.setdefault(precision_key, {})[model_name] = first_model
+        profiling_precision_registry[model_name] = precision_key
+        self._ambiguous_global_model_names[family_name].discard(model_name)
+
+    def _store_model_precision(
+        self,
+        model_name: str,
+        precision: str,
+        model: BaseEstimator,
+        *,
+        cluster_type: ClusterType | None = None,
+    ) -> None:
         precision_key = precision.upper()
         family_name = self._measurement_family_name(self._active_measurement_type)
-        if family_name == "eager":
-            self._trained_models_eager[model_name] = model
-            self._models_by_precision_eager.setdefault(precision_key, {})[model_name] = model
-            self._model_profiling_precision_eager[model_name] = precision_key
-        elif family_name == "kernel_only":
-            self._trained_models_kernel_only[model_name] = model
-            self._models_by_precision_kernel_only.setdefault(precision_key, {})[model_name] = model
-            self._model_profiling_precision_kernel_only[model_name] = precision_key
+
+        if cluster_type is None:
+            registry, precision_registry, profiling_precision_registry = (
+                self._global_family_registries(family_name)
+            )
+            model = self._coalesce_same_scope_artifact(
+                existing=registry.get(model_name),
+                incoming=model,
+                model_name=model_name,
+                family_name=family_name,
+                scope_description="in the unscoped registry",
+            )
+            existing_precision = profiling_precision_registry.get(model_name)
+            if (
+                existing_precision is not None
+                and existing_precision != precision_key
+            ):
+                raise ValueError(
+                    "conflicting shared prediction artifacts in the unscoped "
+                    f"registry for operator {model_name!r}: profiling precision "
+                    f"{existing_precision!r} != {precision_key!r}."
+                )
+            registry[model_name] = model
+            precision_registry.setdefault(precision_key, {})[model_name] = model
+            profiling_precision_registry[model_name] = precision_key
+            combined_key = f"{family_name}:{model_name}"
         else:
-            raise ValueError(f"Unsupported family_name={family_name!r}")
+            if not isinstance(cluster_type, ClusterType):
+                raise TypeError(
+                    "cluster_type must be a ClusterType when registering a "
+                    f"shared prediction artifact, got {cluster_type!r}."
+                )
 
-        self._models_by_precision.setdefault(precision_key, {})[f"{family_name}:{model_name}"] = model
-        self._model_profiling_precision[f"{family_name}:{model_name}"] = precision_key
+            cluster_models = self._trained_models_by_cluster.setdefault(
+                cluster_type,
+                {"eager": {}, "kernel_only": {}},
+            )
+            cluster_family_models = cluster_models.setdefault(family_name, {})
+            model = self._coalesce_same_scope_artifact(
+                existing=cluster_family_models.get(model_name),
+                incoming=model,
+                model_name=model_name,
+                family_name=family_name,
+                scope_description=f"in cluster {cluster_type.name}",
+            )
 
-    def get_model(self, model_name: str, precision: Optional[str] = None) -> Optional[BaseEstimator]:
-        """Get a trained prediction model by name and precision."""
+            cluster_precisions = self._models_by_precision_by_cluster.setdefault(
+                cluster_type,
+                {"eager": {}, "kernel_only": {}},
+            )
+            cluster_family_precisions = cluster_precisions.setdefault(
+                family_name, {}
+            )
+            cluster_precision_metadata = (
+                self._model_profiling_precision_by_cluster.setdefault(
+                    cluster_type,
+                    {"eager": {}, "kernel_only": {}},
+                ).setdefault(family_name, {})
+            )
+            existing_precision = cluster_precision_metadata.get(model_name)
+            if (
+                existing_precision is not None
+                and existing_precision != precision_key
+            ):
+                raise ValueError(
+                    "conflicting shared prediction artifacts in cluster "
+                    f"{cluster_type.name} for operator {model_name!r}: profiling "
+                    f"precision {existing_precision!r} != {precision_key!r}."
+                )
+
+            cluster_family_models[model_name] = model
+            cluster_family_precisions.setdefault(precision_key, {})[
+                model_name
+            ] = model
+            cluster_precision_metadata[model_name] = precision_key
+            self._refresh_global_model_projection(family_name, model_name)
+            combined_key = (
+                f"{cluster_type.name}:{family_name}:{model_name}"
+            )
+
+        self._models_by_precision.setdefault(precision_key, {})[
+            combined_key
+        ] = model
+        self._model_profiling_precision[combined_key] = precision_key
+
+    def _raise_for_ambiguous_unscoped_model(self, model_name: str) -> None:
+        ambiguous_families = [
+            family_name
+            for family_name, names in self._ambiguous_global_model_names.items()
+            if model_name in names
+        ]
+        if ambiguous_families:
+            raise ValueError(
+                "ambiguous unscoped shared prediction artifact for operator "
+                f"{model_name!r} in measurement families "
+                f"{sorted(ambiguous_families)}; provide cluster_type."
+            )
+
+    def get_model(
+        self,
+        model_name: str,
+        precision: Optional[str] = None,
+        *,
+        cluster_type: ClusterType | None = None,
+    ) -> Optional[BaseEstimator]:
+        """Get one model, optionally constrained to its exact owning cluster."""
         if self._all_dummy_mode:
             return None
 
+        if cluster_type is None:
+            self._raise_for_ambiguous_unscoped_model(model_name)
+            family_models = {
+                "eager": self._trained_models_eager,
+                "kernel_only": self._trained_models_kernel_only,
+            }
+            precision_models = {
+                "eager": self._models_by_precision_eager,
+                "kernel_only": self._models_by_precision_kernel_only,
+            }
+        else:
+            family_models = self.get_models_for_cluster(cluster_type)
+            precision_models = (
+                self._models_by_precision_by_cluster.get(cluster_type, {})
+            )
+
+        enabled_families = tuple(family_models)
         if precision:
             precision_key = precision.upper()
-            for registry in (self._models_by_precision_eager, self._models_by_precision_kernel_only):
-                model = registry.get(precision_key, {}).get(model_name)
+            for family_name in enabled_families:
+                model = (
+                    precision_models
+                    .get(family_name, {})
+                    .get(precision_key, {})
+                    .get(model_name)
+                )
                 if model is not None:
                     return model
 
             available_precisions = sorted(
-                set(self._models_by_precision_eager.keys()) | set(self._models_by_precision_kernel_only.keys())
+                {
+                    precision_name
+                    for family_name in enabled_families
+                    for precision_name in precision_models.get(
+                        family_name, {}
+                    )
+                }
+            )
+            cluster_description = (
+                "unscoped"
+                if cluster_type is None
+                else f"cluster {cluster_type.name}"
             )
             raise ValueError(
-                f"Model '{model_name}' not available for precision '{precision_key}'. "
-                f"Available precisions: {available_precisions}. "
-                f"Ensure profiling data matches the requested precision."
+                f"Model {model_name!r} is not available for precision "
+                f"{precision_key!r} in {cluster_description}. Available "
+                f"precisions: {available_precisions}. Ensure profiling data "
+                "matches the requested precision."
             )
 
-        return self._trained_models_eager.get(model_name) or self._trained_models_kernel_only.get(model_name)
+        return family_models.get("eager", {}).get(model_name) or family_models.get(
+            "kernel_only", {}
+        ).get(model_name)
 
-    def _load_model_from_cache(self, model_name: str, model_hash: str) -> BaseEstimator:
+    def _load_model_from_cache(
+        self,
+        model_name: str,
+        model_hash: str,
+        *,
+        feature_cols: List[str],
+        target_col: str,
+        operator_binding: Dict[str, Any] | None = None,
+    ) -> BaseEstimator:
         with InterProcessReaderWriterLock(f"{self._cache_dir}/{model_hash}_model_lock.file").read_lock():
             cache_file = f"{self._cache_dir}/{model_name}_{model_hash}.pkl"
             if not os.path.exists(cache_file):
                 return None
             logger.info(f"✓ Loaded pre-trained model '{model_name}' from cache (hash: {model_hash})")
             logger.info(f"  Cache file: {cache_file}")
-            return pickle.load(open(cache_file, "rb"))
+            with open(cache_file, "rb") as cache_stream:
+                model = pickle.load(cache_stream)
+            return validate_cached_model(
+                model_name,
+                model,
+                expected_model_hash=model_hash,
+                feature_names=feature_cols,
+                target_col=target_col,
+                operator_binding=operator_binding,
+            )
 
-    def _store_model_in_cache(self, model_name: str, model_hash: str, model: BaseEstimator) -> None:
+    def _store_model_in_cache(
+        self,
+        model_name: str,
+        model_hash: str,
+        model: BaseEstimator,
+        *,
+        operator_binding: Dict[str, Any] | None = None,
+    ) -> None:
+        validate_cached_model(
+            model_name,
+            model,
+            expected_model_hash=model_hash,
+            feature_names=getattr(model, "_frontier_feature_names", ()),
+            target_col=getattr(model, "_frontier_target_col", ""),
+            operator_binding=operator_binding,
+        )
         with InterProcessReaderWriterLock(f"{self._cache_dir}/{model_hash}_model_lock.file").write_lock():
             cache_file = f"{self._cache_dir}/{model_name}_{model_hash}.pkl"
             pickle.dump(model, open(cache_file, "wb"), protocol=pickle.HIGHEST_PROTOCOL)
@@ -3231,43 +3776,50 @@ class ExecutionTimePredictionModelManager:
             logger.info(f"  Cache file: {cache_file}")
 
     def get_models(self) -> Dict[str, Dict[str, BaseEstimator]]:
-        """Return the trained models grouped by measurement family."""
+        """Return the legacy unscoped view only when every name is unambiguous."""
         if self._all_dummy_mode:
             logger.debug("Returning empty models dict for dummy mode")
             return {"eager": {}, "kernel_only": {}}
+
+        ambiguous = {
+            family_name: sorted(names)
+            for family_name, names in self._ambiguous_global_model_names.items()
+            if names
+        }
+        if ambiguous:
+            raise ValueError(
+                "ambiguous unscoped shared prediction artifacts exist: "
+                f"{ambiguous}; use get_models_for_cluster(cluster_type)."
+            )
         return {
             "eager": dict(self._trained_models_eager),
             "kernel_only": dict(self._trained_models_kernel_only),
         }
 
     def get_models_for_cluster(self, cluster_type: ClusterType) -> Dict[str, Dict[str, BaseEstimator]]:
-        """Return a cluster-specific view of trained models grouped by measurement family."""
+        """Return only artifacts owned by the requested cluster."""
         if self._all_dummy_mode:
             return {"eager": {}, "kernel_only": {}}
 
-        if cluster_type == ClusterType.PREFILL:
-            return {"eager": dict(self._trained_models_eager), "kernel_only": {}}
-        if cluster_type in [ClusterType.DECODE, ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN]:
-            if (
-                global_vars.get_sys_arch() == "pd-af-disaggregation"
-                and cluster_type == ClusterType.DECODE_ATTN
-            ):
-                return {
-                    "eager": dict(self._trained_models_eager),
-                    "kernel_only": dict(self._trained_models_kernel_only),
-                }
-            if not self._is_kernel_only_measurement_enabled_for_cluster(cluster_type):
-                return {"eager": dict(self._trained_models_eager), "kernel_only": {}}
-            return {"eager": {}, "kernel_only": dict(self._trained_models_kernel_only)}
-        if cluster_type == ClusterType.MONOLITHIC:
-            kernel_only_models = {}
-            if self._is_kernel_only_measurement_enabled_for_cluster(cluster_type):
-                kernel_only_models = dict(self._trained_models_kernel_only)
-            return {
-                "eager": dict(self._trained_models_eager),
-                "kernel_only": kernel_only_models,
-            }
-        raise ValueError(f"Unsupported cluster_type={cluster_type!r}")
+        if not isinstance(cluster_type, ClusterType):
+            raise TypeError(
+                f"cluster_type must be a ClusterType, got {cluster_type!r}."
+            )
+
+        owned_models = self._trained_models_by_cluster.get(
+            cluster_type,
+            {"eager": {}, "kernel_only": {}},
+        )
+        result: Dict[str, Dict[str, BaseEstimator]] = {
+            "eager": {},
+            "kernel_only": {},
+        }
+        for measurement_type in self._get_measurement_types_for_cluster(
+            cluster_type
+        ):
+            family_name = self._measurement_family_name(measurement_type)
+            result[family_name] = dict(owned_models.get(family_name, {}))
+        return result
 
     def get_required_capabilities(self) -> Dict[str, Any]:
         """Return the analyzed requirements."""

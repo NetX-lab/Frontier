@@ -286,8 +286,44 @@ def _make_manager():
 
     manager = ExecutionTimePredictionModelManager.__new__(ExecutionTimePredictionModelManager)
     manager._all_dummy_mode = False
-    manager._trained_models_eager = {"attn_prefill": object()}
-    manager._trained_models_kernel_only = {"attn_decode": object()}
+    eager_model = object()
+    kernel_only_model = object()
+    manager._trained_models_eager = {"attn_prefill": eager_model}
+    manager._trained_models_kernel_only = {"attn_decode": kernel_only_model}
+    manager._models_by_precision_eager = {}
+    manager._models_by_precision_kernel_only = {}
+    manager._model_profiling_precision_eager = {}
+    manager._model_profiling_precision_kernel_only = {}
+    manager._models_by_precision = {}
+    manager._model_profiling_precision = {}
+    manager._trained_models_by_cluster = {
+        ClusterType.PREFILL: {
+            "eager": {"attn_prefill": eager_model},
+            "kernel_only": {},
+        },
+        ClusterType.DECODE: {
+            "eager": {"attn_prefill": eager_model},
+            "kernel_only": {"attn_decode": kernel_only_model},
+        },
+        ClusterType.DECODE_ATTN: {
+            "eager": {"attn_prefill": eager_model},
+            "kernel_only": {"attn_decode": kernel_only_model},
+        },
+        ClusterType.DECODE_FFN: {
+            "eager": {},
+            "kernel_only": {"attn_decode": kernel_only_model},
+        },
+        ClusterType.MONOLITHIC: {
+            "eager": {"attn_prefill": eager_model},
+            "kernel_only": {"attn_decode": kernel_only_model},
+        },
+    }
+    manager._models_by_precision_by_cluster = {}
+    manager._model_profiling_precision_by_cluster = {}
+    manager._ambiguous_global_model_names = {
+        "eager": set(),
+        "kernel_only": set(),
+    }
 
     replica_config = SimpleNamespace(
         device="a100",
