@@ -35,7 +35,7 @@ ARCHITECTURE_CASE_COUNTS = {
     "pd-af-disaggregation": 10,
 }
 MODEL_ORDER = ("dense", "moe", "mixed")
-PD_AF_VARIANT_INDICES = (0, 1, 2, 3, 4, 5, 6, 7, 10, 11)
+PD_AF_VARIANT_INDICES = (0, 1, 2, 3, 5, 5, 6, 9, 10, 11)
 MODEL_SPECS: Mapping[str, Mapping[str, Any]] = {
     "dense": {
         "model_name": "llama2_7b_dense_example",
@@ -504,6 +504,15 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
     required = [model_dir / "attention.csv", model_dir / "linear_op.csv"]
     if case.is_moe:
         required.append(model_dir / "moe.csv")
+    if case.architecture == "pd-af-disaggregation":
+        required.extend(
+            [
+                model_dir / "attention_kernel_only.csv",
+                model_dir / "linear_op_kernel_only.csv",
+            ]
+        )
+        if case.is_moe:
+            required.append(model_dir / "moe_kernel_only.csv")
     missing = [path for path in required if not path.is_file()]
     if missing:
         raise FileNotFoundError(
@@ -515,12 +524,17 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
         expected_runtime_path = (
             "uniform_topk" if case.routing_distribution == "random" else "standard_fused_topk"
         )
-        available_paths = _profile_routing_runtime_paths(model_dir / "moe.csv")
-        if expected_runtime_path not in available_paths:
-            raise ValueError(
-                f"{case.case_id} requires routing_runtime_path={expected_runtime_path!r}, "
-                f"but {model_dir / 'moe.csv'} provides {sorted(available_paths)!r}"
-            )
+        moe_profile_paths = [model_dir / "moe.csv"]
+        if case.architecture == "pd-af-disaggregation":
+            moe_profile_paths.append(model_dir / "moe_kernel_only.csv")
+        for path in moe_profile_paths:
+            available_paths = _profile_routing_runtime_paths(path)
+            if expected_runtime_path not in available_paths:
+                raise ValueError(
+                    f"{case.case_id} requires routing_runtime_path="
+                    f"{expected_runtime_path!r}, but {path} provides "
+                    f"{sorted(available_paths)!r}"
+                )
     return required
 
 

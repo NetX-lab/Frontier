@@ -134,6 +134,51 @@ def test_profile_validation_is_fail_fast(tmp_path: Path) -> None:
         validate_profile_inputs(case, tmp_path)
 
 
+def test_pdaf_profile_validation_requires_kernel_only_family(tmp_path: Path) -> None:
+    case = next(
+        case
+        for case in build_matrix(REPO_ROOT)
+        if case.architecture == "pd-af-disaggregation" and case.model_kind == "moe"
+    )
+    model_dir = tmp_path / case.device / case.model_name
+    model_dir.mkdir(parents=True)
+    common_header = (
+        "profiling_precision,model_arch,model_architecture_profile,"
+        "quant_signature,measurement_type\n"
+    )
+    common_row = "BF16,generic,generic,none,CUDA_EVENT\n"
+    (model_dir / "attention.csv").write_text(
+        common_header + common_row,
+        encoding="utf-8",
+    )
+    (model_dir / "linear_op.csv").write_text(
+        common_header + common_row,
+        encoding="utf-8",
+    )
+    (model_dir / "moe.csv").write_text(
+        common_header.removesuffix("\n")
+        + ",routing_runtime_path\n"
+        + common_row.removesuffix("\n")
+        + ",uniform_topk\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(FileNotFoundError, match="linear_op_kernel_only.csv"):
+        validate_profile_inputs(case, tmp_path)
+
+
+def test_pdaf_moe_cases_use_kernel_only_capable_profile() -> None:
+    cases = [
+        case
+        for case in build_matrix(REPO_ROOT)
+        if case.architecture == "pd-af-disaggregation" and case.model_kind == "moe"
+    ]
+
+    assert {case.ep_size for case in cases} == {1, 2, 4}
+    assert all(case.model_name == "Phi-tiny-MoE-instruct" for case in cases)
+    assert all(case.routing_distribution == "random" for case in cases)
+
+
 def test_profile_validation_rejects_missing_architecture_metadata(tmp_path: Path) -> None:
     case = next(
         case
