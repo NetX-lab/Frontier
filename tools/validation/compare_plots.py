@@ -178,6 +178,7 @@ def write_html_report(
     fig_html = fig.to_html(full_html=False, include_plotlyjs="cdn")
     table_html = _data_table_html(real, sim)
     subtitle_html = f"<p style='color:#555'>{subtitle}</p>" if subtitle else ""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         f"<!doctype html><html><head><meta charset='utf-8'><title>{title}</title></head>"
         f"<body style='font-family:sans-serif;max-width:1400px;margin:2rem auto'>"
