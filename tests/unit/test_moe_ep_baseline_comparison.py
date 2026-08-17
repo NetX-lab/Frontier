@@ -148,6 +148,7 @@ def test_comparison_aligns_all_cases_and_reports_numeric_and_workflow_gaps(
 
     result = comparison.build_comparison(manifest, current, baseline)
 
+    assert result["report_date"] == "2026-08-17"
     assert result["case_count"] == 110
     assert result["current_execution_counts"] == {"PASS": 110}
     assert result["baseline_execution_counts"] == {"FAIL": 1, "PASS": 109}

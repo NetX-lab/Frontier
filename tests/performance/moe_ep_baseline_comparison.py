@@ -16,7 +16,7 @@ from typing import Any, Mapping, Sequence
 from tests.e2e.moe_ep_baseline_replay import load_and_validate_manifest
 
 
-REPORT_DATE = "2026-08-16"
+REPORT_DATE = "2026-08-17"
 METRIC_FIELDS = {
     "ttft_mean_ms": ("ttft_statistics", True),
     "tpot_mean_ms": ("tpot_statistics", False),
