@@ -87,6 +87,51 @@ def test_dummy_decode_ffn_tp_collectives_use_profile_capability_not_legacy_ident
     assert execution_time.share_expert_tensor_parallel_allreduce_time == 10.0
 
 
+def test_dummy_decode_attn_allows_zero_moe_ep_for_attention_only_cluster() -> None:
+    predictor = _DummyDisaggregationPredictor.__new__(_DummyDisaggregationPredictor)
+    predictor._dummy_execution_time = 10.0
+    predictor._num_layers_per_pipeline_stage = 1
+    predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
+        model_config=_ProfileOnlyStep3ModelConfig(),
+        attn_tensor_parallel_size=1,
+        moe_tensor_parallel_size=0,
+        moe_expert_parallel_size=0,
+        num_pipeline_stages=1,
+    )
+
+    execution_time = predictor._get_dummy_execution_time_for_cluster(
+        batch=SimpleNamespace(),
+        pipeline_stage=0,
+        cluster_type=ClusterType.DECODE_ATTN,
+    )
+
+    assert execution_time._is_moe is False
+    assert execution_time.expert_parallel_communication_time == 0.0
+
+
+def test_dummy_decode_ffn_rejects_zero_moe_ep_for_moe_cluster() -> None:
+    predictor = _DummyDisaggregationPredictor.__new__(_DummyDisaggregationPredictor)
+    predictor._dummy_execution_time = 10.0
+    predictor._num_layers_per_pipeline_stage = 1
+    predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
+        model_config=_ProfileOnlyStep3ModelConfig(),
+        attn_tensor_parallel_size=0,
+        moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=0,
+        num_pipeline_stages=1,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="positive integer moe_expert_parallel_size, got 0",
+    ):
+        predictor._get_dummy_execution_time_for_cluster(
+            batch=SimpleNamespace(),
+            pipeline_stage=0,
+            cluster_type=ClusterType.DECODE_FFN,
+        )
+
+
 @pytest.mark.parametrize(
     "cluster_type",
     (ClusterType.PREFILL, ClusterType.DECODE, ClusterType.DECODE_FFN),

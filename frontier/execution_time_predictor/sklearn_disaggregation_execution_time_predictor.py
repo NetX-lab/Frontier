@@ -577,7 +577,14 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         model_config = cluster_replica_config.model_config
         is_moe_model = model_config is not None and model_config.is_moe
         moe_ep_size = cluster_replica_config.moe_expert_parallel_size
-        if type(moe_ep_size) is not int or moe_ep_size <= 0:
+        # DECODE_ATTN is intentionally attention-only; its cluster replica
+        # config sets MoE parallelism fields to zero even when the model itself
+        # is MoE. Validate EP topology only for clusters that execute MoE/FFN.
+        if (
+            is_moe_model
+            and cluster_type != ClusterType.DECODE_ATTN
+            and (type(moe_ep_size) is not int or moe_ep_size <= 0)
+        ):
             raise ValueError(
                 "Dummy MoE prediction requires a positive integer "
                 f"moe_expert_parallel_size, got {moe_ep_size!r}"
