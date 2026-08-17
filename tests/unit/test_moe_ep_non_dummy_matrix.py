@@ -909,7 +909,10 @@ def test_optimization_command_materializes_declared_controls() -> None:
     assert "--speculative_decoding_config_enabled" in mtp_enabled_command
     assert prefix_control_env["MAX_TOKENS_IN_BATCH"] == "32"
     assert prefix_enabled_env["MAX_TOKENS_IN_BATCH"] == "32"
-    assert chunked_prefill_env["MAX_TOKENS_IN_BATCH"] == "64"
+    assert int(chunked_prefill_env["MAX_TOKENS_IN_BATCH"]) == max(
+        64,
+        chunked_prefill.prefill_tokens,
+    )
     assert chunked_prefill_env["LONG_PREFILL_TOKEN_THRESHOLD"] == "16"
     assert pdaf_graph_env["ENABLE_CUDA_GRAPH"] == "true"
     assert decode_graph_env["DECODE_CUDA_GRAPH_MODE"] == "piecewise"
@@ -925,6 +928,29 @@ def test_optimization_command_materializes_declared_controls() -> None:
         chunked_disabled, REPO_ROOT, output_root
     )
     assert chunked_disabled_env["LONG_PREFILL_TOKEN_THRESHOLD"] == "0"
+
+
+def test_optimization_command_batch_budget_is_schedulable_and_pair_stable() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    output_root = Path("/data/ycfeng/tmp/optimization-matrix")
+    budgets: dict[str, int] = {}
+
+    for case in cases:
+        _, env = build_shell_command(case, REPO_ROOT, output_root)
+        budget = int(env["MAX_TOKENS_IN_BATCH"])
+        budgets[case.case_id] = budget
+        if case.optimization_stratum != "prefix":
+            assert budget >= case.prefill_tokens, case.case_id
+
+    groups: dict[str, list[object]] = {}
+    for case in cases:
+        group_id = case.pair_id or case.comparison_group_id
+        if group_id is not None:
+            groups.setdefault(group_id, []).append(case)
+
+    for group_id, group in groups.items():
+        if len(group) > 1:
+            assert len({budgets[case.case_id] for case in group}) == 1, group_id
 
 
 def test_online_activation_requires_a_positive_inter_arrival_delay(

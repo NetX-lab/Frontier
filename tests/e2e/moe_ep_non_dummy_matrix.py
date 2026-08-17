@@ -1407,7 +1407,7 @@ def build_shell_command(
             "MAX_TOKENS_IN_BATCH": (
                 "32"
                 if case.optimization_stratum == "prefix"
-                else "64"
+                else str(max(64, case.prefill_tokens))
             ),
             "LONG_PREFILL_TOKEN_THRESHOLD": (
                 "16" if case.enable_chunked_prefill else "0"
