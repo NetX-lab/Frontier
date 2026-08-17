@@ -314,12 +314,32 @@ def validate_optimization_case(case: MatrixCase) -> None:
 
     if case.device != "h800":
         raise ValueError(f"optimization matrix requires H800, got {case.device}")
+    if case.prefill_tokens < 2:
+        raise ValueError(
+            f"prefill_tokens must be >1, got {case.prefill_tokens}"
+        )
+    if case.workload_kind == "zero-routed":
+        if (
+            not case.is_moe
+            or case.ep_size <= 1
+            or case.prefill_tokens * case.router_topk >= case.ep_size
+        ):
+            raise ValueError(
+                "zero-routed workload cannot guarantee a zero-routed EP lane: "
+                f"prefill_tokens={case.prefill_tokens}, "
+                f"router_topk={case.router_topk}, ep_size={case.ep_size}"
+            )
     if case.total_cards not in {8, 32}:
         raise ValueError(
             f"optimization matrix requires 8 or 32 cards, got {case.total_cards}"
         )
     if case.simulation_mode not in {"offline", "online"}:
         raise ValueError(f"unsupported simulation mode: {case.simulation_mode}")
+    if case.simulation_mode == "online" and case.num_requests < 2:
+        raise ValueError(
+            "online optimization cases require at least two requests "
+            "to emit inter-arrival evidence"
+        )
     if case.decode_cuda_graph_mode not in {
         "none",
         "full_decode_only",
@@ -626,6 +646,8 @@ def _optimization_topology(
     total_cards: int,
     pipeline_stages: int,
     capacity_relation: str,
+    *,
+    world_size_override: int | None = None,
 ) -> dict[str, int]:
     if total_cards not in {8, 32}:
         raise ValueError(f"optimization cases require 8 or 32 cards, got {total_cards}")
@@ -634,7 +656,13 @@ def _optimization_topology(
     if capacity_relation not in {"equal", "gt", "lt"}:
         raise ValueError(f"unsupported capacity relation: {capacity_relation}")
 
-    if architecture == "pd-af-disaggregation":
+    if world_size_override is not None:
+        if world_size_override <= 0:
+            raise ValueError(
+                f"world_size_override must be positive, got {world_size_override}"
+            )
+        world_size = world_size_override
+    elif architecture == "pd-af-disaggregation":
         if model_kind == "mixed" and total_cards == 8:
             raise ValueError("PD-AF mixed topology requires more than 8 cards")
         world_size = 2 if total_cards == 8 else 4
@@ -725,14 +753,18 @@ def _optimization_topology(
             "decode_attn_tp": world_size,
         }
     elif architecture == "pd-af-disaggregation":
-        if pipeline_stages == 1 and total_cards == 8:
+        if (
+            pipeline_stages == 1
+            and total_cards == 4 * world_size
+            and world_size in {2, 8}
+        ):
             if capacity_relation == "equal":
                 prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 2, 1, 1
             elif capacity_relation == "gt":
                 prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 1, 2, 1
             else:
                 prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 1, 1, 2
-            decode_attn_tp = 2
+            decode_attn_tp = world_size
         elif pipeline_stages == 1 and total_cards == 32:
             if capacity_relation == "equal":
                 prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 4, 2, 2
@@ -802,11 +834,12 @@ def _optimization_workload(
     workload_index: int,
     *,
     zero_routed: bool,
+    simulation_mode: str,
 ) -> tuple[str, int, int, int]:
     if optimization_stratum == "prefix":
         return "prefix-trace", 32, 2, 2
     if zero_routed:
-        return "zero-routed", 1, 4, 1
+        return "zero-routed", 2, 4, 2 if simulation_mode == "online" else 1
     labels = ("prefill-heavy", "decode-heavy", "mixed")
     if optimization_stratum == "mtp":
         return (
@@ -868,12 +901,14 @@ def _make_optimization_case(
         total_cards,
         pipeline_stages,
         capacity_relation,
+        world_size_override=8 if zero_routed else None,
     )
     workload_kind, prefill_tokens, decode_tokens, num_requests = (
         _optimization_workload(
             optimization_stratum,
             workload_index,
             zero_routed=zero_routed,
+            simulation_mode=simulation_mode,
         )
     )
     num_layers, moe_layer_ids = _model_layer_shape(model_name)

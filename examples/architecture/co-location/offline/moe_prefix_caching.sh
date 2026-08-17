@@ -152,6 +152,7 @@ Backend: $CC_BACKEND
 Expected Trace Shape: requests=$EXPECTED_TRACE_REQUESTS from TRACE_FILE, repeated block_hash_ids produce cache-hit blocks
 Parallelism: Attn_TP=$ATTN_TP, MoE_TP=$MOE_TP, MoE_EP=$MOE_EP, PP=$PP
 Runtime Optimizations: decode_cuda_graph_mode=$DECODE_CUDA_GRAPH_MODE, chunked_prefill=$ENABLE_CHUNKED_PREFILL, prefix_caching=true
+Dummy Mode: $ENABLE_DUMMY_MODE
 Metrics: output_dir=$METRICS_OUTPUT_DIR, run_id=$RUN_ID
 ============================================
 EOF

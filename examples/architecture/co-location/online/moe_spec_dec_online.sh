@@ -208,6 +208,7 @@ Parallelism: Attn_TP=$ATTN_TP, MoE_TP=$MOE_TP, MoE_EP=$MOE_EP, PP=$PP
 Speculative Decoding: method=$SPEC_METHOD, num_speculative_tokens=$NUM_SPECULATIVE_TOKENS, committed_tokens_per_iteration=$COMMITTED_TOKENS_PER_ITERATION
 MTP: n_predict=$MTP_N_PREDICT, num_layers=$MTP_NUM_LAYERS
 Runtime Optimizations: decode_cuda_graph_mode=$DECODE_CUDA_GRAPH_MODE, chunked_prefill=$ENABLE_CHUNKED_PREFILL
+Dummy Mode: $ENABLE_DUMMY_MODE
 Metrics: output_dir=$METRICS_OUTPUT_DIR, run_id=$RUN_ID
 ============================================
 EOF

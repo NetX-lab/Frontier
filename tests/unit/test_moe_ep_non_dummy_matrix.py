@@ -474,6 +474,45 @@ def test_zero_routed_cases_are_mathematically_guaranteed() -> None:
     )
 
 
+def test_optimization_cases_respect_production_prefill_request_contract() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+
+    assert cases
+    assert all(case.prefill_tokens > 1 for case in cases)
+    with pytest.raises(ValueError, match="prefill_tokens must be >1"):
+        validate_optimization_case(replace(cases[0], prefill_tokens=1))
+
+
+def test_online_optimization_cases_can_emit_inter_arrival_evidence() -> None:
+    online_cases = [
+        case
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.simulation_mode == "online"
+    ]
+
+    assert online_cases
+    assert all(case.num_requests > 1 for case in online_cases)
+    with pytest.raises(ValueError, match="online.*at least two requests"):
+        validate_optimization_case(replace(online_cases[0], num_requests=1))
+
+
+def test_optimization_case_rejects_unprovable_zero_routed_workload() -> None:
+    zero_routed_case = next(
+        case
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.expects_zero_routed_lane
+    )
+
+    with pytest.raises(ValueError, match="cannot guarantee a zero-routed EP lane"):
+        validate_optimization_case(
+            replace(
+                zero_routed_case,
+                prefill_tokens=zero_routed_case.ep_size
+                // zero_routed_case.router_topk,
+            )
+        )
+
+
 def test_optimization_pairs_change_only_the_declared_fields() -> None:
     cases = build_optimization_matrix(REPO_ROOT)
     validate_optimization_pairs(cases)
@@ -796,6 +835,25 @@ def test_non_dummy_command_has_no_dummy_switch() -> None:
     assert "--replica_config_device h800" in command
     assert env["ENABLE_DUMMY_MODE"] == "false"
     assert env["DECODE_CUDA_GRAPH_MODE"] == "none"
+
+
+def test_optimization_wrappers_log_dummy_mode_state() -> None:
+    output_root = Path("/data/ycfeng/tmp/optimization-matrix")
+    scripts = {
+        Path(shlex.split(build_shell_command(case, REPO_ROOT, output_root)[0])[1])
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.architecture == "co-location"
+        and case.optimization_stratum in {"prefix", "mtp"}
+    }
+
+    missing = [
+        str(script.relative_to(REPO_ROOT))
+        for script in sorted(scripts)
+        if "Dummy Mode: $ENABLE_DUMMY_MODE"
+        not in script.read_text(encoding="utf-8")
+    ]
+
+    assert missing == []
 
 
 def test_non_dummy_command_uses_output_scoped_predictor_cache(tmp_path: Path) -> None:
