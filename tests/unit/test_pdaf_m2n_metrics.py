@@ -123,6 +123,7 @@ def _materialized_ep_ffn_batch(
     cluster_scheduler._config = SimpleNamespace(
         replica_config=SimpleNamespace(
             model_config=SimpleNamespace(is_moe=True),
+            router_topk=1,
         ),
     )
     plan = EPBatchGroupPlan(
