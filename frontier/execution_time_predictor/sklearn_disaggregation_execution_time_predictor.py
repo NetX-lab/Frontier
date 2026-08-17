@@ -1363,6 +1363,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         measurement_type = self._select_measurement_type_for_batch(batch)
         self._require_predictions_for_measurement_type(measurement_type, batch)
         self._activate_measurement_type(measurement_type)
+        self._emit_cuda_graph_activation_records(
+            batch,
+            measurement_type,
+            cluster_type,
+        )
 
         # Validate cluster_type consistency
         if self._cluster_type is not None and cluster_type != self._cluster_type:

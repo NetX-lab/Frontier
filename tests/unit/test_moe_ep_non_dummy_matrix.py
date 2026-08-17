@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import json
+import shlex
 from collections import Counter
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import pytest
@@ -15,11 +16,20 @@ from tests.e2e.moe_ep_non_dummy_matrix import (
     _parse_ep_conservation_records,
     _parse_ep_barrier_records,
     _parse_ep_workload_records,
+    _validate_persisted_case_metadata,
     _validate_result_ledger_provenance,
     build_matrix,
+    build_optimization_comparison,
+    build_optimization_matrix,
     build_shell_command,
+    calculate_case_cards,
     check_case_log,
+    main,
+    preflight_cases,
+    run_cases,
     validate_case_parallel_semantics,
+    validate_optimization_case,
+    validate_optimization_pairs,
     validate_profile_inputs,
 )
 
@@ -27,11 +37,111 @@ from tests.e2e.moe_ep_non_dummy_matrix import (
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def _write_minimal_profile(
+    path: Path,
+    *,
+    measurement_type: str,
+    tp_sizes: tuple[int, ...],
+    ep_size: int | None = None,
+    routing_runtime_path: str | None = None,
+    include_mtp_columns: bool = False,
+) -> None:
+    fields = [
+        "profiling_precision",
+        "model_arch",
+        "model_architecture_profile",
+        "quant_signature",
+        "measurement_type",
+        "num_tensor_parallel_workers",
+    ]
+    if ep_size is not None:
+        fields.extend(["expert_parallel_size", "routing_runtime_path"])
+    if include_mtp_columns:
+        fields.extend(
+            [
+                "time_stats.mtp_fusion_proj.median",
+                "time_stats.lm_head_linear.median",
+            ]
+        )
+
+    rows = []
+    for tp_size in tp_sizes:
+        values = [
+            "BF16",
+            "generic",
+            "generic",
+            "none",
+            measurement_type,
+            str(tp_size),
+        ]
+        if ep_size is not None:
+            values.extend([str(ep_size), str(routing_runtime_path)])
+        if include_mtp_columns:
+            values.extend(["1.0", "2.0"])
+        rows.append(",".join(values))
+    path.write_text(
+        ",".join(fields) + "\n" + "\n".join(rows) + "\n",
+        encoding="utf-8",
+    )
+
+
 def _write_minimal_metrics(metrics_dir: Path) -> None:
     metrics_dir.mkdir()
     (metrics_dir / "system_metrics.json").write_text(
         json.dumps({"ttft_statistics": {"mean": 1.0}}),
         encoding="utf-8",
+    )
+
+
+def _write_request_metrics(
+    metrics_dir: Path,
+    rows: list[dict[str, object]],
+) -> None:
+    headers = [
+        "Request Id",
+        "request_inter_arrival_delay",
+        "request_prefix_cache_hit_blocks",
+        "request_spec_total_iterations",
+        "request_spec_committed_tokens",
+    ]
+    metrics_dir.mkdir(parents=True, exist_ok=True)
+    lines = [",".join(headers)]
+    for row in rows:
+        lines.append(",".join(str(row.get(header, "")) for header in headers))
+    (metrics_dir / "request_metrics.csv").write_text(
+        "\n".join(lines) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _write_success_log(
+    log_path: Path,
+    *,
+    extra_lines: list[str] | None = None,
+) -> None:
+    lines = [
+        "Dummy Mode: false",
+        "Simulation completed successfully.",
+        "[OP-TRACE][MONOLITHIC][ATTENTION] batch_id=1, layer_id=0, num_tokens=1",
+    ]
+    if extra_lines:
+        lines.extend(extra_lines)
+    log_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _dense_optimization_case(**changes: object):
+    case = next(
+        case
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.architecture == "co-location"
+        and case.model_kind == "dense"
+        and case.optimization_stratum == "ordinary"
+    )
+    return replace(
+        case,
+        num_layers=1,
+        moe_layer_ids=(),
+        **changes,
     )
 
 
@@ -169,6 +279,436 @@ def test_matrix_has_required_cross_architecture_coverage() -> None:
     }
 
 
+def test_optimization_matrix_has_exact_required_marginals() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+
+    assert len(cases) == 200
+    assert Counter(case.architecture for case in cases) == Counter(
+        {
+            "co-location": 91,
+            "pd-disaggregation": 91,
+            "pd-af-disaggregation": 18,
+        }
+    )
+    assert Counter(case.simulation_mode for case in cases) == Counter(
+        {"offline": 100, "online": 100}
+    )
+    assert Counter(case.total_cards for case in cases) == Counter({8: 100, 32: 100})
+    assert Counter(case.model_kind for case in cases) == Counter(
+        {"dense": 67, "moe": 67, "mixed": 66}
+    )
+    assert Counter(case.enable_chunked_prefill for case in cases) == Counter(
+        {False: 100, True: 100}
+    )
+    assert Counter(
+        case.routing_distribution for case in cases if case.is_moe
+    ) == Counter(
+        {
+            "random": 34,
+            "balanced": 33,
+            "skewed": 33,
+            "zipf": 33,
+        }
+    )
+
+
+def test_optimization_matrix_effective_configs_are_unique() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    effective_keys = []
+    for case in cases:
+        payload = asdict(case)
+        for ignored_field in (
+            "case_id",
+            "baseline_case_id",
+            "seed",
+            "optimization_stratum",
+            "pair_id",
+            "comparison_group_id",
+            "pair_role",
+        ):
+            payload.pop(ignored_field, None)
+        effective_keys.append(json.dumps(payload, sort_keys=True))
+
+    assert len(set(effective_keys)) == 200
+
+
+def test_optimization_matrix_rejects_unsupported_combinations() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    for case in cases:
+        validate_optimization_case(case)
+
+    pdaf_case = next(
+        case for case in cases if case.architecture == "pd-af-disaggregation"
+    )
+    mtp_case = next(
+        case for case in cases if case.optimization_stratum == "mtp"
+    )
+    prefix_case = next(
+        case for case in cases if case.optimization_stratum == "prefix"
+    )
+    shared_case = next(
+        case for case in cases if case.architecture == "co-location"
+    )
+
+    with pytest.raises(ValueError, match="PD-AF.*Prefix"):
+        validate_optimization_case(
+            replace(pdaf_case, enable_prefix_caching=True)
+        )
+    with pytest.raises(ValueError, match="MTP.*CUDA Graph"):
+        validate_optimization_case(
+            replace(mtp_case, decode_cuda_graph_mode="full_decode_only")
+        )
+    with pytest.raises(ValueError, match="Prefix.*MTP"):
+        validate_optimization_case(
+            replace(prefix_case, enable_mtp=True)
+        )
+    with pytest.raises(ValueError, match="global CUDA Graph"):
+        validate_optimization_case(replace(shared_case, use_cuda_graph=True))
+    with pytest.raises(ValueError, match="PD-AF.*decode CUDA Graph"):
+        validate_optimization_case(
+            replace(pdaf_case, decode_cuda_graph_mode="piecewise")
+        )
+    with pytest.raises(ValueError, match="MTP.*random routing"):
+        validate_optimization_case(
+            replace(mtp_case, routing_distribution="balanced")
+        )
+
+
+def test_optimization_matrix_recomputes_exact_topology_and_pp_marginals() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+
+    assert Counter(case.pipeline_stages for case in cases) == Counter({1: 136, 2: 64})
+    assert all(calculate_case_cards(case) == case.total_cards for case in cases)
+    assert all(case.total_cards in {8, 32} for case in cases)
+    assert all(
+        case.total_cards == 32
+        for case in cases
+        if case.architecture == "pd-af-disaggregation"
+        and case.model_kind == "mixed"
+    )
+
+    pdd_relations = Counter(
+        "equal"
+        if case.prefill_replicas == case.decode_replicas
+        else (
+            "prefill_gt"
+            if case.prefill_replicas > case.decode_replicas
+            else "prefill_lt"
+        )
+        for case in cases
+        if case.architecture == "pd-disaggregation"
+    )
+    assert set(pdd_relations) == {"equal", "prefill_gt", "prefill_lt"}
+
+    pdaf_relations = Counter(
+        "equal"
+        if case.decode_attn_replicas == case.decode_ffn_replicas
+        else (
+            "attn_gt"
+            if case.decode_attn_replicas > case.decode_ffn_replicas
+            else "attn_lt"
+        )
+        for case in cases
+        if case.architecture == "pd-af-disaggregation"
+    )
+    assert pdaf_relations == Counter({"equal": 6, "attn_gt": 6, "attn_lt": 6})
+
+
+def test_zero_routed_cases_are_mathematically_guaranteed() -> None:
+    zero_routed_cases = [
+        case
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.expects_zero_routed_lane
+    ]
+
+    assert zero_routed_cases
+    assert all(
+        case.prefill_tokens * case.router_topk < case.ep_size
+        for case in zero_routed_cases
+    )
+
+
+def test_optimization_pairs_change_only_the_declared_fields() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    validate_optimization_pairs(cases)
+
+    prefix_pair_id = next(
+        case.pair_id
+        for case in cases
+        if case.optimization_stratum == "prefix"
+    )
+    corrupted = [
+        (
+            replace(case, routing_distribution="random")
+            if case.pair_id == prefix_pair_id and case.pair_role == "enabled"
+            else case
+        )
+        for case in cases
+    ]
+    with pytest.raises(ValueError, match="undeclared fields.*routing_distribution"):
+        validate_optimization_pairs(corrupted)
+
+
+def test_ordinary_optimization_groups_cover_exact_graph_chunk_factorials() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    groups: dict[str, list[object]] = {}
+    for case in cases:
+        if (
+            case.optimization_stratum == "ordinary"
+            and case.comparison_group_id is not None
+        ):
+            groups.setdefault(case.comparison_group_id, []).append(case)
+
+    factorial_groups = [
+        group
+        for group in groups.values()
+        if {
+            (case.decode_cuda_graph_mode, case.enable_chunked_prefill)
+            for case in group
+        }
+        == {
+            ("none", False),
+            ("none", True),
+            ("full_decode_only", False),
+            ("full_decode_only", True),
+            ("piecewise", False),
+            ("piecewise", True),
+        }
+    ]
+
+    assert len(factorial_groups) >= 4
+    for group in factorial_groups:
+        control = next(
+            case
+            for case in group
+            if case.decode_cuda_graph_mode == "none"
+            and not case.enable_chunked_prefill
+        )
+        for candidate in group:
+            differences = {
+                field_name
+                for field_name in asdict(control)
+                if field_name
+                not in {
+                    "case_id",
+                    "baseline_case_id",
+                    "pair_id",
+                    "comparison_group_id",
+                    "pair_role",
+                    "decode_cuda_graph_mode",
+                    "enable_chunked_prefill",
+                }
+                and getattr(control, field_name) != getattr(candidate, field_name)
+            }
+            assert not differences
+
+
+def _optimization_result_row(case, *, metric_offset: float) -> dict[str, object]:
+    check: dict[str, object] = {
+        "status": "PASS",
+        "errors": "",
+        "ttft_mean_ms": 10.0 + metric_offset,
+        "tpot_mean_ms": 2.0 + metric_offset,
+        "e2e_mean_ms": 20.0 + metric_offset,
+    }
+    if case.decode_cuda_graph_mode != "none" or case.use_cuda_graph:
+        check["cuda_graph_capture_count"] = 2
+        check["cuda_graph_capture_roles"] = (
+            ["DECODE_ATTN", "DECODE_FFN"]
+            if case.architecture == "pd-af-disaggregation"
+            else [
+                "MONOLITHIC"
+                if case.architecture == "co-location"
+                else "DECODE"
+            ]
+        )
+    if case.enable_chunked_prefill:
+        check["chunked_prefill_split_count"] = 2
+    if case.enable_prefix_caching:
+        check["prefix_cache_hit_blocks"] = 4
+    if case.enable_mtp:
+        check["spec_decode_iterations"] = 3
+        check["spec_decode_committed_tokens"] = 5
+    return {
+        "case_id": case.case_id,
+        "case": json.loads(json.dumps(asdict(case), sort_keys=True)),
+        "status": "PASS",
+        "check": check,
+    }
+
+
+def test_optimization_comparison_expands_factorial_axes_and_reports_metrics() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    factorial_group_id = next(
+        case.comparison_group_id
+        for case in cases
+        if case.optimization_stratum == "ordinary"
+        and case.comparison_group_id is not None
+        and case.decode_cuda_graph_mode == "piecewise"
+        and case.enable_chunked_prefill
+        and sum(
+            candidate.comparison_group_id == case.comparison_group_id
+            for candidate in cases
+        )
+        == 6
+    )
+    group = [
+        case for case in cases if case.comparison_group_id == factorial_group_id
+    ]
+    result_rows = [
+        _optimization_result_row(case, metric_offset=float(index))
+        for index, case in enumerate(group)
+    ]
+
+    report = build_optimization_comparison(group, result_rows)
+
+    assert report["status"] == "PASS"
+    assert report["pair_count"] == 7
+    assert report["failed_pair_count"] == 0
+    assert report["latency_oracle"] == "report_only"
+    assert Counter(pair["optimization"] for pair in report["pairs"]) == Counter(
+        {"cuda_graph": 4, "chunked_prefill": 3}
+    )
+    for pair in report["pairs"]:
+        assert pair["status"] == "PASS"
+        assert pair["changed_fields"] == [pair["target_field"]]
+        for metric in ("ttft_mean_ms", "tpot_mean_ms", "e2e_mean_ms"):
+            values = pair["metrics"][metric]
+            assert values["control_ms"] is not None
+            assert values["enabled_ms"] is not None
+            assert values["delta_ms"] == pytest.approx(
+                values["enabled_ms"] - values["control_ms"]
+            )
+
+
+def test_optimization_comparison_fails_only_the_pair_missing_activation() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    pair_id = next(
+        case.pair_id
+        for case in cases
+        if case.optimization_stratum == "prefix"
+    )
+    pair_cases = [case for case in cases if case.pair_id == pair_id]
+    result_rows = [
+        _optimization_result_row(case, metric_offset=float(index))
+        for index, case in enumerate(pair_cases)
+    ]
+    enabled_row = next(
+        row
+        for row in result_rows
+        if row["case_id"].endswith("_enabled")
+    )
+    enabled_row["check"].pop("prefix_cache_hit_blocks")
+
+    report = build_optimization_comparison(pair_cases, result_rows)
+
+    assert report["status"] == "FAIL"
+    assert report["pair_count"] == 1
+    assert report["failed_pair_count"] == 1
+    assert report["pairs"][0]["status"] == "FAIL"
+    assert "Prefix Cache activation" in report["pairs"][0]["errors"]
+    assert report["pairs"][0]["metrics"]["ttft_mean_ms"]["delta_ms"] is not None
+
+
+def test_optimization_comparison_does_not_use_missing_latency_as_verdict() -> None:
+    all_cases = build_optimization_matrix(REPO_ROOT)
+    pair_id = next(
+        case.pair_id
+        for case in all_cases
+        if case.optimization_stratum == "prefix"
+    )
+    cases = [case for case in all_cases if case.pair_id == pair_id]
+    result_rows = [
+        _optimization_result_row(case, metric_offset=float(index))
+        for index, case in enumerate(cases)
+    ]
+    for row in result_rows:
+        row["check"]["tpot_mean_ms"] = None
+
+    report = build_optimization_comparison(cases, result_rows)
+
+    assert report["status"] == "PASS"
+    assert report["failed_pair_count"] == 0
+    assert report["pairs"][0]["metrics"]["tpot_mean_ms"] == {
+        "control_ms": None,
+        "enabled_ms": None,
+        "delta_ms": None,
+        "relative_delta_percent": None,
+    }
+
+
+def test_optimization_comparison_rejects_result_case_metadata_mismatch() -> None:
+    all_cases = build_optimization_matrix(REPO_ROOT)
+    pair_id = next(
+        case.pair_id
+        for case in all_cases
+        if case.optimization_stratum == "prefix"
+    )
+    cases = [case for case in all_cases if case.pair_id == pair_id]
+    result_rows = [
+        _optimization_result_row(case, metric_offset=float(index))
+        for index, case in enumerate(cases)
+    ]
+    result_rows[0]["case"] = {
+        **result_rows[0]["case"],
+        "seed": int(result_rows[0]["case"]["seed"]) + 1,
+    }
+
+    with pytest.raises(ValueError, match="result-row case metadata mismatch"):
+        build_optimization_comparison(cases, result_rows)
+
+
+def test_optimization_comparison_rejects_persisted_case_metadata_mismatch(
+    tmp_path: Path,
+) -> None:
+    case = next(
+        case
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.optimization_stratum == "prefix"
+    )
+    case_dir = tmp_path / case.case_id
+    case_dir.mkdir()
+    log_path = case_dir / f"{case.case_id}.log"
+    log_path.write_text("", encoding="utf-8")
+    (case_dir / "case_metadata.json").write_text(
+        json.dumps(
+            {
+                "case": {
+                    **asdict(case),
+                    "seed": case.seed + 1,
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    result_row = {
+        **_optimization_result_row(case, metric_offset=0.0),
+        "log_path": str(log_path),
+    }
+
+    with pytest.raises(ValueError, match="persisted case metadata mismatch"):
+        _validate_persisted_case_metadata([case], [result_row])
+
+
+def test_build_optimization_matrix_validates_pair_integrity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    validated: list[list[object]] = []
+
+    def record_validation(cases) -> None:
+        validated.append(cases)
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.validate_optimization_pairs",
+        record_validation,
+    )
+
+    cases = build_optimization_matrix(REPO_ROOT)
+
+    assert validated == [cases]
+    assert validated[0] is cases
+
+
 def test_matrix_uses_frontier_vllm_parallel_semantics() -> None:
     for case in build_matrix(REPO_ROOT):
         validate_case_parallel_semantics(case)
@@ -225,6 +765,934 @@ def test_non_dummy_command_uses_output_scoped_predictor_cache(tmp_path: Path) ->
     expected_cache = (output_root / "_predictor_cache").resolve()
     assert "--metrics_config_cache_dir" in command
     assert str(expected_cache) in command
+
+
+def test_optimization_command_selects_mode_and_feature_recipes() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    selected = {
+        "online_ordinary": next(
+            case
+            for case in cases
+            if case.optimization_stratum == "ordinary"
+            and case.simulation_mode == "online"
+            and case.architecture == "co-location"
+            and case.model_kind == "dense"
+        ),
+        "offline_prefix": next(
+            case
+            for case in cases
+            if case.optimization_stratum == "prefix"
+            and case.simulation_mode == "offline"
+            and case.architecture == "co-location"
+        ),
+        "online_prefix": next(
+            case
+            for case in cases
+            if case.optimization_stratum == "prefix"
+            and case.simulation_mode == "online"
+            and case.architecture == "pd-disaggregation"
+        ),
+        "offline_mtp": next(
+            case
+            for case in cases
+            if case.optimization_stratum == "mtp"
+            and case.simulation_mode == "offline"
+            and case.architecture == "co-location"
+        ),
+        "online_mtp": next(
+            case
+            for case in cases
+            if case.optimization_stratum == "mtp"
+            and case.simulation_mode == "online"
+            and case.architecture == "pd-disaggregation"
+        ),
+        "online_pdaf": next(
+            case
+            for case in cases
+            if case.architecture == "pd-af-disaggregation"
+            and case.simulation_mode == "online"
+            and case.model_kind == "moe"
+        ),
+    }
+    expected_suffixes = {
+        "online_ordinary": "co-location/online/dense_model_basic_online.sh",
+        "offline_prefix": "co-location/offline/moe_prefix_caching.sh",
+        "online_prefix": "pdd/online/moe_prefix_caching_online.sh",
+        "offline_mtp": "co-location/offline/moe_spec_dec.sh",
+        "online_mtp": "pdd/online/moe_spec_dec_online.sh",
+        "online_pdaf": "pd-af-disagg/online/moe_model_ep_online.sh",
+    }
+
+    for label, case in selected.items():
+        command, _ = build_shell_command(
+            case,
+            REPO_ROOT,
+            Path("/data/ycfeng/tmp/optimization-matrix"),
+        )
+        script = Path(shlex.split(command)[1])
+        assert script.as_posix().endswith(expected_suffixes[label])
+
+
+def test_optimization_command_materializes_declared_controls() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    prefix_control = next(
+        case
+        for case in cases
+        if case.optimization_stratum == "prefix"
+        and case.pair_role == "control"
+    )
+    prefix_enabled = next(
+        case
+        for case in cases
+        if case.pair_id == prefix_control.pair_id
+        and case.pair_role == "enabled"
+    )
+    mtp_control = next(
+        case
+        for case in cases
+        if case.optimization_stratum == "mtp"
+        and case.pair_role == "control"
+    )
+    mtp_enabled = next(
+        case
+        for case in cases
+        if case.pair_id == mtp_control.pair_id
+        and case.pair_role == "enabled"
+    )
+    pdaf_graph = next(
+        case
+        for case in cases
+        if case.architecture == "pd-af-disaggregation" and case.use_cuda_graph
+    )
+    decode_graph = next(
+        case
+        for case in cases
+        if case.architecture == "co-location"
+        and case.decode_cuda_graph_mode == "piecewise"
+    )
+    chunked_prefill = next(case for case in cases if case.enable_chunked_prefill)
+    output_root = Path("/data/ycfeng/tmp/optimization-matrix")
+
+    prefix_control_command, prefix_control_env = build_shell_command(
+        prefix_control, REPO_ROOT, output_root
+    )
+    prefix_enabled_command, prefix_enabled_env = build_shell_command(
+        prefix_enabled, REPO_ROOT, output_root
+    )
+    mtp_control_command, mtp_control_env = build_shell_command(
+        mtp_control, REPO_ROOT, output_root
+    )
+    mtp_enabled_command, mtp_enabled_env = build_shell_command(
+        mtp_enabled, REPO_ROOT, output_root
+    )
+    _, pdaf_graph_env = build_shell_command(pdaf_graph, REPO_ROOT, output_root)
+    _, decode_graph_env = build_shell_command(decode_graph, REPO_ROOT, output_root)
+    _, chunked_prefill_env = build_shell_command(
+        chunked_prefill, REPO_ROOT, output_root
+    )
+
+    assert prefix_control_env["TRACE_FILE"] == str(
+        REPO_ROOT / "examples/fixtures/prefix_cache_shared_session_trace.csv"
+    )
+    assert prefix_enabled_env["TRACE_FILE"] == prefix_control_env["TRACE_FILE"]
+    assert "--no-vllm_v1_scheduler_config_enable_prefix_caching" in (
+        prefix_control_command
+    )
+    assert "--vllm_v1_scheduler_config_enable_prefix_caching" in (
+        prefix_enabled_command
+    )
+    assert mtp_control_env["SPEC_METHOD"] == "qwen3_next_mtp"
+    assert mtp_enabled_env["SPEC_METHOD"] == mtp_control_env["SPEC_METHOD"]
+    assert int(mtp_enabled_env["MTP_N_PREDICT"]) > 0
+    assert int(mtp_enabled_env["MTP_NUM_LAYERS"]) > 0
+    assert "--no-speculative_decoding_config_enabled" in mtp_control_command
+    assert "--speculative_decoding_config_enabled" in mtp_enabled_command
+    assert prefix_control_env["MAX_TOKENS_IN_BATCH"] == "32"
+    assert prefix_enabled_env["MAX_TOKENS_IN_BATCH"] == "32"
+    assert chunked_prefill_env["MAX_TOKENS_IN_BATCH"] == "64"
+    assert chunked_prefill_env["LONG_PREFILL_TOKEN_THRESHOLD"] == "16"
+    assert pdaf_graph_env["ENABLE_CUDA_GRAPH"] == "true"
+    assert decode_graph_env["DECODE_CUDA_GRAPH_MODE"] == "piecewise"
+    assert chunked_prefill_env["ENABLE_CHUNKED_PREFILL"] == "true"
+
+    chunked_disabled = next(
+        case
+        for case in cases
+        if not case.enable_chunked_prefill
+        and case.optimization_stratum == "ordinary"
+    )
+    _, chunked_disabled_env = build_shell_command(
+        chunked_disabled, REPO_ROOT, output_root
+    )
+    assert chunked_disabled_env["LONG_PREFILL_TOKEN_THRESHOLD"] == "0"
+
+
+def test_online_activation_requires_a_positive_inter_arrival_delay(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(simulation_mode="online")
+    log_path = tmp_path / "online.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_success_log(log_path)
+    _write_minimal_metrics(metrics_dir)
+    _write_request_metrics(
+        metrics_dir,
+        [
+            {
+                "Request Id": 0,
+                "request_inter_arrival_delay": 0.0,
+            }
+        ],
+    )
+
+    result = check_case_log(case, log_path, metrics_dir)
+
+    assert result["status"] == "FAIL"
+    assert "online activation" in result["errors"]
+
+
+def test_online_activation_accepts_a_positive_inter_arrival_delay(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(simulation_mode="online")
+    log_path = tmp_path / "online.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_success_log(log_path)
+    _write_minimal_metrics(metrics_dir)
+    _write_request_metrics(
+        metrics_dir,
+        [
+            {
+                "Request Id": 0,
+                "request_inter_arrival_delay": 0.25,
+            }
+        ],
+    )
+
+    result = check_case_log(case, log_path, metrics_dir)
+
+    assert result["status"] == "PASS"
+
+
+def test_prefix_activation_requires_positive_and_consistent_hit_totals(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(
+        optimization_stratum="prefix",
+        enable_prefix_caching=True,
+        request_source="prefix-trace",
+    )
+    log_path = tmp_path / "prefix.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_success_log(log_path)
+    _write_request_metrics(
+        metrics_dir,
+        [
+            {
+                "Request Id": 0,
+                "request_prefix_cache_hit_blocks": 0,
+            }
+        ],
+    )
+    (metrics_dir / "system_metrics.json").write_text(
+        json.dumps(
+            {
+                "ttft_statistics": {"mean": 1.0},
+                "prefix_cache_statistics": {
+                    "total_query_blocks": 1,
+                    "total_hit_blocks": 0,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    zero_result = check_case_log(case, log_path, metrics_dir)
+
+    assert zero_result["status"] == "FAIL"
+    assert "Prefix Cache activation" in zero_result["errors"]
+
+    _write_request_metrics(
+        metrics_dir,
+        [
+            {
+                "Request Id": 0,
+                "request_prefix_cache_hit_blocks": 1,
+            }
+        ],
+    )
+    (metrics_dir / "system_metrics.json").write_text(
+        json.dumps(
+            {
+                "ttft_statistics": {"mean": 1.0},
+                "prefix_cache_statistics": {
+                    "total_query_blocks": 2,
+                    "total_hit_blocks": 1,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    positive_result = check_case_log(case, log_path, metrics_dir)
+
+    assert positive_result["status"] == "PASS"
+    assert positive_result["prefix_cache_hit_blocks"] == 1
+
+
+def test_mtp_activation_requires_positive_and_consistent_counters(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(
+        optimization_stratum="mtp",
+        enable_mtp=True,
+    )
+    log_path = tmp_path / "mtp.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_success_log(log_path)
+    _write_request_metrics(
+        metrics_dir,
+        [
+            {
+                "Request Id": 0,
+                "request_spec_total_iterations": 0,
+                "request_spec_committed_tokens": 0,
+            }
+        ],
+    )
+    (metrics_dir / "system_metrics.json").write_text(
+        json.dumps(
+            {
+                "ttft_statistics": {"mean": 1.0},
+                "spec_decode_statistics": {
+                    "total_iterations": 0,
+                    "total_committed_tokens": 0,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    zero_result = check_case_log(case, log_path, metrics_dir)
+
+    assert zero_result["status"] == "FAIL"
+    assert "MTP activation" in zero_result["errors"]
+
+    _write_request_metrics(
+        metrics_dir,
+        [
+            {
+                "Request Id": 0,
+                "request_spec_total_iterations": 2,
+                "request_spec_committed_tokens": 3,
+            }
+        ],
+    )
+    (metrics_dir / "system_metrics.json").write_text(
+        json.dumps(
+            {
+                "ttft_statistics": {"mean": 1.0},
+                "spec_decode_statistics": {
+                    "total_iterations": 2,
+                    "total_committed_tokens": 3,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    positive_result = check_case_log(case, log_path, metrics_dir)
+
+    assert positive_result["status"] == "PASS"
+    assert positive_result["spec_decode_iterations"] == 2
+    assert positive_result["spec_decode_committed_tokens"] == 3
+
+
+def test_chunked_prefill_requires_multiple_scheduling_chunks_for_one_request(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(
+        enable_chunked_prefill=True,
+        prefill_tokens=32,
+    )
+    log_path = tmp_path / "chunked.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_success_log(
+        log_path,
+        extra_lines=[
+            "[ADMISSION] req=7 admitted, num_tokens=32, "
+            "running_count=1, token_budget_remaining=0",
+            "[RUNNING_SCHEDULED] req=7, num_new_tokens=1, blocks_allocated=1",
+        ],
+    )
+
+    no_split_result = check_case_log(case, log_path, metrics_dir)
+
+    assert no_split_result["status"] == "FAIL"
+    assert "Chunked Prefill activation" in no_split_result["errors"]
+
+    _write_success_log(
+        log_path,
+        extra_lines=[
+            "[ADMISSION] req=7 admitted, num_tokens=16, "
+            "running_count=1, token_budget_remaining=16",
+            "[RUNNING_SCHEDULED] req=7, num_new_tokens=16, blocks_allocated=1",
+            "[RUNNING_SCHEDULED] req=7, num_new_tokens=16, blocks_allocated=2",
+        ],
+    )
+
+    split_result = check_case_log(case, log_path, metrics_dir)
+
+    assert split_result["status"] == "PASS"
+    assert split_result["chunked_prefill_split_count"] == 2
+
+
+@pytest.mark.parametrize(
+    ("case_changes", "runtime_mode"),
+    (
+        (
+            {"decode_cuda_graph_mode": "piecewise"},
+            "PIECEWISE",
+        ),
+        (
+            {"use_cuda_graph": True, "optimization_stratum": "pd-af-cube"},
+            "GLOBAL",
+        ),
+    ),
+)
+def test_cuda_graph_activation_requires_matching_production_runtime_records(
+    tmp_path: Path,
+    case_changes: dict[str, object],
+    runtime_mode: str,
+) -> None:
+    if runtime_mode == "GLOBAL":
+        case = next(
+            case
+            for case in build_optimization_matrix(REPO_ROOT)
+            if case.architecture == "pd-af-disaggregation"
+            and case.use_cuda_graph
+        )
+    else:
+        case = _dense_optimization_case(**case_changes)
+    log_path = tmp_path / "cuda_graph.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_success_log(log_path)
+
+    missing_result = check_case_log(case, log_path, metrics_dir)
+
+    assert missing_result["status"] == "FAIL"
+    assert "CUDA Graph activation" in missing_result["errors"]
+
+    expected_roles = (
+        ("DECODE_ATTN", "DECODE_FFN")
+        if runtime_mode == "GLOBAL"
+        else (
+            ("MONOLITHIC",)
+            if case.architecture == "co-location"
+            else ("DECODE",)
+        )
+    )
+    activation_lines = []
+    for role in expected_roles:
+        activation_lines.append(
+            "[CUDA-GRAPH-ACTIVATION] "
+            + json.dumps(
+                {
+                    "batch_id": 7,
+                    "cluster_role": role,
+                    "config_mode": (
+                        "global"
+                        if runtime_mode == "GLOBAL"
+                        else case.decode_cuda_graph_mode
+                    ),
+                    "runtime_mode": runtime_mode,
+                    "capture_hit": True,
+                    "capture_sizes": [8],
+                    "original_tokens": [5],
+                    "padded_tokens": [8],
+                    "measurement_family": "kernel_only",
+                },
+                sort_keys=True,
+            )
+        )
+    _write_success_log(log_path, extra_lines=activation_lines)
+
+    positive_result = check_case_log(case, log_path, metrics_dir)
+
+    assert positive_result["status"] == "PASS"
+    assert positive_result["cuda_graph_capture_count"] == len(expected_roles)
+    assert positive_result["cuda_graph_capture_roles"] == list(expected_roles)
+
+    eager_line = activation_lines[0].replace(
+        '"measurement_family": "kernel_only"',
+        '"measurement_family": "eager"',
+    )
+    _write_success_log(log_path, extra_lines=[eager_line, *activation_lines[1:]])
+
+    wrong_family_result = check_case_log(case, log_path, metrics_dir)
+
+    assert wrong_family_result["status"] == "FAIL"
+    assert "measurement_family" in wrong_family_result["errors"]
+
+
+def test_cuda_graph_control_rejects_unexpected_activation_record(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(decode_cuda_graph_mode="none")
+    log_path = tmp_path / "cuda_graph_control.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_success_log(
+        log_path,
+        extra_lines=[
+            "[CUDA-GRAPH-ACTIVATION] "
+            + json.dumps(
+                {
+                    "batch_id": 7,
+                    "cluster_role": "MONOLITHIC",
+                    "config_mode": "full_decode_only",
+                    "runtime_mode": "FULL",
+                    "capture_hit": True,
+                    "capture_sizes": [8],
+                    "original_tokens": [5],
+                    "padded_tokens": [8],
+                    "measurement_family": "kernel_only",
+                },
+                sort_keys=True,
+            )
+        ],
+    )
+
+    result = check_case_log(case, log_path, metrics_dir)
+
+    assert result["status"] == "FAIL"
+    assert "CUDA Graph control unexpectedly activated" in result["errors"]
+
+
+def test_optimization_cli_writes_independent_manifest(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    task_dir = tmp_path / "task"
+
+    exit_code = main(
+        [
+            "--mode",
+            "generate",
+            "--matrix-kind",
+            "optimization",
+            "--repo-root",
+            str(REPO_ROOT),
+            "--task-dir",
+            str(task_dir),
+        ]
+    )
+
+    optimization_manifest = (
+        task_dir / "moe_ep_non_dummy_optimization_matrix_manifest.jsonl"
+    )
+    regression_manifest = task_dir / "moe_ep_non_dummy_matrix_manifest.jsonl"
+    rows = [
+        json.loads(line)
+        for line in optimization_manifest.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    assert exit_code == 0
+    assert len(rows) == 200
+    assert not regression_manifest.exists()
+    assert str(optimization_manifest) in capsys.readouterr().out
+
+
+def test_optimization_compare_cli_writes_json_csv_and_markdown(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    all_cases = build_optimization_matrix(REPO_ROOT)
+    pair_id = next(
+        case.pair_id
+        for case in all_cases
+        if case.optimization_stratum == "prefix"
+    )
+    cases = [case for case in all_cases if case.pair_id == pair_id]
+    task_dir = tmp_path / "task"
+    output_root = tmp_path / "outputs"
+    results_path = task_dir / "results.jsonl"
+    result_rows = []
+    for index, case in enumerate(cases):
+        row = _optimization_result_row(case, metric_offset=float(index))
+        case_dir = output_root / case.case_id
+        case_dir.mkdir(parents=True)
+        (case_dir / "case_metadata.json").write_text(
+            json.dumps({"case": asdict(case)}, sort_keys=True),
+            encoding="utf-8",
+        )
+        row.update(
+            {
+                "repo_root": str(REPO_ROOT.resolve()),
+                "output_root": str(output_root.resolve()),
+                "results_path": str(results_path.resolve()),
+                "log_path": str(case_dir / f"{case.case_id}.log"),
+                "metrics_path": str(case_dir / "metrics"),
+            }
+        )
+        result_rows.append(row)
+    results_path.parent.mkdir(parents=True)
+    results_path.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in result_rows),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.build_optimization_matrix",
+        lambda _repo_root: cases,
+    )
+
+    exit_code = main(
+        [
+            "--mode",
+            "compare",
+            "--matrix-kind",
+            "optimization",
+            "--repo-root",
+            str(REPO_ROOT),
+            "--task-dir",
+            str(task_dir),
+            "--output-root",
+            str(output_root),
+            "--results-path",
+            str(results_path),
+        ]
+    )
+
+    json_path = task_dir / "moe_ep_non_dummy_optimization_comparison.json"
+    csv_path = task_dir / "moe_ep_non_dummy_optimization_comparison.csv"
+    markdown_path = task_dir / "moe_ep_non_dummy_optimization_comparison.md"
+    report = json.loads(json_path.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert report["status"] == "PASS"
+    assert report["pair_count"] == 1
+    assert "control_ttft_mean_ms" in csv_path.read_text(encoding="utf-8")
+    assert "Latency values are report-only" in markdown_path.read_text(
+        encoding="utf-8"
+    )
+    output = capsys.readouterr().out
+    assert f"comparison_json={json_path}" in output
+    assert f"comparison_markdown={markdown_path}" in output
+
+
+def test_preflight_classifies_each_case_without_launching(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cases = build_optimization_matrix(REPO_ROOT)[:2]
+    ready_case, blocked_case = cases
+
+    def fake_validate_profile_inputs(case, root):
+        if case.case_id == blocked_case.case_id:
+            raise ValueError("missing required routing profile")
+        return [root / "data/profiling/compute/ready.csv"]
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.validate_profile_inputs",
+        fake_validate_profile_inputs,
+    )
+
+    rows = preflight_cases(
+        cases,
+        REPO_ROOT,
+        tmp_path / "output",
+    )
+
+    assert [row["case_id"] for row in rows] == [
+        ready_case.case_id,
+        blocked_case.case_id,
+    ]
+    assert rows[0]["status"] == "READY"
+    assert rows[0]["required_profile_paths"] == [
+        str(REPO_ROOT / "data/profiling/compute/ready.csv")
+    ]
+    assert rows[0]["command"].startswith("bash ")
+    assert rows[1]["status"] == "BLOCKED"
+    assert rows[1]["required_profile_paths"] == []
+    assert rows[1]["blockers"] == [
+        {
+            "stage": "profile",
+            "type": "ValueError",
+            "message": "missing required routing profile",
+        }
+    ]
+
+
+def test_preflight_cli_writes_independent_ledger_and_fails_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    cases = build_optimization_matrix(REPO_ROOT)[:2]
+    preflight_path = tmp_path / "optimization_preflight.jsonl"
+    task_dir = tmp_path / "task"
+    expected_rows = [
+        {
+            "case_id": cases[0].case_id,
+            "status": "READY",
+            "blockers": [],
+            "preflight_only": True,
+        },
+        {
+            "case_id": cases[1].case_id,
+            "status": "BLOCKED",
+            "blockers": [
+                {
+                    "stage": "profile",
+                    "type": "ValueError",
+                    "message": "missing required routing profile",
+                }
+            ],
+            "preflight_only": True,
+        },
+    ]
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.build_optimization_matrix",
+        lambda _repo_root: cases,
+    )
+
+    def fake_preflight_cases(
+        selected_cases,
+        repo_root,
+        output_root,
+        *,
+        matrix_kind,
+    ):
+        assert list(selected_cases) == cases
+        assert repo_root == REPO_ROOT
+        assert output_root == Path(
+            "/data/ycfeng/tmp/frontier_non_dummy_optimization_matrix"
+        )
+        assert matrix_kind == "optimization"
+        return expected_rows
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.preflight_cases",
+        fake_preflight_cases,
+    )
+
+    def fail_if_run(*_args, **_kwargs):
+        raise AssertionError("preflight must not launch simulator cases")
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.run_cases",
+        fail_if_run,
+    )
+
+    exit_code = main(
+        [
+            "--mode",
+            "preflight",
+            "--matrix-kind",
+            "optimization",
+            "--repo-root",
+            str(REPO_ROOT),
+            "--task-dir",
+            str(task_dir),
+            "--preflight-path",
+            str(preflight_path),
+        ]
+    )
+
+    rows = [
+        json.loads(line)
+        for line in preflight_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    output = capsys.readouterr().out
+    assert exit_code == 1
+    assert rows == expected_rows
+    assert f"preflight={preflight_path}" in output
+    assert "ready=1 blocked=1" in output
+    assert not (
+        task_dir / "moe_ep_non_dummy_optimization_matrix_results.jsonl"
+    ).exists()
+
+
+def test_optimization_run_preflights_full_matrix_before_partial_launch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    cases = build_optimization_matrix(REPO_ROOT)[:3]
+    task_dir = tmp_path / "task"
+    output_root = tmp_path / "outputs"
+    inspected_case_ids: list[str] = []
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.build_optimization_matrix",
+        lambda _repo_root: cases,
+    )
+
+    def fake_preflight_cases(
+        selected_cases,
+        repo_root,
+        selected_output_root,
+        *,
+        matrix_kind,
+    ):
+        inspected_case_ids.extend(case.case_id for case in selected_cases)
+        assert repo_root == REPO_ROOT
+        assert selected_output_root == output_root
+        assert matrix_kind == "optimization"
+        return [
+            {
+                "case_id": case.case_id,
+                "status": "BLOCKED" if index == 2 else "READY",
+                "blockers": (
+                    [
+                        {
+                            "stage": "profile",
+                            "type": "ValueError",
+                            "message": "missing profile",
+                        }
+                    ]
+                    if index == 2
+                    else []
+                ),
+                "preflight_only": True,
+            }
+            for index, case in enumerate(selected_cases)
+        ]
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.preflight_cases",
+        fake_preflight_cases,
+    )
+
+    def fail_if_run(*_args, **_kwargs):
+        raise AssertionError("blocked optimization matrix must not launch")
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.run_cases",
+        fail_if_run,
+    )
+
+    exit_code = main(
+        [
+            "--mode",
+            "run",
+            "--matrix-kind",
+            "optimization",
+            "--repo-root",
+            str(REPO_ROOT),
+            "--task-dir",
+            str(task_dir),
+            "--output-root",
+            str(output_root),
+            "--start",
+            "0",
+            "--limit",
+            "1",
+        ]
+    )
+
+    assert exit_code == 1
+    assert inspected_case_ids == [case.case_id for case in cases]
+    assert "ready=2 blocked=1" in capsys.readouterr().out
+    assert not (
+        task_dir / "moe_ep_non_dummy_optimization_matrix_results.jsonl"
+    ).exists()
+
+
+def test_run_cases_preflights_every_selected_case_before_launch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cases = build_optimization_matrix(REPO_ROOT)[:2]
+    validated_case_ids: list[str] = []
+
+    def fake_validate_profile_inputs(case, _repo_root):
+        validated_case_ids.append(case.case_id)
+        if case.case_id == cases[1].case_id:
+            raise ValueError("second case missing profile")
+        return []
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.validate_profile_inputs",
+        fake_validate_profile_inputs,
+    )
+
+    def fail_if_launched(*_args, **_kwargs):
+        raise AssertionError("no simulator may launch before full preflight")
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.subprocess.run",
+        fail_if_launched,
+    )
+
+    with pytest.raises(ValueError, match="second case missing profile"):
+        run_cases(
+            cases,
+            REPO_ROOT,
+            tmp_path / "outputs",
+            tmp_path / "results.jsonl",
+        )
+
+    assert validated_case_ids == [case.case_id for case in cases]
+
+
+def test_run_cases_uses_filesystem_freshness_marker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case = replace(
+        next(
+            case
+            for case in build_matrix(REPO_ROOT)
+            if case.architecture == "co-location" and case.model_kind == "dense"
+        ),
+        num_layers=1,
+    )
+    output_root = tmp_path / "outputs"
+    results_path = tmp_path / "results.jsonl"
+    real_time_ns = __import__("time").time_ns
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.time.time_ns",
+        lambda: real_time_ns() + 1_000_000_000,
+    )
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.validate_profile_inputs",
+        lambda *_args, **_kwargs: [],
+    )
+
+    def fake_run(*_args, stdout, **_kwargs):
+        metrics_dir = output_root / case.case_id / "metrics"
+        _write_minimal_metrics(metrics_dir)
+        stdout.write(
+            "Dummy Mode: false\n"
+            "Simulation completed successfully.\n"
+            "[OP-TRACE][MONOLITHIC][ATTENTION] "
+            "batch_id=1, layer_id=0, num_tokens=1\n"
+        )
+        stdout.flush()
+        return type("Completed", (), {"returncode": 0})()
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.subprocess.run",
+        fake_run,
+    )
+
+    results = run_cases(
+        [case],
+        REPO_ROOT,
+        output_root,
+        results_path,
+    )
+
+    assert results[0]["status"] == "PASS"
+    assert results[0]["metrics_path"] == str(
+        (output_root / case.case_id / "metrics").resolve()
+    )
 
 
 def test_profile_validation_is_fail_fast(tmp_path: Path) -> None:
@@ -309,6 +1777,100 @@ def test_profile_validation_rejects_missing_architecture_metadata(tmp_path: Path
     )
 
     with pytest.raises(ValueError, match="model_architecture_profile"):
+        validate_profile_inputs(case, tmp_path)
+
+
+def test_profile_validation_requires_exact_measurement_family(tmp_path: Path) -> None:
+    case = next(
+        case
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.architecture == "co-location" and case.model_kind == "dense"
+    )
+    model_dir = tmp_path / case.device / case.model_name
+    model_dir.mkdir(parents=True)
+    _write_minimal_profile(
+        model_dir / "attention.csv",
+        measurement_type="KERNEL_ONLY",
+        tp_sizes=(case.attn_tensor_parallel_size,),
+    )
+    _write_minimal_profile(
+        model_dir / "linear_op.csv",
+        measurement_type="KERNEL_ONLY",
+        tp_sizes=(case.attn_tensor_parallel_size,),
+    )
+
+    with pytest.raises(ValueError, match="measurement_type.*CUDA_EVENT"):
+        validate_profile_inputs(case, tmp_path)
+
+
+def test_profile_validation_requires_exact_moe_tp_ep_tuple(tmp_path: Path) -> None:
+    case = next(
+        case
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.architecture == "co-location"
+        and case.model_kind == "moe"
+        and case.routing_distribution == "random"
+        and case.optimization_stratum == "ordinary"
+    )
+    model_dir = tmp_path / case.device / case.model_name
+    model_dir.mkdir(parents=True)
+    _write_minimal_profile(
+        model_dir / "attention.csv",
+        measurement_type="CUDA_EVENT",
+        tp_sizes=(case.attn_tensor_parallel_size,),
+    )
+    _write_minimal_profile(
+        model_dir / "linear_op.csv",
+        measurement_type="CUDA_EVENT",
+        tp_sizes=(
+            case.attn_tensor_parallel_size,
+            case.moe_tensor_parallel_size,
+        ),
+    )
+    _write_minimal_profile(
+        model_dir / "moe.csv",
+        measurement_type="CUDA_EVENT",
+        tp_sizes=(case.moe_tensor_parallel_size,),
+        ep_size=case.ep_size + 1,
+        routing_runtime_path="uniform_topk",
+    )
+
+    with pytest.raises(ValueError, match=r"TP/EP.*\(.*\)"):
+        validate_profile_inputs(case, tmp_path)
+
+
+def test_profile_validation_requires_target_embedded_mtp_columns(
+    tmp_path: Path,
+) -> None:
+    case = next(
+        case
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.enable_mtp and case.architecture == "co-location"
+    )
+    model_dir = tmp_path / case.device / case.model_name
+    model_dir.mkdir(parents=True)
+    _write_minimal_profile(
+        model_dir / "attention.csv",
+        measurement_type="CUDA_EVENT",
+        tp_sizes=(case.attn_tensor_parallel_size,),
+    )
+    _write_minimal_profile(
+        model_dir / "linear_op.csv",
+        measurement_type="CUDA_EVENT",
+        tp_sizes=(
+            case.attn_tensor_parallel_size,
+            case.moe_tensor_parallel_size,
+        ),
+    )
+    _write_minimal_profile(
+        model_dir / "moe.csv",
+        measurement_type="CUDA_EVENT",
+        tp_sizes=(case.moe_tensor_parallel_size,),
+        ep_size=case.ep_size,
+        routing_runtime_path="uniform_topk",
+    )
+
+    with pytest.raises(ValueError, match="mtp_fusion_proj.*lm_head_linear"):
         validate_profile_inputs(case, tmp_path)
 
 

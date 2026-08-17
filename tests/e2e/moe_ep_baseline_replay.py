@@ -613,7 +613,6 @@ def run_baseline_cases(
         case_dir.mkdir(parents=True, exist_ok=True)
         log_path = case_dir / f"{case.case_id}.log"
         metadata_path = case_dir / "baseline_case_metadata.json"
-        run_started_at_ns = time.time_ns()
         run_started_at_s = time.time()
         metadata_path.write_text(
             json.dumps(
@@ -646,6 +645,7 @@ def run_baseline_cases(
             ),
             encoding="utf-8",
         )
+        run_freshness_marker_ns = metadata_path.stat().st_mtime_ns
 
         started = time.monotonic()
         with log_path.open("w", encoding="utf-8") as stream:
@@ -677,7 +677,7 @@ def run_baseline_cases(
             metrics_dir = _find_metrics_dir(
                 output_root,
                 case,
-                started_at_ns=run_started_at_ns,
+                started_at_ns=run_freshness_marker_ns,
             )
             metrics_path = str(metrics_dir)
         except (FileNotFoundError, OSError) as exc:

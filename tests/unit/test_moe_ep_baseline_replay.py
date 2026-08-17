@@ -310,7 +310,14 @@ def test_baseline_ledger_provenance_rejects_paths_from_another_campaign(
 
 def test_baseline_runner_records_failure_and_continues_to_next_case(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    real_time_ns = baseline.time.time_ns
+    monkeypatch.setattr(
+        baseline.time,
+        "time_ns",
+        lambda: real_time_ns() + 1_000_000_000,
+    )
     dense_cases = [
         case
         for case in build_matrix(REPO_ROOT)
@@ -348,8 +355,8 @@ echo "Simulation completed successfully."
     model_dir.mkdir(parents=True)
     profile_csv = (
         "profiling_precision,model_arch,model_architecture_profile,"
-        "quant_signature,measurement_type\n"
-        "BF16,generic,generic,none,CUDA_EVENT\n"
+        "quant_signature,measurement_type,num_tensor_parallel_workers\n"
+        "BF16,generic,generic,none,CUDA_EVENT,1\n"
     )
     (model_dir / "attention.csv").write_text(profile_csv, encoding="utf-8")
     (model_dir / "linear_op.csv").write_text(profile_csv, encoding="utf-8")

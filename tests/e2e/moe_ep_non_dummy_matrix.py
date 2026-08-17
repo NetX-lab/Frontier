@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import ast
 import csv
+import itertools
 import json
 import math
 import os
@@ -34,6 +35,11 @@ ARCHITECTURE_CASE_COUNTS = {
     "co-location": 50,
     "pd-disaggregation": 50,
     "pd-af-disaggregation": 10,
+}
+OPTIMIZATION_ARCHITECTURE_CASE_COUNTS = {
+    "co-location": 91,
+    "pd-disaggregation": 91,
+    "pd-af-disaggregation": 18,
 }
 MODEL_ORDER = ("dense", "moe", "mixed")
 PD_AF_VARIANT_INDICES = (0, 1, 2, 3, 5, 5, 6, 9, 10, 11)
@@ -62,6 +68,12 @@ MODEL_SPECS: Mapping[str, Mapping[str, Any]] = {
         "router_topk": 3,
     },
 }
+OPTIMIZATION_MTP_MODEL_SPEC: Mapping[str, Any] = {
+    "model_name": "qwen3-next-80b-a3b-instruct-reduced-l2",
+    "device": "h800",
+    "total_experts": 512,
+    "router_topk": 10,
+}
 ROUTING_DISTRIBUTIONS = ("balanced", "random", "skewed", "zipf")
 WORKLOADS: Mapping[str, tuple[int, int, int]] = {
     "prefill-heavy": (8, 1, 1),
@@ -89,6 +101,10 @@ REQUIRED_PROFILE_METADATA_COLUMNS = (
     "model_architecture_profile",
     "quant_signature",
     "measurement_type",
+)
+TARGET_EMBEDDED_MTP_COLUMNS = (
+    "time_stats.mtp_fusion_proj.median",
+    "time_stats.lm_head_linear.median",
 )
 
 
@@ -159,6 +175,17 @@ class MatrixCase:
     total_cards: int
     num_layers: int
     moe_layer_ids: tuple[int, ...]
+    simulation_mode: str = "offline"
+    enable_chunked_prefill: bool = False
+    decode_cuda_graph_mode: str = "none"
+    use_cuda_graph: bool = False
+    enable_prefix_caching: bool = False
+    enable_mtp: bool = False
+    request_source: str = "synthetic"
+    optimization_stratum: str = "ordinary"
+    pair_id: str | None = None
+    comparison_group_id: str | None = None
+    pair_role: str = "standalone"
 
     @property
     def is_moe(self) -> bool:
@@ -282,6 +309,221 @@ def validate_case_parallel_semantics(case: MatrixCase) -> None:
         raise ValueError(f"invalid PD-AF DECODE_FFN local world for {case.case_id}")
 
 
+def validate_optimization_case(case: MatrixCase) -> None:
+    """Reject unsupported optimization combinations without rewriting them."""
+
+    if case.device != "h800":
+        raise ValueError(f"optimization matrix requires H800, got {case.device}")
+    if case.total_cards not in {8, 32}:
+        raise ValueError(
+            f"optimization matrix requires 8 or 32 cards, got {case.total_cards}"
+        )
+    if case.simulation_mode not in {"offline", "online"}:
+        raise ValueError(f"unsupported simulation mode: {case.simulation_mode}")
+    if case.decode_cuda_graph_mode not in {
+        "none",
+        "full_decode_only",
+        "piecewise",
+    }:
+        raise ValueError(
+            f"unsupported decode CUDA Graph mode: {case.decode_cuda_graph_mode}"
+        )
+    if case.enable_prefix_caching and case.enable_mtp:
+        raise ValueError("Prefix Caching and MTP cannot be enabled together")
+
+    if case.architecture == "pd-af-disaggregation":
+        if case.enable_prefix_caching or case.optimization_stratum == "prefix":
+            raise ValueError("PD-AF does not support Prefix Caching")
+        if case.enable_mtp or case.optimization_stratum == "mtp":
+            raise ValueError("PD-AF does not support MTP")
+        if case.decode_cuda_graph_mode != "none":
+            raise ValueError("PD-AF does not support decode CUDA Graph modes")
+    elif case.use_cuda_graph:
+        raise ValueError("global CUDA Graph is PD-AF-only")
+
+    if case.use_cuda_graph and case.decode_cuda_graph_mode != "none":
+        raise ValueError(
+            "global and decode CUDA Graph modes cannot be enabled together"
+        )
+
+    if case.optimization_stratum == "prefix":
+        if case.enable_mtp:
+            raise ValueError("Prefix Caching controls cannot enable MTP")
+        if case.request_source != "prefix-trace":
+            raise ValueError("Prefix Caching requires the repeated-prefix trace")
+        if case.model_kind == "dense":
+            raise ValueError("Prefix Caching matrix rows require a MoE-bearing model")
+    elif case.enable_prefix_caching:
+        raise ValueError("Prefix Caching is only valid in the prefix stratum")
+
+    if case.optimization_stratum == "mtp":
+        if case.decode_cuda_graph_mode != "none":
+            raise ValueError("MTP cannot be combined with decode CUDA Graph")
+        if case.routing_distribution != "random":
+            raise ValueError("MTP matrix rows require random routing")
+        if case.model_name != str(OPTIMIZATION_MTP_MODEL_SPEC["model_name"]):
+            raise ValueError("MTP matrix rows require the Qwen3-Next target model")
+        if case.enable_prefix_caching:
+            raise ValueError("MTP controls cannot enable Prefix Caching")
+    elif case.enable_mtp:
+        raise ValueError("MTP is only valid in the MTP stratum")
+
+
+def calculate_case_cards(case: MatrixCase) -> int:
+    """Recompute physical cards from role-local topology."""
+
+    if case.architecture == "co-location":
+        return (
+            case.replica_count
+            * case.attn_tensor_parallel_size
+            * case.pipeline_stages
+        )
+    if case.architecture == "pd-disaggregation":
+        return (
+            case.prefill_replicas
+            * case.prefill_attn_tensor_parallel_size
+            * case.pipeline_stages
+            + case.decode_replicas
+            * case.decode_attn_tensor_parallel_size
+            * case.pipeline_stages
+        )
+    if case.architecture == "pd-af-disaggregation":
+        decode_ffn_world = (
+            case.decode_moe_tensor_parallel_size
+            * case.decode_moe_expert_parallel_size
+        )
+        return (
+            case.prefill_replicas
+            * case.prefill_attn_tensor_parallel_size
+            * case.pipeline_stages
+            + case.decode_attn_replicas
+            * case.decode_attn_tensor_parallel_size
+            + case.decode_ffn_replicas
+            * decode_ffn_world
+            * case.pipeline_stages
+        )
+    raise ValueError(f"unsupported architecture: {case.architecture}")
+
+
+def _undeclared_pair_differences(
+    reference: MatrixCase,
+    candidate: MatrixCase,
+    *,
+    declared_fields: set[str],
+) -> list[str]:
+    ignored_fields = {
+        "case_id",
+        "baseline_case_id",
+        "pair_id",
+        "comparison_group_id",
+        "pair_role",
+    }
+    reference_payload = asdict(reference)
+    candidate_payload = asdict(candidate)
+    return sorted(
+        field_name
+        for field_name in reference_payload
+        if field_name not in ignored_fields
+        and field_name not in declared_fields
+        and reference_payload[field_name] != candidate_payload[field_name]
+    )
+
+
+def validate_optimization_pairs(cases: Sequence[MatrixCase]) -> None:
+    """Require paired controls to differ only in their declared optimization."""
+
+    pair_groups: dict[str, list[MatrixCase]] = {}
+    comparison_groups: dict[str, list[MatrixCase]] = {}
+    for case in cases:
+        if case.pair_id is not None:
+            pair_groups.setdefault(case.pair_id, []).append(case)
+        if case.comparison_group_id is not None:
+            comparison_groups.setdefault(case.comparison_group_id, []).append(case)
+
+    for pair_id, group in pair_groups.items():
+        if len(group) != 2:
+            raise ValueError(f"{pair_id} must contain exactly two rows")
+        by_role = {case.pair_role: case for case in group}
+        if set(by_role) != {"control", "enabled"}:
+            raise ValueError(f"{pair_id} must contain control and enabled rows")
+        control = by_role["control"]
+        enabled = by_role["enabled"]
+        if any(case.baseline_case_id != control.case_id for case in group):
+            raise ValueError(f"{pair_id} baseline_case_id must name the control row")
+        if control.optimization_stratum == "prefix":
+            declared_fields = {"enable_prefix_caching"}
+            if control.enable_prefix_caching or not enabled.enable_prefix_caching:
+                raise ValueError(f"{pair_id} has invalid Prefix Caching roles")
+        elif control.optimization_stratum == "mtp":
+            declared_fields = {"enable_mtp"}
+            if control.enable_mtp or not enabled.enable_mtp:
+                raise ValueError(f"{pair_id} has invalid MTP roles")
+        else:
+            raise ValueError(f"{pair_id} has unsupported pair stratum")
+        differences = _undeclared_pair_differences(
+            control,
+            enabled,
+            declared_fields=declared_fields,
+        )
+        if differences:
+            raise ValueError(
+                f"{pair_id} changes undeclared fields: {', '.join(differences)}"
+            )
+
+    for comparison_group_id, group in comparison_groups.items():
+        if len(group) == 1:
+            continue
+        if group[0].architecture == "pd-af-disaggregation":
+            declared_fields = {"use_cuda_graph"}
+            controls = [case for case in group if not case.use_cuda_graph]
+            enabled_rows = [case for case in group if case.use_cuda_graph]
+        else:
+            declared_fields = {"decode_cuda_graph_mode"}
+            chunked_prefill_varies = len(
+                {case.enable_chunked_prefill for case in group}
+            ) > 1
+            if chunked_prefill_varies:
+                declared_fields.add("enable_chunked_prefill")
+                controls = [
+                    case
+                    for case in group
+                    if case.decode_cuda_graph_mode == "none"
+                    and not case.enable_chunked_prefill
+                ]
+                enabled_rows = [case for case in group if case not in controls]
+            else:
+                controls = [
+                    case
+                    for case in group
+                    if case.decode_cuda_graph_mode == "none"
+                ]
+                enabled_rows = [
+                    case
+                    for case in group
+                    if case.decode_cuda_graph_mode != "none"
+                ]
+        if len(controls) != 1 or not enabled_rows:
+            raise ValueError(
+                f"{comparison_group_id} requires one eager control and enabled rows"
+            )
+        control = controls[0]
+        if any(case.baseline_case_id != control.case_id for case in group):
+            raise ValueError(
+                f"{comparison_group_id} baseline_case_id must name the control row"
+            )
+        for candidate in enabled_rows:
+            differences = _undeclared_pair_differences(
+                control,
+                candidate,
+                declared_fields=declared_fields,
+            )
+            if differences:
+                raise ValueError(
+                    f"{comparison_group_id} changes undeclared fields: "
+                    f"{', '.join(differences)}"
+                )
+
+
 def build_matrix(repo_root: Path) -> list[MatrixCase]:
     """Build the deterministic 110-case matrix and validate its topology."""
 
@@ -377,21 +619,757 @@ def build_matrix(repo_root: Path) -> list[MatrixCase]:
     return cases
 
 
+def _optimization_topology(
+    architecture: str,
+    model_kind: str,
+    model_name: str,
+    total_cards: int,
+    pipeline_stages: int,
+    capacity_relation: str,
+) -> dict[str, int]:
+    if total_cards not in {8, 32}:
+        raise ValueError(f"optimization cases require 8 or 32 cards, got {total_cards}")
+    if pipeline_stages not in {1, 2}:
+        raise ValueError(f"optimization cases require PP=1 or PP=2, got {pipeline_stages}")
+    if capacity_relation not in {"equal", "gt", "lt"}:
+        raise ValueError(f"unsupported capacity relation: {capacity_relation}")
+
+    if architecture == "pd-af-disaggregation":
+        if model_kind == "mixed" and total_cards == 8:
+            raise ValueError("PD-AF mixed topology requires more than 8 cards")
+        world_size = 2 if total_cards == 8 else 4
+    elif model_name == str(OPTIMIZATION_MTP_MODEL_SPEC["model_name"]):
+        world_size = 4
+    elif model_kind == "dense":
+        world_size = (
+            2
+            if architecture == "pd-disaggregation"
+            and total_cards == 8
+            and pipeline_stages == 2
+            else 4
+        )
+    elif model_kind in {"moe", "mixed"}:
+        world_size = 4 if total_cards == 8 else 8
+        if (
+            architecture == "pd-disaggregation"
+            and total_cards == 8
+            and pipeline_stages == 2
+        ):
+            world_size = 2
+            if model_kind == "mixed":
+                raise ValueError("PDD mixed 8-card topology cannot use PP=2")
+    else:
+        raise ValueError(f"unsupported model kind: {model_kind}")
+
+    if model_kind == "dense":
+        moe_tp = world_size
+        ep_size = 1
+    elif model_kind == "moe":
+        moe_tp = 1
+        ep_size = world_size
+    elif model_kind == "mixed":
+        moe_tp = 4
+        ep_size = world_size // moe_tp
+    if moe_tp * ep_size != world_size:
+        raise AssertionError(
+            f"{model_kind} topology does not conserve world size: "
+            f"moe_tp={moe_tp}, ep={ep_size}, world={world_size}"
+        )
+
+    if architecture == "co-location":
+        denominator = world_size * pipeline_stages
+        if total_cards % denominator:
+            raise ValueError(
+                f"co-location topology cannot model {total_cards} cards with "
+                f"world={world_size}, pp={pipeline_stages}"
+            )
+        replica_count = total_cards // denominator
+        topology = {
+            "pipeline_stages": pipeline_stages,
+            "replica_count": replica_count,
+            "prefill_replicas": replica_count,
+            "decode_replicas": replica_count,
+            "decode_attn_replicas": replica_count,
+            "decode_ffn_replicas": replica_count,
+            "attn_tp": world_size,
+            "prefill_attn_tp": world_size,
+            "decode_attn_tp": world_size,
+        }
+    elif architecture == "pd-disaggregation":
+        denominator = world_size * pipeline_stages
+        if total_cards % denominator:
+            raise ValueError(
+                f"PDD topology cannot model {total_cards} cards with "
+                f"world={world_size}, pp={pipeline_stages}"
+            )
+        role_replica_sum = total_cards // denominator
+        if role_replica_sum < 2:
+            raise ValueError("PDD requires at least one PREFILL and one DECODE Replica")
+        if capacity_relation == "equal" or role_replica_sum == 2:
+            if role_replica_sum % 2:
+                raise ValueError("equal PDD capacity requires an even Replica sum")
+            prefill_replicas = decode_replicas = role_replica_sum // 2
+        elif capacity_relation == "gt":
+            prefill_replicas, decode_replicas = role_replica_sum - 1, 1
+        else:
+            prefill_replicas, decode_replicas = 1, role_replica_sum - 1
+        topology = {
+            "pipeline_stages": pipeline_stages,
+            "replica_count": max(prefill_replicas, decode_replicas),
+            "prefill_replicas": prefill_replicas,
+            "decode_replicas": decode_replicas,
+            "decode_attn_replicas": decode_replicas,
+            "decode_ffn_replicas": decode_replicas,
+            "attn_tp": world_size,
+            "prefill_attn_tp": world_size,
+            "decode_attn_tp": world_size,
+        }
+    elif architecture == "pd-af-disaggregation":
+        if pipeline_stages == 1 and total_cards == 8:
+            if capacity_relation == "equal":
+                prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 2, 1, 1
+            elif capacity_relation == "gt":
+                prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 1, 2, 1
+            else:
+                prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 1, 1, 2
+            decode_attn_tp = 2
+        elif pipeline_stages == 1 and total_cards == 32:
+            if capacity_relation == "equal":
+                prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 4, 2, 2
+            elif capacity_relation == "gt":
+                prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 4, 3, 1
+            else:
+                prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 4, 1, 3
+            decode_attn_tp = 4
+        elif pipeline_stages == 2 and total_cards == 32:
+            if capacity_relation == "equal":
+                prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 1, 2, 2
+                decode_attn_tp = 4
+            elif capacity_relation == "gt":
+                prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 2, 2, 1
+                decode_attn_tp = 4
+            else:
+                prefill_replicas, decode_attn_replicas, decode_ffn_replicas = 1, 1, 2
+                decode_attn_tp = 8
+        else:
+            raise ValueError(
+                f"unsupported PD-AF topology: cards={total_cards}, "
+                f"pp={pipeline_stages}"
+            )
+        topology = {
+            "pipeline_stages": pipeline_stages,
+            "replica_count": prefill_replicas,
+            "prefill_replicas": prefill_replicas,
+            "decode_replicas": decode_attn_replicas,
+            "decode_attn_replicas": decode_attn_replicas,
+            "decode_ffn_replicas": decode_ffn_replicas,
+            "attn_tp": world_size,
+            "prefill_attn_tp": world_size,
+            "decode_attn_tp": decode_attn_tp,
+        }
+    else:
+        raise ValueError(f"unsupported architecture: {architecture}")
+
+    if architecture == "co-location":
+        computed_cards = (
+            topology["replica_count"] * world_size * pipeline_stages
+        )
+    elif architecture == "pd-disaggregation":
+        computed_cards = (
+            topology["prefill_replicas"] + topology["decode_replicas"]
+        ) * world_size * pipeline_stages
+    else:
+        computed_cards = (
+            topology["prefill_replicas"] * world_size * pipeline_stages
+            + topology["decode_attn_replicas"] * topology["decode_attn_tp"]
+            + topology["decode_ffn_replicas"] * world_size * pipeline_stages
+        )
+    if computed_cards != total_cards:
+        raise AssertionError(
+            f"{architecture} {model_kind} topology models {computed_cards} cards, "
+            f"expected {total_cards}"
+        )
+    return {
+        **topology,
+        "moe_tp": moe_tp,
+        "ep_size": ep_size,
+        "total_cards": total_cards,
+    }
+
+
+def _optimization_workload(
+    optimization_stratum: str,
+    workload_index: int,
+    *,
+    zero_routed: bool,
+) -> tuple[str, int, int, int]:
+    if optimization_stratum == "prefix":
+        return "prefix-trace", 32, 2, 2
+    if zero_routed:
+        return "zero-routed", 1, 4, 1
+    labels = ("prefill-heavy", "decode-heavy", "mixed")
+    if optimization_stratum == "mtp":
+        return (
+            labels[workload_index % len(labels)],
+            384 + 64 * workload_index,
+            64 + 16 * (workload_index % 4),
+            4 + workload_index % 3,
+        )
+    if optimization_stratum == "pd-af-cube":
+        return (
+            labels[workload_index % len(labels)],
+            320 + 48 * workload_index,
+            32 + 8 * (workload_index % 5),
+            4 + workload_index % 4,
+        )
+    return (
+        labels[workload_index % len(labels)],
+        256 + 32 * workload_index,
+        32 + 8 * (workload_index % 4),
+        4 + workload_index % 3,
+    )
+
+
+def _make_optimization_case(
+    *,
+    repo_root: Path,
+    case_id: str,
+    baseline_case_id: str,
+    seed: int,
+    architecture: str,
+    model_kind: str,
+    use_mtp_model: bool,
+    routing_distribution: str,
+    simulation_mode: str,
+    total_cards: int,
+    enable_chunked_prefill: bool,
+    decode_cuda_graph_mode: str,
+    use_cuda_graph: bool,
+    enable_prefix_caching: bool,
+    enable_mtp: bool,
+    request_source: str,
+    optimization_stratum: str,
+    pair_id: str | None,
+    comparison_group_id: str | None,
+    pair_role: str,
+    pipeline_stages: int,
+    capacity_relation: str,
+    workload_index: int,
+    zero_routed: bool = False,
+) -> MatrixCase:
+    if simulation_mode not in {"offline", "online"}:
+        raise ValueError(f"unsupported simulation mode: {simulation_mode}")
+    spec = OPTIMIZATION_MTP_MODEL_SPEC if use_mtp_model else MODEL_SPECS[model_kind]
+    model_name = str(spec["model_name"])
+    topology = _optimization_topology(
+        architecture,
+        model_kind,
+        model_name,
+        total_cards,
+        pipeline_stages,
+        capacity_relation,
+    )
+    workload_kind, prefill_tokens, decode_tokens, num_requests = (
+        _optimization_workload(
+            optimization_stratum,
+            workload_index,
+            zero_routed=zero_routed,
+        )
+    )
+    num_layers, moe_layer_ids = _model_layer_shape(model_name)
+    case = MatrixCase(
+        case_id=case_id,
+        baseline_case_id=baseline_case_id,
+        architecture=architecture,
+        model_kind=model_kind,
+        model_name=model_name,
+        device="h800",
+        routing_distribution=(
+            routing_distribution if model_kind != "dense" else "balanced"
+        ),
+        seed=seed,
+        workload_kind=workload_kind,
+        prefill_tokens=prefill_tokens,
+        decode_tokens=decode_tokens,
+        num_requests=num_requests,
+        ep_size=topology["ep_size"],
+        moe_tensor_parallel_size=topology["moe_tp"],
+        total_experts=int(spec["total_experts"]),
+        router_topk=int(spec["router_topk"]),
+        pipeline_stages=topology["pipeline_stages"],
+        replica_count=topology["replica_count"],
+        prefill_replicas=topology["prefill_replicas"],
+        decode_replicas=topology["decode_replicas"],
+        decode_attn_replicas=topology["decode_attn_replicas"],
+        decode_ffn_replicas=topology["decode_ffn_replicas"],
+        attn_tensor_parallel_size=topology["attn_tp"],
+        prefill_attn_tensor_parallel_size=topology["prefill_attn_tp"],
+        decode_attn_tensor_parallel_size=topology["decode_attn_tp"],
+        prefill_moe_tensor_parallel_size=topology["moe_tp"],
+        decode_moe_tensor_parallel_size=topology["moe_tp"],
+        prefill_moe_expert_parallel_size=topology["ep_size"],
+        decode_moe_expert_parallel_size=topology["ep_size"],
+        total_cards=topology["total_cards"],
+        num_layers=num_layers,
+        moe_layer_ids=moe_layer_ids,
+        simulation_mode=simulation_mode,
+        enable_chunked_prefill=enable_chunked_prefill,
+        decode_cuda_graph_mode=decode_cuda_graph_mode,
+        use_cuda_graph=use_cuda_graph,
+        enable_prefix_caching=enable_prefix_caching,
+        enable_mtp=enable_mtp,
+        request_source=request_source,
+        optimization_stratum=optimization_stratum,
+        pair_id=pair_id,
+        comparison_group_id=comparison_group_id,
+        pair_role=pair_role,
+    )
+    validate_case_parallel_semantics(case)
+    validate_optimization_case(case)
+    return case
+
+
+def _shared_optimization_cases(
+    repo_root: Path,
+    architecture: str,
+    *,
+    seed_start: int,
+) -> list[MatrixCase]:
+    prefix = architecture.replace("-", "_")
+    group_sizes = (3,) * 16 + (2,) * 2 + (1,) * 3
+    if architecture == "co-location":
+        model_routing = (
+            (("dense", "balanced"),) * 10
+            + (
+                ("mixed", "balanced"),
+                ("mixed", "skewed"),
+                ("mixed", "skewed"),
+                ("mixed", "zipf"),
+                ("mixed", "zipf"),
+                ("moe", "zipf"),
+                ("mixed", "balanced"),
+                ("mixed", "balanced"),
+                ("dense", "balanced"),
+                ("mixed", "skewed"),
+                ("moe", "random"),
+            )
+        )
+        offline_groups = set(range(8)) | {16, 18, 19}
+        chunk_off_groups = set(range(8)) | {17, 18, 20}
+    elif architecture == "pd-disaggregation":
+        model_routing = (
+            (("dense", "balanced"),) * 10
+            + (
+                ("moe", "balanced"),
+                ("mixed", "skewed"),
+                ("mixed", "skewed"),
+                ("mixed", "zipf"),
+                ("mixed", "zipf"),
+                ("mixed", "zipf"),
+                ("moe", "random"),
+                ("mixed", "balanced"),
+                ("mixed", "balanced"),
+                ("mixed", "balanced"),
+                ("mixed", "skewed"),
+            )
+        )
+        offline_groups = set(range(8)) | {16, 18}
+        chunk_off_groups = set(range(8)) | {16, 19}
+    else:
+        raise ValueError(f"unsupported shared optimization architecture: {architecture}")
+    card8_groups = set(range(8)) | {17, 20}
+    pp2_groups = set(range(6))
+
+    factorial_context_sources = {0: 0, 1: 9}
+    skipped_contexts = {8, 9}
+    cases: list[MatrixCase] = []
+    for group_index, (group_size, (model_kind, routing)) in enumerate(
+        zip(group_sizes, model_routing, strict=True)
+    ):
+        if group_index in skipped_contexts:
+            continue
+        context_index = factorial_context_sources.get(group_index, group_index)
+        graph_modes = (
+            ("none", "full_decode_only", "piecewise")
+            if group_size == 3
+            else (("none", "full_decode_only") if group_size == 2 else ("none",))
+        )
+        comparison_group_id = f"{prefix}_ordinary_graph_{group_index:02d}"
+        chunked_prefill_modes = (
+            (False, True)
+            if group_index in factorial_context_sources
+            else (context_index not in chunk_off_groups,)
+        )
+        baseline_case_id = (
+            f"{comparison_group_id}_none_chunk_off"
+            if len(chunked_prefill_modes) == 2
+            else f"{comparison_group_id}_none"
+        )
+        for graph_mode, enable_chunked_prefill in itertools.product(
+            graph_modes,
+            chunked_prefill_modes,
+        ):
+            case_id = (
+                f"{comparison_group_id}_{graph_mode}_"
+                f"chunk_{'on' if enable_chunked_prefill else 'off'}"
+                if len(chunked_prefill_modes) == 2
+                else f"{comparison_group_id}_{graph_mode}"
+            )
+            cases.append(
+                _make_optimization_case(
+                    repo_root=repo_root,
+                    case_id=case_id,
+                    baseline_case_id=baseline_case_id,
+                    seed=seed_start + context_index,
+                    architecture=architecture,
+                    model_kind=model_kind,
+                    use_mtp_model=False,
+                    routing_distribution=routing,
+                    simulation_mode=(
+                        "offline" if context_index in offline_groups else "online"
+                    ),
+                    total_cards=8 if context_index in card8_groups else 32,
+                    enable_chunked_prefill=enable_chunked_prefill,
+                    decode_cuda_graph_mode=graph_mode,
+                    use_cuda_graph=False,
+                    enable_prefix_caching=False,
+                    enable_mtp=False,
+                    request_source="synthetic",
+                    optimization_stratum="ordinary",
+                    pair_id=None,
+                    comparison_group_id=comparison_group_id,
+                    pair_role=(
+                        "control"
+                        if graph_mode == "none" and not enable_chunked_prefill
+                        else "enabled"
+                    ),
+                    pipeline_stages=2 if context_index in pp2_groups else 1,
+                    capacity_relation=("equal", "gt", "lt")[context_index % 3],
+                    workload_index=context_index,
+                    zero_routed=(
+                        architecture == "co-location" and context_index == 20
+                    )
+                    or (
+                        architecture == "pd-disaggregation" and context_index == 16
+                    ),
+                )
+            )
+
+    prefix_routings = (
+        "balanced",
+        "skewed",
+        "zipf",
+        "balanced",
+        "skewed",
+        "zipf",
+        "balanced",
+        "skewed",
+        "balanced",
+        "skewed",
+        "zipf",
+    )
+    prefix_graph_modes = (
+        "none",
+        "full_decode_only",
+        "piecewise",
+        "full_decode_only",
+        "piecewise",
+        "none",
+        "full_decode_only",
+        "piecewise",
+        "none",
+        "full_decode_only",
+        "none",
+    )
+    prefix_models = (
+        "moe",
+        "mixed",
+        "moe",
+        "mixed",
+        "moe",
+        "mixed",
+        "moe",
+        "mixed",
+        "moe",
+        "mixed",
+        "moe",
+    )
+    prefix_chunk_off = {0, 2, 5, 7, 9}
+    prefix_offline = (
+        {0, 2, 3, 5, 7, 10}
+        if architecture == "co-location"
+        else {1, 4, 6, 8, 9}
+    )
+    prefix_card8 = {0, 1, 3, 5, 7, 9}
+    prefix_pp2 = {2, 4, 6, 8}
+    for context_index in range(11):
+        pair_id = f"{prefix}_prefix_{context_index:02d}"
+        control_case_id = f"{pair_id}_control"
+        for enabled in (False, True):
+            cases.append(
+                _make_optimization_case(
+                    repo_root=repo_root,
+                    case_id=(
+                        f"{pair_id}_{'enabled' if enabled else 'control'}"
+                    ),
+                    baseline_case_id=control_case_id,
+                    seed=seed_start + 100 + context_index,
+                    architecture=architecture,
+                    model_kind=prefix_models[context_index],
+                    use_mtp_model=False,
+                    routing_distribution=prefix_routings[context_index],
+                    simulation_mode=(
+                        "offline"
+                        if context_index in prefix_offline
+                        else "online"
+                    ),
+                    total_cards=8 if context_index in prefix_card8 else 32,
+                    enable_chunked_prefill=context_index not in prefix_chunk_off,
+                    decode_cuda_graph_mode=prefix_graph_modes[context_index],
+                    use_cuda_graph=False,
+                    enable_prefix_caching=enabled,
+                    enable_mtp=False,
+                    request_source="prefix-trace",
+                    optimization_stratum="prefix",
+                    pair_id=pair_id,
+                    comparison_group_id=None,
+                    pair_role="enabled" if enabled else "control",
+                    pipeline_stages=2 if context_index in prefix_pp2 else 1,
+                    capacity_relation=("equal", "gt", "lt")[context_index % 3],
+                    workload_index=context_index,
+                )
+            )
+
+    mtp_offline_count = 3 if architecture == "co-location" else 4
+    for context_index in range(7):
+        pair_id = f"{prefix}_mtp_{context_index:02d}"
+        control_case_id = f"{pair_id}_control"
+        for enabled in (False, True):
+            cases.append(
+                _make_optimization_case(
+                    repo_root=repo_root,
+                    case_id=(
+                        f"{pair_id}_{'enabled' if enabled else 'control'}"
+                    ),
+                    baseline_case_id=control_case_id,
+                    seed=seed_start + 200 + context_index,
+                    architecture=architecture,
+                    model_kind="moe",
+                    use_mtp_model=True,
+                    routing_distribution="random",
+                    simulation_mode=(
+                        "offline"
+                        if context_index < mtp_offline_count
+                        else "online"
+                    ),
+                    total_cards=8 if context_index < 4 else 32,
+                    enable_chunked_prefill=context_index >= 4,
+                    decode_cuda_graph_mode="none",
+                    use_cuda_graph=False,
+                    enable_prefix_caching=False,
+                    enable_mtp=enabled,
+                    request_source="synthetic",
+                    optimization_stratum="mtp",
+                    pair_id=pair_id,
+                    comparison_group_id=None,
+                    pair_role="enabled" if enabled else "control",
+                    pipeline_stages=2 if context_index in {5, 6} else 1,
+                    capacity_relation=("equal", "gt", "lt")[context_index % 3],
+                    workload_index=context_index,
+                )
+            )
+
+    expected_count = OPTIMIZATION_ARCHITECTURE_CASE_COUNTS[architecture]
+    if len(cases) != expected_count:
+        raise AssertionError(
+            f"expected {expected_count} {architecture} optimization cases, "
+            f"got {len(cases)}"
+        )
+    return cases
+
+
+def _pdaf_optimization_cases(
+    repo_root: Path,
+    *,
+    seed_start: int,
+) -> list[MatrixCase]:
+    paired_contexts = (
+        ("offline", False, "dense", 8, "balanced", "equal", 1, False),
+        ("offline", False, "moe", 8, "random", "gt", 1, False),
+        ("offline", True, "mixed", 32, "balanced", "lt", 2, False),
+        ("online", False, "dense", 32, "balanced", "gt", 2, False),
+        ("online", True, "moe", 32, "skewed", "lt", 1, False),
+        ("online", True, "mixed", 32, "zipf", "equal", 1, False),
+    )
+    cases: list[MatrixCase] = []
+    for context_index, (
+        simulation_mode,
+        enable_chunked_prefill,
+        model_kind,
+        total_cards,
+        routing,
+        relation,
+        pipeline_stages,
+        zero_routed,
+    ) in enumerate(paired_contexts):
+        comparison_group_id = f"pd_af_cuda_graph_{context_index:02d}"
+        baseline_case_id = f"{comparison_group_id}_control"
+        for enabled in (False, True):
+            cases.append(
+                _make_optimization_case(
+                    repo_root=repo_root,
+                    case_id=(
+                        f"{comparison_group_id}_"
+                        f"{'enabled' if enabled else 'control'}"
+                    ),
+                    baseline_case_id=baseline_case_id,
+                    seed=seed_start + context_index,
+                    architecture="pd-af-disaggregation",
+                    model_kind=model_kind,
+                    use_mtp_model=False,
+                    routing_distribution=routing,
+                    simulation_mode=simulation_mode,
+                    total_cards=total_cards,
+                    enable_chunked_prefill=enable_chunked_prefill,
+                    decode_cuda_graph_mode="none",
+                    use_cuda_graph=enabled,
+                    enable_prefix_caching=False,
+                    enable_mtp=False,
+                    request_source="synthetic",
+                    optimization_stratum="pd-af-cube",
+                    pair_id=None,
+                    comparison_group_id=comparison_group_id,
+                    pair_role="enabled" if enabled else "control",
+                    pipeline_stages=pipeline_stages,
+                    capacity_relation=relation,
+                    workload_index=context_index,
+                    zero_routed=zero_routed,
+                )
+            )
+
+    standalone_contexts = (
+        ("offline", False, False, "dense", 8, "balanced", "equal", False),
+        ("offline", True, False, "moe", 8, "random", "equal", False),
+        ("offline", True, True, "mixed", 32, "balanced", "gt", False),
+        ("online", False, False, "dense", 32, "balanced", "gt", False),
+        ("online", False, True, "moe", 32, "skewed", "lt", True),
+        ("online", True, True, "mixed", 32, "zipf", "lt", False),
+    )
+    for context_index, (
+        simulation_mode,
+        enable_chunked_prefill,
+        use_cuda_graph,
+        model_kind,
+        total_cards,
+        routing,
+        relation,
+        zero_routed,
+    ) in enumerate(standalone_contexts):
+        case_id = f"pd_af_cube_standalone_{context_index:02d}"
+        cases.append(
+            _make_optimization_case(
+                repo_root=repo_root,
+                case_id=case_id,
+                baseline_case_id=case_id,
+                seed=seed_start + 100 + context_index,
+                architecture="pd-af-disaggregation",
+                model_kind=model_kind,
+                use_mtp_model=False,
+                routing_distribution=routing,
+                simulation_mode=simulation_mode,
+                total_cards=total_cards,
+                enable_chunked_prefill=enable_chunked_prefill,
+                decode_cuda_graph_mode="none",
+                use_cuda_graph=use_cuda_graph,
+                enable_prefix_caching=False,
+                enable_mtp=False,
+                request_source="synthetic",
+                optimization_stratum="pd-af-cube",
+                pair_id=None,
+                comparison_group_id=f"pd_af_standalone_{context_index:02d}",
+                pair_role="standalone",
+                pipeline_stages=1,
+                capacity_relation=relation,
+                workload_index=6 + context_index,
+                zero_routed=zero_routed,
+            )
+        )
+    if len(cases) != 18:
+        raise AssertionError(f"expected 18 PD-AF optimization cases, got {len(cases)}")
+    return cases
+
+
+def build_optimization_matrix(repo_root: Path) -> list[MatrixCase]:
+    """Build the exact 200-case H800 optimization matrix."""
+
+    cases = _shared_optimization_cases(
+        repo_root,
+        "co-location",
+        seed_start=10_000,
+    )
+    cases.extend(
+        _shared_optimization_cases(
+            repo_root,
+            "pd-disaggregation",
+            seed_start=20_000,
+        )
+    )
+    cases.extend(_pdaf_optimization_cases(repo_root, seed_start=30_000))
+    if len(cases) != 200:
+        raise AssertionError(f"expected 200 optimization cases, got {len(cases)}")
+    validate_optimization_pairs(cases)
+    return cases
+
+
 def _script_for_case(case: MatrixCase, repo_root: Path) -> Path:
     root = repo_root / "examples" / "architecture"
-    if case.model_kind == "dense":
+    mode_suffix = "_online" if case.simulation_mode == "online" else ""
+    mode_dir = case.simulation_mode
+    if case.optimization_stratum == "prefix":
         names = {
-            "co-location": "co-location/offline/dense_model_basic.sh",
-            "pd-disaggregation": "pdd/offline/dense_model_basic.sh",
-            "pd-af-disaggregation": "pd-af-disagg/offline/dense_model_basic.sh",
+            "co-location": (
+                f"co-location/{mode_dir}/moe_prefix_caching{mode_suffix}.sh"
+            ),
+            "pd-disaggregation": (
+                f"pdd/{mode_dir}/moe_prefix_caching{mode_suffix}.sh"
+            ),
+        }
+    elif case.optimization_stratum == "mtp":
+        names = {
+            "co-location": f"co-location/{mode_dir}/moe_spec_dec{mode_suffix}.sh",
+            "pd-disaggregation": f"pdd/{mode_dir}/moe_spec_dec{mode_suffix}.sh",
+        }
+    elif case.model_kind == "dense":
+        names = {
+            "co-location": (
+                f"co-location/{mode_dir}/dense_model_basic{mode_suffix}.sh"
+            ),
+            "pd-disaggregation": (
+                f"pdd/{mode_dir}/dense_model_basic{mode_suffix}.sh"
+            ),
+            "pd-af-disaggregation": (
+                f"pd-af-disagg/{mode_dir}/dense_model_basic{mode_suffix}.sh"
+            ),
         }
     else:
         names = {
-            "co-location": "co-location/offline/moe_model_basic.sh",
-            "pd-disaggregation": "pdd/offline/moe_model_basic.sh",
-            "pd-af-disaggregation": "pd-af-disagg/offline/moe_model_ep.sh",
+            "co-location": (
+                f"co-location/{mode_dir}/moe_model_basic{mode_suffix}.sh"
+            ),
+            "pd-disaggregation": (
+                f"pdd/{mode_dir}/moe_model_basic{mode_suffix}.sh"
+            ),
+            "pd-af-disaggregation": (
+                f"pd-af-disagg/{mode_dir}/moe_model_ep{mode_suffix}.sh"
+            ),
         }
-    path = root / names[case.architecture]
+    try:
+        relative_path = names[case.architecture]
+    except KeyError as exc:
+        raise ValueError(
+            f"{case.optimization_stratum} is unsupported for {case.architecture}"
+        ) from exc
+    path = root / relative_path
     if not path.is_file():
         raise FileNotFoundError(path)
     return path
@@ -413,8 +1391,9 @@ def build_shell_command(
             "VIDUR_DISABLE_WANDB": "1",
             "MODEL_NAME": case.model_name,
             "ENABLE_DUMMY_MODE": "false",
-            "DECODE_CUDA_GRAPH_MODE": "none",
-            "ENABLE_CHUNKED_PREFILL": "false",
+            "DECODE_CUDA_GRAPH_MODE": case.decode_cuda_graph_mode,
+            "ENABLE_CUDA_GRAPH": str(case.use_cuda_graph).lower(),
+            "ENABLE_CHUNKED_PREFILL": str(case.enable_chunked_prefill).lower(),
             "NUM_REQUESTS": str(case.num_requests),
             "PREFILL_TOKENS": str(case.prefill_tokens),
             "DECODE_TOKENS": str(case.decode_tokens),
@@ -425,10 +1404,28 @@ def build_shell_command(
             "MOE_ROUTING_SEED": str(case.seed),
             "TOTAL_EXPERTS": str(case.total_experts),
             "ROUTER_TOPK": str(case.router_topk),
-            "MAX_TOKENS_IN_BATCH": "64",
-            "LONG_PREFILL_TOKEN_THRESHOLD": "0",
+            "MAX_TOKENS_IN_BATCH": (
+                "32"
+                if case.optimization_stratum == "prefix"
+                else "64"
+            ),
+            "LONG_PREFILL_TOKEN_THRESHOLD": (
+                "16" if case.enable_chunked_prefill else "0"
+            ),
         }
     )
+    if case.optimization_stratum == "prefix":
+        env["TRACE_FILE"] = str(
+            repo_root / "examples" / "fixtures" / "prefix_cache_shared_session_trace.csv"
+        )
+    if case.optimization_stratum == "mtp":
+        env.update(
+            {
+                "SPEC_METHOD": "qwen3_next_mtp",
+                "MTP_N_PREDICT": "2",
+                "MTP_NUM_LAYERS": "1",
+            }
+        )
     if case.architecture == "co-location":
         env.update(
             {
@@ -484,6 +1481,25 @@ def build_shell_command(
     # back to a different SKU.
     if case.architecture == "co-location" and case.model_kind != "dense":
         command_parts.extend(["--replica_config_device", case.device])
+    if case.optimization_stratum == "prefix":
+        command_parts.append(
+            "--vllm_v1_scheduler_config_enable_prefix_caching"
+            if case.enable_prefix_caching
+            else "--no-vllm_v1_scheduler_config_enable_prefix_caching"
+        )
+    if case.optimization_stratum == "mtp":
+        command_parts.append(
+            "--speculative_decoding_config_enabled"
+            if case.enable_mtp
+            else "--no-speculative_decoding_config_enabled"
+        )
+    if case.architecture == "pd-af-disaggregation":
+        if case.use_cuda_graph:
+            command_parts.extend(
+                ["--use_cuda_graph", "--cudagraph_capture_sizes", "8", "16", "32", "64"]
+            )
+        else:
+            command_parts.append("--no-use_cuda_graph")
     # Keep predictor artifacts isolated from the repository's shared cache. A
     # previously interrupted non-dummy run can leave a truncated pickle there;
     # reusing it would make an otherwise valid case fail with an unrelated
@@ -502,57 +1518,283 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
     if (root / case.device).is_dir() and not (profile_root).is_dir():
         profile_root = root
     model_dir = profile_root / case.device / case.model_name
-    required = [model_dir / "attention.csv", model_dir / "linear_op.csv"]
-    if case.is_moe:
-        required.append(model_dir / "moe.csv")
-    if case.architecture == "pd-af-disaggregation":
-        required.extend(
-            [
-                model_dir / "attention_kernel_only.csv",
-                model_dir / "linear_op_kernel_only.csv",
-            ]
-        )
+    eager_attention_tps: set[int] = set()
+    eager_linear_tps: set[int] = set()
+    eager_moe_keys: set[tuple[int, int]] = set()
+    kernel_attention_tps: set[int] = set()
+    kernel_linear_tps: set[int] = set()
+    kernel_moe_keys: set[tuple[int, int]] = set()
+
+    if case.architecture == "co-location":
+        eager_attention_tps.add(case.attn_tensor_parallel_size)
+        eager_linear_tps.add(case.attn_tensor_parallel_size)
         if case.is_moe:
-            required.append(model_dir / "moe_kernel_only.csv")
+            eager_linear_tps.add(case.moe_tensor_parallel_size)
+            eager_moe_keys.add((case.moe_tensor_parallel_size, case.ep_size))
+        if case.decode_cuda_graph_mode != "none":
+            kernel_attention_tps.add(case.attn_tensor_parallel_size)
+            kernel_linear_tps.update(eager_linear_tps)
+            kernel_moe_keys.update(eager_moe_keys)
+    elif case.architecture == "pd-disaggregation":
+        eager_attention_tps.add(case.prefill_attn_tensor_parallel_size)
+        eager_linear_tps.add(case.prefill_attn_tensor_parallel_size)
+        if case.is_moe:
+            eager_linear_tps.add(case.prefill_moe_tensor_parallel_size)
+            eager_moe_keys.add(
+                (
+                    case.prefill_moe_tensor_parallel_size,
+                    case.prefill_moe_expert_parallel_size,
+                )
+            )
+        if case.decode_cuda_graph_mode == "none":
+            eager_attention_tps.add(case.decode_attn_tensor_parallel_size)
+            eager_linear_tps.add(case.decode_attn_tensor_parallel_size)
+            if case.is_moe:
+                eager_linear_tps.add(case.decode_moe_tensor_parallel_size)
+                eager_moe_keys.add(
+                    (
+                        case.decode_moe_tensor_parallel_size,
+                        case.decode_moe_expert_parallel_size,
+                    )
+                )
+        else:
+            kernel_attention_tps.add(case.decode_attn_tensor_parallel_size)
+            kernel_linear_tps.add(case.decode_attn_tensor_parallel_size)
+            if case.is_moe:
+                kernel_linear_tps.add(case.decode_moe_tensor_parallel_size)
+                kernel_moe_keys.add(
+                    (
+                        case.decode_moe_tensor_parallel_size,
+                        case.decode_moe_expert_parallel_size,
+                    )
+                )
+    elif case.architecture == "pd-af-disaggregation":
+        eager_attention_tps.update(
+            {
+                case.prefill_attn_tensor_parallel_size,
+                case.decode_attn_tensor_parallel_size,
+            }
+        )
+        eager_linear_tps.update(eager_attention_tps)
+        kernel_attention_tps.add(case.decode_attn_tensor_parallel_size)
+        kernel_linear_tps.add(case.decode_attn_tensor_parallel_size)
+        decode_ffn_full_world_tp = (
+            case.decode_moe_tensor_parallel_size
+            * case.decode_moe_expert_parallel_size
+        )
+        kernel_linear_tps.add(decode_ffn_full_world_tp)
+        if case.is_moe:
+            eager_linear_tps.add(case.prefill_moe_tensor_parallel_size)
+            kernel_linear_tps.add(case.decode_moe_tensor_parallel_size)
+            eager_moe_keys.add(
+                (
+                    case.prefill_moe_tensor_parallel_size,
+                    case.prefill_moe_expert_parallel_size,
+                )
+            )
+            kernel_moe_keys.add(
+                (
+                    case.decode_moe_tensor_parallel_size,
+                    case.decode_moe_expert_parallel_size,
+                )
+            )
+    else:
+        raise ValueError(f"unsupported architecture: {case.architecture}")
+
+    profile_requirements: dict[Path, tuple[str, set[int]]] = {
+        model_dir / "attention.csv": ("CUDA_EVENT", eager_attention_tps),
+        model_dir / "linear_op.csv": ("CUDA_EVENT", eager_linear_tps),
+    }
+    if eager_moe_keys:
+        profile_requirements[model_dir / "moe.csv"] = (
+            "CUDA_EVENT",
+            {tp for tp, _ep in eager_moe_keys},
+        )
+    if kernel_attention_tps:
+        profile_requirements[model_dir / "attention_kernel_only.csv"] = (
+            "KERNEL_ONLY",
+            kernel_attention_tps,
+        )
+    if kernel_linear_tps:
+        profile_requirements[model_dir / "linear_op_kernel_only.csv"] = (
+            "KERNEL_ONLY",
+            kernel_linear_tps,
+        )
+    if kernel_moe_keys:
+        profile_requirements[model_dir / "moe_kernel_only.csv"] = (
+            "KERNEL_ONLY",
+            {tp for tp, _ep in kernel_moe_keys},
+        )
+
+    required = list(profile_requirements)
     missing = [path for path in required if not path.is_file()]
     if missing:
         raise FileNotFoundError(
             "Missing required non-dummy profiling files:\n" + "\n".join(str(p) for p in missing)
         )
-    for path in required:
+    for path, (measurement_type, tp_sizes) in profile_requirements.items():
         _validate_profile_metadata(path)
-    if case.is_moe:
-        expected_runtime_path = (
-            "uniform_topk" if case.routing_distribution == "random" else "standard_fused_topk"
+        _validate_profile_family_and_tp(
+            case,
+            path,
+            expected_measurement_type=measurement_type,
+            required_tp_sizes=tp_sizes,
         )
-        moe_profile_paths = [model_dir / "moe.csv"]
-        if case.architecture == "pd-af-disaggregation":
-            moe_profile_paths.append(model_dir / "moe_kernel_only.csv")
-        for path in moe_profile_paths:
-            available_paths = _profile_routing_runtime_paths(path)
-            if expected_runtime_path not in available_paths:
-                raise ValueError(
-                    f"{case.case_id} requires routing_runtime_path="
-                    f"{expected_runtime_path!r}, but {path} provides "
-                    f"{sorted(available_paths)!r}"
-                )
+
+    expected_runtime_path = (
+        "uniform_topk"
+        if case.routing_distribution == "random"
+        else "standard_fused_topk"
+    )
+    for path, keys in (
+        (model_dir / "moe.csv", eager_moe_keys),
+        (model_dir / "moe_kernel_only.csv", kernel_moe_keys),
+    ):
+        if not keys:
+            continue
+        _validate_moe_profile_keys(
+            case,
+            path,
+            required_tp_ep_keys=keys,
+            expected_runtime_path=expected_runtime_path,
+        )
+
+    if case.enable_mtp:
+        _validate_target_embedded_mtp_columns(
+            case,
+            model_dir / "linear_op.csv",
+            required_tp_sizes=eager_linear_tps,
+        )
     return required
+
+
+def _preflight_blocker(stage: str, exc: Exception) -> dict[str, str]:
+    """Serialize one expected static-validation failure for the JSONL ledger."""
+
+    return {
+        "stage": stage,
+        "type": type(exc).__name__,
+        "message": str(exc),
+    }
+
+
+def preflight_cases(
+    cases: Sequence[MatrixCase],
+    repo_root: Path,
+    output_root: Path,
+    *,
+    matrix_kind: str = "optimization",
+) -> list[dict[str, Any]]:
+    """Validate a matrix without launching any simulator process.
+
+    The preflight ledger is deliberately independent from the runtime result
+    ledger.  A case is READY only when its topology contract, real profiling
+    inputs, and wrapper command all validate.  Every expected validation
+    failure is retained as a structured blocker so a campaign can stop before
+    spending GPU time on a late predictor or wrapper error.
+    """
+
+    if matrix_kind not in {"regression", "optimization"}:
+        raise ValueError(f"unsupported matrix kind for preflight: {matrix_kind}")
+
+    repo_root = repo_root.resolve()
+    output_root = output_root.resolve()
+    rows: list[dict[str, Any]] = []
+    for case in cases:
+        blockers: list[dict[str, str]] = []
+        required_profile_paths: list[str] = []
+        command = ""
+        environment: dict[str, str] = {}
+
+        try:
+            validate_case_parallel_semantics(case)
+            if matrix_kind == "optimization":
+                validate_optimization_case(case)
+        except (AssertionError, FileNotFoundError, OSError, ValueError) as exc:
+            blockers.append(_preflight_blocker("topology", exc))
+
+        try:
+            required_profile_paths = [
+                str(path.resolve()) for path in validate_profile_inputs(case, repo_root)
+            ]
+        except (AssertionError, FileNotFoundError, OSError, ValueError) as exc:
+            blockers.append(_preflight_blocker("profile", exc))
+
+        try:
+            command, env = build_shell_command(case, repo_root, output_root)
+            environment = {
+                key: env[key]
+                for key in (
+                    "MODEL_NAME",
+                    "ENABLE_DUMMY_MODE",
+                    "SIMULATION_MODE",
+                    "DECODE_CUDA_GRAPH_MODE",
+                    "ENABLE_CUDA_GRAPH",
+                    "ENABLE_CHUNKED_PREFILL",
+                    "LONG_PREFILL_TOKEN_THRESHOLD",
+                    "MAX_TOKENS_IN_BATCH",
+                    "ENABLE_PREFIX_CACHING",
+                    "ENABLE_MTP",
+                    "MOE_ROUTING_DISTRIBUTION_TYPE",
+                    "MOE_ROUTING_SEED",
+                    "TOTAL_EXPERTS",
+                    "ROUTER_TOPK",
+                    "TRACE_FILE",
+                    "SPEC_METHOD",
+                    "MTP_N_PREDICT",
+                    "MTP_NUM_LAYERS",
+                )
+                if key in env
+            }
+        except (AssertionError, FileNotFoundError, OSError, ValueError) as exc:
+            blockers.append(_preflight_blocker("command", exc))
+
+        rows.append(
+            {
+                "case_id": case.case_id,
+                "baseline_case_id": case.baseline_case_id,
+                "architecture": case.architecture,
+                "model_kind": case.model_kind,
+                "model_name": case.model_name,
+                "device": case.device,
+                "total_cards": case.total_cards,
+                "simulation_mode": case.simulation_mode,
+                "optimization_stratum": case.optimization_stratum,
+                "pair_id": case.pair_id,
+                "comparison_group_id": case.comparison_group_id,
+                "pair_role": case.pair_role,
+                "required_profile_paths": required_profile_paths,
+                "command": command,
+                "environment": environment,
+                "blockers": blockers,
+                "status": "READY" if not blockers else "BLOCKED",
+                "preflight_only": True,
+            }
+        )
+    return rows
+
+
+@lru_cache(maxsize=None)
+def _read_profile_table(
+    path: Path,
+) -> tuple[tuple[str, ...], tuple[dict[str, str], ...]]:
+    with path.open("r", encoding="utf-8", newline="") as stream:
+        reader = csv.DictReader(stream)
+        fieldnames = tuple(reader.fieldnames or ())
+        rows = tuple(dict(row) for row in reader)
+    return fieldnames, rows
 
 
 @lru_cache(maxsize=None)
 def _validate_profile_metadata(path: Path) -> None:
     """Require the predictor's immutable metadata contract before a run."""
 
-    with path.open("r", encoding="utf-8", newline="") as stream:
-        reader = csv.DictReader(stream)
-        fieldnames = tuple(reader.fieldnames or ())
-        missing = sorted(set(REQUIRED_PROFILE_METADATA_COLUMNS) - set(fieldnames))
-        if missing:
-            raise ValueError(
-                f"{path} missing required profiling metadata columns: {', '.join(missing)}"
-            )
-        rows = list(reader)
-
+    fieldnames, rows = _read_profile_table(path)
+    missing = sorted(set(REQUIRED_PROFILE_METADATA_COLUMNS) - set(fieldnames))
+    if missing:
+        raise ValueError(
+            f"{path} missing required profiling metadata columns: {', '.join(missing)}"
+        )
     if not rows:
         raise ValueError(f"{path} contains no profiling rows")
     empty = [
@@ -566,16 +1808,126 @@ def _validate_profile_metadata(path: Path) -> None:
         )
 
 
-@lru_cache(maxsize=None)
-def _profile_routing_runtime_paths(path: Path) -> frozenset[str]:
-    with path.open("r", encoding="utf-8", newline="") as stream:
-        reader = csv.DictReader(stream)
-        if "routing_runtime_path" not in (reader.fieldnames or []):
-            raise ValueError(f"missing routing_runtime_path column in {path}")
-        return frozenset(
-            str(row.get("routing_runtime_path", "")).strip()
-            for row in reader
-            if str(row.get("routing_runtime_path", "")).strip()
+def _profile_int_values(
+    path: Path,
+    rows: Sequence[Mapping[str, str]],
+    column: str,
+) -> set[int]:
+    fieldnames, _cached_rows = _read_profile_table(path)
+    if column not in fieldnames:
+        raise ValueError(f"{path} missing required profiling column: {column}")
+    values: set[int] = set()
+    for row in rows:
+        raw_value = str(row.get(column, "")).strip()
+        try:
+            value = int(raw_value)
+        except ValueError as exc:
+            raise ValueError(
+                f"{path} contains non-integer {column}={raw_value!r}"
+            ) from exc
+        values.add(value)
+    return values
+
+
+def _validate_profile_family_and_tp(
+    case: MatrixCase,
+    path: Path,
+    *,
+    expected_measurement_type: str,
+    required_tp_sizes: set[int],
+) -> None:
+    fieldnames, rows = _read_profile_table(path)
+    if "measurement_type" not in fieldnames:
+        raise ValueError(f"{path} missing required profiling column: measurement_type")
+    measurement_types = {
+        str(row.get("measurement_type", "")).strip() for row in rows
+    }
+    if measurement_types != {expected_measurement_type}:
+        raise ValueError(
+            f"{case.case_id} requires measurement_type={expected_measurement_type} "
+            f"in {path}, but found {sorted(measurement_types)!r}"
+        )
+    available_tp_sizes = _profile_int_values(
+        path,
+        rows,
+        "num_tensor_parallel_workers",
+    )
+    missing_tp_sizes = sorted(required_tp_sizes - available_tp_sizes)
+    if missing_tp_sizes:
+        raise ValueError(
+            f"{case.case_id} requires TP rows {missing_tp_sizes} in {path}; "
+            f"available TP rows are {sorted(available_tp_sizes)}"
+        )
+
+
+def _validate_moe_profile_keys(
+    case: MatrixCase,
+    path: Path,
+    *,
+    required_tp_ep_keys: set[tuple[int, int]],
+    expected_runtime_path: str,
+) -> None:
+    fieldnames, rows = _read_profile_table(path)
+    required_columns = {
+        "num_tensor_parallel_workers",
+        "expert_parallel_size",
+        "routing_runtime_path",
+    }
+    missing_columns = sorted(required_columns - set(fieldnames))
+    if missing_columns:
+        raise ValueError(
+            f"{path} missing required MoE profiling columns: "
+            f"{', '.join(missing_columns)}"
+        )
+    available_keys: set[tuple[int, int, str]] = set()
+    for row in rows:
+        try:
+            tp_size = int(str(row["num_tensor_parallel_workers"]).strip())
+            ep_size = int(str(row["expert_parallel_size"]).strip())
+        except ValueError as exc:
+            raise ValueError(f"{path} contains non-integer MoE TP/EP metadata") from exc
+        runtime_path = str(row.get("routing_runtime_path", "")).strip()
+        available_keys.add((tp_size, ep_size, runtime_path))
+    missing_keys = sorted(
+        (tp_size, ep_size, expected_runtime_path)
+        for tp_size, ep_size in required_tp_ep_keys
+        if (tp_size, ep_size, expected_runtime_path) not in available_keys
+    )
+    if missing_keys:
+        raise ValueError(
+            f"{case.case_id} requires MoE TP/EP/routing keys {missing_keys} "
+            f"in {path}; available keys are {sorted(available_keys)}"
+        )
+
+
+def _validate_target_embedded_mtp_columns(
+    case: MatrixCase,
+    path: Path,
+    *,
+    required_tp_sizes: set[int],
+) -> None:
+    fieldnames, rows = _read_profile_table(path)
+    missing_columns = [
+        column for column in TARGET_EMBEDDED_MTP_COLUMNS if column not in fieldnames
+    ]
+    relevant_rows = [
+        row
+        for row in rows
+        if int(str(row["num_tensor_parallel_workers"]).strip())
+        in required_tp_sizes
+    ]
+    empty_columns = [
+        column
+        for column in TARGET_EMBEDDED_MTP_COLUMNS
+        if column in fieldnames
+        and not any(str(row.get(column, "")).strip() for row in relevant_rows)
+    ]
+    if missing_columns or empty_columns:
+        required_columns = ", ".join(TARGET_EMBEDDED_MTP_COLUMNS)
+        raise ValueError(
+            f"{case.case_id} requires target-embedded MTP columns "
+            f"{required_columns} in {path}; missing={missing_columns}, "
+            f"empty={empty_columns}"
         )
 
 
@@ -617,6 +1969,312 @@ def _finite_metric_values(value: Any) -> Iterable[float]:
         if not math.isfinite(number) or number < 0:
             raise ValueError(f"non-finite or negative metric value: {value!r}")
         yield number
+
+
+def _read_request_metrics_rows(metrics_dir: Path) -> list[dict[str, str]]:
+    path = metrics_dir / "request_metrics.csv"
+    if not path.is_file():
+        raise FileNotFoundError(f"missing request metrics file: {path}")
+    with path.open("r", encoding="utf-8", newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    if not rows:
+        raise ValueError(f"request metrics file contains no rows: {path}")
+    return rows
+
+
+def _nonnegative_integer_metric(
+    row: Mapping[str, str],
+    field: str,
+) -> int:
+    raw_value = str(row.get(field, "")).strip()
+    if not raw_value:
+        raise ValueError(f"request metrics row is missing {field}")
+    try:
+        value = float(raw_value)
+    except ValueError as exc:
+        raise ValueError(f"request metrics {field} is not numeric: {raw_value!r}") from exc
+    if not math.isfinite(value) or value < 0 or not value.is_integer():
+        raise ValueError(
+            f"request metrics {field} must be a finite non-negative integer: {raw_value!r}"
+        )
+    return int(value)
+
+
+def _check_optimization_activation(
+    case: MatrixCase,
+    text: str,
+    metrics_dir: Path,
+    metrics: Mapping[str, Any],
+) -> tuple[list[str], dict[str, Any]]:
+    """Require runtime evidence for every enabled optimization surface."""
+
+    errors: list[str] = []
+    evidence: dict[str, Any] = {}
+    request_rows: list[dict[str, str]] | None = None
+
+    def _request_rows() -> list[dict[str, str]]:
+        nonlocal request_rows
+        if request_rows is None:
+            request_rows = _read_request_metrics_rows(metrics_dir)
+        return request_rows
+
+    if case.simulation_mode == "online":
+        try:
+            delays = []
+            for row in _request_rows():
+                raw_value = str(row.get("request_inter_arrival_delay", "")).strip()
+                if not raw_value:
+                    continue
+                value = float(raw_value)
+                if not math.isfinite(value) or value < 0:
+                    raise ValueError(
+                        "request_inter_arrival_delay must be finite and non-negative"
+                    )
+                delays.append(value)
+            positive_delays = [value for value in delays if value > 0]
+            evidence["online_positive_inter_arrival_count"] = len(positive_delays)
+            if not positive_delays:
+                errors.append(
+                    "online activation requires a finite positive "
+                    "request_inter_arrival_delay"
+                )
+        except (FileNotFoundError, ValueError) as exc:
+            errors.append(f"online activation evidence invalid: {exc}")
+
+    if case.enable_prefix_caching:
+        try:
+            stats = metrics.get("prefix_cache_statistics")
+            if not isinstance(stats, Mapping):
+                raise ValueError("missing prefix_cache_statistics")
+            total_hit_blocks = _nonnegative_integer_metric(
+                {key: str(value) for key, value in stats.items()},
+                "total_hit_blocks",
+            )
+            request_hit_blocks = sum(
+                _nonnegative_integer_metric(row, "request_prefix_cache_hit_blocks")
+                for row in _request_rows()
+            )
+            evidence["prefix_cache_hit_blocks"] = total_hit_blocks
+            evidence["prefix_cache_request_hit_blocks"] = request_hit_blocks
+            if total_hit_blocks <= 0:
+                errors.append(
+                    "Prefix Cache activation requires total_hit_blocks > 0"
+                )
+            if request_hit_blocks != total_hit_blocks:
+                errors.append(
+                    "Prefix Cache activation totals disagree "
+                    f"system={total_hit_blocks} request={request_hit_blocks}"
+                )
+        except (FileNotFoundError, ValueError) as exc:
+            errors.append(f"Prefix Cache activation evidence invalid: {exc}")
+
+    if case.enable_mtp:
+        try:
+            stats = metrics.get("spec_decode_statistics")
+            if not isinstance(stats, Mapping):
+                raise ValueError("missing spec_decode_statistics")
+            total_iterations = _nonnegative_integer_metric(
+                {key: str(value) for key, value in stats.items()},
+                "total_iterations",
+            )
+            total_committed_tokens = _nonnegative_integer_metric(
+                {key: str(value) for key, value in stats.items()},
+                "total_committed_tokens",
+            )
+            request_iterations = sum(
+                _nonnegative_integer_metric(row, "request_spec_total_iterations")
+                for row in _request_rows()
+            )
+            request_committed_tokens = sum(
+                _nonnegative_integer_metric(row, "request_spec_committed_tokens")
+                for row in _request_rows()
+            )
+            evidence["spec_decode_iterations"] = total_iterations
+            evidence["spec_decode_committed_tokens"] = total_committed_tokens
+            evidence["spec_decode_request_iterations"] = request_iterations
+            evidence["spec_decode_request_committed_tokens"] = request_committed_tokens
+            if total_iterations <= 0 or total_committed_tokens <= 0:
+                errors.append(
+                    "MTP activation requires positive total_iterations and "
+                    "total_committed_tokens"
+                )
+            if request_iterations != total_iterations:
+                errors.append(
+                    "MTP iteration totals disagree "
+                    f"system={total_iterations} request={request_iterations}"
+                )
+            if request_committed_tokens != total_committed_tokens:
+                errors.append(
+                    "MTP committed-token totals disagree "
+                    f"system={total_committed_tokens} request={request_committed_tokens}"
+                )
+        except (FileNotFoundError, ValueError) as exc:
+            errors.append(f"MTP activation evidence invalid: {exc}")
+
+    if case.enable_chunked_prefill:
+        schedule_pattern = re.compile(
+            r"\[(?P<event>ADMISSION|RUNNING_SCHEDULED)\]\s+"
+            r"req=(?P<request_id>[^,\s]+).*?"
+            r"(?P<field>num_tokens|num_new_tokens)=(?P<token_count>\d+)"
+        )
+        admissions: dict[str, list[int]] = {}
+        running_chunks: dict[str, list[int]] = {}
+        for line in text.splitlines():
+            match = schedule_pattern.search(line)
+            if match is None:
+                continue
+            request_id = match.group("request_id")
+            token_count = int(match.group("token_count"))
+            if match.group("event") == "ADMISSION":
+                admissions.setdefault(request_id, []).append(token_count)
+            else:
+                running_chunks.setdefault(request_id, []).append(token_count)
+        split_requests = [
+            request_id
+            for request_id, admission_counts in admissions.items()
+            if any(count < case.prefill_tokens for count in admission_counts)
+            and any(
+                count > 1
+                for count in running_chunks.get(request_id, [])
+            )
+        ]
+        evidence["chunked_prefill_split_count"] = sum(
+            1
+            for request_id in split_requests
+            for count in running_chunks.get(request_id, [])
+            if count > 1
+        )
+        if not split_requests:
+            errors.append(
+                "Chunked Prefill activation requires a request admitted with "
+                "fewer than all prefill tokens and a later RUNNING_SCHEDULED "
+                "chunk with num_new_tokens > 1"
+            )
+
+    graph_enabled = (
+        case.use_cuda_graph or case.decode_cuda_graph_mode != "none"
+    )
+    activation_marker = "[CUDA-GRAPH-ACTIVATION]"
+    if not graph_enabled and activation_marker in text:
+        errors.append("CUDA Graph control unexpectedly activated")
+    if graph_enabled:
+        expected_mode = (
+            "GLOBAL"
+            if case.use_cuda_graph
+            else {
+                "full_decode_only": "FULL",
+                "piecewise": "PIECEWISE",
+            }[case.decode_cuda_graph_mode]
+        )
+        expected_config_mode = (
+            "global" if case.use_cuda_graph else case.decode_cuda_graph_mode
+        )
+        expected_roles = (
+            ("MONOLITHIC",)
+            if case.architecture == "co-location"
+            else (
+                ("DECODE",)
+                if case.architecture == "pd-disaggregation"
+                else ("DECODE_ATTN", "DECODE_FFN")
+            )
+        )
+        try:
+            matching_captures: list[Mapping[str, Any]] = []
+            invalid_records: list[str] = []
+            for line in text.splitlines():
+                if activation_marker not in line:
+                    continue
+                payload_text = line.partition(activation_marker)[2].strip()
+                capture = json.loads(payload_text)
+                if not isinstance(capture, Mapping):
+                    raise ValueError("activation record must be an object")
+                role = capture.get("cluster_role")
+                if role not in expected_roles:
+                    invalid_records.append(f"unexpected cluster_role={role!r}")
+                    continue
+                if capture.get("config_mode") != expected_config_mode:
+                    invalid_records.append(
+                        f"{role} config_mode={capture.get('config_mode')!r}"
+                    )
+                    continue
+                if capture.get("runtime_mode") != expected_mode:
+                    invalid_records.append(
+                        f"{role} runtime_mode={capture.get('runtime_mode')!r}"
+                    )
+                    continue
+                if capture.get("capture_hit") is not True:
+                    invalid_records.append(f"{role} capture_hit is not true")
+                    continue
+                if capture.get("measurement_family") != "kernel_only":
+                    invalid_records.append(
+                        f"{role} measurement_family="
+                        f"{capture.get('measurement_family')!r}"
+                    )
+                    continue
+                capture_sizes = capture.get("capture_sizes")
+                original_tokens = capture.get("original_tokens")
+                padded_tokens = capture.get("padded_tokens")
+                if not isinstance(capture_sizes, list) or not capture_sizes:
+                    raise ValueError("capture_sizes must be a non-empty list")
+                if not isinstance(original_tokens, list) or not original_tokens:
+                    raise ValueError("original_tokens must be a non-empty list")
+                if not isinstance(padded_tokens, list) or not padded_tokens:
+                    raise ValueError("padded_tokens must be a non-empty list")
+                if not (
+                    len(capture_sizes)
+                    == len(original_tokens)
+                    == len(padded_tokens)
+                ):
+                    raise ValueError(
+                        "capture_sizes/original_tokens/padded_tokens lengths differ"
+                    )
+                for capture_size, original, padded in zip(
+                    capture_sizes,
+                    original_tokens,
+                    padded_tokens,
+                ):
+                    if type(capture_size) is not int or capture_size <= 0:
+                        raise ValueError(
+                            "capture_sizes must contain positive integers"
+                        )
+                    if type(original) is not int or original < 0:
+                        raise ValueError(
+                            "original_tokens must contain non-negative integers"
+                        )
+                    if type(padded) is not int or padded < original:
+                        raise ValueError(
+                            "padded_tokens must contain integers >= original_tokens"
+                        )
+                    if capture_size != padded:
+                        raise ValueError(
+                            "capture_sizes must equal the selected padded_tokens"
+                        )
+                matching_captures.append(capture)
+            matching_roles = {
+                str(capture["cluster_role"]) for capture in matching_captures
+            }
+            evidence["cuda_graph_capture_count"] = len(matching_captures)
+            evidence["cuda_graph_capture_roles"] = [
+                role for role in expected_roles if role in matching_roles
+            ]
+            missing_roles = [
+                role for role in expected_roles if role not in matching_roles
+            ]
+            if missing_roles:
+                invalid_detail = (
+                    f"; invalid records: {', '.join(invalid_records)}"
+                    if invalid_records
+                    else ""
+                )
+                errors.append(
+                    "CUDA Graph activation requires production runtime records "
+                    f"for roles={missing_roles}, runtime_mode={expected_mode}, "
+                    f"measurement_family='kernel_only'{invalid_detail}"
+                )
+        except (json.JSONDecodeError, ValueError) as exc:
+            errors.append(f"CUDA Graph activation evidence invalid: {exc}")
+
+    return errors, evidence
 
 
 def _parse_ep_workload_records(text: str) -> list[dict[str, Any]]:
@@ -1230,6 +2888,7 @@ def check_case_log(
     metric_path = metrics_dir / "system_metrics.json"
     numeric_metric_count = 0
     metrics: dict[str, Any] = {}
+    activation_evidence: dict[str, Any] = {}
     if not metric_path.is_file():
         errors.append(f"missing metrics file: {metric_path}")
     else:
@@ -1238,6 +2897,14 @@ def check_case_log(
             numeric_metric_count = sum(1 for _ in _finite_metric_values(metrics))
         except (OSError, json.JSONDecodeError, ValueError) as exc:
             errors.append(f"invalid metrics: {exc}")
+
+    activation_errors, activation_evidence = _check_optimization_activation(
+        case,
+        text,
+        metrics_dir,
+        metrics,
+    )
+    errors.extend(activation_errors)
 
     def _stat_value(name: str) -> float | None:
         value = metrics.get(name, {})
@@ -1258,7 +2925,9 @@ def check_case_log(
         "ep_conservation_records": len(ep_conservation_records),
         "numeric_metric_count": numeric_metric_count,
         "ttft_mean_ms": _stat_value("ttft_statistics"),
+        "tpot_mean_ms": _stat_value("tpot_statistics"),
         "e2e_mean_ms": _stat_value("request_e2e_time_statistics"),
+        **activation_evidence,
     }
 
 
@@ -1287,6 +2956,430 @@ def _load_result_rows(path: Path) -> list[dict[str, Any]]:
             raise ValueError(f"result ledger row is not an object at {path}:{line_number}")
         rows.append(row)
     return rows
+
+
+def _serialized_case_payload(case: MatrixCase) -> dict[str, Any]:
+    """Return the exact JSON representation persisted in manifests and ledgers."""
+
+    payload = json.loads(json.dumps(asdict(case), sort_keys=True))
+    if not isinstance(payload, dict):
+        raise TypeError(f"case payload must serialize to an object: {case.case_id}")
+    return payload
+
+
+def _optimization_pair_specs(
+    cases: Sequence[MatrixCase],
+) -> list[dict[str, Any]]:
+    pair_groups: dict[str, list[MatrixCase]] = {}
+    comparison_groups: dict[str, list[MatrixCase]] = {}
+    for case in cases:
+        if case.pair_id is not None:
+            pair_groups.setdefault(case.pair_id, []).append(case)
+        if case.comparison_group_id is not None:
+            comparison_groups.setdefault(case.comparison_group_id, []).append(case)
+
+    specs: list[dict[str, Any]] = []
+    for pair_id, group in sorted(pair_groups.items()):
+        by_role = {case.pair_role: case for case in group}
+        control = by_role["control"]
+        enabled = by_role["enabled"]
+        if control.optimization_stratum == "prefix":
+            optimization = "prefix_cache"
+            target_field = "enable_prefix_caching"
+        elif control.optimization_stratum == "mtp":
+            optimization = "mtp"
+            target_field = "enable_mtp"
+        else:
+            raise ValueError(f"unsupported paired stratum: {pair_id}")
+        specs.append(
+            {
+                "comparison_id": pair_id,
+                "group_id": pair_id,
+                "optimization": optimization,
+                "target_field": target_field,
+                "control": control,
+                "enabled": enabled,
+            }
+        )
+
+    for group_id, group in sorted(comparison_groups.items()):
+        if len(group) < 2:
+            continue
+        if group[0].architecture == "pd-af-disaggregation":
+            controls = [case for case in group if not case.use_cuda_graph]
+            enabled_rows = [case for case in group if case.use_cuda_graph]
+            if len(controls) != 1 or len(enabled_rows) != 1:
+                raise ValueError(
+                    f"{group_id} must contain one PD-AF graph control and enabled row"
+                )
+            specs.append(
+                {
+                    "comparison_id": f"{group_id}:cuda_graph",
+                    "group_id": group_id,
+                    "optimization": "cuda_graph",
+                    "target_field": "use_cuda_graph",
+                    "control": controls[0],
+                    "enabled": enabled_rows[0],
+                }
+            )
+            continue
+
+        by_axes = {
+            (case.decode_cuda_graph_mode, case.enable_chunked_prefill): case
+            for case in group
+        }
+        chunk_modes = sorted(
+            {case.enable_chunked_prefill for case in group}
+        )
+        graph_modes = sorted(
+            {case.decode_cuda_graph_mode for case in group}
+        )
+        for chunk_enabled in chunk_modes:
+            control = by_axes.get(("none", chunk_enabled))
+            if control is None:
+                continue
+            for graph_mode in graph_modes:
+                if graph_mode == "none":
+                    continue
+                enabled = by_axes.get((graph_mode, chunk_enabled))
+                if enabled is None:
+                    continue
+                specs.append(
+                    {
+                        "comparison_id": (
+                            f"{group_id}:cuda_graph:{graph_mode}:"
+                            f"chunk_{'on' if chunk_enabled else 'off'}"
+                        ),
+                        "group_id": group_id,
+                        "optimization": "cuda_graph",
+                        "target_field": "decode_cuda_graph_mode",
+                        "control": control,
+                        "enabled": enabled,
+                    }
+                )
+
+        if set(chunk_modes) == {False, True}:
+            for graph_mode in graph_modes:
+                control = by_axes.get((graph_mode, False))
+                enabled = by_axes.get((graph_mode, True))
+                if control is None or enabled is None:
+                    continue
+                specs.append(
+                    {
+                        "comparison_id": (
+                            f"{group_id}:chunked_prefill:{graph_mode}"
+                        ),
+                        "group_id": group_id,
+                        "optimization": "chunked_prefill",
+                        "target_field": "enable_chunked_prefill",
+                        "control": control,
+                        "enabled": enabled,
+                    }
+                )
+    return specs
+
+
+def _optimization_activation_errors(
+    optimization: str,
+    control_check: Mapping[str, Any],
+    enabled_check: Mapping[str, Any],
+) -> list[str]:
+    errors: list[str] = []
+
+    def _count(check: Mapping[str, Any], field: str) -> int:
+        value = check.get(field, 0)
+        return int(value) if type(value) is int and value >= 0 else 0
+
+    if optimization == "cuda_graph":
+        control_count = _count(control_check, "cuda_graph_capture_count")
+        enabled_count = _count(enabled_check, "cuda_graph_capture_count")
+        if control_count != 0:
+            errors.append("CUDA Graph control unexpectedly activated")
+        if enabled_count <= 0:
+            errors.append("CUDA Graph activation evidence is missing")
+    elif optimization == "chunked_prefill":
+        control_count = _count(control_check, "chunked_prefill_split_count")
+        enabled_count = _count(enabled_check, "chunked_prefill_split_count")
+        if control_count != 0:
+            errors.append("Chunked Prefill control unexpectedly split a request")
+        if enabled_count <= 0:
+            errors.append("Chunked Prefill activation evidence is missing")
+    elif optimization == "prefix_cache":
+        control_count = _count(control_check, "prefix_cache_hit_blocks")
+        enabled_count = _count(enabled_check, "prefix_cache_hit_blocks")
+        if control_count != 0:
+            errors.append("Prefix Cache control unexpectedly recorded hits")
+        if enabled_count <= 0:
+            errors.append("Prefix Cache activation evidence is missing")
+    elif optimization == "mtp":
+        control_iterations = _count(control_check, "spec_decode_iterations")
+        enabled_iterations = _count(enabled_check, "spec_decode_iterations")
+        enabled_tokens = _count(enabled_check, "spec_decode_committed_tokens")
+        if control_iterations != 0:
+            errors.append("MTP control unexpectedly recorded iterations")
+        if enabled_iterations <= 0 or enabled_tokens <= 0:
+            errors.append("MTP activation evidence is missing")
+    else:
+        raise ValueError(f"unsupported optimization comparison: {optimization}")
+    return errors
+
+
+def build_optimization_comparison(
+    cases: Sequence[MatrixCase],
+    result_rows: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    case_by_id = {case.case_id: case for case in cases}
+    if len(case_by_id) != len(cases):
+        raise ValueError("optimization comparison cases contain duplicate case IDs")
+    result_by_id: dict[str, Mapping[str, Any]] = {}
+    for row in result_rows:
+        case_id = row.get("case_id")
+        if not isinstance(case_id, str) or case_id not in case_by_id:
+            raise ValueError(f"unknown optimization result case_id={case_id!r}")
+        if case_id in result_by_id:
+            raise ValueError(f"duplicate optimization result case_id={case_id!r}")
+        expected_case = _serialized_case_payload(case_by_id[case_id])
+        if row.get("case") != expected_case:
+            raise ValueError(
+                "optimization result-row case metadata mismatch: "
+                f"case_id={case_id!r}"
+            )
+        result_by_id[case_id] = row
+    missing_results = sorted(set(case_by_id) - set(result_by_id))
+    if missing_results:
+        raise ValueError(
+            f"optimization comparison is missing result rows: {missing_results}"
+        )
+
+    metric_fields = ("ttft_mean_ms", "tpot_mean_ms", "e2e_mean_ms")
+    pair_rows: list[dict[str, Any]] = []
+    for spec in _optimization_pair_specs(cases):
+        control = spec["control"]
+        enabled = spec["enabled"]
+        control_result = result_by_id[control.case_id]
+        enabled_result = result_by_id[enabled.case_id]
+        control_check = control_result.get("check")
+        enabled_check = enabled_result.get("check")
+        errors: list[str] = []
+        if not isinstance(control_check, Mapping) or not isinstance(
+            enabled_check, Mapping
+        ):
+            raise ValueError(
+                f"{spec['comparison_id']} result rows require check objects"
+            )
+        for label, result, check in (
+            ("control", control_result, control_check),
+            ("enabled", enabled_result, enabled_check),
+        ):
+            if result.get("status") != "PASS" or check.get("status") != "PASS":
+                errors.append(f"{label} runtime workflow did not PASS")
+
+        ignored_fields = {
+            "case_id",
+            "baseline_case_id",
+            "pair_id",
+            "comparison_group_id",
+            "pair_role",
+        }
+        changed_fields = sorted(
+            field_name
+            for field_name in asdict(control)
+            if field_name not in ignored_fields
+            and getattr(control, field_name) != getattr(enabled, field_name)
+        )
+        target_field = str(spec["target_field"])
+        if changed_fields != [target_field]:
+            errors.append(
+                f"pair changes fields={changed_fields}, expected={[target_field]}"
+            )
+
+        errors.extend(
+            _optimization_activation_errors(
+                str(spec["optimization"]),
+                control_check,
+                enabled_check,
+            )
+        )
+        metrics: dict[str, dict[str, float | None]] = {}
+        for metric_field in metric_fields:
+            raw_control = control_check.get(metric_field)
+            raw_enabled = enabled_check.get(metric_field)
+            control_value = (
+                float(raw_control)
+                if isinstance(raw_control, (int, float))
+                and not isinstance(raw_control, bool)
+                and math.isfinite(float(raw_control))
+                and float(raw_control) >= 0
+                else None
+            )
+            enabled_value = (
+                float(raw_enabled)
+                if isinstance(raw_enabled, (int, float))
+                and not isinstance(raw_enabled, bool)
+                and math.isfinite(float(raw_enabled))
+                and float(raw_enabled) >= 0
+                else None
+            )
+            if control_value is None or enabled_value is None:
+                delta = None
+                relative_delta = None
+            else:
+                delta = enabled_value - control_value
+                relative_delta = (
+                    None
+                    if control_value == 0
+                    else delta / control_value * 100.0
+                )
+            metrics[metric_field] = {
+                "control_ms": control_value,
+                "enabled_ms": enabled_value,
+                "delta_ms": delta,
+                "relative_delta_percent": relative_delta,
+            }
+
+        pair_rows.append(
+            {
+                "comparison_id": spec["comparison_id"],
+                "group_id": spec["group_id"],
+                "optimization": spec["optimization"],
+                "target_field": target_field,
+                "control_case_id": control.case_id,
+                "enabled_case_id": enabled.case_id,
+                "architecture": control.architecture,
+                "model_kind": control.model_kind,
+                "simulation_mode": control.simulation_mode,
+                "total_cards": control.total_cards,
+                "changed_fields": changed_fields,
+                "latency_oracle": "report_only",
+                "status": "PASS" if not errors else "FAIL",
+                "errors": "; ".join(errors),
+                "metrics": metrics,
+            }
+        )
+
+    failed_pair_count = sum(row["status"] != "PASS" for row in pair_rows)
+    return {
+        "status": "PASS" if failed_pair_count == 0 else "FAIL",
+        "case_count": len(cases),
+        "pair_count": len(pair_rows),
+        "failed_pair_count": failed_pair_count,
+        "latency_oracle": "report_only",
+        "optimization_counts": dict(
+            sorted(Counter(row["optimization"] for row in pair_rows).items())
+        ),
+        "pairs": pair_rows,
+    }
+
+
+def write_optimization_comparison_artifacts(
+    task_dir: Path,
+    report: Mapping[str, Any],
+) -> tuple[Path, Path, Path]:
+    """Write machine-readable and human-readable paired comparison reports."""
+
+    task_dir.mkdir(parents=True, exist_ok=True)
+    json_path = task_dir / "moe_ep_non_dummy_optimization_comparison.json"
+    csv_path = task_dir / "moe_ep_non_dummy_optimization_comparison.csv"
+    markdown_path = task_dir / "moe_ep_non_dummy_optimization_comparison.md"
+
+    json_path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    metric_fields = ("ttft_mean_ms", "tpot_mean_ms", "e2e_mean_ms")
+    csv_fields = [
+        "comparison_id",
+        "group_id",
+        "optimization",
+        "target_field",
+        "control_case_id",
+        "enabled_case_id",
+        "architecture",
+        "model_kind",
+        "simulation_mode",
+        "total_cards",
+        "changed_fields",
+        "latency_oracle",
+        "status",
+        "errors",
+    ]
+    for metric_field in metric_fields:
+        metric_name = metric_field.removesuffix("_ms")
+        csv_fields.extend(
+            [
+                f"control_{metric_name}_ms",
+                f"enabled_{metric_name}_ms",
+                f"{metric_name}_delta_ms",
+                f"{metric_name}_relative_delta_percent",
+            ]
+        )
+
+    csv_rows: list[dict[str, Any]] = []
+    for pair in report.get("pairs", ()):
+        row = {field: pair.get(field, "") for field in csv_fields[:14]}
+        row["changed_fields"] = ",".join(pair.get("changed_fields", ()))
+        metrics = pair.get("metrics", {})
+        for metric_field in metric_fields:
+            metric_name = metric_field.removesuffix("_ms")
+            values = metrics.get(metric_field, {})
+            row[f"control_{metric_name}_ms"] = values.get("control_ms")
+            row[f"enabled_{metric_name}_ms"] = values.get("enabled_ms")
+            row[f"{metric_name}_delta_ms"] = values.get("delta_ms")
+            row[f"{metric_name}_relative_delta_percent"] = values.get(
+                "relative_delta_percent"
+            )
+        csv_rows.append(row)
+    with csv_path.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=csv_fields)
+        writer.writeheader()
+        writer.writerows(csv_rows)
+
+    markdown_lines = [
+        "# Frontier Optimization Paired Comparison",
+        "",
+        f"- Status: `{report.get('status')}`",
+        f"- Cases: `{report.get('case_count')}`",
+        f"- Pairs: `{report.get('pair_count')}`",
+        f"- Failed pairs: `{report.get('failed_pair_count')}`",
+        "- Latency values are report-only; they do not determine PASS/FAIL.",
+        "",
+        "| Pair | Optimization | Architecture | Control | Enabled | Status | "
+        "TTFT control/enabled/delta (ms) | TPOT control/enabled/delta (ms) | "
+        "E2E control/enabled/delta (ms) | Errors |",
+        "|---|---|---|---|---|---|---:|---:|---:|---|",
+    ]
+
+    def metric_triplet(pair: Mapping[str, Any], metric_field: str) -> str:
+        values = pair["metrics"][metric_field]
+        return (
+            f"{values['control_ms']} / {values['enabled_ms']} / "
+            f"{values['delta_ms']}"
+        )
+
+    for pair in report.get("pairs", ()):
+        errors = str(pair.get("errors", "")).replace("|", "\\|")
+        markdown_lines.append(
+            "| {comparison_id} | {optimization} | {architecture} | "
+            "`{control_case_id}` | `{enabled_case_id}` | {status} | "
+            "{ttft} | {tpot} | {e2e} | {errors} |".format(
+                comparison_id=pair["comparison_id"],
+                optimization=pair["optimization"],
+                architecture=pair["architecture"],
+                control_case_id=pair["control_case_id"],
+                enabled_case_id=pair["enabled_case_id"],
+                status=pair["status"],
+                ttft=metric_triplet(pair, "ttft_mean_ms"),
+                tpot=metric_triplet(pair, "tpot_mean_ms"),
+                e2e=metric_triplet(pair, "e2e_mean_ms"),
+                errors=errors,
+            )
+        )
+    markdown_path.write_text(
+        "\n".join(markdown_lines) + "\n",
+        encoding="utf-8",
+    )
+    return json_path, csv_path, markdown_path
 
 
 def _validate_result_ledger_provenance(
@@ -1357,6 +3450,43 @@ def _validate_result_ledger_provenance(
             raise ValueError(
                 "result ledger PASS row has no canonical metrics_path: "
                 f"case_id={case_id!r}"
+            )
+
+
+def _validate_persisted_case_metadata(
+    cases: Sequence[MatrixCase],
+    rows: Sequence[Mapping[str, Any]],
+) -> None:
+    """Require on-disk case metadata to match the active matrix exactly."""
+
+    case_by_id = {case.case_id: case for case in cases}
+    for row in rows:
+        case_id = row.get("case_id")
+        if not isinstance(case_id, str) or case_id not in case_by_id:
+            raise ValueError(f"unknown optimization result case_id={case_id!r}")
+        log_path = row.get("log_path")
+        if not isinstance(log_path, str) or not log_path:
+            raise ValueError(
+                f"optimization result row has no log_path: case_id={case_id!r}"
+            )
+        metadata_path = Path(log_path).resolve().parent / "case_metadata.json"
+        if not metadata_path.is_file():
+            raise ValueError(
+                "persisted case metadata is missing: "
+                f"case_id={case_id!r}, path={metadata_path}"
+            )
+        try:
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                "persisted case metadata is invalid JSON: "
+                f"case_id={case_id!r}, path={metadata_path}"
+            ) from exc
+        expected_case = _serialized_case_payload(case_by_id[case_id])
+        if not isinstance(metadata, Mapping) or metadata.get("case") != expected_case:
+            raise ValueError(
+                "persisted case metadata mismatch: "
+                f"case_id={case_id!r}, path={metadata_path}"
             )
 
 
@@ -1440,15 +3570,18 @@ def run_cases(
         (),
         expected_case_ids=expected_case_ids,
     )
-    results: list[dict[str, Any]] = []
+    launch_specs: list[tuple[MatrixCase, str, dict[str, str]]] = []
     for case in selected:
         validate_profile_inputs(case, repo_root)
         command, env = build_shell_command(case, repo_root, output_root)
+        launch_specs.append((case, command, env))
+
+    results: list[dict[str, Any]] = []
+    for case, command, env in launch_specs:
         case_dir = output_root / case.case_id
         case_dir.mkdir(parents=True, exist_ok=True)
         log_path = case_dir / f"{case.case_id}.log"
         metadata_path = case_dir / "case_metadata.json"
-        run_started_at_ns = time.time_ns()
         run_started_at_s = time.time()
         metadata_path.write_text(
             json.dumps(
@@ -1479,6 +3612,7 @@ def run_cases(
             ),
             encoding="utf-8",
         )
+        run_freshness_marker_ns = metadata_path.stat().st_mtime_ns
         started = time.monotonic()
         with log_path.open("w", encoding="utf-8") as stream:
             stream.write(f"MATRIX_COMMAND: {command}\n")
@@ -1502,14 +3636,17 @@ def run_cases(
         run_finished_at_s = time.time()
         check: dict[str, Any]
         try:
-            if not log_path.is_file() or log_path.stat().st_mtime_ns < run_started_at_ns:
+            if (
+                not log_path.is_file()
+                or log_path.stat().st_mtime_ns < run_freshness_marker_ns
+            ):
                 raise FileNotFoundError(
                     f"no fresh case log for {case.case_id} under {output_root}"
                 )
             metrics_dir = _find_metrics_dir(
                 output_root,
                 case,
-                started_at_ns=run_started_at_ns,
+                started_at_ns=run_freshness_marker_ns,
             )
             check = check_case_log(case, log_path, metrics_dir, strict_layers=True)
             metrics_path = str(metrics_dir)
@@ -1519,6 +3656,7 @@ def run_cases(
         status = "PASS" if exit_code == 0 and check.get("status") == "PASS" else "FAIL"
         result = {
             "case_id": case.case_id,
+            "case": _serialized_case_payload(case),
             "architecture": case.architecture,
             "model_kind": case.model_kind,
             "total_cards": case.total_cards,
@@ -1549,7 +3687,16 @@ def run_cases(
 
 def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("generate", "run"), default="generate")
+    parser.add_argument(
+        "--mode",
+        choices=("generate", "preflight", "run", "compare"),
+        default="generate",
+    )
+    parser.add_argument(
+        "--matrix-kind",
+        choices=("regression", "optimization"),
+        default="regression",
+    )
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument(
         "--task-dir",
@@ -1559,7 +3706,7 @@ def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--output-root",
         type=Path,
-        default=Path("/data/ycfeng/tmp/frontier_non_dummy_matrix"),
+        default=None,
     )
     parser.add_argument(
         "--results-path",
@@ -1569,6 +3716,12 @@ def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
             "Canonical JSONL ledger path. Required when resuming a ledger; "
             "rows from another output root or worktree are rejected."
         ),
+    )
+    parser.add_argument(
+        "--preflight-path",
+        type=Path,
+        default=None,
+        help="Independent JSONL ledger path for static preflight evidence.",
     )
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--limit", type=int, default=None)
@@ -1581,21 +3734,90 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     repo_root = args.repo_root.resolve()
     task_dir = args.task_dir if args.task_dir.is_absolute() else repo_root / args.task_dir
-    manifest_path = task_dir / "moe_ep_non_dummy_matrix_manifest.jsonl"
+    if args.matrix_kind == "optimization":
+        manifest_name = "moe_ep_non_dummy_optimization_matrix_manifest.jsonl"
+        results_name = "moe_ep_non_dummy_optimization_matrix_results.jsonl"
+        default_output_root = Path(
+            "/data/ycfeng/tmp/frontier_non_dummy_optimization_matrix"
+        )
+        cases = build_optimization_matrix(repo_root)
+    else:
+        manifest_name = "moe_ep_non_dummy_matrix_manifest.jsonl"
+        results_name = "moe_ep_non_dummy_matrix_results.jsonl"
+        default_output_root = Path("/data/ycfeng/tmp/frontier_non_dummy_matrix")
+        cases = build_matrix(repo_root)
+    manifest_path = task_dir / manifest_name
     results_path = (
         args.results_path
         if args.results_path is not None
-        else task_dir / "moe_ep_non_dummy_matrix_results.jsonl"
+        else task_dir / results_name
     )
-    cases = build_matrix(repo_root)
+    output_root = (
+        args.output_root if args.output_root is not None else default_output_root
+    )
     write_manifest(manifest_path, cases)
     print(f"manifest={manifest_path} cases={len(cases)}")
     if args.mode == "generate":
         return 0
+    if args.mode == "compare":
+        if args.matrix_kind != "optimization":
+            raise ValueError("compare mode requires --matrix-kind optimization")
+        result_rows = _load_result_rows(results_path)
+        _validate_result_ledger_provenance(
+            result_rows,
+            repo_root=repo_root,
+            output_root=output_root,
+            results_path=results_path,
+        )
+        _validate_persisted_case_metadata(cases, result_rows)
+        report = build_optimization_comparison(cases, result_rows)
+        json_path, csv_path, markdown_path = (
+            write_optimization_comparison_artifacts(task_dir, report)
+        )
+        print(f"comparison_json={json_path}")
+        print(f"comparison_csv={csv_path}")
+        print(f"comparison_markdown={markdown_path}")
+        return 0 if report["status"] == "PASS" else 1
+    if args.mode == "preflight":
+        preflight_path = (
+            args.preflight_path
+            if args.preflight_path is not None
+            else task_dir
+            / f"moe_ep_non_dummy_{args.matrix_kind}_preflight.jsonl"
+        )
+        preflight_rows = preflight_cases(
+            cases,
+            repo_root,
+            output_root,
+            matrix_kind=args.matrix_kind,
+        )
+        _write_jsonl(preflight_path, preflight_rows)
+        ready = sum(row["status"] == "READY" for row in preflight_rows)
+        blocked = len(preflight_rows) - ready
+        print(f"preflight={preflight_path} ready={ready} blocked={blocked}")
+        return 0 if blocked == 0 else 1
+    if args.matrix_kind == "optimization":
+        preflight_path = (
+            args.preflight_path
+            if args.preflight_path is not None
+            else task_dir / "moe_ep_non_dummy_optimization_preflight.jsonl"
+        )
+        preflight_rows = preflight_cases(
+            cases,
+            repo_root,
+            output_root,
+            matrix_kind=args.matrix_kind,
+        )
+        _write_jsonl(preflight_path, preflight_rows)
+        ready = sum(row["status"] == "READY" for row in preflight_rows)
+        blocked = len(preflight_rows) - ready
+        print(f"preflight={preflight_path} ready={ready} blocked={blocked}")
+        if blocked:
+            return 1
     results = run_cases(
         cases,
         repo_root,
-        args.output_root,
+        output_root,
         results_path,
         start=args.start,
         limit=args.limit,

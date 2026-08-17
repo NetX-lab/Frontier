@@ -33,6 +33,10 @@ class AFDStageMetadata:
     original_stage_token_lens: Optional[List[int]] = None
     padded_stage_token_lens: Optional[List[int]] = None
     ffn_compute_stage_token_lens: Optional[List[int]] = None
+    attention_use_cuda_graph: bool = False
+    attention_cudagraph_capture_sizes: Optional[List[int]] = None
+    ffn_use_cuda_graph: bool = False
+    ffn_cudagraph_capture_sizes: Optional[List[int]] = None
 
     @property
     def num_pad_tokens(self) -> int:
@@ -237,6 +241,18 @@ class AFDStageMetadata:
             original_stage_token_lens=list(stage_tokens_lens),
             padded_stage_token_lens=list(padded_tokens_lens),
             ffn_compute_stage_token_lens=ffn_compute_stage_token_lens,
+            attention_use_cuda_graph=bool(use_cuda_graph),
+            attention_cudagraph_capture_sizes=(
+                list(cudagraph_capture_sizes)
+                if cudagraph_capture_sizes is not None
+                else None
+            ),
+            ffn_use_cuda_graph=bool(ffn_use_cuda_graph),
+            ffn_cudagraph_capture_sizes=(
+                list(ffn_cudagraph_capture_sizes)
+                if ffn_cudagraph_capture_sizes is not None
+                else None
+            ),
         )
 
     def with_dp_padding(
@@ -290,6 +306,22 @@ class AFDStageMetadata:
             original_stage_token_lens=self.original_stage_token_lens,
             padded_stage_token_lens=list(dp_stage_max_tokens),
             ffn_compute_stage_token_lens=ffn_stage_tokens,
+            attention_use_cuda_graph=self.attention_use_cuda_graph,
+            attention_cudagraph_capture_sizes=(
+                list(self.attention_cudagraph_capture_sizes)
+                if self.attention_cudagraph_capture_sizes is not None
+                else None
+            ),
+            ffn_use_cuda_graph=self.ffn_use_cuda_graph,
+            ffn_cudagraph_capture_sizes=(
+                list(ffn_cudagraph_capture_sizes)
+                if ffn_cudagraph_capture_sizes is not None
+                else (
+                    list(self.ffn_cudagraph_capture_sizes)
+                    if self.ffn_cudagraph_capture_sizes is not None
+                    else None
+                )
+            ),
         )
 
 

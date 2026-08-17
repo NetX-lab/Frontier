@@ -774,6 +774,146 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         else:
             raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
 
+    @staticmethod
+    def _cuda_graph_capture_hit(
+        original_tokens: List[int],
+        padded_tokens: List[int],
+        capture_sizes: Optional[List[int]],
+    ) -> bool:
+        if not original_tokens or len(original_tokens) != len(padded_tokens):
+            return False
+        if not capture_sizes:
+            return False
+        configured_sizes = {int(size) for size in capture_sizes}
+        return all(
+            original >= 0
+            and padded >= original
+            and padded in configured_sizes
+            for original, padded in zip(original_tokens, padded_tokens)
+        )
+
+    def _build_cuda_graph_activation_records(
+        self,
+        batch: Batch,
+        measurement_type: MeasurementType,
+        cluster_type: ClusterType,
+    ) -> List[Dict[str, Any]]:
+        decode_metadata = getattr(batch, "decode_cuda_graph_metadata", None)
+        if decode_metadata is not None and cluster_type in (
+            ClusterType.MONOLITHIC,
+            ClusterType.DECODE,
+        ):
+            measurement_family = (
+                SklearnExecutionTimePredictor._measurement_family_name(
+                    measurement_type
+                )
+            )
+            return [
+                {
+                    "batch_id": int(batch.id),
+                    "cluster_role": cluster_type.name,
+                    "config_mode": str(decode_metadata.config_mode),
+                    "runtime_mode": str(decode_metadata.runtime_mode),
+                    "capture_hit": bool(decode_metadata.capture_hit),
+                    "capture_sizes": [int(decode_metadata.padded_total_tokens)],
+                    "original_tokens": [int(decode_metadata.original_total_tokens)],
+                    "padded_tokens": [int(decode_metadata.padded_total_tokens)],
+                    "original_decode_batch_size": int(
+                        decode_metadata.original_decode_batch_size
+                    ),
+                    "padded_decode_batch_size": int(
+                        decode_metadata.padded_decode_batch_size
+                    ),
+                    "measurement_family": measurement_family,
+                }
+            ]
+
+        afd_metadata = getattr(batch, "afd_stage_metadata", None)
+        if afd_metadata is None or cluster_type not in (
+            ClusterType.DECODE_ATTN,
+            ClusterType.DECODE_FFN,
+        ):
+            return []
+
+        represents_all_stages = bool(
+            getattr(batch, "afd_stage_represents_all_stages", False)
+        )
+        stage_index = getattr(batch, "afd_stage_idx", None)
+        if cluster_type == ClusterType.DECODE_ATTN:
+            graph_enabled = bool(afd_metadata.attention_use_cuda_graph)
+            configured_sizes = afd_metadata.attention_cudagraph_capture_sizes
+            if represents_all_stages:
+                original_tokens = list(
+                    afd_metadata.original_stage_token_lens or []
+                )
+                padded_tokens = list(afd_metadata.padded_stage_token_lens or [])
+            elif stage_index is not None:
+                original_tokens = [
+                    int(afd_metadata.original_stage_token_lens[stage_index])
+                ]
+                padded_tokens = [
+                    int(afd_metadata.padded_stage_token_lens[stage_index])
+                ]
+            else:
+                original_tokens = [int(afd_metadata.original_total_tokens)]
+                padded_tokens = [int(afd_metadata.padded_total_tokens)]
+        else:
+            graph_enabled = bool(afd_metadata.ffn_use_cuda_graph)
+            configured_sizes = afd_metadata.ffn_cudagraph_capture_sizes
+            if represents_all_stages:
+                original_tokens = [int(afd_metadata.padded_total_tokens)]
+                padded_tokens = [int(afd_metadata.ffn_compute_total_tokens)]
+            elif stage_index is not None:
+                original_tokens = [
+                    int(afd_metadata.padded_stage_token_lens[stage_index])
+                ]
+                padded_tokens = [
+                    int(afd_metadata.ffn_compute_stage_token_lens[stage_index])
+                ]
+            else:
+                original_tokens = [int(afd_metadata.padded_total_tokens)]
+                padded_tokens = [int(afd_metadata.ffn_compute_total_tokens)]
+
+        if not graph_enabled:
+            return []
+        measurement_family = SklearnExecutionTimePredictor._measurement_family_name(
+            measurement_type
+        )
+        capture_hit = SklearnExecutionTimePredictor._cuda_graph_capture_hit(
+            original_tokens,
+            padded_tokens,
+            configured_sizes,
+        )
+        return [
+            {
+                "batch_id": int(batch.id),
+                "cluster_role": cluster_type.name,
+                "config_mode": "global",
+                "runtime_mode": "GLOBAL",
+                "capture_hit": capture_hit,
+                "capture_sizes": list(padded_tokens),
+                "original_tokens": list(original_tokens),
+                "padded_tokens": list(padded_tokens),
+                "measurement_family": measurement_family,
+            }
+        ]
+
+    def _emit_cuda_graph_activation_records(
+        self,
+        batch: Batch,
+        measurement_type: MeasurementType,
+        cluster_type: ClusterType,
+    ) -> None:
+        for record in self._build_cuda_graph_activation_records(
+            batch,
+            measurement_type,
+            cluster_type,
+        ):
+            logger.info(
+                "[CUDA-GRAPH-ACTIVATION] %s",
+                json.dumps(record, sort_keys=True),
+            )
+
     @contextmanager
     def _temporary_measurement_type(self, measurement_type: MeasurementType):
         previous_measurement_type = getattr(self, "_active_measurement_type", None)
@@ -6953,6 +7093,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         measurement_type = self._select_measurement_type_for_batch(batch)
         self._require_predictions_for_measurement_type(measurement_type, batch)
         self._activate_measurement_type(measurement_type)
+        self._emit_cuda_graph_activation_records(
+            batch,
+            measurement_type,
+            cluster_type,
+        )
 
         # Calculate first-class communication operators for the dense live path.
         communication_operator_times: dict[str, float] = {}
