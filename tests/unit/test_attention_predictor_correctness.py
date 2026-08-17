@@ -115,12 +115,17 @@ def test_attention_trace_total_includes_decode(
         num_decode_tokens=num_decode_tokens,
     )
 
-    with caplog.at_level(logging.INFO):
-        attention_time = predictor.predict_attention_layer_time(
-            batch=batch,
-            layer_id=0,
-            cluster_type=ClusterType.MONOLITHIC,
-        )
+    frontier_logger = logging.getLogger("frontier")
+    frontier_logger.addHandler(caplog.handler)
+    try:
+        with caplog.at_level(logging.INFO, logger="frontier"):
+            attention_time = predictor.predict_attention_layer_time(
+                batch=batch,
+                layer_id=0,
+                cluster_type=ClusterType.MONOLITHIC,
+            )
+    finally:
+        frontier_logger.removeHandler(caplog.handler)
 
     expected_total = sum(
         (
@@ -134,7 +139,9 @@ def test_attention_trace_total_includes_decode(
         )
     )
     assert attention_time.attention_decode_execution_time == pytest.approx(3.0)
-    assert _extract_total_attention_time(caplog.records) == pytest.approx(expected_total)
+    assert _extract_total_attention_time(caplog.records) == pytest.approx(
+        expected_total
+    )
 
 
 def test_dsa_frozen_fails_fast_in_dummy_mode(monkeypatch: pytest.MonkeyPatch) -> None:

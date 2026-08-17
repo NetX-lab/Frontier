@@ -593,6 +593,7 @@ def test_execution_time_rejects_mlp_operator_times_for_moe_components() -> None:
 def test_dense_mlp_predictor_writes_structured_mlp_operator_times() -> None:
     predictor = cast(Any, object.__new__(_ConcreteSklearnExecutionTimePredictor))
     predictor._enable_dummy_mode = False
+    predictor._model_config = SimpleNamespace(supports_share_expert=lambda: False)
     predictor._supports_operation = lambda op_name: op_name in {
         "mlp_up_proj",
         "mlp_act",
