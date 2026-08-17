@@ -41,6 +41,14 @@ class BatchStage(BaseEntity):
             int(getattr(request, "runtime_epoch", 0)) for request in requests
         ]
         self._num_tokens = num_tokens
+        self._request_num_prefill_tokens = (
+            None
+            if tokens_are_post_routing
+            else [
+                int(token_count) if not request.is_prefill_complete else 0
+                for request, token_count in zip(requests, num_tokens)
+            ]
+        )
         total_tokens = sum(num_tokens)
         self._total_tokens = total_tokens
         self._batch_id = batch_id
@@ -73,6 +81,12 @@ class BatchStage(BaseEntity):
     @property
     def num_tokens(self) -> List[int]:
         return self._num_tokens
+
+    @property
+    def request_num_prefill_tokens(self) -> Optional[List[int]]:
+        if self._request_num_prefill_tokens is None:
+            return None
+        return list(self._request_num_prefill_tokens)
 
     @property
     @check_scheduled

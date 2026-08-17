@@ -1982,6 +1982,272 @@ def _read_request_metrics_rows(metrics_dir: Path) -> list[dict[str, str]]:
     return rows
 
 
+def _read_chunked_prefill_stage_ledger(
+    case: MatrixCase,
+    metrics_dir: Path,
+) -> dict[str, Any]:
+    path = metrics_dir / "frontier_stage_batch_ledger.jsonl"
+    if not path.is_file():
+        raise FileNotFoundError(f"missing stage-batch ledger: {path}")
+    expected_cluster = {
+        "co-location": "MONOLITHIC",
+        "pd-disaggregation": "PREFILL",
+        "pd-af-disaggregation": "PREFILL",
+    }[case.architecture]
+    prefill_components = (
+        "attention_prefill_execution_time",
+        "attn_mla_prefill_time",
+    )
+    grouped_payloads: dict[
+        tuple[str, int, int],
+        dict[
+            int,
+            tuple[
+                tuple[str, ...],
+                tuple[int, ...],
+                tuple[int, ...],
+            ],
+        ],
+    ] = {}
+    prefill_row_count = 0
+
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(),
+        1,
+    ):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"invalid stage-batch ledger JSON at {path}:{line_number}"
+            ) from exc
+        if not isinstance(row, Mapping):
+            raise ValueError(
+                f"stage-batch ledger row is not an object at {path}:{line_number}"
+            )
+        if row.get("cluster_type") != expected_cluster:
+            continue
+        execution_time = row.get("execution_time")
+        if not isinstance(execution_time, Mapping):
+            continue
+        component_ledger = execution_time.get("component_ledger_ms")
+        if not isinstance(component_ledger, Mapping):
+            continue
+        prefill_component_total = 0.0
+        for component in prefill_components:
+            raw_value = component_ledger.get(component, 0.0)
+            if isinstance(raw_value, bool) or not isinstance(raw_value, (int, float)):
+                raise ValueError(
+                    f"{component} must be numeric at {path}:{line_number}"
+                )
+            value = float(raw_value)
+            if not math.isfinite(value) or value < 0:
+                raise ValueError(
+                    f"{component} must be finite and non-negative "
+                    f"at {path}:{line_number}"
+                )
+            prefill_component_total += value
+        if prefill_component_total <= 0:
+            continue
+        prefill_row_count += 1
+        if (
+            row.get("execution_scope") != "FULL_STAGE_WORLD"
+            or row.get("replica_local_id") is not None
+        ):
+            raise ValueError(
+                "prefill stage-batch ledger row must use FULL_STAGE_WORLD "
+                f"at {path}:{line_number}"
+            )
+
+        integer_fields: dict[str, int] = {}
+        for field in ("batch_id", "stage_id", "replica_id"):
+            raw_value = row.get(field)
+            if isinstance(raw_value, bool) or not isinstance(raw_value, int):
+                raise ValueError(
+                    f"{field} must be an integer at {path}:{line_number}"
+                )
+            if raw_value < 0:
+                raise ValueError(
+                    f"{field} must be non-negative at {path}:{line_number}"
+                )
+            integer_fields[field] = raw_value
+
+        request_ids = row.get("request_ids")
+        request_num_tokens = row.get("request_num_tokens")
+        request_num_prefill_tokens = row.get("request_num_prefill_tokens")
+        if not isinstance(request_ids, list) or not isinstance(
+            request_num_tokens,
+            list,
+        ) or not isinstance(
+            request_num_prefill_tokens,
+            list,
+        ):
+            raise ValueError(
+                "request_ids, request_num_tokens, and "
+                "request_num_prefill_tokens must be lists "
+                f"at {path}:{line_number}"
+            )
+        if (
+            not request_ids
+            or len(request_ids) != len(request_num_tokens)
+            or len(request_ids) != len(request_num_prefill_tokens)
+        ):
+            raise ValueError(
+                "request_ids, request_num_tokens, and "
+                "request_num_prefill_tokens must be non-empty and aligned "
+                f"at {path}:{line_number}"
+            )
+        normalized_request_ids = tuple(str(request_id) for request_id in request_ids)
+        if any(not request_id for request_id in normalized_request_ids):
+            raise ValueError(f"request_ids must be non-empty at {path}:{line_number}")
+        if len(set(normalized_request_ids)) != len(normalized_request_ids):
+            raise ValueError(
+                f"request_ids must be unique within a batch at {path}:{line_number}"
+            )
+        normalized_token_counts: list[int] = []
+        normalized_prefill_token_counts: list[int] = []
+        for token_count, prefill_token_count in zip(
+            request_num_tokens,
+            request_num_prefill_tokens,
+        ):
+            if isinstance(token_count, bool) or not isinstance(token_count, int):
+                raise ValueError(
+                    "request_num_tokens must contain integers "
+                    f"at {path}:{line_number}"
+                )
+            if token_count <= 0 or token_count > case.prefill_tokens:
+                raise ValueError(
+                    "prefill chunks must be positive and no larger than the prompt "
+                    f"at {path}:{line_number}: token_count={token_count}, "
+                    f"prefill_tokens={case.prefill_tokens}"
+                )
+            if (
+                isinstance(prefill_token_count, bool)
+                or not isinstance(prefill_token_count, int)
+            ):
+                raise ValueError(
+                    "request_num_prefill_tokens must contain integers "
+                    f"at {path}:{line_number}"
+                )
+            if (
+                prefill_token_count < 0
+                or prefill_token_count > token_count
+                or prefill_token_count > case.prefill_tokens
+            ):
+                raise ValueError(
+                    "request prefill tokens must be non-negative and no larger "
+                    "than the request batch tokens or prompt "
+                    f"at {path}:{line_number}: "
+                    f"prefill_token_count={prefill_token_count}, "
+                    f"token_count={token_count}, "
+                    f"prefill_tokens={case.prefill_tokens}"
+                )
+            normalized_token_counts.append(token_count)
+            normalized_prefill_token_counts.append(prefill_token_count)
+        if not any(normalized_prefill_token_counts):
+            raise ValueError(
+                "prefill stage-batch ledger row has no request-level "
+                f"prefill tokens at {path}:{line_number}"
+            )
+
+        group_key = (
+            expected_cluster,
+            integer_fields["replica_id"],
+            integer_fields["batch_id"],
+        )
+        stage_payloads = grouped_payloads.setdefault(group_key, {})
+        stage_id = integer_fields["stage_id"]
+        if stage_id in stage_payloads:
+            raise ValueError(
+                "duplicate pipeline-stage ledger row "
+                f"cluster={group_key[0]} replica={group_key[1]} "
+                f"batch={group_key[2]} stage={stage_id}"
+            )
+        stage_payloads[stage_id] = (
+            normalized_request_ids,
+            tuple(normalized_token_counts),
+            tuple(normalized_prefill_token_counts),
+        )
+
+    expected_stage_ids = set(range(case.pipeline_stages))
+    request_chunks: dict[str, list[int]] = {}
+    for group_key, stage_payloads in sorted(grouped_payloads.items()):
+        actual_stage_ids = set(stage_payloads)
+        if actual_stage_ids != expected_stage_ids:
+            raise ValueError(
+                "pipeline-stage coverage mismatch "
+                f"cluster={group_key[0]} replica={group_key[1]} "
+                f"batch={group_key[2]} expected={sorted(expected_stage_ids)} "
+                f"actual={sorted(actual_stage_ids)}"
+            )
+        ordered_payloads = [
+            stage_payloads[stage_id] for stage_id in sorted(stage_payloads)
+        ]
+        first_payload = ordered_payloads[0]
+        if any(payload != first_payload for payload in ordered_payloads[1:]):
+            raise ValueError(
+                "pipeline-stage payload mismatch "
+                f"cluster={group_key[0]} replica={group_key[1]} "
+                f"batch={group_key[2]}"
+            )
+        request_ids, _token_counts, prefill_token_counts = first_payload
+        for request_id, prefill_token_count in zip(
+            request_ids,
+            prefill_token_counts,
+        ):
+            if prefill_token_count > 0:
+                request_chunks.setdefault(request_id, []).append(
+                    prefill_token_count
+                )
+
+    if request_chunks and not case.enable_prefix_caching:
+        if len(request_chunks) != case.num_requests:
+            raise ValueError(
+                "prefill request coverage mismatch "
+                f"expected={case.num_requests} actual={len(request_chunks)}"
+            )
+
+    request_token_totals = {
+        request_id: sum(chunks)
+        for request_id, chunks in sorted(request_chunks.items())
+    }
+    for request_id, total in request_token_totals.items():
+        if total > case.prefill_tokens or (
+            not case.enable_prefix_caching and total != case.prefill_tokens
+        ):
+            raise ValueError(
+                "prefill-token conservation mismatch "
+                f"request_id={request_id} expected={case.prefill_tokens} "
+                f"actual={total}"
+            )
+    split_requests = {
+        request_id: chunks
+        for request_id, chunks in request_chunks.items()
+        if len(chunks) > 1
+    }
+    full_conserving_split_requests = [
+        request_id
+        for request_id, chunks in split_requests.items()
+        if sum(chunks) == case.prefill_tokens
+    ]
+    return {
+        "chunked_prefill_stage_ledger_present": True,
+        "chunked_prefill_prefill_row_count": prefill_row_count,
+        "chunked_prefill_prefill_batch_count": len(grouped_payloads),
+        "chunked_prefill_request_count": len(request_chunks),
+        "chunked_prefill_split_request_count": len(split_requests),
+        "chunked_prefill_split_count": sum(
+            len(chunks) - 1 for chunks in split_requests.values()
+        ),
+        "chunked_prefill_full_conserving_split_request_count": len(
+            full_conserving_split_requests
+        ),
+        "chunked_prefill_request_token_totals": request_token_totals,
+    }
+
+
 def _nonnegative_integer_metric(
     row: Mapping[str, str],
     field: str,
@@ -2111,45 +2377,39 @@ def _check_optimization_activation(
         except (FileNotFoundError, ValueError) as exc:
             errors.append(f"MTP activation evidence invalid: {exc}")
 
-    if case.enable_chunked_prefill:
-        schedule_pattern = re.compile(
-            r"\[(?P<event>ADMISSION|RUNNING_SCHEDULED)\]\s+"
-            r"req=(?P<request_id>[^,\s]+).*?"
-            r"(?P<field>num_tokens|num_new_tokens)=(?P<token_count>\d+)"
-        )
-        admissions: dict[str, list[int]] = {}
-        running_chunks: dict[str, list[int]] = {}
-        for line in text.splitlines():
-            match = schedule_pattern.search(line)
-            if match is None:
-                continue
-            request_id = match.group("request_id")
-            token_count = int(match.group("token_count"))
-            if match.group("event") == "ADMISSION":
-                admissions.setdefault(request_id, []).append(token_count)
-            else:
-                running_chunks.setdefault(request_id, []).append(token_count)
-        split_requests = [
-            request_id
-            for request_id, admission_counts in admissions.items()
-            if any(count < case.prefill_tokens for count in admission_counts)
-            and any(
-                count > 1
-                for count in running_chunks.get(request_id, [])
+    stage_ledger_path = metrics_dir / "frontier_stage_batch_ledger.jsonl"
+    if case.enable_chunked_prefill or stage_ledger_path.is_file():
+        try:
+            chunked_prefill_evidence = _read_chunked_prefill_stage_ledger(
+                case,
+                metrics_dir,
             )
-        ]
-        evidence["chunked_prefill_split_count"] = sum(
-            1
-            for request_id in split_requests
-            for count in running_chunks.get(request_id, [])
-            if count > 1
-        )
-        if not split_requests:
-            errors.append(
-                "Chunked Prefill activation requires a request admitted with "
-                "fewer than all prefill tokens and a later RUNNING_SCHEDULED "
-                "chunk with num_new_tokens > 1"
+            evidence.update(chunked_prefill_evidence)
+            split_count = int(
+                chunked_prefill_evidence["chunked_prefill_split_count"]
             )
+            full_conserving_split_count = int(
+                chunked_prefill_evidence[
+                    "chunked_prefill_full_conserving_split_request_count"
+                ]
+            )
+            if case.enable_chunked_prefill:
+                if split_count <= 0:
+                    errors.append(
+                        "Chunked Prefill activation requires multiple positive "
+                        "prefill chunks for at least one request"
+                    )
+                elif full_conserving_split_count <= 0:
+                    errors.append(
+                        "Chunked Prefill activation requires at least one split "
+                        "request with exact prefill-token conservation"
+                    )
+            elif split_count > 0:
+                errors.append("Chunked Prefill control unexpectedly split a request")
+        except (FileNotFoundError, KeyError, OSError, ValueError) as exc:
+            evidence["chunked_prefill_stage_ledger_present"] = False
+            evidence["chunked_prefill_split_count"] = 0
+            errors.append(f"Chunked Prefill stage-ledger evidence invalid: {exc}")
 
     graph_enabled = (
         case.use_cuda_graph or case.decode_cuda_graph_mode != "none"
@@ -2528,7 +2788,11 @@ def check_case_log(
     text = log_path.read_text(encoding="utf-8", errors="replace")
     if "Traceback" in text:
         errors.append("Traceback")
-    if "Simulation completed successfully." not in text:
+    success_markers = {
+        "Simulation completed successfully.",
+        "Online simulation completed successfully.",
+    }
+    if not any(line.strip() in success_markers for line in text.splitlines()):
         errors.append("missing success marker")
     if "Dummy Mode: false" not in text:
         errors.append("dummy mode was not explicitly disabled")

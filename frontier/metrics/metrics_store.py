@@ -4075,6 +4075,11 @@ class MetricsStore:
                 "diagnostic_component_ledger_ms": diagnostic_component_ledger_ms,
             },
         }
+        request_num_prefill_tokens = batch_stage.request_num_prefill_tokens
+        if request_num_prefill_tokens is not None:
+            row["request_num_prefill_tokens"] = [
+                int(token_count) for token_count in request_num_prefill_tokens
+            ]
         if hasattr(batch_stage, "source_batch_ids"):
             row["source_batch_ids"] = [
                 int(batch_id) for batch_id in batch_stage.source_batch_ids

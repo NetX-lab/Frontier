@@ -93,6 +93,52 @@ def _write_minimal_metrics(metrics_dir: Path) -> None:
     )
 
 
+def _write_stage_batch_ledger(
+    metrics_dir: Path,
+    rows: list[dict[str, object]],
+) -> None:
+    metrics_dir.mkdir(parents=True, exist_ok=True)
+    (metrics_dir / "frontier_stage_batch_ledger.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+
+
+def _prefill_stage_ledger_row(
+    *,
+    batch_id: int,
+    stage_id: int,
+    request_ids: list[str],
+    request_num_tokens: list[int],
+    request_num_prefill_tokens: list[int] | None = None,
+    cluster_type: str = "MONOLITHIC",
+    decode_component_ms: float = 0.0,
+) -> dict[str, object]:
+    row = {
+        "batch_id": batch_id,
+        "stage_id": stage_id,
+        "cluster_type": cluster_type,
+        "replica_id": 0,
+        "execution_scope": "FULL_STAGE_WORLD",
+        "replica_local_id": None,
+        "request_ids": request_ids,
+        "request_num_tokens": request_num_tokens,
+        "execution_time": {
+            "component_ledger_ms": {
+                "attention_prefill_execution_time": 1.0,
+                "attention_decode_execution_time": decode_component_ms,
+                "attn_mla_prefill_time": 0.0,
+            }
+        },
+    }
+    row["request_num_prefill_tokens"] = (
+        request_num_tokens
+        if request_num_prefill_tokens is None
+        else request_num_prefill_tokens
+    )
+    return row
+
+
 def _write_request_metrics(
     metrics_dir: Path,
     rows: list[dict[str, object]],
@@ -1134,44 +1180,304 @@ def test_mtp_activation_requires_positive_and_consistent_counters(
     assert positive_result["spec_decode_committed_tokens"] == 3
 
 
-def test_chunked_prefill_requires_multiple_scheduling_chunks_for_one_request(
+def test_chunked_prefill_rejects_single_full_prefill_batch(
     tmp_path: Path,
 ) -> None:
     case = _dense_optimization_case(
         enable_chunked_prefill=True,
         prefill_tokens=32,
+        num_requests=1,
+        pipeline_stages=2,
     )
     log_path = tmp_path / "chunked.log"
     metrics_dir = tmp_path / "metrics"
     _write_minimal_metrics(metrics_dir)
-    _write_success_log(
-        log_path,
-        extra_lines=[
-            "[ADMISSION] req=7 admitted, num_tokens=32, "
-            "running_count=1, token_budget_remaining=0",
-            "[RUNNING_SCHEDULED] req=7, num_new_tokens=1, blocks_allocated=1",
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=0,
+                stage_id=stage_id,
+                request_ids=["7"],
+                request_num_tokens=[32],
+            )
+            for stage_id in (0, 1)
         ],
     )
+    _write_success_log(log_path)
 
-    no_split_result = check_case_log(case, log_path, metrics_dir)
+    result = check_case_log(case, log_path, metrics_dir)
 
-    assert no_split_result["status"] == "FAIL"
-    assert "Chunked Prefill activation" in no_split_result["errors"]
+    assert result["status"] == "FAIL"
+    assert result["chunked_prefill_split_count"] == 0
+    assert "multiple positive prefill chunks" in result["errors"]
 
-    _write_success_log(
-        log_path,
-        extra_lines=[
-            "[ADMISSION] req=7 admitted, num_tokens=16, "
-            "running_count=1, token_budget_remaining=16",
-            "[RUNNING_SCHEDULED] req=7, num_new_tokens=16, blocks_allocated=1",
-            "[RUNNING_SCHEDULED] req=7, num_new_tokens=16, blocks_allocated=2",
+
+def test_chunked_prefill_rejects_pipeline_stage_payload_mismatch(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(
+        enable_chunked_prefill=True,
+        prefill_tokens=32,
+        num_requests=1,
+        pipeline_stages=2,
+    )
+    log_path = tmp_path / "chunked.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=0,
+                stage_id=0,
+                request_ids=["7"],
+                request_num_tokens=[16],
+            ),
+            _prefill_stage_ledger_row(
+                batch_id=0,
+                stage_id=1,
+                request_ids=["7"],
+                request_num_tokens=[8],
+            ),
         ],
     )
+    _write_success_log(log_path)
 
-    split_result = check_case_log(case, log_path, metrics_dir)
+    result = check_case_log(case, log_path, metrics_dir)
 
-    assert split_result["status"] == "PASS"
-    assert split_result["chunked_prefill_split_count"] == 2
+    assert result["status"] == "FAIL"
+    assert "pipeline-stage payload mismatch" in result["errors"]
+
+
+def test_chunked_prefill_rejects_non_conserving_stage_ledger(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(
+        enable_chunked_prefill=True,
+        prefill_tokens=32,
+        num_requests=1,
+        pipeline_stages=2,
+    )
+    log_path = tmp_path / "chunked.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=batch_id,
+                stage_id=stage_id,
+                request_ids=["7"],
+                request_num_tokens=[token_count],
+            )
+            for batch_id, token_count in ((0, 16), (1, 8))
+            for stage_id in (0, 1)
+        ],
+    )
+    _write_success_log(log_path)
+
+    result = check_case_log(case, log_path, metrics_dir)
+
+    assert result["status"] == "FAIL"
+    assert "prefill-token conservation" in result["errors"]
+
+
+def test_chunked_prefill_accepts_token_conserving_stage_ledger_without_debug_logs(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(
+        enable_chunked_prefill=True,
+        prefill_tokens=32,
+        num_requests=1,
+        pipeline_stages=2,
+    )
+    log_path = tmp_path / "chunked.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=batch_id,
+                stage_id=stage_id,
+                request_ids=["7"],
+                request_num_tokens=[16],
+            )
+            for batch_id in (0, 1)
+            for stage_id in (0, 1)
+        ],
+    )
+    _write_success_log(log_path)
+
+    result = check_case_log(case, log_path, metrics_dir)
+
+    assert result["status"] == "PASS"
+    assert result["chunked_prefill_split_count"] == 1
+
+
+def test_chunked_prefill_counts_only_request_prefill_tokens_in_mixed_batch(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(
+        enable_chunked_prefill=True,
+        prefill_tokens=32,
+        num_requests=2,
+        pipeline_stages=1,
+    )
+    log_path = tmp_path / "chunked.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=0,
+                stage_id=0,
+                request_ids=["0"],
+                request_num_tokens=[16],
+                request_num_prefill_tokens=[16],
+            ),
+            _prefill_stage_ledger_row(
+                batch_id=1,
+                stage_id=0,
+                request_ids=["0"],
+                request_num_tokens=[16],
+                request_num_prefill_tokens=[16],
+            ),
+            _prefill_stage_ledger_row(
+                batch_id=2,
+                stage_id=0,
+                request_ids=["1", "0"],
+                request_num_tokens=[16, 1],
+                request_num_prefill_tokens=[16, 0],
+                decode_component_ms=1.0,
+            ),
+            _prefill_stage_ledger_row(
+                batch_id=3,
+                stage_id=0,
+                request_ids=["0", "1"],
+                request_num_tokens=[1, 16],
+                request_num_prefill_tokens=[0, 16],
+                decode_component_ms=1.0,
+            ),
+        ],
+    )
+    _write_success_log(log_path)
+
+    result = check_case_log(case, log_path, metrics_dir)
+
+    assert result["status"] == "PASS"
+    assert result["chunked_prefill_request_token_totals"] == {
+        "0": 32,
+        "1": 32,
+    }
+    assert result["chunked_prefill_split_count"] == 2
+
+
+@pytest.mark.parametrize(
+    "architecture",
+    ("pd-disaggregation", "pd-af-disaggregation"),
+)
+def test_chunked_prefill_reads_prefill_role_for_disaggregated_architectures(
+    tmp_path: Path,
+    architecture: str,
+) -> None:
+    case = _dense_optimization_case(
+        architecture=architecture,
+        enable_chunked_prefill=True,
+        prefill_tokens=32,
+        num_requests=1,
+        pipeline_stages=2,
+    )
+    log_path = tmp_path / "chunked.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=batch_id,
+                stage_id=stage_id,
+                request_ids=["7"],
+                request_num_tokens=[16],
+                cluster_type="PREFILL",
+            )
+            for batch_id in (0, 1)
+            for stage_id in (0, 1)
+        ],
+    )
+    _write_success_log(log_path)
+
+    result = check_case_log(case, log_path, metrics_dir)
+
+    assert result["status"] == "PASS"
+    assert result["chunked_prefill_split_count"] == 1
+
+
+def test_chunked_prefill_control_split_fails_paired_comparison(
+    tmp_path: Path,
+) -> None:
+    group_id = next(
+        case.comparison_group_id
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.architecture == "co-location"
+        and case.model_kind == "dense"
+        and case.optimization_stratum == "ordinary"
+        and case.decode_cuda_graph_mode == "none"
+        and case.enable_chunked_prefill
+        and case.comparison_group_id is not None
+    )
+    pair_cases = [
+        replace(
+            case,
+            prefill_tokens=32,
+            num_requests=1,
+            pipeline_stages=2,
+        )
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.comparison_group_id == group_id
+        and case.decode_cuda_graph_mode == "none"
+    ]
+    result_rows = []
+    for case in pair_cases:
+        log_path = tmp_path / f"{case.case_id}.log"
+        metrics_dir = tmp_path / case.case_id
+        _write_minimal_metrics(metrics_dir)
+        _write_stage_batch_ledger(
+            metrics_dir,
+            [
+                _prefill_stage_ledger_row(
+                    batch_id=batch_id,
+                    stage_id=stage_id,
+                    request_ids=["7"],
+                    request_num_tokens=[16],
+                )
+                for batch_id in (0, 1)
+                for stage_id in (0, 1)
+            ],
+        )
+        _write_success_log(log_path)
+        check = check_case_log(case, log_path, metrics_dir)
+        row = _optimization_result_row(case, metric_offset=0.0)
+        row["status"] = check["status"]
+        row["check"] = check
+        result_rows.append(row)
+
+    control_check = next(
+        row["check"]
+        for row in result_rows
+        if not next(
+            case
+            for case in pair_cases
+            if case.case_id == row["case_id"]
+        ).enable_chunked_prefill
+    )
+    report = build_optimization_comparison(pair_cases, result_rows)
+
+    assert control_check["chunked_prefill_split_count"] == 1
+    assert report["status"] == "FAIL"
+    assert "Chunked Prefill control unexpectedly split" in report["pairs"][0]["errors"]
 
 
 @pytest.mark.parametrize(
@@ -2465,6 +2771,69 @@ def test_dense_checker_does_not_require_moe_layer_granularity(tmp_path: Path) ->
     result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
 
     assert result["status"] == "PASS"
+
+
+def test_online_checker_accepts_online_success_marker(tmp_path: Path) -> None:
+    case = replace(
+        next(
+            case
+            for case in build_optimization_matrix(REPO_ROOT)
+            if case.architecture == "co-location"
+            and case.model_kind == "dense"
+            and case.simulation_mode == "online"
+            and case.optimization_stratum == "ordinary"
+        ),
+        num_layers=1,
+        moe_layer_ids=(),
+    )
+    log_path = tmp_path / "online.log"
+    metrics_dir = tmp_path / "metrics"
+    metrics_dir.mkdir()
+    (metrics_dir / "system_metrics.json").write_text(
+        json.dumps({"ttft_statistics": {"mean": 1.0}}), encoding="utf-8"
+    )
+    _write_request_metrics(
+        metrics_dir,
+        [{"Request Id": "request-0", "request_inter_arrival_delay": "1.0"}],
+    )
+    log_path.write_text(
+        "Dummy Mode: false\n"
+        "Online simulation completed successfully.\n"
+        "[OP-TRACE][MONOLITHIC][ATTENTION] "
+        "batch_id=0, layer_id=0, num_tokens=1\n",
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "PASS"
+    assert result["online_positive_inter_arrival_count"] == 1
+
+
+def test_log_checker_rejects_unknown_success_marker(tmp_path: Path) -> None:
+    case = next(
+        case
+        for case in build_matrix(REPO_ROOT)
+        if case.architecture == "co-location" and case.model_kind == "dense"
+    )
+    log_path = tmp_path / "unknown-marker.log"
+    metrics_dir = tmp_path / "metrics"
+    metrics_dir.mkdir()
+    (metrics_dir / "system_metrics.json").write_text(
+        json.dumps({"ttft_statistics": {"mean": 1.0}}), encoding="utf-8"
+    )
+    log_path.write_text(
+        "Dummy Mode: false\n"
+        "Simulation finished successfully.\n"
+        "[OP-TRACE][MONOLITHIC][ATTENTION] "
+        "batch_id=0, layer_id=0, num_tokens=1\n",
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir)
+
+    assert result["status"] == "FAIL"
+    assert "missing success marker" in result["errors"]
 
 
 def test_result_ledger_merges_partial_runs_without_erasing_prior_cases() -> None:

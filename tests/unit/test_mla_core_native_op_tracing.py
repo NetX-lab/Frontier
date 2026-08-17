@@ -101,6 +101,7 @@ class _DummyBatchStage:
         self._batch_id = 17
         self.request_ids = [101]
         self.num_tokens = [1]
+        self.request_num_prefill_tokens = [1]
         self.scheduled_at = 0.0
         self.execution_time = 0.0
         self.tokens_are_post_routing = False
@@ -503,6 +504,7 @@ def test_frontier_stage_batch_ledger_uses_structured_mla_operator_times() -> Non
     assert component_ledger["attn_mla_v_up_proj_time"] == pytest.approx(0.12)
     assert sum(component_ledger.values()) == pytest.approx(0.42)
     assert row["execution_time"]["total_time_ms"] == pytest.approx(0.42)
+    assert row["request_num_prefill_tokens"] == [1]
 
 
 def test_op_level_tracing_generates_metadata_for_structured_mla_ops() -> None:

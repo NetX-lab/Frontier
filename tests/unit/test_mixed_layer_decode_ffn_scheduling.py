@@ -1300,6 +1300,7 @@ def test_regular_batch_stage_accounts_requests_once() -> None:
     request = SimpleNamespace(
         id=2,
         runtime_epoch=0,
+        is_prefill_complete=True,
         on_batch_stage_schedule=Mock(),
         on_batch_stage_end=Mock(),
     )
