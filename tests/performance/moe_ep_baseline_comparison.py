@@ -10,10 +10,14 @@ import math
 import statistics
 import sys
 from collections import Counter
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from tests.e2e.moe_ep_baseline_replay import load_and_validate_manifest
+from tests.e2e.moe_ep_baseline_replay import (
+    MatrixCase,
+    load_and_validate_manifest,
+)
 
 
 REPORT_DATE = "2026-08-17"
@@ -71,6 +75,69 @@ def _index_complete_rows(
             f"{label} rows do not match the manifest: missing={missing}, extra={extra}"
         )
     return indexed
+
+
+def _normalized_case_metadata(case: MatrixCase) -> dict[str, Any]:
+    """Return the JSON representation written by both campaign runners."""
+
+    return json.loads(json.dumps(asdict(case), sort_keys=True))
+
+
+def _validate_result_row_metadata(
+    row: Mapping[str, Any],
+    *,
+    case: MatrixCase,
+    label: str,
+) -> None:
+    mismatches = [
+        field
+        for field in ("architecture", "model_kind", "total_cards")
+        if row.get(field) != getattr(case, field)
+    ]
+    if mismatches:
+        raise ValueError(
+            f"{label} metadata mismatch for {case.case_id}: "
+            f"fields={mismatches}"
+        )
+
+
+def _validate_case_metadata(
+    row: Mapping[str, Any],
+    *,
+    case: MatrixCase,
+    label: str,
+    metadata_filename: str,
+) -> None:
+    log_path = row.get("log_path")
+    if not isinstance(log_path, str) or not log_path:
+        raise ValueError(
+            f"{label} result has no log_path for {case.case_id}"
+        )
+    metadata_path = Path(log_path).parent / metadata_filename
+    if not metadata_path.is_file():
+        raise FileNotFoundError(metadata_path)
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid case metadata JSON: {metadata_path}") from exc
+    if not isinstance(metadata, Mapping):
+        raise ValueError(f"case metadata root must be an object: {metadata_path}")
+    actual_case = metadata.get("case")
+    if not isinstance(actual_case, Mapping):
+        raise ValueError(f"case metadata has no case object: {metadata_path}")
+
+    expected_case = _normalized_case_metadata(case)
+    actual_case_dict = dict(actual_case)
+    mismatches = sorted(
+        field
+        for field in set(expected_case) | set(actual_case_dict)
+        if actual_case_dict.get(field) != expected_case.get(field)
+    )
+    if mismatches:
+        raise ValueError(
+            f"{label} case metadata mismatch for {case.case_id}: "
+            f"fields={mismatches}, path={metadata_path}"
+        )
 
 
 def _metric_means(
@@ -254,14 +321,28 @@ def build_comparison(
     for case in cases:
         current = current_by_id[case.case_id]
         baseline = baseline_by_id[case.case_id]
-        if current.get("architecture") != case.architecture:
-            raise ValueError(
-                f"current architecture mismatch for {case.case_id}"
-            )
-        if baseline.get("architecture") != case.architecture:
-            raise ValueError(
-                f"baseline architecture mismatch for {case.case_id}"
-            )
+        _validate_result_row_metadata(
+            current,
+            case=case,
+            label="current result",
+        )
+        _validate_result_row_metadata(
+            baseline,
+            case=case,
+            label="baseline result",
+        )
+        _validate_case_metadata(
+            current,
+            case=case,
+            label="current",
+            metadata_filename="case_metadata.json",
+        )
+        _validate_case_metadata(
+            baseline,
+            case=case,
+            label="baseline",
+            metadata_filename="baseline_case_metadata.json",
+        )
         current_status = current.get("status")
         baseline_status = baseline.get("execution_status")
         if current_status not in {"PASS", "FAIL"}:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
@@ -47,6 +48,24 @@ def _write_jsonl(path: Path, rows: list[dict[str, object]]) -> None:
     )
 
 
+def _write_case_metadata(
+    root: Path,
+    *,
+    case: object,
+    filename: str,
+) -> Path:
+    case_id = str(getattr(case, "case_id"))
+    case_root = root / case_id
+    case_root.mkdir(parents=True, exist_ok=True)
+    log_path = case_root / f"{case_id}.log"
+    log_path.write_text("", encoding="utf-8")
+    (case_root / filename).write_text(
+        json.dumps({"case": asdict(case)}, sort_keys=True),
+        encoding="utf-8",
+    )
+    return log_path
+
+
 def _build_complete_campaigns(
     tmp_path: Path,
 ) -> tuple[Path, Path, Path, list[dict[str, object]], list[dict[str, object]]]:
@@ -58,6 +77,11 @@ def _build_complete_campaigns(
     current_rows: list[dict[str, object]] = []
     baseline_rows: list[dict[str, object]] = []
     for index, case in enumerate(cases):
+        current_log = _write_case_metadata(
+            current_metrics_root,
+            case=case,
+            filename="case_metadata.json",
+        )
         current_metrics = _write_metrics(
             current_metrics_root,
             case.case_id,
@@ -70,7 +94,9 @@ def _build_complete_campaigns(
                 "case_id": case.case_id,
                 "architecture": case.architecture,
                 "model_kind": case.model_kind,
+                "total_cards": case.total_cards,
                 "status": "PASS",
+                "log_path": str(current_log),
                 "metrics_path": str(current_metrics),
                 "check": {
                     "ep_workload_records": 4 if case.is_moe else 0,
@@ -79,14 +105,21 @@ def _build_complete_campaigns(
                 },
             }
         )
+        baseline_log = _write_case_metadata(
+            baseline_metrics_root,
+            case=case,
+            filename="baseline_case_metadata.json",
+        )
         if index == len(cases) - 1:
             baseline_rows.append(
                 {
                     "case_id": case.case_id,
                     "architecture": case.architecture,
                     "model_kind": case.model_kind,
+                    "total_cards": case.total_cards,
                     "execution_status": "FAIL",
                     "workflow_evidence_status": "MISSING_CURRENT_SCHEMA",
+                    "log_path": str(baseline_log),
                     "metrics_path": "",
                     "exit_code": 7,
                     "check": {
@@ -111,12 +144,14 @@ def _build_complete_campaigns(
                     "case_id": case.case_id,
                     "architecture": case.architecture,
                     "model_kind": case.model_kind,
+                    "total_cards": case.total_cards,
                     "execution_status": "PASS",
                     "workflow_evidence_status": (
                         "MISSING_CURRENT_SCHEMA"
                         if case.is_moe
                         else "NOT_APPLICABLE_DENSE"
                     ),
+                    "log_path": str(baseline_log),
                     "metrics_path": str(baseline_metrics),
                     "exit_code": 0,
                     "check": {
@@ -216,4 +251,57 @@ def test_comparison_rejects_non_millisecond_metric_units(
     metric_file.write_text(json.dumps(metrics), encoding="utf-8")
 
     with pytest.raises(ValueError, match="unit='s'"):
+        comparison.build_comparison(manifest, current, baseline)
+
+
+@pytest.mark.parametrize(
+    ("campaign", "metadata_filename", "field", "invalid_value"),
+    (
+        ("current", "case_metadata.json", "model_name", "wrong-model"),
+        (
+            "baseline",
+            "baseline_case_metadata.json",
+            "decode_ffn_replicas",
+            999,
+        ),
+    ),
+)
+def test_comparison_rejects_case_metadata_that_differs_from_manifest(
+    tmp_path: Path,
+    campaign: str,
+    metadata_filename: str,
+    field: str,
+    invalid_value: object,
+) -> None:
+    manifest, current, baseline, current_rows, baseline_rows = (
+        _build_complete_campaigns(tmp_path)
+    )
+    rows = current_rows if campaign == "current" else baseline_rows
+    metadata_path = (
+        Path(str(rows[0]["log_path"])).parent / metadata_filename
+    )
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["case"][field] = invalid_value
+    metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    with pytest.raises(
+        ValueError,
+        match=rf"{campaign} case metadata mismatch.*{field}",
+    ):
+        comparison.build_comparison(manifest, current, baseline)
+
+
+def test_comparison_rejects_result_row_metadata_that_differs_from_manifest(
+    tmp_path: Path,
+) -> None:
+    manifest, current, baseline, current_rows, _ = _build_complete_campaigns(
+        tmp_path
+    )
+    current_rows[0]["total_cards"] = 999
+    _write_jsonl(current, current_rows)
+
+    with pytest.raises(
+        ValueError,
+        match="current result metadata mismatch.*total_cards",
+    ):
         comparison.build_comparison(manifest, current, baseline)

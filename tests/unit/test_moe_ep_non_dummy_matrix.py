@@ -27,6 +27,109 @@ from tests.e2e.moe_ep_non_dummy_matrix import (
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def _write_minimal_metrics(metrics_dir: Path) -> None:
+    metrics_dir.mkdir()
+    (metrics_dir / "system_metrics.json").write_text(
+        json.dumps({"ttft_statistics": {"mean": 1.0}}),
+        encoding="utf-8",
+    )
+
+
+def _strict_ep_log(
+    *,
+    workload_lines: list[str],
+    conservation_lines: list[str],
+    barrier_lines: list[str],
+) -> str:
+    return "\n".join(
+        [
+            "Dummy Mode: false",
+            "Simulation completed successfully.",
+            "[OP-TRACE][MONOLITHIC][MOE][moe_shuffling] layer_id=0",
+            "[OP-TRACE][MONOLITHIC][MOE][moe_grouped_gemm] layer_id=0",
+            *workload_lines,
+            *conservation_lines,
+            *barrier_lines,
+        ]
+    )
+
+
+def _strict_ep_log_from_events(
+    event_lines: list[str],
+    *,
+    layer_ids: tuple[int, ...] = (0,),
+    include_pdaf_participant_map: bool = False,
+) -> str:
+    lines = [
+        "Dummy Mode: false",
+        "Simulation completed successfully.",
+    ]
+    for layer_id in layer_ids:
+        lines.extend(
+            [
+                f"[OP-TRACE][MONOLITHIC][MOE][moe_shuffling] layer_id={layer_id}",
+                f"[OP-TRACE][MONOLITHIC][MOE][moe_grouped_gemm] layer_id={layer_id}",
+            ]
+        )
+    if include_pdaf_participant_map:
+        lines.append("per_expert_tokens extracted:")
+    lines.extend(event_lines)
+    return "\n".join(lines)
+
+
+def _ep_wave_lines(
+    *,
+    cluster: str,
+    ep_size: int,
+    batch_id: int,
+    layer_id: int,
+) -> dict[str, list[str] | str]:
+    ep_ids = list(range(ep_size))
+    workloads = [
+        f"[EP-WORKLOAD][{cluster}] batch_id={batch_id}, layer_id={layer_id}, "
+        f"ep_id={ep_id}, moe_ep_size={ep_size}, "
+        f"per_expert_tokens={{{ep_id}: 1}}, "
+        "lane_compute_ms=1.0, lane_comm_ms=0.0"
+        for ep_id in ep_ids
+    ]
+    per_ep_tokens = "{" + ", ".join(f"{ep_id}: 1" for ep_id in ep_ids) + "}"
+    conservation = (
+        f"[EP-CONSERVATION][{cluster}] batch_id={batch_id}, "
+        f"layer_id={layer_id}, routing_token_count={ep_size}, router_topk=1, "
+        f"total_routed_assignments={ep_size}, "
+        f"per_ep_routed_tokens={per_ep_tokens}"
+    )
+    dispatch = (
+        f"[EP-BARRIER][{cluster}] batch_id={batch_id}, layer_id={layer_id}, "
+        f"phase=dispatch, expected_ep_ids={ep_ids}, arrived_ep_ids={ep_ids}, "
+        "max_lane_time_ms=1.0, barrier_time_ms=1.0, "
+        "barrier_end_time_s=0.001"
+    )
+    combine = (
+        f"[EP-BARRIER][{cluster}] batch_id={batch_id}, layer_id={layer_id}, "
+        f"phase=combine, expected_ep_ids={ep_ids}, arrived_ep_ids={ep_ids}, "
+        "max_lane_time_ms=1.0, barrier_time_ms=1.0, "
+        "barrier_end_time_s=0.002"
+    )
+    return {
+        "workloads": workloads,
+        "conservation": conservation,
+        "dispatch": dispatch,
+        "combine": combine,
+    }
+
+
+def _single_layer_ep2_case(*, zero_routed: bool = False):
+    return next(
+        replace(case, num_layers=1, moe_layer_ids=(0,))
+        for case in build_matrix(REPO_ROOT)
+        if case.architecture == "co-location"
+        and case.model_kind == "moe"
+        and case.ep_size == 2
+        and (not zero_routed or case.workload_kind == "zero-routed")
+    )
+
+
 def test_matrix_has_required_cross_architecture_coverage() -> None:
     cases = build_matrix(REPO_ROOT)
 
@@ -315,7 +418,10 @@ def test_shared_moe_checker_requires_dispatch_and_combine_barriers(
     result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
 
     assert result["status"] == "FAIL"
-    assert "cluster=MONOLITHIC phase=dispatch layers=[0]" in result["errors"]
+    assert (
+        "missing EP barrier evidence for workload waves "
+        "phase=dispatch waves=[('MONOLITHIC', 1, 0)]"
+    ) in result["errors"]
 
 
 def test_ep_workload_parser_accepts_logger_prefix() -> None:
@@ -455,6 +561,282 @@ def test_strict_shared_checker_requires_layer_barrier_evidence(tmp_path: Path) -
 
     assert result["status"] == "FAIL"
     assert "missing EP barrier evidence" in result["errors"]
+
+
+@pytest.mark.parametrize(
+    "duplicate_kind",
+    ("workload", "conservation", "barrier"),
+)
+def test_strict_checker_rejects_duplicate_wave_records(
+    tmp_path: Path,
+    duplicate_kind: str,
+) -> None:
+    case = _single_layer_ep2_case()
+    log_path = tmp_path / f"duplicate_{duplicate_kind}.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    workloads = [
+        "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, ep_id=0, "
+        "moe_ep_size=2, per_expert_tokens={0: 1}, "
+        "lane_compute_ms=1.0, lane_comm_ms=0.0",
+        "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, ep_id=1, "
+        "moe_ep_size=2, per_expert_tokens={1: 1}, "
+        "lane_compute_ms=2.0, lane_comm_ms=0.0",
+    ]
+    conservation = [
+        "[EP-CONSERVATION][MONOLITHIC] batch_id=10, layer_id=0, "
+        "routing_token_count=1, router_topk=2, "
+        "total_routed_assignments=2, per_ep_routed_tokens={0: 1, 1: 1}",
+    ]
+    barriers = [
+        "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+        "phase=dispatch, expected_ep_ids=[0, 1], arrived_ep_ids=[0, 1], "
+        "max_lane_time_ms=2.0, barrier_time_ms=2.0, "
+        "barrier_end_time_s=0.002",
+        "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+        "phase=combine, expected_ep_ids=[0, 1], arrived_ep_ids=[0, 1], "
+        "max_lane_time_ms=2.0, barrier_time_ms=2.0, "
+        "barrier_end_time_s=0.004",
+    ]
+    if duplicate_kind == "workload":
+        workloads.append(workloads[-1])
+    elif duplicate_kind == "conservation":
+        conservation.append(conservation[-1])
+    else:
+        barriers.append(barriers[-1])
+    log_path.write_text(
+        _strict_ep_log(
+            workload_lines=workloads,
+            conservation_lines=conservation,
+            barrier_lines=barriers,
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "duplicate EP" in result["errors"]
+
+
+def test_strict_checker_requires_barriers_for_the_same_workload_wave(
+    tmp_path: Path,
+) -> None:
+    case = _single_layer_ep2_case()
+    log_path = tmp_path / "wrong_barrier_wave.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        _strict_ep_log(
+            workload_lines=[
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=0, moe_ep_size=2, per_expert_tokens={0: 1}, "
+                "lane_compute_ms=1.0, lane_comm_ms=0.0",
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=1, moe_ep_size=2, per_expert_tokens={1: 1}, "
+                "lane_compute_ms=2.0, lane_comm_ms=0.0",
+            ],
+            conservation_lines=[
+                "[EP-CONSERVATION][MONOLITHIC] batch_id=10, layer_id=0, "
+                "routing_token_count=1, router_topk=2, "
+                "total_routed_assignments=2, "
+                "per_ep_routed_tokens={0: 1, 1: 1}",
+            ],
+            barrier_lines=[
+                "[EP-BARRIER][MONOLITHIC] batch_id=11, layer_id=0, "
+                "phase=dispatch, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=2.0, "
+                "barrier_time_ms=2.0, barrier_end_time_s=0.002",
+                "[EP-BARRIER][MONOLITHIC] batch_id=11, layer_id=0, "
+                "phase=combine, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=2.0, "
+                "barrier_time_ms=2.0, barrier_end_time_s=0.004",
+            ],
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "EP barrier wave identity mismatch" in result["errors"]
+
+
+def test_zero_routed_case_requires_a_lane_with_zero_total_workload(
+    tmp_path: Path,
+) -> None:
+    case = _single_layer_ep2_case(zero_routed=True)
+    log_path = tmp_path / "no_zero_total_lane.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        _strict_ep_log(
+            workload_lines=[
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=0, moe_ep_size=2, per_expert_tokens={0: 0, 1: 1}, "
+                "lane_compute_ms=1.0, lane_comm_ms=0.0",
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=1, moe_ep_size=2, per_expert_tokens={2: 1, 3: 0}, "
+                "lane_compute_ms=1.0, lane_comm_ms=0.0",
+            ],
+            conservation_lines=[
+                "[EP-CONSERVATION][MONOLITHIC] batch_id=10, layer_id=0, "
+                "routing_token_count=1, router_topk=2, "
+                "total_routed_assignments=2, "
+                "per_ep_routed_tokens={0: 1, 1: 1}",
+            ],
+            barrier_lines=[
+                "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+                "phase=dispatch, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+                "barrier_time_ms=1.0, barrier_end_time_s=0.001",
+                "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+                "phase=combine, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+                "barrier_time_ms=1.0, barrier_end_time_s=0.002",
+            ],
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "zero-total EP lane" in result["errors"]
+
+
+@pytest.mark.parametrize(
+    ("architecture", "present_role", "missing_role", "ep_size_field"),
+    (
+        (
+            "pd-disaggregation",
+            "PREFILL",
+            "DECODE",
+            "prefill_moe_expert_parallel_size",
+        ),
+        (
+            "pd-af-disaggregation",
+            "PREFILL",
+            "DECODE_FFN",
+            "prefill_moe_expert_parallel_size",
+        ),
+    ),
+)
+def test_strict_checker_requires_each_moe_layer_in_every_execution_role(
+    tmp_path: Path,
+    architecture: str,
+    present_role: str,
+    missing_role: str,
+    ep_size_field: str,
+) -> None:
+    case = next(
+        replace(candidate, num_layers=1, moe_layer_ids=(0,))
+        for candidate in build_matrix(REPO_ROOT)
+        if candidate.architecture == architecture
+        and candidate.model_kind == "moe"
+    )
+    wave = _ep_wave_lines(
+        cluster=present_role,
+        ep_size=int(getattr(case, ep_size_field)),
+        batch_id=10,
+        layer_id=0,
+    )
+    log_path = tmp_path / f"missing_{missing_role.lower()}.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        _strict_ep_log_from_events(
+            [
+                str(wave["conservation"]),
+                *list(wave["workloads"]),
+                str(wave["dispatch"]),
+                str(wave["combine"]),
+            ],
+            include_pdaf_participant_map=architecture == "pd-af-disaggregation",
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert (
+        "EP workload has no complete participant wave "
+        f"cluster={missing_role} layer=0"
+    ) in result["errors"]
+
+
+def test_strict_checker_requires_workload_before_dispatch_barrier(
+    tmp_path: Path,
+) -> None:
+    case = _single_layer_ep2_case()
+    wave = _ep_wave_lines(
+        cluster="MONOLITHIC",
+        ep_size=2,
+        batch_id=10,
+        layer_id=0,
+    )
+    log_path = tmp_path / "dispatch_before_workload.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        _strict_ep_log_from_events(
+            [
+                str(wave["conservation"]),
+                str(wave["dispatch"]),
+                *list(wave["workloads"]),
+                str(wave["combine"]),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "EP wave event order is invalid" in result["errors"]
+
+
+def test_strict_checker_rejects_next_layer_start_before_previous_combine(
+    tmp_path: Path,
+) -> None:
+    case = replace(_single_layer_ep2_case(), num_layers=2, moe_layer_ids=(0, 1))
+    layer_0 = _ep_wave_lines(
+        cluster="MONOLITHIC",
+        ep_size=2,
+        batch_id=10,
+        layer_id=0,
+    )
+    layer_1 = _ep_wave_lines(
+        cluster="MONOLITHIC",
+        ep_size=2,
+        batch_id=10,
+        layer_id=1,
+    )
+    log_path = tmp_path / "next_layer_before_combine.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        _strict_ep_log_from_events(
+            [
+                str(layer_0["conservation"]),
+                *list(layer_0["workloads"]),
+                str(layer_0["dispatch"]),
+                str(layer_1["conservation"]),
+                *list(layer_1["workloads"]),
+                str(layer_0["combine"]),
+                str(layer_1["dispatch"]),
+                str(layer_1["combine"]),
+            ],
+            layer_ids=(0, 1),
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "next MoE layer started before prior combine" in result["errors"]
 
 
 def test_log_checker_rejects_traceback(tmp_path: Path) -> None:

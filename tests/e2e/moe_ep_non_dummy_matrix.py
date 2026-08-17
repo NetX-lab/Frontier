@@ -20,6 +20,7 @@ import shlex
 import subprocess
 import sys
 import time
+from collections import Counter
 from dataclasses import asdict, dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -686,6 +687,8 @@ def _expected_ep_size_for_cluster(case: MatrixCase, cluster: str) -> int | None:
     """Return the EP cardinality for one physical cluster role."""
 
     cluster_name = str(cluster).upper()
+    if case.architecture == "co-location":
+        return int(case.ep_size) if cluster_name == "MONOLITHIC" else None
     if case.architecture == "pd-af-disaggregation":
         if cluster_name == "PREFILL":
             return int(case.prefill_moe_expert_parallel_size)
@@ -697,7 +700,50 @@ def _expected_ep_size_for_cluster(case: MatrixCase, cluster: str) -> int | None:
             return int(case.prefill_moe_expert_parallel_size)
         if cluster_name == "DECODE":
             return int(case.decode_moe_expert_parallel_size)
-    return int(case.ep_size)
+        return None
+    return None
+
+
+def _expected_ep_roles(case: MatrixCase) -> tuple[str, ...]:
+    """Return every cluster role that must execute each MoE layer."""
+
+    if case.architecture == "co-location":
+        return ("MONOLITHIC",)
+    if case.architecture == "pd-disaggregation":
+        return ("PREFILL", "DECODE")
+    if case.architecture == "pd-af-disaggregation":
+        return ("PREFILL", "DECODE_FFN")
+    raise ValueError(f"unsupported architecture: {case.architecture}")
+
+
+def _ep_event_positions(
+    text: str,
+) -> dict[tuple[str, int, int], dict[str, list[int]]]:
+    """Index strict EP evidence by wave and log-line order."""
+
+    positions: dict[tuple[str, int, int], dict[str, list[int]]] = {}
+    event_patterns = (
+        ("workload", _EP_WORKLOAD_LINE_RE),
+        ("conservation", _EP_CONSERVATION_LINE_RE),
+        ("barrier", _EP_BARRIER_LINE_RE),
+    )
+    for line_index, line in enumerate(text.splitlines()):
+        for event_kind, pattern in event_patterns:
+            match = pattern.search(line)
+            if match is None:
+                continue
+            groups = match.groupdict()
+            wave_key = (
+                str(groups["cluster"]).upper(),
+                int(groups["batch_id"]),
+                int(groups["layer_id"]),
+            )
+            phase = str(groups["phase"]) if event_kind == "barrier" else event_kind
+            positions.setdefault(wave_key, {}).setdefault(phase, []).append(
+                line_index
+            )
+            break
+    return positions
 
 
 def _parse_ep_barrier_records(text: str) -> list[dict[str, Any]]:
@@ -895,7 +941,14 @@ def check_case_log(
                     ),
                     [],
                 ).append(record)
-            complete_layers: set[int] = set()
+            expected_roles = _expected_ep_roles(case)
+            complete_layers_by_role = {
+                cluster_name: set() for cluster_name in expected_roles
+            }
+            per_ep_totals_by_wave: dict[
+                tuple[str, int, int],
+                dict[int, int],
+            ] = {}
             for (cluster_name, _batch_id, layer_id), wave_records in records_by_wave.items():
                 expected_ep_size = _expected_ep_size_for_cluster(case, cluster_name)
                 if expected_ep_size is None:
@@ -905,9 +958,34 @@ def check_case_log(
                     )
                     continue
                 expected_ep_ids = set(range(expected_ep_size))
-                actual_ep_ids = {int(record["ep_id"]) for record in wave_records}
-                if actual_ep_ids == expected_ep_ids:
-                    complete_layers.add(layer_id)
+                ep_id_counts = Counter(
+                    int(record["ep_id"]) for record in wave_records
+                )
+                duplicate_ep_ids = sorted(
+                    ep_id
+                    for ep_id, count in ep_id_counts.items()
+                    if count != 1
+                )
+                if duplicate_ep_ids:
+                    errors.append(
+                        "duplicate EP workload records "
+                        f"cluster={cluster_name} batch_id={_batch_id} "
+                        f"layer={layer_id} ep_ids={duplicate_ep_ids}"
+                    )
+                actual_ep_ids = set(ep_id_counts)
+                if (
+                    actual_ep_ids == expected_ep_ids
+                    and not duplicate_ep_ids
+                ):
+                    complete_layers_by_role[cluster_name].add(layer_id)
+                    per_ep_totals_by_wave[
+                        (cluster_name, _batch_id, layer_id)
+                    ] = {
+                        int(record["ep_id"]): sum(
+                            record["per_expert_tokens"].values()
+                        )
+                        for record in wave_records
+                    }
                 if any(
                     int(record["moe_ep_size"]) != expected_ep_size
                     for record in wave_records
@@ -923,40 +1001,70 @@ def check_case_log(
                         f"cluster={cluster_name} batch_id={_batch_id} layer={layer_id} "
                         f"expected={sorted(expected_ep_ids)} actual={sorted(actual_ep_ids)}"
                     )
-            for expected_layer_id in sorted(expected_moe_layers):
-                if expected_layer_id not in complete_layers:
-                    errors.append(
-                        "EP workload has no complete participant wave "
-                        f"for layer={expected_layer_id}"
-                    )
-            conservation_by_wave = {
-                (
-                    str(record["cluster"]).upper(),
-                    int(record["batch_id"]),
-                    int(record["layer_id"]),
-                ): record
-                for record in ep_conservation_records
-            }
-            conservation_layers_by_cluster: dict[str, set[int]] = {}
+            for cluster_name in expected_roles:
+                for expected_layer_id in sorted(expected_moe_layers):
+                    if (
+                        expected_layer_id
+                        not in complete_layers_by_role[cluster_name]
+                    ):
+                        errors.append(
+                            "EP workload has no complete participant wave "
+                            f"cluster={cluster_name} layer={expected_layer_id}"
+                        )
+            conservation_records_by_wave: dict[
+                tuple[str, int, int],
+                list[dict[str, Any]],
+            ] = {}
             for record in ep_conservation_records:
-                cluster_name = str(record["cluster"]).upper()
-                conservation_layers_by_cluster.setdefault(cluster_name, set()).add(
-                    int(record["layer_id"])
-                )
-            for wave_key, wave_records in records_by_wave.items():
-                conservation = conservation_by_wave.get(wave_key)
-                if conservation is None:
+                conservation_records_by_wave.setdefault(
+                    (
+                        str(record["cluster"]).upper(),
+                        int(record["batch_id"]),
+                        int(record["layer_id"]),
+                    ),
+                    [],
+                ).append(record)
+            for wave_key, records in conservation_records_by_wave.items():
+                if len(records) != 1:
                     errors.append(
-                        "missing EP conservation evidence for wave "
-                        f"cluster={wave_key[0]} batch_id={wave_key[1]} layer={wave_key[2]}"
+                        "duplicate EP conservation records "
+                        f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                        f"layer={wave_key[2]} count={len(records)}"
                     )
+            workload_wave_keys = set(records_by_wave)
+            conservation_wave_keys = set(conservation_records_by_wave)
+            missing_conservation_waves = sorted(
+                workload_wave_keys - conservation_wave_keys
+            )
+            extra_conservation_waves = sorted(
+                conservation_wave_keys - workload_wave_keys
+            )
+            for wave_key in missing_conservation_waves:
+                errors.append(
+                    "missing EP conservation evidence for wave "
+                    f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                    f"layer={wave_key[2]}"
+                )
+            if extra_conservation_waves:
+                errors.append(
+                    "EP conservation wave identity mismatch "
+                    f"extra={extra_conservation_waves}"
+                )
+            for wave_key in sorted(
+                workload_wave_keys & conservation_wave_keys
+            ):
+                records = conservation_records_by_wave[wave_key]
+                if len(records) != 1:
                     continue
-                expected_ep_size = _expected_ep_size_for_cluster(case, wave_key[0])
+                conservation = records[0]
+                expected_ep_size = _expected_ep_size_for_cluster(
+                    case,
+                    wave_key[0],
+                )
                 expected_ep_ids = set(range(expected_ep_size or 0))
-                per_ep_totals = {
-                    int(record["ep_id"]): sum(record["per_expert_tokens"].values())
-                    for record in wave_records
-                }
+                per_ep_totals = per_ep_totals_by_wave.get(wave_key)
+                if per_ep_totals is None:
+                    continue
                 if set(per_ep_totals) != expected_ep_ids:
                     errors.append(
                         "EP conservation workload participant IDs do not match "
@@ -974,47 +1082,150 @@ def check_case_log(
                         "EP conservation total disagrees with lane workload "
                         f"cluster={wave_key[0]} batch_id={wave_key[1]} layer={wave_key[2]}"
                     )
-            workload_clusters = {
-                str(record["cluster"]).upper() for record in ep_workload_records
-            }
-            for cluster_name in sorted(workload_clusters):
-                missing_conservation_layers = sorted(
-                    expected_moe_layers
-                    - conservation_layers_by_cluster.get(cluster_name, set())
-                )
-                if missing_conservation_layers:
-                    errors.append(
-                        "EP conservation has no complete layer evidence "
-                        f"cluster={cluster_name} layers={missing_conservation_layers}"
-                    )
 
-            barrier_layers_by_phase: dict[tuple[str, str], set[int]] = {}
+            barrier_records_by_wave_phase: dict[
+                tuple[str, int, int, str],
+                list[dict[str, Any]],
+            ] = {}
             for record in ep_barrier_records:
-                barrier_layers_by_phase.setdefault(
-                    (str(record["cluster"]).upper(), str(record["phase"])),
-                    set(),
-                ).add(int(record["layer_id"]))
-            required_phases = ("dispatch", "combine")
-            for cluster_name in sorted(workload_clusters):
-                for phase in required_phases:
-                    missing_barrier_layers = sorted(
-                        expected_moe_layers
-                        - barrier_layers_by_phase.get((cluster_name, phase), set())
+                barrier_records_by_wave_phase.setdefault(
+                    (
+                        str(record["cluster"]).upper(),
+                        int(record["batch_id"]),
+                        int(record["layer_id"]),
+                        str(record["phase"]),
+                    ),
+                    [],
+                ).append(record)
+            for barrier_key, records in barrier_records_by_wave_phase.items():
+                if len(records) != 1:
+                    errors.append(
+                        "duplicate EP barrier records "
+                        f"cluster={barrier_key[0]} batch_id={barrier_key[1]} "
+                        f"layer={barrier_key[2]} phase={barrier_key[3]} "
+                        f"count={len(records)}"
                     )
-                    if missing_barrier_layers:
+            required_phases = ("dispatch", "combine")
+            for phase in required_phases:
+                phase_wave_keys = {
+                    key[:3]
+                    for key in barrier_records_by_wave_phase
+                    if key[3] == phase
+                }
+                missing_barrier_waves = sorted(
+                    workload_wave_keys - phase_wave_keys
+                )
+                extra_barrier_waves = sorted(
+                    phase_wave_keys - workload_wave_keys
+                )
+                if missing_barrier_waves:
+                    errors.append(
+                        "missing EP barrier evidence for workload waves "
+                        f"phase={phase} waves={missing_barrier_waves}"
+                    )
+                if missing_barrier_waves or extra_barrier_waves:
+                    errors.append(
+                        "EP barrier wave identity mismatch "
+                        f"phase={phase} missing={missing_barrier_waves} "
+                        f"extra={extra_barrier_waves}"
+                    )
+                for wave_key in sorted(
+                    workload_wave_keys & phase_wave_keys
+                ):
+                    records = barrier_records_by_wave_phase[
+                        (*wave_key, phase)
+                    ]
+                    if len(records) != 1:
+                        continue
+                    expected_ep_size = _expected_ep_size_for_cluster(
+                        case,
+                        wave_key[0],
+                    )
+                    expected_ep_ids = set(range(expected_ep_size or 0))
+                    workload_ep_ids = {
+                        int(record["ep_id"])
+                        for record in records_by_wave[wave_key]
+                    }
+                    barrier_ep_ids = set(records[0]["expected_ep_ids"])
+                    if (
+                        barrier_ep_ids != expected_ep_ids
+                        or barrier_ep_ids != workload_ep_ids
+                    ):
                         errors.append(
-                            "missing EP barrier evidence for MoE layers "
-                            f"cluster={cluster_name} phase={phase} "
-                            f"layers={missing_barrier_layers}"
+                            "EP barrier participants disagree with workload "
+                            f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                            f"layer={wave_key[2]} phase={phase} "
+                            f"expected={sorted(expected_ep_ids)} "
+                            f"workload={sorted(workload_ep_ids)} "
+                            f"barrier={sorted(barrier_ep_ids)}"
+                        )
+
+            event_positions_by_wave = _ep_event_positions(text)
+            ordered_waves_by_scope: dict[
+                tuple[str, int],
+                list[tuple[int, int, int]],
+            ] = {}
+            for wave_key in sorted(workload_wave_keys):
+                event_positions = event_positions_by_wave.get(wave_key, {})
+                workload_positions = event_positions.get("workload", [])
+                conservation_positions = event_positions.get("conservation", [])
+                dispatch_positions = event_positions.get("dispatch", [])
+                combine_positions = event_positions.get("combine", [])
+                if (
+                    len(workload_positions) != len(records_by_wave[wave_key])
+                    or len(conservation_positions) != 1
+                    or len(dispatch_positions) != 1
+                    or len(combine_positions) != 1
+                ):
+                    continue
+                materialization_end = max(
+                    [*workload_positions, *conservation_positions]
+                )
+                dispatch_position = dispatch_positions[0]
+                combine_position = combine_positions[0]
+                if not (
+                    materialization_end < dispatch_position < combine_position
+                ):
+                    errors.append(
+                        "EP wave event order is invalid "
+                        f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                        f"layer={wave_key[2]}"
+                    )
+                    continue
+                wave_start = min(
+                    [*workload_positions, *conservation_positions]
+                )
+                ordered_waves_by_scope.setdefault(
+                    (wave_key[0], wave_key[1]),
+                    [],
+                ).append((wave_key[2], wave_start, combine_position))
+
+            for (cluster_name, batch_id), ordered_waves in (
+                ordered_waves_by_scope.items()
+            ):
+                ordered_waves.sort()
+                for previous_wave, next_wave in zip(
+                    ordered_waves,
+                    ordered_waves[1:],
+                ):
+                    previous_layer, _previous_start, previous_combine = (
+                        previous_wave
+                    )
+                    next_layer, next_start, _next_combine = next_wave
+                    if next_start <= previous_combine:
+                        errors.append(
+                            "next MoE layer started before prior combine "
+                            f"cluster={cluster_name} batch_id={batch_id} "
+                            f"previous_layer={previous_layer} "
+                            f"next_layer={next_layer}"
                         )
         if case.architecture == "pd-af-disaggregation" and ep_participant_records == 0:
             errors.append("missing DECODE_FFN EP participant maps")
         if case.expects_zero_routed_lane and not any(
-            token_count == 0
+            sum(record["per_expert_tokens"].values()) == 0
             for record in ep_workload_records
-            for token_count in record["per_expert_tokens"].values()
-        ) and "0}" not in text and ": 0" not in text:
-            errors.append("zero-routed case has no zero-token participant evidence")
+        ):
+            errors.append("zero-routed case has no zero-total EP lane evidence")
 
     metric_path = metrics_dir / "system_metrics.json"
     numeric_metric_count = 0
