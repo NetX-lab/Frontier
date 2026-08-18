@@ -646,6 +646,15 @@ def _optimization_result_row(case, *, metric_offset: float) -> dict[str, object]
         "ttft_mean_ms": 10.0 + metric_offset,
         "tpot_mean_ms": 2.0 + metric_offset,
         "e2e_mean_ms": 20.0 + metric_offset,
+        "layer_ids": list(range(case.num_layers)),
+        "moe_trace_count": len(case.moe_layer_ids) if case.is_moe else 0,
+        "ep_workload_records": 1 if case.is_moe else 0,
+        "ep_barrier_records": 2 if case.is_moe else 0,
+        "ep_conservation_records": 1 if case.is_moe else 0,
+        "chunked_prefill_request_token_totals": {
+            str(request_id): case.prefill_tokens
+            for request_id in range(case.num_requests)
+        },
     }
     if case.decode_cuda_graph_mode != "none" or case.use_cuda_graph:
         check["cuda_graph_capture_count"] = 2
@@ -708,6 +717,11 @@ def test_optimization_comparison_expands_factorial_axes_and_reports_metrics() ->
     for pair in report["pairs"]:
         assert pair["status"] == "PASS"
         assert pair["changed_fields"] == [pair["target_field"]]
+        assert pair["workflow"]["control"]["layer_ids"] == pair["workflow"]["enabled"][
+            "layer_ids"
+        ]
+        assert pair["workflow"]["control"]["ep_barrier_records"] >= 0
+        assert pair["workflow"]["enabled"]["ep_barrier_records"] >= 0
         for metric in ("ttft_mean_ms", "tpot_mean_ms", "e2e_mean_ms"):
             values = pair["metrics"][metric]
             assert values["control_ms"] is not None
@@ -715,6 +729,64 @@ def test_optimization_comparison_expands_factorial_axes_and_reports_metrics() ->
             assert values["delta_ms"] == pytest.approx(
                 values["enabled_ms"] - values["control_ms"]
             )
+
+
+def test_optimization_comparison_rejects_layer_workflow_mismatch() -> None:
+    all_cases = build_optimization_matrix(REPO_ROOT)
+    pair_id = next(
+        case.pair_id
+        for case in all_cases
+        if case.optimization_stratum == "prefix"
+    )
+    cases = [case for case in all_cases if case.pair_id == pair_id]
+    result_rows = [
+        _optimization_result_row(case, metric_offset=float(index))
+        for index, case in enumerate(cases)
+    ]
+    enabled_row = next(
+        row for row in result_rows if row["case_id"].endswith("_enabled")
+    )
+    enabled_row["check"]["layer_ids"] = [0]
+
+    report = build_optimization_comparison(cases, result_rows)
+
+    assert report["status"] == "FAIL"
+    assert report["failed_pair_count"] == 1
+    assert "layer identity differs" in report["pairs"][0]["errors"]
+
+
+def test_chunked_prefill_pair_rejects_request_token_conservation_mismatch() -> None:
+    all_cases = build_optimization_matrix(REPO_ROOT)
+    group_id = next(
+        case.comparison_group_id
+        for case in all_cases
+        if case.optimization_stratum == "ordinary"
+        and case.comparison_group_id is not None
+        and case.enable_chunked_prefill
+    )
+    cases = [
+        case
+        for case in all_cases
+        if case.comparison_group_id == group_id
+        and case.decode_cuda_graph_mode == "none"
+    ]
+    assert len(cases) == 2
+    result_rows = [
+        _optimization_result_row(case, metric_offset=float(index))
+        for index, case in enumerate(cases)
+    ]
+    enabled_row = next(
+        row for row in result_rows if row["case"]["enable_chunked_prefill"]
+    )
+    enabled_row["check"]["chunked_prefill_request_token_totals"]["0"] += 1
+
+    report = build_optimization_comparison(cases, result_rows)
+
+    assert report["status"] == "FAIL"
+    assert report["failed_pair_count"] == 1
+    assert "Chunked Prefill request token conservation differs" in report["pairs"][
+        0
+    ]["errors"]
 
 
 def test_optimization_comparison_fails_only_the_pair_missing_activation() -> None:
@@ -1932,10 +2004,13 @@ def test_optimization_compare_cli_writes_json_csv_and_markdown(
     assert exit_code == 0
     assert report["status"] == "PASS"
     assert report["pair_count"] == 1
-    assert "control_ttft_mean_ms" in csv_path.read_text(encoding="utf-8")
-    assert "Latency values are report-only" in markdown_path.read_text(
-        encoding="utf-8"
-    )
+    assert "workflow" in report["pairs"][0]
+    csv_text = csv_path.read_text(encoding="utf-8")
+    assert "control_ttft_mean_ms" in csv_text
+    assert "control_workflow" in csv_text
+    markdown_text = markdown_path.read_text(encoding="utf-8")
+    assert "Latency values are report-only" in markdown_text
+    assert "Workflow control/enabled" in markdown_text
     output = capsys.readouterr().out
     assert f"comparison_json={json_path}" in output
     assert f"comparison_markdown={markdown_path}" in output

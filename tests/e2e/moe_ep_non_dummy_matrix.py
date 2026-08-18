@@ -3739,6 +3739,58 @@ def _optimization_activation_errors(
     return errors
 
 
+def _optimization_workflow_summary(
+    check: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Extract the runtime workflow evidence used by paired comparisons."""
+
+    count_fields = (
+        "moe_trace_count",
+        "ep_participant_records",
+        "ep_workload_records",
+        "ep_barrier_records",
+        "ep_conservation_records",
+        "chunked_prefill_split_count",
+        "prefix_cache_hit_blocks",
+        "spec_decode_iterations",
+        "spec_decode_committed_tokens",
+        "cuda_graph_capture_count",
+    )
+    summary: dict[str, Any] = {}
+    layer_ids = check.get("layer_ids")
+    if not isinstance(layer_ids, list) or any(
+        type(layer_id) is not int or layer_id < 0 for layer_id in layer_ids
+    ):
+        raise ValueError("optimization workflow layer_ids must be non-negative ints")
+    summary["layer_ids"] = list(layer_ids)
+    for field in count_fields:
+        value = check.get(field, 0)
+        if type(value) is not int or value < 0:
+            raise ValueError(
+                f"optimization workflow {field} must be a non-negative int"
+            )
+        summary[field] = value
+
+    raw_token_totals = check.get("chunked_prefill_request_token_totals", {})
+    if not isinstance(raw_token_totals, Mapping):
+        raise ValueError(
+            "optimization workflow chunked_prefill_request_token_totals "
+            "must be a mapping"
+        )
+    token_totals: dict[str, int] = {}
+    for request_id, token_count in raw_token_totals.items():
+        if type(token_count) is not int or token_count < 0:
+            raise ValueError(
+                "optimization workflow request token totals must contain "
+                "non-negative ints"
+            )
+        token_totals[str(request_id)] = token_count
+    summary["chunked_prefill_request_token_totals"] = dict(
+        sorted(token_totals.items())
+    )
+    return summary
+
+
 def build_optimization_comparison(
     cases: Sequence[MatrixCase],
     result_rows: Sequence[Mapping[str, Any]],
@@ -3808,6 +3860,24 @@ def build_optimization_comparison(
                 f"pair changes fields={changed_fields}, expected={[target_field]}"
             )
 
+        control_workflow = _optimization_workflow_summary(control_check)
+        enabled_workflow = _optimization_workflow_summary(enabled_check)
+        if control_workflow["layer_ids"] != enabled_workflow["layer_ids"]:
+            errors.append(
+                "layer identity differs "
+                f"control={control_workflow['layer_ids']} "
+                f"enabled={enabled_workflow['layer_ids']}"
+            )
+        if (
+            spec["optimization"] == "chunked_prefill"
+            and control_workflow["chunked_prefill_request_token_totals"]
+            != enabled_workflow["chunked_prefill_request_token_totals"]
+        ):
+            errors.append(
+                "Chunked Prefill request token conservation differs "
+                "between control and enabled cases"
+            )
+
         errors.extend(
             _optimization_activation_errors(
                 str(spec["optimization"]),
@@ -3868,6 +3938,10 @@ def build_optimization_comparison(
                 "latency_oracle": "report_only",
                 "status": "PASS" if not errors else "FAIL",
                 "errors": "; ".join(errors),
+                "workflow": {
+                    "control": control_workflow,
+                    "enabled": enabled_workflow,
+                },
                 "metrics": metrics,
             }
         )
@@ -3918,6 +3992,8 @@ def write_optimization_comparison_artifacts(
         "latency_oracle",
         "status",
         "errors",
+        "control_workflow",
+        "enabled_workflow",
     ]
     for metric_field in metric_fields:
         metric_name = metric_field.removesuffix("_ms")
@@ -3934,6 +4010,13 @@ def write_optimization_comparison_artifacts(
     for pair in report.get("pairs", ()):
         row = {field: pair.get(field, "") for field in csv_fields[:14]}
         row["changed_fields"] = ",".join(pair.get("changed_fields", ()))
+        workflow = pair.get("workflow", {})
+        row["control_workflow"] = json.dumps(
+            workflow.get("control", {}), sort_keys=True
+        )
+        row["enabled_workflow"] = json.dumps(
+            workflow.get("enabled", {}), sort_keys=True
+        )
         metrics = pair.get("metrics", {})
         for metric_field in metric_fields:
             metric_name = metric_field.removesuffix("_ms")
@@ -3961,8 +4044,8 @@ def write_optimization_comparison_artifacts(
         "",
         "| Pair | Optimization | Architecture | Control | Enabled | Status | "
         "TTFT control/enabled/delta (ms) | TPOT control/enabled/delta (ms) | "
-        "E2E control/enabled/delta (ms) | Errors |",
-        "|---|---|---|---|---|---|---:|---:|---:|---|",
+        "E2E control/enabled/delta (ms) | Workflow control/enabled | Errors |",
+        "|---|---|---|---|---|---|---:|---:|---:|---|---|",
     ]
 
     def metric_triplet(pair: Mapping[str, Any], metric_field: str) -> str:
@@ -3972,12 +4055,28 @@ def write_optimization_comparison_artifacts(
             f"{values['delta_ms']}"
         )
 
+    def workflow_triplet(pair: Mapping[str, Any]) -> str:
+        workflow = pair.get("workflow", {})
+        rendered: list[str] = []
+        for role in ("control", "enabled"):
+            summary = workflow.get(role, {})
+            rendered.append(
+                f"{role}: layers={summary.get('layer_ids', [])}; "
+                f"EP(workload/barrier/conservation)="
+                f"{summary.get('ep_workload_records', 0)}/"
+                f"{summary.get('ep_barrier_records', 0)}/"
+                f"{summary.get('ep_conservation_records', 0)}; "
+                f"chunk_splits={summary.get('chunked_prefill_split_count', 0)}"
+            )
+        return "<br>".join(rendered)
+
     for pair in report.get("pairs", ()):
         errors = str(pair.get("errors", "")).replace("|", "\\|")
+        workflow = workflow_triplet(pair).replace("|", "\\|")
         markdown_lines.append(
             "| {comparison_id} | {optimization} | {architecture} | "
             "`{control_case_id}` | `{enabled_case_id}` | {status} | "
-            "{ttft} | {tpot} | {e2e} | {errors} |".format(
+            "{ttft} | {tpot} | {e2e} | {workflow} | {errors} |".format(
                 comparison_id=pair["comparison_id"],
                 optimization=pair["optimization"],
                 architecture=pair["architecture"],
@@ -3987,6 +4086,7 @@ def write_optimization_comparison_artifacts(
                 ttft=metric_triplet(pair, "ttft_mean_ms"),
                 tpot=metric_triplet(pair, "tpot_mean_ms"),
                 e2e=metric_triplet(pair, "e2e_mean_ms"),
+                workflow=workflow,
                 errors=errors,
             )
         )
