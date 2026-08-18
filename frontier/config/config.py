@@ -2889,6 +2889,22 @@ class ClusterConfig:
             "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
         },
     )
+    prefill_replica_scheduler_config_enable_chunked_prefill: Optional[bool] = field(
+        default=None,
+        metadata={
+            "help": "Enable Chunked Prefill for the prefill cluster replica scheduler.",
+            "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
+        },
+    )
+    prefill_replica_scheduler_config_long_prefill_token_threshold: Optional[int] = (
+        field(
+            default=None,
+            metadata={
+                "help": "Long-prefill token threshold for the prefill cluster replica scheduler.",
+                "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
+            },
+        )
+    )
     prefill_replica_scheduler_config_num_blocks: Optional[int] = field(
         default=None,
         metadata={
@@ -4605,6 +4621,8 @@ class ClusterConfig:
                 prefill_replica_scheduler_config_type=self.prefill_replica_scheduler_config_type,
                 prefill_replica_scheduler_config_batch_size_cap=self.prefill_replica_scheduler_config_batch_size_cap,
                 prefill_replica_scheduler_config_max_tokens_in_batch=self.prefill_replica_scheduler_config_max_tokens_in_batch,
+                prefill_replica_scheduler_config_enable_chunked_prefill=self.prefill_replica_scheduler_config_enable_chunked_prefill,
+                prefill_replica_scheduler_config_long_prefill_token_threshold=self.prefill_replica_scheduler_config_long_prefill_token_threshold,
                 prefill_replica_scheduler_config_num_blocks=self.prefill_replica_scheduler_config_num_blocks,
                 prefill_replica_scheduler_config_block_size=self.prefill_replica_scheduler_config_block_size,
                 prefill_replica_scheduler_config_watermark_blocks_fraction=self.prefill_replica_scheduler_config_watermark_blocks_fraction,

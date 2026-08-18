@@ -23,6 +23,9 @@ from frontier.config.config import (
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
+from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+    BaseClusterScheduler,
+)
 from frontier.types import ClusterType
 
 
@@ -126,6 +129,32 @@ def test_pdaf_decode_pipeline_defaults_do_not_restrict_prefill_pipeline_parallel
     assert config.prefill_replica_config.num_pipeline_stages == 2
     assert config.decode_attn_replica_config.num_pipeline_stages == 1
     assert config.decode_ffn_replica_config.num_pipeline_stages == 1
+
+
+def test_pdaf_prefill_vllm_scheduler_receives_role_specific_chunked_prefill_controls() -> None:
+    config = _build_pdaf_cluster_config(
+        model_name="step-moe-noquant",
+        prefill_replica_scheduler_config_type="vllm_v1",
+        prefill_replica_scheduler_config_max_tokens_in_batch=64,
+        prefill_replica_scheduler_config_enable_chunked_prefill=True,
+        prefill_replica_scheduler_config_long_prefill_token_threshold=16,
+    )
+    prefill_config = config.get_cluster_configs_for_disaggregation()[
+        ClusterType.PREFILL
+    ]
+
+    scheduler_config = (
+        BaseClusterScheduler._get_cluster_specific_replica_scheduler_config(
+            None,
+            prefill_config,
+            ClusterType.PREFILL,
+        )
+    )
+
+    assert isinstance(scheduler_config, VllmV1SchedulerConfig)
+    assert scheduler_config.max_tokens_in_batch == 64
+    assert scheduler_config.enable_chunked_prefill is True
+    assert scheduler_config.long_prefill_token_threshold == 16
 
 
 def _build_decode_ffn_scheduler(

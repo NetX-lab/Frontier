@@ -11,7 +11,11 @@ import pytest
 
 from frontier.config.model_config import BaseModelConfig
 from frontier.entities import Batch, Request
-from frontier.entities.batch import DenseFFNBatchGroup, EPBatchGroup
+from frontier.entities.batch import (
+    AFDStageMetadata,
+    DenseFFNBatchGroup,
+    EPBatchGroup,
+)
 from frontier.entities.batch_stage import BatchStage
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
 from frontier.events.ep_alltoall_dispatch_ready_event import (
@@ -20,6 +24,9 @@ from frontier.events.ep_alltoall_dispatch_ready_event import (
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
     SklearnDisaggregationExecutionTimePredictor,
+)
+from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+    SklearnExecutionTimePredictor,
 )
 from frontier.moe_ep_workload import LayerEPWorkload
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
@@ -33,7 +40,7 @@ from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     FULL_STAGE_WORLD,
     StageExecutionContext,
 )
-from frontier.types import ClusterType
+from frontier.types import ClusterType, MeasurementType
 
 
 def test_dense_ffn_batch_group_has_no_ep_lane_identity() -> None:
@@ -140,6 +147,31 @@ def _transfer_info(*, layer_id: int, afd_stage_idx: int = 2):
         target_ffn_replica_id=0,
         activation_size_bytes=128,
     )
+
+
+def _attach_cuda_graph_metadata(
+    batch: Batch,
+    *,
+    stage_idx: int,
+    represents_all_stages: bool = False,
+) -> AFDStageMetadata:
+    metadata = AFDStageMetadata(
+        num_stages=3,
+        original_total_tokens=3,
+        padded_total_tokens=6,
+        ffn_compute_total_tokens=10,
+        original_stage_token_lens=[1, 1, 1],
+        padded_stage_token_lens=[1, 1, 4],
+        ffn_compute_stage_token_lens=[1, 1, 8],
+        attention_use_cuda_graph=True,
+        attention_cudagraph_capture_sizes=[1, 2, 4, 8],
+        ffn_use_cuda_graph=True,
+        ffn_cudagraph_capture_sizes=[1, 2, 4, 8, 16],
+    )
+    batch.afd_stage_idx = stage_idx
+    batch.afd_stage_represents_all_stages = represents_all_stages
+    batch.afd_stage_metadata = metadata
+    return metadata
 
 
 def _branch_scheduler(model_config, *, layer_id: int):
@@ -367,6 +399,79 @@ def test_ep_wave_schedule_materializes_one_shared_workload_for_all_lanes(
     assert [len(sink._m2n_immediate_batch_queue) for sink in queue_sinks] == [1, 1]
 
 
+def test_moe_ep_batches_preserve_decode_ffn_cuda_graph_metadata(
+    monkeypatch,
+    mixed_model_config,
+) -> None:
+    scheduler, _ = _builder_scheduler(mixed_model_config)
+    source_batch = _source_batch(layer_id=4, afd_stage_idx=2)
+    source_batch._num_tokens = [3]
+    source_batch._total_num_tokens = 3
+    expected_metadata = _attach_cuda_graph_metadata(
+        source_batch,
+        stage_idx=2,
+    )
+    scheduler._m2n_ready_groups = deque(
+        [[(source_batch, _transfer_info(layer_id=4, afd_stage_idx=2))]]
+    )
+    scheduler._predictor = SimpleNamespace(
+        _decode_ffn_routing_details={
+            0: {4: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
+        }
+    )
+    scheduler._replica_ep_size = 2
+    scheduler._config.replica_config.router_topk = 2
+    scheduler._config.replica_config.total_expert_num = 4
+    scheduler._config.replica_config.local_expert_num = 2
+    scheduler._config.replica_config.moe_expert_parallel_size = 2
+
+    queue_sinks = [_QueuedBatchSink(), _QueuedBatchSink()]
+    scheduler.get_replica_scheduler = Mock(
+        side_effect=lambda _replica_id, ep_id: queue_sinks[ep_id]
+    )
+
+    monkeypatch.setattr(
+        scheduler,
+        "_materialize_ep_wave_workload",
+        Mock(
+            return_value=LayerEPWorkload(
+                target_replica_id=0,
+                global_layer_id=4,
+                routing_token_count=3,
+                router_topk=2,
+                total_routed_assignments=6,
+                global_per_expert_tokens={0: 0, 1: 0, 2: 3, 3: 3},
+                per_ep_per_expert_tokens={
+                    0: {0: 0, 1: 0},
+                    1: {2: 3, 3: 3},
+                },
+                per_ep_routed_tokens={0: 0, 1: 6},
+                participant_ep_ids=(0, 1),
+                expert_to_ep={0: 0, 1: 0, 2: 1, 3: 1},
+            )
+        ),
+    )
+
+    scheduler.schedule_ffn_with_m2n_immediate()
+
+    ep_batches = [
+        sink._m2n_immediate_batch_queue[0] for sink in queue_sinks
+    ]
+    for ep_batch in ep_batches:
+        assert ep_batch.afd_stage_idx == 2
+        assert ep_batch.afd_stage_represents_all_stages is False
+        assert ep_batch.afd_stage_metadata == expected_metadata
+        records = SklearnExecutionTimePredictor._build_cuda_graph_activation_records(
+            object(),
+            ep_batch,
+            MeasurementType.KERNEL_ONLY,
+            ClusterType.DECODE_FFN,
+        )
+        assert records[0]["capture_hit"] is True
+        assert records[0]["original_tokens"] == [4]
+        assert records[0]["padded_tokens"] == [8]
+
+
 def test_dense_builder_propagates_decode_ffn_layer_metadata(
     mixed_model_config,
 ) -> None:
@@ -385,6 +490,77 @@ def test_dense_builder_propagates_decode_ffn_layer_metadata(
     assert isinstance(dense_batch, DenseFFNBatchGroup)
     assert getattr(dense_batch, "decode_ffn_layer_id", None) == 3
     assert dense_batch.afd_stage_idx == 2
+
+
+def test_dense_builder_preserves_decode_ffn_cuda_graph_metadata(
+    mixed_model_config,
+) -> None:
+    scheduler, queue_sink = _builder_scheduler(mixed_model_config)
+    source_batch = _source_batch(layer_id=3, afd_stage_idx=2)
+    expected_metadata = _attach_cuda_graph_metadata(
+        source_batch,
+        stage_idx=2,
+    )
+    ready_groups = deque(
+        [[(source_batch, _transfer_info(layer_id=3, afd_stage_idx=2))]]
+    )
+
+    scheduler._schedule_dense_ffn_from_m2n_group(ready_groups, Mock())
+
+    dense_batch = queue_sink._m2n_immediate_batch_queue[0]
+    assert dense_batch.afd_stage_idx == 2
+    assert dense_batch.afd_stage_represents_all_stages is False
+    assert dense_batch.afd_stage_metadata == expected_metadata
+    records = SklearnExecutionTimePredictor._build_cuda_graph_activation_records(
+        object(),
+        dense_batch,
+        MeasurementType.KERNEL_ONLY,
+        ClusterType.DECODE_FFN,
+    )
+    assert records[0]["capture_hit"] is True
+    assert records[0]["original_tokens"] == [4]
+    assert records[0]["padded_tokens"] == [8]
+
+
+def test_dense_builder_aggregates_metadata_across_source_batches(
+    mixed_model_config,
+) -> None:
+    scheduler, queue_sink = _builder_scheduler(mixed_model_config)
+    first_source = _source_batch(layer_id=3, afd_stage_idx=2)
+    second_source = _source_batch(layer_id=3, afd_stage_idx=2)
+    first_metadata = _attach_cuda_graph_metadata(first_source, stage_idx=2)
+    _attach_cuda_graph_metadata(second_source, stage_idx=2)
+    ready_groups = deque(
+        [
+            [
+                (first_source, _transfer_info(layer_id=3, afd_stage_idx=2)),
+                (second_source, _transfer_info(layer_id=3, afd_stage_idx=2)),
+            ]
+        ]
+    )
+
+    scheduler._schedule_dense_ffn_from_m2n_group(ready_groups, Mock())
+
+    dense_batch = queue_sink._m2n_immediate_batch_queue[0]
+    metadata = dense_batch.afd_stage_metadata
+    assert metadata is not None
+    assert metadata is not first_metadata
+    assert metadata.original_total_tokens == 6
+    assert metadata.padded_total_tokens == 12
+    assert metadata.ffn_compute_total_tokens == 20
+    assert metadata.original_stage_token_lens == [2, 2, 2]
+    assert metadata.padded_stage_token_lens == [2, 2, 8]
+    assert metadata.ffn_compute_stage_token_lens == [2, 2, 16]
+    assert dense_batch.afd_stage_represents_all_stages is False
+    records = SklearnExecutionTimePredictor._build_cuda_graph_activation_records(
+        object(),
+        dense_batch,
+        MeasurementType.KERNEL_ONLY,
+        ClusterType.DECODE_FFN,
+    )
+    assert records[0]["capture_hit"] is True
+    assert records[0]["original_tokens"] == [8]
+    assert records[0]["padded_tokens"] == [16]
 
 
 def test_dense_ffn_batch_uses_full_stage_parent_scope(

@@ -115,6 +115,10 @@ class BatchStage(BaseEntity):
         return [request.id for request in self._requests]
 
     @property
+    def request_runtime_epochs(self) -> List[int]:
+        return list(self._request_runtime_epochs)
+
+    @property
     def requests(self) -> List[Request]:
         return self._requests
 
@@ -216,6 +220,7 @@ class BatchStage(BaseEntity):
             "pipeline_stage": self._pipeline_stage,
             "scheduled": self._scheduled,
             "request_ids": self.request_ids,
+            "request_runtime_epochs": self.request_runtime_epochs,
             "num_tokens": self._num_tokens,
             "total_tokens": self._total_tokens,
             "effective_total_tokens_compute": self._effective_total_tokens_compute,

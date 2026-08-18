@@ -100,6 +100,7 @@ class _DummyBatchStage:
     def __init__(self) -> None:
         self._batch_id = 17
         self.request_ids = [101]
+        self.request_runtime_epochs = [0]
         self.num_tokens = [1]
         self.request_num_prefill_tokens = [1]
         self.scheduled_at = 0.0

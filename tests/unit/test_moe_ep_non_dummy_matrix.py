@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import json
 import shlex
+import threading
+import time
 from collections import Counter
 from dataclasses import asdict, replace
 from pathlib import Path
 
 import pytest
 
+import tests.e2e.moe_ep_non_dummy_matrix as matrix_module
 from tests.e2e.moe_ep_non_dummy_matrix import (
     _find_metrics_dir,
     _merge_result_rows,
@@ -45,6 +48,7 @@ def _write_minimal_profile(
     ep_size: int | None = None,
     routing_runtime_path: str | None = None,
     include_mtp_columns: bool = False,
+    include_mtp_same_tp_columns: bool = False,
 ) -> None:
     fields = [
         "profiling_precision",
@@ -55,12 +59,30 @@ def _write_minimal_profile(
         "num_tensor_parallel_workers",
     ]
     if ep_size is not None:
-        fields.extend(["expert_parallel_size", "routing_runtime_path"])
+        fields.extend(
+            [
+                "expert_parallel_size",
+                "routing_runtime_path",
+                "gating_runtime_context",
+                "time_stats.moe_gating_linear.median",
+                "time_stats.moe_gating_routing_topk.median",
+                "time_stats.moe_shuffling.median",
+                "time_stats.moe_grouped_gemm.median",
+            ]
+        )
     if include_mtp_columns:
         fields.extend(
             [
                 "time_stats.mtp_fusion_proj.median",
                 "time_stats.lm_head_linear.median",
+            ]
+        )
+    if include_mtp_same_tp_columns:
+        fields.extend(
+            [
+                "time_stats.emb.median",
+                "time_stats.input_layernorm.median",
+                "time_stats.post_attention_layernorm.median",
             ]
         )
 
@@ -75,9 +97,21 @@ def _write_minimal_profile(
             str(tp_size),
         ]
         if ep_size is not None:
-            values.extend([str(ep_size), str(routing_runtime_path)])
+            values.extend(
+                [
+                    str(ep_size),
+                    str(routing_runtime_path),
+                    "standalone_legacy",
+                    "1.0",
+                    "2.0",
+                    "3.0",
+                    "4.0",
+                ]
+            )
         if include_mtp_columns:
             values.extend(["1.0", "2.0"])
+        if include_mtp_same_tp_columns:
+            values.extend(["", "", ""])
         rows.append(",".join(values))
     path.write_text(
         ",".join(fields) + "\n" + "\n".join(rows) + "\n",
@@ -111,6 +145,7 @@ def _prefill_stage_ledger_row(
     request_ids: list[str],
     request_num_tokens: list[int],
     request_num_prefill_tokens: list[int] | None = None,
+    request_runtime_epochs: list[int] | None = None,
     cluster_type: str = "MONOLITHIC",
     decode_component_ms: float = 0.0,
 ) -> dict[str, object]:
@@ -136,6 +171,11 @@ def _prefill_stage_ledger_row(
         if request_num_prefill_tokens is None
         else request_num_prefill_tokens
     )
+    row["request_runtime_epochs"] = (
+        [0] * len(request_ids)
+        if request_runtime_epochs is None
+        else request_runtime_epochs
+    )
     return row
 
 
@@ -149,6 +189,8 @@ def _write_request_metrics(
         "request_prefix_cache_hit_blocks",
         "request_spec_total_iterations",
         "request_spec_committed_tokens",
+        "request_num_prefill_tokens",
+        "request_prefill_preemption_count",
     ]
     metrics_dir.mkdir(parents=True, exist_ok=True)
     lines = [",".join(headers)]
@@ -418,12 +460,21 @@ def test_optimization_matrix_rejects_unsupported_combinations() -> None:
         validate_optimization_case(
             replace(mtp_case, routing_distribution="balanced")
         )
+    with pytest.raises(ValueError, match="PD-AF.*pipeline stages"):
+        validate_optimization_case(
+            replace(pdaf_case, pipeline_stages=2)
+        )
 
 
 def test_optimization_matrix_recomputes_exact_topology_and_pp_marginals() -> None:
     cases = build_optimization_matrix(REPO_ROOT)
 
-    assert Counter(case.pipeline_stages for case in cases) == Counter({1: 136, 2: 64})
+    assert Counter(case.pipeline_stages for case in cases) == Counter({1: 140, 2: 60})
+    assert all(
+        case.pipeline_stages == 1
+        for case in cases
+        if case.architecture == "pd-af-disaggregation"
+    )
     assert all(calculate_case_cards(case) == case.total_cards for case in cases)
     assert all(case.total_cards in {8, 32} for case in cases)
     assert all(
@@ -1013,9 +1064,9 @@ def test_optimization_command_materializes_declared_controls() -> None:
     assert "--speculative_decoding_config_enabled" in mtp_enabled_command
     assert prefix_control_env["MAX_TOKENS_IN_BATCH"] == "32"
     assert prefix_enabled_env["MAX_TOKENS_IN_BATCH"] == "32"
-    assert int(chunked_prefill_env["MAX_TOKENS_IN_BATCH"]) == max(
+    assert int(chunked_prefill_env["MAX_TOKENS_IN_BATCH"]) == min(
         64,
-        chunked_prefill.prefill_tokens,
+        chunked_prefill.prefill_tokens // 2,
     )
     assert chunked_prefill_env["LONG_PREFILL_TOKEN_THRESHOLD"] == "16"
     assert pdaf_graph_env["ENABLE_CUDA_GRAPH"] == "true"
@@ -1043,18 +1094,37 @@ def test_optimization_command_batch_budget_is_schedulable_and_pair_stable() -> N
         _, env = build_shell_command(case, REPO_ROOT, output_root)
         budget = int(env["MAX_TOKENS_IN_BATCH"])
         budgets[case.case_id] = budget
-        if case.optimization_stratum != "prefix":
+        if case.enable_chunked_prefill:
+            assert 0 < budget < case.prefill_tokens, case.case_id
+        elif case.optimization_stratum != "prefix":
             assert budget >= case.prefill_tokens, case.case_id
 
-    groups: dict[str, list[object]] = {}
+    groups: dict[tuple[str, bool], list[object]] = {}
     for case in cases:
         group_id = case.pair_id or case.comparison_group_id
         if group_id is not None:
-            groups.setdefault(group_id, []).append(case)
+            group_key = (group_id, case.enable_chunked_prefill)
+            groups.setdefault(group_key, []).append(case)
 
-    for group_id, group in groups.items():
+    for (group_id, chunked_prefill_enabled), group in groups.items():
         if len(group) > 1:
-            assert len({budgets[case.case_id] for case in group}) == 1, group_id
+            assert len({budgets[case.case_id] for case in group}) == 1, (
+                group_id,
+                chunked_prefill_enabled,
+            )
+
+
+def test_chunked_prefill_command_budget_forces_multiple_prefill_chunks() -> None:
+    for case in build_optimization_matrix(REPO_ROOT):
+        if not case.enable_chunked_prefill:
+            continue
+        _, env = build_shell_command(
+            case,
+            REPO_ROOT,
+            Path("/data/ycfeng/tmp/optimization-matrix"),
+        )
+        budget = int(env["MAX_TOKENS_IN_BATCH"])
+        assert 0 < budget < case.prefill_tokens, case.case_id
 
 
 def test_online_activation_requires_a_positive_inter_arrival_delay(
@@ -1374,6 +1444,64 @@ def test_chunked_prefill_accepts_token_conserving_stage_ledger_without_debug_log
     assert result["chunked_prefill_split_count"] == 1
 
 
+def test_chunked_prefill_accepts_explicit_preemption_recompute_epochs(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(
+        enable_chunked_prefill=True,
+        prefill_tokens=32,
+        num_requests=1,
+        pipeline_stages=1,
+    )
+    log_path = tmp_path / "chunked.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_request_metrics(
+        metrics_dir,
+        [
+            {
+                "Request Id": 7,
+                "request_num_prefill_tokens": 32,
+                "request_prefill_preemption_count": 1,
+            }
+        ],
+    )
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=0,
+                stage_id=0,
+                request_ids=["7"],
+                request_num_tokens=[16],
+                request_runtime_epochs=[0],
+            ),
+            _prefill_stage_ledger_row(
+                batch_id=1,
+                stage_id=0,
+                request_ids=["7"],
+                request_num_tokens=[16],
+                request_runtime_epochs=[1],
+            ),
+            _prefill_stage_ledger_row(
+                batch_id=2,
+                stage_id=0,
+                request_ids=["7"],
+                request_num_tokens=[16],
+                request_runtime_epochs=[1],
+            ),
+        ],
+    )
+    _write_success_log(log_path)
+
+    result = check_case_log(case, log_path, metrics_dir)
+
+    assert result["status"] == "PASS"
+    assert result["chunked_prefill_request_token_totals"] == {"7": 48}
+    assert result["chunked_prefill_request_recompute_token_totals"] == {"7": 16}
+    assert result["chunked_prefill_prefill_preemption_count"] == 1
+
+
 def test_chunked_prefill_counts_only_request_prefill_tokens_in_mixed_batch(
     tmp_path: Path,
 ) -> None:
@@ -1431,6 +1559,47 @@ def test_chunked_prefill_counts_only_request_prefill_tokens_in_mixed_batch(
         "1": 32,
     }
     assert result["chunked_prefill_split_count"] == 2
+
+
+def test_chunked_prefill_ignores_speculative_verify_prefill_kernel_rows(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(
+        enable_chunked_prefill=False,
+        prefill_tokens=32,
+        num_requests=1,
+        pipeline_stages=1,
+    )
+    log_path = tmp_path / "verify.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=0,
+                stage_id=0,
+                request_ids=["7"],
+                request_num_tokens=[32],
+                request_num_prefill_tokens=[32],
+            ),
+            _prefill_stage_ledger_row(
+                batch_id=1,
+                stage_id=0,
+                request_ids=["7"],
+                request_num_tokens=[2],
+                request_num_prefill_tokens=[0],
+                decode_component_ms=1.0,
+            ),
+        ],
+    )
+    _write_success_log(log_path)
+
+    result = check_case_log(case, log_path, metrics_dir)
+
+    assert result["status"] == "PASS"
+    assert result["chunked_prefill_prefill_row_count"] == 1
+    assert result["chunked_prefill_split_count"] == 0
 
 
 @pytest.mark.parametrize(
@@ -1993,6 +2162,59 @@ def test_optimization_run_preflights_full_matrix_before_partial_launch(
     ).exists()
 
 
+def test_optimization_run_forwards_bounded_parallelism(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cases = build_optimization_matrix(REPO_ROOT)[:2]
+    captured_parallelism: list[int] = []
+
+    monkeypatch.setattr(
+        matrix_module,
+        "build_optimization_matrix",
+        lambda _repo_root: cases,
+    )
+    monkeypatch.setattr(
+        matrix_module,
+        "preflight_cases",
+        lambda selected_cases, *_args, **_kwargs: [
+            {
+                "case_id": case.case_id,
+                "status": "READY",
+                "blockers": [],
+                "preflight_only": True,
+            }
+            for case in selected_cases
+        ],
+    )
+
+    def fake_run_cases(*_args, max_parallel_cases, **_kwargs):
+        captured_parallelism.append(max_parallel_cases)
+        return [{"status": "PASS"} for _case in cases]
+
+    monkeypatch.setattr(matrix_module, "run_cases", fake_run_cases)
+
+    exit_code = main(
+        [
+            "--mode",
+            "run",
+            "--matrix-kind",
+            "optimization",
+            "--repo-root",
+            str(REPO_ROOT),
+            "--task-dir",
+            str(tmp_path / "task"),
+            "--output-root",
+            str(tmp_path / "outputs"),
+            "--max-parallel-cases",
+            "2",
+        ]
+    )
+
+    assert exit_code == 0
+    assert captured_parallelism == [2]
+
+
 def test_run_cases_preflights_every_selected_case_before_launch(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -2028,6 +2250,83 @@ def test_run_cases_preflights_every_selected_case_before_launch(
         )
 
     assert validated_case_ids == [case.case_id for case in cases]
+
+
+def test_run_cases_bounds_parallelism_and_serializes_ledger_writes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cases = build_optimization_matrix(REPO_ROOT)[:4]
+    active = 0
+    max_active = 0
+    active_lock = threading.Lock()
+    write_thread_ids: list[int] = []
+    real_write_jsonl = matrix_module._write_jsonl
+
+    monkeypatch.setattr(
+        matrix_module,
+        "validate_profile_inputs",
+        lambda *_args, **_kwargs: [],
+    )
+    monkeypatch.setattr(
+        matrix_module,
+        "build_shell_command",
+        lambda case, *_args, **_kwargs: (case.case_id, {}),
+    )
+    monkeypatch.setattr(
+        matrix_module,
+        "_find_metrics_dir",
+        lambda output_root, case, **_kwargs: output_root / case.case_id / "metrics",
+    )
+    monkeypatch.setattr(
+        matrix_module,
+        "check_case_log",
+        lambda *_args, **_kwargs: {"status": "PASS"},
+    )
+
+    def fake_run(_command, *, stdout, **_kwargs):
+        nonlocal active, max_active
+        with active_lock:
+            active += 1
+            max_active = max(max_active, active)
+        time.sleep(0.05)
+        with active_lock:
+            active -= 1
+        return type("Completed", (), {"returncode": 0})()
+
+    def recording_write_jsonl(path, rows):
+        write_thread_ids.append(threading.get_ident())
+        return real_write_jsonl(path, rows)
+
+    monkeypatch.setattr(matrix_module.subprocess, "run", fake_run)
+    monkeypatch.setattr(matrix_module, "_write_jsonl", recording_write_jsonl)
+
+    results_path = tmp_path / "results.jsonl"
+    results = run_cases(
+        cases,
+        REPO_ROOT,
+        tmp_path / "outputs",
+        results_path,
+        max_parallel_cases=2,
+    )
+
+    assert [result["case_id"] for result in results] == [
+        case.case_id for case in cases
+    ]
+    assert [row["case_id"] for row in _load_result_rows_for_test(results_path)] == [
+        case.case_id for case in cases
+    ]
+    assert max_active == 2
+    assert write_thread_ids
+    assert set(write_thread_ids) == {threading.get_ident()}
+
+
+def _load_result_rows_for_test(path: Path) -> list[dict[str, object]]:
+    return [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 def test_run_cases_uses_filesystem_freshness_marker(
@@ -2229,6 +2528,57 @@ def test_profile_validation_requires_exact_moe_tp_ep_tuple(tmp_path: Path) -> No
         validate_profile_inputs(case, tmp_path)
 
 
+def test_pdd_profile_validation_uses_runtime_op_level_tp_policy(
+    tmp_path: Path,
+) -> None:
+    case = next(
+        case
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.case_id == "pd_disaggregation_ordinary_graph_11_none"
+    )
+    model_dir = tmp_path / case.device / case.model_name
+    model_dir.mkdir(parents=True)
+    _write_minimal_profile(
+        model_dir / "attention.csv",
+        measurement_type="CUDA_EVENT",
+        tp_sizes=(case.attn_tensor_parallel_size,),
+    )
+    _write_minimal_profile(
+        model_dir / "linear_op.csv",
+        measurement_type="CUDA_EVENT",
+        tp_sizes=(
+            case.attn_tensor_parallel_size,
+            case.moe_tensor_parallel_size,
+        ),
+    )
+    (model_dir / "moe.csv").write_text(
+        "profiling_precision,model_arch,model_architecture_profile,"
+        "quant_signature,measurement_type,num_tensor_parallel_workers,"
+        "expert_parallel_size,routing_runtime_path,"
+        "gating_runtime_context,"
+        "time_stats.moe_gating_linear.median,"
+        "time_stats.moe_gating_routing_topk.median,"
+        "time_stats.moe_shuffling.median,"
+        "time_stats.moe_grouped_gemm.median\n"
+        "BF16,generic,generic,none,CUDA_EVENT,1,2,uniform_topk,"
+        "standalone_legacy,"
+        "1.0,2.0,3.0,4.0\n"
+        "BF16,generic,generic,none,CUDA_EVENT,4,2,standard_fused_topk,"
+        "standalone_legacy,"
+        "1.0,2.0,3.0,4.0\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "moe_gating_routing_topk.*TP=1.*"
+            "routing_runtime_path=standard_fused_topk"
+        ),
+    ):
+        validate_profile_inputs(case, tmp_path)
+
+
 def test_profile_validation_requires_target_embedded_mtp_columns(
     tmp_path: Path,
 ) -> None:
@@ -2261,6 +2611,43 @@ def test_profile_validation_requires_target_embedded_mtp_columns(
     )
 
     with pytest.raises(ValueError, match="mtp_fusion_proj.*lm_head_linear"):
+        validate_profile_inputs(case, tmp_path)
+
+
+def test_profile_validation_rejects_empty_target_embedded_mtp_same_tp_columns(
+    tmp_path: Path,
+) -> None:
+    case = next(
+        case
+        for case in build_optimization_matrix(REPO_ROOT)
+        if case.enable_mtp and case.architecture == "co-location"
+    )
+    model_dir = tmp_path / case.device / case.model_name
+    model_dir.mkdir(parents=True)
+    _write_minimal_profile(
+        model_dir / "attention.csv",
+        measurement_type="CUDA_EVENT",
+        tp_sizes=(case.attn_tensor_parallel_size,),
+    )
+    _write_minimal_profile(
+        model_dir / "linear_op.csv",
+        measurement_type="CUDA_EVENT",
+        tp_sizes=(
+            case.attn_tensor_parallel_size,
+            case.moe_tensor_parallel_size,
+        ),
+        include_mtp_columns=True,
+        include_mtp_same_tp_columns=True,
+    )
+    _write_minimal_profile(
+        model_dir / "moe.csv",
+        measurement_type="CUDA_EVENT",
+        tp_sizes=(case.moe_tensor_parallel_size,),
+        ep_size=case.ep_size,
+        routing_runtime_path="uniform_topk",
+    )
+
+    with pytest.raises(ValueError, match="same-TP.*emb"):
         validate_profile_inputs(case, tmp_path)
 
 

@@ -2478,6 +2478,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
     def _should_include_spec_decode_proposer_overhead(self, batch: Batch) -> bool:
         if bool(
+            getattr(batch, "_suppress_spec_decode_proposer_overhead", False)
+        ):
+            return False
+        if bool(
             getattr(
                 self._replica_config,
                 "suppress_spec_decode_proposer_overhead",
@@ -3636,6 +3640,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         # Cluster-specific needs with measurement-aware family split.
         need_prefill = measurement_type == MeasurementType.CUDA_EVENT and self._cluster_type in [
             ClusterType.PREFILL,
+            ClusterType.DECODE,
             ClusterType.MONOLITHIC,
         ]
         need_decode = self._cluster_type in [
@@ -4243,7 +4248,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             ]
 
         if operation == self._dense_attention_prefill_op_name():
-            return self._cluster_type in [ClusterType.PREFILL, ClusterType.MONOLITHIC]
+            # PDD DECODE executes speculative verify with the same measured
+            # prefill-style attention kernel. PD-AF DECODE_ATTN remains
+            # unsupported because speculative decoding is not a PD-AF release path.
+            return self._cluster_type in [
+                ClusterType.PREFILL,
+                ClusterType.DECODE,
+                ClusterType.MONOLITHIC,
+            ]
 
         if operation == self._dense_attention_decode_op_name():
             return self._cluster_type in [
@@ -4489,6 +4501,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             ),
             is_moe=bool(is_moe),
         )
+        synthetic_batch._suppress_spec_decode_proposer_overhead = True
         if copy_spec_decode_metadata:
             metadata = getattr(source_batch, "spec_decode_metadata", None)
             if metadata is not None:
@@ -4899,6 +4912,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
 
         disabled_spec_config = SpeculativeDecodingConfig(enabled=False)
+        cluster_num_replicas = getattr(
+            self._replica_config, "cluster_num_replicas", None
+        )
+        if type(cluster_num_replicas) is not int or cluster_num_replicas <= 0:
+            raise ValueError(
+                "MTP secondary predictor requires a positive cluster replica count; "
+                f"got {cluster_num_replicas!r}"
+            )
         proposer_model_config = load_mtp_structural_model_config(
             str(contract.proposer_model_name)
         )
@@ -4948,6 +4969,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             moe_routing_seed=int(
                 getattr(self._replica_config, "moe_routing_seed", 42)
             ),
+            cluster_num_replicas=cluster_num_replicas,
             cluster_prefix=getattr(self._replica_config, "cluster_prefix", None),
             requires_mtp_structural_compute_models=True,
             suppress_spec_decode_proposer_overhead=True,

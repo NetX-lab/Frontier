@@ -22,10 +22,27 @@ import subprocess
 import sys
 import time
 from collections import Counter
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import asdict, dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
+
+from frontier.spec_decode.mtp_registry import (
+    get_target_embedded_mtp_linear_ops,
+    get_target_embedded_mtp_same_tp_linear_ops,
+)
+from frontier.moe_gating_runtime import (
+    DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
+    MOE_GATING_RUNTIME_CONTEXT_COLUMN,
+)
+from frontier.moe_routing_runtime import resolve_moe_gating_routing_runtime_path
+from frontier.operators.families import (
+    MOE_FAMILY,
+    is_moe_operator_ep_agnostic,
+    resolve_moe_operator_tp_key,
+)
+from frontier.types import ClusterType
 
 
 ARCHITECTURE_CASE_COUNTS = {
@@ -102,9 +119,13 @@ REQUIRED_PROFILE_METADATA_COLUMNS = (
     "quant_signature",
     "measurement_type",
 )
-TARGET_EMBEDDED_MTP_COLUMNS = (
-    "time_stats.mtp_fusion_proj.median",
-    "time_stats.lm_head_linear.median",
+TARGET_EMBEDDED_MTP_COLUMNS = tuple(
+    f"time_stats.{op_name}.median"
+    for op_name in get_target_embedded_mtp_linear_ops()
+)
+TARGET_EMBEDDED_MTP_SAME_TP_COLUMNS = tuple(
+    f"time_stats.{op_name}.median"
+    for op_name in get_target_embedded_mtp_same_tp_linear_ops()
 )
 
 
@@ -194,6 +215,16 @@ class MatrixCase:
     @property
     def expects_zero_routed_lane(self) -> bool:
         return self.is_moe and self.workload_kind == "zero-routed" and self.ep_size > 1
+
+
+@dataclass(frozen=True)
+class _MoeProfileRequirement:
+    """One runtime MoE profile contract for a concrete cluster role."""
+
+    cluster_type: ClusterType
+    moe_tensor_parallel_size: int
+    moe_expert_parallel_size: int
+    routing_runtime_path: str
 
 
 def _model_layer_shape(model_name: str) -> tuple[int, tuple[int, ...]]:
@@ -352,6 +383,11 @@ def validate_optimization_case(case: MatrixCase) -> None:
         raise ValueError("Prefix Caching and MTP cannot be enabled together")
 
     if case.architecture == "pd-af-disaggregation":
+        if case.pipeline_stages != 1:
+            raise ValueError(
+                "PD-AF optimization cases require pipeline stages=1, "
+                f"got {case.pipeline_stages}"
+            )
         if case.enable_prefix_caching or case.optimization_stratum == "prefix":
             raise ValueError("PD-AF does not support Prefix Caching")
         if case.enable_mtp or case.optimization_stratum == "mtp":
@@ -1231,8 +1267,8 @@ def _pdaf_optimization_cases(
     paired_contexts = (
         ("offline", False, "dense", 8, "balanced", "equal", 1, False),
         ("offline", False, "moe", 8, "random", "gt", 1, False),
-        ("offline", True, "mixed", 32, "balanced", "lt", 2, False),
-        ("online", False, "dense", 32, "balanced", "gt", 2, False),
+        ("offline", True, "mixed", 32, "balanced", "lt", 1, False),
+        ("online", False, "dense", 32, "balanced", "gt", 1, False),
         ("online", True, "moe", 32, "skewed", "lt", 1, False),
         ("online", True, "mixed", 32, "zipf", "equal", 1, False),
     )
@@ -1439,10 +1475,14 @@ def build_shell_command(
             "MOE_ROUTING_SEED": str(case.seed),
             "TOTAL_EXPERTS": str(case.total_experts),
             "ROUTER_TOPK": str(case.router_topk),
-            "MAX_TOKENS_IN_BATCH": (
-                "32"
-                if case.optimization_stratum == "prefix"
-                else str(max(64, case.prefill_tokens))
+            "MAX_TOKENS_IN_BATCH": str(
+                min(64, max(1, case.prefill_tokens // 2))
+                if case.enable_chunked_prefill
+                else (
+                    32
+                    if case.optimization_stratum == "prefix"
+                    else max(64, case.prefill_tokens)
+                )
             ),
             "LONG_PREFILL_TOKEN_THRESHOLD": (
                 "16" if case.enable_chunked_prefill else "0"
@@ -1559,6 +1599,37 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
     kernel_attention_tps: set[int] = set()
     kernel_linear_tps: set[int] = set()
     kernel_moe_keys: set[tuple[int, int]] = set()
+    moe_profile_requirements: dict[
+        Path, tuple[str, set[_MoeProfileRequirement]]
+    ] = {}
+
+    def register_moe_requirement(
+        path: Path,
+        measurement_type: str,
+        *,
+        cluster_type: ClusterType,
+        moe_tensor_parallel_size: int,
+        moe_expert_parallel_size: int,
+    ) -> None:
+        requirement = _MoeProfileRequirement(
+            cluster_type=cluster_type,
+            moe_tensor_parallel_size=moe_tensor_parallel_size,
+            moe_expert_parallel_size=moe_expert_parallel_size,
+            routing_runtime_path=resolve_moe_gating_routing_runtime_path(
+                case.routing_distribution
+            ),
+        )
+        existing = moe_profile_requirements.get(path)
+        if existing is None:
+            moe_profile_requirements[path] = (measurement_type, {requirement})
+            return
+        existing_measurement_type, requirements = existing
+        if existing_measurement_type != measurement_type:
+            raise ValueError(
+                f"{path} is required as both {existing_measurement_type} and "
+                f"{measurement_type} for {case.case_id}"
+            )
+        requirements.add(requirement)
 
     if case.architecture == "co-location":
         eager_attention_tps.add(case.attn_tensor_parallel_size)
@@ -1566,10 +1637,25 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
         if case.is_moe:
             eager_linear_tps.add(case.moe_tensor_parallel_size)
             eager_moe_keys.add((case.moe_tensor_parallel_size, case.ep_size))
+            register_moe_requirement(
+                model_dir / "moe.csv",
+                "CUDA_EVENT",
+                cluster_type=ClusterType.MONOLITHIC,
+                moe_tensor_parallel_size=case.moe_tensor_parallel_size,
+                moe_expert_parallel_size=case.ep_size,
+            )
         if case.decode_cuda_graph_mode != "none":
             kernel_attention_tps.add(case.attn_tensor_parallel_size)
             kernel_linear_tps.update(eager_linear_tps)
             kernel_moe_keys.update(eager_moe_keys)
+            if case.is_moe:
+                register_moe_requirement(
+                    model_dir / "moe_kernel_only.csv",
+                    "KERNEL_ONLY",
+                    cluster_type=ClusterType.MONOLITHIC,
+                    moe_tensor_parallel_size=case.moe_tensor_parallel_size,
+                    moe_expert_parallel_size=case.ep_size,
+                )
     elif case.architecture == "pd-disaggregation":
         eager_attention_tps.add(case.prefill_attn_tensor_parallel_size)
         eager_linear_tps.add(case.prefill_attn_tensor_parallel_size)
@@ -1580,6 +1666,13 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
                     case.prefill_moe_tensor_parallel_size,
                     case.prefill_moe_expert_parallel_size,
                 )
+            )
+            register_moe_requirement(
+                model_dir / "moe.csv",
+                "CUDA_EVENT",
+                cluster_type=ClusterType.PREFILL,
+                moe_tensor_parallel_size=case.prefill_moe_tensor_parallel_size,
+                moe_expert_parallel_size=case.prefill_moe_expert_parallel_size,
             )
         if case.decode_cuda_graph_mode == "none":
             eager_attention_tps.add(case.decode_attn_tensor_parallel_size)
@@ -1592,6 +1685,13 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
                         case.decode_moe_expert_parallel_size,
                     )
                 )
+                register_moe_requirement(
+                    model_dir / "moe.csv",
+                    "CUDA_EVENT",
+                    cluster_type=ClusterType.DECODE,
+                    moe_tensor_parallel_size=case.decode_moe_tensor_parallel_size,
+                    moe_expert_parallel_size=case.decode_moe_expert_parallel_size,
+                )
         else:
             kernel_attention_tps.add(case.decode_attn_tensor_parallel_size)
             kernel_linear_tps.add(case.decode_attn_tensor_parallel_size)
@@ -1602,6 +1702,13 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
                         case.decode_moe_tensor_parallel_size,
                         case.decode_moe_expert_parallel_size,
                     )
+                )
+                register_moe_requirement(
+                    model_dir / "moe_kernel_only.csv",
+                    "KERNEL_ONLY",
+                    cluster_type=ClusterType.DECODE,
+                    moe_tensor_parallel_size=case.decode_moe_tensor_parallel_size,
+                    moe_expert_parallel_size=case.decode_moe_expert_parallel_size,
                 )
     elif case.architecture == "pd-af-disaggregation":
         eager_attention_tps.update(
@@ -1627,11 +1734,25 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
                     case.prefill_moe_expert_parallel_size,
                 )
             )
+            register_moe_requirement(
+                model_dir / "moe.csv",
+                "CUDA_EVENT",
+                cluster_type=ClusterType.PREFILL,
+                moe_tensor_parallel_size=case.prefill_moe_tensor_parallel_size,
+                moe_expert_parallel_size=case.prefill_moe_expert_parallel_size,
+            )
             kernel_moe_keys.add(
                 (
                     case.decode_moe_tensor_parallel_size,
                     case.decode_moe_expert_parallel_size,
                 )
+            )
+            register_moe_requirement(
+                model_dir / "moe_kernel_only.csv",
+                "KERNEL_ONLY",
+                cluster_type=ClusterType.DECODE_FFN,
+                moe_tensor_parallel_size=case.decode_moe_tensor_parallel_size,
+                moe_expert_parallel_size=case.decode_moe_expert_parallel_size,
             )
     else:
         raise ValueError(f"unsupported architecture: {case.architecture}")
@@ -1676,29 +1797,18 @@ def validate_profile_inputs(case: MatrixCase, root: Path) -> list[Path]:
             required_tp_sizes=tp_sizes,
         )
 
-    expected_runtime_path = (
-        "uniform_topk"
-        if case.routing_distribution == "random"
-        else "standard_fused_topk"
-    )
-    for path, keys in (
-        (model_dir / "moe.csv", eager_moe_keys),
-        (model_dir / "moe_kernel_only.csv", kernel_moe_keys),
-    ):
-        if not keys:
-            continue
+    for path, (_measurement_type, requirements) in moe_profile_requirements.items():
         _validate_moe_profile_keys(
             case,
             path,
-            required_tp_ep_keys=keys,
-            expected_runtime_path=expected_runtime_path,
+            requirements=requirements,
         )
 
     if case.enable_mtp:
         _validate_target_embedded_mtp_columns(
             case,
             model_dir / "linear_op.csv",
-            required_tp_sizes=eager_linear_tps,
+            required_tp_sizes={case.attn_tensor_parallel_size},
         )
     return required
 
@@ -1899,39 +2009,139 @@ def _validate_moe_profile_keys(
     case: MatrixCase,
     path: Path,
     *,
-    required_tp_ep_keys: set[tuple[int, int]],
-    expected_runtime_path: str,
+    requirements: set[_MoeProfileRequirement],
 ) -> None:
     fieldnames, rows = _read_profile_table(path)
-    required_columns = {
-        "num_tensor_parallel_workers",
-        "expert_parallel_size",
-        "routing_runtime_path",
-    }
+    required_columns = {"num_tensor_parallel_workers", "expert_parallel_size"}
     missing_columns = sorted(required_columns - set(fieldnames))
     if missing_columns:
         raise ValueError(
             f"{path} missing required MoE profiling columns: "
             f"{', '.join(missing_columns)}"
         )
-    available_keys: set[tuple[int, int, str]] = set()
+
+    normalized_rows: list[tuple[dict[str, str], int, int]] = []
     for row in rows:
         try:
             tp_size = int(str(row["num_tensor_parallel_workers"]).strip())
             ep_size = int(str(row["expert_parallel_size"]).strip())
         except ValueError as exc:
             raise ValueError(f"{path} contains non-integer MoE TP/EP metadata") from exc
-        runtime_path = str(row.get("routing_runtime_path", "")).strip()
-        available_keys.add((tp_size, ep_size, runtime_path))
-    missing_keys = sorted(
-        (tp_size, ep_size, expected_runtime_path)
-        for tp_size, ep_size in required_tp_ep_keys
-        if (tp_size, ep_size, expected_runtime_path) not in available_keys
+        normalized_rows.append((row, tp_size, ep_size))
+
+    available_keys = sorted(
+        {
+            (
+                tp_size,
+                ep_size,
+                str(row.get("routing_runtime_path", "")).strip(),
+                str(row.get(MOE_GATING_RUNTIME_CONTEXT_COLUMN, "")).strip(),
+            )
+            for row, tp_size, ep_size in normalized_rows
+        }
     )
-    if missing_keys:
+    missing_requirements: list[str] = []
+    for requirement in sorted(
+        requirements,
+        key=lambda item: (
+            item.cluster_type.value,
+            item.moe_tensor_parallel_size,
+            item.moe_expert_parallel_size,
+            item.routing_runtime_path,
+        ),
+    ):
+        for operator in MOE_FAMILY.profiling_ops():
+            op_name = operator.profiling_name()
+            tp_key = resolve_moe_operator_tp_key(
+                op_name,
+                moe_tp_size=requirement.moe_tensor_parallel_size,
+                cluster_type=requirement.cluster_type,
+                family=MOE_FAMILY,
+            )
+            ep_agnostic = is_moe_operator_ep_agnostic(
+                op_name,
+                family=MOE_FAMILY,
+            )
+            candidates = [
+                row
+                for row, tp_size, ep_size in normalized_rows
+                if tp_size == tp_key
+                and (ep_agnostic or ep_size == requirement.moe_expert_parallel_size)
+            ]
+            requirement_parts = [
+                f"cluster={requirement.cluster_type.name}",
+                f"TP={tp_key}",
+                (
+                    "EP=ANY"
+                    if ep_agnostic
+                    else f"EP={requirement.moe_expert_parallel_size}"
+                ),
+            ]
+            if op_name == "moe_gating_routing_topk":
+                requirement_parts.append(
+                    f"routing_runtime_path={requirement.routing_runtime_path}"
+                )
+                if "routing_runtime_path" not in fieldnames:
+                    missing_requirements.append(
+                        f"{op_name} requires {', '.join(requirement_parts)} "
+                        "but routing_runtime_path column is missing"
+                    )
+                    continue
+                candidates = [
+                    row
+                    for row in candidates
+                    if str(row.get("routing_runtime_path", "")).strip()
+                    == requirement.routing_runtime_path
+                ]
+            if operator.precision_name() == "moe_gating":
+                requirement_parts.append(
+                    "gating_runtime_context="
+                    f"{DEFAULT_MOE_GATING_RUNTIME_CONTEXT}"
+                )
+                if MOE_GATING_RUNTIME_CONTEXT_COLUMN not in fieldnames:
+                    missing_requirements.append(
+                        f"{op_name} requires {', '.join(requirement_parts)} "
+                        f"but {MOE_GATING_RUNTIME_CONTEXT_COLUMN} column is missing"
+                    )
+                    continue
+                candidates = [
+                    row
+                    for row in candidates
+                    if str(row.get(MOE_GATING_RUNTIME_CONTEXT_COLUMN, "")).strip()
+                    == DEFAULT_MOE_GATING_RUNTIME_CONTEXT
+                ]
+
+            target_column = f"time_stats.{op_name}.median"
+            requirement_parts.append(f"target={target_column}")
+            if target_column not in fieldnames:
+                missing_requirements.append(
+                    f"{op_name} requires {', '.join(requirement_parts)} "
+                    "but target column is missing"
+                )
+                continue
+            has_valid_target = False
+            for row in candidates:
+                raw_value = str(row.get(target_column, "")).strip()
+                try:
+                    value = float(raw_value)
+                except ValueError:
+                    continue
+                if math.isfinite(value) and value >= 0:
+                    has_valid_target = True
+                    break
+            if not has_valid_target:
+                missing_requirements.append(
+                    f"{op_name} requires {', '.join(requirement_parts)} "
+                    "with at least one finite non-negative value"
+                )
+
+    if missing_requirements:
+        requirement_text = "\n  - ".join(missing_requirements)
         raise ValueError(
-            f"{case.case_id} requires MoE TP/EP/routing keys {missing_keys} "
-            f"in {path}; available keys are {sorted(available_keys)}"
+            f"{case.case_id} MoE profile contract failed before training in {path}.\n"
+            "Missing op-level TP/EP/routing/context/timing coverage:\n"
+            f"  - {requirement_text}\n"
+            f"Available TP/EP/routing/context keys are {available_keys}"
         )
 
 
@@ -1942,27 +2152,44 @@ def _validate_target_embedded_mtp_columns(
     required_tp_sizes: set[int],
 ) -> None:
     fieldnames, rows = _read_profile_table(path)
+    required_columns = (
+        *TARGET_EMBEDDED_MTP_COLUMNS,
+        *TARGET_EMBEDDED_MTP_SAME_TP_COLUMNS,
+    )
     missing_columns = [
-        column for column in TARGET_EMBEDDED_MTP_COLUMNS if column not in fieldnames
+        column for column in required_columns if column not in fieldnames
     ]
-    relevant_rows = [
-        row
-        for row in rows
-        if int(str(row["num_tensor_parallel_workers"]).strip())
-        in required_tp_sizes
-    ]
-    empty_columns = [
-        column
-        for column in TARGET_EMBEDDED_MTP_COLUMNS
-        if column in fieldnames
-        and not any(str(row.get(column, "")).strip() for row in relevant_rows)
-    ]
-    if missing_columns or empty_columns:
-        required_columns = ", ".join(TARGET_EMBEDDED_MTP_COLUMNS)
+    non_finite_by_tp: dict[int, list[str]] = {}
+    for tp_size in sorted(required_tp_sizes):
+        relevant_rows = [
+            row
+            for row in rows
+            if int(str(row["num_tensor_parallel_workers"]).strip()) == tp_size
+        ]
+        invalid_columns = []
+        for column in required_columns:
+            if column not in fieldnames:
+                continue
+            for row in relevant_rows:
+                raw_value = str(row.get(column, "")).strip()
+                try:
+                    value = float(raw_value)
+                except ValueError:
+                    invalid_columns.append(column)
+                    break
+                if not math.isfinite(value) or value < 0:
+                    invalid_columns.append(column)
+                    break
+        if invalid_columns:
+            non_finite_by_tp[tp_size] = invalid_columns
+    if missing_columns or non_finite_by_tp:
+        mtp_columns = ", ".join(TARGET_EMBEDDED_MTP_COLUMNS)
+        same_tp_columns = ", ".join(TARGET_EMBEDDED_MTP_SAME_TP_COLUMNS)
         raise ValueError(
-            f"{case.case_id} requires target-embedded MTP columns "
-            f"{required_columns} in {path}; missing={missing_columns}, "
-            f"empty={empty_columns}"
+            f"{case.case_id} requires finite target-embedded MTP columns "
+            f"{mtp_columns} and finite same-TP columns {same_tp_columns} "
+            f"for TP sizes {sorted(required_tp_sizes)} in {path}; "
+            f"missing={missing_columns}, non_finite_by_tp={non_finite_by_tp}"
         )
 
 
@@ -2041,6 +2268,7 @@ def _read_chunked_prefill_stage_ledger(
                 tuple[str, ...],
                 tuple[int, ...],
                 tuple[int, ...],
+                tuple[int, ...],
             ],
         ],
     ] = {}
@@ -2086,16 +2314,6 @@ def _read_chunked_prefill_stage_ledger(
             prefill_component_total += value
         if prefill_component_total <= 0:
             continue
-        prefill_row_count += 1
-        if (
-            row.get("execution_scope") != "FULL_STAGE_WORLD"
-            or row.get("replica_local_id") is not None
-        ):
-            raise ValueError(
-                "prefill stage-batch ledger row must use FULL_STAGE_WORLD "
-                f"at {path}:{line_number}"
-            )
-
         integer_fields: dict[str, int] = {}
         for field in ("batch_id", "stage_id", "replica_id"):
             raw_value = row.get(field)
@@ -2110,9 +2328,13 @@ def _read_chunked_prefill_stage_ledger(
             integer_fields[field] = raw_value
 
         request_ids = row.get("request_ids")
+        request_runtime_epochs = row.get("request_runtime_epochs")
         request_num_tokens = row.get("request_num_tokens")
         request_num_prefill_tokens = row.get("request_num_prefill_tokens")
         if not isinstance(request_ids, list) or not isinstance(
+            request_runtime_epochs,
+            list,
+        ) or not isinstance(
             request_num_tokens,
             list,
         ) or not isinstance(
@@ -2126,11 +2348,12 @@ def _read_chunked_prefill_stage_ledger(
             )
         if (
             not request_ids
+            or len(request_ids) != len(request_runtime_epochs)
             or len(request_ids) != len(request_num_tokens)
             or len(request_ids) != len(request_num_prefill_tokens)
         ):
             raise ValueError(
-                "request_ids, request_num_tokens, and "
+                "request_ids, request_runtime_epochs, request_num_tokens, and "
                 "request_num_prefill_tokens must be non-empty and aligned "
                 f"at {path}:{line_number}"
             )
@@ -2141,6 +2364,19 @@ def _read_chunked_prefill_stage_ledger(
             raise ValueError(
                 f"request_ids must be unique within a batch at {path}:{line_number}"
             )
+        normalized_runtime_epochs: list[int] = []
+        for runtime_epoch in request_runtime_epochs:
+            if isinstance(runtime_epoch, bool) or not isinstance(runtime_epoch, int):
+                raise ValueError(
+                    "request_runtime_epochs must contain integers "
+                    f"at {path}:{line_number}"
+                )
+            if runtime_epoch < 0:
+                raise ValueError(
+                    "request_runtime_epochs must be non-negative "
+                    f"at {path}:{line_number}"
+                )
+            normalized_runtime_epochs.append(runtime_epoch)
         normalized_token_counts: list[int] = []
         normalized_prefill_token_counts: list[int] = []
         for token_count, prefill_token_count in zip(
@@ -2182,9 +2418,19 @@ def _read_chunked_prefill_stage_ledger(
             normalized_token_counts.append(token_count)
             normalized_prefill_token_counts.append(prefill_token_count)
         if not any(normalized_prefill_token_counts):
+            # Speculative verify batches may use the prefill-style attention
+            # kernel while all requests are already in decode. They are not
+            # prompt-prefill chunks and must not enter this ledger.
+            continue
+
+        prefill_row_count += 1
+        if (
+            row.get("execution_scope") != "FULL_STAGE_WORLD"
+            or row.get("replica_local_id") is not None
+        ):
             raise ValueError(
-                "prefill stage-batch ledger row has no request-level "
-                f"prefill tokens at {path}:{line_number}"
+                "prefill stage-batch ledger row must use FULL_STAGE_WORLD "
+                f"at {path}:{line_number}"
             )
 
         group_key = (
@@ -2202,12 +2448,13 @@ def _read_chunked_prefill_stage_ledger(
             )
         stage_payloads[stage_id] = (
             normalized_request_ids,
+            tuple(normalized_runtime_epochs),
             tuple(normalized_token_counts),
             tuple(normalized_prefill_token_counts),
         )
 
     expected_stage_ids = set(range(case.pipeline_stages))
-    request_chunks: dict[str, list[int]] = {}
+    request_chunks: dict[str, list[tuple[int, int]]] = {}
     for group_key, stage_payloads in sorted(grouped_payloads.items()):
         actual_stage_ids = set(stage_payloads)
         if actual_stage_ids != expected_stage_ids:
@@ -2227,14 +2474,15 @@ def _read_chunked_prefill_stage_ledger(
                 f"cluster={group_key[0]} replica={group_key[1]} "
                 f"batch={group_key[2]}"
             )
-        request_ids, _token_counts, prefill_token_counts = first_payload
-        for request_id, prefill_token_count in zip(
+        request_ids, runtime_epochs, _token_counts, prefill_token_counts = first_payload
+        for request_id, runtime_epoch, prefill_token_count in zip(
             request_ids,
+            runtime_epochs,
             prefill_token_counts,
         ):
             if prefill_token_count > 0:
                 request_chunks.setdefault(request_id, []).append(
-                    prefill_token_count
+                    (runtime_epoch, prefill_token_count)
                 )
 
     if request_chunks and not case.enable_prefix_caching:
@@ -2245,17 +2493,78 @@ def _read_chunked_prefill_stage_ledger(
             )
 
     request_token_totals = {
-        request_id: sum(chunks)
+        request_id: sum(token_count for _runtime_epoch, token_count in chunks)
         for request_id, chunks in sorted(request_chunks.items())
     }
+    request_recompute_token_totals: dict[str, int] = {}
+    request_prefill_preemption_counts: dict[str, int] = {}
+    request_final_epoch_token_totals: dict[str, int] = {}
+    request_rows_by_id: dict[str, Mapping[str, str]] = {}
+    if any(total > case.prefill_tokens for total in request_token_totals.values()):
+        for request_row in _read_request_metrics_rows(metrics_dir):
+            request_id = str(request_row.get("Request Id", "")).strip()
+            if request_id:
+                request_rows_by_id[request_id] = request_row
     for request_id, total in request_token_totals.items():
-        if total > case.prefill_tokens or (
-            not case.enable_prefix_caching and total != case.prefill_tokens
-        ):
+        request_epochs = {}
+        for runtime_epoch, token_count in request_chunks[request_id]:
+            request_epochs[runtime_epoch] = (
+                request_epochs.get(runtime_epoch, 0) + token_count
+            )
+        request_row = request_rows_by_id.get(request_id)
+        final_epoch = max(request_epochs)
+        request_final_epoch_token_totals[request_id] = request_epochs[final_epoch]
+        preemption_count = 0
+        if request_row is not None:
+            preemption_count = _nonnegative_integer_metric(
+                request_row,
+                "request_prefill_preemption_count",
+            )
+        request_prefill_preemption_counts[request_id] = preemption_count
+        if total > case.prefill_tokens:
+            if request_row is None:
+                raise ValueError(
+                    "prefill-token conservation mismatch "
+                    f"request_id={request_id} exceeds prompt without request metrics "
+                    f"expected={case.prefill_tokens} actual={total}"
+                )
+            if len(request_epochs) != preemption_count + 1:
+                raise ValueError(
+                    "prefill recompute epoch count mismatch "
+                    f"request_id={request_id} expected={preemption_count + 1} "
+                    f"actual={len(request_epochs)}"
+                )
+            if request_epochs[final_epoch] != case.prefill_tokens:
+                raise ValueError(
+                    "prefill recompute final epoch mismatch "
+                    f"request_id={request_id} expected={case.prefill_tokens} "
+                    f"actual={request_epochs[final_epoch]}"
+                )
+            prior_epoch_total = sum(
+                token_count
+                for runtime_epoch, token_count in request_epochs.items()
+                if runtime_epoch != final_epoch
+            )
+            if prior_epoch_total <= 0 or any(
+                token_count >= case.prefill_tokens
+                for runtime_epoch, token_count in request_epochs.items()
+                if runtime_epoch != final_epoch
+            ):
+                raise ValueError(
+                    "prefill recompute prior epoch must contain partial work "
+                    f"request_id={request_id} epochs={request_epochs}"
+                )
+            request_recompute_token_totals[request_id] = prior_epoch_total
+        elif not case.enable_prefix_caching and total != case.prefill_tokens:
             raise ValueError(
                 "prefill-token conservation mismatch "
                 f"request_id={request_id} expected={case.prefill_tokens} "
                 f"actual={total}"
+            )
+        elif preemption_count > 0:
+            raise ValueError(
+                "prefill preemption has no recompute evidence "
+                f"request_id={request_id} preemption_count={preemption_count}"
             )
     split_requests = {
         request_id: chunks
@@ -2265,7 +2574,7 @@ def _read_chunked_prefill_stage_ledger(
     full_conserving_split_requests = [
         request_id
         for request_id, chunks in split_requests.items()
-        if sum(chunks) == case.prefill_tokens
+        if request_final_epoch_token_totals[request_id] == case.prefill_tokens
     ]
     return {
         "chunked_prefill_stage_ledger_present": True,
@@ -2280,6 +2589,13 @@ def _read_chunked_prefill_stage_ledger(
             full_conserving_split_requests
         ),
         "chunked_prefill_request_token_totals": request_token_totals,
+        "chunked_prefill_request_final_epoch_token_totals": (
+            request_final_epoch_token_totals
+        ),
+        "chunked_prefill_request_recompute_token_totals": request_recompute_token_totals,
+        "chunked_prefill_prefill_preemption_count": sum(
+            request_prefill_preemption_counts.values()
+        ),
     }
 
 
@@ -3841,6 +4157,112 @@ def _load_manifest(path: Path) -> list[MatrixCase]:
     return cases
 
 
+def _run_case(
+    case: MatrixCase,
+    command: str,
+    env: dict[str, str],
+    *,
+    repo_root: Path,
+    output_root: Path,
+    results_path: Path,
+    timeout_seconds: int,
+) -> dict[str, Any]:
+    case_dir = output_root / case.case_id
+    case_dir.mkdir(parents=True, exist_ok=True)
+    log_path = case_dir / f"{case.case_id}.log"
+    metadata_path = case_dir / "case_metadata.json"
+    run_started_at_s = time.time()
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "case": asdict(case),
+                "command": command,
+                "environment": {
+                    key: env[key]
+                    for key in (
+                        "MODEL_NAME",
+                        "ENABLE_DUMMY_MODE",
+                        "DECODE_CUDA_GRAPH_MODE",
+                        "MOE_ROUTING_DISTRIBUTION_TYPE",
+                        "MOE_ROUTING_SEED",
+                        "TOTAL_EXPERTS",
+                        "ROUTER_TOPK",
+                    )
+                    if key in env
+                },
+                "repo_root": str(repo_root),
+                "output_root": str(output_root),
+                "results_path": str(results_path),
+                "run_started_at_unix_s": run_started_at_s,
+                "trace_schema_version": 1,
+            },
+            indent=2,
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    run_freshness_marker_ns = metadata_path.stat().st_mtime_ns
+    started = time.monotonic()
+    with log_path.open("w", encoding="utf-8") as stream:
+        stream.write(f"MATRIX_COMMAND: {command}\n")
+        stream.flush()
+        try:
+            completed = subprocess.run(
+                command,
+                shell=True,
+                cwd=repo_root,
+                env=env,
+                stdout=stream,
+                stderr=subprocess.STDOUT,
+                timeout=timeout_seconds,
+                check=False,
+            )
+            exit_code = int(completed.returncode)
+        except subprocess.TimeoutExpired:
+            exit_code = 124
+            stream.write(f"MATRIX_TIMEOUT after {timeout_seconds}s\n")
+    elapsed = time.monotonic() - started
+    run_finished_at_s = time.time()
+    try:
+        if (
+            not log_path.is_file()
+            or log_path.stat().st_mtime_ns < run_freshness_marker_ns
+        ):
+            raise FileNotFoundError(
+                f"no fresh case log for {case.case_id} under {output_root}"
+            )
+        metrics_dir = _find_metrics_dir(
+            output_root,
+            case,
+            started_at_ns=run_freshness_marker_ns,
+        )
+        check = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+        metrics_path = str(metrics_dir)
+    except (FileNotFoundError, OSError) as exc:
+        check = {"status": "FAIL", "errors": str(exc)}
+        metrics_path = ""
+    status = "PASS" if exit_code == 0 and check.get("status") == "PASS" else "FAIL"
+    return {
+        "case_id": case.case_id,
+        "case": _serialized_case_payload(case),
+        "architecture": case.architecture,
+        "model_kind": case.model_kind,
+        "total_cards": case.total_cards,
+        "exit_code": exit_code,
+        "elapsed_seconds": round(elapsed, 3),
+        "log_path": str(log_path),
+        "metrics_path": metrics_path,
+        "repo_root": str(repo_root),
+        "output_root": str(output_root),
+        "results_path": str(results_path),
+        "run_started_at_unix_s": run_started_at_s,
+        "run_finished_at_unix_s": run_finished_at_s,
+        "trace_schema_version": 1,
+        "status": status,
+        "check": check,
+    }
+
+
 def run_cases(
     cases: Sequence[MatrixCase],
     repo_root: Path,
@@ -3851,7 +4273,13 @@ def run_cases(
     limit: int | None = None,
     timeout_seconds: int = 600,
     continue_on_failure: bool = False,
+    max_parallel_cases: int = 1,
 ) -> list[dict[str, Any]]:
+    if type(max_parallel_cases) is not int or max_parallel_cases <= 0:
+        raise ValueError(
+            "max_parallel_cases must be a positive integer, "
+            f"got {max_parallel_cases!r}"
+        )
     repo_root = repo_root.resolve()
     output_root = output_root.resolve()
     results_path = results_path.resolve()
@@ -3875,113 +4303,89 @@ def run_cases(
         command, env = build_shell_command(case, repo_root, output_root)
         launch_specs.append((case, command, env))
 
-    results: list[dict[str, Any]] = []
-    for case, command, env in launch_specs:
-        case_dir = output_root / case.case_id
-        case_dir.mkdir(parents=True, exist_ok=True)
-        log_path = case_dir / f"{case.case_id}.log"
-        metadata_path = case_dir / "case_metadata.json"
-        run_started_at_s = time.time()
-        metadata_path.write_text(
-            json.dumps(
-                {
-                    "case": asdict(case),
-                    "command": command,
-                    "environment": {
-                        key: env[key]
-                        for key in (
-                            "MODEL_NAME",
-                            "ENABLE_DUMMY_MODE",
-                            "DECODE_CUDA_GRAPH_MODE",
-                            "MOE_ROUTING_DISTRIBUTION_TYPE",
-                            "MOE_ROUTING_SEED",
-                            "TOTAL_EXPERTS",
-                            "ROUTER_TOPK",
-                        )
-                        if key in env
-                    },
-                    "repo_root": str(repo_root),
-                    "output_root": str(output_root),
-                    "results_path": str(results_path),
-                    "run_started_at_unix_s": run_started_at_s,
-                    "trace_schema_version": 1,
-                },
-                indent=2,
-                sort_keys=True,
-            ),
-            encoding="utf-8",
-        )
-        run_freshness_marker_ns = metadata_path.stat().st_mtime_ns
-        started = time.monotonic()
-        with log_path.open("w", encoding="utf-8") as stream:
-            stream.write(f"MATRIX_COMMAND: {command}\n")
-            stream.flush()
-            try:
-                completed = subprocess.run(
-                    command,
-                    shell=True,
-                    cwd=repo_root,
-                    env=env,
-                    stdout=stream,
-                    stderr=subprocess.STDOUT,
-                    timeout=timeout_seconds,
-                    check=False,
-                )
-                exit_code = int(completed.returncode)
-            except subprocess.TimeoutExpired:
-                exit_code = 124
-                stream.write(f"MATRIX_TIMEOUT after {timeout_seconds}s\n")
-        elapsed = time.monotonic() - started
-        run_finished_at_s = time.time()
-        check: dict[str, Any]
-        try:
-            if (
-                not log_path.is_file()
-                or log_path.stat().st_mtime_ns < run_freshness_marker_ns
-            ):
-                raise FileNotFoundError(
-                    f"no fresh case log for {case.case_id} under {output_root}"
-                )
-            metrics_dir = _find_metrics_dir(
-                output_root,
-                case,
-                started_at_ns=run_freshness_marker_ns,
-            )
-            check = check_case_log(case, log_path, metrics_dir, strict_layers=True)
-            metrics_path = str(metrics_dir)
-        except (FileNotFoundError, OSError) as exc:
-            check = {"status": "FAIL", "errors": str(exc)}
-            metrics_path = ""
-        status = "PASS" if exit_code == 0 and check.get("status") == "PASS" else "FAIL"
-        result = {
-            "case_id": case.case_id,
-            "case": _serialized_case_payload(case),
-            "architecture": case.architecture,
-            "model_kind": case.model_kind,
-            "total_cards": case.total_cards,
-            "exit_code": exit_code,
-            "elapsed_seconds": round(elapsed, 3),
-            "log_path": str(log_path),
-            "metrics_path": metrics_path,
-            "repo_root": str(repo_root),
-            "output_root": str(output_root),
-            "results_path": str(results_path),
-            "run_started_at_unix_s": run_started_at_s,
-            "run_finished_at_unix_s": run_finished_at_s,
-            "trace_schema_version": 1,
-            "status": status,
-            "check": check,
-        }
-        results.append(result)
+    results_by_index: dict[int, dict[str, Any]] = {}
+
+    def persist_result(index: int, result: dict[str, Any]) -> None:
+        nonlocal persisted
+        results_by_index[index] = result
         persisted = _merge_result_rows(
             persisted,
             (result,),
             expected_case_ids=expected_case_ids,
         )
         _write_jsonl(results_path, persisted)
-        if status != "PASS" and not continue_on_failure:
-            raise RuntimeError(f"matrix case failed: {json.dumps(result, sort_keys=True)}")
-    return results
+
+    if max_parallel_cases == 1 or len(launch_specs) <= 1:
+        for index, (case, command, env) in enumerate(launch_specs):
+            result = _run_case(
+                case,
+                command,
+                env,
+                repo_root=repo_root,
+                output_root=output_root,
+                results_path=results_path,
+                timeout_seconds=timeout_seconds,
+            )
+            persist_result(index, result)
+            if result["status"] != "PASS" and not continue_on_failure:
+                raise RuntimeError(
+                    f"matrix case failed: {json.dumps(result, sort_keys=True)}"
+                )
+        return [results_by_index[index] for index in range(len(launch_specs))]
+
+    failure_result: dict[str, Any] | None = None
+    next_index = 0
+    with ThreadPoolExecutor(max_workers=max_parallel_cases) as executor:
+        active = {}
+
+        def submit_ready_cases() -> None:
+            nonlocal next_index
+            while (
+                failure_result is None
+                and next_index < len(launch_specs)
+                and len(active) < max_parallel_cases
+            ):
+                case, command, env = launch_specs[next_index]
+                future = executor.submit(
+                    _run_case,
+                    case,
+                    command,
+                    env,
+                    repo_root=repo_root,
+                    output_root=output_root,
+                    results_path=results_path,
+                    timeout_seconds=timeout_seconds,
+                )
+                active[future] = next_index
+                next_index += 1
+
+        submit_ready_cases()
+        while active:
+            done, _pending = wait(active, return_when=FIRST_COMPLETED)
+            completed = sorted(
+                ((active.pop(future), future) for future in done),
+                key=lambda item: item[0],
+            )
+            for index, future in completed:
+                result = future.result()
+                persist_result(index, result)
+                if (
+                    result["status"] != "PASS"
+                    and not continue_on_failure
+                    and failure_result is None
+                ):
+                    failure_result = result
+            submit_ready_cases()
+
+    if failure_result is not None:
+        raise RuntimeError(
+            f"matrix case failed: {json.dumps(failure_result, sort_keys=True)}"
+        )
+    return [
+        results_by_index[index]
+        for index in range(len(launch_specs))
+        if index in results_by_index
+    ]
 
 
 def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
@@ -4025,6 +4429,7 @@ def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--timeout-seconds", type=int, default=600)
+    parser.add_argument("--max-parallel-cases", type=int, default=1)
     parser.add_argument("--continue-on-failure", action="store_true")
     return parser.parse_args(argv)
 
@@ -4122,6 +4527,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         limit=args.limit,
         timeout_seconds=args.timeout_seconds,
         continue_on_failure=args.continue_on_failure,
+        max_parallel_cases=args.max_parallel_cases,
     )
     passed = sum(result["status"] == "PASS" for result in results)
     failed = len(results) - passed

@@ -541,6 +541,9 @@ class Batch(BaseEntity):
         # pipeline-wave token count derived from stage-local metadata.
         self.afd_stage_represents_all_stages: bool = False
         self.spec_decode_metadata: Optional[SpecDecodeBatchMetadata] = None
+        # Structural MTP replay accounts for proposer work in its outer caller.
+        # Nested decoder probes must not add the same proposer overhead again.
+        self._suppress_spec_decode_proposer_overhead: bool = False
         self._spec_terminal_completion_delay_s_by_request: Dict[int, float] = {}
 
     @staticmethod

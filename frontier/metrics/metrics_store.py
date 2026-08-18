@@ -4064,6 +4064,10 @@ class MetricsStore:
                 None if replica_local_id is None else int(replica_local_id)
             ),
             "request_ids": [str(request_id) for request_id in batch_stage.request_ids],
+            "request_runtime_epochs": [
+                int(runtime_epoch)
+                for runtime_epoch in batch_stage.request_runtime_epochs
+            ],
             "request_num_tokens": [int(token_count) for token_count in batch_stage.num_tokens],
             "stage_start_ts": float(batch_stage.scheduled_at),
             "stage_end_ts": float(stage_end_time),

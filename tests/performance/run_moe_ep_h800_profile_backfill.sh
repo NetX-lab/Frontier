@@ -14,6 +14,8 @@ CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3,4,5,6,7}"
 STAGE_ROOT="${STAGE_ROOT:-/data/ycfeng/tmp/frontier_moe_ep_profile_backfill_20260817}"
 BASE_REF="${BASE_REF:-HEAD}"
 BASE_COMMIT=""
+PROFILE_SCOPE="${PROFILE_SCOPE:-full}"
+AUDIT_ONLY=false
 DRY_RUN=false
 
 TOKENS=(1 2 4 8 16 32 64)
@@ -32,6 +34,30 @@ MTP_COLUMNS=(
   time_stats.lm_head_linear.std
   time_stats.lm_head_linear.count
 )
+MTP_SAME_TP_COLUMNS=(
+  time_stats.emb.min
+  time_stats.emb.max
+  time_stats.emb.mean
+  time_stats.emb.median
+  time_stats.emb.std
+  time_stats.emb.count
+  time_stats.input_layernorm.min
+  time_stats.input_layernorm.max
+  time_stats.input_layernorm.mean
+  time_stats.input_layernorm.median
+  time_stats.input_layernorm.std
+  time_stats.input_layernorm.count
+  time_stats.post_attention_layernorm.min
+  time_stats.post_attention_layernorm.max
+  time_stats.post_attention_layernorm.mean
+  time_stats.post_attention_layernorm.median
+  time_stats.post_attention_layernorm.std
+  time_stats.post_attention_layernorm.count
+)
+MTP_ENRICH_COLUMNS=(
+  "${MTP_SAME_TP_COLUMNS[@]}"
+  "${MTP_COLUMNS[@]}"
+)
 
 RAW_ROOT="$STAGE_ROOT/raw"
 MERGED_ROOT="$STAGE_ROOT/merged"
@@ -43,12 +69,16 @@ MERGE_TOOL="$REPO_ROOT/tests/e2e/operator_parity/merge_profile_csv_contexts.py"
 
 usage() {
   cat <<'EOF'
-Usage: run_moe_ep_h800_profile_backfill.sh [--stage-root PATH] [--base-ref REF] [--dry-run]
+Usage: run_moe_ep_h800_profile_backfill.sh [--stage-root PATH] [--base-ref REF] [--scope SCOPE] [--audit-only] [--dry-run]
 
 The default mode collects into a new staging root and never writes canonical
 profiling CSVs. The merge baseline is exported from the explicit Git base ref,
 not copied from the working tree. Publish only after inspecting
 profile_audit.json and running the task's explicit merge command.
+
+Scopes:
+  full                 Run the complete historical matrix backfill.
+  step-tp1-standard    Profile only the missing Step TP=1 standard topk rows.
 EOF
 }
 
@@ -70,6 +100,15 @@ while [[ $# -gt 0 ]]; do
       BASE_REF="$2"
       shift 2
       ;;
+    --scope)
+      [[ $# -ge 2 ]] || { echo "--scope requires a value" >&2; exit 2; }
+      PROFILE_SCOPE="$2"
+      shift 2
+      ;;
+    --audit-only)
+      AUDIT_ONLY=true
+      shift
+      ;;
     --dry-run)
       DRY_RUN=true
       shift
@@ -86,27 +125,44 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+case "$PROFILE_SCOPE" in
+  full|step-tp1-standard)
+    ;;
+  *)
+    echo "Unsupported profiling scope: $PROFILE_SCOPE" >&2
+    exit 2
+    ;;
+esac
+
 if ! BASE_COMMIT="$(git -C "$REPO_ROOT" rev-parse --verify "${BASE_REF}^{commit}")"; then
   echo "Invalid Git base ref: $BASE_REF" >&2
   exit 2
 fi
 printf 'base_ref=%s base_commit=%s\n' "$BASE_REF" "$BASE_COMMIT"
 
-if [[ "$DRY_RUN" != true && -e "$STAGE_ROOT" ]]; then
-  echo "Refusing to reuse existing staging root: $STAGE_ROOT" >&2
-  echo "Choose a new --stage-root; no files were changed." >&2
-  exit 2
-fi
+if [[ "$AUDIT_ONLY" == true ]]; then
+  if [[ "$DRY_RUN" != true && ! -d "$STAGE_ROOT" ]]; then
+    echo "Audit-only staging root does not exist: $STAGE_ROOT" >&2
+    exit 2
+  fi
+else
+  if [[ "$DRY_RUN" != true && -e "$STAGE_ROOT" ]]; then
+    echo "Refusing to reuse existing staging root: $STAGE_ROOT" >&2
+    echo "Choose a new --stage-root; no files were changed." >&2
+    exit 2
+  fi
 
-if [[ "$DRY_RUN" != true ]]; then
-  mkdir -p \
-    "$RAW_ROOT" \
-    "$MERGED_ROOT/compute/$DEVICE" \
-    "$BASELINE_ROOT" \
-    "$LOG_ROOT"
+  if [[ "$DRY_RUN" != true ]]; then
+    mkdir -p \
+      "$RAW_ROOT" \
+      "$MERGED_ROOT/compute/$DEVICE" \
+      "$BASELINE_ROOT" \
+      "$LOG_ROOT"
+  fi
 fi
 
 export CUDA_VISIBLE_DEVICES
+export NUM_GPUS
 export CUDA_HOME="$CUDA12"
 export PATH="$CUDA12/bin:$PROFILE_ENV_ROOT/nvidia/cuda_nvcc/bin:$PATH"
 export PYTHONPATH="$PROFILE_ENV_ROOT:$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
@@ -203,11 +259,25 @@ profile_qwen_mtp() {
 }
 
 snapshot_canonical_to_staging() {
-  local profile_paths=(
-    "data/profiling/compute/$DEVICE/Phi-tiny-MoE-instruct"
-    "data/profiling/compute/$DEVICE/step-moe-noquant-small"
-    "data/profiling/compute/$DEVICE/qwen3-next-80b-a3b-instruct-reduced-l2"
-  )
+  local -a profile_paths
+  local -a models
+  if [[ "$PROFILE_SCOPE" == "step-tp1-standard" ]]; then
+    profile_paths=(
+      "data/profiling/compute/$DEVICE/step-moe-noquant-small"
+    )
+    models=(step-moe-noquant-small)
+  else
+    profile_paths=(
+      "data/profiling/compute/$DEVICE/Phi-tiny-MoE-instruct"
+      "data/profiling/compute/$DEVICE/step-moe-noquant-small"
+      "data/profiling/compute/$DEVICE/qwen3-next-80b-a3b-instruct-reduced-l2"
+    )
+    models=(
+      Phi-tiny-MoE-instruct
+      step-moe-noquant-small
+      qwen3-next-80b-a3b-instruct-reduced-l2
+    )
+  fi
   printf 'COMMAND git -C %q archive --format=tar %q --' \
     "$REPO_ROOT" \
     "$BASE_COMMIT"
@@ -225,7 +295,7 @@ snapshot_canonical_to_staging() {
   fi
 
   local model
-  for model in Phi-tiny-MoE-instruct step-moe-noquant-small qwen3-next-80b-a3b-instruct-reduced-l2; do
+  for model in "${models[@]}"; do
     run_logged "copy_${model}" \
       cp -a \
       "$BASELINE_CANONICAL_ROOT/$model" \
@@ -258,19 +328,25 @@ merge_qwen_mtp_columns() {
     --allow-in-place \
     --models qwen3-next-80b-a3b-instruct-reduced-l2 \
     --filenames linear_op.csv \
-    --enrich-columns "${MTP_COLUMNS[@]}" \
-    --drop-canonical-key is_step2_mini=False \
+    --enrich-columns "${MTP_ENRICH_COLUMNS[@]}" \
     --supplement-key num_tensor_parallel_workers=4
 }
 
 audit_staging() {
+  local raw_qwen_path="-"
+  if [[ "$PROFILE_SCOPE" == "full" ]]; then
+    raw_qwen_path="$RAW_ROOT/qwen3_next_mtp_linear/compute/$DEVICE/qwen3-next-80b-a3b-instruct-reduced-l2/linear_op.csv"
+  fi
   run_logged "audit_staging" \
     "$PYTHON_BIN" - \
     "$MERGED_ROOT/compute/$DEVICE" \
     "$BASELINE_CANONICAL_ROOT" \
+    "$raw_qwen_path" \
     "$AUDIT_JSON" \
     "$BASE_REF" \
-    "$BASE_COMMIT" <<'PY'
+    "$BASE_COMMIT" \
+    "$PROFILE_SCOPE" \
+    "$RAW_ROOT" <<'PY'
 import csv
 import json
 import math
@@ -279,9 +355,12 @@ from pathlib import Path
 
 root = Path(sys.argv[1])
 canonical_root = Path(sys.argv[2])
-report_path = Path(sys.argv[3])
-base_ref = sys.argv[4]
-base_commit = sys.argv[5]
+raw_qwen = Path(sys.argv[3])
+report_path = Path(sys.argv[4])
+base_ref = sys.argv[5]
+base_commit = sys.argv[6]
+profile_scope = sys.argv[7]
+raw_root = Path(sys.argv[8])
 tokens = {1, 2, 4, 8, 16, 32, 64}
 qwen_tokens = {1, 2, 4, 8, 16, 32, 64, 128}
 mtp_columns = (
@@ -298,6 +377,27 @@ mtp_columns = (
     "time_stats.lm_head_linear.std",
     "time_stats.lm_head_linear.count",
 )
+same_tp_columns = (
+    "time_stats.emb.min",
+    "time_stats.emb.max",
+    "time_stats.emb.mean",
+    "time_stats.emb.median",
+    "time_stats.emb.std",
+    "time_stats.emb.count",
+    "time_stats.input_layernorm.min",
+    "time_stats.input_layernorm.max",
+    "time_stats.input_layernorm.mean",
+    "time_stats.input_layernorm.median",
+    "time_stats.input_layernorm.std",
+    "time_stats.input_layernorm.count",
+    "time_stats.post_attention_layernorm.min",
+    "time_stats.post_attention_layernorm.max",
+    "time_stats.post_attention_layernorm.mean",
+    "time_stats.post_attention_layernorm.median",
+    "time_stats.post_attention_layernorm.std",
+    "time_stats.post_attention_layernorm.count",
+)
+enriched_columns = (*same_tp_columns, *mtp_columns)
 
 
 def read(path):
@@ -328,7 +428,7 @@ def audit_file(path, expected_measurement):
     return {"path": str(path), "rows": len(rows), "timing_columns": len(timing)}
 
 
-def audit_moe(model, expected_tp_ep):
+def audit_moe(model, expected_tp_ep_by_context):
     results = []
     for filename, measurement in (("moe.csv", "CUDA_EVENT"), ("moe_kernel_only.csv", "KERNEL_ONLY")):
         path = root / model / filename
@@ -345,8 +445,8 @@ def audit_moe(model, expected_tp_ep):
             )
             observed[key] = observed.get(key, 0) + 1
         required = 0
-        for tp, ep in expected_tp_ep:
-            for context in ("standalone_legacy", "prefill_hot"):
+        for context, expected_tp_ep in expected_tp_ep_by_context.items():
+            for tp, ep in expected_tp_ep:
                 for token in tokens:
                     key = (tp, ep, "standard_fused_topk", context, token)
                     if observed.get(key) != 1:
@@ -357,20 +457,209 @@ def audit_moe(model, expected_tp_ep):
     return results
 
 
+def keyed_rows(fields, rows, source, key_fields=None):
+    if key_fields is None:
+        key_fields = [
+            field for field in fields if not field.startswith("time_stats.")
+        ]
+    missing_key_fields = sorted(set(key_fields) - set(fields))
+    if missing_key_fields:
+        raise ValueError(
+            f"missing feature-key columns in {source}: {missing_key_fields}"
+        )
+    keyed = {}
+    for row in rows:
+        key = tuple(row.get(field, "") for field in key_fields)
+        if key in keyed:
+            raise ValueError(f"duplicate feature key in {source}: {key}")
+        keyed[key] = row
+    return key_fields, keyed
+
+
+def assert_timing_rows_equal(expected, actual, timing_fields, context):
+    for field in timing_fields:
+        if not finite(expected.get(field, "")) or not finite(actual.get(field, "")):
+            raise ValueError(f"non-finite timing during {context}: {field}")
+        if float(expected[field]) != float(actual[field]):
+            raise ValueError(
+                f"timing changed during {context}: {field}, "
+                f"expected={expected[field]}, actual={actual[field]}"
+            )
+
+
+def audit_step_tp1_supplement(filename, method, measurement):
+    model = "step-moe-noquant-small"
+    staged = root / model / filename
+    canonical = canonical_root / model / filename
+    raw = (
+        raw_root
+        / f"{model}_{method}_standalone_legacy"
+        / "compute"
+        / root.name
+        / model
+        / filename
+    )
+    staged_fields, staged_rows = read(staged)
+    canonical_fields, canonical_rows = read(canonical)
+    raw_fields, raw_rows = read(raw)
+    if set(staged_fields) != set(canonical_fields) or set(staged_fields) != set(raw_fields):
+        raise ValueError(
+            f"Step profile schema mismatch for {filename}: "
+            f"staged={staged_fields}, canonical={canonical_fields}, raw={raw_fields}"
+        )
+    if {row.get("measurement_type", "") for row in raw_rows} != {measurement}:
+        raise ValueError(f"unexpected raw measurement family in {raw}")
+
+    expected_coverage = {
+        (1, 1, "standard_fused_topk", "standalone_legacy", token)
+        for token in tokens
+    }
+    raw_coverage = {
+        (
+            int(row["num_tensor_parallel_workers"]),
+            int(row["expert_parallel_size"]),
+            row["routing_runtime_path"],
+            row["gating_runtime_context"],
+            int(row["num_tokens"]),
+        )
+        for row in raw_rows
+    }
+    if raw_coverage != expected_coverage or len(raw_rows) != len(tokens):
+        raise ValueError(
+            f"unexpected Step TP=1 raw coverage in {raw}: "
+            f"expected={sorted(expected_coverage)}, actual={sorted(raw_coverage)}"
+        )
+    canonical_coverage = {
+        (
+            int(row["num_tensor_parallel_workers"]),
+            int(row["expert_parallel_size"]),
+            row["routing_runtime_path"],
+            row["gating_runtime_context"],
+            int(row["num_tokens"]),
+        )
+        for row in canonical_rows
+    }
+    overlap = expected_coverage & canonical_coverage
+    if overlap:
+        raise ValueError(
+            f"Step TP=1 supplement would overwrite canonical coverage: {sorted(overlap)}"
+        )
+
+    canonical_key_fields, canonical_by_key = keyed_rows(
+        canonical_fields,
+        canonical_rows,
+        canonical,
+    )
+    _staged_key_fields, staged_by_key = keyed_rows(
+        staged_fields,
+        staged_rows,
+        staged,
+        key_fields=canonical_key_fields,
+    )
+    _raw_key_fields, raw_by_key = keyed_rows(
+        raw_fields,
+        raw_rows,
+        raw,
+        key_fields=canonical_key_fields,
+    )
+    if set(canonical_by_key) & set(raw_by_key):
+        raise ValueError(f"Step raw supplement collides with canonical keys for {filename}")
+    expected_staged_keys = set(canonical_by_key) | set(raw_by_key)
+    if set(staged_by_key) != expected_staged_keys:
+        raise ValueError(
+            f"Step staged keys differ from canonical plus raw for {filename}"
+        )
+
+    timing_fields = [
+        field for field in staged_fields if field.startswith("time_stats.")
+    ]
+    for key, canonical_row in canonical_by_key.items():
+        assert_timing_rows_equal(
+            canonical_row,
+            staged_by_key[key],
+            timing_fields,
+            f"preserving canonical {filename} key={key}",
+        )
+    for key, raw_row in raw_by_key.items():
+        assert_timing_rows_equal(
+            raw_row,
+            staged_by_key[key],
+            timing_fields,
+            f"publishing raw {filename} key={key}",
+        )
+    return {
+        "filename": filename,
+        "measurement_type": measurement,
+        "canonical_rows": len(canonical_rows),
+        "raw_rows": len(raw_rows),
+        "staged_rows": len(staged_rows),
+        "added_rows": len(raw_rows),
+        "timing_columns": len(timing_fields),
+        "raw_timing_cells_verified": len(raw_rows) * len(timing_fields),
+        "canonical_timing_cells_preserved": (
+            len(canonical_rows) * len(timing_fields)
+        ),
+    }
+
+
+if profile_scope == "step-tp1-standard":
+    audit = {
+        "provenance": {
+            "base_ref": base_ref,
+            "base_commit": base_commit,
+            "baseline_root": str(canonical_root),
+            "scope": profile_scope,
+        },
+        "moe": {
+            "step-moe-noquant-small": audit_moe(
+                "step-moe-noquant-small",
+                {
+                    "standalone_legacy": {(1, 1), (4, 1), (4, 2)},
+                    "prefill_hot": {(4, 1), (4, 2)},
+                },
+            ),
+        },
+        "supplements": [
+            audit_step_tp1_supplement("moe.csv", "cuda_event", "CUDA_EVENT"),
+            audit_step_tp1_supplement(
+                "moe_kernel_only.csv",
+                "record_function",
+                "KERNEL_ONLY",
+            ),
+        ],
+    }
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(
+        json.dumps(audit, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    print(json.dumps(audit, indent=2, sort_keys=True))
+    raise SystemExit(0)
+if profile_scope != "full":
+    raise ValueError(f"unsupported audit scope: {profile_scope}")
+
+
 audit = {
     "provenance": {
         "base_ref": base_ref,
         "base_commit": base_commit,
+        "scope": profile_scope,
         "baseline_root": str(canonical_root),
     },
     "moe": {
         "Phi-tiny-MoE-instruct": audit_moe(
             "Phi-tiny-MoE-instruct",
-            {(1, 1), (1, 2), (1, 4), (1, 8)},
+            {
+                "standalone_legacy": {(1, 1), (1, 2), (1, 4), (1, 8)},
+                "prefill_hot": {(1, 1), (1, 2), (1, 4), (1, 8)},
+            },
         ),
         "step-moe-noquant-small": audit_moe(
             "step-moe-noquant-small",
-            {(4, 1), (4, 2)},
+            {
+                "standalone_legacy": {(4, 1), (4, 2)},
+                "prefill_hot": {(4, 1), (4, 2)},
+            },
         ),
     }
 }
@@ -380,31 +669,34 @@ qwen = root / model / "linear_op.csv"
 canonical_qwen = canonical_root / model / "linear_op.csv"
 qwen_fields, qwen_rows = read(qwen)
 canonical_fields, canonical_rows = read(canonical_qwen)
-if "is_step2_mini" not in canonical_fields:
-    raise ValueError(f"expected legacy is_step2_mini key in {canonical_qwen}")
-if {row.get("is_step2_mini", "") for row in canonical_rows} != {"False"}:
-    raise ValueError(f"unexpected legacy key values in {canonical_qwen}")
-if "is_step2_mini" in qwen_fields:
-    raise ValueError(f"legacy is_step2_mini key remains in {qwen}")
-for column in mtp_columns:
+raw_fields, raw_rows = read(raw_qwen)
+if "is_step2_mini" in canonical_fields or "is_step2_mini" in qwen_fields:
+    raise ValueError("legacy is_step2_mini key must be absent from Qwen profiles")
+for column in enriched_columns:
     if column not in qwen_fields:
-        raise ValueError(f"missing MTP column {column} in {qwen}")
+        raise ValueError(f"missing target-embedded MTP column {column} in {qwen}")
+    if column not in raw_fields:
+        raise ValueError(f"missing raw target-embedded MTP column {column} in {raw_qwen}")
 
-canonical_comparable_fields = [
-    field for field in canonical_fields if field != "is_step2_mini"
-]
 canonical_key_fields = [
     field
-    for field in canonical_comparable_fields
+    for field in canonical_fields
     if not field.startswith("time_stats.")
 ]
 staged_key_fields = [
     field for field in qwen_fields if not field.startswith("time_stats.")
 ]
-if set(canonical_key_fields) != set(staged_key_fields):
+raw_key_fields = [
+    field for field in raw_fields if not field.startswith("time_stats.")
+]
+if (
+    set(canonical_key_fields) != set(staged_key_fields)
+    or set(canonical_key_fields) != set(raw_key_fields)
+):
     raise ValueError(
-        "Qwen key schema changed beyond legacy migration: "
-        f"canonical={canonical_key_fields}, staged={staged_key_fields}"
+        "Qwen key schema mismatch: "
+        f"canonical={canonical_key_fields}, staged={staged_key_fields}, "
+        f"raw={raw_key_fields}"
     )
 canonical_by_key = {}
 for row in canonical_rows:
@@ -420,11 +712,19 @@ for row in qwen_rows:
     staged_by_key[key] = row
 if set(canonical_by_key) != set(staged_by_key):
     raise ValueError("Qwen row keys changed during MTP enrichment")
+raw_tp4_by_key = {}
+for row in raw_rows:
+    if int(row["num_tensor_parallel_workers"]) != 4:
+        continue
+    key = tuple(row.get(field, "") for field in canonical_key_fields)
+    if key in raw_tp4_by_key:
+        raise ValueError(f"duplicate raw Qwen TP=4 key: {key}")
+    raw_tp4_by_key[key] = row
 
 preserved_timing_fields = [
     field
     for field in canonical_fields
-    if field.startswith("time_stats.") and field not in mtp_columns
+    if field.startswith("time_stats.") and field not in enriched_columns
 ]
 preserved_cells = 0
 for key, canonical_row in canonical_by_key.items():
@@ -442,24 +742,66 @@ qwen_tp4 = [
 ]
 if {int(row["num_tokens"]) for row in qwen_tp4} != qwen_tokens:
     raise ValueError(f"Qwen3-Next TP=4 token coverage mismatch in {qwen}")
+qwen_tp4_keys = {
+    tuple(row.get(field, "") for field in canonical_key_fields)
+    for row in qwen_tp4
+}
+if qwen_tp4_keys != set(raw_tp4_by_key):
+    raise ValueError(
+        "Qwen3-Next raw/staged TP=4 keys differ: "
+        f"raw={sorted(raw_tp4_by_key)}, staged={sorted(qwen_tp4_keys)}"
+    )
 mtp_populated_cells = 0
+same_tp_populated_cells = 0
 for row in qwen_tp4:
+    key = tuple(row.get(field, "") for field in canonical_key_fields)
+    canonical_row = canonical_by_key[key]
+    raw_row = raw_tp4_by_key[key]
+    for column in same_tp_columns:
+        if not finite(row.get(column, "")):
+            raise ValueError(f"invalid Qwen3-Next same-TP value {column} for key {row}")
+        if row.get(column, "") != raw_row.get(column, ""):
+            raise ValueError(
+                f"Qwen TP=4 same-TP timing differs from raw {column}, key={key}"
+            )
+        same_tp_populated_cells += 1
     for column in mtp_columns:
         if not finite(row.get(column, "")):
             raise ValueError(f"invalid Qwen3-Next MTP value {column} for key {row}")
+        if row.get(column, "") != canonical_row.get(column, ""):
+            raise ValueError(
+                f"Qwen TP=4 existing MTP timing changed for {column}, key={key}"
+            )
+        if row.get(column, "") != raw_row.get(column, ""):
+            raise ValueError(
+                f"Qwen TP=4 MTP timing differs from raw {column}, key={key}"
+            )
         mtp_populated_cells += 1
 qwen_non_tp4 = [
     row for row in qwen_rows
     if int(row["num_tensor_parallel_workers"]) != 4
 ]
 mtp_empty_nonselected_cells = 0
+same_tp_preserved_nonselected_cells = 0
 for row in qwen_non_tp4:
+    key = tuple(row.get(field, "") for field in canonical_key_fields)
+    canonical_row = canonical_by_key[key]
     for column in mtp_columns:
+        if row.get(column, "") != canonical_row.get(column, ""):
+            raise ValueError(
+                f"Qwen non-TP4 MTP timing changed for {column}, key={key}"
+            )
         if str(row.get(column, "")).strip():
             raise ValueError(
                 f"unexpected non-TP4 MTP value {column} for key {row}"
             )
         mtp_empty_nonselected_cells += 1
+    for column in same_tp_columns:
+        if row.get(column, "") != canonical_row.get(column, ""):
+            raise ValueError(
+                f"Qwen non-TP4 same-TP timing changed for {column}, key={key}"
+            )
+        same_tp_preserved_nonselected_cells += 1
 audit["qwen3_next_mtp"] = {
     "path": str(qwen),
     "canonical_path": str(canonical_qwen),
@@ -468,11 +810,15 @@ audit["qwen3_next_mtp"] = {
     "non_tp4_rows": len(qwen_non_tp4),
     "token_points": sorted(qwen_tokens),
     "columns": list(mtp_columns),
-    "legacy_key_removed": True,
+    "same_tp_columns": list(same_tp_columns),
+    "legacy_key_absent": True,
+    "raw_selected_rows": len(raw_tp4_by_key),
     "preserved_existing_timing_fields": len(preserved_timing_fields),
     "preserved_existing_timing_cells": preserved_cells,
     "mtp_populated_cells": mtp_populated_cells,
     "mtp_empty_nonselected_cells": mtp_empty_nonselected_cells,
+    "same_tp_populated_cells": same_tp_populated_cells,
+    "same_tp_preserved_nonselected_cells": same_tp_preserved_nonselected_cells,
 }
 
 report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -483,6 +829,14 @@ PY
 
 if [[ "$DRY_RUN" == true ]]; then
   echo "Dry run: no GPU or filesystem mutation will occur."
+fi
+
+if [[ "$AUDIT_ONLY" == true ]]; then
+  audit_staging
+  echo "Existing staging audit completed: $STAGE_ROOT"
+  echo "Profiling scope: $PROFILE_SCOPE"
+  echo "Audit report: $AUDIT_JSON"
+  exit 0
 fi
 
 run_logged environment \
@@ -502,33 +856,49 @@ import torch
 print("torch_cuda", torch.version.cuda)
 print("cuda_available", torch.cuda.is_available())
 print("cuda_device_count", torch.cuda.device_count())
-if not torch.cuda.is_available() or torch.cuda.device_count() < 8:
-    raise SystemExit("Expected at least 8 visible CUDA devices")
+expected_gpu_count = int(os.environ["NUM_GPUS"])
+if expected_gpu_count <= 0:
+    raise SystemExit(f"NUM_GPUS must be positive, got {expected_gpu_count}")
+if not torch.cuda.is_available() or torch.cuda.device_count() < expected_gpu_count:
+    raise SystemExit(
+        f"Expected at least {expected_gpu_count} visible CUDA devices"
+    )
 subprocess.run(["nvidia-smi", "-L"], check=True)
 PY
 
-profile_moe Phi-tiny-MoE-instruct cuda_event standalone_legacy "1" "1 2 4 8"
-profile_moe Phi-tiny-MoE-instruct cuda_event prefill_hot "1" "1 2 4 8"
-profile_moe Phi-tiny-MoE-instruct record_function standalone_legacy "1" "1 2 4 8"
-profile_moe Phi-tiny-MoE-instruct record_function prefill_hot "1" "1 2 4 8"
-profile_moe step-moe-noquant-small cuda_event standalone_legacy "4" "1 2"
-profile_moe step-moe-noquant-small cuda_event prefill_hot "4" "1 2"
-profile_moe step-moe-noquant-small record_function standalone_legacy "4" "1 2"
-profile_moe step-moe-noquant-small record_function prefill_hot "4" "1 2"
-profile_qwen_mtp
+if [[ "$PROFILE_SCOPE" == "step-tp1-standard" ]]; then
+  profile_moe step-moe-noquant-small cuda_event standalone_legacy "1" "1"
+  profile_moe step-moe-noquant-small record_function standalone_legacy "1" "1"
 
-snapshot_canonical_to_staging
-merge_moe_supplements Phi-tiny-MoE-instruct cuda_event standalone_legacy
-merge_moe_supplements Phi-tiny-MoE-instruct cuda_event prefill_hot
-merge_moe_supplements Phi-tiny-MoE-instruct record_function standalone_legacy
-merge_moe_supplements Phi-tiny-MoE-instruct record_function prefill_hot
-merge_moe_supplements step-moe-noquant-small cuda_event standalone_legacy
-merge_moe_supplements step-moe-noquant-small cuda_event prefill_hot
-merge_moe_supplements step-moe-noquant-small record_function standalone_legacy
-merge_moe_supplements step-moe-noquant-small record_function prefill_hot
-merge_qwen_mtp_columns
-audit_staging
+  snapshot_canonical_to_staging
+  merge_moe_supplements step-moe-noquant-small cuda_event standalone_legacy
+  merge_moe_supplements step-moe-noquant-small record_function standalone_legacy
+  audit_staging
+else
+  profile_moe Phi-tiny-MoE-instruct cuda_event standalone_legacy "1" "1 2 4 8"
+  profile_moe Phi-tiny-MoE-instruct cuda_event prefill_hot "1" "1 2 4 8"
+  profile_moe Phi-tiny-MoE-instruct record_function standalone_legacy "1" "1 2 4 8"
+  profile_moe Phi-tiny-MoE-instruct record_function prefill_hot "1" "1 2 4 8"
+  profile_moe step-moe-noquant-small cuda_event standalone_legacy "4" "1 2"
+  profile_moe step-moe-noquant-small cuda_event prefill_hot "4" "1 2"
+  profile_moe step-moe-noquant-small record_function standalone_legacy "4" "1 2"
+  profile_moe step-moe-noquant-small record_function prefill_hot "4" "1 2"
+  profile_qwen_mtp
+
+  snapshot_canonical_to_staging
+  merge_moe_supplements Phi-tiny-MoE-instruct cuda_event standalone_legacy
+  merge_moe_supplements Phi-tiny-MoE-instruct cuda_event prefill_hot
+  merge_moe_supplements Phi-tiny-MoE-instruct record_function standalone_legacy
+  merge_moe_supplements Phi-tiny-MoE-instruct record_function prefill_hot
+  merge_moe_supplements step-moe-noquant-small cuda_event standalone_legacy
+  merge_moe_supplements step-moe-noquant-small cuda_event prefill_hot
+  merge_moe_supplements step-moe-noquant-small record_function standalone_legacy
+  merge_moe_supplements step-moe-noquant-small record_function prefill_hot
+  merge_qwen_mtp_columns
+  audit_staging
+fi
 
 echo "Staging profile backfill completed: $STAGE_ROOT"
+echo "Profiling scope: $PROFILE_SCOPE"
 echo "Merged, audited profiles: $MERGED_ROOT/compute/$DEVICE"
 echo "Audit report: $AUDIT_JSON"

@@ -79,6 +79,7 @@ class _LanePredictor:
             0: {2: {0: 0.25, 1: 0.0, 2: 0.0, 3: 0.75}}
         }
         self.calls: list[tuple[int, dict[int, int]]] = []
+        self.include_attention_calls: list[bool] = []
 
     def predict_stage_execution_time(
         self,
@@ -87,12 +88,14 @@ class _LanePredictor:
         cluster_type=None,
         num_layers=None,
         layer_id=None,
+        include_attention=True,
         **_kwargs,
     ):
         assert cluster_type is ClusterType.DECODE
         assert num_layers == 1
         per_expert = dict(getattr(batch, "per_expert_tokens", {}))
         self.calls.append((layer_id, per_expert))
+        self.include_attention_calls.append(include_attention)
         return _ExecutionTime(
             **{
                 0: {
@@ -221,6 +224,20 @@ def test_decode_moe_layer_uses_local_ep_wave_and_slowest_lane_barrier(monkeypatc
     assert "max_lane_time_ms=3.000000" in barrier_lines[1]
     assert "barrier_time_ms=6.000000" in barrier_lines[1]
     assert "barrier_end_time_s=0.019000" in barrier_lines[1]
+
+
+def test_decode_moe_ep_lane_prediction_excludes_attention() -> None:
+    scheduler, predictor, batch = _scheduler()
+
+    scheduler._on_decode_ep_wave_ready(
+        time=0.01,
+        replica_id=0,
+        stage_id=0,
+        batch=batch,
+        layer_id=2,
+    )
+
+    assert predictor.include_attention_calls == [False, False]
 
 
 def test_decode_dense_layer_bypasses_ep_materializer(monkeypatch) -> None:

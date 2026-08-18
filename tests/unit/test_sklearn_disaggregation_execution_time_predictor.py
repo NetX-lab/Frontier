@@ -248,3 +248,92 @@ def test_disaggregation_dense_layer_uses_shared_expert_profile_rows() -> None:
     assert result.mlp_layer_down_proj_execution_time == 2.0
     assert result.mlp_layer_act_execution_time == 3.0
     assert result.mlp_norm_time == 4.0
+
+
+def test_pdd_decode_post_attention_prediction_skips_attention_lookup() -> None:
+    predictor = _DummyDisaggregationPredictor.__new__(
+        _DummyDisaggregationPredictor
+    )
+    predictor._enable_dummy_mode = False
+    predictor._cluster_type = ClusterType.DECODE
+    predictor._replica_config = SimpleNamespace(
+        total_expert_num=4,
+        moe_expert_parallel_size=2,
+    )
+    predictor._is_zero_token_decode_ffn_ep_barrier = lambda *_args: False
+    predictor._select_measurement_type_for_batch = lambda _batch: None
+    predictor._require_predictions_for_measurement_type = lambda *_args: None
+    predictor._activate_measurement_type = lambda *_args: None
+    predictor._emit_cuda_graph_activation_records = lambda *_args: None
+    predictor._get_communication_time = lambda *_args: SimpleNamespace(
+        tensor_parallel_time=4.0,
+        pipeline_parallel_time=0.0,
+    )
+    predictor._get_overhead_time = lambda *_args: SimpleNamespace(
+        schedule_time=0.0,
+        sampler_e2e_time=0.0,
+        prepare_inputs_e2e_time=0.0,
+        process_model_outputs_time=0.0,
+        ray_comm_time=0.0,
+        pp_producer_send_path_runtime_time=0.0,
+        pp_receiver_head_runtime_time=0.0,
+        pp_prefill_consumer_active_runtime_time=0.0,
+        pp_stage_boundary_residual_runtime_time=0.0,
+        pp_stage_boundary_handoff_time=0.0,
+    )
+    predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
+    model_config = SimpleNamespace(
+        is_moe=True,
+        is_moe_layer=lambda layer_id: layer_id == 2,
+        embedding_dim=128,
+    )
+    predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
+        model_config=model_config,
+        moe_tensor_parallel_size=1,
+    )
+    predictor.predict_attention_layer_time = lambda *_args, **_kwargs: (
+        (_ for _ in ()).throw(
+            AssertionError("post-attention EP lane looked up attention")
+        )
+    )
+    predictor.predict_moe_layer_time = lambda *_args, **_kwargs: SimpleNamespace(
+        moe_grouped_gemm_time=5.0,
+        moe_gating_time=1.0,
+        moe_shuffling_time=0.5,
+        share_expert_up_proj_time=0.0,
+        share_expert_down_proj_time=0.0,
+        share_expert_act_time=0.0,
+    )
+    predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 1.0
+    predictor._get_add_layer_act_execution_time = lambda _batch: 2.0
+    predictor._predict_named_ep_phase_operator_times = lambda **_kwargs: {
+        "expert_parallel_alltoall_dispatch": 0.25,
+        "expert_parallel_alltoall_combine": 0.75,
+    }
+    predictor._predict_one_op_time = (
+        lambda _name, value, *_args, **_kwargs: value
+    )
+    batch = SimpleNamespace(
+        id=7,
+        per_expert_tokens={0: 4, 1: 0},
+    )
+
+    result = predictor.predict_stage_execution_time(
+        batch,
+        stage_id=0,
+        cluster_type=ClusterType.DECODE,
+        num_layers=1,
+        layer_id=2,
+        include_attention=False,
+    )
+
+    assert result.get_single_layer_attention_time() == pytest.approx(0.0)
+    phases = (
+        result.get_single_layer_moe_pre_dispatch_time(),
+        result.get_single_layer_moe_dispatch_time(),
+        result.get_single_layer_moe_post_dispatch_compute_time(),
+        result.get_single_layer_moe_combine_time(),
+    )
+    assert sum(phases) == pytest.approx(
+        result.get_single_layer_post_attention_time()
+    )

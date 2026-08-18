@@ -210,8 +210,8 @@ CMD=(
   --replica_config_moe_routing_seed "$MOE_ROUTING_SEED"
 
   # Scheduler parameters
-  --vllm_v1_scheduler_config_max_tokens_in_batch "$MAX_TOKENS_IN_BATCH"
-  --vllm_v1_scheduler_config_long_prefill_token_threshold "$LONG_PREFILL_TOKEN_THRESHOLD"
+  --cluster_config_prefill_replica_scheduler_config_max_tokens_in_batch "$MAX_TOKENS_IN_BATCH"
+  --cluster_config_prefill_replica_scheduler_config_long_prefill_token_threshold "$LONG_PREFILL_TOKEN_THRESHOLD"
   --vllm_v1_scheduler_config_block_size "${BLOCK_SIZE:-16}"
   --vllm_v1_scheduler_config_num_blocks "${NUM_BLOCKS:-128}"
 
@@ -246,9 +246,9 @@ CMD=(
 )
 
 if [ "$ENABLE_CHUNKED_PREFILL" = "true" ]; then
-  CMD+=(--vllm_v1_scheduler_config_enable_chunked_prefill)
+  CMD+=(--cluster_config_prefill_replica_scheduler_config_enable_chunked_prefill)
 else
-  CMD+=(--no-vllm_v1_scheduler_config_enable_chunked_prefill)
+  CMD+=(--no-cluster_config_prefill_replica_scheduler_config_enable_chunked_prefill)
 fi
 
 if [ "$ENABLE_DUMMY_MODE" = "true" ]; then

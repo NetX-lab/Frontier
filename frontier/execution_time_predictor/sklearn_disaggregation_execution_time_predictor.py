@@ -561,7 +561,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         )
 
     def _get_dummy_execution_time_for_cluster(
-        self, batch: Batch, pipeline_stage: int, cluster_type: ClusterType = None
+        self,
+        batch: Batch,
+        pipeline_stage: int,
+        cluster_type: ClusterType = None,
+        include_attention: bool = True,
     ) -> ExecutionTime:
         """Return cluster-specific dummy ExecutionTime object."""
         if cluster_type is None:
@@ -675,13 +679,23 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             # Unified DECODE cluster (PD-disaggregation mode): attention + (MLP/MoE)
             return ExecutionTime(
                 num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
-                attention_rope_execution_time=base_time,
-                attention_kv_cache_save_execution_time=base_time,
-                attention_decode_execution_time=base_time,
+                attention_rope_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attention_kv_cache_save_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attention_decode_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
                 attention_prefill_execution_time=0.0,  # No prefill in decode
-                attention_layer_pre_proj_execution_time=base_time,
-                attention_layer_post_proj_execution_time=base_time,
-                attn_norm_time=base_time,
+                attention_layer_pre_proj_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attention_layer_post_proj_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attn_norm_time=base_time if include_attention else 0.0,
                 mlp_norm_time=base_time,
                 add_time=base_time,
                 tensor_parallel_communication_time=tp_comm_time,
@@ -1227,6 +1241,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         layer_id: int = 0,
         include_moe: bool | None = None,
         include_ffn: bool = True,
+        include_attention: bool = True,
     ) -> ExecutionTime:
         """
         Predict aggregated execution time for one or more transformer layers (disaggregated architecture).
@@ -1240,6 +1255,15 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         - This predictor emits single-layer op/comm/residual components.
         - ExecutionTime applies num_layers_per_pipeline_stage aggregation.
         """
+        if type(include_attention) is not bool:
+            raise ValueError("include_attention must be a bool")
+        if not include_attention and (
+            cluster_type != ClusterType.DECODE or not include_ffn
+        ):
+            raise ValueError(
+                "Post-attention-only prediction requires unified DECODE with FFN enabled"
+            )
+
         if self._enable_dummy_mode:
             if cluster_type in (
                 ClusterType.PREFILL,
@@ -1250,7 +1274,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 self._log_architecture_attention_shape(batch)
             # Phase 1 Fix: Use cluster-specific dummy execution time
             dummy_exec_time = self._get_dummy_execution_time_for_cluster(
-                batch, stage_id, cluster_type
+                batch,
+                stage_id,
+                cluster_type,
+                include_attention=include_attention,
             )
 
             # If num_layers matches, return as-is
@@ -1893,9 +1920,69 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             # Handles both dense models (MLP) and MoE models
             # For dense models: attention + MLP
             # For MoE models: attention + MoE
-            attention_time = self.predict_attention_layer_time(
-                batch, layer_id=layer_id, cluster_type=cluster_type
-            )
+            attention_execution_params = self._get_zero_attn_params()
+            if include_attention:
+                attention_time = self.predict_attention_layer_time(
+                    batch, layer_id=layer_id, cluster_type=cluster_type
+                )
+                attention_execution_params = {
+                    "attention_rope_execution_time": self._predict_one_op_time(
+                        "attention_rope_execution_time",
+                        attention_time.attention_rope_execution_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    "attention_kv_cache_save_execution_time": self._predict_one_op_time(
+                        "attention_kv_cache_save_execution_time",
+                        attention_time.attention_kv_cache_save_execution_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    "attention_decode_execution_time": self._predict_one_op_time(
+                        "attention_decode_execution_time",
+                        attention_time.attention_decode_execution_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    "attention_prefill_execution_time": self._predict_one_op_time(
+                        "attention_prefill_execution_time",
+                        attention_time.attention_prefill_execution_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    "attention_layer_pre_proj_execution_time": self._predict_one_op_time(
+                        "attention_layer_pre_proj_execution_time",
+                        attention_time.attention_layer_pre_proj_execution_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    "attention_layer_post_proj_execution_time": self._predict_one_op_time(
+                        "attention_layer_post_proj_execution_time",
+                        attention_time.attention_layer_post_proj_execution_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    "attn_norm_time": self._predict_one_op_time(
+                        "attn_norm_time",
+                        attention_time.attn_norm_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                }
 
             # Check if this is a MoE model or dense model
             # Use model_config.is_moe for MoE detection - NOT parallelism settings
@@ -1907,6 +1994,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
             if include_moe is not None:
                 is_moe_model = include_moe
+            if not include_attention and not is_moe_model:
+                raise ValueError(
+                    "Post-attention-only unified DECODE prediction requires a MoE layer"
+                )
 
             if is_moe_model:
                 # MoE model: use MoE operations
@@ -1991,62 +2082,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
 
                 return ExecutionTime(
                     num_layers_per_pipeline_stage=num_layers,
-                    attention_rope_execution_time=self._predict_one_op_time(
-                        "attention_rope_execution_time",
-                        attention_time.attention_rope_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_kv_cache_save_execution_time=self._predict_one_op_time(
-                        "attention_kv_cache_save_execution_time",
-                        attention_time.attention_kv_cache_save_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_decode_execution_time=self._predict_one_op_time(
-                        "attention_decode_execution_time",
-                        attention_time.attention_decode_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_prefill_execution_time=self._predict_one_op_time(
-                        "attention_prefill_execution_time",
-                        attention_time.attention_prefill_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_layer_pre_proj_execution_time=self._predict_one_op_time(
-                        "attention_layer_pre_proj_execution_time",
-                        attention_time.attention_layer_pre_proj_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_layer_post_proj_execution_time=self._predict_one_op_time(
-                        "attention_layer_post_proj_execution_time",
-                        attention_time.attention_layer_post_proj_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attn_norm_time=self._predict_one_op_time(
-                        "attn_norm_time",
-                        attention_time.attn_norm_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
+                    **attention_execution_params,
                     mlp_norm_time=self._predict_one_op_time(
                         "mlp_norm_time",
                         mlp_norm_time,
@@ -2124,7 +2160,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     ),
                     tensor_parallel_communication_time=self._predict_one_op_time(
                         "tensor_parallel_communication_time",
-                        communication_time.tensor_parallel_time,
+                        (
+                            communication_time.tensor_parallel_time
+                            if include_attention
+                            else 0.0
+                        ),
                         batch,
                         stage_id,
                         cluster_type,
@@ -2132,7 +2172,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     ),
                     attn_tensor_parallel_allreduce_time=self._predict_one_op_time(
                         "attn_tensor_parallel_allreduce_time",
-                        communication_time.tensor_parallel_time,
+                        (
+                            communication_time.tensor_parallel_time
+                            if include_attention
+                            else 0.0
+                        ),
                         batch,
                         stage_id,
                         cluster_type,
@@ -2181,62 +2225,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 add_time = self._get_add_layer_act_execution_time(batch)
                 return ExecutionTime(
                     num_layers_per_pipeline_stage=num_layers,
-                    attention_rope_execution_time=self._predict_one_op_time(
-                        "attention_rope_execution_time",
-                        attention_time.attention_rope_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_kv_cache_save_execution_time=self._predict_one_op_time(
-                        "attention_kv_cache_save_execution_time",
-                        attention_time.attention_kv_cache_save_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_decode_execution_time=self._predict_one_op_time(
-                        "attention_decode_execution_time",
-                        attention_time.attention_decode_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_prefill_execution_time=self._predict_one_op_time(
-                        "attention_prefill_execution_time",
-                        attention_time.attention_prefill_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_layer_pre_proj_execution_time=self._predict_one_op_time(
-                        "attention_layer_pre_proj_execution_time",
-                        attention_time.attention_layer_pre_proj_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_layer_post_proj_execution_time=self._predict_one_op_time(
-                        "attention_layer_post_proj_execution_time",
-                        attention_time.attention_layer_post_proj_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attn_norm_time=self._predict_one_op_time(
-                        "attn_norm_time",
-                        attention_time.attn_norm_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
+                    **attention_execution_params,
                     mlp_norm_time=self._predict_one_op_time(
                         "mlp_norm_time",
                         mlp_time.mlp_norm_time,

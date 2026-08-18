@@ -1,5 +1,6 @@
-from typing import Any, Dict, List, Optional, TYPE_CHECKING, Union
+import math
 import os
+from typing import Any, Dict, List, Optional, TYPE_CHECKING, Union
 
 import numpy as np
 import pandas as pd
@@ -2368,6 +2369,163 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         raise NotImplementedError("MoE all-to-all prediction not implemented")
         # return self._dummy_execution_time
+
+    def _predict_mtp_decoder_layer_time_ms(
+        self,
+        *,
+        predictor,
+        batch: Batch,
+    ) -> float:
+        layer_id = 0
+        model_config = getattr(predictor, "_model_config", None)
+        if model_config is None:
+            raise ValueError(
+                "MTP structural decoder prediction requires model_config"
+            )
+        if not bool(getattr(model_config, "is_moe", False)):
+            return super()._predict_mtp_decoder_layer_time_ms(
+                predictor=predictor,
+                batch=batch,
+            )
+
+        is_moe_layer = getattr(model_config, "is_moe_layer", None)
+        if not callable(is_moe_layer):
+            raise ValueError(
+                "MTP structural MoE decoder prediction requires "
+                "model_config.is_moe_layer"
+            )
+        if not bool(is_moe_layer(layer_id)):
+            return super()._predict_mtp_decoder_layer_time_ms(
+                predictor=predictor,
+                batch=batch,
+            )
+
+        cluster_type = getattr(predictor, "_cluster_type", None)
+        if not isinstance(cluster_type, ClusterType):
+            raise ValueError(
+                "MTP structural MoE decoder prediction requires a valid cluster_type"
+            )
+
+        attention_execution_time = predictor.predict_stage_execution_time(
+            batch=batch,
+            stage_id=0,
+            cluster_type=cluster_type,
+            num_layers=1,
+            layer_id=layer_id,
+            include_ffn=False,
+        )
+        attention_time_ms = float(attention_execution_time.model_time_ms)
+        if not math.isfinite(attention_time_ms) or attention_time_ms < 0:
+            raise ValueError(
+                "MTP structural attention time must be finite and non-negative, "
+                f"got {attention_time_ms}"
+            )
+
+        workload = predictor._materialize_layer_ep_workload(
+            batch=batch,
+            cluster_type=cluster_type,
+            layer_id=layer_id,
+        )
+        participant_ep_ids = tuple(workload.participant_ep_ids)
+        if not participant_ep_ids:
+            raise ValueError(
+                "MTP structural MoE decoder produced no EP participants"
+            )
+
+        effective_tokens = int(
+            batch.get_effective_total_tokens_for_compute(cluster_type)
+        )
+        if effective_tokens <= 0:
+            raise ValueError(
+                "MTP structural MoE decoder requires positive pre-routing "
+                f"effective tokens, got {effective_tokens}"
+            )
+
+        from frontier.entities import EPBatchGroup, Request
+
+        pre_dispatch_times_ms: List[float] = []
+        dispatch_times_ms: List[float] = []
+        routed_compute_times_ms: List[float] = []
+        combine_times_ms: List[float] = []
+        for ep_id in participant_ep_ids:
+            per_expert_tokens = dict(
+                workload.per_ep_per_expert_tokens[int(ep_id)]
+            )
+            logic_num_tokens = list(per_expert_tokens.values())
+            lane_batch = EPBatchGroup(
+                requests=[
+                    Request(0.0, 0, num_tokens)
+                    for num_tokens in logic_num_tokens
+                ],
+                num_tokens=logic_num_tokens,
+                replica_id=int(batch.replica_id),
+                ep_id=int(ep_id),
+                time=float(getattr(batch, "time", 0.0) or 0.0),
+                source_batch_ids=[int(batch.id)],
+                per_expert_tokens=per_expert_tokens,
+                cluster_type=cluster_type,
+                is_moe=True,
+            )
+            lane_batch.moe_pre_routing_effective_total_tokens = effective_tokens
+
+            lane_execution_time = predictor.predict_stage_execution_time(
+                batch=lane_batch,
+                stage_id=0,
+                cluster_type=cluster_type,
+                num_layers=1,
+                layer_id=layer_id,
+            )
+            phase_times_ms = [
+                float(lane_execution_time.get_single_layer_moe_pre_dispatch_time()),
+                float(lane_execution_time.get_single_layer_moe_dispatch_time()),
+                float(
+                    lane_execution_time.get_single_layer_moe_post_dispatch_compute_time()
+                ),
+                float(lane_execution_time.get_single_layer_moe_combine_time()),
+            ]
+            if any(
+                not math.isfinite(value) or value < 0
+                for value in phase_times_ms
+            ):
+                raise ValueError(
+                    "MTP structural MoE lane phase times must be finite and "
+                    f"non-negative, got ep_id={ep_id}, values={phase_times_ms}"
+                )
+
+            post_attention_time_ms = float(
+                lane_execution_time.get_single_layer_post_attention_time()
+            )
+            if not math.isfinite(post_attention_time_ms) or post_attention_time_ms < 0:
+                raise ValueError(
+                    "MTP structural MoE lane post-attention time must be finite "
+                    f"and non-negative, got ep_id={ep_id}, "
+                    f"value={post_attention_time_ms}"
+                )
+            if not math.isclose(
+                sum(phase_times_ms),
+                post_attention_time_ms,
+                rel_tol=1e-9,
+                abs_tol=1e-9,
+            ):
+                raise ValueError(
+                    "MTP structural MoE lane phase decomposition does not match "
+                    f"post-attention time: ep_id={ep_id}, "
+                    f"phase_sum_ms={sum(phase_times_ms)}, "
+                    f"post_attention_ms={post_attention_time_ms}"
+                )
+
+            pre_dispatch_times_ms.append(phase_times_ms[0])
+            dispatch_times_ms.append(phase_times_ms[1])
+            routed_compute_times_ms.append(phase_times_ms[2])
+            combine_times_ms.append(phase_times_ms[3])
+
+        return (
+            attention_time_ms
+            + max(pre_dispatch_times_ms)
+            + max(dispatch_times_ms)
+            + max(routed_compute_times_ms)
+            + max(combine_times_ms)
+        )
 
     def predict_stage_execution_time(
         self,

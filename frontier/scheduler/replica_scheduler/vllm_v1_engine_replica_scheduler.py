@@ -4494,7 +4494,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 stage_reqs_start_loc = list(range(num_reqs + 1))
 
             afd_stage_metadata = None
-            if self._cluster_type == ClusterType.DECODE_ATTN and num_stages > 1:
+            if self._cluster_type == ClusterType.DECODE_ATTN and num_stages > 0:
                 from frontier.config import global_vars
                 from frontier.entities.batch import AFDStageMetadata
 
@@ -4600,7 +4600,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
 
         # Get num_stages from cluster config (af_pipeline_num_micro_batch)
         num_stages = self._af_pipeline_num_micro_batch
-        if num_stages is None or num_stages <= 1:
+        if num_stages is None or num_stages <= 0:
             return batch
 
         if self._cluster_type != ClusterType.DECODE_ATTN:
