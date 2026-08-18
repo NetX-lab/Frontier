@@ -364,6 +364,62 @@ def _single_layer_ep2_case(*, zero_routed: bool = False):
     )
 
 
+def _independent_ep_wave_fixture(
+    tmp_path: Path,
+    *,
+    batch_ids: tuple[int, ...] = (10,),
+) -> tuple[object, Path, Path]:
+    """Create a strict one-layer EP fixture backed by an independent ledger."""
+
+    case = replace(
+        _single_layer_ep2_case(),
+        total_experts=2,
+        router_topk=1,
+        routing_distribution="balanced",
+        num_requests=1,
+        pipeline_stages=1,
+        prefill_tokens=2,
+    )
+    log_path = tmp_path / "ep_wave.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=batch_id,
+                stage_id=0,
+                request_ids=["0"],
+                request_num_tokens=[2],
+                request_num_prefill_tokens=[2],
+                request_runtime_epochs=[0],
+            )
+            for batch_id in batch_ids
+        ],
+    )
+    event_lines: list[str] = []
+    for batch_id in batch_ids:
+        wave = _ep_wave_lines(
+            cluster="MONOLITHIC",
+            ep_size=2,
+            batch_id=batch_id,
+            layer_id=0,
+        )
+        event_lines.extend(
+            [
+                str(wave["conservation"]),
+                *list(wave["workloads"]),
+                str(wave["dispatch"]),
+                str(wave["combine"]),
+            ]
+        )
+    log_path.write_text(
+        _strict_ep_log_from_events(event_lines),
+        encoding="utf-8",
+    )
+    return case, log_path, metrics_dir
+
+
 def test_matrix_has_required_cross_architecture_coverage() -> None:
     cases = build_matrix(REPO_ROOT)
 
@@ -817,6 +873,25 @@ def test_optimization_comparison_expands_factorial_axes_and_reports_metrics() ->
             assert values["delta_ms"] == pytest.approx(
                 values["enabled_ms"] - values["control_ms"]
             )
+
+
+def test_optimization_comparison_rejects_incomplete_campaign_when_required() -> None:
+    all_cases = build_optimization_matrix(REPO_ROOT)
+    reduced_cases = all_cases[:-1]
+    result_rows = [
+        _optimization_result_row(case, metric_offset=float(index))
+        for index, case in enumerate(reduced_cases)
+    ]
+
+    with pytest.raises(
+        ValueError,
+        match=r"requires the complete matrix: expected=200 actual=199",
+    ):
+        build_optimization_comparison(
+            reduced_cases,
+            result_rows,
+            require_complete_matrix=True,
+        )
 
 
 def test_optimization_comparison_rejects_layer_workflow_mismatch() -> None:
@@ -2029,13 +2104,7 @@ def test_optimization_compare_cli_writes_json_csv_and_markdown(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    all_cases = build_optimization_matrix(REPO_ROOT)
-    pair_id = next(
-        case.pair_id
-        for case in all_cases
-        if case.optimization_stratum == "prefix"
-    )
-    cases = [case for case in all_cases if case.pair_id == pair_id]
+    cases = build_optimization_matrix(REPO_ROOT)
     task_dir = tmp_path / "task"
     output_root = tmp_path / "outputs"
     results_path = task_dir / "results.jsonl"
@@ -2099,7 +2168,8 @@ def test_optimization_compare_cli_writes_json_csv_and_markdown(
     report = json.loads(json_path.read_text(encoding="utf-8"))
     assert exit_code == 0
     assert report["status"] == "PASS"
-    assert report["pair_count"] == 1
+    assert report["case_count"] == 200
+    assert report["pair_count"] == 122
     assert "workflow" in report["pairs"][0]
     csv_text = csv_path.read_text(encoding="utf-8")
     assert "control_ttft_mean_ms" in csv_text
@@ -3875,6 +3945,167 @@ def test_strict_checker_rejects_mismatched_structured_wave_identity(
 
     assert result["status"] == "FAIL"
     assert "structured EP wave identity mismatch" in result["errors"]
+
+
+def test_strict_checker_rejects_missing_iteration_identity(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+    log_path.write_text(
+        log_path.read_text(encoding="utf-8").replace(
+            "iteration_ids=[0]",
+            "iteration_ids=[]",
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert "iteration_ids must be a non-empty list" in result["errors"]
+
+
+def test_strict_checker_rejects_duplicate_iteration_identity(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+    log_path.write_text(
+        log_path.read_text(encoding="utf-8").replace(
+            "iteration_ids=[0]",
+            "iteration_ids=[0, 0]",
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert (
+        "request/epoch/iteration lists must have equal lengths"
+        in result["errors"]
+    )
+
+
+def test_strict_checker_rejects_cross_replica_wave_identity(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+    log_path.write_text(
+        log_path.read_text(encoding="utf-8").replace(
+            "replica_id=0",
+            "replica_id=1",
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert "EP expected wave manifest missing" in result["errors"]
+    assert "EP expected wave manifest extra" in result["errors"]
+
+
+def test_strict_checker_rejects_missing_expected_wave(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(
+        tmp_path,
+        batch_ids=(10, 11),
+    )
+    lines = log_path.read_text(encoding="utf-8").splitlines()
+    log_path.write_text(
+        "\n".join(line for line in lines if "batch_id=11" not in line) + "\n",
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert "EP expected wave manifest missing" in result["errors"]
+
+
+def test_strict_checker_rejects_extra_expected_wave(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+    wave = _ep_wave_lines(
+        cluster="MONOLITHIC",
+        ep_size=2,
+        batch_id=11,
+        layer_id=0,
+    )
+    log_path.write_text(
+        log_path.read_text(encoding="utf-8")
+        + "\n"
+        + "\n".join(
+            [
+                str(wave["conservation"]),
+                *list(wave["workloads"]),
+                str(wave["dispatch"]),
+                str(wave["combine"]),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert "EP expected wave manifest extra" in result["errors"]
+
+
+def test_strict_checker_rejects_duplicate_expected_wave(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+    duplicate = log_path.read_text(encoding="utf-8")
+    log_path.write_text(duplicate + duplicate, encoding="utf-8")
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert (
+        "EP expected wave manifest duplicate" in result["errors"]
+        or "duplicate EP conservation records" in result["errors"]
+    )
 
 
 def test_online_checker_accepts_online_success_marker(tmp_path: Path) -> None:

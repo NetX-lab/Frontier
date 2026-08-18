@@ -3110,6 +3110,289 @@ def _expected_ep_request_identity_sets(
     return expected
 
 
+def _read_ep_expected_wave_manifest(
+    case: MatrixCase,
+    metrics_dir: Path,
+) -> Counter[tuple[Any, ...]]:
+    """Build the independent physical-wave manifest from the stage ledger.
+
+    The stage ledger is intentionally treated as the source of truth for
+    ``cluster/batch/layer/replica/stage/request-runtime`` scope.  It does not
+    currently persist the runtime EP identity suffix (iteration, schedule
+    epoch, AF stage, or operation id), so those fields are validated
+    structurally from the trace parser but are never used to manufacture the
+    expected manifest.  A trace with a different identity suffix therefore
+    cannot create a new expected wave; it is reported as a duplicate/extra
+    physical wave instead.
+
+    Manifest keys are:
+
+    ``(cluster, batch_id, layer_id, replica_id, stage_id, request_epoch_key)``.
+
+    One key is expected for each full-stage ledger row and each declared MoE
+    layer.  Duplicate or missing pipeline-stage rows are hard evidence errors.
+    """
+
+    # Reuse the token-oracle parser first.  Besides avoiding a second schema
+    # implementation, this guarantees that every manifest row has a valid,
+    # independent token payload and that duplicate full-stage rows are rejected.
+    _read_ep_request_token_oracle(case, metrics_dir)
+    path = metrics_dir / "frontier_stage_batch_ledger.jsonl"
+    expected_clusters = set(_expected_ep_roles(case))
+    grouped: dict[
+        tuple[str, int, int],
+        dict[int, tuple[tuple[int, int], ...]],
+    ] = {}
+
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(),
+        1,
+    ):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"invalid stage ledger JSON at {path}:{line_number}"
+            ) from exc
+        if not isinstance(row, Mapping):
+            raise ValueError(
+                f"stage ledger row is not an object at {path}:{line_number}"
+            )
+        cluster = str(row.get("cluster_type", "")).upper()
+        if cluster not in expected_clusters:
+            continue
+        if row.get("execution_scope") != "FULL_STAGE_WORLD":
+            continue
+        try:
+            batch_id = int(row["batch_id"])
+            stage_id = int(row["stage_id"])
+            replica_id = int(row["replica_id"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(
+                "EP expected wave manifest requires integer batch_id/stage_id/"
+                f"replica_id at {path}:{line_number}"
+            ) from exc
+        if min(batch_id, stage_id, replica_id) < 0:
+            raise ValueError(
+                "EP expected wave manifest IDs must be non-negative "
+                f"at {path}:{line_number}"
+            )
+        request_ids = row.get("request_ids")
+        request_epochs = row.get("request_runtime_epochs")
+        if not isinstance(request_ids, list) or not isinstance(
+            request_epochs, list
+        ):
+            raise ValueError(
+                "EP expected wave manifest requires request_ids and "
+                f"request_runtime_epochs lists at {path}:{line_number}"
+            )
+        normalized_ids: list[int] = []
+        for request_id in request_ids:
+            try:
+                normalized_ids.append(int(request_id))
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    "EP expected wave manifest request IDs must be integers "
+                    f"at {path}:{line_number}"
+                ) from exc
+        request_epoch_key = _canonical_request_epoch_key(
+            normalized_ids,
+            request_epochs,
+        )
+        group_key = (cluster, replica_id, batch_id)
+        stage_payloads = grouped.setdefault(group_key, {})
+        if stage_id in stage_payloads:
+            raise ValueError(
+                "EP expected wave manifest has duplicate stage row "
+                f"cluster={cluster} replica={replica_id} batch={batch_id} "
+                f"stage={stage_id}"
+            )
+        stage_payloads[stage_id] = request_epoch_key
+
+    expected_stage_ids = set(range(int(case.pipeline_stages)))
+    manifest: Counter[tuple[Any, ...]] = Counter()
+    for (cluster, replica_id, batch_id), stage_payloads in sorted(
+        grouped.items()
+    ):
+        actual_stage_ids = set(stage_payloads)
+        if actual_stage_ids != expected_stage_ids:
+            raise ValueError(
+                "EP expected wave manifest pipeline coverage mismatch "
+                f"cluster={cluster} replica={replica_id} batch={batch_id} "
+                f"expected={sorted(expected_stage_ids)} "
+                f"actual={sorted(actual_stage_ids)}"
+            )
+        request_epoch_keys = set(stage_payloads.values())
+        if len(request_epoch_keys) != 1:
+            raise ValueError(
+                "EP expected wave manifest request identity differs across "
+                f"pipeline stages cluster={cluster} replica={replica_id} "
+                f"batch={batch_id}"
+            )
+        request_epoch_key = next(iter(request_epoch_keys))
+        for stage_id in sorted(stage_payloads):
+            for layer_id in sorted(int(item) for item in case.moe_layer_ids):
+                manifest[
+                    (
+                        cluster,
+                        batch_id,
+                        layer_id,
+                        replica_id,
+                        stage_id,
+                        request_epoch_key,
+                    )
+                ] += 1
+    if not manifest:
+        raise ValueError(
+            "EP expected wave manifest contains no FULL_STAGE_WORLD MoE waves"
+        )
+    return manifest
+
+
+def _ep_wave_manifest_key(record: Mapping[str, Any]) -> tuple[Any, ...]:
+    """Return the independent physical scope key for one parsed EP record."""
+
+    identity = record.get("trace_identity")
+    if identity is None:
+        raise ValueError("structured EP wave identity is missing")
+    request_epoch_key = _canonical_request_epoch_key(
+        tuple(identity["request_ids"]),
+        tuple(identity["request_runtime_epochs"]),
+    )
+    return (
+        str(record["cluster"]).upper(),
+        int(record["batch_id"]),
+        int(record["layer_id"]),
+        int(identity["replica_id"]),
+        int(identity["stage_id"]),
+        request_epoch_key,
+    )
+
+
+def _observed_ep_wave_manifest(
+    records: Sequence[Mapping[str, Any]],
+    *,
+    stream_name: str,
+    phase: str | None = None,
+) -> tuple[Counter[tuple[Any, ...]], list[str]]:
+    """Collapse lane records into one physical-wave count per identity."""
+
+    errors: list[str] = []
+    grouped: dict[tuple[Any, ...], list[Mapping[str, Any]]] = {}
+    for record in records:
+        if phase is not None and str(record.get("phase")) != phase:
+            continue
+        try:
+            wave_key = _ep_wave_key(record)
+        except (KeyError, TypeError, ValueError) as exc:
+            errors.append(
+                f"EP expected wave manifest {stream_name} identity invalid: {exc}"
+            )
+            continue
+        grouped.setdefault(wave_key, []).append(record)
+
+    observed: Counter[tuple[Any, ...]] = Counter()
+    for wave_key, wave_records in grouped.items():
+        try:
+            manifest_key = _ep_wave_manifest_key(wave_records[0])
+        except (KeyError, TypeError, ValueError) as exc:
+            errors.append(
+                f"EP expected wave manifest {stream_name} identity invalid: {exc}"
+            )
+            continue
+        observed[manifest_key] += 1
+    return observed, errors
+
+
+def _compare_ep_wave_manifest(
+    expected: Mapping[tuple[Any, ...], int],
+    observed: Mapping[tuple[Any, ...], int],
+    *,
+    stream_name: str,
+) -> list[str]:
+    """Compare expected/observed physical-wave multisets fail-closed."""
+
+    errors: list[str] = []
+    expected_counter = Counter(expected)
+    observed_counter = Counter(observed)
+    missing = expected_counter - observed_counter
+    extra = observed_counter - expected_counter
+    duplicates = {
+        key: count
+        for key, count in observed_counter.items()
+        if count > expected_counter.get(key, 0)
+    }
+    if missing:
+        errors.append(
+            "EP expected wave manifest missing "
+            f"stream={stream_name} waves={sorted(missing.items(), key=str)}"
+        )
+    if extra:
+        errors.append(
+            "EP expected wave manifest extra "
+            f"stream={stream_name} waves={sorted(extra.items(), key=str)}"
+        )
+    if duplicates:
+        errors.append(
+            "EP expected wave manifest duplicate "
+            f"stream={stream_name} waves={sorted(duplicates.items(), key=str)}"
+        )
+    return errors
+
+
+def _validate_ep_expected_wave_manifest(
+    *,
+    expected_manifest: Mapping[tuple[Any, ...], int],
+    workload_records: Sequence[Mapping[str, Any]],
+    conservation_records: Sequence[Mapping[str, Any]],
+    barrier_records: Sequence[Mapping[str, Any]],
+) -> list[str]:
+    """Require every EP evidence stream to match the independent manifest."""
+
+    errors: list[str] = []
+    workload_observed, workload_errors = _observed_ep_wave_manifest(
+        workload_records,
+        stream_name="workload",
+    )
+    errors.extend(workload_errors)
+    conservation_observed, conservation_errors = _observed_ep_wave_manifest(
+        conservation_records,
+        stream_name="conservation",
+    )
+    errors.extend(conservation_errors)
+    errors.extend(
+        _compare_ep_wave_manifest(
+            expected_manifest,
+            workload_observed,
+            stream_name="workload",
+        )
+    )
+    errors.extend(
+        _compare_ep_wave_manifest(
+            expected_manifest,
+            conservation_observed,
+            stream_name="conservation",
+        )
+    )
+    for phase in ("dispatch", "combine"):
+        barrier_observed, barrier_errors = _observed_ep_wave_manifest(
+            barrier_records,
+            stream_name=f"barrier/{phase}",
+            phase=phase,
+        )
+        errors.extend(barrier_errors)
+        errors.extend(
+            _compare_ep_wave_manifest(
+                expected_manifest,
+                barrier_observed,
+                stream_name=f"barrier/{phase}",
+            )
+        )
+    return errors
+
+
 def _nonnegative_integer_metric(
     row: Mapping[str, str],
     field: str,
@@ -4003,6 +4286,7 @@ def check_case_log(
     expected_request_identity_sets: (
         dict[tuple[str, int], set[tuple[int, int]]] | None
     ) = None
+    expected_wave_manifest: Counter[tuple[Any, ...]] | None = None
     if (
         strict_layers
         and case.is_moe
@@ -4016,6 +4300,10 @@ def check_case_log(
             expected_request_identity_sets = _expected_ep_request_identity_sets(
                 independent_token_oracle
             )
+            expected_wave_manifest = _read_ep_expected_wave_manifest(
+                case,
+                metrics_dir,
+            )
         except (FileNotFoundError, OSError, ValueError) as exc:
             errors.append(f"independent EP token oracle invalid: {exc}")
     if strict_layers and case.is_moe:
@@ -4026,6 +4314,15 @@ def check_case_log(
                 barrier_records=ep_barrier_records,
             )
         )
+        if expected_wave_manifest is not None:
+            errors.extend(
+                _validate_ep_expected_wave_manifest(
+                    expected_manifest=expected_wave_manifest,
+                    workload_records=ep_workload_records,
+                    conservation_records=ep_conservation_records,
+                    barrier_records=ep_barrier_records,
+                )
+            )
     if strict_layers:
         protocol_layer_ids = {
             int(record["layer_id"])
@@ -4956,8 +5253,16 @@ def _optimization_workflow_summary(
 def build_optimization_comparison(
     cases: Sequence[MatrixCase],
     result_rows: Sequence[Mapping[str, Any]],
+    *,
+    require_complete_matrix: bool = False,
 ) -> dict[str, Any]:
-    if len(cases) == sum(OPTIMIZATION_ARCHITECTURE_CASE_COUNTS.values()):
+    expected_case_count = sum(OPTIMIZATION_ARCHITECTURE_CASE_COUNTS.values())
+    if require_complete_matrix and len(cases) != expected_case_count:
+        raise ValueError(
+            "optimization comparison requires the complete matrix: "
+            f"expected={expected_case_count} actual={len(cases)}"
+        )
+    if len(cases) == expected_case_count:
         _validate_expected_optimization_pair_set(
             cases,
             _optimization_pair_specs(cases),
@@ -5809,7 +6114,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             expected_source_provenance=source_provenance,
         )
         _validate_persisted_case_metadata(cases, result_rows)
-        report = build_optimization_comparison(cases, result_rows)
+        report = build_optimization_comparison(
+            cases,
+            result_rows,
+            require_complete_matrix=True,
+        )
         json_path, csv_path, markdown_path = (
             write_optimization_comparison_artifacts(task_dir, report)
         )
