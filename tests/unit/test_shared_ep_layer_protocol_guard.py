@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 from collections import defaultdict
+from unittest.mock import Mock
 
 import pytest
 
@@ -11,6 +12,7 @@ from frontier.events.decode_sync_event import DecodeSyncEvent
 from frontier.events.decode_sync_collective_event import DecodeSyncCollectiveEvent
 from frontier.events.prefill_sync_event import PrefillSyncEvent
 from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveEvent
+from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
@@ -53,6 +55,26 @@ class _LayerPredictor:
         return _ExecutionTime(4.0 if layer_id == 1 else 9.0)
 
 
+class _StageOffsetPredictor:
+    _num_layers_per_pipeline_stage = 16
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[int, ClusterType, int, int]] = []
+
+    def predict_stage_execution_time(
+        self,
+        _batch,
+        stage_id,
+        cluster_type=None,
+        *,
+        num_layers,
+        layer_id,
+        **_kwargs,
+    ):
+        self.calls.append((stage_id, cluster_type, num_layers, layer_id))
+        return _ExecutionTime(1.0)
+
+
 def _scheduler(cluster_type: ClusterType):
     scheduler = object.__new__(RoundRobinClusterScheduler)
     scheduler._cluster_type = cluster_type
@@ -68,6 +90,58 @@ def _scheduler(cluster_type: ClusterType):
         _monolithic_routing_details={0: {2: {0: 1.0}}},
     )
     return scheduler
+
+
+@pytest.mark.parametrize(
+    ("cluster_type", "num_prefill_tokens", "num_decode_tokens", "event_type"),
+    [
+        (ClusterType.MONOLITHIC, 4, 0, PrefillSyncEvent),
+        (ClusterType.MONOLITHIC, 0, 4, DecodeSyncEvent),
+    ],
+)
+def test_shared_pipeline_stage_one_starts_at_global_layer_offset(
+    cluster_type: ClusterType,
+    num_prefill_tokens: int,
+    num_decode_tokens: int,
+    event_type,
+) -> None:
+    predictor = _StageOffsetPredictor()
+    request = Request(
+        arrived_at=0.0,
+        num_prefill_tokens=num_prefill_tokens,
+        num_decode_tokens=num_decode_tokens,
+    )
+    if num_decode_tokens > 0:
+        request._is_prefill_complete = True
+    batch = Batch(0, [request], [4], is_moe=True)
+    batch.set_global_id(9)
+    stage_scheduler = SimpleNamespace(
+        is_busy=False,
+        get_queue_batches=Mock(return_value=[batch]),
+        pop_batch_if_not_busy=Mock(return_value=batch),
+        consume_last_stale_drop_count=Mock(return_value=0),
+        _execution_time_predictor=predictor,
+    )
+    cluster_scheduler = SimpleNamespace(
+        get_replica_stage_scheduler=Mock(return_value=stage_scheduler),
+        get_replica=Mock(return_value=SimpleNamespace(is_moe=True)),
+    )
+    global_scheduler = SimpleNamespace(
+        get_cluster_scheduler=Mock(return_value=cluster_scheduler)
+    )
+
+    events = ReplicaStageScheduleEvent(
+        time=1.0,
+        replica_id=0,
+        stage_id=1,
+        cluster_type=cluster_type,
+        replica_local_id=None,
+    ).handle_event(global_scheduler, Mock())
+
+    assert len(events) == 1
+    assert isinstance(events[0], event_type)
+    assert events[0]._layer_id == 16
+    assert predictor.calls == [(1, cluster_type, 1, 16)]
 
 
 def _room():

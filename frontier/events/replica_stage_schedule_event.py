@@ -198,8 +198,16 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     # Initialize batch metadata for layer-by-layer processing
                     batch._prefill_stage_start_time = self.time
 
-                    # Start with first layer (layer_id = 0)
-                    first_layer_id = 0
+                    num_layers = (
+                        stage_scheduler._execution_time_predictor
+                        ._num_layers_per_pipeline_stage
+                    )
+                    first_layer_id, _ = (
+                        BaseClusterScheduler.get_pipeline_stage_layer_bounds(
+                            self._stage_id,
+                            num_layers,
+                        )
+                    )
 
                     # Predict first-layer timing directly (avoid using aggregated stage prediction).
                     execution_time = stage_scheduler._execution_time_predictor.predict_stage_execution_time(
@@ -455,16 +463,25 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     # DECODE cluster (PD-disaggregation) and MONOLITHIC pure-decode MoE
                     # reuse the same layer-by-layer decode sync processing path.
 
-                    # Get num_layers from the predictor
-                    num_layers = stage_scheduler._execution_time_predictor._num_layers_per_pipeline_stage
+                    # Get the global layer range owned by this pipeline stage.
+                    num_layers = (
+                        stage_scheduler._execution_time_predictor
+                        ._num_layers_per_pipeline_stage
+                    )
+                    first_layer_id, _ = (
+                        BaseClusterScheduler.get_pipeline_stage_layer_bounds(
+                            self._stage_id,
+                            num_layers,
+                        )
+                    )
 
-                    # Get execution time components for all layers in this pipeline stage
+                    # Predict the first layer owned by this pipeline stage.
                     execution_time = stage_scheduler._execution_time_predictor.predict_stage_execution_time(
                         batch,
                         self._stage_id,
                         self._cluster_type,
                         num_layers=1,
-                        layer_id=0,
+                        layer_id=first_layer_id,
                         include_ffn=False,
                     )
 
@@ -474,8 +491,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     # Initialize batch metadata for layer-by-layer processing
                     batch._decode_stage_start_time = self.time
 
-                    # Start with first layer (layer_id = 0)
-                    first_layer_id = 0
                     # Predictor single-layer attention component is in milliseconds;
                     # event queue timestamps are in seconds.
                     attention_time_ms = execution_time.get_single_layer_attention_time()

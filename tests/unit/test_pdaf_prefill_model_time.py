@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from frontier.events.prefill_sync_event import PrefillSyncEvent
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
@@ -393,13 +394,81 @@ def test_prefill_sync_records_heterogeneous_layer_components_once() -> None:
     )
 
 
+def test_prefill_pp2_stage_one_advances_with_global_layer_ids() -> None:
+    layer_times = {
+        2: _LayerExecutionTime(
+            attention_ms=1.25,
+            post_attention_ms=2.5,
+            pipeline_ms=0.75,
+        ),
+        3: _LayerExecutionTime(
+            attention_ms=3.75,
+            post_attention_ms=4.5,
+            pipeline_ms=0.75,
+        ),
+    }
+    predictor = _LayerPredictor(layer_times)
+    batch = SimpleNamespace(
+        id=12,
+        global_id=9,
+        is_idle=False,
+        total_num_tokens=8,
+        _prefill_stage_start_time=10.0,
+        _prefill_model_execution_components_ms_by_stage={1: [1.25, 2.5]},
+        schedule_epoch=0,
+        request_execution_signatures=[],
+        request_mutation_signatures=[],
+        thinking_round_start_times=[],
+    )
+    batch_stage = Mock()
+    stage_scheduler = SimpleNamespace(
+        is_last_stage=True,
+        _execution_time_predictor=predictor,
+        predict_and_create_stage=Mock(return_value=(batch_stage, None)),
+    )
+    scheduler = object.__new__(_ConcreteClusterScheduler)
+    scheduler._cluster_type = ClusterType.PREFILL
+    scheduler._predictor = predictor
+    scheduler._prefill_sync_waiting_room = {
+        0: {
+            1: {
+                9: {
+                    2: {
+                        "post_moe": {"batches": {None: batch}}
+                    }
+                }
+            }
+        }
+    }
+    scheduler.get_replica_stage_scheduler = Mock(return_value=stage_scheduler)
+    scheduler._create_prefill_corrected_execution_time_for_metrics = Mock(
+        return_value=layer_times[2]
+    )
+    scheduler._should_trigger_kv_transfer = Mock(return_value=False)
+
+    events = scheduler.on_prefill_sync_collective(
+        time=10.0025,
+        replica_id=0,
+        stage_id=1,
+        batch_global_id=9,
+        sync_stage="post_moe",
+        layer_id=2,
+        metrics_store=Mock(),
+    )
+
+    assert len(events) == 1
+    assert isinstance(events[0], PrefillSyncEvent)
+    assert events[0]._layer_id == 3
+    assert predictor.calls == [(1, 2), (1, 3)]
+
+
 def test_prefill_stage_schedule_resets_component_ledger_for_pipeline_stage() -> None:
     execution_time = _LayerExecutionTime(
         attention_ms=1.25,
         post_attention_ms=2.5,
         pipeline_ms=0.75,
     )
-    predictor = _LayerPredictor({0: execution_time})
+    predictor = _LayerPredictor({3: execution_time})
     batch = SimpleNamespace(
         id=11,
         global_id=9,

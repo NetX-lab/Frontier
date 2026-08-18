@@ -274,7 +274,7 @@ def test_pp2_terminal_collectives_account_all_94_layers() -> None:
         scheduler,
         metrics_store,
         stage_id=1,
-        layer_id=46,
+        layer_id=93,
         batches={0: batch},
         time=2.0,
     )
@@ -315,12 +315,45 @@ def test_monolithic_shared_domain_terminal_collectives_account_all_layers(
             scheduler,
             metrics_store,
             stage_id=stage_id,
-            layer_id=layers_per_stage - 1,
+            layer_id=(stage_id + 1) * layers_per_stage - 1,
             batches={0: lane_zero_batch, 1: lane_one_batch},
             time=float(stage_id + 1),
         )
 
     assert request.completed_layer_count == total_layers
+
+
+def test_decode_pp2_stage_one_advances_with_global_layer_ids() -> None:
+    request = _request(completed_layer_count=4)
+    batch = _batch([request])
+    scheduler = _DecodeSyncScheduler(
+        total_layers=8,
+        num_layers_per_pipeline_stage=4,
+        pipeline_parallel_size=2,
+    )
+    metrics_store = _MetricsStore()
+    scheduler.add_post_moe_collective(
+        stage_id=1,
+        batch_global_id=41,
+        layer_id=4,
+        batches={0: batch},
+    )
+
+    events = BaseClusterScheduler.on_decode_sync_collective(
+        scheduler,
+        time=1.0,
+        replica_id=1,
+        stage_id=1,
+        batch_global_id=41,
+        sync_stage="post_moe",
+        layer_id=4,
+        metrics_store=metrics_store,
+    )
+
+    assert request.completed_layer_count == 5
+    assert len(events) == 1
+    assert isinstance(events[0], DecodeSyncEvent)
+    assert events[0]._layer_id == 5
 
 
 def test_terminal_collective_increments_duplicate_active_request_once() -> None:

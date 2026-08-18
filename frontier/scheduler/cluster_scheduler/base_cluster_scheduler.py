@@ -93,6 +93,29 @@ class EPBatchGroupPlan(NamedTuple):
 
 class BaseClusterScheduler(ABC):
     @staticmethod
+    def get_pipeline_stage_layer_bounds(
+        stage_id: int,
+        num_layers_per_pipeline_stage: int,
+    ) -> tuple[int, int]:
+        """Return the global half-open layer range owned by one PP stage."""
+
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError(
+                "pipeline stage_id must be an exact non-negative int, "
+                f"got {stage_id!r}"
+            )
+        if (
+            type(num_layers_per_pipeline_stage) is not int
+            or num_layers_per_pipeline_stage <= 0
+        ):
+            raise ValueError(
+                "num_layers_per_pipeline_stage must be an exact positive int, "
+                f"got {num_layers_per_pipeline_stage!r}"
+            )
+        first_layer_id = stage_id * num_layers_per_pipeline_stage
+        return first_layer_id, first_layer_id + num_layers_per_pipeline_stage
+
+    @staticmethod
     def _resolve_ep_trace_identity(
         ep_batches: Dict[int, Any],
         batch_global_id: int,
@@ -3806,13 +3829,12 @@ class BaseClusterScheduler(ABC):
             # IMPORTANT: execution_time here is a single-layer prediction (num_layers=1)
             # for component extraction, so it cannot be used as the stage layer count.
             num_layers = self._predictor._num_layers_per_pipeline_stage
-            if num_layers < 1:
-                raise ValueError(
-                    f"Invalid prefill stage layer count: num_layers={num_layers} "
-                    f"(replica={replica_id}, stage={stage_id})"
-                )
+            _, stage_layer_end = BaseClusterScheduler.get_pipeline_stage_layer_bounds(
+                stage_id,
+                num_layers,
+            )
 
-            if layer_id < num_layers - 1:
+            if layer_id < stage_layer_end - 1:
                 # Not the last layer, continue to next layer by paying next-layer attention.
                 next_layer_id = layer_id + 1
                 self.transition_stage_admission_for_layer(
@@ -4414,9 +4436,13 @@ class BaseClusterScheduler(ABC):
             request.mb_on_step_layer_count_increment(num_layers_completed=1)
 
         num_layers = execution_time_predictor._num_layers_per_pipeline_stage
+        _, stage_layer_end = BaseClusterScheduler.get_pipeline_stage_layer_bounds(
+            stage_id,
+            num_layers,
+        )
         next_layer_id = layer_id + 1
 
-        if next_layer_id < num_layers:
+        if next_layer_id < stage_layer_end:
             self.transition_stage_admission_for_layer(
                 sample_batch,
                 stage_id=stage_id,
