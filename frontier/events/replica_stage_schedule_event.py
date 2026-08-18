@@ -393,6 +393,13 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         per_expert_tokens=dict(batch.per_expert_tokens),
                         lane_compute_ms=lane_compute_ms,
                         lane_comm_ms=lane_comm_ms,
+                        trace_identity=BaseClusterScheduler._build_ep_trace_identity(
+                            batch=batch,
+                            replica_id=int(self._replica_id),
+                            stage_id=int(self._stage_id),
+                            operation_id=logical_batch_id,
+                            afd_stage_idx=getattr(batch, "afd_stage_idx", None),
+                        ),
                     )
 
                     import math

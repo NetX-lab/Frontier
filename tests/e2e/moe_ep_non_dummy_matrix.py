@@ -16,6 +16,7 @@ import itertools
 import json
 import math
 import os
+import platform
 import re
 import shlex
 import subprocess
@@ -25,8 +26,11 @@ from collections import Counter
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import asdict, dataclass
 from functools import lru_cache
+from importlib import metadata as importlib_metadata
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
+
+import numpy as np
 
 from frontier.spec_decode.mtp_registry import (
     get_target_embedded_mtp_linear_ops,
@@ -58,6 +62,21 @@ OPTIMIZATION_ARCHITECTURE_CASE_COUNTS = {
     "pd-disaggregation": 91,
     "pd-af-disaggregation": 18,
 }
+EXPECTED_OPTIMIZATION_PAIR_COUNTS = {
+    "cuda_graph": 74,
+    "chunked_prefill": 12,
+    "prefix_cache": 22,
+    "mtp": 14,
+}
+_ALLOWED_STANDALONE_COMPARISON_GROUPS = {
+    f"{architecture}_ordinary_graph_{group_index:02d}"
+    for architecture in ("co_location", "pd_disaggregation")
+    for group_index in (18, 19, 20)
+}
+_ALLOWED_STANDALONE_COMPARISON_GROUPS.update(
+    f"pd_af_standalone_{context_index:02d}" for context_index in range(6)
+)
+_SOURCE_PROVENANCE_PACKAGES = ("numpy", "pandas", "scikit-learn")
 MODEL_ORDER = ("dense", "moe", "mixed")
 PD_AF_VARIANT_INDICES = (0, 1, 2, 3, 5, 5, 6, 9, 10, 11)
 MODEL_SPECS: Mapping[str, Mapping[str, Any]] = {
@@ -129,15 +148,28 @@ TARGET_EMBEDDED_MTP_SAME_TP_COLUMNS = tuple(
 )
 
 
+_EP_TRACE_IDENTITY_SUFFIX = (
+    r"(?:,\s+replica_id=(?P<replica_id>-?\d+),\s+"
+    r"stage_id=(?P<stage_id>-?\d+),\s+"
+    r"request_ids=(?P<request_ids>\[[^\]]*\]),\s+"
+    r"request_runtime_epochs=(?P<request_runtime_epochs>\[[^\]]*\]),\s+"
+    r"iteration_ids=(?P<iteration_ids>\[[^\]]*\]),\s+"
+    r"schedule_epoch=(?P<schedule_epoch>-?\d+),\s+"
+    r"afd_stage_idx=(?P<afd_stage_idx>-?\d+),\s+"
+    r"operation_id=(?P<operation_id>-?\d+))?"
+)
+
 _EP_WORKLOAD_LINE_RE = re.compile(
     r"\[EP-WORKLOAD\]\[(?P<cluster>[^\]]+)\]\s+"
     r"batch_id=(?P<batch_id>-?\d+),\s+"
     r"layer_id=(?P<layer_id>-?\d+),\s+"
     r"ep_id=(?P<ep_id>-?\d+),\s+"
     r"moe_ep_size=(?P<moe_ep_size>\d+),\s+"
-    r"per_expert_tokens=(?P<per_expert_tokens>\{.*\}),\s+"
+    r"per_expert_tokens=(?P<per_expert_tokens>\{.*?\}),\s+"
     r"lane_compute_ms=(?P<lane_compute_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
-    r"lane_comm_ms=(?P<lane_comm_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)\s*$"
+    r"lane_comm_ms=(?P<lane_comm_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
+    + _EP_TRACE_IDENTITY_SUFFIX
+    + r"\s*$"
 )
 _EP_BARRIER_LINE_RE = re.compile(
     r"\[EP-BARRIER\]\[(?P<cluster>[^\]]+)\]\s+"
@@ -149,7 +181,8 @@ _EP_BARRIER_LINE_RE = re.compile(
     r"max_lane_time_ms=(?P<max_lane_time_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
     r"barrier_time_ms=(?P<barrier_time_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
     r"barrier_end_time_s=(?P<barrier_end_time_s>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
-    r"\s*$"
+    + _EP_TRACE_IDENTITY_SUFFIX
+    + r"\s*$"
 )
 _EP_CONSERVATION_LINE_RE = re.compile(
     r"\[EP-CONSERVATION\]\[(?P<cluster>[^\]]+)\]\s+"
@@ -158,7 +191,9 @@ _EP_CONSERVATION_LINE_RE = re.compile(
     r"routing_token_count=(?P<routing_token_count>\d+),\s+"
     r"router_topk=(?P<router_topk>\d+),\s+"
     r"total_routed_assignments=(?P<total_routed_assignments>\d+),\s+"
-    r"per_ep_routed_tokens=(?P<per_ep_routed_tokens>\{.*\})\s*$"
+    r"per_ep_routed_tokens=(?P<per_ep_routed_tokens>\{.*?\})"
+    + _EP_TRACE_IDENTITY_SUFFIX
+    + r"\s*$"
 )
 
 
@@ -485,6 +520,200 @@ def _undeclared_pair_differences(
     )
 
 
+def _expected_optimization_pair_specs(
+    cases: Sequence[MatrixCase],
+) -> list[dict[str, Any]]:
+    """Return the fixed pair contract for the 200-case optimization matrix.
+
+    The expected IDs are intentionally derived from the matrix design, not
+    from ``comparison_group_id`` values observed in the input.  This keeps a
+    missing axis or a silently split group from shrinking the comparison
+    denominator while still allowing the six explicitly documented ordinary
+    singleton groups.
+    """
+
+    case_by_id: dict[str, MatrixCase] = {}
+    for case in cases:
+        if case.case_id in case_by_id:
+            raise ValueError(
+                f"optimization pair manifest has duplicate case_id={case.case_id!r}"
+            )
+        case_by_id[case.case_id] = case
+
+    specs: list[dict[str, Any]] = []
+
+    def add_pair(
+        *,
+        comparison_id: str,
+        group_id: str,
+        optimization: str,
+        target_field: str,
+        control_case_id: str,
+        enabled_case_id: str,
+    ) -> None:
+        try:
+            control = case_by_id[control_case_id]
+            enabled = case_by_id[enabled_case_id]
+        except KeyError as exc:
+            raise ValueError(
+                "expected optimization pair references missing case: "
+                f"{exc.args[0]!r}"
+            ) from exc
+        specs.append(
+            {
+                "comparison_id": comparison_id,
+                "group_id": group_id,
+                "optimization": optimization,
+                "target_field": target_field,
+                "control": control,
+                "enabled": enabled,
+            }
+        )
+
+    for architecture in ("co_location", "pd_disaggregation"):
+        for optimization, count, target_field in (
+            ("prefix_cache", 11, "enable_prefix_caching"),
+            ("mtp", 7, "enable_mtp"),
+        ):
+            for context_index in range(count):
+                pair_id = (
+                    f"{architecture}_{'prefix' if optimization == 'prefix_cache' else 'mtp'}_"
+                    f"{context_index:02d}"
+                )
+                add_pair(
+                    comparison_id=pair_id,
+                    group_id=pair_id,
+                    optimization=optimization,
+                    target_field=target_field,
+                    control_case_id=f"{pair_id}_control",
+                    enabled_case_id=f"{pair_id}_enabled",
+                )
+
+        # Groups 00 and 01 are the only full graph/chunk factorials.
+        for group_index in (0, 1):
+            group_id = f"{architecture}_ordinary_graph_{group_index:02d}"
+            for chunk_enabled in (False, True):
+                chunk_suffix = f"chunk_{'on' if chunk_enabled else 'off'}"
+                control_case_id = f"{group_id}_none_{chunk_suffix}"
+                for graph_mode in ("full_decode_only", "piecewise"):
+                    add_pair(
+                        comparison_id=(
+                            f"{group_id}:cuda_graph:{graph_mode}:"
+                            f"{chunk_suffix}"
+                        ),
+                        group_id=group_id,
+                        optimization="cuda_graph",
+                        target_field="decode_cuda_graph_mode",
+                        control_case_id=control_case_id,
+                        enabled_case_id=f"{group_id}_{graph_mode}_{chunk_suffix}",
+                    )
+            for graph_mode in ("none", "full_decode_only", "piecewise"):
+                add_pair(
+                    comparison_id=(
+                        f"{group_id}:chunked_prefill:{graph_mode}"
+                    ),
+                    group_id=group_id,
+                    optimization="chunked_prefill",
+                    target_field="enable_chunked_prefill",
+                    control_case_id=f"{group_id}_{graph_mode}_chunk_off",
+                    enabled_case_id=f"{group_id}_{graph_mode}_chunk_on",
+                )
+
+        for group_index in range(2, 8):
+            group_id = f"{architecture}_ordinary_graph_{group_index:02d}"
+            for graph_mode in ("full_decode_only", "piecewise"):
+                add_pair(
+                    comparison_id=(
+                        f"{group_id}:cuda_graph:{graph_mode}:chunk_off"
+                    ),
+                    group_id=group_id,
+                    optimization="cuda_graph",
+                    target_field="decode_cuda_graph_mode",
+                    control_case_id=f"{group_id}_none",
+                    enabled_case_id=f"{group_id}_{graph_mode}",
+                )
+
+        for group_index in range(10, 16):
+            group_id = f"{architecture}_ordinary_graph_{group_index:02d}"
+            for graph_mode in ("full_decode_only", "piecewise"):
+                add_pair(
+                    comparison_id=(
+                        f"{group_id}:cuda_graph:{graph_mode}:chunk_on"
+                    ),
+                    group_id=group_id,
+                    optimization="cuda_graph",
+                    target_field="decode_cuda_graph_mode",
+                    control_case_id=f"{group_id}_none",
+                    enabled_case_id=f"{group_id}_{graph_mode}",
+                )
+
+        # The two-card rows exercise one graph axis without a chunk axis.  The
+        # generated design intentionally swaps the chunk state between the two
+        # shared architectures.
+        final_group_chunk_state = {
+            "co_location": {16: "on", 17: "off"},
+            "pd_disaggregation": {16: "off", 17: "on"},
+        }[architecture]
+        for group_index in (16, 17):
+            group_id = f"{architecture}_ordinary_graph_{group_index:02d}"
+            chunk_state = final_group_chunk_state[group_index]
+            add_pair(
+                comparison_id=(
+                    f"{group_id}:cuda_graph:full_decode_only:chunk_{chunk_state}"
+                ),
+                group_id=group_id,
+                optimization="cuda_graph",
+                target_field="decode_cuda_graph_mode",
+                control_case_id=f"{group_id}_none",
+                enabled_case_id=f"{group_id}_full_decode_only",
+            )
+
+    for context_index in range(6):
+        group_id = f"pd_af_cuda_graph_{context_index:02d}"
+        add_pair(
+            comparison_id=f"{group_id}:cuda_graph",
+            group_id=group_id,
+            optimization="cuda_graph",
+            target_field="use_cuda_graph",
+            control_case_id=f"{group_id}_control",
+            enabled_case_id=f"{group_id}_enabled",
+        )
+
+    return specs
+
+
+def _pair_spec_key(spec: Mapping[str, Any]) -> tuple[str, str, str, str, str]:
+    return (
+        str(spec["comparison_id"]),
+        str(spec["group_id"]),
+        str(spec["optimization"]),
+        str(spec["control"].case_id),
+        str(spec["enabled"].case_id),
+    )
+
+
+def _validate_expected_optimization_pair_set(
+    cases: Sequence[MatrixCase],
+    actual_specs: Sequence[Mapping[str, Any]],
+) -> None:
+    expected_specs = _expected_optimization_pair_specs(cases)
+    expected_keys = {_pair_spec_key(spec) for spec in expected_specs}
+    actual_keys = {_pair_spec_key(spec) for spec in actual_specs}
+    missing = sorted(expected_keys - actual_keys)
+    extra = sorted(actual_keys - expected_keys)
+    if missing or extra:
+        raise ValueError(
+            "optimization pair set mismatch: "
+            f"missing={missing} extra={extra}"
+        )
+    counts = Counter(str(spec["optimization"]) for spec in actual_specs)
+    if counts != Counter(EXPECTED_OPTIMIZATION_PAIR_COUNTS):
+        raise ValueError(
+            "optimization pair counts mismatch: "
+            f"expected={EXPECTED_OPTIMIZATION_PAIR_COUNTS} actual={dict(counts)}"
+        )
+
+
 def validate_optimization_pairs(cases: Sequence[MatrixCase]) -> None:
     """Require paired controls to differ only in their declared optimization."""
 
@@ -528,6 +757,11 @@ def validate_optimization_pairs(cases: Sequence[MatrixCase]) -> None:
 
     for comparison_group_id, group in comparison_groups.items():
         if len(group) == 1:
+            if comparison_group_id not in _ALLOWED_STANDALONE_COMPARISON_GROUPS:
+                raise ValueError(
+                    f"{comparison_group_id} is an undeclared singleton "
+                    "comparison group"
+                )
             continue
         if group[0].architecture == "pd-af-disaggregation":
             declared_fields = {"use_cuda_graph"}
@@ -578,6 +812,11 @@ def validate_optimization_pairs(cases: Sequence[MatrixCase]) -> None:
                     f"{comparison_group_id} changes undeclared fields: "
                     f"{', '.join(differences)}"
                 )
+
+    _validate_expected_optimization_pair_set(
+        cases,
+        _optimization_pair_specs(cases),
+    )
 
 
 def build_matrix(repo_root: Path) -> list[MatrixCase]:
@@ -2599,6 +2838,278 @@ def _read_chunked_prefill_stage_ledger(
     }
 
 
+def _stage_ledger_has_chunk_schema(path: Path) -> bool:
+    """Return whether a ledger carries request-level prefill chunk fields.
+
+    Older non-optimization runs persisted only ``request_num_tokens``.  That
+    schema cannot prove chunk activation, so it is intentionally ignored for
+    historical control rows.  Enabled Chunked Prefill rows still call the
+    strict parser and fail closed when these fields are absent.
+    """
+
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(),
+        1,
+    ):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"invalid stage-batch ledger JSON at {path}:{line_number}"
+            ) from exc
+        if not isinstance(row, Mapping):
+            raise ValueError(
+                f"stage-batch ledger row is not an object at {path}:{line_number}"
+            )
+        return (
+            "request_runtime_epochs" in row
+            and "request_num_prefill_tokens" in row
+        )
+    return False
+
+
+def _canonical_request_epoch_key(
+    request_ids: Sequence[int],
+    request_runtime_epochs: Sequence[int],
+) -> tuple[tuple[int, int], ...]:
+    if len(request_ids) != len(request_runtime_epochs) or not request_ids:
+        raise ValueError(
+            "request_ids and request_runtime_epochs must be non-empty and aligned"
+        )
+    pairs = []
+    for request_id, runtime_epoch in zip(
+        request_ids,
+        request_runtime_epochs,
+    ):
+        if type(request_id) is not int or request_id < 0:
+            raise ValueError("request IDs must be non-negative integers")
+        if type(runtime_epoch) is not int or runtime_epoch < 0:
+            raise ValueError("request runtime epochs must be non-negative integers")
+        pairs.append((request_id, runtime_epoch))
+    if len({request_id for request_id, _epoch in pairs}) != len(pairs):
+        raise ValueError("request IDs must be unique within one wave")
+    return tuple(sorted(pairs))
+
+
+def _read_ep_request_token_oracle(
+    case: MatrixCase,
+    metrics_dir: Path,
+) -> dict[tuple[Any, ...], int]:
+    """Derive MoE routing-token counts from the independent stage ledger.
+
+    Only ``FULL_STAGE_WORLD`` rows are accepted.  EP-lane rows already contain
+    post-routing token subsets and would double-count the pre-routing batch if
+    used as the oracle.  A missing or ambiguous full-stage payload is a hard
+    evidence failure; the runtime's self-reported conservation count is never
+    treated as a fallback oracle.
+    """
+
+    path = metrics_dir / "frontier_stage_batch_ledger.jsonl"
+    if not path.is_file():
+        raise FileNotFoundError(f"missing independent stage ledger: {path}")
+
+    expected_clusters = set(_expected_ep_roles(case))
+    grouped: dict[
+        tuple[str, int, int],
+        dict[int, tuple[tuple[int, int], ...]],
+    ] = {}
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(),
+        1,
+    ):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"invalid stage ledger JSON at {path}:{line_number}"
+            ) from exc
+        if not isinstance(row, Mapping):
+            raise ValueError(
+                f"stage ledger row is not an object at {path}:{line_number}"
+            )
+        cluster = str(row.get("cluster_type", "")).upper()
+        if cluster not in expected_clusters:
+            continue
+        if row.get("execution_scope") != "FULL_STAGE_WORLD":
+            continue
+        try:
+            batch_id = int(row["batch_id"])
+            stage_id = int(row["stage_id"])
+            replica_id = int(row["replica_id"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(
+                "independent stage ledger requires integer batch_id/stage_id/"
+                f"replica_id at {path}:{line_number}"
+            ) from exc
+        if min(batch_id, stage_id, replica_id) < 0:
+            raise ValueError(
+                f"independent stage ledger IDs must be non-negative at {path}:{line_number}"
+            )
+        request_ids = row.get("request_ids")
+        request_epochs = row.get("request_runtime_epochs")
+        request_tokens = row.get("request_num_tokens")
+        if not (
+            isinstance(request_ids, list)
+            and isinstance(request_epochs, list)
+            and isinstance(request_tokens, list)
+        ):
+            raise ValueError(
+                "independent stage ledger requires request_ids, "
+                "request_runtime_epochs, and request_num_tokens lists "
+                f"at {path}:{line_number}"
+            )
+        if not (
+            request_ids
+            and len(request_ids) == len(request_epochs) == len(request_tokens)
+        ):
+            raise ValueError(
+                "independent stage ledger request fields must be non-empty "
+                f"and aligned at {path}:{line_number}"
+            )
+        normalized_ids: list[int] = []
+        for request_id in request_ids:
+            try:
+                normalized_id = int(request_id)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    "independent stage ledger request IDs must be integers "
+                    f"at {path}:{line_number}"
+                ) from exc
+            normalized_ids.append(normalized_id)
+        normalized_epochs: list[int] = []
+        normalized_tokens: list[int] = []
+        for runtime_epoch, token_count in zip(request_epochs, request_tokens):
+            if type(runtime_epoch) is not int or runtime_epoch < 0:
+                raise ValueError(
+                    "independent stage ledger runtime epochs must be "
+                    f"non-negative integers at {path}:{line_number}"
+                )
+            if type(token_count) is not int or token_count < 0:
+                raise ValueError(
+                    "independent stage ledger request token counts must be "
+                    f"non-negative integers at {path}:{line_number}"
+                )
+            normalized_epochs.append(runtime_epoch)
+            normalized_tokens.append(token_count)
+        request_epoch_key = _canonical_request_epoch_key(
+            normalized_ids,
+            normalized_epochs,
+        )
+        payload = tuple(
+            sorted(
+                zip(
+                    normalized_ids,
+                    normalized_epochs,
+                    normalized_tokens,
+                )
+            )
+        )
+        group_key = (cluster, replica_id, batch_id)
+        stage_payloads = grouped.setdefault(group_key, {})
+        if stage_id in stage_payloads:
+            previous = stage_payloads[stage_id]
+            previous_payload = tuple(
+                (request_id, runtime_epoch)
+                for request_id, runtime_epoch, _token_count in previous
+            )
+            if previous_payload != request_epoch_key:
+                raise ValueError(
+                    "independent stage ledger has conflicting request identity "
+                    f"cluster={cluster} replica={replica_id} batch={batch_id} "
+                    f"stage={stage_id}"
+                )
+            raise ValueError(
+                "independent stage ledger has duplicate full-stage rows "
+                f"cluster={cluster} replica={replica_id} batch={batch_id} "
+                f"stage={stage_id}"
+            )
+        stage_payloads[stage_id] = payload
+
+    expected_stage_ids = set(range(int(case.pipeline_stages)))
+    oracle: dict[tuple[Any, ...], int] = {}
+    for (cluster, replica_id, batch_id), stage_payloads in sorted(grouped.items()):
+        if set(stage_payloads) != expected_stage_ids:
+            raise ValueError(
+                "independent stage ledger pipeline coverage mismatch "
+                f"cluster={cluster} replica={replica_id} batch={batch_id} "
+                f"expected={sorted(expected_stage_ids)} "
+                f"actual={sorted(stage_payloads)}"
+            )
+        first_payload = stage_payloads[min(stage_payloads)]
+        if any(payload != first_payload for payload in stage_payloads.values()):
+            raise ValueError(
+                "independent stage ledger request payload differs across "
+                f"pipeline stages cluster={cluster} replica={replica_id} "
+                f"batch={batch_id}"
+            )
+        request_epoch_key = tuple(
+            (request_id, runtime_epoch)
+            for request_id, runtime_epoch, _token_count in first_payload
+        )
+        token_count = sum(
+            token_count
+            for _request_id, _runtime_epoch, token_count in first_payload
+        )
+        oracle_key = (cluster, replica_id, batch_id, request_epoch_key)
+        previous_count = oracle.get(oracle_key)
+        if previous_count is not None and previous_count != token_count:
+            raise ValueError(
+                "independent stage ledger has ambiguous token count "
+                f"for cluster={cluster} replica={replica_id} batch={batch_id}"
+            )
+        oracle[oracle_key] = token_count
+    if not oracle:
+        raise ValueError(
+            "independent stage ledger contains no FULL_STAGE_WORLD MoE rows"
+        )
+    return oracle
+
+
+def _expected_ep_request_identity_sets(
+    independent_token_oracle: Mapping[tuple[Any, ...], int],
+) -> dict[tuple[str, int], set[tuple[int, int]]]:
+    """Group independent request identities by execution role and Replica.
+
+    The stage ledger is the source of truth for which request/runtime-epoch
+    cohorts reached each physical Replica.  A request may be split across
+    multiple batches, so this helper returns a set union instead of imposing a
+    batch cardinality assumption.
+    """
+
+    expected: dict[tuple[str, int], set[tuple[int, int]]] = {}
+    for oracle_key in independent_token_oracle:
+        if len(oracle_key) != 4:
+            raise ValueError(
+                "independent EP token oracle key has an invalid shape"
+            )
+        cluster, replica_id, _batch_id, request_epoch_key = oracle_key
+        if not isinstance(request_epoch_key, tuple) or not request_epoch_key:
+            raise ValueError(
+                "independent EP token oracle request identity is empty"
+            )
+        role_key = (str(cluster).upper(), int(replica_id))
+        identities = expected.setdefault(role_key, set())
+        for request_id, runtime_epoch in request_epoch_key:
+            if (
+                type(request_id) is not int
+                or request_id < 0
+                or type(runtime_epoch) is not int
+                or runtime_epoch < 0
+            ):
+                raise ValueError(
+                    "independent EP token oracle request identity contains "
+                    "an invalid request/runtime epoch"
+                )
+            identities.add((request_id, runtime_epoch))
+    if not expected:
+        raise ValueError("independent EP token oracle has no request identities")
+    return expected
+
+
 def _nonnegative_integer_metric(
     row: Mapping[str, str],
     field: str,
@@ -2729,7 +3240,10 @@ def _check_optimization_activation(
             errors.append(f"MTP activation evidence invalid: {exc}")
 
     stage_ledger_path = metrics_dir / "frontier_stage_batch_ledger.jsonl"
-    if case.enable_chunked_prefill or stage_ledger_path.is_file():
+    parse_chunk_ledger = case.enable_chunked_prefill
+    if stage_ledger_path.is_file() and not parse_chunk_ledger:
+        parse_chunk_ledger = _stage_ledger_has_chunk_schema(stage_ledger_path)
+    if parse_chunk_ledger:
         try:
             chunked_prefill_evidence = _read_chunked_prefill_stage_ledger(
                 case,
@@ -2937,18 +3451,24 @@ def _parse_ep_workload_records(text: str) -> list[dict[str, Any]]:
         if not math.isfinite(lane_comm_ms) or lane_comm_ms < 0:
             raise ValueError("EP workload lane_comm_ms must be finite and non-negative")
 
-        records.append(
-            {
-                "cluster": groups["cluster"],
-                "batch_id": int(groups["batch_id"]),
-                "layer_id": int(groups["layer_id"]),
-                "ep_id": ep_id,
-                "moe_ep_size": moe_ep_size,
-                "per_expert_tokens": normalized_tokens,
-                "lane_compute_ms": lane_compute_ms,
-                "lane_comm_ms": lane_comm_ms,
-            }
-        )
+        batch_id = int(groups["batch_id"])
+        layer_id = int(groups["layer_id"])
+        if batch_id < 0 or layer_id < 0:
+            raise ValueError("EP workload batch_id/layer_id must be non-negative")
+        record = {
+            "cluster": groups["cluster"],
+            "batch_id": batch_id,
+            "layer_id": layer_id,
+            "ep_id": ep_id,
+            "moe_ep_size": moe_ep_size,
+            "per_expert_tokens": normalized_tokens,
+            "lane_compute_ms": lane_compute_ms,
+            "lane_comm_ms": lane_comm_ms,
+        }
+        identity = _parse_ep_trace_identity(groups)
+        if identity is not None:
+            record["trace_identity"] = identity
+        records.append(record)
     return records
 
 
@@ -2985,12 +3505,219 @@ def _expected_ep_roles(case: MatrixCase) -> tuple[str, ...]:
     raise ValueError(f"unsupported architecture: {case.architecture}")
 
 
+def _parse_ep_trace_identity(
+    groups: Mapping[str, str | None],
+) -> dict[str, Any] | None:
+    """Parse the mandatory structured identity suffix when present."""
+
+    fields = (
+        "replica_id",
+        "stage_id",
+        "request_ids",
+        "request_runtime_epochs",
+        "iteration_ids",
+        "schedule_epoch",
+        "afd_stage_idx",
+        "operation_id",
+    )
+    values = [groups.get(field) for field in fields]
+    if all(value is None for value in values):
+        return None
+    if any(value is None for value in values):
+        raise ValueError(
+            "structured EP wave identity is incomplete; all identity fields "
+            f"are required: {fields}"
+        )
+
+    try:
+        request_ids = ast.literal_eval(str(groups["request_ids"]))
+        request_runtime_epochs = ast.literal_eval(
+            str(groups["request_runtime_epochs"])
+        )
+        iteration_ids = ast.literal_eval(str(groups["iteration_ids"]))
+    except (SyntaxError, ValueError) as exc:
+        raise ValueError("structured EP wave identity lists are invalid") from exc
+
+    for name, value in (
+        ("request_ids", request_ids),
+        ("request_runtime_epochs", request_runtime_epochs),
+        ("iteration_ids", iteration_ids),
+    ):
+        if not isinstance(value, list) or not value:
+            raise ValueError(
+                f"structured EP wave identity {name} must be a non-empty list"
+            )
+        if any(type(item) is not int or item < 0 for item in value):
+            raise ValueError(
+                f"structured EP wave identity {name} must contain "
+                "non-negative integers"
+            )
+    if not (
+        len(request_ids)
+        == len(request_runtime_epochs)
+        == len(iteration_ids)
+    ):
+        raise ValueError(
+            "structured EP wave identity request/epoch/iteration lists "
+            "must have equal lengths"
+        )
+    if len(set(request_ids)) != len(request_ids):
+        raise ValueError(
+            "structured EP wave identity request_ids must be unique"
+        )
+
+    identity = {
+        "replica_id": int(str(groups["replica_id"])),
+        "stage_id": int(str(groups["stage_id"])),
+        "request_ids": tuple(int(item) for item in request_ids),
+        "request_runtime_epochs": tuple(
+            int(item) for item in request_runtime_epochs
+        ),
+        "iteration_ids": tuple(int(item) for item in iteration_ids),
+        "schedule_epoch": int(str(groups["schedule_epoch"])),
+        "afd_stage_idx": int(str(groups["afd_stage_idx"])),
+        "operation_id": int(str(groups["operation_id"])),
+    }
+    if identity["replica_id"] < 0 or identity["stage_id"] < 0:
+        raise ValueError(
+            "structured EP wave identity replica_id/stage_id must be non-negative"
+        )
+    if identity["schedule_epoch"] < 0 or identity["operation_id"] < 0:
+        raise ValueError(
+            "structured EP wave identity schedule_epoch/operation_id "
+            "must be non-negative"
+        )
+    if identity["afd_stage_idx"] < -1:
+        raise ValueError(
+            "structured EP wave identity afd_stage_idx must be >= -1"
+        )
+    return identity
+
+
+def _ep_identity_key(identity: Mapping[str, Any]) -> tuple[Any, ...]:
+    return (
+        int(identity["replica_id"]),
+        int(identity["stage_id"]),
+        tuple(identity["request_ids"]),
+        tuple(identity["request_runtime_epochs"]),
+        tuple(identity["iteration_ids"]),
+        int(identity["schedule_epoch"]),
+        int(identity["afd_stage_idx"]),
+        int(identity["operation_id"]),
+    )
+
+
+def _ep_wave_key(record: Mapping[str, Any]) -> tuple[Any, ...]:
+    """Return the identity-aware key for one EP evidence wave.
+
+    ``batch_id`` and ``layer_id`` identify the physical scheduling location,
+    while the structured identity distinguishes independent decode/AF
+    iterations that may legally reuse those numeric fields.
+    """
+
+    identity = record.get("trace_identity")
+    identity_key = () if identity is None else _ep_identity_key(identity)
+    return (
+        str(record["cluster"]).upper(),
+        int(record["batch_id"]),
+        int(record["layer_id"]),
+        identity_key,
+    )
+
+
+def _format_ep_wave_key(wave_key: tuple[Any, ...]) -> tuple[Any, ...]:
+    """Return the compact location tuple used in human-readable errors."""
+
+    return tuple(wave_key[:3])
+
+
+def _validate_ep_trace_identities(
+    *,
+    workload_records: Sequence[Mapping[str, Any]],
+    conservation_records: Sequence[Mapping[str, Any]],
+    barrier_records: Sequence[Mapping[str, Any]],
+) -> list[str]:
+    """Validate one complete identity across all EP evidence streams."""
+
+    errors: list[str] = []
+    identities_by_location_stream: dict[
+        tuple[tuple[str, int, int], str],
+        set[tuple[Any, ...]],
+    ] = {}
+    scopes_by_identity: dict[tuple[Any, ...], set[tuple[str, int, int]]] = {}
+    streams = (
+        ("workload", workload_records),
+        ("conservation", conservation_records),
+        ("barrier", barrier_records),
+    )
+    for stream_name, records in streams:
+        for record in records:
+            wave_key = _ep_wave_key(record)
+            location_key = tuple(wave_key[:3])
+            identity = record.get("trace_identity")
+            if identity is None:
+                errors.append(
+                    "structured EP wave identity is missing "
+                    f"stream={stream_name} cluster={location_key[0]} "
+                    f"batch_id={location_key[1]} layer={location_key[2]}"
+                )
+                continue
+            try:
+                identity_key = _ep_identity_key(identity)
+            except (KeyError, TypeError, ValueError) as exc:
+                errors.append(
+                    "structured EP wave identity is invalid "
+                    f"stream={stream_name} cluster={location_key[0]} "
+                    f"batch_id={location_key[1]} layer={location_key[2]}: {exc}"
+                )
+                continue
+            identities_by_location_stream.setdefault(
+                (location_key, stream_name),
+                set(),
+            ).add(identity_key)
+            # ``operation_id`` is layer-local in some production paths, so a
+            # valid request wave may reuse the same identity across layers.
+            # Reuse across cluster or batch scope is the unsafe case.
+            scopes_by_identity.setdefault(identity_key, set()).add(
+                location_key
+            )
+
+    locations = {
+        location_key
+        for location_key, _stream_name in identities_by_location_stream
+    }
+    for location_key in sorted(locations):
+        stream_sets = {
+            stream_name: identities_by_location_stream.get(
+                (location_key, stream_name),
+                set(),
+            )
+            for stream_name, _records in streams
+        }
+        expected = set().union(*stream_sets.values())
+        for stream_name, identities in stream_sets.items():
+            if identities != expected:
+                errors.append(
+                    "structured EP wave identity mismatch "
+                    f"cluster={location_key[0]} batch_id={location_key[1]} "
+                    f"layer={location_key[2]} stream={stream_name}"
+                )
+
+    for identity_key, scopes in scopes_by_identity.items():
+        if len({(location[0], location[1]) for location in scopes}) > 1:
+            errors.append(
+                "structured EP wave identity is reused across waves "
+                f"identity={identity_key} scopes={sorted(scopes)}"
+            )
+    return errors
+
+
 def _ep_event_positions(
     text: str,
-) -> dict[tuple[str, int, int], dict[str, list[int]]]:
+) -> dict[tuple[Any, ...], dict[str, list[int]]]:
     """Index strict EP evidence by wave and log-line order."""
 
-    positions: dict[tuple[str, int, int], dict[str, list[int]]] = {}
+    positions: dict[tuple[Any, ...], dict[str, list[int]]] = {}
     event_patterns = (
         ("workload", _EP_WORKLOAD_LINE_RE),
         ("conservation", _EP_CONSERVATION_LINE_RE),
@@ -3002,11 +3729,18 @@ def _ep_event_positions(
             if match is None:
                 continue
             groups = match.groupdict()
-            wave_key = (
-                str(groups["cluster"]).upper(),
-                int(groups["batch_id"]),
-                int(groups["layer_id"]),
-            )
+            record: dict[str, Any] = {
+                "cluster": groups["cluster"],
+                "batch_id": int(groups["batch_id"]),
+                "layer_id": int(groups["layer_id"]),
+            }
+            try:
+                identity = _parse_ep_trace_identity(groups)
+            except ValueError:
+                identity = None
+            if identity is not None:
+                record["trace_identity"] = identity
+            wave_key = _ep_wave_key(record)
             phase = str(groups["phase"]) if event_kind == "barrier" else event_kind
             positions.setdefault(wave_key, {}).setdefault(phase, []).append(
                 line_index
@@ -3053,17 +3787,19 @@ def _parse_ep_barrier_records(text: str) -> list[dict[str, Any]]:
         layer_id = int(groups["layer_id"])
         if batch_id < 0 or layer_id < 0:
             raise ValueError("EP barrier batch_id/layer_id must be non-negative")
-        records.append(
-            {
-                "cluster": groups["cluster"],
-                "batch_id": batch_id,
-                "layer_id": layer_id,
-                "phase": groups["phase"],
-                "expected_ep_ids": [int(ep_id) for ep_id in expected_ep_ids],
-                "arrived_ep_ids": [int(ep_id) for ep_id in arrived_ep_ids],
-                **values,
-            }
-        )
+        record = {
+            "cluster": groups["cluster"],
+            "batch_id": batch_id,
+            "layer_id": layer_id,
+            "phase": groups["phase"],
+            "expected_ep_ids": [int(ep_id) for ep_id in expected_ep_ids],
+            "arrived_ep_ids": [int(ep_id) for ep_id in arrived_ep_ids],
+            **values,
+        }
+        identity = _parse_ep_trace_identity(groups)
+        if identity is not None:
+            record["trace_identity"] = identity
+        records.append(record)
     return records
 
 
@@ -3112,18 +3848,84 @@ def _parse_ep_conservation_records(text: str) -> list[dict[str, Any]]:
             raise ValueError(
                 "conservation per_ep_routed_tokens total is inconsistent"
             )
-        records.append(
-            {
-                "cluster": groups["cluster"],
-                "batch_id": batch_id,
-                "layer_id": layer_id,
-                "routing_token_count": routing_token_count,
-                "router_topk": router_topk,
-                "total_routed_assignments": total_routed_assignments,
-                "per_ep_routed_tokens": normalized,
-            }
-        )
+        record = {
+            "cluster": groups["cluster"],
+            "batch_id": batch_id,
+            "layer_id": layer_id,
+            "routing_token_count": routing_token_count,
+            "router_topk": router_topk,
+            "total_routed_assignments": total_routed_assignments,
+            "per_ep_routed_tokens": normalized,
+        }
+        identity = _parse_ep_trace_identity(groups)
+        if identity is not None:
+            record["trace_identity"] = identity
+        records.append(record)
     return records
+
+
+def _reference_routing_counts(
+    case: MatrixCase,
+    *,
+    routing_token_count: int,
+    layer_id: int,
+) -> dict[int, int]:
+    """Recompute one layer's Hamilton routing allocation independently.
+
+    The checker deliberately does not call Frontier's materializer.  It
+    reproduces only the public routing contract from ``MatrixCase`` so a
+    malformed trace cannot satisfy the checker merely by sharing the same
+    implementation helper.
+    """
+
+    if type(routing_token_count) is not int or routing_token_count < 0:
+        raise ValueError("routing_token_count must be a non-negative int")
+    if type(layer_id) is not int or layer_id < 0:
+        raise ValueError("layer_id must be a non-negative int")
+    total_experts = int(case.total_experts)
+    router_topk = int(case.router_topk)
+    if total_experts <= 0 or router_topk <= 0:
+        raise ValueError("case routing cardinalities must be positive")
+
+    rng = np.random.default_rng(int(case.seed) + layer_id)
+    distribution = str(case.routing_distribution).strip().lower()
+    if distribution == "balanced":
+        weights = np.ones(total_experts, dtype=float)
+    elif distribution == "random":
+        weights = rng.uniform(0.1, 1.0, total_experts)
+    elif distribution == "skewed":
+        ranks = np.arange(1, total_experts + 1, dtype=float)
+        weights = 1.0 / np.power(ranks, 0.35)
+    elif distribution == "zipf":
+        ranks = np.arange(1, total_experts + 1, dtype=float)
+        weights = 1.0 / ranks
+    else:
+        raise ValueError(
+            f"unsupported case routing distribution: {case.routing_distribution!r}"
+        )
+
+    total_weight = float(np.sum(weights))
+    if not math.isfinite(total_weight) or total_weight <= 0.0:
+        raise ValueError("case routing distribution has an invalid weight sum")
+    total_assignments = routing_token_count * router_topk
+    quotas = total_assignments * weights / total_weight
+    counts = {
+        expert_id: int(math.floor(float(quotas[expert_id])))
+        for expert_id in range(total_experts)
+    }
+    remainder = total_assignments - sum(counts.values())
+    ranked_experts = sorted(
+        range(total_experts),
+        key=lambda expert_id: (
+            -(float(quotas[expert_id]) - counts[expert_id]),
+            expert_id,
+        ),
+    )
+    for expert_id in ranked_experts[:remainder]:
+        counts[expert_id] += 1
+    if sum(counts.values()) != total_assignments:
+        raise ValueError("reference routing allocation is not conserved")
+    return counts
 
 
 def check_case_log(
@@ -3132,6 +3934,7 @@ def check_case_log(
     metrics_dir: Path,
     *,
     strict_layers: bool = False,
+    require_independent_token_oracle: bool = False,
 ) -> dict[str, Any]:
     """Check workflow evidence and numeric metrics for one completed run."""
 
@@ -3153,11 +3956,17 @@ def check_case_log(
     layer_ids = sorted({int(match) for match in re.findall(r"layer_id=(\d+)", text)})
     if not layer_ids:
         errors.append("no layer_id trace")
-    if strict_layers and case.model_kind != "dense":
+    if strict_layers:
+        expected_layer_ids = list(range(case.num_layers))
+        if layer_ids != expected_layer_ids:
+            errors.append(
+                "layer ids are not contiguous "
+                f"expected={expected_layer_ids} actual={layer_ids}"
+            )
+
+        # A mixed model may legitimately allocate EP-capable resources
+        # statically, but only declared MoE layers may activate the protocol.
         if case.model_kind == "mixed":
-            # A mixed model may legitimately aggregate dense-layer work.  The
-            # correctness contract is that every declared MoE layer appears in
-            # the per-layer MoE trace; dense layer IDs are not a substitute.
             moe_layer_ids_seen = sorted(
                 {
                     int(match)
@@ -3166,17 +3975,11 @@ def check_case_log(
                     for match in re.findall(r"layer_id=(\d+)", line)
                 }
             )
-            expected = list(case.moe_layer_ids)
-            if moe_layer_ids_seen != expected:
+            expected_moe_layer_ids = list(case.moe_layer_ids)
+            if moe_layer_ids_seen != expected_moe_layer_ids:
                 errors.append(
                     "mixed MoE layer ids are incomplete "
-                    f"expected={expected} actual={moe_layer_ids_seen}"
-                )
-        else:
-            expected = list(range(case.num_layers))
-            if layer_ids != expected:
-                errors.append(
-                    f"layer ids are not contiguous expected={expected} actual={layer_ids}"
+                    f"expected={expected_moe_layer_ids} actual={moe_layer_ids_seen}"
                 )
 
     moe_trace_count = text.count("[MOE]")
@@ -3196,6 +3999,62 @@ def check_case_log(
     except ValueError as exc:
         ep_conservation_records = []
         errors.append(f"invalid EP conservation trace: {exc}")
+    independent_token_oracle: dict[tuple[Any, ...], int] | None = None
+    expected_request_identity_sets: (
+        dict[tuple[str, int], set[tuple[int, int]]] | None
+    ) = None
+    if (
+        strict_layers
+        and case.is_moe
+        and require_independent_token_oracle
+    ):
+        try:
+            independent_token_oracle = _read_ep_request_token_oracle(
+                case,
+                metrics_dir,
+            )
+            expected_request_identity_sets = _expected_ep_request_identity_sets(
+                independent_token_oracle
+            )
+        except (FileNotFoundError, OSError, ValueError) as exc:
+            errors.append(f"independent EP token oracle invalid: {exc}")
+    if strict_layers and case.is_moe:
+        errors.extend(
+            _validate_ep_trace_identities(
+                workload_records=ep_workload_records,
+                conservation_records=ep_conservation_records,
+                barrier_records=ep_barrier_records,
+            )
+        )
+    if strict_layers:
+        protocol_layer_ids = {
+            int(record["layer_id"])
+            for record in (
+                *ep_workload_records,
+                *ep_conservation_records,
+                *ep_barrier_records,
+            )
+        }
+        moe_trace_layer_ids = {
+            int(match)
+            for line in text.splitlines()
+            if "[MOE]" in line
+            for match in re.findall(r"layer_id=(\d+)", line)
+        }
+        if case.model_kind == "dense" and (
+            protocol_layer_ids or moe_trace_layer_ids or ep_participant_records
+        ):
+            errors.append("dense case emitted EP protocol evidence")
+        elif case.model_kind == "mixed":
+            dense_layer_ids = set(range(case.num_layers)) - set(case.moe_layer_ids)
+            dense_protocol_layer_ids = sorted(
+                dense_layer_ids & (protocol_layer_ids | moe_trace_layer_ids)
+            )
+            if dense_protocol_layer_ids:
+                errors.append(
+                    "dense layer emitted EP protocol evidence "
+                    f"layers={dense_protocol_layer_ids}"
+                )
     if case.is_moe:
         if "moe_grouped_gemm" not in text or "moe_shuffling" not in text:
             errors.append("missing MoE grouped-gemm/shuffling trace")
@@ -3203,26 +4062,116 @@ def check_case_log(
             errors.append("missing EP workload trace")
         elif strict_layers:
             expected_moe_layers = set(int(layer_id) for layer_id in case.moe_layer_ids)
-            records_by_wave: dict[tuple[str, int, int], list[dict[str, Any]]] = {}
+            records_by_wave: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
             for record in ep_workload_records:
-                cluster_name = str(record["cluster"]).upper()
-                records_by_wave.setdefault(
-                    (
-                        cluster_name,
-                        int(record["batch_id"]),
-                        int(record["layer_id"]),
-                    ),
-                    [],
-                ).append(record)
+                records_by_wave.setdefault(_ep_wave_key(record), []).append(record)
             expected_roles = _expected_ep_roles(case)
             complete_layers_by_role = {
                 cluster_name: set() for cluster_name in expected_roles
             }
+            if expected_request_identity_sets is not None:
+                observed_request_identity_sets: dict[
+                    tuple[str, int, int],
+                    set[tuple[int, int]],
+                ] = {}
+                for wave_key, wave_records in records_by_wave.items():
+                    identity = wave_records[0].get("trace_identity")
+                    if identity is None:
+                        continue
+                    role_key = (
+                        str(wave_key[0]).upper(),
+                        int(identity["replica_id"]),
+                        int(wave_key[2]),
+                    )
+                    observed = observed_request_identity_sets.setdefault(
+                        role_key,
+                        set(),
+                    )
+                    observed.update(
+                        zip(
+                            identity["request_ids"],
+                            identity["request_runtime_epochs"],
+                        )
+                    )
+                for role in expected_roles:
+                    expected_role_replicas = {
+                        replica_id: identities
+                        for (cluster, replica_id), identities in (
+                            expected_request_identity_sets.items()
+                        )
+                        if cluster == role
+                    }
+                    if not expected_role_replicas:
+                        errors.append(
+                            "independent EP token oracle has no Replica "
+                            f"request identity for role={role}"
+                        )
+                        continue
+                    for layer_id in sorted(expected_moe_layers):
+                        for replica_id, expected_identities in sorted(
+                            expected_role_replicas.items()
+                        ):
+                            actual_identities = observed_request_identity_sets.get(
+                                (role, replica_id, layer_id),
+                                set(),
+                            )
+                            if actual_identities != expected_identities:
+                                errors.append(
+                                    "EP wave request identity coverage mismatch "
+                                    f"role={role} replica={replica_id} "
+                                    f"layer={layer_id} "
+                                    f"expected={sorted(expected_identities)} "
+                                    f"actual={sorted(actual_identities)}"
+                                )
             per_ep_totals_by_wave: dict[
-                tuple[str, int, int],
+                tuple[Any, ...],
                 dict[int, int],
             ] = {}
-            for (cluster_name, _batch_id, layer_id), wave_records in records_by_wave.items():
+            routing_token_count_by_wave: dict[tuple[Any, ...], int] = {}
+            for conservation in ep_conservation_records:
+                conservation_wave_key = _ep_wave_key(conservation)
+                reported_count = int(conservation["routing_token_count"])
+                expected_count = None
+                if independent_token_oracle is not None:
+                    identity = conservation.get("trace_identity")
+                    if identity is not None:
+                        identity_key = _ep_identity_key(identity)
+                        request_epoch_key = tuple(
+                            sorted(
+                                zip(
+                                    identity["request_ids"],
+                                    identity["request_runtime_epochs"],
+                                )
+                            )
+                        )
+                        oracle_key = (
+                            str(conservation["cluster"]).upper(),
+                            int(identity["replica_id"]),
+                            int(conservation["batch_id"]),
+                            request_epoch_key,
+                        )
+                        expected_count = independent_token_oracle.get(oracle_key)
+                    if expected_count is None:
+                        errors.append(
+                            "independent EP token oracle has no matching "
+                            f"request/stage ledger wave cluster={conservation_wave_key[0]} "
+                            f"batch_id={conservation_wave_key[1]} "
+                            f"layer={conservation_wave_key[2]}"
+                        )
+                    elif reported_count != expected_count:
+                        errors.append(
+                            "EP conservation routing_token_count disagrees with "
+                            "independent request/stage ledger "
+                            f"cluster={conservation_wave_key[0]} "
+                            f"batch_id={conservation_wave_key[1]} "
+                            f"layer={conservation_wave_key[2]} "
+                            f"expected={expected_count} actual={reported_count}"
+                        )
+                routing_token_count_by_wave[conservation_wave_key] = (
+                    reported_count if expected_count is None else expected_count
+                )
+            for wave_key, wave_records in records_by_wave.items():
+                cluster_name, _batch_id, layer_id = wave_key[:3]
                 expected_ep_size = _expected_ep_size_for_cluster(case, cluster_name)
                 if expected_ep_size is None:
                     errors.append(
@@ -3231,6 +4180,14 @@ def check_case_log(
                     )
                     continue
                 expected_ep_ids = set(range(expected_ep_size))
+                if int(case.total_experts) % expected_ep_size != 0:
+                    errors.append(
+                        "case.total_experts is not divisible by EP size "
+                        f"cluster={cluster_name} total_experts={case.total_experts} "
+                        f"ep_size={expected_ep_size}"
+                    )
+                    continue
+                experts_per_ep = int(case.total_experts) // expected_ep_size
                 ep_id_counts = Counter(
                     int(record["ep_id"]) for record in wave_records
                 )
@@ -3251,14 +4208,81 @@ def check_case_log(
                     and not duplicate_ep_ids
                 ):
                     complete_layers_by_role[cluster_name].add(layer_id)
-                    per_ep_totals_by_wave[
-                        (cluster_name, _batch_id, layer_id)
-                    ] = {
+                    per_ep_totals_by_wave[wave_key] = {
                         int(record["ep_id"]): sum(
                             record["per_expert_tokens"].values()
                         )
                         for record in wave_records
                     }
+                observed_expert_counts: dict[int, int] = {}
+                expert_owner_by_id: dict[int, int] = {}
+                for record in wave_records:
+                    ep_id = int(record["ep_id"])
+                    for expert_id, token_count in record[
+                        "per_expert_tokens"
+                    ].items():
+                        if expert_id < 0 or expert_id >= int(case.total_experts):
+                            errors.append(
+                                "EP workload expert ID is outside "
+                                f"case.total_experts cluster={cluster_name} "
+                                f"batch_id={_batch_id} layer={layer_id} "
+                                f"expert_id={expert_id} total_experts={case.total_experts}"
+                            )
+                            continue
+                        expected_owner = expert_id // experts_per_ep
+                        if expected_owner != ep_id:
+                            errors.append(
+                                "EP workload expert ownership mismatch "
+                                f"cluster={cluster_name} batch_id={_batch_id} "
+                                f"layer={layer_id} expert_id={expert_id} "
+                                f"expected_ep={expected_owner} actual_ep={ep_id}"
+                            )
+                        previous_owner = expert_owner_by_id.get(expert_id)
+                        if previous_owner is not None:
+                            errors.append(
+                                "EP workload expert appears in multiple lanes "
+                                f"cluster={cluster_name} batch_id={_batch_id} "
+                                f"layer={layer_id} expert_id={expert_id} "
+                                f"owners={[previous_owner, ep_id]}"
+                            )
+                        expert_owner_by_id[expert_id] = ep_id
+                        observed_expert_counts[expert_id] = (
+                            observed_expert_counts.get(expert_id, 0)
+                            + int(token_count)
+                        )
+                missing_experts = sorted(
+                    set(range(int(case.total_experts))) - set(observed_expert_counts)
+                )
+                if missing_experts:
+                    errors.append(
+                        "EP workload expert map is incomplete "
+                        f"cluster={cluster_name} batch_id={_batch_id} "
+                        f"layer={layer_id} missing_experts={missing_experts}"
+                    )
+                try:
+                    expected_global_counts = _reference_routing_counts(
+                        case,
+                        routing_token_count=routing_token_count_by_wave[wave_key],
+                        layer_id=layer_id,
+                    )
+                except StopIteration:
+                    expected_global_counts = None
+                except (KeyError, ValueError) as exc:
+                    expected_global_counts = None
+                    errors.append(
+                        "reference routing oracle failed "
+                        f"cluster={cluster_name} batch_id={_batch_id} "
+                        f"layer={layer_id}: {exc}"
+                    )
+                if expected_global_counts is not None and (
+                    observed_expert_counts != expected_global_counts
+                ):
+                    errors.append(
+                        "EP workload differs from independent routing oracle "
+                        f"cluster={cluster_name} batch_id={_batch_id} "
+                        f"layer={layer_id} expected={expected_global_counts} "
+                        f"actual={observed_expert_counts}"
+                    )
                 if any(
                     int(record["moe_ep_size"]) != expected_ep_size
                     for record in wave_records
@@ -3285,16 +4309,12 @@ def check_case_log(
                             f"cluster={cluster_name} layer={expected_layer_id}"
                         )
             conservation_records_by_wave: dict[
-                tuple[str, int, int],
+                tuple[Any, ...],
                 list[dict[str, Any]],
             ] = {}
             for record in ep_conservation_records:
                 conservation_records_by_wave.setdefault(
-                    (
-                        str(record["cluster"]).upper(),
-                        int(record["batch_id"]),
-                        int(record["layer_id"]),
-                    ),
+                    _ep_wave_key(record),
                     [],
                 ).append(record)
             for wave_key, records in conservation_records_by_wave.items():
@@ -3335,6 +4355,13 @@ def check_case_log(
                     wave_key[0],
                 )
                 expected_ep_ids = set(range(expected_ep_size or 0))
+                if int(conservation["router_topk"]) != int(case.router_topk):
+                    errors.append(
+                        "EP conservation router_topk disagrees with case "
+                        f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                        f"layer={wave_key[2]} expected={case.router_topk} "
+                        f"actual={conservation['router_topk']}"
+                    )
                 per_ep_totals = per_ep_totals_by_wave.get(wave_key)
                 if per_ep_totals is None:
                     continue
@@ -3355,19 +4382,44 @@ def check_case_log(
                         "EP conservation total disagrees with lane workload "
                         f"cluster={wave_key[0]} batch_id={wave_key[1]} layer={wave_key[2]}"
                     )
+                try:
+                    expected_global_counts = _reference_routing_counts(
+                        case,
+                        routing_token_count=routing_token_count_by_wave[wave_key],
+                        layer_id=wave_key[2],
+                    )
+                except (KeyError, ValueError) as exc:
+                    errors.append(
+                        "reference routing oracle failed "
+                        f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                        f"layer={wave_key[2]}: {exc}"
+                    )
+                else:
+                    expected_per_ep_totals = {
+                        ep_id: sum(
+                            token_count
+                            for expert_id, token_count in expected_global_counts.items()
+                            if expert_id
+                            // (int(case.total_experts) // int(expected_ep_size or 1))
+                            == ep_id
+                        )
+                        for ep_id in expected_ep_ids
+                    }
+                    if per_ep_totals != expected_per_ep_totals:
+                        errors.append(
+                            "EP conservation differs from independent routing oracle "
+                            f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                            f"layer={wave_key[2]} expected={expected_per_ep_totals} "
+                            f"actual={per_ep_totals}"
+                        )
 
             barrier_records_by_wave_phase: dict[
-                tuple[str, int, int, str],
+                tuple[Any, ...],
                 list[dict[str, Any]],
             ] = {}
             for record in ep_barrier_records:
                 barrier_records_by_wave_phase.setdefault(
-                    (
-                        str(record["cluster"]).upper(),
-                        int(record["batch_id"]),
-                        int(record["layer_id"]),
-                        str(record["phase"]),
-                    ),
+                    (*_ep_wave_key(record), str(record["phase"])),
                     [],
                 ).append(record)
             for barrier_key, records in barrier_records_by_wave_phase.items():
@@ -3375,15 +4427,15 @@ def check_case_log(
                     errors.append(
                         "duplicate EP barrier records "
                         f"cluster={barrier_key[0]} batch_id={barrier_key[1]} "
-                        f"layer={barrier_key[2]} phase={barrier_key[3]} "
+                        f"layer={barrier_key[2]} phase={barrier_key[4]} "
                         f"count={len(records)}"
                     )
             required_phases = ("dispatch", "combine")
             for phase in required_phases:
                 phase_wave_keys = {
-                    key[:3]
+                    key[:4]
                     for key in barrier_records_by_wave_phase
-                    if key[3] == phase
+                    if key[4] == phase
                 }
                 missing_barrier_waves = sorted(
                     workload_wave_keys - phase_wave_keys
@@ -3394,13 +4446,14 @@ def check_case_log(
                 if missing_barrier_waves:
                     errors.append(
                         "missing EP barrier evidence for workload waves "
-                        f"phase={phase} waves={missing_barrier_waves}"
+                        f"phase={phase} waves={[_format_ep_wave_key(key) for key in missing_barrier_waves]}"
                     )
                 if missing_barrier_waves or extra_barrier_waves:
                     errors.append(
                         "EP barrier wave identity mismatch "
-                        f"phase={phase} missing={missing_barrier_waves} "
-                        f"extra={extra_barrier_waves}"
+                        f"phase={phase} "
+                        f"missing={[_format_ep_wave_key(key) for key in missing_barrier_waves]} "
+                        f"extra={[_format_ep_wave_key(key) for key in extra_barrier_waves]}"
                     )
                 for wave_key in sorted(
                     workload_wave_keys & phase_wave_keys
@@ -3436,7 +4489,7 @@ def check_case_log(
             event_positions_by_wave = _ep_event_positions(text)
             ordered_waves_by_scope: dict[
                 tuple[str, int],
-                list[tuple[int, int, int]],
+                list[tuple[int, int, int, tuple[Any, ...]]],
             ] = {}
             for wave_key in sorted(workload_wave_keys):
                 event_positions = event_positions_by_wave.get(wave_key, {})
@@ -3471,7 +4524,7 @@ def check_case_log(
                 ordered_waves_by_scope.setdefault(
                     (wave_key[0], wave_key[1]),
                     [],
-                ).append((wave_key[2], wave_start, combine_position))
+                ).append((wave_key[2], wave_start, combine_position, wave_key))
 
             for (cluster_name, batch_id), ordered_waves in (
                 ordered_waves_by_scope.items()
@@ -3481,10 +4534,10 @@ def check_case_log(
                     ordered_waves,
                     ordered_waves[1:],
                 ):
-                    previous_layer, _previous_start, previous_combine = (
+                    previous_layer, _previous_start, previous_combine, _previous_key = (
                         previous_wave
                     )
-                    next_layer, next_start, _next_combine = next_wave
+                    next_layer, next_start, _next_combine, _next_key = next_wave
                     if next_start <= previous_combine:
                         errors.append(
                             "next MoE layer started before prior combine "
@@ -3492,6 +4545,21 @@ def check_case_log(
                             f"previous_layer={previous_layer} "
                             f"next_layer={next_layer}"
                         )
+            if expected_request_identity_sets is None:
+                for cluster_name in expected_roles:
+                    for expected_layer_id in sorted(expected_moe_layers):
+                        batch_ids = {
+                            batch_id
+                            for role, batch_id, layer_id, _identity in workload_wave_keys
+                            if role == cluster_name and layer_id == expected_layer_id
+                        }
+                        if len(batch_ids) < int(case.num_requests):
+                            errors.append(
+                                "EP wave cardinality is below case.num_requests "
+                                f"cluster={cluster_name} layer={expected_layer_id} "
+                                f"expected_at_least={case.num_requests} "
+                                f"actual={len(batch_ids)}"
+                            )
         if case.architecture == "pd-af-disaggregation" and ep_participant_records == 0:
             errors.append("missing DECODE_FFN EP participant maps")
         if case.expects_zero_routed_lane and not any(
@@ -3538,6 +4606,11 @@ def check_case_log(
         "ep_workload_records": len(ep_workload_records),
         "ep_barrier_records": len(ep_barrier_records),
         "ep_conservation_records": len(ep_conservation_records),
+        "independent_ep_token_oracle_records": (
+            0
+            if independent_token_oracle is None
+            else len(independent_token_oracle)
+        ),
         "numeric_metric_count": numeric_metric_count,
         "ttft_mean_ms": _stat_value("ttft_statistics"),
         "tpot_mean_ms": _stat_value("tpot_statistics"),
@@ -3580,6 +4653,95 @@ def _serialized_case_payload(case: MatrixCase) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise TypeError(f"case payload must serialize to an object: {case.case_id}")
     return payload
+
+
+def _source_provenance(repo_root: Path) -> dict[str, Any]:
+    """Capture immutable source and runtime identity for one campaign."""
+
+    root = repo_root.resolve()
+
+    def git_output(*arguments: str) -> str:
+        try:
+            process = subprocess.Popen(
+                ["git", "-C", str(root), *arguments],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+            output, _ = process.communicate()
+            if process.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    process.returncode,
+                    ["git", "-C", str(root), *arguments],
+                    output=output,
+                )
+            return output.strip()
+        except (OSError, subprocess.CalledProcessError) as exc:
+            raise RuntimeError(
+                f"unable to capture git provenance for {root}: {arguments}"
+            ) from exc
+
+    dependencies: dict[str, str] = {}
+    for package_name in _SOURCE_PROVENANCE_PACKAGES:
+        try:
+            dependencies[package_name] = importlib_metadata.version(package_name)
+        except importlib_metadata.PackageNotFoundError as exc:
+            raise RuntimeError(
+                f"required provenance dependency is not installed: {package_name}"
+            ) from exc
+
+    dirty_status = git_output("status", "--porcelain", "--untracked-files=all")
+    return {
+        "git_sha": git_output("rev-parse", "HEAD"),
+        "git_dirty": bool(dirty_status),
+        "git_dirty_file_count": len(dirty_status.splitlines()),
+        "python_version": platform.python_version(),
+        "python_implementation": platform.python_implementation(),
+        "dependencies": dependencies,
+    }
+
+
+def _validate_source_provenance(
+    value: Any,
+    *,
+    expected: Mapping[str, Any] | None = None,
+    context: str,
+) -> None:
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{context} is missing source_provenance")
+    required_fields = (
+        "git_sha",
+        "git_dirty",
+        "git_dirty_file_count",
+        "python_version",
+        "python_implementation",
+        "dependencies",
+    )
+    missing = [field for field in required_fields if field not in value]
+    if missing:
+        raise ValueError(
+            f"{context} source_provenance is incomplete: missing={missing}"
+        )
+    if (
+        not isinstance(value["git_sha"], str)
+        or not value["git_sha"]
+        or type(value["git_dirty"]) is not bool
+        or type(value["git_dirty_file_count"]) is not int
+        or value["git_dirty_file_count"] < 0
+        or not isinstance(value["python_version"], str)
+        or not isinstance(value["python_implementation"], str)
+        or not isinstance(value["dependencies"], Mapping)
+        or any(
+            not isinstance(package, str) or not isinstance(version, str)
+            for package, version in value["dependencies"].items()
+        )
+    ):
+        raise ValueError(f"{context} source_provenance has invalid field types")
+    if expected is not None and dict(value) != dict(expected):
+        raise ValueError(
+            f"{context} source_provenance mismatch: "
+            f"row={dict(value)!r} expected={dict(expected)!r}"
+        )
 
 
 def _optimization_pair_specs(
@@ -3795,6 +4957,11 @@ def build_optimization_comparison(
     cases: Sequence[MatrixCase],
     result_rows: Sequence[Mapping[str, Any]],
 ) -> dict[str, Any]:
+    if len(cases) == sum(OPTIMIZATION_ARCHITECTURE_CASE_COUNTS.values()):
+        _validate_expected_optimization_pair_set(
+            cases,
+            _optimization_pair_specs(cases),
+        )
     case_by_id = {case.case_id: case for case in cases}
     if len(case_by_id) != len(cases):
         raise ValueError("optimization comparison cases contain duplicate case IDs")
@@ -4103,6 +5270,7 @@ def _validate_result_ledger_provenance(
     repo_root: Path,
     output_root: Path,
     results_path: Path,
+    expected_source_provenance: Mapping[str, Any] | None = None,
 ) -> None:
     """Reject ledger rows produced by another run/output generation.
 
@@ -4166,6 +5334,11 @@ def _validate_result_ledger_provenance(
                 "result ledger PASS row has no canonical metrics_path: "
                 f"case_id={case_id!r}"
             )
+        _validate_source_provenance(
+            row.get("source_provenance"),
+            expected=expected_source_provenance,
+            context=f"result ledger case_id={case_id!r}",
+        )
 
 
 def _validate_persisted_case_metadata(
@@ -4203,6 +5376,11 @@ def _validate_persisted_case_metadata(
                 "persisted case metadata mismatch: "
                 f"case_id={case_id!r}, path={metadata_path}"
             )
+        _validate_source_provenance(
+            metadata.get("source_provenance"),
+            expected=row.get("source_provenance"),
+            context=f"persisted case metadata case_id={case_id!r}",
+        )
 
 
 def _merge_result_rows(
@@ -4246,6 +5424,28 @@ def write_manifest(path: Path, cases: Sequence[MatrixCase]) -> None:
     _write_jsonl(path, [asdict(case) for case in cases])
 
 
+def write_optimization_pair_manifest(
+    path: Path,
+    cases: Sequence[MatrixCase],
+) -> None:
+    """Persist the fixed expected optimization pair set for audit/replay."""
+
+    specs = _expected_optimization_pair_specs(cases)
+    _validate_expected_optimization_pair_set(cases, specs)
+    rows = [
+        {
+            "comparison_id": spec["comparison_id"],
+            "group_id": spec["group_id"],
+            "optimization": spec["optimization"],
+            "target_field": spec["target_field"],
+            "control_case_id": spec["control"].case_id,
+            "enabled_case_id": spec["enabled"].case_id,
+        }
+        for spec in specs
+    ]
+    _write_jsonl(path, rows)
+
+
 def _load_manifest(path: Path) -> list[MatrixCase]:
     cases: list[MatrixCase] = []
     for line in path.read_text(encoding="utf-8").splitlines():
@@ -4265,6 +5465,7 @@ def _run_case(
     repo_root: Path,
     output_root: Path,
     results_path: Path,
+    source_provenance: Mapping[str, Any],
     timeout_seconds: int,
 ) -> dict[str, Any]:
     case_dir = output_root / case.case_id
@@ -4293,6 +5494,7 @@ def _run_case(
                 "repo_root": str(repo_root),
                 "output_root": str(output_root),
                 "results_path": str(results_path),
+                "source_provenance": dict(source_provenance),
                 "run_started_at_unix_s": run_started_at_s,
                 "trace_schema_version": 1,
             },
@@ -4336,7 +5538,13 @@ def _run_case(
             case,
             started_at_ns=run_freshness_marker_ns,
         )
-        check = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+        check = check_case_log(
+            case,
+            log_path,
+            metrics_dir,
+            strict_layers=True,
+            require_independent_token_oracle=True,
+        )
         metrics_path = str(metrics_dir)
     except (FileNotFoundError, OSError) as exc:
         check = {"status": "FAIL", "errors": str(exc)}
@@ -4355,6 +5563,7 @@ def _run_case(
         "repo_root": str(repo_root),
         "output_root": str(output_root),
         "results_path": str(results_path),
+        "source_provenance": dict(source_provenance),
         "run_started_at_unix_s": run_started_at_s,
         "run_finished_at_unix_s": run_finished_at_s,
         "trace_schema_version": 1,
@@ -4383,6 +5592,7 @@ def run_cases(
     repo_root = repo_root.resolve()
     output_root = output_root.resolve()
     results_path = results_path.resolve()
+    source_provenance = _source_provenance(repo_root)
     selected = list(cases[start : (start + limit) if limit is not None else None])
     expected_case_ids = tuple(case.case_id for case in cases)
     existing_rows = _load_result_rows(results_path)
@@ -4391,6 +5601,7 @@ def run_cases(
         repo_root=repo_root,
         output_root=output_root,
         results_path=results_path,
+        expected_source_provenance=source_provenance,
     )
     persisted = _merge_result_rows(
         existing_rows,
@@ -4424,6 +5635,7 @@ def run_cases(
                 repo_root=repo_root,
                 output_root=output_root,
                 results_path=results_path,
+                source_provenance=source_provenance,
                 timeout_seconds=timeout_seconds,
             )
             persist_result(index, result)
@@ -4454,6 +5666,7 @@ def run_cases(
                     repo_root=repo_root,
                     output_root=output_root,
                     results_path=results_path,
+                    source_provenance=source_provenance,
                     timeout_seconds=timeout_seconds,
                 )
                 active[future] = next_index
@@ -4526,6 +5739,12 @@ def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
         default=None,
         help="Independent JSONL ledger path for static preflight evidence.",
     )
+    parser.add_argument(
+        "--pair-manifest-path",
+        type=Path,
+        default=None,
+        help="Expected optimization pair manifest path.",
+    )
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--timeout-seconds", type=int, default=600)
@@ -4551,6 +5770,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         default_output_root = Path("/data/ycfeng/tmp/frontier_non_dummy_matrix")
         cases = build_matrix(repo_root)
     manifest_path = task_dir / manifest_name
+    pair_manifest_path = (
+        args.pair_manifest_path
+        if args.pair_manifest_path is not None
+        else task_dir / "moe_ep_non_dummy_optimization_expected_pairs.jsonl"
+    )
     results_path = (
         args.results_path
         if args.results_path is not None
@@ -4561,17 +5785,28 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     write_manifest(manifest_path, cases)
     print(f"manifest={manifest_path} cases={len(cases)}")
+    if (
+        args.matrix_kind == "optimization"
+        and len(cases) == sum(OPTIMIZATION_ARCHITECTURE_CASE_COUNTS.values())
+    ):
+        write_optimization_pair_manifest(pair_manifest_path, cases)
+        print(
+            f"expected_pair_manifest={pair_manifest_path} "
+            f"pairs={len(_expected_optimization_pair_specs(cases))}"
+        )
     if args.mode == "generate":
         return 0
     if args.mode == "compare":
         if args.matrix_kind != "optimization":
             raise ValueError("compare mode requires --matrix-kind optimization")
         result_rows = _load_result_rows(results_path)
+        source_provenance = _source_provenance(repo_root)
         _validate_result_ledger_provenance(
             result_rows,
             repo_root=repo_root,
             output_root=output_root,
             results_path=results_path,
+            expected_source_provenance=source_provenance,
         )
         _validate_persisted_case_metadata(cases, result_rows)
         report = build_optimization_comparison(cases, result_rows)

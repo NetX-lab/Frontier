@@ -14,6 +14,7 @@ from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor impo
 )
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
     SklearnDisaggregationExecutionTimePredictor,
+    WorkloadDistributionType,
 )
 from frontier.model_architectures import ModelArchitectureProfile
 from frontier.types import ClusterType
@@ -717,3 +718,34 @@ def test_global_routing_allocations_use_canonical_distribution_types(
         assert all(value == pytest.approx(0.25) for value in first[0].values())
     else:
         assert len(set(first[0].values())) > 1
+
+
+@pytest.mark.parametrize("distribution_type", ["balanced", "random", "skewed", "zipf"])
+def test_disaggregation_routing_matches_shared_predictor_rng_contract(
+    distribution_type: str,
+) -> None:
+    """All architectures must materialize the same per-layer routing ratios."""
+    shared_predictor = object.__new__(_DummySklearnMoEPredictor)
+    shared_predictor._model_config = SimpleNamespace(num_layers=2, is_moe=True)
+    shared_predictor._replica_config = SimpleNamespace(total_expert_num=8)
+    shared_predictor._moe_ep_size = 2
+    shared_predictor._moe_routing_seed = 17
+    shared_predictor._moe_routing_distribution_type = distribution_type
+    expected = shared_predictor._init_global_routing_allocations()
+
+    disaggregation_predictor = object.__new__(_DummyDisaggregationPredictor)
+    disaggregation_predictor._distribution_seed = 17
+    disaggregation_predictor._workload_distribution_type = (
+        WorkloadDistributionType(distribution_type)
+    )
+
+    for layer_id in range(2):
+        actual = disaggregation_predictor._generate_expert_allocations(
+            total_expert_num=8,
+            expert_parallel_size=2,
+            replica_id=0,
+            layer_id=layer_id,
+        )
+        assert actual == pytest.approx(
+            [expected[layer_id][expert_id] for expert_id in range(8)]
+        )

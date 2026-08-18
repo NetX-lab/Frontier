@@ -62,6 +62,16 @@ def _combine_batch(
         global_id=10,
         replica_id=0,
         ep_id=ep_id,
+        requests=[
+            SimpleNamespace(
+                id=0,
+                runtime_epoch=0,
+                current_decode_token_index=1,
+            )
+        ],
+        request_runtime_epochs=[0],
+        schedule_epoch=0,
+        afd_stage_idx=0,
         decode_ffn_layer_id=4,
         source_batch_ids=list(source_batch_ids),
         per_expert_tokens={},

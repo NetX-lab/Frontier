@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shlex
 import threading
 import time
@@ -245,9 +246,9 @@ def _strict_ep_log(
             "Simulation completed successfully.",
             "[OP-TRACE][MONOLITHIC][MOE][moe_shuffling] layer_id=0",
             "[OP-TRACE][MONOLITHIC][MOE][moe_grouped_gemm] layer_id=0",
-            *workload_lines,
-            *conservation_lines,
-            *barrier_lines,
+            *[_add_test_ep_identity(line) for line in workload_lines],
+            *[_add_test_ep_identity(line) for line in conservation_lines],
+            *[_add_test_ep_identity(line) for line in barrier_lines],
         ]
     )
 
@@ -257,6 +258,7 @@ def _strict_ep_log_from_events(
     *,
     layer_ids: tuple[int, ...] = (0,),
     include_pdaf_participant_map: bool = False,
+    add_identity: bool = True,
 ) -> str:
     lines = [
         "Dummy Mode: false",
@@ -271,8 +273,35 @@ def _strict_ep_log_from_events(
         )
     if include_pdaf_participant_map:
         lines.append("per_expert_tokens extracted:")
-    lines.extend(event_lines)
+    if add_identity:
+        lines.extend(_add_test_ep_identity(line) for line in event_lines)
+    else:
+        lines.extend(event_lines)
     return "\n".join(lines)
+
+
+def _test_ep_identity_suffix(batch_id: int, layer_id: int) -> str:
+    operation_id = batch_id * 1000 + layer_id
+    return (
+        ", replica_id=0, stage_id=0, request_ids=[0], "
+        "request_runtime_epochs=[0], iteration_ids=[0], "
+        f"schedule_epoch=0, afd_stage_idx=-1, operation_id={operation_id}"
+    )
+
+
+def _add_test_ep_identity(line: str) -> str:
+    if not line.startswith("[EP-"):
+        return line
+    if "replica_id=" in line:
+        return line
+    batch_match = re.search(r"batch_id=(\d+)", line)
+    layer_match = re.search(r"layer_id=(\d+)", line)
+    if batch_match is None or layer_match is None:
+        return line
+    return line + _test_ep_identity_suffix(
+        int(batch_match.group(1)),
+        int(layer_match.group(1)),
+    )
 
 
 def _ep_wave_lines(
@@ -281,6 +310,7 @@ def _ep_wave_lines(
     ep_size: int,
     batch_id: int,
     layer_id: int,
+    include_identity: bool = True,
 ) -> dict[str, list[str] | str]:
     ep_ids = list(range(ep_size))
     workloads = [
@@ -309,6 +339,12 @@ def _ep_wave_lines(
         "max_lane_time_ms=1.0, barrier_time_ms=1.0, "
         "barrier_end_time_s=0.002"
     )
+    if include_identity:
+        suffix = _test_ep_identity_suffix(batch_id, layer_id)
+        workloads = [line + suffix for line in workloads]
+        conservation += suffix
+        dispatch += suffix
+        combine += suffix
     return {
         "workloads": workloads,
         "conservation": conservation,
@@ -582,6 +618,58 @@ def test_optimization_pairs_change_only_the_declared_fields() -> None:
         for case in cases
     ]
     with pytest.raises(ValueError, match="undeclared fields.*routing_distribution"):
+        validate_optimization_pairs(corrupted)
+
+
+def test_optimization_pair_manifest_has_exact_expected_set() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    specs = matrix_module._expected_optimization_pair_specs(cases)
+
+    assert len(specs) == 122
+    assert Counter(spec["optimization"] for spec in specs) == Counter(
+        {
+            "cuda_graph": 74,
+            "chunked_prefill": 12,
+            "prefix_cache": 22,
+            "mtp": 14,
+        }
+    )
+    assert len(
+        {
+            (
+                spec["comparison_id"],
+                spec["control"].case_id,
+                spec["enabled"].case_id,
+            )
+            for spec in specs
+        }
+    ) == 122
+
+
+def test_optimization_pair_validation_rejects_split_factorial_group() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    target = next(
+        case
+        for case in cases
+        if case.comparison_group_id == "co_location_ordinary_graph_00"
+        and case.case_id.endswith("piecewise_chunk_on")
+    )
+    corrupted = [
+        replace(
+            case,
+            comparison_group_id="unexpected_singleton",
+            baseline_case_id=case.case_id,
+            pair_role="standalone",
+        )
+        if case.case_id == target.case_id
+        else case
+        for case in cases
+    ]
+
+    with pytest.raises(
+        ValueError,
+        match="undeclared singleton|pair set mismatch",
+    ):
         validate_optimization_pairs(corrupted)
 
 
@@ -1951,13 +2039,20 @@ def test_optimization_compare_cli_writes_json_csv_and_markdown(
     task_dir = tmp_path / "task"
     output_root = tmp_path / "outputs"
     results_path = task_dir / "results.jsonl"
+    source_provenance = matrix_module._source_provenance(REPO_ROOT)
     result_rows = []
     for index, case in enumerate(cases):
         row = _optimization_result_row(case, metric_offset=float(index))
         case_dir = output_root / case.case_id
         case_dir.mkdir(parents=True)
         (case_dir / "case_metadata.json").write_text(
-            json.dumps({"case": asdict(case)}, sort_keys=True),
+            json.dumps(
+                {
+                    "case": asdict(case),
+                    "source_provenance": source_provenance,
+                },
+                sort_keys=True,
+            ),
             encoding="utf-8",
         )
         row.update(
@@ -1967,6 +2062,7 @@ def test_optimization_compare_cli_writes_json_csv_and_markdown(
                 "results_path": str(results_path.resolve()),
                 "log_path": str(case_dir / f"{case.case_id}.log"),
                 "metrics_path": str(case_dir / "metrics"),
+                "source_provenance": source_provenance,
             }
         )
         result_rows.append(row)
@@ -3270,11 +3366,15 @@ def test_log_checker_rejects_traceback(tmp_path: Path) -> None:
     assert "Traceback" in result["errors"]
 
 
-def test_dense_checker_does_not_require_moe_layer_granularity(tmp_path: Path) -> None:
-    case = next(
-        case
-        for case in build_matrix(REPO_ROOT)
-        if case.architecture == "co-location" and case.model_kind == "dense"
+def test_strict_dense_checker_requires_complete_layer_coverage(tmp_path: Path) -> None:
+    case = replace(
+        next(
+            case
+            for case in build_matrix(REPO_ROOT)
+            if case.architecture == "co-location" and case.model_kind == "dense"
+        ),
+        num_layers=32,
+        moe_layer_ids=(),
     )
     log_path = tmp_path / "dense.log"
     metrics_dir = tmp_path / "metrics"
@@ -3290,7 +3390,491 @@ def test_dense_checker_does_not_require_moe_layer_granularity(tmp_path: Path) ->
 
     result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
 
+    assert result["status"] == "FAIL"
+    assert "layer ids are not contiguous" in result["errors"]
+
+
+def test_chunked_prefill_control_ignores_legacy_stage_ledger_schema(
+    tmp_path: Path,
+) -> None:
+    case = _dense_optimization_case(
+        enable_chunked_prefill=False,
+        prefill_tokens=32,
+        num_requests=1,
+        pipeline_stages=1,
+    )
+    log_path = tmp_path / "legacy_control.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            {
+                "batch_id": 0,
+                "stage_id": 0,
+                "cluster_type": "MONOLITHIC",
+                "replica_id": 0,
+                "execution_scope": "FULL_STAGE_WORLD",
+                "replica_local_id": None,
+                "request_ids": ["7"],
+                "request_num_tokens": [32],
+                "execution_time": {
+                    "component_ledger_ms": {
+                        "attention_prefill_execution_time": 1.0,
+                    }
+                },
+            }
+        ],
+    )
+    _write_success_log(log_path)
+
+    result = check_case_log(case, log_path, metrics_dir)
+
     assert result["status"] == "PASS"
+    assert "chunked_prefill_stage_ledger_present" not in result
+
+
+def test_strict_dense_checker_rejects_moe_protocol_records(
+    tmp_path: Path,
+) -> None:
+    case = replace(
+        next(
+            case
+            for case in build_matrix(REPO_ROOT)
+            if case.architecture == "co-location" and case.model_kind == "dense"
+        ),
+        num_layers=1,
+        moe_layer_ids=(),
+    )
+    wave = _ep_wave_lines(
+        cluster="MONOLITHIC",
+        ep_size=1,
+        batch_id=1,
+        layer_id=0,
+    )
+    log_path = tmp_path / "dense_with_ep.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        "\n".join(
+            [
+                "Dummy Mode: false",
+                "Simulation completed successfully.",
+                "[OP-TRACE][MONOLITHIC][ATTENTION] batch_id=1, layer_id=0, num_tokens=1",
+                str(wave["conservation"]),
+                *list(wave["workloads"]),
+                str(wave["dispatch"]),
+                str(wave["combine"]),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "dense case emitted EP protocol evidence" in result["errors"]
+
+
+def test_strict_mixed_checker_requires_dense_layer_coverage(
+    tmp_path: Path,
+) -> None:
+    case = replace(
+        next(
+            case
+            for case in build_matrix(REPO_ROOT)
+            if case.architecture == "co-location"
+            and case.model_kind == "mixed"
+            and case.ep_size == 2
+        ),
+        num_layers=2,
+        moe_layer_ids=(1,),
+    )
+    wave = _ep_wave_lines(
+        cluster="MONOLITHIC",
+        ep_size=2,
+        batch_id=1,
+        layer_id=1,
+    )
+    log_path = tmp_path / "mixed_missing_dense.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        _strict_ep_log_from_events(
+            [
+                str(wave["conservation"]),
+                *list(wave["workloads"]),
+                str(wave["dispatch"]),
+                str(wave["combine"]),
+            ],
+            layer_ids=(1,),
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "layer ids are not contiguous" in result["errors"]
+
+
+def test_strict_mixed_checker_rejects_dense_layer_ep_wave(
+    tmp_path: Path,
+) -> None:
+    case = replace(
+        next(
+            case
+            for case in build_matrix(REPO_ROOT)
+            if case.architecture == "co-location"
+            and case.model_kind == "mixed"
+            and case.ep_size == 2
+        ),
+        num_layers=2,
+        moe_layer_ids=(1,),
+    )
+    dense_wave = _ep_wave_lines(
+        cluster="MONOLITHIC",
+        ep_size=2,
+        batch_id=1,
+        layer_id=0,
+    )
+    moe_wave = _ep_wave_lines(
+        cluster="MONOLITHIC",
+        ep_size=2,
+        batch_id=1,
+        layer_id=1,
+    )
+    log_path = tmp_path / "mixed_dense_as_moe.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        "\n".join(
+            [
+                "Dummy Mode: false",
+                "Simulation completed successfully.",
+                "[OP-TRACE][MONOLITHIC][ATTENTION] batch_id=1, layer_id=0, num_tokens=1",
+                str(dense_wave["conservation"]),
+                *list(dense_wave["workloads"]),
+                str(dense_wave["dispatch"]),
+                str(dense_wave["combine"]),
+                "[OP-TRACE][MONOLITHIC][MOE][moe_shuffling] layer_id=1",
+                "[OP-TRACE][MONOLITHIC][MOE][moe_grouped_gemm] layer_id=1",
+                str(moe_wave["conservation"]),
+                *list(moe_wave["workloads"]),
+                str(moe_wave["dispatch"]),
+                str(moe_wave["combine"]),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "dense layer emitted EP protocol evidence" in result["errors"]
+
+
+def test_strict_checker_rejects_case_routing_contract_mismatch(
+    tmp_path: Path,
+) -> None:
+    case = replace(
+        _single_layer_ep2_case(),
+        total_experts=2,
+        router_topk=1,
+        routing_distribution="balanced",
+        num_requests=1,
+    )
+    log_path = tmp_path / "routing_contract_mismatch.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        _strict_ep_log(
+            workload_lines=[
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=0, moe_ep_size=2, per_expert_tokens={0: 1}, "
+                "lane_compute_ms=1.0, lane_comm_ms=0.0",
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=1, moe_ep_size=2, per_expert_tokens={999: 1}, "
+                "lane_compute_ms=1.0, lane_comm_ms=0.0",
+            ],
+            conservation_lines=[
+                "[EP-CONSERVATION][MONOLITHIC] batch_id=10, layer_id=0, "
+                "routing_token_count=1, router_topk=2, "
+                "total_routed_assignments=2, "
+                "per_ep_routed_tokens={0: 1, 1: 1}",
+            ],
+            barrier_lines=[
+                "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+                "phase=dispatch, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+                "barrier_time_ms=1.0, barrier_end_time_s=0.001",
+                "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+                "phase=combine, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+                "barrier_time_ms=1.0, barrier_end_time_s=0.002",
+            ],
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "router_topk disagrees with case" in result["errors"]
+    assert "expert ID is outside case.total_experts" in result["errors"]
+
+
+def test_strict_checker_rejects_missing_request_wave(
+    tmp_path: Path,
+) -> None:
+    case = replace(
+        _single_layer_ep2_case(),
+        total_experts=2,
+        router_topk=1,
+        routing_distribution="balanced",
+        num_requests=2,
+    )
+    wave = _ep_wave_lines(
+        cluster="MONOLITHIC",
+        ep_size=2,
+        batch_id=10,
+        layer_id=0,
+    )
+    log_path = tmp_path / "missing_request_wave.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        _strict_ep_log_from_events(
+            [
+                str(wave["conservation"]),
+                *list(wave["workloads"]),
+                str(wave["dispatch"]),
+                str(wave["combine"]),
+            ],
+            add_identity=False,
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "EP wave cardinality is below case.num_requests" in result["errors"]
+
+
+def test_strict_checker_uses_independent_request_token_oracle(
+    tmp_path: Path,
+) -> None:
+    case = replace(
+        _single_layer_ep2_case(),
+        total_experts=2,
+        router_topk=1,
+        routing_distribution="balanced",
+        num_requests=1,
+        pipeline_stages=1,
+    )
+    log_path = tmp_path / "independent_token_oracle.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=10,
+                stage_id=0,
+                request_ids=["0"],
+                request_num_tokens=[1],
+                request_runtime_epochs=[0],
+            )
+        ],
+    )
+    log_path.write_text(
+        _strict_ep_log(
+            workload_lines=[
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=0, moe_ep_size=2, per_expert_tokens={0: 1}, "
+                "lane_compute_ms=1.0, lane_comm_ms=0.0",
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=1, moe_ep_size=2, per_expert_tokens={1: 1}, "
+                "lane_compute_ms=1.0, lane_comm_ms=0.0",
+            ],
+            conservation_lines=[
+                "[EP-CONSERVATION][MONOLITHIC] batch_id=10, layer_id=0, "
+                "routing_token_count=2, router_topk=1, "
+                "total_routed_assignments=2, "
+                "per_ep_routed_tokens={0: 1, 1: 1}",
+            ],
+            barrier_lines=[
+                "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+                "phase=dispatch, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+                "barrier_time_ms=1.0, barrier_end_time_s=0.001",
+                "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+                "phase=combine, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+                "barrier_time_ms=1.0, barrier_end_time_s=0.002",
+            ],
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert (
+        "routing_token_count disagrees with independent request/stage ledger"
+        in result["errors"]
+    )
+
+
+def test_strict_checker_accepts_one_batched_wave_for_all_requests(
+    tmp_path: Path,
+) -> None:
+    case = replace(
+        _single_layer_ep2_case(),
+        total_experts=2,
+        router_topk=1,
+        routing_distribution="balanced",
+        num_requests=3,
+        pipeline_stages=1,
+        prefill_tokens=1,
+    )
+    log_path = tmp_path / "batched_request_wave.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=10,
+                stage_id=0,
+                request_ids=["0", "1", "2"],
+                request_num_tokens=[1, 1, 1],
+                request_num_prefill_tokens=[case.prefill_tokens] * 3,
+                request_runtime_epochs=[0, 0, 0],
+            )
+        ],
+    )
+    log_text = _strict_ep_log(
+        workload_lines=[
+            "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+            "ep_id=0, moe_ep_size=2, per_expert_tokens={0: 2}, "
+            "lane_compute_ms=1.0, lane_comm_ms=0.0",
+            "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+            "ep_id=1, moe_ep_size=2, per_expert_tokens={1: 1}, "
+            "lane_compute_ms=1.0, lane_comm_ms=0.0",
+        ],
+        conservation_lines=[
+            "[EP-CONSERVATION][MONOLITHIC] batch_id=10, layer_id=0, "
+            "routing_token_count=3, router_topk=1, "
+            "total_routed_assignments=3, "
+            "per_ep_routed_tokens={0: 2, 1: 1}",
+        ],
+        barrier_lines=[
+            "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+            "phase=dispatch, expected_ep_ids=[0, 1], "
+            "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+            "barrier_time_ms=1.0, barrier_end_time_s=0.001",
+            "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+            "phase=combine, expected_ep_ids=[0, 1], "
+            "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+            "barrier_time_ms=1.0, barrier_end_time_s=0.002",
+        ],
+    )
+    log_text = (
+        log_text.replace("request_ids=[0]", "request_ids=[0, 1, 2]")
+        .replace(
+            "request_runtime_epochs=[0]",
+            "request_runtime_epochs=[0, 0, 0]",
+        )
+        .replace("iteration_ids=[0]", "iteration_ids=[0, 0, 0]")
+    )
+    log_path.write_text(log_text, encoding="utf-8")
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+    )
+
+    assert result["status"] == "PASS", result["errors"]
+
+
+def test_strict_checker_rejects_missing_structured_wave_identity(
+    tmp_path: Path,
+) -> None:
+    case = _single_layer_ep2_case()
+    wave = _ep_wave_lines(
+        cluster="MONOLITHIC",
+        ep_size=2,
+        batch_id=10,
+        layer_id=0,
+        include_identity=False,
+    )
+    log_path = tmp_path / "missing_structured_identity.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        _strict_ep_log_from_events(
+            [
+                str(wave["conservation"]),
+                *list(wave["workloads"]),
+                str(wave["dispatch"]),
+                str(wave["combine"]),
+            ],
+            add_identity=False,
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "structured EP wave identity is missing" in result["errors"]
+
+
+def test_strict_checker_rejects_mismatched_structured_wave_identity(
+    tmp_path: Path,
+) -> None:
+    case = _single_layer_ep2_case()
+    wave = _ep_wave_lines(
+        cluster="MONOLITHIC",
+        ep_size=2,
+        batch_id=10,
+        layer_id=0,
+    )
+    mismatched_conservation = str(wave["conservation"]).replace(
+        "replica_id=0",
+        "replica_id=1",
+        1,
+    )
+    log_path = tmp_path / "mismatched_structured_identity.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        _strict_ep_log_from_events(
+            [
+                mismatched_conservation,
+                *list(wave["workloads"]),
+                str(wave["dispatch"]),
+                str(wave["combine"]),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "structured EP wave identity mismatch" in result["errors"]
 
 
 def test_online_checker_accepts_online_success_marker(tmp_path: Path) -> None:
@@ -3421,6 +4005,32 @@ def test_result_ledger_rejects_external_log_and_metrics_paths(tmp_path: Path) ->
                     "output_root": str(output_root),
                     "results_path": str(results_path),
                     "log_path": str(tmp_path / "old.log"),
+                    "metrics_path": str(case_root / "metrics"),
+                }
+            ],
+            repo_root=tmp_path / "repo",
+            output_root=output_root,
+            results_path=results_path,
+        )
+
+
+def test_result_ledger_rejects_missing_source_provenance_with_valid_paths(
+    tmp_path: Path,
+) -> None:
+    output_root = tmp_path / "output"
+    case_root = output_root / "case-a"
+    case_root.mkdir(parents=True)
+    results_path = tmp_path / "results.jsonl"
+    with pytest.raises(ValueError, match="source_provenance"):
+        _validate_result_ledger_provenance(
+            [
+                {
+                    "case_id": "case-a",
+                    "status": "PASS",
+                    "repo_root": str(tmp_path / "repo"),
+                    "output_root": str(output_root),
+                    "results_path": str(results_path),
+                    "log_path": str(case_root / "case-a.log"),
                     "metrics_path": str(case_root / "metrics"),
                 }
             ],

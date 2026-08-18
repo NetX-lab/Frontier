@@ -6119,6 +6119,16 @@ def test_ep_dispatch_valid_exact_lanes_preserve_collective_payload_and_time() ->
         global_id=0,
         ep_id=0,
         replica_id=3,
+        requests=[
+            SimpleNamespace(
+                id=0,
+                runtime_epoch=0,
+                current_decode_token_index=1,
+            )
+        ],
+        request_runtime_epochs=[0],
+        schedule_epoch=0,
+        afd_stage_idx=0,
         total_num_tokens=100,
         decode_ffn_layer_id=4,
         source_batch_ids=[0],
@@ -6132,6 +6142,16 @@ def test_ep_dispatch_valid_exact_lanes_preserve_collective_payload_and_time() ->
         global_id=0,
         ep_id=1,
         replica_id=3,
+        requests=[
+            SimpleNamespace(
+                id=0,
+                runtime_epoch=0,
+                current_decode_token_index=1,
+            )
+        ],
+        request_runtime_epochs=[0],
+        schedule_epoch=0,
+        afd_stage_idx=0,
         total_num_tokens=200,
         decode_ffn_layer_id=4,
         source_batch_ids=[0],

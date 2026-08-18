@@ -472,7 +472,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         Returns:
             List of allocation ratios for each expert (sum should be 1.0)
         """
-        np.random.seed(self._distribution_seed + replica_id * 1000 + layer_id)
+        # Replica IDs select the shared routing lookup only; they must not
+        # create different per-layer distributions across architectures.
+        rng = np.random.default_rng(self._distribution_seed + layer_id)
 
         if self._workload_distribution_type == WorkloadDistributionType.BALANCED:
             # Balanced distribution: each expert gets equal allocation
@@ -480,7 +482,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
 
         elif self._workload_distribution_type == WorkloadDistributionType.RANDOM:
             # Random distribution: generate random weights and normalize
-            random_weights = np.random.uniform(0.1, 1.0, total_expert_num)
+            random_weights = rng.uniform(0.1, 1.0, total_expert_num)
             total_weight = np.sum(random_weights)
             allocation_ratios = (random_weights / total_weight).tolist()
 
