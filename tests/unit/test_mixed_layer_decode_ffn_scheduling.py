@@ -1512,6 +1512,7 @@ def _run_decode_ffn_stage_event(monkeypatch, batch: Batch):
     execution_time = SimpleNamespace(
         get_single_layer_moe_pre_dispatch_time=lambda: 0.0,
         get_single_layer_moe_post_dispatch_compute_time=lambda: 1.0,
+        get_single_layer_moe_post_combine_time=lambda: 0.0,
         expert_parallel_communication_time=0.0,
     )
     stage_scheduler = Mock()

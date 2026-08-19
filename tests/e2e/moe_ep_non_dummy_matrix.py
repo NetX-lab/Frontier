@@ -164,7 +164,8 @@ _EP_TRACE_IDENTITY_SUFFIX = (
     r"iteration_ids=(?P<iteration_ids>\[[^\]]*\]),\s+"
     r"schedule_epoch=(?P<schedule_epoch>-?\d+),\s+"
     r"afd_stage_idx=(?P<afd_stage_idx>-?\d+),\s+"
-    r"operation_id=(?P<operation_id>-?\d+))?"
+    r"operation_id=(?P<operation_id>-?\d+),\s+"
+    r"operation_kind=(?P<operation_kind>[A-Za-z0-9_.-]+))?"
 )
 
 _EP_WORKLOAD_LINE_RE = re.compile(
@@ -189,6 +190,7 @@ _EP_BARRIER_LINE_RE = re.compile(
     r"arrived_ep_ids=(?P<arrived_ep_ids>\[[^\]]*\]),\s+"
     r"max_lane_time_ms=(?P<max_lane_time_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
     r"barrier_time_ms=(?P<barrier_time_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"(?:barrier_start_time_s=(?P<barrier_start_time_s>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+)?"
     r"barrier_end_time_s=(?P<barrier_end_time_s>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
     + _EP_TRACE_IDENTITY_SUFFIX
     + r"\s*$"
@@ -207,6 +209,7 @@ _EP_CONSERVATION_LINE_RE = re.compile(
 _OP_TRACE_LAYER_RE = re.compile(
     r"\[OP-TRACE\][^\n]*?\blayer_id=(?P<layer_id>-?\d+)"
 )
+_ROUTING_SNAPSHOT_MARKER = "[ROUTING-SNAPSHOT]"
 
 
 @dataclass(frozen=True)
@@ -2906,6 +2909,70 @@ def _canonical_request_epoch_key(
     return tuple(sorted(pairs))
 
 
+def _parse_stage_ledger_identity(
+    row: Mapping[str, Any],
+    *,
+    path: Path,
+    line_number: int,
+) -> tuple[tuple[int, ...], int, int, int, str]:
+    """Parse the runtime identity persisted by the independent stage ledger."""
+
+    required_fields = (
+        "iteration_ids",
+        "schedule_epoch",
+        "afd_stage_idx",
+        "operation_id",
+        "operation_kind",
+    )
+    missing = [field for field in required_fields if field not in row]
+    if missing:
+        raise ValueError(
+            "EP expected wave manifest stage ledger is missing runtime identity "
+            f"fields={missing} at {path}:{line_number}"
+        )
+
+    iteration_ids = row["iteration_ids"]
+    if not isinstance(iteration_ids, list) or not iteration_ids:
+        raise ValueError(
+            "EP expected wave manifest iteration_ids must be a non-empty list "
+            f"at {path}:{line_number}"
+        )
+    if any(type(item) is not int or item < 0 for item in iteration_ids):
+        raise ValueError(
+            "EP expected wave manifest iteration_ids must contain non-negative "
+            f"integers at {path}:{line_number}"
+        )
+
+    schedule_epoch = row["schedule_epoch"]
+    afd_stage_idx = row["afd_stage_idx"]
+    operation_id = row["operation_id"]
+    for field_name, value, minimum in (
+        ("schedule_epoch", schedule_epoch, 0),
+        ("afd_stage_idx", afd_stage_idx, -1),
+        ("operation_id", operation_id, 0),
+    ):
+        if type(value) is not int or value < minimum:
+            raise ValueError(
+                "EP expected wave manifest runtime identity field must be an "
+                f"exact integer: field={field_name} value={value!r} "
+                f"at {path}:{line_number}"
+            )
+
+    operation_kind = row["operation_kind"]
+    if not isinstance(operation_kind, str) or not operation_kind.strip():
+        raise ValueError(
+            "EP expected wave manifest operation_kind must be a non-empty string "
+            f"at {path}:{line_number}"
+        )
+    return (
+        tuple(int(item) for item in iteration_ids),
+        int(schedule_epoch),
+        int(afd_stage_idx),
+        int(operation_id),
+        operation_kind.strip(),
+    )
+
+
 def _read_ep_stage_token_index(
     case: MatrixCase,
     metrics_dir: Path,
@@ -2926,7 +2993,13 @@ def _read_ep_stage_token_index(
     expected_clusters = set(_expected_ep_roles(case))
     grouped: dict[
         tuple[str, int, int],
-        dict[int, tuple[tuple[int, int], ...]],
+        dict[
+            int,
+            tuple[
+                tuple[tuple[int, int], ...],
+                tuple[tuple[int, ...], int, int, int, str],
+            ],
+        ],
     ] = {}
     for line_number, line in enumerate(
         path.read_text(encoding="utf-8").splitlines(),
@@ -3656,18 +3729,18 @@ def _read_ep_expected_wave_manifest(
 ) -> Counter[tuple[Any, ...]]:
     """Build the independent physical-wave manifest from the stage ledger.
 
-    The stage ledger is intentionally treated as the source of truth for
-    ``cluster/batch/layer/replica/stage/request-runtime`` scope.  It does not
-    currently persist the runtime EP identity suffix (iteration, schedule
-    epoch, AF stage, or operation id), so those fields are validated
-    structurally from the trace parser but are never used to manufacture the
-    expected manifest.  A trace with a different identity suffix therefore
-    cannot create a new expected wave; it is reported as a duplicate/extra
-    physical wave instead.
+    The stage ledger is the independent source of truth for the complete
+    physical wave identity.  In addition to
+    ``cluster/batch/layer/replica/stage/request-runtime`` scope, it must carry
+    the runtime suffix fields (iteration, schedule epoch, AF stage,
+    operation id, and operation kind).  Missing suffix fields are evidence
+    failures; they are never filled from the runtime trace.
 
     Manifest keys are:
 
-    ``(cluster, batch_id, layer_id, replica_id, stage_id, request_epoch_key)``.
+    ``(cluster, batch_id, layer_id, replica_id, stage_id, request_epoch_key,
+    iteration_key, schedule_epoch, afd_stage_idx, operation_id,
+    operation_kind)``.
 
     One key is expected for each full-stage ledger row and each declared MoE
     layer.  Duplicate or missing pipeline-stage rows are hard evidence errors.
@@ -3681,7 +3754,13 @@ def _read_ep_expected_wave_manifest(
     expected_clusters = set(_expected_ep_roles(case))
     grouped: dict[
         tuple[str, int, int],
-        dict[int, tuple[tuple[int, int], ...]],
+        dict[
+            int,
+            tuple[
+                tuple[tuple[int, int], ...],
+                tuple[tuple[int, ...], int, int, int, str],
+            ],
+        ],
     ] = {}
 
     for line_number, line in enumerate(
@@ -3741,6 +3820,7 @@ def _read_ep_expected_wave_manifest(
             normalized_ids,
             request_epochs,
         )
+        identity = _parse_stage_ledger_identity(row, path=path, line_number=line_number)
         group_key = (cluster, replica_id, batch_id)
         stage_payloads = grouped.setdefault(group_key, {})
         if stage_id in stage_payloads:
@@ -3749,7 +3829,7 @@ def _read_ep_expected_wave_manifest(
                 f"cluster={cluster} replica={replica_id} batch={batch_id} "
                 f"stage={stage_id}"
             )
-        stage_payloads[stage_id] = request_epoch_key
+        stage_payloads[stage_id] = (request_epoch_key, identity)
 
     expected_stage_ids = set(range(int(case.pipeline_stages)))
     manifest: Counter[tuple[Any, ...]] = Counter()
@@ -3764,7 +3844,7 @@ def _read_ep_expected_wave_manifest(
                 f"expected={sorted(expected_stage_ids)} "
                 f"actual={sorted(actual_stage_ids)}"
             )
-        request_epoch_keys = set(stage_payloads.values())
+        request_epoch_keys = {payload[0] for payload in stage_payloads.values()}
         if len(request_epoch_keys) != 1:
             raise ValueError(
                 "EP expected wave manifest request identity differs across "
@@ -3772,6 +3852,14 @@ def _read_ep_expected_wave_manifest(
                 f"batch={batch_id}"
             )
         request_epoch_key = next(iter(request_epoch_keys))
+        stage_identities = {payload[1] for payload in stage_payloads.values()}
+        if len(stage_identities) != 1:
+            raise ValueError(
+                "EP expected wave manifest runtime identity differs across "
+                f"pipeline stages cluster={cluster} replica={replica_id} "
+                f"batch={batch_id}"
+            )
+        identity = next(iter(stage_identities))
         for stage_id in sorted(stage_payloads):
             if case.num_layers % case.pipeline_stages != 0:
                 raise ValueError(
@@ -3797,6 +3885,11 @@ def _read_ep_expected_wave_manifest(
                         replica_id,
                         stage_id,
                         request_epoch_key,
+                        identity[0],
+                        identity[1],
+                        identity[2],
+                        identity[3],
+                        identity[4],
                     )
                 ] += 1
     if not manifest:
@@ -3807,7 +3900,7 @@ def _read_ep_expected_wave_manifest(
 
 
 def _ep_wave_manifest_key(record: Mapping[str, Any]) -> tuple[Any, ...]:
-    """Return the independent physical scope key for one parsed EP record."""
+    """Return the complete independent physical scope key for one EP record."""
 
     identity = record.get("trace_identity")
     if identity is None:
@@ -3823,6 +3916,11 @@ def _ep_wave_manifest_key(record: Mapping[str, Any]) -> tuple[Any, ...]:
         int(identity["replica_id"]),
         int(identity["stage_id"]),
         request_epoch_key,
+        tuple(identity["iteration_ids"]),
+        int(identity["schedule_epoch"]),
+        int(identity["afd_stage_idx"]),
+        int(identity["operation_id"]),
+        str(identity["operation_kind"]),
     )
 
 
@@ -3879,6 +3977,41 @@ def _compare_ep_wave_manifest(
         for key, count in observed_counter.items()
         if count > expected_counter.get(key, 0)
     }
+    identity_field_names = (
+        "iteration_ids",
+        "schedule_epoch",
+        "afd_stage_idx",
+        "operation_id",
+        "operation_kind",
+    )
+    for expected_key in missing:
+        matching_extra = next(
+            (
+                extra_key
+                for extra_key in extra
+                if len(extra_key) >= 6
+                and len(expected_key) >= 6
+                and extra_key[:6] == expected_key[:6]
+            ),
+            None,
+        )
+        if matching_extra is None:
+            continue
+        changed_fields = [
+            field_name
+            for field_name, expected_value, actual_value in zip(
+                identity_field_names,
+                expected_key[6:11],
+                matching_extra[6:11],
+            )
+            if expected_value != actual_value
+        ]
+        if changed_fields:
+            errors.append(
+                "EP expected wave identity mismatch "
+                f"stream={stream_name} fields={changed_fields} "
+                f"expected={expected_key[6:11]} actual={matching_extra[6:11]}"
+            )
     if missing:
         errors.append(
             "EP expected wave manifest missing "
@@ -4322,6 +4455,157 @@ def _parse_ep_workload_records(text: str) -> list[dict[str, Any]]:
     return records
 
 
+def _parse_routing_snapshot_records(text: str) -> list[dict[str, Any]]:
+    """Parse exact predictor-owned routing snapshots from runtime logs."""
+
+    records: list[dict[str, Any]] = []
+    for line in text.splitlines():
+        if _ROUTING_SNAPSHOT_MARKER not in line:
+            continue
+        payload_text = line.partition(_ROUTING_SNAPSHOT_MARKER)[2].strip()
+        try:
+            payload = json.loads(payload_text)
+        except json.JSONDecodeError as exc:
+            raise ValueError("invalid ROUTING-SNAPSHOT JSON payload") from exc
+        if not isinstance(payload, Mapping):
+            raise ValueError("ROUTING-SNAPSHOT payload must be an object")
+        if payload.get("schema_version") != 1:
+            raise ValueError("ROUTING-SNAPSHOT schema_version must be 1")
+        cluster = str(payload.get("cluster", "")).strip().upper()
+        if not cluster:
+            raise ValueError("ROUTING-SNAPSHOT cluster is missing")
+        raw_details = payload.get("routing_details")
+        if not isinstance(raw_details, Mapping) or not raw_details:
+            raise ValueError("ROUTING-SNAPSHOT routing_details is missing")
+        normalized: dict[int, dict[int, dict[int, float]]] = {}
+        for raw_replica_id, raw_layers in raw_details.items():
+            try:
+                replica_id = int(raw_replica_id)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    "ROUTING-SNAPSHOT replica IDs must be integers"
+                ) from exc
+            if replica_id < 0 or not isinstance(raw_layers, Mapping):
+                raise ValueError("ROUTING-SNAPSHOT replica map is invalid")
+            normalized_layers: dict[int, dict[int, float]] = {}
+            for raw_layer_id, raw_experts in raw_layers.items():
+                try:
+                    layer_id = int(raw_layer_id)
+                except (TypeError, ValueError) as exc:
+                    raise ValueError(
+                        "ROUTING-SNAPSHOT layer IDs must be integers"
+                    ) from exc
+                if layer_id < 0 or not isinstance(raw_experts, Mapping):
+                    raise ValueError("ROUTING-SNAPSHOT layer map is invalid")
+                normalized_experts: dict[int, float] = {}
+                for raw_expert_id, raw_ratio in raw_experts.items():
+                    try:
+                        expert_id = int(raw_expert_id)
+                        ratio = float(raw_ratio)
+                    except (TypeError, ValueError) as exc:
+                        raise ValueError(
+                            "ROUTING-SNAPSHOT expert entries are invalid"
+                        ) from exc
+                    if expert_id < 0 or not math.isfinite(ratio) or ratio < 0.0:
+                        raise ValueError("ROUTING-SNAPSHOT ratios are invalid")
+                    normalized_experts[expert_id] = ratio
+                if not normalized_experts or not math.isclose(
+                    sum(normalized_experts.values()),
+                    1.0,
+                    rel_tol=0.0,
+                    abs_tol=1e-12,
+                ):
+                    raise ValueError(
+                        "ROUTING-SNAPSHOT layer ratios must sum to one"
+                    )
+                normalized_layers[layer_id] = normalized_experts
+            normalized[replica_id] = normalized_layers
+        records.append({"cluster": cluster, "routing_details": normalized})
+    return records
+
+
+def _validate_routing_snapshot_records(
+    case: MatrixCase,
+    *,
+    snapshot_records: Sequence[Mapping[str, Any]],
+    expected_snapshot: Sequence[Mapping[str, Any]],
+) -> list[str]:
+    """Compare runtime routing_details with the independent sidecar snapshot."""
+
+    errors: list[str] = []
+    expected_by_layer = {
+        int(entry["layer_id"]): {
+            int(expert_id): float(ratio)
+            for expert_id, ratio in zip(
+                range(int(case.total_experts)),
+                entry["ratios"],
+            )
+        }
+        for entry in expected_snapshot
+    }
+    expected_roles = set(_expected_ep_roles(case))
+    records_by_cluster: dict[str, list[Mapping[str, Any]]] = {}
+    for record in snapshot_records:
+        cluster = str(record.get("cluster", "")).upper()
+        if cluster not in expected_roles:
+            errors.append(
+                "routing snapshot emitted for unexpected cluster "
+                f"cluster={cluster}"
+            )
+            continue
+        records_by_cluster.setdefault(cluster, []).append(record)
+
+    for cluster in sorted(expected_roles):
+        records = records_by_cluster.get(cluster, [])
+        if not records:
+            errors.append(
+                "missing runtime routing snapshot for expected cluster "
+                f"cluster={cluster}"
+            )
+            continue
+        for record in records:
+            details = record.get("routing_details")
+            if not isinstance(details, Mapping):
+                errors.append(
+                    f"routing snapshot details are invalid cluster={cluster}"
+                )
+                continue
+            for replica_id, per_layer in details.items():
+                for layer_id in sorted(expected_by_layer):
+                    actual = per_layer.get(layer_id)
+                    expected = expected_by_layer[layer_id]
+                    if actual is None:
+                        errors.append(
+                            "runtime routing snapshot is missing MoE layer "
+                            f"cluster={cluster} replica={replica_id} "
+                            f"layer={layer_id}"
+                        )
+                        continue
+                    if set(actual) != set(expected):
+                        errors.append(
+                            "runtime routing snapshot expert domain mismatch "
+                            f"cluster={cluster} replica={replica_id} "
+                            f"layer={layer_id} expected={sorted(expected)} "
+                            f"actual={sorted(actual)}"
+                        )
+                        continue
+                    for expert_id, expected_ratio in expected.items():
+                        actual_ratio = float(actual[expert_id])
+                        if not math.isclose(
+                            actual_ratio,
+                            expected_ratio,
+                            rel_tol=0.0,
+                            abs_tol=1e-12,
+                        ):
+                            errors.append(
+                                "runtime routing snapshot ratio mismatch "
+                                f"cluster={cluster} replica={replica_id} "
+                                f"layer={layer_id} expert={expert_id} "
+                                f"expected={expected_ratio} actual={actual_ratio}"
+                            )
+    return errors
+
+
 def _expected_ep_size_for_cluster(case: MatrixCase, cluster: str) -> int | None:
     """Return the EP cardinality for one physical cluster role."""
 
@@ -4369,6 +4653,7 @@ def _parse_ep_trace_identity(
         "schedule_epoch",
         "afd_stage_idx",
         "operation_id",
+        "operation_kind",
     )
     values = [groups.get(field) for field in fields]
     if all(value is None for value in values):
@@ -4427,6 +4712,7 @@ def _parse_ep_trace_identity(
         "schedule_epoch": int(str(groups["schedule_epoch"])),
         "afd_stage_idx": int(str(groups["afd_stage_idx"])),
         "operation_id": int(str(groups["operation_id"])),
+        "operation_kind": str(groups["operation_kind"]).strip(),
     }
     if identity["replica_id"] < 0 or identity["stage_id"] < 0:
         raise ValueError(
@@ -4441,6 +4727,10 @@ def _parse_ep_trace_identity(
         raise ValueError(
             "structured EP wave identity afd_stage_idx must be >= -1"
         )
+    if not identity["operation_kind"]:
+        raise ValueError(
+            "structured EP wave identity operation_kind must be non-empty"
+        )
     return identity
 
 
@@ -4454,6 +4744,7 @@ def _ep_identity_key(identity: Mapping[str, Any]) -> tuple[Any, ...]:
         int(identity["schedule_epoch"]),
         int(identity["afd_stage_idx"]),
         int(identity["operation_id"]),
+        str(identity["operation_kind"]),
     )
 
 
@@ -4599,7 +4890,11 @@ def _ep_event_positions(
     return positions
 
 
-def _parse_ep_barrier_records(text: str) -> list[dict[str, Any]]:
+def _parse_ep_barrier_records(
+    text: str,
+    *,
+    require_start_time: bool = False,
+) -> list[dict[str, Any]]:
     """Parse completed per-layer EP barrier records from a simulator log."""
 
     records: list[dict[str, Any]] = []
@@ -4625,10 +4920,18 @@ def _parse_ep_barrier_records(text: str) -> list[dict[str, Any]]:
             raise ValueError("EP barrier arrived_ep_ids must be unique")
         if sorted(expected_ep_ids) != sorted(arrived_ep_ids):
             raise ValueError("EP barrier arrived_ep_ids must equal expected_ep_ids")
+        start_time_raw = groups.get("barrier_start_time_s")
+        if require_start_time and start_time_raw is None:
+            raise ValueError(
+                "EP barrier DES timestamp evidence requires "
+                "barrier_start_time_s"
+            )
         values = {
             name: float(groups[name])
             for name in ("max_lane_time_ms", "barrier_time_ms", "barrier_end_time_s")
         }
+        if start_time_raw is not None:
+            values["barrier_start_time_s"] = float(start_time_raw)
         if any(not math.isfinite(value) or value < 0 for value in values.values()):
             raise ValueError("EP barrier times must be finite and non-negative")
         if values["barrier_time_ms"] < values["max_lane_time_ms"]:
@@ -4651,6 +4954,41 @@ def _parse_ep_barrier_records(text: str) -> list[dict[str, Any]]:
             record["trace_identity"] = identity
         records.append(record)
     return records
+
+
+def _validate_ep_barrier_time_equations(
+    records: Sequence[Mapping[str, Any]],
+) -> list[str]:
+    """Check DES barrier end timestamps against independently logged starts."""
+
+    errors: list[str] = []
+    for record in records:
+        start_time_s = record.get("barrier_start_time_s")
+        if start_time_s is None:
+            errors.append(
+                "EP barrier DES timestamp evidence is missing "
+                f"barrier_start_time_s cluster={record['cluster']} "
+                f"batch_id={record['batch_id']} layer={record['layer_id']} "
+                f"phase={record['phase']}"
+            )
+            continue
+        expected_end_time_s = float(start_time_s) + float(
+            record["barrier_time_ms"]
+        ) * 1e-3
+        if not math.isclose(
+            float(record["barrier_end_time_s"]),
+            expected_end_time_s,
+            rel_tol=0.0,
+            abs_tol=1e-9,
+        ):
+            errors.append(
+                "EP barrier DES timestamp equation mismatch "
+                f"cluster={record['cluster']} batch_id={record['batch_id']} "
+                f"layer={record['layer_id']} phase={record['phase']} "
+                f"expected_end_time_s={expected_end_time_s} "
+                f"actual_end_time_s={record['barrier_end_time_s']}"
+            )
+    return errors
 
 
 def _parse_ep_conservation_records(text: str) -> list[dict[str, Any]]:
@@ -4807,7 +5145,9 @@ def check_case_log(
     *,
     strict_layers: bool = False,
     require_independent_token_oracle: bool = False,
+    require_routing_details_oracle: bool = False,
     require_operation_layer_oracle: bool = False,
+    require_barrier_time_oracle: bool = False,
     expected_source_provenance: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Check workflow evidence and numeric metrics for one completed run."""
@@ -4895,10 +5235,15 @@ def check_case_log(
         ep_workload_records = []
         errors.append(f"invalid EP workload trace: {exc}")
     try:
-        ep_barrier_records = _parse_ep_barrier_records(text)
+        ep_barrier_records = _parse_ep_barrier_records(
+            text,
+            require_start_time=require_barrier_time_oracle,
+        )
     except ValueError as exc:
         ep_barrier_records = []
         errors.append(f"invalid EP barrier trace: {exc}")
+    if require_barrier_time_oracle and ep_barrier_records:
+        errors.extend(_validate_ep_barrier_time_equations(ep_barrier_records))
     try:
         ep_conservation_records = _parse_ep_conservation_records(text)
     except ValueError as exc:
@@ -4906,6 +5251,7 @@ def check_case_log(
         errors.append(f"invalid EP conservation trace: {exc}")
     independent_token_oracle: dict[tuple[Any, ...], int] | None = None
     routing_input_oracle: dict[str, Any] | None = None
+    routing_snapshot_records: list[dict[str, Any]] = []
     expected_request_identity_sets: (
         dict[tuple[str, int], set[tuple[int, int]]] | None
     ) = None
@@ -4934,6 +5280,25 @@ def check_case_log(
             )
         except (FileNotFoundError, OSError, ValueError) as exc:
             errors.append(f"independent EP token oracle invalid: {exc}")
+    if strict_layers and case.is_moe and require_routing_details_oracle:
+        try:
+            routing_snapshot_records = _parse_routing_snapshot_records(text)
+            if routing_input_oracle is None:
+                raise ValueError(
+                    "routing snapshot validation requires the independent "
+                    "routing input oracle"
+                )
+            errors.extend(
+                _validate_routing_snapshot_records(
+                    case,
+                    snapshot_records=routing_snapshot_records,
+                    expected_snapshot=routing_input_oracle[
+                        "routing_details_snapshot"
+                    ],
+                )
+            )
+        except ValueError as exc:
+            errors.append(f"routing snapshot oracle invalid: {exc}")
     if strict_layers and case.is_moe:
         errors.extend(
             _validate_ep_trace_identities(
@@ -5610,6 +5975,7 @@ def check_case_log(
             if independent_token_oracle is None
             else len(independent_token_oracle)
         ),
+        "routing_snapshot_records": len(routing_snapshot_records),
         "numeric_metric_count": numeric_metric_count,
         "ttft_mean_ms": _stat_value("ttft_statistics"),
         "tpot_mean_ms": _stat_value("tpot_statistics"),
@@ -6654,7 +7020,9 @@ def _run_case(
             metrics_dir,
             strict_layers=True,
             require_independent_token_oracle=True,
+            require_routing_details_oracle=True,
             require_operation_layer_oracle=True,
+            require_barrier_time_oracle=True,
             expected_source_provenance=source_provenance,
         )
         metrics_path = str(metrics_dir)

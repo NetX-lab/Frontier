@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from frontier.entities import EPBatchGroup, Request
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
     SklearnDisaggregationExecutionTimePredictor,
 )
@@ -217,6 +218,44 @@ def test_disaggregation_grouped_gemm_delegates_with_lane_batch(monkeypatch) -> N
     ) == expected
 
 
+def test_disaggregation_moe_tp_allreduce_uses_lane_routed_tokens() -> None:
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 0, 3)],
+        num_tokens=[3],
+        replica_id=0,
+        ep_id=1,
+        time=0.0,
+        source_batch_ids=[7],
+        per_expert_tokens={2: 0, 3: 3},
+        cluster_type=ClusterType.DECODE,
+        is_moe=True,
+    )
+
+    assert (
+        SklearnDisaggregationExecutionTimePredictor._get_moe_tp_routed_tokens(
+            lane,
+            ClusterType.DECODE,
+        )
+        == 3
+    )
+
+
+def test_disaggregation_moe_tp_allreduce_keeps_source_tokens_for_shared_batch() -> None:
+    batch = SimpleNamespace(
+        get_effective_total_tokens_rounded=lambda cluster_type: (
+            8 if cluster_type is ClusterType.PREFILL else 5
+        )
+    )
+
+    assert (
+        SklearnDisaggregationExecutionTimePredictor._get_moe_tp_routed_tokens(
+            batch,
+            ClusterType.PREFILL,
+        )
+        == 8
+    )
+
+
 def test_disaggregation_dense_layer_uses_shared_expert_profile_rows() -> None:
     predictor = _DummyDisaggregationPredictor.__new__(_DummyDisaggregationPredictor)
     predictor._enable_dummy_mode = False
@@ -333,6 +372,7 @@ def test_pdd_decode_post_attention_prediction_skips_attention_lookup() -> None:
         result.get_single_layer_moe_dispatch_time(),
         result.get_single_layer_moe_post_dispatch_compute_time(),
         result.get_single_layer_moe_combine_time(),
+        result.get_single_layer_moe_post_combine_time(),
     )
     assert sum(phases) == pytest.approx(
         result.get_single_layer_post_attention_time()

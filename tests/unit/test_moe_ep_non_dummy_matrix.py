@@ -14,12 +14,16 @@ from pathlib import Path
 import pytest
 
 import tests.e2e.moe_ep_non_dummy_matrix as matrix_module
+import frontier.scheduler.cluster_scheduler.base_cluster_scheduler as cluster_scheduler_module
+from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import BaseClusterScheduler
+from frontier.types import ClusterType
 from tests.e2e.moe_ep_non_dummy_matrix import (
     _find_metrics_dir,
     _merge_result_rows,
     _parse_ep_conservation_records,
     _parse_ep_barrier_records,
     _parse_ep_workload_records,
+    _validate_ep_barrier_time_equations,
     _validate_persisted_case_metadata,
     _validate_result_ledger_provenance,
     build_matrix,
@@ -149,7 +153,16 @@ def _prefill_stage_ledger_row(
     request_runtime_epochs: list[int] | None = None,
     cluster_type: str = "MONOLITHIC",
     decode_component_ms: float = 0.0,
+    iteration_ids: list[int] | None = None,
+    schedule_epoch: int = 0,
+    afd_stage_idx: int = -1,
+    operation_id: int | None = None,
+    operation_kind: str = "ep_ffn",
 ) -> dict[str, object]:
+    if iteration_ids is None:
+        iteration_ids = [0] * len(request_ids)
+    if operation_id is None:
+        operation_id = batch_id
     row = {
         "batch_id": batch_id,
         "stage_id": stage_id,
@@ -159,6 +172,11 @@ def _prefill_stage_ledger_row(
         "replica_local_id": None,
         "request_ids": request_ids,
         "request_num_tokens": request_num_tokens,
+        "iteration_ids": iteration_ids,
+        "schedule_epoch": schedule_epoch,
+        "afd_stage_idx": afd_stage_idx,
+        "operation_id": operation_id,
+        "operation_kind": operation_kind,
         "execution_time": {
             "component_ledger_ms": {
                 "attention_prefill_execution_time": 1.0,
@@ -281,11 +299,13 @@ def _strict_ep_log_from_events(
 
 
 def _test_ep_identity_suffix(batch_id: int, layer_id: int) -> str:
-    operation_id = batch_id * 1000 + layer_id
+    del layer_id
+    operation_id = batch_id
     return (
         ", replica_id=0, stage_id=0, request_ids=[0], "
         "request_runtime_epochs=[0], iteration_ids=[0], "
-        f"schedule_epoch=0, afd_stage_idx=-1, operation_id={operation_id}"
+        f"schedule_epoch=0, afd_stage_idx=-1, operation_id={operation_id}, "
+        "operation_kind=ep_ffn"
     )
 
 
@@ -445,6 +465,100 @@ def _independent_ep_wave_fixture(
         encoding="utf-8",
     )
     return case, log_path, metrics_dir
+
+
+def _routing_snapshot_line(case: object, *, mutate_first_ratio: bool = False) -> str:
+    snapshot = matrix_module._expected_routing_details_snapshot(case)
+    details: dict[str, dict[str, dict[str, float]]] = {"0": {}}
+    for entry in snapshot:
+        ratios = list(entry["ratios"])
+        if mutate_first_ratio and int(entry["layer_id"]) == 0:
+            ratios[0] += 0.01
+            ratios[1] -= 0.01
+        details["0"][str(entry["layer_id"])] = {
+            str(expert_id): float(ratio)
+            for expert_id, ratio in enumerate(ratios)
+        }
+    return (
+        "[ROUTING-SNAPSHOT] "
+        + json.dumps(
+            {
+                "schema_version": 1,
+                "cluster": "MONOLITHIC",
+                "routing_details": details,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+
+
+def test_strict_checker_binds_runtime_routing_snapshot_to_independent_sidecar(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+    log_path.write_text(
+        log_path.read_text(encoding="utf-8")
+        + "\n"
+        + _routing_snapshot_line(case)
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+        require_routing_details_oracle=True,
+    )
+
+    assert result["status"] == "PASS", result["errors"]
+    assert result["routing_snapshot_records"] == 1
+
+
+def test_strict_checker_rejects_mutated_runtime_routing_snapshot(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+    log_path.write_text(
+        log_path.read_text(encoding="utf-8")
+        + "\n"
+        + _routing_snapshot_line(case, mutate_first_ratio=True)
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+        require_routing_details_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert "runtime routing snapshot ratio mismatch" in result["errors"]
+
+
+def test_strict_checker_rejects_missing_runtime_routing_snapshot(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+        require_routing_details_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert "missing runtime routing snapshot" in result["errors"]
 
 
 def test_matrix_has_required_cross_architecture_coverage() -> None:
@@ -3212,6 +3326,45 @@ def test_ep_barrier_parser_accepts_logger_prefix() -> None:
     ]
 
 
+def test_ep_barrier_log_precision_preserves_timestamp_equation(monkeypatch) -> None:
+    messages: list[str] = []
+
+    def capture_info(message: str, *args: object) -> None:
+        messages.append(message % args)
+
+    monkeypatch.setattr(cluster_scheduler_module.logger, "info", capture_info)
+    start_time_s = 0.0001956
+    barrier_time_ms = 0.147713
+    BaseClusterScheduler._log_ep_barrier_trace(
+        cluster_type=ClusterType.PREFILL,
+        batch_id=7,
+        layer_id=3,
+        phase="dispatch",
+        expected_ep_ids=(0, 1),
+        arrived_ep_ids=(0, 1),
+        max_lane_time_ms=0.146522,
+        barrier_time_ms=barrier_time_ms,
+        barrier_start_time_s=start_time_s,
+        barrier_end_time_s=start_time_s + barrier_time_ms * 1e-3,
+        trace_identity={
+            "replica_id": 0,
+            "stage_id": 0,
+            "request_ids": (11,),
+            "request_runtime_epochs": (0,),
+            "iteration_ids": (0,),
+            "schedule_epoch": 1,
+            "afd_stage_idx": -1,
+            "operation_id": 7,
+            "operation_kind": "ep_ffn",
+        },
+    )
+
+    assert len(messages) == 1
+    records = _parse_ep_barrier_records(messages[0], require_start_time=True)
+    assert len(records) == 1
+    assert _validate_ep_barrier_time_equations(records) == []
+
+
 def test_ep_conservation_parser_accepts_logger_prefix() -> None:
     records = _parse_ep_conservation_records(
         "INFO 12:00:00 scheduler.py:1] "
@@ -4483,6 +4636,142 @@ def test_strict_checker_rejects_duplicate_iteration_identity(
         "request/epoch/iteration lists must have equal lengths"
         in result["errors"]
     )
+
+
+@pytest.mark.parametrize(
+    ("field", "replacement", "identity_field"),
+    [
+        ("iteration_ids=[0]", "iteration_ids=[7]", "iteration_ids"),
+        ("schedule_epoch=0", "schedule_epoch=9", "schedule_epoch"),
+        ("afd_stage_idx=-1", "afd_stage_idx=4", "afd_stage_idx"),
+        ("operation_id=10", "operation_id=999999", "operation_id"),
+    ],
+)
+def test_strict_checker_rejects_common_mode_identity_mutation(
+    tmp_path: Path,
+    field: str,
+    replacement: str,
+    identity_field: str,
+) -> None:
+    """Runtime identity must match the independent stage-ledger identity."""
+
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+    original = log_path.read_text(encoding="utf-8")
+    assert field in original
+    log_path.write_text(
+        original.replace(field, replacement),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+    )
+
+    assert result["status"] == "FAIL", result["errors"]
+    assert f"fields=['{identity_field}']" in result["errors"]
+
+
+def test_strict_checker_rejects_operation_kind_mismatch(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+    ledger_path = metrics_dir / "frontier_stage_batch_ledger.jsonl"
+    ledger = json.loads(ledger_path.read_text(encoding="utf-8").splitlines()[0])
+    ledger["operation_kind"] = "attention"
+    ledger_path.write_text(json.dumps(ledger) + "\n", encoding="utf-8")
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+    )
+
+    assert result["status"] == "FAIL", result["errors"]
+    assert "fields=['operation_kind']" in result["errors"]
+
+
+def _add_barrier_start_times(log_text: str) -> str:
+    return (
+        log_text.replace(
+            "barrier_end_time_s=0.001",
+            "barrier_start_time_s=0.000, barrier_end_time_s=0.001",
+        )
+        .replace(
+            "barrier_end_time_s=0.002",
+            "barrier_start_time_s=0.001, barrier_end_time_s=0.002",
+        )
+    )
+
+
+def test_strict_checker_accepts_barrier_des_timestamp_equations(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+    log_path.write_text(
+        _add_barrier_start_times(log_path.read_text(encoding="utf-8")),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+        require_barrier_time_oracle=True,
+    )
+
+    assert result["status"] == "PASS", result["errors"]
+
+
+def test_strict_checker_rejects_missing_barrier_des_start_time(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+        require_barrier_time_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert "barrier_start_time_s" in result["errors"]
+
+
+def test_strict_checker_rejects_mutated_barrier_des_end_time(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+    log_text = _add_barrier_start_times(log_path.read_text(encoding="utf-8"))
+    log_path.write_text(
+        log_text.replace(
+            "barrier_start_time_s=0.001, barrier_end_time_s=0.002",
+            "barrier_start_time_s=0.001, barrier_end_time_s=99.000",
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+        require_barrier_time_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert "DES timestamp equation mismatch" in result["errors"]
 
 
 def test_strict_checker_rejects_cross_replica_wave_identity(

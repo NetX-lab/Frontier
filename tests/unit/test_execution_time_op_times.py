@@ -346,8 +346,69 @@ def test_execution_time_moe_phases_conserve_complete_post_attention_time():
         execution_time.get_single_layer_moe_dispatch_time(),
         execution_time.get_single_layer_moe_post_dispatch_compute_time(),
         execution_time.get_single_layer_moe_combine_time(),
+        execution_time.get_single_layer_moe_post_combine_time(),
     )
 
+    assert phases == pytest.approx(
+        (
+            553.0,
+            1.25,
+            111.0,
+            3.75,
+            147.0,
+        )
+    )
+    assert sum(phases) == pytest.approx(
+        execution_time.get_single_layer_post_attention_time()
+    )
+
+
+def test_zero_routed_lane_has_zero_routed_expert_compute():
+    execution_time = ExecutionTime(
+        **_base_execution_kwargs(
+            num_layers_per_pipeline_stage=1,
+            is_moe=True,
+            attention_rope_execution_time=0.0,
+            attention_kv_cache_save_execution_time=0.0,
+            attention_decode_execution_time=0.0,
+            attention_prefill_execution_time=0.0,
+            attention_layer_pre_proj_execution_time=0.0,
+            attention_layer_post_proj_execution_time=0.0,
+            attn_norm_time=0.0,
+            mlp_norm_time=1.0,
+            add_attn_residual_time=2.0,
+            add_ffn_residual_time=3.0,
+            tensor_parallel_communication_time=0.0,
+            pipeline_parallel_communication_time=0.0,
+            expert_parallel_communication_time=0.0,
+            moe_grouped_gemm_time=0.0,
+            moe_gating_linear_time=0.0,
+            moe_gating_routing_topk_time=0.0,
+            moe_shuffling_time=0.0,
+            mlp_layer_up_proj_execution_time=0.0,
+            mlp_layer_down_proj_execution_time=0.0,
+            mlp_layer_act_execution_time=0.0,
+            attn_tensor_parallel_allreduce_time=0.0,
+            moe_tensor_parallel_allreduce_time=0.0,
+            communication_operator_times=CommunicationOperatorTimes(
+                {
+                    "expert_parallel_alltoall_dispatch": 0.0,
+                    "expert_parallel_alltoall_combine": 0.0,
+                }
+            ),
+        )
+    )
+
+    assert execution_time.moe_grouped_gemm_time == pytest.approx(0.0)
+    assert execution_time.get_single_layer_post_attention_time() == pytest.approx(6.0)
+    phases = (
+        execution_time.get_single_layer_moe_pre_dispatch_time(),
+        execution_time.get_single_layer_moe_dispatch_time(),
+        execution_time.get_single_layer_moe_post_dispatch_compute_time(),
+        execution_time.get_single_layer_moe_combine_time(),
+        execution_time.get_single_layer_moe_post_combine_time(),
+    )
+    assert phases == pytest.approx((3.0, 0.0, 0.0, 0.0, 3.0))
     assert sum(phases) == pytest.approx(
         execution_time.get_single_layer_post_attention_time()
     )

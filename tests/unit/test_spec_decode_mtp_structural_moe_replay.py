@@ -31,12 +31,14 @@ class _LaneExecutionTime:
         dispatch_ms: float,
         routed_compute_ms: float,
         combine_ms: float,
+        post_combine_ms: float,
     ) -> None:
         self._phase_times = (
             pre_dispatch_ms,
             dispatch_ms,
             routed_compute_ms,
             combine_ms,
+            post_combine_ms,
         )
 
     def get_single_layer_moe_pre_dispatch_time(self) -> float:
@@ -50,6 +52,9 @@ class _LaneExecutionTime:
 
     def get_single_layer_moe_combine_time(self) -> float:
         return self._phase_times[3]
+
+    def get_single_layer_moe_post_combine_time(self) -> float:
+        return self._phase_times[4]
 
     def get_single_layer_post_attention_time(self) -> float:
         return sum(self._phase_times)
@@ -149,14 +154,15 @@ def test_mtp_structural_moe_decoder_replays_local_ep_lanes_and_barriers() -> Non
         lane_calls.append(batch)
         assert batch.moe_pre_routing_effective_total_tokens == 4
         phase_times_by_ep = {
-            0: (2.0, 1.0, 4.0, 1.0),
-            1: (3.0, 2.0, 1.0, 4.0),
+            0: (2.0, 1.0, 4.0, 1.0, 5.0),
+            1: (3.0, 2.0, 1.0, 4.0, 6.0),
         }
         return _LaneExecutionTime(
             pre_dispatch_ms=phase_times_by_ep[batch.ep_id][0],
             dispatch_ms=phase_times_by_ep[batch.ep_id][1],
             routed_compute_ms=phase_times_by_ep[batch.ep_id][2],
             combine_ms=phase_times_by_ep[batch.ep_id][3],
+            post_combine_ms=phase_times_by_ep[batch.ep_id][4],
         )
 
     predictor.predict_stage_execution_time = _predict_stage_execution_time
@@ -166,7 +172,7 @@ def test_mtp_structural_moe_decoder_replays_local_ep_lanes_and_barriers() -> Non
         batch=source_batch,
     )
 
-    assert result_ms == pytest.approx(23.0)
+    assert result_ms == pytest.approx(29.0)
     assert [lane.ep_id for lane in lane_calls] == [0, 1]
     assert [lane.per_expert_tokens for lane in lane_calls] == [
         {0: 1, 1: 1},

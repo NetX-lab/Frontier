@@ -171,6 +171,23 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             routing_details: Dict[int, Dict[int, Dict[int, float]]] = (
                 self._simulate_and_store_routing(target_cluster_type)
             )
+            target_replica_config = self._get_cluster_replica_config(
+                target_cluster_type
+            )
+            if (
+                getattr(target_replica_config.model_config, "is_moe", None)
+                is False
+            ):
+                if routing_details:
+                    raise ValueError(
+                        f"Dense {target_cluster_type.name} predictor produced "
+                        "unexpected MoE routing details"
+                    )
+            else:
+                self._emit_routing_details_snapshot(
+                    target_cluster_type,
+                    routing_details,
+                )
 
             if target_cluster_type == ClusterType.PREFILL:
                 self._prefill_routing_details = routing_details
@@ -1106,6 +1123,79 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             for op_name, phase_time_ms in phase_times.items()
         }
 
+    @staticmethod
+    def _get_moe_tp_routed_tokens(
+        batch: Batch,
+        cluster_type: ClusterType,
+    ) -> int:
+        """Return the payload token count for a routed MoE-TP allreduce.
+
+        Shared-domain batches use their source compute-effective token count.
+        Synthetic EP lane batches must instead use the lane-local routed
+        assignment count; their pre-routing metadata describes shared work and
+        must not size the post-dispatch collective.
+        """
+        if isinstance(batch, EPBatchGroup):
+            per_expert_tokens = getattr(batch, "per_expert_tokens", None)
+            if not isinstance(per_expert_tokens, dict):
+                raise ValueError(
+                    "MoE TP allreduce EP lane requires an explicit "
+                    "per_expert_tokens dictionary"
+                )
+            routed_tokens = 0
+            for expert_id, token_count in per_expert_tokens.items():
+                if type(expert_id) is not int or expert_id < 0:
+                    raise ValueError(
+                        "MoE TP allreduce expert IDs must be exact "
+                        "non-negative integers"
+                    )
+                if type(token_count) is not int or token_count < 0:
+                    raise ValueError(
+                        "MoE TP allreduce token counts must be exact "
+                        "non-negative integers"
+                    )
+                routed_tokens += token_count
+            return routed_tokens
+
+        effective_tokens = int(
+            batch.get_effective_total_tokens_rounded(cluster_type)
+        )
+        if effective_tokens < 0:
+            raise ValueError(
+                "MoE TP allreduce effective token count must be non-negative, "
+                f"got {effective_tokens}"
+            )
+        return effective_tokens
+
+    def _predict_moe_tp_allreduce_time(
+        self,
+        *,
+        batch: Batch,
+        cluster_type: ClusterType,
+        cluster_replica_config: ReplicaConfig,
+    ) -> float:
+        """Predict routed MoE-TP allreduce using the correct token domain."""
+        moe_tp_size = int(cluster_replica_config.moe_tensor_parallel_size)
+        if moe_tp_size <= 1:
+            return 0.0
+
+        routed_tokens = self._get_moe_tp_routed_tokens(batch, cluster_type)
+        data_size_bytes = (
+            int(cluster_replica_config.model_config.embedding_dim)
+            * 2
+            * routed_tokens
+        )
+        quant_manager = get_quantization_manager()
+        moe_tp_allreduce_bytes = quant_manager.adjust_tensor_size(
+            "allreduce", data_size_bytes, cluster_type
+        )
+        return self.predict_allreduce_time(
+            data_size_bytes=moe_tp_allreduce_bytes,
+            num_devices=moe_tp_size,
+            cluster_type=cluster_type,
+            comm_domain="MOE_TP",
+        )
+
     def _predict_attention_only_stage_execution_time(
         self,
         batch: Batch,
@@ -1633,9 +1723,15 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 ffn_tp_allgather_time = 0.0
                 share_expert_tp_allreduce_time = 0.0
                 moe_tp_size = cluster_replica_config.moe_tensor_parallel_size
+                moe_tp_allreduce_time = self._predict_moe_tp_allreduce_time(
+                    batch=batch,
+                    cluster_type=cluster_type,
+                    cluster_replica_config=cluster_replica_config,
+                )
                 if architecture_profile.moe_tensor_parallel_allgather_op and moe_tp_size > 1:
-                    # Use compute-effective tokens. AFD paths already include CUDA Graph
-                    # padding in metadata; non-CUDA-Graph paths keep exact token counts.
+                    # Allgather and shared-expert collectives use the source
+                    # batch's pre-routing hidden-state payload. Only the routed
+                    # MoE-TP allreduce above uses lane-local assignments.
                     effective_tokens = batch.get_effective_total_tokens_rounded(
                         cluster_type
                     )
@@ -2054,33 +2150,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 # (communication_time.tensor_parallel_time uses attn_tensor_parallel_size,
                 #  so we need a separate calculation for MoE TP allreduce)
                 moe_tp_size = cluster_replica_config.moe_tensor_parallel_size
-                moe_tp_allreduce_time = 0.0
-                if moe_tp_size > 1:
-                    # Use compute-effective tokens. AFD paths already include CUDA Graph
-                    # padding in metadata; non-CUDA-Graph paths keep exact token counts.
-                    effective_tokens = batch.get_effective_total_tokens_rounded(cluster_type)
-                    data_size_bytes = (
-                        cluster_replica_config.model_config.embedding_dim
-                        * 2
-                        * effective_tokens
-                    )
-                    if data_size_bytes % moe_tp_size != 0:
-                        raise ValueError(
-                            "Profile-declared FFN TP allgather requires per-device tensor bytes to be "
-                            f"divisible by moe_tp_size, got data_size_bytes={data_size_bytes}, "
-                            f"moe_tp_size={moe_tp_size}"
-                        )
-                    per_device_data_size_bytes = data_size_bytes // moe_tp_size
-                    quant_manager = get_quantization_manager()
-                    moe_tp_allreduce_bytes = quant_manager.adjust_tensor_size(
-                        "allreduce", data_size_bytes, cluster_type
-                    )
-                    moe_tp_allreduce_time = self.predict_allreduce_time(
-                        data_size_bytes=moe_tp_allreduce_bytes,
-                        num_devices=moe_tp_size,
-                        cluster_type=cluster_type,
-                        comm_domain="MOE_TP",
-                    )
+                moe_tp_allreduce_time = self._predict_moe_tp_allreduce_time(
+                    batch=batch,
+                    cluster_type=cluster_type,
+                    cluster_replica_config=cluster_replica_config,
+                )
 
                 return ExecutionTime(
                     num_layers_per_pipeline_stage=num_layers,

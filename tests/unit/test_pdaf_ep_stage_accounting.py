@@ -8,7 +8,11 @@ from frontier.config import global_vars
 from frontier.entities import Request
 from frontier.entities.batch import DenseFFNBatchGroup, EPBatchGroup
 from frontier.events.cluster_batch_end_event import ClusterBatchEndEvent
+from frontier.events.ep_alltoall_combine_collective_event import (
+    EPAllToAllCombineCollectiveEvent,
+)
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
+from frontier.model_architectures import ModelArchitectureProfile
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )
@@ -81,6 +85,7 @@ def _combine_batch(
         total_routed_assignments=1,
         execution_time=execution_time,
         activation_bytes=activation_bytes,
+        post_combine_time=0.0,
     )
 
 
@@ -150,6 +155,7 @@ def _run_ep_stage(
     execution_time = SimpleNamespace(
         get_single_layer_moe_pre_dispatch_time=lambda: 2.0,
         get_single_layer_moe_post_dispatch_compute_time=lambda: 1.0,
+        get_single_layer_moe_post_combine_time=lambda: 4.0,
         expert_parallel_communication_time=0.5,
     )
     stage_scheduler = Mock()
@@ -181,6 +187,52 @@ def _run_ep_stage(
     ).handle_event(global_scheduler, Mock())
 
     assert events[0].time == pytest.approx(1.002)
+    assert batch.post_combine_time == pytest.approx(0.004)
+
+
+def test_pdaf_combine_completion_waits_for_post_combine_work() -> None:
+    batches = {ep_id: _batch(ep_id) for ep_id in range(2)}
+    for batch in batches.values():
+        batch.post_combine_time = 0.004
+
+    scheduler = object.__new__(_ConcreteClusterScheduler)
+    scheduler._cluster_type = ClusterType.DECODE_FFN
+    scheduler._config = SimpleNamespace(
+        replica_config=SimpleNamespace(
+            moe_expert_parallel_size=2,
+            model_config=SimpleNamespace(
+                embedding_dim=16,
+                get_model_architecture_profile=ModelArchitectureProfile.generic,
+            ),
+        )
+    )
+    scheduler._predictor = SimpleNamespace(
+        predict_alltoall_time=Mock(return_value=0.5),
+        predict_allgather_time=Mock(return_value=0.5),
+    )
+    scheduler.get_replica = Mock(return_value=SimpleNamespace(ep_size=2))
+    scheduler._ep_allgather_waiting_room = {
+        0: {
+            0: {
+                10: {
+                    "batches": {},
+                    "arrival_times": {},
+                }
+            }
+        }
+    }
+
+    assert scheduler.on_ep_alltoall_combine_ready(
+        1.0, 0, 0, batches[0], 0
+    ) == []
+    events = scheduler.on_ep_alltoall_combine_ready(
+        1.1, 0, 0, batches[1], 1
+    )
+
+    assert len(events) == 1
+    assert isinstance(events[0], EPAllToAllCombineCollectiveEvent)
+    assert events[0]._combine_end_time == pytest.approx(1.1005)
+    assert events[0].time == pytest.approx(1.1045)
 
 
 def test_ep_dispatch_preserves_full_stage_execution_time(
@@ -219,7 +271,7 @@ def test_ep_dispatch_preserves_full_stage_execution_time(
     assert any(
         "[EP-WORKLOAD][DECODE_FFN]" in line
         and "ep_id=0" in line
-        and "lane_compute_ms=3.000000" in line
+        and "lane_compute_ms=7.000000" in line
         and "routed_compute_ms=1.000000" in line
         and "lane_comm_ms=0.500000" in line
         for line in workload_lines

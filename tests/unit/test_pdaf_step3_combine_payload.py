@@ -81,6 +81,7 @@ def _batch(
         total_num_tokens=total_num_tokens,
         replica_id=replica_id,
         ep_id=ep_id,
+        post_combine_time=0.0,
     )
 
 

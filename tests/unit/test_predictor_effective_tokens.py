@@ -127,6 +127,53 @@ def test_sklearn_moe_predictor_uses_logical_tokens_for_local_ep_routed_tokens():
     effective_tokens.assert_not_called()
 
 
+def test_sklearn_moe_predictor_rejects_missing_ep_routed_token_metadata():
+    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
+        DummySklearnMoEExecutionTimePredictor
+    )
+    predictor._router_topk = 2
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 0, 0)],
+        num_tokens=[0],
+        replica_id=0,
+        ep_id=0,
+        time=0.0,
+        source_batch_ids=[1],
+        per_expert_tokens=None,
+        cluster_type=ClusterType.DECODE,
+        is_moe=True,
+    )
+
+    with pytest.raises(ValueError, match="per_expert_tokens is required"):
+        SklearnMoEExecutionTimePredictor._get_local_ep_routed_tokens(
+            predictor, lane
+        )
+
+
+def test_sklearn_moe_predictor_accepts_empty_ep_routed_token_map():
+    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
+        DummySklearnMoEExecutionTimePredictor
+    )
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 0, 0)],
+        num_tokens=[0],
+        replica_id=0,
+        ep_id=0,
+        time=0.0,
+        source_batch_ids=[1],
+        per_expert_tokens={},
+        cluster_type=ClusterType.DECODE,
+        is_moe=True,
+    )
+
+    assert (
+        SklearnMoEExecutionTimePredictor._get_local_ep_routed_tokens(
+            predictor, lane
+        )
+        == 0
+    )
+
+
 def test_sklearn_moe_predictor_materializes_explicit_global_expert_tokens():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor

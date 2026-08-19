@@ -1,4 +1,5 @@
 import logging
+import math
 from typing import List, TYPE_CHECKING
 
 from frontier.events import BaseEvent
@@ -223,8 +224,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     attention_time_ms = execution_time.get_single_layer_attention_time()
 
                     # Diagnostic logging for execution time
-                    import math
-
                     if (
                         math.isnan(attention_time_ms)
                         or math.isinf(attention_time_ms)
@@ -331,8 +330,28 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     expert_comp_time_ms = (
                         execution_time.get_single_layer_moe_post_dispatch_compute_time()
                     )
+                    post_combine_getter = getattr(
+                        execution_time,
+                        "get_single_layer_moe_post_combine_time",
+                        None,
+                    )
+                    if not callable(post_combine_getter):
+                        raise ValueError(
+                            "DECODE_FFN EP prediction is missing explicit "
+                            "post-combine time"
+                        )
+                    post_combine_time_ms = float(post_combine_getter())
+                    if (
+                        not math.isfinite(post_combine_time_ms)
+                        or post_combine_time_ms < 0.0
+                    ):
+                        raise ValueError(
+                            "DECODE_FFN EP post-combine time must be finite and "
+                            f"non-negative, got {post_combine_time_ms!r}"
+                        )
                     pre_dispatch_compute_time = pre_dispatch_compute_time_ms * 1e-3
                     expert_comp_time = expert_comp_time_ms * 1e-3
+                    post_combine_time = post_combine_time_ms * 1e-3
 
                     lane_comm_ms = getattr(
                         execution_time, "expert_parallel_communication_time", None
@@ -342,7 +361,11 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             "DECODE_FFN EP prediction is missing explicit EP communication time"
                         )
                     lane_comm_ms = float(lane_comm_ms)
-                    lane_compute_ms = pre_dispatch_compute_time_ms + expert_comp_time_ms
+                    lane_compute_ms = (
+                        pre_dispatch_compute_time_ms
+                        + expert_comp_time_ms
+                        + post_combine_time_ms
+                    )
                     raw_source_batch_ids = getattr(batch, "source_batch_ids", ())
                     if not isinstance(raw_source_batch_ids, (list, tuple)):
                         raise ValueError(
@@ -399,11 +422,10 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             replica_id=int(self._replica_id),
                             stage_id=int(self._stage_id),
                             operation_id=logical_batch_id,
+                            operation_kind="ep_ffn",
                             afd_stage_idx=getattr(batch, "afd_stage_idx", None),
                         ),
                     )
-
-                    import math
 
                     if (
                         math.isnan(expert_comp_time)
@@ -438,14 +460,16 @@ class ReplicaStageScheduleEvent(BaseEvent):
 
                     # Store expert compute time for use after dispatch collective completes
                     batch.expert_compute_time = expert_comp_time
+                    batch.post_combine_time = post_combine_time
 
                     if debug_logger.isEnabledFor(logging.INFO):
                         debug_logger.info(
                             f"[EXEC_TIME_STAGE] batch_id={batch.id}, "
                             f"stage_execution_time={self._batch_stage.execution_time:.6f}s, "
-                            f"pre_dispatch_compute_time={pre_dispatch_compute_time:.6f}s, "
-                            f"expert_comp_time={expert_comp_time:.6f}s"
-                        )
+                        f"pre_dispatch_compute_time={pre_dispatch_compute_time:.6f}s, "
+                        f"expert_comp_time={expert_comp_time:.6f}s, "
+                        f"post_combine_time={post_combine_time:.6f}s"
+                    )
 
                     # Pre-dispatch compute must complete before EP dispatch collective starts
                     batch.time = self.time + pre_dispatch_compute_time
@@ -505,8 +529,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     attention_time = attention_time_ms * 1e-3
 
                     # Diagnostic logging for execution time
-                    import math
-
                     if (
                         math.isnan(attention_time_ms)
                         or math.isinf(attention_time_ms)
@@ -558,7 +580,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 self._is_last_stage = stage_scheduler.is_last_stage
 
                 # Diagnostic logging for execution time
-                import math
                 # todo: check the component of execution time
                 exec_time = self._batch_stage.execution_time
                 if math.isnan(exec_time) or math.isinf(exec_time) or exec_time < 0:
@@ -701,8 +722,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 self._is_last_stage = stage_scheduler.is_last_stage
 
                 # Diagnostic logging for execution time
-                import math
-
                 exec_time = self._batch_stage.execution_time
                 if math.isnan(exec_time) or math.isinf(exec_time) or exec_time < 0:
                     debug_logger.error(
@@ -773,8 +792,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
         self._is_last_stage = stage_scheduler.is_last_stage
 
         # Diagnostic logging for execution time
-        import math
-
         exec_time = self._batch_stage.execution_time
         if math.isnan(exec_time) or math.isinf(exec_time) or exec_time < 0:
             debug_logger.error(

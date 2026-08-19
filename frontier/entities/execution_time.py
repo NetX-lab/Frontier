@@ -794,17 +794,37 @@ class ExecutionTime(BaseEntity):
         """
         Get the MoE runtime that must complete before EP dispatch begins.
 
-        This covers the explicit FFN-EP workflow segment observed in runtime
-        traces: share-expert ops, MoE gating, then token shuffling.
+        This covers the shared work before routed tokens enter their EP lanes.
         """
         if not isinstance(self._moe_or_mlp_time, MoETime):
             raise ValueError("MoE pre-dispatch time is only available for MoE models")
         return (
-            self._moe_or_mlp_time.share_expert_up_proj_time
-            + self._moe_or_mlp_time.share_expert_down_proj_time
-            + self._moe_or_mlp_time.share_expert_act_time
-            + self._moe_or_mlp_time.moe_gating_time
-            + self._moe_or_mlp_time.moe_shuffling_time
+            self._get_attn_tp_allreduce_time()
+            + self._time_attr_value(
+                "add_attn_residual_time",
+                self._residual_time.add_attn_residual_time,
+            )
+            + self._time_attr_value(
+                "mlp_norm_time",
+                self._moe_or_mlp_time.mlp_norm_time,
+            )
+            + self._get_tensor_parallel_allgather_time()
+            + self._time_attr_value(
+                "share_expert_up_proj_time",
+                self._moe_or_mlp_time.share_expert_up_proj_time,
+            )
+            + self._time_attr_value(
+                "share_expert_act_time",
+                self._moe_or_mlp_time.share_expert_act_time,
+            )
+            + self._time_attr_value(
+                "share_expert_down_proj_time",
+                self._moe_or_mlp_time.share_expert_down_proj_time,
+            )
+            + self._get_share_expert_tensor_parallel_allreduce_time()
+            + self._get_moe_gating_time()
+            + self._get_moe_shuffling_time()
+            + self._get_dp_input_allreduce_time()
         )
 
     def _get_required_moe_ep_phase_time(self, op_name: str) -> float:
@@ -833,34 +853,36 @@ class ExecutionTime(BaseEntity):
 
     def get_single_layer_moe_post_dispatch_compute_time(self) -> float:
         """
-        Get non-collective MoE work after the explicit pre-dispatch segment.
-
-        This is derived from the complete post-attention block so norm,
-        residual, TP, and other modeled components cannot disappear when the
-        scheduler expands one layer into explicit EP phases.
+        Get lane-local routed expert work after EP dispatch.
         """
         if not isinstance(self._moe_or_mlp_time, MoETime):
             raise ValueError(
                 "MoE post-dispatch compute time is only available for MoE models"
             )
-        remaining_time_ms = (
-            self.get_single_layer_post_attention_time()
-            - self.get_single_layer_moe_pre_dispatch_time()
-            - self.get_single_layer_moe_dispatch_time()
-            - self.get_single_layer_moe_combine_time()
+        return (
+            self._get_moe_grouped_gemm_time()
+            + self._get_moe_tp_allreduce_time()
         )
-        if not math.isfinite(remaining_time_ms) or remaining_time_ms < 0:
-            raise ValueError(
-                "MoE phase decomposition leaves invalid post-dispatch work: "
-                f"{remaining_time_ms} ms"
-            )
-        return remaining_time_ms
 
     def get_single_layer_moe_combine_time(self) -> float:
         """Get the exact named EP combine latency for one MoE layer."""
 
         return self._get_required_moe_ep_phase_time(
             "expert_parallel_alltoall_combine"
+        )
+
+    def get_single_layer_moe_post_combine_time(self) -> float:
+        """Get shared work that must complete after EP combine."""
+        if not isinstance(self._moe_or_mlp_time, MoETime):
+            raise ValueError(
+                "MoE post-combine time is only available for MoE models"
+            )
+        return (
+            self._get_dp_output_allreduce_time()
+            + self._time_attr_value(
+                "add_ffn_residual_time",
+                self._residual_time.add_ffn_residual_time,
+            )
         )
 
     def get_single_layer_moe_comm_time(self) -> float:

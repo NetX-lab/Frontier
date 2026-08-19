@@ -36,11 +36,13 @@ class _ExecutionTime:
         dispatch_ms: float,
         routed_compute_ms: float,
         combine_ms: float,
+        post_combine_ms: float = 0.0,
     ) -> None:
         self._pre_dispatch_ms = pre_dispatch_ms
         self._dispatch_ms = dispatch_ms
         self._routed_compute_ms = routed_compute_ms
         self._combine_ms = combine_ms
+        self._post_combine_ms = post_combine_ms
         self.expert_parallel_communication_time = dispatch_ms + combine_ms
         self.pipeline_time = 0.0
         self.total_time = 0.0
@@ -53,6 +55,7 @@ class _ExecutionTime:
             + self._dispatch_ms
             + self._routed_compute_ms
             + self._combine_ms
+            + self._post_combine_ms
         )
 
     def get_single_layer_moe_pre_dispatch_time(self) -> float:
@@ -66,6 +69,9 @@ class _ExecutionTime:
 
     def get_single_layer_moe_combine_time(self) -> float:
         return self._combine_ms
+
+    def get_single_layer_moe_post_combine_time(self) -> float:
+        return self._post_combine_ms
 
     def get_single_layer_attention_time(self) -> float:
         return 2.0
@@ -109,24 +115,28 @@ class _LanePredictor:
                     "dispatch_ms": 0.25,
                     "routed_compute_ms": 1.5,
                     "combine_ms": 0.75,
+                    "post_combine_ms": 2.0,
                 },
                 2: {
                     "pre_dispatch_ms": 0.5,
                     "dispatch_ms": 0.25,
                     "routed_compute_ms": 1.5,
                     "combine_ms": 0.75,
+                    "post_combine_ms": 2.0,
                 },
                 3: {
                     "pre_dispatch_ms": 2.0,
                     "dispatch_ms": 1.0,
                     "routed_compute_ms": 3.0,
                     "combine_ms": 3.0,
+                    "post_combine_ms": 2.0,
                 },
                 4: {
                     "pre_dispatch_ms": 2.0,
                     "dispatch_ms": 1.0,
                     "routed_compute_ms": 3.0,
                     "combine_ms": 3.0,
+                    "post_combine_ms": 2.0,
                 },
             }[sum(per_expert.values())]
         )
@@ -190,12 +200,12 @@ def test_decode_moe_layer_uses_local_ep_wave_and_slowest_lane_barrier(monkeypatc
 
     assert len(events) == 1
     assert isinstance(events[0], DecodeSyncCollectiveEvent)
-    assert events[0].time == pytest.approx(0.019)
+    assert events[0].time == pytest.approx(0.021)
     assert predictor.calls == [
         (2, {0: 1, 1: 0}),
         (2, {2: 0, 3: 3}),
     ]
-    assert batch._decode_ep_wave_lane_times_ms == (2.0, 5.0)
+    assert batch._decode_ep_wave_lane_times_ms == (4.0, 7.0)
     assert not hasattr(batch, "_decode_ep_wave_post_moe_comm_time_s")
     assert batch._stage_admission_ticket.scope == EP_WAVE
     assert batch._stage_admission_scope_history[-1]["participant_ep_ids"] == (0, 1)
@@ -206,7 +216,7 @@ def test_decode_moe_layer_uses_local_ep_wave_and_slowest_lane_barrier(monkeypatc
     assert len(workload_lines) == 2
     assert "[EP-WORKLOAD][DECODE]" in workload_lines[0]
     assert "ep_id=0" in workload_lines[0]
-    assert "lane_compute_ms=2.000000" in workload_lines[0]
+    assert "lane_compute_ms=4.000000" in workload_lines[0]
     assert "routed_compute_ms=1.500000" in workload_lines[0]
     assert "lane_comm_ms=1.000000" in workload_lines[0]
     barrier_lines = [line for line in captured if "[EP-BARRIER]" in line]
@@ -282,7 +292,7 @@ def test_decode_ep_collective_communication_is_added_once() -> None:
         batch=batch,
         layer_id=2,
     )
-    assert wave_events[0].time == pytest.approx(0.019)
+    assert wave_events[0].time == pytest.approx(0.021)
 
     transition_events = scheduler.on_decode_sync_collective(
         time=wave_events[0].time,
@@ -295,5 +305,5 @@ def test_decode_ep_collective_communication_is_added_once() -> None:
     )
 
     assert len(transition_events) == 1
-    assert transition_events[0].time == pytest.approx(0.021)
+    assert transition_events[0].time == pytest.approx(0.023)
     assert batch._stage_admission_ticket.scope == FULL_STAGE_WORLD

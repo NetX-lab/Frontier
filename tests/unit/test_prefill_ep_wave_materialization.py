@@ -37,11 +37,13 @@ class _ExecutionTime:
         dispatch_ms: float,
         routed_compute_ms: float,
         combine_ms: float,
+        post_combine_ms: float = 0.0,
     ) -> None:
         self._pre_dispatch_ms = pre_dispatch_ms
         self._dispatch_ms = dispatch_ms
         self._routed_compute_ms = routed_compute_ms
         self._combine_ms = combine_ms
+        self._post_combine_ms = post_combine_ms
         self.expert_parallel_communication_time = dispatch_ms + combine_ms
 
     def get_single_layer_post_attention_time(self) -> float:
@@ -50,6 +52,7 @@ class _ExecutionTime:
             + self._dispatch_ms
             + self._routed_compute_ms
             + self._combine_ms
+            + self._post_combine_ms
         )
 
     def get_single_layer_moe_pre_dispatch_time(self) -> float:
@@ -63,6 +66,9 @@ class _ExecutionTime:
 
     def get_single_layer_moe_combine_time(self) -> float:
         return self._combine_ms
+
+    def get_single_layer_moe_post_combine_time(self) -> float:
+        return self._post_combine_ms
 
 
 class _LanePredictor:
@@ -98,12 +104,14 @@ class _LanePredictor:
                     "dispatch_ms": 1.0,
                     "routed_compute_ms": 0.0,
                     "combine_ms": 1.0,
+                    "post_combine_ms": 2.0,
                 },
                 4: {
                     "pre_dispatch_ms": 1.0,
                     "dispatch_ms": 2.0,
                     "routed_compute_ms": 4.0,
                     "combine_ms": 3.0,
+                    "post_combine_ms": 2.0,
                 },
             }[sum(per_expert_tokens.values())]
         )
@@ -177,13 +185,13 @@ def test_prefill_moe_layer_materializes_global_distribution_once_and_waits_for_s
 
     assert len(events) == 1
     assert isinstance(events[0], PrefillSyncCollectiveEvent)
-    assert events[0].time == pytest.approx(0.012)
+    assert events[0].time == pytest.approx(0.014)
     assert predictor.calls == [
         (4, {0: 0, 1: 0}),
         (4, {2: 1, 3: 3}),
     ]
-    assert batch._prefill_model_execution_components_ms_by_stage[0] == [1.0, 11.0]
-    assert batch._prefill_ep_wave_lane_times_ms == (2.0, 5.0)
+    assert batch._prefill_model_execution_components_ms_by_stage[0] == [1.0, 13.0]
+    assert batch._prefill_ep_wave_lane_times_ms == (4.0, 7.0)
     assert batch._stage_admission_ticket.scope == EP_WAVE
     assert batch._stage_admission_scope_history[-1]["participant_ep_ids"] == (0, 1)
     room = scheduler._prefill_sync_waiting_room[0][0][9][4]["post_moe"]
@@ -194,7 +202,7 @@ def test_prefill_moe_layer_materializes_global_distribution_once_and_waits_for_s
     assert "[EP-WORKLOAD][PREFILL]" in workload_lines[0]
     assert "ep_id=0" in workload_lines[0]
     assert "per_expert_tokens={0: 0, 1: 0}" in workload_lines[0]
-    assert "lane_compute_ms=2.000000" in workload_lines[0]
+    assert "lane_compute_ms=4.000000" in workload_lines[0]
     assert "routed_compute_ms=0.000000" in workload_lines[0]
     assert "lane_comm_ms=2.000000" in workload_lines[0]
     barrier_lines = [line for line in captured if "[EP-BARRIER]" in line]
@@ -227,7 +235,7 @@ def test_prefill_ep_wave_accepts_numpy_timestamp_from_non_dummy_predictor():
     )
 
     assert len(events) == 1
-    assert events[0].time == pytest.approx(0.012)
+    assert events[0].time == pytest.approx(0.014)
 
 
 def test_prefill_dense_layer_bypasses_ep_materializer(monkeypatch):

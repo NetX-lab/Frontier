@@ -1,6 +1,7 @@
+import json
 import math
 import os
-from typing import Any, Dict, List, Optional, TYPE_CHECKING, Union
+from typing import Any, Dict, List, Mapping, Optional, TYPE_CHECKING, Union
 
 import numpy as np
 import pandas as pd
@@ -66,6 +67,61 @@ from frontier.execution_time_predictor.shared_prediction_model_manager import (
 )
 
 logger = init_logger(__name__)
+
+
+def _normalize_routing_details_for_trace(
+    routing_details: Mapping[int, Mapping[int, Mapping[int, float]]],
+) -> dict[str, dict[str, dict[str, float]]]:
+    """Return a strict JSON-safe copy of runtime routing details.
+
+    The matrix checker compares this emitted object with an independently
+    materialized sidecar.  The trace must therefore contain the actual
+    predictor-owned map, not a derived token allocation or a digest.
+    """
+
+    if not isinstance(routing_details, Mapping) or not routing_details:
+        raise ValueError("routing_details trace payload must be a non-empty mapping")
+    normalized: dict[str, dict[str, dict[str, float]]] = {}
+    for replica_id, per_layer in routing_details.items():
+        if type(replica_id) is not int or replica_id < 0:
+            raise ValueError(
+                "routing_details trace replica IDs must be non-negative integers"
+            )
+        if not isinstance(per_layer, Mapping) or not per_layer:
+            raise ValueError(
+                f"routing_details trace replica {replica_id} has no layer map"
+            )
+        normalized_layers: dict[str, dict[str, float]] = {}
+        for layer_id, per_expert in per_layer.items():
+            if type(layer_id) is not int or layer_id < 0:
+                raise ValueError(
+                    "routing_details trace layer IDs must be non-negative integers"
+                )
+            if not isinstance(per_expert, Mapping) or not per_expert:
+                raise ValueError(
+                    f"routing_details trace layer {layer_id} has no expert map"
+                )
+            normalized_experts: dict[str, float] = {}
+            for expert_id, ratio in per_expert.items():
+                if type(expert_id) is not int or expert_id < 0:
+                    raise ValueError(
+                        "routing_details trace expert IDs must be non-negative integers"
+                    )
+                value = float(ratio)
+                if not math.isfinite(value) or value < 0.0:
+                    raise ValueError(
+                        "routing_details trace ratios must be finite and non-negative"
+                    )
+                normalized_experts[str(expert_id)] = value
+            ratio_sum = sum(normalized_experts.values())
+            if not math.isclose(ratio_sum, 1.0, rel_tol=0.0, abs_tol=1e-12):
+                raise ValueError(
+                    "routing_details trace ratios must sum to one "
+                    f"for replica={replica_id} layer={layer_id}, got {ratio_sum}"
+                )
+            normalized_layers[str(layer_id)] = normalized_experts
+        normalized[str(replica_id)] = normalized_layers
+    return normalized
 
 
 def _get_moe_family_model_names() -> list[str]:
@@ -174,6 +230,24 @@ def _validate_moe_columns(moe_df: pd.DataFrame) -> None:
 
 
 class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
+    @staticmethod
+    def _emit_routing_details_snapshot(
+        cluster_type: ClusterType,
+        routing_details: Mapping[int, Mapping[int, Mapping[int, float]]],
+    ) -> None:
+        """Emit the exact predictor-owned routing map for external validation."""
+
+        normalized = _normalize_routing_details_for_trace(routing_details)
+        payload = {
+            "schema_version": 1,
+            "cluster": cluster_type.name,
+            "routing_details": normalized,
+        }
+        logger.info(
+            "[ROUTING-SNAPSHOT] %s",
+            json.dumps(payload, sort_keys=True, separators=(",", ":")),
+        )
+
     def _get_requested_moe_gating_routing_runtime_path(self) -> str:
         return resolve_moe_gating_routing_runtime_path(
             getattr(self, "_moe_routing_distribution_type", "balanced")
@@ -355,6 +429,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             self._model_config, "is_moe", True
         ) is not False:
             self._monolithic_routing_details = self._build_shared_routing_details()
+            self._emit_routing_details_snapshot(
+                ClusterType.MONOLITHIC,
+                self._monolithic_routing_details,
+            )
         logger.info(
             "[MoE Routing] Initialized global routing allocations: "
             "distribution=%s, seed=%s, num_layers=%s",
@@ -1147,11 +1225,27 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         if isinstance(batch, EPBatchGroup):
             per_expert_tokens = getattr(batch, "per_expert_tokens", None)
-            if per_expert_tokens is not None:
-                return int(
-                    sum(int(token_count) for token_count in per_expert_tokens.values())
+            if per_expert_tokens is None:
+                raise ValueError(
+                    "EPBatchGroup.per_expert_tokens is required for "
+                    "expert-parallel routed-token accounting"
                 )
-            return int(batch.total_num_tokens)
+            if not isinstance(per_expert_tokens, dict):
+                raise ValueError(
+                    "EPBatchGroup.per_expert_tokens must be a dictionary"
+                )
+            routed_tokens = 0
+            for expert_id, token_count in per_expert_tokens.items():
+                if type(expert_id) is not int or expert_id < 0:
+                    raise ValueError(
+                        "EPBatchGroup expert IDs must be non-negative integers"
+                    )
+                if type(token_count) is not int or token_count < 0:
+                    raise ValueError(
+                        "EPBatchGroup token counts must be non-negative integers"
+                    )
+                routed_tokens += token_count
+            return routed_tokens
         return int(batch.total_num_tokens) * int(self._router_topk)
 
     def _get_moe_tokens_input(
@@ -1474,14 +1568,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             quant_manager = get_quantization_manager()
 
             if self._use_expert_parallel_alltoall_path(batch):
-                from frontier.entities import EPBatchGroup
-
-                if isinstance(batch, EPBatchGroup) and getattr(batch, "per_expert_tokens", None):
-                    routed_tokens = int(
-                        sum(int(token_count) for token_count in batch.per_expert_tokens.values())
-                    )
-                else:
-                    routed_tokens = int(effective_tokens * self._router_topk)
+                routed_tokens = self._get_local_ep_routed_tokens(batch)
                 data_size_bytes = self._model_config.embedding_dim * 2 * routed_tokens
                 data_size_bytes = quant_manager.adjust_tensor_size(
                     "expert_parallel_communication", data_size_bytes, self._cluster_type
@@ -2447,6 +2534,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         dispatch_times_ms: List[float] = []
         routed_compute_times_ms: List[float] = []
         combine_times_ms: List[float] = []
+        post_combine_times_ms: List[float] = []
         for ep_id in participant_ep_ids:
             per_expert_tokens = dict(
                 workload.per_ep_per_expert_tokens[int(ep_id)]
@@ -2482,6 +2570,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                     lane_execution_time.get_single_layer_moe_post_dispatch_compute_time()
                 ),
                 float(lane_execution_time.get_single_layer_moe_combine_time()),
+                float(
+                    lane_execution_time.get_single_layer_moe_post_combine_time()
+                ),
             ]
             if any(
                 not math.isfinite(value) or value < 0
@@ -2518,6 +2609,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             dispatch_times_ms.append(phase_times_ms[1])
             routed_compute_times_ms.append(phase_times_ms[2])
             combine_times_ms.append(phase_times_ms[3])
+            post_combine_times_ms.append(phase_times_ms[4])
 
         return (
             attention_time_ms
@@ -2525,6 +2617,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             + max(dispatch_times_ms)
             + max(routed_compute_times_ms)
             + max(combine_times_ms)
+            + max(post_combine_times_ms)
         )
 
     def predict_stage_execution_time(

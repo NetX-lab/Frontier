@@ -16,6 +16,7 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
+from frontier.entities import EPBatchGroup, Request
 from frontier.metrics.op_trace_utils import map_trace_op_to_precision_op
 from frontier.model_architectures import ModelArchitectureProfile
 from frontier.operators.families import COMM_FAMILY, get_comm_operator
@@ -144,9 +145,13 @@ class _SpyCCBackend:
         return float(data_size_bytes) / 4000.0 + float(num_devices)
 
 
-def _comm_context(*, quantization_manager: object | None = None) -> CommPayloadContext:
+def _comm_context(
+    *,
+    batch: object | None = None,
+    quantization_manager: object | None = None,
+) -> CommPayloadContext:
     return CommPayloadContext(
-        batch=_Batch(),
+        batch=_Batch() if batch is None else batch,
         model_config=SimpleNamespace(embedding_dim=8, num_experts_per_tok=2),
         replica_config=SimpleNamespace(
             attn_tensor_parallel_size=4,
@@ -264,6 +269,103 @@ def test_comm_payload_builder_preserves_legacy_quantized_hidden_state_bytes() ->
     assert quantization_manager.calls == [
         ("allreduce", 80, ClusterType.MONOLITHIC),
     ]
+
+
+def _ep_batch_group(per_expert_tokens: object) -> EPBatchGroup:
+    return EPBatchGroup(
+        requests=[Request(0.0, 5, 0)],
+        num_tokens=[5],
+        replica_id=0,
+        ep_id=0,
+        time=0.0,
+        source_batch_ids=[1],
+        per_expert_tokens=per_expert_tokens,
+        cluster_type=ClusterType.MONOLITHIC,
+        is_moe=True,
+    )
+
+
+def test_zero_routed_ep_lane_uses_zero_moe_tp_allreduce_payload() -> None:
+    batch = _ep_batch_group({0: 0, 1: 0})
+    quantization_manager = SimpleNamespace(
+        adjust_tensor_size=lambda _collective, data_size_bytes, _cluster_type: (
+            data_size_bytes
+        )
+    )
+    ctx = _comm_context(
+        batch=batch,
+        quantization_manager=quantization_manager,
+    )
+
+    moe_tp_allreduce = get_comm_operator("moe_tensor_parallel_allreduce")
+    assert moe_tp_allreduce.build_payload_bytes(ctx) == 0
+
+
+def test_shared_batch_uses_effective_tokens_even_if_it_has_routing_metadata() -> None:
+    batch = _Batch()
+    batch.per_expert_tokens = {0: 0, 1: 0}
+    quantization_manager = SimpleNamespace(
+        adjust_tensor_size=lambda _collective, data_size_bytes, _cluster_type: (
+            data_size_bytes
+        )
+    )
+    ctx = _comm_context(
+        batch=batch,
+        quantization_manager=quantization_manager,
+    )
+
+    moe_tp_allreduce = get_comm_operator("moe_tensor_parallel_allreduce")
+    assert moe_tp_allreduce.build_payload_bytes(ctx) == 8 * 2 * 5
+
+
+def test_ep_lane_requires_routed_token_metadata() -> None:
+    batch = _ep_batch_group(None)
+    ctx = _comm_context(
+        batch=batch,
+        quantization_manager=SimpleNamespace(
+            adjust_tensor_size=lambda _collective, data_size_bytes, _cluster_type: (
+                data_size_bytes
+            )
+        ),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="requires EPBatchGroup\\.per_expert_tokens",
+    ):
+        get_comm_operator("moe_tensor_parallel_allreduce").build_payload_bytes(ctx)
+
+
+def test_ep_lane_requires_routed_token_metadata_for_alltoall() -> None:
+    batch = _ep_batch_group(None)
+    ctx = _comm_context(
+        batch=batch,
+        quantization_manager=SimpleNamespace(
+            adjust_tensor_size=lambda _collective, data_size_bytes, _cluster_type: (
+                data_size_bytes
+            )
+        ),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="requires EPBatchGroup\\.per_expert_tokens",
+    ):
+        get_comm_operator("expert_parallel_alltoall").build_payload_bytes(ctx)
+
+
+def test_zero_routed_ep_lane_uses_zero_alltoall_payload() -> None:
+    batch = _ep_batch_group({})
+    ctx = _comm_context(
+        batch=batch,
+        quantization_manager=SimpleNamespace(
+            adjust_tensor_size=lambda _collective, data_size_bytes, _cluster_type: (
+                data_size_bytes
+            )
+        ),
+    )
+
+    assert get_comm_operator("expert_parallel_alltoall").build_payload_bytes(ctx) == 0
 
 
 def test_communication_operator_times_reconcile_split_tp_and_pp_legacy_fields() -> None:
