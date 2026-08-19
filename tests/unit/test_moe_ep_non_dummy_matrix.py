@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import shlex
+import subprocess
 import threading
 import time
 from collections import Counter
@@ -2614,16 +2615,53 @@ def test_optimization_compare_cli_writes_json_csv_and_markdown(
     task_dir = tmp_path / "task"
     output_root = tmp_path / "outputs"
     results_path = task_dir / "results.jsonl"
-    source_provenance = matrix_module._source_provenance(REPO_ROOT)
+    manifest_path = (
+        task_dir / "moe_ep_non_dummy_optimization_matrix_manifest.jsonl"
+    )
+    profile_manifest_path = (
+        task_dir / "moe_ep_non_dummy_optimization_preflight.jsonl"
+    )
     pair_manifest_path = (
         task_dir / "moe_ep_non_dummy_optimization_expected_pairs.jsonl"
     )
     task_dir.mkdir(parents=True)
-    matrix_module.write_manifest(
-        task_dir / "moe_ep_non_dummy_optimization_matrix_manifest.jsonl",
-        cases,
-    )
+    matrix_module.write_manifest(manifest_path, cases)
     matrix_module.write_optimization_pair_manifest(pair_manifest_path, cases)
+    profile_manifest_path.write_text(
+        "".join(
+            json.dumps(
+                {
+                    "case_id": case.case_id,
+                    "status": "READY",
+                    "blockers": [],
+                    "preflight_only": True,
+                },
+                sort_keys=True,
+            )
+            + "\n"
+            for case in cases
+        ),
+        encoding="utf-8",
+    )
+
+    real_source_provenance = matrix_module._source_provenance
+
+    def clean_source_provenance(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        provenance = real_source_provenance(*args, **kwargs)
+        provenance["git_dirty"] = False
+        provenance["git_dirty_file_count"] = 0
+        return provenance
+
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix._source_provenance",
+        clean_source_provenance,
+    )
+    source_provenance = clean_source_provenance(
+        REPO_ROOT,
+        campaign_id=results_path.stem,
+        manifest_path=manifest_path,
+        profile_manifest_path=profile_manifest_path,
+    )
     result_rows = []
     for index, case in enumerate(cases):
         row = _optimization_result_row(case, metric_offset=float(index))
@@ -5450,6 +5488,160 @@ def test_result_ledger_rejects_missing_source_provenance_with_valid_paths(
             repo_root=tmp_path / "repo",
             output_root=output_root,
             results_path=results_path,
+        )
+
+
+def test_source_provenance_records_campaign_and_runner_identity(
+    tmp_path: Path,
+) -> None:
+    manifest_path = tmp_path / "manifest.jsonl"
+    preflight_path = tmp_path / "preflight.jsonl"
+    manifest_path.write_text('{"case_id":"case-a"}\n', encoding="utf-8")
+    preflight_path.write_text(
+        '{"case_id":"case-a","status":"READY"}\n',
+        encoding="utf-8",
+    )
+    provenance = matrix_module._source_provenance(
+        REPO_ROOT,
+        campaign_id="campaign-001",
+        manifest_path=manifest_path,
+        profile_manifest_path=preflight_path,
+    )
+
+    assert provenance["campaign_id"] == "campaign-001"
+    assert provenance["manifest_path"].endswith("manifest.jsonl")
+    assert provenance["profile_manifest_path"].endswith("preflight.jsonl")
+    assert re.fullmatch(r"[0-9a-f]{64}", provenance["manifest_sha256"])
+    assert re.fullmatch(r"[0-9a-f]{64}", provenance["profile_manifest_sha256"])
+    assert provenance["python_executable"]
+    assert provenance["runner"].endswith("moe_ep_non_dummy_matrix.py")
+    assert provenance["checker_schema_version"]
+
+
+def test_source_provenance_binds_campaign_manifest_contents(
+    tmp_path: Path,
+) -> None:
+    manifest_path = tmp_path / "manifest.jsonl"
+    preflight_path = tmp_path / "preflight.jsonl"
+    manifest_path.write_text('{"case_id":"case-a"}\n', encoding="utf-8")
+    preflight_path.write_text(
+        '{"case_id":"case-a","status":"READY"}\n',
+        encoding="utf-8",
+    )
+    before = matrix_module._source_provenance(
+        REPO_ROOT,
+        campaign_id="campaign-001",
+        manifest_path=manifest_path,
+        profile_manifest_path=preflight_path,
+    )
+
+    manifest_path.write_text('{"case_id":"case-b"}\n', encoding="utf-8")
+    after = matrix_module._source_provenance(
+        REPO_ROOT,
+        campaign_id="campaign-001",
+        manifest_path=manifest_path,
+        profile_manifest_path=preflight_path,
+    )
+
+    assert before["manifest_sha256"] != after["manifest_sha256"]
+    with pytest.raises(ValueError, match="source_provenance mismatch"):
+        matrix_module._validate_source_provenance(
+            before,
+            expected=after,
+            context="test campaign",
+            require_campaign_fields=True,
+        )
+
+
+def test_source_provenance_clean_gate_ignores_untracked_artifacts(
+    tmp_path: Path,
+) -> None:
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    tracked_path = repo_root / "tracked.txt"
+    tracked_path.write_text("tracked\n", encoding="utf-8")
+    subprocess.run(["git", "init", "-q"], cwd=repo_root, check=True)
+    subprocess.run(["git", "add", "tracked.txt"], cwd=repo_root, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Frontier Test",
+            "-c",
+            "user.email=frontier-test@example.com",
+            "commit",
+            "-q",
+            "-m",
+            "fixture",
+        ],
+        cwd=repo_root,
+        check=True,
+    )
+    (repo_root / "untracked-output.json").write_text("{}\n", encoding="utf-8")
+
+    provenance = matrix_module._source_provenance(repo_root)
+
+    assert provenance["git_dirty"] is False
+    assert provenance["git_dirty_file_count"] == 0
+
+    tracked_path.write_text("modified\n", encoding="utf-8")
+    dirty_provenance = matrix_module._source_provenance(repo_root)
+
+    assert dirty_provenance["git_dirty"] is True
+    assert dirty_provenance["git_dirty_file_count"] == 1
+
+
+def test_source_provenance_strict_gate_rejects_missing_campaign_path(
+    tmp_path: Path,
+) -> None:
+    manifest_path = tmp_path / "manifest.jsonl"
+    preflight_path = tmp_path / "preflight.jsonl"
+    manifest_path.write_text('{"case_id":"case-a"}\n', encoding="utf-8")
+    preflight_path.write_text(
+        '{"case_id":"case-a","status":"READY"}\n',
+        encoding="utf-8",
+    )
+    provenance = matrix_module._source_provenance(
+        REPO_ROOT,
+        campaign_id="campaign-001",
+        manifest_path=manifest_path,
+        profile_manifest_path=preflight_path,
+    )
+    provenance["profile_manifest_path"] = ""
+
+    with pytest.raises(ValueError, match="campaign manifest paths"):
+        matrix_module._validate_source_provenance(
+            provenance,
+            context="test campaign",
+            require_campaign_fields=True,
+        )
+
+
+def test_source_provenance_strict_gate_rejects_dirty_tree(
+    tmp_path: Path,
+) -> None:
+    manifest_path = tmp_path / "manifest.jsonl"
+    preflight_path = tmp_path / "preflight.jsonl"
+    manifest_path.write_text('{"case_id":"case-a"}\n', encoding="utf-8")
+    preflight_path.write_text(
+        '{"case_id":"case-a","status":"READY"}\n',
+        encoding="utf-8",
+    )
+    provenance = matrix_module._source_provenance(
+        REPO_ROOT,
+        campaign_id="campaign-001",
+        manifest_path=manifest_path,
+        profile_manifest_path=preflight_path,
+    )
+    provenance["git_dirty"] = True
+    provenance["git_dirty_file_count"] = 1
+
+    with pytest.raises(ValueError, match="clean Git tree"):
+        matrix_module._validate_source_provenance(
+            provenance,
+            context="test campaign",
+            require_campaign_fields=True,
+            require_clean=True,
         )
 
 

@@ -113,6 +113,7 @@ OPTIMIZATION_MTP_MODEL_SPEC: Mapping[str, Any] = {
 }
 ROUTING_DISTRIBUTIONS = ("balanced", "random", "skewed", "zipf")
 ROUTING_ORACLE_SCHEMA_VERSION = 2
+CHECKER_SCHEMA_VERSION = "moe_ep_non_dummy_matrix.v3"
 ROUTING_ORACLE_ALGORITHM = {
     "name": "hamilton_largest_remainder",
     "version": 1,
@@ -6503,8 +6504,27 @@ def _serialized_case_payload(case: MatrixCase) -> dict[str, Any]:
     return payload
 
 
-def _source_provenance(repo_root: Path) -> dict[str, Any]:
-    """Capture immutable source and runtime identity for one campaign."""
+def _sha256_file(path: Path) -> str:
+    """Return a content identity for one required campaign artifact."""
+
+    resolved = path.resolve()
+    if not resolved.is_file():
+        raise FileNotFoundError(f"campaign artifact does not exist: {resolved}")
+    digest = hashlib.sha256()
+    with resolved.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _source_provenance(
+    repo_root: Path,
+    *,
+    campaign_id: str | None = None,
+    manifest_path: Path | None = None,
+    profile_manifest_path: Path | None = None,
+) -> dict[str, Any]:
+    """Capture source, runner, checker, and campaign identity."""
 
     root = repo_root.resolve()
 
@@ -6538,14 +6558,35 @@ def _source_provenance(repo_root: Path) -> dict[str, Any]:
                 f"required provenance dependency is not installed: {package_name}"
             ) from exc
 
-    dirty_status = git_output("status", "--porcelain", "--untracked-files=all")
+    dirty_status = git_output("status", "--porcelain", "--untracked-files=no")
     return {
         "git_sha": git_output("rev-parse", "HEAD"),
         "git_dirty": bool(dirty_status),
         "git_dirty_file_count": len(dirty_status.splitlines()),
+        "git_status_scope": "tracked_files",
+        "python_executable": str(Path(sys.executable).resolve()),
         "python_version": platform.python_version(),
         "python_implementation": platform.python_implementation(),
         "dependencies": dependencies,
+        "runner": str(Path(__file__).resolve()),
+        "checker_schema_version": CHECKER_SCHEMA_VERSION,
+        "campaign_id": campaign_id or f"adhoc:{root.name}",
+        "manifest_path": (
+            str(manifest_path.resolve()) if manifest_path is not None else ""
+        ),
+        "manifest_sha256": (
+            _sha256_file(manifest_path) if manifest_path is not None else ""
+        ),
+        "profile_manifest_path": (
+            str(profile_manifest_path.resolve())
+            if profile_manifest_path is not None
+            else ""
+        ),
+        "profile_manifest_sha256": (
+            _sha256_file(profile_manifest_path)
+            if profile_manifest_path is not None
+            else ""
+        ),
     }
 
 
@@ -6554,6 +6595,8 @@ def _validate_source_provenance(
     *,
     expected: Mapping[str, Any] | None = None,
     context: str,
+    require_campaign_fields: bool = False,
+    require_clean: bool = False,
 ) -> None:
     if not isinstance(value, Mapping):
         raise ValueError(f"{context} is missing source_provenance")
@@ -6561,9 +6604,18 @@ def _validate_source_provenance(
         "git_sha",
         "git_dirty",
         "git_dirty_file_count",
+        "git_status_scope",
+        "python_executable",
         "python_version",
         "python_implementation",
         "dependencies",
+        "runner",
+        "checker_schema_version",
+        "campaign_id",
+        "manifest_path",
+        "manifest_sha256",
+        "profile_manifest_path",
+        "profile_manifest_sha256",
     )
     missing = [field for field in required_fields if field not in value]
     if missing:
@@ -6576,6 +6628,9 @@ def _validate_source_provenance(
         or type(value["git_dirty"]) is not bool
         or type(value["git_dirty_file_count"]) is not int
         or value["git_dirty_file_count"] < 0
+        or value["git_status_scope"] != "tracked_files"
+        or not isinstance(value["python_executable"], str)
+        or not value["python_executable"]
         or not isinstance(value["python_version"], str)
         or not isinstance(value["python_implementation"], str)
         or not isinstance(value["dependencies"], Mapping)
@@ -6583,8 +6638,51 @@ def _validate_source_provenance(
             not isinstance(package, str) or not isinstance(version, str)
             for package, version in value["dependencies"].items()
         )
+        or not isinstance(value["runner"], str)
+        or not value["runner"]
+        or not isinstance(value["checker_schema_version"], str)
+        or not value["checker_schema_version"]
+        or not isinstance(value["campaign_id"], str)
+        or not value["campaign_id"]
+        or not isinstance(value["manifest_path"], str)
+        or not isinstance(value["manifest_sha256"], str)
+        or not isinstance(value["profile_manifest_path"], str)
+        or not isinstance(value["profile_manifest_sha256"], str)
     ):
         raise ValueError(f"{context} source_provenance has invalid field types")
+    if require_campaign_fields:
+        campaign_paths = (
+            value["manifest_path"],
+            value["profile_manifest_path"],
+        )
+        if not all(campaign_paths):
+            raise ValueError(
+                f"{context} source_provenance is missing campaign manifest paths"
+            )
+        if not all(Path(path).is_absolute() for path in campaign_paths):
+            raise ValueError(
+                f"{context} source_provenance has non-canonical campaign paths"
+            )
+        campaign_digests = (
+            value["manifest_sha256"],
+            value["profile_manifest_sha256"],
+        )
+        if not all(
+            re.fullmatch(r"[0-9a-f]{64}", digest)
+            for digest in campaign_digests
+        ):
+            raise ValueError(
+                f"{context} source_provenance is missing campaign content identity"
+            )
+        if value["checker_schema_version"] != CHECKER_SCHEMA_VERSION:
+            raise ValueError(
+                f"{context} source_provenance has unsupported checker schema: "
+                f"{value['checker_schema_version']!r}"
+            )
+    if require_clean and value["git_dirty"]:
+        raise ValueError(
+            f"{context} source_provenance requires a clean Git tree"
+        )
     if expected is not None and dict(value) != dict(expected):
         raise ValueError(
             f"{context} source_provenance mismatch: "
@@ -7133,6 +7231,8 @@ def _validate_result_ledger_provenance(
     output_root: Path,
     results_path: Path,
     expected_source_provenance: Mapping[str, Any] | None = None,
+    require_campaign_fields: bool = False,
+    require_clean: bool = False,
 ) -> None:
     """Reject ledger rows produced by another run/output generation.
 
@@ -7200,6 +7300,8 @@ def _validate_result_ledger_provenance(
             row.get("source_provenance"),
             expected=expected_source_provenance,
             context=f"result ledger case_id={case_id!r}",
+            require_campaign_fields=require_campaign_fields,
+            require_clean=require_clean,
         )
 
 
@@ -7542,6 +7644,9 @@ def run_cases(
     output_root: Path,
     results_path: Path,
     *,
+    manifest_path: Path | None = None,
+    profile_manifest_path: Path | None = None,
+    require_clean_source: bool = False,
     start: int = 0,
     limit: int | None = None,
     timeout_seconds: int = 600,
@@ -7556,7 +7661,18 @@ def run_cases(
     repo_root = repo_root.resolve()
     output_root = output_root.resolve()
     results_path = results_path.resolve()
-    source_provenance = _source_provenance(repo_root)
+    source_provenance = _source_provenance(
+        repo_root,
+        campaign_id=results_path.stem,
+        manifest_path=manifest_path,
+        profile_manifest_path=profile_manifest_path,
+    )
+    _validate_source_provenance(
+        source_provenance,
+        context="current campaign",
+        require_campaign_fields=require_clean_source,
+        require_clean=require_clean_source,
+    )
     selected = list(cases[start : (start + limit) if limit is not None else None])
     expected_case_ids = tuple(case.case_id for case in cases)
     existing_rows = _load_result_rows(results_path)
@@ -7566,6 +7682,8 @@ def run_cases(
         output_root=output_root,
         results_path=results_path,
         expected_source_provenance=source_provenance,
+        require_campaign_fields=require_clean_source,
+        require_clean=require_clean_source,
     )
     persisted = _merge_result_rows(
         existing_rows,
@@ -7747,6 +7865,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     output_root = (
         args.output_root if args.output_root is not None else default_output_root
     )
+    profile_manifest_path: Path | None = None
+    if args.matrix_kind == "optimization":
+        profile_manifest_path = (
+            args.preflight_path
+            if args.preflight_path is not None
+            else task_dir / "moe_ep_non_dummy_optimization_preflight.jsonl"
+        )
     if args.mode == "compare":
         _validate_persisted_case_manifest(manifest_path, cases)
     else:
@@ -7780,13 +7905,31 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.matrix_kind != "optimization":
             raise ValueError("compare mode requires --matrix-kind optimization")
         result_rows = _load_result_rows(results_path)
-        source_provenance = _source_provenance(repo_root)
+        source_provenance = _source_provenance(
+            repo_root,
+            campaign_id=results_path.stem,
+            manifest_path=manifest_path,
+            profile_manifest_path=profile_manifest_path,
+        )
+        if profile_manifest_path is None or not profile_manifest_path.is_file():
+            raise FileNotFoundError(
+                "optimization compare requires a persisted profile preflight ledger: "
+                f"{profile_manifest_path}"
+            )
+        _validate_source_provenance(
+            source_provenance,
+            context="current comparison",
+            require_campaign_fields=True,
+            require_clean=True,
+        )
         _validate_result_ledger_provenance(
             result_rows,
             repo_root=repo_root,
             output_root=output_root,
             results_path=results_path,
             expected_source_provenance=source_provenance,
+            require_campaign_fields=True,
+            require_clean=True,
         )
         _validate_persisted_case_metadata(cases, result_rows)
         report = build_optimization_comparison(
@@ -7843,6 +7986,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         repo_root,
         output_root,
         results_path,
+        manifest_path=manifest_path,
+        profile_manifest_path=profile_manifest_path,
+        require_clean_source=args.matrix_kind == "optimization",
         start=args.start,
         limit=args.limit,
         timeout_seconds=args.timeout_seconds,
