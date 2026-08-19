@@ -1,0 +1,78 @@
+attention_backend: FLASHINFER
+batch_size_list:
+- 32
+- 48
+- 64
+- 96
+- 128
+- 160
+- 192
+- 256
+- 320
+- 384
+- 448
+- 512
+block_shape: null
+block_size: 32
+decode_kv_cache_size_list: null
+device: h100
+disable_ray: true
+disable_replicated: false
+enable_chunked_prefill_grid_search: false
+enable_mixed_prefill: false
+enable_true_mixed: false
+fixed_chunked_prefill_size: 16384
+max_batch_size: 512
+max_mixed_batch_size: 8
+max_model_len: 9216
+max_pipeline_parallel_size: 1
+max_seq_len: 9216
+min_batch_size: 32
+mixed_batch_size_list: null
+mixed_batch_size_max: 32
+mixed_batch_size_min: 2
+mixed_kv_cache_size_list:
+- 0
+mixed_mode: both
+mixed_num_samples: 3
+mixed_profile_strategy: default
+mixed_shapes_per_point: 2
+mixed_total_tokens_list: null
+mixed_total_tokens_max: 1055
+mixed_total_tokens_min: 1025
+model_architecture_profile: null
+models:
+- qwen3-a3b-30b-moe
+num_gpus: 1
+num_tensor_parallel_workers:
+- 1
+output_dir: data/profiling_sglang_cps16384
+precision: BF16
+profile_method: cuda_event
+profile_only_decode: false
+profile_only_prefill: false
+skip_confirmation: true
+true_mixed_decode_batch_sizes:
+- 1
+- 2
+- 4
+- 8
+true_mixed_decode_kv_cache_sizes:
+- 128
+- 256
+- 512
+- 1024
+- 2048
+true_mixed_prefill_batch_sizes:
+- 1
+- 2
+- 4
+true_mixed_prefill_chunk_sizes:
+- 64
+- 128
+- 256
+- 512
+- 1024
+true_mixed_prefill_kv_cache_size: 0
+use_fp8: null
+vllm_mla_cuda_op_log: null

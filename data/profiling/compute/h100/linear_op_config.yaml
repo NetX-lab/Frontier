@@ -1,0 +1,22 @@
+attn_tp: null
+block_shape: null
+device: h100
+disable_ray: true
+disable_replicated: false
+extra_num_tokens: null
+ffn_tp: null
+include_target_embedded_mtp: false
+is_moe: true
+max_tokens: 16384
+models:
+- qwen3-a3b-30b-moe
+num_gpus: 1
+num_tensor_parallel_workers:
+- 1
+num_tokens_list: null
+output_dir: data/profiling
+precision: BF16
+profile_method: cuda_event
+ray_enable_datasets_serializers: false
+skip_confirmation: true
+use_fp8: null

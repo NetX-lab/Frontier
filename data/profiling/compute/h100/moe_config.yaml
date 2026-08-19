@@ -1,0 +1,28 @@
+block_shape: null
+device: h100
+disable_ray: true
+disable_replicated: false
+enable_load_imbalance: true
+expert_parallel_sizes:
+- 1
+extra_num_tokens: null
+gating_runtime_context: prefill_hot
+load_distributions:
+- uniform
+- skewed
+- extremely_skewed
+max_tokens: 16384
+models:
+- qwen3-a3b-30b-moe
+num_gpus: 1
+num_samples_per_distribution: 3
+num_tensor_parallel_workers:
+- 1
+num_tokens_list: null
+output_dir: data/profiling
+per_channel_quant: false
+precision: BF16
+profile_method: cuda_event
+routing_runtime_path: standard_fused_topk
+skip_confirmation: true
+use_fp8: null

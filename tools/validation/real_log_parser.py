@@ -21,6 +21,17 @@ _HEADER_RE = re.compile(
     r"^(Warm-up|Benchmark)\s*\|\s*concurrency=(\d+)\s*\|\s*prompts=(\d+)\s*$",
     re.MULTILINE,
 )
+# Newer sweep-launcher format (seen from a standalone single-node sglang/vLLM launcher):
+# "### SGLang benchmark | concurrency=32 ###" / "### vLLM benchmark | concurrency=32 ###".
+# No separate warm-up phase (these launchers are typically run with skip_warmup=true) and no
+# prompt count in the header itself -- every match is a "benchmark" phase point, and
+# num_prompts is recovered from the benchmark_args Namespace dump instead (see
+# _ARG_PATTERNS["num_prompts"]). Tried only when _HEADER_RE finds nothing, so a file already
+# matching the older format is never reinterpreted.
+_HEADER_RE_NO_PHASE = re.compile(
+    r"^#+\s*\S+\s+benchmark\s*\|\s*concurrency=(\d+)\s*#+\s*$",
+    re.MULTILINE | re.IGNORECASE,
+)
 _RESULT_BLOCK_RE = re.compile(
     r"={10,}\s*Serving Benchmark Result\s*={10,}\n(.*?)\n={10,}",
     re.DOTALL,
@@ -41,8 +52,13 @@ _ARG_PATTERNS = {
     # (custom_output_len, sonnet_output_len, random_output_len, ...) that share the suffix.
     "input_len": re.compile(r"\binput_len=(\d+)"),
     "output_len": re.compile(r"\boutput_len=(\d+)"),
+    # Only needed as a num_prompts source for _HEADER_RE_NO_PHASE captures, which carry no
+    # prompt count of their own -- both engines' Namespace dumps include this field directly.
+    "num_prompts": re.compile(r"\bnum_prompts=(\d+)"),
 }
-_ARG_INT_FIELDS = {"port", "random_input_len", "random_output_len", "input_len", "output_len"}
+_ARG_INT_FIELDS = {
+    "port", "random_input_len", "random_output_len", "input_len", "output_len", "num_prompts",
+}
 _ARG_FLOAT_FIELDS = {"random_range_ratio", "request_rate"}
 
 # raw "Serving Benchmark Result" key -> (BenchmarkResult field name, value type)
@@ -64,6 +80,8 @@ _RESULT_FIELD_MAP = {
     "Peak output token throughput (tok/s)": ("peak_output_token_throughput_tok_s", float),
     "Peak concurrent requests": ("peak_concurrent_requests", int),
     "Total token throughput (tok/s)": ("total_token_throughput_tok_s", float),
+    # Newer vLLM bench_serving capitalizes "Token"; exact-string lookup below needs both.
+    "Total Token throughput (tok/s)": ("total_token_throughput_tok_s", float),
     "Concurrency": ("achieved_concurrency", float),
     "Mean E2E Latency (ms)": ("e2e_mean_ms", float),
     "Median E2E Latency (ms)": ("e2e_median_ms", float),
@@ -234,11 +252,20 @@ def _parse_result_block(block_text: str) -> Dict[str, object]:
 def parse_bench_output(text: str) -> List[BenchmarkResult]:
     """Parse a bench_output.txt into one BenchmarkResult per (phase, concurrency) point."""
     headers = list(_HEADER_RE.finditer(text))
+    phased_headers = True
+    if not headers:
+        headers = list(_HEADER_RE_NO_PHASE.finditer(text))
+        phased_headers = False
     results: List[BenchmarkResult] = []
 
     for i, header in enumerate(headers):
-        phase_label, concurrency, num_prompts = header.groups()
-        phase = "warmup" if phase_label == "Warm-up" else "benchmark"
+        if phased_headers:
+            phase_label, concurrency, header_num_prompts = header.groups()
+            phase = "warmup" if phase_label == "Warm-up" else "benchmark"
+        else:
+            (concurrency,) = header.groups()
+            phase = "benchmark"
+            header_num_prompts = None
         window_end = headers[i + 1].start() if i + 1 < len(headers) else len(text)
         window = text[header.end():window_end]
 
@@ -263,6 +290,21 @@ def parse_bench_output(text: str) -> List[BenchmarkResult]:
             duration = result_fields.get("benchmark_duration_s")
             if total_in is not None and duration:
                 result_fields["input_token_throughput_tok_s"] = total_in / duration
+
+        # _HEADER_RE_NO_PHASE carries no prompt count; recover it from the Namespace dump
+        # instead (both engines report num_prompts there), falling back to the result block's
+        # own successful-request count as a last resort. Fail loudly rather than fabricate a
+        # count if truly nothing in this window says how many prompts were sent.
+        num_prompts = header_num_prompts
+        if num_prompts is None:
+            num_prompts = args_fields.get("num_prompts")
+        if num_prompts is None:
+            num_prompts = result_fields.get("successful_requests")
+        if num_prompts is None:
+            raise ValueError(
+                f"Could not determine num_prompts for concurrency={concurrency}: "
+                "missing from the header, the benchmark_args Namespace, and the result block."
+            )
 
         results.append(
             BenchmarkResult(
