@@ -10,6 +10,7 @@ import time
 from collections import Counter
 from dataclasses import asdict, replace
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -373,7 +374,10 @@ def _ep_wave_lines(
     }
 
 
-def _single_layer_ep2_case(*, zero_routed: bool = False):
+def _single_layer_ep2_case(
+    *,
+    zero_routed: bool = False,
+) -> matrix_module.MatrixCase:
     return next(
         replace(case, num_layers=1, moe_layer_ids=(0,))
         for case in build_matrix(REPO_ROOT)
@@ -384,7 +388,7 @@ def _single_layer_ep2_case(*, zero_routed: bool = False):
     )
 
 
-def _zero_routed_checker_case():
+def _zero_routed_checker_case() -> matrix_module.MatrixCase:
     """Return a small case whose ownership and Hamilton counts are explicit."""
 
     return replace(
@@ -399,7 +403,7 @@ def _independent_ep_wave_fixture(
     tmp_path: Path,
     *,
     batch_ids: tuple[int, ...] = (10,),
-) -> tuple[object, Path, Path]:
+) -> tuple[matrix_module.MatrixCase, Path, Path]:
     """Create a strict one-layer EP fixture backed by an independent ledger."""
 
     case = replace(
@@ -467,30 +471,62 @@ def _independent_ep_wave_fixture(
     return case, log_path, metrics_dir
 
 
-def _routing_snapshot_line(case: object, *, mutate_first_ratio: bool = False) -> str:
+def _routing_snapshot_line(
+    case: matrix_module.MatrixCase,
+    *,
+    mutate_first_ratio: bool = False,
+) -> str:
     snapshot = matrix_module._expected_routing_details_snapshot(case)
-    details: dict[str, dict[str, dict[str, float]]] = {"0": {}}
-    for entry in snapshot:
-        ratios = list(entry["ratios"])
-        if mutate_first_ratio and int(entry["layer_id"]) == 0:
-            ratios[0] += 0.01
-            ratios[1] -= 0.01
-        details["0"][str(entry["layer_id"])] = {
-            str(expert_id): float(ratio)
-            for expert_id, ratio in enumerate(ratios)
-        }
+    cluster = matrix_module._expected_ep_roles(case)[0]
+    details: dict[str, dict[str, dict[str, float]]] = {}
+    for replica_id in matrix_module._expected_routing_snapshot_replica_ids(
+        case,
+        cluster,
+    ):
+        details[str(replica_id)] = {}
+        for entry in snapshot:
+            ratios = list(entry["ratios"])
+            if mutate_first_ratio and int(entry["layer_id"]) == 0:
+                ratios[0] += 0.01
+                ratios[1] -= 0.01
+            details[str(replica_id)][str(entry["layer_id"])] = {
+                str(expert_id): float(ratio)
+                for expert_id, ratio in enumerate(ratios)
+            }
     return (
         "[ROUTING-SNAPSHOT] "
         + json.dumps(
             {
                 "schema_version": 1,
-                "cluster": "MONOLITHIC",
+                "cluster": cluster,
                 "routing_details": details,
             },
             sort_keys=True,
             separators=(",", ":"),
         )
     )
+
+
+def _parsed_routing_snapshot_records(
+    case: matrix_module.MatrixCase,
+) -> list[dict[str, Any]]:
+    """Build parser-shaped routing records from the independent oracle."""
+
+    cluster = matrix_module._expected_ep_roles(case)[0]
+    snapshot = matrix_module._expected_routing_details_snapshot(case)
+    per_replica: dict[int, dict[int, dict[int, float]]] = {}
+    for replica_id in matrix_module._expected_routing_snapshot_replica_ids(
+        case,
+        cluster,
+    ):
+        per_replica[replica_id] = {
+            int(entry["layer_id"]): {
+                expert_id: float(ratio)
+                for expert_id, ratio in enumerate(entry["ratios"])
+            }
+            for entry in snapshot
+        }
+    return [{"cluster": cluster, "routing_details": per_replica}]
 
 
 def test_strict_checker_binds_runtime_routing_snapshot_to_independent_sidecar(
@@ -559,6 +595,183 @@ def test_strict_checker_rejects_missing_runtime_routing_snapshot(
 
     assert result["status"] == "FAIL"
     assert "missing runtime routing snapshot" in result["errors"]
+
+
+def test_routing_snapshot_replica_ids_follow_global_creation_order() -> None:
+    cases = [
+        (
+            replace(
+                _single_layer_ep2_case(),
+                replica_count=2,
+            ),
+            "MONOLITHIC",
+            {0, 1},
+        ),
+        (
+            replace(
+                next(
+                    candidate
+                    for candidate in build_matrix(REPO_ROOT)
+                    if candidate.architecture == "pd-disaggregation"
+                    and candidate.model_kind == "moe"
+                ),
+                prefill_replicas=2,
+                decode_replicas=1,
+                num_layers=1,
+                moe_layer_ids=(0,),
+            ),
+            "DECODE",
+            {2},
+        ),
+        (
+            replace(
+                next(
+                    candidate
+                    for candidate in build_matrix(REPO_ROOT)
+                    if candidate.architecture == "pd-af-disaggregation"
+                    and candidate.model_kind == "moe"
+                ),
+                prefill_replicas=2,
+                decode_attn_replicas=1,
+                decode_ffn_replicas=2,
+                num_layers=1,
+                moe_layer_ids=(0,),
+            ),
+            "DECODE_FFN",
+            {3, 4},
+        ),
+    ]
+    for case, cluster, expected in cases:
+        assert (
+            matrix_module._expected_routing_snapshot_replica_ids(case, cluster)
+            == expected
+        )
+
+
+def test_routing_snapshot_checker_rejects_missing_replica() -> None:
+    case = replace(_single_layer_ep2_case(), replica_count=2)
+    records = _parsed_routing_snapshot_records(case)
+    details = records[0]["routing_details"]
+    del details[1]
+
+    errors = matrix_module._validate_routing_snapshot_records(
+        case,
+        snapshot_records=records,
+        expected_snapshot=matrix_module._expected_routing_details_snapshot(case),
+    )
+
+    assert any("Replica set mismatch" in error for error in errors)
+
+
+def test_routing_snapshot_checker_rejects_extra_replica() -> None:
+    case = replace(_single_layer_ep2_case(), replica_count=2)
+    records = _parsed_routing_snapshot_records(case)
+    details = records[0]["routing_details"]
+    details[99] = {
+        layer_id: dict(experts)
+        for layer_id, experts in details[0].items()
+    }
+
+    errors = matrix_module._validate_routing_snapshot_records(
+        case,
+        snapshot_records=records,
+        expected_snapshot=matrix_module._expected_routing_details_snapshot(case),
+    )
+
+    assert any("Replica set mismatch" in error for error in errors)
+
+
+def test_routing_snapshot_checker_rejects_extra_layer() -> None:
+    case = _single_layer_ep2_case()
+    records = _parsed_routing_snapshot_records(case)
+    details = records[0]["routing_details"]
+    for per_layer in details.values():
+        per_layer[9] = dict(per_layer[0])
+
+    errors = matrix_module._validate_routing_snapshot_records(
+        case,
+        snapshot_records=records,
+        expected_snapshot=matrix_module._expected_routing_details_snapshot(case),
+    )
+
+    assert any("layer set mismatch" in error for error in errors)
+
+
+def test_routing_snapshot_checker_rejects_duplicate_cluster_snapshot() -> None:
+    case = _single_layer_ep2_case()
+    records = _parsed_routing_snapshot_records(case)
+    records.append(
+        {
+            "cluster": records[0]["cluster"],
+            "routing_details": records[0]["routing_details"],
+        }
+    )
+
+    errors = matrix_module._validate_routing_snapshot_records(
+        case,
+        snapshot_records=records,
+        expected_snapshot=matrix_module._expected_routing_details_snapshot(case),
+    )
+
+    assert any("exactly one record per cluster" in error for error in errors)
+
+
+def test_routing_snapshot_checker_rejects_unexpected_cluster() -> None:
+    case = _single_layer_ep2_case()
+    records = _parsed_routing_snapshot_records(case)
+    records.append(
+        {
+            "cluster": "UNKNOWN",
+            "routing_details": records[0]["routing_details"],
+        }
+    )
+
+    errors = matrix_module._validate_routing_snapshot_records(
+        case,
+        snapshot_records=records,
+        expected_snapshot=matrix_module._expected_routing_details_snapshot(case),
+    )
+
+    assert any("unexpected cluster" in error for error in errors)
+    assert any("cluster set mismatch" in error for error in errors)
+
+
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    [
+        (
+            (
+                '{"schema_version":1,"cluster":"MONOLITHIC",'
+                '"routing_details":{"0":{"0":{"0":1.0}},'
+                '"00":{"0":{"0":1.0}}}}'
+            ),
+            "duplicate Replica ID",
+        ),
+        (
+            (
+                '{"schema_version":1,"cluster":"MONOLITHIC",'
+                '"routing_details":{"0":{"0":{"0":0.5,"1":0.5},'
+                '"00":{"0":0.5,"1":0.5}}}}'
+            ),
+            "duplicate layer ID",
+        ),
+        (
+            (
+                '{"schema_version":1,"cluster":"MONOLITHIC",'
+                '"routing_details":{"0":{"0":{"0":0.5,"00":0.5}}}}'
+            ),
+            "duplicate expert ID",
+        ),
+    ],
+)
+def test_routing_snapshot_parser_rejects_duplicate_integer_keys(
+    payload: str,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        matrix_module._parse_routing_snapshot_records(
+            "[ROUTING-SNAPSHOT] " + payload
+        )
 
 
 def test_matrix_has_required_cross_architecture_coverage() -> None:

@@ -3197,10 +3197,24 @@ def _routing_input_expected_token_total(
 def _expected_routing_details_snapshot(
     case: MatrixCase,
 ) -> list[dict[str, Any]]:
-    """Materialize the pre-run routing ratios independently of runtime output."""
+    """Materialize the predictor-owned routing ratios independently.
+
+    The disaggregation predictor materializes a routing map for every model
+    layer on MoE-bearing models, including dense layers in a mixed model.  The
+    EP token oracle remains scoped to ``case.moe_layer_ids``; this snapshot
+    instead mirrors the runtime map shape so the checker can enforce its full
+    identity.
+    """
 
     snapshot: list[dict[str, Any]] = []
-    for layer_id in case.moe_layer_ids:
+    if case.is_moe:
+        num_layers = int(case.num_layers)
+        if num_layers <= 0:
+            raise ValueError("MoE routing snapshot requires positive num_layers")
+        snapshot_layer_ids = range(num_layers)
+    else:
+        snapshot_layer_ids = ()
+    for layer_id in snapshot_layer_ids:
         total_experts = int(case.total_experts)
         rng = np.random.default_rng(int(case.seed) + int(layer_id))
         distribution = str(case.routing_distribution).strip().lower()
@@ -3231,6 +3245,56 @@ def _expected_routing_details_snapshot(
             }
         )
     return snapshot
+
+
+def _expected_routing_snapshot_replica_ids(
+    case: MatrixCase,
+    cluster: str,
+) -> set[int]:
+    """Return the exact global Replica IDs for one routing snapshot role."""
+
+    cluster_name = str(cluster).upper()
+    if case.architecture == "co-location":
+        if cluster_name != "MONOLITHIC":
+            raise ValueError(
+                f"unexpected co-location routing role: {cluster_name}"
+            )
+        start_id = 0
+        replica_count = int(case.replica_count)
+    elif case.architecture == "pd-disaggregation":
+        if cluster_name == "PREFILL":
+            start_id = 0
+            replica_count = int(case.prefill_replicas)
+        elif cluster_name == "DECODE":
+            start_id = int(case.prefill_replicas)
+            replica_count = int(case.decode_replicas)
+        else:
+            raise ValueError(
+                f"unexpected PDD routing role: {cluster_name}"
+            )
+    elif case.architecture == "pd-af-disaggregation":
+        if cluster_name == "PREFILL":
+            start_id = 0
+            replica_count = int(case.prefill_replicas)
+        elif cluster_name == "DECODE_FFN":
+            start_id = int(case.prefill_replicas) + int(
+                case.decode_attn_replicas
+            )
+            replica_count = int(case.decode_ffn_replicas)
+        else:
+            raise ValueError(
+                f"unexpected PD-AF routing role: {cluster_name}"
+            )
+    else:
+        raise ValueError(
+            f"unsupported routing snapshot architecture: {case.architecture}"
+        )
+    if replica_count <= 0:
+        raise ValueError(
+            f"routing snapshot role must have positive Replica count: "
+            f"cluster={cluster_name} count={replica_count}"
+        )
+    return set(range(start_id, start_id + replica_count))
 
 
 def _hamilton_counts_from_ratios(
@@ -4485,6 +4549,12 @@ def _parse_routing_snapshot_records(text: str) -> list[dict[str, Any]]:
                 raise ValueError(
                     "ROUTING-SNAPSHOT replica IDs must be integers"
                 ) from exc
+            if replica_id in normalized:
+                raise ValueError(
+                    "ROUTING-SNAPSHOT duplicate Replica ID after integer "
+                    f"normalization: raw_key={raw_replica_id!r} "
+                    f"normalized={replica_id}"
+                )
             if replica_id < 0 or not isinstance(raw_layers, Mapping):
                 raise ValueError("ROUTING-SNAPSHOT replica map is invalid")
             normalized_layers: dict[int, dict[int, float]] = {}
@@ -4495,6 +4565,12 @@ def _parse_routing_snapshot_records(text: str) -> list[dict[str, Any]]:
                     raise ValueError(
                         "ROUTING-SNAPSHOT layer IDs must be integers"
                     ) from exc
+                if layer_id in normalized_layers:
+                    raise ValueError(
+                        "ROUTING-SNAPSHOT duplicate layer ID after integer "
+                        f"normalization: raw_key={raw_layer_id!r} "
+                        f"normalized={layer_id}"
+                    )
                 if layer_id < 0 or not isinstance(raw_experts, Mapping):
                     raise ValueError("ROUTING-SNAPSHOT layer map is invalid")
                 normalized_experts: dict[int, float] = {}
@@ -4506,6 +4582,12 @@ def _parse_routing_snapshot_records(text: str) -> list[dict[str, Any]]:
                         raise ValueError(
                             "ROUTING-SNAPSHOT expert entries are invalid"
                         ) from exc
+                    if expert_id in normalized_experts:
+                        raise ValueError(
+                            "ROUTING-SNAPSHOT duplicate expert ID after "
+                            f"integer normalization: raw_key={raw_expert_id!r} "
+                            f"normalized={expert_id}"
+                        )
                     if expert_id < 0 or not math.isfinite(ratio) or ratio < 0.0:
                         raise ValueError("ROUTING-SNAPSHOT ratios are invalid")
                     normalized_experts[expert_id] = ratio
@@ -4543,10 +4625,13 @@ def _validate_routing_snapshot_records(
         }
         for entry in expected_snapshot
     }
+    expected_layer_ids = set(expected_by_layer)
     expected_roles = set(_expected_ep_roles(case))
     records_by_cluster: dict[str, list[Mapping[str, Any]]] = {}
+    actual_clusters: set[str] = set()
     for record in snapshot_records:
         cluster = str(record.get("cluster", "")).upper()
+        actual_clusters.add(cluster)
         if cluster not in expected_roles:
             errors.append(
                 "routing snapshot emitted for unexpected cluster "
@@ -4554,6 +4639,12 @@ def _validate_routing_snapshot_records(
             )
             continue
         records_by_cluster.setdefault(cluster, []).append(record)
+
+    if actual_clusters != expected_roles:
+        errors.append(
+            "routing snapshot cluster set mismatch "
+            f"expected={sorted(expected_roles)} actual={sorted(actual_clusters)}"
+        )
 
     for cluster in sorted(expected_roles):
         records = records_by_cluster.get(cluster, [])
@@ -4563,46 +4654,88 @@ def _validate_routing_snapshot_records(
                 f"cluster={cluster}"
             )
             continue
-        for record in records:
-            details = record.get("routing_details")
-            if not isinstance(details, Mapping):
+        if len(records) != 1:
+            errors.append(
+                "routing snapshot must contain exactly one record per cluster "
+                f"cluster={cluster} expected=1 actual={len(records)}"
+            )
+        record = records[0]
+        details = record.get("routing_details")
+        if not isinstance(details, Mapping):
+            errors.append(
+                f"routing snapshot details are invalid cluster={cluster}"
+            )
+            continue
+
+        expected_replica_ids = _expected_routing_snapshot_replica_ids(
+            case,
+            cluster,
+        )
+        actual_replica_ids = set(details)
+        if actual_replica_ids != expected_replica_ids:
+            errors.append(
+                "runtime routing snapshot Replica set mismatch "
+                f"cluster={cluster} expected={sorted(expected_replica_ids)} "
+                f"actual={sorted(actual_replica_ids)}"
+            )
+
+        for replica_id in sorted(expected_replica_ids):
+            if replica_id not in details:
+                continue
+            per_layer = details[replica_id]
+            if not isinstance(per_layer, Mapping):
                 errors.append(
-                    f"routing snapshot details are invalid cluster={cluster}"
+                    "runtime routing snapshot layer map is invalid "
+                    f"cluster={cluster} replica={replica_id}"
                 )
                 continue
-            for replica_id, per_layer in details.items():
-                for layer_id in sorted(expected_by_layer):
-                    actual = per_layer.get(layer_id)
-                    expected = expected_by_layer[layer_id]
-                    if actual is None:
+            actual_layer_ids = set(per_layer)
+            if actual_layer_ids != expected_layer_ids:
+                errors.append(
+                    "runtime routing snapshot layer set mismatch "
+                    f"cluster={cluster} replica={replica_id} "
+                    f"expected={sorted(expected_layer_ids)} "
+                    f"actual={sorted(actual_layer_ids)}"
+                )
+            for layer_id in sorted(expected_by_layer):
+                actual = per_layer.get(layer_id)
+                expected = expected_by_layer[layer_id]
+                if actual is None:
+                    errors.append(
+                        "runtime routing snapshot is missing MoE layer "
+                        f"cluster={cluster} replica={replica_id} "
+                        f"layer={layer_id}"
+                    )
+                    continue
+                if not isinstance(actual, Mapping):
+                    errors.append(
+                        "runtime routing snapshot expert map is invalid "
+                        f"cluster={cluster} replica={replica_id} "
+                        f"layer={layer_id}"
+                    )
+                    continue
+                if set(actual) != set(expected):
+                    errors.append(
+                        "runtime routing snapshot expert domain mismatch "
+                        f"cluster={cluster} replica={replica_id} "
+                        f"layer={layer_id} expected={sorted(expected)} "
+                        f"actual={sorted(actual)}"
+                    )
+                    continue
+                for expert_id, expected_ratio in expected.items():
+                    actual_ratio = float(actual[expert_id])
+                    if not math.isclose(
+                        actual_ratio,
+                        expected_ratio,
+                        rel_tol=0.0,
+                        abs_tol=1e-12,
+                    ):
                         errors.append(
-                            "runtime routing snapshot is missing MoE layer "
+                            "runtime routing snapshot ratio mismatch "
                             f"cluster={cluster} replica={replica_id} "
-                            f"layer={layer_id}"
+                            f"layer={layer_id} expert={expert_id} "
+                            f"expected={expected_ratio} actual={actual_ratio}"
                         )
-                        continue
-                    if set(actual) != set(expected):
-                        errors.append(
-                            "runtime routing snapshot expert domain mismatch "
-                            f"cluster={cluster} replica={replica_id} "
-                            f"layer={layer_id} expected={sorted(expected)} "
-                            f"actual={sorted(actual)}"
-                        )
-                        continue
-                    for expert_id, expected_ratio in expected.items():
-                        actual_ratio = float(actual[expert_id])
-                        if not math.isclose(
-                            actual_ratio,
-                            expected_ratio,
-                            rel_tol=0.0,
-                            abs_tol=1e-12,
-                        ):
-                            errors.append(
-                                "runtime routing snapshot ratio mismatch "
-                                f"cluster={cluster} replica={replica_id} "
-                                f"layer={layer_id} expert={expert_id} "
-                                f"expected={expected_ratio} actual={actual_ratio}"
-                            )
     return errors
 
 
