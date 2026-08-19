@@ -2990,7 +2990,7 @@ class BaseClusterScheduler(ABC):
         stage_id: int,
         batch_global_id: int,
         metrics_store,
-        combine_end_time: float | None = None,
+        combine_end_time: float,
     ):
         """
         Handle EP AllToAll combine collective synchronization in decode-ffn cluster.
@@ -3020,8 +3020,6 @@ class BaseClusterScheduler(ABC):
         ):
             raise ValueError("EP combine completion time must be finite")
         time = float(time)
-        if combine_end_time is None:
-            combine_end_time = time
         if (
             not isinstance(combine_end_time, Real)
             or isinstance(combine_end_time, bool)

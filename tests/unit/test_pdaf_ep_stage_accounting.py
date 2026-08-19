@@ -377,6 +377,7 @@ def test_ep_combine_collective_validates_source_ids_before_mutation() -> None:
             stage_id=0,
             batch_global_id=10,
             metrics_store=metrics_store,
+            combine_end_time=5.0,
         )
 
     assert scheduler._ep_allgather_waiting_room[0][0][10] is room
@@ -387,6 +388,17 @@ def test_ep_combine_collective_validates_source_ids_before_mutation() -> None:
         replica_scheduler.release_activation_memory_bytes.assert_not_called()
     metrics_store.on_replica_schedule.assert_not_called()
     metrics_store.flush_frontier_stage_batch_ledger_row.assert_not_called()
+
+
+def test_ep_combine_event_rejects_missing_combine_end_time() -> None:
+    with pytest.raises(ValueError, match="finite combine_end_time"):
+        EPAllToAllCombineCollectiveEvent(
+            time=5.0,
+            replica_id=0,
+            stage_id=0,
+            batch_global_id=10,
+            combine_end_time=None,  # type: ignore[arg-type]
+        )
 
 
 def test_ep_combine_collective_reschedules_only_non_empty_stage_lanes() -> None:
@@ -408,6 +420,7 @@ def test_ep_combine_collective_reschedules_only_non_empty_stage_lanes() -> None:
         stage_id=0,
         batch_global_id=10,
         metrics_store=Mock(),
+        combine_end_time=5.0,
     )
 
     schedule_events = [
@@ -451,6 +464,7 @@ def test_ep_combine_collective_reschedules_pending_dense_full_stage_queue() -> N
         stage_id=0,
         batch_global_id=10,
         metrics_store=Mock(),
+        combine_end_time=5.0,
     )
 
     schedule_events = [
@@ -500,6 +514,7 @@ def test_ep_combine_collective_rejects_invalid_source_id_cohort_before_lookup_or
                 stage_id=0,
                 batch_global_id=10,
                 metrics_store=metrics_store,
+                combine_end_time=5.0,
             )
         finally:
             assert scheduler._ep_allgather_waiting_room[0][0][10] is room
@@ -543,6 +558,7 @@ def test_ep_combine_collective_validates_token_conservation_before_mutation() ->
             stage_id=0,
             batch_global_id=10,
             metrics_store=metrics_store,
+            combine_end_time=5.0,
         )
 
     assert scheduler._ep_allgather_waiting_room[0][0][10] is room
@@ -580,6 +596,7 @@ def test_ep_combine_collective_requires_execution_time_from_every_lane() -> None
             stage_id=0,
             batch_global_id=10,
             metrics_store=metrics_store,
+            combine_end_time=5.0,
         )
 
     assert scheduler._ep_allgather_waiting_room[0][0][10] is room
@@ -612,6 +629,7 @@ def test_ep_combine_collective_validates_all_raw_batches_before_mutation() -> No
             stage_id=0,
             batch_global_id=10,
             metrics_store=metrics_store,
+            combine_end_time=5.0,
         )
 
     assert scheduler._ep_allgather_waiting_room[0][0][10] is room
@@ -656,6 +674,7 @@ def test_ep_combine_collective_prepares_all_transfer_events_before_mutation() ->
             stage_id=0,
             batch_global_id=10,
             metrics_store=metrics_store,
+            combine_end_time=5.0,
         )
 
     assert scheduler._ep_allgather_waiting_room[0][0][10] is room

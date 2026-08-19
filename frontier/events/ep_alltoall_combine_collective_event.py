@@ -1,3 +1,4 @@
+import math
 from typing import List, TYPE_CHECKING
 
 from frontier.events.base_event import BaseEvent
@@ -27,14 +28,22 @@ class EPAllToAllCombineCollectiveEvent(BaseEvent):
         stage_id: int,
         batch_global_id: int,
         *,
-        combine_end_time: float | None = None,
+        combine_end_time: float,
     ):
         super().__init__(time, EventType.EP_ALLTOALL_COMBINE_COLLECTIVE)
 
         self._replica_id = replica_id
         self._stage_id = stage_id
         self._batch_global_id = batch_global_id
-        self._combine_end_time = float(time if combine_end_time is None else combine_end_time)
+        if (
+            not isinstance(combine_end_time, (int, float))
+            or isinstance(combine_end_time, bool)
+            or not math.isfinite(float(combine_end_time))
+        ):
+            raise ValueError(
+                "EP combine event requires a finite combine_end_time"
+            )
+        self._combine_end_time = float(combine_end_time)
         if self._combine_end_time > float(time):
             raise ValueError(
                 "EP combine end time cannot be later than event completion time"
