@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import ast
 import csv
+import hashlib
 import itertools
 import json
 import math
@@ -111,6 +112,13 @@ OPTIMIZATION_MTP_MODEL_SPEC: Mapping[str, Any] = {
     "router_topk": 10,
 }
 ROUTING_DISTRIBUTIONS = ("balanced", "random", "skewed", "zipf")
+ROUTING_ORACLE_SCHEMA_VERSION = 2
+ROUTING_ORACLE_ALGORITHM = {
+    "name": "hamilton_largest_remainder",
+    "version": 1,
+    "weight_seed_policy": "numpy_default_rng(seed_plus_layer_id)",
+    "tie_break": "fraction_desc_then_global_expert_id_asc",
+}
 WORKLOADS: Mapping[str, tuple[int, int, int]] = {
     "prefill-heavy": (8, 1, 1),
     "decode-heavy": (2, 4, 1),
@@ -167,6 +175,7 @@ _EP_WORKLOAD_LINE_RE = re.compile(
     r"moe_ep_size=(?P<moe_ep_size>\d+),\s+"
     r"per_expert_tokens=(?P<per_expert_tokens>\{.*?\}),\s+"
     r"lane_compute_ms=(?P<lane_compute_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"(?:routed_compute_ms=(?P<routed_compute_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+)?"
     r"lane_comm_ms=(?P<lane_comm_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
     + _EP_TRACE_IDENTITY_SUFFIX
     + r"\s*$"
@@ -194,6 +203,9 @@ _EP_CONSERVATION_LINE_RE = re.compile(
     r"per_ep_routed_tokens=(?P<per_ep_routed_tokens>\{.*?\})"
     + _EP_TRACE_IDENTITY_SUFFIX
     + r"\s*$"
+)
+_OP_TRACE_LAYER_RE = re.compile(
+    r"\[OP-TRACE\][^\n]*?\blayer_id=(?P<layer_id>-?\d+)"
 )
 
 
@@ -682,11 +694,12 @@ def _expected_optimization_pair_specs(
     return specs
 
 
-def _pair_spec_key(spec: Mapping[str, Any]) -> tuple[str, str, str, str, str]:
+def _pair_spec_key(spec: Mapping[str, Any]) -> tuple[str, str, str, str, str, str]:
     return (
         str(spec["comparison_id"]),
         str(spec["group_id"]),
         str(spec["optimization"]),
+        str(spec["target_field"]),
         str(spec["control"].case_id),
         str(spec["enabled"].case_id),
     )
@@ -2893,17 +2906,17 @@ def _canonical_request_epoch_key(
     return tuple(sorted(pairs))
 
 
-def _read_ep_request_token_oracle(
+def _read_ep_stage_token_index(
     case: MatrixCase,
     metrics_dir: Path,
 ) -> dict[tuple[Any, ...], int]:
-    """Derive MoE routing-token counts from the independent stage ledger.
+    """Index runtime stage-ledger token counts by physical wave identity.
 
     Only ``FULL_STAGE_WORLD`` rows are accepted.  EP-lane rows already contain
-    post-routing token subsets and would double-count the pre-routing batch if
-    used as the oracle.  A missing or ambiguous full-stage payload is a hard
-    evidence failure; the runtime's self-reported conservation count is never
-    treated as a fallback oracle.
+    post-routing token subsets and would double-count the pre-routing batch.
+    This index is used only for runtime batch/request identity.  It is not an
+    independent token truth source; the pre-run routing-input sidecar is the
+    numeric oracle used by strict validation.
     """
 
     path = metrics_dir / "frontier_stage_batch_ledger.jsonl"
@@ -3069,6 +3082,533 @@ def _read_ep_request_token_oracle(
     return oracle
 
 
+def _case_fingerprint(case: MatrixCase) -> str:
+    """Return a stable digest for the exact matrix-case payload."""
+
+    payload = json.dumps(
+        _serialized_case_payload(case),
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _routing_input_expected_token_total(
+    case: MatrixCase,
+    *,
+    cluster: str,
+) -> int:
+    """Return the pre-run logical token budget for one MoE execution role."""
+
+    cluster_name = str(cluster).upper()
+    if case.architecture == "co-location":
+        if cluster_name != "MONOLITHIC":
+            raise ValueError(
+                f"unexpected co-location routing role: {cluster_name}"
+            )
+        per_request = int(case.prefill_tokens) + int(case.decode_tokens)
+    elif case.architecture in {"pd-disaggregation", "pd-af-disaggregation"}:
+        if cluster_name == "PREFILL":
+            per_request = int(case.prefill_tokens)
+        elif cluster_name in {"DECODE", "DECODE_FFN"}:
+            per_request = int(case.decode_tokens)
+        else:
+            raise ValueError(
+                f"unexpected disaggregation routing role: {cluster_name}"
+            )
+    else:
+        raise ValueError(f"unsupported routing-input architecture: {case.architecture}")
+    return int(case.num_requests) * per_request
+
+
+def _expected_routing_details_snapshot(
+    case: MatrixCase,
+) -> list[dict[str, Any]]:
+    """Materialize the pre-run routing ratios independently of runtime output."""
+
+    snapshot: list[dict[str, Any]] = []
+    for layer_id in case.moe_layer_ids:
+        total_experts = int(case.total_experts)
+        rng = np.random.default_rng(int(case.seed) + int(layer_id))
+        distribution = str(case.routing_distribution).strip().lower()
+        if distribution == "balanced":
+            weights = np.ones(total_experts, dtype=float)
+        elif distribution == "random":
+            weights = rng.uniform(0.1, 1.0, total_experts)
+        elif distribution == "skewed":
+            ranks = np.arange(1, total_experts + 1, dtype=float)
+            weights = 1.0 / np.power(ranks, 0.35)
+        elif distribution == "zipf":
+            ranks = np.arange(1, total_experts + 1, dtype=float)
+            weights = 1.0 / ranks
+        else:
+            raise ValueError(
+                f"unsupported case routing distribution: {case.routing_distribution!r}"
+            )
+        total_weight = float(np.sum(weights))
+        if not math.isfinite(total_weight) or total_weight <= 0.0:
+            raise ValueError("routing_details snapshot has an invalid weight sum")
+        ratios = [float(weight / total_weight) for weight in weights]
+        if not math.isclose(sum(ratios), 1.0, rel_tol=0.0, abs_tol=1e-12):
+            raise ValueError("routing_details snapshot ratios are not normalized")
+        snapshot.append(
+            {
+                "layer_id": int(layer_id),
+                "ratios": ratios,
+            }
+        )
+    return snapshot
+
+
+def _hamilton_counts_from_ratios(
+    ratios: Sequence[float],
+    *,
+    total_assignments: int,
+) -> dict[int, int]:
+    """Integerize one persisted routing ratio vector with a fixed tie-break."""
+
+    if type(total_assignments) is not int or total_assignments < 0:
+        raise ValueError("total_assignments must be a non-negative int")
+    if not ratios:
+        raise ValueError("routing ratios must be non-empty")
+    if any(
+        not isinstance(ratio, (int, float))
+        or not math.isfinite(float(ratio))
+        or float(ratio) < 0.0
+        for ratio in ratios
+    ):
+        raise ValueError("routing ratios must be finite and non-negative")
+    ratio_sum = float(sum(float(ratio) for ratio in ratios))
+    if not math.isclose(ratio_sum, 1.0, rel_tol=0.0, abs_tol=1e-12):
+        raise ValueError(f"routing ratios must sum to one, got {ratio_sum}")
+    quotas = [
+        float(total_assignments) * float(ratio)
+        for ratio in ratios
+    ]
+    counts = {
+        expert_id: int(math.floor(quota))
+        for expert_id, quota in enumerate(quotas)
+    }
+    remainder = int(total_assignments - sum(counts.values()))
+    ranked_experts = sorted(
+        range(len(quotas)),
+        key=lambda expert_id: (
+            -(quotas[expert_id] - counts[expert_id]),
+            expert_id,
+        ),
+    )
+    for expert_id in ranked_experts[:remainder]:
+        counts[expert_id] += 1
+    if sum(counts.values()) != total_assignments:
+        raise ValueError("Hamilton routing counts are not conserved")
+    return counts
+
+
+def _expected_expert_ownership(
+    case: MatrixCase,
+    *,
+    cluster: str,
+) -> dict[int, list[int]]:
+    """Return the fixed contiguous global-expert ownership for one EP role."""
+
+    ep_size = _expected_ep_size_for_cluster(case, cluster)
+    if ep_size is None or ep_size <= 0:
+        raise ValueError(f"unsupported EP role for ownership: {cluster}")
+    total_experts = int(case.total_experts)
+    if total_experts % ep_size != 0:
+        raise ValueError(
+            "total_experts must be divisible by EP size for ownership oracle"
+        )
+    experts_per_ep = total_experts // ep_size
+    return {
+        ep_id: list(
+            range(ep_id * experts_per_ep, (ep_id + 1) * experts_per_ep)
+        )
+        for ep_id in range(ep_size)
+    }
+
+
+def _build_routing_input_ledger(
+    case: MatrixCase,
+    *,
+    source_provenance: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Build the pre-run routing/token sidecar for one matrix case.
+
+    The sidecar contains logical request budgets and aggregate role/layer token
+    totals only.  It intentionally does not invent request-to-expert
+    assignments; expert allocation remains the independent Hamilton check in
+    ``_reference_routing_counts``.
+    """
+
+    oracle_status = "READY"
+    oracle_reason = ""
+    if case.optimization_stratum in {"prefix", "mtp"}:
+        oracle_status = "UNSUPPORTED"
+        oracle_reason = (
+            "prefix-cache and MTP token budgets require dedicated semantic "
+            "oracles before strict routing validation"
+        )
+
+    logical_token_segments: list[dict[str, Any]] = []
+    for request_id in range(int(case.num_requests)):
+        logical_token_segments.append(
+            {
+                "request_id": str(request_id),
+                "runtime_epoch": 0,
+                "phase": "prefill",
+                "iteration_id": 0,
+                "token_count": int(case.prefill_tokens),
+            }
+        )
+        for iteration_id in range(int(case.decode_tokens)):
+            logical_token_segments.append(
+                {
+                    "request_id": str(request_id),
+                    "runtime_epoch": 0,
+                    "phase": "decode",
+                    "iteration_id": iteration_id,
+                    "token_count": 1,
+                }
+            )
+
+    routing_details_snapshot = _expected_routing_details_snapshot(case)
+    snapshot_by_layer = {
+        int(entry["layer_id"]): entry["ratios"]
+        for entry in routing_details_snapshot
+    }
+    expected_totals: list[dict[str, Any]] = []
+    for cluster in _expected_ep_roles(case):
+        ownership = _expected_expert_ownership(case, cluster=cluster)
+        for layer_id in case.moe_layer_ids:
+            routing_token_count = _routing_input_expected_token_total(
+                case,
+                cluster=cluster,
+            )
+            global_counts = _hamilton_counts_from_ratios(
+                snapshot_by_layer[int(layer_id)],
+                total_assignments=routing_token_count * int(case.router_topk),
+            )
+            per_ep_counts = {
+                str(ep_id): sum(
+                    global_counts[expert_id] for expert_id in expert_ids
+                )
+                for ep_id, expert_ids in ownership.items()
+            }
+            expected_totals.append(
+                {
+                    "cluster": cluster,
+                    "replica_id": None,
+                    "layer_id": int(layer_id),
+                    "routing_token_count": routing_token_count,
+                    "expected_global_counts": {
+                        str(expert_id): int(token_count)
+                        for expert_id, token_count in global_counts.items()
+                    },
+                    "expected_per_ep_routed_tokens": per_ep_counts,
+                }
+            )
+    return {
+        "schema_version": ROUTING_ORACLE_SCHEMA_VERSION,
+        "oracle_status": oracle_status,
+        "oracle_reason": oracle_reason,
+        "case_id": case.case_id,
+        "case_fingerprint": _case_fingerprint(case),
+        "case": _serialized_case_payload(case),
+        "source_provenance": dict(source_provenance),
+        "model": {
+            "model_kind": case.model_kind,
+            "model_name": case.model_name,
+            "num_layers": int(case.num_layers),
+            "moe_layer_ids": [int(layer_id) for layer_id in case.moe_layer_ids],
+        },
+        "routing": {
+            "distribution": case.routing_distribution,
+            "seed": int(case.seed),
+            "total_experts": int(case.total_experts),
+            "router_topk": int(case.router_topk),
+        },
+        "routing_algorithm": dict(ROUTING_ORACLE_ALGORITHM),
+        "routing_details_snapshot": routing_details_snapshot,
+        "topology": {
+            "architecture": case.architecture,
+            "total_cards": int(case.total_cards),
+            "pipeline_stages": int(case.pipeline_stages),
+            "replica_count": int(case.replica_count),
+            "prefill_replicas": int(case.prefill_replicas),
+            "decode_replicas": int(case.decode_replicas),
+            "decode_attn_replicas": int(case.decode_attn_replicas),
+            "decode_ffn_replicas": int(case.decode_ffn_replicas),
+            "ep_size": int(case.ep_size),
+        },
+        "logical_token_segments": logical_token_segments,
+        "expected_routing_token_totals": expected_totals,
+    }
+
+
+def _write_routing_input_ledger(
+    metrics_dir: Path,
+    case: MatrixCase,
+    *,
+    source_provenance: Mapping[str, Any],
+) -> Path:
+    """Persist one pre-run routing/token sidecar before launching the case."""
+
+    metrics_dir.mkdir(parents=True, exist_ok=True)
+    path = metrics_dir / "frontier_routing_input_ledger.json"
+    path.write_text(
+        json.dumps(
+            _build_routing_input_ledger(
+                case,
+                source_provenance=source_provenance,
+            ),
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def _read_ep_request_token_oracle(
+    case: MatrixCase,
+    metrics_dir: Path,
+    *,
+    expected_source_provenance: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Read independent pre-run routing/token truth from the sidecar."""
+
+    path_candidates = [
+        metrics_dir / "frontier_routing_input_ledger.json",
+        *(
+            parent / "frontier_routing_input_ledger.json"
+            for parent in metrics_dir.parents
+        ),
+    ]
+    path = next((candidate for candidate in path_candidates if candidate.is_file()), None)
+    if path is None:
+        raise FileNotFoundError(
+            "missing routing input ledger: "
+            f"{metrics_dir / 'frontier_routing_input_ledger.json'}"
+        )
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid routing input ledger JSON: {path}") from exc
+    if not isinstance(payload, Mapping):
+        raise ValueError(f"routing input ledger must be an object: {path}")
+    if payload.get("schema_version") != ROUTING_ORACLE_SCHEMA_VERSION:
+        raise ValueError(
+            "routing input ledger schema_version must be "
+            f"{ROUTING_ORACLE_SCHEMA_VERSION}: {path}"
+        )
+    if payload.get("oracle_status") != "READY":
+        raise ValueError(
+            "routing input ledger oracle is not ready: "
+            f"status={payload.get('oracle_status')!r} "
+            f"reason={payload.get('oracle_reason', '')!r}"
+        )
+    if payload.get("case_id") != case.case_id:
+        raise ValueError(
+            "routing input ledger case_id mismatch: "
+            f"row={payload.get('case_id')!r} expected={case.case_id!r}"
+        )
+    if payload.get("case_fingerprint") != _case_fingerprint(case):
+        raise ValueError(
+            "routing input ledger case_fingerprint mismatch: "
+            f"path={path}"
+        )
+    if payload.get("case") != _serialized_case_payload(case):
+        raise ValueError(
+            f"routing input ledger case payload mismatch: {path}"
+        )
+    _validate_source_provenance(
+        payload.get("source_provenance"),
+        expected=expected_source_provenance,
+        context=f"routing input ledger {path}",
+    )
+
+    routing = payload.get("routing")
+    if not isinstance(routing, Mapping):
+        raise ValueError(f"routing input ledger is missing routing metadata: {path}")
+    expected_routing = {
+        "distribution": case.routing_distribution,
+        "seed": int(case.seed),
+        "total_experts": int(case.total_experts),
+        "router_topk": int(case.router_topk),
+    }
+    if dict(routing) != expected_routing:
+        raise ValueError(
+            "routing input ledger routing metadata mismatch: "
+            f"row={dict(routing)!r} expected={expected_routing!r}"
+        )
+    routing_algorithm = payload.get("routing_algorithm")
+    if dict(routing_algorithm or {}) != ROUTING_ORACLE_ALGORITHM:
+        raise ValueError(
+            "routing input ledger routing algorithm mismatch: "
+            f"row={routing_algorithm!r} expected={ROUTING_ORACLE_ALGORITHM!r}"
+        )
+    routing_details_snapshot = payload.get("routing_details_snapshot")
+    expected_snapshot = _expected_routing_details_snapshot(case)
+    if routing_details_snapshot != expected_snapshot:
+        raise ValueError(
+            "routing_details_snapshot mismatch: "
+            f"row={routing_details_snapshot!r} expected={expected_snapshot!r}"
+        )
+
+    segments = payload.get("logical_token_segments")
+    if not isinstance(segments, list) or not segments:
+        raise ValueError(
+            "routing input ledger logical_token_segments must be non-empty"
+        )
+    normalized_segments: list[dict[str, Any]] = []
+    segment_keys: set[tuple[str, int, str, int]] = set()
+    for index, segment in enumerate(segments):
+        if not isinstance(segment, Mapping):
+            raise ValueError(
+                f"routing input ledger segment {index} is not an object"
+            )
+        request_id = segment.get("request_id")
+        runtime_epoch = segment.get("runtime_epoch")
+        phase = segment.get("phase")
+        iteration_id = segment.get("iteration_id")
+        token_count = segment.get("token_count")
+        if (
+            not isinstance(request_id, str)
+            or not request_id
+            or type(runtime_epoch) is not int
+            or runtime_epoch < 0
+            or not isinstance(phase, str)
+            or not phase
+            or type(iteration_id) is not int
+            or iteration_id < 0
+            or type(token_count) is not int
+            or token_count < 0
+        ):
+            raise ValueError(
+                f"routing input ledger segment {index} has invalid fields"
+            )
+        key = (request_id, runtime_epoch, phase, iteration_id)
+        if key in segment_keys:
+            raise ValueError(
+                f"routing input ledger has duplicate logical segment key={key!r}"
+            )
+        segment_keys.add(key)
+        normalized_segments.append(
+            {
+                "request_id": request_id,
+                "runtime_epoch": runtime_epoch,
+                "phase": phase,
+                "iteration_id": iteration_id,
+                "token_count": token_count,
+            }
+        )
+
+    raw_totals = payload.get("expected_routing_token_totals")
+    if not isinstance(raw_totals, list) or not raw_totals:
+        raise ValueError(
+            "routing input ledger expected_routing_token_totals must be non-empty"
+        )
+    totals: dict[tuple[str, int | None, int], int] = {}
+    expected_global_counts_by_key: dict[
+        tuple[str, int | None, int], dict[int, int]
+    ] = {}
+    expected_per_ep_by_key: dict[
+        tuple[str, int | None, int], dict[int, int]
+    ] = {}
+    for index, entry in enumerate(raw_totals):
+        if not isinstance(entry, Mapping):
+            raise ValueError(
+                f"routing input ledger total {index} is not an object"
+            )
+        cluster = entry.get("cluster")
+        replica_id = entry.get("replica_id")
+        layer_id = entry.get("layer_id")
+        token_count = entry.get("routing_token_count")
+        if (
+            not isinstance(cluster, str)
+            or not cluster
+            or (
+                replica_id is not None
+                and (type(replica_id) is not int or replica_id < 0)
+            )
+            or type(layer_id) is not int
+            or layer_id < 0
+            or type(token_count) is not int
+            or token_count < 0
+        ):
+            raise ValueError(
+                f"routing input ledger total {index} has invalid fields"
+            )
+        key = (cluster.upper(), replica_id, layer_id)
+        if key in totals:
+            raise ValueError(
+                "routing input ledger has duplicate expected total key="
+                f"{key!r}"
+            )
+        expected_global_counts = entry.get("expected_global_counts")
+        expected_per_ep = entry.get("expected_per_ep_routed_tokens")
+        normalized_global_counts: dict[int, int] | None = None
+        normalized_per_ep: dict[int, int] | None = None
+        if expected_global_counts is not None:
+            if not isinstance(expected_global_counts, Mapping):
+                raise ValueError(
+                    f"routing input ledger total {index} expected_global_counts "
+                    "must be an object"
+                )
+            normalized_global_counts = {}
+            for expert_id, count in expected_global_counts.items():
+                try:
+                    expert_key = int(expert_id)
+                except (TypeError, ValueError) as exc:
+                    raise ValueError(
+                        f"routing input ledger total {index} has invalid expert ID"
+                    ) from exc
+                if (
+                    expert_key < 0
+                    or type(count) is not int
+                    or count < 0
+                ):
+                    raise ValueError(
+                        f"routing input ledger total {index} has invalid "
+                        "expected_global_counts"
+                    )
+                normalized_global_counts[expert_key] = int(count)
+        if expected_per_ep is not None:
+            if not isinstance(expected_per_ep, Mapping):
+                raise ValueError(
+                    f"routing input ledger total {index} "
+                    "expected_per_ep_routed_tokens must be an object"
+                )
+            normalized_per_ep = {}
+            for ep_id, count in expected_per_ep.items():
+                try:
+                    ep_key = int(ep_id)
+                except (TypeError, ValueError) as exc:
+                    raise ValueError(
+                        f"routing input ledger total {index} has invalid EP ID"
+                    ) from exc
+                if ep_key < 0 or type(count) is not int or count < 0:
+                    raise ValueError(
+                        f"routing input ledger total {index} has invalid "
+                        "expected_per_ep_routed_tokens"
+                    )
+                normalized_per_ep[ep_key] = int(count)
+        totals[key] = token_count
+        if normalized_global_counts is not None:
+            expected_global_counts_by_key[key] = normalized_global_counts
+        if normalized_per_ep is not None:
+            expected_per_ep_by_key[key] = normalized_per_ep
+    return {
+        "totals": totals,
+        "logical_token_segments": normalized_segments,
+        "routing_details_snapshot": expected_snapshot,
+        "expected_global_counts": expected_global_counts_by_key,
+        "expected_per_ep_routed_tokens": expected_per_ep_by_key,
+    }
+
+
 def _expected_ep_request_identity_sets(
     independent_token_oracle: Mapping[tuple[Any, ...], int],
 ) -> dict[tuple[str, int], set[tuple[int, int]]]:
@@ -3136,7 +3676,7 @@ def _read_ep_expected_wave_manifest(
     # Reuse the token-oracle parser first.  Besides avoiding a second schema
     # implementation, this guarantees that every manifest row has a valid,
     # independent token payload and that duplicate full-stage rows are rejected.
-    _read_ep_request_token_oracle(case, metrics_dir)
+    _read_ep_stage_token_index(case, metrics_dir)
     path = metrics_dir / "frontier_stage_batch_ledger.jsonl"
     expected_clusters = set(_expected_ep_roles(case))
     grouped: dict[
@@ -3233,7 +3773,22 @@ def _read_ep_expected_wave_manifest(
             )
         request_epoch_key = next(iter(request_epoch_keys))
         for stage_id in sorted(stage_payloads):
-            for layer_id in sorted(int(item) for item in case.moe_layer_ids):
+            if case.num_layers % case.pipeline_stages != 0:
+                raise ValueError(
+                    "EP expected wave manifest requires model layers to divide "
+                    "pipeline stages exactly: "
+                    f"num_layers={case.num_layers} "
+                    f"pipeline_stages={case.pipeline_stages}"
+                )
+            layers_per_stage = case.num_layers // case.pipeline_stages
+            first_layer_id = stage_id * layers_per_stage
+            last_layer_id = first_layer_id + layers_per_stage
+            stage_moe_layer_ids = sorted(
+                int(item)
+                for item in case.moe_layer_ids
+                if first_layer_id <= int(item) < last_layer_id
+            )
+            for layer_id in stage_moe_layer_ids:
                 manifest[
                     (
                         cluster,
@@ -3722,6 +4277,10 @@ def _parse_ep_workload_records(text: str) -> list[dict[str, Any]]:
             normalized_tokens[int(expert_id)] = int(token_count)
 
         lane_compute_ms = float(groups["lane_compute_ms"])
+        routed_compute_raw = groups.get("routed_compute_ms")
+        routed_compute_ms = (
+            None if routed_compute_raw is None else float(routed_compute_raw)
+        )
         lane_comm_ms = float(groups["lane_comm_ms"])
         ep_id = int(groups["ep_id"])
         moe_ep_size = int(groups["moe_ep_size"])
@@ -3733,6 +4292,12 @@ def _parse_ep_workload_records(text: str) -> list[dict[str, Any]]:
             raise ValueError("EP workload lane_compute_ms must be finite and non-negative")
         if not math.isfinite(lane_comm_ms) or lane_comm_ms < 0:
             raise ValueError("EP workload lane_comm_ms must be finite and non-negative")
+        if routed_compute_ms is not None and (
+            not math.isfinite(routed_compute_ms) or routed_compute_ms < 0
+        ):
+            raise ValueError(
+                "EP workload routed_compute_ms must be finite and non-negative"
+            )
 
         batch_id = int(groups["batch_id"])
         layer_id = int(groups["layer_id"])
@@ -3748,6 +4313,8 @@ def _parse_ep_workload_records(text: str) -> list[dict[str, Any]]:
             "lane_compute_ms": lane_compute_ms,
             "lane_comm_ms": lane_comm_ms,
         }
+        if routed_compute_ms is not None:
+            record["routed_compute_ms"] = routed_compute_ms
         identity = _parse_ep_trace_identity(groups)
         if identity is not None:
             record["trace_identity"] = identity
@@ -4147,6 +4714,28 @@ def _parse_ep_conservation_records(text: str) -> list[dict[str, Any]]:
     return records
 
 
+def _parse_op_trace_layer_records(text: str) -> list[dict[str, Any]]:
+    """Parse layer identities only from production operation-trace lines."""
+
+    records: list[dict[str, Any]] = []
+    for line in text.splitlines():
+        if "[OP-TRACE]" not in line:
+            continue
+        match = _OP_TRACE_LAYER_RE.search(line)
+        if match is None:
+            continue
+        layer_id = int(match.group("layer_id"))
+        if layer_id < 0:
+            raise ValueError("operation trace layer_id must be non-negative")
+        records.append(
+            {
+                "layer_id": layer_id,
+                "is_moe": "[MOE]" in line,
+            }
+        )
+    return records
+
+
 def _reference_routing_counts(
     case: MatrixCase,
     *,
@@ -4218,6 +4807,8 @@ def check_case_log(
     *,
     strict_layers: bool = False,
     require_independent_token_oracle: bool = False,
+    require_operation_layer_oracle: bool = False,
+    expected_source_provenance: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Check workflow evidence and numeric metrics for one completed run."""
 
@@ -4239,6 +4830,11 @@ def check_case_log(
     layer_ids = sorted({int(match) for match in re.findall(r"layer_id=(\d+)", text)})
     if not layer_ids:
         errors.append("no layer_id trace")
+    try:
+        op_trace_layer_records = _parse_op_trace_layer_records(text)
+    except ValueError as exc:
+        op_trace_layer_records = []
+        errors.append(f"invalid operation layer trace: {exc}")
     if strict_layers:
         expected_layer_ids = list(range(case.num_layers))
         if layer_ids != expected_layer_ids:
@@ -4264,6 +4860,32 @@ def check_case_log(
                     "mixed MoE layer ids are incomplete "
                     f"expected={expected_moe_layer_ids} actual={moe_layer_ids_seen}"
                 )
+        if require_operation_layer_oracle:
+            operation_layer_ids = sorted(
+                {int(record["layer_id"]) for record in op_trace_layer_records}
+            )
+            if operation_layer_ids != expected_layer_ids:
+                errors.append(
+                    "operation trace layer ids are not contiguous "
+                    f"expected={expected_layer_ids} actual={operation_layer_ids}"
+                )
+            operation_moe_layer_ids = sorted(
+                {
+                    int(record["layer_id"])
+                    for record in op_trace_layer_records
+                    if record["is_moe"]
+                }
+            )
+            if case.model_kind == "mixed":
+                expected_moe_layer_ids = sorted(
+                    int(layer_id) for layer_id in case.moe_layer_ids
+                )
+                if operation_moe_layer_ids != expected_moe_layer_ids:
+                    errors.append(
+                        "operation trace MoE layer ids are incomplete "
+                        f"expected={expected_moe_layer_ids} "
+                        f"actual={operation_moe_layer_ids}"
+                    )
 
     moe_trace_count = text.count("[MOE]")
     ep_participant_records = text.count("per_expert_tokens extracted:")
@@ -4283,6 +4905,7 @@ def check_case_log(
         ep_conservation_records = []
         errors.append(f"invalid EP conservation trace: {exc}")
     independent_token_oracle: dict[tuple[Any, ...], int] | None = None
+    routing_input_oracle: dict[str, Any] | None = None
     expected_request_identity_sets: (
         dict[tuple[str, int], set[tuple[int, int]]] | None
     ) = None
@@ -4293,7 +4916,12 @@ def check_case_log(
         and require_independent_token_oracle
     ):
         try:
-            independent_token_oracle = _read_ep_request_token_oracle(
+            routing_input_oracle = _read_ep_request_token_oracle(
+                case,
+                metrics_dir,
+                expected_source_provenance=expected_source_provenance,
+            )
+            independent_token_oracle = _read_ep_stage_token_index(
                 case,
                 metrics_dir,
             )
@@ -4425,12 +5053,29 @@ def check_case_log(
                 dict[int, int],
             ] = {}
             routing_token_count_by_wave: dict[tuple[Any, ...], int] = {}
+            observed_routing_totals_by_role_layer: Counter[tuple[str, int]] = Counter()
+            observed_routing_totals_by_role_replica_layer: Counter[
+                tuple[str, int, int]
+            ] = Counter()
             for conservation in ep_conservation_records:
                 conservation_wave_key = _ep_wave_key(conservation)
                 reported_count = int(conservation["routing_token_count"])
+                cluster_name = str(conservation["cluster"]).upper()
+                layer_id = int(conservation["layer_id"])
+                observed_routing_totals_by_role_layer[
+                    (cluster_name, layer_id)
+                ] += reported_count
+                identity = conservation.get("trace_identity")
+                if identity is not None:
+                    observed_routing_totals_by_role_replica_layer[
+                        (
+                            cluster_name,
+                            int(identity["replica_id"]),
+                            layer_id,
+                        )
+                    ] += reported_count
                 expected_count = None
                 if independent_token_oracle is not None:
-                    identity = conservation.get("trace_identity")
                     if identity is not None:
                         identity_key = _ep_identity_key(identity)
                         request_epoch_key = tuple(
@@ -4467,6 +5112,38 @@ def check_case_log(
                 routing_token_count_by_wave[conservation_wave_key] = (
                     reported_count if expected_count is None else expected_count
                 )
+            if routing_input_oracle is not None:
+                expected_routing_totals = routing_input_oracle["totals"]
+                for (
+                    expected_cluster,
+                    expected_replica_id,
+                    expected_layer_id,
+                ), expected_count in sorted(expected_routing_totals.items()):
+                    if expected_replica_id is None:
+                        actual_count = observed_routing_totals_by_role_layer.get(
+                            (expected_cluster, expected_layer_id),
+                            0,
+                        )
+                    else:
+                        actual_count = (
+                            observed_routing_totals_by_role_replica_layer.get(
+                                (
+                                    expected_cluster,
+                                    expected_replica_id,
+                                    expected_layer_id,
+                                ),
+                                0,
+                            )
+                        )
+                    if actual_count != expected_count:
+                        errors.append(
+                            "EP conservation routing_token_count disagrees with "
+                            "independent routing input ledger "
+                            f"cluster={expected_cluster} "
+                            f"replica_id={expected_replica_id} "
+                            f"layer={expected_layer_id} "
+                            f"expected={expected_count} actual={actual_count}"
+                        )
             for wave_key, wave_records in records_by_wave.items():
                 cluster_name, _batch_id, layer_id = wave_key[:3]
                 expected_ep_size = _expected_ep_size_for_cluster(case, cluster_name)
@@ -4515,6 +5192,31 @@ def check_case_log(
                 expert_owner_by_id: dict[int, int] = {}
                 for record in wave_records:
                     ep_id = int(record["ep_id"])
+                    local_token_total = sum(
+                        int(token_count)
+                        for token_count in record["per_expert_tokens"].values()
+                    )
+                    if local_token_total == 0:
+                        routed_compute_ms = record.get("routed_compute_ms")
+                        if routed_compute_ms is None:
+                            errors.append(
+                                "zero-routed EP lane lacks independent routed "
+                                "compute evidence "
+                                f"cluster={cluster_name} batch_id={_batch_id} "
+                                f"layer={layer_id} ep_id={ep_id}"
+                            )
+                        elif not math.isclose(
+                            float(routed_compute_ms),
+                            0.0,
+                            rel_tol=0.0,
+                            abs_tol=1e-12,
+                        ):
+                            errors.append(
+                                "zero-routed EP lane has non-zero local compute "
+                                f"cluster={cluster_name} batch_id={_batch_id} "
+                                f"layer={layer_id} ep_id={ep_id} "
+                                f"routed_compute_ms={routed_compute_ms}"
+                            )
                     for expert_id, token_count in record[
                         "per_expert_tokens"
                     ].items():
@@ -5255,6 +5957,7 @@ def build_optimization_comparison(
     result_rows: Sequence[Mapping[str, Any]],
     *,
     require_complete_matrix: bool = False,
+    pair_specs: Sequence[Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     expected_case_count = sum(OPTIMIZATION_ARCHITECTURE_CASE_COUNTS.values())
     if require_complete_matrix and len(cases) != expected_case_count:
@@ -5262,11 +5965,16 @@ def build_optimization_comparison(
             "optimization comparison requires the complete matrix: "
             f"expected={expected_case_count} actual={len(cases)}"
         )
-    if len(cases) == expected_case_count:
+    if len(cases) == expected_case_count and pair_specs is None:
         _validate_expected_optimization_pair_set(
             cases,
             _optimization_pair_specs(cases),
         )
+    comparison_specs = (
+        list(_optimization_pair_specs(cases))
+        if pair_specs is None
+        else [dict(spec) for spec in pair_specs]
+    )
     case_by_id = {case.case_id: case for case in cases}
     if len(case_by_id) != len(cases):
         raise ValueError("optimization comparison cases contain duplicate case IDs")
@@ -5292,7 +6000,7 @@ def build_optimization_comparison(
 
     metric_fields = ("ttft_mean_ms", "tpot_mean_ms", "e2e_mean_ms")
     pair_rows: list[dict[str, Any]] = []
-    for spec in _optimization_pair_specs(cases):
+    for spec in comparison_specs:
         control = spec["control"]
         enabled = spec["enabled"]
         control_result = result_by_id[control.case_id]
@@ -5735,9 +6443,16 @@ def write_optimization_pair_manifest(
 ) -> None:
     """Persist the fixed expected optimization pair set for audit/replay."""
 
+    rows = _optimization_pair_manifest_rows(cases)
+    _write_jsonl(path, rows)
+
+
+def _optimization_pair_manifest_rows(
+    cases: Sequence[MatrixCase],
+) -> list[dict[str, str]]:
     specs = _expected_optimization_pair_specs(cases)
     _validate_expected_optimization_pair_set(cases, specs)
-    rows = [
+    return [
         {
             "comparison_id": spec["comparison_id"],
             "group_id": spec["group_id"],
@@ -5748,7 +6463,81 @@ def write_optimization_pair_manifest(
         }
         for spec in specs
     ]
-    _write_jsonl(path, rows)
+
+
+def _load_optimization_pair_manifest(path: Path) -> list[dict[str, Any]]:
+    if not path.is_file():
+        raise ValueError(
+            "persisted optimization pair manifest is missing: "
+            f"path={path}"
+        )
+    rows: list[dict[str, Any]] = []
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(),
+        1,
+    ):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                "persisted optimization pair manifest has invalid JSON: "
+                f"path={path} line={line_number}"
+            ) from exc
+        if not isinstance(row, dict):
+            raise ValueError(
+                "persisted optimization pair manifest row is not an object: "
+                f"path={path} line={line_number}"
+            )
+        rows.append(row)
+    return rows
+
+
+def _validate_persisted_optimization_pair_manifest(
+    path: Path,
+    cases: Sequence[MatrixCase],
+) -> list[dict[str, Any]]:
+    actual_rows = _load_optimization_pair_manifest(path)
+    expected_rows = _optimization_pair_manifest_rows(cases)
+    if actual_rows != expected_rows:
+        raise ValueError(
+            "persisted optimization pair manifest mismatch: "
+            f"path={path} expected_rows={len(expected_rows)} "
+            f"actual_rows={len(actual_rows)}"
+        )
+    case_by_id = {case.case_id: case for case in cases}
+    return [
+        {
+            "comparison_id": row["comparison_id"],
+            "group_id": row["group_id"],
+            "optimization": row["optimization"],
+            "target_field": row["target_field"],
+            "control": case_by_id[row["control_case_id"]],
+            "enabled": case_by_id[row["enabled_case_id"]],
+        }
+        for row in actual_rows
+    ]
+
+
+def _validate_persisted_case_manifest(
+    path: Path,
+    cases: Sequence[MatrixCase],
+) -> None:
+    if not path.is_file():
+        raise ValueError(
+            "persisted optimization case manifest is missing: "
+            f"path={path}"
+        )
+    actual_cases = _load_manifest(path)
+    expected_payloads = [_serialized_case_payload(case) for case in cases]
+    actual_payloads = [_serialized_case_payload(case) for case in actual_cases]
+    if actual_payloads != expected_payloads:
+        raise ValueError(
+            "persisted optimization case manifest mismatch: "
+            f"path={path} expected_rows={len(expected_payloads)} "
+            f"actual_rows={len(actual_payloads)}"
+        )
 
 
 def _load_manifest(path: Path) -> list[MatrixCase]:
@@ -5777,7 +6566,18 @@ def _run_case(
     case_dir.mkdir(parents=True, exist_ok=True)
     log_path = case_dir / f"{case.case_id}.log"
     metadata_path = case_dir / "case_metadata.json"
+    routing_input_ledger_path: Path | None = None
     run_started_at_s = time.time()
+    try:
+        routing_input_ledger_path = _write_routing_input_ledger(
+            case_dir,
+            case,
+            source_provenance=source_provenance,
+        )
+    except (OSError, ValueError) as exc:
+        raise RuntimeError(
+            f"unable to persist routing input ledger for {case.case_id}"
+        ) from exc
     metadata_path.write_text(
         json.dumps(
             {
@@ -5800,6 +6600,11 @@ def _run_case(
                 "output_root": str(output_root),
                 "results_path": str(results_path),
                 "source_provenance": dict(source_provenance),
+                "routing_input_ledger_path": (
+                    str(routing_input_ledger_path)
+                    if routing_input_ledger_path is not None
+                    else None
+                ),
                 "run_started_at_unix_s": run_started_at_s,
                 "trace_schema_version": 1,
             },
@@ -5849,6 +6654,8 @@ def _run_case(
             metrics_dir,
             strict_layers=True,
             require_independent_token_oracle=True,
+            require_operation_layer_oracle=True,
+            expected_source_provenance=source_provenance,
         )
         metrics_path = str(metrics_dir)
     except (FileNotFoundError, OSError) as exc:
@@ -6088,13 +6895,29 @@ def main(argv: Sequence[str] | None = None) -> int:
     output_root = (
         args.output_root if args.output_root is not None else default_output_root
     )
-    write_manifest(manifest_path, cases)
+    if args.mode == "compare":
+        _validate_persisted_case_manifest(manifest_path, cases)
+    else:
+        write_manifest(manifest_path, cases)
     print(f"manifest={manifest_path} cases={len(cases)}")
-    if (
+    has_complete_optimization_matrix = (
         args.matrix_kind == "optimization"
         and len(cases) == sum(OPTIMIZATION_ARCHITECTURE_CASE_COUNTS.values())
-    ):
-        write_optimization_pair_manifest(pair_manifest_path, cases)
+    )
+    persisted_pair_specs: list[dict[str, Any]] | None = None
+    if has_complete_optimization_matrix:
+        if args.mode == "compare":
+            persisted_pair_specs = _validate_persisted_optimization_pair_manifest(
+                pair_manifest_path,
+                cases,
+            )
+        elif pair_manifest_path.is_file():
+            _validate_persisted_optimization_pair_manifest(
+                pair_manifest_path,
+                cases,
+            )
+        else:
+            write_optimization_pair_manifest(pair_manifest_path, cases)
         print(
             f"expected_pair_manifest={pair_manifest_path} "
             f"pairs={len(_expected_optimization_pair_specs(cases))}"
@@ -6118,6 +6941,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             cases,
             result_rows,
             require_complete_matrix=True,
+            pair_specs=persisted_pair_specs,
         )
         json_path, csv_path, markdown_path = (
             write_optimization_comparison_artifacts(task_dir, report)

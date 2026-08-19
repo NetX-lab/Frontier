@@ -445,6 +445,7 @@ class BaseClusterScheduler(ABC):
         moe_ep_size: int,
         per_expert_tokens: Dict[int, int],
         lane_compute_ms: float,
+        routed_compute_ms: float,
         lane_comm_ms: float,
         trace_identity: Dict[str, Any],
     ) -> None:
@@ -482,6 +483,7 @@ class BaseClusterScheduler(ABC):
             normalized_tokens[int(expert_id)] = int(token_count)
         for name, value in (
             ("lane_compute_ms", lane_compute_ms),
+            ("routed_compute_ms", routed_compute_ms),
             ("lane_comm_ms", lane_comm_ms),
         ):
             if not isinstance(value, Real) or isinstance(value, bool):
@@ -496,6 +498,7 @@ class BaseClusterScheduler(ABC):
         logger.info(
             "[EP-WORKLOAD][%s] batch_id=%d, layer_id=%d, ep_id=%d, "
             "moe_ep_size=%d, per_expert_tokens=%s, lane_compute_ms=%.6f, "
+            "routed_compute_ms=%.6f, "
             "lane_comm_ms=%.6f, %s",
             cluster_name,
             batch_id,
@@ -504,6 +507,7 @@ class BaseClusterScheduler(ABC):
             moe_ep_size,
             dict(sorted(normalized_tokens.items())),
             float(lane_compute_ms),
+            float(routed_compute_ms),
             float(lane_comm_ms),
             BaseClusterScheduler._format_ep_trace_identity(trace_identity),
         )
@@ -3491,6 +3495,7 @@ class BaseClusterScheduler(ABC):
                     moe_ep_size=int(self._config.replica_config.moe_expert_parallel_size),
                     per_expert_tokens=dict(lane_batch.per_expert_tokens),
                     lane_compute_ms=lane_compute_ms,
+                    routed_compute_ms=routed_compute_ms,
                     lane_comm_ms=lane_comm_ms,
                     trace_identity=trace_identity,
                 )
@@ -3790,6 +3795,7 @@ class BaseClusterScheduler(ABC):
                     moe_ep_size=int(self._config.replica_config.moe_expert_parallel_size),
                     per_expert_tokens=dict(lane_batch.per_expert_tokens),
                     lane_compute_ms=lane_compute_ms,
+                    routed_compute_ms=routed_compute_ms,
                     lane_comm_ms=lane_comm_ms,
                     trace_identity=trace_identity,
                 )

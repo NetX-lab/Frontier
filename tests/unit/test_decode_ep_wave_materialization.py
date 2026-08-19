@@ -207,6 +207,7 @@ def test_decode_moe_layer_uses_local_ep_wave_and_slowest_lane_barrier(monkeypatc
     assert "[EP-WORKLOAD][DECODE]" in workload_lines[0]
     assert "ep_id=0" in workload_lines[0]
     assert "lane_compute_ms=2.000000" in workload_lines[0]
+    assert "routed_compute_ms=1.500000" in workload_lines[0]
     assert "lane_comm_ms=1.000000" in workload_lines[0]
     barrier_lines = [line for line in captured if "[EP-BARRIER]" in line]
     assert len(barrier_lines) == 2

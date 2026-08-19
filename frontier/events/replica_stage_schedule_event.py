@@ -392,6 +392,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         moe_ep_size=int(moe_ep_size),
                         per_expert_tokens=dict(batch.per_expert_tokens),
                         lane_compute_ms=lane_compute_ms,
+                        routed_compute_ms=expert_comp_time_ms,
                         lane_comm_ms=lane_comm_ms,
                         trace_identity=BaseClusterScheduler._build_ep_trace_identity(
                             batch=batch,

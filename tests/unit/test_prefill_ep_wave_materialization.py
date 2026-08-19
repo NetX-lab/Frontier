@@ -195,6 +195,7 @@ def test_prefill_moe_layer_materializes_global_distribution_once_and_waits_for_s
     assert "ep_id=0" in workload_lines[0]
     assert "per_expert_tokens={0: 0, 1: 0}" in workload_lines[0]
     assert "lane_compute_ms=2.000000" in workload_lines[0]
+    assert "routed_compute_ms=0.000000" in workload_lines[0]
     assert "lane_comm_ms=2.000000" in workload_lines[0]
     barrier_lines = [line for line in captured if "[EP-BARRIER]" in line]
     assert len(barrier_lines) == 2

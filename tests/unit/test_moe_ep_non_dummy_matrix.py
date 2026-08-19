@@ -364,6 +364,17 @@ def _single_layer_ep2_case(*, zero_routed: bool = False):
     )
 
 
+def _zero_routed_checker_case():
+    """Return a small case whose ownership and Hamilton counts are explicit."""
+
+    return replace(
+        _single_layer_ep2_case(zero_routed=True),
+        total_experts=4,
+        router_topk=2,
+        routing_distribution="balanced",
+    )
+
+
 def _independent_ep_wave_fixture(
     tmp_path: Path,
     *,
@@ -396,6 +407,22 @@ def _independent_ep_wave_fixture(
             )
             for batch_id in batch_ids
         ],
+    )
+    routing_input = matrix_module._build_routing_input_ledger(
+        case,
+        source_provenance=matrix_module._source_provenance(REPO_ROOT),
+    )
+    routing_input["expected_routing_token_totals"] = [
+        {
+            "cluster": "MONOLITHIC",
+            "replica_id": 0,
+            "layer_id": 0,
+            "routing_token_count": 2,
+        }
+    ]
+    (metrics_dir / "frontier_routing_input_ledger.json").write_text(
+        json.dumps(routing_input),
+        encoding="utf-8",
     )
     event_lines: list[str] = []
     for batch_id in batch_ids:
@@ -2109,6 +2136,15 @@ def test_optimization_compare_cli_writes_json_csv_and_markdown(
     output_root = tmp_path / "outputs"
     results_path = task_dir / "results.jsonl"
     source_provenance = matrix_module._source_provenance(REPO_ROOT)
+    pair_manifest_path = (
+        task_dir / "moe_ep_non_dummy_optimization_expected_pairs.jsonl"
+    )
+    task_dir.mkdir(parents=True)
+    matrix_module.write_manifest(
+        task_dir / "moe_ep_non_dummy_optimization_matrix_manifest.jsonl",
+        cases,
+    )
+    matrix_module.write_optimization_pair_manifest(pair_manifest_path, cases)
     result_rows = []
     for index, case in enumerate(cases):
         row = _optimization_result_row(case, metric_offset=float(index))
@@ -2135,7 +2171,7 @@ def test_optimization_compare_cli_writes_json_csv_and_markdown(
             }
         )
         result_rows.append(row)
-    results_path.parent.mkdir(parents=True)
+    results_path.parent.mkdir(parents=True, exist_ok=True)
     results_path.write_text(
         "".join(json.dumps(row, sort_keys=True) + "\n" for row in result_rows),
         encoding="utf-8",
@@ -2180,6 +2216,133 @@ def test_optimization_compare_cli_writes_json_csv_and_markdown(
     output = capsys.readouterr().out
     assert f"comparison_json={json_path}" in output
     assert f"comparison_markdown={markdown_path}" in output
+
+
+def test_optimization_compare_rejects_mutated_persisted_pair_manifest(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    task_dir = tmp_path / "task"
+    output_root = tmp_path / "outputs"
+    results_path = task_dir / "results.jsonl"
+    source_provenance = matrix_module._source_provenance(REPO_ROOT)
+    pair_manifest_path = (
+        task_dir / "moe_ep_non_dummy_optimization_expected_pairs.jsonl"
+    )
+    task_dir.mkdir(parents=True)
+    matrix_module.write_manifest(
+        task_dir / "moe_ep_non_dummy_optimization_matrix_manifest.jsonl",
+        cases,
+    )
+    matrix_module.write_optimization_pair_manifest(pair_manifest_path, cases)
+    pair_rows = [
+        json.loads(line)
+        for line in pair_manifest_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    pair_rows[0]["control_case_id"] = "nonexistent-control"
+    pair_manifest_path.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in pair_rows),
+        encoding="utf-8",
+    )
+
+    result_rows = []
+    for index, case in enumerate(cases):
+        case_dir = output_root / case.case_id
+        case_dir.mkdir(parents=True)
+        (case_dir / "case_metadata.json").write_text(
+            json.dumps(
+                {
+                    "case": asdict(case),
+                    "source_provenance": source_provenance,
+                },
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+        row = _optimization_result_row(case, metric_offset=float(index))
+        row.update(
+            {
+                "repo_root": str(REPO_ROOT.resolve()),
+                "output_root": str(output_root.resolve()),
+                "results_path": str(results_path.resolve()),
+                "log_path": str(case_dir / f"{case.case_id}.log"),
+                "metrics_path": str(case_dir / "metrics"),
+                "source_provenance": source_provenance,
+            }
+        )
+        result_rows.append(row)
+    results_path.parent.mkdir(parents=True, exist_ok=True)
+    results_path.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in result_rows),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        "tests.e2e.moe_ep_non_dummy_matrix.build_optimization_matrix",
+        lambda _repo_root: cases,
+    )
+
+    with pytest.raises(ValueError, match="persisted optimization pair manifest"):
+        main(
+            [
+                "--mode",
+                "compare",
+                "--matrix-kind",
+                "optimization",
+                "--repo-root",
+                str(REPO_ROOT),
+                "--task-dir",
+                str(task_dir),
+                "--output-root",
+                str(output_root),
+                "--results-path",
+                str(results_path),
+                "--pair-manifest-path",
+                str(pair_manifest_path),
+            ]
+        )
+
+
+@pytest.mark.parametrize(
+    ("mutation", "match"),
+    [
+        ("delete", "persisted optimization pair manifest mismatch"),
+        ("optimization", "persisted optimization pair manifest mismatch"),
+        ("target_field", "persisted optimization pair manifest mismatch"),
+        ("enabled", "persisted optimization pair manifest mismatch"),
+    ],
+)
+def test_persisted_pair_manifest_requires_exact_rows(
+    tmp_path: Path,
+    mutation: str,
+    match: str,
+) -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    path = tmp_path / "expected_pairs.jsonl"
+    matrix_module.write_optimization_pair_manifest(path, cases)
+    rows = [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    if mutation == "delete":
+        rows.pop()
+    elif mutation == "optimization":
+        rows[0]["optimization"] = "mtp"
+    elif mutation == "target_field":
+        rows[0]["target_field"] = "enable_mtp"
+    elif mutation == "enabled":
+        rows[0]["enabled_case_id"] = "missing-enabled-case"
+    else:
+        raise AssertionError(f"unsupported test mutation={mutation!r}")
+    path.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match=match):
+        matrix_module._validate_persisted_optimization_pair_manifest(path, cases)
 
 
 def test_preflight_classifies_each_case_without_launching(
@@ -3285,6 +3448,94 @@ def test_zero_routed_case_requires_a_lane_with_zero_total_workload(
     assert "zero-total EP lane" in result["errors"]
 
 
+def test_zero_routed_case_requires_zero_local_compute_for_zero_lane(
+    tmp_path: Path,
+) -> None:
+    case = _zero_routed_checker_case()
+    log_path = tmp_path / "zero_lane_nonzero_compute.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        _strict_ep_log(
+            workload_lines=[
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=0, moe_ep_size=2, per_expert_tokens={0: 0, 1: 0}, "
+                "lane_compute_ms=1.0, routed_compute_ms=1.0, "
+                "lane_comm_ms=0.0",
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=1, moe_ep_size=2, per_expert_tokens={2: 1, 3: 1}, "
+                "lane_compute_ms=1.0, routed_compute_ms=1.0, "
+                "lane_comm_ms=0.0",
+            ],
+            conservation_lines=[
+                "[EP-CONSERVATION][MONOLITHIC] batch_id=10, layer_id=0, "
+                "routing_token_count=1, router_topk=2, "
+                "total_routed_assignments=2, "
+                "per_ep_routed_tokens={0: 0, 1: 2}",
+            ],
+            barrier_lines=[
+                "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+                "phase=dispatch, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+                "barrier_time_ms=1.0, barrier_end_time_s=0.001",
+                "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+                "phase=combine, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+                "barrier_time_ms=1.0, barrier_end_time_s=0.002",
+            ],
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "zero-routed EP lane has non-zero local compute" in result["errors"]
+
+
+def test_zero_routed_case_requires_independent_routed_compute_evidence(
+    tmp_path: Path,
+) -> None:
+    case = _zero_routed_checker_case()
+    log_path = tmp_path / "zero_lane_missing_routed_compute.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        _strict_ep_log(
+            workload_lines=[
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=0, moe_ep_size=2, per_expert_tokens={0: 0, 1: 0}, "
+                "lane_compute_ms=1.0, lane_comm_ms=0.0",
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=1, moe_ep_size=2, per_expert_tokens={2: 1, 3: 1}, "
+                "lane_compute_ms=1.0, lane_comm_ms=0.0",
+            ],
+            conservation_lines=[
+                "[EP-CONSERVATION][MONOLITHIC] batch_id=10, layer_id=0, "
+                "routing_token_count=1, router_topk=2, "
+                "total_routed_assignments=2, "
+                "per_ep_routed_tokens={0: 0, 1: 2}",
+            ],
+            barrier_lines=[
+                "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+                "phase=dispatch, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+                "barrier_time_ms=1.0, barrier_end_time_s=0.001",
+                "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+                "phase=combine, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+                "barrier_time_ms=1.0, barrier_end_time_s=0.002",
+            ],
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(case, log_path, metrics_dir, strict_layers=True)
+
+    assert result["status"] == "FAIL"
+    assert "lacks independent routed compute evidence" in result["errors"]
+
+
 @pytest.mark.parametrize(
     ("architecture", "present_role", "missing_role", "ep_size_field"),
     (
@@ -3462,6 +3713,45 @@ def test_strict_dense_checker_requires_complete_layer_coverage(tmp_path: Path) -
 
     assert result["status"] == "FAIL"
     assert "layer ids are not contiguous" in result["errors"]
+
+
+def test_strict_checker_does_not_count_unrelated_layer_ids_as_execution(
+    tmp_path: Path,
+) -> None:
+    case = replace(
+        next(
+            case
+            for case in build_matrix(REPO_ROOT)
+            if case.architecture == "co-location" and case.model_kind == "dense"
+        ),
+        num_layers=2,
+        moe_layer_ids=(),
+    )
+    log_path = tmp_path / "forged_layer.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        "\n".join(
+            [
+                "Dummy Mode: false",
+                "Simulation completed successfully.",
+                "[OP-TRACE][MONOLITHIC][ATTENTION] batch_id=0, layer_id=0, num_tokens=1",
+                "[UNRELATED-METRIC] layer_id=1, value=1",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_operation_layer_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert "operation trace layer ids are not contiguous" in result["errors"]
 
 
 def test_chunked_prefill_control_ignores_legacy_stage_ledger_schema(
@@ -3644,6 +3934,58 @@ def test_strict_mixed_checker_rejects_dense_layer_ep_wave(
     assert "dense layer emitted EP protocol evidence" in result["errors"]
 
 
+def test_strict_mixed_checker_requires_dense_operation_trace(
+    tmp_path: Path,
+) -> None:
+    case = replace(
+        next(
+            case
+            for case in build_matrix(REPO_ROOT)
+            if case.architecture == "co-location"
+            and case.model_kind == "mixed"
+            and case.ep_size == 2
+        ),
+        num_layers=2,
+        moe_layer_ids=(1,),
+    )
+    moe_wave = _ep_wave_lines(
+        cluster="MONOLITHIC",
+        ep_size=2,
+        batch_id=1,
+        layer_id=1,
+    )
+    log_path = tmp_path / "mixed_missing_dense_op_trace.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    log_path.write_text(
+        "\n".join(
+            [
+                "Dummy Mode: false",
+                "Simulation completed successfully.",
+                "[UNRELATED-METRIC] layer_id=0, value=1",
+                "[OP-TRACE][MONOLITHIC][MOE][moe_shuffling] layer_id=1",
+                "[OP-TRACE][MONOLITHIC][MOE][moe_grouped_gemm] layer_id=1",
+                str(moe_wave["conservation"]),
+                *list(moe_wave["workloads"]),
+                str(moe_wave["dispatch"]),
+                str(moe_wave["combine"]),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_operation_layer_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert "operation trace layer ids are not contiguous" in result["errors"]
+
+
 def test_strict_checker_rejects_case_routing_contract_mismatch(
     tmp_path: Path,
 ) -> None:
@@ -3758,6 +4100,22 @@ def test_strict_checker_uses_independent_request_token_oracle(
             )
         ],
     )
+    routing_input = matrix_module._build_routing_input_ledger(
+        case,
+        source_provenance=matrix_module._source_provenance(REPO_ROOT),
+    )
+    routing_input["expected_routing_token_totals"] = [
+        {
+            "cluster": "MONOLITHIC",
+            "replica_id": 0,
+            "layer_id": 0,
+            "routing_token_count": 1,
+        }
+    ]
+    (metrics_dir / "frontier_routing_input_ledger.json").write_text(
+        json.dumps(routing_input),
+        encoding="utf-8",
+    )
     log_path.write_text(
         _strict_ep_log(
             workload_lines=[
@@ -3803,6 +4161,119 @@ def test_strict_checker_uses_independent_request_token_oracle(
     )
 
 
+def test_strict_checker_rejects_self_consistent_but_wrong_runtime_token_ledger(
+    tmp_path: Path,
+) -> None:
+    """The independent token oracle must not be derived from runtime output."""
+
+    case = replace(
+        _single_layer_ep2_case(),
+        total_experts=2,
+        router_topk=1,
+        routing_distribution="balanced",
+        num_requests=1,
+        pipeline_stages=1,
+        prefill_tokens=2,
+        decode_tokens=0,
+    )
+    log_path = tmp_path / "self_consistent_wrong_token_ledger.log"
+    metrics_dir = tmp_path / "metrics"
+    _write_minimal_metrics(metrics_dir)
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=10,
+                stage_id=0,
+                request_ids=["0"],
+                request_num_tokens=[2],
+                request_num_prefill_tokens=[2],
+                request_runtime_epochs=[0],
+            )
+        ],
+    )
+    routing_input = matrix_module._build_routing_input_ledger(
+        case,
+        source_provenance=matrix_module._source_provenance(REPO_ROOT),
+    )
+    routing_input["expected_routing_token_totals"] = [
+        {
+            "cluster": "MONOLITHIC",
+            "replica_id": 0,
+            "layer_id": 0,
+            "routing_token_count": 1,
+        }
+    ]
+    (metrics_dir / "frontier_routing_input_ledger.json").write_text(
+        json.dumps(routing_input),
+        encoding="utf-8",
+    )
+    log_path.write_text(
+        _strict_ep_log(
+            workload_lines=[
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=0, moe_ep_size=2, per_expert_tokens={0: 1}, "
+                "lane_compute_ms=1.0, lane_comm_ms=0.0",
+                "[EP-WORKLOAD][MONOLITHIC] batch_id=10, layer_id=0, "
+                "ep_id=1, moe_ep_size=2, per_expert_tokens={1: 1}, "
+                "lane_compute_ms=1.0, lane_comm_ms=0.0",
+            ],
+            conservation_lines=[
+                "[EP-CONSERVATION][MONOLITHIC] batch_id=10, layer_id=0, "
+                "routing_token_count=2, router_topk=1, "
+                "total_routed_assignments=2, "
+                "per_ep_routed_tokens={0: 1, 1: 1}",
+            ],
+            barrier_lines=[
+                "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+                "phase=dispatch, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+                "barrier_time_ms=1.0, barrier_end_time_s=0.001",
+                "[EP-BARRIER][MONOLITHIC] batch_id=10, layer_id=0, "
+                "phase=combine, expected_ep_ids=[0, 1], "
+                "arrived_ep_ids=[0, 1], max_lane_time_ms=1.0, "
+                "barrier_time_ms=1.0, barrier_end_time_s=0.002",
+            ],
+        ),
+        encoding="utf-8",
+    )
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert (
+        "routing_token_count disagrees with independent routing input ledger"
+        in result["errors"]
+    )
+
+
+def test_strict_checker_rejects_mutated_routing_details_snapshot(
+    tmp_path: Path,
+) -> None:
+    case, log_path, metrics_dir = _independent_ep_wave_fixture(tmp_path)
+    sidecar_path = metrics_dir / "frontier_routing_input_ledger.json"
+    payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    payload["routing_details_snapshot"][0]["ratios"][0] += 0.01
+    sidecar_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = check_case_log(
+        case,
+        log_path,
+        metrics_dir,
+        strict_layers=True,
+        require_independent_token_oracle=True,
+    )
+
+    assert result["status"] == "FAIL"
+    assert "routing_details_snapshot mismatch" in result["errors"]
+
+
 def test_strict_checker_accepts_one_batched_wave_for_all_requests(
     tmp_path: Path,
 ) -> None:
@@ -3830,6 +4301,22 @@ def test_strict_checker_accepts_one_batched_wave_for_all_requests(
                 request_runtime_epochs=[0, 0, 0],
             )
         ],
+    )
+    routing_input = matrix_module._build_routing_input_ledger(
+        case,
+        source_provenance=matrix_module._source_provenance(REPO_ROOT),
+    )
+    routing_input["expected_routing_token_totals"] = [
+        {
+            "cluster": "MONOLITHIC",
+            "replica_id": 0,
+            "layer_id": 0,
+            "routing_token_count": 3,
+        }
+    ]
+    (metrics_dir / "frontier_routing_input_ledger.json").write_text(
+        json.dumps(routing_input),
+        encoding="utf-8",
     )
     log_text = _strict_ep_log(
         workload_lines=[
@@ -4106,6 +4593,47 @@ def test_strict_checker_rejects_duplicate_expected_wave(
         "EP expected wave manifest duplicate" in result["errors"]
         or "duplicate EP conservation records" in result["errors"]
     )
+
+
+def test_expected_wave_manifest_partitions_moe_layers_by_pipeline_stage(
+    tmp_path: Path,
+) -> None:
+    case = replace(
+        _single_layer_ep2_case(),
+        num_layers=4,
+        moe_layer_ids=(0, 3),
+        pipeline_stages=2,
+        prefill_tokens=2,
+    )
+    metrics_dir = tmp_path / "metrics"
+    _write_stage_batch_ledger(
+        metrics_dir,
+        [
+            _prefill_stage_ledger_row(
+                batch_id=10,
+                stage_id=0,
+                request_ids=["0"],
+                request_num_tokens=[2],
+                request_num_prefill_tokens=[2],
+                request_runtime_epochs=[0],
+            ),
+            _prefill_stage_ledger_row(
+                batch_id=10,
+                stage_id=1,
+                request_ids=["0"],
+                request_num_tokens=[2],
+                request_num_prefill_tokens=[2],
+                request_runtime_epochs=[0],
+            ),
+        ],
+    )
+
+    manifest = matrix_module._read_ep_expected_wave_manifest(case, metrics_dir)
+
+    assert {
+        (key[2], key[4])
+        for key in manifest
+    } == {(0, 0), (3, 1)}
 
 
 def test_online_checker_accepts_online_success_marker(tmp_path: Path) -> None:

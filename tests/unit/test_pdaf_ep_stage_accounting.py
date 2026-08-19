@@ -220,6 +220,7 @@ def test_ep_dispatch_preserves_full_stage_execution_time(
         "[EP-WORKLOAD][DECODE_FFN]" in line
         and "ep_id=0" in line
         and "lane_compute_ms=3.000000" in line
+        and "routed_compute_ms=1.000000" in line
         and "lane_comm_ms=0.500000" in line
         for line in workload_lines
     )
