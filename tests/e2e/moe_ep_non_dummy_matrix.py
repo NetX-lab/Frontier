@@ -178,6 +178,10 @@ _EP_WORKLOAD_LINE_RE = re.compile(
     r"lane_compute_ms=(?P<lane_compute_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
     r"(?:routed_compute_ms=(?P<routed_compute_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+)?"
     r"lane_comm_ms=(?P<lane_comm_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
+    r"(?:,\s+pre_dispatch_ms=(?P<pre_dispatch_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"dispatch_ms=(?P<dispatch_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"combine_ms=(?P<combine_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"post_combine_ms=(?P<post_combine_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?))?"
     + _EP_TRACE_IDENTITY_SUFFIX
     + r"\s*$"
 )
@@ -192,6 +196,18 @@ _EP_BARRIER_LINE_RE = re.compile(
     r"barrier_time_ms=(?P<barrier_time_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
     r"(?:barrier_start_time_s=(?P<barrier_start_time_s>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+)?"
     r"barrier_end_time_s=(?P<barrier_end_time_s>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
+    + _EP_TRACE_IDENTITY_SUFFIX
+    + r"\s*$"
+)
+_EP_WAVE_END_LINE_RE = re.compile(
+    r"\[EP-WAVE-END\]\[(?P<cluster>[^\]]+)\]\s+"
+    r"batch_id=(?P<batch_id>-?\d+),\s+"
+    r"layer_id=(?P<layer_id>-?\d+),\s+"
+    r"wave_start_time_s=(?P<wave_start_time_s>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"combine_barrier_end_time_s=(?P<combine_barrier_end_time_s>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"post_combine_time_ms=(?P<post_combine_time_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"wave_end_time_s=(?P<wave_end_time_s>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"wave_time_ms=(?P<wave_time_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
     + _EP_TRACE_IDENTITY_SUFFIX
     + r"\s*$"
 )
@@ -4479,6 +4495,27 @@ def _parse_ep_workload_records(text: str) -> list[dict[str, Any]]:
             None if routed_compute_raw is None else float(routed_compute_raw)
         )
         lane_comm_ms = float(groups["lane_comm_ms"])
+        phase_names = (
+            "pre_dispatch_ms",
+            "dispatch_ms",
+            "combine_ms",
+            "post_combine_ms",
+        )
+        phase_raw = {name: groups.get(name) for name in phase_names}
+        phase_present = [value is not None for value in phase_raw.values()]
+        if any(phase_present) and not all(phase_present):
+            raise ValueError(
+                "EP workload phase evidence must include "
+                "pre_dispatch_ms, dispatch_ms, combine_ms, and post_combine_ms"
+            )
+        phase_values = (
+            {
+                name: float(value)
+                for name, value in phase_raw.items()
+            }
+            if all(phase_present)
+            else None
+        )
         ep_id = int(groups["ep_id"])
         moe_ep_size = int(groups["moe_ep_size"])
         if moe_ep_size <= 0 or ep_id < 0 or ep_id >= moe_ep_size:
@@ -4494,6 +4531,13 @@ def _parse_ep_workload_records(text: str) -> list[dict[str, Any]]:
         ):
             raise ValueError(
                 "EP workload routed_compute_ms must be finite and non-negative"
+            )
+        if phase_values is not None and any(
+            not math.isfinite(value) or value < 0.0
+            for value in phase_values.values()
+        ):
+            raise ValueError(
+                "EP workload phase values must be finite and non-negative"
             )
 
         batch_id = int(groups["batch_id"])
@@ -4512,6 +4556,72 @@ def _parse_ep_workload_records(text: str) -> list[dict[str, Any]]:
         }
         if routed_compute_ms is not None:
             record["routed_compute_ms"] = routed_compute_ms
+        if phase_values is not None:
+            record.update(phase_values)
+        identity = _parse_ep_trace_identity(groups)
+        if identity is not None:
+            record["trace_identity"] = identity
+        records.append(record)
+    return records
+
+
+def _parse_ep_wave_end_records(text: str) -> list[dict[str, Any]]:
+    """Parse the final post-combine completion marker for each EP wave."""
+
+    records: list[dict[str, Any]] = []
+    for line in text.splitlines():
+        match = _EP_WAVE_END_LINE_RE.search(line)
+        if match is None:
+            continue
+        groups = match.groupdict()
+        values = {
+            name: float(groups[name])
+            for name in (
+                "wave_start_time_s",
+                "combine_barrier_end_time_s",
+                "post_combine_time_ms",
+                "wave_end_time_s",
+                "wave_time_ms",
+            )
+        }
+        if any(not math.isfinite(value) or value < 0.0 for value in values.values()):
+            raise ValueError("EP wave end times must be finite and non-negative")
+        expected_end_time_s = (
+            values["combine_barrier_end_time_s"]
+            + values["post_combine_time_ms"] * 1e-3
+        )
+        if not math.isclose(
+            values["wave_end_time_s"],
+            expected_end_time_s,
+            rel_tol=0.0,
+            abs_tol=1e-9,
+        ):
+            raise ValueError(
+                "EP wave end timestamp does not match combine end plus "
+                "post-combine duration"
+            )
+        expected_wave_time_ms = (
+            values["wave_end_time_s"] - values["wave_start_time_s"]
+        ) * 1000.0
+        if not math.isclose(
+            values["wave_time_ms"],
+            expected_wave_time_ms,
+            rel_tol=0.0,
+            abs_tol=1e-9,
+        ):
+            raise ValueError(
+                "EP wave end duration does not match start/end timestamps"
+            )
+        batch_id = int(groups["batch_id"])
+        layer_id = int(groups["layer_id"])
+        if batch_id < 0 or layer_id < 0:
+            raise ValueError("EP wave end batch_id/layer_id must be non-negative")
+        record = {
+            "cluster": groups["cluster"],
+            "batch_id": batch_id,
+            "layer_id": layer_id,
+            **values,
+        }
         identity = _parse_ep_trace_identity(groups)
         if identity is not None:
             record["trace_identity"] = identity
@@ -4996,6 +5106,7 @@ def _ep_event_positions(
         ("workload", _EP_WORKLOAD_LINE_RE),
         ("conservation", _EP_CONSERVATION_LINE_RE),
         ("barrier", _EP_BARRIER_LINE_RE),
+        ("wave_end", _EP_WAVE_END_LINE_RE),
     )
     for line_index, line in enumerate(text.splitlines()):
         for event_kind, pattern in event_patterns:
@@ -5120,6 +5231,215 @@ def _validate_ep_barrier_time_equations(
                 f"layer={record['layer_id']} phase={record['phase']} "
                 f"expected_end_time_s={expected_end_time_s} "
                 f"actual_end_time_s={record['barrier_end_time_s']}"
+            )
+    return errors
+
+
+def _validate_ep_phase_accounting(
+    *,
+    workload_records: Sequence[Mapping[str, Any]],
+    barrier_records: Sequence[Mapping[str, Any]],
+    wave_end_records: Sequence[Mapping[str, Any]],
+) -> list[str]:
+    """Recompute the five named EP phases and both barrier equations."""
+
+    # Workload traces are intentionally compact and publish phase durations
+    # with six decimal places.  Keep the equation strict while allowing the
+    # bounded quantization error introduced by those published values.
+    phase_log_abs_tol_ms = 2e-6
+    errors: list[str] = []
+    workloads_by_wave: dict[tuple[Any, ...], list[Mapping[str, Any]]] = {}
+    for record in workload_records:
+        workloads_by_wave.setdefault(_ep_wave_key(record), []).append(record)
+    barriers_by_wave_phase: dict[tuple[Any, ...], Mapping[str, Any]] = {}
+    for record in barrier_records:
+        key = (*_ep_wave_key(record), str(record["phase"]))
+        if key in barriers_by_wave_phase:
+            errors.append(
+                "duplicate EP phase-accounting barrier "
+                f"cluster={record['cluster']} batch_id={record['batch_id']} "
+                f"layer={record['layer_id']} phase={record['phase']}"
+            )
+            continue
+        barriers_by_wave_phase[key] = record
+    wave_ends_by_wave: dict[tuple[Any, ...], Mapping[str, Any]] = {}
+    for record in wave_end_records:
+        wave_key = _ep_wave_key(record)
+        if wave_key in wave_ends_by_wave:
+            errors.append(
+                "duplicate EP wave-end evidence "
+                f"cluster={record['cluster']} batch_id={record['batch_id']} "
+                f"layer={record['layer_id']}"
+            )
+            continue
+        wave_ends_by_wave[wave_key] = record
+
+    required_fields = (
+        "pre_dispatch_ms",
+        "dispatch_ms",
+        "routed_compute_ms",
+        "combine_ms",
+        "post_combine_ms",
+    )
+    for wave_key, records in workloads_by_wave.items():
+        phase_rows: list[Mapping[str, Any]] = []
+        for record in records:
+            missing = [field for field in required_fields if field not in record]
+            if missing:
+                errors.append(
+                    "EP phase-accounting evidence is incomplete "
+                    f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                    f"layer={wave_key[2]} ep_id={record['ep_id']} "
+                    f"missing={missing}"
+                )
+                continue
+            phase_rows.append(record)
+            expected_lane_compute_ms = (
+                float(record["pre_dispatch_ms"])
+                + float(record["routed_compute_ms"])
+                + float(record["post_combine_ms"])
+            )
+            expected_lane_comm_ms = (
+                float(record["dispatch_ms"]) + float(record["combine_ms"])
+            )
+            if not math.isclose(
+                float(record["lane_compute_ms"]),
+                expected_lane_compute_ms,
+                rel_tol=1e-12,
+                abs_tol=phase_log_abs_tol_ms,
+            ):
+                errors.append(
+                    "EP lane compute equation mismatch "
+                    f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                    f"layer={wave_key[2]} ep_id={record['ep_id']} "
+                    f"expected={expected_lane_compute_ms} "
+                    f"actual={record['lane_compute_ms']}"
+                )
+            if not math.isclose(
+                float(record["lane_comm_ms"]),
+                expected_lane_comm_ms,
+                rel_tol=1e-12,
+                abs_tol=phase_log_abs_tol_ms,
+            ):
+                errors.append(
+                    "EP lane communication equation mismatch "
+                    f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                    f"layer={wave_key[2]} ep_id={record['ep_id']} "
+                    f"expected={expected_lane_comm_ms} "
+                    f"actual={record['lane_comm_ms']}"
+                )
+        if not phase_rows:
+            continue
+
+        dispatch = barriers_by_wave_phase.get((*wave_key, "dispatch"))
+        combine = barriers_by_wave_phase.get((*wave_key, "combine"))
+        wave_end = wave_ends_by_wave.get(wave_key)
+        if dispatch is None or combine is None:
+            continue
+        if wave_end is None:
+            errors.append(
+                "missing EP wave-end evidence "
+                f"cluster={wave_key[0]} batch_id={wave_key[1]} layer={wave_key[2]}"
+            )
+        pre_dispatch_max = max(float(row["pre_dispatch_ms"]) for row in phase_rows)
+        dispatch_max = max(float(row["dispatch_ms"]) for row in phase_rows)
+        routed_max = max(float(row["routed_compute_ms"]) for row in phase_rows)
+        combine_max = max(float(row["combine_ms"]) for row in phase_rows)
+        post_combine_max = max(float(row["post_combine_ms"]) for row in phase_rows)
+
+        # PD-AF dispatch-ready events may start at different DES timestamps.
+        # Its barrier records the observed arrival spread plus dispatch time.
+        if str(wave_key[0]).upper() == "DECODE_FFN":
+            expected_dispatch_barrier_ms = (
+                float(dispatch["max_lane_time_ms"]) + dispatch_max
+            )
+        else:
+            expected_dispatch_barrier_ms = pre_dispatch_max + dispatch_max
+            if not math.isclose(
+                float(dispatch["max_lane_time_ms"]),
+                pre_dispatch_max,
+                rel_tol=1e-12,
+                abs_tol=phase_log_abs_tol_ms,
+            ):
+                errors.append(
+                    "EP dispatch max-lane phase mismatch "
+                    f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                    f"layer={wave_key[2]} expected={pre_dispatch_max} "
+                    f"actual={dispatch['max_lane_time_ms']}"
+                )
+        if not math.isclose(
+            float(dispatch["barrier_time_ms"]),
+            expected_dispatch_barrier_ms,
+            rel_tol=1e-12,
+            abs_tol=phase_log_abs_tol_ms,
+        ):
+            errors.append(
+                "EP dispatch barrier equation mismatch "
+                f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                f"layer={wave_key[2]} expected={expected_dispatch_barrier_ms} "
+                f"actual={dispatch['barrier_time_ms']}"
+            )
+
+        expected_combine_barrier_ms = routed_max + combine_max
+        if not math.isclose(
+            float(combine["max_lane_time_ms"]),
+            routed_max,
+            rel_tol=1e-12,
+            abs_tol=phase_log_abs_tol_ms,
+        ):
+            errors.append(
+                "EP combine max-lane phase mismatch "
+                f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                f"layer={wave_key[2]} expected={routed_max} "
+                f"actual={combine['max_lane_time_ms']}"
+            )
+        if not math.isclose(
+            float(combine["barrier_time_ms"]),
+            expected_combine_barrier_ms,
+            rel_tol=1e-12,
+            abs_tol=phase_log_abs_tol_ms,
+        ):
+            errors.append(
+                "EP combine barrier equation mismatch "
+                f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                f"layer={wave_key[2]} expected={expected_combine_barrier_ms} "
+                f"actual={combine['barrier_time_ms']}"
+            )
+        if not math.isclose(
+            float(combine["barrier_start_time_s"]),
+            float(dispatch["barrier_end_time_s"]),
+            rel_tol=0.0,
+            abs_tol=1e-9,
+        ):
+            errors.append(
+                "EP combine barrier does not start at dispatch barrier end "
+                f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                f"layer={wave_key[2]}"
+            )
+        if wave_end is None:
+            continue
+        if not math.isclose(
+            float(wave_end["combine_barrier_end_time_s"]),
+            float(combine["barrier_end_time_s"]),
+            rel_tol=0.0,
+            abs_tol=1e-9,
+        ):
+            errors.append(
+                "EP wave-end combine timestamp does not match barrier "
+                f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                f"layer={wave_key[2]}"
+            )
+        if not math.isclose(
+            float(wave_end["post_combine_time_ms"]),
+            post_combine_max,
+            rel_tol=1e-12,
+            abs_tol=phase_log_abs_tol_ms,
+        ):
+            errors.append(
+                "EP wave-end post-combine max mismatch "
+                f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                f"layer={wave_key[2]} expected={post_combine_max} "
+                f"actual={wave_end['post_combine_time_ms']}"
             )
     return errors
 
@@ -5281,6 +5601,7 @@ def check_case_log(
     require_routing_details_oracle: bool = False,
     require_operation_layer_oracle: bool = False,
     require_barrier_time_oracle: bool = False,
+    require_phase_accounting_oracle: bool = False,
     expected_source_provenance: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Check workflow evidence and numeric metrics for one completed run."""
@@ -5377,6 +5698,21 @@ def check_case_log(
         errors.append(f"invalid EP barrier trace: {exc}")
     if require_barrier_time_oracle and ep_barrier_records:
         errors.extend(_validate_ep_barrier_time_equations(ep_barrier_records))
+    ep_wave_end_records: list[dict[str, Any]] = []
+    if require_phase_accounting_oracle:
+        try:
+            ep_wave_end_records = _parse_ep_wave_end_records(text)
+        except ValueError as exc:
+            errors.append(f"invalid EP wave-end trace: {exc}")
+        if not ep_wave_end_records:
+            errors.append("missing EP wave-end trace")
+        errors.extend(
+            _validate_ep_phase_accounting(
+                workload_records=ep_workload_records,
+                barrier_records=ep_barrier_records,
+                wave_end_records=ep_wave_end_records,
+            )
+        )
     try:
         ep_conservation_records = _parse_ep_conservation_records(text)
     except ValueError as exc:
@@ -5994,11 +6330,16 @@ def check_case_log(
                 conservation_positions = event_positions.get("conservation", [])
                 dispatch_positions = event_positions.get("dispatch", [])
                 combine_positions = event_positions.get("combine", [])
+                wave_end_positions = event_positions.get("wave_end", [])
                 if (
                     len(workload_positions) != len(records_by_wave[wave_key])
                     or len(conservation_positions) != 1
                     or len(dispatch_positions) != 1
                     or len(combine_positions) != 1
+                    or (
+                        require_phase_accounting_oracle
+                        and len(wave_end_positions) != 1
+                    )
                 ):
                     continue
                 materialization_end = max(
@@ -6015,6 +6356,15 @@ def check_case_log(
                         f"layer={wave_key[2]}"
                     )
                     continue
+                if require_phase_accounting_oracle:
+                    wave_end_position = wave_end_positions[0]
+                    if combine_position >= wave_end_position:
+                        errors.append(
+                            "EP wave end event order is invalid "
+                            f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                            f"layer={wave_key[2]}"
+                        )
+                        continue
                 wave_start = min(
                     [*workload_positions, *conservation_positions]
                 )
@@ -7156,6 +7506,7 @@ def _run_case(
             require_routing_details_oracle=True,
             require_operation_layer_oracle=True,
             require_barrier_time_oracle=True,
+            require_phase_accounting_oracle=case.is_moe,
             expected_source_provenance=source_provenance,
         )
         metrics_path = str(metrics_dir)

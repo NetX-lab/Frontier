@@ -482,6 +482,10 @@ class BaseClusterScheduler(ABC):
         lane_compute_ms: float,
         routed_compute_ms: float,
         lane_comm_ms: float,
+        pre_dispatch_ms: float,
+        dispatch_ms: float,
+        combine_ms: float,
+        post_combine_ms: float,
         trace_identity: Dict[str, Any],
     ) -> None:
         """Emit one source-level record for a materialized EP participant.
@@ -516,10 +520,17 @@ class BaseClusterScheduler(ABC):
                     "EP workload per_expert_tokens must contain non-negative integer pairs"
                 )
             normalized_tokens[int(expert_id)] = int(token_count)
+        phase_values = (
+            ("pre_dispatch_ms", pre_dispatch_ms),
+            ("dispatch_ms", dispatch_ms),
+            ("routed_compute_ms", routed_compute_ms),
+            ("combine_ms", combine_ms),
+            ("post_combine_ms", post_combine_ms),
+        )
         for name, value in (
             ("lane_compute_ms", lane_compute_ms),
-            ("routed_compute_ms", routed_compute_ms),
             ("lane_comm_ms", lane_comm_ms),
+            *phase_values,
         ):
             if not isinstance(value, Real) or isinstance(value, bool):
                 raise ValueError(f"EP workload {name} must be a real number")
@@ -528,13 +539,43 @@ class BaseClusterScheduler(ABC):
                 raise ValueError(
                     f"EP workload {name} must be finite and non-negative, got {value!r}"
                 )
+        expected_lane_compute_ms = math.fsum(
+            float(value)
+            for name, value in phase_values
+            if name in {"pre_dispatch_ms", "routed_compute_ms", "post_combine_ms"}
+        )
+        expected_lane_comm_ms = float(dispatch_ms) + float(combine_ms)
+        if not math.isclose(
+            float(lane_compute_ms),
+            expected_lane_compute_ms,
+            rel_tol=1e-12,
+            abs_tol=1e-9,
+        ):
+            raise ValueError(
+                "EP workload lane_compute_ms does not equal "
+                "pre_dispatch_ms + routed_compute_ms + post_combine_ms: "
+                f"lane_compute_ms={lane_compute_ms!r}, "
+                f"expected={expected_lane_compute_ms!r}"
+            )
+        if not math.isclose(
+            float(lane_comm_ms),
+            expected_lane_comm_ms,
+            rel_tol=1e-12,
+            abs_tol=1e-9,
+        ):
+            raise ValueError(
+                "EP workload lane_comm_ms does not equal "
+                "dispatch_ms + combine_ms: "
+                f"lane_comm_ms={lane_comm_ms!r}, expected={expected_lane_comm_ms!r}"
+            )
 
         cluster_name = getattr(cluster_type, "name", str(cluster_type))
         logger.info(
             "[EP-WORKLOAD][%s] batch_id=%d, layer_id=%d, ep_id=%d, "
             "moe_ep_size=%d, per_expert_tokens=%s, lane_compute_ms=%.6f, "
-            "routed_compute_ms=%.6f, "
-            "lane_comm_ms=%.6f, %s",
+            "routed_compute_ms=%.6f, lane_comm_ms=%.6f, "
+            "pre_dispatch_ms=%.6f, dispatch_ms=%.6f, "
+            "combine_ms=%.6f, post_combine_ms=%.6f, %s",
             cluster_name,
             batch_id,
             layer_id,
@@ -544,6 +585,73 @@ class BaseClusterScheduler(ABC):
             float(lane_compute_ms),
             float(routed_compute_ms),
             float(lane_comm_ms),
+            float(pre_dispatch_ms),
+            float(dispatch_ms),
+            float(combine_ms),
+            float(post_combine_ms),
+            BaseClusterScheduler._format_ep_trace_identity(trace_identity),
+        )
+
+    @staticmethod
+    def _log_ep_wave_end_trace(
+        *,
+        cluster_type: ClusterType,
+        batch_id: int,
+        layer_id: int,
+        wave_start_time_s: float,
+        combine_barrier_end_time_s: float,
+        post_combine_time_ms: float,
+        wave_end_time_s: float,
+        trace_identity: Dict[str, Any],
+    ) -> None:
+        """Emit the final post-combine end of one EP wave."""
+
+        for name, value in (
+            ("wave_start_time_s", wave_start_time_s),
+            ("combine_barrier_end_time_s", combine_barrier_end_time_s),
+            ("post_combine_time_ms", post_combine_time_ms),
+            ("wave_end_time_s", wave_end_time_s),
+        ):
+            if (
+                not isinstance(value, Real)
+                or isinstance(value, bool)
+                or not math.isfinite(float(value))
+                or float(value) < 0.0
+            ):
+                raise ValueError(
+                    f"EP wave end {name} must be finite and non-negative, got {value!r}"
+                )
+        expected_end_time_s = (
+            float(combine_barrier_end_time_s) + float(post_combine_time_ms) * 1e-3
+        )
+        if not math.isclose(
+            float(wave_end_time_s),
+            expected_end_time_s,
+            rel_tol=0.0,
+            abs_tol=1e-9,
+        ):
+            raise ValueError(
+                "EP wave end time does not match combine end plus post-combine "
+                f"time: expected={expected_end_time_s!r}, actual={wave_end_time_s!r}"
+            )
+        if float(wave_end_time_s) < float(wave_start_time_s):
+            raise ValueError("EP wave end time cannot precede wave start")
+
+        cluster_name = getattr(cluster_type, "name", str(cluster_type))
+        wave_time_ms = (float(wave_end_time_s) - float(wave_start_time_s)) * 1000.0
+        logger.info(
+            "[EP-WAVE-END][%s] batch_id=%d, layer_id=%d, "
+            "wave_start_time_s=%.12f, combine_barrier_end_time_s=%.12f, "
+            "post_combine_time_ms=%.12f, wave_end_time_s=%.12f, "
+            "wave_time_ms=%.12f, %s",
+            cluster_name,
+            batch_id,
+            layer_id,
+            float(wave_start_time_s),
+            float(combine_barrier_end_time_s),
+            float(post_combine_time_ms),
+            float(wave_end_time_s),
+            wave_time_ms,
             BaseClusterScheduler._format_ep_trace_identity(trace_identity),
         )
 
@@ -2752,6 +2860,7 @@ class BaseClusterScheduler(ABC):
             batch_global_id
         )
         for ep_batch, ready_time, _ in prepared_lanes:
+            ep_batch._ep_dispatch_collective_end_time_s = float(time)
             ep_batch.time = ready_time
 
         return [event for _, _, event in prepared_lanes]
@@ -3094,6 +3203,24 @@ class BaseClusterScheduler(ABC):
             operation_id=trace_batch_id,
             operation_kind="ep_ffn",
         )
+        dispatch_end_times = {
+            getattr(ep_batch, "_ep_dispatch_collective_end_time_s", None)
+            for ep_batch in ep_batches.values()
+        }
+        if len(dispatch_end_times) != 1 or None in dispatch_end_times:
+            raise ValueError(
+                "EP combine collective requires one dispatch collective end time "
+                f"for every lane: values={sorted(dispatch_end_times, key=repr)}"
+            )
+        dispatch_end_time_s = float(next(iter(dispatch_end_times)))
+        if dispatch_end_time_s < trace_origin_s:
+            raise ValueError(
+                "EP dispatch collective end cannot precede the first dispatch arrival"
+            )
+        if trace_sync_s < dispatch_end_time_s:
+            raise ValueError(
+                "EP combine lane arrival cannot precede dispatch collective end"
+            )
         self._log_ep_barrier_trace(
             cluster_type=self._cluster_type,
             batch_id=trace_batch_id,
@@ -3101,10 +3228,20 @@ class BaseClusterScheduler(ABC):
             phase="combine",
             expected_ep_ids=tuple(sorted(ep_batches)),
             arrived_ep_ids=tuple(sorted(ep_batches)),
-            max_lane_time_ms=(trace_sync_s - trace_origin_s) * 1000.0,
-            barrier_time_ms=(combine_end_time - trace_origin_s) * 1000.0,
-            barrier_start_time_s=trace_origin_s,
+            max_lane_time_ms=(trace_sync_s - dispatch_end_time_s) * 1000.0,
+            barrier_time_ms=(combine_end_time - dispatch_end_time_s) * 1000.0,
+            barrier_start_time_s=dispatch_end_time_s,
             barrier_end_time_s=combine_end_time,
+            trace_identity=trace_identity,
+        )
+        self._log_ep_wave_end_trace(
+            cluster_type=self._cluster_type,
+            batch_id=trace_batch_id,
+            layer_id=trace_layer_id,
+            wave_start_time_s=trace_origin_s,
+            combine_barrier_end_time_s=combine_end_time,
+            post_combine_time_ms=(time - combine_end_time) * 1000.0,
+            wave_end_time_s=time,
             trace_identity=trace_identity,
         )
         logger.info(
@@ -3643,6 +3780,10 @@ class BaseClusterScheduler(ABC):
                     lane_compute_ms=lane_compute_ms,
                     routed_compute_ms=routed_compute_ms,
                     lane_comm_ms=lane_comm_ms,
+                    pre_dispatch_ms=pre_dispatch_ms,
+                    dispatch_ms=dispatch_ms,
+                    combine_ms=combine_ms,
+                    post_combine_ms=post_combine_ms,
                     trace_identity=trace_identity,
                 )
                 lane_compute_times_ms.append(lane_compute_ms)
@@ -3761,6 +3902,16 @@ class BaseClusterScheduler(ABC):
         post_combine_barrier_time_ms = max(post_combine_times_ms)
         barrier_end_time_s = (
             combine_barrier_end_time_s + post_combine_barrier_time_ms * 1e-3
+        )
+        self._log_ep_wave_end_trace(
+            cluster_type=self._cluster_type,
+            batch_id=int(batch.id),
+            layer_id=layer_id,
+            wave_start_time_s=time,
+            combine_barrier_end_time_s=combine_barrier_end_time_s,
+            post_combine_time_ms=post_combine_barrier_time_ms,
+            wave_end_time_s=barrier_end_time_s,
+            trace_identity=trace_identity,
         )
         wave_time_ms = (
             dispatch_barrier_time_ms
@@ -3959,6 +4110,10 @@ class BaseClusterScheduler(ABC):
                     lane_compute_ms=lane_compute_ms,
                     routed_compute_ms=routed_compute_ms,
                     lane_comm_ms=lane_comm_ms,
+                    pre_dispatch_ms=pre_dispatch_ms,
+                    dispatch_ms=dispatch_ms,
+                    combine_ms=combine_ms,
+                    post_combine_ms=post_combine_ms,
                     trace_identity=trace_identity,
                 )
                 lane_compute_times_ms.append(lane_compute_ms)
@@ -4062,6 +4217,16 @@ class BaseClusterScheduler(ABC):
         post_combine_barrier_time_ms = max(post_combine_times_ms)
         barrier_end_time_s = (
             combine_barrier_end_time_s + post_combine_barrier_time_ms * 1e-3
+        )
+        self._log_ep_wave_end_trace(
+            cluster_type=self._cluster_type,
+            batch_id=int(batch.id),
+            layer_id=layer_id,
+            wave_start_time_s=time,
+            combine_barrier_end_time_s=combine_barrier_end_time_s,
+            post_combine_time_ms=post_combine_barrier_time_ms,
+            wave_end_time_s=barrier_end_time_s,
+            trace_identity=trace_identity,
         )
         batch._decode_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
 

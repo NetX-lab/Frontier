@@ -323,49 +323,32 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     # every EP size.  EP=1 is a one-participant EP_WAVE, not a
                     # dense shortcut.
                     # FFN-EP runtime follows the explicit operation order:
-                    # share-expert + gating + shuffling -> dispatch -> grouped_gemm -> combine.
-                    pre_dispatch_compute_time_ms = (
-                        execution_time.get_single_layer_moe_pre_dispatch_time()
-                    )
-                    expert_comp_time_ms = (
-                        execution_time.get_single_layer_moe_post_dispatch_compute_time()
-                    )
-                    post_combine_getter = getattr(
+                    # pre-dispatch -> dispatch -> routed compute -> combine ->
+                    # post-combine.  Keep the same named phase decomposition
+                    # used by the shared PREFILL/DECODE paths.
+                    (
+                        pre_dispatch_compute_time_ms,
+                        dispatch_time_ms,
+                        expert_comp_time_ms,
+                        combine_time_ms,
+                        post_combine_time_ms,
+                    ) = BaseClusterScheduler._get_shared_ep_phase_times_ms(
                         execution_time,
-                        "get_single_layer_moe_post_combine_time",
-                        None,
+                        cluster_type=self._cluster_type,
+                        batch_id=int(batch.id),
+                        layer_id=int(getattr(batch, "decode_ffn_layer_id", -1)),
+                        ep_id=int(batch.ep_id),
                     )
-                    if not callable(post_combine_getter):
-                        raise ValueError(
-                            "DECODE_FFN EP prediction is missing explicit "
-                            "post-combine time"
-                        )
-                    post_combine_time_ms = float(post_combine_getter())
-                    if (
-                        not math.isfinite(post_combine_time_ms)
-                        or post_combine_time_ms < 0.0
-                    ):
-                        raise ValueError(
-                            "DECODE_FFN EP post-combine time must be finite and "
-                            f"non-negative, got {post_combine_time_ms!r}"
-                        )
                     pre_dispatch_compute_time = pre_dispatch_compute_time_ms * 1e-3
                     expert_comp_time = expert_comp_time_ms * 1e-3
                     post_combine_time = post_combine_time_ms * 1e-3
 
-                    lane_comm_ms = getattr(
-                        execution_time, "expert_parallel_communication_time", None
-                    )
-                    if lane_comm_ms is None:
-                        raise ValueError(
-                            "DECODE_FFN EP prediction is missing explicit EP communication time"
-                        )
-                    lane_comm_ms = float(lane_comm_ms)
                     lane_compute_ms = (
                         pre_dispatch_compute_time_ms
                         + expert_comp_time_ms
                         + post_combine_time_ms
                     )
+                    lane_comm_ms = dispatch_time_ms + combine_time_ms
                     raw_source_batch_ids = getattr(batch, "source_batch_ids", ())
                     if not isinstance(raw_source_batch_ids, (list, tuple)):
                         raise ValueError(
@@ -417,6 +400,10 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         lane_compute_ms=lane_compute_ms,
                         routed_compute_ms=expert_comp_time_ms,
                         lane_comm_ms=lane_comm_ms,
+                        pre_dispatch_ms=pre_dispatch_compute_time_ms,
+                        dispatch_ms=dispatch_time_ms,
+                        combine_ms=combine_time_ms,
+                        post_combine_ms=post_combine_time_ms,
                         trace_identity=BaseClusterScheduler._build_ep_trace_identity(
                             batch=batch,
                             replica_id=int(self._replica_id),

@@ -25,6 +25,7 @@ from tests.e2e.moe_ep_non_dummy_matrix import (
     _parse_ep_barrier_records,
     _parse_ep_workload_records,
     _validate_ep_barrier_time_equations,
+    _validate_ep_phase_accounting,
     _validate_persisted_case_metadata,
     _validate_result_ledger_provenance,
     build_matrix,
@@ -372,6 +373,157 @@ def _ep_wave_lines(
         "dispatch": dispatch,
         "combine": combine,
     }
+
+
+def _phase_accounting_fixture() -> tuple[
+    list[dict[str, object]],
+    list[dict[str, object]],
+    list[dict[str, object]],
+]:
+    workloads = [
+        {
+            "cluster": "MONOLITHIC",
+            "batch_id": 10,
+            "layer_id": 0,
+            "ep_id": 0,
+            "moe_ep_size": 2,
+            "per_expert_tokens": {0: 1},
+            "lane_compute_ms": 6.0,
+            "lane_comm_ms": 5.0,
+            "pre_dispatch_ms": 1.0,
+            "dispatch_ms": 2.0,
+            "routed_compute_ms": 3.0,
+            "combine_ms": 3.0,
+            "post_combine_ms": 2.0,
+        },
+        {
+            "cluster": "MONOLITHIC",
+            "batch_id": 10,
+            "layer_id": 0,
+            "ep_id": 1,
+            "moe_ep_size": 2,
+            "per_expert_tokens": {1: 1},
+            "lane_compute_ms": 7.0,
+            "lane_comm_ms": 3.0,
+            "pre_dispatch_ms": 2.0,
+            "dispatch_ms": 1.0,
+            "routed_compute_ms": 4.0,
+            "combine_ms": 2.0,
+            "post_combine_ms": 1.0,
+        },
+    ]
+    barriers = [
+        {
+            "cluster": "MONOLITHIC",
+            "batch_id": 10,
+            "layer_id": 0,
+            "phase": "dispatch",
+            "max_lane_time_ms": 2.0,
+            "barrier_time_ms": 4.0,
+            "barrier_start_time_s": 0.0,
+            "barrier_end_time_s": 0.004,
+        },
+        {
+            "cluster": "MONOLITHIC",
+            "batch_id": 10,
+            "layer_id": 0,
+            "phase": "combine",
+            "max_lane_time_ms": 4.0,
+            "barrier_time_ms": 7.0,
+            "barrier_start_time_s": 0.004,
+            "barrier_end_time_s": 0.011,
+        },
+    ]
+    wave_ends = [
+        {
+            "cluster": "MONOLITHIC",
+            "batch_id": 10,
+            "layer_id": 0,
+            "wave_start_time_s": 0.0,
+            "combine_barrier_end_time_s": 0.011,
+            "post_combine_time_ms": 2.0,
+            "wave_end_time_s": 0.013,
+            "wave_time_ms": 13.0,
+        }
+    ]
+    return workloads, barriers, wave_ends
+
+
+def test_ep_phase_accounting_recomputes_named_phases_and_barriers() -> None:
+    workloads, barriers, wave_ends = _phase_accounting_fixture()
+
+    assert (
+        _validate_ep_phase_accounting(
+            workload_records=workloads,
+            barrier_records=barriers,
+            wave_end_records=wave_ends,
+        )
+        == []
+    )
+
+
+@pytest.mark.parametrize(
+    "phase_name",
+    (
+        "pre_dispatch_ms",
+        "dispatch_ms",
+        "routed_compute_ms",
+        "combine_ms",
+        "post_combine_ms",
+    ),
+)
+def test_ep_phase_accounting_rejects_mutated_phase(
+    phase_name: str,
+) -> None:
+    workloads, barriers, wave_ends = _phase_accounting_fixture()
+    workloads[0][phase_name] = float(workloads[0][phase_name]) + 1.0
+
+    errors = _validate_ep_phase_accounting(
+        workload_records=workloads,
+        barrier_records=barriers,
+        wave_end_records=wave_ends,
+    )
+
+    assert errors
+    assert any("equation mismatch" in error for error in errors)
+
+
+def test_ep_phase_accounting_rejects_mutated_barrier() -> None:
+    workloads, barriers, wave_ends = _phase_accounting_fixture()
+    barriers[0]["barrier_time_ms"] = 5.0
+
+    errors = _validate_ep_phase_accounting(
+        workload_records=workloads,
+        barrier_records=barriers,
+        wave_end_records=wave_ends,
+    )
+
+    assert any("dispatch barrier equation mismatch" in error for error in errors)
+
+
+def test_ep_phase_accounting_rejects_missing_phase_field() -> None:
+    workloads, barriers, wave_ends = _phase_accounting_fixture()
+    del workloads[0]["combine_ms"]
+
+    errors = _validate_ep_phase_accounting(
+        workload_records=workloads,
+        barrier_records=barriers,
+        wave_end_records=wave_ends,
+    )
+
+    assert any("evidence is incomplete" in error for error in errors)
+
+
+def test_ep_phase_accounting_rejects_missing_wave_end() -> None:
+    workloads, barriers, _wave_ends = _phase_accounting_fixture()
+
+    errors = _validate_ep_phase_accounting(
+        workload_records=workloads,
+        barrier_records=barriers,
+        wave_end_records=[],
+    )
+
+    assert any("missing EP wave-end evidence" in error for error in errors)
 
 
 def _single_layer_ep2_case(

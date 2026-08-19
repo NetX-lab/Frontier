@@ -86,6 +86,7 @@ def _combine_batch(
         execution_time=execution_time,
         activation_bytes=activation_bytes,
         post_combine_time=0.0,
+        _ep_dispatch_collective_end_time_s=4.0,
     )
 
 
@@ -154,8 +155,11 @@ def _run_ep_stage(
     )
     execution_time = SimpleNamespace(
         get_single_layer_moe_pre_dispatch_time=lambda: 2.0,
+        get_single_layer_moe_dispatch_time=lambda: 0.5,
         get_single_layer_moe_post_dispatch_compute_time=lambda: 1.0,
+        get_single_layer_moe_combine_time=lambda: 0.5,
         get_single_layer_moe_post_combine_time=lambda: 4.0,
+        get_single_layer_post_attention_time=lambda: 8.0,
         expert_parallel_communication_time=0.5,
     )
     stage_scheduler = Mock()
@@ -270,10 +274,12 @@ def test_ep_dispatch_preserves_full_stage_execution_time(
     assert len(workload_lines) == 2
     assert any(
         "[EP-WORKLOAD][DECODE_FFN]" in line
-        and "ep_id=0" in line
-        and "lane_compute_ms=7.000000" in line
-        and "routed_compute_ms=1.000000" in line
-        and "lane_comm_ms=0.500000" in line
+            and "ep_id=0" in line
+            and "lane_compute_ms=7.000000" in line
+            and "routed_compute_ms=1.000000" in line
+            and "lane_comm_ms=1.000000" in line
+            and "dispatch_ms=0.500000" in line
+            and "combine_ms=0.500000" in line
         for line in workload_lines
     )
 
