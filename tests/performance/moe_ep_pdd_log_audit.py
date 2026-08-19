@@ -11,6 +11,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 
 _WORKLOAD_RE = re.compile(
     r"\[EP-WORKLOAD\]\[(?P<cluster>[^\]]+)\]\s+"
@@ -128,7 +130,7 @@ def _parse_log(path: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]], 
     return workloads, barriers, snapshots
 
 
-def _load_config(path: Path) -> dict[str, int | bool | str]:
+def _load_config(path: Path) -> dict[str, Any]:
     config = json.loads(path.read_text(encoding="utf-8"))
     cluster = config["cluster_config"]
     prefill = cluster["prefill_replica_config"]
@@ -137,10 +139,21 @@ def _load_config(path: Path) -> dict[str, int | bool | str]:
     request = config["request_generator_config"]["length_generator_config"]
     return {
         "num_layers": int(model["num_layers"]),
+        "is_moe": bool(model["is_moe"]),
         "total_experts": int(prefill["total_expert_num"]),
         "router_topk": int(prefill["router_topk"]),
+        "routing_seed": int(prefill["moe_routing_seed"]),
+        "routing_distribution": str(prefill["moe_routing_distribution_type"]),
         "prefill_ep_size": int(prefill["moe_expert_parallel_size"]),
         "decode_ep_size": int(decode["moe_expert_parallel_size"]),
+        "prefill_replicas": int(cluster["prefill_cluster_num_replicas"]),
+        "decode_replicas": int(cluster["decode_cluster_num_replicas"]),
+        "prefill_pipeline_stages": int(
+            cluster["prefill_replica_config_num_pipeline_stages"]
+        ),
+        "decode_pipeline_stages": int(
+            cluster["decode_replica_config_num_pipeline_stages"]
+        ),
         "prefill_tokens": int(request["prefill_tokens"]),
         "decode_tokens": int(request["decode_tokens"]),
         "num_requests": int(config["request_generator_config"]["num_requests"]),
@@ -149,6 +162,59 @@ def _load_config(path: Path) -> dict[str, int | bool | str]:
         "chunked_prefill": bool(cluster["replica_scheduler_config"]["enable_chunked_prefill"]),
         "cuda_graph_mode": str(config["decode_cuda_graph_mode"]),
     }
+
+
+def _expected_routing_ratios(
+    *,
+    distribution: str,
+    seed: int,
+    layer_id: int,
+    total_experts: int,
+) -> list[float]:
+    """Build the independent routing sidecar for one PDD MoE layer."""
+
+    rng = np.random.default_rng(seed + layer_id)
+    if distribution == "balanced":
+        weights = np.ones(total_experts, dtype=float)
+    elif distribution == "random":
+        weights = rng.uniform(0.1, 1.0, total_experts)
+    elif distribution == "skewed":
+        ranks = np.arange(1, total_experts + 1, dtype=float)
+        weights = 1.0 / np.power(ranks, 0.35)
+    elif distribution == "zipf":
+        ranks = np.arange(1, total_experts + 1, dtype=float)
+        weights = 1.0 / ranks
+    else:
+        raise ValueError(
+            f"unsupported routing distribution in PDD audit: {distribution!r}"
+        )
+    total_weight = float(np.sum(weights))
+    if not math.isfinite(total_weight) or total_weight <= 0.0:
+        raise ValueError("routing sidecar has an invalid weight sum")
+    return [float(weight / total_weight) for weight in weights]
+
+
+def _normalize_snapshot_details(
+    details: Any,
+) -> dict[int, dict[int, dict[int, float]]]:
+    if not isinstance(details, dict) or not details:
+        raise ValueError("routing snapshot details must be a non-empty object")
+    normalized: dict[int, dict[int, dict[int, float]]] = {}
+    for raw_replica_id, raw_layers in details.items():
+        replica_id = int(raw_replica_id)
+        if replica_id < 0 or not isinstance(raw_layers, dict):
+            raise ValueError("routing snapshot replica map is invalid")
+        normalized_layers: dict[int, dict[int, float]] = {}
+        for raw_layer_id, raw_experts in raw_layers.items():
+            layer_id = int(raw_layer_id)
+            if layer_id < 0 or not isinstance(raw_experts, dict):
+                raise ValueError("routing snapshot layer map is invalid")
+            normalized_layers[layer_id] = {
+                int(expert_id): float(ratio)
+                for expert_id, ratio in raw_experts.items()
+            }
+        normalized[replica_id] = normalized_layers
+    return normalized
 
 
 def _check(
@@ -170,6 +236,24 @@ def _check(
         "PREFILL": int(config["prefill_tokens"]),
         "DECODE": 1,
     }
+    if int(config["num_requests"]) != 1:
+        errors.append(
+            "direct PDD audit requires exactly one request so expected batch "
+            "identity is not inferred from runtime grouping"
+        )
+    expected_replica_ids = {
+        "PREFILL": set(range(int(config["prefill_replicas"]))),
+        "DECODE": set(
+            range(
+                int(config["prefill_replicas"]),
+                int(config["prefill_replicas"]) + int(config["decode_replicas"]),
+            )
+        ),
+    }
+    expected_pipeline_stages = {
+        "PREFILL": int(config["prefill_pipeline_stages"]),
+        "DECODE": int(config["decode_pipeline_stages"]),
+    }
 
     workloads_by_wave: dict[tuple[Any, ...], list[dict[str, Any]]] = collections.defaultdict(list)
     barriers_by_wave: dict[tuple[Any, ...], list[dict[str, Any]]] = collections.defaultdict(list)
@@ -178,15 +262,27 @@ def _check(
     for record in barriers:
         barriers_by_wave[record["wave"]].append(record)
 
-    expected_wave_count = sum(expected_batches.values()) * num_layers
-    if len(workloads) != expected_wave_count * int(config["prefill_ep_size"]):
+    expected_wave_count_by_cluster = {
+        cluster: expected_batches[cluster] * num_layers
+        for cluster in expected_ep_sizes
+    }
+    expected_workload_count = sum(
+        expected_wave_count_by_cluster[cluster] * ep_size
+        for cluster, ep_size in expected_ep_sizes.items()
+    )
+    expected_barrier_count = sum(
+        expected_wave_count_by_cluster.values()
+    ) * 2
+    expected_wave_count = sum(expected_wave_count_by_cluster.values())
+    if len(workloads) != expected_workload_count:
         errors.append(
-            f"workload count mismatch expected={expected_wave_count * int(config['prefill_ep_size'])} "
+            f"workload count mismatch expected={expected_workload_count} "
             f"actual={len(workloads)}"
         )
-    if len(barriers) != expected_wave_count * 2:
+    if len(barriers) != expected_barrier_count:
         errors.append(
-            f"barrier count mismatch expected={expected_wave_count * 2} actual={len(barriers)}"
+            f"barrier count mismatch expected={expected_barrier_count} "
+            f"actual={len(barriers)}"
         )
     if len(workloads_by_wave) != expected_wave_count:
         errors.append(
@@ -204,6 +300,18 @@ def _check(
         if ep_size is None:
             errors.append(f"unexpected workload cluster={cluster}")
             continue
+        replica_id, stage_id = _identity_value[0], _identity_value[1]
+        if replica_id not in expected_replica_ids[cluster]:
+            errors.append(
+                f"workload replica is outside configured cluster domain "
+                f"cluster={cluster} replica={replica_id} "
+                f"expected={sorted(expected_replica_ids[cluster])}"
+            )
+        if stage_id < 0 or stage_id >= expected_pipeline_stages[cluster]:
+            errors.append(
+                f"workload stage is outside configured pipeline domain "
+                f"cluster={cluster} stage={stage_id}"
+            )
         expected_ids = list(range(ep_size))
         actual_ids = sorted(record["ep"] for record in records)
         if actual_ids != expected_ids:
@@ -228,6 +336,11 @@ def _check(
                     "expected": expected_assignment_count,
                     "actual": observed_assignment_count,
                 }
+            )
+        if any(record["ep_size"] != ep_size for record in records):
+            errors.append(
+                f"EP size mismatch cluster={cluster} batch={batch} layer={layer} "
+                f"expected={ep_size} actual={sorted({record['ep_size'] for record in records})}"
             )
         all_experts: list[int] = []
         for record in records:
@@ -330,19 +443,84 @@ def _check(
                 previous_combine_line = max(combine_lines, default=previous_combine_line)
 
     snapshot_ratio_error = 0.0
+    snapshot_ratio_mismatches = 0
     snapshot_domains: set[int] = set()
     snapshot_replicas: dict[str, int] = {}
+    snapshot_by_cluster: dict[str, dict[int, dict[int, dict[int, float]]]] = {}
     for snapshot in snapshots:
         cluster = str(snapshot.get("cluster", "")).upper()
-        details = snapshot.get("routing_details", {})
+        if cluster in snapshot_by_cluster:
+            errors.append(f"duplicate routing snapshot cluster={cluster}")
+            continue
+        if cluster not in expected_ep_sizes:
+            errors.append(f"unexpected routing snapshot cluster={cluster}")
+            continue
+        if snapshot.get("schema_version") != 1:
+            errors.append(f"routing snapshot schema mismatch cluster={cluster}")
+            continue
+        try:
+            details = _normalize_snapshot_details(snapshot.get("routing_details"))
+        except (TypeError, ValueError) as exc:
+            errors.append(f"invalid routing snapshot cluster={cluster}: {exc}")
+            continue
+        snapshot_by_cluster[cluster] = details
         snapshot_replicas[cluster] = len(details)
-        for layers in details.values():
-            for experts in layers.values():
-                snapshot_domains.add(len(experts))
-                snapshot_ratio_error = max(
-                    snapshot_ratio_error,
-                    abs(sum(float(value) for value in experts.values()) - 1.0),
+        actual_replica_ids = set(details)
+        if actual_replica_ids != expected_replica_ids[cluster]:
+            errors.append(
+                f"routing snapshot Replica set mismatch cluster={cluster} "
+                f"expected={sorted(expected_replica_ids[cluster])} "
+                f"actual={sorted(actual_replica_ids)}"
+            )
+        expected_layers = set(range(num_layers))
+        expected_ratios = {
+            layer_id: _expected_routing_ratios(
+                distribution=str(config["routing_distribution"]),
+                seed=int(config["routing_seed"]),
+                layer_id=layer_id,
+                total_experts=total_experts,
+            )
+            for layer_id in expected_layers
+        }
+        for replica_id, layers in details.items():
+            actual_layers = set(layers)
+            if actual_layers != expected_layers:
+                errors.append(
+                    f"routing snapshot layer set mismatch cluster={cluster} "
+                    f"replica={replica_id} expected={sorted(expected_layers)} "
+                    f"actual={sorted(actual_layers)}"
                 )
+            for layer_id, experts in layers.items():
+                snapshot_domains.add(len(experts))
+                ratio_sum_error = abs(sum(experts.values()) - 1.0)
+                snapshot_ratio_error = max(snapshot_ratio_error, ratio_sum_error)
+                expected = {
+                    expert_id: expected_ratios[layer_id][expert_id]
+                    for expert_id in range(total_experts)
+                } if layer_id in expected_ratios else {}
+                if set(experts) != set(expected):
+                    snapshot_ratio_mismatches += 1
+                    continue
+                if any(
+                    not math.isclose(
+                        float(experts[expert_id]),
+                        expected_ratio,
+                        rel_tol=0.0,
+                        abs_tol=1e-12,
+                    )
+                    for expert_id, expected_ratio in expected.items()
+                ):
+                    snapshot_ratio_mismatches += 1
+    if set(snapshot_by_cluster) != set(expected_ep_sizes):
+        errors.append(
+            "routing snapshot cluster set mismatch "
+            f"expected={sorted(expected_ep_sizes)} "
+            f"actual={sorted(snapshot_by_cluster)}"
+        )
+    if snapshot_ratio_mismatches:
+        errors.append(
+            f"routing snapshot sidecar mismatches={snapshot_ratio_mismatches}"
+        )
 
     errors.extend(
         [
@@ -393,6 +571,7 @@ def _check(
         "snapshot_replicas": snapshot_replicas,
         "snapshot_expert_domains": sorted(snapshot_domains),
         "snapshot_max_ratio_sum_abs_error": snapshot_ratio_error,
+        "snapshot_sidecar_mismatches": snapshot_ratio_mismatches,
         "config": config,
     }
 
