@@ -355,7 +355,7 @@ def test_ep_lane_requires_routed_token_metadata_for_alltoall() -> None:
 
 
 def test_zero_routed_ep_lane_uses_zero_alltoall_payload() -> None:
-    batch = _ep_batch_group({})
+    batch = _ep_batch_group({0: 0, 1: 0})
     ctx = _comm_context(
         batch=batch,
         quantization_manager=SimpleNamespace(
@@ -366,6 +366,25 @@ def test_zero_routed_ep_lane_uses_zero_alltoall_payload() -> None:
     )
 
     assert get_comm_operator("expert_parallel_alltoall").build_payload_bytes(ctx) == 0
+
+
+@pytest.mark.parametrize(
+    "operator_name",
+    ["moe_tensor_parallel_allreduce", "expert_parallel_alltoall"],
+)
+def test_ep_lane_rejects_empty_routed_token_map(operator_name: str) -> None:
+    batch = _ep_batch_group({})
+    ctx = _comm_context(
+        batch=batch,
+        quantization_manager=SimpleNamespace(
+            adjust_tensor_size=lambda _collective, data_size_bytes, _cluster_type: (
+                data_size_bytes
+            )
+        ),
+    )
+
+    with pytest.raises(ValueError, match="per_expert_tokens must be a non-empty"):
+        get_comm_operator(operator_name).build_payload_bytes(ctx)
 
 
 def test_communication_operator_times_reconcile_split_tp_and_pp_legacy_fields() -> None:

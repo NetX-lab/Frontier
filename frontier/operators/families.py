@@ -340,6 +340,10 @@ def _moe_tp_allreduce_payload_bytes(ctx: CommPayloadContext) -> int:
             raise ValueError(
                 "MoE TP allreduce per_expert_tokens must be a dictionary"
             )
+        if not per_expert_tokens:
+            raise ValueError(
+                "MoE TP allreduce per_expert_tokens must be a non-empty dictionary"
+            )
         routed_tokens = 0
         for expert_id, token_count in per_expert_tokens.items():
             if type(expert_id) is not int or expert_id < 0:
@@ -396,6 +400,11 @@ def _expert_parallel_payload_bytes(ctx: CommPayloadContext) -> int:
         if not isinstance(per_expert_tokens, dict):
             raise ValueError(
                 "Expert-parallel all-to-all per_expert_tokens must be a dictionary"
+            )
+        if not per_expert_tokens:
+            raise ValueError(
+                "Expert-parallel all-to-all per_expert_tokens must be a "
+                "non-empty dictionary"
             )
         routed_tokens = 0
         for expert_id, token_count in per_expert_tokens.items():

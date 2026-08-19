@@ -240,6 +240,26 @@ def test_disaggregation_moe_tp_allreduce_uses_lane_routed_tokens() -> None:
     )
 
 
+def test_disaggregation_moe_tp_allreduce_rejects_empty_lane_routing_map() -> None:
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 0, 0)],
+        num_tokens=[0],
+        replica_id=0,
+        ep_id=1,
+        time=0.0,
+        source_batch_ids=[7],
+        per_expert_tokens={},
+        cluster_type=ClusterType.DECODE,
+        is_moe=True,
+    )
+
+    with pytest.raises(ValueError, match="requires a non-empty"):
+        SklearnDisaggregationExecutionTimePredictor._get_moe_tp_routed_tokens(
+            lane,
+            ClusterType.DECODE,
+        )
+
+
 def test_disaggregation_moe_tp_allreduce_keeps_source_tokens_for_shared_batch() -> None:
     batch = SimpleNamespace(
         get_effective_total_tokens_rounded=lambda cluster_type: (

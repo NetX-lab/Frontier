@@ -1142,6 +1142,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     "MoE TP allreduce EP lane requires an explicit "
                     "per_expert_tokens dictionary"
                 )
+            if not per_expert_tokens:
+                raise ValueError(
+                    "MoE TP allreduce EP lane requires a non-empty "
+                    "per_expert_tokens dictionary"
+                )
             routed_tokens = 0
             for expert_id, token_count in per_expert_tokens.items():
                 if type(expert_id) is not int or expert_id < 0:

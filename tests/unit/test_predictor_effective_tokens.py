@@ -150,7 +150,7 @@ def test_sklearn_moe_predictor_rejects_missing_ep_routed_token_metadata():
         )
 
 
-def test_sklearn_moe_predictor_accepts_empty_ep_routed_token_map():
+def test_sklearn_moe_predictor_rejects_empty_ep_routed_token_map():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -166,12 +166,10 @@ def test_sklearn_moe_predictor_accepts_empty_ep_routed_token_map():
         is_moe=True,
     )
 
-    assert (
+    with pytest.raises(ValueError, match="per_expert_tokens must be a non-empty"):
         SklearnMoEExecutionTimePredictor._get_local_ep_routed_tokens(
             predictor, lane
         )
-        == 0
-    )
 
 
 def test_sklearn_moe_predictor_materializes_explicit_global_expert_tokens():

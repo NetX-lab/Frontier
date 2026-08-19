@@ -1234,6 +1234,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 raise ValueError(
                     "EPBatchGroup.per_expert_tokens must be a dictionary"
                 )
+            if not per_expert_tokens:
+                raise ValueError(
+                    "EPBatchGroup.per_expert_tokens must be a non-empty dictionary"
+                )
             routed_tokens = 0
             for expert_id, token_count in per_expert_tokens.items():
                 if type(expert_id) is not int or expert_id < 0:
