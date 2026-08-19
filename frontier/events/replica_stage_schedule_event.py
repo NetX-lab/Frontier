@@ -715,6 +715,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     effective_total_tokens_rounded=effective_tokens_rounded,
                     tokens_are_post_routing=tokens_are_post_routing,
                 )
+                batch_stage.attach_runtime_identity(batch)
 
                 # Mark stage as busy
                 stage_scheduler._is_busy = True

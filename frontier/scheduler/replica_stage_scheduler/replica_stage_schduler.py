@@ -413,6 +413,7 @@ class ReplicaStageScheduler:
                 tokens_are_post_routing=tokens_are_post_routing,
             )
             self._copy_ep_batch_metadata_to_stage(batch, batch_stage)
+            batch_stage.attach_runtime_identity(batch)
             return batch_stage, None
 
         total_execution_time = execution_time.total_time
@@ -432,6 +433,7 @@ class ReplicaStageScheduler:
             tokens_are_post_routing=tokens_are_post_routing,
         )
         self._copy_ep_batch_metadata_to_stage(batch, batch_stage)
+        batch_stage.attach_runtime_identity(batch)
 
         return batch_stage, execution_time
 

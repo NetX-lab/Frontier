@@ -4079,6 +4079,9 @@ class MetricsStore:
                 "diagnostic_component_ledger_ms": diagnostic_component_ledger_ms,
             },
         }
+        runtime_identity = getattr(batch_stage, "runtime_identity", None)
+        if runtime_identity is not None:
+            row.update(runtime_identity)
         request_num_prefill_tokens = batch_stage.request_num_prefill_tokens
         if request_num_prefill_tokens is not None:
             row["request_num_prefill_tokens"] = [
@@ -4172,6 +4175,9 @@ class MetricsStore:
                 "total_time_ms": _round_ledger_ms(execution_time.total_time * 1e3),
             },
         }
+        runtime_identity = getattr(batch_stage, "runtime_identity", None)
+        if runtime_identity is not None:
+            row.update(runtime_identity)
         if hasattr(batch_stage, "source_batch_ids"):
             row["source_batch_ids"] = [
                 int(batch_id) for batch_id in batch_stage.source_batch_ids

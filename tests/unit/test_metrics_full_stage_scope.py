@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from frontier.entities.batch_stage import BatchStage
 from frontier.metrics.metrics_store import MetricsStore
 from frontier.types import ClusterType
 
@@ -119,3 +120,39 @@ def test_full_stage_ledger_key_preserves_absent_local_identity() -> None:
     )
 
     assert key == (ClusterType.DECODE_FFN.name, 2, None, 1, 9)
+
+
+def test_stage_ledger_identity_is_captured_from_live_batch_state() -> None:
+    request = SimpleNamespace(
+        id=7,
+        runtime_epoch=2,
+        current_decode_token_index=4,
+        is_prefill_complete=False,
+    )
+    batch = SimpleNamespace(
+        id=11,
+        requests=[request],
+        schedule_epoch=3,
+        afd_stage_idx=5,
+        is_moe=True,
+    )
+    batch_stage = BatchStage(
+        batch_id=11,
+        replica_id=0,
+        pipeline_stage=0,
+        execution_time=0.1,
+        model_execution_time=0.1,
+        requests=[request],
+        num_tokens=[1],
+        cluster_type=ClusterType.MONOLITHIC,
+    )
+
+    batch_stage.attach_runtime_identity(batch)
+
+    assert batch_stage.runtime_identity == {
+        "iteration_ids": [3],
+        "schedule_epoch": 3,
+        "afd_stage_idx": 5,
+        "operation_id": 11,
+        "operation_kind": "ep_ffn",
+    }
