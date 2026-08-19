@@ -51,6 +51,7 @@ class StageExecutionContext:
         self._ready_fifo: deque[StageAdmissionTicket] = deque()
         self._active_ticket: StageAdmissionTicket | None = None
         self._operation_ids: set[Hashable] = set()
+        self._cancelled_tickets: set[StageAdmissionTicket] = set()
 
     @property
     def replica_id(self) -> int:
@@ -91,6 +92,21 @@ class StageExecutionContext:
     @property
     def queued_tickets(self) -> tuple[StageAdmissionTicket, ...]:
         return tuple(self._ready_fifo)
+
+    def is_active(self, ticket: StageAdmissionTicket) -> bool:
+        """Return whether this exact ticket currently owns the stage."""
+
+        return self._active_ticket == ticket
+
+    def is_queued(self, ticket: StageAdmissionTicket) -> bool:
+        """Return whether this exact ticket is waiting in the ready FIFO."""
+
+        return ticket in self._ready_fifo
+
+    def is_cancelled(self, ticket: StageAdmissionTicket) -> bool:
+        """Return whether this exact ticket was invalidated as stale."""
+
+        return ticket in self._cancelled_tickets
 
     def _validate_operation_id(self, operation_id: Hashable) -> None:
         try:
@@ -277,6 +293,7 @@ class StageExecutionContext:
         except ValueError as exc:
             raise ValueError("stage admission ticket is not queued") from exc
         self._operation_ids.remove(ticket.operation_id)
+        self._cancelled_tickets.add(ticket)
 
 
 __all__ = [

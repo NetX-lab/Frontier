@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from frontier.entities import Batch, EPBatchGroup, Request
+from frontier.events.batch_stage_end_event import BatchStageEndEvent
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     FULL_STAGE_WORLD,
     EP_WAVE,
@@ -170,6 +171,133 @@ def test_cluster_scheduler_releases_parent_ticket_after_wave_cleanup() -> None:
     scheduler._stage_execution_contexts = {(0, 0): context}
     scheduler.release_stage_admission_for_batch(batch)
 
+    assert context.is_idle
+    assert not hasattr(batch, "_stage_admission_ticket")
+
+
+def test_stale_ep_wave_lane_drops_siblings_with_the_same_parent_ticket() -> None:
+    """A stale lane must not leak an invalid parent ticket to a sibling lane."""
+
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2)
+    ticket = context.enqueue_ep_wave(operation_id=71, participant_ep_ids=(0, 1))
+    stale_request = Request(arrived_at=0.0, num_prefill_tokens=0, num_decode_tokens=1)
+    live_request = Request(arrived_at=0.0, num_prefill_tokens=0, num_decode_tokens=1)
+    stale_lane = Batch(0, [stale_request], [1], is_moe=True)
+    live_lane = Batch(0, [live_request], [1], is_moe=True)
+    stale_lane.set_global_id(71)
+    live_lane.set_global_id(71)
+    stale_lane._stage_admission_ticket = ticket
+    live_lane._stage_admission_ticket = ticket
+
+    stage = ReplicaStageScheduler(
+        replica_id=0,
+        stage_id=0,
+        is_last_stage=True,
+        is_moe=True,
+        execution_time_predictor=object(),
+        cluster_type=ClusterType.DECODE_FFN,
+        replica_local_id=0,
+        stage_execution_context=context,
+    )
+    stage.add_batch(stale_lane)
+    stage.add_batch(live_lane)
+    stale_request._execution_epoch += 1
+
+    # A stale lane invalidates the whole EP wave, so its sibling is dropped
+    # instead of carrying an admission ticket that has already been released.
+    assert stage.pop_batch_if_not_busy() is None
+    assert stage.consume_last_stale_drop_count() == 2
+    assert context.is_idle
+    assert context.queued_tickets == ()
+
+
+def test_stale_schedule_epoch_drops_siblings_with_the_same_parent_ticket() -> None:
+    """A stale queue snapshot must not leak its parent EP-wave ticket."""
+
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2)
+    ticket = context.enqueue_ep_wave(operation_id=72, participant_ep_ids=(0, 1))
+    stale_request = Request(arrived_at=0.0, num_prefill_tokens=0, num_decode_tokens=1)
+    live_request = Request(arrived_at=0.0, num_prefill_tokens=0, num_decode_tokens=1)
+    stale_lane = Batch(0, [stale_request], [1], is_moe=True)
+    live_lane = Batch(0, [live_request], [1], is_moe=True)
+    stale_lane.set_global_id(72)
+    live_lane.set_global_id(72)
+    stale_lane._stage_admission_ticket = ticket
+    live_lane._stage_admission_ticket = ticket
+
+    stage = ReplicaStageScheduler(
+        replica_id=0,
+        stage_id=0,
+        is_last_stage=True,
+        is_moe=True,
+        execution_time_predictor=object(),
+        cluster_type=ClusterType.DECODE_FFN,
+        replica_local_id=0,
+        stage_execution_context=context,
+    )
+    stage.add_batch(stale_lane)
+    stage.add_batch(live_lane)
+    stale_lane._schedule_epoch += 1
+
+    assert stage.pop_batch_if_not_busy() is None
+    assert stage.consume_last_stale_drop_count() == 2
+    assert context.is_idle
+    assert context.queued_tickets == ()
+
+
+def test_stale_stage_end_releases_the_captured_active_ticket() -> None:
+    """A stale stage-end event must not leave its parent stage permanently busy."""
+
+    class _ProbeClusterScheduler(BaseClusterScheduler):
+        def schedule(self):
+            return []
+
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
+    ticket = context.enqueue_full_stage(operation_id=("stage_batch", 73, 0))
+    assert context.try_acquire(ticket)
+    stage_end_calls = []
+    cluster_scheduler = object.__new__(_ProbeClusterScheduler)
+    cluster_scheduler._stage_execution_contexts = {(0, 0): context}
+    cluster_scheduler.get_replica_stage_scheduler = lambda *_args: SimpleNamespace(
+        on_stage_end=lambda: stage_end_calls.append(True)
+    )
+
+    batch = Batch(
+        0,
+        [Request(arrived_at=0.0, num_prefill_tokens=1, num_decode_tokens=0)],
+        [1],
+        is_moe=False,
+    )
+    batch.set_global_id(73)
+    batch._stage_admission_ticket = ticket
+    batch_stage = SimpleNamespace(
+        id=1,
+        on_stage_end=lambda *_args: pytest.fail(
+            "stale batch stage must not end"
+        ),
+    )
+    event = BatchStageEndEvent(
+        time=1.0,
+        replica_id=0,
+        stage_id=0,
+        is_last_stage=True,
+        batch=batch,
+        batch_stage=batch_stage,
+        cluster_type=ClusterType.PREFILL,
+        replica_local_id=None,
+    )
+    batch._schedule_epoch += 1
+    scheduler = SimpleNamespace(
+        get_cluster_scheduler=lambda *_args: cluster_scheduler
+    )
+    metrics_store = SimpleNamespace(
+        on_batch_stage_end=lambda *_args: pytest.fail(
+            "stale batch stage must not write metrics"
+        )
+    )
+
+    assert event.handle_event(scheduler, metrics_store) == []
+    assert stage_end_calls == [True]
     assert context.is_idle
     assert not hasattr(batch, "_stage_admission_ticket")
 

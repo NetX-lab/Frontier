@@ -32,6 +32,7 @@ from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
+    StageAdmissionTicket,
     StageExecutionContext,
 )
 from frontier.types import (
@@ -1480,6 +1481,32 @@ class BaseClusterScheduler(ABC):
         )
         context.release(ticket)
         batch.__dict__.pop("_stage_admission_ticket", None)
+
+    def discard_stage_admission_ticket(
+        self,
+        ticket: StageAdmissionTicket,
+        *,
+        stage_id: int,
+    ) -> None:
+        """Clean up one ticket captured by a stale stage event."""
+
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError(
+                "stage_id is required to discard a stage admission ticket"
+            )
+        context = self.get_stage_execution_context(
+            int(ticket.replica_id),
+            stage_id,
+        )
+        if context.is_active(ticket):
+            context.release(ticket)
+        elif context.is_queued(ticket):
+            context.cancel(ticket)
+        elif not context.is_cancelled(ticket):
+            raise ValueError(
+                "stale stage event carries an unknown stage admission ticket: "
+                f"{ticket.operation_id!r}"
+            )
 
     def transition_stage_admission_for_layer(
         self,

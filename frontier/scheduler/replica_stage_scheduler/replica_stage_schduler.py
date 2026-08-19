@@ -209,6 +209,45 @@ class ReplicaStageScheduler:
             live_batch._stage_admission_ticket = batch._stage_admission_ticket
         return live_batch
 
+    def _drop_queued_lanes_for_ticket(
+        self, admission_ticket: StageAdmissionTicket
+    ) -> int:
+        """Drop every queued sibling that belongs to one invalid EP wave."""
+
+        retained = []
+        dropped = 0
+        for queue_item in self._batch_queue:
+            queued_batch = queue_item[3]
+            if getattr(queued_batch, "_stage_admission_ticket", None) == admission_ticket:
+                dropped += 1
+                queued_batch.__dict__.pop("_stage_admission_ticket", None)
+            else:
+                retained.append(queue_item)
+        if dropped:
+            self._batch_queue = retained
+            heapq.heapify(self._batch_queue)
+        return dropped
+
+    def _discard_stale_ticket(self, admission_ticket: StageAdmissionTicket) -> None:
+        """Cancel a queued stale ticket without touching another active wave."""
+
+        context = self._stage_execution_context
+        if context is None:
+            raise ValueError(
+                "Batch carries a stage admission ticket but no StageExecutionContext"
+            )
+        if context.is_queued(admission_ticket):
+            context.cancel(admission_ticket)
+        elif context.is_active(admission_ticket):
+            # A sibling lane may already own the wave. Its active ticket is
+            # released only at the true completion boundary.
+            return
+        elif not context.is_cancelled(admission_ticket):
+            raise ValueError(
+                "stale batch carries an unknown stage admission ticket: "
+                f"{admission_ticket.operation_id!r}"
+            )
+
     def pop_batch_if_not_busy(self) -> Batch:
         """
         Pop the batch with smallest (global_id, insertion_counter) from the queue.
@@ -223,34 +262,55 @@ class ReplicaStageScheduler:
         self._last_stale_drop_count = 0
         if self._is_busy or not self._batch_queue:
             return None
-        # A complete operation may have been queued on several child lanes.
-        # Acquire its stage parent before any child marks itself busy or starts
-        # pre-dispatch work.  The first lane acquires the ticket; sibling lanes
-        # observe that the same parent already owns it.
-        _, _, expected_schedule_epoch, queued_batch = self._batch_queue[0]
-        admission_ticket = getattr(queued_batch, "_stage_admission_ticket", None)
-        parent_acquired = False
-        if admission_ticket is not None:
-            if self._stage_execution_context is None:
-                raise ValueError(
-                    "Batch carries a stage admission ticket but no StageExecutionContext"
-                )
-            if queued_batch.schedule_epoch == expected_schedule_epoch:
+        while self._batch_queue:
+            # Inspect and admit the same queue head. The old implementation
+            # admitted the first ticket before a stale-drop loop could pop a
+            # different batch, allowing that batch to bypass the parent owner.
+            _, _, expected_schedule_epoch, batch = self._batch_queue[0]
+            admission_ticket = getattr(batch, "_stage_admission_ticket", None)
+            if admission_ticket is not None:
+                if self._stage_execution_context is None:
+                    raise ValueError(
+                        "Batch carries a stage admission ticket but no StageExecutionContext"
+                    )
+                if self._stage_execution_context.is_cancelled(admission_ticket):
+                    heapq.heappop(self._batch_queue)
+                    batch.__dict__.pop("_stage_admission_ticket", None)
+                    self._last_stale_drop_count += 1
+                    self._last_stale_drop_count += (
+                        self._drop_queued_lanes_for_ticket(admission_ticket)
+                    )
+                    continue
+            if batch.schedule_epoch != expected_schedule_epoch:
+                heapq.heappop(self._batch_queue)
+                if admission_ticket is not None:
+                    self._discard_stale_ticket(admission_ticket)
+                    batch.__dict__.pop("_stage_admission_ticket", None)
+                    self._last_stale_drop_count += (
+                        self._drop_queued_lanes_for_ticket(admission_ticket)
+                    )
+                self._last_stale_drop_count += 1
+                continue
+            parent_acquired = False
+            if admission_ticket is not None:
                 if not self._stage_execution_context.owns(admission_ticket):
                     if not self._stage_execution_context.try_acquire(admission_ticket):
                         return None
                     parent_acquired = True
-        while self._batch_queue:
-            # heappop returns the smallest element:
-            # (global_id, insertion_counter, schedule_epoch, batch)
-            _, _, expected_schedule_epoch, batch = heapq.heappop(self._batch_queue)
-            if batch.schedule_epoch != expected_schedule_epoch:
-                self._last_stale_drop_count += 1
-                continue
+            # Remove the same candidate whose ticket was just acquired.
+            heapq.heappop(self._batch_queue)
             live_batch = self._materialize_runtime_live_batch(batch)
             if live_batch is None:
-                if parent_acquired:
-                    self._stage_execution_context.release(admission_ticket)
+                if admission_ticket is not None:
+                    context = self._stage_execution_context
+                    if parent_acquired and context.is_active(admission_ticket):
+                        context.release(admission_ticket)
+                    elif context.is_queued(admission_ticket):
+                        context.cancel(admission_ticket)
+                    batch.__dict__.pop("_stage_admission_ticket", None)
+                    self._last_stale_drop_count += (
+                        self._drop_queued_lanes_for_ticket(admission_ticket)
+                    )
                 self._last_stale_drop_count += 1
                 continue
             self._is_busy = True
