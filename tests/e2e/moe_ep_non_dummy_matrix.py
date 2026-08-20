@@ -194,6 +194,7 @@ _EP_BARRIER_LINE_RE = re.compile(
     r"expected_ep_ids=(?P<expected_ep_ids>\[[^\]]*\]),\s+"
     r"arrived_ep_ids=(?P<arrived_ep_ids>\[[^\]]*\]),\s+"
     r"max_lane_time_ms=(?P<max_lane_time_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
+    r"(?:collective_time_ms=(?P<collective_time_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+)?"
     r"barrier_time_ms=(?P<barrier_time_ms>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+"
     r"(?:barrier_start_time_s=(?P<barrier_start_time_s>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?),\s+)?"
     r"barrier_end_time_s=(?P<barrier_end_time_s>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
@@ -5175,6 +5176,9 @@ def _parse_ep_barrier_records(
             name: float(groups[name])
             for name in ("max_lane_time_ms", "barrier_time_ms", "barrier_end_time_s")
         }
+        collective_time_raw = groups.get("collective_time_ms")
+        if collective_time_raw is not None:
+            values["collective_time_ms"] = float(collective_time_raw)
         if start_time_raw is not None:
             values["barrier_start_time_s"] = float(start_time_raw)
         if any(not math.isfinite(value) or value < 0 for value in values.values()):
@@ -5337,6 +5341,13 @@ def _validate_ep_phase_accounting(
         wave_end = wave_ends_by_wave.get(wave_key)
         if dispatch is None or combine is None:
             continue
+        for phase_name, barrier in (("dispatch", dispatch), ("combine", combine)):
+            if "collective_time_ms" not in barrier:
+                errors.append(
+                    "EP phase-accounting evidence is missing collective component "
+                    f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                    f"layer={wave_key[2]} phase={phase_name}"
+                )
         if wave_end is None:
             errors.append(
                 "missing EP wave-end evidence "
@@ -5368,6 +5379,18 @@ def _validate_ep_phase_accounting(
                     f"layer={wave_key[2]} expected={pre_dispatch_max} "
                     f"actual={dispatch['max_lane_time_ms']}"
                 )
+        if "collective_time_ms" in dispatch and not math.isclose(
+            float(dispatch["collective_time_ms"]),
+            dispatch_max,
+            rel_tol=1e-12,
+            abs_tol=phase_log_abs_tol_ms,
+        ):
+            errors.append(
+                "EP dispatch collective component mismatch "
+                f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                f"layer={wave_key[2]} expected={dispatch_max} "
+                f"actual={dispatch['collective_time_ms']}"
+            )
         if not math.isclose(
             float(dispatch["barrier_time_ms"]),
             expected_dispatch_barrier_ms,
@@ -5393,6 +5416,18 @@ def _validate_ep_phase_accounting(
                 f"cluster={wave_key[0]} batch_id={wave_key[1]} "
                 f"layer={wave_key[2]} expected={routed_max} "
                 f"actual={combine['max_lane_time_ms']}"
+            )
+        if "collective_time_ms" in combine and not math.isclose(
+            float(combine["collective_time_ms"]),
+            combine_max,
+            rel_tol=1e-12,
+            abs_tol=phase_log_abs_tol_ms,
+        ):
+            errors.append(
+                "EP combine collective component mismatch "
+                f"cluster={wave_key[0]} batch_id={wave_key[1]} "
+                f"layer={wave_key[2]} expected={combine_max} "
+                f"actual={combine['collective_time_ms']}"
             )
         if not math.isclose(
             float(combine["barrier_time_ms"]),

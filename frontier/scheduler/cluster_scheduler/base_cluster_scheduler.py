@@ -665,6 +665,7 @@ class BaseClusterScheduler(ABC):
         expected_ep_ids: Tuple[int, ...],
         arrived_ep_ids: Tuple[int, ...],
         max_lane_time_ms: float,
+        collective_time_ms: float,
         barrier_time_ms: float,
         barrier_start_time_s: float,
         barrier_end_time_s: float,
@@ -687,6 +688,7 @@ class BaseClusterScheduler(ABC):
             )
         for name, value in (
             ("max_lane_time_ms", max_lane_time_ms),
+            ("collective_time_ms", collective_time_ms),
             ("barrier_time_ms", barrier_time_ms),
             ("barrier_start_time_s", barrier_start_time_s),
             ("barrier_end_time_s", barrier_end_time_s),
@@ -702,6 +704,18 @@ class BaseClusterScheduler(ABC):
             raise ValueError(
                 "EP barrier time cannot be shorter than the slowest lane: "
                 f"barrier={barrier_time_ms!r}, max_lane={max_lane_time_ms!r}"
+            )
+        expected_barrier_time_ms = float(max_lane_time_ms) + float(collective_time_ms)
+        if not math.isclose(
+            float(barrier_time_ms),
+            expected_barrier_time_ms,
+            rel_tol=1e-12,
+            abs_tol=1e-9,
+        ):
+            raise ValueError(
+                "EP barrier time does not equal lane arrival plus collective time: "
+                f"barrier={barrier_time_ms!r}, max_lane={max_lane_time_ms!r}, "
+                f"collective={collective_time_ms!r}, expected={expected_barrier_time_ms!r}"
             )
         expected_end_time_s = float(barrier_start_time_s) + float(barrier_time_ms) * 1e-3
         if not math.isclose(
@@ -720,7 +734,8 @@ class BaseClusterScheduler(ABC):
         logger.info(
             "[EP-BARRIER][%s] batch_id=%d, layer_id=%d, phase=%s, "
             "expected_ep_ids=%s, arrived_ep_ids=%s, max_lane_time_ms=%.12f, "
-            "barrier_time_ms=%.12f, barrier_start_time_s=%.12f, "
+            "collective_time_ms=%.12f, barrier_time_ms=%.12f, "
+            "barrier_start_time_s=%.12f, "
             "barrier_end_time_s=%.12f, %s",
             cluster_name,
             batch_id,
@@ -729,6 +744,7 @@ class BaseClusterScheduler(ABC):
             list(expected),
             list(arrived),
             float(max_lane_time_ms),
+            float(collective_time_ms),
             float(barrier_time_ms),
             float(barrier_start_time_s),
             float(barrier_end_time_s),
@@ -2798,6 +2814,7 @@ class BaseClusterScheduler(ABC):
             expected_ep_ids=tuple(sorted(expected_ep_ids)),
             arrived_ep_ids=tuple(sorted(expected_ep_ids)),
             max_lane_time_ms=(ep_collective_sync_time - trace_origin_s) * 1000.0,
+            collective_time_ms=ep_collective_exec_time_ms,
             barrier_time_ms=(collective_event_time - trace_origin_s) * 1000.0,
             barrier_start_time_s=trace_origin_s,
             barrier_end_time_s=collective_event_time,
@@ -3250,6 +3267,7 @@ class BaseClusterScheduler(ABC):
             expected_ep_ids=tuple(sorted(ep_batches)),
             arrived_ep_ids=tuple(sorted(ep_batches)),
             max_lane_time_ms=(trace_sync_s - dispatch_end_time_s) * 1000.0,
+            collective_time_ms=(combine_end_time - trace_sync_s) * 1000.0,
             barrier_time_ms=(combine_end_time - dispatch_end_time_s) * 1000.0,
             barrier_start_time_s=dispatch_end_time_s,
             barrier_end_time_s=combine_end_time,
@@ -3912,6 +3930,7 @@ class BaseClusterScheduler(ABC):
             expected_ep_ids=participant_ep_ids,
             arrived_ep_ids=participant_ep_ids,
             max_lane_time_ms=max_pre_dispatch_ms,
+            collective_time_ms=max_dispatch_ms,
             barrier_time_ms=dispatch_barrier_time_ms,
             barrier_start_time_s=time,
             barrier_end_time_s=dispatch_barrier_end_time_s,
@@ -3931,6 +3950,7 @@ class BaseClusterScheduler(ABC):
             expected_ep_ids=participant_ep_ids,
             arrived_ep_ids=participant_ep_ids,
             max_lane_time_ms=max_routed_compute_ms,
+            collective_time_ms=max_combine_ms,
             barrier_time_ms=combine_barrier_time_ms,
             barrier_start_time_s=dispatch_barrier_end_time_s,
             barrier_end_time_s=combine_barrier_end_time_s,
@@ -4227,6 +4247,7 @@ class BaseClusterScheduler(ABC):
             expected_ep_ids=participant_ep_ids,
             arrived_ep_ids=participant_ep_ids,
             max_lane_time_ms=max_pre_dispatch_ms,
+            collective_time_ms=max_dispatch_ms,
             barrier_time_ms=dispatch_barrier_time_ms,
             barrier_start_time_s=time,
             barrier_end_time_s=dispatch_barrier_end_time_s,
@@ -4246,6 +4267,7 @@ class BaseClusterScheduler(ABC):
             expected_ep_ids=participant_ep_ids,
             arrived_ep_ids=participant_ep_ids,
             max_lane_time_ms=max_routed_compute_ms,
+            collective_time_ms=max_combine_ms,
             barrier_time_ms=combine_barrier_time_ms,
             barrier_start_time_s=dispatch_barrier_end_time_s,
             barrier_end_time_s=combine_barrier_end_time_s,

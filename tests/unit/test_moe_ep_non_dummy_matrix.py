@@ -420,6 +420,7 @@ def _phase_accounting_fixture() -> tuple[
             "layer_id": 0,
             "phase": "dispatch",
             "max_lane_time_ms": 2.0,
+            "collective_time_ms": 2.0,
             "barrier_time_ms": 4.0,
             "barrier_start_time_s": 0.0,
             "barrier_end_time_s": 0.004,
@@ -430,6 +431,7 @@ def _phase_accounting_fixture() -> tuple[
             "layer_id": 0,
             "phase": "combine",
             "max_lane_time_ms": 4.0,
+            "collective_time_ms": 3.0,
             "barrier_time_ms": 7.0,
             "barrier_start_time_s": 0.004,
             "barrier_end_time_s": 0.011,
@@ -500,6 +502,19 @@ def test_ep_phase_accounting_rejects_mutated_barrier() -> None:
     )
 
     assert any("dispatch barrier equation mismatch" in error for error in errors)
+
+
+def test_ep_phase_accounting_rejects_mutated_collective_component() -> None:
+    workloads, barriers, wave_ends = _phase_accounting_fixture()
+    barriers[0]["collective_time_ms"] = 9.0
+
+    errors = _validate_ep_phase_accounting(
+        workload_records=workloads,
+        barrier_records=barriers,
+        wave_end_records=wave_ends,
+    )
+
+    assert any("collective component mismatch" in error for error in errors)
 
 
 def test_ep_phase_accounting_rejects_missing_phase_field() -> None:
@@ -3729,7 +3744,8 @@ def test_ep_barrier_parser_accepts_logger_prefix() -> None:
         "INFO 12:00:00 scheduler.py:1] "
         "[EP-BARRIER][PREFILL] batch_id=7, layer_id=3, phase=combine, "
         "expected_ep_ids=[0, 1], arrived_ep_ids=[0, 1], "
-        "max_lane_time_ms=4.0, barrier_time_ms=4.0, barrier_end_time_s=0.008"
+        "max_lane_time_ms=4.0, collective_time_ms=0.0, "
+        "barrier_time_ms=4.0, barrier_end_time_s=0.008"
     )
 
     assert records == [
@@ -3741,6 +3757,7 @@ def test_ep_barrier_parser_accepts_logger_prefix() -> None:
             "expected_ep_ids": [0, 1],
             "arrived_ep_ids": [0, 1],
             "max_lane_time_ms": 4.0,
+            "collective_time_ms": 0.0,
             "barrier_time_ms": 4.0,
             "barrier_end_time_s": 0.008,
         }
@@ -3764,6 +3781,7 @@ def test_ep_barrier_log_precision_preserves_timestamp_equation(monkeypatch) -> N
         expected_ep_ids=(0, 1),
         arrived_ep_ids=(0, 1),
         max_lane_time_ms=0.146522,
+        collective_time_ms=0.001191,
         barrier_time_ms=barrier_time_ms,
         barrier_start_time_s=start_time_s,
         barrier_end_time_s=start_time_s + barrier_time_ms * 1e-3,
