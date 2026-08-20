@@ -156,6 +156,7 @@ class ModelArchitectureProfile:
                     "attn_post_proj",
                 ),
             ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
             match=match or (lambda _config: False),
         )
 

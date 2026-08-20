@@ -86,11 +86,13 @@ def _batch(
 
 
 @pytest.mark.parametrize(
-    ("first_tokens", "second_tokens"),
-    [(100, 200), (200, 100)],
+    ("first_ep_id", "first_tokens", "second_ep_id", "second_tokens"),
+    [(1, 0, 0, 4), (0, 4, 1, 0)],
 )
 def test_step3_alltoall_combine_uses_max_lane_payload_independent_of_arrival_order(
+    first_ep_id: int,
     first_tokens: int,
+    second_ep_id: int,
     second_tokens: int,
 ) -> None:
     scheduler, predictor = _build_scheduler(architecture_profile="step3_text")
@@ -99,14 +101,14 @@ def test_step3_alltoall_combine_uses_max_lane_payload_independent_of_arrival_ord
         global_id=77,
         total_num_tokens=first_tokens,
         replica_id=3,
-        ep_id=0,
+        ep_id=first_ep_id,
     )
     second_batch = _batch(
         batch_id=11,
         global_id=77,
         total_num_tokens=second_tokens,
         replica_id=3,
-        ep_id=1,
+        ep_id=second_ep_id,
     )
 
     first_events = scheduler.on_ep_alltoall_combine_ready(
@@ -114,7 +116,7 @@ def test_step3_alltoall_combine_uses_max_lane_payload_independent_of_arrival_ord
         replica_id=3,
         stage_id=4,
         batch=first_batch,
-        ep_id=0,
+        ep_id=first_ep_id,
     )
 
     assert first_events == []
@@ -126,7 +128,7 @@ def test_step3_alltoall_combine_uses_max_lane_payload_independent_of_arrival_ord
         replica_id=3,
         stage_id=4,
         batch=second_batch,
-        ep_id=1,
+        ep_id=second_ep_id,
     )
 
     assert len(second_events) == 1
@@ -137,7 +139,7 @@ def test_step3_alltoall_combine_uses_max_lane_payload_independent_of_arrival_ord
     assert second_events[0].to_dict()["batch_global_id"] == 77
     assert predictor.alltoall_calls == [
         {
-            "data_size_bytes": 200 * 4096 * 2,
+            "data_size_bytes": 4 * 4096 * 2,
             "num_devices": 2,
             "cluster_type": ClusterType.DECODE_FFN,
             "comm_domain": "EP",
@@ -146,21 +148,30 @@ def test_step3_alltoall_combine_uses_max_lane_payload_independent_of_arrival_ord
     assert predictor.allgather_calls == []
 
 
-def test_generic_allgather_combine_preserves_first_lane_payload() -> None:
+@pytest.mark.parametrize(
+    ("first_ep_id", "first_tokens", "second_ep_id", "second_tokens"),
+    [(1, 0, 0, 4), (0, 4, 1, 0)],
+)
+def test_generic_alltoall_combine_uses_max_lane_payload_independent_of_arrival_order(
+    first_ep_id: int,
+    first_tokens: int,
+    second_ep_id: int,
+    second_tokens: int,
+) -> None:
     scheduler, predictor = _build_scheduler(architecture_profile="generic")
     first_batch = _batch(
         batch_id=20,
         global_id=88,
-        total_num_tokens=100,
+        total_num_tokens=first_tokens,
         replica_id=5,
-        ep_id=0,
+        ep_id=first_ep_id,
     )
     second_batch = _batch(
         batch_id=21,
         global_id=88,
-        total_num_tokens=200,
+        total_num_tokens=second_tokens,
         replica_id=5,
-        ep_id=1,
+        ep_id=second_ep_id,
     )
 
     first_events = scheduler.on_ep_alltoall_combine_ready(
@@ -168,26 +179,27 @@ def test_generic_allgather_combine_preserves_first_lane_payload() -> None:
         replica_id=5,
         stage_id=6,
         batch=first_batch,
-        ep_id=0,
+        ep_id=first_ep_id,
     )
     second_events = scheduler.on_ep_alltoall_combine_ready(
         time=2.4,
         replica_id=5,
         stage_id=6,
         batch=second_batch,
-        ep_id=1,
+        ep_id=second_ep_id,
     )
 
     assert first_events == []
     assert len(second_events) == 1
     assert isinstance(second_events[0], EPAllToAllCombineCollectiveEvent)
     assert second_events[0].time == pytest.approx(2.4125)
-    assert predictor.alltoall_calls == []
-    assert predictor.allgather_calls == [
+    assert predictor.alltoall_calls == [
         {
-            "data_size_bytes": 100 * 4096 * 2,
+            "data_size_bytes": 4 * 4096 * 2,
             "num_devices": 2,
             "cluster_type": ClusterType.DECODE_FFN,
             "comm_domain": "EP",
         }
     ]
+    assert predictor.allgather_calls == []
+    assert set(scheduler._ep_allgather_waiting_room[5][6][88]["batches"]) == {0, 1}

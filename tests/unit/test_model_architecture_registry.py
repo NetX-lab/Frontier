@@ -348,7 +348,7 @@ def test_ep_collective_resolver_reuses_runtime_resolved_identity() -> None:
 
         assert len(_generic_fallback_records(records)) == 1
 
-    assert collectives == [ExpertParallelCollective.ALLGATHER] * 5
+    assert collectives == [ExpertParallelCollective.ALLTOALL] * 5
 
 
 def test_ep_collective_resolver_uses_runtime_snapshot_after_identity_mutation() -> None:
@@ -376,7 +376,7 @@ def test_ep_collective_resolver_uses_runtime_snapshot_after_identity_mutation() 
 
     assert cfg.get_model_architecture_profile() is generic_profile
     assert get_model_architecture_profile(cfg) is step3_profile
-    assert collective_after_mutation is ExpertParallelCollective.ALLGATHER
+    assert collective_after_mutation is ExpertParallelCollective.ALLTOALL
     assert reclassified.get_model_architecture_profile() is step3_profile
     assert get_model_architecture_profile(reclassified) is step3_profile
 
@@ -756,7 +756,7 @@ def test_ep_collective_resolver_uses_profile_not_step3_model_type() -> None:
             ClusterType.MONOLITHIC,
             expected_ep_size=2,
         )
-        is ExpertParallelCollective.ALLGATHER
+        is ExpertParallelCollective.ALLTOALL
     )
 
 
