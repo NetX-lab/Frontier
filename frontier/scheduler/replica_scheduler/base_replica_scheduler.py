@@ -1035,6 +1035,18 @@ class BaseReplicaScheduler(ABC):
             transfer_time_ms=transfer_time,
             layer_id=layer_id,
             afd_stage_idx=batch.afd_stage_idx,
+            source_execution_replica_id=self._replica_id,
+            source_execution_replica_local_id=self._replica_local_id,
+            target_execution_replica_id=(
+                getattr(batch, "decode_attn_original_replica_id", None)
+                if self._cluster_type == ClusterType.DECODE_FFN
+                else None
+            ),
+            target_execution_replica_local_id=(
+                getattr(batch, "decode_attn_original_replica_local_id", None)
+                if self._cluster_type == ClusterType.DECODE_FFN
+                else None
+            ),
         )
 
         return [transfer_start_event]

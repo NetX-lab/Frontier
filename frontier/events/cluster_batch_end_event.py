@@ -206,6 +206,14 @@ class ClusterBatchEndEvent(BaseEvent):
                         transfer_time_ms=transfer_time,
                         layer_id=current_layer_id,
                         afd_stage_idx=batch_for_transfer.afd_stage_idx,
+                        source_execution_replica_id=self._replica_id,
+                        source_execution_replica_local_id=self._replica_local_id,
+                        target_execution_replica_id=(
+                            batch_for_transfer.decode_attn_original_replica_id
+                        ),
+                        target_execution_replica_local_id=(
+                            batch_for_transfer.decode_attn_original_replica_local_id
+                        ),
                     )
                 )
 

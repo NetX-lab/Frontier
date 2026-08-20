@@ -365,6 +365,13 @@ class MetricsStore:
                 self._config.store_plots,
             ),
         }
+        # Transfer lineage is kept as a small lifecycle ledger.  The row is
+        # created at transfer start and enriched when the target scheduler has
+        # selected the physical target Replica.
+        self._transfer_ledger_next_id = 0
+        self._transfer_ledger_rows: list[dict[str, Any]] = []
+        self._transfer_ledger_rows_by_info_id: dict[int, dict[str, Any]] = {}
+        self._transfer_info_objects: dict[int, Any] = {}
 
         # Initialize preemption statistics collector for system-level metrics
         # NOTE: Separation of Concerns - Request-Level vs. System-Level Metrics
@@ -2003,6 +2010,7 @@ class MetricsStore:
         self._write_system_metrics()
         self._write_op_precision_metadata()
         self._write_frontier_stage_batch_ledger()
+        self._write_frontier_transfer_ledger()
 
         # Flush and close TraceStore if active
         if self.trace_store:
@@ -3511,6 +3519,19 @@ class MetricsStore:
         cluster_type: ClusterType,
         replica_local_id: int | None = None,
     ) -> None:
+        if (
+            self._config.write_metrics
+            and batch_stage is not None
+            and cluster_type in {ClusterType.DECODE, ClusterType.DECODE_ATTN}
+        ):
+            self._bind_pending_kv_transfer_target(
+                time=time,
+                batch_stage=batch_stage,
+                cluster_type=cluster_type,
+                replica_id=replica_id,
+                replica_local_id=replica_local_id,
+            )
+
         # Emit op-level traces if enabled (independent of write_metrics flag)
         # This must be called FIRST because it uses the raw simulation time,
         # and trace events should capture the start time of the stage execution.
@@ -4095,6 +4116,11 @@ class MetricsStore:
             row["source_request_ids"] = [
                 str(request_id) for request_id in batch_stage.source_request_ids
             ]
+        if hasattr(batch_stage, "source_request_runtime_epochs"):
+            row["source_request_runtime_epochs"] = [
+                int(runtime_epoch)
+                for runtime_epoch in batch_stage.source_request_runtime_epochs
+            ]
         if hasattr(batch_stage, "source_request_num_tokens"):
             row["source_request_num_tokens"] = [
                 int(token_count)
@@ -4185,6 +4211,11 @@ class MetricsStore:
         if hasattr(batch_stage, "source_request_ids"):
             row["source_request_ids"] = [
                 str(request_id) for request_id in batch_stage.source_request_ids
+            ]
+        if hasattr(batch_stage, "source_request_runtime_epochs"):
+            row["source_request_runtime_epochs"] = [
+                int(runtime_epoch)
+                for runtime_epoch in batch_stage.source_request_runtime_epochs
             ]
         if hasattr(batch_stage, "source_batch_arrival_times"):
             row["source_batch_arrival_times"] = [
@@ -4432,6 +4463,411 @@ class MetricsStore:
                 )
                 handle.write("\n")
 
+    def _build_transfer_ledger_row(
+        self,
+        *,
+        transfer_info: Any,
+        transfer_kind: str,
+        source_replica_id: int,
+        source_replica_local_id: int | None,
+        target_cluster_type: ClusterType,
+        byte_count: int,
+        start_time: float,
+    ) -> dict[str, Any]:
+        if type(source_replica_id) is not int or source_replica_id < 0:
+            raise ValueError(
+                "Transfer ledger requires an exact non-negative source Replica "
+                f"ID, got {source_replica_id!r}"
+            )
+        batch = getattr(transfer_info, "batch", None)
+        requests = list(getattr(batch, "requests", ()) or ())
+        request_ids = [int(request.id) for request in requests]
+        request_runtime_epochs = list(
+            getattr(batch, "request_runtime_epochs", ()) or ()
+        )
+        if (
+            len(request_runtime_epochs) != len(request_ids)
+            or any(
+                type(runtime_epoch) is not int or runtime_epoch < 0
+                for runtime_epoch in request_runtime_epochs
+            )
+        ):
+            raise ValueError(
+                "Transfer ledger requires request_runtime_epochs aligned with "
+                "request_ids"
+            )
+        iteration_ids: list[int | None] = []
+        for request in requests:
+            token_index = getattr(request, "current_decode_token_index", None)
+            iteration_ids.append(
+                token_index - 1
+                if type(token_index) is int and token_index >= 1
+                else None
+            )
+
+        source_cluster_type = getattr(transfer_info, "source_cluster_type", None)
+        if not isinstance(source_cluster_type, ClusterType):
+            raise ValueError(
+                "Transfer ledger requires a valid source ClusterType, "
+                f"got {source_cluster_type!r}"
+            )
+        if not isinstance(target_cluster_type, ClusterType):
+            raise ValueError(
+                "Transfer ledger requires a valid target ClusterType, "
+                f"got {target_cluster_type!r}"
+            )
+
+        if transfer_kind == "kv_cache":
+            target_replica_id = getattr(transfer_info, "target_replica_id", None)
+            target_replica_local_id = getattr(
+                transfer_info, "target_replica_local_id", None
+            )
+            attention_owner_replica_id = None
+            attention_owner_replica_local_id = None
+            layer_id = None
+            afd_stage_idx = None
+            pipeline_stage = None
+        elif transfer_kind == "m2n":
+            target_replica_id = getattr(
+                transfer_info, "target_execution_replica_id", None
+            )
+            target_replica_local_id = getattr(
+                transfer_info, "target_execution_replica_local_id", None
+            )
+            layer_id = getattr(transfer_info, "layer_id", None)
+            afd_stage_idx = getattr(transfer_info, "afd_stage_idx", None)
+            pipeline_stage = getattr(transfer_info, "pipeline_stage", None)
+            attention_owner_replica_id = getattr(
+                transfer_info, "source_replica_id", None
+            )
+            attention_owner_replica_local_id = getattr(
+                transfer_info, "source_replica_local_id", None
+            )
+            if (
+                type(attention_owner_replica_id) is not int
+                or attention_owner_replica_id < 0
+            ):
+                raise ValueError(
+                    "M2N transfer ledger requires an exact non-negative "
+                    "Attention owner Replica ID, got "
+                    f"{attention_owner_replica_id!r}"
+                )
+            if attention_owner_replica_local_id is not None and (
+                type(attention_owner_replica_local_id) is not int
+                or attention_owner_replica_local_id < 0
+            ):
+                raise ValueError(
+                    "M2N transfer ledger requires a non-negative Attention "
+                    "owner local Replica ID or None, got "
+                    f"{attention_owner_replica_local_id!r}"
+                )
+        else:
+            raise ValueError(
+                f"Unsupported transfer ledger kind: {transfer_kind!r}"
+            )
+
+        batch_id = getattr(batch, "id", None)
+        batch_global_id = getattr(batch, "global_id", None)
+        transfer_id = f"{transfer_kind}-{self._transfer_ledger_next_id}"
+        self._transfer_ledger_next_id += 1
+        return {
+            "transfer_id": transfer_id,
+            "transfer_kind": transfer_kind,
+            "request_ids": request_ids,
+            "request_runtime_epochs": request_runtime_epochs,
+            "batch_id": batch_id,
+            "batch_global_id": batch_global_id,
+            "source_cluster": source_cluster_type.name,
+            "target_cluster": target_cluster_type.name,
+            "source_replica_id": source_replica_id,
+            "source_replica_local_id": source_replica_local_id,
+            "attention_owner_replica_id": attention_owner_replica_id,
+            "attention_owner_replica_local_id": (
+                attention_owner_replica_local_id
+            ),
+            "target_replica_id": target_replica_id,
+            "target_replica_local_id": target_replica_local_id,
+            "target_bound": False,
+            "layer_id": layer_id,
+            "afd_stage_idx": afd_stage_idx,
+            "pipeline_stage": pipeline_stage,
+            "iteration_ids": iteration_ids,
+            "bytes": int(byte_count),
+            "start_ts_s": float(start_time),
+            "end_ts_s": None,
+            "duration_ms": None,
+            "status": "started",
+        }
+
+    def _register_transfer_ledger_start(
+        self,
+        *,
+        transfer_info: Any,
+        transfer_kind: str,
+        source_replica_id: int,
+        source_replica_local_id: int | None,
+        target_cluster_type: ClusterType,
+        byte_count: int,
+        start_time: float,
+    ) -> None:
+        if not self._config.write_metrics:
+            return
+        transfer_key = id(transfer_info)
+        if transfer_key in self._transfer_ledger_rows_by_info_id:
+            raise ValueError(
+                "Transfer ledger received a duplicate start for the same "
+                f"transfer object: kind={transfer_kind}"
+            )
+        row = self._build_transfer_ledger_row(
+            transfer_info=transfer_info,
+            transfer_kind=transfer_kind,
+            source_replica_id=source_replica_id,
+            source_replica_local_id=source_replica_local_id,
+            target_cluster_type=target_cluster_type,
+            byte_count=byte_count,
+            start_time=start_time,
+        )
+        self._transfer_ledger_rows.append(row)
+        self._transfer_ledger_rows_by_info_id[transfer_key] = row
+        self._transfer_info_objects[transfer_key] = transfer_info
+
+    def _bind_transfer_target_replica(
+        self,
+        transfer_info: Any,
+        target_replica_id: int | None,
+        target_replica_local_id: int | None = None,
+    ) -> None:
+        if not self._config.write_metrics or target_replica_id is None:
+            return
+        if type(target_replica_id) is not int or target_replica_id < 0:
+            raise ValueError(
+                "Transfer target Replica ID must be a non-negative int, "
+                f"got {target_replica_id!r}"
+            )
+        if target_replica_local_id is not None and (
+            type(target_replica_local_id) is not int or target_replica_local_id < 0
+        ):
+            raise ValueError(
+                "Transfer target local Replica ID must be a non-negative int or "
+                f"None, got {target_replica_local_id!r}"
+            )
+
+        row = self._transfer_ledger_rows_by_info_id.get(id(transfer_info))
+        if row is None:
+            raise ValueError(
+                "Transfer target binding has no corresponding transfer start"
+            )
+        existing_target = row.get("target_replica_id")
+        if existing_target is not None and int(existing_target) != target_replica_id:
+            raise ValueError(
+                "Transfer target Replica changed after binding: "
+                f"existing={existing_target}, new={target_replica_id}"
+            )
+        existing_local = row.get("target_replica_local_id")
+        if (
+            existing_local is not None
+            and target_replica_local_id is not None
+            and int(existing_local) != target_replica_local_id
+        ):
+            raise ValueError(
+                "Transfer target local Replica changed after binding: "
+                f"existing={existing_local}, new={target_replica_local_id}"
+            )
+
+        row["target_replica_id"] = target_replica_id
+        row["target_replica_local_id"] = target_replica_local_id
+        row["target_bound"] = True
+        transfer_kind = row["transfer_kind"]
+        if transfer_kind == "kv_cache":
+            transfer_info.target_replica_id = target_replica_id
+            transfer_info.target_replica_local_id = target_replica_local_id
+        elif transfer_kind == "m2n":
+            transfer_info.target_execution_replica_id = target_replica_id
+            transfer_info.target_execution_replica_local_id = (
+                target_replica_local_id
+            )
+            if transfer_info.target_cluster_type == ClusterType.DECODE_FFN:
+                transfer_info.target_ffn_replica_id = target_replica_id
+        else:
+            raise ValueError(
+                f"Unsupported transfer ledger kind during target binding: "
+                f"{transfer_kind!r}"
+            )
+        self._refresh_transfer_ledger_status(row)
+        if row["status"] == "completed":
+            transfer_key = id(transfer_info)
+            del self._transfer_ledger_rows_by_info_id[transfer_key]
+            del self._transfer_info_objects[transfer_key]
+
+    @staticmethod
+    def _refresh_transfer_ledger_status(row: dict[str, Any]) -> None:
+        if row.get("end_ts_s") is None:
+            row["status"] = "started"
+        elif row.get("target_bound") is not True:
+            row["status"] = "pending_target"
+        else:
+            row["status"] = "completed"
+
+    def _complete_transfer_ledger_end(
+        self,
+        *,
+        transfer_info: Any,
+        end_time: float,
+        duration_ms: float,
+    ) -> None:
+        if not self._config.write_metrics:
+            return
+        row = self._transfer_ledger_rows_by_info_id.get(id(transfer_info))
+        if row is None:
+            raise ValueError(
+                "Transfer ledger received an end without a recorded start"
+            )
+        if row.get("end_ts_s") is not None:
+            raise ValueError(
+                f"Transfer ledger received a duplicate end: {row['transfer_id']}"
+            )
+        row["end_ts_s"] = float(end_time)
+        row["duration_ms"] = float(duration_ms)
+        self._refresh_transfer_ledger_status(row)
+        if row["status"] == "completed":
+            transfer_key = id(transfer_info)
+            del self._transfer_ledger_rows_by_info_id[transfer_key]
+            del self._transfer_info_objects[transfer_key]
+
+    def on_m2n_transfer_target_bound(self, transfer_info: Any) -> None:
+        """Bind the physical target after M2N arrival routing is resolved."""
+        if not self._config.write_metrics:
+            return
+        target_replica_id = getattr(
+            transfer_info, "target_execution_replica_id", None
+        )
+        target_replica_local_id = getattr(
+            transfer_info, "target_execution_replica_local_id", None
+        )
+        if target_replica_id is None:
+            raise ValueError(
+                "M2N transfer target binding requires an explicit physical "
+                "target Replica"
+            )
+        self._bind_transfer_target_replica(
+            transfer_info,
+            target_replica_id,
+            target_replica_local_id,
+        )
+
+    def _bind_pending_kv_transfer_target(
+        self,
+        *,
+        time: float,
+        batch_stage: BatchStage,
+        cluster_type: ClusterType,
+        replica_id: int,
+        replica_local_id: int | None,
+    ) -> None:
+        if not self._config.write_metrics:
+            return
+        request_ids = list(batch_stage.request_ids)
+        request_runtime_epochs = list(batch_stage.request_runtime_epochs)
+        if (
+            len(request_runtime_epochs) != len(request_ids)
+            or any(
+                type(runtime_epoch) is not int or runtime_epoch < 0
+                for runtime_epoch in request_runtime_epochs
+            )
+        ):
+            raise ValueError(
+                "KV target stage requires request_runtime_epochs aligned with "
+                "request_ids"
+            )
+        request_identity = {
+            (int(request_id), runtime_epoch)
+            for request_id, runtime_epoch in zip(
+                request_ids,
+                request_runtime_epochs,
+            )
+        }
+        candidates = []
+        for transfer_info_id, row in self._transfer_ledger_rows_by_info_id.items():
+            if row.get("transfer_kind") != "kv_cache":
+                continue
+            if row.get("target_bound") is True:
+                continue
+            if row.get("target_cluster") != cluster_type.name:
+                continue
+            transfer_request_ids = list(row.get("request_ids", ()))
+            transfer_runtime_epochs = list(
+                row.get("request_runtime_epochs", ())
+            )
+            if (
+                not transfer_request_ids
+                or len(transfer_runtime_epochs) != len(transfer_request_ids)
+                or any(
+                    type(runtime_epoch) is not int or runtime_epoch < 0
+                    for runtime_epoch in transfer_runtime_epochs
+                )
+            ):
+                raise ValueError(
+                    "Pending KV transfer requires request_runtime_epochs aligned "
+                    "with request_ids"
+                )
+            transfer_identity = {
+                (int(request_id), runtime_epoch)
+                for request_id, runtime_epoch in zip(
+                    transfer_request_ids,
+                    transfer_runtime_epochs,
+                )
+            }
+            if not transfer_identity.issubset(
+                request_identity
+            ):
+                continue
+            end_time = row.get("end_ts_s")
+            if end_time is None or float(end_time) > float(time) + 1e-12:
+                continue
+            candidates.append((transfer_info_id, row, transfer_identity))
+        if not candidates:
+            return
+
+        # A target stage may legitimately receive several independent transfers
+        # (for example, one transfer per request), but two pending transfers must
+        # never claim the same request/runtime-epoch identity.  Matching only on
+        # subset membership would otherwise bind duplicate or stale transfer rows
+        # to the same stage and corrupt source/target lineage.  Detect the full
+        # ambiguity before mutating any row so the ledger remains transactional.
+        for index, (_, first_row, first_identity) in enumerate(candidates):
+            for _, second_row, second_identity in candidates[index + 1 :]:
+                overlap = first_identity & second_identity
+                if overlap:
+                    raise ValueError(
+                        "ambiguous KV transfer target: pending transfers "
+                        f"{first_row['transfer_id']!r} and "
+                        f"{second_row['transfer_id']!r} share request/runtime "
+                        f"identity {sorted(overlap)!r}"
+                    )
+
+        for transfer_info_id, _, _ in candidates:
+            transfer_info = self._transfer_info_objects.get(transfer_info_id)
+            if transfer_info is None:
+                raise ValueError(
+                    "KV transfer target binding lost its transfer object identity"
+                )
+            self._bind_transfer_target_replica(
+                transfer_info,
+                replica_id,
+                replica_local_id,
+            )
+
+    def _write_frontier_transfer_ledger(self) -> None:
+        if not self._transfer_ledger_rows:
+            return
+        os.makedirs(self._config.output_dir, exist_ok=True)
+        output_path = os.path.join(
+            self._config.output_dir, "frontier_transfer_ledger.jsonl"
+        )
+        with open(output_path, "w", encoding="utf-8") as handle:
+            for row in self._transfer_ledger_rows:
+                handle.write(json.dumps(row, sort_keys=True) + "\n")
+
     def on_kv_cache_transfer_start(
         self,
         time: float,
@@ -4494,6 +4930,15 @@ class MetricsStore:
         if not self._config.write_metrics:
             return
 
+        self._register_transfer_ledger_start(
+            transfer_info=transfer_info,
+            transfer_kind="kv_cache",
+            source_replica_id=source_replica_id,
+            source_replica_local_id=source_replica_local_id,
+            target_cluster_type=target_cluster_type,
+            byte_count=kv_cache_size_bytes,
+            start_time=time,
+        )
         self._kv_cache_transfer_metrics["transfer_count"] += 1
 
     def on_kv_cache_transfer_end(
@@ -4521,6 +4966,11 @@ class MetricsStore:
         )
         self._kv_cache_transfer_metrics["transfer_times"].put(transfer_id, duration)
         self._kv_cache_transfer_metrics["transfer_sizes"].put(transfer_id, size_bytes)
+        self._complete_transfer_ledger_end(
+            transfer_info=transfer_info,
+            end_time=time,
+            duration_ms=duration,
+        )
 
     def on_m2n_transfer_start(
         self,
@@ -4590,6 +5040,27 @@ class MetricsStore:
         if not self._config.write_metrics:
             return
 
+        source_execution_replica_id = transfer_info.source_execution_replica_id
+        source_execution_replica_local_id = (
+            transfer_info.source_execution_replica_local_id
+        )
+        if (
+            type(source_execution_replica_id) is not int
+            or source_execution_replica_id < 0
+        ):
+            raise ValueError(
+                "M2N transfer ledger requires an exact non-negative source "
+                f"execution Replica ID, got {source_execution_replica_id!r}"
+            )
+        self._register_transfer_ledger_start(
+            transfer_info=transfer_info,
+            transfer_kind="m2n",
+            source_replica_id=source_execution_replica_id,
+            source_replica_local_id=source_execution_replica_local_id,
+            target_cluster_type=target_cluster_type,
+            byte_count=activation_size_bytes,
+            start_time=time,
+        )
         if not hasattr(self, "_m2n_transfer_metrics"):
             self._m2n_transfer_metrics = {
                 "transfer_count": 0,
@@ -4705,3 +5176,8 @@ class MetricsStore:
         )
         self._m2n_transfer_metrics["transfer_times"].put(transfer_id, duration)
         self._m2n_transfer_metrics["transfer_sizes"].put(transfer_id, size_bytes)
+        self._complete_transfer_ledger_end(
+            transfer_info=transfer_info,
+            end_time=time,
+            duration_ms=duration,
+        )

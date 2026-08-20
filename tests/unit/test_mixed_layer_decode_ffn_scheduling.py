@@ -563,6 +563,47 @@ def test_dense_builder_aggregates_metadata_across_source_batches(
     assert records[0]["padded_tokens"] == [16]
 
 
+def test_dense_ffn_stage_preserves_multi_source_lineage(
+    mixed_model_config,
+) -> None:
+    scheduler, queue_sink = _builder_scheduler(mixed_model_config)
+    first_source = _source_batch(layer_id=3, afd_stage_idx=2)
+    second_source = _source_batch(layer_id=3, afd_stage_idx=2)
+    first_source.decode_ffn_m2n_arrival_time = 0.125
+    second_source.decode_ffn_m2n_arrival_time = 0.250
+    ready_groups = deque(
+        [
+            [
+                (first_source, _transfer_info(layer_id=3, afd_stage_idx=2)),
+                (second_source, _transfer_info(layer_id=3, afd_stage_idx=2)),
+            ]
+        ]
+    )
+
+    scheduler._schedule_dense_ffn_from_m2n_group(ready_groups, Mock())
+    dense_batch = queue_sink._m2n_immediate_batch_queue[0]
+    batch_stage, _ = _stage_scheduler(Mock()).predict_and_create_stage(
+        dense_batch
+    )
+
+    assert dense_batch.source_batches == [first_source, second_source]
+    assert batch_stage.source_batch_ids == [
+        first_source.id,
+        second_source.id,
+    ]
+    assert batch_stage.source_request_ids == [
+        str(first_source.requests[0].id),
+        str(second_source.requests[0].id),
+    ]
+    assert batch_stage.source_request_runtime_epochs == [
+        *first_source.request_runtime_epochs,
+        *second_source.request_runtime_epochs,
+    ]
+    assert batch_stage.source_request_num_tokens == [1, 1]
+    assert batch_stage.source_batch_arrival_times == [0.125, 0.250]
+    assert batch_stage.source_group_ready_ts == 0.250
+
+
 def test_dense_ffn_batch_uses_full_stage_parent_scope(
     mixed_model_config,
 ) -> None:
@@ -1430,15 +1471,18 @@ def test_replica_stage_scheduler_rejects_missing_layer_when_skipping_prediction(
 def test_dense_ffn_batch_stage_tokens_are_post_routing() -> None:
     predictor = Mock()
     scheduler = _stage_scheduler(predictor)
+    source_batch = _source_batch(layer_id=3)
+    source_batch.decode_ffn_m2n_arrival_time = 0.0
     dense_batch = DenseFFNBatchGroup(
-        requests=[_decode_request()],
-        num_tokens=[1],
+        requests=list(source_batch.requests),
+        num_tokens=list(source_batch.num_tokens),
         replica_id=0,
         time=0.0,
-        source_batch_ids=[1],
+        source_batch_ids=[source_batch.id],
         cluster_type=ClusterType.DECODE_FFN,
     )
     dense_batch.decode_ffn_layer_id = 3
+    dense_batch.source_batches = [source_batch]
 
     batch_stage, _ = scheduler.predict_and_create_stage(dense_batch)
 
@@ -1511,8 +1555,11 @@ def _run_decode_ffn_stage_event(monkeypatch, batch: Batch):
     batch_stage = SimpleNamespace(execution_time=0.01, on_schedule=Mock())
     execution_time = SimpleNamespace(
         get_single_layer_moe_pre_dispatch_time=lambda: 0.0,
+        get_single_layer_moe_dispatch_time=lambda: 0.0,
         get_single_layer_moe_post_dispatch_compute_time=lambda: 1.0,
+        get_single_layer_moe_combine_time=lambda: 0.0,
         get_single_layer_moe_post_combine_time=lambda: 0.0,
+        get_single_layer_post_attention_time=lambda: 1.0,
         expert_parallel_communication_time=0.0,
     )
     stage_scheduler = Mock()

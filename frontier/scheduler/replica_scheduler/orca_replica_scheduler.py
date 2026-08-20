@@ -20,6 +20,14 @@ class OrcaReplicaScheduler(BaseReplicaScheduler):
         #  - else use generic micro_batch_size if provided on config
         #  - else default to 1 (most conservative)
         if self._cluster_type == ClusterType.DECODE_ATTN:
+            if (
+                type(self._af_pipeline_num_micro_batch) is not int
+                or self._af_pipeline_num_micro_batch <= 0
+            ):
+                raise ValueError(
+                    "DECODE_ATTN Orca requires a positive exact "
+                    "af_pipeline_num_micro_batch"
+                )
             mbs = None
             try:
                 if getattr(self, "_cluster_scheduler", None) is not None:
@@ -31,12 +39,63 @@ class OrcaReplicaScheduler(BaseReplicaScheduler):
             if mbs is None:
                 mbs = 1
             self._micro_batch_size = int(mbs)
+            self._decode_attn_active_stage_slots = set()
         else:
             # For other clusters, micro-batch sizing is not used by Orca; set to max batch size
             self._micro_batch_size = self._max_batch_size
 
+    def _next_decode_attn_stage_slot(self) -> int:
+        active_slots = getattr(self, "_decode_attn_active_stage_slots", None)
+        if type(active_slots) is not set:
+            raise RuntimeError(
+                "DECODE_ATTN Orca active stage slots must be an exact set"
+            )
+        for active_slot in active_slots:
+            if (
+                type(active_slot) is not int
+                or active_slot < 0
+                or active_slot >= self._af_pipeline_num_micro_batch
+            ):
+                raise RuntimeError(
+                    "DECODE_ATTN Orca active stage slot is outside the configured "
+                    f"pipeline: slot={active_slot!r}, "
+                    f"capacity={self._af_pipeline_num_micro_batch}"
+                )
+
+        for stage_idx in range(self._af_pipeline_num_micro_batch):
+            if stage_idx not in active_slots:
+                return stage_idx
+        raise RuntimeError(
+            "DECODE_ATTN Orca has no free AFD stage slot: "
+            f"active={sorted(active_slots)}, "
+            f"capacity={self._af_pipeline_num_micro_batch}"
+        )
+
     def on_batch_end(self, batch: Batch) -> None:
         logger = get_cluster_logger(__name__, self._cluster_type.name)
+        completed_stage_idx = None
+        if self._cluster_type == ClusterType.DECODE_ATTN:
+            completed_stage_idx = getattr(batch, "afd_stage_idx", None)
+            if type(completed_stage_idx) is not int or completed_stage_idx < 0:
+                raise ValueError(
+                    "DECODE_ATTN Orca completed batch afd_stage_idx must be an "
+                    f"exact non-negative int, got {completed_stage_idx!r}"
+                )
+            active_slots = getattr(
+                self,
+                "_decode_attn_active_stage_slots",
+                None,
+            )
+            if type(active_slots) is not set:
+                raise RuntimeError(
+                    "DECODE_ATTN Orca active stage slots must be an exact set"
+                )
+            if completed_stage_idx not in active_slots:
+                raise ValueError(
+                    "DECODE_ATTN Orca completed batch stage slot is not active: "
+                    f"slot={completed_stage_idx}, active={sorted(active_slots)}"
+                )
+
         self._num_running_batches -= 1
 
         for request in batch.requests:
@@ -69,6 +128,9 @@ class OrcaReplicaScheduler(BaseReplicaScheduler):
                             f"tok_idx={getattr(request,'current_decode_token_index',None)} "
                             f"layer={getattr(request,'completed_layer_count',None)} (cluster={self._cluster_type})"
                         )
+
+        if completed_stage_idx is not None:
+            self._decode_attn_active_stage_slots.remove(completed_stage_idx)
 
     def _get_next_batch(self, is_micro_batch: bool) -> Batch:
         logger = get_cluster_logger(__name__, self._cluster_type.name)
@@ -208,6 +270,8 @@ class OrcaReplicaScheduler(BaseReplicaScheduler):
             # Fallback: nothing could be formed due to allocation; do not modify queues
             return
 
+        stage_idx = self._next_decode_attn_stage_slot()
+
         # 4) Apply destructive pops in reverse index order to keep indices valid
         for idx in sorted(take_from_preempted, reverse=True):
             self._preempted_requests.pop(idx)
@@ -216,6 +280,13 @@ class OrcaReplicaScheduler(BaseReplicaScheduler):
             self.allocate(req.id, self._max_blocks_per_sequence)
 
         new_batch = self._create_batch(requests, num_tokens)
+        if getattr(new_batch, "afd_stage_idx", None) is not None:
+            raise ValueError(
+                "DECODE_ATTN Orca new batch afd_stage_idx must be unset before "
+                f"slot assignment, got {new_batch.afd_stage_idx!r}"
+            )
+        new_batch.afd_stage_idx = stage_idx
+        self._decode_attn_active_stage_slots.add(stage_idx)
         new_batch_req_ids = [r.id for r in new_batch.requests]
         logger.info(
             f"[DECODE_ATTN][Replica {self._replica_id}][DP {self._replica_local_id}] _get_next_batch(MB): CREATED batch {new_batch.id} "

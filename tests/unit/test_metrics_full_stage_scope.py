@@ -127,7 +127,9 @@ def test_stage_ledger_identity_is_captured_from_live_batch_state() -> None:
         id=7,
         runtime_epoch=2,
         current_decode_token_index=4,
+        completed_layer_count=9,
         is_prefill_complete=False,
+        completed=False,
     )
     batch = SimpleNamespace(
         id=11,
@@ -153,6 +155,7 @@ def test_stage_ledger_identity_is_captured_from_live_batch_state() -> None:
         "iteration_ids": [3],
         "schedule_epoch": 3,
         "afd_stage_idx": 5,
+        "layer_id": 9,
         "operation_id": 11,
         "operation_kind": "ep_ffn",
     }

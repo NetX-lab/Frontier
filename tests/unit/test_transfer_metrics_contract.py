@@ -1935,3 +1935,59 @@ def test_kv_ledger_does_not_bind_different_runtime_epoch(
     assert row["target_replica_id"] is None
     assert row["target_bound"] is False
     assert row["status"] == "pending_target"
+
+
+def test_kv_ledger_rejects_ambiguous_duplicate_request_cohort(
+    tmp_path: Path,
+) -> None:
+    """A target stage must not bind two transfers with the same request epoch."""
+
+    _, first_batch = _request_and_batch()
+    _, second_batch = _request_and_batch()
+    second_batch.id = 12
+    second_batch.global_id = 23
+    transfers = [
+        SimpleNamespace(
+            batch=batch,
+            source_cluster_type=ClusterType.PREFILL,
+            target_cluster_type=ClusterType.DECODE,
+            source_replica_id=index,
+            source_replica_local_id=None,
+            target_replica_id=None,
+            target_replica_local_id=None,
+            kv_cache_size_bytes=8192,
+        )
+        for index, batch in enumerate((first_batch, second_batch))
+    ]
+    store = _ledger_store(tmp_path)
+
+    for transfer_info in transfers:
+        store.on_kv_cache_transfer_start(
+            1.0,
+            transfer_info.source_replica_id,
+            None,
+            ClusterType.DECODE,
+            8192,
+            transfer_info,
+        )
+        store.on_kv_cache_transfer_end(
+            1.004,
+            4.0,
+            8192,
+            ClusterType.DECODE,
+            transfer_info,
+        )
+
+    with pytest.raises(ValueError, match="ambiguous KV transfer target"):
+        store._bind_pending_kv_transfer_target(
+            time=1.005,
+            batch_stage=SimpleNamespace(
+                request_ids=[7],
+                request_runtime_epochs=[3],
+            ),
+            cluster_type=ClusterType.DECODE,
+            replica_id=2,
+            replica_local_id=None,
+        )
+
+    assert all(row["target_bound"] is False for row in store._transfer_ledger_rows)

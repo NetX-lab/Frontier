@@ -1119,6 +1119,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         dense_batch.set_global_id(shared_group_id)
         dense_batch.decode_ffn_layer_id = layer_global_id
         dense_batch.afd_stage_idx = afd_stage_idx
+        dense_batch.source_batches = list(raw_batches)
         (
             dense_batch.afd_stage_metadata,
             dense_batch.afd_stage_represents_all_stages,

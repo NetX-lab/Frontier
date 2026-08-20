@@ -29,6 +29,10 @@ class M2NTransferInfo:
     afd_stage_idx: Optional[int] = None
     pipeline_stage: Optional[str] = None
     target_ffn_replica_id: Optional[int] = None
+    source_execution_replica_id: Optional[int] = None
+    source_execution_replica_local_id: Optional[int] = None
+    target_execution_replica_id: Optional[int] = None
+    target_execution_replica_local_id: Optional[int] = None
 
     def __post_init__(self) -> None:
         self.validate_direction()
@@ -93,6 +97,10 @@ class M2NTransferInfo:
             "target_cluster_type": self.target_cluster_type.name,
             "source_replica_id": self.source_replica_id,
             "source_replica_local_id": self.source_replica_local_id,
+            "source_execution_replica_id": self.source_execution_replica_id,
+            "source_execution_replica_local_id": self.source_execution_replica_local_id,
+            "target_execution_replica_id": self.target_execution_replica_id,
+            "target_execution_replica_local_id": self.target_execution_replica_local_id,
             "activation_size_bytes": self.activation_size_bytes,
             "effective_data_size_bytes": self.effective_data_size_bytes,
             "transfer_time_ms": self.transfer_time_ms,

@@ -24,7 +24,7 @@ from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
 )
-from frontier.types import ClusterType
+from frontier.types import ClusterType, ReplicaSchedulerType
 
 
 class _ConcreteClusterScheduler(BaseClusterScheduler):
@@ -64,7 +64,13 @@ def test_pdaf_source_replica_mapping_allows_idle_target_ffn_replicas() -> None:
 
 
 def _scheduler() -> _ConcreteClusterScheduler:
-    return object.__new__(_ConcreteClusterScheduler)
+    scheduler = object.__new__(_ConcreteClusterScheduler)
+    scheduler._ffn_lane_to_target_replica = {
+        (0, None): 0,
+        (1, None): 0,
+        (2, None): 0,
+    }
+    return scheduler
 
 
 def _transfer_info(**overrides) -> M2NTransferInfo:
@@ -285,6 +291,7 @@ def test_decode_ffn_accepts_exact_receipt_metadata() -> None:
     scheduler._m2n_waiting_by_layer = {}
     scheduler._m2n_ready_groups = deque()
     scheduler._is_periodic_scheduling_enabled = False
+    scheduler._ffn_lane_to_target_replica = {(0, None): 9}
     logger = Mock()
 
     events = scheduler._handle_m2n_arrival_decode_ffn(
@@ -296,6 +303,9 @@ def test_decode_ffn_accepts_exact_receipt_metadata() -> None:
 
     request.on_arrival.assert_called_once_with(1.25, ClusterType.DECODE_FFN)
     assert batch.decode_ffn_m2n_arrival_time == pytest.approx(1.25)
+    assert transfer_info.target_ffn_replica_id == 9
+    assert transfer_info.target_execution_replica_id == 9
+    assert transfer_info.target_execution_replica_local_id is None
     assert scheduler._m2n_waiting_by_layer == {}
     assert list(scheduler._m2n_ready_groups) == [[(batch, transfer_info)]]
     assert len(events) == 1
@@ -521,6 +531,7 @@ def test_m2n_arrival_routes_valid_target_to_matching_handler(
         scheduler._ffn_group_micro_batches = 1
         scheduler._m2n_waiting_by_layer = {}
     else:
+        scheduler._replica_scheduler_type = ReplicaSchedulerType.VLLM_V1
         scheduler._config = SimpleNamespace(
             replica_config=SimpleNamespace(
                 model_config=SimpleNamespace(num_layers=8),
@@ -2137,6 +2148,7 @@ def _decode_attn_return_fixture(
     scheduler._af_batch_queue = []
     scheduler._is_periodic_scheduling_enabled = False
     scheduler._cluster = SimpleNamespace(replicas={0: SimpleNamespace()})
+    scheduler._replica_scheduler_type = ReplicaSchedulerType.VLLM_V1
     scheduler._replica_schedulers = {(0, None): replica_scheduler}
 
     transfer_info = _transfer_info(
@@ -2153,7 +2165,10 @@ def _decode_attn_return_fixture(
     global_scheduler = SimpleNamespace(
         get_cluster_scheduler=Mock(return_value=scheduler),
     )
-    metrics_store = SimpleNamespace(on_m2n_transfer_end=Mock())
+    metrics_store = SimpleNamespace(
+        on_m2n_transfer_end=Mock(),
+        on_m2n_transfer_target_bound=Mock(),
+    )
 
     request.on_m2n_transfer_complete = Mock(
         wraps=request.on_m2n_transfer_complete,
@@ -2792,6 +2807,37 @@ def test_decode_attn_transfer_end_accepts_active_cohort_microbatch_subset() -> N
     assert scheduler._af_batch_queue == [batch]
     assert cohort_state["all_request_ids"] == {request.id, sibling_request_id}
     assert cohort_state["pending_request_ids"] == {request.id}
+    assert len(events) == 1
+    assert isinstance(events[0], ClusterScheduleEvent)
+
+
+def test_decode_attn_transfer_end_accepts_cohort_free_orca_receipt() -> None:
+    (
+        scheduler,
+        batch,
+        request,
+        transfer_info,
+        global_scheduler,
+        metrics_store,
+        cohort_state,
+    ) = _decode_attn_return_fixture()
+    scheduler._replica_scheduler_type = ReplicaSchedulerType.ORCA
+    batch.decode_attn_cohort_id = None
+    batch.decode_attn_cohort_request_ids = None
+    cohort_state_before = deepcopy(cohort_state)
+
+    events = M2NTransferEndEvent(1.0, transfer_info).handle_event(
+        global_scheduler,
+        metrics_store,
+    )
+
+    assert transfer_info.transfer_end_time == pytest.approx(1.0)
+    metrics_store.on_m2n_transfer_end.assert_called_once()
+    assert request._m2n_transfer_time_ffn_to_attn == pytest.approx(0.5)
+    assert request.af_roundtrip_inflight is False
+    assert request.completed_layer_count == 1
+    assert scheduler._af_batch_queue == [batch]
+    assert cohort_state == cohort_state_before
     assert len(events) == 1
     assert isinstance(events[0], ClusterScheduleEvent)
 

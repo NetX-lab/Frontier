@@ -123,6 +123,31 @@ class BatchStage(BaseEntity):
                 "stage runtime identity afd_stage_idx must be an int >= -1"
             )
 
+        layer_id = getattr(batch, "decode_ffn_layer_id", None)
+        if layer_id is None and afd_stage_idx >= 0:
+            active_requests = [
+                request for request in requests if not getattr(request, "completed", False)
+            ]
+            layer_requests = active_requests or requests
+            layer_ids = [
+                getattr(request, "completed_layer_count", None)
+                for request in layer_requests
+            ]
+            if (
+                not layer_ids
+                or any(type(item) is not int or item < 0 for item in layer_ids)
+                or len(set(layer_ids)) != 1
+            ):
+                raise ValueError(
+                    "stage runtime identity requires one exact non-negative "
+                    f"PD-AF layer_id, got {layer_ids!r}"
+                )
+            layer_id = layer_ids[0]
+        if layer_id is not None and (type(layer_id) is not int or layer_id < 0):
+            raise ValueError(
+                "stage runtime identity layer_id must be a non-negative int"
+            )
+
         source_batch_ids = getattr(batch, "source_batch_ids", ())
         if source_batch_ids:
             normalized_source_ids = tuple(int(batch_id) for batch_id in source_batch_ids)
@@ -149,6 +174,8 @@ class BatchStage(BaseEntity):
             "operation_id": int(operation_id),
             "operation_kind": operation_kind,
         }
+        if layer_id is not None:
+            self._runtime_identity["layer_id"] = int(layer_id)
 
     @property
     def runtime_identity(self) -> dict[str, Any] | None:

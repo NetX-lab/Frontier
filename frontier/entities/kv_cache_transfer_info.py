@@ -25,6 +25,8 @@ class KVCacheTransferInfo:
     enable_latency_hiding: bool = False
     transfer_protocol: str = "rdma"
     transfer_requests: bool = False
+    target_replica_id: Optional[int] = None
+    target_replica_local_id: Optional[int] = None
 
     def __post_init__(self) -> None:
         if self.transfer_end_time is None:
@@ -47,6 +49,9 @@ class KVCacheTransferInfo:
             "source_cluster_type": self.source_cluster_type.name,
             "target_cluster_type": self.target_cluster_type.name,
             "source_replica_id": self.source_replica_id,
+            "source_replica_local_id": self.source_replica_local_id,
+            "target_replica_id": self.target_replica_id,
+            "target_replica_local_id": self.target_replica_local_id,
             "kv_cache_size_bytes": self.kv_cache_size_bytes,
             "effective_data_size_bytes": self.effective_data_size_bytes,
             "transfer_time_ms": self.transfer_time_ms,

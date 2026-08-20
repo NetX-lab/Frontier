@@ -79,40 +79,52 @@ class ReplicaStageScheduler:
             },
         }
 
-    def _copy_ep_batch_metadata_to_stage(
+    def _copy_source_batch_metadata_to_stage(
         self, batch: Batch, batch_stage: BatchStage
     ) -> None:
-        if not isinstance(batch, EPBatchGroup):
+        if not isinstance(batch, (EPBatchGroup, DenseFFNBatchGroup)):
             return
-        batch_stage.ep_id = int(batch.ep_id)
+
+        source_batches = getattr(batch, "source_batches", None)
+        if not isinstance(source_batches, (list, tuple)) or not source_batches:
+            raise ValueError(
+                "DECODE_FFN synthetic batch requires non-empty source_batches"
+            )
         batch_stage.source_batch_ids = [int(batch_id) for batch_id in batch.source_batch_ids]
         batch_stage.source_request_ids = [
             str(request_id)
-            for source_batch in getattr(batch, "source_batches", [])
+            for source_batch in source_batches
             for request_id in source_batch.request_ids
+        ]
+        batch_stage.source_request_runtime_epochs = [
+            int(runtime_epoch)
+            for source_batch in source_batches
+            for runtime_epoch in source_batch.request_runtime_epochs
         ]
         batch_stage.source_request_num_tokens = [
             int(token_count)
-            for source_batch in getattr(batch, "source_batches", [])
+            for source_batch in source_batches
             for token_count in source_batch.num_tokens
         ]
         source_batch_arrival_times = []
-        for source_batch in getattr(batch, "source_batches", []):
+        for source_batch in source_batches:
             if not hasattr(source_batch, "decode_ffn_m2n_arrival_time"):
                 raise ValueError(
-                    "DECODE_FFN EP source batch is missing "
+                    "DECODE_FFN source batch is missing "
                     "decode_ffn_m2n_arrival_time"
                 )
             source_batch_arrival_times.append(
                 float(source_batch.decode_ffn_m2n_arrival_time)
             )
         batch_stage.source_batch_arrival_times = source_batch_arrival_times
-        if source_batch_arrival_times:
-            batch_stage.source_group_ready_ts = max(source_batch_arrival_times)
-        batch_stage.per_expert_tokens = {
-            int(expert_id): int(token_count)
-            for expert_id, token_count in batch.per_expert_tokens.items()
-        }
+        batch_stage.source_group_ready_ts = max(source_batch_arrival_times)
+
+        if isinstance(batch, EPBatchGroup):
+            batch_stage.ep_id = int(batch.ep_id)
+            batch_stage.per_expert_tokens = {
+                int(expert_id): int(token_count)
+                for expert_id, token_count in batch.per_expert_tokens.items()
+            }
 
     def add_batch(self, batch: Batch) -> None:
         """
@@ -412,7 +424,7 @@ class ReplicaStageScheduler:
                 effective_total_tokens_rounded=effective_tokens_rounded,
                 tokens_are_post_routing=tokens_are_post_routing,
             )
-            self._copy_ep_batch_metadata_to_stage(batch, batch_stage)
+            self._copy_source_batch_metadata_to_stage(batch, batch_stage)
             batch_stage.attach_runtime_identity(batch)
             return batch_stage, None
 
@@ -432,7 +444,7 @@ class ReplicaStageScheduler:
             effective_total_tokens_rounded=effective_tokens_rounded,
             tokens_are_post_routing=tokens_are_post_routing,
         )
-        self._copy_ep_batch_metadata_to_stage(batch, batch_stage)
+        self._copy_source_batch_metadata_to_stage(batch, batch_stage)
         batch_stage.attach_runtime_identity(batch)
 
         return batch_stage, execution_time

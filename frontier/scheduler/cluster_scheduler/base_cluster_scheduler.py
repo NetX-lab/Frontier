@@ -1151,6 +1151,12 @@ class BaseClusterScheduler(ABC):
         cluster_specific_config = self._get_cluster_specific_replica_scheduler_config(
             self._config, self._cluster_type
         )
+        self._replica_scheduler_type = cluster_specific_config.get_type()
+        if type(self._replica_scheduler_type) is not ReplicaSchedulerType:
+            raise TypeError(
+                "Cluster replica scheduler type must be an exact "
+                f"ReplicaSchedulerType, got {self._replica_scheduler_type!r}"
+            )
         self._validate_prefix_cache_cluster_config(cluster_specific_config)
 
         # Validate scheduler type for DECODE_FFN cluster
@@ -2804,6 +2810,11 @@ class BaseClusterScheduler(ABC):
             ][stage_id][batch_global_id]
         dispatch_wait_room["batches"][ep_id] = batch
         dispatch_wait_room["arrival_times"][ep_id] = time
+        dispatch_start_time_s = min(prospective_arrival_times.values())
+        for ep_batch in prospective_batches.values():
+            ep_batch._ep_dispatch_collective_start_time_s = float(
+                dispatch_start_time_s
+            )
         logger.info(
             f"[EP-DISPATCH][COLLECTIVE] global_id={batch_global_id}, "
             f"sync_time={ep_collective_sync_time:.6f}s, "
@@ -3188,7 +3199,6 @@ class BaseClusterScheduler(ABC):
             ep_batches,
             batch_global_id,
         )
-        trace_origin_s = min(arrival_times.values())
         trace_sync_s = max(arrival_times.values())
         if not isinstance(time, Real) or isinstance(time, bool) or not math.isfinite(float(time)):
             raise ValueError("EP combine collective time must be finite")
@@ -3213,9 +3223,20 @@ class BaseClusterScheduler(ABC):
                 f"for every lane: values={sorted(dispatch_end_times, key=repr)}"
             )
         dispatch_end_time_s = float(next(iter(dispatch_end_times)))
-        if dispatch_end_time_s < trace_origin_s:
+        dispatch_start_times = {
+            getattr(ep_batch, "_ep_dispatch_collective_start_time_s", None)
+            for ep_batch in ep_batches.values()
+        }
+        if len(dispatch_start_times) != 1 or None in dispatch_start_times:
             raise ValueError(
-                "EP dispatch collective end cannot precede the first dispatch arrival"
+                "EP combine collective requires one dispatch collective arrival "
+                "time for every lane: "
+                f"values={sorted(dispatch_start_times, key=repr)}"
+            )
+        dispatch_start_time_s = float(next(iter(dispatch_start_times)))
+        if dispatch_end_time_s < dispatch_start_time_s:
+            raise ValueError(
+                "EP dispatch collective end cannot precede dispatch arrival"
             )
         if trace_sync_s < dispatch_end_time_s:
             raise ValueError(
@@ -3238,7 +3259,7 @@ class BaseClusterScheduler(ABC):
             cluster_type=self._cluster_type,
             batch_id=trace_batch_id,
             layer_id=trace_layer_id,
-            wave_start_time_s=trace_origin_s,
+            wave_start_time_s=dispatch_start_time_s,
             combine_barrier_end_time_s=combine_end_time,
             post_combine_time_ms=(time - combine_end_time) * 1000.0,
             wave_end_time_s=time,
@@ -3347,7 +3368,10 @@ class BaseClusterScheduler(ABC):
 
             prepared_events = (
                 self._create_m2n_transfer_events_for_aggregated_batch(
-                    raw_batch, time
+                    raw_batch,
+                    time,
+                    source_replica_id=replica_id,
+                    source_replica_local_id=canonical_ep_id,
                 )
             )
             m2n_events.extend(prepared_events)
@@ -3501,7 +3525,14 @@ class BaseClusterScheduler(ABC):
 
         return m2n_events + schedule_events
 
-    def _create_m2n_transfer_events_for_aggregated_batch(self, batch, current_time):
+    def _create_m2n_transfer_events_for_aggregated_batch(
+        self,
+        batch,
+        current_time,
+        *,
+        source_replica_id: int,
+        source_replica_local_id: int | None,
+    ):
         """Create M2N transfer events for aggregated batch to return to decode-attn cluster."""
         from frontier.events.m2n_transfer_start_event import M2NTransferStartEvent
         from frontier.types import ClusterType
@@ -3533,6 +3564,12 @@ class BaseClusterScheduler(ABC):
             transfer_time_ms=transfer_time,
             layer_id=layer_id,
             afd_stage_idx=batch.afd_stage_idx,
+            source_execution_replica_id=source_replica_id,
+            source_execution_replica_local_id=source_replica_local_id,
+            target_execution_replica_id=batch.decode_attn_original_replica_id,
+            target_execution_replica_local_id=(
+                batch.decode_attn_original_replica_local_id
+            ),
         )
 
         try:
@@ -5428,15 +5465,42 @@ class BaseClusterScheduler(ABC):
         time: float,
         batch: Batch,
         transfer_info,
+        *,
+        expected_roundtrip_inflight: bool = False,
+        request_end_deferred: bool = False,
     ) -> List:
-        """Route M2N transfer arrival to the appropriate cluster handler."""
+        """Route M2N transfer arrival to the appropriate cluster handler.
+
+        ``expected_roundtrip_inflight`` describes the request lifecycle state
+        that the handler must validate against.  The M2N end event uses
+        ``False`` while the request's F→A end hook is still deferred until the
+        target admission succeeds.  Direct scheduler callers retain the
+        historical default, where the end hook has already been applied.
+        """
         from frontier.logger import get_cluster_logger
+
+        if type(expected_roundtrip_inflight) is not bool:
+            raise ValueError(
+                "M2N arrival expected_roundtrip_inflight must be an exact bool, "
+                f"got {expected_roundtrip_inflight!r}"
+            )
+        if type(request_end_deferred) is not bool:
+            raise ValueError(
+                "M2N arrival request_end_deferred must be an exact bool, "
+                f"got {request_end_deferred!r}"
+            )
+        if request_end_deferred and expected_roundtrip_inflight is not False:
+            raise ValueError(
+                "M2N arrival with deferred request end must validate the "
+                "projected roundtrip_inflight=False state"
+            )
 
         if self._cluster_type is ClusterType.DECODE_ATTN:
             self._validate_decode_attn_m2n_receipt(
                 batch,
                 transfer_info,
-                expected_roundtrip_inflight=False,
+                expected_roundtrip_inflight=expected_roundtrip_inflight,
+                request_end_deferred=request_end_deferred,
             )
         else:
             self.preflight_m2n_arrival(batch, transfer_info)
@@ -5452,7 +5516,14 @@ class BaseClusterScheduler(ABC):
         if self._cluster_type == ClusterType.DECODE_FFN:
             return self._handle_m2n_arrival_decode_ffn(time, batch, transfer_info, logger)
         if self._cluster_type == ClusterType.DECODE_ATTN:
-            return self._handle_m2n_arrival_decode_attn(time, batch, transfer_info, logger)
+            return self._handle_m2n_arrival_decode_attn(
+                time,
+                batch,
+                transfer_info,
+                logger,
+                expected_roundtrip_inflight=expected_roundtrip_inflight,
+                request_end_deferred=request_end_deferred,
+            )
         raise RuntimeError(
             f"Validated M2N arrival has no handler for cluster {self._cluster_type.name}"
         )
@@ -5912,6 +5983,7 @@ class BaseClusterScheduler(ABC):
         int,
         tuple[int, int] | tuple[int, int, int],
         tuple[tuple[int, int], ...],
+        int,
     ]:
         """Validate one A-to-F receipt without mutating scheduler or batch state."""
 
@@ -6030,6 +6102,50 @@ class BaseClusterScheduler(ABC):
                 incoming_batch=batch,
             )
 
+        lane_to_target_replica = getattr(
+            self,
+            "_ffn_lane_to_target_replica",
+            None,
+        )
+        if type(lane_to_target_replica) is not dict:
+            raise RuntimeError(
+                "DECODE_FFN receipt requires an exact lane-to-target Replica map"
+            )
+        if lane not in lane_to_target_replica:
+            raise ValueError(
+                "DECODE_FFN receipt lane has no target Replica mapping: "
+                f"lane={lane}"
+            )
+        target_replica_id = lane_to_target_replica[lane]
+        if type(target_replica_id) is not int or target_replica_id < 0:
+            raise ValueError(
+                "DECODE_FFN receipt target Replica mapping must be an exact "
+                f"non-negative int, got {target_replica_id!r}"
+            )
+        for field_name in (
+            "target_ffn_replica_id",
+            "target_execution_replica_id",
+        ):
+            existing_target = getattr(transfer_info, field_name, None)
+            if existing_target is None:
+                continue
+            if type(existing_target) is not int or existing_target < 0:
+                raise ValueError(
+                    f"DECODE_FFN receipt {field_name} must be None or an exact "
+                    f"non-negative int, got {existing_target!r}"
+                )
+            if existing_target != target_replica_id:
+                raise ValueError(
+                    f"DECODE_FFN receipt {field_name} does not match the "
+                    "lane-to-target Replica mapping: "
+                    f"field={existing_target}, mapping={target_replica_id}"
+                )
+        if transfer_info.target_execution_replica_local_id is not None:
+            raise ValueError(
+                "DECODE_FFN A-to-F target execution identity must not carry "
+                "a Replica-local lane"
+            )
+
         return (
             layer_id,
             afd_stage_idx,
@@ -6039,6 +6155,7 @@ class BaseClusterScheduler(ABC):
             expected_lanes,
             group_key,
             expected_lane_contract,
+            target_replica_id,
         )
 
     def _validate_decode_attn_f2a_cohort_binding(
@@ -6228,6 +6345,7 @@ class BaseClusterScheduler(ABC):
         transfer_info: "M2NTransferInfo",
         *,
         expected_roundtrip_inflight: bool,
+        request_end_deferred: bool = False,
     ) -> Dict[str, Any]:
         """Validate one F-to-A receipt without mutating runtime state."""
 
@@ -6242,6 +6360,16 @@ class BaseClusterScheduler(ABC):
             raise ValueError(
                 "DECODE_ATTN expected roundtrip state must be an exact bool, "
                 f"got {expected_roundtrip_inflight!r}"
+            )
+        if type(request_end_deferred) is not bool:
+            raise ValueError(
+                "DECODE_ATTN request_end_deferred must be an exact bool, "
+                f"got {request_end_deferred!r}"
+            )
+        if request_end_deferred and expected_roundtrip_inflight is not False:
+            raise ValueError(
+                "DECODE_ATTN deferred request end requires the projected "
+                "roundtrip_inflight=False state"
             )
 
         self.validate_m2n_arrival_target(transfer_info)
@@ -6337,7 +6465,12 @@ class BaseClusterScheduler(ABC):
                     f"exact bool, got {roundtrip_inflight!r} for request "
                     f"{getattr(request, 'id', '?')}"
                 )
-            if roundtrip_inflight is not expected_roundtrip_inflight:
+            roundtrip_matches = (
+                roundtrip_inflight is True
+                if request_end_deferred
+                else roundtrip_inflight is expected_roundtrip_inflight
+            )
+            if not roundtrip_matches:
                 raise ValueError(
                     "DECODE_ATTN receipt request roundtrip state does not match the "
                     f"admission phase: expected={expected_roundtrip_inflight}, "
@@ -6431,14 +6564,42 @@ class BaseClusterScheduler(ABC):
             )
         scheduler_expected_lane_set = set(scheduler_expected_lanes)
 
-        self._validate_decode_attn_f2a_cohort_binding(
+        replica_scheduler_type = getattr(self, "_replica_scheduler_type", None)
+        if type(replica_scheduler_type) is not ReplicaSchedulerType:
+            raise RuntimeError(
+                "DECODE_ATTN receipt requires an exact replica scheduler type, "
+                f"got {replica_scheduler_type!r}"
+            )
+        cohort_id = getattr(batch, "decode_attn_cohort_id", None)
+        cohort_request_ids = getattr(
             batch,
-            lane=lane,
-            afd_stage_idx=afd_stage_idx,
-            requests=requests,
-            active_requests=active_requests,
-            context="receipt",
+            "decode_attn_cohort_request_ids",
+            None,
         )
+        cohort_scheduler_types = {
+            ReplicaSchedulerType.VLLM_V1,
+            ReplicaSchedulerType.SGLANG,
+            ReplicaSchedulerType.SJ2Q_FASTSERVE_LITE,
+            ReplicaSchedulerType.SJ2Q_PENALTY_ONLY,
+            ReplicaSchedulerType.SJ2Q_BOUNDED_CARRYOVER,
+        }
+        if replica_scheduler_type in cohort_scheduler_types:
+            self._validate_decode_attn_f2a_cohort_binding(
+                batch,
+                lane=lane,
+                afd_stage_idx=afd_stage_idx,
+                requests=requests,
+                active_requests=active_requests,
+                context="receipt",
+            )
+        elif cohort_id is not None or cohort_request_ids is not None:
+            raise ValueError(
+                "DECODE_ATTN receipt from a non-cohort scheduler must not carry "
+                "decode_attn_cohort_id or decode_attn_cohort_request_ids: "
+                f"scheduler_type={replica_scheduler_type}, "
+                f"cohort_id={cohort_id!r}, "
+                f"cohort_request_ids={cohort_request_ids!r}"
+            )
 
         barrier_round_id = getattr(batch, "decode_attn_barrier_round_id", None)
         if barrier_round_id is not None:
@@ -6934,7 +7095,12 @@ class BaseClusterScheduler(ABC):
             expected_lanes,
             group_key,
             expected_lane_contract,
+            target_replica_id,
         ) = self._validate_decode_ffn_m2n_receipt(batch, transfer_info)
+
+        transfer_info.target_ffn_replica_id = target_replica_id
+        transfer_info.target_execution_replica_id = target_replica_id
+        transfer_info.target_execution_replica_local_id = None
 
         for request in batch.requests:
             request.on_arrival(time, self._cluster_type)
@@ -6951,8 +7117,6 @@ class BaseClusterScheduler(ABC):
             }
             self._m2n_waiting_by_layer[group_key] = room
 
-        if hasattr(self, '_ffn_lane_to_target_replica'):
-            transfer_info.target_ffn_replica_id = self._ffn_lane_to_target_replica.get(lane)
         if lane not in room['per_lane_queues']:
             room['per_lane_queues'][lane] = deque()
         was_empty = (len(room['per_lane_queues'][lane]) == 0)
@@ -7501,6 +7665,9 @@ class BaseClusterScheduler(ABC):
         micro_batch: Batch,
         transfer_info,
         logger,
+        *,
+        expected_roundtrip_inflight: bool = False,
+        request_end_deferred: bool = False,
     ) -> List:
         """Handle M2N transfer arrival at decode-attn cluster (return from decode-ffn).
 
@@ -7516,7 +7683,8 @@ class BaseClusterScheduler(ABC):
         receipt = self._validate_decode_attn_m2n_receipt(
             micro_batch,
             transfer_info,
-            expected_roundtrip_inflight=False,
+            expected_roundtrip_inflight=expected_roundtrip_inflight,
+            request_end_deferred=request_end_deferred,
         )
         logger.info(f"[AF-ARRIVAL] M2N returned micro batch {micro_batch.id} at decode-attn; advancing request states")
 
@@ -8381,6 +8549,8 @@ class BaseClusterScheduler(ABC):
             transfer_time_ms=transfer_time,
             layer_id=layer_id,
             afd_stage_idx=batch.afd_stage_idx,
+            source_execution_replica_id=replica_id,
+            source_execution_replica_local_id=replica_local_id,
         )
         schedule_event = ReplicaScheduleEvent(
             time,
@@ -8748,6 +8918,8 @@ class BaseClusterScheduler(ABC):
                         transfer_time_ms=transfer_time,
                         layer_id=ready_layer_id,
                         afd_stage_idx=ready_batch.afd_stage_idx,
+                        source_execution_replica_id=source_replica_id,
+                        source_execution_replica_local_id=source_replica_local_id,
                     )
                 )
                 events.append(

@@ -86,6 +86,7 @@ def _combine_batch(
         execution_time=execution_time,
         activation_bytes=activation_bytes,
         post_combine_time=0.0,
+        _ep_dispatch_collective_start_time_s=4.0,
         _ep_dispatch_collective_end_time_s=4.0,
     )
 
@@ -237,6 +238,63 @@ def test_pdaf_combine_completion_waits_for_post_combine_work() -> None:
     assert isinstance(events[0], EPAllToAllCombineCollectiveEvent)
     assert events[0]._combine_end_time == pytest.approx(1.1005)
     assert events[0].time == pytest.approx(1.1045)
+
+
+def test_ep_combine_allows_dispatch_end_before_combine_arrival() -> None:
+    batches = {
+        0: _combine_batch(0, source_batch_ids=[10]),
+        1: _combine_batch(1, source_batch_ids=[10]),
+    }
+    raw = _raw_batch(10)
+    scheduler, room, stage_schedulers, _ = _combine_scheduler(
+        batches,
+        raw_batches={10: raw},
+    )
+    room["arrival_times"] = {0: 4.1, 1: 4.2}
+    stage_schedulers[0].is_empty.return_value = False
+    stage_schedulers[1].is_empty.return_value = True
+
+    events = scheduler.on_ep_alltoall_combine_collective_schedule(
+        time=5.0,
+        replica_id=0,
+        stage_id=0,
+        batch_global_id=10,
+        metrics_store=Mock(),
+        combine_end_time=5.0,
+    )
+
+    assert any(
+        isinstance(event, ReplicaStageScheduleEvent)
+        for event in events
+    )
+
+
+def test_ep_combine_rejects_dispatch_end_before_dispatch_arrival() -> None:
+    batches = {
+        0: _combine_batch(0, source_batch_ids=[10]),
+        1: _combine_batch(1, source_batch_ids=[10]),
+    }
+    for batch in batches.values():
+        batch._ep_dispatch_collective_start_time_s = 4.1
+    raw = _raw_batch(10)
+    scheduler, room, _stage_schedulers, _ = _combine_scheduler(
+        batches,
+        raw_batches={10: raw},
+    )
+    room["arrival_times"] = {0: 4.2, 1: 4.3}
+
+    with pytest.raises(
+        ValueError,
+        match="dispatch collective end cannot precede dispatch arrival",
+    ):
+        scheduler.on_ep_alltoall_combine_collective_schedule(
+            time=5.0,
+            replica_id=0,
+            stage_id=0,
+            batch_global_id=10,
+            metrics_store=Mock(),
+            combine_end_time=5.0,
+        )
 
 
 def test_ep_dispatch_preserves_full_stage_execution_time(
@@ -701,7 +759,20 @@ def test_ep_combine_collective_prepares_all_transfer_events_before_mutation() ->
     metrics_store.flush_frontier_stage_batch_ledger_row.assert_not_called()
     assert (
         scheduler._create_m2n_transfer_events_for_aggregated_batch.call_args_list
-        == [call(raw_10, 5.0), call(raw_11, 5.0)]
+        == [
+            call(
+                raw_10,
+                5.0,
+                source_replica_id=0,
+                source_replica_local_id=0,
+            ),
+            call(
+                raw_11,
+                5.0,
+                source_replica_id=0,
+                source_replica_local_id=0,
+            ),
+        ]
     )
 
 
