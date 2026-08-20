@@ -1401,6 +1401,23 @@ def test_optimization_comparison_rejects_incomplete_campaign_when_required() -> 
         )
 
 
+def test_optimization_comparison_rejects_explicit_incomplete_pair_specs() -> None:
+    cases = build_optimization_matrix(REPO_ROOT)
+    result_rows = [
+        _optimization_result_row(case, metric_offset=float(index))
+        for index, case in enumerate(cases)
+    ]
+    incomplete_specs = matrix_module._expected_optimization_pair_specs(cases)[:1]
+
+    with pytest.raises(ValueError, match="optimization pair set mismatch"):
+        build_optimization_comparison(
+            cases,
+            result_rows,
+            require_complete_matrix=True,
+            pair_specs=incomplete_specs,
+        )
+
+
 def test_optimization_comparison_rejects_layer_workflow_mismatch() -> None:
     all_cases = build_optimization_matrix(REPO_ROOT)
     pair_id = next(
@@ -2661,6 +2678,7 @@ def test_optimization_compare_cli_writes_json_csv_and_markdown(
         campaign_id=results_path.stem,
         manifest_path=manifest_path,
         profile_manifest_path=profile_manifest_path,
+        expected_pair_manifest_path=pair_manifest_path,
     )
     result_rows = []
     for index, case in enumerate(cases):
@@ -5523,9 +5541,14 @@ def test_source_provenance_binds_campaign_manifest_contents(
 ) -> None:
     manifest_path = tmp_path / "manifest.jsonl"
     preflight_path = tmp_path / "preflight.jsonl"
+    pair_manifest_path = tmp_path / "expected_pairs.jsonl"
     manifest_path.write_text('{"case_id":"case-a"}\n', encoding="utf-8")
     preflight_path.write_text(
         '{"case_id":"case-a","status":"READY"}\n',
+        encoding="utf-8",
+    )
+    pair_manifest_path.write_text(
+        '{"control_case_id":"case-a","enabled_case_id":"case-b"}\n',
         encoding="utf-8",
     )
     before = matrix_module._source_provenance(
@@ -5533,17 +5556,27 @@ def test_source_provenance_binds_campaign_manifest_contents(
         campaign_id="campaign-001",
         manifest_path=manifest_path,
         profile_manifest_path=preflight_path,
+        expected_pair_manifest_path=pair_manifest_path,
     )
 
     manifest_path.write_text('{"case_id":"case-b"}\n', encoding="utf-8")
+    pair_manifest_path.write_text(
+        '{"control_case_id":"case-a","enabled_case_id":"case-c"}\n',
+        encoding="utf-8",
+    )
     after = matrix_module._source_provenance(
         REPO_ROOT,
         campaign_id="campaign-001",
         manifest_path=manifest_path,
         profile_manifest_path=preflight_path,
+        expected_pair_manifest_path=pair_manifest_path,
     )
 
     assert before["manifest_sha256"] != after["manifest_sha256"]
+    assert (
+        before["expected_pair_manifest_sha256"]
+        != after["expected_pair_manifest_sha256"]
+    )
     with pytest.raises(ValueError, match="source_provenance mismatch"):
         matrix_module._validate_source_provenance(
             before,
@@ -5622,9 +5655,14 @@ def test_source_provenance_strict_gate_rejects_dirty_tree(
 ) -> None:
     manifest_path = tmp_path / "manifest.jsonl"
     preflight_path = tmp_path / "preflight.jsonl"
+    pair_manifest_path = tmp_path / "expected_pairs.jsonl"
     manifest_path.write_text('{"case_id":"case-a"}\n', encoding="utf-8")
     preflight_path.write_text(
         '{"case_id":"case-a","status":"READY"}\n',
+        encoding="utf-8",
+    )
+    pair_manifest_path.write_text(
+        '{"control_case_id":"case-a","enabled_case_id":"case-b"}\n',
         encoding="utf-8",
     )
     provenance = matrix_module._source_provenance(
@@ -5632,6 +5670,7 @@ def test_source_provenance_strict_gate_rejects_dirty_tree(
         campaign_id="campaign-001",
         manifest_path=manifest_path,
         profile_manifest_path=preflight_path,
+        expected_pair_manifest_path=pair_manifest_path,
     )
     provenance["git_dirty"] = True
     provenance["git_dirty_file_count"] = 1

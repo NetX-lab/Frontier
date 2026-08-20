@@ -6523,6 +6523,7 @@ def _source_provenance(
     campaign_id: str | None = None,
     manifest_path: Path | None = None,
     profile_manifest_path: Path | None = None,
+    expected_pair_manifest_path: Path | None = None,
 ) -> dict[str, Any]:
     """Capture source, runner, checker, and campaign identity."""
 
@@ -6587,6 +6588,16 @@ def _source_provenance(
             if profile_manifest_path is not None
             else ""
         ),
+        "expected_pair_manifest_path": (
+            str(expected_pair_manifest_path.resolve())
+            if expected_pair_manifest_path is not None
+            else ""
+        ),
+        "expected_pair_manifest_sha256": (
+            _sha256_file(expected_pair_manifest_path)
+            if expected_pair_manifest_path is not None
+            else ""
+        ),
     }
 
 
@@ -6616,6 +6627,8 @@ def _validate_source_provenance(
         "manifest_sha256",
         "profile_manifest_path",
         "profile_manifest_sha256",
+        "expected_pair_manifest_path",
+        "expected_pair_manifest_sha256",
     )
     missing = [field for field in required_fields if field not in value]
     if missing:
@@ -6648,12 +6661,15 @@ def _validate_source_provenance(
         or not isinstance(value["manifest_sha256"], str)
         or not isinstance(value["profile_manifest_path"], str)
         or not isinstance(value["profile_manifest_sha256"], str)
+        or not isinstance(value["expected_pair_manifest_path"], str)
+        or not isinstance(value["expected_pair_manifest_sha256"], str)
     ):
         raise ValueError(f"{context} source_provenance has invalid field types")
     if require_campaign_fields:
         campaign_paths = (
             value["manifest_path"],
             value["profile_manifest_path"],
+            value["expected_pair_manifest_path"],
         )
         if not all(campaign_paths):
             raise ValueError(
@@ -6666,6 +6682,7 @@ def _validate_source_provenance(
         campaign_digests = (
             value["manifest_sha256"],
             value["profile_manifest_sha256"],
+            value["expected_pair_manifest_sha256"],
         )
         if not all(
             re.fullmatch(r"[0-9a-f]{64}", digest)
@@ -6912,16 +6929,14 @@ def build_optimization_comparison(
             "optimization comparison requires the complete matrix: "
             f"expected={expected_case_count} actual={len(cases)}"
         )
-    if len(cases) == expected_case_count and pair_specs is None:
-        _validate_expected_optimization_pair_set(
-            cases,
-            _optimization_pair_specs(cases),
-        )
+    canonical_specs = _optimization_pair_specs(cases)
     comparison_specs = (
-        list(_optimization_pair_specs(cases))
+        canonical_specs
         if pair_specs is None
         else [dict(spec) for spec in pair_specs]
     )
+    if len(cases) == expected_case_count:
+        _validate_expected_optimization_pair_set(cases, comparison_specs)
     case_by_id = {case.case_id: case for case in cases}
     if len(case_by_id) != len(cases):
         raise ValueError("optimization comparison cases contain duplicate case IDs")
@@ -7646,6 +7661,7 @@ def run_cases(
     *,
     manifest_path: Path | None = None,
     profile_manifest_path: Path | None = None,
+    expected_pair_manifest_path: Path | None = None,
     require_clean_source: bool = False,
     start: int = 0,
     limit: int | None = None,
@@ -7666,6 +7682,7 @@ def run_cases(
         campaign_id=results_path.stem,
         manifest_path=manifest_path,
         profile_manifest_path=profile_manifest_path,
+        expected_pair_manifest_path=expected_pair_manifest_path,
     )
     _validate_source_provenance(
         source_provenance,
@@ -7910,6 +7927,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             campaign_id=results_path.stem,
             manifest_path=manifest_path,
             profile_manifest_path=profile_manifest_path,
+            expected_pair_manifest_path=pair_manifest_path,
         )
         if profile_manifest_path is None or not profile_manifest_path.is_file():
             raise FileNotFoundError(
@@ -7988,6 +8006,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         results_path,
         manifest_path=manifest_path,
         profile_manifest_path=profile_manifest_path,
+        expected_pair_manifest_path=(
+            pair_manifest_path if args.matrix_kind == "optimization" else None
+        ),
         require_clean_source=args.matrix_kind == "optimization",
         start=args.start,
         limit=args.limit,
