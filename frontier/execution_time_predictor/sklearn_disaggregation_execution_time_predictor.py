@@ -593,6 +593,8 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
 
         base_time = self._dummy_execution_time
+        routed_token_count = self._get_ep_lane_routed_token_count(batch)
+        zero_routed_ep_lane = routed_token_count == 0
 
         cluster_replica_config = self._get_cluster_replica_config(cluster_type)
         # Use model_config.is_moe for MoE detection - NOT parallelism settings
@@ -644,6 +646,14 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         )
         # COMM_SKIP: TP all-reduce not needed when tp_size <= 1 (no tensor sharding)
         tp_comm_time = base_time if tp_size > 1 else 0.0
+        moe_tp_allreduce_time = (
+            0.0
+            if zero_routed_ep_lane
+            else (tp_comm_time if is_moe_model else 0.0)
+        )
+        routed_grouped_gemm_time = (
+            0.0 if zero_routed_ep_lane else base_time
+        )
         ffn_tp_comm_enabled = (
             cluster_type == ClusterType.DECODE_FFN
             and architecture_profile.moe_tensor_parallel_allgather_op is not None
@@ -674,6 +684,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_norm_time=base_time,
                 add_time=base_time,
                 tensor_parallel_communication_time=tp_comm_time,
+                moe_tensor_parallel_allreduce_time=moe_tp_allreduce_time,
                 pipeline_parallel_communication_time=base_time,
                 expert_parallel_communication_time=ep_communication_time,
                 moe_gating_time=base_time,
@@ -688,7 +699,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_layer_up_proj_execution_time=base_time,
                 mlp_layer_down_proj_execution_time=base_time,
                 mlp_layer_act_execution_time=base_time,
-                moe_grouped_gemm_time=base_time,
+                moe_grouped_gemm_time=routed_grouped_gemm_time,
                 share_expert_up_proj_time=share_expert_time,
                 share_expert_down_proj_time=share_expert_time,
                 share_expert_act_time=share_expert_time,
@@ -718,6 +729,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_norm_time=base_time,
                 add_time=base_time,
                 tensor_parallel_communication_time=tp_comm_time,
+                moe_tensor_parallel_allreduce_time=moe_tp_allreduce_time,
                 pipeline_parallel_communication_time=base_time,
                 expert_parallel_communication_time=ep_communication_time,
                 moe_gating_time=base_time,
@@ -732,7 +744,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_layer_up_proj_execution_time=base_time,
                 mlp_layer_down_proj_execution_time=base_time,
                 mlp_layer_act_execution_time=base_time,
-                moe_grouped_gemm_time=base_time,
+                moe_grouped_gemm_time=routed_grouped_gemm_time,
                 share_expert_up_proj_time=share_expert_time,
                 share_expert_down_proj_time=share_expert_time,
                 share_expert_act_time=share_expert_time,
@@ -775,6 +787,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
         elif cluster_type == ClusterType.DECODE_FFN:
             # DECODE_FFN cluster only handles FFN/MoE operations
+            routed_grouped_gemm_time = (
+                0.0 if zero_routed_ep_lane else base_time * 0.5
+            )
             return ExecutionTime(
                 num_layers_per_pipeline_stage=1,
                 attention_rope_execution_time=0.0,  # No attention in FFN cluster
@@ -787,6 +802,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_norm_time=base_time,
                 add_time=base_time,
                 tensor_parallel_communication_time=tp_comm_time,
+                moe_tensor_parallel_allreduce_time=moe_tp_allreduce_time,
                 pipeline_parallel_communication_time=0.0,
                 expert_parallel_communication_time=ep_communication_time,
                 # In dummy mode, keep the per-layer MoE compute (gating + grouped_gemm)
@@ -803,7 +819,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_layer_up_proj_execution_time=base_time,
                 mlp_layer_down_proj_execution_time=base_time,
                 mlp_layer_act_execution_time=base_time,
-                moe_grouped_gemm_time=base_time * 0.5,
+                moe_grouped_gemm_time=routed_grouped_gemm_time,
                 share_expert_up_proj_time=share_expert_time,
                 share_expert_down_proj_time=share_expert_time,
                 share_expert_act_time=share_expert_time,

@@ -375,6 +375,76 @@ def test_attention_only_probe_does_not_lookup_dense_ffn_profile() -> None:
     assert result.get_single_layer_post_attention_time() == pytest.approx(0.0)
 
 
+def test_common_moe_post_attention_probe_skips_attention_lookup() -> None:
+    """Shared co-location DECODE EP lanes must expose a post-attention contract."""
+
+    predictor = _DummySklearnMoEPredictor.__new__(_DummySklearnMoEPredictor)
+    predictor._enable_dummy_mode = False
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._num_layers_per_pipeline_stage = 1
+    predictor._moe_ep_size = 2
+    predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.generic())
+    predictor._replica_config = SimpleNamespace(
+        num_pipeline_stages=1,
+        attn_tensor_parallel_size=2,
+        moe_tensor_parallel_size=1,
+        attn_dp=1,
+    )
+    predictor._get_model_architecture_profile = lambda: ModelArchitectureProfile.generic()
+    predictor.predict_attention_layer_time = lambda **_kwargs: (
+        (_ for _ in ()).throw(
+            AssertionError("post-attention EP lane looked up attention")
+        )
+    )
+    predictor._predict_expert_parallel_phase_operator_times = lambda _batch: {
+        "expert_parallel_alltoall_dispatch": 0.25,
+        "expert_parallel_alltoall_combine": 0.75,
+    }
+    predictor._get_gating_linear_time = lambda _batch: 0.5
+    predictor._get_gating_routing_topk_time = lambda _batch: 0.5
+    predictor._get_moe_shuffling_time = lambda _batch, **_kwargs: 0.5
+    predictor._get_grouped_gemm_time = lambda _tokens, **_kwargs: 5.0
+    predictor._predict_comm_operator = lambda *_args, **_kwargs: 0.75
+    predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 1.0
+    predictor._get_add_layer_act_execution_time = lambda _batch: 2.0
+    predictor.predict_dp_moe_allreduce_times = lambda *_args, **_kwargs: (0.0, 0.0)
+    predictor._get_pp_producer_send_path_runtime_time = lambda *_args: 0.0
+    predictor._get_pp_receiver_head_runtime_time = lambda *_args: 0.0
+    predictor._get_pp_prefill_consumer_active_runtime_time = lambda *_args: 0.0
+    predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
+    predictor._get_mtp_terminal_overshoot_time = lambda *_args, **_kwargs: 0.0
+    predictor._should_include_spec_decode_proposer_overhead = lambda _batch: False
+    predictor._get_schedule_time = lambda _batch: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch: 0.0
+    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor._model_config.supports_share_expert = lambda: False
+
+    result = predictor._get_execution_time_internal(
+        _DummyBatch(),
+        pipeline_stage=0,
+        moe_tokens_input={0: 4, 1: 0},
+        include_moe=True,
+        include_ffn=True,
+        include_attention=False,
+    )
+
+    assert result.get_single_layer_attention_time() == pytest.approx(0.0)
+    assert result._attn_tensor_parallel_allreduce_time == pytest.approx(0.0)
+    assert result._tensor_parallel_communication_time == pytest.approx(0.0)
+    phases = (
+        result.get_single_layer_moe_pre_dispatch_time(),
+        result.get_single_layer_moe_dispatch_time(),
+        result.get_single_layer_moe_post_dispatch_compute_time(),
+        result.get_single_layer_moe_combine_time(),
+        result.get_single_layer_moe_post_combine_time(),
+    )
+    assert sum(phases) == pytest.approx(
+        result.get_single_layer_post_attention_time()
+    )
+
+
 def test_predict_stage_execution_time_keeps_per_layer_components_and_scales_linearly() -> None:
     predictor = _build_predictor()
     batch = _DummyBatch()

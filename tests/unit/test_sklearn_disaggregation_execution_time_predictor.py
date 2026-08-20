@@ -88,6 +88,33 @@ def test_dummy_decode_ffn_tp_collectives_use_profile_capability_not_legacy_ident
     assert execution_time.share_expert_tensor_parallel_allreduce_time == 10.0
 
 
+def test_dummy_unified_decode_post_attention_zeroes_attention_tp_communication() -> None:
+    predictor = _dummy_predictor(_ProfileOnlyStep3ModelConfig())
+
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 0, 4)],
+        num_tokens=[4],
+        replica_id=0,
+        ep_id=0,
+        time=0.0,
+        source_batch_ids=[7],
+        per_expert_tokens={0: 4, 1: 0},
+        cluster_type=ClusterType.DECODE,
+        is_moe=True,
+    )
+    execution_time = predictor._get_dummy_execution_time_for_cluster(
+        batch=lane,
+        pipeline_stage=0,
+        cluster_type=ClusterType.DECODE,
+        include_attention=False,
+    )
+
+    assert execution_time._attn_tensor_parallel_allreduce_time == pytest.approx(0.0)
+    assert execution_time._communication_time.tensor_parallel_allreduce_time == pytest.approx(
+        0.0
+    )
+
+
 def test_dummy_decode_attn_allows_zero_moe_ep_for_attention_only_cluster() -> None:
     predictor = _DummyDisaggregationPredictor.__new__(_DummyDisaggregationPredictor)
     predictor._dummy_execution_time = 10.0
@@ -151,6 +178,99 @@ def test_dummy_moe_clusters_publish_named_ep_phase_times(
     assert execution_time.get_single_layer_moe_dispatch_time() == pytest.approx(10.0)
     assert execution_time.get_single_layer_moe_combine_time() == pytest.approx(10.0)
     assert execution_time.expert_parallel_communication_time == pytest.approx(20.0)
+
+
+def test_common_dummy_moe_predictor_zero_lane_has_no_routed_compute() -> None:
+    """Zero-routed lanes keep shared work but cannot fabricate expert compute."""
+    predictor = _DummyDisaggregationPredictor.__new__(
+        _DummyDisaggregationPredictor
+    )
+    predictor._enable_dummy_mode = True
+    predictor._dummy_execution_time = 2.0
+    predictor._num_layers_per_pipeline_stage = 1
+    predictor._model_config = _ProfileOnlyStep3ModelConfig()
+    predictor._replica_config = SimpleNamespace(
+        attn_tensor_parallel_size=1,
+        moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=2,
+        attn_dp=1,
+        num_pipeline_stages=1,
+    )
+
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 0, 0)],
+        num_tokens=[0],
+        replica_id=0,
+        ep_id=1,
+        time=0.0,
+        source_batch_ids=[7],
+        per_expert_tokens={0: 0, 1: 0},
+        cluster_type=ClusterType.MONOLITHIC,
+        is_moe=True,
+    )
+
+    execution_time = predictor._get_dummy_execution_time(lane, pipeline_stage=0)
+
+    assert execution_time.get_single_layer_moe_post_dispatch_compute_time() == 0.0
+    assert execution_time.get_single_layer_moe_pre_dispatch_time() > 0.0
+    assert execution_time.get_single_layer_moe_dispatch_time() > 0.0
+    assert execution_time.get_single_layer_moe_combine_time() > 0.0
+
+
+def test_common_dummy_moe_predictor_zero_explicit_allocation_has_no_routed_compute() -> None:
+    """The explicit allocation API must honor zero routed tokens too."""
+    predictor = _DummyDisaggregationPredictor.__new__(
+        _DummyDisaggregationPredictor
+    )
+    predictor._enable_dummy_mode = True
+    predictor._dummy_execution_time = 2.0
+    predictor._model_config = _ProfileOnlyStep3ModelConfig()
+
+    moe_time = predictor.predict_moe_layer_time(
+        batch_or_group=SimpleNamespace(),
+        layer_id=0,
+        cluster_type=ClusterType.MONOLITHIC,
+        per_expert_tokens={0: 0, 1: 0},
+    )
+
+    assert moe_time.moe_grouped_gemm_time == 0.0
+    assert moe_time.moe_shuffling_time > 0.0
+    assert moe_time.operator_times is not None
+    assert moe_time.operator_times.get_required_time("moe_grouped_gemm") == 0.0
+
+
+@pytest.mark.parametrize(
+    "cluster_type",
+    (ClusterType.PREFILL, ClusterType.DECODE, ClusterType.DECODE_FFN),
+)
+def test_disaggregation_dummy_zero_lane_has_no_routed_compute(
+    cluster_type: ClusterType,
+) -> None:
+    """All disaggregation MoE roles must preserve the zero-routed contract."""
+    predictor = _dummy_predictor(_ProfileOnlyStep3ModelConfig())
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 0, 0)],
+        num_tokens=[0],
+        replica_id=0,
+        ep_id=1,
+        time=0.0,
+        source_batch_ids=[7],
+        per_expert_tokens={0: 0, 1: 0},
+        cluster_type=cluster_type,
+        is_moe=True,
+    )
+
+    execution_time = predictor._get_dummy_execution_time_for_cluster(
+        batch=lane,
+        pipeline_stage=0,
+        cluster_type=cluster_type,
+        include_attention=cluster_type is not ClusterType.DECODE_FFN,
+    )
+
+    assert execution_time.get_single_layer_moe_post_dispatch_compute_time() == 0.0
+    assert execution_time.get_single_layer_moe_pre_dispatch_time() > 0.0
+    assert execution_time.get_single_layer_moe_dispatch_time() > 0.0
+    assert execution_time.get_single_layer_moe_combine_time() > 0.0
 
 
 def test_pdd_predictor_has_no_direct_step3_identity_branches() -> None:

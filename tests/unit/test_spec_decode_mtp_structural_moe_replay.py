@@ -152,6 +152,7 @@ def test_mtp_structural_moe_decoder_replays_local_ep_lanes_and_barriers() -> Non
             return SimpleNamespace(model_time_ms=10.0)
 
         lane_calls.append(batch)
+        assert kwargs.get("include_attention") is False
         assert batch.moe_pre_routing_effective_total_tokens == 4
         phase_times_by_ep = {
             0: (2.0, 1.0, 4.0, 1.0, 5.0),
