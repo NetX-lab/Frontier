@@ -53,6 +53,7 @@ def _build_predictor(
     *,
     model_result: float = 4.5,
     runtime_value: float | None = None,
+    exact_lookup: dict[tuple[float, ...], float] | None = None,
 ) -> tuple[_ConcretePredictor, _CountingFiniteModel]:
     predictor = _ConcretePredictor.__new__(_ConcretePredictor)
     predictor._active_measurement_type = MeasurementType.CUDA_EVENT
@@ -60,11 +61,29 @@ def _build_predictor(
     predictor._runtime_cache = defaultdict(lambda: defaultdict(dict))
 
     model = _CountingFiniteModel(model_result)
+    if exact_lookup is not None:
+        model._frontier_exact_lookup = exact_lookup
     predictor._models = {"test_operator": model}
     predictor._predictions = {"test_operator": {(1,): 1.0}}
     if runtime_value is not None:
         predictor._runtime_cache["eager"]["test_operator"][(2.0,)] = runtime_value
     return predictor, model
+
+
+def test_finite_exact_measured_row_precedes_materialized_model_value() -> None:
+    predictor, model = _build_predictor(
+        model_result=6.0,
+        exact_lookup={(1.0,): 9.0},
+    )
+
+    value = predictor._get_named_linear_op_execution_time(
+        op_name="test_operator",
+        num_tokens=1,
+    )
+
+    assert value == 9.0
+    assert model.calls == 0
+    assert predictor._runtime_cache["eager"]["test_operator"] == {}
 
 
 def test_finite_prediction_miss_uses_model_once_and_reuses_runtime_cache() -> None:

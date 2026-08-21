@@ -1469,6 +1469,7 @@ class ExecutionTimePredictionModelManager:
                 target_col=dense_attention_target_columns[kv_cache_model_name],
                 execution_time_predictor_config=execution_time_predictor_config,
                 training_context=training_context,
+                persist_exact_lookup=True,
             )
             trained_model_signatures.add(kv_cache_model_signature)
             logger.info(f"Trained {kv_cache_model_name} for {cluster_type}")

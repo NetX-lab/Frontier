@@ -3257,6 +3257,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 df=attention_df,
                 feature_cols=kv_cache_feature_cols,
                 target_col=target_columns[kv_cache_model_name],
+                persist_exact_lookup=True,
             )
 
         # NOTE: Communication models (all_reduce, send_recv) are no longer trained here.
@@ -4449,8 +4450,23 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"model has {model_feature_count}"
             )
 
+        # A persisted measured row is authoritative when the producer attached
+        # exact metadata to the estimator.  Finite prediction tables remain
+        # compatible with older artifacts that do not carry this optional map.
+        exact_lookup = getattr(model, "_frontier_exact_lookup", None)
+        if exact_lookup is not None and not isinstance(exact_lookup, Mapping):
+            raise ValueError(
+                f"Prediction exact lookup metadata for {model_name} must be a mapping"
+            )
+
         missing_value = object()
-        exact_value = model_info.get(feature_key, missing_value)
+        exact_value = (
+            exact_lookup.get(feature_key, missing_value)
+            if exact_lookup is not None
+            else missing_value
+        )
+        if exact_value is missing_value:
+            exact_value = model_info.get(feature_key, missing_value)
         if exact_value is not missing_value:
             if isinstance(exact_value, (bool, np.bool_)):
                 raise ValueError(
