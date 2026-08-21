@@ -6147,9 +6147,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention decode prediction cache not found for cluster {self._cluster_type}"
             )
 
-        raw_time = self._predictions[decode_op_name][
-            (decode_batch_size, decode_avg_kv_cache_size)
-        ] * (
+        raw_time = self._get_prediction_for_features(
+            decode_op_name,
+            {
+                "batch_size": decode_batch_size,
+                "kv_cache_size": decode_avg_kv_cache_size,
+            },
+            feature_names=("batch_size", "kv_cache_size"),
+        ) * (
             1
             + self._attention_decode_batching_overhead_fraction
             * int(decode_batch_size > 1)
@@ -6206,9 +6211,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         agg_kv_cache_size = sum(kv_cache_sizes)
         agg_prefill_chunk_size = sum([x**2 for x in prefill_chunk_sizes]) ** 0.5
 
-        return self._predictions[prefill_op_name][
-            (agg_kv_cache_size, round(agg_prefill_chunk_size) ** 2)
-        ] * (
+        raw_time = self._get_prediction_for_features(
+            prefill_op_name,
+            {
+                "kv_cache_size": agg_kv_cache_size,
+                "prefill_chunk_size_squared": round(agg_prefill_chunk_size) ** 2,
+            },
+            feature_names=("kv_cache_size", "prefill_chunk_size_squared"),
+        )
+        return raw_time * (
             1
             + self._attention_prefill_batching_overhead_fraction
             * int(len(prefill_params) > 1)
@@ -6282,13 +6293,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             # attn_prefill cache uses prefill_chunk_size_squared as its second
             # dimension in this codebase. For speculative verify, query_len is
             # verify_tokens, so we map to verify_tokens**2 here.
-            key = (int(kv_cache_size), int(verify_tokens**2))
-            if key not in self._predictions[prefill_op_name]:
-                raise ValueError(
-                    "Speculative verify prefill key missing from attn_prefill cache: "
-                    f"key={key}, request_id={request.id}, verify_tokens={verify_tokens}"
-                )
-            total_verify_prefill_time += self._predictions[prefill_op_name][key]
+            total_verify_prefill_time += self._get_prediction_for_features(
+                prefill_op_name,
+                {
+                    "kv_cache_size": int(kv_cache_size),
+                    "prefill_chunk_size_squared": int(verify_tokens**2),
+                },
+                feature_names=("kv_cache_size", "prefill_chunk_size_squared"),
+            )
 
         return total_verify_prefill_time
 
@@ -6396,14 +6408,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             // self._config.kv_cache_prediction_granularity
         ) * self._config.kv_cache_prediction_granularity
 
-        key = (int(decode_batch_size), int(decode_avg_kv_cache_size))
-        if key not in self._predictions[decode_op_name]:
-            raise ValueError(
-                "Speculative decode key missing from attn_decode cache: "
-                f"key={key}, decode_batch_size={decode_batch_size}"
-            )
-
-        raw_time = self._predictions[decode_op_name][key] * (
+        raw_time = self._get_prediction_for_features(
+            decode_op_name,
+            {
+                "batch_size": int(decode_batch_size),
+                "kv_cache_size": int(decode_avg_kv_cache_size),
+            },
+            feature_names=("batch_size", "kv_cache_size"),
+        ) * (
             1
             + self._attention_decode_batching_overhead_fraction
             * int(decode_batch_size > 1)

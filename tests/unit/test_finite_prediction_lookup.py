@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 import math
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -11,7 +12,7 @@ import pytest
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
-from frontier.types import MeasurementType
+from frontier.types import ClusterType, MeasurementType
 
 
 class _CountingFiniteModel:
@@ -24,6 +25,19 @@ class _CountingFiniteModel:
     def predict(self, features: Any) -> list[float]:
         self.calls += 1
         assert list(features.columns) == ["num_tokens"]
+        return [self.result]
+
+
+class _CountingTwoFeatureModel:
+    def __init__(self, feature_names: tuple[str, str], result: float) -> None:
+        self.n_features_in_ = len(feature_names)
+        self._frontier_feature_names = list(feature_names)
+        self.result = result
+        self.calls = 0
+
+    def predict(self, features: Any) -> list[float]:
+        self.calls += 1
+        assert list(features.columns) == self._frontier_feature_names
         return [self.result]
 
 
@@ -121,3 +135,70 @@ def test_invalid_finite_model_output_fails_without_cache(result: float) -> None:
 
     assert model.calls == 1
     assert predictor._runtime_cache["eager"]["test_operator"] == {}
+
+
+def _build_attention_decode_predictor() -> tuple[_ConcretePredictor, _CountingTwoFeatureModel, Any]:
+    predictor = _ConcretePredictor.__new__(_ConcretePredictor)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._measurement_family_name = lambda _measurement_type: "eager"
+    predictor._runtime_cache = defaultdict(lambda: defaultdict(dict))
+    model = _CountingTwoFeatureModel(("batch_size", "kv_cache_size"), 4.25)
+    predictor._models = {"attn_decode": model}
+    predictor._predictions = {"attn_decode": {(1, 64): 1.0}}
+    predictor._dense_attention_decode_op_name = lambda: "attn_decode"
+    predictor._supports_operation = lambda _operation: True
+    predictor._get_batch_decode_attention_params = lambda _batch: (2, 128)
+    predictor._attention_decode_batching_overhead_fraction = 0.0
+    predictor._get_late_decode_only_calibration_scale = lambda *_args: None
+    predictor._get_calibration_scale = lambda *_args: 1.0
+    batch = SimpleNamespace(num_prefill_tokens=0)
+    return predictor, model, batch
+
+
+def test_attention_decode_finite_miss_uses_model_once_and_reuses_runtime_cache() -> None:
+    predictor, model, batch = _build_attention_decode_predictor()
+
+    first = predictor._get_attention_decode_execution_time(batch)
+    second = predictor._get_attention_decode_execution_time(batch)
+
+    assert first == 4.25
+    assert second == 4.25
+    assert model.calls == 1
+    assert predictor._runtime_cache["eager"]["attn_decode"] == {
+        (2.0, 128.0): 4.25
+    }
+
+
+def _build_attention_prefill_predictor() -> tuple[_ConcretePredictor, _CountingTwoFeatureModel, Any]:
+    predictor = _ConcretePredictor.__new__(_ConcretePredictor)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._measurement_family_name = lambda _measurement_type: "eager"
+    predictor._runtime_cache = defaultdict(lambda: defaultdict(dict))
+    model = _CountingTwoFeatureModel(
+        ("kv_cache_size", "prefill_chunk_size_squared"),
+        5.5,
+    )
+    predictor._models = {"attn_prefill": model}
+    predictor._predictions = {"attn_prefill": {(64, 256): 1.0}}
+    predictor._dense_attention_prefill_op_name = lambda: "attn_prefill"
+    predictor._supports_operation = lambda _operation: True
+    predictor._get_batch_prefill_attention_params = lambda _batch: [(128, 32)]
+    predictor._attention_prefill_batching_overhead_fraction = 0.0
+    batch = SimpleNamespace(num_prefill_tokens=32, id=1, num_tokens=[32])
+    return predictor, model, batch
+
+
+def test_attention_prefill_finite_miss_uses_model_once_and_reuses_runtime_cache() -> None:
+    predictor, model, batch = _build_attention_prefill_predictor()
+
+    first = predictor._get_attention_prefill_execution_time(batch)
+    second = predictor._get_attention_prefill_execution_time(batch)
+
+    assert first == 5.5
+    assert second == 5.5
+    assert model.calls == 1
+    assert predictor._runtime_cache["eager"]["attn_prefill"] == {
+        (128.0, 1024.0): 5.5
+    }
