@@ -4292,6 +4292,196 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         batch._decode_mixed_features = features
         return features
 
+    def _get_prediction_for_features(
+        self,
+        model_name: str,
+        features: Mapping[str, Any],
+        *,
+        feature_names: Optional[Tuple[str, ...]] = None,
+    ) -> float:
+        """Resolve an exact row, runtime result, or trained model prediction.
+
+        Finite prediction tables are materialized for the common runtime domain,
+        while the trained model remains the authoritative fallback for a legal
+        combination that was not materialized.  The runtime cache stores only
+        validated model results; measured rows remain read-only.
+        """
+        model_info = self._predictions.get(model_name)
+        if model_info is None:
+            raise ValueError(f"Model {model_name} not found in predictions")
+
+        if isinstance(model_info, Mapping) and model_info.get(
+            "_on_demand_prediction"
+        ) is True:
+            if not isinstance(features, Mapping):
+                raise ValueError(
+                    f"Prediction features for {model_name} must be a mapping"
+                )
+            return self._get_on_demand_prediction(model_name, dict(features))
+
+        if not isinstance(model_info, Mapping):
+            raise ValueError(
+                f"Prediction table for {model_name} must be a mapping"
+            )
+        if not isinstance(features, Mapping):
+            raise ValueError(
+                f"Prediction features for {model_name} must be a mapping"
+            )
+
+        model = None
+        models = getattr(self, "_models", None)
+        if isinstance(models, Mapping):
+            model = models.get(model_name)
+        if model is None:
+            candidate = model_info.get("_model")
+            if candidate is not None:
+                model = candidate
+
+        if feature_names is None:
+            model_feature_names = getattr(model, "_frontier_feature_names", None)
+            if model_feature_names is None:
+                model_feature_names = getattr(model, "feature_names_in_", None)
+            if model_feature_names is None:
+                raise ValueError(
+                    f"Finite prediction model {model_name} has no feature schema"
+                )
+            normalized_feature_names = _as_prediction_feature_names(
+                model_name, model_feature_names
+            )
+        else:
+            normalized_feature_names = _as_prediction_feature_names(
+                model_name, feature_names
+            )
+
+        missing = [name for name in normalized_feature_names if name not in features]
+        if missing:
+            raise ValueError(
+                f"Prediction missing required features for {model_name}: {missing}"
+            )
+        unexpected = sorted(set(features) - set(normalized_feature_names))
+        if unexpected:
+            raise ValueError(
+                f"Prediction has unexpected features for {model_name}: {unexpected}"
+            )
+
+        normalized_features = {
+            name: _coerce_finite_prediction_feature(model_name, name, features[name])
+            for name in normalized_feature_names
+        }
+        feature_key = tuple(normalized_features[name] for name in normalized_feature_names)
+
+        model_feature_names = getattr(model, "_frontier_feature_names", None)
+        if model_feature_names is None:
+            model_feature_names = getattr(model, "feature_names_in_", None)
+        if model_feature_names is not None:
+            normalized_model_feature_names = _as_prediction_feature_names(
+                model_name, model_feature_names
+            )
+            if normalized_model_feature_names != normalized_feature_names:
+                raise ValueError(
+                    f"Prediction feature schema mismatch for {model_name}: "
+                    f"record={normalized_feature_names!r}, "
+                    f"model={normalized_model_feature_names!r}"
+                )
+        model_feature_count = getattr(model, "n_features_in_", None)
+        if model_feature_count is not None and int(model_feature_count) != len(
+            normalized_feature_names
+        ):
+            raise ValueError(
+                f"Prediction feature schema mismatch for {model_name}: "
+                f"record has {len(normalized_feature_names)} features, "
+                f"model has {model_feature_count}"
+            )
+
+        missing_value = object()
+        exact_value = model_info.get(feature_key, missing_value)
+        if exact_value is not missing_value:
+            if isinstance(exact_value, (bool, np.bool_)):
+                raise ValueError(
+                    f"Prediction exact lookup value for {model_name} must be numeric"
+                )
+            try:
+                normalized_exact_value = float(exact_value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Prediction exact lookup value for {model_name} is not numeric: "
+                    f"{exact_value!r}"
+                ) from exc
+            if not math.isfinite(normalized_exact_value) or normalized_exact_value < 0.0:
+                raise ValueError(
+                    f"Prediction exact lookup value for {model_name} must be finite "
+                    "and non-negative"
+                )
+            return normalized_exact_value
+
+        runtime_cache_store = getattr(self, "_runtime_cache", None)
+        if runtime_cache_store is None:
+            raise RuntimeError(
+                "Runtime prediction cache is not initialized before model fallback"
+            )
+        family_name = self._measurement_family_name(self._active_measurement_type)
+        runtime_cache = runtime_cache_store[family_name][model_name]
+        if feature_key in runtime_cache:
+            cached_value = runtime_cache[feature_key]
+            if isinstance(cached_value, (bool, np.bool_)):
+                raise ValueError(
+                    f"Prediction runtime cache value for {model_name} must be numeric"
+                )
+            try:
+                normalized_cached_value = float(cached_value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Prediction runtime cache value for {model_name} is not numeric: "
+                    f"{cached_value!r}"
+                ) from exc
+            if not math.isfinite(normalized_cached_value) or normalized_cached_value < 0.0:
+                raise ValueError(
+                    f"Prediction runtime cache value for {model_name} must be finite "
+                    "and non-negative"
+                )
+            return normalized_cached_value
+
+        if model is None:
+            raise ValueError(
+                f"Prediction key {feature_key} for {model_name} is not materialized and "
+                "no trained model is available for fallback"
+            )
+
+        feature_vector = pd.DataFrame(
+            [[normalized_features[name] for name in normalized_feature_names]],
+            columns=normalized_feature_names,
+        )
+        try:
+            raw_prediction = model.predict(feature_vector)
+        except Exception as exc:
+            raise ValueError(f"Prediction failed for {model_name}: {exc}") from exc
+        try:
+            prediction_values = list(raw_prediction)
+        except TypeError as exc:
+            raise ValueError(
+                f"Prediction output for {model_name} must contain exactly one value"
+            ) from exc
+        if len(prediction_values) != 1:
+            raise ValueError(
+                f"Prediction model {model_name} returned {len(prediction_values)} values; "
+                "expected exactly one"
+            )
+        try:
+            prediction = float(prediction_values[0])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Prediction output for {model_name} is not numeric: "
+                f"{prediction_values[0]!r}"
+            ) from exc
+        if not math.isfinite(prediction) or prediction < 0.0:
+            raise ValueError(
+                f"Prediction output for {model_name} must be finite and non-negative; "
+                f"got {prediction!r}"
+            )
+
+        runtime_cache[feature_key] = prediction
+        return prediction
+
     def _get_on_demand_prediction(
         self, model_name: str, features: Dict[str, float]
     ) -> float:
@@ -4711,7 +4901,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention pre-projection operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions["attn_pre_proj"][(effective_tokens,)]
+        raw_time = self._get_prediction_for_features(
+            "attn_pre_proj",
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
         if getattr(batch, "num_prefill_tokens", 0) > 0:
             prefill_phase_scale = self._get_optional_calibration_scale(
                 "_prefill_phase_attn_pre_proj_calibration_scale",
@@ -4730,7 +4924,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention post-projection operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions["attn_post_proj"][(effective_tokens,)]
+        raw_time = self._get_prediction_for_features(
+            "attn_post_proj",
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
         if getattr(batch, "num_prefill_tokens", 0) > 0:
             prefill_phase_scale = self._get_optional_calibration_scale(
                 "_prefill_phase_attn_post_proj_calibration_scale",
@@ -4750,7 +4948,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
         operator = _get_operator_spec_by_name(FFN_FAMILY, "mlp_up_proj")
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions[operator.profiling_name()][(effective_tokens,)]
+        raw_time = self._get_prediction_for_features(
+            operator.profiling_name(),
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
         if getattr(batch, "num_prefill_tokens", 0) > 0:
             prefill_phase_scale = self._get_optional_operator_phase_calibration_scale(
                 operator,
@@ -4768,7 +4970,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
         operator = _get_operator_spec_by_name(FFN_FAMILY, "mlp_down_proj")
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        raw_time = self._predictions[operator.profiling_name()][(effective_tokens,)]
+        raw_time = self._get_prediction_for_features(
+            operator.profiling_name(),
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
         decode_phase_scale = None
         if getattr(batch, "num_prefill_tokens", 0) == 0:
             decode_phase_scale = self._get_optional_operator_phase_calibration_scale(
@@ -4786,7 +4992,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"MLP activation operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["mlp_act"][(effective_tokens,)]
+        return self._get_prediction_for_features(
+            "mlp_act",
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
 
     def _get_attn_norm_layer_act_execution_time(self, batch: Batch) -> float:
         if not self._supports_operation("input_layernorm"):
@@ -4794,7 +5004,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"input layernorm operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["input_layernorm"][(effective_tokens,)]
+        return self._get_prediction_for_features(
+            "input_layernorm",
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
 
     def _get_mlp_norm_layer_act_execution_time(self, batch: Batch) -> float:
         if not self._model_config.post_attn_norm:
@@ -4806,7 +5020,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"post-attention layernorm operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["post_attention_layernorm"][(effective_tokens,)]
+        return self._get_prediction_for_features(
+            "post_attention_layernorm",
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
 
     def _get_add_layer_act_execution_time(self, batch: Batch) -> float:
         if self._model_config.uses_fused_add_norm:
@@ -4816,7 +5034,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"add operation not supported for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["add"][(effective_tokens,)]
+        return self._get_prediction_for_features(
+            "add",
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
 
     def _get_named_linear_op_execution_time(
         self,
@@ -4824,18 +5046,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         op_name: str,
         num_tokens: int,
     ) -> float:
-        if op_name not in self._predictions:
-            raise ValueError(
-                f"{op_name} prediction cache not found. "
-                "Ensure matching profiling data is available."
-            )
-        key = (int(num_tokens),)
-        if key not in self._predictions[op_name]:
-            raise ValueError(
-                f"{op_name} prediction key not found for num_tokens={num_tokens}. "
-                "Ensure matching profiling rows exist."
-            )
-        return float(self._predictions[op_name][key])
+        return self._get_prediction_for_features(
+            op_name,
+            {"num_tokens": num_tokens},
+            feature_names=("num_tokens",),
+        )
 
     @staticmethod
     def _get_mtp_active_request_indices(
@@ -5482,7 +5697,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure architecture-profile profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["attn_inter_norm"][(effective_tokens,)]
+        return self._get_prediction_for_features(
+            "attn_inter_norm",
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
 
     def _get_attn_wq_proj_execution_time(self, batch: Batch) -> float:
         """Get architecture-profile WQ projection execution time."""
@@ -5497,7 +5716,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure architecture-profile profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["attn_wq_proj"][(effective_tokens,)]
+        return self._get_prediction_for_features(
+            "attn_wq_proj",
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
 
     def _get_share_expert_up_proj_execution_time(self, batch: Batch) -> float:
         """Get shared-expert up projection execution time."""
@@ -5512,7 +5735,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure shared-expert MoE profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["share_expert_up_proj"][(effective_tokens,)]
+        return self._get_prediction_for_features(
+            "share_expert_up_proj",
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
 
     def _get_share_expert_down_proj_execution_time(self, batch: Batch) -> float:
         """Get shared-expert down projection execution time."""
@@ -5527,7 +5754,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure shared-expert MoE profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["share_expert_down_proj"][(effective_tokens,)]
+        return self._get_prediction_for_features(
+            "share_expert_down_proj",
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
 
     def _get_share_expert_act_execution_time(self, batch: Batch) -> float:
         """Get shared-expert activation execution time."""
@@ -5542,7 +5773,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"Ensure shared-expert MoE profiling data is available."
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["share_expert_act"][(effective_tokens,)]
+        return self._get_prediction_for_features(
+            "share_expert_act",
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
 
     def _validate_prediction_value(
         self, value: float, operation_name: str, batch: Batch, context: str = ""
@@ -5808,7 +6043,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"attention rope prediction cache not found for cluster {self._cluster_type}"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions["attn_rope"][(effective_tokens,)]
+        return self._get_prediction_for_features(
+            "attn_rope",
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
 
     def _get_attention_kv_cache_save_execution_time(self, batch: Batch) -> float:
         cache_write_op_name = self._dense_attention_cache_write_op_name()
@@ -5850,7 +6089,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         # don't use round up to the nearest multiple of 8 here, because we want to
         # predict the execution time for the exact number of tokens
         num_tokens = batch.total_num_tokens
-        raw_time = prediction_info[(num_tokens,)]
+        raw_time = self._get_prediction_for_features(
+            cache_write_op_name,
+            {"num_tokens": num_tokens},
+            feature_names=("num_tokens",),
+        )
         if getattr(batch, "num_prefill_tokens", 0) > 0:
             prefill_phase_scale = self._get_optional_calibration_scale(
                 "_prefill_phase_attn_kv_cache_save_calibration_scale",
