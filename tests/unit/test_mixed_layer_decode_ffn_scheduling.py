@@ -1724,6 +1724,52 @@ def test_trained_decode_ffn_predictor_classifies_each_layer(
     assert execution_time._is_moe is expected_is_moe
 
 
+def test_trained_prefill_dense_layer_rejects_post_attention_scope(
+    mixed_model_config,
+) -> None:
+    predictor = _trained_predictor(mixed_model_config)
+    predictor.predict_mlp_layer_time = lambda *_args, **_kwargs: SimpleNamespace(
+        mlp_norm_time=0.0,
+        mlp_layer_up_proj_execution_time=0.0,
+        mlp_layer_down_proj_execution_time=0.0,
+        mlp_layer_act_execution_time=0.0,
+        total_time=lambda: 0.0,
+    )
+
+    with pytest.raises(ValueError, match="MoE layer"):
+        predictor.predict_stage_execution_time(
+            SimpleNamespace(
+                id=901,
+                total_num_tokens=1,
+                requests=[SimpleNamespace(id=901)],
+            ),
+            stage_id=0,
+            cluster_type=ClusterType.PREFILL,
+            num_layers=1,
+            layer_id=3,
+            include_ffn=True,
+            include_attention=False,
+        )
+
+
+def test_trained_post_attention_scope_rejects_dense_override(
+    mixed_model_config,
+) -> None:
+    predictor = _trained_predictor(mixed_model_config)
+
+    with pytest.raises(ValueError, match="include_moe=False"):
+        predictor.predict_stage_execution_time(
+            SimpleNamespace(id=902),
+            stage_id=0,
+            cluster_type=ClusterType.PREFILL,
+            num_layers=1,
+            layer_id=4,
+            include_moe=False,
+            include_ffn=True,
+            include_attention=False,
+        )
+
+
 def test_trained_dense_decode_ffn_constructs_execution_time_with_one_is_moe_source(
     dense_model_config,
 ) -> None:

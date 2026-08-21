@@ -1400,6 +1400,24 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 "Post-attention-only prediction requires shared-domain PREFILL "
                 "or unified DECODE with FFN enabled"
             )
+        if not include_attention:
+            if include_moe is False:
+                raise ValueError(
+                    "Post-attention-only prediction requires a MoE layer; "
+                    "include_moe=False selects a dense FFN branch"
+                )
+            cluster_replica_config = self._get_cluster_replica_config(cluster_type)
+            model_config = cluster_replica_config.model_config
+            is_moe_layer = bool(
+                model_config is not None
+                and model_config.is_moe
+                and model_config.is_moe_layer(layer_id)
+            )
+            if not is_moe_layer:
+                raise ValueError(
+                    "Post-attention-only prediction requires a MoE layer; "
+                    f"layer_id={layer_id} is dense"
+                )
 
         if self._enable_dummy_mode:
             if cluster_type in (
