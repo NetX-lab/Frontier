@@ -1665,7 +1665,11 @@ def _trained_predictor(model_config, *, isolate_branch: bool = True):
     predictor._select_measurement_type_for_batch = lambda _batch: "decode"
     predictor._require_predictions_for_measurement_type = lambda *_args: None
     predictor._activate_measurement_type = lambda *_args: None
-    predictor._get_communication_time = lambda *_args: _ZeroAttributes()
+    def _get_communication_time(*_args, include_attention: bool = True):
+        del include_attention
+        return _ZeroAttributes()
+
+    predictor._get_communication_time = _get_communication_time
     predictor._get_overhead_time = lambda *_args: _ZeroAttributes()
     predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
     predictor._get_mlp_norm_layer_act_execution_time = lambda *_args: 0.0
