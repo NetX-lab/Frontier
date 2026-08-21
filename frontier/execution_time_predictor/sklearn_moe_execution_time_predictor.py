@@ -1390,7 +1390,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "per_expert_tokens must be non-empty for load-imbalance feature construction"
             )
 
-        from frontier.profiling.moe.moe_input import MoELoadImbalanceInput
+        from frontier.moe_load_imbalance import MoELoadImbalanceInput
 
         expert_token_counts = [int(v) for v in per_expert_tokens.values()]
         if any(v < 0 for v in expert_token_counts):
