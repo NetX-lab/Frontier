@@ -148,4 +148,3 @@ def test_moe_grouped_gemm_allocation_miss_preserves_original_pre_routing_tokens(
     assert value == 7.0
     assert model.calls == 1
     assert model.seen_values == [6.0]
-
