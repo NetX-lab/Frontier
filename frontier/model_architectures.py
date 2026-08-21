@@ -106,7 +106,7 @@ class ModelArchitectureProfile:
     profile_id: str
     display_name: str
     linear_attention: LinearAttentionProfile
-    expert_parallel_collective: ExpertParallelCollective = ExpertParallelCollective.ALLGATHER
+    expert_parallel_collective: ExpertParallelCollective
     target_embedded_mtp: bool = False
     predictor_attention_extra_ops: tuple[str, ...] = ()
     attention_shape_log_kind: AttentionShapeLogKind | None = None
@@ -179,6 +179,7 @@ class ModelArchitectureProfile:
                     "attn_wq_proj",
                 ),
             ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
             target_embedded_mtp=True,
             predictor_attention_extra_ops=(
                 "attn_inter_norm",
@@ -255,8 +256,6 @@ class ModelArchitectureProfile:
     ) -> bool:
         """Return whether EP synchronization should use alltoall semantics."""
 
-        if expected_ep_size <= 1:
-            return False
         if self.expert_parallel_collective is not ExpertParallelCollective.ALLTOALL:
             return False
         return cluster_type in (
@@ -384,6 +383,12 @@ class ModelArchitectureRegistry:
     def register(self, profile: ModelArchitectureProfile) -> None:
         if profile.profile_id in self._profiles_by_id:
             raise ValueError(f"Duplicate model architecture profile: {profile.profile_id}")
+        if profile.expert_parallel_collective is not ExpertParallelCollective.ALLTOALL:
+            raise ValueError(
+                "Model architecture profiles must declare "
+                "expert_parallel_collective=ALLTOALL: "
+                f"{profile.profile_id} declares {profile.expert_parallel_collective.value}"
+            )
         self._profiles_by_id[profile.profile_id] = profile
 
     def get(self, profile_id: str) -> ModelArchitectureProfile:
