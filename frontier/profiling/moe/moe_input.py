@@ -60,7 +60,9 @@ def get_default_moe_profiling_config(
         + list(range(2 * 1024, max_tokens + 1, 32))
     )
     num_tokens_list = [t for t in num_tokens_list if t <= max_tokens]
-    num_tokens_list.sort()
+    if max_tokens > 0:
+        num_tokens_list.append(max_tokens)
+    num_tokens_list = sorted(set(num_tokens_list))
     
     # Expert configurations
     num_experts_list = [num_experts]  # Typically fixed per model
@@ -88,4 +90,3 @@ def get_default_moe_profiling_config(
         expert_hidden_dim=expert_hidden_dim,
         tensor_parallel_size_list=tensor_parallel_size_list,
     )
-

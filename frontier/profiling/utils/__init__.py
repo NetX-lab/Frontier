@@ -200,6 +200,8 @@ def get_num_tokens_to_profile(
             num_tokens_to_profile.append(num_tokens)
         else:
             break
+    if max_num_tokens > 0:
+        num_tokens_to_profile.append(max_num_tokens)
 
     if extra_num_tokens:
         for num_tokens in extra_num_tokens:
@@ -208,8 +210,9 @@ def get_num_tokens_to_profile(
                 raise ValueError(
                     f"extra_num_tokens must be positive integers, got {token_value}"
                 )
-            if token_value <= max_num_tokens:
-                num_tokens_to_profile.append(token_value)
+            # Explicit extensions belong to the requested profiling domain.
+            # The profiler owns the physical-capacity check for each workload.
+            num_tokens_to_profile.append(token_value)
 
     # Deduplicate while preserving deterministic sort order.
     num_tokens_to_profile = sorted(set(num_tokens_to_profile), reverse=True)
@@ -263,11 +266,15 @@ def get_attention_batch_sizes_to_profile(
         return sorted(normalized)
 
     BATCH_SIZE_SPACE = list(range(1, 128 + 1, 1)) + list(range(128, 1024 + 1, 8))
-    return list(
+    batch_sizes_to_profile = list(
         filter(
             lambda x: (x >= min_batch_size and x <= max_batch_size), BATCH_SIZE_SPACE
         )
     )
+    for boundary in (min_batch_size, max_batch_size):
+        if boundary > 0 and min_batch_size <= boundary <= max_batch_size:
+            batch_sizes_to_profile.append(boundary)
+    return sorted(set(batch_sizes_to_profile))
 
 
 def get_attention_prefill_chunk_sizes_to_profile(max_seq_len: int):
@@ -286,7 +293,9 @@ def get_attention_prefill_chunk_sizes_to_profile(max_seq_len: int):
             prefill_chunk_sizes_to_profile.append(prefill_chunk_size)
         else:
             break
-    return prefill_chunk_sizes_to_profile
+    if max_seq_len > 0:
+        prefill_chunk_sizes_to_profile.append(max_seq_len)
+    return sorted(set(prefill_chunk_sizes_to_profile))
 
 
 def get_seq_lengths_to_profile(max_seq_len: int):
@@ -306,8 +315,9 @@ def get_seq_lengths_to_profile(max_seq_len: int):
                     f"FRONTIER_EXTRA_SEQ_LENGTHS contains negative value: {value}"
                 )
             SEQ_LENGTH_SIZE_SPACE.append(value)
+    SEQ_LENGTH_SIZE_SPACE.append(max_seq_len)
     seq_lengths_to_profile = [
-        seq_length for seq_length in SEQ_LENGTH_SIZE_SPACE if seq_length < max_seq_len
+        seq_length for seq_length in SEQ_LENGTH_SIZE_SPACE if seq_length <= max_seq_len
     ]
     return sorted(set(seq_lengths_to_profile))
 
