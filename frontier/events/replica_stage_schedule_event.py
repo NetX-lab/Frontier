@@ -221,7 +221,9 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     )
                     # Predictor single-layer components are in milliseconds.
                     # Event queue timestamps are in seconds.
-                    attention_time_ms = execution_time.get_single_layer_attention_time()
+                    attention_time_ms = (
+                        execution_time.get_single_layer_attention_scope_time()
+                    )
 
                     # Diagnostic logging for execution time
                     if (
@@ -512,7 +514,9 @@ class ReplicaStageScheduleEvent(BaseEvent):
 
                     # Predictor single-layer attention component is in milliseconds;
                     # event queue timestamps are in seconds.
-                    attention_time_ms = execution_time.get_single_layer_attention_time()
+                    attention_time_ms = (
+                        execution_time.get_single_layer_attention_scope_time()
+                    )
                     attention_time = attention_time_ms * 1e-3
 
                     # Diagnostic logging for execution time

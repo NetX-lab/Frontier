@@ -29,6 +29,9 @@ def test_prefill_final_sync_records_elapsed_model_time_not_full_stage_prediction
         def get_single_layer_attention_time(self) -> float:
             return 1.0
 
+        def get_single_layer_attention_scope_time(self) -> float:
+            return 1.0
+
         def get_single_layer_post_attention_time(self) -> float:
             return 1.0
 
@@ -124,6 +127,9 @@ class _LayerExecutionTime:
         self.total_time = self.model_time
 
     def get_single_layer_attention_time(self) -> float:
+        return self._attention_ms
+
+    def get_single_layer_attention_scope_time(self) -> float:
         return self._attention_ms
 
     def get_single_layer_post_attention_time(self) -> float:

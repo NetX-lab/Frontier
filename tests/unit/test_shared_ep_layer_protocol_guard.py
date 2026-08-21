@@ -39,6 +39,9 @@ class _ExecutionTime:
     def get_single_layer_attention_time(self) -> float:
         return 9.0
 
+    def get_single_layer_attention_scope_time(self) -> float:
+        return 9.0
+
 
 class _LayerPredictor:
     _num_layers_per_pipeline_stage = 3

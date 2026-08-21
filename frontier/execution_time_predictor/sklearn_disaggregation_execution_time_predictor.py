@@ -20,6 +20,7 @@ from frontier.config import (
 from frontier.config import global_vars
 from frontier.entities import Batch, EPBatchGroup, ExecutionTime
 from frontier.entities.time_components import (
+    AttentionTime,
     CommunicationOperatorTimes,
     OverheadTime,
 )
@@ -646,6 +647,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         )
         # COMM_SKIP: TP all-reduce not needed when tp_size <= 1 (no tensor sharding)
         tp_comm_time = base_time if tp_size > 1 else 0.0
+        attention_tp_comm_time = tp_comm_time if include_attention else 0.0
         moe_tp_allreduce_time = (
             0.0
             if zero_routed_ep_lane
@@ -674,16 +676,27 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             # PREFILL cluster handles full model layers
             return ExecutionTime(
                 num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
-                attention_rope_execution_time=base_time,
-                attention_kv_cache_save_execution_time=base_time,
+                attention_rope_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attention_kv_cache_save_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
                 attention_decode_execution_time=0.0,  # No decode in prefill
-                attention_prefill_execution_time=base_time,
-                attention_layer_pre_proj_execution_time=base_time,
-                attention_layer_post_proj_execution_time=base_time,
-                attn_norm_time=base_time,
+                attention_prefill_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attention_layer_pre_proj_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attention_layer_post_proj_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attn_norm_time=base_time if include_attention else 0.0,
                 mlp_norm_time=base_time,
                 add_time=base_time,
-                tensor_parallel_communication_time=tp_comm_time,
+                tensor_parallel_communication_time=attention_tp_comm_time,
+                attn_tensor_parallel_allreduce_time=attention_tp_comm_time,
                 moe_tensor_parallel_allreduce_time=moe_tp_allreduce_time,
                 pipeline_parallel_communication_time=base_time,
                 expert_parallel_communication_time=ep_communication_time,
@@ -728,7 +741,8 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 attn_norm_time=base_time if include_attention else 0.0,
                 mlp_norm_time=base_time,
                 add_time=base_time,
-                tensor_parallel_communication_time=tp_comm_time,
+                tensor_parallel_communication_time=attention_tp_comm_time,
+                attn_tensor_parallel_allreduce_time=attention_tp_comm_time,
                 moe_tensor_parallel_allreduce_time=moe_tp_allreduce_time,
                 pipeline_parallel_communication_time=base_time,
                 expert_parallel_communication_time=ep_communication_time,
@@ -952,7 +966,12 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
     # ========================================================================
 
     def _get_communication_time(
-        self, batch: Batch, stage_id: int, cluster_type: ClusterType
+        self,
+        batch: Batch,
+        stage_id: int,
+        cluster_type: ClusterType,
+        *,
+        include_attention: bool = True,
     ) -> CommunicationTime:
         """
         Get communication times for a batch at a given stage.
@@ -973,7 +992,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         pipeline_parallel_time = 0.0
 
         # Tensor parallel communication (all-reduce)
-        if self._supports_operation("tensor_parallel_communication"):
+        if (
+            include_attention
+            and self._supports_operation("tensor_parallel_communication")
+        ):
             tensor_parallel_time = self._get_tensor_parallel_communication_time(batch)
 
         # Pipeline parallel communication (send/recv)
@@ -1371,10 +1393,12 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         if type(include_attention) is not bool:
             raise ValueError("include_attention must be a bool")
         if not include_attention and (
-            cluster_type != ClusterType.DECODE or not include_ffn
+            cluster_type not in (ClusterType.PREFILL, ClusterType.DECODE)
+            or not include_ffn
         ):
             raise ValueError(
-                "Post-attention-only prediction requires unified DECODE with FFN enabled"
+                "Post-attention-only prediction requires shared-domain PREFILL "
+                "or unified DECODE with FFN enabled"
             )
 
         if self._enable_dummy_mode:
@@ -1443,6 +1467,18 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 * scale_factor,
                 tensor_parallel_communication_time=dummy_exec_time._tensor_parallel_communication_time
                 * scale_factor,
+                attn_tensor_parallel_allreduce_time=(
+                    dummy_exec_time._attn_tensor_parallel_allreduce_time
+                    * scale_factor
+                    if dummy_exec_time._has_attn_tensor_parallel_allreduce_time
+                    else None
+                ),
+                moe_tensor_parallel_allreduce_time=(
+                    dummy_exec_time._moe_tensor_parallel_allreduce_time
+                    * scale_factor
+                    if dummy_exec_time._has_moe_tensor_parallel_allreduce_time
+                    else None
+                ),
                 tensor_parallel_allgather_time=dummy_exec_time._tensor_parallel_allgather_time
                 * scale_factor,
                 share_expert_tensor_parallel_allreduce_time=dummy_exec_time._share_expert_tensor_parallel_allreduce_time
@@ -1539,7 +1575,12 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
 
         # Use new unified APIs to build execution time components
-        communication_time = self._get_communication_time(batch, stage_id, cluster_type)
+        communication_time = self._get_communication_time(
+            batch,
+            stage_id,
+            cluster_type,
+            include_attention=include_attention,
+        )
         overhead_time = self._get_overhead_time(batch, cluster_type, stage_id)
         overhead_time.pp_stage_boundary_handoff_time = (
             self._get_pp_stage_boundary_handoff_time(batch, stage_id)
@@ -2396,8 +2437,14 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         elif cluster_type == ClusterType.PREFILL:
             # Full model (attention + FFN) - predict both attention and FFN time
             # FFN can be MoE (for MoE models) or MLP (for dense models)
-            attention_time = self.predict_attention_layer_time(
-                batch, layer_id=layer_id, cluster_type=cluster_type
+            attention_time = (
+                self.predict_attention_layer_time(
+                    batch,
+                    layer_id=layer_id,
+                    cluster_type=cluster_type,
+                )
+                if include_attention
+                else AttentionTime()
             )
 
             # Check whether the requested layer is MoE or dense.  Step3 models

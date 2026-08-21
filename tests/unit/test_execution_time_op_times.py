@@ -315,6 +315,23 @@ def test_execution_time_preserves_named_ep_dispatch_and_combine_times():
     assert execution_time.expert_parallel_communication_time == pytest.approx(5.0)
 
 
+def test_attention_scope_includes_attention_tp_without_redefining_compute_time():
+    execution_time = ExecutionTime(
+        **_base_execution_kwargs(
+            num_layers_per_pipeline_stage=1,
+            is_moe=True,
+        )
+    )
+
+    assert execution_time.get_single_layer_attention_time() == pytest.approx(700.0)
+    assert execution_time.get_single_layer_attention_scope_time() == pytest.approx(
+        800.0
+    )
+    assert execution_time.get_single_layer_post_attention_time() == pytest.approx(
+        execution_time.get_single_layer_block_time() - 800.0
+    )
+
+
 def test_execution_time_moe_phases_conserve_complete_post_attention_time():
     execution_time = ExecutionTime(
         **_base_execution_kwargs(
@@ -351,7 +368,7 @@ def test_execution_time_moe_phases_conserve_complete_post_attention_time():
 
     assert phases == pytest.approx(
         (
-            553.0,
+            453.0,
             1.25,
             111.0,
             3.75,

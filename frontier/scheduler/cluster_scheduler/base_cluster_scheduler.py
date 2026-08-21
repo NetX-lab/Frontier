@@ -3807,6 +3807,7 @@ class BaseClusterScheduler(ABC):
                     cluster_type=self._cluster_type,
                     num_layers=1,
                     layer_id=layer_id,
+                    include_attention=False,
                 )
                 (
                     pre_dispatch_ms,
@@ -4572,7 +4573,7 @@ class BaseClusterScheduler(ABC):
                     include_ffn=False,
                 )
                 attention_time_ms = (
-                    next_layer_execution_time.get_single_layer_attention_time()
+                    next_layer_execution_time.get_single_layer_attention_scope_time()
                 )
                 attention_time = attention_time_ms * 1e-3
                 total_time_to_next_sync = attention_time
@@ -5177,7 +5178,10 @@ class BaseClusterScheduler(ABC):
                 layer_id=next_layer_id,
                 include_ffn=False,
             )
-            attention_time = next_layer_execution_time.get_single_layer_attention_time() * 1e-3
+            attention_time = (
+                next_layer_execution_time.get_single_layer_attention_scope_time()
+                * 1e-3
+            )
 
             for participant_id, batch in dp_batches.items():
                 if batch.is_idle:

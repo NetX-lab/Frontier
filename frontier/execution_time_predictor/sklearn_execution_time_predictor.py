@@ -7070,6 +7070,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         layer_id: int = 0,
         include_moe: bool | None = None,
         include_ffn: bool = True,
+        include_attention: bool = True,
     ) -> ExecutionTime:
         """
         Predict aggregated execution time for one or more transformer layers.
@@ -7097,6 +7098,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             raise ValueError("include_moe must be a bool or None")
         if type(include_ffn) is not bool:
             raise ValueError("include_ffn must be a bool")
+        if type(include_attention) is not bool:
+            raise ValueError("include_attention must be a bool")
+        if not include_attention:
+            raise ValueError(
+                "Dense prediction does not support include_attention=False"
+            )
         if not include_ffn and include_moe is not None:
             raise ValueError(
                 "include_moe must be None for an attention-only stage probe"

@@ -403,6 +403,7 @@ class BaseExecutionTimePredictor(ABC):
         layer_id: int = 0,
         include_moe: bool | None = None,
         include_ffn: bool = True,
+        include_attention: bool = True,
     ) -> ExecutionTime:
         """
         Predict aggregated execution time for one or more transformer layers.
@@ -424,6 +425,9 @@ class BaseExecutionTimePredictor(ABC):
             include_ffn: Whether to include the FFN/MoE block.  Set to ``False``
                          for an attention-only probe; such a probe must not read
                          dense FFN or routed-expert profiling rows.
+            include_attention: Whether to include the attention block. Concrete
+                               predictors must define the supported scope
+                               explicitly.
 
         Returns:
             ExecutionTime object with aggregated times

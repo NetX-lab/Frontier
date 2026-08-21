@@ -776,6 +776,14 @@ class ExecutionTime(BaseEntity):
         """
         return self._attention_time.total_time()
 
+    def get_single_layer_attention_scope_time(self) -> float:
+        """
+        Get the complete single-layer attention scope.
+
+        This includes attention compute and its tensor-parallel all-reduce.
+        """
+        return self._get_attention_layer_execution_time()
+
     def get_single_layer_moe_comp_time(self) -> float:
         """
         Get MoE computation time for a single layer.
@@ -799,8 +807,7 @@ class ExecutionTime(BaseEntity):
         if not isinstance(self._moe_or_mlp_time, MoETime):
             raise ValueError("MoE pre-dispatch time is only available for MoE models")
         return (
-            self._get_attn_tp_allreduce_time()
-            + self._time_attr_value(
+            self._time_attr_value(
                 "add_attn_residual_time",
                 self._residual_time.add_attn_residual_time,
             )
@@ -931,16 +938,17 @@ class ExecutionTime(BaseEntity):
         """
         Get post-attention portion of one layer in milliseconds.
 
-        Equivalent to: single-layer block - single-layer attention.
+        Equivalent to: single-layer block - complete single-layer attention scope.
         """
         post_attention_time = (
-            self.get_single_layer_block_time() - self.get_single_layer_attention_time()
+            self.get_single_layer_block_time()
+            - self.get_single_layer_attention_scope_time()
         )
         if post_attention_time < 0:
             raise ValueError(
                 f"Invalid post-attention time: {post_attention_time} ms "
                 f"(block={self.get_single_layer_block_time()} ms, "
-                f"attention={self.get_single_layer_attention_time()} ms)"
+                f"attention_scope={self.get_single_layer_attention_scope_time()} ms)"
             )
         return post_attention_time
 

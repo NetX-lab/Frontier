@@ -76,6 +76,7 @@ class _LanePredictor:
 
     def __init__(self) -> None:
         self.calls: list[tuple[int, dict[int, int]]] = []
+        self.include_attention_calls: list[bool] = []
 
     def predict_stage_execution_time(
         self,
@@ -85,9 +86,11 @@ class _LanePredictor:
         cluster_type,
         num_layers,
         layer_id,
+        include_attention=True,
     ):
         assert cluster_type is ClusterType.PREFILL
         assert num_layers == 1
+        self.include_attention_calls.append(include_attention)
         per_expert_tokens = dict(getattr(batch, "per_expert_tokens", {}))
         self.calls.append((layer_id, per_expert_tokens))
         if layer_id == 3:
@@ -190,6 +193,7 @@ def test_prefill_moe_layer_materializes_global_distribution_once_and_waits_for_s
         (4, {0: 0, 1: 0}),
         (4, {2: 1, 3: 3}),
     ]
+    assert predictor.include_attention_calls == [False, False]
     assert batch._prefill_model_execution_components_ms_by_stage[0] == [1.0, 13.0]
     assert batch._prefill_ep_wave_lane_times_ms == (4.0, 7.0)
     assert batch._stage_admission_ticket.scope == EP_WAVE

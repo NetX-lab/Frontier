@@ -88,30 +88,92 @@ def test_dummy_decode_ffn_tp_collectives_use_profile_capability_not_legacy_ident
     assert execution_time.share_expert_tensor_parallel_allreduce_time == 10.0
 
 
-def test_dummy_unified_decode_post_attention_zeroes_attention_tp_communication() -> None:
+@pytest.mark.parametrize(
+    ("cluster_type", "batch_request"),
+    (
+        (ClusterType.PREFILL, Request(0.0, 4, 0)),
+        (ClusterType.DECODE, Request(0.0, 0, 4)),
+    ),
+)
+def test_dummy_shared_domain_post_attention_zeroes_attention_components(
+    cluster_type: ClusterType,
+    batch_request: Request,
+) -> None:
     predictor = _dummy_predictor(_ProfileOnlyStep3ModelConfig())
 
     lane = EPBatchGroup(
-        requests=[Request(0.0, 0, 4)],
+        requests=[batch_request],
         num_tokens=[4],
         replica_id=0,
         ep_id=0,
         time=0.0,
         source_batch_ids=[7],
         per_expert_tokens={0: 4, 1: 0},
-        cluster_type=ClusterType.DECODE,
+        cluster_type=cluster_type,
         is_moe=True,
     )
     execution_time = predictor._get_dummy_execution_time_for_cluster(
         batch=lane,
         pipeline_stage=0,
-        cluster_type=ClusterType.DECODE,
+        cluster_type=cluster_type,
         include_attention=False,
     )
 
+    assert execution_time.get_single_layer_attention_time() == pytest.approx(0.0)
     assert execution_time._attn_tensor_parallel_allreduce_time == pytest.approx(0.0)
     assert execution_time._communication_time.tensor_parallel_allreduce_time == pytest.approx(
         0.0
+    )
+
+
+@pytest.mark.parametrize(
+    "cluster_type",
+    (ClusterType.PREFILL, ClusterType.DECODE),
+)
+def test_dummy_layer_scaling_preserves_named_tp_components(
+    cluster_type: ClusterType,
+) -> None:
+    predictor = _dummy_predictor(_ProfileOnlyStep3ModelConfig())
+    predictor._enable_dummy_mode = True
+    predictor._num_layers_per_pipeline_stage = 32
+    predictor._log_architecture_attention_shape = lambda _batch: None
+
+    full_execution_time = predictor.predict_stage_execution_time(
+        batch=SimpleNamespace(),
+        stage_id=0,
+        cluster_type=cluster_type,
+        num_layers=32,
+    )
+    execution_time = predictor.predict_stage_execution_time(
+        batch=SimpleNamespace(),
+        stage_id=0,
+        cluster_type=cluster_type,
+        num_layers=1,
+    )
+    full_communication_time = full_execution_time.communication_time_component
+    communication_time = execution_time.communication_time_component
+
+    assert full_execution_time.get_single_layer_attention_time() == pytest.approx(
+        60.0
+    )
+    assert full_communication_time.attn_tensor_parallel_allreduce_time == pytest.approx(
+        10.0
+    )
+    assert full_communication_time.moe_tensor_parallel_allreduce_time == pytest.approx(
+        10.0
+    )
+    assert full_execution_time.get_single_layer_attention_scope_time() == pytest.approx(
+        70.0
+    )
+    assert execution_time.get_single_layer_attention_time() == pytest.approx(1.875)
+    assert communication_time.attn_tensor_parallel_allreduce_time == pytest.approx(
+        0.3125
+    )
+    assert communication_time.moe_tensor_parallel_allreduce_time == pytest.approx(
+        0.3125
+    )
+    assert execution_time.get_single_layer_attention_scope_time() == pytest.approx(
+        2.1875
     )
 
 
@@ -429,12 +491,18 @@ def test_disaggregation_dense_layer_uses_shared_expert_profile_rows() -> None:
     assert result.mlp_norm_time == 4.0
 
 
-def test_pdd_decode_post_attention_prediction_skips_attention_lookup() -> None:
+@pytest.mark.parametrize(
+    "cluster_type",
+    (ClusterType.PREFILL, ClusterType.DECODE),
+)
+def test_pdd_shared_domain_post_attention_prediction_skips_attention_lookup(
+    cluster_type: ClusterType,
+) -> None:
     predictor = _DummyDisaggregationPredictor.__new__(
         _DummyDisaggregationPredictor
     )
     predictor._enable_dummy_mode = False
-    predictor._cluster_type = ClusterType.DECODE
+    predictor._cluster_type = cluster_type
     predictor._replica_config = SimpleNamespace(
         total_expert_num=4,
         moe_expert_parallel_size=2,
@@ -444,10 +512,19 @@ def test_pdd_decode_post_attention_prediction_skips_attention_lookup() -> None:
     predictor._require_predictions_for_measurement_type = lambda *_args: None
     predictor._activate_measurement_type = lambda *_args: None
     predictor._emit_cuda_graph_activation_records = lambda *_args: None
-    predictor._get_communication_time = lambda *_args: SimpleNamespace(
-        tensor_parallel_time=4.0,
-        pipeline_parallel_time=0.0,
-    )
+    communication_attention_flags: list[bool] = []
+
+    def _get_communication_time(
+        *_args,
+        include_attention: bool = True,
+    ) -> SimpleNamespace:
+        communication_attention_flags.append(include_attention)
+        return SimpleNamespace(
+            tensor_parallel_time=4.0 if include_attention else 0.0,
+            pipeline_parallel_time=0.0,
+        )
+
+    predictor._get_communication_time = _get_communication_time
     predictor._get_overhead_time = lambda *_args: SimpleNamespace(
         schedule_time=0.0,
         sampler_e2e_time=0.0,
@@ -482,9 +559,11 @@ def test_pdd_decode_post_attention_prediction_skips_attention_lookup() -> None:
         share_expert_up_proj_time=0.0,
         share_expert_down_proj_time=0.0,
         share_expert_act_time=0.0,
+        total_time=lambda: 6.5,
     )
     predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 1.0
     predictor._get_add_layer_act_execution_time = lambda _batch: 2.0
+    predictor.predict_dp_moe_allreduce_times = lambda *_args: (0.0, 0.0)
     predictor._predict_named_ep_phase_operator_times = lambda **_kwargs: {
         "expert_parallel_alltoall_dispatch": 0.25,
         "expert_parallel_alltoall_combine": 0.75,
@@ -495,17 +574,20 @@ def test_pdd_decode_post_attention_prediction_skips_attention_lookup() -> None:
     batch = SimpleNamespace(
         id=7,
         per_expert_tokens={0: 4, 1: 0},
+        total_num_tokens=4,
+        requests=[SimpleNamespace(id=7)],
     )
 
     result = predictor.predict_stage_execution_time(
         batch,
         stage_id=0,
-        cluster_type=ClusterType.DECODE,
+        cluster_type=cluster_type,
         num_layers=1,
         layer_id=2,
         include_attention=False,
     )
 
+    assert communication_attention_flags == [False]
     assert result.get_single_layer_attention_time() == pytest.approx(0.0)
     phases = (
         result.get_single_layer_moe_pre_dispatch_time(),
