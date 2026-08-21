@@ -602,7 +602,7 @@ def parse_args():
         default=None,
         help=(
             "Optional explicit batch sizes for online_grid mixed profiling. "
-            "When provided, this overrides mixed_batch_size_min/max."
+            "When provided, these values extend the configured batch-size range."
         ),
     )
     parser.add_argument(
@@ -612,7 +612,7 @@ def parse_args():
         default=None,
         help=(
             "Optional explicit total-token values for online_grid mixed profiling. "
-            "When provided, this overrides mixed_total_tokens_min/max."
+            "When provided, these values extend the configured total-token range."
         ),
     )
     parser.add_argument(

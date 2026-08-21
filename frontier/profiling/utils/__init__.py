@@ -545,7 +545,9 @@ def get_mixed_prefill_input_combinations(
         - "both": Generate both even and random combinations.
     """
     from frontier.profiling.attention.mixed_attention_input import MixedAttentionInput
-    
+
+    if max_seq_len <= 0:
+        raise ValueError("max_seq_len must be positive.")
     if min_batch_size < 2:
         raise ValueError("min_batch_size must be >= 2 for mixed prefill profiling.")
     if max_batch_size < min_batch_size:
@@ -559,8 +561,25 @@ def get_mixed_prefill_input_combinations(
         raise ValueError("kv_cache_sizes cannot be empty.")
     if any(kv_cache_size < 0 for kv_cache_size in kv_cache_sizes):
         raise ValueError("All kv_cache_sizes must be non-negative.")
+    kv_cache_sizes = sorted({int(kv_cache_size) for kv_cache_size in kv_cache_sizes})
 
     input_combinations = []
+    seen_inputs = set()
+
+    def _append_unique(seq_lens, kv_cache_size, input_mode):
+        input_key = (tuple(seq_lens), kv_cache_size, input_mode)
+        if input_key in seen_inputs:
+            return
+        candidate = MixedAttentionInput(
+            seq_lens=list(seq_lens),
+            kv_cache_size=kv_cache_size,
+            mode=input_mode,
+        )
+        if not candidate.is_valid(max_seq_len=max_seq_len, max_batch_size=128):
+            return
+        seen_inputs.add(input_key)
+        input_combinations.append(candidate)
+
     modes_to_generate = []
     
     if mode == "both":
@@ -575,7 +594,13 @@ def get_mixed_prefill_input_combinations(
         + list(range(1024, 4 * 1024 + 1, 64))
         + list(range(4 * 1024, min(16 * 1024, max_seq_len) + 1, 256))
     )
-    
+    seq_length_candidates.append(max_seq_len)
+    for kv_cache_size in kv_cache_sizes:
+        endpoint_seq_len = max_seq_len - kv_cache_size
+        if endpoint_seq_len > 0:
+            seq_length_candidates.append(endpoint_seq_len)
+    seq_length_candidates = sorted(set(seq_length_candidates))
+
     # Filter to only include lengths <= max_seq_len
     seq_length_candidates = [s for s in seq_length_candidates if s <= max_seq_len]
     
@@ -591,13 +616,7 @@ def get_mixed_prefill_input_combinations(
                         if seq_len + kv_cache_size > max_seq_len:
                             continue
                         seq_lens = [seq_len] * batch_size
-                        input_combinations.append(
-                            MixedAttentionInput(
-                                seq_lens=seq_lens,
-                                kv_cache_size=kv_cache_size,
-                                mode="even"
-                            )
-                        )
+                        _append_unique(seq_lens, kv_cache_size, "even")
         
         elif current_mode == "random":
             # Random mode: sequences have varied lengths
@@ -656,13 +675,17 @@ def get_mixed_prefill_input_combinations(
                                 min(s, effective_max_len_with_cache) for s in seq_lens
                             ]
 
-                            input_combinations.append(
-                                MixedAttentionInput(
-                                    seq_lens=seq_lens,
-                                    kv_cache_size=kv_cache_size,
-                                    mode="random"
-                                )
-                            )
+                            _append_unique(seq_lens, kv_cache_size, "random")
+
+                # Keep one deterministic heterogeneous shape at the context
+                # boundary for every requested KV cache size.
+                for kv_cache_size in kv_cache_sizes:
+                    endpoint_seq_len = max_seq_len - kv_cache_size
+                    if endpoint_seq_len > 0:
+                        boundary_seq_lens = [endpoint_seq_len] + [
+                            max(1, endpoint_seq_len // 2)
+                        ] * (batch_size - 1)
+                        _append_unique(boundary_seq_lens, kv_cache_size, "random")
     
     return input_combinations
 
@@ -806,21 +829,25 @@ def get_online_grid_mixed_prefill_input_combinations(
     if any(kv_cache_size < 0 for kv_cache_size in kv_cache_sizes):
         raise ValueError("All kv_cache_sizes must be non-negative.")
 
-    batch_sizes = _normalize_positive_int_list(
+    batch_size_extensions = _normalize_positive_int_list(
         "batch_size_list",
         batch_size_list,
         minimum=2,
     )
-    if batch_sizes is None:
-        batch_sizes = list(range(min_batch_size, max_batch_size + 1))
+    batch_sizes = set(range(min_batch_size, max_batch_size + 1))
+    if batch_size_extensions is not None:
+        batch_sizes.update(batch_size_extensions)
+    batch_sizes = sorted(batch_sizes)
 
-    total_tokens_values = _normalize_positive_int_list(
+    total_token_extensions = _normalize_positive_int_list(
         "total_tokens_list",
         total_tokens_list,
         minimum=1,
     )
-    if total_tokens_values is None:
-        total_tokens_values = list(range(min_total_tokens, max_total_tokens + 1))
+    total_tokens_values = set(range(min_total_tokens, max_total_tokens + 1))
+    if total_token_extensions is not None:
+        total_tokens_values.update(total_token_extensions)
+    total_tokens_values = sorted(total_tokens_values)
 
     input_combinations = []
     for batch_size in batch_sizes:
@@ -916,23 +943,45 @@ def get_true_mixed_attention_input_combinations(
     if not decode_kv_cache_sizes:
         raise ValueError("decode_kv_cache_sizes cannot be empty")
 
-    combinations = []
+    normalized_prefill_batch_sizes = []
     for prefill_bs in prefill_batch_sizes:
         if prefill_bs <= 0:
             raise ValueError(f"Invalid prefill batch size: {prefill_bs}")
+        normalized_prefill_batch_sizes.append(int(prefill_bs))
+    prefill_batch_sizes = sorted(set(normalized_prefill_batch_sizes))
+
+    normalized_prefill_chunk_sizes = []
+    for prefill_chunk_size in prefill_chunk_sizes:
+        if prefill_chunk_size <= 0:
+            raise ValueError(f"Invalid prefill chunk size: {prefill_chunk_size}")
+        normalized_prefill_chunk_sizes.append(int(prefill_chunk_size))
+    endpoint_prefill_chunk_size = max_seq_len - prefill_kv_cache_size
+    if endpoint_prefill_chunk_size > 0:
+        normalized_prefill_chunk_sizes.append(endpoint_prefill_chunk_size)
+    prefill_chunk_sizes = sorted(set(normalized_prefill_chunk_sizes))
+
+    normalized_decode_batch_sizes = []
+    for decode_bs in decode_batch_sizes:
+        if decode_bs <= 0:
+            raise ValueError(f"Invalid decode batch size: {decode_bs}")
+        normalized_decode_batch_sizes.append(int(decode_bs))
+    decode_batch_sizes = sorted(set(normalized_decode_batch_sizes))
+
+    normalized_decode_kv_cache_sizes = []
+    for decode_kv_cache_size in decode_kv_cache_sizes:
+        if decode_kv_cache_size < 0:
+            raise ValueError(
+                f"Invalid decode kv cache size: {decode_kv_cache_size}"
+            )
+        normalized_decode_kv_cache_sizes.append(int(decode_kv_cache_size))
+    normalized_decode_kv_cache_sizes.append(max_seq_len - 1)
+    decode_kv_cache_sizes = sorted(set(normalized_decode_kv_cache_sizes))
+
+    combinations = []
+    for prefill_bs in prefill_batch_sizes:
         for prefill_chunk_size in prefill_chunk_sizes:
-            if prefill_chunk_size <= 0:
-                raise ValueError(
-                    f"Invalid prefill chunk size: {prefill_chunk_size}"
-                )
             for decode_bs in decode_batch_sizes:
-                if decode_bs <= 0:
-                    raise ValueError(f"Invalid decode batch size: {decode_bs}")
                 for decode_kv_cache_size in decode_kv_cache_sizes:
-                    if decode_kv_cache_size < 0:
-                        raise ValueError(
-                            f"Invalid decode kv cache size: {decode_kv_cache_size}"
-                        )
                     candidate = TrueMixedBatchInput(
                         prefill_seq_lens=[prefill_chunk_size] * prefill_bs,
                         prefill_kv_cache_sizes=[prefill_kv_cache_size] * prefill_bs,

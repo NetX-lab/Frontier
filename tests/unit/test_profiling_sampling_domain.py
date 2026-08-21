@@ -5,7 +5,10 @@ from frontier.profiling.utils import (
     get_attention_input_combinations,
     get_attention_prefill_chunk_sizes_to_profile,
     get_num_tokens_to_profile,
+    get_mixed_prefill_input_combinations,
+    get_online_grid_mixed_prefill_input_combinations,
     get_seq_lengths_to_profile,
+    get_true_mixed_attention_input_combinations,
 )
 from frontier.profiling.moe.moe_input import get_default_moe_profiling_config
 
@@ -113,3 +116,64 @@ def test_explicit_decode_cache_endpoint_remains_bounded():
             profile_only_decode=True,
             decode_kv_cache_size_list=[1001],
         )
+
+
+def test_legacy_mixed_prefill_retains_high_kv_endpoint_with_legal_sequence():
+    inputs = get_mixed_prefill_input_combinations(
+        max_seq_len=1000,
+        min_batch_size=2,
+        max_batch_size=2,
+        mode="even",
+        kv_cache_sizes=[0, 992],
+    )
+
+    high_kv_inputs = [item for item in inputs if item.kv_cache_size == 992]
+    assert high_kv_inputs
+    assert max(item.max_seq_len + item.kv_cache_size for item in high_kv_inputs) == 1000
+    assert all(item.is_valid(1000, max_batch_size=128) for item in high_kv_inputs)
+
+
+def test_legacy_mixed_prefill_emits_unique_structural_workloads():
+    inputs = get_mixed_prefill_input_combinations(
+        max_seq_len=1000,
+        min_batch_size=2,
+        max_batch_size=8,
+        mode="both",
+        kv_cache_sizes=[0],
+    )
+
+    identities = {
+        (tuple(item.seq_lens), item.kv_cache_size, item.mode) for item in inputs
+    }
+    assert len(inputs) == len(identities)
+
+
+def test_online_grid_explicit_lists_extend_default_envelope():
+    inputs = get_online_grid_mixed_prefill_input_combinations(
+        max_seq_len=1000,
+        min_batch_size=2,
+        max_batch_size=3,
+        min_total_tokens=10,
+        max_total_tokens=11,
+        shapes_per_point=1,
+        batch_size_list=[4],
+        total_tokens_list=[12],
+    )
+
+    points = {(item.batch_size, item.total_tokens) for item in inputs}
+    assert {(2, 10), (3, 11), (4, 12)} <= points
+
+
+def test_true_mixed_grid_reaches_prefill_and_decode_endpoints():
+    inputs = get_true_mixed_attention_input_combinations(
+        max_seq_len=1000,
+        prefill_batch_sizes=[1],
+        prefill_chunk_sizes=[64],
+        decode_batch_sizes=[1],
+        decode_kv_cache_sizes=[128],
+        prefill_kv_cache_size=0,
+    )
+
+    assert max(item.prefill_seq_lens[0] for item in inputs) == 1000
+    assert max(item.decode_kv_cache_sizes[0] for item in inputs) == 999
+    assert all(item.is_valid(max_seq_len=1000, max_batch_size=128) for item in inputs)
