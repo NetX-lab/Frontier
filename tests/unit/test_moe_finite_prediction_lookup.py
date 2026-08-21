@@ -37,6 +37,20 @@ class _CountingFiniteModel:
         return [self.result]
 
 
+class _CountingLoadAwareModel:
+    def __init__(self, feature_names: tuple[str, ...], result: float) -> None:
+        self.n_features_in_ = len(feature_names)
+        self._frontier_feature_names = list(feature_names)
+        self.feature_names_in_ = feature_names
+        self.result = result
+        self.calls = 0
+
+    def predict(self, features: Any) -> list[float]:
+        self.calls += 1
+        assert tuple(features.columns) == self.feature_names_in_
+        return [self.result]
+
+
 def _build_predictor(
     model_name: str,
     *,
@@ -148,3 +162,78 @@ def test_moe_grouped_gemm_allocation_miss_preserves_original_pre_routing_tokens(
     assert value == 7.0
     assert model.calls == 1
     assert model.seen_values == [6.0]
+
+
+def _build_load_aware_predictor(
+    *,
+    model_result: float = 8.5,
+    exact_lookup: dict[tuple[float, ...], float] | None = None,
+) -> tuple[_ConcreteMoEPredictor, _CountingLoadAwareModel]:
+    predictor = _ConcreteMoEPredictor.__new__(_ConcreteMoEPredictor)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._measurement_family_name = lambda _measurement_type: "eager"
+    predictor._runtime_cache = defaultdict(lambda: defaultdict(dict))
+    predictor._router_topk = 2
+    predictor._supports_operation = lambda _operation: True
+    predictor._model_config = SimpleNamespace(
+        embedding_dim=4096,
+        mlp_hidden_dim=11008,
+    )
+    predictor._replica_config = SimpleNamespace(total_expert_num=8)
+    predictor._get_moe_compute_calibration_scale = lambda *args, **kwargs: 1.0
+
+    feature_names = tuple(predictor.MOE_LOAD_IMBALANCE_FEATURES)
+    model = _CountingLoadAwareModel(feature_names, model_result)
+    predictor._predictions = {
+        "moe_grouped_gemm": {
+            "_on_demand_prediction": True,
+            "_model": model,
+            "_feature_names": list(feature_names),
+            "_exact_lookup": exact_lookup or {},
+        }
+    }
+    return predictor, model
+
+
+def test_moe_load_imbalance_runtime_features_match_training_schema() -> None:
+    predictor, _model = _build_load_aware_predictor()
+
+    features = predictor._build_moe_load_imbalance_features(
+        {0: 4, 1: 4, 2: 0, 3: 0}
+    )
+
+    assert tuple(features) == tuple(predictor.MOE_LOAD_IMBALANCE_FEATURES)
+    assert "seed" not in features
+    assert "load_distribution" not in features
+
+
+def test_equivalent_moe_allocations_share_canonical_runtime_cache() -> None:
+    predictor, model = _build_load_aware_predictor()
+
+    first = predictor._get_grouped_gemm_time({0: 4, 1: 4, 2: 0, 3: 0})
+    second = predictor._get_grouped_gemm_time({10: 0, 11: 4, 12: 0, 13: 4})
+
+    assert first == 8.5
+    assert second == 8.5
+    assert model.calls == 1
+    assert len(predictor._runtime_cache["eager"]["moe_grouped_gemm"]) == 1
+    assert not hasattr(
+        predictor, "_runtime_grouped_gemm_on_demand_prediction_cache"
+    )
+
+
+def test_moe_exact_lookup_precedes_runtime_cache_for_load_imbalance_query() -> None:
+    predictor, model = _build_load_aware_predictor()
+    features = predictor._build_moe_load_imbalance_features(
+        {0: 4, 1: 4, 2: 0, 3: 0}
+    )
+    key = tuple(float(features[name]) for name in predictor.MOE_LOAD_IMBALANCE_FEATURES)
+    predictor._predictions["moe_grouped_gemm"]["_exact_lookup"] = {key: 2.25}
+    predictor._runtime_cache["eager"]["moe_grouped_gemm"][key] = 9.0
+
+    value = predictor._get_grouped_gemm_time({0: 4, 1: 4, 2: 0, 3: 0})
+
+    assert value == 2.25
+    assert model.calls == 0
+    assert predictor._runtime_cache["eager"]["moe_grouped_gemm"][key] == 9.0

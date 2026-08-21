@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from types import SimpleNamespace
 from typing import Any
 
 import math
@@ -118,6 +119,17 @@ def test_malformed_exact_lookup_value_fails_before_model_fallback() -> None:
     assert model.calls == 0
 
 
+def test_boolean_exact_lookup_value_is_rejected_before_model_fallback() -> None:
+    predictor, model = _build_predictor(
+        _exact_lookup={(4.0,): True},
+    )
+
+    with pytest.raises(ValueError, match="exact lookup value.*numeric"):
+        predictor._get_on_demand_prediction("test_operator", {"num_tokens": 4})
+
+    assert model.calls == 0
+
+
 def test_legal_model_miss_is_cached_using_declared_feature_order() -> None:
     predictor, model = _build_predictor(
         feature_names=("batch_size", "num_tokens"),
@@ -131,6 +143,16 @@ def test_legal_model_miss_is_cached_using_declared_feature_order() -> None:
     assert model.calls == 1
     assert list(model.inputs[0].columns) == ["batch_size", "num_tokens"]
     assert predictor._runtime_cache["eager"]["test_operator"] == {(2.0, 8.0): 3.75}
+
+
+def test_boolean_runtime_cache_value_is_rejected_before_return() -> None:
+    predictor, model = _build_predictor()
+    predictor._runtime_cache["eager"]["test_operator"][(4.0,)] = True
+
+    with pytest.raises(ValueError, match="runtime cache value.*numeric"):
+        predictor._get_on_demand_prediction("test_operator", {"num_tokens": 4})
+
+    assert model.calls == 0
 
 
 def test_missing_feature_is_rejected_before_runtime_cache_lookup() -> None:
@@ -234,3 +256,33 @@ def test_invalid_model_output_is_rejected_without_runtime_cache(result: float) -
 
     assert model.calls == 1
     assert predictor._runtime_cache["eager"]["test_operator"] == {}
+
+
+def test_exact_lookup_metadata_survives_model_cache_round_trip(tmp_path) -> None:
+    predictor = _ConcretePredictor.__new__(_ConcretePredictor)
+    predictor._cache_dir = str(tmp_path)
+    predictor._config = SimpleNamespace(no_cache=False)
+    predictor._get_model_hash = lambda _model_name, _df: "roundtrip"
+
+    legacy_model = _CountingModel(("batch_size", "num_tokens"), result=99.0)
+    predictor._store_model_in_cache("test_operator", "roundtrip", legacy_model)
+    dataframe = pd.DataFrame(
+        {
+            "batch_size": [2, 3],
+            "num_tokens": [8, 8],
+            "target": [2.25, 3.5],
+        }
+    )
+
+    loaded = predictor._train_model(
+        model_name="test_operator",
+        df=dataframe,
+        feature_cols=["batch_size", "num_tokens"],
+        target_col="target",
+        persist_exact_lookup=True,
+    )
+    reloaded = predictor._load_model_from_cache("test_operator", "roundtrip")
+
+    expected = {(2.0, 8.0): 2.25, (3.0, 8.0): 3.5}
+    assert loaded._frontier_exact_lookup == expected
+    assert reloaded._frontier_exact_lookup == expected

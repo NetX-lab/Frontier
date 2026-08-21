@@ -963,6 +963,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 df=op_df,
                 feature_cols=feature_cols,
                 target_col=target_col,
+                persist_exact_lookup=len(feature_cols) > 1,
             )
             logger.info(f"Trained MoE model: {model_name}")
 
@@ -1417,7 +1418,29 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         )
         features = load_input.to_features_dict()
         features.pop("load_distribution", None)
-        return features
+        features.pop("seed", None)
+        missing_features = [
+            name
+            for name in self.MOE_LOAD_IMBALANCE_FEATURES
+            if name not in features
+        ]
+        if missing_features:
+            raise ValueError(
+                "MoE load-imbalance feature construction is missing canonical "
+                f"features: {missing_features}"
+            )
+        unexpected_features = sorted(
+            set(features) - set(self.MOE_LOAD_IMBALANCE_FEATURES)
+        )
+        if unexpected_features:
+            raise ValueError(
+                "MoE load-imbalance feature construction produced unexpected "
+                f"features: {unexpected_features}"
+            )
+        return {
+            name: features[name]
+            for name in self.MOE_LOAD_IMBALANCE_FEATURES
+        }
 
     def _get_moe_compute_calibration_scale(
         self,
@@ -1473,43 +1496,12 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             if len(per_expert_tokens) == 0:
                 raw_time = 0.0
             else:
-                runtime_cache = getattr(
-                    self, "_runtime_moe_shuffling_on_demand_prediction_cache", None
+                features = self._build_moe_load_imbalance_features(
+                    per_expert_tokens
                 )
-                if runtime_cache is None:
-                    runtime_cache = {}
-                    self._runtime_moe_shuffling_on_demand_prediction_cache = (
-                        runtime_cache
-                    )
-                family_name = self._measurement_family_name(
-                    self._active_measurement_type
+                raw_time = self._get_on_demand_prediction(
+                    "moe_shuffling", features
                 )
-                # The on-demand MoE feature vector only contains aggregate load
-                # statistics, so expert IDs and insertion order are not prediction
-                # inputs. Canonicalize by token-count distribution to maximize
-                # result-equivalent cache hits without changing predicted values.
-                distribution_key = tuple(
-                    sorted(
-                        int(token_count)
-                        for token_count in per_expert_tokens.values()
-                    )
-                )
-                cache_key = (
-                    family_name,
-                    distribution_key,
-                    int(self._model_config.embedding_dim),
-                    int(self._model_config.mlp_hidden_dim),
-                    int(self._router_topk),
-                )
-                raw_time = runtime_cache.get(cache_key)
-                if raw_time is None:
-                    features = self._build_moe_load_imbalance_features(
-                        per_expert_tokens
-                    )
-                    raw_time = self._get_on_demand_prediction(
-                        "moe_shuffling", features
-                    )
-                    runtime_cache[cache_key] = raw_time
         else:
             effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
             raw_time = self._get_prediction_for_features(
@@ -1807,44 +1799,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             if total_routed_tokens == 0:
                 return 0.0
 
-            # The grouped_gemm predictor expects pre-routing num_tokens metadata, while runtime
-            # allocation is post-routing (already expanded by router_topk). Recover the
-            # approximate pre-routing token count to keep feature semantics aligned with
-            # the profiling dataset contract.
-            if self._router_topk <= 0:
-                raise ValueError(f"Invalid router_topk={self._router_topk}")
-            approx_num_tokens = max(
-                1, int(round(total_routed_tokens / float(self._router_topk)))
-            )
-
-            runtime_cache = getattr(
-                self, "_runtime_grouped_gemm_on_demand_prediction_cache", None
-            )
-            if runtime_cache is None:
-                runtime_cache = {}
-                self._runtime_grouped_gemm_on_demand_prediction_cache = runtime_cache
-            family_name = self._measurement_family_name(
-                self._active_measurement_type
-            )
-            # The load-imbalance predictor consumes aggregate distribution
-            # statistics, not expert identity/order. Sort token counts so
-            # equivalent allocations share one raw-prediction cache entry.
-            distribution_key = tuple(sorted(expert_token_counts))
-            cache_key = (
-                family_name,
-                distribution_key,
-                approx_num_tokens,
-                int(self._model_config.embedding_dim),
-                int(self._model_config.mlp_hidden_dim),
-                int(self._router_topk),
-            )
-            raw_time = runtime_cache.get(cache_key)
-            if raw_time is None:
-                features = self._build_moe_load_imbalance_features(per_expert_tokens)
-
-                # Use the shared on-demand prediction path (with runtime caching and strict feature checks).
-                raw_time = self._get_on_demand_prediction("moe_grouped_gemm", features)
-                runtime_cache[cache_key] = raw_time
+            features = self._build_moe_load_imbalance_features(per_expert_tokens)
+            raw_time = self._get_on_demand_prediction("moe_grouped_gemm", features)
             scale = self._get_moe_compute_calibration_scale(
                 batch,
                 "_decode_phase_moe_grouped_gemm_calibration_scale",

@@ -2916,6 +2916,37 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             cache_file = f"{self._cache_dir}/{model_name}_{model_hash}.pkl"
             pickle.dump(model, open(cache_file, "wb"), protocol=pickle.HIGHEST_PROTOCOL)
 
+    def _ensure_exact_lookup_metadata(
+        self,
+        *,
+        model_name: str,
+        model_hash: str,
+        model: BaseEstimator,
+        df: pd.DataFrame,
+        feature_cols: List[str],
+        target_col: str,
+    ) -> None:
+        """Persist exact measured rows before an on-demand model cache is stored.
+
+        Older estimator pickles may predate exact lookup metadata.  Rebuild that
+        metadata only when it is absent, then rewrite the same cache artifact so
+        a later process preserves measured-row precedence.
+        """
+        if hasattr(model, "_frontier_exact_lookup"):
+            exact_lookup = getattr(model, "_frontier_exact_lookup")
+            if not isinstance(exact_lookup, Mapping):
+                raise ValueError(
+                    f"Exact lookup metadata for {model_name} must be a mapping"
+                )
+            return
+
+        setattr(
+            model,
+            "_frontier_exact_lookup",
+            _build_exact_feature_lookup(df, feature_cols, target_col),
+        )
+        self._store_model_in_cache(model_name, model_hash, model)
+
     def _store_training_prediction_data(
         self,
         model_name: str,
@@ -2942,6 +2973,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         df: pd.DataFrame,
         feature_cols: List[str],
         target_col: str,
+        persist_exact_lookup: bool = False,
     ) -> BaseEstimator:
         if len(df) == 0:
             raise Exception(f"Training data for model {model_name} is empty")
@@ -2969,6 +3001,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         cached_model = self._load_model_from_cache(model_name, model_hash)
         if cached_model:
+            if persist_exact_lookup:
+                self._ensure_exact_lookup_metadata(
+                    model_name=model_name,
+                    model_hash=model_hash,
+                    model=cached_model,
+                    df=df,
+                    feature_cols=feature_cols,
+                    target_col=target_col,
+                )
             return cached_model
 
         model = self._get_estimator()
@@ -3003,6 +3044,13 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         # Attach model identity so prediction cache can stay in sync with the actual estimator.
         setattr(best_estimator, "_frontier_model_hash", model_hash)
         setattr(best_estimator, "_frontier_feature_names", list(feature_cols))
+
+        if persist_exact_lookup:
+            setattr(
+                best_estimator,
+                "_frontier_exact_lookup",
+                _build_exact_feature_lookup(df, feature_cols, target_col),
+            )
 
         self._store_model_in_cache(model_name, model_hash, best_estimator)
 
@@ -3276,12 +3324,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 df=op_attention_df,
                 feature_cols=feature_cols,
                 target_col=target_col,
+                persist_exact_lookup=True,
             )
-            model._frontier_exact_lookup = _build_exact_feature_lookup(
-                op_attention_df,
-                feature_cols,
-                target_col,
-            )
+            if not hasattr(model, "_frontier_exact_lookup"):
+                model._frontier_exact_lookup = _build_exact_feature_lookup(
+                    op_attention_df,
+                    feature_cols,
+                    target_col,
+                )
             models[model_name] = model
         return models
 
@@ -3326,12 +3376,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     "num_decode_tokens",
                 ],
                 target_col=target_col,
+                persist_exact_lookup=True,
             )
-            model._frontier_exact_lookup = _build_exact_feature_lookup(
-                cpu_overhead_df,
-                ["batch_size", "num_prefill_tokens", "num_decode_tokens"],
-                target_col,
-            )
+            if not hasattr(model, "_frontier_exact_lookup"):
+                model._frontier_exact_lookup = _build_exact_feature_lookup(
+                    cpu_overhead_df,
+                    ["batch_size", "num_prefill_tokens", "num_decode_tokens"],
+                    target_col,
+                )
             models[model_name] = model
 
         return models
@@ -3520,6 +3572,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                         df=mixed_prefill_df,
                         feature_cols=mixed_feature_cols,
                         target_col="time_stats.attn_prefill.median",
+                        persist_exact_lookup=True,
                     )
                     logger.info(
                         "Trained model attn_prefill_mixed with %d mixed-batch samples",
@@ -3552,6 +3605,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                         df=true_mixed_df,
                         feature_cols=decode_in_mixed_feature_cols,
                         target_col="time_stats.attn_decode.median",
+                        persist_exact_lookup=True,
                     )
                     logger.info(
                         "Trained model attn_decode_in_mixed with %d true mixed samples",
@@ -3603,6 +3657,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     df=true_mixed_df,
                     feature_cols=decode_in_mixed_feature_cols,
                     target_col="time_stats.attn_decode.median",
+                    persist_exact_lookup=True,
                 )
                 logger.info(
                     "Trained kernel-only model attn_decode_in_mixed with %d true mixed samples",
@@ -4670,6 +4725,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         missing_exact_value = object()
         exact_value = exact_lookup.get(feature_key, missing_exact_value)
         if exact_value is not missing_exact_value:
+            if isinstance(exact_value, (bool, np.bool_)):
+                raise ValueError(
+                    f"On-demand prediction exact lookup value for {model_name} must be numeric"
+                )
             try:
                 normalized_exact_value = float(exact_value)
             except (TypeError, ValueError) as exc:
@@ -4686,7 +4745,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         runtime_cache = self._runtime_cache[family_name][model_name]
         if feature_key in runtime_cache:
-            cached_prediction = float(runtime_cache[feature_key])
+            cached_value = runtime_cache[feature_key]
+            if isinstance(cached_value, (bool, np.bool_)):
+                raise ValueError(
+                    f"On-demand prediction runtime cache value for {model_name} must be numeric"
+                )
+            try:
+                cached_prediction = float(cached_value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"On-demand prediction runtime cache value for {model_name} is not numeric: "
+                    f"{cached_value!r}"
+                ) from exc
             if not math.isfinite(cached_prediction) or cached_prediction < 0.0:
                 raise ValueError(
                     f"On-demand prediction runtime cache value for {model_name} must be finite "
