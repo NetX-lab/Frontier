@@ -2740,6 +2740,23 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "Post-attention-only prediction requires MONOLITHIC or unified "
                 "DECODE with FFN enabled"
             )
+        if not include_attention:
+            if include_moe is False:
+                raise ValueError(
+                    "Post-attention-only prediction requires a MoE layer; "
+                    "include_moe=False selects a dense FFN branch"
+                )
+            model_config = self._model_config
+            is_moe_layer = bool(
+                model_config is not None
+                and model_config.is_moe
+                and model_config.is_moe_layer(layer_id)
+            )
+            if not is_moe_layer:
+                raise ValueError(
+                    "Post-attention-only prediction requires a MoE layer; "
+                    f"layer_id={layer_id} is dense"
+                )
         if not include_ffn and include_moe is not None:
             raise ValueError(
                 "include_moe must be None for an attention-only stage probe"

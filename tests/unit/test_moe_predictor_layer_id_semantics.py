@@ -260,6 +260,24 @@ def test_predict_stage_execution_time_skips_moe_tokens_for_dense_layer() -> None
     assert result._mlp_layer_up_proj_execution_time == pytest.approx(1.1)
 
 
+def test_mixed_dense_layer_rejects_post_attention_scope() -> None:
+    predictor = _build_predictor()
+    predictor._model_config = _DummyModelConfig(
+        ModelArchitectureProfile.generic(),
+        moe_layer_ids={4, 5, 6},
+    )
+
+    with pytest.raises(ValueError, match="MoE layer"):
+        predictor.predict_stage_execution_time(
+            _DummyBatch(),
+            stage_id=0,
+            cluster_type=ClusterType.MONOLITHIC,
+            num_layers=1,
+            layer_id=1,
+            include_attention=False,
+        )
+
+
 def test_mixed_share_expert_dense_layer_uses_shared_expert_profile_rows() -> None:
     """Step3 mixed dense layers use shared-expert rows, not absent MLP rows."""
 
