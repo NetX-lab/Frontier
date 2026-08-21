@@ -28,7 +28,6 @@ from __future__ import annotations
 import os
 import sys
 import argparse
-import itertools
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -67,6 +66,7 @@ from frontier.profiling.utils import (
     profile_method_to_measurement_type,
     require_profiling_dependencies,
 )
+from frontier.profiling.moe.moe_input import resolve_moe_expert_parallel_sizes
 
 MoEWrapper = None
 
@@ -209,10 +209,10 @@ def parse_args():
         "--expert_parallel_sizes",
         type=int,
         nargs="+",
-        default=[1],
+        default=None,
         help="Expert parallel sizes to profile (distribution parameter, not compute parameter). "
-             "For each EP size, num_experts_per_device = num_experts / expert_parallel_size. "
-             "Example: --expert_parallel_sizes 1 2 4 8",
+             "When omitted, profile every positive divisor of each model's num_experts. "
+             "For each EP size, num_experts_per_device = num_experts / expert_parallel_size.",
     )
     parser.add_argument(
         "--max_tokens",
@@ -571,6 +571,11 @@ def profile_model(
     if not model_config.is_moe:
         raise ValueError(f"Model {model} is not a MoE model (is_moe=False)")
 
+    expert_parallel_sizes = resolve_moe_expert_parallel_sizes(
+        model_config.num_experts,
+        args.expert_parallel_sizes,
+    )
+
     all_results = []
     measurement_type = profile_method_to_measurement_type(args.profile_method).value
 
@@ -607,7 +612,7 @@ def profile_model(
     for num_tensor_parallel_workers in args.num_tensor_parallel_workers:
         if model_config.no_tensor_parallel and num_tensor_parallel_workers > 1:
             # Skip TP > 1 for models that don't support tensor parallelism
-            pbar.update(len(args.expert_parallel_sizes) * len(num_tokens_to_profile))
+            pbar.update(len(expert_parallel_sizes) * len(num_tokens_to_profile))
             continue
 
         def _collect_result(result):
@@ -616,7 +621,7 @@ def profile_model(
             result["measurement_type"] = measurement_type
             all_results.append(result)
 
-        for expert_parallel_size in args.expert_parallel_sizes:
+        for expert_parallel_size in expert_parallel_sizes:
             # Validate EP size
             if model_config.num_experts % expert_parallel_size != 0:
                 raise ValueError(
@@ -895,15 +900,31 @@ def main():
         device_dir = Path(args.output_dir) / "compute" / args.device
         device_dir.mkdir(parents=True, exist_ok=True)
 
-        # Save config to device directory
-        with (device_dir / "moe_config.yaml").open("w", encoding="utf-8") as config_file:
-            yaml.dump(vars(args), config_file)
-
         num_tokens_to_profile = get_num_tokens_to_profile(
             args.max_tokens,
             extra_num_tokens=args.extra_num_tokens,
             num_tokens_list=args.num_tokens_list,
         )
+
+        model_configs = {
+            model: ModelConfig.from_model_name(model) for model in args.models
+        }
+        resolved_ep_sizes_by_model = {}
+        for model, model_config in model_configs.items():
+            if not model_config.is_moe:
+                raise ValueError(f"Model {model} is not a MoE model (is_moe=False)")
+            resolved_ep_sizes_by_model[model] = resolve_moe_expert_parallel_sizes(
+                model_config.num_experts,
+                args.expert_parallel_sizes,
+            )
+
+        # Save both the requested selector and the concrete per-model domain.
+        config_payload = vars(args).copy()
+        config_payload[
+            "resolved_expert_parallel_sizes_by_model"
+        ] = resolved_ep_sizes_by_model
+        with (device_dir / "moe_config.yaml").open("w", encoding="utf-8") as config_file:
+            yaml.dump(config_payload, config_file)
 
         # Interactive confirmation before profiling
         from frontier.profiling.utils.confirmation import (
@@ -913,13 +934,18 @@ def main():
 
         # Load first model config for confirmation display
         first_model = args.models[0]
-        first_model_config = ModelConfig.from_model_name(first_model)
+        first_model_config = model_configs[first_model]
         torch_dtype, precision_str = _resolve_precision_for_model(
             first_model_config, args.precision, first_model
         )
 
+        confirmation_args = argparse.Namespace(**vars(args))
+        confirmation_args.expert_parallel_sizes = resolved_ep_sizes_by_model[
+            first_model
+        ]
+
         config_sections = build_moe_config_sections(
-            args=args,
+            args=confirmation_args,
             model_config=first_model_config,
             num_tokens_count=len(num_tokens_to_profile),
             use_vllm_kernel=use_vllm_kernel_default,
@@ -934,31 +960,24 @@ def main():
         ):
             sys.exit(0)
 
-        # Calculate total combinations: models x num_tokens x TP x EP
-
+        # Calculate total combinations using each model's resolved EP domain.
+        cases_per_parallel_point = 1
         if args.enable_load_imbalance:
-            total_combos = itertools.product(
-                args.models,
-                num_tokens_to_profile,
-                args.num_tensor_parallel_workers,
-                args.expert_parallel_sizes,
-                args.load_distributions,
-                range(args.num_samples_per_distribution),
+            cases_per_parallel_point = (
+                len(args.load_distributions) * args.num_samples_per_distribution
             )
-
-        else:
-            total_combos = itertools.product(
-                args.models,
-                num_tokens_to_profile,
-                args.num_tensor_parallel_workers,
-                args.expert_parallel_sizes,
-            )
-
-        pbar = tqdm(total=len(list(total_combos)))
+        total_combos = sum(
+            len(num_tokens_to_profile)
+            * len(args.num_tensor_parallel_workers)
+            * len(resolved_ep_sizes_by_model[model])
+            * cases_per_parallel_point
+            for model in args.models
+        )
+        pbar = tqdm(total=total_combos)
 
         for model in args.models:
             # Load model config for metadata
-            model_config = ModelConfig.from_model_name(model)
+            model_config = model_configs[model]
             _, precision_str = _resolve_precision_for_model(model_config, args.precision, model)
             result_df = profile_model(
                 args,
