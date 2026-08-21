@@ -76,9 +76,10 @@ def generate_expert_routing(
         
     elif load_distribution == "skewed":
         # Skewed distribution: some experts are more popular (power law)
-        # Use sqrt(expert_id) as probability weight - earlier experts are more likely
+        # Use a positive offset so every expert remains reachable while higher
+        # IDs remain more likely.
         expert_probs = torch.pow(
-            torch.arange(num_experts, dtype=torch.float, device=device), 
+            torch.arange(num_experts, dtype=torch.float, device=device) + 1.0,
             0.5  # Power factor: 0.5 gives moderate skew
         )
         expert_probs = expert_probs / expert_probs.sum()
@@ -97,7 +98,10 @@ def generate_expert_routing(
     elif load_distribution == "extremely_skewed":
         # Extremely skewed: 80% of tokens use only a small subset of experts
         # This simulates scenarios where certain experts become "hot"
-        popular_experts = min(num_experts // 4, 8)  # Use at most 1/4 of experts or 8
+        popular_experts = min(
+            num_experts,
+            max(top_k, min(num_experts // 4, 8)),
+        )
         
         # 80% of tokens use popular experts, 20% use all experts
         use_popular = torch.rand(num_tokens, device=device) < 0.8
@@ -255,4 +259,3 @@ if __name__ == "__main__":
         print(f"  Gini: {stats['gini']:.3f}")
         print(f"  Entropy: {stats['entropy']:.3f}")
         print(f"  Utilization: {stats['utilization']:.3f}")
-

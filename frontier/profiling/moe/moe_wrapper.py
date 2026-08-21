@@ -4,6 +4,7 @@ MoE profiling wrapper.
 This module wraps MoE operations for profiling, following the same pattern as the linear-op wrapper.
 """
 
+import operator
 import os
 from typing import List, Optional
 
@@ -294,8 +295,9 @@ class MoEWrapper:
                 load_distribution=load_distribution,
                 seed=seed,
             )
-            if expert_token_counts is None:
-                expert_token_counts = self._compute_local_expert_token_counts(topk_ids)
+            generated_expert_token_counts = self._compute_local_expert_token_counts(
+                topk_ids
+            )
             profiling_global_num_experts = self.num_experts
             profiling_expert_map = self._build_local_expert_map(topk_ids.device)
         else:
@@ -306,11 +308,56 @@ class MoEWrapper:
                 load_distribution=load_distribution,
                 seed=seed,
             )
-            if expert_token_counts is None:
-                expert_token_counts = compute_expert_token_counts(
-                    topk_ids,
-                    self.num_experts_per_device,
+            generated_expert_token_counts = compute_expert_token_counts(
+                topk_ids,
+                self.num_experts_per_device,
+            )
+
+        if expert_token_counts is None:
+            expert_token_counts = generated_expert_token_counts
+        else:
+            try:
+                supplied_counts = list(expert_token_counts)
+            except TypeError as exc:
+                raise ValueError(
+                    "expert_token_counts must be an iterable of non-negative integers."
+                ) from exc
+
+            if len(supplied_counts) != len(generated_expert_token_counts):
+                raise ValueError(
+                    "expert_token_counts length does not match the local expert "
+                    f"width: expected {len(generated_expert_token_counts)}, "
+                    f"got {len(supplied_counts)}."
                 )
+
+            normalized_counts = []
+            for expert_id, count in enumerate(supplied_counts):
+                if isinstance(count, bool):
+                    raise ValueError(
+                        "expert_token_counts must contain non-negative integers; "
+                        f"expert {expert_id} has boolean value {count!r}."
+                    )
+                try:
+                    normalized_count = operator.index(count)
+                except (TypeError, ValueError, OverflowError) as exc:
+                    raise ValueError(
+                        "expert_token_counts must contain non-negative integers; "
+                        f"expert {expert_id} has value {count!r}."
+                    ) from exc
+                if normalized_count < 0:
+                    raise ValueError(
+                        "expert_token_counts must contain non-negative integers; "
+                        f"expert {expert_id} has value {count!r}."
+                    )
+                normalized_counts.append(normalized_count)
+
+            if normalized_counts != generated_expert_token_counts:
+                raise ValueError(
+                    "expert_token_counts must match the counts derived from the "
+                    f"generated routing IDs: supplied={normalized_counts}, "
+                    f"generated={generated_expert_token_counts}."
+                )
+            expert_token_counts = normalized_counts
 
         return {
             "topk_weights": topk_weights,
