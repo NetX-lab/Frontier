@@ -1203,7 +1203,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "MoE gating linear is not supported for cluster type"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions[model_name][(effective_tokens,)]
+        return self._get_prediction_for_features(
+            model_name,
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
 
     def _get_gating_routing_topk_time(self, batch: Batch) -> float:
         """
@@ -1224,7 +1228,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "MoE gating routing topk is not supported for cluster type"
             )
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-        return self._predictions[model_name][(effective_tokens,)]
+        return self._get_prediction_for_features(
+            model_name,
+            {"num_tokens": effective_tokens},
+            feature_names=("num_tokens",),
+        )
 
     def _get_num_experts_per_device(self) -> int:
         total_experts = int(self._replica_config.total_expert_num)
@@ -1504,7 +1512,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                     runtime_cache[cache_key] = raw_time
         else:
             effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-            raw_time = self._predictions["moe_shuffling"][(effective_tokens,)]
+            raw_time = self._get_prediction_for_features(
+                "moe_shuffling",
+                {"num_tokens": effective_tokens},
+                feature_names=("num_tokens",),
+            )
 
         scale = self._get_moe_compute_calibration_scale(
             batch,
@@ -1727,18 +1739,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             f"Current state: cc_backend=None, enable_dummy_mode={self._enable_dummy_mode}"
         )
 
-    def _round_to_valid_key(self, num_tokens: int) -> int:
-        """
-        Round num_tokens to the nearest valid key in prediction cache.
-
-        This handles cases where the exact token count is not in the cache.
-        """
-        if num_tokens <= 0:
-            return 1  # Minimum valid token count
-        if num_tokens > self._max_tokens:
-            return self._max_tokens
-        return num_tokens
-
     def _is_grouped_gemm_on_demand_mode(self) -> bool:
         """
         Check if moe_grouped_gemm predictor is in on-demand (load-imbalance) mode.
@@ -1854,21 +1854,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             )
             return raw_time * scale
 
-        def _get_cached_grouped_gemm_prediction(rounded_tokens: int) -> float:
-            cache_key = (rounded_tokens,)
-            if cache_key not in prediction_cache:
-                raise KeyError(
-                    "Missing moe_grouped_gemm cached prediction for "
-                    f"tokens={rounded_tokens}. This indicates a profiling coverage gap. "
-                    "Please regenerate profiling data or enable on-demand prediction."
-                )
-            value = float(prediction_cache[cache_key])
-            if value < 0:
-                raise ValueError(
-                    f"Invalid moe_grouped_gemm cached prediction {value} for tokens={rounded_tokens}"
-                )
-            return value
-
         # Standard cache lookup mode (trained with num_tokens only)
         if isinstance(num_tokens_or_allocation, dict):
             # Cached grouped-gemm profiling rows represent the full fused grouped-GEMM
@@ -1883,8 +1868,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             approx_num_tokens = max(
                 1, int(round(total_routed_tokens / float(self._router_topk)))
             )
-            rounded_tokens = self._round_to_valid_key(approx_num_tokens)
-            raw_time = _get_cached_grouped_gemm_prediction(rounded_tokens)
+            raw_time = self._get_prediction_for_features(
+                "moe_grouped_gemm",
+                {"num_tokens": approx_num_tokens},
+                feature_names=("num_tokens",),
+            )
             scale = self._get_moe_compute_calibration_scale(
                 batch,
                 "_decode_phase_moe_grouped_gemm_calibration_scale",
@@ -1898,8 +1886,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         num_tokens = num_tokens_or_allocation
         if num_tokens <= 0:
             return 0.0
-        rounded_tokens = self._round_to_valid_key(num_tokens)
-        raw_time = _get_cached_grouped_gemm_prediction(rounded_tokens)
+        raw_time = self._get_prediction_for_features(
+            "moe_grouped_gemm",
+            {"num_tokens": num_tokens},
+            feature_names=("num_tokens",),
+        )
         scale = self._get_moe_compute_calibration_scale(
             batch,
             "_decode_phase_moe_grouped_gemm_calibration_scale",
