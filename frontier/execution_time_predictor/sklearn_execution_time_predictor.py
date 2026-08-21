@@ -76,7 +76,9 @@ from frontier.operators.families import (
     get_family_profiling_name_set,
     get_comm_operator,
 )
+from frontier.operators.binding import resolve_operator_query_tp_mode
 from frontier.operators.spec import CommOperatorSpec, CommPayloadContext, OperatorSpec
+from frontier.operators.spec import TensorParallelMode
 from frontier.profiling.cpu_overhead.schema import (
     DEFAULT_NUM_DECODE_TOKENS_AMPLIFICATION_FACTOR,
     DEFAULT_NUM_PREFILL_TOKENS,
@@ -2787,11 +2789,28 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         return self._replica_config.attn_tensor_parallel_size
 
     def _get_linear_op_tp_key(self, op_name: str) -> int:
-        replicated_ops = set(get_family_profiling_name_set(MEMORY_FAMILY))
-        replicated_ops.update(
-            self._get_model_architecture_profile().linear_attention.replicated_ops
-        )
-        if op_name in replicated_ops:
+        if op_name in {
+            "mtp_fusion_proj",
+            "lm_head_linear",
+        }:
+            return resolve_effective_attention_tp_size(
+                op_name="attn_pre_proj",
+                requested_tp_size=self._replica_config.attn_tensor_parallel_size,
+                num_kv_heads=self._model_config.num_kv_heads,
+                cluster_type=self._cluster_type,
+                warning_cache=getattr(self, "_attention_tp_warning_cache", None),
+                include_linear_ops=True,
+            )
+
+        try:
+            tp_mode = resolve_operator_query_tp_mode(
+                op_name,
+                architecture_profile=self._get_model_architecture_profile(),
+            )
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Unsupported linear op for TP mapping: {op_name}") from exc
+
+        if tp_mode is TensorParallelMode.REPLICATED:
             if (
                 self._requires_target_embedded_mtp_compute_models()
                 and is_target_embedded_mtp_same_tp_linear_op(op_name)
@@ -2806,28 +2825,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 )
             return 1
 
-        ffn_tp_key = self._get_ffn_tp_key_for_linear_op()
+        if tp_mode is TensorParallelMode.FFN_TP:
+            return self._get_ffn_tp_key_for_linear_op()
 
-        if op_name in get_family_profiling_name_set(FFN_FAMILY):
-            return ffn_tp_key
-
-        if op_name in {
-            "mtp_fusion_proj",
-            "lm_head_linear",
-        }:
-            return resolve_effective_attention_tp_size(
-                op_name="attn_pre_proj",
-                requested_tp_size=self._replica_config.attn_tensor_parallel_size,
-                num_kv_heads=self._model_config.num_kv_heads,
-                cluster_type=self._cluster_type,
-                warning_cache=getattr(self, "_attention_tp_warning_cache", None),
-                include_linear_ops=True,
-            )
-
-        if op_name in get_family_profiling_name_set(SHARE_EXPERT_FAMILY):
-            return ffn_tp_key
-
-        if op_name.startswith("attn_"):
+        if tp_mode is TensorParallelMode.ATTENTION_TP:
             return resolve_effective_attention_tp_size(
                 op_name=op_name,
                 requested_tp_size=self._replica_config.attn_tensor_parallel_size,

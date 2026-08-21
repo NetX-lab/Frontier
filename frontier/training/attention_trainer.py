@@ -29,6 +29,8 @@ from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
 from frontier.logger import init_logger
+from frontier.operators.binding import resolve_operator_query_tp_mode
+from frontier.operators.spec import TensorParallelMode
 from frontier.training.base_trainer import BaseTrainer
 
 logger = init_logger(__name__)
@@ -405,18 +407,20 @@ class AttentionTrainer(BaseTrainer):
         logger.info("Compute dataset column verification passed")
 
     def _get_compute_tp_key(self, model_name: str) -> int:
-        replicated_ops = {
-            "input_layernorm",
-            "post_attention_layernorm",
-            "add",
-            "emb",
-            "attn_pre_proj_qkv",
-            "attn_pre_proj_q_norm",
-        }
-        if model_name in replicated_ops:
+        try:
+            tp_mode = resolve_operator_query_tp_mode(
+                model_name,
+                architecture_profile=self.model_config.get_model_architecture_profile(),
+            )
+        except (AttributeError, TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Unsupported compute model for TP mapping: {model_name}"
+            ) from exc
+
+        if tp_mode is TensorParallelMode.REPLICATED:
             return 1
 
-        if model_name.startswith("attn_"):
+        if tp_mode is TensorParallelMode.ATTENTION_TP:
             return resolve_effective_attention_tp_size(
                 op_name=model_name,
                 requested_tp_size=self.tensor_parallel_size,

@@ -6,6 +6,7 @@ from frontier.operators.binding import (
     OperatorQueryBinding,
     bind_operator_query,
     build_operator_manifest,
+    resolve_operator_query_tp_mode,
 )
 from frontier.operators.registry import OperatorRegistry
 from frontier.operators.spec import (
@@ -36,4 +37,5 @@ __all__ = [
     "TraceKind",
     "bind_operator_query",
     "build_operator_manifest",
+    "resolve_operator_query_tp_mode",
 ]
