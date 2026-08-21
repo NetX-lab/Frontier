@@ -89,6 +89,47 @@ def test_dummy_decode_ffn_tp_collectives_use_profile_capability_not_legacy_ident
 
 
 @pytest.mark.parametrize(
+    ("attn_tp", "moe_tp", "expected_attn_tp_time", "expected_moe_tp_time"),
+    (
+        (4, 1, 10.0, 0.0),
+        (1, 2, 0.0, 10.0),
+    ),
+)
+def test_dummy_shared_domain_uses_separate_attention_and_moe_tp_domains(
+    attn_tp: int,
+    moe_tp: int,
+    expected_attn_tp_time: float,
+    expected_moe_tp_time: float,
+) -> None:
+    model_config = _ProfileOnlyStep3ModelConfig()
+    predictor = _DummyDisaggregationPredictor.__new__(
+        _DummyDisaggregationPredictor
+    )
+    predictor._dummy_execution_time = 10.0
+    predictor._num_layers_per_pipeline_stage = 1
+    predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
+        model_config=model_config,
+        attn_tensor_parallel_size=attn_tp,
+        moe_tensor_parallel_size=moe_tp,
+        moe_expert_parallel_size=2,
+        num_pipeline_stages=1,
+    )
+
+    execution_time = predictor._get_dummy_execution_time_for_cluster(
+        batch=SimpleNamespace(),
+        pipeline_stage=0,
+        cluster_type=ClusterType.PREFILL,
+    )
+
+    assert execution_time._attn_tensor_parallel_allreduce_time == pytest.approx(
+        expected_attn_tp_time
+    )
+    assert execution_time._moe_tensor_parallel_allreduce_time == pytest.approx(
+        expected_moe_tp_time
+    )
+
+
+@pytest.mark.parametrize(
     ("cluster_type", "batch_request"),
     (
         (ClusterType.PREFILL, Request(0.0, 4, 0)),

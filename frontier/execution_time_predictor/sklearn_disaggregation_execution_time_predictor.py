@@ -636,22 +636,30 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             and cluster_replica_config.model_config.supports_share_expert()
         )
         share_expert_time = base_time if share_expert_enabled else 0.0
+        attn_tp_size = int(cluster_replica_config.attn_tensor_parallel_size)
+        moe_tp_size = int(cluster_replica_config.moe_tensor_parallel_size)
         if cluster_type == ClusterType.DECODE_FFN:
-            tp_size = cluster_replica_config.moe_tensor_parallel_size
+            tp_size = moe_tp_size
         else:
-            tp_size = cluster_replica_config.attn_tensor_parallel_size
+            tp_size = attn_tp_size
         pp_stage_boundary_handoff_time = (
             base_time
             if pipeline_stage < cluster_replica_config.num_pipeline_stages - 1
             else 0.0
         )
         # COMM_SKIP: TP all-reduce not needed when tp_size <= 1 (no tensor sharding)
-        tp_comm_time = base_time if tp_size > 1 else 0.0
-        attention_tp_comm_time = tp_comm_time if include_attention else 0.0
+        attn_tp_comm_time = base_time if attn_tp_size > 1 else 0.0
+        moe_tp_comm_time = (
+            base_time if is_moe_model and moe_tp_size > 1 else 0.0
+        )
+        tp_comm_time = (
+            moe_tp_comm_time if cluster_type == ClusterType.DECODE_FFN else attn_tp_comm_time
+        )
+        attention_tp_comm_time = attn_tp_comm_time if include_attention else 0.0
         moe_tp_allreduce_time = (
             0.0
             if zero_routed_ep_lane
-            else (tp_comm_time if is_moe_model else 0.0)
+            else moe_tp_comm_time
         )
         routed_grouped_gemm_time = (
             0.0 if zero_routed_ep_lane else base_time
@@ -659,7 +667,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         ffn_tp_comm_enabled = (
             cluster_type == ClusterType.DECODE_FFN
             and architecture_profile.moe_tensor_parallel_allgather_op is not None
-            and tp_size > 1
+            and moe_tp_size > 1
         )
         ffn_tp_allgather_time = base_time if ffn_tp_comm_enabled else 0.0
         share_expert_tp_allreduce_time = (
