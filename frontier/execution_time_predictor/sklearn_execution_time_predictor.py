@@ -8,7 +8,7 @@ from abc import abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
 from itertools import product
-from typing import Any, Dict, List, Optional, Set, Tuple, TYPE_CHECKING
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TYPE_CHECKING
 import math
 
 import numpy as np
@@ -136,6 +136,159 @@ def _build_exact_feature_lookup(
         key_tuple = key if isinstance(key, tuple) else (key,)
         lookup[tuple(float(item) for item in key_tuple)] = float(value)
     return lookup
+
+
+_PREDICTION_FEATURE_DEFAULT_BOUNDS: Dict[str, Tuple[float | None, float | None]] = {
+    "batch_composition_ratio": (0.0, 1.0),
+    "is_decode": (0.0, 1.0),
+    "is_prefill": (0.0, 1.0),
+}
+
+
+def _as_prediction_feature_names(
+    model_name: str,
+    raw_feature_names: Any,
+) -> Tuple[str, ...]:
+    if isinstance(raw_feature_names, (str, bytes)):
+        raise ValueError(
+            f"On-demand prediction feature schema for {model_name} must be a sequence"
+        )
+    try:
+        feature_names = tuple(str(name) for name in raw_feature_names)
+    except TypeError as exc:
+        raise ValueError(
+            f"On-demand prediction feature schema for {model_name} is invalid"
+        ) from exc
+    if not feature_names or any(not name for name in feature_names):
+        raise ValueError(
+            f"On-demand prediction feature schema for {model_name} must be non-empty"
+        )
+    if len(set(feature_names)) != len(feature_names):
+        raise ValueError(
+            f"On-demand prediction feature schema for {model_name} contains duplicates: "
+            f"{feature_names!r}"
+        )
+    return feature_names
+
+
+def _coerce_finite_prediction_feature(model_name: str, feature_name: str, value: Any) -> float:
+    if isinstance(value, (bool, np.bool_)):
+        raise ValueError(
+            f"On-demand prediction feature {feature_name!r} for {model_name} must be numeric"
+        )
+    try:
+        numeric_value = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"On-demand prediction feature {feature_name!r} for {model_name} is not numeric: "
+            f"{value!r}"
+        ) from exc
+    if not math.isfinite(numeric_value):
+        raise ValueError(
+            f"On-demand prediction feature {feature_name!r} for {model_name} must be finite; "
+            f"got {value!r}"
+        )
+    if numeric_value < 0.0:
+        raise ValueError(
+            f"On-demand prediction feature {feature_name!r} for {model_name} must be "
+            f"non-negative; got {numeric_value}"
+        )
+    return numeric_value
+
+
+def _parse_prediction_bounds(
+    model_name: str,
+    feature_name: str,
+    raw_bounds: Any,
+) -> Tuple[float | None, float | None]:
+    if isinstance(raw_bounds, Mapping):
+        lower = raw_bounds.get("min", raw_bounds.get("lower"))
+        upper = raw_bounds.get("max", raw_bounds.get("upper"))
+    elif isinstance(raw_bounds, (tuple, list)) and len(raw_bounds) == 2:
+        lower, upper = raw_bounds
+    else:
+        raise ValueError(
+            f"On-demand prediction bounds for {model_name}/{feature_name} must be "
+            "a two-item sequence or mapping"
+        )
+
+    parsed: list[float | None] = []
+    for bound_name, bound in (("minimum", lower), ("maximum", upper)):
+        if bound is None:
+            parsed.append(None)
+            continue
+        try:
+            numeric_bound = float(bound)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"On-demand prediction {bound_name} bound for {model_name}/{feature_name} "
+                f"is not numeric: {bound!r}"
+            ) from exc
+        if not math.isfinite(numeric_bound):
+            raise ValueError(
+                f"On-demand prediction {bound_name} bound for {model_name}/{feature_name} "
+                f"must be finite: {bound!r}"
+            )
+        parsed.append(numeric_bound)
+
+    minimum, maximum = parsed
+    if minimum is not None and maximum is not None and minimum > maximum:
+        raise ValueError(
+            f"On-demand prediction bounds for {model_name}/{feature_name} are inverted: "
+            f"{minimum} > {maximum}"
+        )
+    return minimum, maximum
+
+
+def _validate_prediction_constraints(
+    model_name: str,
+    features: Mapping[str, float],
+    raw_constraints: Any,
+) -> None:
+    if raw_constraints is None:
+        return
+    if not isinstance(raw_constraints, (tuple, list)):
+        raise ValueError(
+            f"On-demand prediction relational constraints for {model_name} must be a sequence"
+        )
+    for constraint in raw_constraints:
+        if not isinstance(constraint, Mapping):
+            raise ValueError(
+                f"On-demand prediction relational constraint for {model_name} is invalid"
+            )
+        constraint_type = constraint.get("type")
+        if constraint_type != "linear_lte":
+            raise ValueError(
+                f"Unsupported on-demand prediction relational constraint for {model_name}: "
+                f"{constraint_type!r}"
+            )
+        terms = constraint.get("terms")
+        if not isinstance(terms, Mapping) or not terms:
+            raise ValueError(
+                f"On-demand prediction relational constraint for {model_name} requires terms"
+            )
+        unknown_features = sorted(set(terms) - set(features))
+        if unknown_features:
+            raise ValueError(
+                f"On-demand prediction relational constraint for {model_name} references "
+                f"unknown features: {unknown_features!r}"
+            )
+        try:
+            maximum = float(constraint["max"])
+            value = sum(float(coefficient) * features[name] for name, coefficient in terms.items())
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(
+                f"On-demand prediction relational constraint for {model_name} is malformed"
+            ) from exc
+        if not math.isfinite(maximum) or not math.isfinite(value):
+            raise ValueError(
+                f"On-demand prediction relational constraint for {model_name} must be finite"
+            )
+        if value > maximum and not math.isclose(value, maximum, rel_tol=0.0, abs_tol=1e-9):
+            raise ValueError(
+                f"On-demand prediction relational constraint violated for {model_name}: "
+                f"value={value}, max={maximum}"
+            )
 
 
 if TYPE_CHECKING:
@@ -3613,6 +3766,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "_n_features": int(n_features),
                 "_model": model,
                 "_feature_names": list(feature_names),
+                "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
             }
 
         return predictions
@@ -3841,6 +3995,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "_n_features": n_features,
                 "_model": model,  # Store model for on-demand prediction
                 "_feature_names": feature_names,
+                "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
             }
 
         need_true_mixed_decode = self._cluster_type == ClusterType.MONOLITHIC
@@ -3866,6 +4021,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "_n_features": getattr(model, "n_features_in_", len(feature_names)),
                 "_model": model,
                 "_feature_names": feature_names,
+                "_exact_lookup": getattr(model, "_frontier_exact_lookup", {}),
             }
 
         return predictions
@@ -4152,67 +4308,225 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         Returns:
             Predicted execution time in seconds
         """
-        # Create cache key from features (must be hashable)
-        # Use sorted keys for consistent ordering
-        cache_key = tuple(features[k] for k in sorted(features.keys()))
-
         family_name = self._measurement_family_name(self._active_measurement_type)
-
-        # Check runtime cache first
-        if cache_key in self._runtime_cache[family_name][model_name]:
-            return self._runtime_cache[family_name][model_name][cache_key]
-
-        # Get model from predictions dict
         model_info = self._predictions.get(model_name)
         if model_info is None:
             raise ValueError(f"Model {model_name} not found in predictions")
 
-        # Extract model and feature names from the on-demand prediction marker
-        if (
-            not isinstance(model_info, dict)
-            or "_on_demand_prediction" not in model_info
-        ):
+        if not isinstance(model_info, Mapping) or model_info.get(
+            "_on_demand_prediction"
+        ) is not True:
             raise ValueError(
                 f"Model {model_name} is not configured for on-demand prediction"
             )
 
         model = model_info.get("_model")
-        feature_names = model_info.get("_feature_names", [])
+        feature_names = _as_prediction_feature_names(
+            model_name,
+            model_info.get("_feature_names", ()),
+        )
+        if model is None:
+            raise ValueError(f"Model {model_name} has no trained model available")
 
-        # Build feature vector in correct order.
-        # Fail-fast if any required feature is missing (no silent defaults).
-        missing = [fn for fn in feature_names if fn not in features]
+        model_feature_names = getattr(model, "_frontier_feature_names", None)
+        if model_feature_names is None:
+            model_feature_names = getattr(model, "feature_names_in_", None)
+        if model_feature_names is not None:
+            normalized_model_feature_names = _as_prediction_feature_names(
+                model_name,
+                model_feature_names,
+            )
+            if normalized_model_feature_names != feature_names:
+                raise ValueError(
+                    f"On-demand prediction feature schema mismatch for {model_name}: "
+                    f"record={feature_names!r}, model={normalized_model_feature_names!r}"
+                )
+        model_feature_count = getattr(model, "n_features_in_", None)
+        if model_feature_count is not None and int(model_feature_count) != len(feature_names):
+            raise ValueError(
+                f"On-demand prediction feature schema mismatch for {model_name}: "
+                f"record has {len(feature_names)} features, model has {model_feature_count}"
+            )
+
+        if not isinstance(features, Mapping):
+            raise ValueError(
+                f"On-demand prediction features for {model_name} must be a mapping"
+            )
+        missing = [name for name in feature_names if name not in features]
         if missing:
             raise ValueError(
                 f"On-demand prediction missing required features for {model_name}: {missing}. "
                 f"Provided keys: {sorted(list(features.keys()))}"
             )
+        unexpected = sorted(set(features) - set(feature_names))
+        if unexpected:
+            raise ValueError(
+                f"On-demand prediction has unexpected features for {model_name}: {unexpected}"
+            )
 
-        feature_key = tuple(float(features[fn]) for fn in feature_names)
-        exact_lookup = model_info.get("_exact_lookup") or {}
-        if feature_key in exact_lookup:
-            prediction = float(exact_lookup[feature_key])
-            self._runtime_cache[family_name][model_name][cache_key] = prediction
-            return prediction
+        normalized_features = {
+            name: _coerce_finite_prediction_feature(model_name, name, features[name])
+            for name in feature_names
+        }
 
-        if model is None:
-            raise ValueError(f"Model {model_name} has no trained model available")
+        domain = model_info.get("_feature_domain")
+        if domain is None:
+            domain = getattr(model, "_frontier_feature_domain", None)
+        if domain is not None and not isinstance(domain, Mapping):
+            raise ValueError(
+                f"On-demand prediction feature domain for {model_name} must be a mapping"
+            )
+
+        raw_bounds = model_info.get("_feature_bounds")
+        if raw_bounds is None and isinstance(domain, Mapping):
+            raw_bounds = domain.get("bounds", domain.get("physical_bounds"))
+        if raw_bounds is not None:
+            if not isinstance(raw_bounds, Mapping):
+                raise ValueError(
+                    f"On-demand prediction feature bounds for {model_name} must be a mapping"
+                )
+            bounds_by_feature = dict(raw_bounds)
+        else:
+            bounds_by_feature = {}
+        for feature_name, default_bounds in _PREDICTION_FEATURE_DEFAULT_BOUNDS.items():
+            if feature_name in feature_names and feature_name not in bounds_by_feature:
+                bounds_by_feature[feature_name] = default_bounds
+        for feature_name, raw_bound in bounds_by_feature.items():
+            if feature_name not in normalized_features:
+                raise ValueError(
+                    f"On-demand prediction bounds for {model_name} reference unknown feature "
+                    f"{feature_name!r}"
+                )
+            minimum, maximum = _parse_prediction_bounds(
+                model_name,
+                feature_name,
+                raw_bound,
+            )
+            value = normalized_features[feature_name]
+            if minimum is not None and value < minimum:
+                raise ValueError(
+                    f"On-demand prediction feature {feature_name!r} for {model_name} is below "
+                    f"declared minimum {minimum}: {value}"
+                )
+            if maximum is not None and value > maximum:
+                raise ValueError(
+                    f"On-demand prediction feature {feature_name!r} for {model_name} is above "
+                    f"declared maximum {maximum}: {value}"
+                )
+
+        raw_constraints = model_info.get("_feature_constraints")
+        if raw_constraints is None and isinstance(domain, Mapping):
+            raw_constraints = domain.get("constraints")
+        _validate_prediction_constraints(model_name, normalized_features, raw_constraints)
+
+        declared_identity = model_info.get("_identity")
+        if declared_identity is None:
+            declared_identity = model_info.get("_model_identity")
+        if declared_identity is not None:
+            if not isinstance(declared_identity, Mapping):
+                raise ValueError(f"On-demand prediction identity for {model_name} is invalid")
+            runtime_identity = getattr(self, "_prediction_identity", None)
+            if runtime_identity is None:
+                runtime_identity = {}
+                model_hash = getattr(model, "_frontier_model_hash", None)
+                if model_hash is not None:
+                    runtime_identity["model_hash"] = model_hash
+                replica_config = getattr(self, "_replica_config", None)
+                model_config = getattr(self, "_model_config", None)
+                get_name = getattr(model_config, "get_name", None)
+                if callable(get_name):
+                    runtime_identity["model_name"] = get_name()
+                elif replica_config is not None:
+                    runtime_identity["model_name"] = getattr(
+                        replica_config, "model_name", None
+                    )
+                if replica_config is not None:
+                    for identity_name in (
+                        "device",
+                        "network_device",
+                        "attn_tensor_parallel_size",
+                        "moe_tensor_parallel_size",
+                        "moe_expert_parallel_size",
+                        "expert_parallel_size",
+                    ):
+                        value = getattr(replica_config, identity_name, None)
+                        if value is not None:
+                            runtime_identity[identity_name] = value
+                runtime_identity["measurement_family"] = family_name
+            if not isinstance(runtime_identity, Mapping):
+                raise ValueError(
+                    f"On-demand prediction runtime identity for {model_name} is invalid"
+                )
+            identity_mismatches = {
+                key: (declared_value, runtime_identity.get(key))
+                for key, declared_value in declared_identity.items()
+                if key not in runtime_identity or runtime_identity.get(key) != declared_value
+            }
+            if identity_mismatches:
+                raise ValueError(
+                    f"On-demand prediction identity mismatch for {model_name}: "
+                    f"{identity_mismatches!r}"
+                )
+
+        feature_key = tuple(normalized_features[name] for name in feature_names)
+        exact_lookup = model_info.get("_exact_lookup", {})
+        if exact_lookup is None:
+            exact_lookup = {}
+        if not isinstance(exact_lookup, Mapping):
+            raise ValueError(
+                f"On-demand prediction exact lookup metadata for {model_name} is invalid"
+            )
+        missing_exact_value = object()
+        exact_value = exact_lookup.get(feature_key, missing_exact_value)
+        if exact_value is not missing_exact_value:
+            try:
+                normalized_exact_value = float(exact_value)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"On-demand prediction exact lookup value for {model_name} is not numeric: "
+                    f"{exact_value!r}"
+                ) from exc
+            if normalized_exact_value < 0.0 or not math.isfinite(normalized_exact_value):
+                raise ValueError(
+                    f"On-demand prediction exact lookup value for {model_name} must be finite "
+                    "and non-negative"
+                )
+            return normalized_exact_value
+
+        runtime_cache = self._runtime_cache[family_name][model_name]
+        if feature_key in runtime_cache:
+            cached_prediction = float(runtime_cache[feature_key])
+            if not math.isfinite(cached_prediction) or cached_prediction < 0.0:
+                raise ValueError(
+                    f"On-demand prediction runtime cache value for {model_name} must be finite "
+                    "and non-negative"
+                )
+            return cached_prediction
 
         feature_vector = pd.DataFrame(
-            [[features[fn] for fn in feature_names]],
+            [[normalized_features[name] for name in feature_names]],
             columns=feature_names,
         )
 
-        # Make prediction
         try:
-            prediction = float(model.predict(feature_vector)[0])
-            # Ensure non-negative prediction
-            prediction = max(0.0, prediction)
-        except Exception as e:
-            raise ValueError(f"On-demand prediction failed for {model_name}: {e}")
+            raw_prediction = model.predict(feature_vector)
+            if len(raw_prediction) != 1:
+                raise ValueError(
+                    f"model returned {len(raw_prediction)} values; expected exactly one"
+                )
+            prediction = float(raw_prediction[0])
+        except ValueError:
+            raise
+        except Exception as exc:
+            raise ValueError(f"On-demand prediction failed for {model_name}: {exc}") from exc
 
-        # Cache the result
-        self._runtime_cache[family_name][model_name][cache_key] = prediction
+        if not math.isfinite(prediction) or prediction < 0.0:
+            raise ValueError(
+                f"On-demand prediction output for {model_name} must be finite and non-negative; "
+                f"got {prediction!r}"
+            )
+
+        runtime_cache[feature_key] = prediction
 
         return prediction
 
