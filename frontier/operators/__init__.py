@@ -1,6 +1,12 @@
 """Generic operator specifications, registries, and model bindings."""
 
-from frontier.operators.binding import FamilyBinding, OperatorManifest, build_operator_manifest
+from frontier.operators.binding import (
+    FamilyBinding,
+    OperatorManifest,
+    OperatorQueryBinding,
+    bind_operator_query,
+    build_operator_manifest,
+)
 from frontier.operators.registry import OperatorRegistry
 from frontier.operators.spec import (
     CommOperatorSpec,
@@ -20,6 +26,7 @@ __all__ = [
     "FamilyBinding",
     "OperatorFamilySpec",
     "OperatorManifest",
+    "OperatorQueryBinding",
     "OperatorPhase",
     "OperatorRegistry",
     "OperatorRole",
@@ -27,5 +34,6 @@ __all__ = [
     "ProjectionOwnership",
     "ResourceClass",
     "TraceKind",
+    "bind_operator_query",
     "build_operator_manifest",
 ]

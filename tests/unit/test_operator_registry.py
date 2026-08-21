@@ -13,7 +13,11 @@ from frontier.attention.families import (
     iter_execution_enabled_families,
 )
 from frontier.config.model_config import BaseModelConfig
-from frontier.operators.binding import FamilyBinding, build_operator_manifest
+from frontier.operators.binding import (
+    FamilyBinding,
+    bind_operator_query,
+    build_operator_manifest,
+)
 from frontier.operators.families import OPERATOR_REGISTRY
 from frontier.operators.registry import OperatorRegistry
 from frontier.operators.spec import (
@@ -22,6 +26,7 @@ from frontier.operators.spec import (
     OperatorRole,
     OperatorSpec,
     ResourceClass,
+    TensorParallelMode,
 )
 from frontier.types import ActivationType, NormType
 
@@ -210,3 +215,41 @@ def test_global_operator_registry_resource_class_matches_ratified_assignments() 
     assert resource_by_operator[("ffn", "mlp_up_proj")] is ResourceClass.COMP
     assert resource_by_operator[("moe", "moe_gating_routing_topk")] is ResourceClass.MEMORY
     assert resource_by_operator[("comm", "expert_parallel_allreduce")] is ResourceClass.COMM
+
+
+def test_bind_operator_query_resolves_registered_physical_operator() -> None:
+    binding = bind_operator_query("mlp_up_proj")
+
+    assert binding.family_id == "ffn"
+    assert binding.physical_name == "mlp_up_proj"
+    assert binding.profiling_name == "mlp_up_proj"
+    assert binding.tp_mode is TensorParallelMode.FFN_TP
+
+
+def test_bind_operator_query_resolves_explicit_physical_alias() -> None:
+    binding = bind_operator_query("add_attn_residual", family_id="memory")
+
+    assert binding.family_id == "memory"
+    assert binding.physical_name == "add_attn_residual"
+    assert binding.profiling_name == "add"
+    assert binding.tp_mode is TensorParallelMode.REPLICATED
+
+
+def test_bind_operator_query_rejects_family_mismatch_before_routing() -> None:
+    with pytest.raises(ValueError, match="does not belong to operator family"):
+        bind_operator_query("mlp_up_proj", family_id="memory")
+
+
+def test_bind_operator_query_rejects_unknown_operator() -> None:
+    with pytest.raises(ValueError, match="Unknown operator query"):
+        bind_operator_query("attn_unregistered")
+
+
+def test_bind_operator_query_rejects_ambiguous_profiling_alias() -> None:
+    with pytest.raises(ValueError, match="ambiguous profiling alias"):
+        bind_operator_query("add")
+
+
+def test_bind_operator_query_rejects_disabled_family() -> None:
+    with pytest.raises(NotImplementedError, match="not enabled for execution"):
+        bind_operator_query("kv_cache_transfer")

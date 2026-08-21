@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from frontier.operators.spec import OperatorFamilySpec, OperatorSpec
+from frontier.operators.spec import (
+    OperatorFamilySpec,
+    OperatorSpec,
+    TensorParallelMode,
+)
 
 
 @dataclass(frozen=True)
@@ -22,6 +26,99 @@ class FamilyBinding:
                 f"is frozen: {self.reason}"
             )
         self.family.require_enabled_for_execution()
+
+
+@dataclass(frozen=True)
+class OperatorQueryBinding:
+    """Registry facts bound to one runtime operator query."""
+
+    family_id: str
+    family: OperatorFamilySpec
+    operator: OperatorSpec
+    physical_name: str
+    profiling_name: str
+    tp_mode: TensorParallelMode | None
+
+
+def bind_operator_query(
+    operator_name: str,
+    *,
+    family_id: str | None = None,
+) -> OperatorQueryBinding:
+    """Bind a physical or unambiguous profiling operator name to the registry."""
+
+    if not isinstance(operator_name, str) or not operator_name:
+        raise ValueError("Operator query name must be a non-empty string")
+
+    from frontier.operators.families import iter_operator_families
+
+    families = tuple(iter_operator_families())
+    if family_id is not None:
+        family_matches = tuple(family for family in families if family.family_id == family_id)
+        if not family_matches:
+            raise ValueError(f"Unknown operator family: {family_id}")
+
+    physical_matches = tuple(
+        (family, operator)
+        for family in families
+        for operator in family.operators
+        if operator.name == operator_name
+    )
+    profiling_matches = tuple(
+        (family, operator)
+        for family in families
+        for operator in family.operators
+        if operator.profiling_name() == operator_name
+    )
+
+    if len(physical_matches) > 1:
+        raise ValueError(
+            f"Duplicate physical operator registration for {operator_name!r}"
+        )
+    if len(physical_matches) == 1:
+        family, operator = physical_matches[0]
+        conflicting_aliases = tuple(
+            (candidate_family, candidate_operator)
+            for candidate_family, candidate_operator in profiling_matches
+            if candidate_operator is not operator
+        )
+        if conflicting_aliases:
+            names = [
+                f"{candidate_family.family_id}/{candidate_operator.name}"
+                for candidate_family, candidate_operator in conflicting_aliases
+            ]
+            raise ValueError(
+                f"Operator query {operator_name!r} collides with profiling aliases: "
+                f"{names}"
+            )
+    elif not profiling_matches:
+        raise ValueError(f"Unknown operator query: {operator_name!r}")
+    elif len(profiling_matches) > 1:
+        names = [
+            f"{candidate_family.family_id}/{candidate_operator.name}"
+            for candidate_family, candidate_operator in profiling_matches
+        ]
+        raise ValueError(
+            f"Operator query {operator_name!r} is an ambiguous profiling alias: {names}"
+        )
+    else:
+        family, operator = profiling_matches[0]
+
+    if family_id is not None and family.family_id != family_id:
+        raise ValueError(
+            f"Operator {operator_name!r} does not belong to operator family "
+            f"{family_id!r}; registered family is {family.family_id!r}"
+        )
+
+    family.require_enabled_for_execution()
+    return OperatorQueryBinding(
+        family_id=family.family_id,
+        family=family,
+        operator=operator,
+        physical_name=operator.name,
+        profiling_name=operator.profiling_name(),
+        tp_mode=operator.tp_mode,
+    )
 
 
 @dataclass(frozen=True)
