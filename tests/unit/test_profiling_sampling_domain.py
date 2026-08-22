@@ -101,6 +101,13 @@ def test_decode_attention_input_reserves_the_current_token():
     assert not AttentionInput(0, 1000, 1, False).is_valid(1000)
 
 
+def test_decode_memory_limit_reserves_the_current_token():
+    decode_input = AttentionInput(0, 32, 1, False)
+
+    assert not decode_input.is_under_memory_limit(32)
+    assert decode_input.is_under_memory_limit(33)
+
+
 def test_explicit_decode_cache_endpoint_remains_bounded():
     inputs = get_attention_input_combinations(
         max_seq_len=1000,
