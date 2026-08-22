@@ -43,26 +43,31 @@ def generate_expert_routing(
         topk_ids: Selected expert indices [num_tokens, top_k]
     
     Raises:
-        ValueError: If load_distribution is not recognized
+        ValueError: If dimensions are non-positive or load_distribution is not recognized
     
     Examples:
         >>> weights, ids = generate_expert_routing(1024, 8, 2, "uniform", seed=42)
         >>> weights.shape, ids.shape
         (torch.Size([1024, 2]), torch.Size([1024, 2]))
     """
-    if seed is not None:
-        torch.manual_seed(seed)
-        np.random.seed(seed)
-    
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    
-    # check top_k
+    if num_tokens <= 0:
+        raise ValueError(f"num_tokens must be positive, got {num_tokens}.")
+    if num_experts <= 0:
+        raise ValueError(f"num_experts must be positive, got {num_experts}.")
+    if top_k <= 0:
+        raise ValueError(f"top_k must be positive, got {top_k}.")
     if top_k > num_experts:
         raise ValueError(
             f"top_k ({top_k}) cannot exceed num_experts ({num_experts}). "
             f"This typically happens when EP is too large. "
             f"Reduce EP so that num_experts_per_device >= router_topk."
         )
+
+    if seed is not None:
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     
     if load_distribution == "uniform":
         # Uniform distribution: each expert has equal probability of being selected
