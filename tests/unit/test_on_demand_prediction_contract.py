@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from types import SimpleNamespace
 from typing import Any
 
 import math
@@ -12,6 +13,9 @@ import pytest
 
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
+)
+from frontier.execution_time_predictor.shared_prediction_model_manager import (
+    ExecutionTimePredictionModelManager,
 )
 from frontier.types import MeasurementType
 
@@ -118,6 +122,17 @@ def test_malformed_exact_lookup_value_fails_before_model_fallback() -> None:
     assert model.calls == 0
 
 
+def test_boolean_exact_lookup_value_is_rejected_before_model_fallback() -> None:
+    predictor, model = _build_predictor(
+        _exact_lookup={(4.0,): True},
+    )
+
+    with pytest.raises(ValueError, match="exact lookup value.*numeric"):
+        predictor._get_on_demand_prediction("test_operator", {"num_tokens": 4})
+
+    assert model.calls == 0
+
+
 def test_legal_model_miss_is_cached_using_declared_feature_order() -> None:
     predictor, model = _build_predictor(
         feature_names=("batch_size", "num_tokens"),
@@ -131,6 +146,16 @@ def test_legal_model_miss_is_cached_using_declared_feature_order() -> None:
     assert model.calls == 1
     assert list(model.inputs[0].columns) == ["batch_size", "num_tokens"]
     assert predictor._runtime_cache["eager"]["test_operator"] == {(2.0, 8.0): 3.75}
+
+
+def test_boolean_runtime_cache_value_is_rejected_before_return() -> None:
+    predictor, model = _build_predictor()
+    predictor._runtime_cache["eager"]["test_operator"][(4.0,)] = True
+
+    with pytest.raises(ValueError, match="runtime cache value.*numeric"):
+        predictor._get_on_demand_prediction("test_operator", {"num_tokens": 4})
+
+    assert model.calls == 0
 
 
 def test_missing_feature_is_rejected_before_runtime_cache_lookup() -> None:
@@ -234,3 +259,118 @@ def test_invalid_model_output_is_rejected_without_runtime_cache(result: float) -
 
     assert model.calls == 1
     assert predictor._runtime_cache["eager"]["test_operator"] == {}
+
+
+def test_exact_lookup_metadata_survives_model_cache_round_trip_by_default(
+    tmp_path,
+) -> None:
+    predictor = _ConcretePredictor.__new__(_ConcretePredictor)
+    predictor._cache_dir = str(tmp_path)
+    predictor._config = SimpleNamespace(no_cache=False)
+    predictor._get_model_hash = lambda _model_name, _df: "roundtrip"
+
+    legacy_model = _CountingModel(("batch_size", "num_tokens"), result=99.0)
+    predictor._store_model_in_cache("test_operator", "roundtrip", legacy_model)
+    dataframe = pd.DataFrame(
+        {
+            "batch_size": [2, 3],
+            "num_tokens": [8, 8],
+            "target": [2.25, 3.5],
+        }
+    )
+
+    loaded = predictor._train_model(
+        model_name="test_operator",
+        df=dataframe,
+        feature_cols=["batch_size", "num_tokens"],
+        target_col="target",
+    )
+    reloaded = predictor._load_model_from_cache("test_operator", "roundtrip")
+
+    expected = {(2.0, 8.0): 2.25, (3.0, 8.0): 3.5}
+    assert loaded._frontier_exact_lookup == expected
+    assert reloaded._frontier_exact_lookup == expected
+
+
+def test_one_feature_moe_exact_lookup_survives_cache_round_trip_and_precedes_runtime_cache(
+    tmp_path,
+) -> None:
+    model_name = "moe_gating_linear"
+    predictor = _ConcretePredictor.__new__(_ConcretePredictor)
+    predictor._cache_dir = str(tmp_path)
+    predictor._config = SimpleNamespace(no_cache=False)
+    predictor._get_model_hash = lambda _model_name, _df: "roundtrip"
+
+    legacy_model = _CountingModel(("num_tokens",), result=99.0)
+    predictor._store_model_in_cache(model_name, "roundtrip", legacy_model)
+    dataframe = pd.DataFrame(
+        {
+            "num_tokens": [1, 2],
+            "target": [9.0, 4.0],
+        }
+    )
+
+    predictor._train_model(
+        model_name=model_name,
+        df=dataframe,
+        feature_cols=["num_tokens"],
+        target_col="target",
+    )
+    reloaded = predictor._load_model_from_cache(model_name, "roundtrip")
+    predictor._models = {model_name: reloaded}
+    predictor._predictions = {model_name: {}}
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._measurement_family_name = lambda _measurement_type: "eager"
+    predictor._runtime_cache = defaultdict(lambda: defaultdict(dict))
+    predictor._runtime_cache["eager"][model_name][(2.0,)] = 99.0
+
+    observed = predictor._get_prediction_for_features(
+        model_name,
+        {"num_tokens": 2},
+        feature_names=("num_tokens",),
+    )
+
+    expected = {(1.0,): 9.0, (2.0,): 4.0}
+    assert reloaded._frontier_exact_lookup == expected
+    assert observed == 4.0
+    assert predictor._runtime_cache["eager"][model_name][(2.0,)] == 99.0
+
+
+def test_shared_manager_exact_lookup_survives_cache_round_trip_by_default(
+    tmp_path,
+) -> None:
+    manager = ExecutionTimePredictionModelManager.__new__(
+        ExecutionTimePredictionModelManager
+    )
+    manager._cache_dir = str(tmp_path)
+    manager._active_measurement_type = MeasurementType.CUDA_EVENT
+    manager._get_model_hash = lambda *_args: "roundtrip"
+    manager._store_model_precision = lambda *_args: None
+
+    legacy_model = _CountingModel(("batch_size", "num_tokens"), result=99.0)
+    manager._store_model_in_cache("test_operator", "roundtrip", legacy_model)
+    dataframe = pd.DataFrame(
+        {
+            "batch_size": [2, 3],
+            "num_tokens": [8, 8],
+            "target": [2.25, 3.5],
+            "profiling_precision": ["FP16", "FP16"],
+            "measurement_type": [
+                MeasurementType.CUDA_EVENT.value,
+                MeasurementType.CUDA_EVENT.value,
+            ],
+        }
+    )
+
+    loaded = manager._train_single_model(
+        model_name="test_operator",
+        df=dataframe,
+        feature_cols=["batch_size", "num_tokens"],
+        target_col="target",
+        execution_time_predictor_config=SimpleNamespace(),
+    )
+    reloaded = manager._load_model_from_cache("test_operator", "roundtrip")
+
+    expected = {(2.0, 8.0): 2.25, (3.0, 8.0): 3.5}
+    assert loaded._frontier_exact_lookup == expected
+    assert reloaded._frontier_exact_lookup == expected

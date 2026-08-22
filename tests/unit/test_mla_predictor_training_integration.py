@@ -185,6 +185,7 @@ def test_mla_train_attention_layer_models_trains_six_imported_targets() -> None:
         df: pd.DataFrame,
         feature_cols: list[str],
         target_col: str,
+        **_kwargs,
     ):
         trained[model_name] = {
             "feature_cols": tuple(feature_cols),
@@ -275,6 +276,7 @@ def test_mla_train_attention_layer_models_filters_sparse_rows_by_target() -> Non
         df: pd.DataFrame,
         feature_cols: list[str],
         target_col: str,
+        **_kwargs,
     ):
         assert not df[target_col].isna().any()
         trained_row_counts[model_name] = len(df)
@@ -432,7 +434,9 @@ def test_mla_train_attention_layer_models_rejects_sparse_target_with_no_observed
     sparse_df["time_stats.attn_mla_v_up_proj.median"] = pd.NA
     predictor._load_attention_df = lambda _path: sparse_df
     predictor._train_model = (
-        lambda *, model_name, df, feature_cols, target_col: _FakeMlaModel(feature_cols)
+        lambda *, model_name, df, feature_cols, target_col, **_kwargs: _FakeMlaModel(
+            feature_cols
+        )
     )
 
     with pytest.raises(

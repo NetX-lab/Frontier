@@ -17,6 +17,7 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
 from frontier.model_architectures import ModelArchitectureProfile
 from frontier.operators import binding as operator_binding
 from frontier.operators.spec import TensorParallelMode
+import frontier.spec_decode.mtp_registry as mtp_registry
 from frontier.training.attention_trainer import AttentionTrainer
 from frontier.training.linear_op_trainer import LinearOpTrainer
 from frontier.types import ClusterType
@@ -143,3 +144,39 @@ def test_attention_trainer_rejects_undeclared_attention_name() -> None:
 
     with pytest.raises(ValueError, match="Unsupported compute model"):
         trainer._get_compute_tp_key("attn_not_declared")
+
+
+def test_target_embedded_mtp_registry_extension_updates_all_tp_consumers(
+    monkeypatch,
+) -> None:
+    probe_name = "mtp_registry_extension_probe"
+    monkeypatch.setattr(
+        mtp_registry,
+        "_TARGET_EMBEDDED_MTP_LINEAR_OPS",
+        mtp_registry.get_target_embedded_mtp_linear_ops() + (probe_name,),
+    )
+
+    predictor = _predictor()
+    manager = object.__new__(ExecutionTimePredictionModelManager)
+    replica_config = SimpleNamespace(
+        attn_tensor_parallel_size=2,
+        moe_tensor_parallel_size=4,
+        model_config=_model_config(),
+        speculative_decoding_config=None,
+    )
+    trainer = object.__new__(LinearOpTrainer)
+    trainer.model_config = _model_config()
+    trainer.tensor_parallel_size = 2
+    trainer._has_target_embedded_mtp_ops = True
+
+    assert predictor._get_linear_op_tp_key(probe_name) == 2
+    assert (
+        manager._get_linear_op_tp_key(
+            probe_name,
+            ClusterType.MONOLITHIC,
+            replica_config,
+            is_moe_model=False,
+        )
+        == 2
+    )
+    assert trainer._get_training_tp_key(probe_name) == 2

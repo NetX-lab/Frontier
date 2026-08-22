@@ -105,6 +105,10 @@ def test_mixed_layer_moe_materializes_moe_and_dense_mlp_predictors(
         row["model_name"]: row["training_context"]["is_moe_model"]
         for row in trained
     }["mlp_up_proj"] is False
+    assert {
+        row["model_name"]: row.get("persist_exact_lookup", True)
+        for row in trained
+    }["moe_grouped_gemm"] is True
 
 
 def test_mixed_layer_predicate_preserves_pure_moe_and_dense_contracts() -> None:

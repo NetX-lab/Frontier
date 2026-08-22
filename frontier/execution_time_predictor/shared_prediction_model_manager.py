@@ -2,7 +2,7 @@ import hashlib
 import os
 import pickle
 from itertools import product
-from typing import Dict, Set, List, Any, Tuple, Optional
+from typing import Dict, Set, List, Any, Tuple, Optional, Mapping
 
 import numpy as np
 import pandas as pd
@@ -68,7 +68,10 @@ from frontier.profiling.cpu_overhead.validation import (
     validate_cpu_overhead_dataframe,
 )
 from frontier.spec_decode.runtime import is_target_embedded_mtp_enabled
-from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_same_tp_linear_op
+from frontier.spec_decode.mtp_registry import (
+    get_target_embedded_mtp_linear_ops,
+    is_target_embedded_mtp_same_tp_linear_op,
+)
 
 logger = init_logger(__name__)
 MIGRATION_HELP_COMMAND = (
@@ -614,10 +617,7 @@ class ExecutionTimePredictionModelManager:
         architecture_profile = _resolve_model_architecture_profile(
             getattr(replica_config, "model_config", None)
         )
-        if op_name in {
-            "mtp_fusion_proj",
-            "lm_head_linear",
-        }:
+        if op_name in get_target_embedded_mtp_linear_ops():
             return resolve_effective_attention_tp_size(
                 op_name="attn_pre_proj",
                 requested_tp_size=replica_config.attn_tensor_parallel_size,
@@ -1468,6 +1468,7 @@ class ExecutionTimePredictionModelManager:
                 target_col=dense_attention_target_columns[kv_cache_model_name],
                 execution_time_predictor_config=execution_time_predictor_config,
                 training_context=training_context,
+                persist_exact_lookup=True,
             )
             trained_model_signatures.add(kv_cache_model_signature)
             logger.info(f"Trained {kv_cache_model_name} for {cluster_type}")
@@ -1599,6 +1600,7 @@ class ExecutionTimePredictionModelManager:
                         target_col="time_stats.attn_prefill.median",  # Same target column as attn_prefill
                         execution_time_predictor_config=execution_time_predictor_config,
                         training_context=training_context,
+                        persist_exact_lookup=True,
                     )
                     trained_model_signatures.add(mixed_batch_model_signature)
                     logger.info(f"Trained attn_prefill_mixed with {len(mixed_batch_df)} samples for {cluster_type}")
@@ -1623,6 +1625,7 @@ class ExecutionTimePredictionModelManager:
                         target_col="time_stats.attn_decode.median",
                         execution_time_predictor_config=execution_time_predictor_config,
                         training_context=training_context,
+                        persist_exact_lookup=True,
                     )
                     trained_model_signatures.add(decode_in_mixed_signature)
                     logger.info(
@@ -1816,12 +1819,14 @@ class ExecutionTimePredictionModelManager:
                 target_col=target_col,
                 execution_time_predictor_config=execution_time_predictor_config,
                 training_context=training_context,
+                persist_exact_lookup=True,
             )
-            model._frontier_exact_lookup = _build_exact_feature_lookup(
-                op_attention_df,
-                feature_cols,
-                target_col,
-            )
+            if not hasattr(model, "_frontier_exact_lookup"):
+                model._frontier_exact_lookup = _build_exact_feature_lookup(
+                    op_attention_df,
+                    feature_cols,
+                    target_col,
+                )
             models[model_name] = model
             trained_model_signatures.add(model_signature)
             logger.info(f"Trained {model_name} for {cluster_type}")
@@ -2046,19 +2051,21 @@ class ExecutionTimePredictionModelManager:
                     target_col=target_col,
                     execution_time_predictor_config=execution_time_predictor_config,
                     training_context=training_context,
+                    persist_exact_lookup=True,
                 )
-                model._frontier_exact_lookup = _build_exact_feature_lookup(
-                    cpu_overhead_df,
-                    feature_cols,
-                    target_col,
-                )
+                if not hasattr(model, "_frontier_exact_lookup"):
+                    model._frontier_exact_lookup = _build_exact_feature_lookup(
+                        cpu_overhead_df,
+                        feature_cols,
+                        target_col,
+                    )
                 models[model_name] = model
                 trained_model_signatures.add(model_signature)
 
         trained_model_signatures.add(cpu_signature)
         return models
 
-    def _train_single_model(self, model_name: str, df: pd.DataFrame, feature_cols: List[str], target_col: str, execution_time_predictor_config, training_context: Dict[str, Any] = None) -> BaseEstimator:
+    def _train_single_model(self, model_name: str, df: pd.DataFrame, feature_cols: List[str], target_col: str, execution_time_predictor_config, training_context: Dict[str, Any] = None, persist_exact_lookup: bool = True) -> BaseEstimator:
         """Train a single model with given data and configuration."""
         if len(df) == 0:
             # 提供详细的错误信息，以便调试
@@ -2110,6 +2117,15 @@ class ExecutionTimePredictionModelManager:
         )
         cached_model = self._load_model_from_cache(model_name, model_hash)
         if cached_model:
+            if persist_exact_lookup:
+                self._ensure_exact_lookup_metadata(
+                    model_name=model_name,
+                    model_hash=model_hash,
+                    model=cached_model,
+                    df=df,
+                    feature_cols=feature_cols,
+                    target_col=target_col,
+                )
             self._store_model_precision(model_name, profiling_precision, cached_model)
             return cached_model
 
@@ -2198,6 +2214,13 @@ class ExecutionTimePredictionModelManager:
         setattr(best_estimator, "_frontier_target_col", target_col)
         # Tie the trained estimator to its cache hash so prediction caches can include model identity.
         setattr(best_estimator, "_frontier_model_hash", model_hash)
+
+        if persist_exact_lookup:
+            setattr(
+                best_estimator,
+                "_frontier_exact_lookup",
+                _build_exact_feature_lookup(df, feature_cols, target_col),
+            )
 
         self._store_model_in_cache(model_name, model_hash, best_estimator)
         self._store_model_precision(model_name, profiling_precision, best_estimator)
@@ -3233,6 +3256,32 @@ class ExecutionTimePredictionModelManager:
             pickle.dump(model, open(cache_file, "wb"), protocol=pickle.HIGHEST_PROTOCOL)
             logger.info(f"✓ Saved trained model '{model_name}' to cache (hash: {model_hash})")
             logger.info(f"  Cache file: {cache_file}")
+
+    def _ensure_exact_lookup_metadata(
+        self,
+        *,
+        model_name: str,
+        model_hash: str,
+        model: BaseEstimator,
+        df: pd.DataFrame,
+        feature_cols: List[str],
+        target_col: str,
+    ) -> None:
+        """Persist exact measured rows before an on-demand model cache is stored."""
+        if hasattr(model, "_frontier_exact_lookup"):
+            exact_lookup = getattr(model, "_frontier_exact_lookup")
+            if not isinstance(exact_lookup, Mapping):
+                raise ValueError(
+                    f"Exact lookup metadata for {model_name} must be a mapping"
+                )
+            return
+
+        setattr(
+            model,
+            "_frontier_exact_lookup",
+            _build_exact_feature_lookup(df, feature_cols, target_col),
+        )
+        self._store_model_in_cache(model_name, model_hash, model)
 
     def get_models(self) -> Dict[str, Dict[str, BaseEstimator]]:
         """Return the trained models grouped by measurement family."""

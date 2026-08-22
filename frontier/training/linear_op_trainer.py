@@ -23,7 +23,10 @@ from frontier.execution_time_predictor.attention_tp_policy import (
 )
 from frontier.operators.binding import resolve_operator_query_tp_mode
 from frontier.operators.spec import TensorParallelMode
-from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_same_tp_linear_op
+from frontier.spec_decode.mtp_registry import (
+    get_target_embedded_mtp_linear_ops,
+    is_target_embedded_mtp_same_tp_linear_op,
+)
 from frontier.training.base_trainer import BaseTrainer
 from frontier.logger import init_logger
 
@@ -297,7 +300,7 @@ class LinearOpTrainer(BaseTrainer):
         return f"time_stats.{model_name}.median"
 
     def _get_training_tp_key(self, model_name: str) -> int:
-        if model_name in {"mtp_fusion_proj", "lm_head_linear"}:
+        if model_name in get_target_embedded_mtp_linear_ops():
             return resolve_effective_attention_tp_size(
                 op_name="attn_pre_proj",
                 requested_tp_size=self.tensor_parallel_size,

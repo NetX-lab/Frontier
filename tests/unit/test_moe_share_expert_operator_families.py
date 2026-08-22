@@ -287,11 +287,17 @@ def test_sklearn_moe_training_uses_moe_family_profiling_names(
             tuple(model_names)
         )
     )
-    predictor._train_model = lambda **kwargs: SimpleNamespace(
-        model_name=kwargs["model_name"],
-        feature_cols=tuple(kwargs["feature_cols"]),
-        target_col=kwargs["target_col"],
-    )
+    training_calls = []
+
+    def _train_model(**kwargs):
+        training_calls.append(kwargs)
+        return SimpleNamespace(
+            model_name=kwargs["model_name"],
+            feature_cols=tuple(kwargs["feature_cols"]),
+            target_col=kwargs["target_col"],
+        )
+
+    predictor._train_model = _train_model
 
     models = predictor._train_moe_models()
 
@@ -299,6 +305,9 @@ def test_sklearn_moe_training_uses_moe_family_profiling_names(
     assert registered_model_names == [("moe_family_first", "moe_family_second")]
     assert models["moe_family_first"].target_col == "time_stats.moe_family_first.median"
     assert models["moe_family_second"].target_col == "time_stats.moe_family_second.median"
+    assert all(
+        call.get("persist_exact_lookup", True) is True for call in training_calls
+    )
 
 
 def test_sklearn_moe_dataset_contract_filters_gating_context_from_operator_precision(

@@ -368,6 +368,7 @@ def test_attention_training_uses_true_mixed_rows_for_verify_prefill_model() -> N
         df: pd.DataFrame,
         feature_cols: list[str],
         target_col: str,
+        **_kwargs: object,
     ) -> object:
         trained[model_name] = {
             "df": df.copy(),
@@ -464,6 +465,7 @@ def test_attention_training_derives_true_mixed_prefill_features_from_list_column
         df: pd.DataFrame,
         feature_cols: list[str],
         target_col: str,
+        **_kwargs: object,
     ) -> object:
         trained[model_name] = {
             "df": df.copy(),
