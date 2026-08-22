@@ -1231,6 +1231,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             return 0.0
 
         routed_tokens = self._get_moe_tp_routed_tokens(batch, cluster_type)
+        if routed_tokens == 0:
+            return 0.0
+
         data_size_bytes = (
             int(cluster_replica_config.model_config.embedding_dim)
             * 2
@@ -1969,6 +1972,14 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         cluster_type,
                         num_layers,
                     ),
+                    moe_tensor_parallel_allreduce_time=self._predict_one_op_time(
+                        "moe_tensor_parallel_allreduce_time",
+                        moe_tp_allreduce_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
                     pipeline_parallel_communication_time=communication_time.pipeline_parallel_time,
                     schedule_time=overhead_time.schedule_time,
                     sampler_e2e_time=overhead_time.sampler_e2e_time,
@@ -2542,9 +2553,17 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     dp_output_allreduce_time,
                 ) = self.predict_dp_moe_allreduce_times(batch, cluster_type)
 
-                # Keep PREFILL MoE TP communication composition aligned with monolithic MoE path.
-                moe_tp_size = cluster_replica_config.moe_tensor_parallel_size
-                moe_tp_allreduce_time = 0.0
+                # Keep PREFILL MoE TP communication composition aligned with the
+                # routed-token contract used by the shared MoE predictor.  An
+                # EP lane carries only its local routed assignments; the source
+                # batch's effective token count remains valid for shared
+                # allgather and shared-expert collectives below.
+                moe_tp_size = int(cluster_replica_config.moe_tensor_parallel_size)
+                moe_tp_allreduce_time = self._predict_moe_tp_allreduce_time(
+                    batch=batch,
+                    cluster_type=cluster_type,
+                    cluster_replica_config=cluster_replica_config,
+                )
                 ffn_tp_allgather_time = 0.0
                 share_expert_tp_allreduce_time = 0.0
                 if moe_tp_size > 1:
@@ -2564,16 +2583,6 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         )
                     per_device_data_size_bytes = data_size_bytes // moe_tp_size
                     quant_manager = get_quantization_manager()
-                    moe_tp_allreduce_bytes = quant_manager.adjust_tensor_size(
-                        "allreduce", data_size_bytes, cluster_type
-                    )
-                    moe_tp_allreduce_time = self.predict_allreduce_time(
-                        data_size_bytes=moe_tp_allreduce_bytes,
-                        num_devices=moe_tp_size,
-                        cluster_type=cluster_type,
-                        comm_domain="MOE_TP",
-                    )
-
                     architecture_profile = self._resolve_model_architecture_profile_for_config(
                         cluster_replica_config.model_config
                     )
@@ -2593,6 +2602,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                             + moe_time.share_expert_act_time
                             > 0
                         ):
+                            moe_tp_allreduce_bytes = quant_manager.adjust_tensor_size(
+                                "allreduce", data_size_bytes, cluster_type
+                            )
                             raw_share_expert_tp_allreduce_time = self.predict_allreduce_time(
                                 data_size_bytes=moe_tp_allreduce_bytes,
                                 num_devices=moe_tp_size,

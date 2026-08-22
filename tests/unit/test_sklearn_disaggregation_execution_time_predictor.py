@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import pytest
 
 from frontier.entities import EPBatchGroup, Request
+from frontier.entities.time_components import AttentionTime
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
     SklearnDisaggregationExecutionTimePredictor,
 )
@@ -497,6 +499,293 @@ def test_disaggregation_moe_tp_allreduce_keeps_source_tokens_for_shared_batch() 
         )
         == 8
     )
+
+
+def _common_moe_tp_helper_predictor(*, moe_tp: int, dummy: bool):
+    predictor = _DummyDisaggregationPredictor.__new__(
+        _DummyDisaggregationPredictor
+    )
+    predictor._cluster_type = ClusterType.PREFILL
+    predictor._model_config = SimpleNamespace(embedding_dim=8)
+    predictor._replica_config = SimpleNamespace(moe_tensor_parallel_size=moe_tp)
+    predictor._enable_dummy_mode = dummy
+    predictor._dummy_execution_time = 5.0
+    return predictor
+
+
+def test_common_moe_tp_helper_uses_lane_tokens_and_moe_tp_domain(
+    monkeypatch,
+) -> None:
+    predictor = _common_moe_tp_helper_predictor(moe_tp=3, dummy=False)
+    backend = SimpleNamespace(predict_allreduce=MagicMock(return_value=2.5))
+    predictor._cc_backend = backend
+    predictor._strip_collective_sim_allreduce_launch_overhead_if_needed = (
+        lambda **kwargs: kwargs["predicted_ms"]
+    )
+    monkeypatch.setattr(
+        "frontier.execution_time_predictor.sklearn_moe_execution_time_predictor.get_quantization_manager",
+        lambda: SimpleNamespace(
+            adjust_tensor_size=lambda _collective, data_size_bytes, _cluster_type: data_size_bytes
+        ),
+    )
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 3, 0)],
+        num_tokens=[3],
+        replica_id=0,
+        ep_id=1,
+        time=0.0,
+        source_batch_ids=[7],
+        per_expert_tokens={2: 0, 3: 3},
+        cluster_type=ClusterType.PREFILL,
+        is_moe=True,
+    )
+
+    result = predictor._get_moe_tensor_parallel_allreduce_time(lane)
+
+    assert result == pytest.approx(2.5)
+    backend.predict_allreduce.assert_called_once_with(
+        data_size_bytes=8 * 2 * 3,
+        num_devices=3,
+        cluster_type=ClusterType.PREFILL,
+        comm_domain="MOE_TP",
+    )
+
+
+def test_common_moe_tp_helper_uses_effective_tokens_for_shared_batch(
+    monkeypatch,
+) -> None:
+    predictor = _common_moe_tp_helper_predictor(moe_tp=3, dummy=False)
+    backend = SimpleNamespace(predict_allreduce=MagicMock(return_value=2.5))
+    predictor._cc_backend = backend
+    predictor._strip_collective_sim_allreduce_launch_overhead_if_needed = (
+        lambda **kwargs: kwargs["predicted_ms"]
+    )
+    monkeypatch.setattr(
+        "frontier.execution_time_predictor.sklearn_moe_execution_time_predictor.get_quantization_manager",
+        lambda: SimpleNamespace(
+            adjust_tensor_size=lambda _collective, data_size_bytes, _cluster_type: data_size_bytes
+        ),
+    )
+    batch = SimpleNamespace(
+        get_effective_total_tokens_rounded=lambda _cluster_type: 8,
+    )
+
+    predictor._get_moe_tensor_parallel_allreduce_time(batch)
+
+    backend.predict_allreduce.assert_called_once_with(
+        data_size_bytes=8 * 2 * 8,
+        num_devices=3,
+        cluster_type=ClusterType.PREFILL,
+        comm_domain="MOE_TP",
+    )
+
+
+@pytest.mark.parametrize("dummy", (False, True))
+def test_common_moe_tp_helper_returns_exact_zero_for_moe_tp_one(dummy: bool) -> None:
+    predictor = _common_moe_tp_helper_predictor(moe_tp=1, dummy=dummy)
+    batch = SimpleNamespace(
+        get_effective_total_tokens_rounded=lambda _cluster_type: 8,
+    )
+
+    assert predictor._get_moe_tensor_parallel_allreduce_time(batch) == 0.0
+
+
+def test_common_dummy_moe_tp_helper_returns_zero_for_zero_routed_lane() -> None:
+    predictor = _common_moe_tp_helper_predictor(moe_tp=2, dummy=True)
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 0, 0)],
+        num_tokens=[0],
+        replica_id=0,
+        ep_id=1,
+        time=0.0,
+        source_batch_ids=[7],
+        per_expert_tokens={0: 0, 1: 0},
+        cluster_type=ClusterType.PREFILL,
+        is_moe=True,
+    )
+
+    assert predictor._get_moe_tensor_parallel_allreduce_time(lane) == 0.0
+
+
+def test_disaggregation_moe_tp_allreduce_uses_lane_tokens_and_moe_tp_domain(
+    monkeypatch,
+) -> None:
+    predictor = _DummyDisaggregationPredictor.__new__(
+        _DummyDisaggregationPredictor
+    )
+    model_config = SimpleNamespace(embedding_dim=4096)
+    cluster_replica_config = SimpleNamespace(
+        model_config=model_config,
+        moe_tensor_parallel_size=3,
+    )
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 4, 0)],
+        num_tokens=[4],
+        replica_id=0,
+        ep_id=1,
+        time=0.0,
+        source_batch_ids=[7],
+        per_expert_tokens={2: 0, 3: 4},
+        cluster_type=ClusterType.PREFILL,
+        is_moe=True,
+    )
+    predictor.predict_allreduce_time = MagicMock(return_value=7.0)
+    monkeypatch.setattr(
+        "frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor.get_quantization_manager",
+        lambda: SimpleNamespace(
+            adjust_tensor_size=lambda _collective, data_size_bytes, _cluster_type: data_size_bytes
+        ),
+    )
+
+    result = predictor._predict_moe_tp_allreduce_time(
+        batch=lane,
+        cluster_type=ClusterType.PREFILL,
+        cluster_replica_config=cluster_replica_config,
+    )
+
+    assert result == pytest.approx(7.0)
+    predictor.predict_allreduce_time.assert_called_once_with(
+        data_size_bytes=4096 * 2 * 4,
+        num_devices=3,
+        cluster_type=ClusterType.PREFILL,
+        comm_domain="MOE_TP",
+    )
+
+
+def test_disaggregation_moe_tp_allreduce_skips_zero_routed_lane(
+    monkeypatch,
+) -> None:
+    predictor = _DummyDisaggregationPredictor.__new__(
+        _DummyDisaggregationPredictor
+    )
+    cluster_replica_config = SimpleNamespace(
+        model_config=SimpleNamespace(embedding_dim=4096),
+        moe_tensor_parallel_size=2,
+    )
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 0, 0)],
+        num_tokens=[0],
+        replica_id=0,
+        ep_id=1,
+        time=0.0,
+        source_batch_ids=[7],
+        per_expert_tokens={0: 0, 1: 0},
+        cluster_type=ClusterType.DECODE_FFN,
+        is_moe=True,
+    )
+    predictor.predict_allreduce_time = MagicMock(return_value=3.0)
+    monkeypatch.setattr(
+        "frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor.get_quantization_manager",
+        lambda: SimpleNamespace(
+            adjust_tensor_size=lambda _collective, data_size_bytes, _cluster_type: data_size_bytes
+        ),
+    )
+
+    result = predictor._predict_moe_tp_allreduce_time(
+        batch=lane,
+        cluster_type=ClusterType.DECODE_FFN,
+        cluster_replica_config=cluster_replica_config,
+    )
+
+    assert result == 0.0
+    predictor.predict_allreduce_time.assert_not_called()
+
+
+@pytest.mark.parametrize("cluster_type", (ClusterType.PREFILL, ClusterType.DECODE_FFN))
+def test_disaggregation_ep_lane_uses_moe_tp_helper_for_routed_payload(
+    cluster_type: ClusterType,
+) -> None:
+    predictor = _DummyDisaggregationPredictor.__new__(
+        _DummyDisaggregationPredictor
+    )
+    predictor._enable_dummy_mode = False
+    predictor._cluster_type = cluster_type
+    model_config = SimpleNamespace(
+        is_moe=True,
+        embedding_dim=128,
+        is_moe_layer=lambda _layer_id: True,
+        get_model_architecture_profile=lambda: ModelArchitectureProfile.generic(),
+    )
+    replica_config = SimpleNamespace(
+        model_config=model_config,
+        total_expert_num=4,
+        attn_tensor_parallel_size=4,
+        moe_tensor_parallel_size=2,
+        moe_expert_parallel_size=2,
+        num_pipeline_stages=1,
+    )
+    predictor._replica_config = replica_config
+    predictor._model_config = model_config
+    predictor._get_cluster_replica_config = lambda _cluster_type: replica_config
+    predictor._select_measurement_type_for_batch = lambda _batch: None
+    predictor._require_predictions_for_measurement_type = lambda *_args: None
+    predictor._activate_measurement_type = lambda *_args: None
+    predictor._emit_cuda_graph_activation_records = lambda *_args: None
+    predictor._get_communication_time = lambda *_args, **_kwargs: SimpleNamespace(
+        tensor_parallel_time=3.0,
+        pipeline_parallel_time=0.0,
+    )
+    predictor._get_overhead_time = lambda *_args: SimpleNamespace(
+        schedule_time=0.0,
+        sampler_e2e_time=0.0,
+        prepare_inputs_e2e_time=0.0,
+        process_model_outputs_time=0.0,
+        ray_comm_time=0.0,
+        pp_producer_send_path_runtime_time=0.0,
+        pp_receiver_head_runtime_time=0.0,
+        pp_prefill_consumer_active_runtime_time=0.0,
+        pp_stage_boundary_residual_runtime_time=0.0,
+        pp_stage_boundary_handoff_time=0.0,
+    )
+    predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
+    predictor.predict_attention_layer_time = lambda *_args, **_kwargs: AttentionTime()
+    predictor.predict_moe_layer_time = lambda *_args, **_kwargs: SimpleNamespace(
+        moe_grouped_gemm_time=5.0,
+        moe_gating_time=1.0,
+        moe_shuffling_time=0.5,
+        share_expert_up_proj_time=0.0,
+        share_expert_down_proj_time=0.0,
+        share_expert_act_time=0.0,
+        total_time=lambda: 6.5,
+    )
+    predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 1.0
+    predictor._get_add_layer_act_execution_time = lambda _batch: 2.0
+    predictor.predict_dp_moe_allreduce_times = lambda *_args: (0.0, 0.0)
+    predictor._predict_named_ep_phase_operator_times = lambda **_kwargs: {
+        "expert_parallel_alltoall_dispatch": 0.25,
+        "expert_parallel_alltoall_combine": 0.75,
+    }
+    predictor._predict_one_op_time = (
+        lambda _name, value, *_args, **_kwargs: value
+    )
+    predictor.predict_allreduce_time = MagicMock(return_value=3.0)
+    predictor._predict_moe_tp_allreduce_time = MagicMock(return_value=7.0)
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 100, 0)],
+        num_tokens=[100],
+        replica_id=0,
+        ep_id=1,
+        time=0.0,
+        source_batch_ids=[7],
+        per_expert_tokens={0: 0, 1: 3},
+        cluster_type=cluster_type,
+        is_moe=True,
+    )
+
+    result = predictor.predict_stage_execution_time(
+        lane,
+        stage_id=0,
+        cluster_type=cluster_type,
+        num_layers=1,
+        layer_id=2,
+    )
+
+    predictor._predict_moe_tp_allreduce_time.assert_called_once_with(
+        batch=lane,
+        cluster_type=cluster_type,
+        cluster_replica_config=replica_config,
+    )
+    assert result._moe_tensor_parallel_allreduce_time == pytest.approx(7.0)
 
 
 def test_disaggregation_dense_layer_uses_shared_expert_profile_rows() -> None:

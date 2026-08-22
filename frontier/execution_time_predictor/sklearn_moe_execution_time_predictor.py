@@ -1570,14 +1570,24 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         This is separate from attention TP all-reduce and is required when
         attn_tp != moe_tp in unified clusters (MONOLITHIC/DECODE/PREFILL).
         """
-        moe_tp_size = self._replica_config.moe_tensor_parallel_size
+        moe_tp_size = int(self._replica_config.moe_tensor_parallel_size)
         # COMM_SKIP: TP all-reduce not needed when moe_tp_size <= 1 (no tensor sharding)
         if moe_tp_size <= 1:
             return 0.0
 
+        # Routed EP lanes carry only their local expert assignments.  A shared
+        # batch has no lane-local map, so its compute-effective token count is
+        # the payload domain for the full MoE TP collective.
+        routed_tokens = (
+            self._get_local_ep_routed_tokens(batch)
+            if isinstance(batch, EPBatchGroup)
+            else self._get_effective_moe_total_tokens(batch)
+        )
+        if routed_tokens == 0:
+            return 0.0
+
         if self._cc_backend is not None:
-            effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-            data_size_bytes = self._model_config.embedding_dim * 2 * effective_tokens
+            data_size_bytes = self._model_config.embedding_dim * 2 * routed_tokens
             quant_manager = get_quantization_manager()
             data_size_bytes = quant_manager.adjust_tensor_size(
                 "allreduce", data_size_bytes, self._cluster_type
@@ -1603,7 +1613,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         if self._enable_dummy_mode:
             logger.debug(
                 f"_get_moe_tensor_parallel_allreduce_time: CC Backend not available, "
-                f"using dummy mode value={self._dummy_execution_time} ms"
+                f"using dummy mode value={self._dummy_execution_time} ms for "
+                f"routed_tokens={routed_tokens}"
             )
             return self._dummy_execution_time
 
