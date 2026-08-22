@@ -32,8 +32,9 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import warnings
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing as mp
 
@@ -822,6 +823,91 @@ def _validate_cli_conflicts(args: argparse.Namespace) -> None:
             raise ValueError(
                 "--vllm_mla_cuda_op_log cannot be combined with mixed profiling modes."
             )
+
+
+def _filter_standard_attention_inputs_by_memory(
+    input_combinations: List[AttentionInput],
+    max_num_tokens: int,
+    model: str,
+    tensor_parallel_size: int,
+    explicit_decode_kv_cache_sizes: Optional[List[int]] = None,
+) -> Tuple[List[AttentionInput], Set[int]]:
+    """Filter standard attention inputs and report target-local explicit drops.
+
+    Automatic profiling points are allowed to disappear when a selected
+    model/tensor-parallel target has insufficient physical KV capacity. Explicit
+    decode KV points follow the same per-target filtering policy, but every
+    discarded explicit point is surfaced as a warning so that the resulting CSV
+    coverage is visible to the caller.
+    """
+    explicit_kv_values = {
+        int(value) for value in (explicit_decode_kv_cache_sizes or [])
+    }
+    filtered_inputs: List[AttentionInput] = []
+    retained_explicit_kv: Set[int] = set()
+    discarded_explicit_inputs: List[AttentionInput] = []
+
+    for input_combination in input_combinations:
+        under_memory_limit = input_combination.is_under_memory_limit(max_num_tokens)
+        if under_memory_limit:
+            filtered_inputs.append(input_combination)
+
+        if (
+            not input_combination.is_prefill
+            and input_combination.kv_cache_size in explicit_kv_values
+        ):
+            if under_memory_limit:
+                retained_explicit_kv.add(input_combination.kv_cache_size)
+            else:
+                discarded_explicit_inputs.append(input_combination)
+
+    if discarded_explicit_inputs:
+        discarded_values = sorted(
+            {item.kv_cache_size for item in discarded_explicit_inputs}
+        )
+        retained_values = sorted(retained_explicit_kv)
+        warnings.warn(
+            "Standard attention memory filtering discarded "
+            f"{len(discarded_explicit_inputs)} combination(s) for explicit "
+            f"decode KV values={discarded_values}; model={model!r}, "
+            f"tensor_parallel_size={tensor_parallel_size}, "
+            f"physical_capacity={max_num_tokens} tokens. "
+            f"Retained explicit KV values for this target={retained_values}. "
+            "The discarded rows were omitted for this target; other selected "
+            "targets may retain them.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
+    return filtered_inputs, retained_explicit_kv
+
+
+def _validate_explicit_decode_kv_coverage(
+    explicit_decode_kv_cache_sizes: Optional[List[int]],
+    retained_explicit_kv: Set[int],
+    target_capacities: Dict[Tuple[str, int], int],
+) -> None:
+    """Fail only when no selected target can profile an explicit KV value."""
+    if not explicit_decode_kv_cache_sizes:
+        return
+
+    requested_values = {int(value) for value in explicit_decode_kv_cache_sizes}
+    missing_values = sorted(requested_values - set(retained_explicit_kv))
+    if not missing_values:
+        return
+
+    capacity_details = ", ".join(
+        f"{model!r}/TP={tensor_parallel_size}: {capacity} tokens"
+        for (model, tensor_parallel_size), capacity in sorted(
+            target_capacities.items(),
+            key=lambda item: (item[0][0], item[0][1]),
+        )
+    )
+    raise ValueError(
+        "no physically legal pairing for explicit decode KV values "
+        f"{missing_values} across the selected model/TP targets; "
+        f"target capacities: {capacity_details or '<none>'}."
+    )
 
 
 def _attach_attention_output_metadata(
@@ -1850,6 +1936,8 @@ def main():
     # Filter standard combinations by memory
     total_combos = {}
     max_num_blocks_dict = {}
+    explicit_decode_kv_retained: Set[int] = set()
+    standard_target_capacities: Dict[Tuple[str, int], int] = {}
     for model in args.models:
         model_config = model_configs[model]
         dtype = model_dtypes[model]
@@ -1864,15 +1952,37 @@ def main():
                 dtype,
                 max_pipeline_parallel_size=args.max_pipeline_parallel_size,
             )
-            max_num_blocks_dict[(model, num_tensor_parallel_workers)] = max_num_blocks
-            total_combos[(model, num_tensor_parallel_workers)] = list(
-                filter(
-                    lambda input_combination: input_combination.is_under_memory_limit(
-                        max_num_blocks * args.block_size
-                    ),
-                    input_combinations,
-                )
+            target_key = (model, num_tensor_parallel_workers)
+            target_capacity = max_num_blocks * args.block_size
+            max_num_blocks_dict[target_key] = max_num_blocks
+            standard_target_capacities[target_key] = target_capacity
+            (
+                total_combos[target_key],
+                retained_target_explicit_kv,
+            ) = _filter_standard_attention_inputs_by_memory(
+                input_combinations,
+                max_num_tokens=target_capacity,
+                model=model,
+                tensor_parallel_size=num_tensor_parallel_workers,
+                explicit_decode_kv_cache_sizes=args.decode_kv_cache_size_list,
             )
+            explicit_decode_kv_retained.update(retained_target_explicit_kv)
+
+    _validate_explicit_decode_kv_coverage(
+        explicit_decode_kv_cache_sizes=args.decode_kv_cache_size_list,
+        retained_explicit_kv=explicit_decode_kv_retained,
+        target_capacities=standard_target_capacities,
+    )
+    if args.decode_kv_cache_size_list is not None:
+        requested_explicit_kv = sorted(
+            {int(value) for value in args.decode_kv_cache_size_list}
+        )
+        print(
+            "Standard attention explicit decode KV coverage after physical "
+            f"filtering: requested={requested_explicit_kv}, "
+            f"retained={sorted(explicit_decode_kv_retained)}, "
+            f"target_capacities={standard_target_capacities}"
+        )
 
     # Calculate total work for progress bar
     total_work = sum(len(v) for v in total_combos.values())
