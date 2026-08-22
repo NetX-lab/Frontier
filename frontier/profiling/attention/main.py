@@ -655,7 +655,10 @@ def parse_args():
         type=int,
         nargs="+",
         default=[64, 128, 256, 512, 1024],
-        help="Prefill chunk sizes for true mixed-batch profiling.",
+        help=(
+            "Prefill chunk sizes for true mixed-batch profiling. "
+            "These values extend the automatic max-context endpoint."
+        ),
     )
     parser.add_argument(
         "--true_mixed_decode_batch_sizes",
@@ -669,7 +672,10 @@ def parse_args():
         type=int,
         nargs="+",
         default=[128, 256, 512, 1024, 2048],
-        help="Decode KV cache sizes for true mixed-batch profiling.",
+        help=(
+            "Decode KV cache sizes for true mixed-batch profiling. "
+            "These values extend the automatic max-context endpoint."
+        ),
     )
     parser.add_argument(
         "--true_mixed_prefill_kv_cache_size",

@@ -154,6 +154,28 @@ def test_legacy_mixed_prefill_emits_unique_structural_workloads():
     assert len(inputs) == len(identities)
 
 
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"min_batch_size": 129, "max_batch_size": 129}, "batch_size"),
+        ({"kv_cache_sizes": [1000]}, "kv_cache_sizes"),
+        ({"mode": "unsupported"}, "mode"),
+    ],
+)
+def test_legacy_mixed_prefill_rejects_runtime_invalid_axes(kwargs, message):
+    base_kwargs = {
+        "max_seq_len": 1000,
+        "min_batch_size": 2,
+        "max_batch_size": 2,
+        "mode": "even",
+        "kv_cache_sizes": [0],
+    }
+    base_kwargs.update(kwargs)
+
+    with pytest.raises(ValueError, match=message):
+        get_mixed_prefill_input_combinations(**base_kwargs)
+
+
 def test_online_grid_explicit_lists_extend_default_envelope():
     inputs = get_online_grid_mixed_prefill_input_combinations(
         max_seq_len=1000,
@@ -170,6 +192,34 @@ def test_online_grid_explicit_lists_extend_default_envelope():
     assert {(2, 10), (3, 11), (4, 12)} <= points
 
 
+def test_online_grid_rejects_runtime_invalid_explicit_batch_size():
+    with pytest.raises(ValueError, match="batch_size_list"):
+        get_online_grid_mixed_prefill_input_combinations(
+            max_seq_len=1000,
+            min_batch_size=2,
+            max_batch_size=2,
+            min_total_tokens=10,
+            max_total_tokens=10,
+            shapes_per_point=1,
+            batch_size_list=[129],
+            total_tokens_list=[129],
+        )
+
+
+def test_online_grid_rejects_invalid_explicit_axis_cross_product():
+    with pytest.raises(ValueError, match="total_tokens"):
+        get_online_grid_mixed_prefill_input_combinations(
+            max_seq_len=1000,
+            min_batch_size=2,
+            max_batch_size=2,
+            min_total_tokens=10,
+            max_total_tokens=10,
+            shapes_per_point=1,
+            batch_size_list=[4],
+            total_tokens_list=[3],
+        )
+
+
 def test_true_mixed_grid_reaches_prefill_and_decode_endpoints():
     inputs = get_true_mixed_attention_input_combinations(
         max_seq_len=1000,
@@ -183,3 +233,33 @@ def test_true_mixed_grid_reaches_prefill_and_decode_endpoints():
     assert max(item.prefill_seq_lens[0] for item in inputs) == 1000
     assert max(item.decode_kv_cache_sizes[0] for item in inputs) == 999
     assert all(item.is_valid(max_seq_len=1000, max_batch_size=128) for item in inputs)
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"prefill_chunk_sizes": [1001]}, "prefill_chunk_sizes"),
+        ({"decode_kv_cache_sizes": [1000]}, "decode_kv_cache_sizes"),
+        (
+            {
+                "prefill_batch_sizes": [100],
+                "decode_batch_sizes": [29],
+            },
+            "total batch size",
+        ),
+        ({"prefill_kv_cache_size": 1000}, "prefill_kv_cache_size"),
+    ],
+)
+def test_true_mixed_rejects_runtime_invalid_explicit_axes(kwargs, message):
+    base_kwargs = {
+        "max_seq_len": 1000,
+        "prefill_batch_sizes": [1],
+        "prefill_chunk_sizes": [64],
+        "decode_batch_sizes": [1],
+        "decode_kv_cache_sizes": [128],
+        "prefill_kv_cache_size": 0,
+    }
+    base_kwargs.update(kwargs)
+
+    with pytest.raises(ValueError, match=message):
+        get_true_mixed_attention_input_combinations(**base_kwargs)

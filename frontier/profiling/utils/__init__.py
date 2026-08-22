@@ -40,6 +40,8 @@ EXPORTABLE_PROFILE_METHOD_CHOICES = [
     ProfileMethod.RECORD_FUNCTION.value,
 ]
 
+_MAX_MIXED_ATTENTION_BATCH_SIZE = 128
+
 
 def normalize_profile_method(profile_method: str) -> str:
     normalized = str(profile_method).strip().lower()
@@ -555,8 +557,17 @@ def get_mixed_prefill_input_combinations(
         raise ValueError("min_batch_size must be >= 2 for mixed prefill profiling.")
     if max_batch_size < min_batch_size:
         raise ValueError("max_batch_size must be >= min_batch_size.")
+    if max_batch_size > _MAX_MIXED_ATTENTION_BATCH_SIZE:
+        raise ValueError(
+            "max_batch_size must be <= "
+            f"{_MAX_MIXED_ATTENTION_BATCH_SIZE} for mixed prefill profiling."
+        )
     if num_samples_per_config <= 0:
         raise ValueError("num_samples_per_config must be > 0.")
+    if mode not in {"even", "random", "both"}:
+        raise ValueError(
+            f"mode must be one of even, random, or both, got {mode!r}."
+        )
 
     if kv_cache_sizes is None:
         kv_cache_sizes = [0]
@@ -565,6 +576,16 @@ def get_mixed_prefill_input_combinations(
     if any(kv_cache_size < 0 for kv_cache_size in kv_cache_sizes):
         raise ValueError("All kv_cache_sizes must be non-negative.")
     kv_cache_sizes = sorted({int(kv_cache_size) for kv_cache_size in kv_cache_sizes})
+    oversized_kv_cache_sizes = [
+        kv_cache_size
+        for kv_cache_size in kv_cache_sizes
+        if kv_cache_size >= max_seq_len
+    ]
+    if oversized_kv_cache_sizes:
+        raise ValueError(
+            "kv_cache_sizes values must be <= max_seq_len - 1, "
+            f"got {oversized_kv_cache_sizes}."
+        )
 
     input_combinations = []
     seen_inputs = set()
@@ -578,8 +599,11 @@ def get_mixed_prefill_input_combinations(
             kv_cache_size=kv_cache_size,
             mode=input_mode,
         )
-        if not candidate.is_valid(max_seq_len=max_seq_len, max_batch_size=128):
-            return
+        if not candidate.is_valid(
+            max_seq_len=max_seq_len,
+            max_batch_size=_MAX_MIXED_ATTENTION_BATCH_SIZE,
+        ):
+            raise RuntimeError(f"Generated invalid mixed prefill input: {candidate}")
         seen_inputs.add(input_key)
         input_combinations.append(candidate)
 
@@ -689,7 +713,10 @@ def get_mixed_prefill_input_combinations(
                             max(1, endpoint_seq_len // 2)
                         ] * (batch_size - 1)
                         _append_unique(boundary_seq_lens, kv_cache_size, "random")
-    
+
+    if not input_combinations:
+        raise ValueError("Mixed prefill profiling produced no valid input combinations.")
+
     return input_combinations
 
 
@@ -819,6 +846,11 @@ def get_online_grid_mixed_prefill_input_combinations(
         raise ValueError("min_batch_size must be >= 2.")
     if max_batch_size < min_batch_size:
         raise ValueError("max_batch_size must be >= min_batch_size.")
+    if max_batch_size > _MAX_MIXED_ATTENTION_BATCH_SIZE:
+        raise ValueError(
+            "max_batch_size must be <= "
+            f"{_MAX_MIXED_ATTENTION_BATCH_SIZE} for mixed prefill profiling."
+        )
     if min_total_tokens <= 0:
         raise ValueError("min_total_tokens must be positive.")
     if max_total_tokens < min_total_tokens:
@@ -831,6 +863,16 @@ def get_online_grid_mixed_prefill_input_combinations(
         raise ValueError("kv_cache_sizes cannot be empty.")
     if any(kv_cache_size < 0 for kv_cache_size in kv_cache_sizes):
         raise ValueError("All kv_cache_sizes must be non-negative.")
+    oversized_kv_cache_sizes = [
+        kv_cache_size
+        for kv_cache_size in kv_cache_sizes
+        if kv_cache_size >= max_seq_len
+    ]
+    if oversized_kv_cache_sizes:
+        raise ValueError(
+            "kv_cache_sizes values must be <= max_seq_len - 1, "
+            f"got {oversized_kv_cache_sizes}."
+        )
 
     batch_size_extensions = _normalize_positive_int_list(
         "batch_size_list",
@@ -839,6 +881,16 @@ def get_online_grid_mixed_prefill_input_combinations(
     )
     batch_sizes = set(range(min_batch_size, max_batch_size + 1))
     if batch_size_extensions is not None:
+        oversized_batch_sizes = [
+            batch_size
+            for batch_size in batch_size_extensions
+            if batch_size > _MAX_MIXED_ATTENTION_BATCH_SIZE
+        ]
+        if oversized_batch_sizes:
+            raise ValueError(
+                "batch_size_list values must be <= "
+                f"{_MAX_MIXED_ATTENTION_BATCH_SIZE}, got {oversized_batch_sizes}."
+            )
         batch_sizes.update(batch_size_extensions)
     batch_sizes = sorted(batch_sizes)
 
@@ -856,8 +908,6 @@ def get_online_grid_mixed_prefill_input_combinations(
     for batch_size in batch_sizes:
         for total_tokens in total_tokens_values:
             if total_tokens < batch_size:
-                if batch_size_list is not None or total_tokens_list is not None:
-                    continue
                 raise ValueError(
                     f"Invalid grid point: total_tokens={total_tokens} < batch_size={batch_size}."
                 )
@@ -937,6 +987,11 @@ def get_true_mixed_attention_input_combinations(
         raise ValueError("max_seq_len must be positive")
     if prefill_kv_cache_size < 0:
         raise ValueError("prefill_kv_cache_size must be non-negative")
+    if prefill_kv_cache_size >= max_seq_len:
+        raise ValueError(
+            "prefill_kv_cache_size must be <= max_seq_len - 1, "
+            f"got {prefill_kv_cache_size}."
+        )
     if not prefill_batch_sizes:
         raise ValueError("prefill_batch_sizes cannot be empty")
     if not prefill_chunk_sizes:
@@ -950,6 +1005,11 @@ def get_true_mixed_attention_input_combinations(
     for prefill_bs in prefill_batch_sizes:
         if prefill_bs <= 0:
             raise ValueError(f"Invalid prefill batch size: {prefill_bs}")
+        if prefill_bs > _MAX_MIXED_ATTENTION_BATCH_SIZE:
+            raise ValueError(
+                "prefill_batch_sizes values must be <= "
+                f"{_MAX_MIXED_ATTENTION_BATCH_SIZE}, got {prefill_bs}."
+            )
         normalized_prefill_batch_sizes.append(int(prefill_bs))
     prefill_batch_sizes = sorted(set(normalized_prefill_batch_sizes))
 
@@ -957,6 +1017,12 @@ def get_true_mixed_attention_input_combinations(
     for prefill_chunk_size in prefill_chunk_sizes:
         if prefill_chunk_size <= 0:
             raise ValueError(f"Invalid prefill chunk size: {prefill_chunk_size}")
+        if prefill_chunk_size + prefill_kv_cache_size > max_seq_len:
+            raise ValueError(
+                "prefill_chunk_sizes values plus prefill_kv_cache_size must be "
+                f"<= max_seq_len, got {prefill_chunk_size} + "
+                f"{prefill_kv_cache_size} > {max_seq_len}."
+            )
         normalized_prefill_chunk_sizes.append(int(prefill_chunk_size))
     endpoint_prefill_chunk_size = max_seq_len - prefill_kv_cache_size
     if endpoint_prefill_chunk_size > 0:
@@ -967,14 +1033,36 @@ def get_true_mixed_attention_input_combinations(
     for decode_bs in decode_batch_sizes:
         if decode_bs <= 0:
             raise ValueError(f"Invalid decode batch size: {decode_bs}")
+        if decode_bs > _MAX_MIXED_ATTENTION_BATCH_SIZE:
+            raise ValueError(
+                "decode_batch_sizes values must be <= "
+                f"{_MAX_MIXED_ATTENTION_BATCH_SIZE}, got {decode_bs}."
+            )
         normalized_decode_batch_sizes.append(int(decode_bs))
     decode_batch_sizes = sorted(set(normalized_decode_batch_sizes))
+    oversized_total_batch_sizes = [
+        (prefill_bs, decode_bs)
+        for prefill_bs in prefill_batch_sizes
+        for decode_bs in decode_batch_sizes
+        if prefill_bs + decode_bs > _MAX_MIXED_ATTENTION_BATCH_SIZE
+    ]
+    if oversized_total_batch_sizes:
+        raise ValueError(
+            "true-mixed total batch size must be <= "
+            f"{_MAX_MIXED_ATTENTION_BATCH_SIZE}, got "
+            f"{oversized_total_batch_sizes}."
+        )
 
     normalized_decode_kv_cache_sizes = []
     for decode_kv_cache_size in decode_kv_cache_sizes:
         if decode_kv_cache_size < 0:
             raise ValueError(
                 f"Invalid decode kv cache size: {decode_kv_cache_size}"
+            )
+        if decode_kv_cache_size >= max_seq_len:
+            raise ValueError(
+                "decode_kv_cache_sizes values must be <= max_seq_len - 1, "
+                f"got {decode_kv_cache_size}."
             )
         normalized_decode_kv_cache_sizes.append(int(decode_kv_cache_size))
     normalized_decode_kv_cache_sizes.append(max_seq_len - 1)
@@ -990,8 +1078,18 @@ def get_true_mixed_attention_input_combinations(
                         prefill_kv_cache_sizes=[prefill_kv_cache_size] * prefill_bs,
                         decode_kv_cache_sizes=[decode_kv_cache_size] * decode_bs,
                     )
-                    if candidate.is_valid(max_seq_len=max_seq_len, max_batch_size=128):
-                        combinations.append(candidate)
+                    if not candidate.is_valid(
+                        max_seq_len=max_seq_len,
+                        max_batch_size=_MAX_MIXED_ATTENTION_BATCH_SIZE,
+                    ):
+                        raise RuntimeError(
+                            f"Generated invalid true-mixed attention input: {candidate}"
+                        )
+                    combinations.append(candidate)
+    if not combinations:
+        raise ValueError(
+            "True-mixed attention profiling produced no valid input combinations."
+        )
     return combinations
 
 
