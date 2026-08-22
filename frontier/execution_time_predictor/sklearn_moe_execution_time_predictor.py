@@ -1563,69 +1563,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         return raw_time
 
-    def _get_moe_tensor_parallel_allreduce_time(self, batch: Batch) -> float:
-        """
-        Get MoE/FFN tensor-parallel all-reduce time using moe_tensor_parallel_size.
-
-        This is separate from attention TP all-reduce and is required when
-        attn_tp != moe_tp in unified clusters (MONOLITHIC/DECODE/PREFILL).
-        """
-        moe_tp_size = int(self._replica_config.moe_tensor_parallel_size)
-        # COMM_SKIP: TP all-reduce not needed when moe_tp_size <= 1 (no tensor sharding)
-        if moe_tp_size <= 1:
-            return 0.0
-
-        # Routed EP lanes carry only their local expert assignments.  A shared
-        # batch has no lane-local map, so its compute-effective token count is
-        # the payload domain for the full MoE TP collective.
-        routed_tokens = (
-            self._get_local_ep_routed_tokens(batch)
-            if isinstance(batch, EPBatchGroup)
-            else self._get_effective_moe_total_tokens(batch)
-        )
-        if routed_tokens == 0:
-            return 0.0
-
-        if self._cc_backend is not None:
-            data_size_bytes = self._model_config.embedding_dim * 2 * routed_tokens
-            quant_manager = get_quantization_manager()
-            data_size_bytes = quant_manager.adjust_tensor_size(
-                "allreduce", data_size_bytes, self._cluster_type
-            )
-            result = self._cc_backend.predict_allreduce(
-                data_size_bytes=data_size_bytes,
-                num_devices=moe_tp_size,
-                cluster_type=self._cluster_type,
-                comm_domain="MOE_TP",
-            )
-            result = self._strip_collective_sim_allreduce_launch_overhead_if_needed(
-                batch=batch,
-                predicted_ms=result,
-                num_devices=moe_tp_size,
-                comm_domain="MOE_TP",
-            )
-            logger.debug(
-                f"_get_moe_tensor_parallel_allreduce_time: using CC Backend, "
-                f"data_size={data_size_bytes}, num_devices={moe_tp_size}, result={result:.6f} ms"
-            )
-            return result
-
-        if self._enable_dummy_mode:
-            logger.debug(
-                f"_get_moe_tensor_parallel_allreduce_time: CC Backend not available, "
-                f"using dummy mode value={self._dummy_execution_time} ms for "
-                f"routed_tokens={routed_tokens}"
-            )
-            return self._dummy_execution_time
-
-        raise RuntimeError(
-            f"CC Backend is required for MoE tensor-parallel allreduce prediction "
-            f"but was not provided. Either:\n"
-            f"  1. Configure a CC Backend (e.g., --cc_backend vidur or --cc_backend analytical)\n"
-            f"  2. Enable dummy mode explicitly (--enable_dummy_mode)\n"
-            f"Current state: cc_backend=None, enable_dummy_mode={self._enable_dummy_mode}"
-        )
-
     def _get_expert_parallel_communication_time(self, batch: Batch) -> float:
         """
         Get expert parallel communication time.

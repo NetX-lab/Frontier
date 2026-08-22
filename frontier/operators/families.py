@@ -19,6 +19,7 @@ from frontier.operators.spec import (
     ResourceClass,
     TensorParallelMode,
     TraceKind,
+    ZeroPayloadPolicy,
 )
 from frontier.types import ClusterType
 
@@ -500,6 +501,7 @@ COMM_FAMILY = OperatorFamilySpec(
             payload_builder=_moe_tp_allreduce_payload_bytes,
             num_devices_builder=_moe_tp_devices,
             apply_allreduce_launch_overhead_strip=True,
+            zero_payload_policy=ZeroPayloadPolicy.EXACT_NOOP,
         ),
         CommOperatorSpec(
             name="moe_tensor_parallel_allgather",

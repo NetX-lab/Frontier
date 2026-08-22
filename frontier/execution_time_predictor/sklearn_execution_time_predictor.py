@@ -77,7 +77,12 @@ from frontier.operators.families import (
     get_family_profiling_name_set,
     get_comm_operator,
 )
-from frontier.operators.spec import CommOperatorSpec, CommPayloadContext, OperatorSpec
+from frontier.operators.spec import (
+    CommOperatorSpec,
+    CommPayloadContext,
+    OperatorSpec,
+    ZeroPayloadPolicy,
+)
 from frontier.profiling.cpu_overhead.schema import (
     DEFAULT_NUM_DECODE_TOKENS_AMPLIFICATION_FACTOR,
     DEFAULT_NUM_PREFILL_TOKENS,
@@ -5338,7 +5343,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         operator: CommOperatorSpec,
         batch: Batch,
     ) -> float:
-        """Predict one first-class communication operator through the thin CC wrappers."""
+        """Predict an operator using this predictor's default communication context."""
 
         ctx = CommPayloadContext(
             batch=batch,
@@ -5347,7 +5352,22 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             cluster_type=self._cluster_type,
             quantization_manager=get_quantization_manager(),
         )
+        return self._predict_comm_operator_with_context(operator, ctx)
+
+    def _predict_comm_operator_with_context(
+        self,
+        operator: CommOperatorSpec,
+        ctx: CommPayloadContext,
+    ) -> float:
+        """Predict one communication operator using the supplied runtime context."""
+
         data_size_bytes = operator.build_payload_bytes(ctx)
+        if (
+            data_size_bytes == 0
+            and operator.zero_payload_policy is ZeroPayloadPolicy.EXACT_NOOP
+        ):
+            return 0.0
+
         num_devices = operator.num_devices(ctx)
 
         if operator.collective_alias == "allreduce":
@@ -5358,7 +5378,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             predicted_ms = self.predict_allreduce_time(
                 data_size_bytes=data_size_bytes,
                 num_devices=num_devices,
-                cluster_type=self._cluster_type,
+                cluster_type=ctx.cluster_type,
                 comm_domain=operator.comm_domain,
             )
             if operator.apply_allreduce_launch_overhead_strip:
@@ -5369,7 +5389,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     )
                 predicted_ms = (
                     self._strip_collective_sim_allreduce_launch_overhead_if_needed(
-                        batch=batch,
+                        batch=ctx.batch,
                         predicted_ms=predicted_ms,
                         num_devices=num_devices,
                         comm_domain=operator.comm_domain,
@@ -5385,7 +5405,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             return self.predict_allgather_time(
                 data_size_bytes=data_size_bytes,
                 num_devices=num_devices,
-                cluster_type=self._cluster_type,
+                cluster_type=ctx.cluster_type,
                 comm_domain=operator.comm_domain,
             )
 
@@ -5397,14 +5417,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             return self.predict_alltoall_time(
                 data_size_bytes=data_size_bytes,
                 num_devices=num_devices,
-                cluster_type=self._cluster_type,
+                cluster_type=ctx.cluster_type,
                 comm_domain=operator.comm_domain,
             )
 
         if operator.collective_alias == "send_recv":
             return self.predict_p2p_time(
                 data_size_bytes=data_size_bytes,
-                cluster_type=self._cluster_type,
+                cluster_type=ctx.cluster_type,
                 comm_domain=operator.comm_domain,
             )
 

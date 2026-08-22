@@ -27,6 +27,8 @@ from frontier.entities.time_components import (
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
+from frontier.operators.families import get_comm_operator
+from frontier.operators.spec import CommPayloadContext
 from frontier.types import ClusterType
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
@@ -1169,87 +1171,6 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             for op_name, phase_time_ms in phase_times.items()
         }
 
-    @staticmethod
-    def _get_moe_tp_routed_tokens(
-        batch: Batch,
-        cluster_type: ClusterType,
-    ) -> int:
-        """Return the payload token count for a routed MoE-TP allreduce.
-
-        Shared-domain batches use their source compute-effective token count.
-        Synthetic EP lane batches must instead use the lane-local routed
-        assignment count; their pre-routing metadata describes shared work and
-        must not size the post-dispatch collective.
-        """
-        if isinstance(batch, EPBatchGroup):
-            per_expert_tokens = getattr(batch, "per_expert_tokens", None)
-            if not isinstance(per_expert_tokens, dict):
-                raise ValueError(
-                    "MoE TP allreduce EP lane requires an explicit "
-                    "per_expert_tokens dictionary"
-                )
-            if not per_expert_tokens:
-                raise ValueError(
-                    "MoE TP allreduce EP lane requires a non-empty "
-                    "per_expert_tokens dictionary"
-                )
-            routed_tokens = 0
-            for expert_id, token_count in per_expert_tokens.items():
-                if type(expert_id) is not int or expert_id < 0:
-                    raise ValueError(
-                        "MoE TP allreduce expert IDs must be exact "
-                        "non-negative integers"
-                    )
-                if type(token_count) is not int or token_count < 0:
-                    raise ValueError(
-                        "MoE TP allreduce token counts must be exact "
-                        "non-negative integers"
-                    )
-                routed_tokens += token_count
-            return routed_tokens
-
-        effective_tokens = int(
-            batch.get_effective_total_tokens_rounded(cluster_type)
-        )
-        if effective_tokens < 0:
-            raise ValueError(
-                "MoE TP allreduce effective token count must be non-negative, "
-                f"got {effective_tokens}"
-            )
-        return effective_tokens
-
-    def _predict_moe_tp_allreduce_time(
-        self,
-        *,
-        batch: Batch,
-        cluster_type: ClusterType,
-        cluster_replica_config: ReplicaConfig,
-    ) -> float:
-        """Predict routed MoE-TP allreduce using the correct token domain."""
-        moe_tp_size = int(cluster_replica_config.moe_tensor_parallel_size)
-        if moe_tp_size <= 1:
-            return 0.0
-
-        routed_tokens = self._get_moe_tp_routed_tokens(batch, cluster_type)
-        if routed_tokens == 0:
-            return 0.0
-
-        data_size_bytes = (
-            int(cluster_replica_config.model_config.embedding_dim)
-            * 2
-            * routed_tokens
-        )
-        quant_manager = get_quantization_manager()
-        moe_tp_allreduce_bytes = quant_manager.adjust_tensor_size(
-            "allreduce", data_size_bytes, cluster_type
-        )
-        return self.predict_allreduce_time(
-            data_size_bytes=moe_tp_allreduce_bytes,
-            num_devices=moe_tp_size,
-            cluster_type=cluster_type,
-            comm_domain="MOE_TP",
-        )
-
     def _predict_attention_only_stage_execution_time(
         self,
         batch: Batch,
@@ -1813,11 +1734,20 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 ep_comm_time = sum(ep_operator_times.values())
                 ffn_tp_allgather_time = 0.0
                 share_expert_tp_allreduce_time = 0.0
-                moe_tp_size = cluster_replica_config.moe_tensor_parallel_size
-                moe_tp_allreduce_time = self._predict_moe_tp_allreduce_time(
-                    batch=batch,
-                    cluster_type=cluster_type,
-                    cluster_replica_config=cluster_replica_config,
+                moe_tp_size = int(cluster_replica_config.moe_tensor_parallel_size)
+                moe_tp_allreduce_time = (
+                    self._predict_comm_operator_with_context(
+                        get_comm_operator("moe_tensor_parallel_allreduce"),
+                        CommPayloadContext(
+                            batch=batch,
+                            model_config=model_config,
+                            replica_config=cluster_replica_config,
+                            cluster_type=cluster_type,
+                            quantization_manager=get_quantization_manager(),
+                        ),
+                    )
+                    if moe_tp_size > 1
+                    else 0.0
                 )
                 if architecture_profile.moe_tensor_parallel_allgather_op and moe_tp_size > 1:
                     # Allgather and shared-expert collectives use the source
@@ -2248,11 +2178,20 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 # Calculate MoE TP allreduce time using moe_tensor_parallel_size
                 # (communication_time.tensor_parallel_time uses attn_tensor_parallel_size,
                 #  so we need a separate calculation for MoE TP allreduce)
-                moe_tp_size = cluster_replica_config.moe_tensor_parallel_size
-                moe_tp_allreduce_time = self._predict_moe_tp_allreduce_time(
-                    batch=batch,
-                    cluster_type=cluster_type,
-                    cluster_replica_config=cluster_replica_config,
+                moe_tp_size = int(cluster_replica_config.moe_tensor_parallel_size)
+                moe_tp_allreduce_time = (
+                    self._predict_comm_operator_with_context(
+                        get_comm_operator("moe_tensor_parallel_allreduce"),
+                        CommPayloadContext(
+                            batch=batch,
+                            model_config=cluster_replica_config.model_config,
+                            replica_config=cluster_replica_config,
+                            cluster_type=cluster_type,
+                            quantization_manager=get_quantization_manager(),
+                        ),
+                    )
+                    if moe_tp_size > 1
+                    else 0.0
                 )
 
                 return ExecutionTime(
@@ -2559,10 +2498,19 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 # batch's effective token count remains valid for shared
                 # allgather and shared-expert collectives below.
                 moe_tp_size = int(cluster_replica_config.moe_tensor_parallel_size)
-                moe_tp_allreduce_time = self._predict_moe_tp_allreduce_time(
-                    batch=batch,
-                    cluster_type=cluster_type,
-                    cluster_replica_config=cluster_replica_config,
+                moe_tp_allreduce_time = (
+                    self._predict_comm_operator_with_context(
+                        get_comm_operator("moe_tensor_parallel_allreduce"),
+                        CommPayloadContext(
+                            batch=batch,
+                            model_config=model_config,
+                            replica_config=cluster_replica_config,
+                            cluster_type=cluster_type,
+                            quantization_manager=get_quantization_manager(),
+                        ),
+                    )
+                    if moe_tp_size > 1
+                    else 0.0
                 )
                 ffn_tp_allgather_time = 0.0
                 share_expert_tp_allreduce_time = 0.0

@@ -20,7 +20,13 @@ from frontier.entities import EPBatchGroup, Request
 from frontier.metrics.op_trace_utils import map_trace_op_to_precision_op
 from frontier.model_architectures import ModelArchitectureProfile
 from frontier.operators.families import COMM_FAMILY, get_comm_operator
-from frontier.operators.spec import CommOperatorSpec, CommPayloadContext, ResourceClass, TraceKind
+from frontier.operators.spec import (
+    CommOperatorSpec,
+    CommPayloadContext,
+    ResourceClass,
+    TraceKind,
+    ZeroPayloadPolicy,
+)
 from frontier.types import ClusterType
 
 
@@ -232,6 +238,8 @@ def test_comm_family_declares_first_class_collective_specs() -> None:
     }.issubset(comm_ops)
 
     attn_allreduce = comm_ops["attn_tensor_parallel_allreduce"]
+    moe_allreduce = comm_ops["moe_tensor_parallel_allreduce"]
+    ep_alltoall = comm_ops["expert_parallel_alltoall"]
     pp_send_recv = comm_ops["pipeline_parallel_send_recv"]
 
     assert isinstance(attn_allreduce, CommOperatorSpec)
@@ -241,6 +249,9 @@ def test_comm_family_declares_first_class_collective_specs() -> None:
     assert attn_allreduce.trace_kind is TraceKind.COMM
     assert attn_allreduce.resource_class is ResourceClass.COMM
     assert attn_allreduce.execution_time_attr == "attn_tensor_parallel_allreduce_time"
+
+    assert moe_allreduce.zero_payload_policy is ZeroPayloadPolicy.EXACT_NOOP
+    assert ep_alltoall.zero_payload_policy is ZeroPayloadPolicy.PREDICT
 
     assert isinstance(pp_send_recv, CommOperatorSpec)
     assert pp_send_recv.collective_alias == "send_recv"
@@ -299,6 +310,92 @@ def test_zero_routed_ep_lane_uses_zero_moe_tp_allreduce_payload() -> None:
 
     moe_tp_allreduce = get_comm_operator("moe_tensor_parallel_allreduce")
     assert moe_tp_allreduce.build_payload_bytes(ctx) == 0
+
+
+@pytest.mark.parametrize("use_backend", (False, True))
+def test_common_moe_tp_live_executor_treats_zero_payload_as_exact_noop(
+    use_backend: bool,
+) -> None:
+    predictor = _moe_predictor()
+    predictor._enable_dummy_mode = not use_backend
+    predictor._dummy_execution_time = 5.0
+    predictor._cc_backend = _SpyCCBackend() if use_backend else None
+    predictor._strip_collective_sim_allreduce_launch_overhead_if_needed = (
+        lambda **_kwargs: (_ for _ in ()).throw(
+            AssertionError("zero-payload no-op must skip launch-overhead handling")
+        )
+    )
+    batch = _ep_batch_group({0: 0, 1: 0})
+
+    result = predictor._predict_comm_operator(
+        get_comm_operator("moe_tensor_parallel_allreduce"),
+        batch,
+    )
+
+    assert result == 0.0
+    if use_backend:
+        assert predictor._cc_backend.calls == []
+
+
+def test_zero_payload_policy_preserves_other_collective_modeling() -> None:
+    predictor = _predictor()
+    predictor._enable_dummy_mode = True
+    predictor._dummy_execution_time = 5.0
+    predictor._cc_backend = None
+    batch = _ep_batch_group({0: 0, 1: 0})
+
+    result = predictor._predict_comm_operator(
+        get_comm_operator("expert_parallel_alltoall"),
+        batch,
+    )
+
+    assert result == 5.0
+
+
+def test_explicit_comm_context_controls_registered_operator_execution() -> None:
+    predictor = _predictor()
+    predictor._model_config = SimpleNamespace(embedding_dim=1, num_experts_per_tok=1)
+    predictor._replica_config = SimpleNamespace(
+        attn_tensor_parallel_size=97,
+        moe_tensor_parallel_size=99,
+        moe_expert_parallel_size=101,
+        num_pipeline_stages=1,
+        router_topk=1,
+    )
+    predictor._cluster_type = ClusterType.PREFILL
+    context = CommPayloadContext(
+        batch=_ep_batch_group({2: 0, 3: 4}),
+        model_config=SimpleNamespace(embedding_dim=8, num_experts_per_tok=2),
+        replica_config=SimpleNamespace(
+            attn_tensor_parallel_size=4,
+            moe_tensor_parallel_size=3,
+            moe_expert_parallel_size=2,
+            num_pipeline_stages=2,
+            router_topk=2,
+        ),
+        cluster_type=ClusterType.DECODE_FFN,
+        quantization_manager=SimpleNamespace(
+            adjust_tensor_size=lambda _collective, data_size_bytes, _cluster_type: (
+                data_size_bytes
+            )
+        ),
+    )
+
+    result = predictor._predict_comm_operator_with_context(
+        get_comm_operator("moe_tensor_parallel_allreduce"),
+        context,
+    )
+
+    assert result == pytest.approx(3.064)
+    assert predictor._cc_backend.calls == [
+        {
+            "collective_alias": "allreduce",
+            "data_size_bytes": 8 * 2 * 4,
+            "num_devices": 3,
+            "cluster_type": ClusterType.DECODE_FFN,
+            "comm_domain": "MOE_TP",
+        }
+    ]
 
 
 def test_shared_batch_uses_effective_tokens_even_if_it_has_routing_metadata() -> None:
