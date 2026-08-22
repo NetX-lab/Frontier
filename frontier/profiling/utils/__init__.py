@@ -367,6 +367,7 @@ def get_attention_input_combinations(
     prefill_lengths_to_profile = get_seq_lengths_to_profile(max_seq_len)
     input_combinations.extend(product(prefill_lengths_to_profile, [0], [1], [True]))
     # Decodes
+    max_decode_kv_cache_size = max_seq_len - 1
     if decode_kv_cache_size_list is not None:
         kv_cache_sizes_to_profile = _normalize_positive_int_list(
             "decode_kv_cache_size_list",
@@ -376,15 +377,17 @@ def get_attention_input_combinations(
         oversized_kv_cache_sizes = [
             kv_cache_size
             for kv_cache_size in kv_cache_sizes_to_profile
-            if kv_cache_size > max_seq_len
+            if kv_cache_size > max_decode_kv_cache_size
         ]
         if oversized_kv_cache_sizes:
             raise ValueError(
-                "decode_kv_cache_size_list values must be <= max_seq_len, "
-                f"got {oversized_kv_cache_sizes} > {max_seq_len}"
+                "decode_kv_cache_size_list values must be <= max_seq_len - 1, "
+                f"got {oversized_kv_cache_sizes} > {max_decode_kv_cache_size}"
             )
     else:
-        kv_cache_sizes_to_profile = get_seq_lengths_to_profile(max_seq_len)
+        kv_cache_sizes_to_profile = get_seq_lengths_to_profile(
+            max_decode_kv_cache_size
+        )
     batch_sizes_to_profile = get_attention_batch_sizes_to_profile(
         min_batch_size, max_batch_size, batch_size_list
     )

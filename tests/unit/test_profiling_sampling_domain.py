@@ -1,5 +1,6 @@
 import pytest
 
+from frontier.profiling.attention.attention_input import AttentionInput
 from frontier.profiling.utils import (
     get_attention_batch_sizes_to_profile,
     get_attention_input_combinations,
@@ -91,8 +92,13 @@ def test_attention_combinations_cover_prefill_and_decode_endpoints_deterministic
 
     assert first_tuples == _attention_input_tuples(second)
     assert (1000, 0, 1, True) in first_tuples
-    assert (0, 1000, 1, False) in first_tuples
+    assert (0, 999, 1, False) in first_tuples
     assert all(item.is_valid(1000) for item in first)
+
+
+def test_decode_attention_input_reserves_the_current_token():
+    assert AttentionInput(0, 999, 1, False).is_valid(1000)
+    assert not AttentionInput(0, 1000, 1, False).is_valid(1000)
 
 
 def test_explicit_decode_cache_endpoint_remains_bounded():
@@ -102,10 +108,10 @@ def test_explicit_decode_cache_endpoint_remains_bounded():
         max_batch_size=1,
         profile_only_prefill=False,
         profile_only_decode=True,
-        decode_kv_cache_size_list=[1000],
+        decode_kv_cache_size_list=[999],
     )
 
-    assert _attention_input_tuples(inputs) == [(0, 1000, 1, False)]
+    assert _attention_input_tuples(inputs) == [(0, 999, 1, False)]
 
     with pytest.raises(ValueError, match="decode_kv_cache_size_list"):
         get_attention_input_combinations(
@@ -114,7 +120,7 @@ def test_explicit_decode_cache_endpoint_remains_bounded():
             max_batch_size=1,
             profile_only_prefill=False,
             profile_only_decode=True,
-            decode_kv_cache_size_list=[1001],
+            decode_kv_cache_size_list=[1000],
         )
 
 

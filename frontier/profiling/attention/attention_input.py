@@ -24,7 +24,7 @@ class AttentionInput:
                 return False
             elif self.kv_cache_size < 0:
                 return False
-            elif self.kv_cache_size > max_seq_len:
+            elif self.kv_cache_size + 1 > max_seq_len:
                 return False
         return True
 
