@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from copy import deepcopy
 import csv
+from enum import Enum
 import logging
 import math
 from pathlib import Path
@@ -76,6 +77,13 @@ def resolve_ep_collective_kind(
     if profile.uses_expert_parallel_alltoall(cluster_type, expected_ep_size):
         return ExpertParallelCollective.ALLTOALL
     return ExpertParallelCollective.ALLGATHER
+
+
+class M2NLaneIdentityScope(Enum):
+    """Replica-local identity rule for one M2N lane contract."""
+
+    FULL_STAGE = "full_stage"
+    REPLICA_LOCAL = "replica_local"
 
 
 class EPBatchGroupPlan(NamedTuple):
@@ -5600,16 +5608,25 @@ class BaseClusterScheduler(ABC):
     def _normalize_m2n_lane_contract(
         raw_lanes,
         *,
+        identity_scope: M2NLaneIdentityScope,
         field_name: str,
         require_nonempty: bool,
     ) -> List[tuple[int, int | None]]:
         """Validate and normalize one exact M2N lane contract."""
 
+        if type(identity_scope) is not M2NLaneIdentityScope:
+            raise ValueError(
+                "identity_scope must be an exact M2NLaneIdentityScope, "
+                f"got {identity_scope!r}"
+            )
         if type(raw_lanes) not in {list, tuple}:
             raise ValueError(
                 f"{field_name} must be an exact list or tuple, got {raw_lanes!r}"
             )
 
+        allow_full_stage_identity = (
+            identity_scope is M2NLaneIdentityScope.FULL_STAGE
+        )
         normalized_lanes: List[tuple[int, int | None]] = []
         seen_lanes = set()
         for raw_lane in raw_lanes:
@@ -5623,13 +5640,6 @@ class BaseClusterScheduler(ABC):
                     f"{field_name} replica_id must be an exact non-negative int, "
                     f"got {lane_replica_id!r}"
                 )
-            # AFD transport lane contracts identify serving Replicas.  Their
-            # second coordinate is intentionally absent on both sides of the
-            # A→F/F→A path; only the DECODE_FFN local EP queues use integer
-            # lane IDs, and they do not pass through this helper.
-            allow_full_stage_identity = field_name.startswith(
-                ("DECODE_ATTN", "DECODE_FFN")
-            )
             if lane_replica_local_id is not None and (
                 type(lane_replica_local_id) is not int or lane_replica_local_id < 0
             ):
@@ -5639,8 +5649,8 @@ class BaseClusterScheduler(ABC):
                 )
             if lane_replica_local_id is None and not allow_full_stage_identity:
                 raise ValueError(
-                    f"{field_name} replica_local_id cannot be None outside a full-stage "
-                    "DECODE_ATTN identity"
+                    f"{field_name} replica_local_id cannot be None in "
+                    f"{identity_scope.value} identity scope"
                 )
             lane = (lane_replica_id, lane_replica_local_id)
             if lane in seen_lanes:
@@ -5738,6 +5748,7 @@ class BaseClusterScheduler(ABC):
         room_contract = tuple(
             self._normalize_m2n_lane_contract(
                 raw_room_contract,
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN waiting-room expected lane contract",
                 require_nonempty=True,
             )
@@ -5753,6 +5764,7 @@ class BaseClusterScheduler(ABC):
                 sorted(
                     self._normalize_m2n_lane_contract(
                         expected_lane_contract,
+                        identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                         field_name="DECODE_FFN receipt expected lane contract",
                         require_nonempty=True,
                     )
@@ -5769,6 +5781,7 @@ class BaseClusterScheduler(ABC):
         queue_lanes = tuple(
             self._normalize_m2n_lane_contract(
                 tuple(per_lane_queues),
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN waiting-room queue lanes",
                 require_nonempty=False,
             )
@@ -5776,6 +5789,7 @@ class BaseClusterScheduler(ABC):
         rr_lanes = tuple(
             self._normalize_m2n_lane_contract(
                 tuple(lanes_rr_order),
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN waiting-room round-robin lanes",
                 require_nonempty=False,
             )
@@ -5915,6 +5929,7 @@ class BaseClusterScheduler(ABC):
                     sorted(
                         self._normalize_m2n_lane_contract(
                             queued_expected_lanes,
+                            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                             field_name=(
                                 "DECODE_FFN waiting-room queued batch expected "
                                 "lane metadata"
@@ -6074,6 +6089,7 @@ class BaseClusterScheduler(ABC):
             raw_expected_lanes = ()
         barrier_expected_lanes = self._normalize_m2n_lane_contract(
             raw_expected_lanes,
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_FFN receipt expected lane metadata",
             require_nonempty=False,
         )
@@ -6089,6 +6105,7 @@ class BaseClusterScheduler(ABC):
         else:
             scheduler_expected_lanes = self._normalize_m2n_lane_contract(
                 getattr(self, "_ffn_expected_lanes", None),
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN scheduler lane topology",
                 require_nonempty=True,
             )
@@ -6580,6 +6597,7 @@ class BaseClusterScheduler(ABC):
                 replica_id,
                 afd_stage_idx=afd_stage_idx,
             ),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN F-to-A scheduler lane topology",
             require_nonempty=True,
         )
@@ -6643,6 +6661,7 @@ class BaseClusterScheduler(ABC):
             raw_expected_lanes = ()
         barrier_expected_lanes = self._normalize_m2n_lane_contract(
             raw_expected_lanes,
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN receipt expected lane metadata",
             require_nonempty=False,
         )
@@ -6666,6 +6685,7 @@ class BaseClusterScheduler(ABC):
                         expected_replica_id,
                         afd_stage_idx=afd_stage_idx,
                     ),
+                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name=(
                         "DECODE_ATTN F-to-A scheduler lane topology for "
                         f"replica {expected_replica_id}"
@@ -6729,6 +6749,7 @@ class BaseClusterScheduler(ABC):
                 existing_expected_lanes = tuple(
                     self._normalize_m2n_lane_contract(
                         raw_room_expected_lanes,
+                        identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                         field_name="DECODE_ATTN F-to-A waiting room expected lanes",
                         require_nonempty=True,
                     )
@@ -6794,6 +6815,7 @@ class BaseClusterScheduler(ABC):
                 )
             room_lanes = self._normalize_m2n_lane_contract(
                 list(per_lane_queues.keys()),
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_ATTN F-to-A waiting room queue lanes",
                 require_nonempty=False,
             )
@@ -6988,6 +7010,7 @@ class BaseClusterScheduler(ABC):
             raw_queued_expected_lanes = ()
         queued_expected_lanes = self._normalize_m2n_lane_contract(
             raw_queued_expected_lanes,
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN F-to-A queued batch expected lanes",
             require_nonempty=False,
         )
@@ -7219,6 +7242,7 @@ class BaseClusterScheduler(ABC):
                 sorted(
                     self._normalize_m2n_lane_contract(
                         expected_lane_ids,
+                        identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                         field_name="DECODE_FFN promotion expected lane IDs",
                         require_nonempty=True,
                     )
@@ -7255,6 +7279,7 @@ class BaseClusterScheduler(ABC):
             normalized_idle_lanes = set(
                 self._normalize_m2n_lane_contract(
                     tuple(raw_idle_lanes),
+                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name="DECODE_FFN idle lane inventory",
                     require_nonempty=False,
                 )
@@ -7379,6 +7404,7 @@ class BaseClusterScheduler(ABC):
         normalized_idle_lanes = set(
             self._normalize_m2n_lane_contract(
                 tuple(ffn_idle_lanes),
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN idle lane inventory",
                 require_nonempty=False,
             )
@@ -7393,6 +7419,7 @@ class BaseClusterScheduler(ABC):
         if expected_lane_ids is not None:
             normalized_expected_lane_ids = self._normalize_m2n_lane_contract(
                 expected_lane_ids,
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN idle injection candidate lanes",
                 require_nonempty=False,
             )
@@ -7866,6 +7893,7 @@ class BaseClusterScheduler(ABC):
             )
         normalized_lane = self._normalize_m2n_lane_contract(
             [lane],
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name=f"DECODE_ATTN A-to-F {context} lane",
             require_nonempty=True,
         )[0]
@@ -8236,6 +8264,7 @@ class BaseClusterScheduler(ABC):
             sorted(
                 self._normalize_m2n_lane_contract(
                     expected_lane_contract,
+                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name="DECODE_ATTN A-to-F expected lane topology",
                     require_nonempty=True,
                 )
@@ -8278,6 +8307,7 @@ class BaseClusterScheduler(ABC):
             sorted(
                 self._normalize_m2n_lane_contract(
                     raw_room_contract,
+                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name=(
                         "DECODE_ATTN A-to-F waiting-room expected lane contract"
                     ),
@@ -8307,6 +8337,7 @@ class BaseClusterScheduler(ABC):
             )
         queue_lanes = self._normalize_m2n_lane_contract(
             tuple(per_lane_queues),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN A-to-F waiting-room queue lanes",
             require_nonempty=False,
         )
@@ -8509,6 +8540,7 @@ class BaseClusterScheduler(ABC):
 
         normalized_idle_lanes = self._normalize_m2n_lane_contract(
             idle_lanes,
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN A-to-F prepared idle lanes",
             require_nonempty=False,
         )
@@ -8731,6 +8763,7 @@ class BaseClusterScheduler(ABC):
                 sorted(
                     self._normalize_m2n_lane_contract(
                         active_local_attn_lanes,
+                        identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                         field_name=(
                             "DECODE_ATTN A-to-F active cohort local_attn topology"
                         ),
@@ -8746,6 +8779,7 @@ class BaseClusterScheduler(ABC):
                             afd_stage_idx,
                             layer_id=layer_id,
                         ),
+                        identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                         field_name="DECODE_ATTN A-to-F expected lane topology",
                         require_nonempty=True,
                     )
@@ -8770,6 +8804,7 @@ class BaseClusterScheduler(ABC):
             normalized_idle_expected_lanes = set(
                 self._normalize_m2n_lane_contract(
                     tuple(idle_expected_lanes),
+                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name="DECODE_ATTN A-to-F idle lane topology",
                     require_nonempty=False,
                 )
@@ -9298,6 +9333,7 @@ class BaseClusterScheduler(ABC):
             )
         scheduler_lanes = self._normalize_m2n_lane_contract(
             list(replica_schedulers),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN A-to-F active lane topology",
             require_nonempty=False,
         )
@@ -9397,6 +9433,7 @@ class BaseClusterScheduler(ABC):
             if stage_slot_lanes:
                 return self._normalize_m2n_lane_contract(
                     stage_slot_lanes,
+                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name="DECODE_ATTN A-to-F active stage lane topology",
                     require_nonempty=True,
                 )
@@ -9413,6 +9450,7 @@ class BaseClusterScheduler(ABC):
         )
         normalized_active_wave_lanes = self._normalize_m2n_lane_contract(
             active_wave_expected_lanes,
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN A-to-F active wave lane topology",
             require_nonempty=False,
         )
@@ -9423,6 +9461,7 @@ class BaseClusterScheduler(ABC):
             )
         normalized_active_wave_request_lanes = self._normalize_m2n_lane_contract(
             list(active_wave_request_ids_by_lane),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN A-to-F active wave request lane topology",
             require_nonempty=False,
         )
@@ -9435,6 +9474,7 @@ class BaseClusterScheduler(ABC):
         if configured_lanes is not None:
             return self._normalize_m2n_lane_contract(
                 configured_lanes,
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_ATTN A-to-F scheduler lane topology",
                 require_nonempty=False,
             )
@@ -9474,6 +9514,7 @@ class BaseClusterScheduler(ABC):
             )
         scheduler_lanes = self._normalize_m2n_lane_contract(
             list(replica_schedulers.keys()),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN replica scheduler lane topology",
             require_nonempty=False,
         )
@@ -9598,6 +9639,7 @@ class BaseClusterScheduler(ABC):
         idle_expected_lanes = set(
             self._normalize_m2n_lane_contract(
                 list(raw_idle_expected_lanes),
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_ATTN idle lane topology",
                 require_nonempty=False,
             )
@@ -9628,6 +9670,7 @@ class BaseClusterScheduler(ABC):
         )
         normalized_active_wave_lanes = self._normalize_m2n_lane_contract(
             active_wave_expected_lanes,
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN active wave lane topology",
             require_nonempty=False,
         )
@@ -9637,6 +9680,7 @@ class BaseClusterScheduler(ABC):
             )
         normalized_active_wave_request_lanes = self._normalize_m2n_lane_contract(
             list(active_wave_request_ids_by_lane.keys()),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN active wave request lane topology",
             require_nonempty=False,
         )
@@ -9657,6 +9701,7 @@ class BaseClusterScheduler(ABC):
         if configured_lanes is not None:
             normalized_configured_lanes = self._normalize_m2n_lane_contract(
                 configured_lanes,
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_ATTN F-to-A scheduler lane topology",
                 require_nonempty=False,
             )
