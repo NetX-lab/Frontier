@@ -336,7 +336,9 @@ def get_attention_input_combinations(
     decode_kv_cache_size_list: List[int] = None,
     enable_chunked_prefill_grid_search: bool = True,
     fixed_chunked_prefill_size: int = -1,
+    max_model_len: Optional[int] = None,
 ):
+    max_model_len = _resolve_profile_max_model_len(max_seq_len, max_model_len)
     input_combinations = []
 
     if fixed_chunked_prefill_size == 0:
@@ -372,6 +374,7 @@ def get_attention_input_combinations(
     input_combinations.extend(product(prefill_lengths_to_profile, [0], [1], [True]))
     # Decodes
     max_decode_kv_cache_size = max_seq_len - 1
+    max_runtime_decode_kv_cache_size = max_model_len - 1
     if decode_kv_cache_size_list is not None:
         kv_cache_sizes_to_profile = _normalize_positive_int_list(
             "decode_kv_cache_size_list",
@@ -381,12 +384,12 @@ def get_attention_input_combinations(
         oversized_kv_cache_sizes = [
             kv_cache_size
             for kv_cache_size in kv_cache_sizes_to_profile
-            if kv_cache_size > max_decode_kv_cache_size
+            if kv_cache_size > max_runtime_decode_kv_cache_size
         ]
         if oversized_kv_cache_sizes:
             raise ValueError(
-                "decode_kv_cache_size_list values must be <= max_seq_len - 1, "
-                f"got {oversized_kv_cache_sizes} > {max_decode_kv_cache_size}"
+                "decode_kv_cache_size_list values must be <= max_model_len - 1, "
+                f"got {oversized_kv_cache_sizes} > {max_runtime_decode_kv_cache_size}"
             )
     else:
         kv_cache_sizes_to_profile = get_seq_lengths_to_profile(
@@ -416,7 +419,10 @@ def get_attention_input_combinations(
             is_prefill,
         )
 
-        if attention_input.is_valid(max_seq_len):
+        if attention_input.is_valid(
+            max_seq_len=max_seq_len,
+            max_model_len=max_model_len,
+        ):
             valid_input_combinations.append(attention_input)
     return valid_input_combinations
 

@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 class AttentionInput:
     def __init__(
         self,
@@ -11,7 +14,12 @@ class AttentionInput:
         self.batch_size = batch_size
         self.is_prefill = is_prefill
 
-    def is_valid(self, max_seq_len: int): 
+    def is_valid(
+        self,
+        max_seq_len: int,
+        max_model_len: Optional[int] = None,
+    ):
+        runtime_max_len = max_seq_len if max_model_len is None else max_model_len
         if self.is_prefill:
             if self.batch_size != 1:
                 return False
@@ -19,12 +27,14 @@ class AttentionInput:
                 return False
             elif self.prefill_chunk_size + self.kv_cache_size > max_seq_len:
                 return False
+            elif self.prefill_chunk_size + self.kv_cache_size > runtime_max_len:
+                return False
         else:
             if self.prefill_chunk_size > 0:
                 return False
             elif self.kv_cache_size < 0:
                 return False
-            elif self.kv_cache_size + 1 > max_seq_len:
+            elif self.kv_cache_size + 1 > runtime_max_len:
                 return False
         return True
 

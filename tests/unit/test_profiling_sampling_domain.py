@@ -131,6 +131,47 @@ def test_explicit_decode_cache_endpoint_remains_bounded():
         )
 
 
+def test_standard_decode_kv_can_extend_beyond_profile_context():
+    inputs = get_attention_input_combinations(
+        max_seq_len=256,
+        max_model_len=512,
+        min_batch_size=1,
+        max_batch_size=1,
+        profile_only_prefill=False,
+        profile_only_decode=True,
+        decode_kv_cache_size_list=[300],
+    )
+
+    assert _attention_input_tuples(inputs) == [(0, 300, 1, False)]
+    assert inputs[0].is_valid(max_seq_len=256, max_model_len=512)
+
+
+def test_standard_decode_kv_still_fails_at_runtime_capacity():
+    with pytest.raises(ValueError, match="max_model_len - 1"):
+        get_attention_input_combinations(
+            max_seq_len=256,
+            max_model_len=512,
+            min_batch_size=1,
+            max_batch_size=1,
+            profile_only_prefill=False,
+            profile_only_decode=True,
+            decode_kv_cache_size_list=[512],
+        )
+
+
+def test_standard_auto_decode_axis_stays_within_profile_context():
+    inputs = get_attention_input_combinations(
+        max_seq_len=256,
+        max_model_len=512,
+        min_batch_size=1,
+        max_batch_size=1,
+        profile_only_prefill=False,
+        profile_only_decode=True,
+    )
+
+    assert max(item.kv_cache_size for item in inputs) == 255
+
+
 def test_legacy_mixed_prefill_retains_high_kv_endpoint_with_legal_sequence():
     inputs = get_mixed_prefill_input_combinations(
         max_seq_len=1000,

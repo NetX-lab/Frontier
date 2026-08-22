@@ -456,7 +456,8 @@ def parse_args():
         default=None,
         help=(
             "Optional explicit decode KV-cache sizes to profile. "
-            "When provided, this overrides the default decode sequence-length grid."
+            "When provided, this overrides the default decode sequence-length grid "
+            "and may exceed max_seq_len when each value is <= max_model_len - 1."
         ),
     )
     parser.add_argument(
@@ -1684,6 +1685,7 @@ def main():
         decode_kv_cache_size_list=args.decode_kv_cache_size_list,
         enable_chunked_prefill_grid_search=args.enable_chunked_prefill_grid_search,
         fixed_chunked_prefill_size=args.fixed_chunked_prefill_size,
+        max_model_len=args.max_model_len,
     )
 
     # Generate mixed-length prefill input combinations if enabled
