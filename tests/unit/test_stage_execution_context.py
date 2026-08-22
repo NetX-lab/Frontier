@@ -477,6 +477,41 @@ def test_queue_commit_failure_cancels_new_stage_admission_ticket(
     assert stage.pop_batch_if_not_busy() is next_batch
 
 
+def test_queue_key_failure_cancels_pre_attached_stage_admission_ticket() -> None:
+    class _QueueKeyFailingBatch(Batch):
+        @property
+        def global_id(self) -> int:
+            raise RuntimeError("queue key failed")
+
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
+    stage = ReplicaStageScheduler(
+        replica_id=0,
+        stage_id=0,
+        is_last_stage=True,
+        is_moe=False,
+        execution_time_predictor=object(),
+        cluster_type=ClusterType.PREFILL,
+        replica_local_id=None,
+        stage_execution_context=context,
+    )
+    batch = _QueueKeyFailingBatch(
+        0,
+        [Request(arrived_at=0.0, num_prefill_tokens=4, num_decode_tokens=0)],
+        [4],
+        is_moe=False,
+    )
+    ticket = context.enqueue_full_stage(operation_id=("pre_attached", batch.id))
+    batch._stage_admission_ticket = ticket
+
+    with pytest.raises(RuntimeError, match="queue key failed"):
+        stage.add_batch(batch)
+
+    assert context.is_cancelled(ticket)
+    assert context.queued_tickets == ()
+    assert stage.is_empty()
+    assert not hasattr(batch, "_stage_admission_ticket")
+
+
 def test_decode_ffn_ep_batch_without_wave_ticket_fails_fast() -> None:
     predictor = object()
     context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2)
