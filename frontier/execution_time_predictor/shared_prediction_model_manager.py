@@ -68,7 +68,10 @@ from frontier.profiling.cpu_overhead.validation import (
     validate_cpu_overhead_dataframe,
 )
 from frontier.spec_decode.runtime import is_target_embedded_mtp_enabled
-from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_same_tp_linear_op
+from frontier.spec_decode.mtp_registry import (
+    get_target_embedded_mtp_linear_ops,
+    is_target_embedded_mtp_same_tp_linear_op,
+)
 
 logger = init_logger(__name__)
 MIGRATION_HELP_COMMAND = (
@@ -614,10 +617,7 @@ class ExecutionTimePredictionModelManager:
         architecture_profile = _resolve_model_architecture_profile(
             getattr(replica_config, "model_config", None)
         )
-        if op_name in {
-            "mtp_fusion_proj",
-            "lm_head_linear",
-        }:
+        if op_name in get_target_embedded_mtp_linear_ops():
             return resolve_effective_attention_tp_size(
                 op_name="attn_pre_proj",
                 requested_tp_size=replica_config.attn_tensor_parallel_size,

@@ -98,7 +98,10 @@ from frontier.spec_decode import (
     get_mtp_method_family,
     is_target_embedded_mtp_enabled,
 )
-from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_same_tp_linear_op
+from frontier.spec_decode.mtp_registry import (
+    get_target_embedded_mtp_linear_ops,
+    is_target_embedded_mtp_same_tp_linear_op,
+)
 from frontier.spec_decode.mtp_runtime import load_mtp_structural_model_config
 from frontier.entities import ExecutionTime
 from frontier.types import ClusterType, MeasurementType
@@ -2789,10 +2792,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         return self._replica_config.attn_tensor_parallel_size
 
     def _get_linear_op_tp_key(self, op_name: str) -> int:
-        if op_name in {
-            "mtp_fusion_proj",
-            "lm_head_linear",
-        }:
+        if op_name in get_target_embedded_mtp_linear_ops():
             return resolve_effective_attention_tp_size(
                 op_name="attn_pre_proj",
                 requested_tp_size=self._replica_config.attn_tensor_parallel_size,
