@@ -470,6 +470,24 @@ def test_ep_collective_resolver_rejects_invalid_runtime_profile() -> None:
         )
 
 
+def test_ep_collective_resolver_rejects_unsupported_cluster_role() -> None:
+    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+        resolve_ep_collective_kind,
+    )
+
+    model_config = _runtime_model_config(model_architecture_profile="generic")
+
+    with pytest.raises(
+        ValueError,
+        match=r"profile generic does not support EP collectives for DECODE_ATTN",
+    ):
+        resolve_ep_collective_kind(
+            model_config,
+            ClusterType.DECODE_ATTN,
+            expected_ep_size=2,
+        )
+
+
 def test_attention_trainer_reuses_runtime_resolved_identity() -> None:
     from frontier.training.attention_trainer import AttentionTrainer
 

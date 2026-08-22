@@ -74,9 +74,12 @@ def resolve_ep_collective_kind(
             "model_config.get_model_architecture_profile() must return "
             "ModelArchitectureProfile"
         )
-    if profile.uses_expert_parallel_alltoall(cluster_type, expected_ep_size):
-        return ExpertParallelCollective.ALLTOALL
-    return ExpertParallelCollective.ALLGATHER
+    if not profile.uses_expert_parallel_alltoall(cluster_type, expected_ep_size):
+        raise ValueError(
+            f"Model architecture profile {profile.profile_id} does not support "
+            f"EP collectives for {cluster_type.name}"
+        )
+    return profile.expert_parallel_collective
 
 
 class M2NLaneIdentityScope(Enum):
