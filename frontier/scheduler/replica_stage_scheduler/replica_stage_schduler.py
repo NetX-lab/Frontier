@@ -22,8 +22,12 @@ class ReplicaStageScheduler:
         execution_time_predictor: BaseExecutionTimePredictor,
         cluster_type: ClusterType,
         replica_local_id: int | None,
-        stage_execution_context: StageExecutionContext | None = None,
+        stage_execution_context: StageExecutionContext,
     ) -> None:
+        if not isinstance(stage_execution_context, StageExecutionContext):
+            raise TypeError(
+                "stage_execution_context must be a StageExecutionContext"
+            )
         self._replica_id = replica_id
         self._stage_id = stage_id
         self._is_last_stage = is_last_stage
@@ -141,25 +145,24 @@ class ReplicaStageScheduler:
         Args:
             batch: The batch to add to the queue
         """
-        if self._stage_execution_context is not None:
-            admission_ticket = getattr(batch, "_stage_admission_ticket", None)
-            if admission_ticket is None:
-                if self._cluster_type == ClusterType.DECODE_FFN and isinstance(
-                    batch, EPBatchGroup
-                ):
-                    raise ValueError(
-                        "DECODE_FFN EPBatchGroup must carry a complete EP_WAVE "
-                        "admission ticket before queue insertion"
-                    )
-                operation_id = (
-                    "stage_batch",
-                    int(batch.id),
-                    int(batch.schedule_epoch),
+        admission_ticket = getattr(batch, "_stage_admission_ticket", None)
+        if admission_ticket is None:
+            if self._cluster_type == ClusterType.DECODE_FFN and isinstance(
+                batch, EPBatchGroup
+            ):
+                raise ValueError(
+                    "DECODE_FFN EPBatchGroup must carry a complete EP_WAVE "
+                    "admission ticket before queue insertion"
                 )
-                admission_ticket = self._stage_execution_context.enqueue_full_stage(
-                    operation_id=operation_id,
-                )
-                batch._stage_admission_ticket = admission_ticket
+            operation_id = (
+                "stage_batch",
+                int(batch.id),
+                int(batch.schedule_epoch),
+            )
+            admission_ticket = self._stage_execution_context.enqueue_full_stage(
+                operation_id=operation_id,
+            )
+            batch._stage_admission_ticket = admission_ticket
 
         # Use heapq to maintain priority queue invariant
         # Tuple comparison: (global_id, insertion_counter) ensures correct ordering
@@ -244,10 +247,6 @@ class ReplicaStageScheduler:
         """Cancel a queued stale ticket without touching another active wave."""
 
         context = self._stage_execution_context
-        if context is None:
-            raise ValueError(
-                "Batch carries a stage admission ticket but no StageExecutionContext"
-            )
         if context.is_queued(admission_ticket):
             context.cancel(admission_ticket)
         elif context.is_active(admission_ticket):
@@ -280,49 +279,45 @@ class ReplicaStageScheduler:
             # different batch, allowing that batch to bypass the parent owner.
             _, _, expected_schedule_epoch, batch = self._batch_queue[0]
             admission_ticket = getattr(batch, "_stage_admission_ticket", None)
-            if admission_ticket is not None:
-                if self._stage_execution_context is None:
-                    raise ValueError(
-                        "Batch carries a stage admission ticket but no StageExecutionContext"
-                    )
-                if self._stage_execution_context.is_cancelled(admission_ticket):
-                    heapq.heappop(self._batch_queue)
-                    batch.__dict__.pop("_stage_admission_ticket", None)
-                    self._last_stale_drop_count += 1
-                    self._last_stale_drop_count += (
-                        self._drop_queued_lanes_for_ticket(admission_ticket)
-                    )
-                    continue
+            if not isinstance(admission_ticket, StageAdmissionTicket):
+                raise ValueError(
+                    "Queued batch must carry a StageAdmissionTicket"
+                )
+            if self._stage_execution_context.is_cancelled(admission_ticket):
+                heapq.heappop(self._batch_queue)
+                batch.__dict__.pop("_stage_admission_ticket", None)
+                self._last_stale_drop_count += 1
+                self._last_stale_drop_count += (
+                    self._drop_queued_lanes_for_ticket(admission_ticket)
+                )
+                continue
             if batch.schedule_epoch != expected_schedule_epoch:
                 heapq.heappop(self._batch_queue)
-                if admission_ticket is not None:
-                    self._discard_stale_ticket(admission_ticket)
-                    batch.__dict__.pop("_stage_admission_ticket", None)
-                    self._last_stale_drop_count += (
-                        self._drop_queued_lanes_for_ticket(admission_ticket)
-                    )
+                self._discard_stale_ticket(admission_ticket)
+                batch.__dict__.pop("_stage_admission_ticket", None)
+                self._last_stale_drop_count += (
+                    self._drop_queued_lanes_for_ticket(admission_ticket)
+                )
                 self._last_stale_drop_count += 1
                 continue
             parent_acquired = False
-            if admission_ticket is not None:
-                if not self._stage_execution_context.owns(admission_ticket):
-                    if not self._stage_execution_context.try_acquire(admission_ticket):
-                        return None
-                    parent_acquired = True
+            if not self._stage_execution_context.owns(admission_ticket):
+                if not self._stage_execution_context.try_acquire(admission_ticket):
+                    return None
+                parent_acquired = True
             # Remove the same candidate whose ticket was just acquired.
             heapq.heappop(self._batch_queue)
             live_batch = self._materialize_runtime_live_batch(batch)
             if live_batch is None:
-                if admission_ticket is not None:
-                    context = self._stage_execution_context
-                    if parent_acquired and context.is_active(admission_ticket):
-                        context.release(admission_ticket)
-                    elif context.is_queued(admission_ticket):
-                        context.cancel(admission_ticket)
-                    batch.__dict__.pop("_stage_admission_ticket", None)
-                    self._last_stale_drop_count += (
-                        self._drop_queued_lanes_for_ticket(admission_ticket)
-                    )
+                context = self._stage_execution_context
+                if parent_acquired and context.is_active(admission_ticket):
+                    context.release(admission_ticket)
+                elif context.is_queued(admission_ticket):
+                    context.cancel(admission_ticket)
+                batch.__dict__.pop("_stage_admission_ticket", None)
+                self._last_stale_drop_count += (
+                    self._drop_queued_lanes_for_ticket(admission_ticket)
+                )
                 self._last_stale_drop_count += 1
                 continue
             self._is_busy = True

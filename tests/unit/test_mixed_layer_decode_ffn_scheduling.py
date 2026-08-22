@@ -196,6 +196,9 @@ def _branch_scheduler(model_config, *, layer_id: int):
     scheduler._replica_ep_size = 1
     scheduler._batch_group_creation_counter = 0
     scheduler._raw_batch_waiting_for_m2n_back = {}
+    scheduler._stage_execution_contexts = {
+        (0, 2): StageExecutionContext(replica_id=0, stage_id=2, ep_size=1)
+    }
 
     dense_result = [(0, 0)]
     scheduler._schedule_dense_ffn_from_m2n_group = Mock(return_value=dense_result)
@@ -244,7 +247,7 @@ def test_pure_dense_layer_keeps_dense_ffn_scheduler(dense_model_config) -> None:
     assert scheduler._distribute_tokens_within_ep_replica.call_count == 0
 
 
-def _builder_scheduler(model_config):
+def _builder_scheduler(model_config, *, ep_size: int = 1):
     scheduler = object.__new__(RoundRobinClusterScheduler)
     scheduler._cluster_type = ClusterType.DECODE_FFN
     scheduler._cluster = SimpleNamespace(replicas={0: object()})
@@ -252,14 +255,21 @@ def _builder_scheduler(model_config):
         replica_config=SimpleNamespace(
             model_config=model_config,
             router_topk=1,
-            total_expert_num=1,
-            moe_expert_parallel_size=1,
+            total_expert_num=ep_size,
+            moe_expert_parallel_size=ep_size,
             local_expert_num=1,
         )
     )
     scheduler._raw_batch_waiting_for_m2n_back = {}
     scheduler._batch_group_creation_counter = 0
     scheduler._ep_routed_token_allocation_cache = {}
+    scheduler._stage_execution_contexts = {
+        (0, 2): StageExecutionContext(
+            replica_id=0,
+            stage_id=2,
+            ep_size=ep_size,
+        )
+    }
     queue_sink = _QueuedBatchSink()
     scheduler._full_stage_replica_schedulers = {0: queue_sink}
     scheduler.get_full_stage_replica_scheduler = Mock(return_value=queue_sink)
@@ -345,7 +355,7 @@ def test_ep_wave_schedule_materializes_one_shared_workload_for_all_lanes(
     monkeypatch,
     mixed_model_config,
 ) -> None:
-    scheduler, _ = _builder_scheduler(mixed_model_config)
+    scheduler, _ = _builder_scheduler(mixed_model_config, ep_size=2)
     source_batch = _source_batch(layer_id=4)
     source_batch._num_tokens = [3]
     source_batch._total_num_tokens = 3
@@ -403,7 +413,7 @@ def test_moe_ep_batches_preserve_decode_ffn_cuda_graph_metadata(
     monkeypatch,
     mixed_model_config,
 ) -> None:
-    scheduler, _ = _builder_scheduler(mixed_model_config)
+    scheduler, _ = _builder_scheduler(mixed_model_config, ep_size=2)
     source_batch = _source_batch(layer_id=4, afd_stage_idx=2)
     source_batch._num_tokens = [3]
     source_batch._total_num_tokens = 3
@@ -607,9 +617,8 @@ def test_dense_ffn_stage_preserves_multi_source_lineage(
 def test_dense_ffn_batch_uses_full_stage_parent_scope(
     mixed_model_config,
 ) -> None:
-    scheduler, queue_sink = _builder_scheduler(mixed_model_config)
-    context = StageExecutionContext(replica_id=0, stage_id=2, ep_size=2)
-    scheduler.get_stage_execution_context = Mock(return_value=context)
+    scheduler, queue_sink = _builder_scheduler(mixed_model_config, ep_size=2)
+    context = scheduler.get_stage_execution_context(0, 2)
     source_batch = _source_batch(layer_id=3, afd_stage_idx=2)
 
     scheduler._schedule_dense_ffn_from_m2n_group(
@@ -745,6 +754,13 @@ def _atomicity_scheduler(
     scheduler._batch_group_creation_counter = 0
     scheduler._raw_batch_waiting_for_m2n_back = {}
     scheduler._ep_routed_token_allocation_cache = {}
+    scheduler._stage_execution_contexts = {
+        (0, source_batch.afd_stage_idx): StageExecutionContext(
+            replica_id=0,
+            stage_id=source_batch.afd_stage_idx,
+            ep_size=ep_size,
+        )
+    }
 
     if queue_factory is None:
         queue_factory = lambda _ep_id: _QueuedBatchSink()
@@ -767,8 +783,7 @@ def test_decode_ffn_wave_materialization_attaches_one_parent_ticket(
         layer_id=4,
         ep_size=2,
     )
-    context = StageExecutionContext(replica_id=0, stage_id=2, ep_size=2)
-    scheduler.get_stage_execution_context = Mock(return_value=context)
+    context = scheduler.get_stage_execution_context(0, 2)
 
     affected = scheduler.schedule_ffn_with_m2n_immediate()
 
@@ -1427,6 +1442,7 @@ def _stage_scheduler(predictor: Mock) -> ReplicaStageScheduler:
         total_time=1.0,
         model_time=0.8,
     )
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
     return ReplicaStageScheduler(
         replica_id=0,
         stage_id=0,
@@ -1435,6 +1451,7 @@ def _stage_scheduler(predictor: Mock) -> ReplicaStageScheduler:
         execution_time_predictor=predictor,
         cluster_type=ClusterType.DECODE_FFN,
         replica_local_id=0,
+        stage_execution_context=context,
     )
 
 

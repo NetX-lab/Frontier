@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from inspect import Parameter, signature
 from types import SimpleNamespace
 
 import pytest
 
 from frontier.entities import Batch, EPBatchGroup, Request
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
+from frontier.events.cluster_batch_end_event import ClusterBatchEndEvent
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     FULL_STAGE_WORLD,
     EP_WAVE,
@@ -16,6 +18,9 @@ from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
 )
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
+)
+from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
+    BaseReplicaScheduler,
 )
 from frontier.scheduler.replica_stage_scheduler.replica_stage_schduler import (
     ReplicaStageScheduler,
@@ -99,6 +104,34 @@ def test_duplicate_operation_id_is_rejected_until_previous_ticket_releases() -> 
     assert context.try_acquire(wave) is True
     with pytest.raises(ValueError, match="operation_id"):
         context.enqueue_ep_wave(operation_id=50, participant_ep_ids=(0,))
+
+
+def test_scheduler_constructors_require_typed_stage_ownership_dependencies() -> None:
+    replica_parameter = signature(BaseReplicaScheduler.__init__).parameters[
+        "cluster_scheduler"
+    ]
+    stage_parameter = signature(ReplicaStageScheduler.__init__).parameters[
+        "stage_execution_context"
+    ]
+
+    assert replica_parameter.default is Parameter.empty
+    assert replica_parameter.annotation is not Parameter.empty
+    assert stage_parameter.default is Parameter.empty
+    assert stage_parameter.annotation is not Parameter.empty
+
+
+def test_replica_stage_scheduler_rejects_missing_stage_execution_context() -> None:
+    with pytest.raises(TypeError, match="StageExecutionContext"):
+        ReplicaStageScheduler(
+            replica_id=0,
+            stage_id=0,
+            is_last_stage=True,
+            is_moe=True,
+            execution_time_predictor=object(),
+            cluster_type=ClusterType.PREFILL,
+            replica_local_id=None,
+            stage_execution_context=None,
+        )
 
 
 def test_child_stage_schedulers_share_parent_ep_wave_ownership() -> None:
@@ -298,6 +331,66 @@ def test_stale_stage_end_releases_the_captured_active_ticket() -> None:
 
     assert event.handle_event(scheduler, metrics_store) == []
     assert stage_end_calls == [True]
+    assert context.is_idle
+    assert not hasattr(batch, "_stage_admission_ticket")
+
+
+def test_normal_stage_end_releases_the_active_parent_ticket() -> None:
+    """A completed stage must release its real parent admission owner."""
+
+    class _ProbeClusterScheduler(BaseClusterScheduler):
+        def schedule(self):
+            return []
+
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
+    ticket = context.enqueue_full_stage(operation_id=("stage_batch", 74, 0))
+    assert context.try_acquire(ticket)
+    stage_end_calls = []
+    cluster_scheduler = object.__new__(_ProbeClusterScheduler)
+    cluster_scheduler._stage_execution_contexts = {(0, 0): context}
+    cluster_scheduler.get_replica_stage_scheduler = lambda *_args: SimpleNamespace(
+        on_stage_end=lambda: stage_end_calls.append(True),
+        is_empty=lambda: True,
+    )
+
+    batch = Batch(
+        0,
+        [Request(arrived_at=0.0, num_prefill_tokens=1, num_decode_tokens=0)],
+        [1],
+        is_moe=False,
+    )
+    batch.set_global_id(74)
+    batch._stage_admission_ticket = ticket
+    batch_stage_end_times = []
+    batch_stage = SimpleNamespace(
+        id=2,
+        on_stage_end=lambda time: batch_stage_end_times.append(time),
+    )
+    event = BatchStageEndEvent(
+        time=1.25,
+        replica_id=0,
+        stage_id=0,
+        is_last_stage=True,
+        batch=batch,
+        batch_stage=batch_stage,
+        cluster_type=ClusterType.PREFILL,
+        replica_local_id=None,
+    )
+    scheduler = SimpleNamespace(
+        get_cluster_scheduler=lambda *_args: cluster_scheduler
+    )
+    metric_calls = []
+    metrics_store = SimpleNamespace(
+        on_batch_stage_end=lambda *args: metric_calls.append(args)
+    )
+
+    events = event.handle_event(scheduler, metrics_store)
+
+    assert stage_end_calls == [True]
+    assert batch_stage_end_times == [1.25]
+    assert len(metric_calls) == 1
+    assert len(events) == 1
+    assert isinstance(events[0], ClusterBatchEndEvent)
     assert context.is_idle
     assert not hasattr(batch, "_stage_admission_ticket")
 

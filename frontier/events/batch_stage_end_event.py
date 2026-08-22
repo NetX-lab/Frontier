@@ -69,16 +69,7 @@ class BatchStageEndEvent(BaseEvent):
                     self._stage_id,
                 )
                 was_active = context.is_active(self._stage_admission_ticket)
-                discard = getattr(
-                    cluster_scheduler,
-                    "discard_stage_admission_ticket",
-                    None,
-                )
-                if not callable(discard):
-                    raise ValueError(
-                        "stale stage end requires admission-ticket cleanup support"
-                    )
-                discard(
+                cluster_scheduler.discard_stage_admission_ticket(
                     self._stage_admission_ticket,
                     stage_id=self._stage_id,
                 )
@@ -107,13 +98,10 @@ class BatchStageEndEvent(BaseEvent):
             self._cluster_type,
             self._replica_local_id,
         )
-        release_parent = getattr(
-            cluster_scheduler,
-            "release_stage_admission_for_batch",
-            None,
+        cluster_scheduler.release_stage_admission_for_batch(
+            self._batch,
+            stage_id=self._stage_id,
         )
-        if callable(release_parent):
-            release_parent(self._batch, stage_id=self._stage_id)
 
         next_events = []
 

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Sequence
+from typing import TYPE_CHECKING, Any, Dict, List, Sequence
 
 from frontier.config import (
     BaseReplicaSchedulerConfig,
@@ -20,6 +20,10 @@ from frontier.spec_decode import (
 )
 from frontier.types import ClusterType, ReplicaSchedulerType
 
+if TYPE_CHECKING:
+    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+        BaseClusterScheduler,
+    )
 
 
 class BaseReplicaScheduler(ABC):
@@ -30,11 +34,13 @@ class BaseReplicaScheduler(ABC):
         request_generator_config: BaseRequestGeneratorConfig,
         replica: Replica,
         predictor: BaseExecutionTimePredictor,
+        cluster_scheduler: "BaseClusterScheduler",
         cluster_type: ClusterType = None,
         replica_local_id: int = None,
         af_pipeline_num_micro_batch: int = -1,
-        cluster_scheduler = None
     ) -> None:
+        if cluster_scheduler is None:
+            raise TypeError("cluster_scheduler must be a BaseClusterScheduler")
         self._config = replica_scheduler_config
         self._replica_config = replica_config
         self._request_generator_config = request_generator_config
@@ -371,16 +377,9 @@ class BaseReplicaScheduler(ABC):
                 self._predictor,
                 self._cluster_type,
                 self._replica_local_id,
-                stage_execution_context=(
-                    cluster_scheduler.get_stage_execution_context(
-                        replica.id,
-                        stage_id,
-                    )
-                    if cluster_scheduler is not None
-                    and callable(
-                        getattr(cluster_scheduler, "get_stage_execution_context", None)
-                    )
-                    else None
+                stage_execution_context=cluster_scheduler.get_stage_execution_context(
+                    replica.id,
+                    stage_id,
                 ),
             )
             for stage_id in range(self._num_stages)
