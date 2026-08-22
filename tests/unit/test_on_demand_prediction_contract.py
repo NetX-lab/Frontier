@@ -14,6 +14,9 @@ import pytest
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
+from frontier.execution_time_predictor.shared_prediction_model_manager import (
+    ExecutionTimePredictionModelManager,
+)
 from frontier.types import MeasurementType
 
 
@@ -258,7 +261,9 @@ def test_invalid_model_output_is_rejected_without_runtime_cache(result: float) -
     assert predictor._runtime_cache["eager"]["test_operator"] == {}
 
 
-def test_exact_lookup_metadata_survives_model_cache_round_trip(tmp_path) -> None:
+def test_exact_lookup_metadata_survives_model_cache_round_trip_by_default(
+    tmp_path,
+) -> None:
     predictor = _ConcretePredictor.__new__(_ConcretePredictor)
     predictor._cache_dir = str(tmp_path)
     predictor._config = SimpleNamespace(no_cache=False)
@@ -279,9 +284,48 @@ def test_exact_lookup_metadata_survives_model_cache_round_trip(tmp_path) -> None
         df=dataframe,
         feature_cols=["batch_size", "num_tokens"],
         target_col="target",
-        persist_exact_lookup=True,
     )
     reloaded = predictor._load_model_from_cache("test_operator", "roundtrip")
+
+    expected = {(2.0, 8.0): 2.25, (3.0, 8.0): 3.5}
+    assert loaded._frontier_exact_lookup == expected
+    assert reloaded._frontier_exact_lookup == expected
+
+
+def test_shared_manager_exact_lookup_survives_cache_round_trip_by_default(
+    tmp_path,
+) -> None:
+    manager = ExecutionTimePredictionModelManager.__new__(
+        ExecutionTimePredictionModelManager
+    )
+    manager._cache_dir = str(tmp_path)
+    manager._active_measurement_type = MeasurementType.CUDA_EVENT
+    manager._get_model_hash = lambda *_args: "roundtrip"
+    manager._store_model_precision = lambda *_args: None
+
+    legacy_model = _CountingModel(("batch_size", "num_tokens"), result=99.0)
+    manager._store_model_in_cache("test_operator", "roundtrip", legacy_model)
+    dataframe = pd.DataFrame(
+        {
+            "batch_size": [2, 3],
+            "num_tokens": [8, 8],
+            "target": [2.25, 3.5],
+            "profiling_precision": ["FP16", "FP16"],
+            "measurement_type": [
+                MeasurementType.CUDA_EVENT.value,
+                MeasurementType.CUDA_EVENT.value,
+            ],
+        }
+    )
+
+    loaded = manager._train_single_model(
+        model_name="test_operator",
+        df=dataframe,
+        feature_cols=["batch_size", "num_tokens"],
+        target_col="target",
+        execution_time_predictor_config=SimpleNamespace(),
+    )
+    reloaded = manager._load_model_from_cache("test_operator", "roundtrip")
 
     expected = {(2.0, 8.0): 2.25, (3.0, 8.0): 3.5}
     assert loaded._frontier_exact_lookup == expected

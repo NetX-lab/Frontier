@@ -2973,7 +2973,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         df: pd.DataFrame,
         feature_cols: List[str],
         target_col: str,
-        persist_exact_lookup: bool = False,
+        persist_exact_lookup: bool = True,
     ) -> BaseEstimator:
         if len(df) == 0:
             raise Exception(f"Training data for model {model_name} is empty")

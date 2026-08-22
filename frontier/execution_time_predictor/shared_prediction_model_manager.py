@@ -2066,7 +2066,7 @@ class ExecutionTimePredictionModelManager:
         trained_model_signatures.add(cpu_signature)
         return models
 
-    def _train_single_model(self, model_name: str, df: pd.DataFrame, feature_cols: List[str], target_col: str, execution_time_predictor_config, training_context: Dict[str, Any] = None, persist_exact_lookup: bool = False) -> BaseEstimator:
+    def _train_single_model(self, model_name: str, df: pd.DataFrame, feature_cols: List[str], target_col: str, execution_time_predictor_config, training_context: Dict[str, Any] = None, persist_exact_lookup: bool = True) -> BaseEstimator:
         """Train a single model with given data and configuration."""
         if len(df) == 0:
             # 提供详细的错误信息，以便调试
