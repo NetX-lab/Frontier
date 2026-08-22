@@ -292,6 +292,50 @@ def test_exact_lookup_metadata_survives_model_cache_round_trip_by_default(
     assert reloaded._frontier_exact_lookup == expected
 
 
+def test_one_feature_moe_exact_lookup_survives_cache_round_trip_and_precedes_runtime_cache(
+    tmp_path,
+) -> None:
+    model_name = "moe_gating_linear"
+    predictor = _ConcretePredictor.__new__(_ConcretePredictor)
+    predictor._cache_dir = str(tmp_path)
+    predictor._config = SimpleNamespace(no_cache=False)
+    predictor._get_model_hash = lambda _model_name, _df: "roundtrip"
+
+    legacy_model = _CountingModel(("num_tokens",), result=99.0)
+    predictor._store_model_in_cache(model_name, "roundtrip", legacy_model)
+    dataframe = pd.DataFrame(
+        {
+            "num_tokens": [1, 2],
+            "target": [9.0, 4.0],
+        }
+    )
+
+    predictor._train_model(
+        model_name=model_name,
+        df=dataframe,
+        feature_cols=["num_tokens"],
+        target_col="target",
+    )
+    reloaded = predictor._load_model_from_cache(model_name, "roundtrip")
+    predictor._models = {model_name: reloaded}
+    predictor._predictions = {model_name: {}}
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._measurement_family_name = lambda _measurement_type: "eager"
+    predictor._runtime_cache = defaultdict(lambda: defaultdict(dict))
+    predictor._runtime_cache["eager"][model_name][(2.0,)] = 99.0
+
+    observed = predictor._get_prediction_for_features(
+        model_name,
+        {"num_tokens": 2},
+        feature_names=("num_tokens",),
+    )
+
+    expected = {(1.0,): 9.0, (2.0,): 4.0}
+    assert reloaded._frontier_exact_lookup == expected
+    assert observed == 4.0
+    assert predictor._runtime_cache["eager"][model_name][(2.0,)] == 99.0
+
+
 def test_shared_manager_exact_lookup_survives_cache_round_trip_by_default(
     tmp_path,
 ) -> None:

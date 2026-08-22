@@ -1047,7 +1047,6 @@ class ExecutionTimePredictionModelManager:
                         target_col=f"time_stats.{target_op_name}.median",
                         execution_time_predictor_config=execution_time_predictor_config,
                         training_context=training_context,
-                        persist_exact_lookup=len(op_feature_cols) > 1,
                     )
                     trained_model_signatures.add(model_signature)
                     logger.info(f"Trained {model_name} for {cluster_type} with features: {op_feature_cols}")

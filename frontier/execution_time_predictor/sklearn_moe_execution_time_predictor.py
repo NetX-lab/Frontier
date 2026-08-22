@@ -963,7 +963,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 df=op_df,
                 feature_cols=feature_cols,
                 target_col=target_col,
-                persist_exact_lookup=len(feature_cols) > 1,
             )
             logger.info(f"Trained MoE model: {model_name}")
 
