@@ -421,6 +421,62 @@ def test_shared_domain_source_batch_gets_full_stage_ticket_before_queue_insert()
     assert context.active_operation_id == ("stage_batch", batch.id, batch.schedule_epoch)
 
 
+def test_queue_commit_failure_cancels_new_stage_admission_ticket(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
+    stage = ReplicaStageScheduler(
+        replica_id=0,
+        stage_id=0,
+        is_last_stage=True,
+        is_moe=False,
+        execution_time_predictor=object(),
+        cluster_type=ClusterType.PREFILL,
+        replica_local_id=None,
+        stage_execution_context=context,
+    )
+    batch = Batch(
+        0,
+        [Request(arrived_at=0.0, num_prefill_tokens=4, num_decode_tokens=0)],
+        [4],
+        is_moe=False,
+    )
+    batch.set_global_id(82)
+    observed_ticket = None
+
+    def _fail_queue_commit(queue, queue_item) -> None:
+        nonlocal observed_ticket
+        observed_ticket = batch._stage_admission_ticket
+        queue.append(queue_item)
+        raise RuntimeError("queue commit failed")
+
+    monkeypatch.setattr(
+        "frontier.scheduler.replica_stage_scheduler."
+        "replica_stage_schduler.heapq.heappush",
+        _fail_queue_commit,
+    )
+
+    with pytest.raises(RuntimeError, match="queue commit failed"):
+        stage.add_batch(batch)
+
+    assert observed_ticket is not None
+    assert context.is_cancelled(observed_ticket)
+    assert context.queued_tickets == ()
+    assert stage.is_empty()
+    assert not hasattr(batch, "_stage_admission_ticket")
+
+    monkeypatch.undo()
+    next_batch = Batch(
+        0,
+        [Request(arrived_at=0.0, num_prefill_tokens=4, num_decode_tokens=0)],
+        [4],
+        is_moe=False,
+    )
+    next_batch.set_global_id(83)
+    stage.add_batch(next_batch)
+    assert stage.pop_batch_if_not_busy() is next_batch
+
+
 def test_decode_ffn_ep_batch_without_wave_ticket_fails_fast() -> None:
     predictor = object()
     context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2)

@@ -166,10 +166,25 @@ class ReplicaStageScheduler:
 
         # Use heapq to maintain priority queue invariant
         # Tuple comparison: (global_id, insertion_counter) ensures correct ordering
-        heapq.heappush(
-            self._batch_queue,
-            (batch.global_id, self._insertion_counter, batch.schedule_epoch, batch),
+        queue_item = (
+            batch.global_id,
+            self._insertion_counter,
+            batch.schedule_epoch,
+            batch,
         )
+        try:
+            heapq.heappush(self._batch_queue, queue_item)
+        except Exception:
+            self._batch_queue[:] = [
+                queued_item
+                for queued_item in self._batch_queue
+                if queued_item is not queue_item
+            ]
+            heapq.heapify(self._batch_queue)
+            if self._stage_execution_context.is_queued(admission_ticket):
+                self._stage_execution_context.cancel(admission_ticket)
+            batch.__dict__.pop("_stage_admission_ticket", None)
+            raise
         self._insertion_counter += 1
 
     def on_stage_end(self) -> None:
