@@ -80,6 +80,7 @@ from frontier.profiling.utils import (
     normalize_profile_method,
     profile_method_to_measurement_type,
     require_profiling_dependencies,
+    _resolve_profile_max_model_len,
 )
 
 
@@ -654,10 +655,12 @@ def parse_args():
         "--true_mixed_prefill_chunk_sizes",
         type=int,
         nargs="+",
-        default=[64, 128, 256, 512, 1024],
+        default=None,
         help=(
-            "Prefill chunk sizes for true mixed-batch profiling. "
-            "These values extend the automatic max-context endpoint."
+            "Optional explicit prefill chunk sizes for true mixed-batch profiling. "
+            "When omitted, canonical anchors and the max_seq_len endpoint are "
+            "derived automatically. Explicit values are checked only against "
+            "max_model_len."
         ),
     )
     parser.add_argument(
@@ -671,10 +674,12 @@ def parse_args():
         "--true_mixed_decode_kv_cache_sizes",
         type=int,
         nargs="+",
-        default=[128, 256, 512, 1024, 2048],
+        default=None,
         help=(
-            "Decode KV cache sizes for true mixed-batch profiling. "
-            "These values extend the automatic max-context endpoint."
+            "Optional explicit decode KV cache sizes for true mixed-batch profiling. "
+            "When omitted, canonical anchors and the max_seq_len endpoint are "
+            "derived automatically. Explicit values are checked only against "
+            "max_model_len."
         ),
     )
     parser.add_argument(
@@ -779,6 +784,8 @@ def _resolve_fp8_settings(
 
 def _validate_cli_conflicts(args: argparse.Namespace) -> None:
     """Validate unsupported argument combinations with fail-fast behavior."""
+    if hasattr(args, "max_seq_len") and hasattr(args, "max_model_len"):
+        _resolve_profile_max_model_len(args.max_seq_len, args.max_model_len)
     if args.profile_only_prefill and args.profile_only_decode:
         raise ValueError(
             "profile_only_prefill and profile_only_decode cannot both be enabled."
@@ -1696,6 +1703,7 @@ def main():
             )
             mixed_input_combinations = get_online_grid_mixed_prefill_input_combinations(
                 max_seq_len=args.max_seq_len,
+                max_model_len=args.max_model_len,
                 min_batch_size=args.mixed_batch_size_min,
                 max_batch_size=args.mixed_batch_size_max,
                 min_total_tokens=args.mixed_total_tokens_min,
@@ -1734,6 +1742,7 @@ def main():
         )
         true_mixed_input_combinations = get_true_mixed_attention_input_combinations(
             max_seq_len=args.max_seq_len,
+            max_model_len=args.max_model_len,
             prefill_batch_sizes=args.true_mixed_prefill_batch_sizes,
             prefill_chunk_sizes=args.true_mixed_prefill_chunk_sizes,
             decode_batch_sizes=args.true_mixed_decode_batch_sizes,

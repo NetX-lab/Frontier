@@ -41,6 +41,8 @@ EXPORTABLE_PROFILE_METHOD_CHOICES = [
 ]
 
 _MAX_MIXED_ATTENTION_BATCH_SIZE = 128
+_TRUE_MIXED_PREFILL_CHUNK_ANCHORS = (64, 128, 256, 512, 1024)
+_TRUE_MIXED_DECODE_KV_ANCHORS = (128, 256, 512, 1024, 2048)
 
 
 def normalize_profile_method(profile_method: str) -> str:
@@ -586,7 +588,6 @@ def get_mixed_prefill_input_combinations(
             "kv_cache_sizes values must be <= max_seq_len - 1, "
             f"got {oversized_kv_cache_sizes}."
         )
-
     input_combinations = []
     seen_inputs = set()
 
@@ -771,7 +772,7 @@ def _validate_online_grid_seq_lens(
     seq_lens: List[int],
     batch_size: int,
     total_tokens: int,
-    max_seq_len: int,
+    max_model_len: int,
     kv_cache_size: int = 0,
 ) -> None:
     if len(seq_lens) != batch_size:
@@ -784,17 +785,17 @@ def _validate_online_grid_seq_lens(
         )
     if min(seq_lens) <= 0:
         raise RuntimeError("All seq_lens values must be positive.")
-    if max(seq_lens) > max_seq_len:
+    if max(seq_lens) > max_model_len:
         raise RuntimeError(
-            f"Invalid seq_lens max: {max(seq_lens)} exceeds max_seq_len={max_seq_len}."
+            f"Invalid seq_lens max: {max(seq_lens)} exceeds max_model_len={max_model_len}."
         )
     if kv_cache_size < 0:
         raise RuntimeError("kv_cache_size must be non-negative.")
-    if max(seq_lens) + kv_cache_size > max_seq_len:
+    if max(seq_lens) + kv_cache_size > max_model_len:
         raise RuntimeError(
             "Invalid seq_lens + kv_cache_size: "
             f"max(seq_lens) + kv_cache_size = {max(seq_lens) + kv_cache_size} "
-            f"exceeds max_seq_len={max_seq_len}."
+            f"exceeds max_model_len={max_model_len}."
         )
 
 
@@ -819,6 +820,53 @@ def _normalize_positive_int_list(
     return sorted(normalized)
 
 
+def _resolve_profile_max_model_len(
+    max_seq_len: int,
+    max_model_len: Optional[int],
+) -> int:
+    if max_seq_len <= 0:
+        raise ValueError("max_seq_len must be positive.")
+    resolved_max_model_len = (
+        max_seq_len if max_model_len is None else int(max_model_len)
+    )
+    if resolved_max_model_len <= 0:
+        raise ValueError("max_model_len must be positive.")
+    if resolved_max_model_len < max_seq_len:
+        raise ValueError(
+            "max_model_len must be >= max_seq_len, got "
+            f"max_model_len={resolved_max_model_len}, max_seq_len={max_seq_len}."
+        )
+    return resolved_max_model_len
+
+
+def _derive_axis_with_headroom(
+    *,
+    anchors: tuple[int, ...],
+    config_max: int,
+    physical_max: int,
+    minimum: int,
+) -> List[int]:
+    """Build an automatic axis through the first legal point above config_max."""
+    values = [
+        anchor
+        for anchor in sorted(anchors)
+        if minimum <= anchor <= config_max
+    ]
+    if config_max >= minimum:
+        values.append(config_max)
+
+    next_anchor = next(
+        (anchor for anchor in sorted(anchors) if anchor > config_max),
+        None,
+    )
+    headroom_value = (
+        next_anchor if next_anchor is not None and next_anchor <= physical_max else physical_max
+    )
+    if headroom_value > config_max and headroom_value >= minimum:
+        values.append(headroom_value)
+    return sorted(set(values))
+
+
 def get_online_grid_mixed_prefill_input_combinations(
     max_seq_len: int,
     min_batch_size: int,
@@ -829,6 +877,7 @@ def get_online_grid_mixed_prefill_input_combinations(
     kv_cache_sizes: Optional[List[int]] = None,
     batch_size_list: Optional[List[int]] = None,
     total_tokens_list: Optional[List[int]] = None,
+    max_model_len: Optional[int] = None,
 ):
     """
     Generate deterministic mixed prefill inputs for online serving coverage.
@@ -840,8 +889,7 @@ def get_online_grid_mixed_prefill_input_combinations(
     """
     from frontier.profiling.attention.mixed_attention_input import MixedAttentionInput
 
-    if max_seq_len <= 0:
-        raise ValueError("max_seq_len must be positive.")
+    max_model_len = _resolve_profile_max_model_len(max_seq_len, max_model_len)
     if min_batch_size < 2:
         raise ValueError("min_batch_size must be >= 2.")
     if max_batch_size < min_batch_size:
@@ -857,22 +905,12 @@ def get_online_grid_mixed_prefill_input_combinations(
         raise ValueError("max_total_tokens must be >= min_total_tokens.")
     if shapes_per_point not in (1, 2):
         raise ValueError("shapes_per_point must be 1 or 2.")
-    if kv_cache_sizes is None:
-        kv_cache_sizes = [0]
-    if not kv_cache_sizes:
-        raise ValueError("kv_cache_sizes cannot be empty.")
-    if any(kv_cache_size < 0 for kv_cache_size in kv_cache_sizes):
-        raise ValueError("All kv_cache_sizes must be non-negative.")
-    oversized_kv_cache_sizes = [
-        kv_cache_size
-        for kv_cache_size in kv_cache_sizes
-        if kv_cache_size >= max_seq_len
-    ]
-    if oversized_kv_cache_sizes:
-        raise ValueError(
-            "kv_cache_sizes values must be <= max_seq_len - 1, "
-            f"got {oversized_kv_cache_sizes}."
-        )
+    explicit_kv_cache_sizes = kv_cache_sizes is not None
+    kv_cache_sizes = _normalize_positive_int_list(
+        "kv_cache_sizes",
+        [0] if kv_cache_sizes is None else kv_cache_sizes,
+        minimum=0,
+    )
 
     batch_size_extensions = _normalize_positive_int_list(
         "batch_size_list",
@@ -903,68 +941,139 @@ def get_online_grid_mixed_prefill_input_combinations(
     if total_token_extensions is not None:
         total_tokens_values.update(total_token_extensions)
     total_tokens_values = sorted(total_tokens_values)
+    explicit_batch_sizes = set(batch_size_extensions or ())
+    explicit_total_tokens = set(total_token_extensions or ())
+    explicit_kv_sizes = set(kv_cache_sizes if explicit_kv_cache_sizes else ())
 
     input_combinations = []
+    valid_batch_sizes = set()
+    valid_total_tokens = set()
+    valid_kv_sizes = set()
     for batch_size in batch_sizes:
         for total_tokens in total_tokens_values:
+            point_is_explicit = (
+                batch_size in explicit_batch_sizes
+                and total_tokens in explicit_total_tokens
+            )
             if total_tokens < batch_size:
-                raise ValueError(
-                    f"Invalid grid point: total_tokens={total_tokens} < batch_size={batch_size}."
-                )
-            if total_tokens > batch_size * max_seq_len:
-                raise ValueError(
-                    f"Invalid grid point: total_tokens={total_tokens} exceeds "
-                    f"batch_capacity={batch_size * max_seq_len}."
-                )
+                if point_is_explicit:
+                    raise ValueError(
+                        f"Invalid grid point: total_tokens={total_tokens} < "
+                        f"batch_size={batch_size}."
+                    )
+                continue
+            if total_tokens > batch_size * max_model_len:
+                if point_is_explicit:
+                    raise ValueError(
+                        f"Invalid grid point: total_tokens={total_tokens} exceeds "
+                        f"batch_capacity={batch_size * max_model_len}."
+                    )
+                continue
 
             balanced_seq_lens = _build_balanced_seq_lens(
                 batch_size=batch_size,
                 total_tokens=total_tokens,
             )
             skewed_seq_lens = None
-            if shapes_per_point == 2:
-                skewed_seq_lens = _build_skewed_seq_lens(
-                    batch_size=batch_size,
-                    total_tokens=total_tokens,
-                    max_seq_len=max_seq_len,
-                )
-                if skewed_seq_lens == balanced_seq_lens:
-                    raise RuntimeError(
-                        "Balanced and skewed seq_lens are identical; cannot satisfy "
-                        "shapes_per_point=2."
-                    )
-
-            for kv_cache_size in kv_cache_sizes:
-                _validate_online_grid_seq_lens(
-                    seq_lens=balanced_seq_lens,
-                    batch_size=batch_size,
-                    total_tokens=total_tokens,
-                    max_seq_len=max_seq_len,
-                    kv_cache_size=kv_cache_size,
-                )
-                input_combinations.append(
-                    MixedAttentionInput(
-                        seq_lens=balanced_seq_lens,
-                        kv_cache_size=kv_cache_size,
-                        mode="online_grid_balanced",
-                    )
-                )
-
-                if skewed_seq_lens is not None:
-                    _validate_online_grid_seq_lens(
-                        seq_lens=skewed_seq_lens,
+            try:
+                if shapes_per_point == 2:
+                    skewed_seq_lens = _build_skewed_seq_lens(
                         batch_size=batch_size,
                         total_tokens=total_tokens,
-                        max_seq_len=max_seq_len,
+                        max_seq_len=max_model_len,
+                    )
+                    if skewed_seq_lens == balanced_seq_lens:
+                        raise RuntimeError(
+                            "Balanced and skewed seq_lens are identical; cannot satisfy "
+                            "shapes_per_point=2."
+                        )
+            except (RuntimeError, ValueError) as exc:
+                if point_is_explicit:
+                    raise ValueError(
+                        f"Invalid explicit online_grid point "
+                        f"(batch_size={batch_size}, total_tokens={total_tokens}): {exc}"
+                    ) from exc
+                continue
+
+            point_inputs = []
+            valid_point_kv_sizes = set()
+            for kv_cache_size in kv_cache_sizes:
+                kv_has_valid_shape = False
+                try:
+                    _validate_online_grid_seq_lens(
+                        seq_lens=balanced_seq_lens,
+                        batch_size=batch_size,
+                        total_tokens=total_tokens,
+                        max_model_len=max_model_len,
                         kv_cache_size=kv_cache_size,
                     )
-                    input_combinations.append(
+                    point_inputs.append(
                         MixedAttentionInput(
-                            seq_lens=skewed_seq_lens,
+                            seq_lens=balanced_seq_lens,
                             kv_cache_size=kv_cache_size,
-                            mode="online_grid_skewed",
+                            mode="online_grid_balanced",
                         )
                     )
+                    kv_has_valid_shape = True
+                except RuntimeError as exc:
+                    if point_is_explicit:
+                        raise ValueError(
+                            f"Invalid explicit online_grid point "
+                            f"(batch_size={batch_size}, total_tokens={total_tokens}, "
+                            f"kv_cache_size={kv_cache_size}): {exc}"
+                        ) from exc
+
+                if skewed_seq_lens is not None:
+                    try:
+                        _validate_online_grid_seq_lens(
+                            seq_lens=skewed_seq_lens,
+                            batch_size=batch_size,
+                            total_tokens=total_tokens,
+                            max_model_len=max_model_len,
+                            kv_cache_size=kv_cache_size,
+                        )
+                        point_inputs.append(
+                            MixedAttentionInput(
+                                seq_lens=skewed_seq_lens,
+                                kv_cache_size=kv_cache_size,
+                                mode="online_grid_skewed",
+                            )
+                        )
+                        kv_has_valid_shape = True
+                    except RuntimeError as exc:
+                        if point_is_explicit:
+                            raise ValueError(
+                                f"Invalid explicit online_grid point "
+                                f"(batch_size={batch_size}, total_tokens={total_tokens}, "
+                                f"kv_cache_size={kv_cache_size}): {exc}"
+                            ) from exc
+                if kv_has_valid_shape:
+                    valid_point_kv_sizes.add(kv_cache_size)
+
+            if point_inputs:
+                input_combinations.extend(point_inputs)
+                valid_batch_sizes.add(batch_size)
+                valid_total_tokens.add(total_tokens)
+                valid_kv_sizes.update(valid_point_kv_sizes)
+
+    missing_explicit_batches = sorted(explicit_batch_sizes - valid_batch_sizes)
+    if missing_explicit_batches:
+        raise ValueError(
+            "batch_size_list values have no physically legal pairing: "
+            f"{missing_explicit_batches}."
+        )
+    missing_explicit_totals = sorted(explicit_total_tokens - valid_total_tokens)
+    if missing_explicit_totals:
+        raise ValueError(
+            "total_tokens_list values have no physically legal pairing: "
+            f"{missing_explicit_totals}."
+        )
+    missing_explicit_kv = sorted(explicit_kv_sizes - valid_kv_sizes)
+    if missing_explicit_kv:
+        raise ValueError(
+            "kv_cache_sizes values have no physically legal pairing: "
+            f"{missing_explicit_kv}."
+        )
 
     if not input_combinations:
         raise ValueError("online_grid mixed prefill produced no valid input combinations.")
@@ -975,31 +1084,27 @@ def get_online_grid_mixed_prefill_input_combinations(
 def get_true_mixed_attention_input_combinations(
     max_seq_len: int,
     prefill_batch_sizes: List[int],
-    prefill_chunk_sizes: List[int],
-    decode_batch_sizes: List[int],
-    decode_kv_cache_sizes: List[int],
+    prefill_chunk_sizes: Optional[List[int]] = None,
+    decode_batch_sizes: Optional[List[int]] = None,
+    decode_kv_cache_sizes: Optional[List[int]] = None,
     prefill_kv_cache_size: int = 0,
+    max_model_len: Optional[int] = None,
 ):
     """Generate true mixed prefill+decode attention input combinations."""
     from frontier.profiling.attention.true_mixed_batch_input import TrueMixedBatchInput
 
-    if max_seq_len <= 0:
-        raise ValueError("max_seq_len must be positive")
+    max_model_len = _resolve_profile_max_model_len(max_seq_len, max_model_len)
     if prefill_kv_cache_size < 0:
         raise ValueError("prefill_kv_cache_size must be non-negative")
-    if prefill_kv_cache_size >= max_seq_len:
+    if prefill_kv_cache_size >= max_model_len:
         raise ValueError(
-            "prefill_kv_cache_size must be <= max_seq_len - 1, "
-            f"got {prefill_kv_cache_size}."
+            "prefill_kv_cache_size must leave room for at least one prefill token "
+            f"under max_model_len={max_model_len}, got {prefill_kv_cache_size}."
         )
     if not prefill_batch_sizes:
         raise ValueError("prefill_batch_sizes cannot be empty")
-    if not prefill_chunk_sizes:
-        raise ValueError("prefill_chunk_sizes cannot be empty")
     if not decode_batch_sizes:
         raise ValueError("decode_batch_sizes cannot be empty")
-    if not decode_kv_cache_sizes:
-        raise ValueError("decode_kv_cache_sizes cannot be empty")
 
     normalized_prefill_batch_sizes = []
     for prefill_bs in prefill_batch_sizes:
@@ -1013,21 +1118,91 @@ def get_true_mixed_attention_input_combinations(
         normalized_prefill_batch_sizes.append(int(prefill_bs))
     prefill_batch_sizes = sorted(set(normalized_prefill_batch_sizes))
 
-    normalized_prefill_chunk_sizes = []
-    for prefill_chunk_size in prefill_chunk_sizes:
-        if prefill_chunk_size <= 0:
-            raise ValueError(f"Invalid prefill chunk size: {prefill_chunk_size}")
-        if prefill_chunk_size + prefill_kv_cache_size > max_seq_len:
-            raise ValueError(
-                "prefill_chunk_sizes values plus prefill_kv_cache_size must be "
-                f"<= max_seq_len, got {prefill_chunk_size} + "
-                f"{prefill_kv_cache_size} > {max_seq_len}."
-            )
-        normalized_prefill_chunk_sizes.append(int(prefill_chunk_size))
-    endpoint_prefill_chunk_size = max_seq_len - prefill_kv_cache_size
-    if endpoint_prefill_chunk_size > 0:
-        normalized_prefill_chunk_sizes.append(endpoint_prefill_chunk_size)
-    prefill_chunk_sizes = sorted(set(normalized_prefill_chunk_sizes))
+    def _normalize_explicit_axis(name: str, values: List[int], minimum: int):
+        normalized = _normalize_positive_int_list(name, values, minimum)
+        if normalized is None:
+            raise RuntimeError(f"{name} normalization unexpectedly returned None")
+        return normalized
+
+    explicit_prefill_chunks = prefill_chunk_sizes is not None
+    explicit_prefill_values = (
+        _normalize_explicit_axis("prefill_chunk_sizes", prefill_chunk_sizes, 1)
+        if explicit_prefill_chunks
+        else []
+    )
+    explicit_prefill_value_set = set(explicit_prefill_values)
+    profile_endpoint = max_seq_len - prefill_kv_cache_size
+    automatic_prefill_values = _derive_axis_with_headroom(
+        anchors=_TRUE_MIXED_PREFILL_CHUNK_ANCHORS,
+        config_max=profile_endpoint,
+        physical_max=max_model_len - prefill_kv_cache_size,
+        minimum=1,
+    )
+    normalized_prefill_chunk_sizes = sorted(
+        set(automatic_prefill_values + explicit_prefill_values)
+    )
+
+    explicit_decode_kv = decode_kv_cache_sizes is not None
+    explicit_decode_values = (
+        _normalize_explicit_axis("decode_kv_cache_sizes", decode_kv_cache_sizes, 0)
+        if explicit_decode_kv
+        else []
+    )
+    explicit_decode_value_set = set(explicit_decode_values)
+    profile_endpoint = max_seq_len - 1
+    automatic_decode_values = _derive_axis_with_headroom(
+        anchors=_TRUE_MIXED_DECODE_KV_ANCHORS,
+        config_max=profile_endpoint,
+        physical_max=max_model_len - 1,
+        minimum=0,
+    )
+    normalized_decode_kv_cache_sizes = sorted(
+        set(automatic_decode_values + explicit_decode_values)
+    )
+
+    def _physical_prefill_chunks(values):
+        valid = []
+        for value in values:
+            if value + prefill_kv_cache_size > max_model_len:
+                if value in explicit_prefill_value_set:
+                    raise ValueError(
+                        "prefill_chunk_sizes values plus prefill_kv_cache_size must "
+                        f"be <= max_model_len, got {value} + "
+                        f"{prefill_kv_cache_size} > {max_model_len}."
+                    )
+                continue
+            valid.append(value)
+        return valid
+
+    def _physical_decode_kv(values):
+        valid = []
+        for value in values:
+            if value + 1 > max_model_len:
+                if value in explicit_decode_value_set:
+                    raise ValueError(
+                        "decode_kv_cache_sizes values must be <= max_model_len - 1, "
+                        f"got {value} > {max_model_len - 1}."
+                    )
+                continue
+            valid.append(value)
+        return valid
+
+    normalized_prefill_chunk_sizes = _physical_prefill_chunks(
+        normalized_prefill_chunk_sizes
+    )
+    normalized_decode_kv_cache_sizes = _physical_decode_kv(
+        normalized_decode_kv_cache_sizes
+    )
+    if not normalized_prefill_chunk_sizes:
+        raise ValueError(
+            "True-mixed attention profiling produced no physically valid prefill "
+            "chunk sizes."
+        )
+    if not normalized_decode_kv_cache_sizes:
+        raise ValueError(
+            "True-mixed attention profiling produced no physically valid decode "
+            "KV cache sizes."
+        )
 
     normalized_decode_batch_sizes = []
     for decode_bs in decode_batch_sizes:
@@ -1053,33 +1228,18 @@ def get_true_mixed_attention_input_combinations(
             f"{oversized_total_batch_sizes}."
         )
 
-    normalized_decode_kv_cache_sizes = []
-    for decode_kv_cache_size in decode_kv_cache_sizes:
-        if decode_kv_cache_size < 0:
-            raise ValueError(
-                f"Invalid decode kv cache size: {decode_kv_cache_size}"
-            )
-        if decode_kv_cache_size >= max_seq_len:
-            raise ValueError(
-                "decode_kv_cache_sizes values must be <= max_seq_len - 1, "
-                f"got {decode_kv_cache_size}."
-            )
-        normalized_decode_kv_cache_sizes.append(int(decode_kv_cache_size))
-    normalized_decode_kv_cache_sizes.append(max_seq_len - 1)
-    decode_kv_cache_sizes = sorted(set(normalized_decode_kv_cache_sizes))
-
     combinations = []
     for prefill_bs in prefill_batch_sizes:
-        for prefill_chunk_size in prefill_chunk_sizes:
+        for prefill_chunk_size in normalized_prefill_chunk_sizes:
             for decode_bs in decode_batch_sizes:
-                for decode_kv_cache_size in decode_kv_cache_sizes:
+                for decode_kv_cache_size in normalized_decode_kv_cache_sizes:
                     candidate = TrueMixedBatchInput(
                         prefill_seq_lens=[prefill_chunk_size] * prefill_bs,
                         prefill_kv_cache_sizes=[prefill_kv_cache_size] * prefill_bs,
                         decode_kv_cache_sizes=[decode_kv_cache_size] * decode_bs,
                     )
                     if not candidate.is_valid(
-                        max_seq_len=max_seq_len,
+                        max_seq_len=max_model_len,
                         max_batch_size=_MAX_MIXED_ATTENTION_BATCH_SIZE,
                     ):
                         raise RuntimeError(

@@ -227,6 +227,108 @@ def test_online_grid_rejects_invalid_explicit_axis_cross_product():
         )
 
 
+def test_online_grid_skips_invalid_automatic_points_but_keeps_explicit_points():
+    inputs = get_online_grid_mixed_prefill_input_combinations(
+        max_seq_len=256,
+        max_model_len=512,
+        min_batch_size=2,
+        max_batch_size=2,
+        min_total_tokens=1025,
+        max_total_tokens=1055,
+        shapes_per_point=1,
+        batch_size_list=[2],
+        total_tokens_list=[64, 128],
+    )
+
+    points = {(item.batch_size, item.total_tokens) for item in inputs}
+    assert points == {(2, 64), (2, 128)}
+
+
+def test_online_grid_rejects_explicit_point_without_a_legal_pair():
+    with pytest.raises(ValueError, match="total_tokens"):
+        get_online_grid_mixed_prefill_input_combinations(
+            max_seq_len=256,
+            max_model_len=512,
+            min_batch_size=2,
+            max_batch_size=2,
+            min_total_tokens=1025,
+            max_total_tokens=1055,
+            shapes_per_point=1,
+            batch_size_list=[2],
+            total_tokens_list=[1025],
+        )
+
+
+def test_online_grid_explicit_kv_can_extend_beyond_profile_context():
+    inputs = get_online_grid_mixed_prefill_input_combinations(
+        max_seq_len=256,
+        max_model_len=512,
+        min_batch_size=2,
+        max_batch_size=2,
+        min_total_tokens=64,
+        max_total_tokens=64,
+        shapes_per_point=1,
+        kv_cache_sizes=[256],
+    )
+
+    assert len(inputs) == 1
+    assert inputs[0].kv_cache_size == 256
+
+
+def test_online_grid_rejects_model_capacity_below_profile_context():
+    with pytest.raises(ValueError, match="max_model_len must be >= max_seq_len"):
+        get_online_grid_mixed_prefill_input_combinations(
+            max_seq_len=256,
+            max_model_len=128,
+            min_batch_size=2,
+            max_batch_size=2,
+            min_total_tokens=64,
+            max_total_tokens=64,
+            shapes_per_point=1,
+        )
+
+
+def test_online_grid_keeps_legal_kv_siblings_when_an_automatic_pair_is_invalid():
+    inputs = get_online_grid_mixed_prefill_input_combinations(
+        max_seq_len=256,
+        max_model_len=512,
+        min_batch_size=2,
+        max_batch_size=32,
+        min_total_tokens=64,
+        max_total_tokens=64,
+        shapes_per_point=1,
+        kv_cache_sizes=[0, 500],
+    )
+
+    point_kv = {
+        (item.batch_size, item.total_tokens, item.kv_cache_size)
+        for item in inputs
+    }
+    assert (2, 64, 0) in point_kv
+    assert (2, 64, 500) not in point_kv
+    assert (32, 64, 500) in point_kv
+
+
+def test_online_grid_keeps_a_valid_shape_when_its_sibling_shape_is_invalid():
+    inputs = get_online_grid_mixed_prefill_input_combinations(
+        max_seq_len=256,
+        max_model_len=512,
+        min_batch_size=2,
+        max_batch_size=32,
+        min_total_tokens=64,
+        max_total_tokens=64,
+        shapes_per_point=2,
+        kv_cache_sizes=[0, 480],
+    )
+
+    point_modes = {
+        (item.batch_size, item.total_tokens, item.kv_cache_size, item.mode)
+        for item in inputs
+    }
+    assert (2, 64, 480, "online_grid_balanced") in point_modes
+    assert (2, 64, 480, "online_grid_skewed") not in point_modes
+
+
 def test_true_mixed_grid_reaches_prefill_and_decode_endpoints():
     inputs = get_true_mixed_attention_input_combinations(
         max_seq_len=1000,
@@ -240,6 +342,101 @@ def test_true_mixed_grid_reaches_prefill_and_decode_endpoints():
     assert max(item.prefill_seq_lens[0] for item in inputs) == 1000
     assert max(item.decode_kv_cache_sizes[0] for item in inputs) == 999
     assert all(item.is_valid(max_seq_len=1000, max_batch_size=128) for item in inputs)
+
+
+@pytest.mark.parametrize(
+    ("max_seq_len", "expected_prefill_chunks", "expected_decode_kv"),
+    [
+        (128, {64, 128, 256}, {127, 128}),
+        (256, {64, 128, 256, 512}, {128, 255, 256}),
+        (
+            1024,
+            {64, 128, 256, 512, 1024, 2048},
+            {128, 256, 512, 1023, 1024},
+        ),
+    ],
+)
+def test_true_mixed_auto_axes_follow_profile_context(
+    max_seq_len, expected_prefill_chunks, expected_decode_kv
+):
+    inputs = get_true_mixed_attention_input_combinations(
+        max_seq_len=max_seq_len,
+        max_model_len=max_seq_len * 2,
+        prefill_batch_sizes=[1, 2, 4],
+        prefill_chunk_sizes=None,
+        decode_batch_sizes=[1, 2, 4, 8],
+        decode_kv_cache_sizes=None,
+        prefill_kv_cache_size=0,
+    )
+
+    prefill_chunks = {item.prefill_seq_lens[0] for item in inputs}
+    decode_kv = {item.decode_kv_cache_sizes[0] for item in inputs}
+    assert prefill_chunks == expected_prefill_chunks
+    assert decode_kv == expected_decode_kv
+
+
+def test_true_mixed_auto_axes_use_physical_boundary_when_next_anchor_does_not_fit():
+    inputs = get_true_mixed_attention_input_combinations(
+        max_seq_len=1000,
+        max_model_len=1010,
+        prefill_batch_sizes=[1],
+        prefill_chunk_sizes=None,
+        decode_batch_sizes=[1],
+        decode_kv_cache_sizes=None,
+        prefill_kv_cache_size=0,
+    )
+
+    prefill_chunks = {item.prefill_seq_lens[0] for item in inputs}
+    decode_kv = {item.decode_kv_cache_sizes[0] for item in inputs}
+    assert prefill_chunks == {64, 128, 256, 512, 1000, 1010}
+    assert decode_kv == {128, 256, 512, 999, 1009}
+
+
+def test_true_mixed_explicit_axes_can_extend_beyond_profile_context():
+    inputs = get_true_mixed_attention_input_combinations(
+        max_seq_len=256,
+        max_model_len=512,
+        prefill_batch_sizes=[1],
+        prefill_chunk_sizes=[512],
+        decode_batch_sizes=[1],
+        decode_kv_cache_sizes=[256],
+        prefill_kv_cache_size=0,
+    )
+
+    extended = [
+        item
+        for item in inputs
+        if item.prefill_seq_lens == [512]
+        and item.decode_kv_cache_sizes == [256]
+    ]
+    assert len(extended) == 1
+    assert len(inputs) > len(extended)
+
+
+def test_true_mixed_explicit_axes_beyond_profile_capacity_fail_fast():
+    with pytest.raises(ValueError):
+        get_true_mixed_attention_input_combinations(
+            max_seq_len=256,
+            max_model_len=512,
+            prefill_batch_sizes=[1],
+            prefill_chunk_sizes=[513],
+            decode_batch_sizes=[1],
+            decode_kv_cache_sizes=[256],
+            prefill_kv_cache_size=0,
+        )
+
+
+def test_true_mixed_rejects_model_capacity_below_profile_context():
+    with pytest.raises(ValueError, match="max_model_len must be >= max_seq_len"):
+        get_true_mixed_attention_input_combinations(
+            max_seq_len=256,
+            max_model_len=128,
+            prefill_batch_sizes=[1],
+            prefill_chunk_sizes=None,
+            decode_batch_sizes=[1],
+            decode_kv_cache_sizes=None,
+            prefill_kv_cache_size=0,
+        )
 
 
 @pytest.mark.parametrize(

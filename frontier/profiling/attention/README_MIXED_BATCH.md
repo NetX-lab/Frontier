@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-22 | Documented automatic true-mixed profiling anchors/endpoints and the max_model_len physical-capacity contract |
 | 2026-06-06 | Replaced private checkout path with a repo-relative profiling example; refreshed legacy CSV naming note for release docs |
 | 2026-02-22 | Added true mixed (`--enable_true_mixed`) full CLI parameter set, output files, and mixed dataset fail-fast input contract notes |
 | 2025-12-06 | Added multi-GPU mode documentation; updated CSV naming from legacy MLP naming to `linear_op.csv`; added --disable_ray usage; documented optional --compute_dataset_path |
@@ -20,6 +21,26 @@
 ## 概述
 
 支持混合长度 batch 的 attention prefill profiling 和预测，更贴近真实 serving 场景。
+
+### True-mixed sampling envelope
+
+当 `--true_mixed_prefill_chunk_sizes` 或
+`--true_mixed_decode_kv_cache_sizes` 省略时，采样器按 `max_seq_len`
+构造 profiling envelope：
+
+1. 保留不超过配置 endpoint 的 canonical anchors；
+2. 保留配置 endpoint（prefill 为
+   `max_seq_len - prefill_kv_cache_size`，decode 为 `max_seq_len - 1`）；
+3. 追加 endpoint 上方第一个仍落在 `max_model_len` 物理容量内的 canonical
+   anchor；当该 anchor 超出物理容量时，追加 physical boundary；
+4. 显式传入的 chunk/KV 值与自动轴合并，并只按 `max_model_len` 校验物理
+   execution capacity，因此显式值可以超过 `max_seq_len`，但不能超过
+   `max_model_len`（prefill 还要计入 `prefill_kv_cache_size`，decode 还要
+   为当前 token 预留 1 个位置）。
+
+`max_seq_len` 与 `max_model_len` 的关系必须满足
+`max_model_len >= max_seq_len`。自动候选超出物理容量时会跳过；用户显式
+提供的物理非法值会立即 fail fast。
 
 ## 核心特性
 
@@ -53,9 +74,7 @@ python -m frontier.profiling.attention.main \
     --max_mixed_batch_size 8 \
     --mixed_num_samples 3 \
     --true_mixed_prefill_batch_sizes 1 2 4 \
-    --true_mixed_prefill_chunk_sizes 64 128 256 512 1024 \
     --true_mixed_decode_batch_sizes 1 2 4 8 \
-    --true_mixed_decode_kv_cache_sizes 128 256 512 1024 2048 \
     --true_mixed_prefill_kv_cache_size 0 \
     --models "meta-llama/Llama-2-7b-hf" \
     --num_gpus 1 \
@@ -121,10 +140,12 @@ python -m frontier.training.cli attention \
 | `--mixed_num_samples` | 3 | Random 模式样本数 |
 | `--enable_true_mixed` | False | 启用 true mixed profiling（prefill+decode 同批） |
 | `--true_mixed_prefill_batch_sizes` | `1 2 4` | true mixed 中 prefill 序列数 |
-| `--true_mixed_prefill_chunk_sizes` | `64 128 256 512 1024` | true mixed 中 prefill chunk size |
+| `--true_mixed_prefill_chunk_sizes` | 自动 | 省略时按 `max_seq_len` 派生 canonical anchors、配置 endpoint 和上方首个合法 anchor；若下一个 anchor 超容量则使用 physical boundary；显式值只按 `max_model_len` 校验 |
 | `--true_mixed_decode_batch_sizes` | `1 2 4 8` | true mixed 中 decode 序列数 |
-| `--true_mixed_decode_kv_cache_sizes` | `128 256 512 1024 2048` | true mixed 中 decode KV cache size |
+| `--true_mixed_decode_kv_cache_sizes` | 自动 | 省略时按 `max_seq_len - 1` 配置 endpoint 和上方首个合法 canonical anchor 派生；若下一个 anchor 超容量则使用 physical boundary；显式值可超过 `max_seq_len`，但必须满足 `max_model_len - 1` |
 | `--true_mixed_prefill_kv_cache_size` | 0 | true mixed 中 prefill 侧 KV cache size |
+| `--max_seq_len` | 4096 | 自动 profiling envelope 的最大长度 |
+| `--max_model_len` | 4096 | 物理 execution 上限；必须满足 `max_model_len >= max_seq_len` |
 | `--max_pipeline_parallel_size` | 8 | Pipeline 并行度（影响内存计算） |
 
 ## CSV 字段
