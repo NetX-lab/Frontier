@@ -540,6 +540,116 @@ def _validate_canonical_moe_result_df(df: pd.DataFrame, *, model: str) -> None:
     )
 
 
+def _get_moe_cases_per_parallel_point(args: argparse.Namespace) -> int:
+    if not args.enable_load_imbalance:
+        return 1
+    return len(args.load_distributions) * args.num_samples_per_distribution
+
+
+def _count_moe_configurations(
+    *,
+    num_tokens_count: int,
+    tensor_parallel_count: int,
+    expert_parallel_count: int,
+    cases_per_parallel_point: int,
+) -> int:
+    return (
+        num_tokens_count
+        * tensor_parallel_count
+        * expert_parallel_count
+        * cases_per_parallel_point
+    )
+
+
+def _build_moe_confirmation_sections(
+    *,
+    args: argparse.Namespace,
+    model_configs: Dict[str, ModelConfig],
+    resolved_ep_sizes_by_model: Dict[str, List[int]],
+    num_tokens_count: int,
+    use_vllm_kernel: bool,
+):
+    from frontier.profiling.utils.confirmation import build_moe_config_sections
+
+    first_model = args.models[0]
+    first_model_config = model_configs[first_model]
+    torch_dtype, precision_str = _resolve_precision_for_model(
+        first_model_config,
+        args.precision,
+        first_model,
+    )
+    confirmation_args = argparse.Namespace(**vars(args))
+    confirmation_args.expert_parallel_sizes = resolved_ep_sizes_by_model[
+        first_model
+    ]
+    sections = build_moe_config_sections(
+        args=confirmation_args,
+        model_config=first_model_config,
+        num_tokens_count=num_tokens_count,
+        use_vllm_kernel=use_vllm_kernel,
+        precision_str=precision_str,
+        torch_dtype=torch_dtype,
+    )
+
+    cases_per_parallel_point = _get_moe_cases_per_parallel_point(args)
+    per_model_rows = []
+    total_configurations = 0
+    for model in args.models:
+        model_config = model_configs[model]
+        ep_sizes = resolved_ep_sizes_by_model[model]
+        model_configurations = _count_moe_configurations(
+            num_tokens_count=num_tokens_count,
+            tensor_parallel_count=len(args.num_tensor_parallel_workers),
+            expert_parallel_count=len(ep_sizes),
+            cases_per_parallel_point=cases_per_parallel_point,
+        )
+        total_configurations += model_configurations
+        _, model_precision = _resolve_precision_for_model(
+            model_config,
+            args.precision,
+            model,
+        )
+        per_model_rows.append(
+            (
+                model,
+                f"{model_config.num_experts} experts; EP={ep_sizes}; "
+                f"precision={model_precision}; "
+                f"{model_configurations:,} configurations",
+            )
+        )
+
+    load_distribution_index = next(
+        (
+            index
+            for index, (section_name, _) in enumerate(sections)
+            if section_name == "Load Distribution"
+        ),
+        len(sections),
+    )
+    sections.insert(
+        load_distribution_index,
+        ("Resolved Model Profiling Domains", per_model_rows),
+    )
+
+    for section_index, (section_name, rows) in enumerate(sections):
+        if section_name != "Profiling Matrix":
+            continue
+        updated_rows = []
+        for key, value in rows:
+            if key == "Total Configurations":
+                value = (
+                    f"~{total_configurations:,}\n"
+                    f"    ({len(args.models)} models with per-model EP domains)"
+                )
+            updated_rows.append((key, value))
+        sections[section_index] = (section_name, updated_rows)
+        break
+    else:
+        raise RuntimeError("MoE confirmation sections are missing Profiling Matrix.")
+
+    return sections
+
+
 def profile_model(
     args: argparse.Namespace, model: str, num_tokens_to_profile: List[int], pbar: Any, use_vllm_kernel: bool
 ):
@@ -578,6 +688,7 @@ def profile_model(
 
     all_results = []
     measurement_type = profile_method_to_measurement_type(args.profile_method).value
+    cases_per_parallel_point = _get_moe_cases_per_parallel_point(args)
 
     # Determine available GPUs for non-Ray mode
     available_gpus = _get_available_gpus(args.num_gpus)
@@ -612,7 +723,14 @@ def profile_model(
     for num_tensor_parallel_workers in args.num_tensor_parallel_workers:
         if model_config.no_tensor_parallel and num_tensor_parallel_workers > 1:
             # Skip TP > 1 for models that don't support tensor parallelism
-            pbar.update(len(expert_parallel_sizes) * len(num_tokens_to_profile))
+            pbar.update(
+                _count_moe_configurations(
+                    num_tokens_count=len(num_tokens_to_profile),
+                    tensor_parallel_count=1,
+                    expert_parallel_count=len(expert_parallel_sizes),
+                    cases_per_parallel_point=cases_per_parallel_point,
+                )
+            )
             continue
 
         def _collect_result(result):
@@ -929,28 +1047,14 @@ def main():
         # Interactive confirmation before profiling
         from frontier.profiling.utils.confirmation import (
             confirm_profiling_execution,
-            build_moe_config_sections,
         )
 
-        # Load first model config for confirmation display
-        first_model = args.models[0]
-        first_model_config = model_configs[first_model]
-        torch_dtype, precision_str = _resolve_precision_for_model(
-            first_model_config, args.precision, first_model
-        )
-
-        confirmation_args = argparse.Namespace(**vars(args))
-        confirmation_args.expert_parallel_sizes = resolved_ep_sizes_by_model[
-            first_model
-        ]
-
-        config_sections = build_moe_config_sections(
-            args=confirmation_args,
-            model_config=first_model_config,
+        config_sections = _build_moe_confirmation_sections(
+            args=args,
+            model_configs=model_configs,
+            resolved_ep_sizes_by_model=resolved_ep_sizes_by_model,
             num_tokens_count=len(num_tokens_to_profile),
             use_vllm_kernel=use_vllm_kernel_default,
-            precision_str=precision_str,
-            torch_dtype=torch_dtype,
         )
 
         if not confirm_profiling_execution(
@@ -961,16 +1065,14 @@ def main():
             sys.exit(0)
 
         # Calculate total combinations using each model's resolved EP domain.
-        cases_per_parallel_point = 1
-        if args.enable_load_imbalance:
-            cases_per_parallel_point = (
-                len(args.load_distributions) * args.num_samples_per_distribution
-            )
+        cases_per_parallel_point = _get_moe_cases_per_parallel_point(args)
         total_combos = sum(
-            len(num_tokens_to_profile)
-            * len(args.num_tensor_parallel_workers)
-            * len(resolved_ep_sizes_by_model[model])
-            * cases_per_parallel_point
+            _count_moe_configurations(
+                num_tokens_count=len(num_tokens_to_profile),
+                tensor_parallel_count=len(args.num_tensor_parallel_workers),
+                expert_parallel_count=len(resolved_ep_sizes_by_model[model]),
+                cases_per_parallel_point=cases_per_parallel_point,
+            )
             for model in args.models
         )
         pbar = tqdm(total=total_combos)
