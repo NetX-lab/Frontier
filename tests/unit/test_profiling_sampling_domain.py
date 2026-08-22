@@ -146,6 +146,34 @@ def test_legacy_mixed_prefill_retains_high_kv_endpoint_with_legal_sequence():
     assert all(item.is_valid(1000, max_batch_size=128) for item in high_kv_inputs)
 
 
+def test_legacy_mixed_prefill_explicit_kv_can_extend_beyond_profile_context():
+    inputs = get_mixed_prefill_input_combinations(
+        max_seq_len=256,
+        max_model_len=512,
+        min_batch_size=2,
+        max_batch_size=2,
+        mode="even",
+        kv_cache_sizes=[300],
+    )
+
+    assert inputs
+    assert all(item.max_seq_len <= 256 for item in inputs)
+    assert all(item.max_seq_len + item.kv_cache_size <= 512 for item in inputs)
+    assert {item.kv_cache_size for item in inputs} == {300}
+
+
+def test_legacy_mixed_prefill_explicit_kv_without_legal_pair_fails_fast():
+    with pytest.raises(ValueError, match="kv_cache_sizes"):
+        get_mixed_prefill_input_combinations(
+            max_seq_len=256,
+            max_model_len=512,
+            min_batch_size=2,
+            max_batch_size=2,
+            mode="even",
+            kv_cache_sizes=[512],
+        )
+
+
 def test_legacy_mixed_prefill_emits_unique_structural_workloads():
     inputs = get_mixed_prefill_input_combinations(
         max_seq_len=1000,

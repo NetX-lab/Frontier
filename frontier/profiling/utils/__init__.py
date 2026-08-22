@@ -528,6 +528,7 @@ def get_mixed_prefill_input_combinations(
     mode: str = "even",
     num_samples_per_config: int = 3,
     kv_cache_sizes: Optional[List[int]] = None,
+    max_model_len: Optional[int] = None,
 ):
     """
     Generate mixed-length prefill input combinations for profiling.
@@ -536,7 +537,9 @@ def get_mixed_prefill_input_combinations(
     with multiple sequences of potentially different lengths in a single batch.
     
     Args:
-        max_seq_len: Maximum sequence length to profile.
+        max_seq_len: Maximum sequence length in the profiling envelope.
+        max_model_len: Runtime context limit for each sequence, defaulting to
+                       ``max_seq_len``.
         min_batch_size: Minimum batch size (default 2, since 1 is single-seq).
         max_batch_size: Maximum batch size (default 8).
         mode: Generation mode - "even", "random", or "both".
@@ -553,8 +556,7 @@ def get_mixed_prefill_input_combinations(
     """
     from frontier.profiling.attention.mixed_attention_input import MixedAttentionInput
 
-    if max_seq_len <= 0:
-        raise ValueError("max_seq_len must be positive.")
+    max_model_len = _resolve_profile_max_model_len(max_seq_len, max_model_len)
     if min_batch_size < 2:
         raise ValueError("min_batch_size must be >= 2 for mixed prefill profiling.")
     if max_batch_size < min_batch_size:
@@ -571,23 +573,16 @@ def get_mixed_prefill_input_combinations(
             f"mode must be one of even, random, or both, got {mode!r}."
         )
 
-    if kv_cache_sizes is None:
-        kv_cache_sizes = [0]
-    if not kv_cache_sizes:
-        raise ValueError("kv_cache_sizes cannot be empty.")
-    if any(kv_cache_size < 0 for kv_cache_size in kv_cache_sizes):
-        raise ValueError("All kv_cache_sizes must be non-negative.")
-    kv_cache_sizes = sorted({int(kv_cache_size) for kv_cache_size in kv_cache_sizes})
-    oversized_kv_cache_sizes = [
-        kv_cache_size
-        for kv_cache_size in kv_cache_sizes
-        if kv_cache_size >= max_seq_len
-    ]
-    if oversized_kv_cache_sizes:
-        raise ValueError(
-            "kv_cache_sizes values must be <= max_seq_len - 1, "
-            f"got {oversized_kv_cache_sizes}."
-        )
+    explicit_kv_cache_sizes = kv_cache_sizes is not None
+    normalized_kv_cache_sizes = _normalize_positive_int_list(
+        "kv_cache_sizes",
+        [0] if kv_cache_sizes is None else kv_cache_sizes,
+        minimum=0,
+    )
+    if normalized_kv_cache_sizes is None:
+        raise RuntimeError("kv_cache_sizes normalization unexpectedly returned None")
+    kv_cache_sizes = normalized_kv_cache_sizes
+    explicit_kv_size_set = set(kv_cache_sizes if explicit_kv_cache_sizes else ())
     input_combinations = []
     seen_inputs = set()
 
@@ -601,7 +596,7 @@ def get_mixed_prefill_input_combinations(
             mode=input_mode,
         )
         if not candidate.is_valid(
-            max_seq_len=max_seq_len,
+            max_seq_len=max_model_len,
             max_batch_size=_MAX_MIXED_ATTENTION_BATCH_SIZE,
         ):
             raise RuntimeError(f"Generated invalid mixed prefill input: {candidate}")
@@ -624,7 +619,7 @@ def get_mixed_prefill_input_combinations(
     )
     seq_length_candidates.append(max_seq_len)
     for kv_cache_size in kv_cache_sizes:
-        endpoint_seq_len = max_seq_len - kv_cache_size
+        endpoint_seq_len = min(max_seq_len, max_model_len - kv_cache_size)
         if endpoint_seq_len > 0:
             seq_length_candidates.append(endpoint_seq_len)
     seq_length_candidates = sorted(set(seq_length_candidates))
@@ -641,7 +636,7 @@ def get_mixed_prefill_input_combinations(
             for batch_size in batch_sizes:
                 for kv_cache_size in kv_cache_sizes:
                     for seq_len in seq_length_candidates:
-                        if seq_len + kv_cache_size > max_seq_len:
+                        if seq_len + kv_cache_size > max_model_len:
                             continue
                         seq_lens = [seq_len] * batch_size
                         _append_unique(seq_lens, kv_cache_size, "even")
@@ -662,7 +657,7 @@ def get_mixed_prefill_input_combinations(
                 ]
                 
                 for min_len, max_len in length_ranges:
-                    # Skip if range is beyond max_seq_len
+                    # Skip if the range is beyond the profiling envelope.
                     if min_len > max_seq_len:
                         continue
                     
@@ -674,11 +669,11 @@ def get_mixed_prefill_input_combinations(
                     
                     # Generate multiple random samples for each range
                     for kv_cache_size in kv_cache_sizes:
-                        if min_len + kv_cache_size > max_seq_len:
+                        if min_len + kv_cache_size > max_model_len:
                             continue
                         effective_max_len_with_cache = min(
                             effective_max_len,
-                            max_seq_len - kv_cache_size,
+                            max_model_len - kv_cache_size,
                         )
                         if effective_max_len_with_cache <= min_len:
                             continue
@@ -708,12 +703,23 @@ def get_mixed_prefill_input_combinations(
                 # Keep one deterministic heterogeneous shape at the context
                 # boundary for every requested KV cache size.
                 for kv_cache_size in kv_cache_sizes:
-                    endpoint_seq_len = max_seq_len - kv_cache_size
+                    endpoint_seq_len = min(max_seq_len, max_model_len - kv_cache_size)
                     if endpoint_seq_len > 0:
                         boundary_seq_lens = [endpoint_seq_len] + [
                             max(1, endpoint_seq_len // 2)
                         ] * (batch_size - 1)
                         _append_unique(boundary_seq_lens, kv_cache_size, "random")
+
+    valid_kv_sizes = {
+        item.kv_cache_size
+        for item in input_combinations
+    }
+    missing_explicit_kv = sorted(explicit_kv_size_set - valid_kv_sizes)
+    if missing_explicit_kv:
+        raise ValueError(
+            "kv_cache_sizes values have no runtime-legal pairing under "
+            f"max_model_len={max_model_len}: {missing_explicit_kv}."
+        )
 
     if not input_combinations:
         raise ValueError("Mixed prefill profiling produced no valid input combinations.")

@@ -629,7 +629,8 @@ def parse_args():
         default=[0],
         help=(
             "Explicit KV cache sizes to profile for mixed prefill inputs. "
-            "Defaults to 0 to preserve existing behavior."
+            "Defaults to 0 to preserve existing behavior. Values may exceed "
+            "max_seq_len when the complete sequence fits max_model_len."
         ),
     )
     parser.add_argument(
@@ -1719,6 +1720,7 @@ def main():
             print(f"KV cache sizes: {args.mixed_kv_cache_size_list}")
             mixed_input_combinations = get_mixed_prefill_input_combinations(
                 max_seq_len=args.max_seq_len,
+                max_model_len=args.max_model_len,
                 min_batch_size=2,  # At least 2 sequences for mixed batch
                 max_batch_size=args.max_mixed_batch_size,
                 mode=args.mixed_mode,
