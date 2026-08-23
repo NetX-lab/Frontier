@@ -403,6 +403,7 @@ def get_attention_input_combinations(
     )
 
     valid_input_combinations = []
+    seen_input_combinations = set()
     for input_combination in input_combinations:
         prefill_chunk_size, kv_cache_size, batch_size, is_prefill = input_combination
 
@@ -423,6 +424,9 @@ def get_attention_input_combinations(
             max_seq_len=max_seq_len,
             max_model_len=max_model_len,
         ):
+            if input_combination in seen_input_combinations:
+                continue
+            seen_input_combinations.add(input_combination)
             valid_input_combinations.append(attention_input)
     return valid_input_combinations
 
