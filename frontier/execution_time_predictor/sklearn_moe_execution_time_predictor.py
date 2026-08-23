@@ -23,13 +23,14 @@ from frontier.logger import init_logger
 from frontier.model_architectures import ModelArchitectureProfile, ResidualAddPolicy
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
-    PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
+    PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
     filter_moe_gating_rows_by_runtime_context,
     get_moe_gating_base_model_name,
+    get_moe_gating_prediction_model_context,
     get_moe_gating_prediction_model_name,
-    has_prefill_hot_moe_gating_rows,
-    should_enable_prefill_hot_moe_gating_contract,
-    should_use_prefill_hot_moe_gating_context,
+    has_prefill_warmed_moe_gating_rows,
+    should_enable_prefill_warmed_moe_gating_contract,
+    should_use_prefill_warmed_moe_gating_context,
 )
 from frontier.moe_routing_runtime import (
     filter_moe_gating_routing_topk_rows,
@@ -83,9 +84,12 @@ def _get_moe_gating_family_model_names() -> list[str]:
     ]
 
 
-def _get_prefill_hot_moe_gating_model_names() -> list[str]:
+def _get_prefill_warmed_moe_gating_model_names() -> list[str]:
     return [
-        f"{model_name}__prefill_hot"
+        get_moe_gating_prediction_model_name(
+            model_name,
+            requested_context=PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
+        )
         for model_name in _get_moe_gating_family_model_names()
     ]
 
@@ -809,16 +813,16 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             moe_tp_size,
             moe_ep_size,
         )
-        if should_enable_prefill_hot_moe_gating_contract(
+        if should_enable_prefill_warmed_moe_gating_contract(
             model_config=self._model_config,
         ):
-            if has_prefill_hot_moe_gating_rows(model_filtered_df):
-                model_names.extend(_get_prefill_hot_moe_gating_model_names())
+            if has_prefill_warmed_moe_gating_rows(model_filtered_df):
+                model_names.extend(_get_prefill_warmed_moe_gating_model_names())
             else:
                 logger.warning(
-                    "Prefill-hot gating contract is enabled for model=%s, but "
-                    "dataset %s has no usable prefill_hot rows; skipping "
-                    "__prefill_hot pseudo-model training.",
+                    "Prefill-warmed gating contract is enabled for model=%s, but "
+                    "dataset %s has no usable prefill_warmed rows; skipping "
+                    "warmed-context pseudo-model training.",
                     self._replica_config.model_name,
                     moe_input_file,
                 )
@@ -853,9 +857,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 runtime_path_key = requested_routing_runtime_path
             gating_context_key: Optional[str] = None
             if _is_moe_gating_family_model_name(base_model_name):
-                gating_context_key = DEFAULT_MOE_GATING_RUNTIME_CONTEXT
-                if model_name.endswith("__prefill_hot"):
-                    gating_context_key = PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT
+                gating_context_key = get_moe_gating_prediction_model_context(
+                    model_name
+                )
             cache_key = (tp_key, ep_key, runtime_path_key, gating_context_key)
             if cache_key not in moe_df_cache:
                 filtered_df = model_filtered_df[
@@ -893,9 +897,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             try:
                 op_df, moe_tp_key, moe_ep_key = _get_moe_df_for_op(model_name)
             except ValueError as e:
-                if model_name.endswith("__prefill_hot"):
+                if get_moe_gating_base_model_name(model_name) != model_name:
                     logger.warning(
-                        "Skipping %s because prefill-hot gating rows are unavailable "
+                        "Skipping %s because prefill-warmed gating rows are unavailable "
                         "for the requested TP/EP slice (%s).",
                         model_name,
                         e,
@@ -971,17 +975,15 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
     def _register_additional_profiling_metadata_from_files(self) -> None:
         moe_input_file = self._moe_input_file
         model_names = _get_moe_family_model_names()
-        if should_enable_prefill_hot_moe_gating_contract(
+        if should_enable_prefill_warmed_moe_gating_contract(
             model_config=self._model_config,
         ):
-            include_prefill_hot_models = False
-            try:
-                moe_df = pd.read_csv(moe_input_file)
-                include_prefill_hot_models = has_prefill_hot_moe_gating_rows(moe_df)
-            except Exception:
-                include_prefill_hot_models = False
-            if include_prefill_hot_models:
-                model_names.extend(_get_prefill_hot_moe_gating_model_names())
+            moe_df = pd.read_csv(moe_input_file)
+            include_prefill_warmed_models = has_prefill_warmed_moe_gating_rows(
+                moe_df
+            )
+            if include_prefill_warmed_models:
+                model_names.extend(_get_prefill_warmed_moe_gating_model_names())
         self._register_profiling_metadata_from_file(moe_input_file, model_names)
 
     def _train_models(self) -> Dict[str, BaseEstimator]:
@@ -999,7 +1001,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
     def _predict_for_compute_models(self) -> Dict[str, Any]:
         predictions = super()._predict_for_compute_models()
-        extra_model_names = _get_prefill_hot_moe_gating_model_names()
+        extra_model_names = _get_prefill_warmed_moe_gating_model_names()
         num_token_range = np.arange(1, self._max_tokens + 1)
         X = pd.DataFrame({"num_tokens": num_token_range})
         for model_name in extra_model_names:
@@ -1017,11 +1019,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         batch: Batch,
     ) -> str:
         requested_context = DEFAULT_MOE_GATING_RUNTIME_CONTEXT
-        if should_use_prefill_hot_moe_gating_context(
+        if should_use_prefill_warmed_moe_gating_context(
             model_config=self._model_config,
             batch=batch,
         ):
-            requested_context = PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT
+            requested_context = PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT
         candidate_model_name = get_moe_gating_prediction_model_name(
             base_model_name,
             requested_context=requested_context,

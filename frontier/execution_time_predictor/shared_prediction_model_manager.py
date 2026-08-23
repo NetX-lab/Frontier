@@ -42,11 +42,13 @@ from frontier.logger import init_logger
 from frontier.model_architectures import get_model_architecture_profile
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
-    PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
+    PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
     filter_moe_gating_rows_by_runtime_context,
     get_moe_gating_base_model_name,
-    has_prefill_hot_moe_gating_rows,
-    should_enable_prefill_hot_moe_gating_contract,
+    get_moe_gating_prediction_model_context,
+    get_moe_gating_prediction_model_name,
+    has_prefill_warmed_moe_gating_rows,
+    should_enable_prefill_warmed_moe_gating_contract,
 )
 from frontier.moe_routing_runtime import (
     filter_moe_gating_routing_topk_rows,
@@ -101,9 +103,12 @@ def _get_moe_gating_family_model_names() -> List[str]:
     ]
 
 
-def _get_prefill_hot_moe_gating_model_names() -> List[str]:
+def _get_prefill_warmed_moe_gating_model_names() -> List[str]:
     return [
-        f"{model_name}__prefill_hot"
+        get_moe_gating_prediction_model_name(
+            model_name,
+            requested_context=PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
+        )
         for model_name in _get_moe_gating_family_model_names()
     ]
 
@@ -853,32 +858,27 @@ class ExecutionTimePredictionModelManager:
             # Aligned with frontier/training/moe_trainer.py _get_feature_cols() method
             base_moe_model_names = _get_moe_family_model_names()
             moe_model_names = list(base_moe_model_names)
-            if should_enable_prefill_hot_moe_gating_contract(
+            if should_enable_prefill_warmed_moe_gating_contract(
                 model_config=model_config,
                 model_arch=model_arch,
                 model_name=replica_config.model_name,
             ):
-                include_prefill_hot_models = False
-                try:
-                    prefill_hot_probe_df = pd.read_csv(moe_input_file)
-                    include_prefill_hot_models = has_prefill_hot_moe_gating_rows(
-                        prefill_hot_probe_df
+                prefill_warmed_probe_df = pd.read_csv(moe_input_file)
+                include_prefill_warmed_models = (
+                    has_prefill_warmed_moe_gating_rows(
+                        prefill_warmed_probe_df
                     )
-                except Exception as e:
-                    logger.warning(
-                        "Unable to probe prefill-hot gating rows in %s: %s",
-                        moe_input_file,
-                        e,
-                    )
-                    include_prefill_hot_models = False
+                )
 
-                if include_prefill_hot_models:
-                    moe_model_names.extend(_get_prefill_hot_moe_gating_model_names())
+                if include_prefill_warmed_models:
+                    moe_model_names.extend(
+                        _get_prefill_warmed_moe_gating_model_names()
+                    )
                 else:
                     logger.warning(
-                        "Prefill-hot gating contract enabled for model=%s, but "
-                        "dataset %s has no usable prefill_hot rows; skipping "
-                        "__prefill_hot pseudo-models in shared-manager training.",
+                        "Prefill-warmed gating contract enabled for model=%s, but "
+                        "dataset %s has no usable prefill_warmed rows; skipping "
+                        "warmed-context pseudo-models in shared-manager training.",
                         replica_config.model_name,
                         moe_input_file,
                     )
@@ -922,9 +922,9 @@ class ExecutionTimePredictionModelManager:
 
                 gating_context_key: Optional[str] = None
                 if _is_moe_gating_family_model_name(base_model_name):
-                    gating_context_key = DEFAULT_MOE_GATING_RUNTIME_CONTEXT
-                    if model_name.endswith("__prefill_hot"):
-                        gating_context_key = PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT
+                    gating_context_key = get_moe_gating_prediction_model_context(
+                        model_name
+                    )
 
                 cache_key = (tp_key, ep_key, runtime_path_key, gating_context_key)
                 if cache_key not in moe_df_cache:
@@ -964,9 +964,9 @@ class ExecutionTimePredictionModelManager:
                     try:
                         op_moe_df, moe_tp_key, moe_ep_key = _get_moe_df_for_op(model_name)
                     except ValueError as e:
-                        if model_name.endswith("__prefill_hot"):
+                        if get_moe_gating_base_model_name(model_name) != model_name:
                             logger.warning(
-                                "Skipping %s because prefill-hot gating rows are unavailable "
+                                "Skipping %s because prefill-warmed gating rows are unavailable "
                                 "for the requested TP/EP slice (%s).",
                                 model_name,
                                 e,

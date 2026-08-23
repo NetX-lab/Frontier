@@ -45,6 +45,8 @@ except ImportError:
 from frontier.config.precision_type import PrecisionType
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
+    get_supported_moe_gating_runtime_context_values,
+    normalize_moe_gating_runtime_context,
 )
 from frontier.operators.families import MOE_FAMILY, get_family_profiling_names
 # Conditionally import ray - only needed when not using --disable_ray
@@ -336,12 +338,13 @@ def parse_args():
     )
     parser.add_argument(
         "--gating_runtime_context",
-        type=str,
+        type=normalize_moe_gating_runtime_context,
         default=DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
-        choices=["standalone_legacy", "prefill_hot"],
+        choices=get_supported_moe_gating_runtime_context_values(),
         help=(
             "Runtime-context variant for moe_gating profiling. "
-            "prefill_hot enables a prefill-only hot-context prefix before timing."
+            "prefill_warmed executes an FFN-like warming prefix before timing. "
+            "standalone_legacy and prefill_hot are temporary legacy aliases."
         ),
     )
     args = parser.parse_args()

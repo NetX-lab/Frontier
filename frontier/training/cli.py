@@ -21,7 +21,8 @@ from frontier.training.attention_trainer import AttentionTrainer, create_attenti
 from frontier.types import MeasurementType
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
-    PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
+    get_supported_moe_gating_runtime_context_values,
+    normalize_moe_gating_runtime_context,
 )
 from frontier.moe_routing_runtime import (
     STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH,
@@ -161,14 +162,14 @@ Examples:
     )
     moe_parser.add_argument(
         "--gating_runtime_context",
-        type=str,
-        choices=[
-            DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
-            PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
-        ],
+        type=normalize_moe_gating_runtime_context,
+        choices=get_supported_moe_gating_runtime_context_values(),
         default=DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
-        help="MoE gating runtime context to select from profiling data "
-             "(default: standalone_legacy)"
+        help=(
+            "MoE gating runtime context to select from profiling data "
+            "(default: direct; standalone_legacy and prefill_hot are "
+            "temporary legacy aliases)"
+        ),
     )
     
     # Predictor configuration

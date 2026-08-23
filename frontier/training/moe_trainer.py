@@ -14,10 +14,12 @@ from frontier.training.base_trainer import BaseTrainer
 from frontier.logger import init_logger
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
-    PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
+    PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
     filter_moe_gating_rows_by_runtime_context,
     get_moe_gating_base_model_name,
-    has_prefill_hot_moe_gating_rows,
+    get_moe_gating_prediction_model_context,
+    get_moe_gating_prediction_model_name,
+    has_prefill_warmed_moe_gating_rows,
     validate_moe_gating_runtime_context,
 )
 from frontier.moe_routing_runtime import (
@@ -55,9 +57,12 @@ def _get_moe_gating_family_model_names() -> List[str]:
     ]
 
 
-def _get_prefill_hot_moe_gating_model_names() -> List[str]:
+def _get_prefill_warmed_moe_gating_model_names() -> List[str]:
     return [
-        f"{model_name}__prefill_hot"
+        get_moe_gating_prediction_model_name(
+            model_name,
+            requested_context=PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
+        )
         for model_name in _get_moe_gating_family_model_names()
     ]
 
@@ -355,12 +360,12 @@ class MoETrainer(BaseTrainer):
         """
         model_names = _get_moe_family_model_names()
         if str(getattr(self, "model_name", "")).strip() == "qwen3-a3b-30b-moe":
-            if self.df is not None and has_prefill_hot_moe_gating_rows(self.df):
-                model_names.extend(_get_prefill_hot_moe_gating_model_names())
+            if self.df is not None and has_prefill_warmed_moe_gating_rows(self.df):
+                model_names.extend(_get_prefill_warmed_moe_gating_model_names())
             else:
                 logger.warning(
-                    "Prefill-hot MoE gating rows are unavailable in %s; "
-                    "skipping __prefill_hot trainer pseudo-models for smoke stability.",
+                    "Prefill-warmed MoE gating rows are unavailable in %s; "
+                    "skipping warmed-context trainer pseudo-models for smoke stability.",
                     self.dataset_path,
                 )
         return model_names
@@ -445,8 +450,10 @@ class MoETrainer(BaseTrainer):
             )
         if _is_moe_gating_family_model_name(base_model_name):
             requested_context = self.gating_runtime_context
-            if model_name.endswith("__prefill_hot"):
-                requested_context = PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT
+            if model_name != base_model_name:
+                requested_context = get_moe_gating_prediction_model_context(
+                    model_name
+                )
             training_df = filter_moe_gating_rows_by_runtime_context(
                 training_df,
                 requested_context=requested_context,
@@ -502,9 +509,9 @@ class MoETrainer(BaseTrainer):
                     target_col=target_col,
                 )
             except ValueError as e:
-                if model_name.endswith("__prefill_hot"):
+                if get_moe_gating_base_model_name(model_name) != model_name:
                     logger.warning(
-                        "Skipping %s: prefill-hot gating rows are unavailable for "
+                        "Skipping %s: prefill-warmed gating rows are unavailable for "
                         "the requested TP/EP slice (%s).",
                         model_name,
                         e,

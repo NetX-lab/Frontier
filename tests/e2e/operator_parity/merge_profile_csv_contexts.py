@@ -6,7 +6,17 @@ import argparse
 import csv
 import json
 from pathlib import Path
+import sys
 from typing import Iterable
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from frontier.moe_gating_runtime import (
+    MOE_GATING_RUNTIME_CONTEXT_COLUMN,
+    normalize_moe_gating_runtime_context,
+)
 
 
 def _read_csv(path: Path) -> tuple[list[str], list[dict[str, str]]]:
@@ -30,7 +40,14 @@ def _merge_fieldnames(*fieldname_sets: Iterable[str]) -> list[str]:
 
 
 def _normalized_row(row: dict[str, str], fieldnames: list[str]) -> dict[str, str]:
-    return {fieldname: row.get(fieldname, "") for fieldname in fieldnames}
+    normalized = {fieldname: row.get(fieldname, "") for fieldname in fieldnames}
+    if MOE_GATING_RUNTIME_CONTEXT_COLUMN in normalized:
+        raw_context = normalized[MOE_GATING_RUNTIME_CONTEXT_COLUMN].strip()
+        if raw_context:
+            normalized[MOE_GATING_RUNTIME_CONTEXT_COLUMN] = (
+                normalize_moe_gating_runtime_context(raw_context)
+            )
+    return normalized
 
 
 def _row_key(row: dict[str, str], key_columns: list[str]) -> tuple[str, ...]:

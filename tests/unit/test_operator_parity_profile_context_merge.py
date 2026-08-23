@@ -26,7 +26,7 @@ def _read_rows(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
-def test_merge_profile_csvs_keeps_prefill_hot_and_standalone_legacy_rows(
+def test_merge_profile_csvs_normalizes_legacy_gating_context_rows(
     tmp_path: Path,
 ) -> None:
     canonical = tmp_path / "canonical" / "moe.csv"
@@ -59,19 +59,20 @@ def test_merge_profile_csvs_keeps_prefill_hot_and_standalone_legacy_rows(
         ],
     )
 
-    report = merge_profile_csvs(
-        canonical_csv=canonical,
-        supplement_csv=supplement,
-        output_csv=output,
-    )
+    with pytest.warns(FutureWarning):
+        report = merge_profile_csvs(
+            canonical_csv=canonical,
+            supplement_csv=supplement,
+            output_csv=output,
+        )
 
     rows = _read_rows(output)
     assert report["base_row_count"] == 1
     assert report["supplement_row_count"] == 1
     assert report["merged_row_count"] == 2
     assert [row["gating_runtime_context"] for row in rows] == [
-        "prefill_hot",
-        "standalone_legacy",
+        "direct",
+        "prefill_warmed",
     ]
 
 
@@ -86,7 +87,7 @@ def test_merge_profile_csvs_fails_on_conflicting_duplicate_profile_key(
         "expert_parallel_size": "1",
         "num_tokens": "1",
         "measurement_type": "CUDA_EVENT",
-        "gating_runtime_context": "standalone_legacy",
+        "gating_runtime_context": "direct",
     }
     _write_csv(
         canonical,

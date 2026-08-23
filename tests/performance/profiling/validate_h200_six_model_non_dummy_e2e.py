@@ -381,7 +381,7 @@ def _validate_moe_profile(
         "num_experts_per_device": contract.num_experts // 2,
         "expert_parallel_size": 2,
         "routing_runtime_path": contract.routing_runtime_path,
-        "gating_runtime_context": "standalone_legacy",
+        "gating_runtime_context": "direct",
         "router_topk": contract.router_topk,
         "hidden_dim": contract.embedding_dim,
         "expert_hidden_dim": contract.mlp_hidden_dim,

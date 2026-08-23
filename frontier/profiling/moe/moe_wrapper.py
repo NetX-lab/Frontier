@@ -33,8 +33,8 @@ from frontier.profiling.utils import ProfileMethod, normalize_profile_method
 from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
-    PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
-    PREFILL_HOT_MOE_GATING_PREFIX_REPEATS,
+    PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
+    PREFILL_WARMED_MOE_GATING_PREFIX_REPEATS,
     get_moe_gating_runtime_context_metadata,
 )
 
@@ -207,15 +207,15 @@ class MoEWrapper:
         self,
         hidden_states: torch.Tensor,
     ):
-        if self.gating_runtime_context == PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT:
-            self._run_prefill_hot_gating_prefix(hidden_states)
+        if self.gating_runtime_context == PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT:
+            self._run_prefill_warmed_gating_prefix(hidden_states)
         return self.gating(hidden_states)
 
-    def _run_prefill_hot_gating_prefix(
+    def _run_prefill_warmed_gating_prefix(
         self, hidden_states: torch.Tensor
     ) -> torch.Tensor:
         prefix_hidden_states = hidden_states
-        for _ in range(PREFILL_HOT_MOE_GATING_PREFIX_REPEATS):
+        for _ in range(PREFILL_WARMED_MOE_GATING_PREFIX_REPEATS):
             up_proj = torch.matmul(
                 prefix_hidden_states, self._gating_prefix_up_weight.transpose(0, 1)
             )

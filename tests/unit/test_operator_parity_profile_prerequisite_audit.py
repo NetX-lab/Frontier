@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from frontier.moe_gating_runtime import DEFAULT_MOE_GATING_RUNTIME_CONTEXT
 from tests.e2e.operator_parity.profile_prerequisite_audit import (
     REQUIRED_BASE_PROFILE_FILES,
@@ -433,7 +435,7 @@ def test_build_requirements_rejects_structurally_invalid_step3_config(
         raise AssertionError("structurally invalid Step3 config must fail fast")
 
 
-def test_audit_requirements_rejects_moe_profiles_without_standalone_legacy_gating_rows(
+def test_audit_requirements_rejects_moe_profiles_without_direct_gating_rows(
     tmp_path: Path,
 ) -> None:
     config_root = tmp_path / "models"
@@ -451,7 +453,11 @@ def test_audit_requirements_rejects_moe_profiles_without_standalone_legacy_gatin
             "prefill_hot",
         )
 
-    [result] = audit_requirements(profile_root=profile_root, requirements=(requirement,))
+    with pytest.warns(FutureWarning):
+        [result] = audit_requirements(
+            profile_root=profile_root,
+            requirements=(requirement,),
+        )
     report = audits_to_dict((result,))
 
     assert result.status == "invalid"
@@ -461,7 +467,7 @@ def test_audit_requirements_rejects_moe_profiles_without_standalone_legacy_gatin
             f"gating_runtime_context={DEFAULT_MOE_GATING_RUNTIME_CONTEXT}"
             in result.files[filename].semantic_coverage_errors
         )
-    assert "gating_runtime_context=standalone_legacy" in __import__("json").dumps(report)
+    assert "gating_runtime_context=direct" in __import__("json").dumps(report)
 
 
 def test_b0_h800_profiling_script_runs_record_function_one_model_per_process() -> None:
@@ -487,12 +493,12 @@ def test_b0_h800_profiling_script_uses_vllm_moe_path_for_uniform_topk() -> None:
     assert "--num_samples_per_distribution 1" in script
 
 
-def test_b0_h800_moe_gating_backfill_script_profiles_standalone_legacy_to_stage() -> None:
+def test_b0_h800_moe_gating_backfill_script_profiles_direct_to_stage() -> None:
     script = Path(
         "tests/e2e/operator_parity/run_b0_h800_moe_gating_backfill.sh"
     ).read_text(encoding="utf-8")
 
-    assert 'MOE_GATING_CONTEXT="${MOE_GATING_CONTEXT:-standalone_legacy}"' in script
+    assert 'MOE_GATING_CONTEXT="${MOE_GATING_CONTEXT:-direct}"' in script
     assert 'OUTPUT_ROOT="${OUTPUT_ROOT:-$STAGE_ROOT/profiling}"' in script
     assert "export OUTPUT_ROOT" in script
     assert "--gating_runtime_context" in script
