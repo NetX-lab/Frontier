@@ -67,6 +67,62 @@ def test_attention_recipe_propagates_profile_and_runtime_context_lengths() -> No
     assert "--max_seq_len" in text
 
 
+def test_linear_recipe_preserves_explicit_extra_token_points() -> None:
+    script = PROFILING_DIR / "profile_linear_op.sh"
+    result = subprocess.run(
+        [
+            "bash",
+            str(script),
+            "--max-tokens",
+            "4096",
+            "--extra-num-tokens",
+            "4097 8192",
+            "--dry-run",
+        ],
+        cwd=REPO_ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Extra token points: 4097 8192" in result.stdout
+    assert "--extra_num_tokens 4097 8192" in result.stdout
+
+
+def test_moe_recipe_defaults_to_model_derived_ep_domain() -> None:
+    script = PROFILING_DIR / "profile_moe.sh"
+    result = subprocess.run(
+        ["bash", str(script), "--dry-run"],
+        cwd=REPO_ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "EP sizes: auto (all runtime-legal divisors)" in result.stdout
+    assert "--expert_parallel_sizes" not in result.stdout
+
+
+def test_moe_recipe_preserves_explicit_ep_override() -> None:
+    script = PROFILING_DIR / "profile_moe.sh"
+    result = subprocess.run(
+        ["bash", str(script), "--ep-sizes", "1 2 4", "--dry-run"],
+        cwd=REPO_ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "EP sizes: 1 2 4" in result.stdout
+    assert "--expert_parallel_sizes 1 2 4" in result.stdout
+
+
 def test_profiling_scripts_route_outputs_to_compute_taxonomy() -> None:
     for script in EXPECTED_SCRIPTS:
         text = _read(script)

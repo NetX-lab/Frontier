@@ -18,7 +18,7 @@ DEVICE="${DEVICE:-rtx_pro_6000}"
 NUM_GPUS="${NUM_GPUS:-1}"
 MAX_TOKENS="${MAX_TOKENS:-16}"
 TP_SIZES="${TP_SIZES:-1}"
-EP_SIZES="${EP_SIZES:-1}"
+EP_SIZES="${EP_SIZES:-}"
 PROFILE_METHOD="${PROFILE_METHOD:-cuda_event}"
 ROUTING_RUNTIME_PATH="${ROUTING_RUNTIME_PATH:-uniform_topk}"
 GATING_RUNTIME_CONTEXT="${GATING_RUNTIME_CONTEXT:-prefill_hot}"
@@ -83,9 +83,11 @@ done
 
 require_bool "DRY_RUN" "$DRY_RUN"
 declare -a TP_SIZE_ARGS
-declare -a EP_SIZE_ARGS
+declare -a EP_SIZE_ARGS=()
 parse_positive_integer_list "TP_SIZES" "$TP_SIZES" TP_SIZE_ARGS
-parse_positive_integer_list "EP_SIZES" "$EP_SIZES" EP_SIZE_ARGS
+if [ -n "$EP_SIZES" ]; then
+  parse_positive_integer_list "EP_SIZES" "$EP_SIZES" EP_SIZE_ARGS
+fi
 
 if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
   echo "ERROR: PYTHON_BIN is not executable or not on PATH: $PYTHON_BIN" >&2
@@ -100,13 +102,19 @@ CMD=(
   --num_gpus "$NUM_GPUS"
   --max_tokens "$MAX_TOKENS"
   --num_tensor_parallel_workers "${TP_SIZE_ARGS[@]}"
-  --expert_parallel_sizes "${EP_SIZE_ARGS[@]}"
   --profile_method "$PROFILE_METHOD"
   --routing_runtime_path "$ROUTING_RUNTIME_PATH"
   --gating_runtime_context "$GATING_RUNTIME_CONTEXT"
   --disable_load_imbalance
   --output_dir "$DATA_DIR_BASE"
 )
+
+if [ "${#EP_SIZE_ARGS[@]}" -gt 0 ]; then
+  CMD+=(--expert_parallel_sizes "${EP_SIZE_ARGS[@]}")
+  RESOLVED_EP_SIZES="$EP_SIZES"
+else
+  RESOLVED_EP_SIZES="auto (all runtime-legal divisors)"
+fi
 
 if [ "$#" -gt 0 ]; then
   CMD+=("$@")
@@ -121,7 +129,7 @@ Resolved output: $DATA_DIR_BASE/compute/$DEVICE/$MODEL/moe.csv
 Model: $MODEL
 Device: $DEVICE
 TP sizes: $TP_SIZES
-EP sizes: $EP_SIZES
+EP sizes: $RESOLVED_EP_SIZES
 Profile method: $PROFILE_METHOD
 Dry run: $DRY_RUN
 ============================================
