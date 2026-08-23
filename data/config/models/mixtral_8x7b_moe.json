@@ -1,5 +1,8 @@
 {
-  "_comment": "Test fixture for quantization tests; not a production model config.",
+  "_comment": "Frontier-normalized official Mixtral-8x7B-v0.1 model config.",
+  "_source_model": "mistralai/Mixtral-8x7B-v0.1",
+  "_source_revision": "fc7ac94680e38d7348cfa806e51218e6273104b0",
+  "_source_sha256": "9d56d04b36d0fd12ff54ae4c5bac769cc176e254e64ff71144614b6318b40793",
   "architectures": ["MixtralForCausalLM"],
   "attention_dropout": 0.0,
   "bos_token_id": 1,
@@ -24,5 +27,5 @@
   "num_experts": 8,
   "moe_intermediate_size": 14336,
   "output_router_logits": false,
-  "router_aux_loss_coef": 0.001
+  "router_aux_loss_coef": 0.02
 }
