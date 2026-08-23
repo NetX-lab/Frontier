@@ -19,14 +19,16 @@ from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
 
 
-SUPPORTED_MODELS = (
-    "llama3.1-8b",
-    "llama3.3-70b",
-    "Qwen3-235B-A22B",
-    "qwen3-a3b-30b-moe",
-    "step3-moe-noquant",
-    "mixtral_8x7b_moe",
-)
+_MODEL_PIPELINE_STAGES = {
+    "llama3.1-8b": 1,
+    "llama3.3-70b": 2,
+    "Qwen3-235B-A22B": 2,
+    "qwen3-a3b-30b-moe": 1,
+    "step3-moe-noquant": 1,
+    "mixtral_8x7b_moe": 1,
+}
+
+SUPPORTED_MODELS = tuple(_MODEL_PIPELINE_STAGES)
 
 _PROFILE_MEASUREMENT_TYPES = {
     "linear_op.csv": "CUDA_EVENT",
@@ -53,6 +55,7 @@ class ModelContract:
     is_moe: bool
     is_mixed_layer_moe: bool
     num_layers: int
+    num_pipeline_stages: int
     dense_layer_count: int
     moe_layer_count: int
     profile_filenames: tuple[str, ...]
@@ -89,6 +92,13 @@ def build_model_contract(
         )
 
     model_config = ModelConfig.from_model_name(model_name)
+    num_pipeline_stages = _MODEL_PIPELINE_STAGES[model_name]
+    if int(model_config.num_layers) % num_pipeline_stages != 0:
+        raise ValueError(
+            f"Model runtime contract for {model_name!r} requires PP"
+            f"{num_pipeline_stages}, but num_layers={model_config.num_layers} "
+            "is not evenly divisible."
+        )
     is_moe = bool(model_config.is_moe)
     moe_layer_count = len(model_config.get_moe_layer_ids())
     dense_layer_count = int(model_config.num_layers) - moe_layer_count
@@ -119,6 +129,7 @@ def build_model_contract(
         is_moe=is_moe,
         is_mixed_layer_moe=is_mixed_layer_moe,
         num_layers=int(model_config.num_layers),
+        num_pipeline_stages=num_pipeline_stages,
         dense_layer_count=dense_layer_count,
         moe_layer_count=moe_layer_count,
         profile_filenames=profile_filenames,
@@ -511,6 +522,34 @@ def _validate_runtime_config(
                 f"config.json field {field!r} must equal {expected!r}, got {actual!r}."
             )
 
+    request_generator_config = config.get("request_generator_config")
+    if not isinstance(request_generator_config, dict):
+        raise ValueError("config.json must contain request_generator_config.")
+    length_generator_config = request_generator_config.get("length_generator_config")
+    if not isinstance(length_generator_config, dict):
+        raise ValueError(
+            "config.json request_generator_config must contain length_generator_config."
+        )
+    expected_request = {
+        "generator_name": "synthetic",
+        "num_requests": 1,
+        "length_generator_name": "fixed",
+        "prefill_tokens": 2,
+        "decode_tokens": 2,
+    }
+    actual_request = {
+        "generator_name": request_generator_config.get("name"),
+        "num_requests": request_generator_config.get("num_requests"),
+        "length_generator_name": length_generator_config.get("name"),
+        "prefill_tokens": length_generator_config.get("prefill_tokens"),
+        "decode_tokens": length_generator_config.get("decode_tokens"),
+    }
+    if actual_request != expected_request:
+        raise ValueError(
+            "config.json request generator must equal "
+            f"{expected_request}, got {actual_request}."
+        )
+
     cluster_config = config.get("cluster_config")
     if not isinstance(cluster_config, dict):
         raise ValueError("config.json must contain cluster_config.")
@@ -528,7 +567,7 @@ def _validate_runtime_config(
     expected_replica = {
         "model_name": contract.model_name,
         "device": "h200",
-        "num_pipeline_stages": 1,
+        "num_pipeline_stages": contract.num_pipeline_stages,
         "attn_tensor_parallel_size": 1,
         "attn_data_parallel_size": 2 if contract.is_moe else 1,
         "data_parallel_size": 2 if contract.is_moe else 1,
@@ -572,6 +611,7 @@ def _validate_runtime_config(
         "simulation_mode": "offline",
         "sys_arch": "co-location",
         "decode_cuda_graph_mode": "full_decode_only",
+        "request": expected_request,
         "replica": expected_replica,
         "profile_files": profile_files,
     }
@@ -616,7 +656,7 @@ def validate_runtime_artifacts(
         )
     row = request_metrics.iloc[0]
     for field, expected in (
-        ("request_num_prefill_tokens", 1),
+        ("request_num_prefill_tokens", 2),
         ("request_num_decode_tokens", 2),
     ):
         if field not in row or int(row[field]) != expected:
@@ -681,7 +721,7 @@ def validate_runtime_artifacts(
         },
         "request_metrics": {
             "row_count": 1,
-            "prefill_tokens": 1,
+            "prefill_tokens": 2,
             "decode_tokens": 2,
             "ttft_ms": ttft_ms,
             "tpot_ms": tpot_ms,

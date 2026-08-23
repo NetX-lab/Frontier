@@ -24,6 +24,7 @@ def test_six_model_contract_is_registry_derived() -> None:
 
     dense = build_model_contract("llama3.1-8b")
     assert dense.is_moe is False
+    assert dense.num_pipeline_stages == 1
     assert dense.profile_filenames == (
         "linear_op.csv",
         "linear_op_kernel_only.csv",
@@ -31,15 +32,20 @@ def test_six_model_contract_is_registry_derived() -> None:
         "attention_kernel_only.csv",
     )
 
+    large_dense = build_model_contract("llama3.3-70b")
+    assert large_dense.num_pipeline_stages == 2
+
     pure_moe = build_model_contract("Qwen3-235B-A22B")
     assert pure_moe.is_moe is True
     assert pure_moe.is_mixed_layer_moe is False
+    assert pure_moe.num_pipeline_stages == 2
     assert "time_stats.mlp_up_proj.median" not in pure_moe.linear_target_columns
     assert pure_moe.routing_runtime_path == "standard_fused_topk"
 
     step3 = build_model_contract("step3-moe-noquant")
     assert step3.is_moe is True
     assert step3.is_mixed_layer_moe is True
+    assert step3.num_pipeline_stages == 1
     assert step3.dense_layer_count == 5
     assert step3.moe_layer_count == 56
     assert "time_stats.mlp_up_proj.median" in step3.linear_target_columns
@@ -210,7 +216,7 @@ def _write_runtime_artifacts(
     pd.DataFrame(
         [
             {
-                "request_num_prefill_tokens": 1,
+                "request_num_prefill_tokens": 2,
                 "request_num_decode_tokens": 2,
                 "ttft": 1.25,
                 "tpot": 0.75,
@@ -250,7 +256,7 @@ def _write_runtime_artifacts(
     replica_config = {
         "model_name": contract.model_name,
         "device": "h200",
-        "num_pipeline_stages": 1,
+        "num_pipeline_stages": contract.num_pipeline_stages,
         "attn_tensor_parallel_size": 1,
         "attn_data_parallel_size": 2 if contract.is_moe else 1,
         "data_parallel_size": 2 if contract.is_moe else 1,
@@ -266,6 +272,15 @@ def _write_runtime_artifacts(
                 "simulation_mode": "offline",
                 "sys_arch": "co-location",
                 "decode_cuda_graph_mode": "full_decode_only",
+                "request_generator_config": {
+                    "name": "synthetic",
+                    "num_requests": 1,
+                    "length_generator_config": {
+                        "name": "fixed",
+                        "prefill_tokens": 2,
+                        "decode_tokens": 2,
+                    },
+                },
                 "cluster_config": {
                     "replica_config": replica_config,
                     "execution_time_predictor_config": predictor_config,
@@ -299,9 +314,14 @@ def test_runtime_artifact_validation_closes_numeric_and_config_contract(
     assert report["request_metrics"]["ttft_ms"] == pytest.approx(1.25)
     assert report["request_metrics"]["tpot_ms"] == pytest.approx(0.75)
     assert report["request_metrics"]["e2e_ms"] == pytest.approx(2.0)
+    assert report["request_metrics"]["prefill_tokens"] == 2
     assert report["ledger"]["row_count"] == 2
     assert report["op_trace"]["event_count"] == 1
     assert report["config"]["replica"]["device"] == "h200"
+    assert (
+        report["config"]["replica"]["num_pipeline_stages"]
+        == contract.num_pipeline_stages
+    )
     assert report["config"]["replica"]["attn_data_parallel_size"] == 2
     assert report["config"]["replica"]["moe_expert_parallel_size"] == 2
 
