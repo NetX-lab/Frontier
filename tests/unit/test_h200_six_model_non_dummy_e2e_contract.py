@@ -4,6 +4,16 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from frontier.moe_gating_runtime import (
+    DIRECT_MOE_GATING_RUNTIME_CONTEXT,
+    PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
+    get_moe_gating_runtime_context_metadata,
+)
+from frontier.profiling.common.model_config import ModelConfig
+from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
+from tests.performance.profiling.run_h200_frozen_manifest_model import (
+    _validate_linear_file,
+)
 from tests.performance.profiling.validate_h200_six_model_non_dummy_e2e import (
     SUPPORTED_MODELS,
     build_model_contract,
@@ -64,6 +74,9 @@ def test_explicit_uniform_mode_selects_uniform_profile_rows() -> None:
 
 def _write_profile_fixture(profile_dir: Path, model_name: str) -> None:
     contract = build_model_contract(model_name)
+    direct_gating_metadata = get_moe_gating_runtime_context_metadata(
+        DIRECT_MOE_GATING_RUNTIME_CONTEXT
+    )
     common_metadata = {
         "profiling_precision": contract.profiling_precision,
         "quant_signature": contract.quant_signature,
@@ -106,7 +119,7 @@ def _write_profile_fixture(profile_dir: Path, model_name: str) -> None:
         "num_experts_per_device": contract.num_experts // 2,
         "expert_parallel_size": 2,
         "routing_runtime_path": contract.routing_runtime_path,
-        "gating_runtime_context": "direct",
+        **direct_gating_metadata,
         "router_topk": contract.router_topk,
         "hidden_dim": contract.embedding_dim,
         "expert_hidden_dim": contract.mlp_hidden_dim,
@@ -176,6 +189,131 @@ def test_profile_preflight_accepts_matching_step3_dual_family_fixture(
     assert report["files"]["attention.csv"]["row_count"] == 2
     assert report["files"]["attention_kernel_only.csv"]["row_count"] == 1
     assert report["files"]["moe.csv"]["routing_runtime_path"] == "standard_fused_topk"
+
+
+def test_profile_preflight_selects_runtime_slice_from_multi_parallel_csvs(
+    tmp_path: Path,
+) -> None:
+    contract = build_model_contract("step3-moe-noquant")
+    profile_dir = tmp_path / contract.model_name
+    _write_profile_fixture(profile_dir, contract.model_name)
+
+    for filename in contract.profile_filenames:
+        path = profile_dir / filename
+        frame = pd.read_csv(path)
+        non_runtime_rows = frame.copy()
+        non_runtime_rows["num_tensor_parallel_workers"] = 2
+        if filename.startswith("moe"):
+            non_runtime_rows["expert_parallel_size"] = 4
+            non_runtime_rows["num_experts_per_device"] = contract.num_experts // 4
+            non_runtime_rows["gating_runtime_context"] = "prefill_warmed"
+        pd.concat([frame, non_runtime_rows], ignore_index=True).to_csv(
+            path,
+            index=False,
+        )
+
+    report = validate_profile_directory(profile_dir, contract)
+
+    for filename in contract.profile_filenames:
+        assert report["files"][filename]["runtime_row_count"] < report["files"][
+            filename
+        ]["row_count"]
+
+
+def test_qwen_profile_preflight_requires_prefill_warmed_runtime_slice(
+    tmp_path: Path,
+) -> None:
+    contract = build_model_contract("Qwen3-235B-A22B")
+    profile_dir = tmp_path / contract.model_name
+    _write_profile_fixture(profile_dir, contract.model_name)
+
+    with pytest.raises(
+        ValueError,
+        match="gating_runtime_context='prefill_warmed'",
+    ):
+        validate_profile_directory(profile_dir, contract)
+
+
+def test_qwen_profile_preflight_selects_both_runtime_contexts(
+    tmp_path: Path,
+) -> None:
+    contract = build_model_contract("Qwen3-235B-A22B")
+    profile_dir = tmp_path / contract.model_name
+    _write_profile_fixture(profile_dir, contract.model_name)
+    warmed_metadata = get_moe_gating_runtime_context_metadata(
+        PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT
+    )
+
+    for filename in ("moe.csv", "moe_kernel_only.csv"):
+        path = profile_dir / filename
+        frame = pd.read_csv(path)
+        warmed_row = frame.iloc[[0]].copy()
+        for column, value in warmed_metadata.items():
+            warmed_row[column] = value
+        pd.concat([frame, warmed_row], ignore_index=True).to_csv(
+            path,
+            index=False,
+        )
+
+    report = validate_profile_directory(profile_dir, contract)
+
+    assert report["files"]["moe.csv"]["runtime_row_count"] == 2
+    assert report["files"]["moe_kernel_only.csv"]["runtime_row_count"] == 2
+
+
+def test_frozen_runner_accepts_fused_add_norm_and_replicated_tp_split(
+    tmp_path: Path,
+) -> None:
+    contract = build_model_contract("llama3.1-8b")
+    model_config = ModelConfig.from_model_name(contract.model_name)
+    tp_sizes = (1, 2)
+    manifest = {
+        "scope": {
+            "tp_sizes": list(tp_sizes),
+            "linear_op": {"num_tokens": [1]},
+        }
+    }
+    rows = []
+    for tp_size in tp_sizes:
+        plan = build_profiling_plan(
+            model_config=model_config,
+            tp_size=tp_size,
+            attn_tp=tp_sizes,
+            ffn_tp=tp_sizes,
+            is_moe=False,
+        )
+        replicated_ops = set(plan["replicated_ops"])
+        row = {
+            "measurement_type": "CUDA_EVENT",
+            "profiling_precision": contract.profiling_precision,
+            "quant_signature": contract.quant_signature,
+            "model_arch": contract.model_arch,
+            "model_architecture_profile": contract.model_architecture_profile,
+            "num_tensor_parallel_workers": tp_size,
+            "num_tokens": 1,
+        }
+        for column in contract.linear_target_columns:
+            op_name = column.removeprefix("time_stats.").removesuffix(".median")
+            row[column] = (
+                1.0 if tp_size == 1 or op_name not in replicated_ops else float("nan")
+            )
+        rows.append(row)
+
+    accepted_dir = tmp_path / contract.model_name
+    accepted_dir.mkdir()
+    pd.DataFrame(rows).to_csv(accepted_dir / "linear_op.csv", index=False)
+
+    report = _validate_linear_file(
+        accepted_dir=accepted_dir,
+        manifest=manifest,
+        contract=contract,
+        model_config=model_config,
+        profile_method="cuda_event",
+        measurement_type="CUDA_EVENT",
+    )
+
+    assert report["row_count"] == 2
+    assert report["validated_target_slices"] == 15
 
 
 def test_profile_preflight_rejects_wrong_measurement_family(tmp_path: Path) -> None:

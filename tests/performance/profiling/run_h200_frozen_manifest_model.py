@@ -495,6 +495,7 @@ def _validate_linear_file(
             f"missing={len(required_keys - observed_keys)}, "
             f"extra={len(observed_keys - required_keys)}."
         )
+    contract_target_columns = set(contract.linear_target_columns)
     minima: dict[str, float] = {}
     for tp_size in manifest["scope"]["tp_sizes"]:
         plan = build_profiling_plan(
@@ -511,7 +512,14 @@ def _validate_linear_file(
             )
             == tp_size
         )
-        for op_name in plan["enabled_ops"]:
+        replicated_ops = set(plan["replicated_ops"])
+        applicable_ops = [
+            op_name
+            for op_name in plan["enabled_ops"]
+            if f"time_stats.{op_name}.median" in contract_target_columns
+            and (tp_size == 1 or op_name not in replicated_ops)
+        ]
+        for op_name in applicable_ops:
             column = f"time_stats.{op_name}.median"
             minimum = _require_finite_positive(
                 frame,

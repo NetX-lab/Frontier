@@ -11,6 +11,12 @@ from typing import Any, Mapping, Sequence
 
 import pandas as pd
 
+from frontier.moe_gating_runtime import (
+    DIRECT_MOE_GATING_RUNTIME_CONTEXT,
+    PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
+    filter_moe_gating_rows_by_runtime_context,
+    should_enable_prefill_warmed_moe_gating_contract,
+)
 from frontier.moe_routing_runtime import (
     resolve_moe_gating_routing_runtime_path,
 )
@@ -285,6 +291,73 @@ def _validate_common_metadata(
         _require_exact_column(frame, path=path, column=column, expected=value)
 
 
+def _select_numeric_runtime_rows(
+    frame: pd.DataFrame,
+    *,
+    path: Path,
+    column: str,
+    expected: int,
+) -> pd.DataFrame:
+    if column not in frame.columns:
+        raise ValueError(f"{path.name} is missing required column {column!r}.")
+    numeric = pd.to_numeric(frame[column], errors="coerce")
+    if numeric.isna().any():
+        raise ValueError(
+            f"{path.name} column {column!r} contains non-numeric values."
+        )
+    selected = frame[numeric == expected].copy()
+    if selected.empty:
+        available = sorted({int(value) for value in numeric})
+        raise ValueError(
+            f"{path.name} has no runtime rows with {column}={expected}; "
+            f"available values: {available}."
+        )
+    return selected
+
+
+def _select_runtime_profile_rows(
+    frame: pd.DataFrame,
+    *,
+    path: Path,
+    contract: ModelContract,
+) -> pd.DataFrame:
+    if not path.name.startswith("moe"):
+        return _select_numeric_runtime_rows(
+            frame,
+            path=path,
+            column="num_tensor_parallel_workers",
+            expected=1,
+        )
+
+    required_contexts = [DIRECT_MOE_GATING_RUNTIME_CONTEXT]
+    if should_enable_prefill_warmed_moe_gating_contract(
+        model_config=ModelConfig.from_model_name(contract.model_name)
+    ):
+        required_contexts.append(PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT)
+
+    runtime_context_rows = []
+    for runtime_context in required_contexts:
+        selected = filter_moe_gating_rows_by_runtime_context(
+            frame,
+            requested_context=runtime_context,
+            source_name=str(path),
+        )
+        selected = _select_numeric_runtime_rows(
+            selected,
+            path=path,
+            column="num_tensor_parallel_workers",
+            expected=1,
+        )
+        selected = _select_numeric_runtime_rows(
+            selected,
+            path=path,
+            column="expert_parallel_size",
+            expected=2,
+        )
+        runtime_context_rows.append(selected)
+    return pd.concat(runtime_context_rows, ignore_index=True)
+
+
 def _validate_linear_profile(
     frame: pd.DataFrame,
     *,
@@ -381,7 +454,6 @@ def _validate_moe_profile(
         "num_experts_per_device": contract.num_experts // 2,
         "expert_parallel_size": 2,
         "routing_runtime_path": contract.routing_runtime_path,
-        "gating_runtime_context": "direct",
         "router_topk": contract.router_topk,
         "hidden_dim": contract.embedding_dim,
         "expert_hidden_dim": contract.mlp_hidden_dim,
@@ -422,28 +494,34 @@ def validate_profile_directory(
             contract=contract,
             measurement_type=measurement_type,
         )
+        runtime_frame = _select_runtime_profile_rows(
+            frame,
+            path=path,
+            contract=contract,
+        )
         if filename.startswith("linear_op"):
             details = _validate_linear_profile(
-                frame,
+                runtime_frame,
                 path=path,
                 contract=contract,
             )
         elif filename.startswith("attention"):
             details = _validate_attention_profile(
-                frame,
+                runtime_frame,
                 path=path,
                 contract=contract,
                 measurement_type=measurement_type,
             )
         else:
             details = _validate_moe_profile(
-                frame,
+                runtime_frame,
                 path=path,
                 contract=contract,
             )
         file_reports[filename] = {
             "path": str(path),
             "row_count": int(len(frame)),
+            "runtime_row_count": int(len(runtime_frame)),
             "measurement_type": measurement_type,
             **details,
         }
