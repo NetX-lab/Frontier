@@ -2796,6 +2796,8 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         request: Request,
         num_new_tokens: int = 1,
         new_computed_blocks=None,
+        *,
+        scheduler_num_computed_tokens: Optional[int] = None,
     ) -> bool:
         """
         Check if memory can be allocated for a request.
@@ -2816,6 +2818,11 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 request,
                 num_new_tokens,
                 new_computed_blocks=new_computed_blocks,
+                scheduler_num_computed_tokens=(
+                    self._get_scheduler_num_computed_tokens(request)
+                    if scheduler_num_computed_tokens is None
+                    else scheduler_num_computed_tokens
+                ),
             )
 
         reserved_tokens = self._get_num_tokens_for_kv_reservation(
@@ -2856,6 +2863,8 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         num_new_tokens: int = 1,
         new_computed_blocks=None,
         prefix_cache_admission: Optional[PrefixCacheAdmission] = None,
+        *,
+        scheduler_num_computed_tokens: Optional[int] = None,
     ) -> Optional[KVCacheAllocationResult]:
         """
         Allocate memory blocks for a request.
@@ -2897,6 +2906,11 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 request,
                 num_new_tokens,
                 new_computed_blocks=computed_blocks,
+                scheduler_num_computed_tokens=(
+                    self._get_scheduler_num_computed_tokens(request)
+                    if scheduler_num_computed_tokens is None
+                    else scheduler_num_computed_tokens
+                ),
             )
             if allocation is None:
                 raise ValueError(
@@ -3114,7 +3128,12 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         )
 
     def _try_allocate_with_preemption(
-        self, request: Request, num_new_tokens: int, preempted_requests: List[Request]
+        self,
+        request: Request,
+        num_new_tokens: int,
+        preempted_requests: List[Request],
+        *,
+        scheduler_num_computed_tokens: Optional[int] = None,
     ) -> bool:
         """
         Try to allocate memory for a request, preempting other requests if necessary.
@@ -3134,8 +3153,23 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         )
 
         while True:
-            if self._can_allocate_request(request, num_new_tokens):
-                self._allocate_request(request, num_new_tokens)
+            if scheduler_num_computed_tokens is None:
+                can_allocate = self._can_allocate_request(request, num_new_tokens)
+            else:
+                can_allocate = self._can_allocate_request(
+                    request,
+                    num_new_tokens,
+                    scheduler_num_computed_tokens=scheduler_num_computed_tokens,
+                )
+            if can_allocate:
+                if scheduler_num_computed_tokens is None:
+                    self._allocate_request(request, num_new_tokens)
+                else:
+                    self._allocate_request(
+                        request,
+                        num_new_tokens,
+                        scheduler_num_computed_tokens=scheduler_num_computed_tokens,
+                    )
                 return True
 
             if not self._enable_preemption:
@@ -3291,9 +3325,10 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             num_new_tokens = self._get_request_next_num_tokens(request)
 
             # Apply max_model_len limit
-            max_allowed = self._max_model_len - self._get_scheduler_num_computed_tokens(
+            scheduler_num_computed_tokens = self._get_scheduler_num_computed_tokens(
                 request
             )
+            max_allowed = self._max_model_len - scheduler_num_computed_tokens
             num_new_tokens = min(num_new_tokens, max_allowed)
             num_new_tokens = self._apply_long_prefill_token_threshold(
                 request, num_new_tokens
@@ -3326,7 +3361,10 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             # Try to allocate with preemption
             preempted_count_before = len(preempted_requests)
             can_schedule = self._try_allocate_with_preemption(
-                request, num_new_tokens, preempted_requests
+                request,
+                num_new_tokens,
+                preempted_requests,
+                scheduler_num_computed_tokens=scheduler_num_computed_tokens,
             )
             token_budget = self._rollback_current_iteration_preempted_requests(
                 scheduled_requests=scheduled,
@@ -3543,6 +3581,9 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             computed_blocks = None
             prefix_cached_tokens = 0
             prefix_cache_admission: Optional[PrefixCacheAdmission] = None
+            scheduler_num_computed_tokens = self._get_scheduler_num_computed_tokens(
+                request
+            )
 
             # Calculate number of new tokens to process
             if self._is_prefix_caching_enabled() and not request.is_prefill_complete:
@@ -3559,9 +3600,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 max_allowed = self._max_model_len - prefix_cached_tokens
             else:
                 num_new_tokens = self._get_request_next_num_tokens(request)
-                max_allowed = self._max_model_len - self._get_scheduler_num_computed_tokens(
-                    request
-                )
+                max_allowed = self._max_model_len - scheduler_num_computed_tokens
 
             # Apply max_model_len limit
             num_new_tokens = min(num_new_tokens, max_allowed)
@@ -3624,6 +3663,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 request,
                 num_new_tokens,
                 new_computed_blocks=computed_blocks,
+                scheduler_num_computed_tokens=scheduler_num_computed_tokens,
             ):
                 # Flow validation: log memory pressure for waiting queue admission
                 available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
@@ -3666,6 +3706,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                     if prefix_cache_admission is not None
                     else None
                 ),
+                scheduler_num_computed_tokens=scheduler_num_computed_tokens,
             )
             if prefix_cached_tokens > 0:
                 request.on_cache_hit(prefix_cached_tokens)
@@ -4381,9 +4422,10 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             num_new_tokens = self._get_request_next_num_tokens(request)
 
             # Apply max_model_len limit
-            max_allowed = self._max_model_len - self._get_scheduler_num_computed_tokens(
+            scheduler_num_computed_tokens = self._get_scheduler_num_computed_tokens(
                 request
             )
+            max_allowed = self._max_model_len - scheduler_num_computed_tokens
             num_new_tokens = min(num_new_tokens, max_allowed)
 
             # Apply token budget limit
@@ -4399,7 +4441,11 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 continue
 
             # Try to allocate (no preemption for waiting requests in Phase 2)
-            if not self._can_allocate_request(request, num_new_tokens):
+            if not self._can_allocate_request(
+                request,
+                num_new_tokens,
+                scheduler_num_computed_tokens=scheduler_num_computed_tokens,
+            ):
                 # Cannot allocate - stop admitting new requests
                 logger.debug(
                     f"[VLLMv1Engine][DECODE] Phase 2: cannot allocate "
@@ -4418,7 +4464,11 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 self._current_schedule_time, self._cluster_type
             )
 
-            self._allocate_request(request, num_new_tokens)
+            self._allocate_request(
+                request,
+                num_new_tokens,
+                scheduler_num_computed_tokens=scheduler_num_computed_tokens,
+            )
             self._advance_scheduler_num_computed_tokens(request, num_new_tokens)
 
             # Add to running requests

@@ -530,7 +530,9 @@ class Request(BaseEntity):
         return self._is_prefill_complete
 
     def on_cache_hit(self, num_tokens_cached: int) -> None:
-        if self._scheduled:
+        # A preempted request keeps its lifetime scheduled marker while waiting
+        # for Prefix-cache re-admission, so allow that one recovery transition.
+        if self._scheduled and not self._preempted:
             raise ValueError(f"Request {self._id} already scheduled.")
         if self._num_processed_tokens != 0:
             raise ValueError(
