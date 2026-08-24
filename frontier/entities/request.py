@@ -203,7 +203,7 @@ class Request(BaseEntity):
 
         self._thinking_home_cluster_type: Optional[ClusterType] = None
         self._thinking_home_replica_id: Optional[int] = None
-        self._thinking_home_dp_id: Optional[int] = None
+        self._thinking_home_replica_local_id: Optional[int] = None
         self._pending_thinking_requeue: bool = False
         self._thinking_tool_wait_started_at: Optional[float] = None
         self._thinking_time_total: float = 0.0
@@ -425,8 +425,8 @@ class Request(BaseEntity):
         return self._thinking_home_replica_id
 
     @property
-    def thinking_home_dp_id(self) -> Optional[int]:
-        return self._thinking_home_dp_id
+    def thinking_home_replica_local_id(self) -> Optional[int]:
+        return self._thinking_home_replica_local_id
 
     @property
     def pending_thinking_requeue(self) -> bool:
@@ -530,7 +530,9 @@ class Request(BaseEntity):
         return self._is_prefill_complete
 
     def on_cache_hit(self, num_tokens_cached: int) -> None:
-        if self._scheduled:
+        # A preempted request keeps its lifetime scheduled marker while waiting
+        # for Prefix-cache re-admission, so allow that one recovery transition.
+        if self._scheduled and not self._preempted:
             raise ValueError(f"Request {self._id} already scheduled.")
         if self._num_processed_tokens != 0:
             raise ValueError(
@@ -1859,7 +1861,7 @@ class Request(BaseEntity):
                 else None
             ),
             "thinking_home_replica_id": self._thinking_home_replica_id,
-            "thinking_home_dp_id": self._thinking_home_dp_id,
+            "thinking_home_replica_local_id": self._thinking_home_replica_local_id,
             "pending_thinking_requeue": self._pending_thinking_requeue,
             "thinking_time_total": self._thinking_time_total,
             "tool_call_time_total": self._tool_call_time_total,
@@ -1982,7 +1984,7 @@ class Request(BaseEntity):
         self,
         cluster_type: ClusterType,
         replica_id: int,
-        dp_id: int,
+        replica_local_id: int | None,
     ) -> None:
         if not self.is_thinking_mode_enabled:
             return
@@ -1994,19 +1996,26 @@ class Request(BaseEntity):
         if self._thinking_home_cluster_type is None:
             self._thinking_home_cluster_type = cluster_type
             self._thinking_home_replica_id = int(replica_id)
-            self._thinking_home_dp_id = int(dp_id)
+            if replica_local_id is not None and (
+                type(replica_local_id) is not int or replica_local_id < 0
+            ):
+                raise ValueError(
+                    "Thinking Mode home queue local identity must be None or "
+                    f"an exact non-negative int, got={replica_local_id!r}"
+                )
+            self._thinking_home_replica_local_id = replica_local_id
             return
         if (
             self._thinking_home_cluster_type != cluster_type
             or self._thinking_home_replica_id != int(replica_id)
-            or self._thinking_home_dp_id != int(dp_id)
+            or self._thinking_home_replica_local_id != replica_local_id
         ):
             raise ValueError(
                 "Thinking Mode v1 home queue affinity changed unexpectedly for "
                 f"request {self._id}: "
                 f"existing=({self._thinking_home_cluster_type.name}, "
-                f"{self._thinking_home_replica_id}, {self._thinking_home_dp_id}), "
-                f"new=({cluster_type.name}, {replica_id}, {dp_id})"
+                f"{self._thinking_home_replica_id}, {self._thinking_home_replica_local_id}), "
+                f"new=({cluster_type.name}, {replica_id}, {replica_local_id})"
             )
 
     def begin_thinking_tool_wait(

@@ -35,7 +35,7 @@ def _make_writer_scheduler(
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
     scheduler._cluster_type = ClusterType.DECODE_ATTN
     scheduler._replica_id = 0
-    scheduler._dp_id = 0
+    scheduler._replica_local_id = 0
     scheduler._replica_is_moe = True
     scheduler._micro_batch_size = len(requests)
     scheduler._af_pipeline_num_micro_batch = num_stages
@@ -214,7 +214,7 @@ class _DecodeAttnScheduleHarness:
     ) -> None:
         self._cluster_type = ClusterType.DECODE_ATTN
         self._replica_id = 0
-        self._dp_id = 0
+        self._replica_local_id = 0
         self._num_running_batches = 0
         self._af_pipeline_num_micro_batch = 2
         self._af_immediate_batch_queue = []

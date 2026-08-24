@@ -59,6 +59,7 @@ from frontier.execution_time_predictor.base_execution_time_predictor import (
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )
+from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
@@ -76,7 +77,12 @@ from frontier.operators.families import (
     get_family_profiling_name_set,
     get_comm_operator,
 )
-from frontier.operators.spec import CommOperatorSpec, CommPayloadContext, OperatorSpec
+from frontier.operators.spec import (
+    CommOperatorSpec,
+    CommPayloadContext,
+    OperatorSpec,
+    ZeroPayloadPolicy,
+)
 from frontier.profiling.cpu_overhead.schema import (
     DEFAULT_NUM_DECODE_TOKENS_AMPLIFICATION_FACTOR,
     DEFAULT_NUM_PREFILL_TOKENS,
@@ -301,19 +307,6 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         self._mlp_down_proj_calibration_scale = self._get_operator_calibration_scale(
             _get_operator_spec_by_name(FFN_FAMILY, "mlp_down_proj")
         )
-        self._moe_shuffling_calibration_scale = self._get_calibration_scale(
-            "_moe_shuffling_calibration_scale", "moe_shuffling_calibration_scale"
-        )
-        self._moe_grouped_gemm_calibration_scale = self._get_calibration_scale(
-            "_moe_grouped_gemm_calibration_scale",
-            "moe_grouped_gemm_calibration_scale",
-        )
-        self._expert_parallel_communication_calibration_scale = (
-            self._get_calibration_scale(
-                "_expert_parallel_communication_calibration_scale",
-                "expert_parallel_communication_calibration_scale",
-            )
-        )
         # Predictor caches are indexed by Batch.get_effective_total_tokens_rounded(), which is a
         # *batch-level* compute-effective token count (e.g., batch_size * seq_len for prefill).
         # The helper name is backward-compatible; token values follow exact compute semantics.
@@ -499,231 +492,6 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         return self._get_optional_calibration_scale(attr_name, field_name)
 
-    def _get_decode_request_length_calibration_scale(
-        self, batch: Batch
-    ) -> Optional[float]:
-        config = getattr(self, "_config", None)
-        if config is None:
-            return None
-        request_length_calibration_fields = (
-            "short_decode_request_length_threshold",
-            "short_decode_request_length_calibration_scale",
-            "long_decode_request_length_threshold",
-            "long_decode_request_length_calibration_scale",
-            "low_prefill_short_decode_request_prefill_threshold",
-            "low_prefill_short_decode_request_decode_threshold",
-            "low_prefill_short_decode_request_calibration_scale",
-            "low_prefill_decode_mix_request_prefill_threshold",
-            "low_prefill_decode_mix_request_decode_min",
-            "low_prefill_decode_mix_request_decode_max",
-            "low_prefill_decode_mix_request_min_match_ratio",
-            "low_prefill_decode_mix_request_max_match_ratio",
-            "low_prefill_decode_mix_request_calibration_scale",
-            "low_prefill_long_decode_request_prefill_threshold",
-            "low_prefill_long_decode_request_decode_threshold",
-            "low_prefill_long_decode_request_calibration_scale",
-            "high_prefill_mid_decode_request_prefill_threshold",
-            "high_prefill_mid_decode_request_decode_min",
-            "high_prefill_mid_decode_request_decode_max",
-            "high_prefill_mid_decode_request_calibration_scale",
-        )
-        if not any(
-            getattr(config, field_name, None) is not None
-            for field_name in request_length_calibration_fields
-        ):
-            return None
-
-        requests = getattr(batch, "requests", None)
-        if not requests:
-            return None
-
-        num_prefill_tokens = int(getattr(batch, "num_prefill_tokens", 0))
-        raw_num_decode_tokens = getattr(batch, "num_decode_tokens", None)
-        if raw_num_decode_tokens is None:
-            num_decode_tokens = sum(
-                1
-                for request in requests
-                if int(getattr(request, "num_decode_tokens")) > 0
-            )
-        else:
-            num_decode_tokens = int(raw_num_decode_tokens)
-        is_mixed_batch = num_prefill_tokens > 0 and num_decode_tokens > 0
-        include_low_mix_mixed_batches = bool(
-            getattr(
-                config,
-                "low_prefill_decode_mix_request_include_mixed_batches",
-                False,
-            )
-        )
-        include_low_long_mixed_batches = bool(
-            getattr(
-                config,
-                "low_prefill_long_decode_request_include_mixed_batches",
-                False,
-            )
-        )
-        if num_prefill_tokens != 0 and not (
-            is_mixed_batch
-            and (include_low_mix_mixed_batches or include_low_long_mixed_batches)
-        ):
-            return None
-
-        request_shapes = [
-            (
-                int(getattr(request, "num_prefill_tokens")),
-                int(getattr(request, "num_decode_tokens")),
-            )
-            for request in requests
-        ]
-        scale = 1.0
-        matched = False
-
-        low_short_prefill_threshold = getattr(
-            config, "low_prefill_short_decode_request_prefill_threshold", None
-        )
-        low_short_decode_threshold = getattr(
-            config, "low_prefill_short_decode_request_decode_threshold", None
-        )
-        if (
-            not is_mixed_batch
-            and low_short_prefill_threshold is not None
-            and low_short_decode_threshold is not None
-            and any(
-                prefill_length <= int(low_short_prefill_threshold)
-                and decode_length <= int(low_short_decode_threshold)
-                for prefill_length, decode_length in request_shapes
-            )
-        ):
-            shape_scale = self._get_optional_calibration_scale(
-                "_low_prefill_short_decode_request_calibration_scale",
-                "low_prefill_short_decode_request_calibration_scale",
-            )
-            if shape_scale is not None:
-                scale *= shape_scale
-                matched = True
-
-        low_mix_prefill_threshold = getattr(
-            config, "low_prefill_decode_mix_request_prefill_threshold", None
-        )
-        low_mix_decode_min = getattr(
-            config, "low_prefill_decode_mix_request_decode_min", None
-        )
-        low_mix_decode_max = getattr(
-            config, "low_prefill_decode_mix_request_decode_max", None
-        )
-        low_mix_min_match_ratio = getattr(
-            config, "low_prefill_decode_mix_request_min_match_ratio", None
-        )
-        low_mix_max_match_ratio = getattr(
-            config, "low_prefill_decode_mix_request_max_match_ratio", None
-        )
-        if (
-            (not is_mixed_batch or include_low_mix_mixed_batches)
-            and low_mix_prefill_threshold is not None
-            and low_mix_decode_min is not None
-            and low_mix_decode_max is not None
-            and low_mix_min_match_ratio is not None
-            and low_mix_max_match_ratio is not None
-        ):
-            matched_request_count = sum(
-                prefill_length <= int(low_mix_prefill_threshold)
-                and int(low_mix_decode_min) <= decode_length <= int(low_mix_decode_max)
-                for prefill_length, decode_length in request_shapes
-            )
-            match_ratio = matched_request_count / len(request_shapes)
-            if (
-                float(low_mix_min_match_ratio)
-                <= match_ratio
-                <= float(low_mix_max_match_ratio)
-            ):
-                shape_scale = self._get_optional_calibration_scale(
-                    "_low_prefill_decode_mix_request_calibration_scale",
-                    "low_prefill_decode_mix_request_calibration_scale",
-                )
-                if shape_scale is not None:
-                    scale *= shape_scale
-                    matched = True
-
-        low_prefill_threshold = getattr(
-            config, "low_prefill_long_decode_request_prefill_threshold", None
-        )
-        low_decode_threshold = getattr(
-            config, "low_prefill_long_decode_request_decode_threshold", None
-        )
-        if (
-            (not is_mixed_batch or include_low_long_mixed_batches)
-            and low_prefill_threshold is not None
-            and low_decode_threshold is not None
-            and any(
-                prefill_length <= int(low_prefill_threshold)
-                and decode_length >= int(low_decode_threshold)
-                for prefill_length, decode_length in request_shapes
-            )
-        ):
-            shape_scale = self._get_optional_calibration_scale(
-                "_low_prefill_long_decode_request_calibration_scale",
-                "low_prefill_long_decode_request_calibration_scale",
-            )
-            if shape_scale is not None:
-                scale *= shape_scale
-                matched = True
-
-        high_prefill_threshold = getattr(
-            config, "high_prefill_mid_decode_request_prefill_threshold", None
-        )
-        high_decode_min = getattr(
-            config, "high_prefill_mid_decode_request_decode_min", None
-        )
-        high_decode_max = getattr(
-            config, "high_prefill_mid_decode_request_decode_max", None
-        )
-        if (
-            not is_mixed_batch
-            and high_prefill_threshold is not None
-            and high_decode_min is not None
-            and high_decode_max is not None
-            and any(
-                prefill_length >= int(high_prefill_threshold)
-                and int(high_decode_min) <= decode_length <= int(high_decode_max)
-                for prefill_length, decode_length in request_shapes
-            )
-        ):
-            shape_scale = self._get_optional_calibration_scale(
-                "_high_prefill_mid_decode_request_calibration_scale",
-                "high_prefill_mid_decode_request_calibration_scale",
-            )
-            if shape_scale is not None:
-                scale *= shape_scale
-                matched = True
-
-        original_decode_lengths = [
-            decode_length for _, decode_length in request_shapes
-        ]
-        long_threshold = getattr(config, "long_decode_request_length_threshold", None)
-        if not is_mixed_batch and long_threshold is not None and any(
-            length >= int(long_threshold) for length in original_decode_lengths
-        ):
-            length_scale = self._get_optional_calibration_scale(
-                "_long_decode_request_length_calibration_scale",
-                "long_decode_request_length_calibration_scale",
-            )
-            if length_scale is not None:
-                scale *= length_scale
-                matched = True
-
-        short_threshold = getattr(config, "short_decode_request_length_threshold", None)
-        if not is_mixed_batch and short_threshold is not None and all(
-            length <= int(short_threshold) for length in original_decode_lengths
-        ):
-            length_scale = self._get_optional_calibration_scale(
-                "_short_decode_request_length_calibration_scale",
-                "short_decode_request_length_calibration_scale",
-            )
-            if length_scale is not None:
-                scale *= length_scale
-                matched = True
-
-        return scale if matched else None
 
     def _log_quantization_details(self) -> None:
         quant_manager = get_quantization_manager()
@@ -1010,6 +778,146 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             self._predictions = self._predictions_kernel_only
         else:
             raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
+
+    @staticmethod
+    def _cuda_graph_capture_hit(
+        original_tokens: List[int],
+        padded_tokens: List[int],
+        capture_sizes: Optional[List[int]],
+    ) -> bool:
+        if not original_tokens or len(original_tokens) != len(padded_tokens):
+            return False
+        if not capture_sizes:
+            return False
+        configured_sizes = {int(size) for size in capture_sizes}
+        return all(
+            original >= 0
+            and padded >= original
+            and padded in configured_sizes
+            for original, padded in zip(original_tokens, padded_tokens)
+        )
+
+    def _build_cuda_graph_activation_records(
+        self,
+        batch: Batch,
+        measurement_type: MeasurementType,
+        cluster_type: ClusterType,
+    ) -> List[Dict[str, Any]]:
+        decode_metadata = getattr(batch, "decode_cuda_graph_metadata", None)
+        if decode_metadata is not None and cluster_type in (
+            ClusterType.MONOLITHIC,
+            ClusterType.DECODE,
+        ):
+            measurement_family = (
+                SklearnExecutionTimePredictor._measurement_family_name(
+                    measurement_type
+                )
+            )
+            return [
+                {
+                    "batch_id": int(batch.id),
+                    "cluster_role": cluster_type.name,
+                    "config_mode": str(decode_metadata.config_mode),
+                    "runtime_mode": str(decode_metadata.runtime_mode),
+                    "capture_hit": bool(decode_metadata.capture_hit),
+                    "capture_sizes": [int(decode_metadata.padded_total_tokens)],
+                    "original_tokens": [int(decode_metadata.original_total_tokens)],
+                    "padded_tokens": [int(decode_metadata.padded_total_tokens)],
+                    "original_decode_batch_size": int(
+                        decode_metadata.original_decode_batch_size
+                    ),
+                    "padded_decode_batch_size": int(
+                        decode_metadata.padded_decode_batch_size
+                    ),
+                    "measurement_family": measurement_family,
+                }
+            ]
+
+        afd_metadata = getattr(batch, "afd_stage_metadata", None)
+        if afd_metadata is None or cluster_type not in (
+            ClusterType.DECODE_ATTN,
+            ClusterType.DECODE_FFN,
+        ):
+            return []
+
+        represents_all_stages = bool(
+            getattr(batch, "afd_stage_represents_all_stages", False)
+        )
+        stage_index = getattr(batch, "afd_stage_idx", None)
+        if cluster_type == ClusterType.DECODE_ATTN:
+            graph_enabled = bool(afd_metadata.attention_use_cuda_graph)
+            configured_sizes = afd_metadata.attention_cudagraph_capture_sizes
+            if represents_all_stages:
+                original_tokens = list(
+                    afd_metadata.original_stage_token_lens or []
+                )
+                padded_tokens = list(afd_metadata.padded_stage_token_lens or [])
+            elif stage_index is not None:
+                original_tokens = [
+                    int(afd_metadata.original_stage_token_lens[stage_index])
+                ]
+                padded_tokens = [
+                    int(afd_metadata.padded_stage_token_lens[stage_index])
+                ]
+            else:
+                original_tokens = [int(afd_metadata.original_total_tokens)]
+                padded_tokens = [int(afd_metadata.padded_total_tokens)]
+        else:
+            graph_enabled = bool(afd_metadata.ffn_use_cuda_graph)
+            configured_sizes = afd_metadata.ffn_cudagraph_capture_sizes
+            if represents_all_stages:
+                original_tokens = [int(afd_metadata.padded_total_tokens)]
+                padded_tokens = [int(afd_metadata.ffn_compute_total_tokens)]
+            elif stage_index is not None:
+                original_tokens = [
+                    int(afd_metadata.padded_stage_token_lens[stage_index])
+                ]
+                padded_tokens = [
+                    int(afd_metadata.ffn_compute_stage_token_lens[stage_index])
+                ]
+            else:
+                original_tokens = [int(afd_metadata.padded_total_tokens)]
+                padded_tokens = [int(afd_metadata.ffn_compute_total_tokens)]
+
+        if not graph_enabled:
+            return []
+        measurement_family = SklearnExecutionTimePredictor._measurement_family_name(
+            measurement_type
+        )
+        capture_hit = SklearnExecutionTimePredictor._cuda_graph_capture_hit(
+            original_tokens,
+            padded_tokens,
+            configured_sizes,
+        )
+        return [
+            {
+                "batch_id": int(batch.id),
+                "cluster_role": cluster_type.name,
+                "config_mode": "global",
+                "runtime_mode": "GLOBAL",
+                "capture_hit": capture_hit,
+                "capture_sizes": list(padded_tokens),
+                "original_tokens": list(original_tokens),
+                "padded_tokens": list(padded_tokens),
+                "measurement_family": measurement_family,
+            }
+        ]
+
+    def _emit_cuda_graph_activation_records(
+        self,
+        batch: Batch,
+        measurement_type: MeasurementType,
+        cluster_type: ClusterType,
+    ) -> None:
+        for record in self._build_cuda_graph_activation_records(
+            batch,
+            measurement_type,
+            cluster_type,
+        ):
+            logger.info(
+                "[CUDA-GRAPH-ACTIVATION] %s",
+                json.dumps(record, sort_keys=True),
+            )
 
     @contextmanager
     def _temporary_measurement_type(self, measurement_type: MeasurementType):
@@ -2575,6 +2483,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
     def _should_include_spec_decode_proposer_overhead(self, batch: Batch) -> bool:
         if bool(
+            getattr(batch, "_suppress_spec_decode_proposer_overhead", False)
+        ):
+            return False
+        if bool(
             getattr(
                 self._replica_config,
                 "suppress_spec_decode_proposer_overhead",
@@ -2587,6 +2499,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _requires_dense_mlp_compute_models(self) -> bool:
         if not getattr(self._model_config, "is_moe", False):
             return True
+
+        supports_share_expert = getattr(
+            self._model_config, "supports_share_expert", None
+        )
+        if callable(supports_share_expert) and supports_share_expert():
+            # Step2Mini/Step3 mixed layers use the profiled shared-expert FFN
+            # path for their non-routed layers.  They do not expose the
+            # standard mlp_* profiling rows, so requesting those models would
+            # make a valid non-dummy profile fail at runtime.
+            return False
 
         get_num_moe_layers = getattr(self._model_config, "get_num_moe_layers", None)
         num_layers = getattr(self._model_config, "num_layers", None)
@@ -2760,7 +2682,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         ).write_lock():
             # store model in cache
             cache_file = f"{self._cache_dir}/{model_name}_{model_hash}.pkl"
-            pickle.dump(model, open(cache_file, "wb"), protocol=pickle.HIGHEST_PROTOCOL)
+            atomic_pickle_dump(model, cache_file)
 
     def _store_training_prediction_data(
         self,
@@ -2871,9 +2793,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             cache_file = (
                 f"{self._cache_dir}/{model_name}_{prediction_hash}_predictions.pkl"
             )
-            pickle.dump(
-                predictions, open(cache_file, "wb"), protocol=pickle.HIGHEST_PROTOCOL
-            )
+            atomic_pickle_dump(predictions, cache_file)
 
     def _load_model_predication_cache(
         self, model_name: str, prediction_hash: str
@@ -3725,6 +3645,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         # Cluster-specific needs with measurement-aware family split.
         need_prefill = measurement_type == MeasurementType.CUDA_EVENT and self._cluster_type in [
             ClusterType.PREFILL,
+            ClusterType.DECODE,
             ClusterType.MONOLITHIC,
         ]
         need_decode = self._cluster_type in [
@@ -3746,7 +3667,6 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         # Build only the grids we actually need to avoid unnecessary compute/memory.
         decode_df = None
-        prefill_df = None
         attention_max_tokens = self._get_attention_prediction_max_tokens_per_request()
 
         decode_op_name = self._dense_attention_decode_op_name()
@@ -3778,33 +3698,38 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
 
         if need_prefill and prefill_op_name in self._models:
-            prefill_kv_cache_size_range = np.arange(
-                0,
-                attention_max_tokens + 1,
-                self._config.kv_cache_prediction_granularity,
+            model = self._models[prefill_op_name]
+            feature_names = list(
+                getattr(
+                    model,
+                    "_frontier_feature_names",
+                    [
+                        "kv_cache_size",
+                        "prefill_chunk_size_squared",
+                    ],
+                )
             )
-            prefill_prefill_chunk_size_range = np.arange(
-                1, self._config.prediction_max_prefill_chunk_size + 1
-            )
-            # PREFILL training data uses batch_size=1 for per-request prediction in this cache.
-            prefill_df = pd.DataFrame(
-                {
-                    "kv_cache_size": np.repeat(
-                        prefill_kv_cache_size_range,
-                        len(prefill_prefill_chunk_size_range),
-                    ),
-                    "prefill_chunk_size_squared": np.tile(
-                        prefill_prefill_chunk_size_range,
-                        len(prefill_kv_cache_size_range),
-                    )
-                    ** 2,
-                }
-            )
-            predictions[prefill_op_name] = self._get_model_prediction(
-                prefill_op_name,
-                self._models[prefill_op_name],
-                prefill_df[["kv_cache_size", "prefill_chunk_size_squared"]],
-            )
+            n_features = int(getattr(model, "n_features_in_", len(feature_names)))
+            if feature_names != [
+                "kv_cache_size",
+                "prefill_chunk_size_squared",
+            ]:
+                raise ValueError(
+                    "Attention prefill model feature schema mismatch: "
+                    f"expected ['kv_cache_size', 'prefill_chunk_size_squared'], "
+                    f"got {feature_names}"
+                )
+            if n_features != len(feature_names):
+                raise ValueError(
+                    "Attention prefill model feature count mismatch: "
+                    f"expected {len(feature_names)}, got {n_features}"
+                )
+            predictions[prefill_op_name] = {
+                "_on_demand_prediction": True,
+                "_n_features": n_features,
+                "_model": model,
+                "_feature_names": feature_names,
+            }
 
         # Handle attn_prefill_mixed: high-dimensional model requiring on-demand prediction
         # This model uses 12 features and cannot be pre-computed efficiently
@@ -4328,7 +4253,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             ]
 
         if operation == self._dense_attention_prefill_op_name():
-            return self._cluster_type in [ClusterType.PREFILL, ClusterType.MONOLITHIC]
+            # PDD DECODE executes speculative verify with the same measured
+            # prefill-style attention kernel. PD-AF DECODE_ATTN remains
+            # unsupported because speculative decoding is not a PD-AF release path.
+            return self._cluster_type in [
+                ClusterType.PREFILL,
+                ClusterType.DECODE,
+                ClusterType.MONOLITHIC,
+            ]
 
         if operation == self._dense_attention_decode_op_name():
             return self._cluster_type in [
@@ -4574,6 +4506,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             ),
             is_moe=bool(is_moe),
         )
+        synthetic_batch._suppress_spec_decode_proposer_overhead = True
         if copy_spec_decode_metadata:
             metadata = getattr(source_batch, "spec_decode_metadata", None)
             if metadata is not None:
@@ -4984,6 +4917,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
 
         disabled_spec_config = SpeculativeDecodingConfig(enabled=False)
+        cluster_num_replicas = getattr(
+            self._replica_config, "cluster_num_replicas", None
+        )
+        if type(cluster_num_replicas) is not int or cluster_num_replicas <= 0:
+            raise ValueError(
+                "MTP secondary predictor requires a positive cluster replica count; "
+                f"got {cluster_num_replicas!r}"
+            )
         proposer_model_config = load_mtp_structural_model_config(
             str(contract.proposer_model_name)
         )
@@ -5006,7 +4947,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             speculative_decoding_config=disabled_spec_config,
             num_pipeline_stages=1,
             attn_tensor_parallel_size=int(self._replica_config.attn_tensor_parallel_size),
-            attn_data_parallel_size=int(getattr(self._replica_config, "attn_data_parallel_size", 1)),
+            attn_dp=int(getattr(self._replica_config, "attn_dp", 1)),
             moe_tensor_parallel_size=int(getattr(self._replica_config, "moe_tensor_parallel_size", 1)),
             moe_expert_parallel_size=moe_ep_size,
             total_expert_num=total_expert_num,
@@ -5025,20 +4966,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 or getattr(proposer_model_config, "num_experts_per_tok", 1)
                 or 1
             ),
-            moe_routing_mode=getattr(
+            moe_routing_distribution_type=getattr(
                 self._replica_config,
-                "moe_routing_mode",
-                "simulation",
+                "moe_routing_distribution_type",
+                "balanced",
             ),
             moe_routing_seed=int(
                 getattr(self._replica_config, "moe_routing_seed", 42)
             ),
-            extend_ep_across_dp=bool(
-                getattr(self._replica_config, "extend_ep_across_dp", False)
-            ),
-            data_parallel_size=int(
-                getattr(self._replica_config, "data_parallel_size", 1) or 1
-            ),
+            cluster_num_replicas=cluster_num_replicas,
             cluster_prefix=getattr(self._replica_config, "cluster_prefix", None),
             requires_mtp_structural_compute_models=True,
             suppress_spec_decode_proposer_overhead=True,
@@ -5407,7 +5343,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         operator: CommOperatorSpec,
         batch: Batch,
     ) -> float:
-        """Predict one first-class communication operator through the thin CC wrappers."""
+        """Predict an operator using this predictor's default communication context."""
 
         ctx = CommPayloadContext(
             batch=batch,
@@ -5416,7 +5352,22 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             cluster_type=self._cluster_type,
             quantization_manager=get_quantization_manager(),
         )
+        return self._predict_comm_operator_with_context(operator, ctx)
+
+    def _predict_comm_operator_with_context(
+        self,
+        operator: CommOperatorSpec,
+        ctx: CommPayloadContext,
+    ) -> float:
+        """Predict one communication operator using the supplied runtime context."""
+
         data_size_bytes = operator.build_payload_bytes(ctx)
+        if (
+            data_size_bytes == 0
+            and operator.zero_payload_policy is ZeroPayloadPolicy.EXACT_NOOP
+        ):
+            return 0.0
+
         num_devices = operator.num_devices(ctx)
 
         if operator.collective_alias == "allreduce":
@@ -5427,7 +5378,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             predicted_ms = self.predict_allreduce_time(
                 data_size_bytes=data_size_bytes,
                 num_devices=num_devices,
-                cluster_type=self._cluster_type,
+                cluster_type=ctx.cluster_type,
                 comm_domain=operator.comm_domain,
             )
             if operator.apply_allreduce_launch_overhead_strip:
@@ -5438,7 +5389,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     )
                 predicted_ms = (
                     self._strip_collective_sim_allreduce_launch_overhead_if_needed(
-                        batch=batch,
+                        batch=ctx.batch,
                         predicted_ms=predicted_ms,
                         num_devices=num_devices,
                         comm_domain=operator.comm_domain,
@@ -5454,7 +5405,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             return self.predict_allgather_time(
                 data_size_bytes=data_size_bytes,
                 num_devices=num_devices,
-                cluster_type=self._cluster_type,
+                cluster_type=ctx.cluster_type,
                 comm_domain=operator.comm_domain,
             )
 
@@ -5466,14 +5417,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             return self.predict_alltoall_time(
                 data_size_bytes=data_size_bytes,
                 num_devices=num_devices,
-                cluster_type=self._cluster_type,
+                cluster_type=ctx.cluster_type,
                 comm_domain=operator.comm_domain,
             )
 
         if operator.collective_alias == "send_recv":
             return self.predict_p2p_time(
                 data_size_bytes=data_size_bytes,
-                cluster_type=self._cluster_type,
+                cluster_type=ctx.cluster_type,
                 comm_domain=operator.comm_domain,
             )
 
@@ -5649,9 +5600,25 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         agg_kv_cache_size = sum(kv_cache_sizes)
         agg_prefill_chunk_size = sum([x**2 for x in prefill_chunk_sizes]) ** 0.5
 
-        return self._predictions[prefill_op_name][
-            (agg_kv_cache_size, round(agg_prefill_chunk_size) ** 2)
-        ] * (
+        model_info = self._predictions[prefill_op_name]
+        if not (
+            isinstance(model_info, dict)
+            and model_info.get("_on_demand_prediction")
+        ):
+            raise ValueError(
+                f"{prefill_op_name} must use on-demand prediction for "
+                f"cluster {self._cluster_type}"
+            )
+        raw_time = self._get_on_demand_prediction(
+            prefill_op_name,
+            {
+                "kv_cache_size": int(agg_kv_cache_size),
+                "prefill_chunk_size_squared": int(
+                    round(agg_prefill_chunk_size) ** 2
+                ),
+            },
+        )
+        return raw_time * (
             1
             + self._attention_prefill_batching_overhead_fraction
             * int(len(prefill_params) > 1)
@@ -5710,6 +5677,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             raise ValueError(
                 f"attention prefill prediction cache not found for cluster {self._cluster_type}"
             )
+        model_info = self._predictions[prefill_op_name]
+        if not (
+            isinstance(model_info, dict)
+            and model_info.get("_on_demand_prediction")
+        ):
+            raise ValueError(
+                f"{prefill_op_name} must use on-demand prediction for "
+                f"cluster {self._cluster_type}"
+            )
 
         total_verify_prefill_time = 0.0
         for request, verify_tokens in verify_entries:
@@ -5725,13 +5701,13 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             # attn_prefill cache uses prefill_chunk_size_squared as its second
             # dimension in this codebase. For speculative verify, query_len is
             # verify_tokens, so we map to verify_tokens**2 here.
-            key = (int(kv_cache_size), int(verify_tokens**2))
-            if key not in self._predictions[prefill_op_name]:
-                raise ValueError(
-                    "Speculative verify prefill key missing from attn_prefill cache: "
-                    f"key={key}, request_id={request.id}, verify_tokens={verify_tokens}"
-                )
-            total_verify_prefill_time += self._predictions[prefill_op_name][key]
+            total_verify_prefill_time += self._get_on_demand_prediction(
+                prefill_op_name,
+                {
+                    "kv_cache_size": int(kv_cache_size),
+                    "prefill_chunk_size_squared": int(verify_tokens**2),
+                },
+            )
 
         return total_verify_prefill_time
 
@@ -6778,7 +6754,26 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 mlp_norm_time=base_time,
             )
 
-        if not self._supports_operation("mlp_up_proj"):
+        supports_share_expert = bool(
+            getattr(self._model_config, "supports_share_expert", lambda: False)()
+        )
+        if supports_share_expert:
+            required_operations = (
+                "share_expert_up_proj",
+                "share_expert_down_proj",
+                "share_expert_act",
+            )
+            missing_operations = [
+                operation
+                for operation in required_operations
+                if not self._supports_operation(operation)
+            ]
+            if missing_operations:
+                raise NotImplementedError(
+                    "Shared-expert dense FFN operations are incomplete for "
+                    f"cluster type {cluster_type}: {missing_operations}"
+                )
+        elif not self._supports_operation("mlp_up_proj"):
             raise NotImplementedError(
                 f"MLP operations not supported for cluster type {cluster_type}"
             )
@@ -6794,9 +6789,17 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
 
         # Get individual MLP operation times for detailed tracing
-        mlp_up_proj_time = self._get_mlp_layer_up_proj_execution_time(batch)
-        mlp_down_proj_time = self._get_mlp_layer_down_proj_execution_time(batch)
-        mlp_act_time = self._get_mlp_layer_act_execution_time(batch)
+        if supports_share_expert:
+            # Step2Mini/Step3 dense boundary layers use the profiled shared
+            # expert operators.  They remain a dense FULL_STAGE_WORLD
+            # operation; only the profile row names differ.
+            mlp_up_proj_time = self._get_share_expert_up_proj_execution_time(batch)
+            mlp_down_proj_time = self._get_share_expert_down_proj_execution_time(batch)
+            mlp_act_time = self._get_share_expert_act_execution_time(batch)
+        else:
+            mlp_up_proj_time = self._get_mlp_layer_up_proj_execution_time(batch)
+            mlp_down_proj_time = self._get_mlp_layer_down_proj_execution_time(batch)
+            mlp_act_time = self._get_mlp_layer_act_execution_time(batch)
         mlp_norm_time = self._get_mlp_norm_layer_act_execution_time(batch)
 
         # Operation-level tracing for MLP (dense model FFN) operations
@@ -6805,27 +6808,28 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         cluster_name = cluster_type.name
 
         # Header log with batch details
+        trace_family = "DENSE_FFN" if supports_share_expert else "MLP"
         logger.info(
-            f"[OP-TRACE][{cluster_name}][MLP] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][{trace_family}] batch_id={batch.id}, layer_id={layer_id}, "
             f"num_tokens={batch.total_num_tokens}, batch_size={len(batch.requests)}, "
             f"batch_input_lens={batch_input_lens}, model_type=dense"
         )
 
         # Individual operation logs
         logger.info(
-            f"[OP-TRACE][{cluster_name}][MLP][post_attention_layernorm] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][{trace_family}][post_attention_layernorm] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={mlp_norm_time:.6f}"
         )
         logger.info(
-            f"[OP-TRACE][{cluster_name}][MLP][mlp_up_proj] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][{trace_family}][mlp_up_proj] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={mlp_up_proj_time:.6f}"
         )
         logger.info(
-            f"[OP-TRACE][{cluster_name}][MLP][mlp_act] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][{trace_family}][mlp_act] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={mlp_act_time:.6f}"
         )
         logger.info(
-            f"[OP-TRACE][{cluster_name}][MLP][mlp_down_proj] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][{trace_family}][mlp_down_proj] batch_id={batch.id}, layer_id={layer_id}, "
             f"predicted_time_ms={mlp_down_proj_time:.6f}"
         )
 
@@ -6834,7 +6838,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             mlp_norm_time + mlp_up_proj_time + mlp_act_time + mlp_down_proj_time
         )
         logger.info(
-            f"[OP-TRACE][{cluster_name}][MLP][TOTAL] batch_id={batch.id}, layer_id={layer_id}, "
+            f"[OP-TRACE][{cluster_name}][{trace_family}][TOTAL] batch_id={batch.id}, layer_id={layer_id}, "
             f"total_mlp_time_ms={total_mlp_time:.6f}"
         )
 
@@ -7084,6 +7088,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         cluster_type: ClusterType,
         num_layers: int = 1,
         layer_id: int = 0,
+        include_moe: bool | None = None,
+        include_ffn: bool = True,
+        include_attention: bool = True,
     ) -> ExecutionTime:
         """
         Predict aggregated execution time for one or more transformer layers.
@@ -7107,6 +7114,20 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         - layer_id is accepted for API compatibility with MoE per-layer routing flows.
           Dense execution-time prediction is layer-homogeneous and ignores this value.
         """
+        if include_moe is not None and type(include_moe) is not bool:
+            raise ValueError("include_moe must be a bool or None")
+        if type(include_ffn) is not bool:
+            raise ValueError("include_ffn must be a bool")
+        if type(include_attention) is not bool:
+            raise ValueError("include_attention must be a bool")
+        if not include_attention:
+            raise ValueError(
+                "Dense prediction does not support include_attention=False"
+            )
+        if not include_ffn and include_moe is not None:
+            raise ValueError(
+                "include_moe must be None for an attention-only stage probe"
+            )
         if self._enable_dummy_mode:
             return self._get_dummy_execution_time(batch, stage_id)
 
@@ -7121,6 +7142,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         measurement_type = self._select_measurement_type_for_batch(batch)
         self._require_predictions_for_measurement_type(measurement_type, batch)
         self._activate_measurement_type(measurement_type)
+        self._emit_cuda_graph_activation_records(
+            batch,
+            measurement_type,
+            cluster_type,
+        )
 
         # Calculate first-class communication operators for the dense live path.
         communication_operator_times: dict[str, float] = {}
@@ -7149,9 +7175,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             communication_operator_times["attn_tensor_parallel_allreduce"] = (
                 tensor_parallel_communication_time
             )
-            communication_operator_times["mlp_tensor_parallel_allreduce"] = (
-                tensor_parallel_communication_time
-            )
+            if include_ffn:
+                communication_operator_times["mlp_tensor_parallel_allreduce"] = (
+                    tensor_parallel_communication_time
+                )
 
         # Build base ExecutionTime for single layer.
         # IMPORTANT: attention must come from predict_attention_layer_time()
@@ -7198,42 +7225,51 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             batch,
             f"stage={stage_id}",
         )
-        mlp_up_proj_time = self._validate_prediction_value(
-            self._get_mlp_layer_up_proj_execution_time(batch),
-            "mlp_up_proj",
-            batch,
-            f"stage={stage_id}",
-        )
-        mlp_down_proj_time = self._validate_prediction_value(
-            self._get_mlp_layer_down_proj_execution_time(batch),
-            "mlp_down_proj",
-            batch,
-            f"stage={stage_id}",
-        )
-        mlp_act_time = self._validate_prediction_value(
-            self._get_mlp_layer_act_execution_time(batch),
-            "mlp_act",
-            batch,
-            f"stage={stage_id}",
-        )
+        if include_ffn:
+            mlp_up_proj_time = self._validate_prediction_value(
+                self._get_mlp_layer_up_proj_execution_time(batch),
+                "mlp_up_proj",
+                batch,
+                f"stage={stage_id}",
+            )
+            mlp_down_proj_time = self._validate_prediction_value(
+                self._get_mlp_layer_down_proj_execution_time(batch),
+                "mlp_down_proj",
+                batch,
+                f"stage={stage_id}",
+            )
+            mlp_act_time = self._validate_prediction_value(
+                self._get_mlp_layer_act_execution_time(batch),
+                "mlp_act",
+                batch,
+                f"stage={stage_id}",
+            )
+        else:
+            mlp_up_proj_time = 0.0
+            mlp_down_proj_time = 0.0
+            mlp_act_time = 0.0
         attn_norm_time = self._validate_prediction_value(
             attention_time.attn_norm_time,
             "attn_norm",
             batch,
             f"stage={stage_id}",
         )
-        mlp_norm_time = self._validate_prediction_value(
-            self._get_mlp_norm_layer_act_execution_time(batch),
-            "mlp_norm",
-            batch,
-            f"stage={stage_id}",
-        )
-        add_time = self._validate_prediction_value(
-            self._get_add_layer_act_execution_time(batch),
-            "add",
-            batch,
-            f"stage={stage_id}",
-        )
+        if include_ffn:
+            mlp_norm_time = self._validate_prediction_value(
+                self._get_mlp_norm_layer_act_execution_time(batch),
+                "mlp_norm",
+                batch,
+                f"stage={stage_id}",
+            )
+            add_time = self._validate_prediction_value(
+                self._get_add_layer_act_execution_time(batch),
+                "add",
+                batch,
+                f"stage={stage_id}",
+            )
+        else:
+            mlp_norm_time = 0.0
+            add_time = 0.0
         schedule_time = self._validate_prediction_value(
             self._get_schedule_time(batch), "schedule", batch, f"stage={stage_id}"
         )
@@ -7329,29 +7365,31 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         attn_post_proj_time = quant_manager.adjust_compute_time(
             "attn_post_proj", attn_post_proj_time, self._cluster_type
         )
-        mlp_up_proj_time = quant_manager.adjust_compute_time(
-            "mlp_up_proj", mlp_up_proj_time, self._cluster_type
-        )
-        mlp_down_proj_time = quant_manager.adjust_compute_time(
-            "mlp_down_proj", mlp_down_proj_time, self._cluster_type
-        )
-        mlp_act_time = quant_manager.adjust_compute_time(
-            "mlp_act", mlp_act_time, self._cluster_type
-        )
+        if include_ffn:
+            mlp_up_proj_time = quant_manager.adjust_compute_time(
+                "mlp_up_proj", mlp_up_proj_time, self._cluster_type
+            )
+            mlp_down_proj_time = quant_manager.adjust_compute_time(
+                "mlp_down_proj", mlp_down_proj_time, self._cluster_type
+            )
+            mlp_act_time = quant_manager.adjust_compute_time(
+                "mlp_act", mlp_act_time, self._cluster_type
+            )
         attn_norm_time = quant_manager.adjust_compute_time(
             "input_layernorm", attn_norm_time, self._cluster_type
         )
-        mlp_norm_time = quant_manager.adjust_compute_time(
-            "post_attention_layernorm", mlp_norm_time, self._cluster_type
-        )
-        add_time = quant_manager.adjust_compute_time(
-            "add", add_time, self._cluster_type
-        )
+        if include_ffn:
+            mlp_norm_time = quant_manager.adjust_compute_time(
+                "post_attention_layernorm", mlp_norm_time, self._cluster_type
+            )
+            add_time = quant_manager.adjust_compute_time(
+                "add", add_time, self._cluster_type
+            )
 
         # Communication times already predicted by CC backend paths (or explicit dummy mode)
         tp_comm_time = tensor_parallel_communication_time
         attn_tp_allreduce_time = tp_comm_time
-        ffn_tp_allreduce_time = tp_comm_time
+        ffn_tp_allreduce_time = tp_comm_time if include_ffn else 0.0
         pp_comm_time = pipeline_parallel_communication_time
 
         logger.debug(

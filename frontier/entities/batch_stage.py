@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from frontier.entities.base_entity import BaseEntity
 from frontier.entities.request import Request
@@ -41,6 +41,14 @@ class BatchStage(BaseEntity):
             int(getattr(request, "runtime_epoch", 0)) for request in requests
         ]
         self._num_tokens = num_tokens
+        self._request_num_prefill_tokens = (
+            None
+            if tokens_are_post_routing
+            else [
+                int(token_count) if not request.is_prefill_complete else 0
+                for request, token_count in zip(requests, num_tokens)
+            ]
+        )
         total_tokens = sum(num_tokens)
         self._total_tokens = total_tokens
         self._batch_id = batch_id
@@ -69,10 +77,123 @@ class BatchStage(BaseEntity):
         self._scheduled_at = None
         self._completed_at = None
         self._scheduled = False
+        self._runtime_identity: dict[str, Any] | None = None
+
+    def attach_runtime_identity(self, batch: Any) -> None:
+        """Persist the exact runtime identity that created this stage.
+
+        The stage ledger is consumed as an independent execution oracle.  Its
+        identity therefore comes from the live batch/request state at stage
+        creation time, never from later log parsing or aggregate timing.
+        """
+
+        source_batches = getattr(batch, "source_batches", None)
+        if isinstance(source_batches, (list, tuple)) and source_batches:
+            requests = [
+                request
+                for source_batch in source_batches
+                for request in getattr(source_batch, "requests", ())
+            ]
+        else:
+            requests = list(getattr(batch, "requests", self._requests))
+        if not requests:
+            raise ValueError("stage runtime identity requires non-empty requests")
+
+        iteration_ids = []
+        for request in requests:
+            token_index = getattr(request, "current_decode_token_index", None)
+            if type(token_index) is not int or token_index < 1:
+                raise ValueError(
+                    "stage runtime identity request current_decode_token_index "
+                    "must be an exact int >= 1"
+                )
+            iteration_ids.append(token_index - 1)
+
+        schedule_epoch = getattr(batch, "schedule_epoch", None)
+        if type(schedule_epoch) is not int or schedule_epoch < 0:
+            raise ValueError(
+                "stage runtime identity schedule_epoch must be a non-negative int"
+            )
+
+        afd_stage_idx = getattr(batch, "afd_stage_idx", None)
+        if afd_stage_idx is None:
+            afd_stage_idx = -1
+        if type(afd_stage_idx) is not int or afd_stage_idx < -1:
+            raise ValueError(
+                "stage runtime identity afd_stage_idx must be an int >= -1"
+            )
+
+        layer_id = getattr(batch, "decode_ffn_layer_id", None)
+        if layer_id is None and afd_stage_idx >= 0:
+            active_requests = [
+                request for request in requests if not getattr(request, "completed", False)
+            ]
+            layer_requests = active_requests or requests
+            layer_ids = [
+                getattr(request, "completed_layer_count", None)
+                for request in layer_requests
+            ]
+            if (
+                not layer_ids
+                or any(type(item) is not int or item < 0 for item in layer_ids)
+                or len(set(layer_ids)) != 1
+            ):
+                raise ValueError(
+                    "stage runtime identity requires one exact non-negative "
+                    f"PD-AF layer_id, got {layer_ids!r}"
+                )
+            layer_id = layer_ids[0]
+        if layer_id is not None and (type(layer_id) is not int or layer_id < 0):
+            raise ValueError(
+                "stage runtime identity layer_id must be a non-negative int"
+            )
+
+        source_batch_ids = getattr(batch, "source_batch_ids", ())
+        if source_batch_ids:
+            normalized_source_ids = tuple(int(batch_id) for batch_id in source_batch_ids)
+            if any(batch_id < 0 for batch_id in normalized_source_ids):
+                raise ValueError(
+                    "stage runtime identity source_batch_ids must be non-negative"
+                )
+            if len(normalized_source_ids) == 1:
+                operation_id = normalized_source_ids[0]
+            else:
+                operation_id = getattr(batch, "global_id", None)
+        else:
+            operation_id = getattr(batch, "id", self._batch_id)
+        if type(operation_id) is not int or operation_id < 0:
+            raise ValueError(
+                "stage runtime identity operation_id must be a non-negative int"
+            )
+
+        operation_kind = "ep_ffn" if bool(getattr(batch, "is_moe", False)) else "full_stage"
+        self._runtime_identity = {
+            "iteration_ids": [int(item) for item in iteration_ids],
+            "schedule_epoch": int(schedule_epoch),
+            "afd_stage_idx": int(afd_stage_idx),
+            "operation_id": int(operation_id),
+            "operation_kind": operation_kind,
+        }
+        if layer_id is not None:
+            self._runtime_identity["layer_id"] = int(layer_id)
+
+    @property
+    def runtime_identity(self) -> dict[str, Any] | None:
+        """Return the immutable-at-capture stage identity, if attached."""
+
+        if self._runtime_identity is None:
+            return None
+        return dict(self._runtime_identity)
 
     @property
     def num_tokens(self) -> List[int]:
         return self._num_tokens
+
+    @property
+    def request_num_prefill_tokens(self) -> Optional[List[int]]:
+        if self._request_num_prefill_tokens is None:
+            return None
+        return list(self._request_num_prefill_tokens)
 
     @property
     @check_scheduled
@@ -99,6 +220,10 @@ class BatchStage(BaseEntity):
     @property
     def request_ids(self) -> List[int]:
         return [request.id for request in self._requests]
+
+    @property
+    def request_runtime_epochs(self) -> List[int]:
+        return list(self._request_runtime_epochs)
 
     @property
     def requests(self) -> List[Request]:
@@ -202,6 +327,7 @@ class BatchStage(BaseEntity):
             "pipeline_stage": self._pipeline_stage,
             "scheduled": self._scheduled,
             "request_ids": self.request_ids,
+            "request_runtime_epochs": self.request_runtime_epochs,
             "num_tokens": self._num_tokens,
             "total_tokens": self._total_tokens,
             "effective_total_tokens_compute": self._effective_total_tokens_compute,

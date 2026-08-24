@@ -15,7 +15,7 @@ class M2NTransferStartEvent(BaseEvent):
         self,
         time: float,
         source_replica_id: int,
-        source_dp_id: int,
+        source_replica_local_id: Optional[int],
         source_cluster_type: ClusterType,
         target_cluster_type: ClusterType,
         batch: "Batch",
@@ -23,17 +23,25 @@ class M2NTransferStartEvent(BaseEvent):
         transfer_time_ms: float,
         layer_id: int = None,
         afd_stage_idx: Optional[int] = None,
+        source_execution_replica_id: Optional[int] = None,
+        source_execution_replica_local_id: Optional[int] = None,
+        target_execution_replica_id: Optional[int] = None,
+        target_execution_replica_local_id: Optional[int] = None,
     ):
         super().__init__(time, EventType.M2N_TRANSFER_START)
 
         self._source_replica_id = source_replica_id
-        self._source_dp_id = source_dp_id
+        self._source_replica_local_id = source_replica_local_id
         self._source_cluster_type = source_cluster_type
         self._target_cluster_type = target_cluster_type
         self._batch = batch
         self._activation_size_bytes = activation_size_bytes
         self._transfer_time_ms = transfer_time_ms
         self._layer_id = layer_id
+        self._source_execution_replica_id = source_execution_replica_id
+        self._source_execution_replica_local_id = source_execution_replica_local_id
+        self._target_execution_replica_id = target_execution_replica_id
+        self._target_execution_replica_local_id = target_execution_replica_local_id
         if afd_stage_idx is None:
             afd_stage_idx = getattr(batch, "afd_stage_idx", None)
         if afd_stage_idx is None:
@@ -61,12 +69,16 @@ class M2NTransferStartEvent(BaseEvent):
             source_cluster_type=self._source_cluster_type,
             target_cluster_type=self._target_cluster_type,
             source_replica_id=self._source_replica_id,
-            source_dp_id=self._source_dp_id,
+            source_replica_local_id=self._source_replica_local_id,
             activation_size_bytes=self._activation_size_bytes,
             transfer_time_ms=self._transfer_time_ms,
             transfer_start_time=self.time,
             layer_id=self._layer_id,
             afd_stage_idx=self._afd_stage_idx,
+            source_execution_replica_id=self._source_execution_replica_id,
+            source_execution_replica_local_id=self._source_execution_replica_local_id,
+            target_execution_replica_id=self._target_execution_replica_id,
+            target_execution_replica_local_id=self._target_execution_replica_local_id,
         )
 
         for request in self._batch.requests:
@@ -130,4 +142,8 @@ class M2NTransferStartEvent(BaseEvent):
             "transfer_time_ms": self._transfer_time_ms,
             "layer_id": self._layer_id,
             "afd_stage_idx": self._afd_stage_idx,
+            "source_execution_replica_id": self._source_execution_replica_id,
+            "source_execution_replica_local_id": self._source_execution_replica_local_id,
+            "target_execution_replica_id": self._target_execution_replica_id,
+            "target_execution_replica_local_id": self._target_execution_replica_local_id,
         }

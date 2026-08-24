@@ -119,7 +119,7 @@ def test_examples_docs_link_profiling_entrypoints_and_downstream_smokes() -> Non
     assert "profile_attention_chunked_prefill.sh" in combined
     assert "smoke_simulator_dense_csv.sh" in combined
     assert "smoke_simulator_moe_csv.sh" in combined
-    assert "uniform_random" in combined
+    assert "moe_routing_distribution_type" in combined
     assert "outputs/examples/profiling-simulator" in combined
     assert "task_memory/task_2026-06-07_examples_expansion_e2e_validation" not in combined
     assert "PROFILE_METHOD=cuda_event" in combined

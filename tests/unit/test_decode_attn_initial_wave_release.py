@@ -53,12 +53,13 @@ def _build_scheduler(*, threshold: int, num_requests: int) -> RoundRobinClusterS
     scheduler._cluster_type = ClusterType.DECODE_ATTN
     scheduler._request_counter = 0
     scheduler._num_replicas = 1
-    scheduler._replica_dp_size = 1
     scheduler._cluster = SimpleNamespace(replicas={0: object()})
     scheduler._request_queue = []
     scheduler._af_batch_queue = []
-    scheduler._replica_dp_load_tracker = {(0, 0): 0}
-    scheduler._dp_replica_schedulers = {(0, 0): _FakeReplicaScheduler()}
+    scheduler._replica_load_tracker = {0: 0}
+    full_stage_scheduler = _FakeReplicaScheduler()
+    scheduler._full_stage_replica_schedulers = {0: full_stage_scheduler}
+    scheduler._replica_schedulers = {(0, None): full_stage_scheduler}
     scheduler._request_generator_config = SimpleNamespace(num_requests=num_requests)
     scheduler._decode_attn_expected_total_requests = num_requests
     scheduler._decode_attn_initial_allocation_done = False
@@ -198,7 +199,7 @@ def test_global_batch_end_emits_cluster_schedule_for_next_buffered_wave() -> Non
     events = GlobalBatchEndEvent(
         time=1.0,
         replica_id=0,
-        dp_id=0,
+        replica_local_id=None,
         batch=batch,
         cluster_type=ClusterType.DECODE_ATTN,
     ).handle_event(_FakeGlobalScheduler(scheduler), _FakeMetricsStore())

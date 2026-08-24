@@ -12,13 +12,20 @@ logger = init_logger(__name__)
 
 
 class BatchEndEvent(BaseEvent):
-    def __init__(self, time: float, replica_id: int, batch: Batch, cluster_type: ClusterType, dp_id: int):
+    def __init__(
+        self,
+        time: float,
+        replica_id: int,
+        batch: Batch,
+        cluster_type: ClusterType,
+        replica_local_id: int | None,
+    ):
         super().__init__(time, EventType.BATCH_END)
 
         self._replica_id = replica_id
         self._batch = batch
         self._cluster_type = cluster_type
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
 
     def handle_event(
         self, scheduler: BaseGlobalScheduler, metrics_store: MetricsStore
@@ -30,7 +37,7 @@ class BatchEndEvent(BaseEvent):
 
         # Get the appropriate cluster scheduler for this cluster-internal event
         cluster_scheduler = scheduler.get_cluster_scheduler(self._cluster_type)
-        replica_scheduler = cluster_scheduler.get_dp_replica_scheduler(self._replica_id, self._dp_id)
+        replica_scheduler = cluster_scheduler.get_replica_scheduler(self._replica_id, self._replica_local_id)
 
         self._batch.on_batch_end(self.time)
         replica_scheduler.on_batch_end(self._batch)
@@ -42,10 +49,10 @@ class BatchEndEvent(BaseEvent):
             self._replica_id,
             memory_usage_percent,
             self._cluster_type,
-            self._dp_id,
+            self._replica_local_id,
         )
 
-        return [ReplicaScheduleEvent(self.time, self._replica_id, self._cluster_type, self._dp_id)]
+        return [ReplicaScheduleEvent(self.time, self._replica_id, self._cluster_type, self._replica_local_id)]
 
     def _handle_decode_attn_completion(self, scheduler, cluster_scheduler, replica_scheduler):
         """Disaggregated decode-attn completion is not included in this release."""
@@ -98,5 +105,5 @@ class BatchEndEvent(BaseEvent):
             "batch_id": self._batch.id,
             "cluster_type": self._cluster_type.name,
             "replica_id": self._replica_id,
-            "dp_id": self._dp_id,
+            "replica_local_id": self._replica_local_id,
         }

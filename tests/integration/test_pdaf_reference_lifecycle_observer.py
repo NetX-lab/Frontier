@@ -364,7 +364,7 @@ def _build_cluster_scheduler(
         RoundRobinClusterScheduler
     )
     scheduler._cluster_type = ClusterType.DECODE_ATTN
-    scheduler._dp_replica_schedulers = {
+    scheduler._replica_schedulers = {
         (0, 0): replica_scheduler,
     }
 
@@ -445,7 +445,7 @@ def _complete_first_real_decode(
     event = GlobalBatchEndEvent(
         resolved_global_end_time_s,
         0,
-        0,
+        None,
         batch,
         ClusterType.DECODE_ATTN,
     )

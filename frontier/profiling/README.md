@@ -1,5 +1,11 @@
 # Frontier Profiling Module
 
+## Modification History
+
+| Date | Summary of Changes |
+|------|--------------------|
+| 2026-08-14 | Replaced the removed routing-mode terminology in the profiling guidance. |
+
 ## Overview
 
 The `frontier/profiling` module is the hardware profiling subsystem of the Frontier LLM inference simulator. It collects timing data for various LLM operations on real GPU hardware, which is then used to train ML-based execution time predictors for accurate simulation.
@@ -56,7 +62,7 @@ Current profiling CLIs default to `record_function`, because decode CUDA graph m
 If the target runtime enables MoE uniform routing, profiling and modeling must target the same uniform-routing runtime path.
 
 - vLLM example: `VLLM_MOE_UNIFORM_ROUTING=1`
-- Frontier example: a uniform-routing mode such as `uniform_legacy`
+- Frontier example: the canonical `moe_routing_distribution_type=balanced` selector
 - For `moe_gating_routing_topk`, the target path becomes `uniform_topk`, not the standard `fused_topk -> topk_softmax` path
 
 Do not reuse standard routing rows as a surrogate for a uniform-routing runtime. Until a runtime-equivalent uniform-routing profiling contract is materialized, any `routing_topk` gap must be treated as path-mismatch evidence first, not as proof that the standard profiling target is numerically too low.

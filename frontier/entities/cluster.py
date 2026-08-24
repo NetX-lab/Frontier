@@ -181,7 +181,7 @@ class Cluster(BaseEntity):
         mapping = FrontierParallelismMapping(
             cluster_num_replicas=num_replicas,
             attn_tensor_parallel_size=int(replica_config.attn_tensor_parallel_size),
-            attn_data_parallel_size=int(replica_config.attn_data_parallel_size),
+            attn_dp=int(replica_config.attn_dp),
             moe_tensor_parallel_size=int(replica_config.moe_tensor_parallel_size),
             moe_expert_parallel_size=int(replica_config.moe_expert_parallel_size),
         )
@@ -220,7 +220,7 @@ class Cluster(BaseEntity):
             runtime_num_replicas=max(1, num_replicas),
             runtime_num_pipeline_stages=max(1, int(replica_config.num_pipeline_stages)),
             runtime_attn_tensor_parallel_size=max(1, int(replica_config.attn_tensor_parallel_size)),
-            runtime_attn_data_parallel_size=max(1, int(replica_config.attn_data_parallel_size)),
+            runtime_attn_dp=max(1, int(replica_config.attn_dp)),
             runtime_moe_tensor_parallel_size=max(1, int(replica_config.moe_tensor_parallel_size)),
             runtime_moe_expert_parallel_size=max(1, int(replica_config.moe_expert_parallel_size)),
             runner_out_dir=runner_out_dir,
@@ -275,8 +275,8 @@ class Cluster(BaseEntity):
             runtime_attn_tensor_parallel_size=max(
                 1, int(replica_config.attn_tensor_parallel_size)
             ),
-            runtime_attn_data_parallel_size=max(
-                1, int(replica_config.attn_data_parallel_size)
+            runtime_attn_dp=max(
+                1, int(replica_config.attn_dp)
             ),
             runtime_moe_tensor_parallel_size=max(
                 1, int(replica_config.moe_tensor_parallel_size)

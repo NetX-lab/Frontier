@@ -34,6 +34,7 @@ from frontier.types import ClusterType, CCBackendType, MeasurementType
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
+from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
 from frontier.execution_time_predictor.attention_dataset_contract import (
     enforce_mixed_attention_input_contract,
 )
@@ -743,7 +744,7 @@ class ExecutionTimePredictionModelManager:
             }
         )
         requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
-            getattr(replica_config, "moe_routing_mode", "simulation")
+            getattr(replica_config, "moe_routing_distribution_type", "balanced")
         )
 
         missing_requirements: List[str] = []
@@ -885,7 +886,7 @@ class ExecutionTimePredictionModelManager:
                 cluster_type,
             )
             requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
-                getattr(replica_config, "moe_routing_mode", "simulation")
+                getattr(replica_config, "moe_routing_distribution_type", "balanced")
             )
 
             moe_df_cache: Dict[
@@ -1189,7 +1190,32 @@ class ExecutionTimePredictionModelManager:
         dense_training_context["input_file"] = linear_ops_file
         dense_training_context["tensor_parallel_size"] = ffn_tp_key
 
-        for model_name in ("mlp_up_proj", "mlp_down_proj", "mlp_act"):
+        dense_model_names = ("mlp_up_proj", "mlp_down_proj", "mlp_act")
+        missing_standard_columns = [
+            f"time_stats.{model_name}.median"
+            for model_name in dense_model_names
+            if f"time_stats.{model_name}.median" not in linear_ops_df.columns
+        ]
+        if missing_standard_columns:
+            model_config = getattr(replica_config, "model_config", None)
+            supports_share_expert = bool(
+                model_config is not None
+                and model_config.supports_share_expert()
+            )
+            if supports_share_expert:
+                logger.info(
+                    "Skipping standard dense MLP training for %s: profile provides "
+                    "shared-expert operations instead; missing columns=%s",
+                    cluster_type,
+                    missing_standard_columns,
+                )
+                return
+            raise ValueError(
+                "Dense MLP profiling data is incomplete; missing columns: "
+                + ", ".join(missing_standard_columns)
+            )
+
+        for model_name in dense_model_names:
             model_signature = f"{model_name}_{ffn_signature}"
             if model_signature in trained_model_signatures:
                 continue
@@ -3052,32 +3078,6 @@ class ExecutionTimePredictionModelManager:
             'prefill_phase_mlp_up_proj_calibration_scale': config.prefill_phase_mlp_up_proj_calibration_scale,
             'mlp_down_proj_calibration_scale': config.mlp_down_proj_calibration_scale,
             'decode_phase_mlp_down_proj_calibration_scale': config.decode_phase_mlp_down_proj_calibration_scale,
-            'moe_shuffling_calibration_scale': config.moe_shuffling_calibration_scale,
-            'decode_phase_moe_shuffling_calibration_scale': config.decode_phase_moe_shuffling_calibration_scale,
-            'moe_grouped_gemm_calibration_scale': config.moe_grouped_gemm_calibration_scale,
-            'decode_phase_moe_grouped_gemm_calibration_scale': config.decode_phase_moe_grouped_gemm_calibration_scale,
-            'short_decode_request_length_threshold': getattr(config, 'short_decode_request_length_threshold', None),
-            'short_decode_request_length_calibration_scale': getattr(config, 'short_decode_request_length_calibration_scale', None),
-            'long_decode_request_length_threshold': getattr(config, 'long_decode_request_length_threshold', None),
-            'long_decode_request_length_calibration_scale': getattr(config, 'long_decode_request_length_calibration_scale', None),
-            'low_prefill_short_decode_request_prefill_threshold': getattr(config, 'low_prefill_short_decode_request_prefill_threshold', None),
-            'low_prefill_short_decode_request_decode_threshold': getattr(config, 'low_prefill_short_decode_request_decode_threshold', None),
-            'low_prefill_short_decode_request_calibration_scale': getattr(config, 'low_prefill_short_decode_request_calibration_scale', None),
-            'low_prefill_decode_mix_request_prefill_threshold': getattr(config, 'low_prefill_decode_mix_request_prefill_threshold', None),
-            'low_prefill_decode_mix_request_decode_min': getattr(config, 'low_prefill_decode_mix_request_decode_min', None),
-            'low_prefill_decode_mix_request_decode_max': getattr(config, 'low_prefill_decode_mix_request_decode_max', None),
-            'low_prefill_decode_mix_request_min_match_ratio': getattr(config, 'low_prefill_decode_mix_request_min_match_ratio', None),
-            'low_prefill_decode_mix_request_max_match_ratio': getattr(config, 'low_prefill_decode_mix_request_max_match_ratio', None),
-            'low_prefill_decode_mix_request_calibration_scale': getattr(config, 'low_prefill_decode_mix_request_calibration_scale', None),
-            'low_prefill_decode_mix_request_include_mixed_batches': getattr(config, 'low_prefill_decode_mix_request_include_mixed_batches', False),
-            'low_prefill_long_decode_request_prefill_threshold': getattr(config, 'low_prefill_long_decode_request_prefill_threshold', None),
-            'low_prefill_long_decode_request_decode_threshold': getattr(config, 'low_prefill_long_decode_request_decode_threshold', None),
-            'low_prefill_long_decode_request_calibration_scale': getattr(config, 'low_prefill_long_decode_request_calibration_scale', None),
-            'low_prefill_long_decode_request_include_mixed_batches': getattr(config, 'low_prefill_long_decode_request_include_mixed_batches', False),
-            'high_prefill_mid_decode_request_prefill_threshold': getattr(config, 'high_prefill_mid_decode_request_prefill_threshold', None),
-            'high_prefill_mid_decode_request_decode_min': getattr(config, 'high_prefill_mid_decode_request_decode_min', None),
-            'high_prefill_mid_decode_request_decode_max': getattr(config, 'high_prefill_mid_decode_request_decode_max', None),
-            'high_prefill_mid_decode_request_calibration_scale': getattr(config, 'high_prefill_mid_decode_request_calibration_scale', None),
             'nccl_cpu_launch_overhead_ms': config.nccl_cpu_launch_overhead_ms,
             'nccl_cpu_skew_overhead_per_device_ms': config.nccl_cpu_skew_overhead_per_device_ms,
         }
@@ -3226,7 +3226,7 @@ class ExecutionTimePredictionModelManager:
     def _store_model_in_cache(self, model_name: str, model_hash: str, model: BaseEstimator) -> None:
         with InterProcessReaderWriterLock(f"{self._cache_dir}/{model_hash}_model_lock.file").write_lock():
             cache_file = f"{self._cache_dir}/{model_name}_{model_hash}.pkl"
-            pickle.dump(model, open(cache_file, "wb"), protocol=pickle.HIGHEST_PROTOCOL)
+            atomic_pickle_dump(model, cache_file)
             logger.info(f"✓ Saved trained model '{model_name}' to cache (hash: {model_hash})")
             logger.info(f"  Cache file: {cache_file}")
 

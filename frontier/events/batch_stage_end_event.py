@@ -21,7 +21,7 @@ class BatchStageEndEvent(BaseEvent):
         batch: Batch,
         batch_stage: BatchStage,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
     ):
         super().__init__(time, EventType.BATCH_STAGE_END)
 
@@ -29,11 +29,14 @@ class BatchStageEndEvent(BaseEvent):
         self._stage_id = stage_id
         self._is_last_stage = is_last_stage
         self._cluster_type = cluster_type
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
 
         self._batch = batch
         self._batch_stage = batch_stage
         self._batch_schedule_epoch = batch.schedule_epoch
+        self._stage_admission_ticket = getattr(
+            batch, "_stage_admission_ticket", None
+        )
         self._request_execution_signatures = batch.request_execution_signatures
         self._thinking_round_start_times = batch.thinking_round_start_times
 
@@ -52,12 +55,37 @@ class BatchStageEndEvent(BaseEvent):
                 self._batch_schedule_epoch,
                 self._batch.schedule_epoch,
             )
+            if self._stage_admission_ticket is not None:
+                cluster_scheduler = scheduler.get_cluster_scheduler(
+                    self._cluster_type
+                )
+                stage_scheduler = cluster_scheduler.get_replica_stage_scheduler(
+                    self._replica_id,
+                    self._replica_local_id,
+                    self._stage_id,
+                )
+                context = cluster_scheduler.get_stage_execution_context(
+                    self._stage_admission_ticket.replica_id,
+                    self._stage_id,
+                )
+                was_active = context.is_active(self._stage_admission_ticket)
+                cluster_scheduler.discard_stage_admission_ticket(
+                    self._stage_admission_ticket,
+                    stage_id=self._stage_id,
+                )
+                if (
+                    getattr(self._batch, "_stage_admission_ticket", None)
+                    == self._stage_admission_ticket
+                ):
+                    self._batch.__dict__.pop("_stage_admission_ticket", None)
+                if was_active:
+                    stage_scheduler.on_stage_end()
             return []
 
         # Get the appropriate cluster scheduler for this cluster-internal event
         cluster_scheduler = scheduler.get_cluster_scheduler(self._cluster_type)
-        stage_scheduler = cluster_scheduler.get_dp_replica_stage_scheduler(
-            self._replica_id, self._dp_id, self._stage_id
+        stage_scheduler = cluster_scheduler.get_replica_stage_scheduler(
+            self._replica_id, self._replica_local_id, self._stage_id
         )
         stage_scheduler.on_stage_end() # update status: _is_busy
 
@@ -68,7 +96,11 @@ class BatchStageEndEvent(BaseEvent):
             self._replica_id,
             self._stage_id,
             self._cluster_type,
-            self._dp_id,
+            self._replica_local_id,
+        )
+        cluster_scheduler.release_stage_admission_for_batch(
+            self._batch,
+            stage_id=self._stage_id,
         )
 
         next_events = []
@@ -81,7 +113,7 @@ class BatchStageEndEvent(BaseEvent):
                 self._replica_id,
                 self._stage_id,
                 self._cluster_type,
-                self._dp_id,
+                self._replica_local_id,
             ))
 
         if self._is_last_stage:
@@ -91,7 +123,8 @@ class BatchStageEndEvent(BaseEvent):
                     self._replica_id,
                     self._batch,
                     self._cluster_type,
-                    self._dp_id,
+                    self._replica_local_id,
+                    source_batch_stage_id=self._batch_stage.id,
                     batch_schedule_epoch=self._batch_schedule_epoch,
                     request_execution_signatures=self._request_execution_signatures,
                     thinking_round_start_times=self._thinking_round_start_times,
@@ -105,7 +138,7 @@ class BatchStageEndEvent(BaseEvent):
                 self._stage_id + 1,
                 self._batch,
                 self._cluster_type,
-                self._dp_id,
+                self._replica_local_id,
             )
         ]
 
@@ -119,7 +152,7 @@ class BatchStageEndEvent(BaseEvent):
             "batch_stage_id": self._batch_stage.id,
             "is_last_stage": self._is_last_stage,
             "cluster_type": self._cluster_type.name,
-            "dp_id": self._dp_id,
+            "replica_local_id": self._replica_local_id,
         }
 
     def to_chrome_trace(self) -> dict:

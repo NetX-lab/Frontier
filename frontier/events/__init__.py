@@ -20,6 +20,7 @@ from frontier.events.m2n_transfer_start_event import M2NTransferStartEvent
 from frontier.events.m2n_transfer_end_event import M2NTransferEndEvent
 from frontier.events.ep_alltoall_dispatch_ready_event import EPAllToAllDispatchReadyEvent
 from frontier.events.ep_alltoall_dispatch_collective_event import EPAllToAllDispatchCollectiveEvent
+from frontier.events.dense_layer_complete_event import DenseLayerCompleteEvent
 
 
 __all__ = [
@@ -45,4 +46,5 @@ __all__ = [
     "M2NTransferEndEvent",
     "EPAllToAllDispatchReadyEvent",
     "EPAllToAllDispatchCollectiveEvent",
+    "DenseLayerCompleteEvent",
 ]

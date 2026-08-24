@@ -6,7 +6,7 @@ import json
 import logging
 import pickle
 from contextlib import contextmanager
-from dataclasses import asdict, fields, replace
+from dataclasses import MISSING, asdict, fields, replace
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Iterator
@@ -286,6 +286,56 @@ def test_local_registry_can_plugin_custom_profile_without_global_model_branch() 
     )
 
 
+def test_model_architecture_profile_requires_explicit_ep_collective_policy() -> None:
+    expert_parallel_collective = next(
+        field
+        for field in fields(ModelArchitectureProfile)
+        if field.name == "expert_parallel_collective"
+    )
+
+    assert expert_parallel_collective.default is MISSING
+
+
+@pytest.mark.parametrize(
+    "profile",
+    MODEL_ARCHITECTURE_REGISTRY.iter_profiles(),
+    ids=lambda profile: profile.profile_id,
+)
+@pytest.mark.parametrize("expected_ep_size", (1, 2))
+def test_canonical_profiles_use_alltoall_for_every_ep_size(
+    profile: ModelArchitectureProfile,
+    expected_ep_size: int,
+) -> None:
+    assert profile.expert_parallel_collective is ExpertParallelCollective.ALLTOALL
+    assert profile.uses_expert_parallel_alltoall(
+        ClusterType.MONOLITHIC,
+        expected_ep_size=expected_ep_size,
+    )
+
+
+def test_registry_rejects_non_alltoall_collective_policy() -> None:
+    registry = ModelArchitectureRegistry()
+    invalid_profile = ModelArchitectureProfile(
+        profile_id="unit_invalid_ep_collective",
+        display_name="Invalid EP Collective",
+        linear_attention=LinearAttentionProfile(
+            sharded_impl=LinearAttentionImplementation.GENERIC,
+            sharded_ops=(
+                "attn_pre_proj",
+                "attn_rope",
+                "attn_post_proj",
+            ),
+        ),
+        expert_parallel_collective=ExpertParallelCollective.ALLGATHER,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="must declare expert_parallel_collective=ALLTOALL",
+    ):
+        registry.register(invalid_profile)
+
+
 def test_unknown_model_uses_generic_profile_with_warning(caplog) -> None:
     cfg = SimpleNamespace(
         model_type="unit_unknown_transformer",
@@ -348,7 +398,7 @@ def test_ep_collective_resolver_reuses_runtime_resolved_identity() -> None:
 
         assert len(_generic_fallback_records(records)) == 1
 
-    assert collectives == [ExpertParallelCollective.ALLGATHER] * 5
+    assert collectives == [ExpertParallelCollective.ALLTOALL] * 5
 
 
 def test_ep_collective_resolver_uses_runtime_snapshot_after_identity_mutation() -> None:
@@ -376,7 +426,7 @@ def test_ep_collective_resolver_uses_runtime_snapshot_after_identity_mutation() 
 
     assert cfg.get_model_architecture_profile() is generic_profile
     assert get_model_architecture_profile(cfg) is step3_profile
-    assert collective_after_mutation is ExpertParallelCollective.ALLGATHER
+    assert collective_after_mutation is ExpertParallelCollective.ALLTOALL
     assert reclassified.get_model_architecture_profile() is step3_profile
     assert get_model_architecture_profile(reclassified) is step3_profile
 
@@ -416,6 +466,24 @@ def test_ep_collective_resolver_rejects_invalid_runtime_profile() -> None:
         resolve_ep_collective_kind(
             model_config,
             ClusterType.MONOLITHIC,
+            expected_ep_size=2,
+        )
+
+
+def test_ep_collective_resolver_rejects_unsupported_cluster_role() -> None:
+    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+        resolve_ep_collective_kind,
+    )
+
+    model_config = _runtime_model_config(model_architecture_profile="generic")
+
+    with pytest.raises(
+        ValueError,
+        match=r"profile generic does not support EP collectives for DECODE_ATTN",
+    ):
+        resolve_ep_collective_kind(
+            model_config,
+            ClusterType.DECODE_ATTN,
             expected_ep_size=2,
         )
 
@@ -756,7 +824,7 @@ def test_ep_collective_resolver_uses_profile_not_step3_model_type() -> None:
             ClusterType.MONOLITHIC,
             expected_ep_size=2,
         )
-        is ExpertParallelCollective.ALLGATHER
+        is ExpertParallelCollective.ALLTOALL
     )
 
 
@@ -764,7 +832,7 @@ def test_ep_collective_resolver_uses_profile_not_step3_model_type() -> None:
     ("expected_ep_size", "expected_collective"),
     [
         (2, ExpertParallelCollective.ALLTOALL),
-        (1, ExpertParallelCollective.ALLGATHER),
+        (1, ExpertParallelCollective.ALLTOALL),
     ],
 )
 def test_step_moe_noquant_real_config_resolves_decode_ffn_collective(
@@ -946,33 +1014,15 @@ def test_predictor_rejects_invalid_architecture_profile_contract() -> None:
         raise AssertionError("Expected invalid architecture profile contract to fail")
 
 
-def test_moe_predictor_rejects_invalid_architecture_profile_contract() -> None:
-    from typing import cast
-
+def test_moe_predictor_has_no_visibility_scaling_hook() -> None:
     from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
         SklearnMoEExecutionTimePredictor,
     )
 
-    class _ConcreteMoEPredictor(SklearnMoEExecutionTimePredictor):
-        def _get_estimator(self):
-            raise AssertionError("not used")
-
-        def _get_grid_search_params(self):
-            raise AssertionError("not used")
-
-    predictor = object.__new__(_ConcreteMoEPredictor)
-    # This test intentionally injects a malformed structural config.
-    predictor._model_config = cast(
-        BaseModelConfig,
-        SimpleNamespace(get_model_architecture_profile=lambda: object()),
+    assert not hasattr(
+        SklearnMoEExecutionTimePredictor,
+        "_apply_share_expert_tp_allreduce_overlap",
     )
-
-    try:
-        predictor._apply_share_expert_tp_allreduce_overlap(1.0)
-    except TypeError as exc:
-        assert "must return ModelArchitectureProfile" in str(exc)
-    else:
-        raise AssertionError("Expected invalid architecture profile contract to fail")
 
 
 def test_step3_profile_requires_moe_runtime_config() -> None:
@@ -1065,6 +1115,7 @@ def test_mla_attention_shape_profile_requires_latent_mla_attention_family() -> N
                 "attn_post_proj",
             ),
         ),
+        expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
         attention_shape_log_kind="mla",
     )
 
@@ -1109,6 +1160,7 @@ def test_structural_requirement_wraps_predicate_value_error_with_profile_context
                 "attn_post_proj",
             ),
         ),
+        expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
         structural_requirements=(
             StructuralRequirement(
                 name="requires_unit_contract",

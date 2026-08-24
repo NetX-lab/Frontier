@@ -1,3 +1,4 @@
+import math
 from typing import List, TYPE_CHECKING
 
 from frontier.events.base_event import BaseEvent
@@ -20,12 +21,33 @@ class EPAllToAllCombineCollectiveEvent(BaseEvent):
     completion in EP processing.
     """
 
-    def __init__(self, time: float, replica_id: int, stage_id: int, batch_global_id: int):
+    def __init__(
+        self,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch_global_id: int,
+        *,
+        combine_end_time: float,
+    ):
         super().__init__(time, EventType.EP_ALLTOALL_COMBINE_COLLECTIVE)
 
         self._replica_id = replica_id
         self._stage_id = stage_id
         self._batch_global_id = batch_global_id
+        if (
+            not isinstance(combine_end_time, (int, float))
+            or isinstance(combine_end_time, bool)
+            or not math.isfinite(float(combine_end_time))
+        ):
+            raise ValueError(
+                "EP combine event requires a finite combine_end_time"
+            )
+        self._combine_end_time = float(combine_end_time)
+        if self._combine_end_time > float(time):
+            raise ValueError(
+                "EP combine end time cannot be later than event completion time"
+            )
         self._cluster_type = ClusterType.DECODE_FFN
 
     def handle_event(
@@ -41,7 +63,12 @@ class EPAllToAllCombineCollectiveEvent(BaseEvent):
         cluster_scheduler: BaseClusterScheduler = scheduler.get_cluster_scheduler(self._cluster_type)
 
         result_events = cluster_scheduler.on_ep_alltoall_combine_collective_schedule(
-            self.time, self._replica_id, self._stage_id, self._batch_global_id, metrics_store
+            self.time,
+            self._replica_id,
+            self._stage_id,
+            self._batch_global_id,
+            metrics_store,
+            combine_end_time=self._combine_end_time,
         )
 
         logger.debug(f"EPAllToAllCombineCollectiveEvent generated {len(result_events)} events: "
@@ -65,5 +92,6 @@ class EPAllToAllCombineCollectiveEvent(BaseEvent):
             "replica_id": self._replica_id,
             "stage_id": self._stage_id,
             "batch_global_id": self._batch_global_id,
+            "combine_end_time": self._combine_end_time,
             "cluster_type": self._cluster_type.name,
         }

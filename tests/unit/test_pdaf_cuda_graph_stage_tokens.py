@@ -6,10 +6,13 @@ import pytest
 from frontier.config import global_vars
 from frontier.entities.batch import AFDStageMetadata, Batch
 from frontier.entities.request import Request
+from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+    SklearnExecutionTimePredictor,
+)
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
 )
-from frontier.types import ClusterType
+from frontier.types import ClusterType, MeasurementType
 
 
 @pytest.fixture(autouse=True)
@@ -54,7 +57,7 @@ def _make_decode_attn_scheduler(
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
     scheduler._cluster_type = ClusterType.DECODE_ATTN
     scheduler._replica_id = 0
-    scheduler._dp_id = 0
+    scheduler._replica_local_id = 0
     scheduler._replica_is_moe = is_moe
     scheduler._num_stages = 1
     scheduler._micro_batch_size = len(requests)
@@ -197,6 +200,51 @@ def test_dense_pp1_scheduler_uses_one_metadata_macro_wave() -> None:
         )
         == 2
     )
+
+
+def test_single_stage_cuda_graph_scheduler_emits_both_role_captures() -> None:
+    global_vars.set_cuda_graph_config(
+        use_cuda_graph=True,
+        cudagraph_capture_sizes=[1, 2, 4, 8],
+    )
+    requests = [_make_decode_request(index) for index in range(4)]
+    scheduler = _make_decode_attn_scheduler(
+        requests,
+        logical_stage_count=1,
+        is_moe=False,
+    )
+
+    batch = scheduler._schedule_decode_attn_only(is_micro_batch=True)
+
+    assert batch is not None
+    assert batch.afd_stage_idx == 0
+    assert batch.afd_stage_represents_all_stages is False
+    assert batch.afd_stage_metadata is not None
+    assert batch.afd_stage_metadata.original_stage_token_lens == [4]
+    assert batch.afd_stage_metadata.padded_stage_token_lens == [4]
+    assert batch.afd_stage_metadata.ffn_compute_stage_token_lens == [4]
+
+    attention_records = (
+        SklearnExecutionTimePredictor._build_cuda_graph_activation_records(
+            object(),
+            batch,
+            MeasurementType.KERNEL_ONLY,
+            ClusterType.DECODE_ATTN,
+        )
+    )
+    ffn_records = SklearnExecutionTimePredictor._build_cuda_graph_activation_records(
+        object(),
+        batch,
+        MeasurementType.KERNEL_ONLY,
+        ClusterType.DECODE_FFN,
+    )
+
+    assert attention_records[0]["capture_hit"] is True
+    assert attention_records[0]["capture_sizes"] == [4]
+    assert attention_records[0]["measurement_family"] == "kernel_only"
+    assert ffn_records[0]["capture_hit"] is True
+    assert ffn_records[0]["capture_sizes"] == [4]
+    assert ffn_records[0]["measurement_family"] == "kernel_only"
 
 
 def test_moe_pp1_scheduler_keeps_physical_stage_siblings() -> None:

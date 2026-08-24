@@ -106,7 +106,7 @@ class OpTraceContext:
 
     @property
     def attn_dp(self) -> int:
-        return int(self.replica_config.attn_data_parallel_size)
+        return int(self.replica_config.attn_dp)
 
     @property
     def moe_tp(self) -> int:

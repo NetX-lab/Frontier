@@ -213,12 +213,12 @@ def test_downstream_smokes_require_csv_paths_to_be_files_before_running_simulato
         assert "required profiling CSV is missing" in result.stderr, script
 
 
-def test_moe_downstream_smoke_uses_routing_mode_matching_checked_in_csv() -> None:
+def test_moe_downstream_smoke_uses_distribution_matching_checked_in_csv() -> None:
     moe_text = _read(PROFILING_DIR / "smoke_simulator_moe_csv.sh")
 
-    assert "--replica_config_moe_routing_mode" in moe_text
-    assert "--replica_config_moe_routing_mode uniform_random" in moe_text
-    assert "--replica_config_moe_routing_mode simulation" not in moe_text
+    assert "--replica_config_moe_routing_distribution_type" in moe_text
+    assert "--replica_config_moe_routing_distribution_type random" in moe_text
+    assert "--replica_config_moe_routing_mode" not in moe_text
 
 
 def test_smoke_metadata_honors_data_path_and_fails_unknown_args() -> None:

@@ -95,7 +95,7 @@ class AstraSimAnalyticalCCBackend(BaseCCBackend):
             self._config.runtime_num_replicas,
             self._config.runtime_num_pipeline_stages,
             self._config.runtime_attn_tensor_parallel_size,
-            self._config.runtime_attn_data_parallel_size,
+            self._config.runtime_attn_dp,
             self._config.runtime_moe_tensor_parallel_size,
             self._config.runtime_moe_expert_parallel_size,
         )
@@ -105,7 +105,7 @@ class AstraSimAnalyticalCCBackend(BaseCCBackend):
         return {
             "TP": int(self._config.runtime_attn_tensor_parallel_size),
             "CP": int(self._config.runtime_num_pipeline_stages),
-            "DP": int(self._config.runtime_attn_data_parallel_size)
+            "DP": int(self._config.runtime_attn_dp)
             * int(self._config.runtime_num_replicas),
             "EP": 1,
         }

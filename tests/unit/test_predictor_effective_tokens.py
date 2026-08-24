@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from frontier.entities import EPBatchGroup, Request
 from frontier.types import ClusterType, MeasurementType
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
@@ -102,7 +103,7 @@ def test_sklearn_moe_predictor_uses_effective_tokens_for_gating():
     )
 
 
-def test_sklearn_moe_predictor_uses_effective_tokens_for_local_ep_routed_tokens():
+def test_sklearn_moe_predictor_uses_logical_tokens_for_local_ep_routed_tokens():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -111,37 +112,92 @@ def test_sklearn_moe_predictor_uses_effective_tokens_for_local_ep_routed_tokens(
     predictor._moe_ep_size = 4
     predictor._use_expert_parallel_alltoall_path = MagicMock(return_value=False)
 
+    effective_tokens = MagicMock(return_value=8)
     batch = SimpleNamespace(
         total_num_tokens=1,
         is_pure_decode_batch=True,
-        get_effective_total_tokens_rounded=lambda _cluster_type: 8,
+        get_effective_total_tokens_rounded=effective_tokens,
     )
 
     result = SklearnMoEExecutionTimePredictor._get_local_ep_routed_tokens(
         predictor, batch
     )
 
-    assert result == 4
+    assert result == 2
+    effective_tokens.assert_not_called()
 
 
-def test_sklearn_moe_predictor_uses_effective_tokens_for_uniform_legacy_tokens_input():
+def test_sklearn_moe_predictor_rejects_missing_ep_routed_token_metadata():
+    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
+        DummySklearnMoEExecutionTimePredictor
+    )
+    predictor._router_topk = 2
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 0, 0)],
+        num_tokens=[0],
+        replica_id=0,
+        ep_id=0,
+        time=0.0,
+        source_batch_ids=[1],
+        per_expert_tokens=None,
+        cluster_type=ClusterType.DECODE,
+        is_moe=True,
+    )
+
+    with pytest.raises(ValueError, match="per_expert_tokens is required"):
+        SklearnMoEExecutionTimePredictor._get_local_ep_routed_tokens(
+            predictor, lane
+        )
+
+
+def test_sklearn_moe_predictor_rejects_empty_ep_routed_token_map():
+    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
+        DummySklearnMoEExecutionTimePredictor
+    )
+    lane = EPBatchGroup(
+        requests=[Request(0.0, 0, 0)],
+        num_tokens=[0],
+        replica_id=0,
+        ep_id=0,
+        time=0.0,
+        source_batch_ids=[1],
+        per_expert_tokens={},
+        cluster_type=ClusterType.DECODE,
+        is_moe=True,
+    )
+
+    with pytest.raises(ValueError, match="per_expert_tokens must be a non-empty"):
+        SklearnMoEExecutionTimePredictor._get_local_ep_routed_tokens(
+            predictor, lane
+        )
+
+
+def test_sklearn_moe_predictor_materializes_explicit_global_expert_tokens():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
     predictor._cluster_type = ClusterType.DECODE
     predictor._router_topk = 2
-    predictor._moe_routing_mode = "uniform_legacy"
-    predictor._is_grouped_gemm_on_demand_mode = MagicMock(return_value=False)
-    predictor._get_local_ep_routed_tokens = MagicMock(return_value=8)
+    predictor._replica_config = SimpleNamespace(
+        total_expert_num=4,
+        moe_expert_parallel_size=1,
+        router_topk=2,
+    )
+    predictor._decode_routing_details = {
+        0: {0: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
+    }
 
+    effective_tokens = MagicMock(return_value=99)
     batch = SimpleNamespace(
-        total_num_tokens=1,
-        get_effective_total_tokens_rounded=lambda _cluster_type: 8,
+        replica_id=0,
+        total_num_tokens=8,
+        get_effective_total_tokens_rounded=effective_tokens,
     )
 
     result = SklearnMoEExecutionTimePredictor._get_moe_tokens_input(predictor, batch)
 
-    assert result == 16
+    assert result == {0: 4, 1: 4, 2: 4, 3: 4}
+    effective_tokens.assert_not_called()
 
 
 def test_sklearn_execution_time_predictor_applies_attn_pre_proj_calibration_scale():
@@ -529,8 +585,17 @@ def test_sklearn_moe_predictor_uses_on_demand_moe_shuffling_prediction() -> None
 
     predictor._get_on_demand_prediction = _fake_get_on_demand_prediction
 
-    batch = MagicMock()
-    batch.total_num_tokens = 12
+    batch = EPBatchGroup(
+        requests=[Request(0.0, 0, 96)],
+        num_tokens=[96],
+        replica_id=0,
+        ep_id=0,
+        time=0.0,
+        source_batch_ids=[1],
+        per_expert_tokens={0: 64, 1: 32},
+        cluster_type=ClusterType.MONOLITHIC,
+        is_moe=True,
+    )
 
     result = SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(
         predictor,
@@ -544,7 +609,7 @@ def test_sklearn_moe_predictor_uses_on_demand_moe_shuffling_prediction() -> None
     assert "load_imbalance_cv" in captured["features"]
 
 
-def test_sklearn_moe_predictor_builds_uniform_allocation_for_on_demand_shuffling() -> None:
+def test_sklearn_moe_predictor_uses_raw_on_demand_shuffling_prediction() -> None:
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -567,22 +632,57 @@ def test_sklearn_moe_predictor_builds_uniform_allocation_for_on_demand_shuffling
 
     predictor._get_on_demand_prediction = _fake_get_on_demand_prediction
 
-    batch = MagicMock()
-    batch.total_num_tokens = 12
+    batch = EPBatchGroup(
+        requests=[Request(0.0, 0, 80)],
+        num_tokens=[80],
+        replica_id=0,
+        ep_id=0,
+        time=0.0,
+        source_batch_ids=[1],
+        per_expert_tokens={0: 32, 1: 16, 2: 16, 3: 16},
+        cluster_type=ClusterType.MONOLITHIC,
+        is_moe=True,
+    )
 
     result = SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(
         predictor,
         batch,
-        moe_tokens_input=80,
+        moe_tokens_input={0: 32, 1: 16, 2: 16, 3: 16},
     )
 
-    assert result == 1.0
+    assert result == 0.5
     assert captured["model_name"] == "moe_shuffling"
     assert captured["features"]["total_routed_tokens"] == 80
     assert captured["features"]["num_experts_per_device"] == 4
 
 
-def test_sklearn_moe_predictor_applies_moe_shuffling_calibration_scale():
+def test_on_demand_shuffling_rejects_global_map_without_ep_lane_identity() -> None:
+    """A global expert map cannot be treated as one device's profile input."""
+
+    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
+        DummySklearnMoEExecutionTimePredictor
+    )
+    predictor._cluster_type = ClusterType.PREFILL
+    predictor._supports_operation = MagicMock(return_value=True)
+    predictor._predictions = {"moe_shuffling": {"_on_demand_prediction": True}}
+    predictor._router_topk = 2
+    predictor._moe_ep_size = 2
+    predictor._replica_config = SimpleNamespace(total_expert_num=4)
+    predictor._model_config = SimpleNamespace(embedding_dim=2048, mlp_hidden_dim=768)
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+
+    batch = MagicMock()
+    batch.total_num_tokens = 8
+
+    with pytest.raises(ValueError, match="EP lane"):
+        SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(
+            predictor,
+            batch,
+            moe_tokens_input={0: 4, 1: 4, 2: 4, 3: 4},
+        )
+
+
+def test_sklearn_moe_predictor_ignores_moe_shuffling_calibration_scale():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -596,10 +696,10 @@ def test_sklearn_moe_predictor_applies_moe_shuffling_calibration_scale():
 
     result = SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(predictor, batch)
 
-    assert result == 1.0
+    assert result == 4.0
 
 
-def test_sklearn_moe_predictor_applies_decode_phase_moe_shuffling_scale_for_decode_only_batch():
+def test_sklearn_moe_predictor_ignores_decode_phase_moe_shuffling_scale_for_decode_only_batch():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -615,10 +715,10 @@ def test_sklearn_moe_predictor_applies_decode_phase_moe_shuffling_scale_for_deco
 
     result = SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(predictor, batch)
 
-    assert result == 6.0
+    assert result == 4.0
 
 
-def test_sklearn_moe_predictor_keeps_global_moe_shuffling_scale_for_mixed_batch():
+def test_sklearn_moe_predictor_ignores_moe_shuffling_scales_for_mixed_batch():
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -634,7 +734,7 @@ def test_sklearn_moe_predictor_keeps_global_moe_shuffling_scale_for_mixed_batch(
 
     result = SklearnMoEExecutionTimePredictor._get_moe_shuffling_time(predictor, batch)
 
-    assert result == 1.0
+    assert result == 4.0
 
 
 def test_sklearn_execution_time_predictor_uses_padded_decode_batch_size_for_attn_decode():
@@ -786,7 +886,7 @@ def test_sklearn_execution_time_predictor_keeps_first_pure_decode_on_global_scal
     assert result == 5.0
 
 
-def test_sklearn_moe_predictor_applies_moe_grouped_gemm_calibration_scale() -> None:
+def test_sklearn_moe_predictor_ignores_moe_grouped_gemm_calibration_scale() -> None:
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -800,10 +900,10 @@ def test_sklearn_moe_predictor_applies_moe_grouped_gemm_calibration_scale() -> N
         predictor, 16
     )
 
-    assert result == 7.0
+    assert result == 4.0
 
 
-def test_sklearn_moe_predictor_applies_decode_phase_moe_grouped_gemm_scale_for_decode_only_batch() -> None:
+def test_sklearn_moe_predictor_ignores_decode_phase_moe_grouped_gemm_scale_for_decode_only_batch() -> None:
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -823,10 +923,10 @@ def test_sklearn_moe_predictor_applies_decode_phase_moe_grouped_gemm_scale_for_d
         batch=batch,
     )
 
-    assert result == 6.0
+    assert result == 4.0
 
 
-def test_sklearn_moe_predictor_keeps_global_moe_grouped_gemm_scale_for_mixed_batch() -> None:
+def test_sklearn_moe_predictor_ignores_moe_grouped_gemm_scales_for_mixed_batch() -> None:
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
@@ -846,31 +946,19 @@ def test_sklearn_moe_predictor_keeps_global_moe_grouped_gemm_scale_for_mixed_bat
         batch=batch,
     )
 
-    assert result == 7.0
+    assert result == 4.0
 
 
-def test_sklearn_moe_predictor_uses_effective_tokens_for_shuffling_allocation() -> None:
+def test_sklearn_moe_predictor_rejects_missing_explicit_shuffling_allocation() -> None:
     predictor = DummySklearnMoEExecutionTimePredictor.__new__(
         DummySklearnMoEExecutionTimePredictor
     )
     predictor._cluster_type = ClusterType.DECODE
-    predictor._router_topk = 2
-    predictor._build_uniform_per_expert_tokens = MagicMock(
-        return_value={0: 8, 1: 8}
-    )
-
-    batch = SimpleNamespace(
-        total_num_tokens=1,
-        get_effective_total_tokens_rounded=lambda _cluster_type: 8,
-    )
-
-    result = SklearnMoEExecutionTimePredictor._resolve_shuffling_per_expert_tokens(
-        predictor,
-        batch,
-    )
-
-    assert result == {0: 8, 1: 8}
-    predictor._build_uniform_per_expert_tokens.assert_called_once_with(16)
+    with pytest.raises(ValueError, match="explicit per-expert token map"):
+        SklearnMoEExecutionTimePredictor._resolve_shuffling_per_expert_tokens(
+            predictor,
+            SimpleNamespace(total_num_tokens=1),
+        )
 
 
 def test_sklearn_moe_predictor_accepts_effective_token_conservation_for_padded_decode_batch() -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -10,7 +11,11 @@ import pytest
 
 from frontier.config.model_config import BaseModelConfig
 from frontier.entities import Batch, Request
-from frontier.entities.batch import DenseFFNBatchGroup, EPBatchGroup
+from frontier.entities.batch import (
+    AFDStageMetadata,
+    DenseFFNBatchGroup,
+    EPBatchGroup,
+)
 from frontier.entities.batch_stage import BatchStage
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
 from frontier.events.ep_alltoall_dispatch_ready_event import (
@@ -20,13 +25,33 @@ from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEve
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
     SklearnDisaggregationExecutionTimePredictor,
 )
+from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+    SklearnExecutionTimePredictor,
+)
+from frontier.moe_ep_workload import LayerEPWorkload
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
 from frontier.scheduler.replica_stage_scheduler.replica_stage_schduler import (
     ReplicaStageScheduler,
 )
-from frontier.types import ClusterType
+from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
+    EP_WAVE,
+    FULL_STAGE_WORLD,
+    StageExecutionContext,
+)
+from frontier.types import ClusterType, MeasurementType
+
+
+def test_dense_ffn_batch_group_has_no_ep_lane_identity() -> None:
+    source = Path("frontier/entities/batch.py").read_text(encoding="utf-8")
+    scheduler_source = Path(
+        "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py"
+    ).read_text(encoding="utf-8")
+
+    assert "lane_id: int" not in source[source.index("class DenseFFNBatchGroup"):]
+    assert "lane_id=0" not in scheduler_source
+    assert "get_full_stage_replica_scheduler" in scheduler_source
 
 
 class _ConcreteDisaggregationPredictor(
@@ -110,7 +135,7 @@ def _source_batch(*, layer_id: int, afd_stage_idx: int = 2) -> Batch:
     batch = Batch(replica_id=0, requests=[request], num_tokens=[1], is_moe=True)
     batch.afd_stage_idx = afd_stage_idx
     batch.decode_attn_original_replica_id = 0
-    batch.decode_attn_original_dp_id = 0
+    batch.decode_attn_original_replica_local_id = 0
     batch.time = 0.0
     return batch
 
@@ -124,6 +149,31 @@ def _transfer_info(*, layer_id: int, afd_stage_idx: int = 2):
     )
 
 
+def _attach_cuda_graph_metadata(
+    batch: Batch,
+    *,
+    stage_idx: int,
+    represents_all_stages: bool = False,
+) -> AFDStageMetadata:
+    metadata = AFDStageMetadata(
+        num_stages=3,
+        original_total_tokens=3,
+        padded_total_tokens=6,
+        ffn_compute_total_tokens=10,
+        original_stage_token_lens=[1, 1, 1],
+        padded_stage_token_lens=[1, 1, 4],
+        ffn_compute_stage_token_lens=[1, 1, 8],
+        attention_use_cuda_graph=True,
+        attention_cudagraph_capture_sizes=[1, 2, 4, 8],
+        ffn_use_cuda_graph=True,
+        ffn_cudagraph_capture_sizes=[1, 2, 4, 8, 16],
+    )
+    batch.afd_stage_idx = stage_idx
+    batch.afd_stage_represents_all_stages = represents_all_stages
+    batch.afd_stage_metadata = metadata
+    return metadata
+
+
 def _branch_scheduler(model_config, *, layer_id: int):
     scheduler = object.__new__(RoundRobinClusterScheduler)
     scheduler._cluster_type = ClusterType.DECODE_FFN
@@ -135,6 +185,8 @@ def _branch_scheduler(model_config, *, layer_id: int):
             model_config=model_config,
             moe_expert_parallel_size=1,
             local_expert_num=1,
+            total_expert_num=1,
+            router_topk=1,
         )
     )
     scheduler._predictor = SimpleNamespace(
@@ -144,13 +196,16 @@ def _branch_scheduler(model_config, *, layer_id: int):
     scheduler._replica_ep_size = 1
     scheduler._batch_group_creation_counter = 0
     scheduler._raw_batch_waiting_for_m2n_back = {}
+    scheduler._stage_execution_contexts = {
+        (0, 2): StageExecutionContext(replica_id=0, stage_id=2, ep_size=1)
+    }
 
     dense_result = [(0, 0)]
     scheduler._schedule_dense_ffn_from_m2n_group = Mock(return_value=dense_result)
     ep_batch = _SyntheticEPBatch()
     scheduler._distribute_tokens_within_ep_replica = Mock(return_value=ep_batch)
     queue_sink = _QueuedBatchSink()
-    scheduler.get_dp_replica_scheduler = Mock(return_value=queue_sink)
+    scheduler.get_replica_scheduler = Mock(return_value=queue_sink)
     return scheduler, dense_result
 
 
@@ -192,7 +247,7 @@ def test_pure_dense_layer_keeps_dense_ffn_scheduler(dense_model_config) -> None:
     assert scheduler._distribute_tokens_within_ep_replica.call_count == 0
 
 
-def _builder_scheduler(model_config):
+def _builder_scheduler(model_config, *, ep_size: int = 1):
     scheduler = object.__new__(RoundRobinClusterScheduler)
     scheduler._cluster_type = ClusterType.DECODE_FFN
     scheduler._cluster = SimpleNamespace(replicas={0: object()})
@@ -200,14 +255,231 @@ def _builder_scheduler(model_config):
         replica_config=SimpleNamespace(
             model_config=model_config,
             router_topk=1,
+            total_expert_num=ep_size,
+            moe_expert_parallel_size=ep_size,
+            local_expert_num=1,
         )
     )
     scheduler._raw_batch_waiting_for_m2n_back = {}
     scheduler._batch_group_creation_counter = 0
     scheduler._ep_routed_token_allocation_cache = {}
+    scheduler._stage_execution_contexts = {
+        (0, 2): StageExecutionContext(
+            replica_id=0,
+            stage_id=2,
+            ep_size=ep_size,
+        )
+    }
     queue_sink = _QueuedBatchSink()
-    scheduler.get_dp_replica_scheduler = Mock(return_value=queue_sink)
+    scheduler._full_stage_replica_schedulers = {0: queue_sink}
+    scheduler.get_full_stage_replica_scheduler = Mock(return_value=queue_sink)
     return scheduler, queue_sink
+
+
+def test_ep_builder_uses_shared_layer_materializer(monkeypatch, mixed_model_config) -> None:
+    """DECODE_FFN must consume one shared global-to-local EP materialization."""
+
+    scheduler = object.__new__(RoundRobinClusterScheduler)
+    scheduler._cluster_type = ClusterType.DECODE_FFN
+    scheduler._cluster = SimpleNamespace(replicas={0: object()})
+    scheduler._config = SimpleNamespace(
+        replica_config=SimpleNamespace(
+            model_config=mixed_model_config,
+            router_topk=2,
+            moe_expert_parallel_size=2,
+            local_expert_num=2,
+            total_expert_num=4,
+        )
+    )
+    scheduler._raw_batch_waiting_for_m2n_back = {}
+    scheduler._batch_group_creation_counter = 0
+    scheduler._ep_routed_token_allocation_cache = {}
+
+    source_batch = _source_batch(layer_id=4)
+    source_batch._num_tokens = [3]
+    source_batch._total_num_tokens = 3
+    transfer_info = _transfer_info(layer_id=4, afd_stage_idx=2)
+
+    captured = {}
+
+    def fake_materializer(**kwargs):
+        captured.update(kwargs)
+        return LayerEPWorkload(
+            target_replica_id=0,
+            global_layer_id=4,
+            routing_token_count=3,
+            router_topk=2,
+            total_routed_assignments=6,
+            global_per_expert_tokens={0: 1, 1: 1, 2: 2, 3: 2},
+            per_ep_per_expert_tokens={
+                0: {0: 1, 1: 1},
+                1: {2: 2, 3: 2},
+            },
+            per_ep_routed_tokens={0: 2, 1: 4},
+            participant_ep_ids=(0, 1),
+            expert_to_ep={0: 0, 1: 0, 2: 1, 3: 1},
+        )
+
+    import frontier.scheduler.cluster_scheduler.base_cluster_scheduler as base_scheduler
+
+    monkeypatch.setattr(
+        base_scheduler,
+        "materialize_layer_ep_workload",
+        fake_materializer,
+        raising=False,
+    )
+
+    plan = scheduler._prepare_ep_batch_group_plan(
+        [(source_batch, transfer_info)],
+        replica_id=0,
+        ep_id=1,
+        expert_global_ids=[2, 3],
+        layer_global_id=4,
+        routing_details={0: {4: {0: 0.1, 1: 0.2, 2: 0.3, 3: 0.4}}},
+    )
+
+    assert captured == {
+        "routing_ratios": {0: 0.1, 1: 0.2, 2: 0.3, 3: 0.4},
+        "target_replica_id": 0,
+        "global_layer_id": 4,
+        "routing_token_count": 3,
+        "router_topk": 2,
+        "total_expert_num": 4,
+        "moe_expert_parallel_size": 2,
+        "expert_to_ep": {0: 0, 1: 0, 2: 1, 3: 1},
+    }
+    assert plan.per_expert_tokens == ((2, 2), (3, 2))
+
+
+def test_ep_wave_schedule_materializes_one_shared_workload_for_all_lanes(
+    monkeypatch,
+    mixed_model_config,
+) -> None:
+    scheduler, _ = _builder_scheduler(mixed_model_config, ep_size=2)
+    source_batch = _source_batch(layer_id=4)
+    source_batch._num_tokens = [3]
+    source_batch._total_num_tokens = 3
+    scheduler._m2n_ready_groups = deque(
+        [[(source_batch, _transfer_info(layer_id=4, afd_stage_idx=2))]]
+    )
+    scheduler._predictor = SimpleNamespace(
+        _decode_ffn_routing_details={
+            0: {4: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
+        }
+    )
+    scheduler._replica_ep_size = 2
+    scheduler._config.replica_config.router_topk = 2
+    scheduler._config.replica_config.total_expert_num = 4
+    scheduler._config.replica_config.local_expert_num = 2
+    scheduler._config.replica_config.moe_expert_parallel_size = 2
+
+    queue_sinks = [_QueuedBatchSink(), _QueuedBatchSink()]
+    scheduler.get_replica_scheduler = Mock(
+        side_effect=lambda _replica_id, ep_id: queue_sinks[ep_id]
+    )
+    materializer_calls = []
+
+    def fake_materializer(**kwargs):
+        materializer_calls.append(kwargs)
+        return LayerEPWorkload(
+            target_replica_id=0,
+            global_layer_id=4,
+            routing_token_count=3,
+            router_topk=2,
+            total_routed_assignments=6,
+            global_per_expert_tokens={0: 0, 1: 0, 2: 3, 3: 3},
+            per_ep_per_expert_tokens={
+                0: {0: 0, 1: 0},
+                1: {2: 3, 3: 3},
+            },
+            per_ep_routed_tokens={0: 0, 1: 6},
+            participant_ep_ids=(0, 1),
+            expert_to_ep={0: 0, 1: 0, 2: 1, 3: 1},
+        )
+
+    monkeypatch.setattr(
+        "frontier.scheduler.cluster_scheduler.base_cluster_scheduler.materialize_layer_ep_workload",
+        fake_materializer,
+    )
+
+    result = scheduler.schedule_ffn_with_m2n_immediate()
+
+    assert result == [(0, 0), (0, 1)]
+    assert len(materializer_calls) == 1
+    assert [len(sink._m2n_immediate_batch_queue) for sink in queue_sinks] == [1, 1]
+
+
+def test_moe_ep_batches_preserve_decode_ffn_cuda_graph_metadata(
+    monkeypatch,
+    mixed_model_config,
+) -> None:
+    scheduler, _ = _builder_scheduler(mixed_model_config, ep_size=2)
+    source_batch = _source_batch(layer_id=4, afd_stage_idx=2)
+    source_batch._num_tokens = [3]
+    source_batch._total_num_tokens = 3
+    expected_metadata = _attach_cuda_graph_metadata(
+        source_batch,
+        stage_idx=2,
+    )
+    scheduler._m2n_ready_groups = deque(
+        [[(source_batch, _transfer_info(layer_id=4, afd_stage_idx=2))]]
+    )
+    scheduler._predictor = SimpleNamespace(
+        _decode_ffn_routing_details={
+            0: {4: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
+        }
+    )
+    scheduler._replica_ep_size = 2
+    scheduler._config.replica_config.router_topk = 2
+    scheduler._config.replica_config.total_expert_num = 4
+    scheduler._config.replica_config.local_expert_num = 2
+    scheduler._config.replica_config.moe_expert_parallel_size = 2
+
+    queue_sinks = [_QueuedBatchSink(), _QueuedBatchSink()]
+    scheduler.get_replica_scheduler = Mock(
+        side_effect=lambda _replica_id, ep_id: queue_sinks[ep_id]
+    )
+
+    monkeypatch.setattr(
+        scheduler,
+        "_materialize_ep_wave_workload",
+        Mock(
+            return_value=LayerEPWorkload(
+                target_replica_id=0,
+                global_layer_id=4,
+                routing_token_count=3,
+                router_topk=2,
+                total_routed_assignments=6,
+                global_per_expert_tokens={0: 0, 1: 0, 2: 3, 3: 3},
+                per_ep_per_expert_tokens={
+                    0: {0: 0, 1: 0},
+                    1: {2: 3, 3: 3},
+                },
+                per_ep_routed_tokens={0: 0, 1: 6},
+                participant_ep_ids=(0, 1),
+                expert_to_ep={0: 0, 1: 0, 2: 1, 3: 1},
+            )
+        ),
+    )
+
+    scheduler.schedule_ffn_with_m2n_immediate()
+
+    ep_batches = [
+        sink._m2n_immediate_batch_queue[0] for sink in queue_sinks
+    ]
+    for ep_batch in ep_batches:
+        assert ep_batch.afd_stage_idx == 2
+        assert ep_batch.afd_stage_represents_all_stages is False
+        assert ep_batch.afd_stage_metadata == expected_metadata
+        records = SklearnExecutionTimePredictor._build_cuda_graph_activation_records(
+            object(),
+            ep_batch,
+            MeasurementType.KERNEL_ONLY,
+            ClusterType.DECODE_FFN,
+        )
+        assert records[0]["capture_hit"] is True
+        assert records[0]["original_tokens"] == [4]
+        assert records[0]["padded_tokens"] == [8]
 
 
 def test_dense_builder_propagates_decode_ffn_layer_metadata(
@@ -222,12 +494,143 @@ def test_dense_builder_propagates_decode_ffn_layer_metadata(
         ready_groups, Mock()
     )
 
-    assert result == [(0, 0)]
+    assert result == [(0, None)]
     assert len(queue_sink._m2n_immediate_batch_queue) == 1
     dense_batch = queue_sink._m2n_immediate_batch_queue[0]
     assert isinstance(dense_batch, DenseFFNBatchGroup)
     assert getattr(dense_batch, "decode_ffn_layer_id", None) == 3
     assert dense_batch.afd_stage_idx == 2
+
+
+def test_dense_builder_preserves_decode_ffn_cuda_graph_metadata(
+    mixed_model_config,
+) -> None:
+    scheduler, queue_sink = _builder_scheduler(mixed_model_config)
+    source_batch = _source_batch(layer_id=3, afd_stage_idx=2)
+    expected_metadata = _attach_cuda_graph_metadata(
+        source_batch,
+        stage_idx=2,
+    )
+    ready_groups = deque(
+        [[(source_batch, _transfer_info(layer_id=3, afd_stage_idx=2))]]
+    )
+
+    scheduler._schedule_dense_ffn_from_m2n_group(ready_groups, Mock())
+
+    dense_batch = queue_sink._m2n_immediate_batch_queue[0]
+    assert dense_batch.afd_stage_idx == 2
+    assert dense_batch.afd_stage_represents_all_stages is False
+    assert dense_batch.afd_stage_metadata == expected_metadata
+    records = SklearnExecutionTimePredictor._build_cuda_graph_activation_records(
+        object(),
+        dense_batch,
+        MeasurementType.KERNEL_ONLY,
+        ClusterType.DECODE_FFN,
+    )
+    assert records[0]["capture_hit"] is True
+    assert records[0]["original_tokens"] == [4]
+    assert records[0]["padded_tokens"] == [8]
+
+
+def test_dense_builder_aggregates_metadata_across_source_batches(
+    mixed_model_config,
+) -> None:
+    scheduler, queue_sink = _builder_scheduler(mixed_model_config)
+    first_source = _source_batch(layer_id=3, afd_stage_idx=2)
+    second_source = _source_batch(layer_id=3, afd_stage_idx=2)
+    first_metadata = _attach_cuda_graph_metadata(first_source, stage_idx=2)
+    _attach_cuda_graph_metadata(second_source, stage_idx=2)
+    ready_groups = deque(
+        [
+            [
+                (first_source, _transfer_info(layer_id=3, afd_stage_idx=2)),
+                (second_source, _transfer_info(layer_id=3, afd_stage_idx=2)),
+            ]
+        ]
+    )
+
+    scheduler._schedule_dense_ffn_from_m2n_group(ready_groups, Mock())
+
+    dense_batch = queue_sink._m2n_immediate_batch_queue[0]
+    metadata = dense_batch.afd_stage_metadata
+    assert metadata is not None
+    assert metadata is not first_metadata
+    assert metadata.original_total_tokens == 6
+    assert metadata.padded_total_tokens == 12
+    assert metadata.ffn_compute_total_tokens == 20
+    assert metadata.original_stage_token_lens == [2, 2, 2]
+    assert metadata.padded_stage_token_lens == [2, 2, 8]
+    assert metadata.ffn_compute_stage_token_lens == [2, 2, 16]
+    assert dense_batch.afd_stage_represents_all_stages is False
+    records = SklearnExecutionTimePredictor._build_cuda_graph_activation_records(
+        object(),
+        dense_batch,
+        MeasurementType.KERNEL_ONLY,
+        ClusterType.DECODE_FFN,
+    )
+    assert records[0]["capture_hit"] is True
+    assert records[0]["original_tokens"] == [8]
+    assert records[0]["padded_tokens"] == [16]
+
+
+def test_dense_ffn_stage_preserves_multi_source_lineage(
+    mixed_model_config,
+) -> None:
+    scheduler, queue_sink = _builder_scheduler(mixed_model_config)
+    first_source = _source_batch(layer_id=3, afd_stage_idx=2)
+    second_source = _source_batch(layer_id=3, afd_stage_idx=2)
+    first_source.decode_ffn_m2n_arrival_time = 0.125
+    second_source.decode_ffn_m2n_arrival_time = 0.250
+    ready_groups = deque(
+        [
+            [
+                (first_source, _transfer_info(layer_id=3, afd_stage_idx=2)),
+                (second_source, _transfer_info(layer_id=3, afd_stage_idx=2)),
+            ]
+        ]
+    )
+
+    scheduler._schedule_dense_ffn_from_m2n_group(ready_groups, Mock())
+    dense_batch = queue_sink._m2n_immediate_batch_queue[0]
+    batch_stage, _ = _stage_scheduler(Mock()).predict_and_create_stage(
+        dense_batch
+    )
+
+    assert dense_batch.source_batches == [first_source, second_source]
+    assert batch_stage.source_batch_ids == [
+        first_source.id,
+        second_source.id,
+    ]
+    assert batch_stage.source_request_ids == [
+        str(first_source.requests[0].id),
+        str(second_source.requests[0].id),
+    ]
+    assert batch_stage.source_request_runtime_epochs == [
+        *first_source.request_runtime_epochs,
+        *second_source.request_runtime_epochs,
+    ]
+    assert batch_stage.source_request_num_tokens == [1, 1]
+    assert batch_stage.source_batch_arrival_times == [0.125, 0.250]
+    assert batch_stage.source_group_ready_ts == 0.250
+
+
+def test_dense_ffn_batch_uses_full_stage_parent_scope(
+    mixed_model_config,
+) -> None:
+    scheduler, queue_sink = _builder_scheduler(mixed_model_config, ep_size=2)
+    context = scheduler.get_stage_execution_context(0, 2)
+    source_batch = _source_batch(layer_id=3, afd_stage_idx=2)
+
+    scheduler._schedule_dense_ffn_from_m2n_group(
+        deque([[(source_batch, _transfer_info(layer_id=3, afd_stage_idx=2))]]),
+        Mock(),
+    )
+
+    dense_batch = queue_sink._m2n_immediate_batch_queue[0]
+    ticket = dense_batch._stage_admission_ticket
+    assert ticket.scope == FULL_STAGE_WORLD
+    assert ticket.participant_ep_ids == ()
+    assert context.queued_tickets == (ticket,)
 
 
 def test_dense_builder_rejects_mismatched_afd_stage_idx(
@@ -278,7 +681,8 @@ def test_moe_ready_group_validation_is_atomic_before_consumption(
     scheduler._replica_ep_size = 1
     scheduler._batch_group_creation_counter = 7
     scheduler._raw_batch_waiting_for_m2n_back = {}
-    scheduler.get_dp_replica_scheduler = Mock(return_value=queue_sink)
+    scheduler._full_stage_replica_schedulers = {0: queue_sink}
+    scheduler.get_full_stage_replica_scheduler = Mock(return_value=queue_sink)
 
     with pytest.raises(ValueError, match="target replica is not available"):
         scheduler.schedule_ffn_with_m2n_immediate()
@@ -307,7 +711,7 @@ def test_dense_ready_group_validation_is_atomic_before_consumption(
     scheduler, _ = _builder_scheduler(mixed_model_config)
     scheduler._batch_group_creation_counter = 7
     scheduler._m2n_ready_groups = ready_groups
-    scheduler.get_dp_replica_scheduler = Mock(return_value=queue_sink)
+    scheduler.get_replica_scheduler = Mock(return_value=queue_sink)
 
     with pytest.raises(ValueError, match="afd_stage_idx missing"):
         scheduler._schedule_dense_ffn_from_m2n_group(ready_groups, Mock())
@@ -350,14 +754,49 @@ def _atomicity_scheduler(
     scheduler._batch_group_creation_counter = 0
     scheduler._raw_batch_waiting_for_m2n_back = {}
     scheduler._ep_routed_token_allocation_cache = {}
+    scheduler._stage_execution_contexts = {
+        (0, source_batch.afd_stage_idx): StageExecutionContext(
+            replica_id=0,
+            stage_id=source_batch.afd_stage_idx,
+            ep_size=ep_size,
+        )
+    }
 
     if queue_factory is None:
         queue_factory = lambda _ep_id: _QueuedBatchSink()
     queue_sinks = {ep_id: queue_factory(ep_id) for ep_id in range(ep_size)}
-    scheduler.get_dp_replica_scheduler = Mock(
+    scheduler._full_stage_replica_schedulers = {0: queue_sinks[0]}
+    scheduler.get_full_stage_replica_scheduler = Mock(
+        return_value=queue_sinks[0]
+    )
+    scheduler.get_replica_scheduler = Mock(
         side_effect=lambda _replica_id, ep_id: queue_sinks[ep_id]
     )
     return scheduler, source_batch, transfer_info, queue_sinks
+
+
+def test_decode_ffn_wave_materialization_attaches_one_parent_ticket(
+    mixed_model_config,
+) -> None:
+    scheduler, _, _, queue_sinks = _atomicity_scheduler(
+        mixed_model_config,
+        layer_id=4,
+        ep_size=2,
+    )
+    context = scheduler.get_stage_execution_context(0, 2)
+
+    affected = scheduler.schedule_ffn_with_m2n_immediate()
+
+    assert affected == [(0, 0), (0, 1)]
+    lane_batches = [
+        queue_sinks[ep_id]._m2n_immediate_batch_queue[0]
+        for ep_id in (0, 1)
+    ]
+    tickets = [batch._stage_admission_ticket for batch in lane_batches]
+    assert tickets[0] == tickets[1]
+    assert tickets[0].scope == EP_WAVE
+    assert tickets[0].participant_ep_ids == (0, 1)
+    assert context.queued_tickets == (tickets[0],)
 
 
 def _atomicity_snapshot(
@@ -446,7 +885,7 @@ def _corrupt_decode_ffn_source_batch(
             total_num_tokens=source_batch.total_num_tokens,
             afd_stage_idx=source_batch.afd_stage_idx,
             decode_attn_original_replica_id=0,
-            decode_attn_original_dp_id=0,
+            decode_attn_original_replica_local_id=0,
             time=0.0,
             _num_routing_tokens=-1,
         )
@@ -523,7 +962,7 @@ def test_decode_ffn_rejects_malformed_source_before_target_lookup_or_constructio
 
     exc = _capture_decode_ffn_exception(scheduler)
 
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
     create_group.assert_not_called()
     _assert_atomicity_snapshot_unchanged(
         before, scheduler, source_batch, queue_sinks
@@ -598,7 +1037,7 @@ def test_decode_ffn_rejects_nonexact_metadata_before_target_lookup_or_constructi
 
     exc = _capture_decode_ffn_exception(scheduler)
 
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
     create_group.assert_not_called()
     _assert_atomicity_snapshot_unchanged(
         before, scheduler, source_batch, queue_sinks
@@ -621,7 +1060,7 @@ def test_decode_ffn_rejects_transfer_and_source_stage_mismatch_before_target_loo
 
     exc = _capture_decode_ffn_exception(scheduler)
 
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
     create_group.assert_not_called()
     _assert_atomicity_snapshot_unchanged(
         before, scheduler, source_batch, queue_sinks
@@ -664,7 +1103,7 @@ def test_decode_ffn_validates_later_group_entries_before_target_lookup_or_constr
 
     exc = _capture_decode_ffn_exception(scheduler)
 
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
     create_group.assert_not_called()
     _assert_atomicity_snapshot_unchanged(
         before, scheduler, source_batch, queue_sinks
@@ -696,7 +1135,7 @@ def test_decode_ffn_rejects_invalid_group_counter_before_construction(
         scheduler.schedule_ffn_with_m2n_immediate()
 
     _assert_atomicity_snapshot_unchanged(before, scheduler, source_batch, queue_sinks)
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
 
 
 @pytest.mark.parametrize("container", [list, tuple])
@@ -714,7 +1153,7 @@ def test_decode_ffn_requires_exact_ready_group_deque_before_construction(
         scheduler.schedule_ffn_with_m2n_immediate()
 
     _assert_atomicity_snapshot_unchanged(before, scheduler, source_batch, queue_sinks)
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
 
 
 @pytest.mark.parametrize("layer_id", [3, 4])
@@ -732,7 +1171,7 @@ def test_decode_ffn_rejects_raw_batch_collision_before_construction(
         scheduler.schedule_ffn_with_m2n_immediate()
 
     _assert_atomicity_snapshot_unchanged(before, scheduler, source_batch, queue_sinks)
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
 
 
 @pytest.mark.parametrize("bad_id", [True, 0.0, -1, "1"])
@@ -750,7 +1189,7 @@ def test_decode_ffn_rejects_nonexact_source_batch_id_before_construction(
         scheduler.schedule_ffn_with_m2n_immediate()
 
     _assert_atomicity_snapshot_unchanged(before, scheduler, source_batch, queue_sinks)
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
 
 
 @pytest.mark.parametrize("layer_id", [3, 4])
@@ -767,7 +1206,7 @@ def test_decode_ffn_rejects_activation_size_before_construction(
         scheduler.schedule_ffn_with_m2n_immediate()
 
     _assert_atomicity_snapshot_unchanged(before, scheduler, source_batch, queue_sinks)
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
 
 
 @pytest.mark.parametrize("layer_id", [3, 4])
@@ -788,7 +1227,7 @@ def test_decode_ffn_rejects_duplicate_source_ids_before_construction(
         scheduler.schedule_ffn_with_m2n_immediate()
 
     _assert_atomicity_snapshot_unchanged(before, scheduler, source_batch, queue_sinks)
-    scheduler.get_dp_replica_scheduler.assert_not_called()
+    scheduler.get_replica_scheduler.assert_not_called()
 
 
 def test_decode_ffn_second_ep_construction_failure_does_not_commit_scheduler_state(
@@ -868,7 +1307,7 @@ def test_decode_ffn_preflights_all_ep_target_queues_before_construction(
             raise KeyError("missing EP target queue")
         return queue_sinks[ep_id]
 
-    scheduler.get_dp_replica_scheduler = Mock(side_effect=fail_second_queue_lookup)
+    scheduler.get_replica_scheduler = Mock(side_effect=fail_second_queue_lookup)
     create_group = Mock(wraps=scheduler._create_batch_group)
     scheduler._create_batch_group = create_group
     before = _atomicity_snapshot(scheduler, source_batch, queue_sinks)
@@ -1003,6 +1442,7 @@ def _stage_scheduler(predictor: Mock) -> ReplicaStageScheduler:
         total_time=1.0,
         model_time=0.8,
     )
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
     return ReplicaStageScheduler(
         replica_id=0,
         stage_id=0,
@@ -1010,7 +1450,8 @@ def _stage_scheduler(predictor: Mock) -> ReplicaStageScheduler:
         is_moe=True,
         execution_time_predictor=predictor,
         cluster_type=ClusterType.DECODE_FFN,
-        dp_id=0,
+        replica_local_id=0,
+        stage_execution_context=context,
     )
 
 
@@ -1047,16 +1488,18 @@ def test_replica_stage_scheduler_rejects_missing_layer_when_skipping_prediction(
 def test_dense_ffn_batch_stage_tokens_are_post_routing() -> None:
     predictor = Mock()
     scheduler = _stage_scheduler(predictor)
+    source_batch = _source_batch(layer_id=3)
+    source_batch.decode_ffn_m2n_arrival_time = 0.0
     dense_batch = DenseFFNBatchGroup(
-        requests=[_decode_request()],
-        num_tokens=[1],
+        requests=list(source_batch.requests),
+        num_tokens=list(source_batch.num_tokens),
         replica_id=0,
-        lane_id=0,
         time=0.0,
-        source_batch_ids=[1],
+        source_batch_ids=[source_batch.id],
         cluster_type=ClusterType.DECODE_FFN,
     )
     dense_batch.decode_ffn_layer_id = 3
+    dense_batch.source_batches = [source_batch]
 
     batch_stage, _ = scheduler.predict_and_create_stage(dense_batch)
 
@@ -1094,6 +1537,7 @@ def test_regular_batch_stage_accounts_requests_once() -> None:
     request = SimpleNamespace(
         id=2,
         runtime_epoch=0,
+        is_prefill_complete=True,
         on_batch_stage_schedule=Mock(),
         on_batch_stage_end=Mock(),
     )
@@ -1124,14 +1568,16 @@ def _run_decode_ffn_stage_event(monkeypatch, batch: Batch):
     from frontier.config import global_vars
 
     monkeypatch.setattr(global_vars, "is_disaggregated_mode", lambda: True)
-    monkeypatch.setattr(
-        global_vars, "get_monolithic_moe_stage_aggregation", lambda: False
-    )
 
     batch_stage = SimpleNamespace(execution_time=0.01, on_schedule=Mock())
     execution_time = SimpleNamespace(
         get_single_layer_moe_pre_dispatch_time=lambda: 0.0,
+        get_single_layer_moe_dispatch_time=lambda: 0.0,
         get_single_layer_moe_post_dispatch_compute_time=lambda: 1.0,
+        get_single_layer_moe_combine_time=lambda: 0.0,
+        get_single_layer_moe_post_combine_time=lambda: 0.0,
+        get_single_layer_post_attention_time=lambda: 1.0,
+        expert_parallel_communication_time=0.0,
     )
     stage_scheduler = Mock()
     stage_scheduler.get_queue_batches.return_value = [batch]
@@ -1145,7 +1591,7 @@ def _run_decode_ffn_stage_event(monkeypatch, batch: Batch):
     stage_scheduler.is_busy = False
 
     cluster_scheduler = Mock()
-    cluster_scheduler.get_dp_replica_stage_scheduler.return_value = stage_scheduler
+    cluster_scheduler.get_replica_stage_scheduler.return_value = stage_scheduler
     cluster_scheduler.get_replica.return_value = SimpleNamespace(
         is_moe=True,
         dp_size=1,
@@ -1159,7 +1605,7 @@ def _run_decode_ffn_stage_event(monkeypatch, batch: Batch):
         replica_id=0,
         stage_id=0,
         cluster_type=ClusterType.DECODE_FFN,
-        dp_id=0,
+        replica_local_id=0,
     )
     return event.handle_event(global_scheduler, Mock())
 
@@ -1169,7 +1615,6 @@ def test_mixed_dense_ffn_event_uses_direct_stage_lifecycle(monkeypatch) -> None:
         requests=[_decode_request()],
         num_tokens=[1],
         replica_id=0,
-        lane_id=0,
         time=0.0,
         source_batch_ids=[1],
         cluster_type=ClusterType.DECODE_FFN,
@@ -1228,6 +1673,7 @@ def _trained_predictor(model_config, *, isolate_branch: bool = True):
         moe_expert_parallel_size=1,
         moe_tensor_parallel_size=1,
     )
+    predictor._moe_ep_size = predictor._replica_config.moe_expert_parallel_size
     predictor._get_cluster_replica_config = lambda _cluster_type: predictor._replica_config
     predictor._get_cluster_model_architecture_profile = (
         lambda _cluster_type: model_config.get_model_architecture_profile()
@@ -1236,7 +1682,11 @@ def _trained_predictor(model_config, *, isolate_branch: bool = True):
     predictor._select_measurement_type_for_batch = lambda _batch: "decode"
     predictor._require_predictions_for_measurement_type = lambda *_args: None
     predictor._activate_measurement_type = lambda *_args: None
-    predictor._get_communication_time = lambda *_args: _ZeroAttributes()
+    def _get_communication_time(*_args, include_attention: bool = True):
+        del include_attention
+        return _ZeroAttributes()
+
+    predictor._get_communication_time = _get_communication_time
     predictor._get_overhead_time = lambda *_args: _ZeroAttributes()
     predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
     predictor._get_mlp_norm_layer_act_execution_time = lambda *_args: 0.0
@@ -1289,6 +1739,52 @@ def test_trained_decode_ffn_predictor_classifies_each_layer(
     )
 
     assert execution_time._is_moe is expected_is_moe
+
+
+def test_trained_prefill_dense_layer_rejects_post_attention_scope(
+    mixed_model_config,
+) -> None:
+    predictor = _trained_predictor(mixed_model_config)
+    predictor.predict_mlp_layer_time = lambda *_args, **_kwargs: SimpleNamespace(
+        mlp_norm_time=0.0,
+        mlp_layer_up_proj_execution_time=0.0,
+        mlp_layer_down_proj_execution_time=0.0,
+        mlp_layer_act_execution_time=0.0,
+        total_time=lambda: 0.0,
+    )
+
+    with pytest.raises(ValueError, match="MoE layer"):
+        predictor.predict_stage_execution_time(
+            SimpleNamespace(
+                id=901,
+                total_num_tokens=1,
+                requests=[SimpleNamespace(id=901)],
+            ),
+            stage_id=0,
+            cluster_type=ClusterType.PREFILL,
+            num_layers=1,
+            layer_id=3,
+            include_ffn=True,
+            include_attention=False,
+        )
+
+
+def test_trained_post_attention_scope_rejects_dense_override(
+    mixed_model_config,
+) -> None:
+    predictor = _trained_predictor(mixed_model_config)
+
+    with pytest.raises(ValueError, match="include_moe=False"):
+        predictor.predict_stage_execution_time(
+            SimpleNamespace(id=902),
+            stage_id=0,
+            cluster_type=ClusterType.PREFILL,
+            num_layers=1,
+            layer_id=4,
+            include_moe=False,
+            include_ffn=True,
+            include_attention=False,
+        )
 
 
 def test_trained_dense_decode_ffn_constructs_execution_time_with_one_is_moe_source(

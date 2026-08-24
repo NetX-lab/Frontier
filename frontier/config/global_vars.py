@@ -18,7 +18,6 @@ USE_CUDA_GRAPH: bool = False
 CUDAGRAPH_CAPTURE_SIZES: Optional[list[int]] = None
 DECODE_CUDA_GRAPH_MODE: str = "none"
 ALLOW_SPEC_DECODE_CUDA_GRAPH_DIAGNOSTIC: bool = False
-ENABLE_MONOLITHIC_MOE_STAGE_AGGREGATION: bool = False
 QUANTIZATION_MANAGER = None
 
 # Global MoE model indicator - determined by model architecture, NOT parallelism config
@@ -84,17 +83,6 @@ def get_decode_cuda_graph_mode() -> str:
 def get_allow_spec_decode_cuda_graph_diagnostic() -> bool:
     """Get the speculative decode CUDA graph diagnostic opt-in flag."""
     return ALLOW_SPEC_DECODE_CUDA_GRAPH_DIAGNOSTIC
-
-
-def set_monolithic_moe_stage_aggregation(enabled: bool) -> None:
-    """Set the MONOLITHIC MoE stage-level aggregation opt-in flag."""
-    global ENABLE_MONOLITHIC_MOE_STAGE_AGGREGATION
-    ENABLE_MONOLITHIC_MOE_STAGE_AGGREGATION = bool(enabled)
-
-
-def get_monolithic_moe_stage_aggregation() -> bool:
-    """Get whether MONOLITHIC MoE should use stage-level aggregation."""
-    return ENABLE_MONOLITHIC_MOE_STAGE_AGGREGATION
 
 
 def set_is_moe(is_moe: bool) -> None:
@@ -179,7 +167,6 @@ def reset_global_vars() -> None:
     """
     global SIMULATION_MODE, SYS_ARCH, USE_CUDA_GRAPH, CUDAGRAPH_CAPTURE_SIZES
     global DECODE_CUDA_GRAPH_MODE, ALLOW_SPEC_DECODE_CUDA_GRAPH_DIAGNOSTIC
-    global ENABLE_MONOLITHIC_MOE_STAGE_AGGREGATION
     global IS_MOE, _IS_MOE_INITIALIZED, QUANTIZATION_MANAGER
     SIMULATION_MODE = None
     SYS_ARCH = None
@@ -187,7 +174,6 @@ def reset_global_vars() -> None:
     CUDAGRAPH_CAPTURE_SIZES = None
     DECODE_CUDA_GRAPH_MODE = "none"
     ALLOW_SPEC_DECODE_CUDA_GRAPH_DIAGNOSTIC = False
-    ENABLE_MONOLITHIC_MOE_STAGE_AGGREGATION = False
     IS_MOE = None
     _IS_MOE_INITIALIZED = False
     QUANTIZATION_MANAGER = None

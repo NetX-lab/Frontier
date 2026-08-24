@@ -1,5 +1,7 @@
-from typing import Any, Dict, List, Optional, TYPE_CHECKING, Union
+import json
+import math
 import os
+from typing import Any, Dict, List, Mapping, Optional, TYPE_CHECKING, Union
 
 import numpy as np
 import pandas as pd
@@ -10,8 +12,9 @@ from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_metric_name_by_role,
 )
-from frontier.entities import Batch, ExecutionTime
+from frontier.entities import Batch, EPBatchGroup, ExecutionTime
 from frontier.entities.time_components import (
+    AttentionTime,
     CommunicationOperatorTimes,
     MoEOperatorTimes,
     MoETime,
@@ -20,7 +23,7 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
 from frontier.logger import init_logger
-from frontier.model_architectures import ModelArchitectureProfile, ResidualAddPolicy
+from frontier.model_architectures import ResidualAddPolicy
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
     PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
@@ -34,6 +37,12 @@ from frontier.moe_gating_runtime import (
 from frontier.moe_routing_runtime import (
     filter_moe_gating_routing_topk_rows,
     resolve_moe_gating_routing_runtime_path,
+)
+from frontier.moe_ep_workload import (
+    LayerEPWorkload,
+    build_contiguous_expert_ownership,
+    materialize_layer_ep_workload,
+    resolve_routing_details,
 )
 from frontier.operators.families import (
     MOE_FAMILY,
@@ -59,6 +68,61 @@ from frontier.execution_time_predictor.shared_prediction_model_manager import (
 )
 
 logger = init_logger(__name__)
+
+
+def _normalize_routing_details_for_trace(
+    routing_details: Mapping[int, Mapping[int, Mapping[int, float]]],
+) -> dict[str, dict[str, dict[str, float]]]:
+    """Return a strict JSON-safe copy of runtime routing details.
+
+    The matrix checker compares this emitted object with an independently
+    materialized sidecar.  The trace must therefore contain the actual
+    predictor-owned map, not a derived token allocation or a digest.
+    """
+
+    if not isinstance(routing_details, Mapping) or not routing_details:
+        raise ValueError("routing_details trace payload must be a non-empty mapping")
+    normalized: dict[str, dict[str, dict[str, float]]] = {}
+    for replica_id, per_layer in routing_details.items():
+        if type(replica_id) is not int or replica_id < 0:
+            raise ValueError(
+                "routing_details trace replica IDs must be non-negative integers"
+            )
+        if not isinstance(per_layer, Mapping) or not per_layer:
+            raise ValueError(
+                f"routing_details trace replica {replica_id} has no layer map"
+            )
+        normalized_layers: dict[str, dict[str, float]] = {}
+        for layer_id, per_expert in per_layer.items():
+            if type(layer_id) is not int or layer_id < 0:
+                raise ValueError(
+                    "routing_details trace layer IDs must be non-negative integers"
+                )
+            if not isinstance(per_expert, Mapping) or not per_expert:
+                raise ValueError(
+                    f"routing_details trace layer {layer_id} has no expert map"
+                )
+            normalized_experts: dict[str, float] = {}
+            for expert_id, ratio in per_expert.items():
+                if type(expert_id) is not int or expert_id < 0:
+                    raise ValueError(
+                        "routing_details trace expert IDs must be non-negative integers"
+                    )
+                value = float(ratio)
+                if not math.isfinite(value) or value < 0.0:
+                    raise ValueError(
+                        "routing_details trace ratios must be finite and non-negative"
+                    )
+                normalized_experts[str(expert_id)] = value
+            ratio_sum = sum(normalized_experts.values())
+            if not math.isclose(ratio_sum, 1.0, rel_tol=0.0, abs_tol=1e-12):
+                raise ValueError(
+                    "routing_details trace ratios must sum to one "
+                    f"for replica={replica_id} layer={layer_id}, got {ratio_sum}"
+                )
+            normalized_layers[str(layer_id)] = normalized_experts
+        normalized[str(replica_id)] = normalized_layers
+    return normalized
 
 
 def _get_moe_family_model_names() -> list[str]:
@@ -167,14 +231,76 @@ def _validate_moe_columns(moe_df: pd.DataFrame) -> None:
 
 
 class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
-    def _get_requested_moe_gating_routing_runtime_path(self) -> str:
-        return resolve_moe_gating_routing_runtime_path(
-            getattr(self, "_moe_routing_mode", "simulation")
+    @staticmethod
+    def _emit_routing_details_snapshot(
+        cluster_type: ClusterType,
+        routing_details: Mapping[int, Mapping[int, Mapping[int, float]]],
+    ) -> None:
+        """Emit the exact predictor-owned routing map for external validation."""
+
+        normalized = _normalize_routing_details_for_trace(routing_details)
+        payload = {
+            "schema_version": 1,
+            "cluster": cluster_type.name,
+            "routing_details": normalized,
+        }
+        logger.info(
+            "[ROUTING-SNAPSHOT] %s",
+            json.dumps(payload, sort_keys=True, separators=(",", ":")),
         )
 
-    def _get_dummy_execution_time(self, batch: Batch, pipeline_stage: int) -> ExecutionTime:
+    def _get_requested_moe_gating_routing_runtime_path(self) -> str:
+        return resolve_moe_gating_routing_runtime_path(
+            getattr(self, "_moe_routing_distribution_type", "balanced")
+        )
+
+    @staticmethod
+    def _get_ep_lane_routed_token_count(
+        batch: Batch,
+        per_expert_tokens: Optional[Dict[int, int]] = None,
+    ) -> Optional[int]:
+        """Return an EP lane's routed-token count, or ``None`` for full batches.
+
+        Dummy mode still models the same five-phase EP contract as the
+        profiling-backed path.  The lane-local routed compute therefore has
+        to depend on the materialized expert map even when the other dummy
+        components use fixed structural timings.
+        """
+
+        if per_expert_tokens is None:
+            if not isinstance(batch, EPBatchGroup):
+                return None
+            per_expert_tokens = getattr(batch, "per_expert_tokens", None)
+        if not isinstance(per_expert_tokens, dict) or not per_expert_tokens:
+            raise ValueError(
+                "EP dummy prediction requires a non-empty per_expert_tokens map"
+            )
+        routed_token_count = 0
+        for expert_id, token_count in per_expert_tokens.items():
+            if type(expert_id) is not int or expert_id < 0:
+                raise ValueError(
+                    "EP dummy prediction expert IDs must be exact non-negative ints"
+                )
+            if type(token_count) is not int or token_count < 0:
+                raise ValueError(
+                    "EP dummy prediction token counts must be exact non-negative ints"
+                )
+            routed_token_count += token_count
+        return routed_token_count
+
+    def _get_dummy_execution_time(
+        self,
+        batch: Batch,
+        pipeline_stage: int,
+        *,
+        include_attention: bool = True,
+    ) -> ExecutionTime:
         """Return fixed dummy ExecutionTime object with MoE-aware fields."""
+        if type(include_attention) is not bool:
+            raise ValueError("include_attention must be a bool")
         base_time = self._dummy_execution_time
+        routed_token_count = self._get_ep_lane_routed_token_count(batch)
+        zero_routed_ep_lane = routed_token_count == 0
         architecture_profile = self._get_model_architecture_profile()
         share_expert_enabled = self._model_config.supports_share_expert()
 
@@ -183,23 +309,31 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         moe_ep_size = self._replica_config.moe_expert_parallel_size
 
         # COMM_SKIP: TP all-reduce not needed when tp_size <= 1 (no tensor sharding)
-        attn_tp_allreduce_time = base_time if attn_tp_size > 1 else 0.0
-        moe_tp_allreduce_time = base_time if moe_tp_size > 1 else 0.0
-        # COMM_SKIP: EP all-to-all not needed when ep_size <= 1 (experts co-located)
-        expert_parallel_comm_time = base_time if moe_ep_size > 1 else 0.0
+        attn_tp_allreduce_time = (
+            base_time if include_attention and attn_tp_size > 1 else 0.0
+        )
+        moe_tp_allreduce_time = (
+            0.0
+            if zero_routed_ep_lane
+            else (base_time if moe_tp_size > 1 else 0.0)
+        )
+        moe_grouped_gemm_time = 0.0 if zero_routed_ep_lane else base_time
+        # EP=1 retains the named protocol phases with zero collective cost.
+        expert_parallel_phase_time = base_time if moe_ep_size > 1 else 0.0
+        expert_parallel_comm_time = expert_parallel_phase_time * 2
 
-        # COMM_SKIP: DP allreduce not needed when dp_size <= 1 (no cross-DP communication)
-        dp_size = getattr(self._replica_config, "data_parallel_size", 1)
-        cluster_type = getattr(self, "_cluster_type", None)
+        # Attention-DP MoE gather/scatter is retired.  MoE communication is
+        # represented by the Replica-local EP wave instead.
+        attn_dp_size = int(
+            getattr(self._replica_config, "attn_dp", 1)
+        )
+        if attn_dp_size != 1:
+            raise ValueError(
+                "MoE attention-DP communication is retired; expected "
+                f"attn_dp=1, got {attn_dp_size}"
+            )
         dp_input_allreduce_time = 0.0
         dp_output_allreduce_time = 0.0
-        if (
-            self._model_config.is_moe
-            and cluster_type in (ClusterType.PREFILL, ClusterType.MONOLITHIC)
-            and dp_size > 1
-        ):
-            dp_input_allreduce_time = base_time
-            dp_output_allreduce_time = base_time
 
         ffn_tp_allgather_time = 0.0
         share_expert_tp_allreduce_time = 0.0
@@ -228,13 +362,21 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         return ExecutionTime(
             num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
-            attention_rope_execution_time=base_time,
-            attention_kv_cache_save_execution_time=base_time,
-            attention_decode_execution_time=base_time,
-            attention_prefill_execution_time=base_time,
-            attention_layer_pre_proj_execution_time=base_time,
-            attention_layer_post_proj_execution_time=base_time,
-            attn_norm_time=base_time,
+            attention_rope_execution_time=(base_time if include_attention else 0.0),
+            attention_kv_cache_save_execution_time=(
+                base_time if include_attention else 0.0
+            ),
+            attention_decode_execution_time=(base_time if include_attention else 0.0),
+            attention_prefill_execution_time=(
+                base_time if include_attention else 0.0
+            ),
+            attention_layer_pre_proj_execution_time=(
+                base_time if include_attention else 0.0
+            ),
+            attention_layer_post_proj_execution_time=(
+                base_time if include_attention else 0.0
+            ),
+            attn_norm_time=base_time if include_attention else 0.0,
             mlp_norm_time=base_time,
             add_time=add_time,
             add_attn_residual_time=add_attn_residual_time,
@@ -256,7 +398,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             mlp_layer_up_proj_execution_time=0.0,
             mlp_layer_down_proj_execution_time=0.0,
             mlp_layer_act_execution_time=0.0,
-            moe_grouped_gemm_time=base_time,
+            moe_grouped_gemm_time=moe_grouped_gemm_time,
             share_expert_up_proj_time=share_expert_time,
             share_expert_down_proj_time=share_expert_time,
             share_expert_act_time=share_expert_time,
@@ -264,12 +406,22 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             share_expert_tensor_parallel_allreduce_time=share_expert_tp_allreduce_time,
             dp_input_allreduce_time=dp_input_allreduce_time,
             dp_output_allreduce_time=dp_output_allreduce_time,
+            communication_operator_times=CommunicationOperatorTimes(
+                {
+                    "expert_parallel_alltoall_dispatch": (
+                        expert_parallel_phase_time
+                    ),
+                    "expert_parallel_alltoall_combine": (
+                        expert_parallel_phase_time
+                    ),
+                }
+            ),
             moe_operator_times=_build_moe_operator_times(
                 mlp_norm_time=base_time,
                 moe_gating_linear_time=base_time * 0.5,
                 moe_gating_routing_topk_time=base_time * 0.5,
                 moe_shuffling_time=base_time,
-                moe_grouped_gemm_time=base_time,
+                moe_grouped_gemm_time=moe_grouped_gemm_time,
                 share_expert_up_proj_time=share_expert_time,
                 share_expert_act_time=share_expert_time,
                 share_expert_down_proj_time=share_expert_time,
@@ -293,30 +445,28 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         self._moe_tp_size = replica_config.moe_tensor_parallel_size
         self._moe_ep_size = replica_config.moe_expert_parallel_size
 
-        # Initialize routing mode before parent init so independent training paths
-        # select the correct moe_gating_routing_topk profiling rows.
-        self._moe_routing_mode = getattr(replica_config, "moe_routing_mode", "simulation")
-        self._moe_routing_seed = getattr(replica_config, "moe_routing_seed", 42)
-        if self._moe_routing_mode not in (
-            "simulation",
-            "uniform_legacy",
-            "uniform_random",
-        ):
+        # Initialize the canonical distribution selector before parent init so
+        # profiling paths choose matching gating-runtime metadata.
+        self._moe_routing_distribution_type = str(
+            getattr(replica_config, "moe_routing_distribution_type", "balanced")
+        ).strip().lower()
+        valid_distribution_types = {"balanced", "random", "skewed", "zipf"}
+        if self._moe_routing_distribution_type not in valid_distribution_types:
             raise ValueError(
-                f"Invalid moe_routing_mode: '{self._moe_routing_mode}'. "
-                f"Must be 'simulation', 'uniform_legacy', or 'uniform_random'."
+                "moe_routing_distribution_type must be one of "
+                f"{sorted(valid_distribution_types)}, got "
+                f"{self._moe_routing_distribution_type!r}"
             )
-        if (
-            self._moe_routing_mode in ("simulation", "uniform_random")
-            and self._moe_routing_seed < 0
-        ):
+        self._moe_routing_seed = getattr(replica_config, "moe_routing_seed", 42)
+        if type(self._moe_routing_seed) is not int or self._moe_routing_seed < 0:
             raise ValueError(
-                "moe_routing_seed must be non-negative when "
-                "moe_routing_mode is 'simulation' or 'uniform_random', "
+                "moe_routing_seed must be an exact non-negative int, "
                 f"got {self._moe_routing_seed}."
             )
         self._moe_gating_routing_runtime_path = (
-            resolve_moe_gating_routing_runtime_path(self._moe_routing_mode)
+            resolve_moe_gating_routing_runtime_path(
+                self._moe_routing_distribution_type
+            )
         )
 
         super().__init__(
@@ -330,76 +480,36 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             cc_backend,
         )
 
-        # Pre-compute routing details for simulation mode
-        # Structure: {layer_id: {expert_id: allocation_ratio}}
-        # This is computed once at init and reused for all batches.
-        self._routing_allocations: Optional[Dict[int, Dict[int, float]]] = None
+        # Pre-compute one global routing source. EP ownership is applied later
+        # by the shared per-layer materializer.
         self._global_routing_allocations: Optional[Dict[int, Dict[int, float]]] = None
-        if self._moe_routing_mode == "simulation":
-            self._routing_allocations = self._init_routing_allocations()
-            self._global_routing_allocations = self._init_global_routing_allocations()
-            logger.info(
-                f"[MoE Routing] Initialized routing allocations for simulation mode: "
-                f"seed={self._moe_routing_seed}, num_layers={len(self._routing_allocations)}"
+        self._monolithic_routing_details = None
+        self._global_routing_allocations = self._init_global_routing_allocations()
+        if self._cluster_type == ClusterType.MONOLITHIC and getattr(
+            self._model_config, "is_moe", True
+        ) is not False:
+            self._monolithic_routing_details = self._build_shared_routing_details()
+            self._emit_routing_details_snapshot(
+                ClusterType.MONOLITHIC,
+                self._monolithic_routing_details,
             )
-
-        self._share_expert_tp_allreduce_visibility_scale = float(
-            getattr(
-                self._config,
-                "share_expert_tp_allreduce_visibility_scale",
-                2.0 / 3.0,
-            )
+        logger.info(
+            "[MoE Routing] Initialized global routing allocations: "
+            "distribution=%s, seed=%s, num_layers=%s",
+            self._moe_routing_distribution_type,
+            self._moe_routing_seed,
+            len(self._global_routing_allocations),
         )
-        if self._share_expert_tp_allreduce_visibility_scale <= 0.0:
-            raise ValueError(
-                "share_expert_tp_allreduce_visibility_scale must be > 0, "
-                f"got={self._share_expert_tp_allreduce_visibility_scale}"
-            )
 
     def _init_routing_allocations(self) -> Dict[int, Dict[int, float]]:
         """
-        Pre-compute expert allocation ratios for all layers.
+        Return the canonical global routing source.
 
-        Uses deterministic seed to ensure reproducible results across runs.
-        The allocations are computed once at init time and cached.
-
-        Returns:
-            Dictionary mapping layer_id -> {expert_id: allocation_ratio}
-            Allocation ratios sum to 1.0 across all experts for each layer.
+        This private name is retained for existing internal callers, but it
+        delegates to the single generator so local and global maps cannot
+        diverge.
         """
-        num_layers = self._model_config.num_layers
-        total_experts = self._replica_config.total_expert_num
-
-        # Get number of experts per device (after EP partitioning)
-        if self._moe_ep_size > 0:
-            num_experts_per_device = total_experts // self._moe_ep_size
-        else:
-            num_experts_per_device = total_experts
-
-        if num_experts_per_device <= 0:
-            logger.warning(
-                f"num_experts_per_device={num_experts_per_device}, cannot init routing."
-            )
-            return {}
-
-        allocations: Dict[int, Dict[int, float]] = {}
-        for layer_id in range(num_layers):
-            # Use deterministic seed derived from config seed + layer_id
-            layer_seed = self._moe_routing_seed + layer_id
-            np.random.seed(layer_seed)
-
-            # Generate random weights and normalize to get allocation ratios
-            # This simulates realistic load imbalance across experts
-            random_weights = np.random.uniform(0.1, 1.0, num_experts_per_device)
-            total_weight = np.sum(random_weights)
-            expert_ratios = random_weights / total_weight
-
-            allocations[layer_id] = {
-                expert_id: float(expert_ratios[expert_id])
-                for expert_id in range(num_experts_per_device)
-            }
-
-        return allocations
+        return self._init_global_routing_allocations()
 
     def _init_global_routing_allocations(self) -> Dict[int, Dict[int, float]]:
         """Pre-compute global expert allocation ratios for shared-domain EP sync.
@@ -407,23 +517,59 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         Monolithic decode with EP enabled needs a global view across all experts to
         derive per-lane post-MoE arrival skew before the shared-domain all-reduce.
         """
-        num_layers = self._model_config.num_layers
         total_experts = self._replica_config.total_expert_num
-
-        if total_experts <= 0:
-            logger.warning(
-                "total_experts=%s, cannot initialize global routing allocations",
-                total_experts,
-            )
+        cluster_type = getattr(self, "_cluster_type", None)
+        if cluster_type == ClusterType.DECODE_ATTN or getattr(
+            self._model_config, "is_moe", None
+        ) is False:
             return {}
+        num_layers = self._model_config.num_layers
 
+        if type(total_experts) is not int or total_experts <= 0:
+            raise ValueError(
+                "total_expert_num must be an exact positive int for routing; "
+                f"got {total_experts!r}"
+            )
+        if type(self._moe_ep_size) is not int or self._moe_ep_size <= 0:
+            raise ValueError(
+                "moe_expert_parallel_size must be an exact positive int for routing; "
+                f"got {self._moe_ep_size!r}"
+            )
+        if total_experts % self._moe_ep_size != 0:
+            raise ValueError(
+                "total_expert_num must be divisible by moe_expert_parallel_size; "
+                f"got total_expert_num={total_experts}, "
+                f"moe_expert_parallel_size={self._moe_ep_size}"
+            )
+
+        distribution_type = self._moe_routing_distribution_type
         allocations: Dict[int, Dict[int, float]] = {}
         for layer_id in range(num_layers):
             layer_seed = self._moe_routing_seed + layer_id
-            np.random.seed(layer_seed)
-            random_weights = np.random.uniform(0.1, 1.0, total_experts)
-            total_weight = np.sum(random_weights)
-            expert_ratios = random_weights / total_weight
+            rng = np.random.default_rng(layer_seed)
+            if distribution_type == "balanced":
+                weights = np.ones(total_experts, dtype=float)
+            elif distribution_type == "random":
+                weights = rng.uniform(0.1, 1.0, total_experts)
+            elif distribution_type == "skewed":
+                ranks = np.arange(1, total_experts + 1, dtype=float)
+                weights = 1.0 / np.power(ranks, 0.35)
+            elif distribution_type == "zipf":
+                ranks = np.arange(1, total_experts + 1, dtype=float)
+                weights = 1.0 / ranks
+            else:
+                raise ValueError(
+                    "Unsupported moe_routing_distribution_type="
+                    f"{distribution_type!r}"
+                )
+            total_weight = float(np.sum(weights))
+            if not np.isfinite(total_weight) or total_weight <= 0.0:
+                raise ValueError(
+                    "MoE routing distribution produced an invalid weight sum: "
+                    f"distribution={distribution_type!r}, layer_id={layer_id}, "
+                    f"sum={total_weight!r}"
+                )
+            expert_ratios = weights / total_weight
             allocations[layer_id] = {
                 expert_id: float(expert_ratios[expert_id])
                 for expert_id in range(total_experts)
@@ -431,52 +577,126 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         return allocations
 
-    def _get_global_per_expert_tokens(
+    def _build_shared_routing_details(
         self,
-        total_routed_tokens: int,
-        layer_id: int,
-    ) -> Dict[int, int]:
-        """Discretize routed tokens across global experts for the given layer."""
-        if total_routed_tokens <= 0:
-            return {}
+    ) -> Dict[int, Dict[int, Dict[int, float]]]:
+        """Expose one immutable-shape routing source for monolithic schedulers.
 
-        total_experts = int(self._replica_config.total_expert_num)
-        if total_experts <= 0:
-            raise ValueError(f"Invalid total_expert_num={total_experts}")
+        ``_global_routing_allocations`` is generated once per model layer and is
+        intentionally replica-independent.  The scheduler, however, performs an
+        exact ``(replica_id, global_layer_id)`` lookup.  Materialize that lookup
+        shape here without generating a second distribution or assigning tokens
+        to requests.  Integer token accounting and EP ownership splitting remain
+        the responsibility of the shared per-layer materializer.
 
-        if self._moe_routing_mode == "uniform_legacy":
-            per_expert = total_routed_tokens // total_experts
-            remainder = total_routed_tokens % total_experts
-            return {
-                expert_id: per_expert + (1 if expert_id < remainder else 0)
-                for expert_id in range(total_experts)
-            }
-        if self._moe_routing_mode == "uniform_random":
-            return self._build_uniform_random_per_expert_tokens(
-                total_routed_tokens=total_routed_tokens,
-                num_experts=total_experts,
-                layer_id=layer_id,
-            )
-
-        if self._global_routing_allocations is None:
+        The current monolithic predictor is constructed from ``ReplicaConfig``
+        rather than ``ClusterConfig``.  The canonical cluster capacity is
+        injected as ``_cluster_num_replicas`` (or the explicit
+        ``ReplicaConfig.cluster_num_replicas`` field) before this method is
+        called.  A missing capacity is an invalid topology, not a condition to
+        infer from an attention-DP field.
+        """
+        allocations = getattr(self, "_global_routing_allocations", None)
+        if type(allocations) is not dict:
             raise ValueError(
-                "Global routing allocations not initialized for simulation mode. "
-                "Ensure _init_global_routing_allocations() was called in __init__."
+                "_global_routing_allocations must be an exact dict before "
+                "building shared routing details"
             )
 
-        effective_layer_id = (
-            layer_id if layer_id in self._global_routing_allocations else 0
+        replica_config = getattr(self, "_replica_config", None)
+        replica_count = getattr(self, "_cluster_num_replicas", None)
+        if replica_count is None:
+            replica_count = getattr(replica_config, "cluster_num_replicas", None)
+        if type(replica_count) is not int or replica_count <= 0:
+            raise ValueError(
+                "A positive cluster replica count is required to build shared "
+                f"routing details; got {replica_count!r}"
+            )
+
+        shared_details: Dict[int, Dict[int, Dict[int, float]]] = {}
+        for replica_id in range(replica_count):
+            per_layer: Dict[int, Dict[int, float]] = {}
+            for layer_id, expert_ratios in allocations.items():
+                if type(layer_id) is not int or layer_id < 0:
+                    raise ValueError(
+                        "Global routing layer IDs must be exact non-negative ints"
+                    )
+                if type(expert_ratios) is not dict:
+                    raise ValueError(
+                        "Global routing expert ratios must be exact dicts"
+                    )
+                per_layer[layer_id] = dict(expert_ratios)
+            shared_details[replica_id] = per_layer
+        return shared_details
+
+
+    def _get_routing_details_for_cluster(self, cluster_type: ClusterType):
+        """Return the exact pre-generated routing map for one serving role."""
+        attribute_by_cluster = {
+            ClusterType.MONOLITHIC: "_monolithic_routing_details",
+            ClusterType.PREFILL: "_prefill_routing_details",
+            ClusterType.DECODE: "_decode_routing_details",
+            ClusterType.DECODE_FFN: "_decode_ffn_routing_details",
+        }
+        attribute_name = attribute_by_cluster.get(cluster_type)
+        if attribute_name is None:
+            raise ValueError(
+                f"MoE routing materialization does not support cluster_type={cluster_type}"
+            )
+        routing_details = getattr(self, attribute_name, None)
+        if routing_details is None:
+            raise ValueError(
+                f"Missing pre-generated routing details for cluster_type={cluster_type}"
+            )
+        return routing_details
+
+    def _get_moe_replica_config_for_cluster(self, cluster_type: ClusterType):
+        if cluster_type == ClusterType.MONOLITHIC:
+            return self._replica_config
+        cluster_getter = getattr(self, "_get_cluster_replica_config", None)
+        if callable(cluster_getter):
+            return cluster_getter(cluster_type)
+        return self._replica_config
+
+    def _materialize_layer_ep_workload(
+        self, batch: Batch, cluster_type: ClusterType, layer_id: int
+    ) -> LayerEPWorkload:
+        """Materialize one exact Replica-local EP workload for a MoE layer."""
+        cluster_replica_config = self._get_moe_replica_config_for_cluster(cluster_type)
+        routing_details = self._get_routing_details_for_cluster(cluster_type)
+        target_replica_id = int(batch.replica_id)
+        global_layer_id = int(layer_id)
+        total_expert_num = int(cluster_replica_config.total_expert_num)
+        moe_ep_size = int(cluster_replica_config.moe_expert_parallel_size)
+        workload = materialize_layer_ep_workload(
+            routing_ratios=resolve_routing_details(
+                routing_details,
+                target_replica_id=target_replica_id,
+                global_layer_id=global_layer_id,
+            ),
+            target_replica_id=target_replica_id,
+            global_layer_id=global_layer_id,
+            routing_token_count=int(batch.total_num_tokens),
+            router_topk=int(cluster_replica_config.router_topk),
+            total_expert_num=total_expert_num,
+            moe_expert_parallel_size=moe_ep_size,
+            expert_to_ep=build_contiguous_expert_ownership(
+                total_expert_num,
+                moe_ep_size,
+            ),
         )
-        if effective_layer_id not in self._global_routing_allocations:
-            raise ValueError(
-                f"No global routing allocations for layer {layer_id} or fallback layer 0. "
-                f"Available layers: {list(self._global_routing_allocations.keys())}"
-            )
+        return workload
 
-        allocation_ratios = self._global_routing_allocations[effective_layer_id]
-        return self._build_proportional_per_expert_tokens(
-            total_routed_tokens=total_routed_tokens,
-            allocation_ratios=allocation_ratios,
+    def _calculate_expert_token_allocation(
+        self, batch: Batch, cluster_type: ClusterType, layer_id: int
+    ) -> Dict[int, int]:
+        """Return the shared materializer's global expert token map."""
+        return dict(
+            self._materialize_layer_ep_workload(
+                batch=batch,
+                cluster_type=cluster_type,
+                layer_id=layer_id,
+            ).global_per_expert_tokens
         )
 
     def predict_monolithic_decode_shared_domain_lane_moe_times_ms(
@@ -530,33 +750,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 )
             }
 
-        total_experts = int(self._replica_config.total_expert_num)
-        if total_experts <= 0 or total_experts % lane_count != 0:
-            raise ValueError(
-                "Monolithic decode shared-domain sync requires total_expert_num to be "
-                f"positive and divisible by moe_ep_size; got total_expert_num={total_experts}, "
-                f"moe_ep_size={lane_count}"
-            )
-
-        total_routed_tokens = int(
-            self._get_effective_moe_total_tokens(batch) * self._router_topk
-        )
-        if total_routed_tokens <= 0:
-            return {lane_id: 0.0 for lane_id in range(lane_count)}
-
-        experts_per_lane = total_experts // lane_count
-        global_per_expert_tokens = self._get_global_per_expert_tokens(
-            total_routed_tokens=total_routed_tokens,
+        workload = self._materialize_layer_ep_workload(
+            batch=batch,
+            cluster_type=ClusterType.MONOLITHIC,
             layer_id=layer_id,
         )
-
-        lane_per_expert_tokens: Dict[int, Dict[int, int]] = {
-            lane_id: {} for lane_id in range(lane_count)
-        }
-        for global_expert_id, token_count in global_per_expert_tokens.items():
-            lane_id = min(lane_count - 1, global_expert_id // experts_per_lane)
-            local_expert_id = global_expert_id % experts_per_lane
-            lane_per_expert_tokens[lane_id][local_expert_id] = int(token_count)
 
         post_attention_layernorm_time = self._get_mlp_norm_layer_act_execution_time(batch)
         gating_linear_time = self._get_gating_linear_time(batch)
@@ -571,10 +769,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         lane_times_ms: Dict[int, float] = {}
         for lane_id in range(lane_count):
-            per_expert_tokens = lane_per_expert_tokens[lane_id]
+            per_expert_tokens = dict(workload.per_ep_per_expert_tokens[lane_id])
             shuffling_time = 0.0
             grouped_gemm_time = 0.0
-            if per_expert_tokens:
+            if any(per_expert_tokens.values()):
                 shuffling_time = self._get_moe_shuffling_time(
                     batch,
                     moe_tokens_input=per_expert_tokens,
@@ -1040,8 +1238,37 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             return True
         if self._cluster_type == ClusterType.DECODE_FFN:
             return True
-        replica_config = getattr(self, "_replica_config", None)
-        return int(getattr(replica_config, "attn_data_parallel_size", 1)) > 1
+        # EP is replica-local and is independent of the retired attention-DP
+        # lane concept.  A full batch on any MoE serving role therefore uses
+        # the EP communication/accounting path whenever EP>1.
+        return True
+
+    def _predict_expert_parallel_phase_operator_times(
+        self,
+        batch: Batch,
+    ) -> dict[str, float]:
+        """Predict exact dispatch and combine collectives for one MoE layer."""
+
+        if self._moe_ep_size <= 1:
+            return {
+                "expert_parallel_alltoall_dispatch": 0.0,
+                "expert_parallel_alltoall_combine": 0.0,
+            }
+        if not self._use_expert_parallel_alltoall_path(batch):
+            raise ValueError(
+                "Canonical MoE EP execution requires named all-to-all dispatch "
+                "and combine phases"
+            )
+        return {
+            op_name: self._predict_comm_operator(
+                get_comm_operator(op_name),
+                batch,
+            )
+            for op_name in (
+                "expert_parallel_alltoall_dispatch",
+                "expert_parallel_alltoall_combine",
+            )
+        }
 
     def _get_effective_moe_total_tokens(self, batch: Batch) -> int:
         effective_tokens = int(
@@ -1054,30 +1281,36 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         return effective_tokens
 
     def _get_local_ep_routed_tokens(self, batch: Batch) -> int:
-        total_routed_tokens = int(
-            self._get_effective_moe_total_tokens(batch) * self._router_topk
-        )
-        if total_routed_tokens <= 0:
-            return 0
-
         from frontier.entities import EPBatchGroup
 
         if isinstance(batch, EPBatchGroup):
             per_expert_tokens = getattr(batch, "per_expert_tokens", None)
-            if per_expert_tokens:
-                return int(
-                    sum(int(token_count) for token_count in per_expert_tokens.values())
+            if per_expert_tokens is None:
+                raise ValueError(
+                    "EPBatchGroup.per_expert_tokens is required for "
+                    "expert-parallel routed-token accounting"
                 )
-            return int(batch.total_num_tokens)
-
-        moe_ep_size = int(getattr(self, "_moe_ep_size", 1))
-        if moe_ep_size <= 1:
-            return total_routed_tokens
-        if not bool(getattr(batch, "is_pure_decode_batch", False)):
-            return total_routed_tokens
-        if self._use_expert_parallel_alltoall_path(batch):
-            return total_routed_tokens
-        return max(1, (total_routed_tokens + moe_ep_size - 1) // moe_ep_size)
+            if not isinstance(per_expert_tokens, dict):
+                raise ValueError(
+                    "EPBatchGroup.per_expert_tokens must be a dictionary"
+                )
+            if not per_expert_tokens:
+                raise ValueError(
+                    "EPBatchGroup.per_expert_tokens must be a non-empty dictionary"
+                )
+            routed_tokens = 0
+            for expert_id, token_count in per_expert_tokens.items():
+                if type(expert_id) is not int or expert_id < 0:
+                    raise ValueError(
+                        "EPBatchGroup expert IDs must be non-negative integers"
+                    )
+                if type(token_count) is not int or token_count < 0:
+                    raise ValueError(
+                        "EPBatchGroup token counts must be non-negative integers"
+                    )
+                routed_tokens += token_count
+            return routed_tokens
+        return int(batch.total_num_tokens) * int(self._router_topk)
 
     def _get_moe_tokens_input(
         self, batch: Batch, layer_id: int = 0
@@ -1085,86 +1318,54 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         """
         Unified entry point to get MoE tokens input for grouped GEMM prediction.
 
-        This method supports three comparison-time routing modes:
-        - 'uniform_legacy': evenly split routed tokens across experts
-        - 'uniform_random': deterministically sample experts uniformly at random
-        - 'simulation': use pre-computed proportional allocations
+        The method consumes the one canonical pre-generated global routing source
+        selected by ``moe_routing_distribution_type``. EP lane batches carry an
+        explicit aggregate expert map; that map is authoritative and is never
+        regenerated from a second random source.
 
         Args:
             batch: The batch being processed
             layer_id: The layer ID for which to get token allocation (default 0)
 
         Returns:
-            - In 'uniform_legacy' mode: int (post_routing_batch_tokens = num_tokens * topk)
-            - In 'uniform_random' mode with on-demand model: Dict[int, int] mapping expert_id to token count
-            - In 'simulation' mode with on-demand model: Dict[int, int] mapping expert_id to token count
-            - In 'uniform_legacy' mode without on-demand model: int (post_routing_batch_tokens)
+            - In load-imbalance mode: Dict[int, int] mapping expert_id to token count
+            - In single-token-count profiling mode: int for EP=1 only
 
         Raises:
             ValueError: If the selected routing mode is not supported by the active predictor
         """
-        num_tokens = self._get_effective_moe_total_tokens(batch)
-        local_routed_tokens = self._get_local_ep_routed_tokens(batch)
-
-        if self._moe_routing_mode == "uniform_legacy":
-            post_routing_batch_tokens = num_tokens * self._router_topk
-
-            if self._is_grouped_gemm_on_demand_mode():
-                return self._build_uniform_per_expert_tokens(local_routed_tokens)
-
-            return post_routing_batch_tokens
-
-        if self._moe_routing_mode == "uniform_random":
-            if not self._is_grouped_gemm_on_demand_mode():
+        explicit_per_expert_tokens = getattr(batch, "per_expert_tokens", None)
+        if explicit_per_expert_tokens is not None:
+            if not isinstance(explicit_per_expert_tokens, dict):
                 raise ValueError(
-                    "moe_routing_mode='uniform_random' requires moe_grouped_gemm model trained with "
-                    "load-imbalance features (14 features). The current model appears to be trained "
-                    "with legacy 1D features only."
+                    "EP batch per_expert_tokens must be an exact dict when present"
                 )
-            return self._build_uniform_random_per_expert_tokens(
-                total_routed_tokens=local_routed_tokens,
-                num_experts=self._get_num_experts_per_device(),
+            per_expert_tokens = {
+                int(expert_id): int(token_count)
+                for expert_id, token_count in explicit_per_expert_tokens.items()
+            }
+            if any(token_count < 0 for token_count in per_expert_tokens.values()):
+                raise ValueError(
+                    "EP batch per_expert_tokens must contain non-negative counts"
+                )
+            return per_expert_tokens
+
+        cluster_type = getattr(self, "_cluster_type", None)
+        if cluster_type is None:
+            raise ValueError(
+                "Canonical MoE token materialization requires an initialized cluster_type"
+            )
+        per_expert_tokens = dict(
+            self._materialize_layer_ep_workload(
+                batch=batch,
+                cluster_type=cluster_type,
                 layer_id=layer_id,
-            )
-
-        if not self._is_grouped_gemm_on_demand_mode():
-            raise ValueError(
-                "moe_routing_mode='simulation' requires moe_grouped_gemm model trained with "
-                "load-imbalance features (14 features). The current model appears to be trained "
-                "with legacy 1D features only. Either:\n"
-                "  1. Use a model trained with load-imbalance features, or\n"
-                "  2. Set moe_routing_mode='uniform_legacy' to use legacy 1D mode."
-            )
-
-        if self._routing_allocations is None:
-            raise ValueError(
-                "Routing allocations not initialized. "
-                "Ensure _init_routing_allocations() was called in __init__."
-            )
-
-        effective_layer_id = layer_id if layer_id in self._routing_allocations else 0
-        if effective_layer_id not in self._routing_allocations:
-            raise ValueError(
-                f"No routing allocations for layer {layer_id} or fallback layer 0. "
-                f"Available layers: {list(self._routing_allocations.keys())}"
-            )
-
-        allocation_ratios = self._routing_allocations[effective_layer_id]
-        per_expert_tokens = self._build_proportional_per_expert_tokens(
-            total_routed_tokens=local_routed_tokens,
-            allocation_ratios=allocation_ratios,
+            ).global_per_expert_tokens
         )
 
-        actual_total = sum(per_expert_tokens.values())
-        if actual_total != local_routed_tokens:
-            raise ValueError(
-                "MoE routing token conservation failed after largest-remainder discretization: "
-                f"expected={local_routed_tokens}, got={actual_total}"
-            )
-
         logger.debug(
-            f"[_get_moe_tokens_input] layer={effective_layer_id}, num_tokens={num_tokens}, "
-            f"local_routed_tokens={local_routed_tokens}, topk={self._router_topk}, "
+            f"[_get_moe_tokens_input] layer={layer_id}, "
+            f"routing_tokens={batch.total_num_tokens}, topk={self._router_topk}, "
             f"experts={len(per_expert_tokens)}"
         )
 
@@ -1226,152 +1427,24 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
         return self._predictions[model_name][(effective_tokens,)]
 
-    def _get_num_experts_per_device(self) -> int:
-        total_experts = int(self._replica_config.total_expert_num)
-        if total_experts <= 0:
-            raise ValueError(f"Invalid total_expert_num={total_experts}")
-        if self._moe_ep_size <= 0:
-            return total_experts
-        if total_experts % self._moe_ep_size != 0:
-            raise ValueError(
-                "total_expert_num must be divisible by moe_expert_parallel_size. "
-                f"total_expert_num={total_experts}, moe_ep_size={self._moe_ep_size}"
-            )
-        return total_experts // self._moe_ep_size
-
-    def _build_uniform_per_expert_tokens(
-        self,
-        total_routed_tokens: int,
-    ) -> Dict[int, int]:
-        if total_routed_tokens < 0:
-            raise ValueError(
-                f"total_routed_tokens must be non-negative, got {total_routed_tokens}"
-            )
-        if total_routed_tokens == 0:
-            return {}
-
-        num_experts_per_device = self._get_num_experts_per_device()
-        per_expert = total_routed_tokens // num_experts_per_device
-        remainder = total_routed_tokens % num_experts_per_device
-
-        per_expert_tokens: Dict[int, int] = {}
-        for expert_id in range(num_experts_per_device):
-            token_count = per_expert + (1 if expert_id < remainder else 0)
-            per_expert_tokens[expert_id] = token_count
-        return per_expert_tokens
-
-    def _build_uniform_random_per_expert_tokens(
-        self,
-        total_routed_tokens: int,
-        num_experts: int,
-        layer_id: int,
-    ) -> Dict[int, int]:
-        if total_routed_tokens < 0:
-            raise ValueError(
-                f"total_routed_tokens must be non-negative, got {total_routed_tokens}"
-            )
-        if total_routed_tokens == 0:
-            return {}
-        if num_experts <= 0:
-            raise ValueError(f"num_experts must be positive, got {num_experts}")
-
-        rng = np.random.default_rng(int(self._moe_routing_seed) + int(layer_id))
-        sampled_expert_ids = rng.integers(
-            low=0,
-            high=num_experts,
-            size=total_routed_tokens,
-        )
-        expert_counts = np.bincount(sampled_expert_ids, minlength=num_experts)
-        return {
-            expert_id: int(expert_counts[expert_id])
-            for expert_id in range(num_experts)
-        }
-
-
-    def _build_proportional_per_expert_tokens(
-        self,
-        total_routed_tokens: int,
-        allocation_ratios: Dict[int, float],
-    ) -> Dict[int, int]:
-        """Discretize routing ratios with largest-remainder token conservation."""
-        if total_routed_tokens < 0:
-            raise ValueError(
-                f"total_routed_tokens must be non-negative, got {total_routed_tokens}"
-            )
-        if total_routed_tokens == 0:
-            return {}
-        if len(allocation_ratios) == 0:
-            raise ValueError("allocation_ratios must be non-empty")
-
-        ratio_sum = float(sum(float(ratio) for ratio in allocation_ratios.values()))
-        if ratio_sum <= 0.0:
-            raise ValueError(
-                f"allocation_ratios must sum to a positive value, got {ratio_sum}"
-            )
-
-        expert_base_allocation: Dict[int, int] = {}
-        expert_fractional_parts: Dict[int, float] = {}
-        normalized_ratios: Dict[int, float] = {}
-        total_base_allocated = 0
-
-        for expert_id in sorted(allocation_ratios):
-            normalized_ratio = float(allocation_ratios[expert_id]) / ratio_sum
-            exact_allocation = total_routed_tokens * normalized_ratio
-            base_allocation = int(exact_allocation)
-            fractional_part = exact_allocation - base_allocation
-
-            expert_base_allocation[expert_id] = base_allocation
-            expert_fractional_parts[expert_id] = fractional_part
-            normalized_ratios[expert_id] = normalized_ratio
-            total_base_allocated += base_allocation
-
-        remaining_tokens = total_routed_tokens - total_base_allocated
-        if remaining_tokens > 0:
-            sorted_experts = sorted(
-                expert_fractional_parts.keys(),
-                key=lambda expert_id: (
-                    -expert_fractional_parts[expert_id],
-                    -normalized_ratios[expert_id],
-                    expert_id,
-                ),
-            )
-            for index in range(remaining_tokens):
-                expert_id = sorted_experts[index % len(sorted_experts)]
-                expert_base_allocation[expert_id] += 1
-
-        total_allocated = sum(expert_base_allocation.values())
-        if total_allocated != total_routed_tokens:
-            raise ValueError(
-                "Largest-remainder MoE routing allocation failed token conservation: "
-                f"allocated={total_allocated}, expected={total_routed_tokens}"
-            )
-
-        return expert_base_allocation
-
     def _resolve_shuffling_per_expert_tokens(
         self,
         batch: Batch,
         moe_tokens_input: Optional[Union[int, Dict[int, int]]] = None,
     ) -> Dict[int, int]:
-        if isinstance(moe_tokens_input, dict):
-            normalized = {
-                int(expert_id): int(token_count)
-                for expert_id, token_count in moe_tokens_input.items()
-            }
-            if any(token_count < 0 for token_count in normalized.values()):
-                raise ValueError(
-                    f"Negative token count in moe_tokens_input={moe_tokens_input}"
-                )
-            return normalized
-
-        if isinstance(moe_tokens_input, int):
-            total_routed_tokens = moe_tokens_input
-        else:
-            total_routed_tokens = int(
-                self._get_effective_moe_total_tokens(batch) * self._router_topk
+        if not isinstance(moe_tokens_input, dict):
+            raise ValueError(
+                "Canonical MoE shuffling prediction requires an explicit per-expert token map"
             )
-
-        return self._build_uniform_per_expert_tokens(total_routed_tokens)
+        normalized = {
+            int(expert_id): int(token_count)
+            for expert_id, token_count in moe_tokens_input.items()
+        }
+        if any(token_count < 0 for token_count in normalized.values()):
+            raise ValueError(
+                f"Negative token count in moe_tokens_input={moe_tokens_input}"
+            )
+        return normalized
 
     def _build_moe_load_imbalance_features(
         self,
@@ -1411,32 +1484,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         features.pop("load_distribution", None)
         return features
 
-    def _get_moe_compute_calibration_scale(
-        self,
-        batch: Optional[Batch],
-        decode_phase_attr_name: str,
-        decode_phase_field_name: str,
-        global_attr_name: str,
-        global_field_name: str,
-    ) -> float:
-        if batch is None:
-            return self._get_calibration_scale(global_attr_name, global_field_name)
-
-        decode_phase_scale = self._get_decode_phase_only_calibration_scale(
-            batch,
-            decode_phase_attr_name,
-            decode_phase_field_name,
-        )
-        if decode_phase_scale is not None:
-            scale = decode_phase_scale
-        else:
-            scale = self._get_calibration_scale(global_attr_name, global_field_name)
-
-        request_length_scale = self._get_decode_request_length_calibration_scale(batch)
-        if request_length_scale is not None:
-            scale *= request_length_scale
-        return scale
-
     def _get_moe_shuffling_time(
         self,
         batch: Batch,
@@ -1458,6 +1505,14 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         if isinstance(prediction_cache, dict) and prediction_cache.get(
             "_on_demand_prediction", False
         ):
+            from frontier.entities import EPBatchGroup
+
+            if not isinstance(batch, EPBatchGroup):
+                raise ValueError(
+                    "On-demand MoE shuffling prediction requires an EP lane "
+                    "batch with local per-expert tokens; a global expert map "
+                    "cannot be used as one device's profile input"
+                )
             per_expert_tokens = self._resolve_shuffling_per_expert_tokens(
                 batch,
                 moe_tokens_input=moe_tokens_input,
@@ -1506,142 +1561,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
             raw_time = self._predictions["moe_shuffling"][(effective_tokens,)]
 
-        scale = self._get_moe_compute_calibration_scale(
-            batch,
-            "_decode_phase_moe_shuffling_calibration_scale",
-            "decode_phase_moe_shuffling_calibration_scale",
-            "_moe_shuffling_calibration_scale",
-            "moe_shuffling_calibration_scale",
-        )
-        return raw_time * scale
-
-    def _apply_share_expert_tp_allreduce_overlap(self, raw_time_ms: float) -> float:
-        """Apply profile-declared overlap scaling for share_expert TP allreduce.
-
-        vLLM records ``share_expert_tp_allreduce`` around an NCCL call that can overlap
-        with subsequent MoE kernels on separate streams. Architecture profiles opt in
-        by declaring the calibrated visibility scale.
-        """
-        if raw_time_ms <= 0.0:
-            return 0.0
-
-        model_config = getattr(self, "_model_config", None)
-        if model_config is None:
-            replica_config = getattr(self, "_replica_config", None)
-            model_config = getattr(replica_config, "model_config", None)
-
-        if model_config is None:
-            return raw_time_ms
-        architecture_getter = getattr(model_config, "get_model_architecture_profile", None)
-        if not callable(architecture_getter):
-            raise TypeError(
-                "MoE share-expert TP allreduce overlap requires "
-                "model_config.get_model_architecture_profile()"
-            )
-        architecture_profile = architecture_getter()
-        if not isinstance(architecture_profile, ModelArchitectureProfile):
-            raise TypeError(
-                "model_config.get_model_architecture_profile() must return "
-                "ModelArchitectureProfile"
-            )
-        overlap_visibility_scale = (
-            architecture_profile.share_expert_tp_allreduce_visibility_scale
-        )
-        if overlap_visibility_scale is None:
-            return raw_time_ms
-        configured_visibility_scale = getattr(
-            self,
-            "_share_expert_tp_allreduce_visibility_scale",
-            None,
-        )
-        if configured_visibility_scale is not None:
-            overlap_visibility_scale = float(configured_visibility_scale)
-        return raw_time_ms * float(overlap_visibility_scale)
-
-
-    def _apply_moe_grouped_gemm_decode_visibility(
-        self,
-        raw_time_ms: float,
-        batch: Batch,
-    ) -> float:
-        """Return raw grouped-GEMM time for runtime-only CUDA Graph modeling."""
-        if raw_time_ms <= 0.0:
-            return 0.0
-        return raw_time_ms
-
-
-    def _get_moe_tensor_parallel_allreduce_time(self, batch: Batch) -> float:
-        """
-        Get MoE/FFN tensor-parallel all-reduce time using moe_tensor_parallel_size.
-
-        This is separate from attention TP all-reduce and is required when
-        attn_tp != moe_tp in unified clusters (MONOLITHIC/DECODE/PREFILL).
-        """
-        moe_tp_size = self._replica_config.moe_tensor_parallel_size
-        # COMM_SKIP: TP all-reduce not needed when moe_tp_size <= 1 (no tensor sharding)
-        if moe_tp_size <= 1:
-            return 0.0
-
-        if self._cc_backend is not None:
-            effective_tokens = batch.get_effective_total_tokens_rounded(self._cluster_type)
-            data_size_bytes = self._model_config.embedding_dim * 2 * effective_tokens
-            quant_manager = get_quantization_manager()
-            data_size_bytes = quant_manager.adjust_tensor_size(
-                "allreduce", data_size_bytes, self._cluster_type
-            )
-            result = self._cc_backend.predict_allreduce(
-                data_size_bytes=data_size_bytes,
-                num_devices=moe_tp_size,
-                cluster_type=self._cluster_type,
-                comm_domain="MOE_TP",
-            )
-            result = self._strip_collective_sim_allreduce_launch_overhead_if_needed(
-                batch=batch,
-                predicted_ms=result,
-                num_devices=moe_tp_size,
-                comm_domain="MOE_TP",
-            )
-            logger.debug(
-                f"_get_moe_tensor_parallel_allreduce_time: using CC Backend, "
-                f"data_size={data_size_bytes}, num_devices={moe_tp_size}, result={result:.6f} ms"
-            )
-            return result
-
-        if self._enable_dummy_mode:
-            logger.debug(
-                f"_get_moe_tensor_parallel_allreduce_time: CC Backend not available, "
-                f"using dummy mode value={self._dummy_execution_time} ms"
-            )
-            return self._dummy_execution_time
-
-        raise RuntimeError(
-            f"CC Backend is required for MoE tensor-parallel allreduce prediction "
-            f"but was not provided. Either:\n"
-            f"  1. Configure a CC Backend (e.g., --cc_backend vidur or --cc_backend analytical)\n"
-            f"  2. Enable dummy mode explicitly (--enable_dummy_mode)\n"
-            f"Current state: cc_backend=None, enable_dummy_mode={self._enable_dummy_mode}"
-        )
-
-    def _get_expert_parallel_communication_calibration_scale(self, batch: Batch) -> float:
-        late_decode_scale = self._get_late_decode_only_calibration_scale(
-            batch,
-            "_late_decode_expert_parallel_communication_calibration_scale",
-            "late_decode_expert_parallel_communication_calibration_scale",
-        )
-        if late_decode_scale is not None:
-            return late_decode_scale
-
-        decode_phase_scale = self._get_decode_phase_only_calibration_scale(
-            batch,
-            "_decode_phase_expert_parallel_communication_calibration_scale",
-            "decode_phase_expert_parallel_communication_calibration_scale",
-        )
-        if decode_phase_scale is not None:
-            return decode_phase_scale
-        return self._get_calibration_scale(
-            "_expert_parallel_communication_calibration_scale",
-            "expert_parallel_communication_calibration_scale",
-        )
+        return raw_time
 
     def _get_expert_parallel_communication_time(self, batch: Batch) -> float:
         """
@@ -1660,14 +1580,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             quant_manager = get_quantization_manager()
 
             if self._use_expert_parallel_alltoall_path(batch):
-                from frontier.entities import EPBatchGroup
-
-                if isinstance(batch, EPBatchGroup) and getattr(batch, "per_expert_tokens", None):
-                    routed_tokens = int(
-                        sum(int(token_count) for token_count in batch.per_expert_tokens.values())
-                    )
-                else:
-                    routed_tokens = int(effective_tokens * self._router_topk)
+                routed_tokens = self._get_local_ep_routed_tokens(batch)
                 data_size_bytes = self._model_config.embedding_dim * 2 * routed_tokens
                 data_size_bytes = quant_manager.adjust_tensor_size(
                     "expert_parallel_communication", data_size_bytes, self._cluster_type
@@ -1683,9 +1596,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                     f"data_size={data_size_bytes}, num_devices={self._moe_ep_size}, "
                     f"result={result:.6f} ms"
                 )
-                return result * self._get_expert_parallel_communication_calibration_scale(
-                    batch
-                )
+                return result
 
             data_size_bytes = self._model_config.embedding_dim * 2 * effective_tokens
             data_size_bytes = quant_manager.adjust_tensor_size(
@@ -1708,9 +1619,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 f"data_size={data_size_bytes}, num_devices={self._moe_ep_size}, "
                 f"result={result:.6f} ms"
             )
-            return result * self._get_expert_parallel_communication_calibration_scale(
-                batch
-            )
+            return result
 
         if self._enable_dummy_mode:
             logger.debug(
@@ -1845,14 +1754,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 # Use the shared on-demand prediction path (with runtime caching and strict feature checks).
                 raw_time = self._get_on_demand_prediction("moe_grouped_gemm", features)
                 runtime_cache[cache_key] = raw_time
-            scale = self._get_moe_compute_calibration_scale(
-                batch,
-                "_decode_phase_moe_grouped_gemm_calibration_scale",
-                "decode_phase_moe_grouped_gemm_calibration_scale",
-                "_moe_grouped_gemm_calibration_scale",
-                "moe_grouped_gemm_calibration_scale",
-            )
-            return raw_time * scale
+            return raw_time
 
         def _get_cached_grouped_gemm_prediction(rounded_tokens: int) -> float:
             cache_key = (rounded_tokens,)
@@ -1885,14 +1787,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             )
             rounded_tokens = self._round_to_valid_key(approx_num_tokens)
             raw_time = _get_cached_grouped_gemm_prediction(rounded_tokens)
-            scale = self._get_moe_compute_calibration_scale(
-                batch,
-                "_decode_phase_moe_grouped_gemm_calibration_scale",
-                "decode_phase_moe_grouped_gemm_calibration_scale",
-                "_moe_grouped_gemm_calibration_scale",
-                "moe_grouped_gemm_calibration_scale",
-            )
-            return raw_time * scale
+            return raw_time
 
         # Backward compatibility: single number of tokens
         num_tokens = num_tokens_or_allocation
@@ -1900,14 +1795,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             return 0.0
         rounded_tokens = self._round_to_valid_key(num_tokens)
         raw_time = _get_cached_grouped_gemm_prediction(rounded_tokens)
-        scale = self._get_moe_compute_calibration_scale(
-            batch,
-            "_decode_phase_moe_grouped_gemm_calibration_scale",
-            "decode_phase_moe_grouped_gemm_calibration_scale",
-            "_moe_grouped_gemm_calibration_scale",
-            "moe_grouped_gemm_calibration_scale",
-        )
-        return raw_time * scale
+        return raw_time
 
     # This is now a private method used internally for MoE-specific logic
     def _get_execution_time_internal(
@@ -1916,6 +1804,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         pipeline_stage: int,
         moe_tokens_input: "int | Dict[int, int] | None" = None,
         include_moe: bool = True,
+        include_ffn: bool = True,
+        include_attention: bool = True,
     ) -> "ExecutionTime":
         """
         Calculate execution time for a pipeline stage.
@@ -1926,8 +1816,14 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             moe_tokens_input: Input for MoE grouped GEMM time calculation.
                 - For standard mode (1 feature): int (post_routing_batch_tokens)
                 - For on-demand mode (14 features): Dict[int, int] (per_expert_tokens)
-                - None is only valid when include_moe=False
+                - None is valid for attention-only and dense-layer calls
             include_moe: Whether to include MoE-specific calculations
+            include_ffn: Whether to include the post-attention FFN block.  When
+                false, only attention and stage-level communication/overhead are
+                constructed; no MLP/MoE profiling lookup is allowed.
+            include_attention: Whether to include attention operators.  When
+                false, the caller is supplying a post-attention EP lane and
+                attention profiling rows must not be queried.
 
         Returns:
             ExecutionTime with all component times
@@ -1935,10 +1831,25 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         Raises:
             ValueError: If include_moe=True but moe_tokens_input is None (fail-fast)
         """
-        attention_time = self.predict_attention_layer_time(
-            batch=batch,
-            layer_id=0,
-            cluster_type=self._cluster_type,
+        if type(include_ffn) is not bool:
+            raise ValueError("include_ffn must be a bool")
+        if type(include_attention) is not bool:
+            raise ValueError("include_attention must be a bool")
+        if not include_ffn and include_moe:
+            raise ValueError("include_moe cannot be true when include_ffn is false")
+        if not include_attention and not include_ffn:
+            raise ValueError(
+                "include_attention=False requires an FFN/MoE post-attention probe"
+            )
+
+        attention_time = (
+            self.predict_attention_layer_time(
+                batch=batch,
+                layer_id=0,
+                cluster_type=self._cluster_type,
+            )
+            if include_attention
+            else AttentionTime()
         )
 
         communication_operator_times: dict[str, float] = {}
@@ -1957,7 +1868,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             )
 
         # For MoE models, attention still uses Tensor Parallelism (AllReduce).
-        if self._replica_config.attn_tensor_parallel_size == 1:
+        if (
+            not include_attention
+            or self._replica_config.attn_tensor_parallel_size == 1
+        ):
             attn_tp_allreduce_time = 0
         else:
             attn_tp_allreduce_time = self._predict_comm_operator(
@@ -1971,7 +1885,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         # Dense-FFN (non-MoE layer) path still uses FFN TP allreduce semantics.
         # Keep it aligned with dense predictor behavior for mixed-layer models.
         moe_tp_allreduce_time = 0.0
-        if include_moe and self._replica_config.moe_tensor_parallel_size > 1:
+        if include_ffn and include_moe and self._replica_config.moe_tensor_parallel_size > 1:
             moe_tp_allreduce_time = self._predict_comm_operator(
                 get_comm_operator("moe_tensor_parallel_allreduce"),
                 batch,
@@ -1979,7 +1893,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             communication_operator_times["moe_tensor_parallel_allreduce"] = (
                 moe_tp_allreduce_time
             )
-        elif self._replica_config.attn_tensor_parallel_size > 1:
+        elif include_ffn and self._replica_config.attn_tensor_parallel_size > 1:
             moe_tp_allreduce_time = attn_tp_allreduce_time
             communication_operator_times["mlp_tensor_parallel_allreduce"] = (
                 moe_tp_allreduce_time
@@ -1988,7 +1902,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         share_expert_up_proj_time = 0.0
         share_expert_down_proj_time = 0.0
         share_expert_act_time = 0.0
-        if include_moe and self._model_config.supports_share_expert():
+        if include_ffn and include_moe and self._model_config.supports_share_expert():
             share_expert_up_proj_time = self._get_share_expert_up_proj_execution_time(batch)
             share_expert_down_proj_time = self._get_share_expert_down_proj_execution_time(batch)
             share_expert_act_time = self._get_share_expert_act_execution_time(batch)
@@ -1997,24 +1911,14 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         mlp_down_proj_time = 0.0
         mlp_act_time = 0.0
 
-        if include_moe:
-            expert_parallel_communication_time = 0.0
-            if self._moe_ep_size > 1:
-                expert_parallel_operator_name = (
-                    "expert_parallel_alltoall"
-                    if self._use_expert_parallel_alltoall_path(batch)
-                    else "expert_parallel_allreduce"
-                )
-                expert_parallel_communication_time = (
-                    self._predict_comm_operator(
-                        get_comm_operator(expert_parallel_operator_name),
-                        batch,
-                    )
-                    * self._get_expert_parallel_communication_calibration_scale(batch)
-                )
-                communication_operator_times[expert_parallel_operator_name] = (
-                    expert_parallel_communication_time
-                )
+        if include_ffn and include_moe:
+            expert_parallel_operator_times = (
+                self._predict_expert_parallel_phase_operator_times(batch)
+            )
+            communication_operator_times.update(expert_parallel_operator_times)
+            expert_parallel_communication_time = sum(
+                expert_parallel_operator_times.values()
+            )
             moe_gating_linear_time = self._get_gating_linear_time(batch)
             moe_gating_routing_topk_time = self._get_gating_routing_topk_time(batch)
             moe_gating_time = moe_gating_linear_time + moe_gating_routing_topk_time
@@ -2034,11 +1938,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 moe_tokens_input,
                 batch=batch,
             )
-            moe_grouped_gemm_time = self._apply_moe_grouped_gemm_decode_visibility(
-                moe_grouped_gemm_time,
-                batch,
-            )
-        else:
+        elif include_ffn:
             # Dense FFN branch for mixed-layer MoE models.
             expert_parallel_communication_time = 0.0
             moe_gating_time = 0.0
@@ -2046,11 +1946,28 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             moe_gating_routing_topk_time = 0.0
             moe_shuffling_time = 0.0
             moe_grouped_gemm_time = 0.0
-            mlp_up_proj_time = self._get_mlp_layer_up_proj_execution_time(batch)
-            mlp_down_proj_time = self._get_mlp_layer_down_proj_execution_time(batch)
-            mlp_act_time = self._get_mlp_layer_act_execution_time(batch)
+            if self._model_config.supports_share_expert():
+                # Step2Mini/Step3 dense layers are the shared-expert FFN.  Map
+                # those profiled operations into the dense MLP component
+                # fields so the layer remains a FULL_STAGE_WORLD operation and
+                # does not acquire MoE routing or EP collective semantics.
+                mlp_up_proj_time = self._get_share_expert_up_proj_execution_time(batch)
+                mlp_down_proj_time = self._get_share_expert_down_proj_execution_time(batch)
+                mlp_act_time = self._get_share_expert_act_execution_time(batch)
+            else:
+                mlp_up_proj_time = self._get_mlp_layer_up_proj_execution_time(batch)
+                mlp_down_proj_time = self._get_mlp_layer_down_proj_execution_time(batch)
+                mlp_act_time = self._get_mlp_layer_act_execution_time(batch)
+        else:
+            # Attention-only probe: no FFN/MoE operation or profiling lookup.
+            expert_parallel_communication_time = 0.0
+            moe_gating_time = 0.0
+            moe_gating_linear_time = 0.0
+            moe_gating_routing_topk_time = 0.0
+            moe_shuffling_time = 0.0
+            moe_grouped_gemm_time = 0.0
 
-        add_time = self._get_add_layer_act_execution_time(batch)
+        add_time = self._get_add_layer_act_execution_time(batch) if include_ffn else 0.0
         add_attn_residual_time = 0.0
         add_ffn_residual_time = 0.0
         architecture_profile = self._get_model_architecture_profile()
@@ -2062,7 +1979,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         ffn_tp_allgather_time = 0.0
         share_expert_tp_allreduce_time = 0.0
         moe_tp_allgather_op = architecture_profile.moe_tensor_parallel_allgather_op
-        if include_moe and moe_tp_allgather_op:
+        if include_ffn and include_moe and moe_tp_allgather_op:
             moe_tp_size = self._replica_config.moe_tensor_parallel_size
             if moe_tp_size > 1:
                 ffn_tp_allgather_time = self._predict_comm_operator(
@@ -2081,16 +1998,14 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                         get_comm_operator(share_expert_tp_allreduce_op),
                         batch,
                     )
-                    share_expert_tp_allreduce_time = self._apply_share_expert_tp_allreduce_overlap(
-                        raw_share_expert_tp_allreduce_time
-                    )
+                    share_expert_tp_allreduce_time = raw_share_expert_tp_allreduce_time
                     communication_operator_times[
                         share_expert_tp_allreduce_op
                     ] = share_expert_tp_allreduce_time
 
         dp_input_allreduce_time = 0.0
         dp_output_allreduce_time = 0.0
-        if include_moe and self._cluster_type is not None:
+        if include_ffn and include_moe and self._cluster_type is not None:
             dp_input_allreduce_time, dp_output_allreduce_time = (
                 self.predict_dp_moe_allreduce_times(batch, self._cluster_type)
             )
@@ -2128,7 +2043,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             f"stage={pipeline_stage}",
         )
 
-        mlp_norm_time = self._get_mlp_norm_layer_act_execution_time(batch)
+        mlp_norm_time = (
+            self._get_mlp_norm_layer_act_execution_time(batch) if include_ffn else 0.0
+        )
 
         return ExecutionTime(
             num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
@@ -2166,7 +2083,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             pp_stage_boundary_handoff_time=self._get_pp_stage_boundary_handoff_time(
                 batch, pipeline_stage
             ),
-            is_moe=include_moe,
+            is_moe=bool(include_ffn and include_moe),
             mlp_layer_up_proj_execution_time=mlp_up_proj_time,
             mlp_layer_down_proj_execution_time=mlp_down_proj_time,
             mlp_layer_act_execution_time=mlp_act_time,
@@ -2195,7 +2112,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                     share_expert_down_proj_time=share_expert_down_proj_time,
                     include_share_expert=self._model_config.supports_share_expert(),
                 )
-                if include_moe
+                if include_ffn and include_moe
                 else None
             ),
         )
@@ -2274,11 +2191,16 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         """
         if self._enable_dummy_mode:
             base_time = self._dummy_execution_time
+            routed_token_count = self._get_ep_lane_routed_token_count(
+                batch_or_group,
+                per_expert_tokens=per_expert_tokens,
+            )
+            moe_grouped_gemm_time = 0.0 if routed_token_count == 0 else base_time
             share_expert_time = (
                 base_time if self._model_config.supports_share_expert() else 0.0
             )
             return MoETime(
-                moe_grouped_gemm_time=base_time,
+                moe_grouped_gemm_time=moe_grouped_gemm_time,
                 moe_gating_linear_time=base_time * 0.5,
                 moe_gating_routing_topk_time=base_time * 0.5,
                 moe_shuffling_time=base_time,
@@ -2291,7 +2213,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                     moe_gating_linear_time=base_time * 0.5,
                     moe_gating_routing_topk_time=base_time * 0.5,
                     moe_shuffling_time=base_time,
-                    moe_grouped_gemm_time=base_time,
+                    moe_grouped_gemm_time=moe_grouped_gemm_time,
                     share_expert_up_proj_time=share_expert_time,
                     share_expert_act_time=share_expert_time,
                     share_expert_down_proj_time=share_expert_time,
@@ -2354,9 +2276,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 else self._get_effective_moe_total_tokens(batch) * self._router_topk
             )
 
-            if (
-                abs(total_allocated_tokens - expected_tokens) > 1
-            ):  # Allow small rounding errors
+            if total_allocated_tokens != expected_tokens:
                 raise ValueError(
                     f"Token conservation violated in predict_moe_layer_time: "
                     f"allocated {total_allocated_tokens} tokens, "
@@ -2571,6 +2491,170 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         raise NotImplementedError("MoE all-to-all prediction not implemented")
         # return self._dummy_execution_time
 
+    def _predict_mtp_decoder_layer_time_ms(
+        self,
+        *,
+        predictor,
+        batch: Batch,
+    ) -> float:
+        layer_id = 0
+        model_config = getattr(predictor, "_model_config", None)
+        if model_config is None:
+            raise ValueError(
+                "MTP structural decoder prediction requires model_config"
+            )
+        if not bool(getattr(model_config, "is_moe", False)):
+            return super()._predict_mtp_decoder_layer_time_ms(
+                predictor=predictor,
+                batch=batch,
+            )
+
+        is_moe_layer = getattr(model_config, "is_moe_layer", None)
+        if not callable(is_moe_layer):
+            raise ValueError(
+                "MTP structural MoE decoder prediction requires "
+                "model_config.is_moe_layer"
+            )
+        if not bool(is_moe_layer(layer_id)):
+            return super()._predict_mtp_decoder_layer_time_ms(
+                predictor=predictor,
+                batch=batch,
+            )
+
+        cluster_type = getattr(predictor, "_cluster_type", None)
+        if not isinstance(cluster_type, ClusterType):
+            raise ValueError(
+                "MTP structural MoE decoder prediction requires a valid cluster_type"
+            )
+
+        attention_execution_time = predictor.predict_stage_execution_time(
+            batch=batch,
+            stage_id=0,
+            cluster_type=cluster_type,
+            num_layers=1,
+            layer_id=layer_id,
+            include_ffn=False,
+        )
+        attention_time_ms = float(attention_execution_time.model_time_ms)
+        if not math.isfinite(attention_time_ms) or attention_time_ms < 0:
+            raise ValueError(
+                "MTP structural attention time must be finite and non-negative, "
+                f"got {attention_time_ms}"
+            )
+
+        workload = predictor._materialize_layer_ep_workload(
+            batch=batch,
+            cluster_type=cluster_type,
+            layer_id=layer_id,
+        )
+        participant_ep_ids = tuple(workload.participant_ep_ids)
+        if not participant_ep_ids:
+            raise ValueError(
+                "MTP structural MoE decoder produced no EP participants"
+            )
+
+        effective_tokens = int(
+            batch.get_effective_total_tokens_for_compute(cluster_type)
+        )
+        if effective_tokens <= 0:
+            raise ValueError(
+                "MTP structural MoE decoder requires positive pre-routing "
+                f"effective tokens, got {effective_tokens}"
+            )
+
+        from frontier.entities import EPBatchGroup, Request
+
+        pre_dispatch_times_ms: List[float] = []
+        dispatch_times_ms: List[float] = []
+        routed_compute_times_ms: List[float] = []
+        combine_times_ms: List[float] = []
+        post_combine_times_ms: List[float] = []
+        for ep_id in participant_ep_ids:
+            per_expert_tokens = dict(
+                workload.per_ep_per_expert_tokens[int(ep_id)]
+            )
+            logic_num_tokens = list(per_expert_tokens.values())
+            lane_batch = EPBatchGroup(
+                requests=[
+                    Request(0.0, 0, num_tokens)
+                    for num_tokens in logic_num_tokens
+                ],
+                num_tokens=logic_num_tokens,
+                replica_id=int(batch.replica_id),
+                ep_id=int(ep_id),
+                time=float(getattr(batch, "time", 0.0) or 0.0),
+                source_batch_ids=[int(batch.id)],
+                per_expert_tokens=per_expert_tokens,
+                cluster_type=cluster_type,
+                is_moe=True,
+            )
+            lane_batch.moe_pre_routing_effective_total_tokens = effective_tokens
+
+            lane_execution_time = predictor.predict_stage_execution_time(
+                batch=lane_batch,
+                stage_id=0,
+                cluster_type=cluster_type,
+                num_layers=1,
+                layer_id=layer_id,
+                include_attention=False,
+            )
+            phase_times_ms = [
+                float(lane_execution_time.get_single_layer_moe_pre_dispatch_time()),
+                float(lane_execution_time.get_single_layer_moe_dispatch_time()),
+                float(
+                    lane_execution_time.get_single_layer_moe_post_dispatch_compute_time()
+                ),
+                float(lane_execution_time.get_single_layer_moe_combine_time()),
+                float(
+                    lane_execution_time.get_single_layer_moe_post_combine_time()
+                ),
+            ]
+            if any(
+                not math.isfinite(value) or value < 0
+                for value in phase_times_ms
+            ):
+                raise ValueError(
+                    "MTP structural MoE lane phase times must be finite and "
+                    f"non-negative, got ep_id={ep_id}, values={phase_times_ms}"
+                )
+
+            post_attention_time_ms = float(
+                lane_execution_time.get_single_layer_post_attention_time()
+            )
+            if not math.isfinite(post_attention_time_ms) or post_attention_time_ms < 0:
+                raise ValueError(
+                    "MTP structural MoE lane post-attention time must be finite "
+                    f"and non-negative, got ep_id={ep_id}, "
+                    f"value={post_attention_time_ms}"
+                )
+            if not math.isclose(
+                sum(phase_times_ms),
+                post_attention_time_ms,
+                rel_tol=1e-9,
+                abs_tol=1e-9,
+            ):
+                raise ValueError(
+                    "MTP structural MoE lane phase decomposition does not match "
+                    f"post-attention time: ep_id={ep_id}, "
+                    f"phase_sum_ms={sum(phase_times_ms)}, "
+                    f"post_attention_ms={post_attention_time_ms}"
+                )
+
+            pre_dispatch_times_ms.append(phase_times_ms[0])
+            dispatch_times_ms.append(phase_times_ms[1])
+            routed_compute_times_ms.append(phase_times_ms[2])
+            combine_times_ms.append(phase_times_ms[3])
+            post_combine_times_ms.append(phase_times_ms[4])
+
+        return (
+            attention_time_ms
+            + max(pre_dispatch_times_ms)
+            + max(dispatch_times_ms)
+            + max(routed_compute_times_ms)
+            + max(combine_times_ms)
+            + max(post_combine_times_ms)
+        )
+
     def predict_stage_execution_time(
         self,
         batch: Batch,
@@ -2578,6 +2662,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         cluster_type: ClusterType,
         num_layers: int = 1,
         layer_id: int = 0,
+        include_moe: bool | None = None,
+        include_ffn: bool = True,
+        include_attention: bool = True,
     ) -> ExecutionTime:
         """
         Predict execution time for MoE models using per-layer component semantics.
@@ -2587,8 +2674,48 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         Therefore, changing ``num_layers`` must update only the layer count, not rescale
         per-layer components.
         """
+        if num_layers < 1:
+            raise ValueError(f"num_layers must be >= 1, got {num_layers}")
+        if type(include_ffn) is not bool:
+            raise ValueError("include_ffn must be a bool")
+        if type(include_attention) is not bool:
+            raise ValueError("include_attention must be a bool")
+        if not include_attention and (
+            cluster_type not in (ClusterType.MONOLITHIC, ClusterType.DECODE)
+            or not include_ffn
+        ):
+            raise ValueError(
+                "Post-attention-only prediction requires MONOLITHIC or unified "
+                "DECODE with FFN enabled"
+            )
+        if not include_attention:
+            if include_moe is False:
+                raise ValueError(
+                    "Post-attention-only prediction requires a MoE layer; "
+                    "include_moe=False selects a dense FFN branch"
+                )
+            model_config = self._model_config
+            is_moe_layer = bool(
+                model_config is not None
+                and model_config.is_moe
+                and model_config.is_moe_layer(layer_id)
+            )
+            if not is_moe_layer:
+                raise ValueError(
+                    "Post-attention-only prediction requires a MoE layer; "
+                    f"layer_id={layer_id} is dense"
+                )
+        if not include_ffn and include_moe is not None:
+            raise ValueError(
+                "include_moe must be None for an attention-only stage probe"
+            )
+
         if self._enable_dummy_mode:
-            return self._get_dummy_execution_time(batch, stage_id)
+            return self._get_dummy_execution_time(
+                batch,
+                stage_id,
+                include_attention=include_attention,
+            )
 
         logger.debug(
             "[EXEC_TIME_PREDICT_MOE] stage_id=%s, cluster_type=%s, num_layers=%s, "
@@ -2602,12 +2729,14 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             batch.num_tokens,
         )
 
-        if num_layers < 1:
-            raise ValueError(f"num_layers must be >= 1, got {num_layers}")
-
         measurement_type = self._select_measurement_type_for_batch(batch)
         self._require_predictions_for_measurement_type(measurement_type, batch)
         self._activate_measurement_type(measurement_type)
+        self._emit_cuda_graph_activation_records(
+            batch,
+            measurement_type,
+            cluster_type,
+        )
 
         # Validate cluster_type consistency
         if self._cluster_type is not None and cluster_type != self._cluster_type:
@@ -2618,17 +2747,24 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         # Mixed-layer MoE models (e.g., Step3) have dense FFN layers where MoE
         # ops must be disabled. The runtime scheduler provides explicit layer_id
-        # for single-layer prediction calls (num_layers == 1).
-        include_moe = True
-        if num_layers == 1:
-            include_moe = self._model_config.is_moe_layer(layer_id)
+        # for single-layer prediction calls (num_layers == 1).  An explicit
+        # override is used by attention-only probes so the predictor does not
+        # materialize a routed workload that the caller will not execute.
+        if not include_ffn:
+            include_moe_for_layer = False
+        elif include_moe is None:
+            include_moe_for_layer = True
+            if num_layers == 1:
+                include_moe_for_layer = self._model_config.is_moe_layer(layer_id)
+        elif type(include_moe) is bool:
+            include_moe_for_layer = include_moe
+        else:
+            raise ValueError("include_moe must be a bool or None")
 
         moe_tokens_input = None
-        if include_moe:
-            # Use unified _get_moe_tokens_input() for mode-aware input selection:
-            # - 'uniform_legacy' mode: returns int (post_routing_batch_tokens)
-            # - 'simulation' mode with on-demand: returns Dict[int, int] (per_expert_tokens)
-            # - 'simulation' mode without on-demand: returns int (post_routing_batch_tokens)
+        if include_moe_for_layer:
+            # Use the canonical distribution source for per-layer MoE input
+            # selection. EP lane batches carry their materialized map directly.
             moe_tokens_input = self._get_moe_tokens_input(batch, layer_id=layer_id)
 
             if isinstance(moe_tokens_input, dict):
@@ -2643,7 +2779,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 logger.debug(
                     "[EXEC_TIME_PREDICT_MOE] Using %s mode with post_routing_batch_tokens=%s, "
                     "layer_id=%s",
-                    self._moe_routing_mode,
+                    self._moe_routing_distribution_type,
                     moe_tokens_input,
                     layer_id,
                 )
@@ -2658,7 +2794,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             batch,
             stage_id,
             moe_tokens_input=moe_tokens_input,
-            include_moe=include_moe,
+            include_moe=include_moe_for_layer,
+            include_ffn=include_ffn,
+            include_attention=include_attention,
         )
 
         # Communication OP-TRACE: log per-layer allreduce times for op-level comparison
@@ -2714,43 +2852,78 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             f"layer_id={layer_id}, predicted_time_ms={et._attention_layer_post_proj_execution_time:.6f}"
         )
 
-        # MOE OP-TRACE: log per-layer MoE op times
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][post_attention_layernorm] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._mlp_norm_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][moe_gating] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._moe_gating_routing_topk_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][moe_gating_linear] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._moe_gating_linear_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][moe_gating_routing_topk] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._moe_gating_routing_topk_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][moe_shuffling] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._moe_shuffling_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][moe_grouped_gemm] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._moe_grouped_gemm_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][add] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._add_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][add_attn_residual] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._add_attn_residual_time:.6f}"
-        )
-        logger.info(
-            f"[OP-TRACE][{cluster_name}][MOE][add_ffn_residual] batch_id={batch.id}, "
-            f"layer_id={layer_id}, predicted_time_ms={et._add_ffn_residual_time:.6f}"
-        )
+        if include_ffn and include_moe_for_layer:
+            # MOE OP-TRACE: log only the routed-expert protocol for an actual
+            # MoE layer.  Dense layers in a mixed model must not be counted as
+            # EP work merely because the model has an MoE-capable topology.
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][post_attention_layernorm] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._mlp_norm_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][moe_gating] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._moe_gating_routing_topk_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][moe_gating_linear] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._moe_gating_linear_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][moe_gating_routing_topk] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._moe_gating_routing_topk_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][moe_shuffling] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._moe_shuffling_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][moe_grouped_gemm] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._moe_grouped_gemm_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][add] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._add_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][add_attn_residual] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._add_attn_residual_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][MOE][add_ffn_residual] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._add_ffn_residual_time:.6f}"
+            )
+        elif include_ffn:
+            # Dense OP-TRACE: this is a FULL_STAGE_WORLD FFN operation.  The
+            # component fields may be populated from shared-expert profile
+            # rows for Step2Mini/Step3 models, but the protocol remains dense.
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][post_attention_layernorm] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._mlp_norm_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][mlp_up_proj] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._mlp_layer_up_proj_execution_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][mlp_down_proj] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._mlp_layer_down_proj_execution_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][mlp_act] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._mlp_layer_act_execution_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][add] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._add_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][add_attn_residual] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._add_attn_residual_time:.6f}"
+            )
+            logger.info(
+                f"[OP-TRACE][{cluster_name}][DENSE_FFN][add_ffn_residual] batch_id={batch.id}, "
+                f"layer_id={layer_id}, predicted_time_ms={et._add_ffn_residual_time:.6f}"
+            )
         logger.info(
             f"[OP-TRACE][{cluster_name}][SPEC_DECODE][decode_draft_proposer] "
             f"batch_id={batch.id}, layer_id={layer_id}, predicted_time_ms="

@@ -19,6 +19,7 @@ from frontier.operators.spec import (
     ResourceClass,
     TensorParallelMode,
     TraceKind,
+    ZeroPayloadPolicy,
 )
 from frontier.types import ClusterType
 
@@ -112,7 +113,6 @@ MOE_FAMILY = OperatorFamilySpec(
             resource_class=ResourceClass.MEMORY,
             tp_mode=TensorParallelMode.MOE_TP,
             ep_agnostic=True,
-            calibration_key="moe_shuffling",
         ),
         OperatorSpec(
             name="moe_grouped_gemm",
@@ -123,7 +123,6 @@ MOE_FAMILY = OperatorFamilySpec(
             resource_class=ResourceClass.COMP,
             tp_mode=TensorParallelMode.MOE_TP,
             projection_ownership=ProjectionOwnership.OUTSIDE_ATTENTION,
-            calibration_key="moe_grouped_gemm",
         ),
     ),
 )
@@ -325,6 +324,49 @@ def _tp_allreduce_payload_bytes(ctx: CommPayloadContext) -> int:
     return _hidden_state_bytes(ctx, "allreduce")
 
 
+def _moe_tp_allreduce_payload_bytes(ctx: CommPayloadContext) -> int:
+    # EP lanes carry post-routing token counts.  A regular source batch does
+    # not: its effective token count is the correct shared-workload payload.
+    from frontier.entities.batch import EPBatchGroup
+
+    if not isinstance(ctx.batch, EPBatchGroup):
+        routed_tokens = _effective_tokens(ctx)
+    else:
+        per_expert_tokens = getattr(ctx.batch, "per_expert_tokens", None)
+        if per_expert_tokens is None:
+            raise ValueError(
+                "MoE TP allreduce requires EPBatchGroup.per_expert_tokens"
+            )
+        if not isinstance(per_expert_tokens, dict):
+            raise ValueError(
+                "MoE TP allreduce per_expert_tokens must be a dictionary"
+            )
+        if not per_expert_tokens:
+            raise ValueError(
+                "MoE TP allreduce per_expert_tokens must be a non-empty dictionary"
+            )
+        routed_tokens = 0
+        for expert_id, token_count in per_expert_tokens.items():
+            if type(expert_id) is not int or expert_id < 0:
+                raise ValueError(
+                    "MoE TP allreduce expert IDs must be non-negative integers"
+                )
+            if type(token_count) is not int or token_count < 0:
+                raise ValueError(
+                    "MoE TP allreduce token counts must be non-negative integers"
+                )
+            routed_tokens += token_count
+
+    data_size_bytes = int(ctx.model_config.embedding_dim) * 2 * routed_tokens
+    return int(
+        ctx.quantization_manager.adjust_tensor_size(
+            "allreduce",
+            data_size_bytes,
+            ctx.cluster_type,
+        )
+    )
+
+
 def _pp_send_recv_payload_bytes(ctx: CommPayloadContext) -> int:
     return _hidden_state_bytes(ctx, "send_recv")
 
@@ -348,9 +390,34 @@ def _moe_tp_allgather_payload_bytes(ctx: CommPayloadContext) -> int:
 
 
 def _expert_parallel_payload_bytes(ctx: CommPayloadContext) -> int:
-    per_expert_tokens = getattr(ctx.batch, "per_expert_tokens", None)
-    if per_expert_tokens:
-        routed_tokens = sum(int(token_count) for token_count in per_expert_tokens.values())
+    from frontier.entities.batch import EPBatchGroup
+
+    if isinstance(ctx.batch, EPBatchGroup):
+        per_expert_tokens = getattr(ctx.batch, "per_expert_tokens", None)
+        if per_expert_tokens is None:
+            raise ValueError(
+                "Expert-parallel all-to-all requires EPBatchGroup.per_expert_tokens"
+            )
+        if not isinstance(per_expert_tokens, dict):
+            raise ValueError(
+                "Expert-parallel all-to-all per_expert_tokens must be a dictionary"
+            )
+        if not per_expert_tokens:
+            raise ValueError(
+                "Expert-parallel all-to-all per_expert_tokens must be a "
+                "non-empty dictionary"
+            )
+        routed_tokens = 0
+        for expert_id, token_count in per_expert_tokens.items():
+            if type(expert_id) is not int or expert_id < 0:
+                raise ValueError(
+                    "Expert-parallel all-to-all expert IDs must be non-negative integers"
+                )
+            if type(token_count) is not int or token_count < 0:
+                raise ValueError(
+                    "Expert-parallel all-to-all token counts must be non-negative integers"
+                )
+            routed_tokens += token_count
     else:
         router_topk = int(getattr(ctx.replica_config, "router_topk", 0) or 0)
         if router_topk <= 0:
@@ -431,9 +498,10 @@ COMM_FAMILY = OperatorFamilySpec(
             collective_alias="allreduce",
             comm_group="moe_tp",
             comm_domain="MOE_TP",
-            payload_builder=_tp_allreduce_payload_bytes,
+            payload_builder=_moe_tp_allreduce_payload_bytes,
             num_devices_builder=_moe_tp_devices,
             apply_allreduce_launch_overhead_strip=True,
+            zero_payload_policy=ZeroPayloadPolicy.EXACT_NOOP,
         ),
         CommOperatorSpec(
             name="moe_tensor_parallel_allgather",

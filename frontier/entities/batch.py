@@ -33,6 +33,10 @@ class AFDStageMetadata:
     original_stage_token_lens: Optional[List[int]] = None
     padded_stage_token_lens: Optional[List[int]] = None
     ffn_compute_stage_token_lens: Optional[List[int]] = None
+    attention_use_cuda_graph: bool = False
+    attention_cudagraph_capture_sizes: Optional[List[int]] = None
+    ffn_use_cuda_graph: bool = False
+    ffn_cudagraph_capture_sizes: Optional[List[int]] = None
 
     @property
     def num_pad_tokens(self) -> int:
@@ -237,6 +241,18 @@ class AFDStageMetadata:
             original_stage_token_lens=list(stage_tokens_lens),
             padded_stage_token_lens=list(padded_tokens_lens),
             ffn_compute_stage_token_lens=ffn_compute_stage_token_lens,
+            attention_use_cuda_graph=bool(use_cuda_graph),
+            attention_cudagraph_capture_sizes=(
+                list(cudagraph_capture_sizes)
+                if cudagraph_capture_sizes is not None
+                else None
+            ),
+            ffn_use_cuda_graph=bool(ffn_use_cuda_graph),
+            ffn_cudagraph_capture_sizes=(
+                list(ffn_cudagraph_capture_sizes)
+                if ffn_cudagraph_capture_sizes is not None
+                else None
+            ),
         )
 
     def with_dp_padding(
@@ -290,6 +306,22 @@ class AFDStageMetadata:
             original_stage_token_lens=self.original_stage_token_lens,
             padded_stage_token_lens=list(dp_stage_max_tokens),
             ffn_compute_stage_token_lens=ffn_stage_tokens,
+            attention_use_cuda_graph=self.attention_use_cuda_graph,
+            attention_cudagraph_capture_sizes=(
+                list(self.attention_cudagraph_capture_sizes)
+                if self.attention_cudagraph_capture_sizes is not None
+                else None
+            ),
+            ffn_use_cuda_graph=self.ffn_use_cuda_graph,
+            ffn_cudagraph_capture_sizes=(
+                list(ffn_cudagraph_capture_sizes)
+                if ffn_cudagraph_capture_sizes is not None
+                else (
+                    list(self.ffn_cudagraph_capture_sizes)
+                    if self.ffn_cudagraph_capture_sizes is not None
+                    else None
+                )
+            ),
         )
 
 
@@ -427,9 +459,9 @@ class Batch(BaseEntity):
         self._id = Batch.generate_id()
 
         # PD-AF Disaggregation support
-        # preserve the original replica ID and DP ID for batches in decode-attn cluster
+        # Preserve the source attention Replica and its full-stage local identity.
         self.decode_attn_original_replica_id: Optional[int] = None
-        self.decode_attn_original_dp_id: Optional[int] = None
+        self.decode_attn_original_replica_local_id: Optional[int] = None
         self.replay_decode_token_index: Optional[int] = None
         self.decode_attn_cohort_id: Optional[int] = None
         self.decode_attn_cohort_request_ids: Optional[tuple[int, ...]] = None
@@ -509,6 +541,9 @@ class Batch(BaseEntity):
         # pipeline-wave token count derived from stage-local metadata.
         self.afd_stage_represents_all_stages: bool = False
         self.spec_decode_metadata: Optional[SpecDecodeBatchMetadata] = None
+        # Structural MTP replay accounts for proposer work in its outer caller.
+        # Nested decoder probes must not add the same proposer overhead again.
+        self._suppress_spec_decode_proposer_overhead: bool = False
         self._spec_terminal_completion_delay_s_by_request: Dict[int, float] = {}
 
     @staticmethod
@@ -1204,7 +1239,7 @@ class Batch(BaseEntity):
         lines.append(f"batch id = {self._id}")
         lines.append(
             f"decode_attn_original_replica_id={self.decode_attn_original_replica_id}, "
-            f"decode_attn_original_dp_id={self.decode_attn_original_dp_id}"
+            f"decode_attn_original_replica_local_id={self.decode_attn_original_replica_local_id}"
         )
         lines.append(f"num req = {self.size}, {self.request_ids}")
         lines.append("------------")
@@ -1339,12 +1374,12 @@ class EPBatchGroup(Batch):
     def get_effective_total_tokens_for_compute(
         self, cluster_type: "ClusterType" = None
     ) -> int:
-        from frontier.types import ClusterType
-
-        if (
-            cluster_type == ClusterType.DECODE_FFN
-            and self._moe_pre_routing_effective_total_tokens is not None
-        ):
+        # The local routed token count is used for grouped-GEMM and collective
+        # payloads, but every EP lane shares the source batch's pre-routing
+        # work (gating, shuffling, and shared experts).  This metadata is
+        # therefore valid for shared PREFILL/DECODE lanes as well as the
+        # PD-AF DECODE_FFN lane; it is attached only to synthetic EP groups.
+        if self._moe_pre_routing_effective_total_tokens is not None:
             return self._moe_pre_routing_effective_total_tokens
         return super().get_effective_total_tokens_for_compute(cluster_type)
 
@@ -1372,13 +1407,11 @@ class DenseFFNBatchGroup(Batch):
         requests: List[Request],
         num_tokens: List[int],
         replica_id: int,
-        lane_id: int,
         time: float,
         source_batch_ids: List[int],
         cluster_type: "ClusterType",
     ) -> None:
         super().__init__(replica_id, requests, num_tokens, is_moe=False)
-        self._lane_id = lane_id
         self._time = time
         self._source_batch_ids = source_batch_ids
         self._cluster_type = cluster_type
@@ -1394,10 +1427,6 @@ class DenseFFNBatchGroup(Batch):
         assert time >= 0, "Invalid scheduling time for DenseFFNBatchGroup"
         self._scheduled_at = time
         self._scheduled = True
-
-    @property
-    def lane_id(self) -> int:
-        return self._lane_id
 
     @property
     def time(self) -> float:

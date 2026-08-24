@@ -299,6 +299,7 @@ _EVENT_FLOAT_SECOND_FIELDS = {
     "batch_stage_execution_time",
     "transfer_start_time",
     "transfer_end_time",
+    "combine_end_time",
 }
 _EVENT_BOOL_FIELDS = {"is_attn_to_ffn", "is_last_stage"}
 _EVENT_LIST_FIELDS = {
@@ -424,7 +425,8 @@ _EVENT_SCHEMAS = {
         ["replica_id", "stage_id", "ep_id"]
     ),
     "EPAllToAllCombineCollectiveEvent": _event_schema(
-        ["replica_id", "stage_id"]
+        ["replica_id", "stage_id"],
+        ["combine_end_time"],
     ),
     "M2NTransferStartEvent": _event_schema(
         [

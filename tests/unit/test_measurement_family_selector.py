@@ -47,7 +47,7 @@ def _build_scheduler(cluster_type: ClusterType) -> VLLMv1EngineReplicaScheduler:
     scheduler._replica_is_moe = False
     scheduler._num_stages = 1
     scheduler._batch_creation_counter = 0
-    scheduler._dp_id = 0
+    scheduler._replica_local_id = 0
     scheduler._max_batch_size = 64
     scheduler._max_num_running_reqs = 64
     scheduler._spec_decode_enabled = True

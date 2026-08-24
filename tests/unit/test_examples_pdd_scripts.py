@@ -114,7 +114,7 @@ def test_pdd_moe_scripts_fail_fast_on_invalid_shared_domain_parallelism() -> Non
             check=False,
         )
         assert result.returncode == 2, script
-        assert "PREFILL_ATTN_TP * PREFILL_ATTN_DP == PREFILL_MOE_TP * PREFILL_MOE_EP" in result.stderr, script
+        assert "PREFILL_ATTN_TP == PREFILL_MOE_TP * PREFILL_MOE_EP" in result.stderr, script
 
 
 def test_pdd_spec_decode_scripts_use_spec_controls_without_prefix_cache_conflict() -> None:
