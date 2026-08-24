@@ -48,6 +48,13 @@ from frontier.spec_decode import (
 from frontier.types import ClusterType
 
 
+_REQUEST_PROGRESS_PRESERVING_PREEMPTION_CLUSTER_TYPES = frozenset(
+    {
+        ClusterType.DECODE,
+        ClusterType.DECODE_ATTN,
+    }
+)
+
 _FRONTIER_VLLM_V1_SCHED_DECISION_LOG_PATH = os.environ.get(
     "FRONTIER_VLLM_V1_SCHED_DECISION_LOG_PATH", ""
 )
@@ -3065,12 +3072,15 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             self._free_request_resources(victim)
 
         # Mark as preempted and reset the scheduler-visible computed frontier.
-        # DECODE_ATTN requests arrive after the PREFILL handoff in PD-AF mode;
-        # their Request-level token lifecycle must survive memory preemption.
-        # Rewinding `_num_processed_tokens` there would contradict
-        # `is_prefill_complete` and discard the handoff-emitted output token.
+        # Disaggregated decode requests arrive after PREFILL has completed and
+        # the prompt KV frontier has transferred to the decode-side cluster.
+        # Their Request-level token lifecycle must survive memory preemption;
+        # only scheduler-local computed state and KV allocation are restarted.
         victim._preempted = True
-        if self._cluster_type != ClusterType.DECODE_ATTN:
+        if (
+            self._cluster_type
+            not in _REQUEST_PROGRESS_PRESERVING_PREEMPTION_CLUSTER_TYPES
+        ):
             victim._num_processed_tokens = 0  # Reset computed tokens as in vLLM v1
         self._scheduled_num_computed_tokens_by_request.pop(victim.id, None)
 
