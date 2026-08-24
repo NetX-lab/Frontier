@@ -98,6 +98,7 @@ class _DummyClusterConfig:
 
 class _DummyBatchStage:
     def __init__(self) -> None:
+        self.id = 29
         self._batch_id = 17
         self.request_ids = [101]
         self.request_runtime_epochs = [0]
@@ -504,6 +505,7 @@ def test_frontier_stage_batch_ledger_uses_structured_mla_operator_times() -> Non
     assert component_ledger["attn_mla_decode_time"] == pytest.approx(0.10)
     assert component_ledger["attn_mla_v_up_proj_time"] == pytest.approx(0.12)
     assert sum(component_ledger.values()) == pytest.approx(0.42)
+    assert row["batch_stage_id"] == 29
     assert row["execution_time"]["total_time_ms"] == pytest.approx(0.42)
     assert row["request_num_prefill_tokens"] == [1]
 

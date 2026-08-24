@@ -17,6 +17,7 @@ def test_kv_cache_transfer_info_computes_end_time_effective_bytes_and_dict() -> 
         target_cluster_type=ClusterType.DECODE,
         source_replica_id=3,
         source_replica_local_id=2,
+        source_batch_stage_id=41,
         kv_cache_size_bytes=4096,
         transfer_time_ms=2.5,
         transfer_start_time=7.0,
@@ -37,6 +38,8 @@ def test_kv_cache_transfer_info_computes_end_time_effective_bytes_and_dict() -> 
     assert data["source_cluster_type"] == "PREFILL"
     assert data["target_cluster_type"] == "DECODE"
     assert data["source_replica_id"] == 3
+    assert data["source_batch_stage_id"] == 41
+    assert data["target_batch_stage_id"] is None
     assert data["kv_cache_size_bytes"] == 4096
     assert data["effective_data_size_bytes"] == 2048
     assert data["transfer_time_ms"] == pytest.approx(2.5)
@@ -161,6 +164,7 @@ def test_kv_cache_transfer_start_event_targets_decode_cluster_for_routing() -> N
         source_cluster_type=ClusterType.PREFILL,
         target_cluster_type=ClusterType.DECODE,
         batch=batch,
+        source_batch_stage_id=303,
         kv_cache_size_bytes=1024,
         transfer_time_ms=0.5,
     )
@@ -169,6 +173,15 @@ def test_kv_cache_transfer_start_event_targets_decode_cluster_for_routing() -> N
 
     assert event.get_target_cluster() is ClusterType.DECODE
     assert simulator._determine_target_cluster(event) is ClusterType.DECODE
+    captured = {}
+    metrics_store = SimpleNamespace(
+        on_kv_cache_transfer_start=lambda *_args: captured.setdefault(
+            "transfer_info", _args[-1]
+        )
+    )
+    next_events = event.handle_event(None, metrics_store)
+    assert next_events[0]._transfer_info.source_batch_stage_id == 303
+    assert event.to_dict()["source_batch_stage_id"] == 303
 
 
 def test_transfer_info_without_compression_preserves_original_size() -> None:
@@ -181,6 +194,7 @@ def test_transfer_info_without_compression_preserves_original_size() -> None:
         target_cluster_type=ClusterType.DECODE,
         source_replica_id=0,
         source_replica_local_id=0,
+        source_batch_stage_id=42,
         kv_cache_size_bytes=0,
         transfer_time_ms=0.0,
         transfer_start_time=3.0,

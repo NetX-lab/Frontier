@@ -27,12 +27,29 @@ class ClusterBatchEndEvent(BaseEvent):
         request_execution_signatures: list[tuple[int, int, int]] | None = None,
         request_mutation_signatures: list[tuple[int, int, int, int]] | None = None,
         thinking_round_start_times: list[float | None] | None = None,
+        source_batch_stage_id: int | None = None,
     ):
         super().__init__(time, EventType.CLUSTER_BATCH_END)
         self._replica_id = replica_id
         self._batch = batch
         self._cluster_type = cluster_type
         self._replica_local_id = replica_local_id
+        if source_batch_stage_id is not None and (
+            type(source_batch_stage_id) is not int
+            or source_batch_stage_id < 0
+        ):
+            raise ValueError(
+                "source_batch_stage_id must be a non-negative int or None, "
+                f"got {source_batch_stage_id!r}"
+            )
+        if (
+            cluster_type == ClusterType.PREFILL
+            and source_batch_stage_id is None
+        ):
+            raise ValueError(
+                "PREFILL ClusterBatchEndEvent requires source_batch_stage_id"
+            )
+        self._source_batch_stage_id = source_batch_stage_id
         self._batch_schedule_epoch = (
             batch.schedule_epoch
             if batch_schedule_epoch is None
@@ -285,6 +302,7 @@ class ClusterBatchEndEvent(BaseEvent):
                             kv_cache_size_bytes=kv_cache_size_bytes,
                             transfer_time_ms=transfer_time_ms,
                             source_cluster_type=self._cluster_type,
+                            source_batch_stage_id=self._source_batch_stage_id,
                         )
                     )
 

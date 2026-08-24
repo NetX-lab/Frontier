@@ -718,7 +718,7 @@ def validate_kv_stage_alignment(
     stage_rows: Iterable[Mapping[str, Any]],
     transfer_rows: Iterable[Mapping[str, Any]],
 ) -> dict[str, Any]:
-    """Join each KV transfer to its observed source and target stages."""
+    """Join each KV transfer through explicit BatchStage foreign keys."""
 
     stages = [dict(row) for row in stage_rows]
     kv_rows = [
@@ -732,6 +732,152 @@ def validate_kv_stage_alignment(
             ["KV stage validation requires stage rows and KV transfers"],
         )
 
+    missing_stage_provenance = [
+        index
+        for index, row in enumerate(stages)
+        if "batch_stage_id" not in row
+    ]
+    missing_transfer_provenance = [
+        (
+            index,
+            [
+                field
+                for field in (
+                    "source_batch_stage_id",
+                    "target_batch_stage_id",
+                )
+                if field not in row
+            ],
+        )
+        for index, row in enumerate(kv_rows)
+        if (
+            "source_batch_stage_id" not in row
+            or "target_batch_stage_id" not in row
+        )
+    ]
+    if missing_stage_provenance or missing_transfer_provenance:
+        missing_errors = [
+            "stage ledger is missing batch_stage_id for rows="
+            f"{missing_stage_provenance}"
+        ] if missing_stage_provenance else []
+        missing_errors.extend(
+            f"KV transfer[{index}] is missing stage provenance fields={fields}"
+            for index, fields in missing_transfer_provenance
+        )
+        return _result(
+            "INSUFFICIENT_EVIDENCE",
+            missing_errors,
+            kv_transfer_count=len(kv_rows),
+            matched_target_stage_count=0,
+        )
+
+    errors: list[str] = []
+    parsed_transfers: list[dict[str, Any]] = []
+    relevant_clusters: set[str] = set()
+    referenced_stage_ids: set[int] = set()
+    for index, transfer in enumerate(kv_rows):
+        prefix = f"KV transfer[{index}]"
+        try:
+            source_batch_stage_id = _non_negative_int(
+                transfer["source_batch_stage_id"],
+                f"{prefix}.source_batch_stage_id",
+            )
+            target_batch_stage_id = _non_negative_int(
+                transfer["target_batch_stage_id"],
+                f"{prefix}.target_batch_stage_id",
+            )
+            transfer_identity = set(
+                _request_runtime_iteration_key(
+                    transfer.get("request_ids"),
+                    transfer.get("request_runtime_epochs"),
+                    transfer.get("iteration_ids"),
+                    prefix,
+                )
+            )
+            source_cluster = transfer["source_cluster"]
+            target_cluster = transfer["target_cluster"]
+            if type(source_cluster) is not str or not source_cluster:
+                raise ValueError(
+                    f"{prefix}.source_cluster must be a non-empty string"
+                )
+            if type(target_cluster) is not str or not target_cluster:
+                raise ValueError(
+                    f"{prefix}.target_cluster must be a non-empty string"
+                )
+            source_replica_id = _non_negative_int(
+                transfer["source_replica_id"],
+                f"{prefix}.source_replica_id",
+            )
+            target_replica_id = _non_negative_int(
+                transfer["target_replica_id"],
+                f"{prefix}.target_replica_id",
+            )
+            source_replica_local_id = transfer["source_replica_local_id"]
+            if source_replica_local_id is not None:
+                source_replica_local_id = _non_negative_int(
+                    source_replica_local_id,
+                    f"{prefix}.source_replica_local_id",
+                )
+            target_replica_local_id = transfer["target_replica_local_id"]
+            if target_replica_local_id is not None:
+                target_replica_local_id = _non_negative_int(
+                    target_replica_local_id,
+                    f"{prefix}.target_replica_local_id",
+                )
+            start_time = _finite_number(
+                transfer["start_ts_s"],
+                f"{prefix}.start_ts_s",
+            )
+            end_time = _finite_number(
+                transfer["end_ts_s"],
+                f"{prefix}.end_ts_s",
+            )
+            if end_time < start_time - 1e-12:
+                raise ValueError("end_ts_s precedes start_ts_s")
+        except (KeyError, TypeError, ValueError) as exc:
+            errors.append(f"{prefix} identity is invalid: {exc}")
+            continue
+
+        parsed_transfers.append(
+            {
+                "prefix": prefix,
+                "source_batch_stage_id": source_batch_stage_id,
+                "target_batch_stage_id": target_batch_stage_id,
+                "request_identity": transfer_identity,
+                "source_cluster": source_cluster,
+                "target_cluster": target_cluster,
+                "source_replica_id": source_replica_id,
+                "source_replica_local_id": source_replica_local_id,
+                "target_replica_id": target_replica_id,
+                "target_replica_local_id": target_replica_local_id,
+                "start_time": start_time,
+                "end_time": end_time,
+            }
+        )
+        relevant_clusters.update((source_cluster, target_cluster))
+        referenced_stage_ids.update(
+            (source_batch_stage_id, target_batch_stage_id)
+        )
+
+    stage_rows_by_id: dict[int, list[tuple[int, dict[str, Any]]]] = {}
+    for index, row in enumerate(stages):
+        try:
+            batch_stage_id = _non_negative_int(
+                row["batch_stage_id"],
+                f"stage[{index}].batch_stage_id",
+            )
+        except (KeyError, ValueError) as exc:
+            errors.append(f"stage[{index}] identity is invalid: {exc}")
+            continue
+        stage_rows_by_id.setdefault(batch_stage_id, []).append((index, row))
+    for batch_stage_id, indexed_rows in stage_rows_by_id.items():
+        if len(indexed_rows) != 1:
+            errors.append(
+                "stage ledger batch_stage_id must be unique: "
+                f"batch_stage_id={batch_stage_id}, "
+                f"rows={[index for index, _ in indexed_rows]}"
+            )
+
     required_stage_fields = (
         "cluster_type",
         "request_ids",
@@ -743,203 +889,207 @@ def validate_kv_stage_alignment(
         "stage_start_ts",
         "stage_end_ts",
     )
-    relevant_clusters = {
-        str(row.get(field))
-        for row in kv_rows
-        for field in ("source_cluster", "target_cluster")
-    }
-    relevant_stages = [
-        row for row in stages if str(row.get("cluster_type")) in relevant_clusters
+    relevant_indexed_stages = [
+        (index, row)
+        for index, row in enumerate(stages)
+        if (
+            row.get("cluster_type") in relevant_clusters
+            or row.get("batch_stage_id") in referenced_stage_ids
+        )
     ]
-    for index, row in enumerate(relevant_stages):
+    missing_stage_fields = []
+    for index, row in relevant_indexed_stages:
         missing = [field for field in required_stage_fields if field not in row]
         if missing:
-            return _result(
-                "INSUFFICIENT_EVIDENCE",
-                [f"KV stage[{index}] is missing identity fields={missing}"],
+            missing_stage_fields.append(
+                f"KV stage[{index}] is missing identity fields={missing}"
             )
+    if missing_stage_fields:
+        return _result(
+            "INSUFFICIENT_EVIDENCE",
+            missing_stage_fields,
+            kv_transfer_count=len(kv_rows),
+            matched_target_stage_count=0,
+        )
 
-    errors: list[str] = []
-    matched_target_stage_count = 0
-    for index, transfer in enumerate(kv_rows):
-        prefix = f"KV transfer[{index}]"
+    parsed_stages_by_id: dict[int, dict[str, Any]] = {}
+    for index, stage in relevant_indexed_stages:
+        stage_prefix = f"stage[{index}]"
         try:
-            transfer_identity = set(
+            batch_stage_id = _non_negative_int(
+                stage["batch_stage_id"],
+                f"{stage_prefix}.batch_stage_id",
+            )
+            stage_identity = set(
                 _request_runtime_iteration_key(
-                    transfer.get("request_ids"),
-                    transfer.get("request_runtime_epochs"),
-                    transfer.get("iteration_ids"),
-                    prefix,
+                    stage["request_ids"],
+                    stage["request_runtime_epochs"],
+                    stage["iteration_ids"],
+                    stage_prefix,
                 )
             )
-            source_cluster = str(transfer["source_cluster"])
-            target_cluster = str(transfer["target_cluster"])
-            source_replica_id = _non_negative_int(
-                int(transfer["source_replica_id"]),
-                f"{prefix}.source_replica_id",
+            stage_replica_id = _non_negative_int(
+                stage["replica_id"],
+                f"{stage_prefix}.replica_id",
             )
-            target_replica_id = _non_negative_int(
-                int(transfer["target_replica_id"]),
-                f"{prefix}.target_replica_id",
+            stage_id = _non_negative_int(
+                stage["stage_id"],
+                f"{stage_prefix}.stage_id",
             )
-            source_replica_local_id = transfer["source_replica_local_id"]
-            if source_replica_local_id is not None:
-                source_replica_local_id = _non_negative_int(
-                    int(source_replica_local_id),
-                    f"{prefix}.source_replica_local_id",
+            stage_replica_local_id = stage["replica_local_id"]
+            if stage_replica_local_id is not None:
+                stage_replica_local_id = _non_negative_int(
+                    stage_replica_local_id,
+                    f"{stage_prefix}.replica_local_id",
                 )
-            target_replica_local_id = transfer["target_replica_local_id"]
-            if target_replica_local_id is not None:
-                target_replica_local_id = _non_negative_int(
-                    int(target_replica_local_id),
-                    f"{prefix}.target_replica_local_id",
-                )
-            start_time = _finite_number(
-                transfer["start_ts_s"],
-                f"{prefix}.start_ts_s",
+            stage_start = _finite_number(
+                stage["stage_start_ts"],
+                f"{stage_prefix}.stage_start_ts",
             )
-            end_time = _finite_number(
-                transfer["end_ts_s"],
-                f"{prefix}.end_ts_s",
+            stage_end = _finite_number(
+                stage["stage_end_ts"],
+                f"{stage_prefix}.stage_end_ts",
             )
+            if stage_end < stage_start - 1e-12:
+                raise ValueError("stage_end_ts precedes stage_start_ts")
         except (KeyError, TypeError, ValueError) as exc:
-            errors.append(f"{prefix} identity is invalid: {exc}")
+            errors.append(f"{stage_prefix} identity is invalid: {exc}")
             continue
-
-        source_candidates: list[tuple[float, int]] = []
-        target_candidates: list[
-            tuple[float, int, int | None]
-        ] = []
-        for stage_index, stage in enumerate(relevant_stages):
-            stage_prefix = f"stage[{stage_index}]"
-            try:
-                stage_identity = set(
-                    _request_runtime_iteration_key(
-                        stage["request_ids"],
-                        stage["request_runtime_epochs"],
-                        stage["iteration_ids"],
-                        stage_prefix,
-                    )
-                )
-                stage_replica_id = _non_negative_int(
-                    int(stage["replica_id"]),
-                    f"{stage_prefix}.replica_id",
-                )
-                stage_id = _non_negative_int(
-                    int(stage["stage_id"]),
-                    f"{stage_prefix}.stage_id",
-                )
-                stage_replica_local_id = stage["replica_local_id"]
-                if stage_replica_local_id is not None:
-                    stage_replica_local_id = _non_negative_int(
-                        int(stage_replica_local_id),
-                        f"{stage_prefix}.replica_local_id",
-                    )
-                stage_start = _finite_number(
-                    stage["stage_start_ts"],
-                    f"{stage_prefix}.stage_start_ts",
-                )
-                stage_end = _finite_number(
-                    stage["stage_end_ts"],
-                    f"{stage_prefix}.stage_end_ts",
-                )
-            except (KeyError, TypeError, ValueError) as exc:
-                errors.append(f"{stage_prefix} identity is invalid: {exc}")
-                continue
-            if not transfer_identity.issubset(stage_identity):
-                continue
-            if (
-                stage.get("cluster_type") == source_cluster
-                and stage_replica_id == source_replica_id
-                and stage_replica_local_id == source_replica_local_id
-            ):
-                source_candidates.append((stage_end, stage_id))
-            if (
-                stage.get("cluster_type") == target_cluster
-                and stage_id == 0
-            ):
-                target_candidates.append(
-                    (
-                        stage_start,
-                        stage_replica_id,
-                        stage_replica_local_id,
-                    )
-                )
-
-        if not source_candidates:
-            errors.append(
-                f"{prefix} has no source stage matching request/runtime-epoch/"
-                "iteration and Replica"
-            )
-        else:
-            source_terminal_stage_id = max(
-                stage_id for _, stage_id in source_candidates
-            )
-            latest_source_end = max(
-                stage_end for stage_end, _ in source_candidates
-            )
-            latest_source_stage_ids = {
-                stage_id
-                for stage_end, stage_id in source_candidates
-                if abs(stage_end - latest_source_end) <= 1e-9
+        if len(stage_rows_by_id.get(batch_stage_id, ())) == 1:
+            parsed_stages_by_id[batch_stage_id] = {
+                "cluster_type": stage["cluster_type"],
+                "request_identity": stage_identity,
+                "replica_id": stage_replica_id,
+                "replica_local_id": stage_replica_local_id,
+                "stage_id": stage_id,
+                "stage_start": stage_start,
+                "stage_end": stage_end,
             }
-            if abs(latest_source_end - start_time) > 1e-9:
-                errors.append(
-                    f"{prefix} start does not equal the latest compatible "
-                    "source stage completion: "
-                    f"transfer_start={start_time}, "
-                    f"latest_source_end={latest_source_end}"
-                )
-            if latest_source_stage_ids != {source_terminal_stage_id}:
-                errors.append(
-                    f"{prefix} latest source completion is not exclusively "
-                    "from the terminal pipeline stage: "
-                    f"terminal_stage_id={source_terminal_stage_id}, "
-                    f"latest_stage_ids={sorted(latest_source_stage_ids)}"
-                )
-        if not target_candidates:
+
+    matched_source_stage_count = 0
+    matched_target_stage_count = 0
+    for transfer in parsed_transfers:
+        prefix = transfer["prefix"]
+        source_batch_stage_id = transfer["source_batch_stage_id"]
+        target_batch_stage_id = transfer["target_batch_stage_id"]
+        source_stage = parsed_stages_by_id.get(source_batch_stage_id)
+        target_stage = parsed_stages_by_id.get(target_batch_stage_id)
+        if source_stage is None:
             errors.append(
-                f"{prefix} has no target entry stage matching "
-                "request/runtime-epoch/iteration"
+                f"{prefix} references missing or invalid source BatchStage "
+                f"id={source_batch_stage_id}"
             )
         else:
-            earliest_target_start = min(
-                stage_start
-                for stage_start, _, _ in target_candidates
-            )
-            target_timing_valid = earliest_target_start >= end_time - 1e-12
-            if not target_timing_valid:
+            source_valid = True
+            if source_stage["cluster_type"] != transfer["source_cluster"]:
+                source_valid = False
                 errors.append(
-                    f"{prefix} earliest compatible target entry stage starts "
+                    f"{prefix} source Cluster does not match referenced "
+                    f"BatchStage: ledger={transfer['source_cluster']!r}, "
+                    f"stage={source_stage['cluster_type']!r}"
+                )
+            if (
+                source_stage["replica_id"],
+                source_stage["replica_local_id"],
+            ) != (
+                transfer["source_replica_id"],
+                transfer["source_replica_local_id"],
+            ):
+                source_valid = False
+                errors.append(
+                    f"{prefix} source Replica does not match referenced "
+                    "BatchStage"
+                )
+            if not transfer["request_identity"].issubset(
+                source_stage["request_identity"]
+            ):
+                source_valid = False
+                errors.append(
+                    f"{prefix} source request/runtime-epoch/iteration identity "
+                    "is absent from referenced BatchStage"
+                )
+            if (
+                abs(source_stage["stage_end"] - transfer["start_time"])
+                > 1e-9
+            ):
+                source_valid = False
+                errors.append(
+                    f"{prefix} start does not equal referenced source "
+                    "BatchStage completion: "
+                    f"transfer_start={transfer['start_time']}, "
+                    f"source_stage_end={source_stage['stage_end']}"
+                )
+            if source_valid:
+                matched_source_stage_count += 1
+
+        if target_stage is None:
+            errors.append(
+                f"{prefix} references missing or invalid target BatchStage "
+                f"id={target_batch_stage_id}"
+            )
+        else:
+            target_valid = True
+            if target_stage["cluster_type"] != transfer["target_cluster"]:
+                target_valid = False
+                errors.append(
+                    f"{prefix} target Cluster does not match referenced "
+                    f"BatchStage: ledger={transfer['target_cluster']!r}, "
+                    f"stage={target_stage['cluster_type']!r}"
+                )
+            if target_stage["stage_id"] != 0:
+                target_valid = False
+                errors.append(
+                    f"{prefix} referenced target BatchStage is not entry "
+                    f"stage 0: stage_id={target_stage['stage_id']}"
+                )
+            if (
+                target_stage["replica_id"],
+                target_stage["replica_local_id"],
+            ) != (
+                transfer["target_replica_id"],
+                transfer["target_replica_local_id"],
+            ):
+                target_valid = False
+                errors.append(
+                    f"{prefix} target Replica does not match referenced "
+                    "BatchStage"
+                )
+            if not transfer["request_identity"].issubset(
+                target_stage["request_identity"]
+            ):
+                target_valid = False
+                errors.append(
+                    f"{prefix} target request/runtime-epoch/iteration identity "
+                    "is absent from referenced BatchStage"
+                )
+            if (
+                target_stage["stage_start"]
+                < transfer["end_time"] - 1e-12
+            ):
+                target_valid = False
+                errors.append(
+                    f"{prefix} referenced target entry BatchStage starts "
                     "before transfer end: "
-                    f"stage_start={earliest_target_start}, "
-                    f"transfer_end={end_time}"
+                    f"stage_start={target_stage['stage_start']}, "
+                    f"transfer_end={transfer['end_time']}"
                 )
-            earliest_target_identities = {
-                (stage_replica_id, stage_replica_local_id)
-                for stage_start, stage_replica_id, stage_replica_local_id
-                in target_candidates
-                if abs(stage_start - earliest_target_start) <= 1e-9
-            }
-            if earliest_target_identities != {
-                (target_replica_id, target_replica_local_id)
-            }:
-                errors.append(
-                    f"{prefix} target Replica does not match the earliest "
-                    "compatible target stage: "
-                    f"ledger={(target_replica_id, target_replica_local_id)!r} "
-                    f"stage={sorted(earliest_target_identities, key=repr)!r}"
-                )
-            elif target_timing_valid:
+            if target_valid:
                 matched_target_stage_count += 1
 
-    details = {
-        "kv_transfer_count": len(kv_rows),
-        "matched_target_stage_count": matched_target_stage_count,
-    }
     if errors:
-        return _result("FAIL", errors, **details)
-    return _result("PASS", **details)
+        return _result(
+            "FAIL",
+            errors,
+            kv_transfer_count=len(kv_rows),
+            matched_source_stage_count=matched_source_stage_count,
+            matched_target_stage_count=matched_target_stage_count,
+        )
+    return _result(
+        "PASS",
+        kv_transfer_count=len(kv_rows),
+        matched_source_stage_count=matched_source_stage_count,
+        matched_target_stage_count=matched_target_stage_count,
+    )
 
 
 def validate_stage_transfer_alignment(

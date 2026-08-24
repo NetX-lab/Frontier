@@ -124,6 +124,7 @@ class BatchStageEndEvent(BaseEvent):
                     self._batch,
                     self._cluster_type,
                     self._replica_local_id,
+                    source_batch_stage_id=self._batch_stage.id,
                     batch_schedule_epoch=self._batch_schedule_epoch,
                     request_execution_signatures=self._request_execution_signatures,
                     thinking_round_start_times=self._thinking_round_start_times,

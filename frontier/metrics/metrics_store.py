@@ -3523,6 +3523,7 @@ class MetricsStore:
             self._config.write_metrics
             and batch_stage is not None
             and cluster_type in {ClusterType.DECODE, ClusterType.DECODE_ATTN}
+            and stage_id == 0
         ):
             self._bind_pending_kv_transfer_target(
                 time=time,
@@ -4049,6 +4050,7 @@ class MetricsStore:
         replica_local_id: int | None,
         stage_end_time: float,
     ) -> dict[str, Any]:
+        batch_stage_id = self._exact_batch_stage_id(batch_stage)
         component_ledger_ms = self._build_frontier_stage_batch_component_ledger(execution_time)
         diagnostic_component_ledger_ms = (
             self._build_frontier_stage_batch_diagnostic_component_ledger(execution_time)
@@ -4075,6 +4077,7 @@ class MetricsStore:
 
         row = {
             "batch_id": int(batch_stage._batch_id),
+            "batch_stage_id": batch_stage_id,
             "stage_id": int(stage_id),
             "cluster_type": cluster_type.name,
             "replica_id": int(replica_id),
@@ -4173,6 +4176,16 @@ class MetricsStore:
             stage_end_time=stage_end_time,
         )
 
+    @staticmethod
+    def _exact_batch_stage_id(batch_stage: BatchStage) -> int:
+        batch_stage_id = getattr(batch_stage, "id", None)
+        if type(batch_stage_id) is not int or batch_stage_id < 0:
+            raise ValueError(
+                "Frontier stage-batch ledger requires a non-negative "
+                f"batch_stage_id, got {batch_stage_id!r}"
+            )
+        return batch_stage_id
+
     def _build_frontier_stage_batch_ledger_summary_row(
         self,
         *,
@@ -4186,6 +4199,7 @@ class MetricsStore:
     ) -> dict[str, Any]:
         row = {
             "batch_id": int(batch_stage._batch_id),
+            "batch_stage_id": self._exact_batch_stage_id(batch_stage),
             "stage_id": int(stage_id),
             "cluster_type": cluster_type.name,
             "replica_id": int(replica_id),
@@ -4522,6 +4536,30 @@ class MetricsStore:
             target_replica_local_id = getattr(
                 transfer_info, "target_replica_local_id", None
             )
+            source_batch_stage_id = getattr(
+                transfer_info, "source_batch_stage_id", None
+            )
+            target_batch_stage_id = getattr(
+                transfer_info, "target_batch_stage_id", None
+            )
+            if (
+                type(source_batch_stage_id) is not int
+                or source_batch_stage_id < 0
+            ):
+                raise ValueError(
+                    "KV transfer ledger requires an exact non-negative "
+                    "source_batch_stage_id, got "
+                    f"{source_batch_stage_id!r}"
+                )
+            if target_batch_stage_id is not None and (
+                type(target_batch_stage_id) is not int
+                or target_batch_stage_id < 0
+            ):
+                raise ValueError(
+                    "KV transfer ledger requires an exact non-negative "
+                    "target_batch_stage_id or None, got "
+                    f"{target_batch_stage_id!r}"
+                )
             attention_owner_replica_id = None
             attention_owner_replica_local_id = None
             layer_id = None
@@ -4543,6 +4581,8 @@ class MetricsStore:
             attention_owner_replica_local_id = getattr(
                 transfer_info, "source_replica_local_id", None
             )
+            source_batch_stage_id = None
+            target_batch_stage_id = None
             if (
                 type(attention_owner_replica_id) is not int
                 or attention_owner_replica_id < 0
@@ -4587,6 +4627,8 @@ class MetricsStore:
             ),
             "target_replica_id": target_replica_id,
             "target_replica_local_id": target_replica_local_id,
+            "source_batch_stage_id": source_batch_stage_id,
+            "target_batch_stage_id": target_batch_stage_id,
             "target_bound": False,
             "layer_id": layer_id,
             "afd_stage_idx": afd_stage_idx,
@@ -4636,6 +4678,7 @@ class MetricsStore:
         transfer_info: Any,
         target_replica_id: int | None,
         target_replica_local_id: int | None = None,
+        target_batch_stage_id: int | None = None,
     ) -> None:
         if not self._config.write_metrics or target_replica_id is None:
             return
@@ -4657,6 +4700,21 @@ class MetricsStore:
             raise ValueError(
                 "Transfer target binding has no corresponding transfer start"
             )
+        transfer_kind = row["transfer_kind"]
+        if transfer_kind == "kv_cache":
+            if (
+                type(target_batch_stage_id) is not int
+                or target_batch_stage_id < 0
+            ):
+                raise ValueError(
+                    "KV transfer target binding requires an exact non-negative "
+                    "target_batch_stage_id, got "
+                    f"{target_batch_stage_id!r}"
+                )
+        elif target_batch_stage_id is not None:
+            raise ValueError(
+                "Only KV transfer target binding accepts target_batch_stage_id"
+            )
         existing_target = row.get("target_replica_id")
         if existing_target is not None and int(existing_target) != target_replica_id:
             raise ValueError(
@@ -4673,14 +4731,25 @@ class MetricsStore:
                 "Transfer target local Replica changed after binding: "
                 f"existing={existing_local}, new={target_replica_local_id}"
             )
+        existing_target_batch_stage_id = row.get("target_batch_stage_id")
+        if (
+            existing_target_batch_stage_id is not None
+            and existing_target_batch_stage_id != target_batch_stage_id
+        ):
+            raise ValueError(
+                "Transfer target BatchStage changed after binding: "
+                f"existing={existing_target_batch_stage_id}, "
+                f"new={target_batch_stage_id}"
+            )
 
         row["target_replica_id"] = target_replica_id
         row["target_replica_local_id"] = target_replica_local_id
+        row["target_batch_stage_id"] = target_batch_stage_id
         row["target_bound"] = True
-        transfer_kind = row["transfer_kind"]
         if transfer_kind == "kv_cache":
             transfer_info.target_replica_id = target_replica_id
             transfer_info.target_replica_local_id = target_replica_local_id
+            transfer_info.target_batch_stage_id = target_batch_stage_id
         elif transfer_kind == "m2n":
             transfer_info.target_execution_replica_id = target_replica_id
             transfer_info.target_execution_replica_local_id = (
@@ -4766,6 +4835,7 @@ class MetricsStore:
     ) -> None:
         if not self._config.write_metrics:
             return
+        target_batch_stage_id = self._exact_batch_stage_id(batch_stage)
         request_ids = list(batch_stage.request_ids)
         request_runtime_epochs = list(batch_stage.request_runtime_epochs)
         if (
@@ -4855,6 +4925,7 @@ class MetricsStore:
                 transfer_info,
                 replica_id,
                 replica_local_id,
+                target_batch_stage_id,
             )
 
     def _write_frontier_transfer_ledger(self) -> None:

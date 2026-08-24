@@ -688,6 +688,7 @@ def _aligned_kv_stage_and_transfer_rows() -> tuple[
     stage_rows = [
         {
             "batch_id": 10,
+            "batch_stage_id": 101,
             "cluster_type": "PREFILL",
             "execution_scope": "FULL_STAGE_WORLD",
             "request_ids": ["7"],
@@ -701,6 +702,7 @@ def _aligned_kv_stage_and_transfer_rows() -> tuple[
         },
         {
             "batch_id": 12,
+            "batch_stage_id": 202,
             "cluster_type": "DECODE",
             "execution_scope": "FULL_STAGE_WORLD",
             "request_ids": ["7"],
@@ -728,6 +730,8 @@ def _aligned_kv_stage_and_transfer_rows() -> tuple[
             "source_replica_local_id": None,
             "target_replica_id": 2,
             "target_replica_local_id": None,
+            "source_batch_stage_id": 101,
+            "target_batch_stage_id": 202,
             "target_bound": True,
             "bytes": 8192,
             "start_ts_s": 1.0,
@@ -756,6 +760,7 @@ def test_kv_stage_alignment_accepts_legal_target_queue_delay() -> None:
     stage_rows[1]["stage_end_ts"] = 1.016
     later_target_stage = dict(stage_rows[1])
     later_target_stage["batch_id"] = 13
+    later_target_stage["batch_stage_id"] = 203
     later_target_stage["stage_start_ts"] = 1.016
     later_target_stage["stage_end_ts"] = 1.026
     stage_rows.append(later_target_stage)
@@ -770,11 +775,8 @@ def test_kv_stage_alignment_accepts_legal_target_queue_delay() -> None:
 
 def test_kv_stage_alignment_rejects_premature_matching_target_stage() -> None:
     stage_rows, transfer_rows = _aligned_kv_stage_and_transfer_rows()
-    premature_target_stage = dict(stage_rows[1])
-    premature_target_stage["batch_id"] = 11
-    premature_target_stage["stage_start_ts"] = 1.001
-    premature_target_stage["stage_end_ts"] = 1.003
-    stage_rows.append(premature_target_stage)
+    stage_rows[1]["stage_start_ts"] = 1.001
+    stage_rows[1]["stage_end_ts"] = 1.003
 
     result = transfer_contract.validate_kv_stage_alignment(
         stage_rows,
@@ -786,11 +788,7 @@ def test_kv_stage_alignment_rejects_premature_matching_target_stage() -> None:
 
 def test_kv_stage_alignment_rejects_transfer_before_latest_source_completion() -> None:
     stage_rows, transfer_rows = _aligned_kv_stage_and_transfer_rows()
-    later_source_stage = dict(stage_rows[0])
-    later_source_stage["batch_id"] = 11
-    later_source_stage["stage_start_ts"] = 1.0
-    later_source_stage["stage_end_ts"] = 1.02
-    stage_rows.append(later_source_stage)
+    stage_rows[0]["stage_end_ts"] = 1.02
 
     result = transfer_contract.validate_kv_stage_alignment(
         stage_rows,
@@ -805,11 +803,13 @@ def test_kv_stage_alignment_requires_terminal_source_pipeline_stage() -> None:
     first_source_stage = stage_rows[0]
     first_source_stage["stage_end_ts"] = 0.99
     terminal_source_stage = dict(first_source_stage)
+    terminal_source_stage["batch_stage_id"] = 102
     terminal_source_stage["stage_id"] = 1
     terminal_source_stage["stage_start_ts"] = 0.99
     terminal_source_stage["stage_end_ts"] = 1.0
     next_chunk_entry = dict(first_source_stage)
     next_chunk_entry["batch_id"] = 11
+    next_chunk_entry["batch_stage_id"] = 103
     next_chunk_entry["stage_start_ts"] = 1.0
     next_chunk_entry["stage_end_ts"] = 1.02
     stage_rows.extend([terminal_source_stage, next_chunk_entry])
@@ -1849,6 +1849,8 @@ def test_kv_ledger_binds_target_on_first_target_stage(tmp_path: Path) -> None:
         target_cluster_type=ClusterType.DECODE,
         source_replica_id=0,
         source_replica_local_id=None,
+        source_batch_stage_id=101,
+        target_batch_stage_id=None,
         target_replica_id=None,
         target_replica_local_id=None,
         kv_cache_size_bytes=8192,
@@ -1876,6 +1878,7 @@ def test_kv_ledger_binds_target_on_first_target_stage(tmp_path: Path) -> None:
     store._bind_pending_kv_transfer_target(
         time=1.005,
         batch_stage=SimpleNamespace(
+            id=202,
             request_ids=[7],
             request_runtime_epochs=[3],
         ),
@@ -1886,7 +1889,78 @@ def test_kv_ledger_binds_target_on_first_target_stage(tmp_path: Path) -> None:
 
     assert row["target_replica_id"] == 2
     assert row["target_replica_local_id"] is None
+    assert row["source_batch_stage_id"] == 101
+    assert row["target_batch_stage_id"] == 202
+    assert transfer_info.target_batch_stage_id == 202
     assert row["status"] == "completed"
+
+
+def test_kv_ledger_binds_only_decode_entry_stage(tmp_path: Path) -> None:
+    _, batch = _request_and_batch()
+    transfer_info = SimpleNamespace(
+        batch=batch,
+        source_cluster_type=ClusterType.PREFILL,
+        target_cluster_type=ClusterType.DECODE,
+        source_replica_id=0,
+        source_replica_local_id=None,
+        source_batch_stage_id=101,
+        target_batch_stage_id=None,
+        target_replica_id=None,
+        target_replica_local_id=None,
+        kv_cache_size_bytes=8192,
+    )
+    store = _ledger_store(tmp_path)
+    store._config.store_utilization_metrics = False
+    store.on_kv_cache_transfer_start(
+        1.0,
+        0,
+        None,
+        ClusterType.DECODE,
+        8192,
+        transfer_info,
+    )
+    store.on_kv_cache_transfer_end(
+        1.004,
+        4.0,
+        8192,
+        ClusterType.DECODE,
+        transfer_info,
+    )
+    row = store._transfer_ledger_rows[0]
+
+    store.on_replica_stage_schedule(
+        time=1.005,
+        replica_id=2,
+        stage_id=1,
+        batch_stage=SimpleNamespace(
+            id=203,
+            request_ids=[7],
+            request_runtime_epochs=[3],
+        ),
+        execution_time=None,
+        cluster_type=ClusterType.DECODE,
+        replica_local_id=None,
+    )
+
+    assert row["target_bound"] is False
+    assert row["target_batch_stage_id"] is None
+
+    store.on_replica_stage_schedule(
+        time=1.006,
+        replica_id=2,
+        stage_id=0,
+        batch_stage=SimpleNamespace(
+            id=202,
+            request_ids=[7],
+            request_runtime_epochs=[3],
+        ),
+        execution_time=None,
+        cluster_type=ClusterType.DECODE,
+        replica_local_id=None,
+    )
+
+    assert row["target_bound"] is True
+    assert row["target_batch_stage_id"] == 202
 
 
 def test_kv_ledger_does_not_bind_different_runtime_epoch(
@@ -1899,6 +1973,8 @@ def test_kv_ledger_does_not_bind_different_runtime_epoch(
         target_cluster_type=ClusterType.DECODE,
         source_replica_id=0,
         source_replica_local_id=None,
+        source_batch_stage_id=101,
+        target_batch_stage_id=None,
         target_replica_id=None,
         target_replica_local_id=None,
         kv_cache_size_bytes=8192,
@@ -1924,6 +2000,7 @@ def test_kv_ledger_does_not_bind_different_runtime_epoch(
     store._bind_pending_kv_transfer_target(
         time=1.005,
         batch_stage=SimpleNamespace(
+            id=202,
             request_ids=[7],
             request_runtime_epochs=[4],
         ),
@@ -1953,6 +2030,8 @@ def test_kv_ledger_rejects_ambiguous_duplicate_request_cohort(
             target_cluster_type=ClusterType.DECODE,
             source_replica_id=index,
             source_replica_local_id=None,
+            source_batch_stage_id=101 + index,
+            target_batch_stage_id=None,
             target_replica_id=None,
             target_replica_local_id=None,
             kv_cache_size_bytes=8192,
@@ -1982,6 +2061,7 @@ def test_kv_ledger_rejects_ambiguous_duplicate_request_cohort(
         store._bind_pending_kv_transfer_target(
             time=1.005,
             batch_stage=SimpleNamespace(
+                id=202,
                 request_ids=[7],
                 request_runtime_epochs=[3],
             ),

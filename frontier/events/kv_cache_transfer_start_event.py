@@ -22,8 +22,17 @@ class KVCacheTransferStartEvent(BaseEvent):
         kv_cache_size_bytes: int,
         transfer_time_ms: float,
         source_cluster_type: ClusterType = ClusterType.PREFILL,
+        source_batch_stage_id: int | None = None,
     ) -> None:
         super().__init__(time, EventType.KV_CACHE_TRANSFER_START)
+        if (
+            type(source_batch_stage_id) is not int
+            or source_batch_stage_id < 0
+        ):
+            raise ValueError(
+                "source_batch_stage_id must be a non-negative int, "
+                f"got {source_batch_stage_id!r}"
+            )
         self._source_replica_id = source_replica_id
         self._source_replica_local_id = source_replica_local_id
         self._source_cluster_type = source_cluster_type
@@ -31,6 +40,7 @@ class KVCacheTransferStartEvent(BaseEvent):
         self._batch = batch
         self._kv_cache_size_bytes = kv_cache_size_bytes
         self._transfer_time_ms = transfer_time_ms
+        self._source_batch_stage_id = source_batch_stage_id
 
     def handle_event(
         self,
@@ -46,6 +56,7 @@ class KVCacheTransferStartEvent(BaseEvent):
             target_cluster_type=self._target_cluster_type,
             source_replica_id=self._source_replica_id,
             source_replica_local_id=self._source_replica_local_id,
+            source_batch_stage_id=self._source_batch_stage_id,
             kv_cache_size_bytes=self._kv_cache_size_bytes,
             transfer_time_ms=self._transfer_time_ms,
             transfer_start_time=self.time,
@@ -78,6 +89,7 @@ class KVCacheTransferStartEvent(BaseEvent):
             "target_cluster_type": self._target_cluster_type.name,
             "batch_id": self._batch.id,
             "batch_global_id": self._batch.global_id,
+            "source_batch_stage_id": self._source_batch_stage_id,
             "kv_cache_size_bytes": self._kv_cache_size_bytes,
             "transfer_time_ms": self._transfer_time_ms,
         }

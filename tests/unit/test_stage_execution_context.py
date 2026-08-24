@@ -391,6 +391,7 @@ def test_normal_stage_end_releases_the_active_parent_ticket() -> None:
     assert len(metric_calls) == 1
     assert len(events) == 1
     assert isinstance(events[0], ClusterBatchEndEvent)
+    assert events[0]._source_batch_stage_id == batch_stage.id
     assert context.is_idle
     assert not hasattr(batch, "_stage_admission_ticket")
 
