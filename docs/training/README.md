@@ -1,5 +1,11 @@
 # Training User Guide
 
+## Modification History
+
+| Date       | Summary of Changes |
+|------------|--------------------|
+| 2026-08-15 | Removed the retired attention-DP CLI option from the training example. |
+
 ## Scope
 
 This guide explains the role of `frontier.training` in the current repository.
@@ -166,7 +172,6 @@ python -m frontier.main \
   --replica_config_model_name qwen2_dense_test \
   --replica_config_attn_tensor_parallel_size 1 \
   --replica_config_num_pipeline_stages 1 \
-  --replica_config_attn_data_parallel_size 1 \
   --cc_backend_config_type analytical \
   --replica_scheduler_config_type vllm_v1 \
   --request_generator_config_type synthetic \

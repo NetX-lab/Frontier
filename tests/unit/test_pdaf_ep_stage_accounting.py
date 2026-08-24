@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from unittest.mock import Mock, call
+import io
 
 import pytest
 
@@ -7,7 +8,11 @@ from frontier.config import global_vars
 from frontier.entities import Request
 from frontier.entities.batch import DenseFFNBatchGroup, EPBatchGroup
 from frontier.events.cluster_batch_end_event import ClusterBatchEndEvent
+from frontier.events.ep_alltoall_combine_collective_event import (
+    EPAllToAllCombineCollectiveEvent,
+)
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
+from frontier.model_architectures import ModelArchitectureProfile
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )
@@ -43,6 +48,9 @@ def _batch(ep_id: int) -> EPBatchGroup:
     )
     batch.set_global_id(10)
     batch.decode_ffn_layer_id = 4
+    batch.routing_token_count = 2
+    batch.router_topk = 1
+    batch.total_routed_assignments = 2
     return batch
 
 
@@ -55,10 +63,31 @@ def _combine_batch(
 ) -> SimpleNamespace:
     return SimpleNamespace(
         id=100 + ep_id,
+        global_id=10,
+        replica_id=0,
+        ep_id=ep_id,
+        requests=[
+            SimpleNamespace(
+                id=0,
+                runtime_epoch=0,
+                current_decode_token_index=1,
+            )
+        ],
+        request_runtime_epochs=[0],
+        schedule_epoch=0,
+        afd_stage_idx=0,
+        decode_ffn_layer_id=4,
         source_batch_ids=list(source_batch_ids),
         per_expert_tokens={},
+        total_num_tokens=1,
+        routing_token_count=1,
+        router_topk=1,
+        total_routed_assignments=1,
         execution_time=execution_time,
         activation_bytes=activation_bytes,
+        post_combine_time=0.0,
+        _ep_dispatch_collective_start_time_s=4.0,
+        _ep_dispatch_collective_end_time_s=4.0,
     )
 
 
@@ -78,7 +107,10 @@ def _combine_scheduler(
 ):
     scheduler = object.__new__(_ConcreteClusterScheduler)
     scheduler._cluster_type = ClusterType.DECODE_FFN
-    room = {"batches": batches}
+    room = {
+        "batches": batches,
+        "arrival_times": {ep_id: 4.0 + ep_id * 0.001 for ep_id in batches},
+    }
     scheduler._ep_allgather_waiting_room = {0: {0: {10: room}}}
     scheduler._raw_batch_waiting_for_m2n_back = dict(raw_batches or {})
 
@@ -92,11 +124,16 @@ def _combine_scheduler(
         )
         for ep_id in batches
     }
-    scheduler.get_dp_replica_stage_scheduler = Mock(
+    scheduler.get_replica_stage_scheduler = Mock(
         side_effect=lambda _replica_id, ep_id, _stage_id: stage_schedulers[ep_id]
     )
-    scheduler.get_dp_replica_scheduler = Mock(
+    scheduler.get_replica_scheduler = Mock(
         side_effect=lambda _replica_id, ep_id: replica_schedulers[ep_id]
+    )
+    full_stage_scheduler = Mock()
+    full_stage_scheduler.is_empty.return_value = True
+    scheduler.get_full_stage_replica_scheduler = Mock(
+        return_value=full_stage_scheduler
     )
     scheduler._create_m2n_transfer_events_for_aggregated_batch = Mock(
         return_value=[]
@@ -112,11 +149,6 @@ def _run_ep_stage(
     full_stage_time_s: float,
 ) -> None:
     monkeypatch.setattr(global_vars, "is_disaggregated_mode", lambda: True)
-    monkeypatch.setattr(
-        global_vars,
-        "get_monolithic_moe_stage_aggregation",
-        lambda: False,
-    )
     batch_stage = SimpleNamespace(
         id=stage_id,
         execution_time=full_stage_time_s,
@@ -124,7 +156,12 @@ def _run_ep_stage(
     )
     execution_time = SimpleNamespace(
         get_single_layer_moe_pre_dispatch_time=lambda: 2.0,
+        get_single_layer_moe_dispatch_time=lambda: 0.5,
         get_single_layer_moe_post_dispatch_compute_time=lambda: 1.0,
+        get_single_layer_moe_combine_time=lambda: 0.5,
+        get_single_layer_moe_post_combine_time=lambda: 4.0,
+        get_single_layer_post_attention_time=lambda: 8.0,
+        expert_parallel_communication_time=0.5,
     )
     stage_scheduler = Mock()
     stage_scheduler.get_queue_batches.return_value = [batch]
@@ -137,7 +174,7 @@ def _run_ep_stage(
     stage_scheduler.is_last_stage = True
     stage_scheduler.is_busy = False
     cluster_scheduler = Mock()
-    cluster_scheduler.get_dp_replica_stage_scheduler.return_value = stage_scheduler
+    cluster_scheduler.get_replica_stage_scheduler.return_value = stage_scheduler
     cluster_scheduler.get_replica.return_value = SimpleNamespace(
         is_moe=True,
         dp_size=1,
@@ -151,15 +188,122 @@ def _run_ep_stage(
         replica_id=0,
         stage_id=stage_id,
         cluster_type=ClusterType.DECODE_FFN,
-        dp_id=batch.ep_id,
+        replica_local_id=batch.ep_id,
     ).handle_event(global_scheduler, Mock())
 
     assert events[0].time == pytest.approx(1.002)
+    assert batch.post_combine_time == pytest.approx(0.004)
+
+
+def test_pdaf_combine_completion_waits_for_post_combine_work() -> None:
+    batches = {ep_id: _batch(ep_id) for ep_id in range(2)}
+    for batch in batches.values():
+        batch.post_combine_time = 0.004
+
+    scheduler = object.__new__(_ConcreteClusterScheduler)
+    scheduler._cluster_type = ClusterType.DECODE_FFN
+    scheduler._config = SimpleNamespace(
+        replica_config=SimpleNamespace(
+            moe_expert_parallel_size=2,
+            model_config=SimpleNamespace(
+                embedding_dim=16,
+                get_model_architecture_profile=ModelArchitectureProfile.generic,
+            ),
+        )
+    )
+    scheduler._predictor = SimpleNamespace(
+        predict_alltoall_time=Mock(return_value=0.5),
+        predict_allgather_time=Mock(return_value=0.5),
+    )
+    scheduler.get_replica = Mock(return_value=SimpleNamespace(ep_size=2))
+    scheduler._ep_allgather_waiting_room = {
+        0: {
+            0: {
+                10: {
+                    "batches": {},
+                    "arrival_times": {},
+                }
+            }
+        }
+    }
+
+    assert scheduler.on_ep_alltoall_combine_ready(
+        1.0, 0, 0, batches[0], 0
+    ) == []
+    events = scheduler.on_ep_alltoall_combine_ready(
+        1.1, 0, 0, batches[1], 1
+    )
+
+    assert len(events) == 1
+    assert isinstance(events[0], EPAllToAllCombineCollectiveEvent)
+    assert events[0]._combine_end_time == pytest.approx(1.1005)
+    assert events[0].time == pytest.approx(1.1045)
+
+
+def test_ep_combine_allows_dispatch_end_before_combine_arrival() -> None:
+    batches = {
+        0: _combine_batch(0, source_batch_ids=[10]),
+        1: _combine_batch(1, source_batch_ids=[10]),
+    }
+    raw = _raw_batch(10)
+    scheduler, room, stage_schedulers, _ = _combine_scheduler(
+        batches,
+        raw_batches={10: raw},
+    )
+    room["arrival_times"] = {0: 4.1, 1: 4.2}
+    stage_schedulers[0].is_empty.return_value = False
+    stage_schedulers[1].is_empty.return_value = True
+
+    events = scheduler.on_ep_alltoall_combine_collective_schedule(
+        time=5.0,
+        replica_id=0,
+        stage_id=0,
+        batch_global_id=10,
+        metrics_store=Mock(),
+        combine_end_time=5.0,
+    )
+
+    assert any(
+        isinstance(event, ReplicaStageScheduleEvent)
+        for event in events
+    )
+
+
+def test_ep_combine_rejects_dispatch_end_before_dispatch_arrival() -> None:
+    batches = {
+        0: _combine_batch(0, source_batch_ids=[10]),
+        1: _combine_batch(1, source_batch_ids=[10]),
+    }
+    for batch in batches.values():
+        batch._ep_dispatch_collective_start_time_s = 4.1
+    raw = _raw_batch(10)
+    scheduler, room, _stage_schedulers, _ = _combine_scheduler(
+        batches,
+        raw_batches={10: raw},
+    )
+    room["arrival_times"] = {0: 4.2, 1: 4.3}
+
+    with pytest.raises(
+        ValueError,
+        match="dispatch collective end cannot precede dispatch arrival",
+    ):
+        scheduler.on_ep_alltoall_combine_collective_schedule(
+            time=5.0,
+            replica_id=0,
+            stage_id=0,
+            batch_global_id=10,
+            metrics_store=Mock(),
+            combine_end_time=5.0,
+        )
 
 
 def test_ep_dispatch_preserves_full_stage_execution_time(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    import frontier.logger as frontier_logging
+
+    log_stream = io.StringIO()
+    monkeypatch.setattr(frontier_logging._default_handler, "stream", log_stream)
     batches = {ep_id: _batch(ep_id) for ep_id in range(2)}
     for batch in batches.values():
         _run_ep_stage(
@@ -183,6 +327,78 @@ def test_ep_dispatch_preserves_full_stage_execution_time(
     assert [event.time for event in ready_events] == pytest.approx([1.006, 1.006])
     for batch in batches.values():
         assert batch.execution_time == pytest.approx(0.010)
+    captured = log_stream.getvalue().splitlines()
+    workload_lines = [line for line in captured if "[EP-WORKLOAD]" in line]
+    assert len(workload_lines) == 2
+    assert any(
+        "[EP-WORKLOAD][DECODE_FFN]" in line
+            and "ep_id=0" in line
+            and "lane_compute_ms=7.000000" in line
+            and "routed_compute_ms=1.000000" in line
+            and "lane_comm_ms=1.000000" in line
+            and "dispatch_ms=0.500000" in line
+            and "combine_ms=0.500000" in line
+        for line in workload_lines
+    )
+
+
+def test_pdaf_dispatch_emits_unified_ep_barrier_trace(monkeypatch) -> None:
+    import frontier.logger as frontier_logging
+
+    log_stream = io.StringIO()
+    monkeypatch.setattr(frontier_logging._default_handler, "stream", log_stream)
+    batches = {ep_id: _batch(ep_id) for ep_id in range(2)}
+    for batch in batches.values():
+        batch.expert_compute_time = 0.25
+
+    scheduler = object.__new__(_ConcreteClusterScheduler)
+    scheduler._cluster_type = ClusterType.DECODE_FFN
+    scheduler._config = SimpleNamespace(
+        replica_config=SimpleNamespace(
+            moe_expert_parallel_size=2,
+            model_config=SimpleNamespace(embedding_dim=16),
+        )
+    )
+    scheduler._predictor = SimpleNamespace(
+        predict_alltoall_time=Mock(return_value=0.5)
+    )
+    scheduler.get_replica = Mock(return_value=SimpleNamespace(ep_size=2))
+    scheduler._ep_alltoall_dispatch_waiting_room = {
+        0: {
+            0: {
+                10: {
+                    "batches": {},
+                    "arrival_times": {},
+                }
+            }
+        }
+    }
+
+    assert scheduler.on_ep_alltoall_dispatch_ready(
+        1.0, 0, 0, batches[0], 0
+    ) == []
+    events = scheduler.on_ep_alltoall_dispatch_ready(
+        1.1, 0, 0, batches[1], 1
+    )
+
+    assert len(events) == 1
+    assert any(
+        "[EP-BARRIER][DECODE_FFN]" in line and "phase=dispatch" in line
+        for line in log_stream.getvalue().splitlines()
+    )
+
+
+def test_ep_workload_trace_rejects_invalid_source_batch_identity(monkeypatch) -> None:
+    batch = _batch(0)
+    batch.source_batch_ids[:] = [-1, 2]
+
+    with pytest.raises(ValueError, match="source_batch_ids"):
+        _run_ep_stage(
+            monkeypatch,
+            batch,
+            stage_id=0,
+            full_stage_time_s=0.010,
+        )
 
 
 def test_ep_dispatch_collective_validates_all_lanes_before_mutation() -> None:
@@ -225,6 +441,7 @@ def test_ep_combine_collective_validates_source_ids_before_mutation() -> None:
             stage_id=0,
             batch_global_id=10,
             metrics_store=metrics_store,
+            combine_end_time=5.0,
         )
 
     assert scheduler._ep_allgather_waiting_room[0][0][10] is room
@@ -235,6 +452,17 @@ def test_ep_combine_collective_validates_source_ids_before_mutation() -> None:
         replica_scheduler.release_activation_memory_bytes.assert_not_called()
     metrics_store.on_replica_schedule.assert_not_called()
     metrics_store.flush_frontier_stage_batch_ledger_row.assert_not_called()
+
+
+def test_ep_combine_event_rejects_missing_combine_end_time() -> None:
+    with pytest.raises(ValueError, match="finite combine_end_time"):
+        EPAllToAllCombineCollectiveEvent(
+            time=5.0,
+            replica_id=0,
+            stage_id=0,
+            batch_global_id=10,
+            combine_end_time=None,  # type: ignore[arg-type]
+        )
 
 
 def test_ep_combine_collective_reschedules_only_non_empty_stage_lanes() -> None:
@@ -256,12 +484,58 @@ def test_ep_combine_collective_reschedules_only_non_empty_stage_lanes() -> None:
         stage_id=0,
         batch_global_id=10,
         metrics_store=Mock(),
+        combine_end_time=5.0,
     )
 
     schedule_events = [
         event for event in events if isinstance(event, ReplicaStageScheduleEvent)
     ]
-    assert [event._dp_id for event in schedule_events] == [0]
+    assert [event._replica_local_id for event in schedule_events] == [0]
+
+
+def test_ep_combine_collective_reschedules_pending_dense_full_stage_queue() -> None:
+    """A completed EP wave must wake a queued dense full-stage operation.
+
+    DECODE_FFN owns both explicit EP children and one lane-free full-stage
+    child.  The parent stage admission ticket serializes them, but the EP
+    combine path bypasses ``BatchStageEndEvent``; it therefore has to emit a
+    follow-up schedule event for the full-stage child when dense work is
+    waiting.  Without that event the dense queue can remain stranded after the
+    EP wave releases the parent scope.
+    """
+
+    batches = {
+        0: _combine_batch(0, source_batch_ids=[10]),
+        1: _combine_batch(1, source_batch_ids=[10]),
+    }
+    raw = _raw_batch(10)
+    scheduler, room, stage_schedulers, _ = _combine_scheduler(
+        batches,
+        raw_batches={10: raw},
+    )
+    stage_schedulers[0].is_empty.return_value = False
+    stage_schedulers[1].is_empty.return_value = True
+
+    full_stage_scheduler = Mock()
+    full_stage_scheduler.is_empty.return_value = False
+    scheduler.get_full_stage_replica_scheduler = Mock(
+        return_value=full_stage_scheduler
+    )
+
+    events = scheduler.on_ep_alltoall_combine_collective_schedule(
+        time=5.0,
+        replica_id=0,
+        stage_id=0,
+        batch_global_id=10,
+        metrics_store=Mock(),
+        combine_end_time=5.0,
+    )
+
+    schedule_events = [
+        event for event in events if isinstance(event, ReplicaStageScheduleEvent)
+    ]
+    assert [event._replica_local_id for event in schedule_events] == [0, None]
+    full_stage_scheduler.is_empty.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
@@ -304,6 +578,7 @@ def test_ep_combine_collective_rejects_invalid_source_id_cohort_before_lookup_or
                 stage_id=0,
                 batch_global_id=10,
                 metrics_store=metrics_store,
+                combine_end_time=5.0,
             )
         finally:
             assert scheduler._ep_allgather_waiting_room[0][0][10] is room
@@ -311,8 +586,8 @@ def test_ep_combine_collective_rejects_invalid_source_id_cohort_before_lookup_or
             assert raw.time == 1.0
             raw_inventory_spy.get.assert_not_called()
             raw_inventory_spy.pop.assert_not_called()
-            scheduler.get_dp_replica_stage_scheduler.assert_not_called()
-            scheduler.get_dp_replica_scheduler.assert_not_called()
+            scheduler.get_replica_stage_scheduler.assert_not_called()
+            scheduler.get_replica_scheduler.assert_not_called()
             scheduler._create_m2n_transfer_events_for_aggregated_batch.assert_not_called()
             raw_request.on_batch_stage_end.assert_not_called()
             for stage_scheduler in stage_schedulers.values():
@@ -347,6 +622,7 @@ def test_ep_combine_collective_validates_token_conservation_before_mutation() ->
             stage_id=0,
             batch_global_id=10,
             metrics_store=metrics_store,
+            combine_end_time=5.0,
         )
 
     assert scheduler._ep_allgather_waiting_room[0][0][10] is room
@@ -384,6 +660,7 @@ def test_ep_combine_collective_requires_execution_time_from_every_lane() -> None
             stage_id=0,
             batch_global_id=10,
             metrics_store=metrics_store,
+            combine_end_time=5.0,
         )
 
     assert scheduler._ep_allgather_waiting_room[0][0][10] is room
@@ -416,6 +693,7 @@ def test_ep_combine_collective_validates_all_raw_batches_before_mutation() -> No
             stage_id=0,
             batch_global_id=10,
             metrics_store=metrics_store,
+            combine_end_time=5.0,
         )
 
     assert scheduler._ep_allgather_waiting_room[0][0][10] is room
@@ -460,6 +738,7 @@ def test_ep_combine_collective_prepares_all_transfer_events_before_mutation() ->
             stage_id=0,
             batch_global_id=10,
             metrics_store=metrics_store,
+            combine_end_time=5.0,
         )
 
     assert scheduler._ep_allgather_waiting_room[0][0][10] is room
@@ -480,7 +759,20 @@ def test_ep_combine_collective_prepares_all_transfer_events_before_mutation() ->
     metrics_store.flush_frontier_stage_batch_ledger_row.assert_not_called()
     assert (
         scheduler._create_m2n_transfer_events_for_aggregated_batch.call_args_list
-        == [call(raw_10, 5.0), call(raw_11, 5.0)]
+        == [
+            call(
+                raw_10,
+                5.0,
+                source_replica_id=0,
+                source_replica_local_id=0,
+            ),
+            call(
+                raw_11,
+                5.0,
+                source_replica_id=0,
+                source_replica_local_id=0,
+            ),
+        ]
     )
 
 
@@ -504,7 +796,6 @@ def _dense_ffn_completion_fixture(
         requests=[_request()],
         num_tokens=[1],
         replica_id=0,
-        lane_id=0,
         time=1.0,
         source_batch_ids=source_batch_ids,
         cluster_type=ClusterType.DECODE_FFN,
@@ -520,7 +811,7 @@ def _dense_ffn_completion_fixture(
         memory_usage_percent=25.0,
     )
     cluster_scheduler = SimpleNamespace(
-        get_dp_replica_scheduler=Mock(return_value=replica_scheduler),
+        get_replica_scheduler=Mock(return_value=replica_scheduler),
         _m2n_transfer_predictor=Mock(),
         _config=SimpleNamespace(replica_config=SimpleNamespace()),
         _raw_batch_waiting_for_m2n_back=dict(raw_batches),
@@ -533,7 +824,7 @@ def _dense_ffn_completion_fixture(
         replica_id=0,
         batch=batch,
         cluster_type=ClusterType.DECODE_FFN,
-        dp_id=0,
+        replica_local_id=None,
     )
     return event, batch, cluster_scheduler, replica_scheduler, global_scheduler
 
@@ -553,7 +844,7 @@ def _event_raw_batch(
         requests=[request],
         time=1.0,
         decode_attn_original_replica_id=decode_attn_original_replica_id,
-        decode_attn_original_dp_id=0,
+        decode_attn_original_replica_local_id=0,
         afd_stage_idx=0,
     )
 
@@ -662,7 +953,10 @@ def test_decode_ffn_completion_validates_routing_before_all_mutation() -> None:
     )
     metrics_store = Mock()
 
-    with pytest.raises(ValueError, match="missing decode_attn_original routing"):
+    with pytest.raises(
+        ValueError,
+        match="missing decode_attn_original_replica_id metadata",
+    ):
         event.handle_event(global_scheduler, metrics_store)
 
     assert cluster_scheduler._raw_batch_waiting_for_m2n_back == {10: raw}

@@ -56,7 +56,7 @@ class LightLLMReplicaScheduler(BaseReplicaScheduler):
                     f"request_id={request.id}, "
                     f"source_cluster={self._cluster_type.name}, "
                     f"source_replica={self._replica_id}, "
-                    f"source_dp={self._dp_id}"
+                    f"source_dp={self._replica_local_id}"
                 )
 
             if request.id in self._allocation_map:

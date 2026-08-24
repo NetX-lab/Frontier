@@ -61,6 +61,13 @@ class TensorParallelMode(Enum):
     MOE_TP = "moe_tp"
 
 
+class ZeroPayloadPolicy(Enum):
+    """How a communication operator handles an exact zero-byte payload."""
+
+    PREDICT = "predict"
+    EXACT_NOOP = "exact_noop"
+
+
 @dataclass(frozen=True)
 class OperatorSpec:
     """Declarative contract for one physical operator."""
@@ -165,6 +172,7 @@ class CommOperatorSpec(OperatorSpec):
     num_devices_builder: CommNumDevicesBuilder | None = None
     comm_domain: str | None = None
     apply_allreduce_launch_overhead_strip: bool = False
+    zero_payload_policy: ZeroPayloadPolicy = ZeroPayloadPolicy.PREDICT
 
     _operator_label: ClassVar[str] = "CommOperator"
 
@@ -184,6 +192,11 @@ class CommOperatorSpec(OperatorSpec):
             raise ValueError(f"CommOperator {self.name} trace_kind must be COMM")
         if self.resource_class is not ResourceClass.COMM:
             raise ValueError(f"CommOperator {self.name} resource_class must be COMM")
+        if not isinstance(self.zero_payload_policy, ZeroPayloadPolicy):
+            raise ValueError(
+                f"CommOperator {self.name} zero_payload_policy must be "
+                f"ZeroPayloadPolicy, got {self.zero_payload_policy!r}"
+            )
 
     def build_payload_bytes(self, ctx: CommPayloadContext) -> int:
         if self.payload_builder is None:

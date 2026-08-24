@@ -74,6 +74,32 @@ def test_flat_cli_exposes_reference_complete_deferred_trace_fields() -> None:
     )
 
 
+def test_flat_cli_excludes_retired_attention_dp_fields() -> None:
+    flat_config = create_flat_dataclass(SimulationConfig)
+    flat_field_names = {field.name for field in fields(flat_config)}
+
+    retired_fields = {
+        "replica_config_attn_data_parallel_size",
+        "cluster_config_prefill_replica_config_attn_data_parallel_size",
+        "cluster_config_decode_attn_replica_config_attn_data_parallel_size",
+        "cluster_config_decode_replica_config_attn_data_parallel_size",
+    }
+    assert retired_fields.isdisjoint(flat_field_names)
+
+
+def test_retired_attention_dp_cli_flag_fails_as_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    flat_config = create_flat_dataclass(SimulationConfig)
+    monkeypatch.setattr(
+        "sys.argv",
+        ["frontier.main", "--replica_config_attn_data_parallel_size", "2"],
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        flat_config.create_from_cli_args()
+
+    assert exc_info.value.code == 2
+
+
 @pytest.mark.parametrize("field_name", DEFERRED_TRACE_FIELDS)
 def test_nonempty_deferred_trace_field_fails_at_pdaf_config_boundary(
     tmp_path: Path,
@@ -142,10 +168,26 @@ def test_deferred_trace_fields_are_preserved_by_replica_config_copy() -> None:
     } == expected
 
 
+def test_replica_config_copy_preserves_moe_routing_distribution_type() -> None:
+    source = ReplicaConfig(
+        model_name="Phi-tiny-MoE-instruct",
+        moe_routing_distribution_type="skewed",
+    )
+    cluster_config = ClusterConfig(
+        num_replicas=1,
+        replica_config=source,
+        replica_scheduler_config=OrcaSchedulerConfig(),
+    )
+
+    copied = cluster_config._create_replica_config_copy()
+
+    assert copied.moe_routing_distribution_type == "skewed"
+
+
 def test_trace_driven_moe_routing_fails_without_silent_fallback(tmp_path: Path) -> None:
     replica_config = ReplicaConfig(
         model_name="llama2_7b_dense_example",
-        moe_routing_mode="trace_driven",
+        moe_routing_trace_path="/data/ycfeng/tmp/deferred-trace.jsonl",
     )
 
     with pytest.raises(ValueError, match=DEFERRED_ERROR_MARKER):

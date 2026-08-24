@@ -19,10 +19,16 @@ from frontier.config import (
 )
 from frontier.config import global_vars
 from frontier.entities import Batch, EPBatchGroup, ExecutionTime
-from frontier.entities.time_components import OverheadTime
+from frontier.entities.time_components import (
+    AttentionTime,
+    CommunicationOperatorTimes,
+    OverheadTime,
+)
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
+from frontier.operators.families import get_comm_operator
+from frontier.operators.spec import CommPayloadContext
 from frontier.types import ClusterType
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
@@ -168,6 +174,23 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             routing_details: Dict[int, Dict[int, Dict[int, float]]] = (
                 self._simulate_and_store_routing(target_cluster_type)
             )
+            target_replica_config = self._get_cluster_replica_config(
+                target_cluster_type
+            )
+            if (
+                getattr(target_replica_config.model_config, "is_moe", None)
+                is False
+            ):
+                if routing_details:
+                    raise ValueError(
+                        f"Dense {target_cluster_type.name} predictor produced "
+                        "unexpected MoE routing details"
+                    )
+            else:
+                self._emit_routing_details_snapshot(
+                    target_cluster_type,
+                    routing_details,
+                )
 
             if target_cluster_type == ClusterType.PREFILL:
                 self._prefill_routing_details = routing_details
@@ -277,6 +300,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
         else:
             raise NotImplementedError(f"Unsupported cluster_type: {cluster_type}")
+
+        if getattr(cluster_replica_config.model_config, "is_moe", None) is False:
+            return {}
 
         # In dummy mode, generate a valid uniform routing map instead of returning an empty dict
         if self._enable_dummy_mode:
@@ -466,7 +492,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         Returns:
             List of allocation ratios for each expert (sum should be 1.0)
         """
-        np.random.seed(self._distribution_seed + replica_id * 1000 + layer_id)
+        # Replica IDs select the shared routing lookup only; they must not
+        # create different per-layer distributions across architectures.
+        rng = np.random.default_rng(self._distribution_seed + layer_id)
 
         if self._workload_distribution_type == WorkloadDistributionType.BALANCED:
             # Balanced distribution: each expert gets equal allocation
@@ -474,7 +502,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
 
         elif self._workload_distribution_type == WorkloadDistributionType.RANDOM:
             # Random distribution: generate random weights and normalize
-            random_weights = np.random.uniform(0.1, 1.0, total_expert_num)
+            random_weights = rng.uniform(0.1, 1.0, total_expert_num)
             total_weight = np.sum(random_weights)
             allocation_ratios = (random_weights / total_weight).tolist()
 
@@ -549,129 +577,17 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         Returns:
             Predicted grouped GEMM execution time in milliseconds.
         """
-        if batch is None:
-            return super()._get_grouped_gemm_time(num_tokens_or_allocation)
         return super()._get_grouped_gemm_time(
             num_tokens_or_allocation,
             batch=batch,
         )
 
-    def _calculate_expert_token_allocation(
-        self, batch: Batch, cluster_type: ClusterType, layer_id: int
-    ) -> Dict[int, int]:
-        """
-        Calculate actual token allocation for each expert based on batch and routing details.
-
-        Args:
-            batch: The batch being processed
-            cluster_type: Type of cluster (PREFILL, DECODE_FFN, or DECODE)
-            layer_id: Layer ID within the pipeline stage
-
-        Returns:
-            Dictionary mapping global_expert_id to number of tokens
-        """
-        # Get routing details for the appropriate cluster
-        if cluster_type == ClusterType.PREFILL:
-            routing_details = self._prefill_routing_details
-            cluster_replica_config = self._cluster_config.prefill_replica_config
-        elif cluster_type == ClusterType.DECODE_FFN:
-            routing_details = self._decode_ffn_routing_details
-            cluster_replica_config = self._cluster_config.decode_ffn_replica_config
-        elif cluster_type == ClusterType.DECODE:
-            # Unified DECODE cluster in PD-disaggregation mode
-            routing_details = self._decode_routing_details
-            cluster_replica_config = getattr(
-                self._cluster_config, "decode_replica_config", self._replica_config
-            )
-        else:
-            raise ValueError(
-                f"Unsupported cluster_type for MoE calculation: {cluster_type}"
-            )
-
-        # Check if routing details are available
-        assert (
-            routing_details is not None
-        ), f"Routing details not available for {cluster_type}"
-
-        replica_id = batch.replica_id
-
-        # Get total tokens in batch and multiply by top_k to get total expert tokens
-        total_batch_tokens = batch.total_num_tokens
-        router_topk = cluster_replica_config.router_topk
-        total_expert_tokens = total_batch_tokens * router_topk
-
-        # Get allocation ratios for this replica and layer
-        if replica_id not in routing_details:
-            logger.error(
-                f"Replica {replica_id} not found in routing details for {cluster_type}"
-            )
-            raise KeyError(
-                f"Replica {replica_id} not found in routing details for {cluster_type}"
-            )
-
-        if layer_id not in routing_details[replica_id]:
-            logger.error(
-                f"Layer {layer_id} not found in routing details for replica {replica_id} in {cluster_type}"
-            )
-            raise KeyError(
-                f"Layer {layer_id} not found in routing details for replica {replica_id} in {cluster_type}"
-            )
-
-        expert_ratios = routing_details[replica_id][layer_id]
-
-        # Calculate actual token allocation for each expert using proportional allocation
-        # with remainder distribution to ensure token conservation.
-        # 
-        # Problem: Simple int(total_expert_tokens * ratio) causes token loss due to truncation.
-        # Example: 4 tokens, 8 experts with uniform ratio 0.125 each
-        #   - int(4 * 0.125) = 0 for all experts → total = 0, expected = 4
-        # 
-        # Solution: Use largest remainder method (Hare quota) for fair distribution:
-        # 1. Calculate base allocation (floor) for each expert
-        # 2. Distribute remaining tokens to experts with largest fractional parts
-        
-        # Step 1: Calculate base allocation and fractional parts
-        expert_base_allocation = {}
-        expert_fractional_parts = {}
-        total_base_allocated = 0
-        
-        for global_expert_id, allocation_ratio in expert_ratios.items():
-            exact_allocation = total_expert_tokens * allocation_ratio
-            base_allocation = int(exact_allocation)
-            fractional_part = exact_allocation - base_allocation
-            
-            expert_base_allocation[global_expert_id] = base_allocation
-            expert_fractional_parts[global_expert_id] = fractional_part
-            total_base_allocated += base_allocation
-        
-        # Step 2: Distribute remaining tokens to experts with largest fractional parts
-        remaining_tokens = total_expert_tokens - total_base_allocated
-        
-        if remaining_tokens > 0:
-            # Sort experts by fractional part (descending) to distribute remaining tokens fairly
-            sorted_experts = sorted(
-                expert_fractional_parts.keys(),
-                key=lambda eid: expert_fractional_parts[eid],
-                reverse=True
-            )
-            
-            # Distribute remaining tokens one by one to experts with largest fractional parts
-            for i in range(remaining_tokens):
-                expert_id = sorted_experts[i % len(sorted_experts)]
-                expert_base_allocation[expert_id] += 1
-        
-        # Verify token conservation
-        total_allocated = sum(expert_base_allocation.values())
-        if total_allocated != total_expert_tokens:
-            logger.warning(
-                f"Token allocation mismatch after distribution: allocated={total_allocated}, "
-                f"expected={total_expert_tokens}. This should not happen."
-            )
-        
-        return expert_base_allocation
-
     def _get_dummy_execution_time_for_cluster(
-        self, batch: Batch, pipeline_stage: int, cluster_type: ClusterType = None
+        self,
+        batch: Batch,
+        pipeline_stage: int,
+        cluster_type: ClusterType = None,
+        include_attention: bool = True,
     ) -> ExecutionTime:
         """Return cluster-specific dummy ExecutionTime object."""
         if cluster_type is None:
@@ -680,17 +596,41 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
 
         base_time = self._dummy_execution_time
-        # PD+AF dummy-mode calibration: DECODE_FFN can otherwise appear far slower than
-        # DECODE_ATTN because its modeled MoE path hits additional scaling factors.
-        # Keep dummy-mode Te within the same order of magnitude as Ta for validation.
-        if cluster_type == ClusterType.DECODE_FFN:
-            base_time *= 0.02
+        routed_token_count = self._get_ep_lane_routed_token_count(batch)
+        zero_routed_ep_lane = routed_token_count == 0
 
         cluster_replica_config = self._get_cluster_replica_config(cluster_type)
         # Use model_config.is_moe for MoE detection - NOT parallelism settings
         # A MoE model remains MoE regardless of moe_expert_parallel_size
         model_config = cluster_replica_config.model_config
         is_moe_model = model_config is not None and model_config.is_moe
+        moe_ep_size = cluster_replica_config.moe_expert_parallel_size
+        # DECODE_ATTN is intentionally attention-only; its cluster replica
+        # config sets MoE parallelism fields to zero even when the model itself
+        # is MoE. Validate EP topology only for clusters that execute MoE/FFN.
+        if (
+            is_moe_model
+            and cluster_type != ClusterType.DECODE_ATTN
+            and (type(moe_ep_size) is not int or moe_ep_size <= 0)
+        ):
+            raise ValueError(
+                "Dummy MoE prediction requires a positive integer "
+                f"moe_expert_parallel_size, got {moe_ep_size!r}"
+            )
+        ep_phase_time = (
+            base_time if is_moe_model and moe_ep_size > 1 else 0.0
+        )
+        ep_communication_time = ep_phase_time * 2
+        ep_operator_times = (
+            CommunicationOperatorTimes(
+                {
+                    "expert_parallel_alltoall_dispatch": ep_phase_time,
+                    "expert_parallel_alltoall_combine": ep_phase_time,
+                }
+            )
+            if is_moe_model
+            else None
+        )
         architecture_profile = self._get_cluster_model_architecture_profile(cluster_type)
         share_expert_enabled = (
             is_moe_model
@@ -698,21 +638,38 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             and cluster_replica_config.model_config.supports_share_expert()
         )
         share_expert_time = base_time if share_expert_enabled else 0.0
+        attn_tp_size = int(cluster_replica_config.attn_tensor_parallel_size)
+        moe_tp_size = int(cluster_replica_config.moe_tensor_parallel_size)
         if cluster_type == ClusterType.DECODE_FFN:
-            tp_size = cluster_replica_config.moe_tensor_parallel_size
+            tp_size = moe_tp_size
         else:
-            tp_size = cluster_replica_config.attn_tensor_parallel_size
+            tp_size = attn_tp_size
         pp_stage_boundary_handoff_time = (
             base_time
             if pipeline_stage < cluster_replica_config.num_pipeline_stages - 1
             else 0.0
         )
         # COMM_SKIP: TP all-reduce not needed when tp_size <= 1 (no tensor sharding)
-        tp_comm_time = base_time if tp_size > 1 else 0.0
+        attn_tp_comm_time = base_time if attn_tp_size > 1 else 0.0
+        moe_tp_comm_time = (
+            base_time if is_moe_model and moe_tp_size > 1 else 0.0
+        )
+        tp_comm_time = (
+            moe_tp_comm_time if cluster_type == ClusterType.DECODE_FFN else attn_tp_comm_time
+        )
+        attention_tp_comm_time = attn_tp_comm_time if include_attention else 0.0
+        moe_tp_allreduce_time = (
+            0.0
+            if zero_routed_ep_lane
+            else moe_tp_comm_time
+        )
+        routed_grouped_gemm_time = (
+            0.0 if zero_routed_ep_lane else base_time
+        )
         ffn_tp_comm_enabled = (
             cluster_type == ClusterType.DECODE_FFN
             and architecture_profile.moe_tensor_parallel_allgather_op is not None
-            and tp_size > 1
+            and moe_tp_size > 1
         )
         ffn_tp_allgather_time = base_time if ffn_tp_comm_enabled else 0.0
         share_expert_tp_allreduce_time = (
@@ -729,18 +686,30 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             # PREFILL cluster handles full model layers
             return ExecutionTime(
                 num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
-                attention_rope_execution_time=base_time,
-                attention_kv_cache_save_execution_time=base_time,
+                attention_rope_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attention_kv_cache_save_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
                 attention_decode_execution_time=0.0,  # No decode in prefill
-                attention_prefill_execution_time=base_time,
-                attention_layer_pre_proj_execution_time=base_time,
-                attention_layer_post_proj_execution_time=base_time,
-                attn_norm_time=base_time,
+                attention_prefill_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attention_layer_pre_proj_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attention_layer_post_proj_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attn_norm_time=base_time if include_attention else 0.0,
                 mlp_norm_time=base_time,
                 add_time=base_time,
-                tensor_parallel_communication_time=tp_comm_time,
+                tensor_parallel_communication_time=attention_tp_comm_time,
+                attn_tensor_parallel_allreduce_time=attention_tp_comm_time,
+                moe_tensor_parallel_allreduce_time=moe_tp_allreduce_time,
                 pipeline_parallel_communication_time=base_time,
-                expert_parallel_communication_time=base_time,
+                expert_parallel_communication_time=ep_communication_time,
                 moe_gating_time=base_time,
                 moe_shuffling_time=base_time,
                 schedule_time=base_time,
@@ -753,27 +722,40 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_layer_up_proj_execution_time=base_time,
                 mlp_layer_down_proj_execution_time=base_time,
                 mlp_layer_act_execution_time=base_time,
-                moe_grouped_gemm_time=base_time,
+                moe_grouped_gemm_time=routed_grouped_gemm_time,
                 share_expert_up_proj_time=share_expert_time,
                 share_expert_down_proj_time=share_expert_time,
                 share_expert_act_time=share_expert_time,
+                communication_operator_times=ep_operator_times,
             )
         elif cluster_type == ClusterType.DECODE:
             # Unified DECODE cluster (PD-disaggregation mode): attention + (MLP/MoE)
             return ExecutionTime(
                 num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
-                attention_rope_execution_time=base_time,
-                attention_kv_cache_save_execution_time=base_time,
-                attention_decode_execution_time=base_time,
+                attention_rope_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attention_kv_cache_save_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attention_decode_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
                 attention_prefill_execution_time=0.0,  # No prefill in decode
-                attention_layer_pre_proj_execution_time=base_time,
-                attention_layer_post_proj_execution_time=base_time,
-                attn_norm_time=base_time,
+                attention_layer_pre_proj_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attention_layer_post_proj_execution_time=(
+                    base_time if include_attention else 0.0
+                ),
+                attn_norm_time=base_time if include_attention else 0.0,
                 mlp_norm_time=base_time,
                 add_time=base_time,
-                tensor_parallel_communication_time=tp_comm_time,
+                tensor_parallel_communication_time=attention_tp_comm_time,
+                attn_tensor_parallel_allreduce_time=attention_tp_comm_time,
+                moe_tensor_parallel_allreduce_time=moe_tp_allreduce_time,
                 pipeline_parallel_communication_time=base_time,
-                expert_parallel_communication_time=base_time,
+                expert_parallel_communication_time=ep_communication_time,
                 moe_gating_time=base_time,
                 moe_shuffling_time=base_time,
                 schedule_time=base_time,
@@ -786,10 +768,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_layer_up_proj_execution_time=base_time,
                 mlp_layer_down_proj_execution_time=base_time,
                 mlp_layer_act_execution_time=base_time,
-                moe_grouped_gemm_time=base_time,
+                moe_grouped_gemm_time=routed_grouped_gemm_time,
                 share_expert_up_proj_time=share_expert_time,
                 share_expert_down_proj_time=share_expert_time,
                 share_expert_act_time=share_expert_time,
+                communication_operator_times=ep_operator_times,
             )
         elif cluster_type == ClusterType.DECODE_ATTN:
             # DECODE_ATTN cluster only handles attention operations
@@ -828,6 +811,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
         elif cluster_type == ClusterType.DECODE_FFN:
             # DECODE_FFN cluster only handles FFN/MoE operations
+            routed_grouped_gemm_time = (
+                0.0 if zero_routed_ep_lane else base_time * 0.5
+            )
             return ExecutionTime(
                 num_layers_per_pipeline_stage=1,
                 attention_rope_execution_time=0.0,  # No attention in FFN cluster
@@ -840,8 +826,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_norm_time=base_time,
                 add_time=base_time,
                 tensor_parallel_communication_time=tp_comm_time,
+                moe_tensor_parallel_allreduce_time=moe_tp_allreduce_time,
                 pipeline_parallel_communication_time=0.0,
-                expert_parallel_communication_time=base_time,
+                expert_parallel_communication_time=ep_communication_time,
                 # In dummy mode, keep the per-layer MoE compute (gating + grouped_gemm)
                 # roughly equal to base_time to avoid artificial Te >> Ta imbalance.
                 moe_gating_time=base_time * 0.5,
@@ -856,12 +843,13 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_layer_up_proj_execution_time=base_time,
                 mlp_layer_down_proj_execution_time=base_time,
                 mlp_layer_act_execution_time=base_time,
-                moe_grouped_gemm_time=base_time * 0.5,
+                moe_grouped_gemm_time=routed_grouped_gemm_time,
                 share_expert_up_proj_time=share_expert_time,
                 share_expert_down_proj_time=share_expert_time,
                 share_expert_act_time=share_expert_time,
                 tensor_parallel_allgather_time=ffn_tp_allgather_time,
                 share_expert_tensor_parallel_allreduce_time=share_expert_tp_allreduce_time,
+                communication_operator_times=ep_operator_times,
             )
 
         raise ValueError(
@@ -972,6 +960,12 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             attn_tensor_parallel_allreduce_time=0.0,
             moe_tensor_parallel_allreduce_time=0.0,
             pp_stage_boundary_handoff_time=0.0,
+            communication_operator_times=CommunicationOperatorTimes(
+                {
+                    "expert_parallel_alltoall_dispatch": 0.0,
+                    "expert_parallel_alltoall_combine": 0.0,
+                }
+            ),
         )
 
     # Phase 2.5: Removed deprecated get_moe_stage_execution_details() method
@@ -982,7 +976,12 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
     # ========================================================================
 
     def _get_communication_time(
-        self, batch: Batch, stage_id: int, cluster_type: ClusterType
+        self,
+        batch: Batch,
+        stage_id: int,
+        cluster_type: ClusterType,
+        *,
+        include_attention: bool = True,
     ) -> CommunicationTime:
         """
         Get communication times for a batch at a given stage.
@@ -1003,7 +1002,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         pipeline_parallel_time = 0.0
 
         # Tensor parallel communication (all-reduce)
-        if self._supports_operation("tensor_parallel_communication"):
+        if (
+            include_attention
+            and self._supports_operation("tensor_parallel_communication")
+        ):
             tensor_parallel_time = self._get_tensor_parallel_communication_time(batch)
 
         # Pipeline parallel communication (send/recv)
@@ -1148,6 +1150,155 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             context=f"cluster={cluster_type}, stage={stage_id}, num_layers={num_layers}",
         )
 
+    def _predict_named_ep_phase_operator_times(
+        self,
+        *,
+        batch: Batch,
+        stage_id: int,
+        cluster_type: ClusterType,
+        num_layers: int,
+    ) -> dict[str, float]:
+        phase_times = self._predict_expert_parallel_phase_operator_times(batch)
+        return {
+            op_name: self._predict_one_op_time(
+                op_name,
+                phase_time_ms,
+                batch,
+                stage_id,
+                cluster_type,
+                num_layers,
+            )
+            for op_name, phase_time_ms in phase_times.items()
+        }
+
+    def _predict_attention_only_stage_execution_time(
+        self,
+        batch: Batch,
+        stage_id: int,
+        cluster_type: ClusterType,
+        num_layers: int,
+    ) -> ExecutionTime:
+        """Predict only attention for a shared-domain layer probe.
+
+        The shared PREFILL/DECODE schedulers use this result to schedule the
+        attention prefix before the layer-local MoE wave.  It must not inspect
+        either dense FFN or routed-expert profiling rows; the subsequent
+        dense/EP operation performs the only FFN lookup for the layer.
+        """
+
+        attention_time = self.predict_attention_layer_time(
+            batch, layer_id=0, cluster_type=cluster_type
+        )
+        communication_time = self._get_communication_time(
+            batch, stage_id, cluster_type
+        )
+        overhead_time = self._get_overhead_time(batch, cluster_type, stage_id)
+
+        return ExecutionTime(
+            num_layers_per_pipeline_stage=num_layers,
+            attention_rope_execution_time=self._predict_one_op_time(
+                "attention_rope_execution_time",
+                attention_time.attention_rope_execution_time,
+                batch,
+                stage_id,
+                cluster_type,
+                num_layers,
+            ),
+            attention_kv_cache_save_execution_time=self._predict_one_op_time(
+                "attention_kv_cache_save_execution_time",
+                attention_time.attention_kv_cache_save_execution_time,
+                batch,
+                stage_id,
+                cluster_type,
+                num_layers,
+            ),
+            attention_decode_execution_time=self._predict_one_op_time(
+                "attention_decode_execution_time",
+                attention_time.attention_decode_execution_time,
+                batch,
+                stage_id,
+                cluster_type,
+                num_layers,
+            ),
+            attention_prefill_execution_time=self._predict_one_op_time(
+                "attention_prefill_execution_time",
+                attention_time.attention_prefill_execution_time,
+                batch,
+                stage_id,
+                cluster_type,
+                num_layers,
+            ),
+            attention_layer_pre_proj_execution_time=self._predict_one_op_time(
+                "attention_layer_pre_proj_execution_time",
+                attention_time.attention_layer_pre_proj_execution_time,
+                batch,
+                stage_id,
+                cluster_type,
+                num_layers,
+            ),
+            attention_layer_post_proj_execution_time=self._predict_one_op_time(
+                "attention_layer_post_proj_execution_time",
+                attention_time.attention_layer_post_proj_execution_time,
+                batch,
+                stage_id,
+                cluster_type,
+                num_layers,
+            ),
+            attn_norm_time=self._predict_one_op_time(
+                "attn_norm_time",
+                attention_time.attn_norm_time,
+                batch,
+                stage_id,
+                cluster_type,
+                num_layers,
+            ),
+            mlp_norm_time=0.0,
+            add_time=0.0,
+            add_attn_residual_time=0.0,
+            add_ffn_residual_time=0.0,
+            tensor_parallel_communication_time=self._predict_one_op_time(
+                "tensor_parallel_communication_time",
+                communication_time.tensor_parallel_time,
+                batch,
+                stage_id,
+                cluster_type,
+                num_layers,
+            ),
+            attn_tensor_parallel_allreduce_time=self._predict_one_op_time(
+                "attn_tensor_parallel_allreduce_time",
+                communication_time.tensor_parallel_time,
+                batch,
+                stage_id,
+                cluster_type,
+                num_layers,
+            ),
+            moe_tensor_parallel_allreduce_time=0.0,
+            tensor_parallel_allgather_time=0.0,
+            share_expert_tensor_parallel_allreduce_time=0.0,
+            pipeline_parallel_communication_time=communication_time.pipeline_parallel_time,
+            schedule_time=overhead_time.schedule_time,
+            sampler_e2e_time=overhead_time.sampler_e2e_time,
+            prepare_inputs_e2e_time=overhead_time.prepare_inputs_e2e_time,
+            process_model_outputs_time=overhead_time.process_model_outputs_time,
+            ray_comm_time=overhead_time.ray_comm_time,
+            pp_producer_send_path_runtime_time=(
+                overhead_time.pp_producer_send_path_runtime_time
+            ),
+            pp_receiver_head_runtime_time=overhead_time.pp_receiver_head_runtime_time,
+            pp_prefill_consumer_active_runtime_time=(
+                overhead_time.pp_prefill_consumer_active_runtime_time
+            ),
+            pp_stage_boundary_residual_runtime_time=(
+                overhead_time.pp_stage_boundary_residual_runtime_time
+            ),
+            pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
+            mlp_layer_up_proj_execution_time=0.0,
+            mlp_layer_down_proj_execution_time=0.0,
+            mlp_layer_act_execution_time=0.0,
+            attention_operator_times=attention_time.operator_times,
+            **self._get_zero_moe_params(),
+        )
+
     def predict_stage_execution_time(
         self,
         batch: Batch,
@@ -1155,6 +1306,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         cluster_type: ClusterType,
         num_layers: int = 1,
         layer_id: int = 0,
+        include_moe: bool | None = None,
+        include_ffn: bool = True,
+        include_attention: bool = True,
     ) -> ExecutionTime:
         """
         Predict aggregated execution time for one or more transformer layers (disaggregated architecture).
@@ -1168,6 +1322,35 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         - This predictor emits single-layer op/comm/residual components.
         - ExecutionTime applies num_layers_per_pipeline_stage aggregation.
         """
+        if type(include_attention) is not bool:
+            raise ValueError("include_attention must be a bool")
+        if not include_attention and (
+            cluster_type not in (ClusterType.PREFILL, ClusterType.DECODE)
+            or not include_ffn
+        ):
+            raise ValueError(
+                "Post-attention-only prediction requires shared-domain PREFILL "
+                "or unified DECODE with FFN enabled"
+            )
+        if not include_attention:
+            if include_moe is False:
+                raise ValueError(
+                    "Post-attention-only prediction requires a MoE layer; "
+                    "include_moe=False selects a dense FFN branch"
+                )
+            cluster_replica_config = self._get_cluster_replica_config(cluster_type)
+            model_config = cluster_replica_config.model_config
+            is_moe_layer = bool(
+                model_config is not None
+                and model_config.is_moe
+                and model_config.is_moe_layer(layer_id)
+            )
+            if not is_moe_layer:
+                raise ValueError(
+                    "Post-attention-only prediction requires a MoE layer; "
+                    f"layer_id={layer_id} is dense"
+                )
+
         if self._enable_dummy_mode:
             if cluster_type in (
                 ClusterType.PREFILL,
@@ -1178,7 +1361,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 self._log_architecture_attention_shape(batch)
             # Phase 1 Fix: Use cluster-specific dummy execution time
             dummy_exec_time = self._get_dummy_execution_time_for_cluster(
-                batch, stage_id, cluster_type
+                batch,
+                stage_id,
+                cluster_type,
+                include_attention=include_attention,
             )
 
             # If num_layers matches, return as-is
@@ -1193,6 +1379,19 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 )
 
             scale_factor = num_layers / dummy_exec_time.num_layers
+            scaled_communication_operator_times = None
+            if dummy_exec_time._is_moe:
+                source_operator_times = dummy_exec_time.communication_operator_times
+                if source_operator_times is None:
+                    raise ValueError(
+                        "Dummy MoE ExecutionTime is missing named EP phase times"
+                    )
+                scaled_communication_operator_times = CommunicationOperatorTimes(
+                    {
+                        op_name: time_ms * scale_factor
+                        for op_name, time_ms in source_operator_times.op_times.items()
+                    }
+                )
 
             # Create scaled ExecutionTime
             return ExecutionTime(
@@ -1218,6 +1417,18 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 * scale_factor,
                 tensor_parallel_communication_time=dummy_exec_time._tensor_parallel_communication_time
                 * scale_factor,
+                attn_tensor_parallel_allreduce_time=(
+                    dummy_exec_time._attn_tensor_parallel_allreduce_time
+                    * scale_factor
+                    if dummy_exec_time._has_attn_tensor_parallel_allreduce_time
+                    else None
+                ),
+                moe_tensor_parallel_allreduce_time=(
+                    dummy_exec_time._moe_tensor_parallel_allreduce_time
+                    * scale_factor
+                    if dummy_exec_time._has_moe_tensor_parallel_allreduce_time
+                    else None
+                ),
                 tensor_parallel_allgather_time=dummy_exec_time._tensor_parallel_allgather_time
                 * scale_factor,
                 share_expert_tensor_parallel_allreduce_time=dummy_exec_time._share_expert_tensor_parallel_allreduce_time
@@ -1248,6 +1459,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 * scale_factor,
                 share_expert_act_time=dummy_exec_time._share_expert_act_time
                 * scale_factor,
+                communication_operator_times=scaled_communication_operator_times,
             )
 
         logger.debug(
@@ -1257,6 +1469,14 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
 
         if num_layers < 1:
             raise ValueError(f"num_layers must be >= 1, got {num_layers}")
+        if include_moe is not None and type(include_moe) is not bool:
+            raise ValueError("include_moe must be a bool or None")
+        if type(include_ffn) is not bool:
+            raise ValueError("include_ffn must be a bool")
+        if not include_ffn and include_moe is not None:
+            raise ValueError(
+                "include_moe must be None for an attention-only stage probe"
+            )
 
         if self._is_zero_token_decode_ffn_ep_barrier(batch, cluster_type):
             logger.debug(
@@ -1269,12 +1489,29 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         measurement_type = self._select_measurement_type_for_batch(batch)
         self._require_predictions_for_measurement_type(measurement_type, batch)
         self._activate_measurement_type(measurement_type)
+        self._emit_cuda_graph_activation_records(
+            batch,
+            measurement_type,
+            cluster_type,
+        )
 
         # Validate cluster_type consistency
         if self._cluster_type is not None and cluster_type != self._cluster_type:
             logger.warning(
                 f"Cluster type mismatch: predictor initialized with {self._cluster_type}, "
                 f"but predict_stage_execution_time called with {cluster_type}"
+            )
+
+        if not include_ffn:
+            if cluster_type == ClusterType.DECODE_FFN:
+                raise ValueError(
+                    "Attention-only prediction is invalid for the DECODE_FFN cluster"
+                )
+            return self._predict_attention_only_stage_execution_time(
+                batch=batch,
+                stage_id=stage_id,
+                cluster_type=cluster_type,
+                num_layers=num_layers,
             )
 
         # Phase 2.5: Refactored to use new unified APIs instead of deprecated get_execution_time()
@@ -1288,7 +1525,12 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             )
 
         # Use new unified APIs to build execution time components
-        communication_time = self._get_communication_time(batch, stage_id, cluster_type)
+        communication_time = self._get_communication_time(
+            batch,
+            stage_id,
+            cluster_type,
+            include_attention=include_attention,
+        )
         overhead_time = self._get_overhead_time(batch, cluster_type, stage_id)
         overhead_time.pp_stage_boundary_handoff_time = (
             self._get_pp_stage_boundary_handoff_time(batch, stage_id)
@@ -1432,6 +1674,8 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 and model_config.is_moe
                 and model_config.is_moe_layer(layer_id)
             )
+            if include_moe is not None:
+                is_moe_layer = include_moe
 
             if is_moe_layer:
                 # MoE layer: use MoE operations
@@ -1481,14 +1725,34 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     add_attn_residual_time = 0.0
                     add_ffn_residual_time = add_time
                     add_time = 0.0
-                # Get expert parallel communication time separately (not from MoETime)
-                ep_comm_time = self._get_expert_parallel_communication_time(batch)
+                ep_operator_times = self._predict_named_ep_phase_operator_times(
+                    batch=batch,
+                    stage_id=stage_id,
+                    cluster_type=cluster_type,
+                    num_layers=num_layers,
+                )
+                ep_comm_time = sum(ep_operator_times.values())
                 ffn_tp_allgather_time = 0.0
                 share_expert_tp_allreduce_time = 0.0
-                moe_tp_size = cluster_replica_config.moe_tensor_parallel_size
+                moe_tp_size = int(cluster_replica_config.moe_tensor_parallel_size)
+                moe_tp_allreduce_time = (
+                    self._predict_comm_operator_with_context(
+                        get_comm_operator("moe_tensor_parallel_allreduce"),
+                        CommPayloadContext(
+                            batch=batch,
+                            model_config=model_config,
+                            replica_config=cluster_replica_config,
+                            cluster_type=cluster_type,
+                            quantization_manager=get_quantization_manager(),
+                        ),
+                    )
+                    if moe_tp_size > 1
+                    else 0.0
+                )
                 if architecture_profile.moe_tensor_parallel_allgather_op and moe_tp_size > 1:
-                    # Use compute-effective tokens. AFD paths already include CUDA Graph
-                    # padding in metadata; non-CUDA-Graph paths keep exact token counts.
+                    # Allgather and shared-expert collectives use the source
+                    # batch's pre-routing hidden-state payload. Only the routed
+                    # MoE-TP allreduce above uses lane-local assignments.
                     effective_tokens = batch.get_effective_total_tokens_rounded(
                         cluster_type
                     )
@@ -1520,9 +1784,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                             cluster_type=cluster_type,
                             comm_domain="MOE_TP",
                         )
-                        share_expert_tp_allreduce_time = self._apply_share_expert_tp_allreduce_overlap(
-                            raw_share_expert_tp_allreduce_time
-                        )
+                        share_expert_tp_allreduce_time = raw_share_expert_tp_allreduce_time
                 return ExecutionTime(
                     num_layers_per_pipeline_stage=num_layers,
                     mlp_norm_time=self._predict_one_op_time(
@@ -1572,6 +1834,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         stage_id,
                         cluster_type,
                         num_layers,
+                    ),
+                    communication_operator_times=CommunicationOperatorTimes(
+                        ep_operator_times
                     ),
                     moe_gating_time=self._predict_one_op_time(
                         "moe_gating_time",
@@ -1632,6 +1897,14 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     tensor_parallel_communication_time=self._predict_one_op_time(
                         "tensor_parallel_communication_time",
                         communication_time.tensor_parallel_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    moe_tensor_parallel_allreduce_time=self._predict_one_op_time(
+                        "moe_tensor_parallel_allreduce_time",
+                        moe_tp_allreduce_time,
                         batch,
                         stage_id,
                         cluster_type,
@@ -1774,9 +2047,69 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             # Handles both dense models (MLP) and MoE models
             # For dense models: attention + MLP
             # For MoE models: attention + MoE
-            attention_time = self.predict_attention_layer_time(
-                batch, layer_id=layer_id, cluster_type=cluster_type
-            )
+            attention_execution_params = self._get_zero_attn_params()
+            if include_attention:
+                attention_time = self.predict_attention_layer_time(
+                    batch, layer_id=layer_id, cluster_type=cluster_type
+                )
+                attention_execution_params = {
+                    "attention_rope_execution_time": self._predict_one_op_time(
+                        "attention_rope_execution_time",
+                        attention_time.attention_rope_execution_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    "attention_kv_cache_save_execution_time": self._predict_one_op_time(
+                        "attention_kv_cache_save_execution_time",
+                        attention_time.attention_kv_cache_save_execution_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    "attention_decode_execution_time": self._predict_one_op_time(
+                        "attention_decode_execution_time",
+                        attention_time.attention_decode_execution_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    "attention_prefill_execution_time": self._predict_one_op_time(
+                        "attention_prefill_execution_time",
+                        attention_time.attention_prefill_execution_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    "attention_layer_pre_proj_execution_time": self._predict_one_op_time(
+                        "attention_layer_pre_proj_execution_time",
+                        attention_time.attention_layer_pre_proj_execution_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    "attention_layer_post_proj_execution_time": self._predict_one_op_time(
+                        "attention_layer_post_proj_execution_time",
+                        attention_time.attention_layer_post_proj_execution_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                    "attn_norm_time": self._predict_one_op_time(
+                        "attn_norm_time",
+                        attention_time.attn_norm_time,
+                        batch,
+                        stage_id,
+                        cluster_type,
+                        num_layers,
+                    ),
+                }
 
             # Check if this is a MoE model or dense model
             # Use model_config.is_moe for MoE detection - NOT parallelism settings
@@ -1784,7 +2117,14 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             is_moe_model = (
                 cluster_replica_config.model_config is not None
                 and cluster_replica_config.model_config.is_moe
+                and cluster_replica_config.model_config.is_moe_layer(layer_id)
             )
+            if include_moe is not None:
+                is_moe_model = include_moe
+            if not include_attention and not is_moe_model:
+                raise ValueError(
+                    "Post-attention-only unified DECODE prediction requires a MoE layer"
+                )
 
             if is_moe_model:
                 # MoE model: use MoE operations
@@ -1797,7 +2137,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 # This uses the routing distribution that was computed during predictor initialization
                 # via _simulate_and_store_routing() method.
                 per_expert_tokens = None
-                if hasattr(batch, "per_expert_tokens") and batch.per_expert_tokens:
+                if getattr(batch, "per_expert_tokens", None) is not None:
                     # EPBatchGroup case: use actual expert allocation from batch
                     per_expert_tokens = batch.per_expert_tokens
                     logger.debug(
@@ -1827,99 +2167,36 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_norm_time = self._get_mlp_norm_layer_act_execution_time(batch)
                 # Get residual add time (both residual connections)
                 add_time = self._get_add_layer_act_execution_time(batch)
-                # Get expert parallel communication time separately (not from MoETime)
-                ep_comm_time = self._get_expert_parallel_communication_time(batch)
+                ep_operator_times = self._predict_named_ep_phase_operator_times(
+                    batch=batch,
+                    stage_id=stage_id,
+                    cluster_type=cluster_type,
+                    num_layers=num_layers,
+                )
+                ep_comm_time = sum(ep_operator_times.values())
 
                 # Calculate MoE TP allreduce time using moe_tensor_parallel_size
                 # (communication_time.tensor_parallel_time uses attn_tensor_parallel_size,
                 #  so we need a separate calculation for MoE TP allreduce)
-                moe_tp_size = cluster_replica_config.moe_tensor_parallel_size
-                moe_tp_allreduce_time = 0.0
-                if moe_tp_size > 1:
-                    # Use compute-effective tokens. AFD paths already include CUDA Graph
-                    # padding in metadata; non-CUDA-Graph paths keep exact token counts.
-                    effective_tokens = batch.get_effective_total_tokens_rounded(cluster_type)
-                    data_size_bytes = (
-                        cluster_replica_config.model_config.embedding_dim
-                        * 2
-                        * effective_tokens
+                moe_tp_size = int(cluster_replica_config.moe_tensor_parallel_size)
+                moe_tp_allreduce_time = (
+                    self._predict_comm_operator_with_context(
+                        get_comm_operator("moe_tensor_parallel_allreduce"),
+                        CommPayloadContext(
+                            batch=batch,
+                            model_config=cluster_replica_config.model_config,
+                            replica_config=cluster_replica_config,
+                            cluster_type=cluster_type,
+                            quantization_manager=get_quantization_manager(),
+                        ),
                     )
-                    if data_size_bytes % moe_tp_size != 0:
-                        raise ValueError(
-                            "Profile-declared FFN TP allgather requires per-device tensor bytes to be "
-                            f"divisible by moe_tp_size, got data_size_bytes={data_size_bytes}, "
-                            f"moe_tp_size={moe_tp_size}"
-                        )
-                    per_device_data_size_bytes = data_size_bytes // moe_tp_size
-                    quant_manager = get_quantization_manager()
-                    moe_tp_allreduce_bytes = quant_manager.adjust_tensor_size(
-                        "allreduce", data_size_bytes, cluster_type
-                    )
-                    moe_tp_allreduce_time = self.predict_allreduce_time(
-                        data_size_bytes=moe_tp_allreduce_bytes,
-                        num_devices=moe_tp_size,
-                        cluster_type=cluster_type,
-                        comm_domain="MOE_TP",
-                    )
+                    if moe_tp_size > 1
+                    else 0.0
+                )
 
                 return ExecutionTime(
                     num_layers_per_pipeline_stage=num_layers,
-                    attention_rope_execution_time=self._predict_one_op_time(
-                        "attention_rope_execution_time",
-                        attention_time.attention_rope_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_kv_cache_save_execution_time=self._predict_one_op_time(
-                        "attention_kv_cache_save_execution_time",
-                        attention_time.attention_kv_cache_save_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_decode_execution_time=self._predict_one_op_time(
-                        "attention_decode_execution_time",
-                        attention_time.attention_decode_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_prefill_execution_time=self._predict_one_op_time(
-                        "attention_prefill_execution_time",
-                        attention_time.attention_prefill_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_layer_pre_proj_execution_time=self._predict_one_op_time(
-                        "attention_layer_pre_proj_execution_time",
-                        attention_time.attention_layer_pre_proj_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_layer_post_proj_execution_time=self._predict_one_op_time(
-                        "attention_layer_post_proj_execution_time",
-                        attention_time.attention_layer_post_proj_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attn_norm_time=self._predict_one_op_time(
-                        "attn_norm_time",
-                        attention_time.attn_norm_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
+                    **attention_execution_params,
                     mlp_norm_time=self._predict_one_op_time(
                         "mlp_norm_time",
                         mlp_norm_time,
@@ -1951,6 +2228,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         stage_id,
                         cluster_type,
                         num_layers,
+                    ),
+                    communication_operator_times=CommunicationOperatorTimes(
+                        ep_operator_times
                     ),
                     moe_gating_time=self._predict_one_op_time(
                         "moe_gating_time",
@@ -1994,7 +2274,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     ),
                     tensor_parallel_communication_time=self._predict_one_op_time(
                         "tensor_parallel_communication_time",
-                        communication_time.tensor_parallel_time,
+                        (
+                            communication_time.tensor_parallel_time
+                            if include_attention
+                            else 0.0
+                        ),
                         batch,
                         stage_id,
                         cluster_type,
@@ -2002,7 +2286,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     ),
                     attn_tensor_parallel_allreduce_time=self._predict_one_op_time(
                         "attn_tensor_parallel_allreduce_time",
-                        communication_time.tensor_parallel_time,
+                        (
+                            communication_time.tensor_parallel_time
+                            if include_attention
+                            else 0.0
+                        ),
                         batch,
                         stage_id,
                         cluster_type,
@@ -2051,62 +2339,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 add_time = self._get_add_layer_act_execution_time(batch)
                 return ExecutionTime(
                     num_layers_per_pipeline_stage=num_layers,
-                    attention_rope_execution_time=self._predict_one_op_time(
-                        "attention_rope_execution_time",
-                        attention_time.attention_rope_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_kv_cache_save_execution_time=self._predict_one_op_time(
-                        "attention_kv_cache_save_execution_time",
-                        attention_time.attention_kv_cache_save_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_decode_execution_time=self._predict_one_op_time(
-                        "attention_decode_execution_time",
-                        attention_time.attention_decode_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_prefill_execution_time=self._predict_one_op_time(
-                        "attention_prefill_execution_time",
-                        attention_time.attention_prefill_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_layer_pre_proj_execution_time=self._predict_one_op_time(
-                        "attention_layer_pre_proj_execution_time",
-                        attention_time.attention_layer_pre_proj_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attention_layer_post_proj_execution_time=self._predict_one_op_time(
-                        "attention_layer_post_proj_execution_time",
-                        attention_time.attention_layer_post_proj_execution_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
-                    attn_norm_time=self._predict_one_op_time(
-                        "attn_norm_time",
-                        attention_time.attn_norm_time,
-                        batch,
-                        stage_id,
-                        cluster_type,
-                        num_layers,
-                    ),
+                    **attention_execution_params,
                     mlp_norm_time=self._predict_one_op_time(
                         "mlp_norm_time",
                         mlp_time.mlp_norm_time,
@@ -2180,8 +2413,14 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         elif cluster_type == ClusterType.PREFILL:
             # Full model (attention + FFN) - predict both attention and FFN time
             # FFN can be MoE (for MoE models) or MLP (for dense models)
-            attention_time = self.predict_attention_layer_time(
-                batch, layer_id=layer_id, cluster_type=cluster_type
+            attention_time = (
+                self.predict_attention_layer_time(
+                    batch,
+                    layer_id=layer_id,
+                    cluster_type=cluster_type,
+                )
+                if include_attention
+                else AttentionTime()
             )
 
             # Check whether the requested layer is MoE or dense.  Step3 models
@@ -2196,6 +2435,8 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 and model_config.is_moe
                 and model_config.is_moe_layer(layer_id)
             )
+            if include_moe is not None:
+                is_moe_model = include_moe
 
             if is_moe_model:
                 # MoE model: use MoE operations for FFN
@@ -2208,7 +2449,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 # This uses the routing distribution that was computed during predictor initialization
                 # via _simulate_and_store_routing() method.
                 per_expert_tokens = None
-                if hasattr(batch, "per_expert_tokens") and batch.per_expert_tokens:
+                if getattr(batch, "per_expert_tokens", None) is not None:
                     # EPBatchGroup case: use actual expert allocation from batch
                     per_expert_tokens = batch.per_expert_tokens
                     logger.debug(
@@ -2239,16 +2480,38 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_norm_time = self._get_mlp_norm_layer_act_execution_time(batch)
                 # Get residual add time (both residual connections in full model)
                 add_time = self._get_add_layer_act_execution_time(batch)
-                # Get expert parallel communication time separately (not from MoETime)
-                ep_comm_time = self._get_expert_parallel_communication_time(batch)
+                ep_operator_times = self._predict_named_ep_phase_operator_times(
+                    batch=batch,
+                    stage_id=stage_id,
+                    cluster_type=cluster_type,
+                    num_layers=num_layers,
+                )
+                ep_comm_time = sum(ep_operator_times.values())
                 (
                     dp_input_allreduce_time,
                     dp_output_allreduce_time,
                 ) = self.predict_dp_moe_allreduce_times(batch, cluster_type)
 
-                # Keep PREFILL MoE TP communication composition aligned with monolithic MoE path.
-                moe_tp_size = cluster_replica_config.moe_tensor_parallel_size
-                moe_tp_allreduce_time = 0.0
+                # Keep PREFILL MoE TP communication composition aligned with the
+                # routed-token contract used by the shared MoE predictor.  An
+                # EP lane carries only its local routed assignments; the source
+                # batch's effective token count remains valid for shared
+                # allgather and shared-expert collectives below.
+                moe_tp_size = int(cluster_replica_config.moe_tensor_parallel_size)
+                moe_tp_allreduce_time = (
+                    self._predict_comm_operator_with_context(
+                        get_comm_operator("moe_tensor_parallel_allreduce"),
+                        CommPayloadContext(
+                            batch=batch,
+                            model_config=model_config,
+                            replica_config=cluster_replica_config,
+                            cluster_type=cluster_type,
+                            quantization_manager=get_quantization_manager(),
+                        ),
+                    )
+                    if moe_tp_size > 1
+                    else 0.0
+                )
                 ffn_tp_allgather_time = 0.0
                 share_expert_tp_allreduce_time = 0.0
                 if moe_tp_size > 1:
@@ -2268,16 +2531,6 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         )
                     per_device_data_size_bytes = data_size_bytes // moe_tp_size
                     quant_manager = get_quantization_manager()
-                    moe_tp_allreduce_bytes = quant_manager.adjust_tensor_size(
-                        "allreduce", data_size_bytes, cluster_type
-                    )
-                    moe_tp_allreduce_time = self.predict_allreduce_time(
-                        data_size_bytes=moe_tp_allreduce_bytes,
-                        num_devices=moe_tp_size,
-                        cluster_type=cluster_type,
-                        comm_domain="MOE_TP",
-                    )
-
                     architecture_profile = self._resolve_model_architecture_profile_for_config(
                         cluster_replica_config.model_config
                     )
@@ -2297,15 +2550,16 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                             + moe_time.share_expert_act_time
                             > 0
                         ):
+                            moe_tp_allreduce_bytes = quant_manager.adjust_tensor_size(
+                                "allreduce", data_size_bytes, cluster_type
+                            )
                             raw_share_expert_tp_allreduce_time = self.predict_allreduce_time(
                                 data_size_bytes=moe_tp_allreduce_bytes,
                                 num_devices=moe_tp_size,
                                 cluster_type=cluster_type,
                                 comm_domain="MOE_TP",
                             )
-                            share_expert_tp_allreduce_time = self._apply_share_expert_tp_allreduce_overlap(
-                                raw_share_expert_tp_allreduce_time
-                            )
+                            share_expert_tp_allreduce_time = raw_share_expert_tp_allreduce_time
 
                 # Build ExecutionTime object for MoE model
                 exec_time = ExecutionTime(
@@ -2397,6 +2651,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         stage_id,
                         cluster_type,
                         num_layers,
+                    ),
+                    communication_operator_times=CommunicationOperatorTimes(
+                        ep_operator_times
                     ),
                     moe_gating_time=self._predict_one_op_time(
                         "moe_gating_time",

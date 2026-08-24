@@ -5,6 +5,10 @@ import logging
 from frontier.entities import Batch, BatchStage, ExecutionTime, EPBatchGroup
 from frontier.entities.batch import DenseFFNBatchGroup
 from frontier.execution_time_predictor import BaseExecutionTimePredictor
+from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
+    StageAdmissionTicket,
+    StageExecutionContext,
+)
 from frontier.types import ClusterType
 
 
@@ -17,15 +21,21 @@ class ReplicaStageScheduler:
         is_moe: bool,
         execution_time_predictor: BaseExecutionTimePredictor,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
+        stage_execution_context: StageExecutionContext,
     ) -> None:
+        if not isinstance(stage_execution_context, StageExecutionContext):
+            raise TypeError(
+                "stage_execution_context must be a StageExecutionContext"
+            )
         self._replica_id = replica_id
         self._stage_id = stage_id
         self._is_last_stage = is_last_stage
         self._is_moe = is_moe
         self._execution_time_predictor = execution_time_predictor
         self._cluster_type = cluster_type
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
+        self._stage_execution_context = stage_execution_context
 
         # Priority queue implementation to prevent EP synchronization deadlock
         # Batches are ordered by (global_id, insertion_order) to ensure:
@@ -56,7 +66,7 @@ class ReplicaStageScheduler:
         queued_batches = self.get_queue_batches()
         return {
             "replica_id": self._replica_id,
-            "dp_id": self._dp_id,
+            "replica_local_id": self._replica_local_id,
             "stage_id": self._stage_id,
             "is_busy": bool(self._is_busy),
             "is_empty": self.is_empty(),
@@ -73,40 +83,52 @@ class ReplicaStageScheduler:
             },
         }
 
-    def _copy_ep_batch_metadata_to_stage(
+    def _copy_source_batch_metadata_to_stage(
         self, batch: Batch, batch_stage: BatchStage
     ) -> None:
-        if not isinstance(batch, EPBatchGroup):
+        if not isinstance(batch, (EPBatchGroup, DenseFFNBatchGroup)):
             return
-        batch_stage.ep_id = int(batch.ep_id)
+
+        source_batches = getattr(batch, "source_batches", None)
+        if not isinstance(source_batches, (list, tuple)) or not source_batches:
+            raise ValueError(
+                "DECODE_FFN synthetic batch requires non-empty source_batches"
+            )
         batch_stage.source_batch_ids = [int(batch_id) for batch_id in batch.source_batch_ids]
         batch_stage.source_request_ids = [
             str(request_id)
-            for source_batch in getattr(batch, "source_batches", [])
+            for source_batch in source_batches
             for request_id in source_batch.request_ids
+        ]
+        batch_stage.source_request_runtime_epochs = [
+            int(runtime_epoch)
+            for source_batch in source_batches
+            for runtime_epoch in source_batch.request_runtime_epochs
         ]
         batch_stage.source_request_num_tokens = [
             int(token_count)
-            for source_batch in getattr(batch, "source_batches", [])
+            for source_batch in source_batches
             for token_count in source_batch.num_tokens
         ]
         source_batch_arrival_times = []
-        for source_batch in getattr(batch, "source_batches", []):
+        for source_batch in source_batches:
             if not hasattr(source_batch, "decode_ffn_m2n_arrival_time"):
                 raise ValueError(
-                    "DECODE_FFN EP source batch is missing "
+                    "DECODE_FFN source batch is missing "
                     "decode_ffn_m2n_arrival_time"
                 )
             source_batch_arrival_times.append(
                 float(source_batch.decode_ffn_m2n_arrival_time)
             )
         batch_stage.source_batch_arrival_times = source_batch_arrival_times
-        if source_batch_arrival_times:
-            batch_stage.source_group_ready_ts = max(source_batch_arrival_times)
-        batch_stage.per_expert_tokens = {
-            int(expert_id): int(token_count)
-            for expert_id, token_count in batch.per_expert_tokens.items()
-        }
+        batch_stage.source_group_ready_ts = max(source_batch_arrival_times)
+
+        if isinstance(batch, EPBatchGroup):
+            batch_stage.ep_id = int(batch.ep_id)
+            batch_stage.per_expert_tokens = {
+                int(expert_id): int(token_count)
+                for expert_id, token_count in batch.per_expert_tokens.items()
+            }
 
     def add_batch(self, batch: Batch) -> None:
         """
@@ -123,12 +145,48 @@ class ReplicaStageScheduler:
         Args:
             batch: The batch to add to the queue
         """
+        admission_ticket = getattr(batch, "_stage_admission_ticket", None)
+        if admission_ticket is None:
+            if self._cluster_type == ClusterType.DECODE_FFN and isinstance(
+                batch, EPBatchGroup
+            ):
+                raise ValueError(
+                    "DECODE_FFN EPBatchGroup must carry a complete EP_WAVE "
+                    "admission ticket before queue insertion"
+                )
+            operation_id = (
+                "stage_batch",
+                int(batch.id),
+                int(batch.schedule_epoch),
+            )
+            admission_ticket = self._stage_execution_context.enqueue_full_stage(
+                operation_id=operation_id,
+            )
+            batch._stage_admission_ticket = admission_ticket
+
         # Use heapq to maintain priority queue invariant
         # Tuple comparison: (global_id, insertion_counter) ensures correct ordering
-        heapq.heappush(
-            self._batch_queue,
-            (batch.global_id, self._insertion_counter, batch.schedule_epoch, batch),
-        )
+        queue_item = None
+        try:
+            queue_item = (
+                batch.global_id,
+                self._insertion_counter,
+                batch.schedule_epoch,
+                batch,
+            )
+            heapq.heappush(self._batch_queue, queue_item)
+        except Exception:
+            if queue_item is not None:
+                self._batch_queue[:] = [
+                    queued_item
+                    for queued_item in self._batch_queue
+                    if queued_item is not queue_item
+                ]
+                heapq.heapify(self._batch_queue)
+            if self._stage_execution_context.is_queued(admission_ticket):
+                self._stage_execution_context.cancel(admission_ticket)
+            batch.__dict__.pop("_stage_admission_ticket", None)
+            raise
         self._insertion_counter += 1
 
     def on_stage_end(self) -> None:
@@ -164,7 +222,7 @@ class ReplicaStageScheduler:
         live_batch.decode_attn_original_replica_id = (
             batch.decode_attn_original_replica_id
         )
-        live_batch.decode_attn_original_dp_id = batch.decode_attn_original_dp_id
+        live_batch.decode_attn_original_replica_local_id = batch.decode_attn_original_replica_local_id
         live_batch.decode_cuda_graph_metadata = batch.decode_cuda_graph_metadata
         live_batch.afd_stage_idx = batch.afd_stage_idx
         live_batch.afd_stage_metadata = batch.afd_stage_metadata
@@ -179,7 +237,44 @@ class ReplicaStageScheduler:
         live_batch._thinking_round_start_times = [
             batch.thinking_round_start_times[index] for index in live_indices
         ]
+        if hasattr(batch, "_stage_admission_ticket"):
+            live_batch._stage_admission_ticket = batch._stage_admission_ticket
         return live_batch
+
+    def _drop_queued_lanes_for_ticket(
+        self, admission_ticket: StageAdmissionTicket
+    ) -> int:
+        """Drop every queued sibling that belongs to one invalid EP wave."""
+
+        retained = []
+        dropped = 0
+        for queue_item in self._batch_queue:
+            queued_batch = queue_item[3]
+            if getattr(queued_batch, "_stage_admission_ticket", None) == admission_ticket:
+                dropped += 1
+                queued_batch.__dict__.pop("_stage_admission_ticket", None)
+            else:
+                retained.append(queue_item)
+        if dropped:
+            self._batch_queue = retained
+            heapq.heapify(self._batch_queue)
+        return dropped
+
+    def _discard_stale_ticket(self, admission_ticket: StageAdmissionTicket) -> None:
+        """Cancel a queued stale ticket without touching another active wave."""
+
+        context = self._stage_execution_context
+        if context.is_queued(admission_ticket):
+            context.cancel(admission_ticket)
+        elif context.is_active(admission_ticket):
+            # A sibling lane may already own the wave. Its active ticket is
+            # released only at the true completion boundary.
+            return
+        elif not context.is_cancelled(admission_ticket):
+            raise ValueError(
+                "stale batch carries an unknown stage admission ticket: "
+                f"{admission_ticket.operation_id!r}"
+            )
 
     def pop_batch_if_not_busy(self) -> Batch:
         """
@@ -196,14 +291,50 @@ class ReplicaStageScheduler:
         if self._is_busy or not self._batch_queue:
             return None
         while self._batch_queue:
-            # heappop returns the smallest element:
-            # (global_id, insertion_counter, schedule_epoch, batch)
-            _, _, expected_schedule_epoch, batch = heapq.heappop(self._batch_queue)
+            # Inspect and admit the same queue head. The old implementation
+            # admitted the first ticket before a stale-drop loop could pop a
+            # different batch, allowing that batch to bypass the parent owner.
+            _, _, expected_schedule_epoch, batch = self._batch_queue[0]
+            admission_ticket = getattr(batch, "_stage_admission_ticket", None)
+            if not isinstance(admission_ticket, StageAdmissionTicket):
+                raise ValueError(
+                    "Queued batch must carry a StageAdmissionTicket"
+                )
+            if self._stage_execution_context.is_cancelled(admission_ticket):
+                heapq.heappop(self._batch_queue)
+                batch.__dict__.pop("_stage_admission_ticket", None)
+                self._last_stale_drop_count += 1
+                self._last_stale_drop_count += (
+                    self._drop_queued_lanes_for_ticket(admission_ticket)
+                )
+                continue
             if batch.schedule_epoch != expected_schedule_epoch:
+                heapq.heappop(self._batch_queue)
+                self._discard_stale_ticket(admission_ticket)
+                batch.__dict__.pop("_stage_admission_ticket", None)
+                self._last_stale_drop_count += (
+                    self._drop_queued_lanes_for_ticket(admission_ticket)
+                )
                 self._last_stale_drop_count += 1
                 continue
+            parent_acquired = False
+            if not self._stage_execution_context.owns(admission_ticket):
+                if not self._stage_execution_context.try_acquire(admission_ticket):
+                    return None
+                parent_acquired = True
+            # Remove the same candidate whose ticket was just acquired.
+            heapq.heappop(self._batch_queue)
             live_batch = self._materialize_runtime_live_batch(batch)
             if live_batch is None:
+                context = self._stage_execution_context
+                if parent_acquired and context.is_active(admission_ticket):
+                    context.release(admission_ticket)
+                elif context.is_queued(admission_ticket):
+                    context.cancel(admission_ticket)
+                batch.__dict__.pop("_stage_admission_ticket", None)
+                self._last_stale_drop_count += (
+                    self._drop_queued_lanes_for_ticket(admission_ticket)
+                )
                 self._last_stale_drop_count += 1
                 continue
             self._is_busy = True
@@ -305,7 +436,8 @@ class ReplicaStageScheduler:
                 effective_total_tokens_rounded=effective_tokens_rounded,
                 tokens_are_post_routing=tokens_are_post_routing,
             )
-            self._copy_ep_batch_metadata_to_stage(batch, batch_stage)
+            self._copy_source_batch_metadata_to_stage(batch, batch_stage)
+            batch_stage.attach_runtime_identity(batch)
             return batch_stage, None
 
         total_execution_time = execution_time.total_time
@@ -324,7 +456,8 @@ class ReplicaStageScheduler:
             effective_total_tokens_rounded=effective_tokens_rounded,
             tokens_are_post_routing=tokens_are_post_routing,
         )
-        self._copy_ep_batch_metadata_to_stage(batch, batch_stage)
+        self._copy_source_batch_metadata_to_stage(batch, batch_stage)
+        batch_stage.attach_runtime_identity(batch)
 
         return batch_stage, execution_time
 

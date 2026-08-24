@@ -30,14 +30,12 @@ SYS_ARCH="${SYS_ARCH:-pd-disaggregation}"
 PREFILL_REPLICAS="${PREFILL_REPLICAS:-1}"
 DECODE_REPLICAS="${DECODE_REPLICAS:-1}"
 PREFILL_ATTN_TP="${PREFILL_ATTN_TP:-2}"
-PREFILL_ATTN_DP="${PREFILL_ATTN_DP:-1}"
 PREFILL_MOE_TP="${PREFILL_MOE_TP:-1}"
 PREFILL_MOE_EP="${PREFILL_MOE_EP:-2}"
 PREFILL_PP="${PREFILL_PP:-1}"
 PREFILL_DEVICE="${PREFILL_DEVICE:-a800}"
 PREFILL_MEMORY_MARGIN_FRACTION="${PREFILL_MEMORY_MARGIN_FRACTION:-0.2}"
 DECODE_ATTN_TP="${DECODE_ATTN_TP:-2}"
-DECODE_ATTN_DP="${DECODE_ATTN_DP:-1}"
 DECODE_MOE_TP="${DECODE_MOE_TP:-1}"
 DECODE_MOE_EP="${DECODE_MOE_EP:-2}"
 DECODE_PP="${DECODE_PP:-1}"
@@ -45,7 +43,7 @@ DECODE_DEVICE="${DECODE_DEVICE:-a800}"
 DECODE_MEMORY_MARGIN_FRACTION="${DECODE_MEMORY_MARGIN_FRACTION:-0.2}"
 TOTAL_EXPERTS="${TOTAL_EXPERTS:-8}"
 ROUTER_TOPK="${ROUTER_TOPK:-2}"
-MOE_ROUTING_MODE="${MOE_ROUTING_MODE:-simulation}"
+MOE_ROUTING_DISTRIBUTION_TYPE="${MOE_ROUTING_DISTRIBUTION_TYPE:-balanced}"
 MOE_ROUTING_SEED="${MOE_ROUTING_SEED:-42}"
 REPLICA_SCHEDULER="${REPLICA_SCHEDULER:-vllm_v1}"
 NUM_REQUESTS="${NUM_REQUESTS:-8}"
@@ -114,15 +112,15 @@ if [ "$ENABLE_CHUNKED_PREFILL" = "false" ] && [ "$LONG_PREFILL_TOKEN_THRESHOLD" 
   exit 2
 fi
 
-if (( PREFILL_ATTN_TP * PREFILL_ATTN_DP != PREFILL_MOE_TP * PREFILL_MOE_EP )); then
-  echo "ERROR: shared-domain prefill MoE requires PREFILL_ATTN_TP * PREFILL_ATTN_DP == PREFILL_MOE_TP * PREFILL_MOE_EP" >&2
-  echo "       got PREFILL_ATTN_TP=$PREFILL_ATTN_TP, PREFILL_ATTN_DP=$PREFILL_ATTN_DP, PREFILL_MOE_TP=$PREFILL_MOE_TP, PREFILL_MOE_EP=$PREFILL_MOE_EP" >&2
+if (( PREFILL_ATTN_TP != PREFILL_MOE_TP * PREFILL_MOE_EP )); then
+  echo "ERROR: shared-domain prefill MoE requires PREFILL_ATTN_TP == PREFILL_MOE_TP * PREFILL_MOE_EP" >&2
+  echo "       got PREFILL_ATTN_TP=$PREFILL_ATTN_TP, PREFILL_MOE_TP=$PREFILL_MOE_TP, PREFILL_MOE_EP=$PREFILL_MOE_EP" >&2
   exit 2
 fi
 
-if (( DECODE_ATTN_TP * DECODE_ATTN_DP != DECODE_MOE_TP * DECODE_MOE_EP )); then
-  echo "ERROR: shared-domain decode MoE requires DECODE_ATTN_TP * DECODE_ATTN_DP == DECODE_MOE_TP * DECODE_MOE_EP" >&2
-  echo "       got DECODE_ATTN_TP=$DECODE_ATTN_TP, DECODE_ATTN_DP=$DECODE_ATTN_DP, DECODE_MOE_TP=$DECODE_MOE_TP, DECODE_MOE_EP=$DECODE_MOE_EP" >&2
+if (( DECODE_ATTN_TP != DECODE_MOE_TP * DECODE_MOE_EP )); then
+  echo "ERROR: shared-domain decode MoE requires DECODE_ATTN_TP == DECODE_MOE_TP * DECODE_MOE_EP" >&2
+  echo "       got DECODE_ATTN_TP=$DECODE_ATTN_TP, DECODE_MOE_TP=$DECODE_MOE_TP, DECODE_MOE_EP=$DECODE_MOE_EP" >&2
   exit 2
 fi
 
@@ -163,7 +161,6 @@ CMD=(
   --cluster_config_decode_cluster_num_replicas "$DECODE_REPLICAS"
   --cluster_config_prefill_replica_config_num_pipeline_stages "$PREFILL_PP"
   --cluster_config_prefill_replica_config_attn_tensor_parallel_size "$PREFILL_ATTN_TP"
-  --cluster_config_prefill_replica_config_attn_data_parallel_size "$PREFILL_ATTN_DP"
   --cluster_config_prefill_replica_config_moe_tensor_parallel_size "$PREFILL_MOE_TP"
   --cluster_config_prefill_replica_config_moe_expert_parallel_size "$PREFILL_MOE_EP"
   --cluster_config_prefill_replica_config_total_expert_num "$TOTAL_EXPERTS"
@@ -172,7 +169,6 @@ CMD=(
   --cluster_config_prefill_replica_config_memory_margin_fraction "$PREFILL_MEMORY_MARGIN_FRACTION"
   --cluster_config_decode_replica_config_num_pipeline_stages "$DECODE_PP"
   --cluster_config_decode_replica_config_attn_tensor_parallel_size "$DECODE_ATTN_TP"
-  --cluster_config_decode_replica_config_attn_data_parallel_size "$DECODE_ATTN_DP"
   --cluster_config_decode_replica_config_moe_tensor_parallel_size "$DECODE_MOE_TP"
   --cluster_config_decode_replica_config_moe_expert_parallel_size "$DECODE_MOE_EP"
   --cluster_config_decode_replica_config_total_expert_num "$TOTAL_EXPERTS"
@@ -181,7 +177,7 @@ CMD=(
   --cluster_config_decode_replica_config_memory_margin_fraction "$DECODE_MEMORY_MARGIN_FRACTION"
   --cc_backend_config_type analytical
   --replica_config_model_name "$MODEL_NAME"
-  --replica_config_moe_routing_mode "$MOE_ROUTING_MODE"
+  --replica_config_moe_routing_distribution_type "$MOE_ROUTING_DISTRIBUTION_TYPE"
   --replica_config_moe_routing_seed "$MOE_ROUTING_SEED"
   --replica_scheduler_config_type "$REPLICA_SCHEDULER"
   --decode_cuda_graph_mode "$DECODE_CUDA_GRAPH_MODE"
@@ -258,9 +254,9 @@ Architecture: $SYS_ARCH
 Simulation Mode: offline
 Prefill cluster replicas: $PREFILL_REPLICAS
 Decode cluster replicas: $DECODE_REPLICAS
-Prefill parallelism: Attn_TP=$PREFILL_ATTN_TP, MoE_TP=$PREFILL_MOE_TP, MoE_EP=$PREFILL_MOE_EP, PP=$PREFILL_PP, DP=$PREFILL_ATTN_DP
-Decode parallelism: Attn_TP=$DECODE_ATTN_TP, MoE_TP=$DECODE_MOE_TP, MoE_EP=$DECODE_MOE_EP, PP=$DECODE_PP, DP=$DECODE_ATTN_DP
-MoE: total_experts=$TOTAL_EXPERTS, router_topk=$ROUTER_TOPK, routing=$MOE_ROUTING_MODE, seed=$MOE_ROUTING_SEED
+Prefill parallelism: Attn_TP=$PREFILL_ATTN_TP, MoE_TP=$PREFILL_MOE_TP, MoE_EP=$PREFILL_MOE_EP, PP=$PREFILL_PP
+Decode parallelism: Attn_TP=$DECODE_ATTN_TP, MoE_TP=$DECODE_MOE_TP, MoE_EP=$DECODE_MOE_EP, PP=$DECODE_PP
+MoE: total_experts=$TOTAL_EXPERTS, router_topk=$ROUTER_TOPK, routing=$MOE_ROUTING_DISTRIBUTION_TYPE, seed=$MOE_ROUTING_SEED
 Scheduler: $REPLICA_SCHEDULER
 Requests: $NUM_REQUESTS (prefill=$PREFILL_TOKENS, decode=$DECODE_TOKENS, qps=$QPS)
 Speculative Decoding: method=$SPEC_METHOD, num_speculative_tokens=$NUM_SPECULATIVE_TOKENS, committed_tokens_per_iteration=$COMMITTED_TOKENS_PER_ITERATION

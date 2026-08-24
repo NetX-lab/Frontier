@@ -21,7 +21,6 @@ CC_BACKEND="${CC_BACKEND:-analytical}"
 NUM_REPLICAS="${NUM_REPLICAS:-2}"
 ATTN_TP="${ATTN_TP:-2}"
 PP="${PP:-1}"
-DP="${DP:-1}"
 REPLICA_SCHEDULER="${REPLICA_SCHEDULER:-vllm_v1}"
 NUM_REQUESTS="${NUM_REQUESTS:-1}"
 PREFILL_TOKENS="${PREFILL_TOKENS:-8}"
@@ -75,7 +74,6 @@ CMD=(
   --replica_config_model_name "$MODEL_NAME"
   --replica_config_attn_tensor_parallel_size "$ATTN_TP"
   --replica_config_num_pipeline_stages "$PP"
-  --replica_config_attn_data_parallel_size "$DP"
   --cc_backend_config_type "$CC_BACKEND"
   --replica_scheduler_config_type "$REPLICA_SCHEDULER"
   --decode_cuda_graph_mode "$DECODE_CUDA_GRAPH_MODE"
@@ -134,7 +132,7 @@ Model: $MODEL_NAME
 Architecture: $SYS_ARCH
 Backend: $CC_BACKEND
 Replicas: $NUM_REPLICAS
-Parallelism: TP=$ATTN_TP, PP=$PP, DP=$DP
+Parallelism: TP=$ATTN_TP, PP=$PP
 Scheduler: $REPLICA_SCHEDULER
 Requests: $NUM_REQUESTS (prefill=$PREFILL_TOKENS, decode=$DECODE_TOKENS)
 Thinking Mode: enabled (depth=$THINKING_DEPTH, hidden prefill=$THINKING_ROUND_PREFILL_TOKENS, hidden decode=$THINKING_ROUND_DECODE_TOKENS)

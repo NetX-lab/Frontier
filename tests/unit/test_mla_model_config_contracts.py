@@ -333,7 +333,7 @@ def test_runtime_memory_planner_uses_mla_latent_kv_cache_page_size(
         model_name=model_name,
         num_pipeline_stages=1,
         attn_tensor_parallel_size=8,
-        attn_data_parallel_size=1,
+        attn_dp=1,
         moe_tensor_parallel_size=1,
         moe_expert_parallel_size=1,
     )
@@ -377,7 +377,7 @@ def test_runtime_memory_planner_delegates_kv_layout_to_attention_memory_adapter(
         model_name=model_name,
         num_pipeline_stages=1,
         attn_tensor_parallel_size=8,
-        attn_data_parallel_size=1,
+        attn_dp=1,
         moe_tensor_parallel_size=1,
         moe_expert_parallel_size=1,
     )

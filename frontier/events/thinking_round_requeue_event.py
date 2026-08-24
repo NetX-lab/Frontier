@@ -28,10 +28,10 @@ class ThinkingRoundRequeueEvent(BaseEvent):
 
         cluster_type = self._request.thinking_home_cluster_type
         replica_id = self._request.thinking_home_replica_id
-        dp_id = self._request.thinking_home_dp_id
-        if cluster_type is None or replica_id is None or dp_id is None:
+        replica_local_id = self._request.thinking_home_replica_local_id
+        if cluster_type is None or replica_id is None:
             raise ValueError(
-                "ThinkingRoundRequeueEvent cannot run without full home-lane affinity."
+                "ThinkingRoundRequeueEvent cannot run without home Replica affinity."
             )
         if cluster_type not in [ClusterType.MONOLITHIC, ClusterType.PREFILL]:
             raise ValueError(
@@ -40,12 +40,18 @@ class ThinkingRoundRequeueEvent(BaseEvent):
             )
 
         cluster_scheduler = scheduler.get_cluster_scheduler(cluster_type)
-        replica_scheduler = cluster_scheduler.get_dp_replica_scheduler(replica_id, dp_id)
+        replica_scheduler = cluster_scheduler.get_replica_scheduler(
+            replica_id, replica_local_id
+        )
 
         self._request.finish_thinking_tool_wait_and_requeue(self.time)
         replica_scheduler.add_request(self._request)
 
-        return [ReplicaScheduleEvent(self.time, replica_id, cluster_type, dp_id)]
+        return [
+            ReplicaScheduleEvent(
+                self.time, replica_id, cluster_type, replica_local_id
+            )
+        ]
 
     def to_dict(self) -> dict:
         return {
@@ -54,5 +60,5 @@ class ThinkingRoundRequeueEvent(BaseEvent):
             "request_id": self._request.id,
             "cluster_type": self._cluster_type.name,
             "replica_id": self._request.thinking_home_replica_id,
-            "dp_id": self._request.thinking_home_dp_id,
+            "replica_local_id": self._request.thinking_home_replica_local_id,
         }

@@ -113,8 +113,8 @@ def test_moe_case_derives_shared_domain_shape() -> None:
 
     assert case.model_name == "Qwen3-235B-A22B"
     assert case.shape == ParallelShape(
-        attn_tp=4,
-        attn_dp=2,
+        attn_tp=8,
+        attn_dp=1,
         moe_tp=1,
         moe_ep=8,
         pp=2,

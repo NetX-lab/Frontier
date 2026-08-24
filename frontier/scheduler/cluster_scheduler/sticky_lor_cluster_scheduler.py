@@ -17,7 +17,7 @@ class StickyLORClusterScheduler(LORClusterScheduler):
 
     def _get_current_pending_by_target(self) -> dict[tuple[int, int], int]:
         pending_by_target: dict[tuple[int, int], int] = {}
-        for target, scheduler in self._dp_replica_schedulers.items():
+        for target, scheduler in self._replica_schedulers.items():
             pending_by_target[target] = int(scheduler.num_pending_requests)
         return pending_by_target
 

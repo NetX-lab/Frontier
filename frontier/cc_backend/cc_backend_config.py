@@ -191,9 +191,9 @@ class CollectiveSimCCBackendConfig(BaseCCBackendConfig):
         default=None,
         metadata={"help": "Frontier runtime attention TP size for per-call layout mapping."},
     )
-    runtime_attn_data_parallel_size: Optional[int] = field(
+    runtime_attn_dp: Optional[int] = field(
         default=None,
-        metadata={"help": "Frontier runtime attention DP size for per-call layout mapping."},
+        metadata={"help": "Frontier runtime fixed attention DP domain for per-call layout mapping."},
     )
     runtime_moe_tensor_parallel_size: Optional[int] = field(
         default=None,
@@ -503,10 +503,10 @@ class AstraSimAnalyticalCCBackendConfig(BaseCCBackendConfig):
             "include_in_cli": False,
         },
     )
-    runtime_attn_data_parallel_size: Optional[int] = field(
+    runtime_attn_dp: Optional[int] = field(
         default=None,
         metadata={
-            "help": "Frontier runtime attention DP size for per-call layout mapping.",
+            "help": "Frontier runtime fixed attention DP domain for per-call layout mapping.",
             "include_in_cli": False,
         },
     )

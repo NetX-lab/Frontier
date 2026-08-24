@@ -13,6 +13,8 @@ from frontier.entities.time_components import (
     MoEOperatorTimes,
     MoETime,
 )
+from frontier.metrics.metrics_store import MetricsStore
+from frontier.types import ClusterType
 
 
 def _base_execution_kwargs(**overrides: Any) -> dict[str, Any]:
@@ -291,6 +293,227 @@ def test_execution_time_comm_setter_updates_expert_parallel_view():
     assert execution_time.expert_parallel_communication_time == pytest.approx(18.0)
     assert execution_time.get_single_layer_moe_comm_time() == pytest.approx(9.0)
     assert execution_time.moe_comm_time == pytest.approx(18.0)
+
+
+def test_execution_time_preserves_named_ep_dispatch_and_combine_times():
+    execution_time = ExecutionTime(
+        **_base_execution_kwargs(
+            num_layers_per_pipeline_stage=1,
+            is_moe=True,
+            expert_parallel_communication_time=0.0,
+            communication_operator_times=CommunicationOperatorTimes(
+                {
+                    "expert_parallel_alltoall_dispatch": 1.25,
+                    "expert_parallel_alltoall_combine": 3.75,
+                }
+            ),
+        )
+    )
+
+    assert execution_time.get_single_layer_moe_dispatch_time() == pytest.approx(1.25)
+    assert execution_time.get_single_layer_moe_combine_time() == pytest.approx(3.75)
+    assert execution_time.expert_parallel_communication_time == pytest.approx(5.0)
+
+
+def test_attention_scope_includes_attention_tp_without_redefining_compute_time():
+    execution_time = ExecutionTime(
+        **_base_execution_kwargs(
+            num_layers_per_pipeline_stage=1,
+            is_moe=True,
+        )
+    )
+
+    assert execution_time.get_single_layer_attention_time() == pytest.approx(700.0)
+    assert execution_time.get_single_layer_attention_scope_time() == pytest.approx(
+        800.0
+    )
+    assert execution_time.get_single_layer_post_attention_time() == pytest.approx(
+        execution_time.get_single_layer_block_time() - 800.0
+    )
+
+
+def test_execution_time_moe_phases_conserve_complete_post_attention_time():
+    execution_time = ExecutionTime(
+        **_base_execution_kwargs(
+            num_layers_per_pipeline_stage=1,
+            is_moe=True,
+            expert_parallel_communication_time=0.0,
+            moe_grouped_gemm_time=11.0,
+            moe_gating_linear_time=13.0,
+            moe_gating_routing_topk_time=17.0,
+            moe_shuffling_time=19.0,
+            share_expert_up_proj_time=23.0,
+            share_expert_act_time=29.0,
+            share_expert_down_proj_time=31.0,
+            tensor_parallel_allgather_time=37.0,
+            share_expert_tensor_parallel_allreduce_time=41.0,
+            dp_input_allreduce_time=43.0,
+            dp_output_allreduce_time=47.0,
+            communication_operator_times=CommunicationOperatorTimes(
+                {
+                    "expert_parallel_alltoall_dispatch": 1.25,
+                    "expert_parallel_alltoall_combine": 3.75,
+                }
+            ),
+        )
+    )
+
+    phases = (
+        execution_time.get_single_layer_moe_pre_dispatch_time(),
+        execution_time.get_single_layer_moe_dispatch_time(),
+        execution_time.get_single_layer_moe_post_dispatch_compute_time(),
+        execution_time.get_single_layer_moe_combine_time(),
+        execution_time.get_single_layer_moe_post_combine_time(),
+    )
+
+    assert phases == pytest.approx(
+        (
+            453.0,
+            1.25,
+            111.0,
+            3.75,
+            147.0,
+        )
+    )
+    assert sum(phases) == pytest.approx(
+        execution_time.get_single_layer_post_attention_time()
+    )
+
+
+def test_zero_routed_lane_has_zero_routed_expert_compute():
+    execution_time = ExecutionTime(
+        **_base_execution_kwargs(
+            num_layers_per_pipeline_stage=1,
+            is_moe=True,
+            attention_rope_execution_time=0.0,
+            attention_kv_cache_save_execution_time=0.0,
+            attention_decode_execution_time=0.0,
+            attention_prefill_execution_time=0.0,
+            attention_layer_pre_proj_execution_time=0.0,
+            attention_layer_post_proj_execution_time=0.0,
+            attn_norm_time=0.0,
+            mlp_norm_time=1.0,
+            add_attn_residual_time=2.0,
+            add_ffn_residual_time=3.0,
+            tensor_parallel_communication_time=0.0,
+            pipeline_parallel_communication_time=0.0,
+            expert_parallel_communication_time=0.0,
+            moe_grouped_gemm_time=0.0,
+            moe_gating_linear_time=0.0,
+            moe_gating_routing_topk_time=0.0,
+            moe_shuffling_time=0.0,
+            mlp_layer_up_proj_execution_time=0.0,
+            mlp_layer_down_proj_execution_time=0.0,
+            mlp_layer_act_execution_time=0.0,
+            attn_tensor_parallel_allreduce_time=0.0,
+            moe_tensor_parallel_allreduce_time=0.0,
+            communication_operator_times=CommunicationOperatorTimes(
+                {
+                    "expert_parallel_alltoall_dispatch": 0.0,
+                    "expert_parallel_alltoall_combine": 0.0,
+                }
+            ),
+        )
+    )
+
+    assert execution_time.moe_grouped_gemm_time == pytest.approx(0.0)
+    assert execution_time.get_single_layer_post_attention_time() == pytest.approx(6.0)
+    phases = (
+        execution_time.get_single_layer_moe_pre_dispatch_time(),
+        execution_time.get_single_layer_moe_dispatch_time(),
+        execution_time.get_single_layer_moe_post_dispatch_compute_time(),
+        execution_time.get_single_layer_moe_combine_time(),
+        execution_time.get_single_layer_moe_post_combine_time(),
+    )
+    assert phases == pytest.approx((3.0, 0.0, 0.0, 0.0, 3.0))
+    assert sum(phases) == pytest.approx(
+        execution_time.get_single_layer_post_attention_time()
+    )
+
+
+def test_execution_time_named_ep_phase_accessors_reject_unsplit_scalar():
+    execution_time = ExecutionTime(
+        **_base_execution_kwargs(
+            num_layers_per_pipeline_stage=1,
+            is_moe=True,
+            expert_parallel_communication_time=5.0,
+            communication_operator_times=None,
+        )
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="expert_parallel_alltoall_dispatch",
+    ):
+        execution_time.get_single_layer_moe_dispatch_time()
+    with pytest.raises(
+        ValueError,
+        match="expert_parallel_alltoall_combine",
+    ):
+        execution_time.get_single_layer_moe_combine_time()
+
+
+def test_metrics_emit_exact_named_ep_phase_times_without_splitting():
+    execution_time = ExecutionTime(
+        **_base_execution_kwargs(
+            num_layers_per_pipeline_stage=2,
+            is_moe=True,
+            expert_parallel_communication_time=0.0,
+            communication_operator_times=CommunicationOperatorTimes(
+                {
+                    "expert_parallel_alltoall_dispatch": 1.25,
+                    "expert_parallel_alltoall_combine": 3.75,
+                }
+            ),
+        )
+    )
+    aggregated: list[tuple[str, str, float]] = []
+    per_layer: list[tuple[str, str, float, int | None]] = []
+
+    MetricsStore.__new__(MetricsStore)._emit_aggregated_traces(
+        lambda kind, name, duration: aggregated.append((kind, name, duration)),
+        execution_time,
+        moe_tp_enabled=False,
+        ep_enabled=True,
+        cluster_type=ClusterType.MONOLITHIC,
+        use_profile_ep_alltoall=False,
+        use_ep_alltoall_dispatch_combine=True,
+    )
+    MetricsStore.__new__(MetricsStore)._emit_per_layer_traces(
+        lambda kind, name, duration, layer_idx=None, _meta=None: per_layer.append(
+            (kind, name, duration, layer_idx)
+        ),
+        execution_time,
+        num_layers=2,
+        base_meta={},
+        moe_tp_enabled=False,
+        ep_enabled=True,
+        cluster_type=ClusterType.MONOLITHIC,
+        use_profile_ep_alltoall=False,
+        use_ep_alltoall_dispatch_combine=True,
+    )
+
+    aggregated_ep = {
+        name: duration
+        for kind, name, duration in aggregated
+        if kind == "COMM" and name.startswith("expert_parallel_alltoall_")
+    }
+    assert aggregated_ep == {
+        "expert_parallel_alltoall_dispatch": pytest.approx(2.5),
+        "expert_parallel_alltoall_combine": pytest.approx(7.5),
+    }
+    for layer_idx in (0, 1):
+        layer_ep = {
+            name: duration
+            for kind, name, duration, emitted_layer_idx in per_layer
+            if kind == "COMM"
+            and name.startswith("expert_parallel_alltoall_")
+            and emitted_layer_idx == layer_idx
+        }
+        assert layer_ep == {
+            "expert_parallel_alltoall_dispatch": pytest.approx(1.25),
+            "expert_parallel_alltoall_combine": pytest.approx(3.75),
+        }
 
 
 def test_execution_time_rejects_conflicting_top_level_and_component_op_times():

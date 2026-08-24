@@ -120,7 +120,7 @@ def test_step_moe_case_uses_pinned_parallelism_for_colocation_and_pdd() -> None:
     }
     parallelism = {
         "attn_tensor_parallel_size": 4,
-        "attn_data_parallel_size": 1,
+        "attn_dp": 1,
         "moe_tensor_parallel_size": 4,
         "moe_expert_parallel_size": 1,
         "num_pipeline_stages": 1,
@@ -159,7 +159,7 @@ def test_step_moe_case_uses_pinned_parallelism_for_colocation_and_pdd() -> None:
     )
 
     assert colocation_command[colocation_command.index("--replica_config_attn_tensor_parallel_size") + 1] == "4"
-    assert colocation_command[colocation_command.index("--replica_config_attn_data_parallel_size") + 1] == "1"
+    assert "--replica_config_attn_data_parallel_size" not in colocation_command
     assert colocation_command[colocation_command.index("--replica_config_moe_tensor_parallel_size") + 1] == "4"
     assert colocation_command[colocation_command.index("--replica_config_moe_expert_parallel_size") + 1] == "1"
     assert pdd_command[pdd_command.index("--cluster_config_prefill_replica_config_attn_tensor_parallel_size") + 1] == "4"

@@ -1,4 +1,4 @@
-"""Regression tests for DECODE_ATTN same-iteration preemption state."""
+"""Regression tests for disaggregated decode preemption state."""
 
 from __future__ import annotations
 
@@ -162,11 +162,55 @@ def test_decode_attn_preemption_preserves_handoff_token_progress() -> None:
     assert scheduler._num_allocated_blocks == 0
 
 
-def test_non_pdaf_decode_preemption_keeps_restart_reset_contract() -> None:
-    """The generic DECODE path still resets Request progress on preemption."""
+def test_pdd_decode_preemption_preserves_transferred_prompt_and_decode_progress() -> None:
+    """PDD DECODE preemption must preserve the completed request lifecycle."""
 
     scheduler = _decode_attn_scheduler()
     scheduler._cluster_type = ClusterType.DECODE
+    victim = Request(arrived_at=0.0, num_prefill_tokens=16, num_decode_tokens=4)
+    victim._is_prefill_complete = True
+    victim._num_processed_tokens = 18
+    victim._current_decode_token_index = 3
+    victim._completed_layer_count = 0
+    victim._scheduled = True
+    scheduler._get_scheduler_num_computed_tokens = (
+        lambda request: request.num_processed_tokens
+    )
+    scheduler._running_requests[:] = [victim]
+    scheduler._allocation_map[victim.id] = 1
+    scheduler._num_allocated_blocks = 1
+    scheduler._scheduled_num_computed_tokens_by_request[victim.id] = 18
+
+    before = {
+        "processed_tokens": victim.num_processed_tokens,
+        "is_prefill_complete": victim.is_prefill_complete,
+        "emitted_decode_tokens": victim.num_emitted_decode_tokens,
+        "remaining_decode_tokens": victim.remaining_decode_tokens,
+        "decode_token_index": victim.current_decode_token_index,
+    }
+
+    scheduler._preempt_request(victim, [])
+
+    after = {
+        "processed_tokens": victim.num_processed_tokens,
+        "is_prefill_complete": victim.is_prefill_complete,
+        "emitted_decode_tokens": victim.num_emitted_decode_tokens,
+        "remaining_decode_tokens": victim.remaining_decode_tokens,
+        "decode_token_index": victim.current_decode_token_index,
+    }
+
+    assert after == before
+    assert victim.get_tokens_at_preemption(ClusterType.DECODE) == [18]
+    assert victim.id not in scheduler._allocation_map
+    assert victim.id not in scheduler._scheduled_num_computed_tokens_by_request
+    assert scheduler._num_allocated_blocks == 0
+
+
+def test_monolithic_preemption_keeps_restart_reset_contract() -> None:
+    """MONOLITHIC preemption still restarts request-level computation."""
+
+    scheduler = _decode_attn_scheduler()
+    scheduler._cluster_type = ClusterType.MONOLITHIC
     victim = _request(0)
     victim._num_processed_tokens = 17
     scheduler._running_requests[:] = [victim]

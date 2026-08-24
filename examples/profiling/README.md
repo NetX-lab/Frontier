@@ -4,9 +4,10 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-14 | Replaced the removed routing-mode CLI with the canonical `moe_routing_distribution_type` selector. |
 | 2026-06-07 | Added support matrix clarifying wrapper defaults, measurement family, checked-in CSV smokes, and dry-run scope. |
 | 2026-06-07 | Clarified release-facing simulator smoke output defaults and smoke script CLI override behavior. |
-| 2026-06-07 | Documented MoE downstream `uniform_random` routing alignment for checked-in `uniform_topk` profiling rows. |
+| 2026-06-07 | Documented MoE downstream random-routing alignment for checked-in `uniform_topk` profiling rows. |
 | 2026-06-07 | Added top-level, non-destructive profiling examples for linear_op, attention chunked prefill, MoE, metadata smoke, and downstream simulator CSV smoke. |
 
 ## Scope
@@ -40,7 +41,7 @@ You can override `PYTHON_BIN`, `MODEL`, `DEVICE`, `DATA_DIR_BASE`, and script-sp
 | Output taxonomy | All wrapper outputs are routed under `data/profiling/compute/<device>/<model>/`. |
 | Dry-run scope | `--dry-run` validates command construction, path routing, argument parsing, and defaults; it does not collect GPU timing data. |
 | Downstream CSV smokes | `smoke_simulator_dense_csv.sh` and `smoke_simulator_moe_csv.sh` consume checked-in CSV profiles by default, rather than freshly generated CSVs from the current shell session. |
-| MoE routing alignment | The MoE downstream smoke currently binds `uniform_random -> uniform_topk` to match checked-in CSV rows. A mismatched CSV should fail fast instead of falling back to another routing family. |
+| MoE routing alignment | The MoE downstream smoke binds `moe_routing_distribution_type=random` to `uniform_topk` rows. A mismatched CSV fails fast instead of falling back to another routing family. |
 
 ## Quick Validation
 
@@ -68,7 +69,7 @@ bash examples/profiling/smoke_simulator_dense_csv.sh
 bash examples/profiling/smoke_simulator_moe_csv.sh
 ```
 
-The MoE downstream smoke sets `--replica_config_moe_routing_mode uniform_random` because the checked-in tiny MoE dataset contains `routing_runtime_path=uniform_topk` rows. Keeping the simulator routing mode aligned with the CSV contract is required; otherwise the predictor fails fast instead of training against mismatched routing data.
+The MoE downstream smoke sets `--replica_config_moe_routing_distribution_type random` because the checked-in tiny MoE dataset contains `routing_runtime_path=uniform_topk` rows. Keeping the canonical distribution selector aligned with the CSV contract is required; otherwise the predictor fails fast instead of training against mismatched routing data.
 
 By default, downstream simulator smoke outputs are written under `outputs/examples/profiling-simulator`. For task-local validation artifacts, pass `METRICS_OUTPUT_DIR=<path>` or `--metrics-output-dir <path>` explicitly.
 

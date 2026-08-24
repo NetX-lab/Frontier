@@ -1,4 +1,5 @@
 import logging
+import math
 from typing import List, TYPE_CHECKING
 
 from frontier.events import BaseEvent
@@ -23,14 +24,14 @@ class ReplicaStageScheduleEvent(BaseEvent):
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
     ):
         super().__init__(time, EventType.REPLICA_STAGE_SCHEDULE)
 
         self._replica_id = replica_id
         self._stage_id = stage_id
         self._cluster_type = cluster_type
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
 
         self._batch = None
         self._batch_stage = None
@@ -42,11 +43,10 @@ class ReplicaStageScheduleEvent(BaseEvent):
         """
         Schedule the next batch for a replica stage and emit synchronization events.
 
-        Communication skip rules:
-        - DP sync for MoE is needed only when a replica has more than one DP lane.
-        - EP synchronization is needed only when moe_expert_parallel_size > 1.
-        - Local MoE (dp_size == 1 and moe_ep_size <= 1) uses direct stage
-          execution; TP communication remains an analytical predictor term.
+        Execution-scope rules:
+        - Dense work uses the full-stage identity ``None``.
+        - Every MoE layer enters a complete Replica-local EP wave, including EP=1.
+        - TP communication remains an analytical predictor term inside each scope.
         """
         from frontier.logger import get_cluster_logger
 
@@ -57,8 +57,8 @@ class ReplicaStageScheduleEvent(BaseEvent):
             self._cluster_type
         )
         stage_scheduler: ReplicaStageScheduler = (
-            cluster_scheduler.get_dp_replica_stage_scheduler(
-                self._replica_id, self._dp_id, self._stage_id
+            cluster_scheduler.get_replica_stage_scheduler(
+                self._replica_id, self._replica_local_id, self._stage_id
             )
         )
 
@@ -66,7 +66,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
         if debug_logger.isEnabledFor(logging.INFO):
             debug_logger.info(
                 f"[STAGE] ReplicaStageScheduleEvent at {self.time:.3f}s: "
-                f"replica={self._replica_id}, dp_id={self._dp_id}, stage={self._stage_id}"
+                f"replica={self._replica_id}, replica_local_id={self._replica_local_id}, stage={self._stage_id}"
             )
             # Use get_queue_batches() to get batches in priority order
             queue_batches = stage_scheduler.get_queue_batches()
@@ -87,24 +87,24 @@ class ReplicaStageScheduleEvent(BaseEvent):
         )
         replica_scheduler = None
         if stale_drop_count > 0:
-            replica_scheduler = cluster_scheduler.get_dp_replica_scheduler(
+            replica_scheduler = cluster_scheduler.get_replica_scheduler(
                 self._replica_id,
-                self._dp_id,
+                self._replica_local_id,
             )
             if replica_scheduler.num_running_batches < stale_drop_count:
                 raise ValueError(
                     "Fully stale stage-drop would make num_running_batches negative: "
-                    f"replica={self._replica_id}, dp_id={self._dp_id}, "
+                    f"replica={self._replica_id}, replica_local_id={self._replica_local_id}, "
                     f"stage={self._stage_id}, stale_drop_count={stale_drop_count}, "
                     f"num_running_batches={replica_scheduler.num_running_batches}"
                 )
             for _ in range(stale_drop_count):
                 replica_scheduler.decrement_num_running_batches()
             debug_logger.info(
-                "[STAGE][STALE-DROP-ACCOUNTING] replica=%s dp_id=%s stage=%s "
+                "[STAGE][STALE-DROP-ACCOUNTING] replica=%s replica_local_id=%s stage=%s "
                 "dropped_batches=%s num_running_batches=%s",
                 self._replica_id,
-                self._dp_id,
+                self._replica_local_id,
                 self._stage_id,
                 stale_drop_count,
                 replica_scheduler.num_running_batches,
@@ -118,9 +118,9 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 from frontier.events.replica_schedule_event import ReplicaScheduleEvent
 
                 debug_logger.info(
-                    "[STAGE][STALE-DROP-RESCHEDULE] replica=%s dp_id=%s stage=%s",
+                    "[STAGE][STALE-DROP-RESCHEDULE] replica=%s replica_local_id=%s stage=%s",
                     self._replica_id,
-                    self._dp_id,
+                    self._replica_local_id,
                     self._stage_id,
                 )
                 return [
@@ -128,7 +128,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self.time,
                         self._replica_id,
                         self._cluster_type,
-                        self._dp_id,
+                        self._replica_local_id,
                     )
                 ]
             debug_logger.info(
@@ -137,7 +137,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
             )
             debug_logger.info(
                 f"No batch to schedule for replica {self._replica_id}, "
-                f"stage {self._stage_id}, dp_id {self._dp_id}"
+                f"stage {self._stage_id}, replica_local_id {self._replica_local_id}"
             )
             return []
 
@@ -150,10 +150,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
         # replica = scheduler.get_replica(self._replica_id)
 
         # pd-af-disagg and pd-disagg
-        from frontier.config.global_vars import (
-            get_monolithic_moe_stage_aggregation,
-            is_disaggregated_mode,
-        )
+        from frontier.config.global_vars import is_disaggregated_mode
 
         replica = cluster_scheduler.get_replica(self._replica_id)
         is_moe = replica.is_moe
@@ -168,32 +165,20 @@ class ReplicaStageScheduleEvent(BaseEvent):
             and batch.num_prefill_tokens <= 0
             and batch.num_decode_tokens > 0
         )
-        # COMM_SKIP: MoE sync event not needed when dp_size == 1 and moe_ep_size <= 1
-        # (no cross-DP or cross-EP peer participates; TP comm is predictor-modeled)
-        moe_sync_required = (
-            replica.dp_size > 1 or replica.num_moe_expert_parallel_size > 1
-        )
-        monolithic_moe_stage_aggregation_enabled = (
-            self._cluster_type == ClusterType.MONOLITHIC
-            and is_moe
-            and get_monolithic_moe_stage_aggregation()
-        )
+        # Every MoE layer uses the canonical per-layer protocol, including
+        # EP=1.  A one-lane wave still establishes the same dispatch/compute/
+        # combine ordering; dense models never enter this branch.
+        moe_sync_required = bool(is_moe)
         uses_prefill_sync_path = (
             (self._cluster_type == ClusterType.PREFILL and is_moe)
-            or (
-                is_monolithic_prefill_moe
-                and not monolithic_moe_stage_aggregation_enabled
-            )
+            or is_monolithic_prefill_moe
         ) and moe_sync_required
         uses_decode_sync_path = (
             self._cluster_type == ClusterType.DECODE_FFN and is_moe
         ) or (
             (
                 (self._cluster_type == ClusterType.DECODE and is_moe)
-                or (
-                    is_monolithic_decode_moe
-                    and not monolithic_moe_stage_aggregation_enabled
-                )
+                or is_monolithic_decode_moe
             )
             and moe_sync_required
         )
@@ -214,8 +199,16 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     # Initialize batch metadata for layer-by-layer processing
                     batch._prefill_stage_start_time = self.time
 
-                    # Start with first layer (layer_id = 0)
-                    first_layer_id = 0
+                    num_layers = (
+                        stage_scheduler._execution_time_predictor
+                        ._num_layers_per_pipeline_stage
+                    )
+                    first_layer_id, _ = (
+                        BaseClusterScheduler.get_pipeline_stage_layer_bounds(
+                            self._stage_id,
+                            num_layers,
+                        )
+                    )
 
                     # Predict first-layer timing directly (avoid using aggregated stage prediction).
                     execution_time = stage_scheduler._execution_time_predictor.predict_stage_execution_time(
@@ -224,14 +217,15 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._cluster_type,
                         num_layers=1,
                         layer_id=first_layer_id,
+                        include_ffn=False,
                     )
                     # Predictor single-layer components are in milliseconds.
                     # Event queue timestamps are in seconds.
-                    attention_time_ms = execution_time.get_single_layer_attention_time()
+                    attention_time_ms = (
+                        execution_time.get_single_layer_attention_scope_time()
+                    )
 
                     # Diagnostic logging for execution time
-                    import math
-
                     if (
                         math.isnan(attention_time_ms)
                         or math.isinf(attention_time_ms)
@@ -267,7 +261,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             self._replica_id,
                             self._stage_id,
                             batch,
-                            self._dp_id,
+                            self._replica_local_id,
                             "pre_moe",
                             first_layer_id,
                             attention_time,
@@ -293,7 +287,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             self._batch_stage,
                             execution_time,
                             self._cluster_type,
-                            self._dp_id,
+                            self._replica_local_id,
                         )
 
                         return [
@@ -305,7 +299,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                                 self._batch,
                                 self._batch_stage,
                                 self._cluster_type,
-                                self._dp_id,
+                                self._replica_local_id,
                             )
                         ]
                     if not isinstance(batch, EPBatchGroup):
@@ -320,53 +314,107 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     self._batch_stage = batch_stage
                     self._is_last_stage = stage_scheduler.is_last_stage
 
-                    # EP=1 OPTIMIZATION: Skip EP synchronization when all experts are on the same device
                     moe_ep_size = replica.num_moe_expert_parallel_size
-
-                    if moe_ep_size <= 1:
-                        # EP=1: All experts on same device, use direct batch processing
-                        debug_logger.info(
-                            f"[EP=1] Skipping EP sync for batch {batch.id} (moe_ep_size={moe_ep_size})"
+                    if type(moe_ep_size) is not int or moe_ep_size <= 0:
+                        raise ValueError(
+                            "MoE DECODE_FFN requires a positive integer "
+                            f"moe_expert_parallel_size, got {moe_ep_size!r}"
                         )
 
-                        batch.execution_time = self._batch_stage.execution_time
-                        self._batch_stage.on_schedule(self.time)
-                        metrics_store.on_replica_stage_schedule(
-                            self.time,
-                            self._replica_id,
-                            self._stage_id,
-                            self._batch_stage,
-                            execution_time,
-                            self._cluster_type,
-                            self._dp_id,
-                        )
-
-                        return [
-                            BatchStageEndEvent(
-                                self.time + self._batch_stage.execution_time,
-                                self._replica_id,
-                                self._stage_id,
-                                self._is_last_stage,
-                                self._batch,
-                                self._batch_stage,
-                                self._cluster_type,
-                                self._dp_id,
-                            ),
-                        ]
-
-                    # EP > 1: Use EP dispatch -> expert compute -> combine path
+                    # Use EP dispatch -> expert compute -> combine path for
+                    # every EP size.  EP=1 is a one-participant EP_WAVE, not a
+                    # dense shortcut.
                     # FFN-EP runtime follows the explicit operation order:
-                    # share-expert + gating + shuffling -> dispatch -> grouped_gemm -> combine.
-                    pre_dispatch_compute_time_ms = (
-                        execution_time.get_single_layer_moe_pre_dispatch_time()
-                    )
-                    expert_comp_time_ms = (
-                        execution_time.get_single_layer_moe_post_dispatch_compute_time()
+                    # pre-dispatch -> dispatch -> routed compute -> combine ->
+                    # post-combine.  Keep the same named phase decomposition
+                    # used by the shared PREFILL/DECODE paths.
+                    (
+                        pre_dispatch_compute_time_ms,
+                        dispatch_time_ms,
+                        expert_comp_time_ms,
+                        combine_time_ms,
+                        post_combine_time_ms,
+                    ) = BaseClusterScheduler._get_shared_ep_phase_times_ms(
+                        execution_time,
+                        cluster_type=self._cluster_type,
+                        batch_id=int(batch.id),
+                        layer_id=int(getattr(batch, "decode_ffn_layer_id", -1)),
+                        ep_id=int(batch.ep_id),
                     )
                     pre_dispatch_compute_time = pre_dispatch_compute_time_ms * 1e-3
                     expert_comp_time = expert_comp_time_ms * 1e-3
+                    post_combine_time = post_combine_time_ms * 1e-3
 
-                    import math
+                    lane_compute_ms = (
+                        pre_dispatch_compute_time_ms
+                        + expert_comp_time_ms
+                        + post_combine_time_ms
+                    )
+                    lane_comm_ms = dispatch_time_ms + combine_time_ms
+                    raw_source_batch_ids = getattr(batch, "source_batch_ids", ())
+                    if not isinstance(raw_source_batch_ids, (list, tuple)):
+                        raise ValueError(
+                            "DECODE_FFN EP batch source_batch_ids must be a list or tuple"
+                        )
+                    if any(
+                        type(batch_id) is not int or batch_id < 0
+                        for batch_id in raw_source_batch_ids
+                    ):
+                        raise ValueError(
+                            "DECODE_FFN EP batch source_batch_ids must contain "
+                            "exact non-negative integers"
+                        )
+                    source_batch_ids = tuple(int(batch_id) for batch_id in raw_source_batch_ids)
+                    layer_id = getattr(batch, "decode_ffn_layer_id", None)
+                    if type(layer_id) is not int or layer_id < 0:
+                        raise ValueError(
+                            "DECODE_FFN EP batch must carry an exact non-negative "
+                            f"decode_ffn_layer_id, got {layer_id!r}"
+                        )
+                    if not source_batch_ids:
+                        global_id = getattr(batch, "global_id", None)
+                        if type(global_id) is not int or global_id < 0:
+                            raise ValueError(
+                                "DECODE_FFN EP batch without source_batch_ids must "
+                                "carry an exact non-negative global_id"
+                            )
+                        # A multi-source EP group has no single source batch ID;
+                        # its global ID is the stable logical wave identity.
+                        logical_batch_id = int(global_id)
+                    else:
+                        if len(source_batch_ids) == 1:
+                            logical_batch_id = source_batch_ids[0]
+                        else:
+                            global_id = getattr(batch, "global_id", None)
+                            if type(global_id) is not int or global_id < 0:
+                                raise ValueError(
+                                    "DECODE_FFN multi-source EP batch must carry an "
+                                    "exact non-negative global_id"
+                                )
+                            logical_batch_id = int(global_id)
+                    BaseClusterScheduler._log_ep_workload_trace(
+                        cluster_type=self._cluster_type,
+                        batch_id=logical_batch_id,
+                        layer_id=layer_id,
+                        ep_id=int(batch.ep_id),
+                        moe_ep_size=int(moe_ep_size),
+                        per_expert_tokens=dict(batch.per_expert_tokens),
+                        lane_compute_ms=lane_compute_ms,
+                        routed_compute_ms=expert_comp_time_ms,
+                        lane_comm_ms=lane_comm_ms,
+                        pre_dispatch_ms=pre_dispatch_compute_time_ms,
+                        dispatch_ms=dispatch_time_ms,
+                        combine_ms=combine_time_ms,
+                        post_combine_ms=post_combine_time_ms,
+                        trace_identity=BaseClusterScheduler._build_ep_trace_identity(
+                            batch=batch,
+                            replica_id=int(self._replica_id),
+                            stage_id=int(self._stage_id),
+                            operation_id=logical_batch_id,
+                            operation_kind="ep_ffn",
+                            afd_stage_idx=getattr(batch, "afd_stage_idx", None),
+                        ),
+                    )
 
                     if (
                         math.isnan(expert_comp_time)
@@ -396,19 +444,21 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._batch_stage,
                         execution_time,
                         self._cluster_type,
-                        self._dp_id,
+                        self._replica_local_id,
                     )
 
                     # Store expert compute time for use after dispatch collective completes
                     batch.expert_compute_time = expert_comp_time
+                    batch.post_combine_time = post_combine_time
 
                     if debug_logger.isEnabledFor(logging.INFO):
                         debug_logger.info(
                             f"[EXEC_TIME_STAGE] batch_id={batch.id}, "
                             f"stage_execution_time={self._batch_stage.execution_time:.6f}s, "
-                            f"pre_dispatch_compute_time={pre_dispatch_compute_time:.6f}s, "
-                            f"expert_comp_time={expert_comp_time:.6f}s"
-                        )
+                        f"pre_dispatch_compute_time={pre_dispatch_compute_time:.6f}s, "
+                        f"expert_comp_time={expert_comp_time:.6f}s, "
+                        f"post_combine_time={post_combine_time:.6f}s"
+                    )
 
                     # Pre-dispatch compute must complete before EP dispatch collective starts
                     batch.time = self.time + pre_dispatch_compute_time
@@ -426,7 +476,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             self._replica_id,
                             self._stage_id,
                             batch,
-                            self._dp_id,
+                            self._replica_local_id,
                         )
                     ]
 
@@ -434,12 +484,26 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     # DECODE cluster (PD-disaggregation) and MONOLITHIC pure-decode MoE
                     # reuse the same layer-by-layer decode sync processing path.
 
-                    # Get num_layers from the predictor
-                    num_layers = stage_scheduler._execution_time_predictor._num_layers_per_pipeline_stage
+                    # Get the global layer range owned by this pipeline stage.
+                    num_layers = (
+                        stage_scheduler._execution_time_predictor
+                        ._num_layers_per_pipeline_stage
+                    )
+                    first_layer_id, _ = (
+                        BaseClusterScheduler.get_pipeline_stage_layer_bounds(
+                            self._stage_id,
+                            num_layers,
+                        )
+                    )
 
-                    # Get execution time components for all layers in this pipeline stage
+                    # Predict the first layer owned by this pipeline stage.
                     execution_time = stage_scheduler._execution_time_predictor.predict_stage_execution_time(
-                        batch, self._stage_id, self._cluster_type, num_layers=num_layers
+                        batch,
+                        self._stage_id,
+                        self._cluster_type,
+                        num_layers=1,
+                        layer_id=first_layer_id,
+                        include_ffn=False,
                     )
 
                     # Use layer-by-layer DP sync path for MoE processing.
@@ -448,16 +512,14 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     # Initialize batch metadata for layer-by-layer processing
                     batch._decode_stage_start_time = self.time
 
-                    # Start with first layer (layer_id = 0)
-                    first_layer_id = 0
                     # Predictor single-layer attention component is in milliseconds;
                     # event queue timestamps are in seconds.
-                    attention_time_ms = execution_time.get_single_layer_attention_time()
+                    attention_time_ms = (
+                        execution_time.get_single_layer_attention_scope_time()
+                    )
                     attention_time = attention_time_ms * 1e-3
 
                     # Diagnostic logging for execution time
-                    import math
-
                     if (
                         math.isnan(attention_time_ms)
                         or math.isinf(attention_time_ms)
@@ -490,7 +552,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                             self._replica_id,
                             self._stage_id,
                             batch,
-                            self._dp_id,
+                            self._replica_local_id,
                             "pre_moe",
                             first_layer_id,
                             attention_time,
@@ -509,7 +571,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 self._is_last_stage = stage_scheduler.is_last_stage
 
                 # Diagnostic logging for execution time
-                import math
                 # todo: check the component of execution time
                 exec_time = self._batch_stage.execution_time
                 if math.isnan(exec_time) or math.isinf(exec_time) or exec_time < 0:
@@ -539,7 +600,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     self._batch_stage,
                     execution_time,
                     self._cluster_type,
-                    self._dp_id,
+                    self._replica_local_id,
                 )
 
                 return [
@@ -551,7 +612,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._batch,
                         self._batch_stage,
                         self._cluster_type,
-                        self._dp_id,
+                        self._replica_local_id,
                     ),
                 ]
 
@@ -572,7 +633,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     self._batch_stage,
                     execution_time,
                     self._cluster_type,
-                    self._dp_id,
+                    self._replica_local_id,
                 )
 
                 return [
@@ -584,7 +645,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._batch,
                         self._batch_stage,
                         self._cluster_type,
-                        self._dp_id,
+                        self._replica_local_id,
                     ),
                 ]
 
@@ -645,6 +706,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     effective_total_tokens_rounded=effective_tokens_rounded,
                     tokens_are_post_routing=tokens_are_post_routing,
                 )
+                batch_stage.attach_runtime_identity(batch)
 
                 # Mark stage as busy
                 stage_scheduler._is_busy = True
@@ -652,8 +714,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 self._is_last_stage = stage_scheduler.is_last_stage
 
                 # Diagnostic logging for execution time
-                import math
-
                 exec_time = self._batch_stage.execution_time
                 if math.isnan(exec_time) or math.isinf(exec_time) or exec_time < 0:
                     debug_logger.error(
@@ -684,7 +744,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     self._batch_stage,
                     execution_time,
                     self._cluster_type,
-                    self._dp_id,
+                    self._replica_local_id,
                 )
 
                 # Schedule batch stage end event directly (no sync events)
@@ -697,7 +757,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         self._batch,
                         self._batch_stage,
                         self._cluster_type,
-                        self._dp_id,
+                        self._replica_local_id,
                     )
                 ]
 
@@ -717,8 +777,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
             )
             raise e
         
-        # if not replica.extend_ep_across_dp:
-        # extend_ep_across_dp CAN BE REMOVED
         batch_stage, execution_time = stage_scheduler.predict_and_create_stage(
             batch
         )
@@ -726,8 +784,6 @@ class ReplicaStageScheduleEvent(BaseEvent):
         self._is_last_stage = stage_scheduler.is_last_stage
 
         # Diagnostic logging for execution time
-        import math
-
         exec_time = self._batch_stage.execution_time
         if math.isnan(exec_time) or math.isinf(exec_time) or exec_time < 0:
             debug_logger.error(
@@ -755,7 +811,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
             self._batch_stage,
             execution_time,
             self._cluster_type,
-            self._dp_id,
+            self._replica_local_id,
         )
 
         return [
@@ -767,7 +823,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                 self._batch,
                 self._batch_stage,
                 self._cluster_type,
-                self._dp_id,
+                self._replica_local_id,
             ),
         ]
 
@@ -780,7 +836,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
             "replica_id": self._replica_id,
             "stage_id": self._stage_id,
             "cluster_type": self._cluster_type.name,
-            "dp_id": self._dp_id,
+            "replica_local_id": self._replica_local_id,
             "batch_id": self._batch.id if self._batch else None,
             "batch_stage_id": self._batch_stage.id if self._batch_stage else None,
             "is_last_stage": self._is_last_stage,

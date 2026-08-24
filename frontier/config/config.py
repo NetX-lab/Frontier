@@ -1873,9 +1873,12 @@ class ReplicaConfig:
         default=1,
         metadata={"help": "Attention tensor parallel size (attn_tp size)."},
     )
-    attn_data_parallel_size: int = field(
+    attn_dp: int = field(
         default=1,
-        metadata={"help": "Attention data parallel size (attn_dp size)."},
+        metadata={
+            "help": "Fixed attention data-parallel domain for one Replica.",
+            "include_in_cli": False,
+        },
     )
     moe_tensor_parallel_size: int = field(
         default=1,
@@ -1897,27 +1900,18 @@ class ReplicaConfig:
         default=0,
         metadata={"help": "Router topk. Set to 0 to inherit from model config."},
     )
-    moe_routing_mode: str = field(
-        default="simulation",
-        metadata={
-            "help": "MoE routing mode for grouped GEMM prediction. "
-            "'simulation': Pre-compute routing details via simulation for realistic load imbalance (default). "
-            "'uniform_legacy': Use uniform token distribution (legacy 1D mode for backward compatibility). "
-            "'uniform_random': Comparison-only deterministic uniform-random expert assignment mirroring vLLM routing simulation."
-        },
-    )
     moe_routing_seed: int = field(
         default=42,
         metadata={
-            "help": "Random seed for MoE routing simulation. Must be a non-negative integer. "
-            "Used when moe_routing_mode is 'simulation' or 'uniform_random' to ensure deterministic and reproducible results."
+            "help": "Random seed for deterministic MoE routing distribution generation. "
+            "Must be a non-negative integer."
         },
     )
     moe_routing_trace_path: str = field(
         default="",
         metadata={
-            "help": "Optional StepFun merged trace JSONL for trace-driven MoE routing. "
-            "Required when moe_routing_mode='trace_driven'."
+            "help": "Deferred StepFun merged trace JSONL for unsupported trace replay. "
+            "A non-empty path fails fast at the architecture boundary."
         },
     )
     decode_attn_initial_lane_trace_path: str = field(
@@ -1949,13 +1943,6 @@ class ReplicaConfig:
             "token-to-expert load skew without changing router_topk/model semantics."
         },
     )
-    # todo: remove this, shouldn't use in simulation in current version
-    extend_ep_across_dp: bool = field(
-        default=False,
-        metadata={
-            "help": "Whether to extend expert parallelism across data parallelism."
-        },
-    )
     device: str = field(
         default="a100",
         metadata={"help": "Device."},
@@ -1973,9 +1960,13 @@ class ReplicaConfig:
     cluster_prefix: str = None
     local_expert_num: int = None
     model_name: str = "meta-llama/Llama-2-7b-hf"
-    data_parallel_size: int = None  # to be set in monolithic mode
 
     def __post_init__(self):
+        if type(self.attn_dp) is not int or self.attn_dp != 1:
+            raise ValueError(
+                "attn_dp is retired as a selectable technology dimension and "
+                f"must be fixed to 1, got {self.attn_dp!r}"
+            )
         # Load model and device configs first (needed for validation)
         self.model_config: BaseModelConfig = BaseModelConfig.create_from_name(
             self.model_name
@@ -2039,13 +2030,13 @@ class ReplicaConfig:
             self.world_size = (
                 self.num_pipeline_stages
                 * self.attn_tensor_parallel_size
-                * self.attn_data_parallel_size
+                * self.attn_dp
             )
         elif self.cluster_prefix == "decode_attn":
             self.world_size = (
                 self.num_pipeline_stages
                 * self.attn_tensor_parallel_size
-                * self.attn_data_parallel_size
+                * self.attn_dp
             )
         elif self.cluster_prefix == "decode_ffn":
             self.world_size = (
@@ -2058,13 +2049,13 @@ class ReplicaConfig:
             self.world_size = (
                 self.num_pipeline_stages
                 * self.attn_tensor_parallel_size
-                * self.attn_data_parallel_size
+                * self.attn_dp
             )
         else:  # Monolithic
             self.world_size = (
                 self.num_pipeline_stages
                 * self.attn_tensor_parallel_size
-                * self.attn_data_parallel_size
+                * self.attn_dp
             )
 
         # Validate expert parallelism configuration for MoE models
@@ -2328,290 +2319,6 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
             )
         },
     )
-    moe_shuffling_calibration_scale: float = field(
-        default=1.0,
-        metadata={
-            "help": "Multiplicative calibration scale for moe_shuffling prediction. Must be > 0."
-        },
-    )
-    decode_phase_moe_shuffling_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative calibration scale for moe_shuffling "
-                "prediction when the batch contains decode tokens but no "
-                "prefill tokens. Must be > 0."
-            )
-        },
-    )
-    moe_grouped_gemm_calibration_scale: float = field(
-        default=1.0,
-        metadata={
-            "help": "Multiplicative calibration scale for moe_grouped_gemm prediction. Must be > 0."
-        },
-    )
-    decode_phase_moe_grouped_gemm_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative calibration scale for moe_grouped_gemm "
-                "prediction when the batch contains decode tokens but no "
-                "prefill tokens. Must be > 0."
-            )
-        },
-    )
-    expert_parallel_communication_calibration_scale: float = field(
-        default=1.0,
-        metadata={
-            "help": (
-                "Multiplicative calibration scale for expert parallel communication "
-                "prediction. Must be > 0."
-            )
-        },
-    )
-    decode_phase_expert_parallel_communication_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative calibration scale for expert parallel "
-                "communication prediction when the batch contains decode tokens "
-                "but no prefill tokens. Must be > 0."
-            )
-        },
-    )
-    late_decode_expert_parallel_communication_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative calibration scale for expert parallel "
-                "communication prediction when every request in a decode-only "
-                "batch is past the first pure decode token. Must be > 0."
-            )
-        },
-    )
-    short_decode_request_length_threshold: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional original decode-token threshold for short-request "
-                "decode-only MoE calibration. Must be > 0 when set."
-            )
-        },
-    )
-    short_decode_request_length_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative MoE calibration scale for decode-only "
-                "batches where every request has original decode tokens <= "
-                "short_decode_request_length_threshold. Must be > 0."
-            )
-        },
-    )
-    long_decode_request_length_threshold: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional original decode-token threshold for long-request "
-                "decode-only MoE calibration. Must be > 0 when set."
-            )
-        },
-    )
-    long_decode_request_length_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative MoE calibration scale for decode-only "
-                "batches where any request has original decode tokens >= "
-                "long_decode_request_length_threshold. Must be > 0."
-            )
-        },
-    )
-    low_prefill_short_decode_request_prefill_threshold: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional original prefill-token threshold for low-prefill, "
-                "short-decode request-shape MoE calibration. Must be > 0 when set."
-            )
-        },
-    )
-    low_prefill_short_decode_request_decode_threshold: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional original decode-token threshold for low-prefill, "
-                "short-decode request-shape MoE calibration. Must be > 0 when set."
-            )
-        },
-    )
-    low_prefill_short_decode_request_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative MoE calibration scale for decode-only "
-                "batches containing a request with original prefill tokens <= "
-                "low_prefill_short_decode_request_prefill_threshold and original "
-                "decode tokens <= low_prefill_short_decode_request_decode_threshold. "
-                "Must be > 0."
-            )
-        },
-    )
-    low_prefill_decode_mix_request_prefill_threshold: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional original prefill-token ceiling for batch-composition "
-                "low-prefill decode-mix MoE calibration. Must be > 0 when set."
-            )
-        },
-    )
-    low_prefill_decode_mix_request_decode_min: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional original decode-token lower bound for batch-composition "
-                "low-prefill decode-mix MoE calibration. Must be > 0 when set."
-            )
-        },
-    )
-    low_prefill_decode_mix_request_decode_max: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional original decode-token upper bound for batch-composition "
-                "low-prefill decode-mix MoE calibration. Must be > 0 when set."
-            )
-        },
-    )
-    low_prefill_decode_mix_request_min_match_ratio: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional inclusive lower bound on matched request ratio for "
-                "batch-composition low-prefill decode-mix MoE calibration. "
-                "Must satisfy 0 < ratio <= 1 when set."
-            )
-        },
-    )
-    low_prefill_decode_mix_request_max_match_ratio: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional inclusive upper bound on matched request ratio for "
-                "batch-composition low-prefill decode-mix MoE calibration. "
-                "Must satisfy 0 < ratio <= 1 when set."
-            )
-        },
-    )
-    low_prefill_decode_mix_request_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative MoE calibration scale for decode-only "
-                "batches whose low-prefill decode-mix request ratio falls within "
-                "the configured inclusive match-ratio band. Must be > 0."
-            )
-        },
-    )
-    low_prefill_decode_mix_request_include_mixed_batches: bool = field(
-        default=False,
-        metadata={
-            "help": (
-                "Allow low-prefill decode-mix MoE request-shape calibration to "
-                "also apply to mixed prefill+decode batches. Default false keeps "
-                "the calibration decode-only."
-            )
-        },
-    )
-    low_prefill_long_decode_request_prefill_threshold: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional original prefill-token threshold for low-prefill, "
-                "long-decode request-shape MoE calibration. Must be > 0 when set."
-            )
-        },
-    )
-    low_prefill_long_decode_request_decode_threshold: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional original decode-token threshold for low-prefill, "
-                "long-decode request-shape MoE calibration. Must be > 0 when set."
-            )
-        },
-    )
-    low_prefill_long_decode_request_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative MoE calibration scale for decode-only "
-                "batches containing a request with original prefill tokens <= "
-                "low_prefill_long_decode_request_prefill_threshold and original "
-                "decode tokens >= low_prefill_long_decode_request_decode_threshold. "
-                "Must be > 0."
-            )
-        },
-    )
-    low_prefill_long_decode_request_include_mixed_batches: bool = field(
-        default=False,
-        metadata={
-            "help": (
-                "Allow low-prefill long-decode MoE request-shape calibration to "
-                "also apply to mixed prefill+decode batches. Default false keeps "
-                "the calibration decode-only."
-            )
-        },
-    )
-    high_prefill_mid_decode_request_prefill_threshold: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional original prefill-token threshold for high-prefill, "
-                "mid-decode request-shape MoE calibration. Must be > 0 when set."
-            )
-        },
-    )
-    high_prefill_mid_decode_request_decode_min: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional original decode-token lower bound for high-prefill, "
-                "mid-decode request-shape MoE calibration. Must be > 0 when set."
-            )
-        },
-    )
-    high_prefill_mid_decode_request_decode_max: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional original decode-token upper bound for high-prefill, "
-                "mid-decode request-shape MoE calibration. Must be > 0 when set."
-            )
-        },
-    )
-    high_prefill_mid_decode_request_calibration_scale: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Optional multiplicative MoE calibration scale for decode-only "
-                "batches containing a request with original prefill tokens >= "
-                "high_prefill_mid_decode_request_prefill_threshold and original "
-                "decode tokens within [high_prefill_mid_decode_request_decode_min, "
-                "high_prefill_mid_decode_request_decode_max]. Must be > 0."
-            )
-        },
-    )
-    share_expert_tp_allreduce_visibility_scale: float = field(
-        default=2.0 / 3.0,
-        metadata={
-            "help": (
-                "Visibility scale for Step3 share_expert TP allreduce overlap modeling. "
-                "Must be > 0."
-            )
-        },
-    )
     nccl_cpu_launch_overhead_ms: float = field(
         default=0.02,
         metadata={"help": "NCCL CPU launch overhead in ms."},
@@ -2658,20 +2365,6 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
             "prefill_phase_mlp_up_proj_calibration_scale",
             "mlp_down_proj_calibration_scale",
             "decode_phase_mlp_down_proj_calibration_scale",
-            "moe_shuffling_calibration_scale",
-            "decode_phase_moe_shuffling_calibration_scale",
-            "moe_grouped_gemm_calibration_scale",
-            "decode_phase_moe_grouped_gemm_calibration_scale",
-            "expert_parallel_communication_calibration_scale",
-            "decode_phase_expert_parallel_communication_calibration_scale",
-            "late_decode_expert_parallel_communication_calibration_scale",
-            "short_decode_request_length_calibration_scale",
-            "long_decode_request_length_calibration_scale",
-            "low_prefill_short_decode_request_calibration_scale",
-            "low_prefill_long_decode_request_calibration_scale",
-            "high_prefill_mid_decode_request_calibration_scale",
-            "low_prefill_decode_mix_request_calibration_scale",
-            "share_expert_tp_allreduce_visibility_scale",
         ):
             raw_value = getattr(self, field_name)
             if raw_value is None:
@@ -2681,183 +2374,6 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
                 raise ValueError(
                     f"{self.__class__.__name__}.{field_name} must be > 0, got={value!r}"
                 )
-        for field_name in (
-            "short_decode_request_length_threshold",
-            "long_decode_request_length_threshold",
-            "low_prefill_short_decode_request_prefill_threshold",
-            "low_prefill_short_decode_request_decode_threshold",
-            "low_prefill_decode_mix_request_prefill_threshold",
-            "low_prefill_decode_mix_request_decode_min",
-            "low_prefill_decode_mix_request_decode_max",
-            "low_prefill_long_decode_request_prefill_threshold",
-            "low_prefill_long_decode_request_decode_threshold",
-            "high_prefill_mid_decode_request_prefill_threshold",
-            "high_prefill_mid_decode_request_decode_min",
-            "high_prefill_mid_decode_request_decode_max",
-        ):
-            raw_value = getattr(self, field_name)
-            if raw_value is None:
-                continue
-            value = int(raw_value)
-            if value <= 0:
-                raise ValueError(
-                    f"{self.__class__.__name__}.{field_name} must be > 0, got={value!r}"
-                )
-        for prefix in ("short", "long"):
-            threshold_name = f"{prefix}_decode_request_length_threshold"
-            scale_name = f"{prefix}_decode_request_length_calibration_scale"
-            threshold = getattr(self, threshold_name)
-            scale = getattr(self, scale_name)
-            if (threshold is None) != (scale is None):
-                raise ValueError(
-                    f"{self.__class__.__name__}.{threshold_name} and {scale_name} "
-                    "must be set together"
-                )
-        short_threshold = self.short_decode_request_length_threshold
-        long_threshold = self.long_decode_request_length_threshold
-        if (
-            short_threshold is not None
-            and long_threshold is not None
-            and long_threshold <= short_threshold
-        ):
-            raise ValueError(
-                f"{self.__class__.__name__}.long_decode_request_length_threshold "
-                "must be greater than short_decode_request_length_threshold"
-            )
-
-        low_prefill_short_fields = (
-            "low_prefill_short_decode_request_prefill_threshold",
-            "low_prefill_short_decode_request_decode_threshold",
-            "low_prefill_short_decode_request_calibration_scale",
-        )
-        low_prefill_short_values = [
-            getattr(self, field_name) for field_name in low_prefill_short_fields
-        ]
-        if any(value is not None for value in low_prefill_short_values) and not all(
-            value is not None for value in low_prefill_short_values
-        ):
-            raise ValueError(
-                f"{self.__class__.__name__}.low_prefill_short_decode_request_prefill_threshold, "
-                "low_prefill_short_decode_request_decode_threshold, and "
-                "low_prefill_short_decode_request_calibration_scale must be set together"
-            )
-
-        low_prefill_decode_mix_fields = (
-            "low_prefill_decode_mix_request_prefill_threshold",
-            "low_prefill_decode_mix_request_decode_min",
-            "low_prefill_decode_mix_request_decode_max",
-            "low_prefill_decode_mix_request_min_match_ratio",
-            "low_prefill_decode_mix_request_max_match_ratio",
-            "low_prefill_decode_mix_request_calibration_scale",
-        )
-        low_prefill_decode_mix_values = [
-            getattr(self, field_name) for field_name in low_prefill_decode_mix_fields
-        ]
-        if any(value is not None for value in low_prefill_decode_mix_values) and not all(
-            value is not None for value in low_prefill_decode_mix_values
-        ):
-            raise ValueError(
-                f"{self.__class__.__name__}.low_prefill_decode_mix_request_prefill_threshold, "
-                "low_prefill_decode_mix_request_decode_min, "
-                "low_prefill_decode_mix_request_decode_max, "
-                "low_prefill_decode_mix_request_min_match_ratio, "
-                "low_prefill_decode_mix_request_max_match_ratio, and "
-                "low_prefill_decode_mix_request_calibration_scale must be set together"
-            )
-
-        low_decode_mix_min = self.low_prefill_decode_mix_request_decode_min
-        low_decode_mix_max = self.low_prefill_decode_mix_request_decode_max
-        if (
-            low_decode_mix_min is not None
-            and low_decode_mix_max is not None
-            and low_decode_mix_max < low_decode_mix_min
-        ):
-            raise ValueError(
-                f"{self.__class__.__name__}.low_prefill_decode_mix_request_decode_max "
-                "must be greater than or equal to low_prefill_decode_mix_request_decode_min"
-            )
-
-        low_decode_mix_min_ratio = (
-            self.low_prefill_decode_mix_request_min_match_ratio
-        )
-        low_decode_mix_max_ratio = (
-            self.low_prefill_decode_mix_request_max_match_ratio
-        )
-        for field_name, raw_value in (
-            (
-                "low_prefill_decode_mix_request_min_match_ratio",
-                low_decode_mix_min_ratio,
-            ),
-            (
-                "low_prefill_decode_mix_request_max_match_ratio",
-                low_decode_mix_max_ratio,
-            ),
-        ):
-            if raw_value is None:
-                continue
-            value = float(raw_value)
-            if value <= 0.0 or value > 1.0:
-                raise ValueError(
-                    f"{self.__class__.__name__}.{field_name} must satisfy 0 < value <= 1, got={value!r}"
-                )
-        if (
-            low_decode_mix_min_ratio is not None
-            and low_decode_mix_max_ratio is not None
-            and low_decode_mix_max_ratio < low_decode_mix_min_ratio
-        ):
-            raise ValueError(
-                f"{self.__class__.__name__}.low_prefill_decode_mix_request_max_match_ratio "
-                "must be greater than or equal to low_prefill_decode_mix_request_min_match_ratio"
-            )
-
-        low_prefill_long_fields = (
-            "low_prefill_long_decode_request_prefill_threshold",
-            "low_prefill_long_decode_request_decode_threshold",
-            "low_prefill_long_decode_request_calibration_scale",
-        )
-        low_prefill_long_values = [
-            getattr(self, field_name) for field_name in low_prefill_long_fields
-        ]
-        if any(value is not None for value in low_prefill_long_values) and not all(
-            value is not None for value in low_prefill_long_values
-        ):
-            raise ValueError(
-                f"{self.__class__.__name__}.low_prefill_long_decode_request_prefill_threshold, "
-                "low_prefill_long_decode_request_decode_threshold, and "
-                "low_prefill_long_decode_request_calibration_scale must be set together"
-            )
-
-        high_prefill_mid_fields = (
-            "high_prefill_mid_decode_request_prefill_threshold",
-            "high_prefill_mid_decode_request_decode_min",
-            "high_prefill_mid_decode_request_decode_max",
-            "high_prefill_mid_decode_request_calibration_scale",
-        )
-        high_prefill_mid_values = [
-            getattr(self, field_name) for field_name in high_prefill_mid_fields
-        ]
-        if any(value is not None for value in high_prefill_mid_values) and not all(
-            value is not None for value in high_prefill_mid_values
-        ):
-            raise ValueError(
-                f"{self.__class__.__name__}.high_prefill_mid_decode_request_prefill_threshold, "
-                "high_prefill_mid_decode_request_decode_min, "
-                "high_prefill_mid_decode_request_decode_max, and "
-                "high_prefill_mid_decode_request_calibration_scale must be set together"
-            )
-
-        high_decode_min = self.high_prefill_mid_decode_request_decode_min
-        high_decode_max = self.high_prefill_mid_decode_request_decode_max
-        if (
-            high_decode_min is not None
-            and high_decode_max is not None
-            and high_decode_max < high_decode_min
-        ):
-            raise ValueError(
-                f"{self.__class__.__name__}.high_prefill_mid_decode_request_decode_max "
-                "must be greater than or equal to high_prefill_mid_decode_request_decode_min"
-            )
-
     def validate_linear_op_input(self) -> None:
         """Validate linear_op_input_file configuration.
         
@@ -3010,18 +2526,9 @@ class ClusterConfig:
         default=None,
         metadata={
             "help": "Number of replicas for decode FFN cluster. "
-            "Dense models may use multiple replicas. "
-            "MoE models require exactly one replica by default to avoid expert redundancy; "
-            "use EP within that replica instead. Used only in pd-af-disaggregation mode.",
+            "Each replica is an independent FFN serving copy; MoE EP lanes are "
+            "scoped inside the selected replica. Used only in pd-af-disaggregation mode.",
             "mode_dependency": "pd-af-disaggregation",
-        },
-    )
-    allow_experiment_multi_decode_ffn_replicas: bool = field(
-        default=False,
-        metadata={
-            "help": "Experiment-only opt-in that permits multiple MoE DECODE_FFN "
-            "replicas for Use Case 6 heterogeneous cost studies. "
-            "Dense models do not require this flag."
         },
     )
     decode_cluster_num_replicas: Optional[int] = field(
@@ -3049,13 +2556,6 @@ class ClusterConfig:
         default=None,
         metadata={
             "help": "Attention tensor parallel size for prefill cluster.",
-            "mode_dependency": "pd-af-disaggregation",
-        },
-    )
-    prefill_replica_config_attn_data_parallel_size: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": "Attention data parallel size for prefill cluster.",
             "mode_dependency": "pd-af-disaggregation",
         },
     )
@@ -3101,13 +2601,6 @@ class ClusterConfig:
             "mode_dependency": "pd-af-disaggregation",
         },
     )
-    prefill_replica_config_extend_ep_across_dp: Optional[bool] = field(
-        default=None,
-        metadata={
-            "help": "Whether to extend expert parallelism across data parallelism for prefill cluster.",
-            "mode_dependency": "pd-af-disaggregation",
-        },
-    )
     prefill_replica_config_device: Optional[str] = field(
         default=None,
         metadata={
@@ -3140,13 +2633,6 @@ class ClusterConfig:
         default=None,
         metadata={
             "help": "Attention tensor parallel size for decode attention cluster.",
-            "mode_dependency": "pd-af-disaggregation",
-        },
-    )
-    decode_attn_replica_config_attn_data_parallel_size: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": "Attention data parallel size for decode attention cluster.",
             "mode_dependency": "pd-af-disaggregation",
         },
     )
@@ -3220,13 +2706,6 @@ class ClusterConfig:
             "mode_dependency": "pd-af-disaggregation",
         },
     )
-    decode_ffn_replica_config_extend_ep_across_dp: Optional[bool] = field(
-        default=None,
-        metadata={
-            "help": "Whether to extend expert parallelism across data parallelism for decode FFN cluster.",
-            "mode_dependency": "pd-af-disaggregation",
-        },
-    )
     decode_ffn_replica_config_device: Optional[str] = field(
         default=None,
         metadata={
@@ -3261,13 +2740,6 @@ class ClusterConfig:
         default=None,
         metadata={
             "help": "Attention tensor parallel size for unified decode cluster.",
-            "mode_dependency": "pd-disaggregation",
-        },
-    )
-    decode_replica_config_attn_data_parallel_size: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": "Attention data parallel size for unified decode cluster.",
             "mode_dependency": "pd-disaggregation",
         },
     )
@@ -3310,13 +2782,6 @@ class ClusterConfig:
         default=None,
         metadata={
             "help": "Router topk for unified decode cluster.",
-            "mode_dependency": "pd-disaggregation",
-        },
-    )
-    decode_replica_config_extend_ep_across_dp: Optional[bool] = field(
-        default=None,
-        metadata={
-            "help": "Whether to extend expert parallelism across data parallelism for unified decode cluster.",
             "mode_dependency": "pd-disaggregation",
         },
     )
@@ -3391,14 +2856,6 @@ class ClusterConfig:
         },
     )
 
-    # Derived cross-cluster parameter propagated for DECODE_FFN scheduling
-    # For decode-ffn cluster: number of DP lanes sourced from DECODE_ATTN config
-    decode_attn_dp_lanes_for_ffn: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": "Derived lanes = decode-attn num_replicas * decode-attn DP size; used by decode-ffn grouping.",
-        },
-    )
     decode_attn_replica_id_start_for_ffn: Optional[int] = field(
         default=None,
         metadata={
@@ -3431,6 +2888,22 @@ class ClusterConfig:
             "help": "Max tokens in batch (max_num_batched_tokens) for prefill cluster replica scheduler.",
             "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
         },
+    )
+    prefill_replica_scheduler_config_enable_chunked_prefill: Optional[bool] = field(
+        default=None,
+        metadata={
+            "help": "Enable Chunked Prefill for the prefill cluster replica scheduler.",
+            "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
+        },
+    )
+    prefill_replica_scheduler_config_long_prefill_token_threshold: Optional[int] = (
+        field(
+            default=None,
+            metadata={
+                "help": "Long-prefill token threshold for the prefill cluster replica scheduler.",
+                "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
+            },
+        )
     )
     prefill_replica_scheduler_config_num_blocks: Optional[int] = field(
         default=None,
@@ -3814,42 +3287,6 @@ class ClusterConfig:
             "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
         },
     )
-    prefill_execution_time_predictor_config_moe_shuffling_calibration_scale: Optional[
-        float
-    ] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Override moe_shuffling calibration scale for the prefill cluster "
-                "execution-time predictor. Must be > 0."
-            ),
-            "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
-        },
-    )
-    prefill_execution_time_predictor_config_moe_grouped_gemm_calibration_scale: Optional[
-        float
-    ] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Override moe_grouped_gemm calibration scale for the prefill cluster "
-                "execution-time predictor. Must be > 0."
-            ),
-            "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
-        },
-    )
-    prefill_execution_time_predictor_config_expert_parallel_communication_calibration_scale: Optional[
-        float
-    ] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Override expert parallel communication calibration scale for "
-                "the prefill cluster execution-time predictor. Must be > 0."
-            ),
-            "mode_dependency": "pd-af-disaggregation,pd-disaggregation",
-        },
-    )
     prefill_execution_time_predictor_config_mlp_down_proj_calibration_scale: Optional[
         float
     ] = field(
@@ -4079,42 +3516,6 @@ class ClusterConfig:
             "help": (
                 "Override attn_kv_cache_save calibration scale for the decode cluster "
                 "execution-time predictor. Must be > 0."
-            ),
-            "mode_dependency": "pd-disaggregation",
-        },
-    )
-    decode_execution_time_predictor_config_moe_shuffling_calibration_scale: Optional[
-        float
-    ] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Override moe_shuffling calibration scale for the decode cluster "
-                "execution-time predictor. Must be > 0."
-            ),
-            "mode_dependency": "pd-disaggregation",
-        },
-    )
-    decode_execution_time_predictor_config_moe_grouped_gemm_calibration_scale: Optional[
-        float
-    ] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Override moe_grouped_gemm calibration scale for the decode cluster "
-                "execution-time predictor. Must be > 0."
-            ),
-            "mode_dependency": "pd-disaggregation",
-        },
-    )
-    decode_execution_time_predictor_config_expert_parallel_communication_calibration_scale: Optional[
-        float
-    ] = field(
-        default=None,
-        metadata={
-            "help": (
-                "Override expert parallel communication calibration scale for "
-                "the decode cluster execution-time predictor. Must be > 0."
             ),
             "mode_dependency": "pd-disaggregation",
         },
@@ -4600,11 +4001,10 @@ class ClusterConfig:
         # Set cluster type for monolithic mode
         self.cluster_type = ClusterType.MONOLITHIC
 
-        # Keep replica-local DP lanes aligned with attn_data_parallel_size in monolithic mode.
-        # Cluster-level scaling is already represented by num_replicas.
-        self.replica_config.data_parallel_size = (
-            self.replica_config.attn_data_parallel_size
-        )
+        # Predictor routing details are indexed by serving Replica identity.
+        # Keep that capacity dimension explicit instead of deriving it from
+        # attention-DP lanes.
+        self.replica_config.cluster_num_replicas = int(self.num_replicas)
 
         # Reuse the same parallel-domain validation used by disaggregated clusters so
         # monolithic MoE layouts fail fast when attention and MoE domains disagree.
@@ -4619,9 +4019,6 @@ class ClusterConfig:
         self.decode_attn_cluster_num_replicas = None
         self.decode_ffn_cluster_num_replicas = None
 
-        # if self.replica_config.extend_ep_across_dp:
-        #     assert self.replica_config.expert_parallel_size == self.replica_config.data_parallel_size * \
-        #         self.replica_config.tensor_parallel_size, "For global MoE, expert_parallel_size must be equal to data_parallel_size * tensor_parallel_size"
         # else:
         #     assert self.replica_config.expert_parallel_size == self.replica_config.tensor_parallel_size, "For local MoE, expert_parallel_size must be equal to tensor_parallel_size"
 
@@ -4710,22 +4107,6 @@ class ClusterConfig:
             self.decode_ffn_replica_config = self._create_replica_config_from_fields(
                 "decode_ffn"
             )
-
-            # Multiple DECODE_FFN replicas duplicate the full expert set for MoE.
-            # Dense models have no expert-set duplication and may use >1 replicas.
-            if (
-                self.decode_ffn_replica_config.model_config.is_moe
-                and self.decode_ffn_cluster_num_replicas != 1
-                and not self.allow_experiment_multi_decode_ffn_replicas
-            ):
-                raise ValueError(
-                    f"decode_ffn_cluster_num_replicas must be 1 for MoE models, got {self.decode_ffn_cluster_num_replicas}. "
-                    f"DP for the FFN cluster is not enabled by default because it causes "
-                    f"expert redundancy (each replica duplicates the full expert set). "
-                    f"Use expert parallelism (EP) within a single replica instead. "
-                    f"Set allow_experiment_multi_decode_ffn_replicas=True only for "
-                    f"explicit experiment-only studies."
-                )
 
             # Enforce disaggregation constraints
             assert (
@@ -4850,7 +4231,7 @@ class ClusterConfig:
             for cluster_type in self.periodic_scheduling_clusters
         ):
             return True
-        return bool(self.allow_experiment_multi_decode_ffn_replicas)
+        return False
 
     def _create_replica_config_from_fields(self, cluster_prefix: str) -> ReplicaConfig:
         """Create ReplicaConfig object from flattened fields."""
@@ -4873,22 +4254,20 @@ class ClusterConfig:
             num_pipeline_stages = 1
             router_load_balancing_type = None
             router_topk = None
-            extend_ep_across_dp = None
             moe_routing_distribution_type = get_field_value(
                 "moe_routing_distribution_type"
             )
             attn_tensor_parallel_size = get_field_value("attn_tensor_parallel_size")
-            attn_data_parallel_size = get_field_value("attn_data_parallel_size")
+            attn_dp = get_field_value("attn_dp")
         else:
             attn_tensor_parallel_size = get_field_value("attn_tensor_parallel_size")
-            attn_data_parallel_size = get_field_value("attn_data_parallel_size")
+            attn_dp = get_field_value("attn_dp")
             moe_tensor_parallel_size = get_field_value("moe_tensor_parallel_size")
             moe_expert_parallel_size = get_field_value("moe_expert_parallel_size")
             total_expert_num = get_field_value("total_expert_num")
             local_expert_num = get_field_value("local_expert_num")
             router_load_balancing_type = get_field_value("router_load_balancing_type")
             router_topk = get_field_value("router_topk")
-            extend_ep_across_dp = get_field_value("extend_ep_across_dp")
             moe_routing_distribution_type = get_field_value(
                 "moe_routing_distribution_type"
             )
@@ -4902,14 +4281,13 @@ class ClusterConfig:
             memory_margin_fraction=get_field_value("memory_margin_fraction"),
             num_pipeline_stages=num_pipeline_stages,
             attn_tensor_parallel_size=attn_tensor_parallel_size,
-            attn_data_parallel_size=attn_data_parallel_size,
+            attn_dp=attn_dp,
             moe_tensor_parallel_size=moe_tensor_parallel_size,
             moe_expert_parallel_size=moe_expert_parallel_size,
             total_expert_num=total_expert_num,
             local_expert_num=local_expert_num,
             router_load_balancing_type=router_load_balancing_type,
             router_topk=router_topk,
-            moe_routing_mode=get_field_value("moe_routing_mode"),
             moe_routing_seed=get_field_value("moe_routing_seed"),
             moe_routing_trace_path=get_field_value("moe_routing_trace_path"),
             decode_attn_initial_lane_trace_path=get_field_value(
@@ -4922,11 +4300,9 @@ class ClusterConfig:
                 "decode_attn_steady_state_measurement_report_path"
             ),
             moe_routing_distribution_type=moe_routing_distribution_type,
-            extend_ep_across_dp=extend_ep_across_dp,
             device=get_field_value("device"),
             network_device=get_field_value("network_device"),
             cluster_prefix=cluster_prefix,
-            data_parallel_size=attn_data_parallel_size,  # Set data_parallel_size for DP replica support
             speculative_decoding_config=main_config.speculative_decoding_config,
         )
 
@@ -4949,11 +4325,11 @@ class ClusterConfig:
         # Validate dense model configuration in disaggregated modes.
         is_dense_model = not replica_config.model_config.is_moe
         if is_dense_model and cluster_name in ["prefill", "decode"]:
-            # For dense models in PD-disaggregation mode, enforce attn_data_parallel_size = 1
-            if replica_config.attn_data_parallel_size != 1:
+            # For dense models in PD-disaggregation mode, enforce attn_dp = 1
+            if replica_config.attn_dp != 1:
                 raise ValueError(
-                    f"Dense models in PD-disaggregation mode require attn_data_parallel_size=1 "
-                    f"in {cluster_name} cluster, got {replica_config.attn_data_parallel_size}. "
+                    f"Dense models in PD-disaggregation mode require attn_dp=1 "
+                    f"in {cluster_name} cluster, got {replica_config.attn_dp}. "
                     f"Dense models do not support attn data parallelism in disaggregated mode."
                 )
             # Ensure MoE parallelism is disabled for dense models
@@ -4965,11 +4341,11 @@ class ClusterConfig:
                 )
 
         if is_dense_model and cluster_name == "decode_attn":
-            if replica_config.attn_data_parallel_size != 1:
+            if replica_config.attn_dp != 1:
                 raise ValueError(
-                    "Dense models require attn_data_parallel_size=1 in "
+                    "Dense models require attn_dp=1 in "
                     f"{cluster_name} cluster, got "
-                    f"{replica_config.attn_data_parallel_size}."
+                    f"{replica_config.attn_dp}."
                 )
 
         if is_dense_model and cluster_name == "decode_ffn":
@@ -4985,12 +4361,24 @@ class ClusterConfig:
                     f"cluster, got {replica_config.router_topk}."
                 )
 
-        if cluster_name in {"prefill", "decode", "monolithic"} and replica_config.model_config.is_moe:
+        normalized_cluster_name = str(cluster_name).strip().lower()
+        if (
+            normalized_cluster_name in {"prefill", "decode", "monolithic"}
+            and replica_config.model_config.is_moe
+            and replica_config.attn_dp != 1
+        ):
+            raise ValueError(
+                "MoE shared-domain roles require "
+                f"attn_dp=1 in {cluster_name} cluster, got "
+                f"{replica_config.attn_dp}."
+            )
+
+        if normalized_cluster_name in {"prefill", "decode", "monolithic"} and replica_config.model_config.is_moe:
             validate_frontier_shared_parallel_domains(
                 FrontierParallelismMapping(
                     cluster_num_replicas=1,
                     attn_tensor_parallel_size=replica_config.attn_tensor_parallel_size,
-                    attn_data_parallel_size=replica_config.attn_data_parallel_size,
+                    attn_dp=replica_config.attn_dp,
                     moe_tensor_parallel_size=replica_config.moe_tensor_parallel_size,
                     moe_expert_parallel_size=replica_config.moe_expert_parallel_size,
                 )
@@ -4998,10 +4386,6 @@ class ClusterConfig:
 
         if cluster_name != "decode_attn":
             pass
-            # if replica_config.extend_ep_across_dp:
-            #     # Assuming data parallelism for MoE is attn_data_parallel_size
-            #     assert replica_config.moe_expert_parallel_size == replica_config.attn_data_parallel_size * \
-            #         replica_config.moe_tensor_parallel_size, f"For global MoE in {cluster_name} cluster, moe_expert_parallel_size must be equal to attn_data_parallel_size * moe_tensor_parallel_size"
             # else:
             #     assert replica_config.moe_expert_parallel_size == replica_config.moe_tensor_parallel_size, f"For local MoE in {cluster_name} cluster, moe_expert_parallel_size must be equal to moe_tensor_parallel_size"
         else:
@@ -5190,13 +4574,13 @@ class ClusterConfig:
                 or cluster_name == "DECODE"
             ):
                 print(
-                    f"   Configuration: PP{replica_config.num_pipeline_stages} × (Attn_TP{replica_config.attn_tensor_parallel_size} x Attn_DP{replica_config.attn_data_parallel_size}) | (MoE_TP{replica_config.moe_tensor_parallel_size} x MoE_EP{replica_config.moe_expert_parallel_size})"
+                    f"   Configuration: PP{replica_config.num_pipeline_stages} × (Attn_TP{replica_config.attn_tensor_parallel_size} x Attn_DP{replica_config.attn_dp}) | (MoE_TP{replica_config.moe_tensor_parallel_size} x MoE_EP{replica_config.moe_expert_parallel_size})"
                 )
                 print(f"   Total Expert Num: {replica_config.total_expert_num}")
                 print(f"   Local Expert Num: {replica_config.local_expert_num}")
             elif cluster_name == "DECODE_ATTN":
                 print(
-                    f"   Configuration: PP{replica_config.num_pipeline_stages} × Attn_TP{replica_config.attn_tensor_parallel_size} x Attn_DP{replica_config.attn_data_parallel_size}"
+                    f"   Configuration: PP{replica_config.num_pipeline_stages} × Attn_TP{replica_config.attn_tensor_parallel_size} x Attn_DP{replica_config.attn_dp}"
                 )
             elif cluster_name == "DECODE_FFN":
                 print(
@@ -5237,6 +4621,8 @@ class ClusterConfig:
                 prefill_replica_scheduler_config_type=self.prefill_replica_scheduler_config_type,
                 prefill_replica_scheduler_config_batch_size_cap=self.prefill_replica_scheduler_config_batch_size_cap,
                 prefill_replica_scheduler_config_max_tokens_in_batch=self.prefill_replica_scheduler_config_max_tokens_in_batch,
+                prefill_replica_scheduler_config_enable_chunked_prefill=self.prefill_replica_scheduler_config_enable_chunked_prefill,
+                prefill_replica_scheduler_config_long_prefill_token_threshold=self.prefill_replica_scheduler_config_long_prefill_token_threshold,
                 prefill_replica_scheduler_config_num_blocks=self.prefill_replica_scheduler_config_num_blocks,
                 prefill_replica_scheduler_config_block_size=self.prefill_replica_scheduler_config_block_size,
                 prefill_replica_scheduler_config_watermark_blocks_fraction=self.prefill_replica_scheduler_config_watermark_blocks_fraction,
@@ -5302,21 +4688,9 @@ class ClusterConfig:
                 decode_ffn_replica_scheduler_config_block_size=self.decode_ffn_replica_scheduler_config_block_size,
                 decode_ffn_replica_scheduler_config_watermark_blocks_fraction=self.decode_ffn_replica_scheduler_config_watermark_blocks_fraction,
                 decode_attn_cluster_num_replicas=self.decode_attn_cluster_num_replicas,
-                decode_attn_replica_config_attn_data_parallel_size=(
-                    self.decode_attn_replica_config.attn_data_parallel_size
-                    if self.decode_attn_replica_config is not None
-                    else None
-                ),
-                allow_experiment_multi_decode_ffn_replicas=(
-                    self.allow_experiment_multi_decode_ffn_replicas
-                ),
             )
-            # Propagate DECODE_ATTN DP lanes for FFN grouping: dp_lanes = attn_num_replicas * attn_dp_size
-            attn_num_replicas = int(self.decode_attn_cluster_num_replicas)
-            attn_dp_size = int(self.decode_attn_replica_config.attn_data_parallel_size)
-            decode_ffn_config.decode_attn_dp_lanes_for_ffn = max(
-                1, attn_num_replicas * attn_dp_size
-            )
+            # Propagate only the source Attention-Replica capacity.  AFD
+            # grouping is Replica-level; it must not manufacture DP lanes.
             decode_ffn_config.decode_attn_replica_id_start_for_ffn = int(
                 self.prefill_cluster_num_replicas
             )
@@ -5362,9 +4736,6 @@ class ClusterConfig:
             "mlp_up_proj_calibration_scale",
             "mlp_down_proj_calibration_scale",
             "decode_phase_mlp_down_proj_calibration_scale",
-            "moe_shuffling_calibration_scale",
-            "moe_grouped_gemm_calibration_scale",
-            "expert_parallel_communication_calibration_scale",
         ):
             override_field = (
                 f"{cluster_prefix}_execution_time_predictor_config_"
@@ -5680,16 +5051,14 @@ class ClusterConfig:
             memory_margin_fraction=original_config.memory_margin_fraction,
             num_pipeline_stages=original_config.num_pipeline_stages,
             attn_tensor_parallel_size=original_config.attn_tensor_parallel_size,
-            attn_data_parallel_size=original_config.attn_data_parallel_size,
+            attn_dp=original_config.attn_dp,
             moe_tensor_parallel_size=original_config.moe_tensor_parallel_size,
             moe_expert_parallel_size=original_config.moe_expert_parallel_size,
             total_expert_num=original_config.total_expert_num,
-            data_parallel_size=original_config.data_parallel_size,
             router_load_balancing_type=original_config.router_load_balancing_type,
             router_topk=original_config.router_topk,
-            extend_ep_across_dp=original_config.extend_ep_across_dp,
-            moe_routing_mode=original_config.moe_routing_mode,
             moe_routing_seed=original_config.moe_routing_seed,
+            moe_routing_distribution_type=original_config.moe_routing_distribution_type,
             moe_routing_trace_path=original_config.moe_routing_trace_path,
             decode_attn_initial_lane_trace_path=(
                 original_config.decode_attn_initial_lane_trace_path
@@ -5752,16 +5121,6 @@ class SimulationConfig(ABC):
         metadata={
             "help": "Comparison-only opt-in for speculative decode CUDA graph "
             "diagnostics. Keeps the default speculative baseline eager-only.",
-        },
-    )
-    enable_monolithic_moe_stage_aggregation: bool = field(
-        default=False,
-        metadata={
-            "help": (
-                "Enable MONOLITHIC MoE accelerated stage-level execution. "
-                "When true, co-location MoE prefill/decode uses aggregated "
-                "stage timing instead of layer-by-layer sync events."
-            ),
         },
     )
     cudagraph_capture_sizes: Optional[List[int]] = field(
@@ -5969,12 +5328,7 @@ class SimulationConfig(ABC):
         self._validate_simulation_mode_arch_compatibility()
         self._validate_thinking_mode_config()
         self._validate_sequential_checkpoint_observer_config()
-        self._validate_monolithic_moe_stage_aggregation_config()
-
         global_vars.set_global_vars(self.simulation_mode, self.sys_arch)
-        global_vars.set_monolithic_moe_stage_aggregation(
-            self.enable_monolithic_moe_stage_aggregation
-        )
         self._validate_cuda_graph_config()
         global_vars.set_cuda_graph_config(
             self.use_cuda_graph,
@@ -6046,16 +5400,11 @@ class SimulationConfig(ABC):
                 value = getattr(replica_config, field_name, "")
                 if value is not None and str(value).strip():
                     configured_fields.add(field_name)
-            if (
-                str(getattr(replica_config, "moe_routing_mode", ""))
-                .strip()
-                .lower()
-                == "trace_driven"
-            ):
+            if str(getattr(replica_config, "moe_routing_trace_path", "")).strip():
                 trace_driven = True
 
         if trace_driven:
-            configured_fields.add("moe_routing_mode='trace_driven'")
+            configured_fields.add("moe_routing_trace_path")
         if not configured_fields:
             return
 
@@ -6106,16 +5455,6 @@ class SimulationConfig(ABC):
         Validate supported simulation-mode/system-architecture combinations.
         """
         pass
-
-    def _validate_monolithic_moe_stage_aggregation_config(self) -> None:
-        if (
-            self.enable_monolithic_moe_stage_aggregation
-            and self.sys_arch != "co-location"
-        ):
-            raise ValueError(
-                "enable_monolithic_moe_stage_aggregation is supported only for "
-                "sys_arch='co-location'."
-            )
 
     def _validate_thinking_mode_config(self) -> None:
         if self.thinking_depth < 1:

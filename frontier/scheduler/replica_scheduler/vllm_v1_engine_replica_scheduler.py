@@ -17,6 +17,7 @@ Reference:
 """
 
 from collections import deque
+from dataclasses import dataclass, replace
 import json
 import logging
 from math import ceil
@@ -31,6 +32,8 @@ from frontier.entities.batch import (
     Request,
     SpecDecodeBatchMetadata,
 )
+from frontier.kv_cache.base_kv_cache_manager import KVCacheAllocationResult
+from frontier.kv_cache.kv_cache_block import KVCacheBlock, KVCacheBlockBinding
 from frontier.kv_cache.replica_kv_cache_manager import ReplicaKVCacheManager
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
@@ -44,6 +47,13 @@ from frontier.spec_decode import (
 )
 from frontier.types import ClusterType
 
+
+_REQUEST_PROGRESS_PRESERVING_PREEMPTION_CLUSTER_TYPES = frozenset(
+    {
+        ClusterType.DECODE,
+        ClusterType.DECODE_ATTN,
+    }
+)
 
 _FRONTIER_VLLM_V1_SCHED_DECISION_LOG_PATH = os.environ.get(
     "FRONTIER_VLLM_V1_SCHED_DECISION_LOG_PATH", ""
@@ -70,6 +80,29 @@ def _log_frontier_vllm_v1_schedule_decision(event: Dict[str, Any]) -> None:
     if _frontier_vllm_v1_sched_decision_logger is None:
         return
     _frontier_vllm_v1_sched_decision_logger.info(json.dumps(event))
+
+
+@dataclass(frozen=True)
+class PrefixCacheAdmission:
+    raw_hit_blocks: tuple[KVCacheBlock, ...]
+    effective_hit_blocks: tuple[KVCacheBlock, ...]
+    raw_hit_bindings: tuple[KVCacheBlockBinding, ...]
+    effective_hit_bindings: tuple[KVCacheBlockBinding, ...]
+    raw_cached_tokens: int
+    effective_cached_tokens: int
+    num_new_tokens: int
+    full_hit_backoff_applied: bool
+
+
+def _serialize_prefix_cache_binding(
+    binding: KVCacheBlockBinding,
+) -> Dict[str, Any]:
+    return {
+        "block_hash": binding.block_hash,
+        "block_id": int(binding.block_id),
+        "creator_request_id": str(binding.creator_request_id),
+        "binding_epoch": int(binding.binding_epoch),
+    }
 
 
 class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
@@ -242,6 +275,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
 
         self._schedule_iteration_id = 0
         self._active_schedule_iteration_id = -1
+        self._prefix_cache_identity_event_seq = 0
         self._decode_attn_next_cohort_id = 0
         self._current_iteration_token_budget = 0
         self._prefill_iteration_reserved_slots_remaining = 0
@@ -1335,7 +1369,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                     f"request_id={request.id}, "
                     f"source_cluster={self._cluster_type.name}, "
                     f"source_replica={self._replica_id}, "
-                    f"source_dp={self._dp_id}"
+                    f"source_dp={self._replica_local_id}"
                 )
 
             if request.id in self._allocation_map:
@@ -1379,9 +1413,18 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
 
     def _prepare_prefix_cache_admission(
         self, request: Request
-    ) -> Tuple[List[object], int, int]:
+    ) -> PrefixCacheAdmission:
         if not self._is_prefix_caching_enabled():
-            return [], 0, self._get_request_next_num_tokens(request)
+            return PrefixCacheAdmission(
+                raw_hit_blocks=(),
+                effective_hit_blocks=(),
+                raw_hit_bindings=(),
+                effective_hit_bindings=(),
+                raw_cached_tokens=0,
+                effective_cached_tokens=0,
+                num_new_tokens=self._get_request_next_num_tokens(request),
+                full_hit_backoff_applied=False,
+            )
         if request.block_hash_ids is None:
             raise ValueError(
                 "block_hash_ids are required when enable_prefix_caching=True"
@@ -1390,13 +1433,176 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         computed_blocks, num_computed_tokens = self._kv_cache_manager.get_computed_blocks(
             request
         )
+        raw_hit_blocks = tuple(computed_blocks)
+        raw_hit_bindings: list[KVCacheBlockBinding] = []
+        query_hashes = list(request.block_hash_ids)
+        for query_index, block in enumerate(raw_hit_blocks):
+            binding = block.binding
+            if binding is None:
+                raise ValueError(
+                    f"Prefix cache hit block {block.block_id} has no binding identity."
+                )
+            if binding.block_hash != query_hashes[query_index]:
+                raise ValueError(
+                    "Prefix cache hit binding disagrees with ordered query hash: "
+                    f"query_index={query_index}, "
+                    f"query_hash={query_hashes[query_index]!r}, "
+                    f"binding_hash={binding.block_hash!r}"
+                )
+            raw_hit_bindings.append(binding)
+        raw_cached_tokens = int(num_computed_tokens)
         num_new_tokens = int(request.num_prefill_tokens) - int(num_computed_tokens)
+        full_hit_backoff_applied = False
         if num_new_tokens == 0 and computed_blocks:
             num_computed_tokens -= int(self._config.block_size)
             num_new_tokens = int(self._config.block_size)
             computed_blocks = list(computed_blocks[:-1])
             self._kv_cache_manager.prefix_cache_stats.hits -= 1
-        return computed_blocks, int(num_computed_tokens), int(num_new_tokens)
+            full_hit_backoff_applied = True
+        return PrefixCacheAdmission(
+            raw_hit_blocks=raw_hit_blocks,
+            effective_hit_blocks=tuple(computed_blocks),
+            raw_hit_bindings=tuple(raw_hit_bindings),
+            effective_hit_bindings=tuple(
+                raw_hit_bindings[: len(computed_blocks)]
+            ),
+            raw_cached_tokens=raw_cached_tokens,
+            effective_cached_tokens=int(num_computed_tokens),
+            num_new_tokens=int(num_new_tokens),
+            full_hit_backoff_applied=full_hit_backoff_applied,
+        )
+
+    def _prefix_cache_identity_event_base(
+        self,
+        *,
+        event: str,
+        request: Request,
+    ) -> Dict[str, Any]:
+        event_seq = int(self._prefix_cache_identity_event_seq)
+        self._prefix_cache_identity_event_seq = event_seq + 1
+        cluster_name = (
+            self._cluster_type.name
+            if self._cluster_type is not None
+            else ClusterType.MONOLITHIC.name
+        )
+        replica_local_id = self._replica_local_id
+        if replica_local_id is not None and (
+            type(replica_local_id) is not int or replica_local_id < 0
+        ):
+            raise ValueError(
+                "Prefix cache identity replica_local_id must be None or an "
+                f"exact non-negative int, got {replica_local_id!r}"
+            )
+        return {
+            "event": event,
+            "prefix_identity_schema_version": 1,
+            "source": "frontier",
+            "scheduler": "vllm_v1",
+            "cluster_type": cluster_name,
+            "replica_id": int(self._replica_id),
+            "replica_local_id": replica_local_id,
+            "iteration_id": int(self._active_schedule_iteration_id),
+            "identity_event_seq": event_seq,
+            "request_id": str(request.id),
+            "prefix_cache_block_size": int(self._config.block_size),
+            "simulation_time": float(self._current_schedule_time),
+            "simulation_time_semantics": "frontier_event_time_seconds",
+        }
+
+    def _serialize_prefix_cache_hit_bindings(
+        self,
+        *,
+        request: Request,
+        bindings: Sequence[KVCacheBlockBinding],
+    ) -> List[Dict[str, Any]]:
+        query_hashes = list(request.block_hash_ids or [])
+        if len(bindings) > len(query_hashes):
+            raise ValueError(
+                "Prefix cache hit count exceeds the ordered query hash count."
+            )
+        rows: List[Dict[str, Any]] = []
+        for query_index, binding in enumerate(bindings):
+            if binding.block_hash != query_hashes[query_index]:
+                raise ValueError(
+                    "Prefix cache hit binding disagrees with ordered query hash: "
+                    f"query_index={query_index}, "
+                    f"query_hash={query_hashes[query_index]!r}, "
+                    f"binding_hash={binding.block_hash!r}"
+                )
+            rows.append(
+                {
+                    "query_index": query_index,
+                    **_serialize_prefix_cache_binding(binding),
+                }
+            )
+        return rows
+
+    def _emit_prefix_cache_identity_events(
+        self,
+        *,
+        request: Request,
+        num_new_tokens: int,
+        allocation: KVCacheAllocationResult,
+        admission: Optional[PrefixCacheAdmission],
+    ) -> None:
+        if admission is not None:
+            admission_payload = self._prefix_cache_identity_event_base(
+                event="prefix_cache_admission",
+                request=request,
+            )
+            admission_payload.update(
+                {
+                    "query_hashes": list(request.block_hash_ids or []),
+                    "raw_hit_blocks": self._serialize_prefix_cache_hit_bindings(
+                        request=request,
+                        bindings=admission.raw_hit_bindings,
+                    ),
+                    "admitted_hit_blocks": self._serialize_prefix_cache_hit_bindings(
+                        request=request,
+                        bindings=admission.effective_hit_bindings,
+                    ),
+                    "raw_cached_tokens": int(admission.raw_cached_tokens),
+                    "admitted_cached_tokens": int(
+                        admission.effective_cached_tokens
+                    ),
+                    "num_new_tokens": int(num_new_tokens),
+                    "full_hit_backoff_applied": bool(
+                        admission.full_hit_backoff_applied
+                    ),
+                }
+            )
+            _log_frontier_vllm_v1_schedule_decision(admission_payload)
+
+        allocation_payload = self._prefix_cache_identity_event_base(
+            event="prefix_cache_allocation",
+            request=request,
+        )
+        reused_blocks: List[Dict[str, Any]] = []
+        for block in allocation.reused_blocks:
+            binding = block.binding
+            if binding is None:
+                raise ValueError(
+                    f"Reused Prefix cache block {block.block_id} has no binding identity."
+                )
+            reused_blocks.append(_serialize_prefix_cache_binding(binding))
+        allocation_payload.update(
+            {
+                "num_new_tokens": int(num_new_tokens),
+                "reused_blocks": reused_blocks,
+                "new_block_ids": [
+                    int(block.block_id) for block in allocation.new_blocks
+                ],
+                "evicted_bindings": [
+                    _serialize_prefix_cache_binding(binding)
+                    for binding in allocation.evicted_bindings
+                ],
+                "new_bindings": [
+                    _serialize_prefix_cache_binding(binding)
+                    for binding in allocation.new_bindings
+                ],
+            }
+        )
+        _log_frontier_vllm_v1_schedule_decision(allocation_payload)
 
     def _build_decode_cuda_graph_metadata(
         self, batch: Batch
@@ -2597,6 +2803,8 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         request: Request,
         num_new_tokens: int = 1,
         new_computed_blocks=None,
+        *,
+        scheduler_num_computed_tokens: Optional[int] = None,
     ) -> bool:
         """
         Check if memory can be allocated for a request.
@@ -2617,6 +2825,11 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 request,
                 num_new_tokens,
                 new_computed_blocks=new_computed_blocks,
+                scheduler_num_computed_tokens=(
+                    self._get_scheduler_num_computed_tokens(request)
+                    if scheduler_num_computed_tokens is None
+                    else scheduler_num_computed_tokens
+                ),
             )
 
         reserved_tokens = self._get_num_tokens_for_kv_reservation(
@@ -2656,7 +2869,10 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         request: Request,
         num_new_tokens: int = 1,
         new_computed_blocks=None,
-    ) -> None:
+        prefix_cache_admission: Optional[PrefixCacheAdmission] = None,
+        *,
+        scheduler_num_computed_tokens: Optional[int] = None,
+    ) -> Optional[KVCacheAllocationResult]:
         """
         Allocate memory blocks for a request.
 
@@ -2667,22 +2883,54 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             request: The request to allocate for
             num_new_tokens: Number of new tokens being processed
         """
+        if type(num_new_tokens) is not int or num_new_tokens <= 0:
+            raise ValueError(
+                "num_new_tokens must be a positive integer, "
+                f"got {num_new_tokens!r}"
+            )
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None
         )
         if self._is_prefix_caching_enabled():
             assert self._kv_cache_manager is not None
-            allocated_blocks = self._kv_cache_manager.allocate_slots(
+            computed_blocks = list(new_computed_blocks or [])
+            if prefix_cache_admission is not None:
+                expected_blocks = prefix_cache_admission.effective_hit_blocks
+                if len(computed_blocks) != len(expected_blocks) or any(
+                    actual is not expected
+                    for actual, expected in zip(computed_blocks, expected_blocks)
+                ):
+                    raise ValueError(
+                        "Committed Prefix cache admission blocks differ from "
+                        "the allocation input."
+                    )
+                if int(num_new_tokens) != int(prefix_cache_admission.num_new_tokens):
+                    raise ValueError(
+                        "Committed Prefix cache admission token count differs "
+                        "from the allocation input."
+                    )
+            allocation = self._kv_cache_manager.allocate_slots(
                 request,
                 num_new_tokens,
-                new_computed_blocks=new_computed_blocks,
+                new_computed_blocks=computed_blocks,
+                scheduler_num_computed_tokens=(
+                    self._get_scheduler_num_computed_tokens(request)
+                    if scheduler_num_computed_tokens is None
+                    else scheduler_num_computed_tokens
+                ),
             )
-            if allocated_blocks is None:
+            if allocation is None:
                 raise ValueError(
                     f"Failed to allocate prefix-cache-managed KV blocks for request {request.id}"
                 )
             self._sync_prefix_cache_allocation_state(request)
-            return
+            self._emit_prefix_cache_identity_events(
+                request=request,
+                num_new_tokens=num_new_tokens,
+                allocation=allocation,
+                admission=prefix_cache_admission,
+            )
+            return allocation
 
         reserved_tokens = self._get_num_tokens_for_kv_reservation(
             request, num_new_tokens
@@ -2700,7 +2948,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 f"[VLLMv1Engine] Allocated {num_required_blocks} blocks for request {request.id} "
                 f"(scheduled_tokens={num_new_tokens}, reserved_tokens={reserved_tokens})"
             )
-            return
+            return None
 
         # Running request - check if additional blocks needed
         num_tokens_reserved = self._allocation_map[request.id] * self._config.block_size
@@ -2710,11 +2958,12 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         )
 
         if num_tokens_required <= 0:
-            return
+            return None
 
         # Allocate additional blocks
         num_additional_blocks = ceil(num_tokens_required / self._config.block_size)
         self.allocate(request.id, num_additional_blocks)
+        return None
 
     # ========== Preemption Logic ==========
 
@@ -2823,12 +3072,15 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             self._free_request_resources(victim)
 
         # Mark as preempted and reset the scheduler-visible computed frontier.
-        # DECODE_ATTN requests arrive after the PREFILL handoff in PD-AF mode;
-        # their Request-level token lifecycle must survive memory preemption.
-        # Rewinding `_num_processed_tokens` there would contradict
-        # `is_prefill_complete` and discard the handoff-emitted output token.
+        # Disaggregated decode requests arrive after PREFILL has completed and
+        # the prompt KV frontier has transferred to the decode-side cluster.
+        # Their Request-level token lifecycle must survive memory preemption;
+        # only scheduler-local computed state and KV allocation are restarted.
         victim._preempted = True
-        if self._cluster_type != ClusterType.DECODE_ATTN:
+        if (
+            self._cluster_type
+            not in _REQUEST_PROGRESS_PRESERVING_PREEMPTION_CLUSTER_TYPES
+        ):
             victim._num_processed_tokens = 0  # Reset computed tokens as in vLLM v1
         self._scheduled_num_computed_tokens_by_request.pop(victim.id, None)
 
@@ -2886,7 +3138,12 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         )
 
     def _try_allocate_with_preemption(
-        self, request: Request, num_new_tokens: int, preempted_requests: List[Request]
+        self,
+        request: Request,
+        num_new_tokens: int,
+        preempted_requests: List[Request],
+        *,
+        scheduler_num_computed_tokens: Optional[int] = None,
     ) -> bool:
         """
         Try to allocate memory for a request, preempting other requests if necessary.
@@ -2906,8 +3163,23 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         )
 
         while True:
-            if self._can_allocate_request(request, num_new_tokens):
-                self._allocate_request(request, num_new_tokens)
+            if scheduler_num_computed_tokens is None:
+                can_allocate = self._can_allocate_request(request, num_new_tokens)
+            else:
+                can_allocate = self._can_allocate_request(
+                    request,
+                    num_new_tokens,
+                    scheduler_num_computed_tokens=scheduler_num_computed_tokens,
+                )
+            if can_allocate:
+                if scheduler_num_computed_tokens is None:
+                    self._allocate_request(request, num_new_tokens)
+                else:
+                    self._allocate_request(
+                        request,
+                        num_new_tokens,
+                        scheduler_num_computed_tokens=scheduler_num_computed_tokens,
+                    )
                 return True
 
             if not self._enable_preemption:
@@ -3063,9 +3335,10 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             num_new_tokens = self._get_request_next_num_tokens(request)
 
             # Apply max_model_len limit
-            max_allowed = self._max_model_len - self._get_scheduler_num_computed_tokens(
+            scheduler_num_computed_tokens = self._get_scheduler_num_computed_tokens(
                 request
             )
+            max_allowed = self._max_model_len - scheduler_num_computed_tokens
             num_new_tokens = min(num_new_tokens, max_allowed)
             num_new_tokens = self._apply_long_prefill_token_threshold(
                 request, num_new_tokens
@@ -3098,7 +3371,10 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             # Try to allocate with preemption
             preempted_count_before = len(preempted_requests)
             can_schedule = self._try_allocate_with_preemption(
-                request, num_new_tokens, preempted_requests
+                request,
+                num_new_tokens,
+                preempted_requests,
+                scheduler_num_computed_tokens=scheduler_num_computed_tokens,
             )
             token_budget = self._rollback_current_iteration_preempted_requests(
                 scheduled_requests=scheduled,
@@ -3314,20 +3590,27 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             )
             computed_blocks = None
             prefix_cached_tokens = 0
+            prefix_cache_admission: Optional[PrefixCacheAdmission] = None
+            scheduler_num_computed_tokens = self._get_scheduler_num_computed_tokens(
+                request
+            )
 
             # Calculate number of new tokens to process
             if self._is_prefix_caching_enabled() and not request.is_prefill_complete:
-                (
-                    computed_blocks,
-                    prefix_cached_tokens,
-                    num_new_tokens,
-                ) = self._prepare_prefix_cache_admission(request)
+                prefix_cache_admission = self._prepare_prefix_cache_admission(
+                    request
+                )
+                computed_blocks = list(
+                    prefix_cache_admission.effective_hit_blocks
+                )
+                prefix_cached_tokens = int(
+                    prefix_cache_admission.effective_cached_tokens
+                )
+                num_new_tokens = int(prefix_cache_admission.num_new_tokens)
                 max_allowed = self._max_model_len - prefix_cached_tokens
             else:
                 num_new_tokens = self._get_request_next_num_tokens(request)
-                max_allowed = self._max_model_len - self._get_scheduler_num_computed_tokens(
-                    request
-                )
+                max_allowed = self._max_model_len - scheduler_num_computed_tokens
 
             # Apply max_model_len limit
             num_new_tokens = min(num_new_tokens, max_allowed)
@@ -3390,6 +3673,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 request,
                 num_new_tokens,
                 new_computed_blocks=computed_blocks,
+                scheduler_num_computed_tokens=scheduler_num_computed_tokens,
             ):
                 # Flow validation: log memory pressure for waiting queue admission
                 available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
@@ -3424,6 +3708,15 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 request,
                 num_new_tokens,
                 new_computed_blocks=computed_blocks,
+                prefix_cache_admission=(
+                    replace(
+                        prefix_cache_admission,
+                        num_new_tokens=int(num_new_tokens),
+                    )
+                    if prefix_cache_admission is not None
+                    else None
+                ),
+                scheduler_num_computed_tokens=scheduler_num_computed_tokens,
             )
             if prefix_cached_tokens > 0:
                 request.on_cache_hit(prefix_cached_tokens)
@@ -4139,9 +4432,10 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             num_new_tokens = self._get_request_next_num_tokens(request)
 
             # Apply max_model_len limit
-            max_allowed = self._max_model_len - self._get_scheduler_num_computed_tokens(
+            scheduler_num_computed_tokens = self._get_scheduler_num_computed_tokens(
                 request
             )
+            max_allowed = self._max_model_len - scheduler_num_computed_tokens
             num_new_tokens = min(num_new_tokens, max_allowed)
 
             # Apply token budget limit
@@ -4157,7 +4451,11 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 continue
 
             # Try to allocate (no preemption for waiting requests in Phase 2)
-            if not self._can_allocate_request(request, num_new_tokens):
+            if not self._can_allocate_request(
+                request,
+                num_new_tokens,
+                scheduler_num_computed_tokens=scheduler_num_computed_tokens,
+            ):
                 # Cannot allocate - stop admitting new requests
                 logger.debug(
                     f"[VLLMv1Engine][DECODE] Phase 2: cannot allocate "
@@ -4176,7 +4474,11 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 self._current_schedule_time, self._cluster_type
             )
 
-            self._allocate_request(request, num_new_tokens)
+            self._allocate_request(
+                request,
+                num_new_tokens,
+                scheduler_num_computed_tokens=scheduler_num_computed_tokens,
+            )
             self._advance_scheduler_num_computed_tokens(request, num_new_tokens)
 
             # Add to running requests
@@ -4494,7 +4796,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 stage_reqs_start_loc = list(range(num_reqs + 1))
 
             afd_stage_metadata = None
-            if self._cluster_type == ClusterType.DECODE_ATTN and num_stages > 1:
+            if self._cluster_type == ClusterType.DECODE_ATTN and num_stages > 0:
                 from frontier.config import global_vars
                 from frontier.entities.batch import AFDStageMetadata
 
@@ -4600,7 +4902,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
 
         # Get num_stages from cluster config (af_pipeline_num_micro_batch)
         num_stages = self._af_pipeline_num_micro_batch
-        if num_stages is None or num_stages <= 1:
+        if num_stages is None or num_stages <= 0:
             return batch
 
         if self._cluster_type != ClusterType.DECODE_ATTN:
@@ -4695,7 +4997,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         running_len = len(self._running_requests)
 
         logger.info(
-            f"[RS-IDLE-CHECK][replica={self._replica_id}][dp={self._dp_id}] "
+            f"[RS-IDLE-CHECK][replica={self._replica_id}][dp={self._replica_local_id}] "
             f"num_pending_requests={self.num_pending_requests}, waiting_requests={waiting_len}, "
             f"running_requests={running_len}, allocated_blocks={len(self._allocation_map)}, "
             f"num_running_batches={self._num_running_batches}, stages_empty={stages_empty}, af_immediate_len={af_len}"

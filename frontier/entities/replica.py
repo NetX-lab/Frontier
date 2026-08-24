@@ -193,17 +193,6 @@ class Replica(BaseEntity):
     def router_load_balancing_type(self) -> str:
         return self._replica_config.router_load_balancing_type
 
-    @property
-    def extend_ep_across_dp(self) -> bool:
-        if not self.is_moe:
-            return False
-        return self._replica_config.extend_ep_across_dp
-
-    @property
-    def dp_size(self) -> int:
-        """Get the data parallel size (number of DP replicas within this replica)."""
-        return self._replica_config.attn_data_parallel_size
-
     def to_dict(self) -> dict:
         return {
             "id": self.id,

@@ -11,13 +11,13 @@ from pathlib import Path
 class FrontierParallelismMapping:
     cluster_num_replicas: int
     attn_tensor_parallel_size: int
-    attn_data_parallel_size: int
+    attn_dp: int
     moe_tensor_parallel_size: int
     moe_expert_parallel_size: int
 
     @property
     def attention_parallel_size(self) -> int:
-        return self.attn_tensor_parallel_size * self.attn_data_parallel_size
+        return self.attn_tensor_parallel_size * self.attn_dp
 
     @property
     def moe_parallel_size(self) -> int:
@@ -65,6 +65,11 @@ def _validate_positive(name: str, value: int) -> int:
 def validate_frontier_shared_parallel_domains(
     mapping: FrontierParallelismMapping,
 ) -> None:
+    if mapping.attn_dp != 1:
+        raise ValueError(
+            "Frontier shared attention/MoE parallel domain requires "
+            "attn_dp=1"
+        )
     if mapping.attention_parallel_size != mapping.moe_parallel_size:
         raise ValueError(
             "Frontier shared attention/MoE parallel domain requires "
@@ -76,7 +81,7 @@ def resolve_frontier_parallelism_mapping(
     *,
     model_profile: str,
     tensor_parallel_size: int,
-    data_parallel_size: int,
+    num_replicas: int,
     enable_expert_parallel: bool,
 ) -> FrontierParallelismMapping:
     normalized_model_profile = str(model_profile).strip().lower()
@@ -86,35 +91,35 @@ def resolve_frontier_parallelism_mapping(
         )
 
     resolved_tp = _validate_positive("tensor_parallel_size", tensor_parallel_size)
-    resolved_dp = _validate_positive("data_parallel_size", data_parallel_size)
+    resolved_num_replicas = _validate_positive("num_replicas", num_replicas)
 
     if normalized_model_profile == "dense":
         if enable_expert_parallel:
             raise ValueError("Dense models do not support expert parallel")
         return FrontierParallelismMapping(
-            cluster_num_replicas=resolved_dp,
+            cluster_num_replicas=resolved_num_replicas,
             attn_tensor_parallel_size=resolved_tp,
-            attn_data_parallel_size=1,
+            attn_dp=1,
             moe_tensor_parallel_size=1,
             moe_expert_parallel_size=1,
         )
 
+    # ``num_replicas`` is the outer serving-capacity dimension. A
+    # Replica never owns an attention-DP lane; MoE EP is always local to one
+    # Replica and therefore must not absorb the Replica count.
     if enable_expert_parallel:
-        mapping = FrontierParallelismMapping(
-            cluster_num_replicas=1,
-            attn_tensor_parallel_size=resolved_tp,
-            attn_data_parallel_size=resolved_dp,
-            moe_tensor_parallel_size=1,
-            moe_expert_parallel_size=resolved_tp * resolved_dp,
-        )
+        moe_tensor_parallel_size = 1
+        moe_expert_parallel_size = resolved_tp
     else:
-        mapping = FrontierParallelismMapping(
-            cluster_num_replicas=1,
-            attn_tensor_parallel_size=resolved_tp,
-            attn_data_parallel_size=resolved_dp,
-            moe_tensor_parallel_size=resolved_tp * resolved_dp,
-            moe_expert_parallel_size=1,
-        )
+        moe_tensor_parallel_size = resolved_tp
+        moe_expert_parallel_size = 1
+    mapping = FrontierParallelismMapping(
+        cluster_num_replicas=resolved_num_replicas,
+        attn_tensor_parallel_size=resolved_tp,
+        attn_dp=1,
+        moe_tensor_parallel_size=moe_tensor_parallel_size,
+        moe_expert_parallel_size=moe_expert_parallel_size,
+    )
 
     validate_frontier_shared_parallel_domains(mapping)
     return mapping
@@ -137,7 +142,7 @@ def build_collective_sim_layout(
             cp=resolved_pp,
             dp=_validate_positive(
                 "attention_dp",
-                mapping.attn_data_parallel_size * mapping.cluster_num_replicas,
+                mapping.cluster_num_replicas,
             ),
             ep=1,
         )

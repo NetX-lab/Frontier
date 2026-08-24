@@ -16,7 +16,7 @@ class DecodeSyncEvent(BaseEvent):
         replica_id: int,
         stage_id: int,
         batch: Batch,
-        dp_id: int,
+        replica_local_id: int | None,
         sync_stage: str,
         layer_id: int,
         stage_execution_time: float,
@@ -27,7 +27,7 @@ class DecodeSyncEvent(BaseEvent):
         self._replica_id = replica_id
         self._stage_id = stage_id
         self._batch = batch
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
         self._sync_stage = sync_stage
         self._layer_id = layer_id
         self._stage_execution_time = stage_execution_time
@@ -43,7 +43,8 @@ class DecodeSyncEvent(BaseEvent):
         logger.info(
             f"[DECODE_SYNC][EVENT][{self._sync_stage}] t={self.time:.6f}s, "
             f"batch_id={self._batch.id}, global_id={self._batch.global_id}, "
-            f"requests={request_ids}, replica={self._replica_id}, dp={self._dp_id}, "
+            f"requests={request_ids}, replica={self._replica_id}, "
+            f"replica_local_id={self._replica_local_id}, "
             f"stage={self._stage_id}, layer={self._layer_id}, "
             f"stage_exec_time={self._stage_execution_time}"
         )
@@ -56,7 +57,7 @@ class DecodeSyncEvent(BaseEvent):
             self._replica_id,
             self._stage_id,
             self._batch,
-            self._dp_id,
+            self._replica_local_id,
             self._sync_stage,
             self._layer_id,
             self._stage_execution_time,
@@ -74,9 +75,8 @@ class DecodeSyncEvent(BaseEvent):
             "replica_id": self._replica_id,
             "stage_id": self._stage_id,
             "batch_id": self._batch.id,
-            "dp_id": self._dp_id,
+            "replica_local_id": self._replica_local_id,
             "sync_stage": self._sync_stage,
             "layer_id": self._layer_id,
             "stage_execution_time": self._stage_execution_time,
         }
-

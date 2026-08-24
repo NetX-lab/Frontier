@@ -84,7 +84,7 @@ class _DummyReplicaConfig:
     moe_tensor_parallel_size = 1
     moe_expert_parallel_size = 1
     attn_tensor_parallel_size = 2
-    attn_data_parallel_size = 1
+    attn_dp = 1
     num_pipeline_stages = 1
     router_topk = 1
     model_config = None
@@ -98,9 +98,12 @@ class _DummyClusterConfig:
 
 class _DummyBatchStage:
     def __init__(self) -> None:
+        self.id = 29
         self._batch_id = 17
         self.request_ids = [101]
+        self.request_runtime_epochs = [0]
         self.num_tokens = [1]
+        self.request_num_prefill_tokens = [1]
         self.scheduled_at = 0.0
         self.execution_time = 0.0
         self.tokens_are_post_routing = False
@@ -366,7 +369,7 @@ def test_operation_metrics_record_mla_attention_ops() -> None:
         batch_stage=_DummyBatchStage(),
         execution_time=execution_time,
         cluster_type=ClusterType.MONOLITHIC,
-        dp_id=0,
+        replica_local_id=0,
     )
 
     per_batch = metrics_store._operation_metrics_per_batch[ClusterType.MONOLITHIC]
@@ -448,7 +451,7 @@ def test_operation_metrics_dense_attention_uses_shared_mapper(monkeypatch) -> No
         batch_stage=_DummyBatchStage(),
         execution_time=execution_time,
         cluster_type=ClusterType.MONOLITHIC,
-        dp_id=0,
+        replica_local_id=0,
     )
 
     per_batch = metrics_store._operation_metrics_per_batch[ClusterType.MONOLITHIC]
@@ -490,7 +493,7 @@ def test_frontier_stage_batch_ledger_uses_structured_mla_operator_times() -> Non
         replica_id=0,
         stage_id=0,
         cluster_type=ClusterType.MONOLITHIC,
-        dp_id=0,
+        replica_local_id=0,
         stage_end_time=1.0,
     )
 
@@ -502,7 +505,9 @@ def test_frontier_stage_batch_ledger_uses_structured_mla_operator_times() -> Non
     assert component_ledger["attn_mla_decode_time"] == pytest.approx(0.10)
     assert component_ledger["attn_mla_v_up_proj_time"] == pytest.approx(0.12)
     assert sum(component_ledger.values()) == pytest.approx(0.42)
+    assert row["batch_stage_id"] == 29
     assert row["execution_time"]["total_time_ms"] == pytest.approx(0.42)
+    assert row["request_num_prefill_tokens"] == [1]
 
 
 def test_op_level_tracing_generates_metadata_for_structured_mla_ops() -> None:

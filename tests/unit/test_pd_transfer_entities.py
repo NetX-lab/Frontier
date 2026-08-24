@@ -16,7 +16,8 @@ def test_kv_cache_transfer_info_computes_end_time_effective_bytes_and_dict() -> 
         source_cluster_type=ClusterType.PREFILL,
         target_cluster_type=ClusterType.DECODE,
         source_replica_id=3,
-        source_dp_id=2,
+        source_replica_local_id=2,
+        source_batch_stage_id=41,
         kv_cache_size_bytes=4096,
         transfer_time_ms=2.5,
         transfer_start_time=7.0,
@@ -37,6 +38,8 @@ def test_kv_cache_transfer_info_computes_end_time_effective_bytes_and_dict() -> 
     assert data["source_cluster_type"] == "PREFILL"
     assert data["target_cluster_type"] == "DECODE"
     assert data["source_replica_id"] == 3
+    assert data["source_batch_stage_id"] == 41
+    assert data["target_batch_stage_id"] is None
     assert data["kv_cache_size_bytes"] == 4096
     assert data["effective_data_size_bytes"] == 2048
     assert data["transfer_time_ms"] == pytest.approx(2.5)
@@ -58,7 +61,7 @@ def test_m2n_transfer_info_validates_direction_and_sets_pipeline_stage() -> None
         source_cluster_type=ClusterType.DECODE_ATTN,
         target_cluster_type=ClusterType.DECODE_FFN,
         source_replica_id=4,
-        source_dp_id=1,
+        source_replica_local_id=1,
         activation_size_bytes=8192,
         transfer_time_ms=1.2,
         transfer_start_time=9.0,
@@ -82,7 +85,7 @@ def test_m2n_transfer_info_validates_direction_and_sets_pipeline_stage() -> None
     assert data["source_cluster_type"] == "DECODE_ATTN"
     assert data["target_cluster_type"] == "DECODE_FFN"
     assert data["source_replica_id"] == 4
-    assert data["source_dp_id"] == 1
+    assert data["source_replica_local_id"] == 1
     assert data["activation_size_bytes"] == 8192
     assert data["effective_data_size_bytes"] == 2048
     assert data["transfer_time_ms"] == pytest.approx(1.2)
@@ -110,7 +113,7 @@ def test_m2n_transfer_info_rejects_non_m2n_cluster_pairs() -> None:
             source_cluster_type=ClusterType.PREFILL,
             target_cluster_type=ClusterType.DECODE,
             source_replica_id=0,
-            source_dp_id=0,
+            source_replica_local_id=0,
             activation_size_bytes=1,
             transfer_time_ms=0.1,
             transfer_start_time=0.0,
@@ -138,7 +141,7 @@ def test_m2n_transfer_info_rejects_nonexact_cluster_types(
         "source_cluster_type": ClusterType.DECODE_ATTN,
         "target_cluster_type": ClusterType.DECODE_FFN,
         "source_replica_id": 0,
-        "source_dp_id": 0,
+        "source_replica_local_id": 0,
         "activation_size_bytes": 1,
         "transfer_time_ms": 0.1,
         "transfer_start_time": 0.0,
@@ -157,10 +160,11 @@ def test_kv_cache_transfer_start_event_targets_decode_cluster_for_routing() -> N
     event = KVCacheTransferStartEvent(
         time=1.0,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
         source_cluster_type=ClusterType.PREFILL,
         target_cluster_type=ClusterType.DECODE,
         batch=batch,
+        source_batch_stage_id=303,
         kv_cache_size_bytes=1024,
         transfer_time_ms=0.5,
     )
@@ -169,6 +173,15 @@ def test_kv_cache_transfer_start_event_targets_decode_cluster_for_routing() -> N
 
     assert event.get_target_cluster() is ClusterType.DECODE
     assert simulator._determine_target_cluster(event) is ClusterType.DECODE
+    captured = {}
+    metrics_store = SimpleNamespace(
+        on_kv_cache_transfer_start=lambda *_args: captured.setdefault(
+            "transfer_info", _args[-1]
+        )
+    )
+    next_events = event.handle_event(None, metrics_store)
+    assert next_events[0]._transfer_info.source_batch_stage_id == 303
+    assert event.to_dict()["source_batch_stage_id"] == 303
 
 
 def test_transfer_info_without_compression_preserves_original_size() -> None:
@@ -180,7 +193,8 @@ def test_transfer_info_without_compression_preserves_original_size() -> None:
         source_cluster_type=ClusterType.PREFILL,
         target_cluster_type=ClusterType.DECODE,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
+        source_batch_stage_id=42,
         kv_cache_size_bytes=0,
         transfer_time_ms=0.0,
         transfer_start_time=3.0,
@@ -193,7 +207,7 @@ def test_transfer_info_without_compression_preserves_original_size() -> None:
         source_cluster_type=ClusterType.DECODE_FFN,
         target_cluster_type=ClusterType.DECODE_ATTN,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
         activation_size_bytes=128,
         transfer_time_ms=0.0,
         transfer_start_time=3.5,

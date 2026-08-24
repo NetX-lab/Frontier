@@ -2,10 +2,25 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Iterable
+from dataclasses import dataclass
 from typing import Hashable, Optional
 
-from frontier.kv_cache.kv_cache_block import KVCacheBlock
+from frontier.kv_cache.kv_cache_block import KVCacheBlock, KVCacheBlockBinding
 from frontier.kv_cache.kv_cache_block_queue import FreeKVCacheBlockQueue
+
+
+@dataclass(frozen=True)
+class BlockPoolAllocation:
+    blocks: tuple[KVCacheBlock, ...]
+    evicted_bindings: tuple[KVCacheBlockBinding, ...]
+
+
+def _require_nonnegative_int(value: int, *, field: str) -> int:
+    if type(value) is not int or value < 0:
+        raise ValueError(
+            f"{field} must be a non-negative integer, got {value!r}"
+        )
+    return value
 
 
 class BlockPool:
@@ -37,33 +52,50 @@ class BlockPool:
             return 0.0
         return self.get_num_used_blocks() / self.num_gpu_blocks
 
-    def _maybe_evict_cached_block(self, block: KVCacheBlock) -> bool:
+    def _maybe_evict_cached_block(
+        self, block: KVCacheBlock
+    ) -> Optional[KVCacheBlockBinding]:
         block_hash = block.block_hash
         if block_hash is None:
-            return False
+            return None
         cached_blocks = self.cached_block_hash_to_block.get(block_hash)
         if not cached_blocks or block.block_id not in cached_blocks:
-            return False
+            raise ValueError(
+                "KV cache block binding is absent from the cache index: "
+                f"block_id={block.block_id}, block_hash={block_hash!r}"
+            )
+        binding = block.binding
+        if binding is None:
+            raise ValueError(
+                f"Cached KV block {block.block_id} has no binding identity."
+            )
         del cached_blocks[block.block_id]
         if not cached_blocks:
             del self.cached_block_hash_to_block[block_hash]
-        block.reset_hash()
+        block.reset_binding()
         self.eviction_count += 1
-        return True
+        return binding
 
-    def get_new_blocks(self, num_blocks: int) -> list[KVCacheBlock]:
+    def get_new_blocks(self, num_blocks: int) -> BlockPoolAllocation:
+        _require_nonnegative_int(num_blocks, field="num_blocks")
         if num_blocks > self.get_num_free_blocks():
             raise ValueError(
                 f"Cannot allocate {num_blocks} KV blocks from pool with {self.get_num_free_blocks()} free blocks."
             )
         new_blocks: list[KVCacheBlock] = []
+        evicted_bindings: list[KVCacheBlockBinding] = []
         while len(new_blocks) < num_blocks:
             block = self.free_block_queue.popleft()
             if self.enable_caching:
-                self._maybe_evict_cached_block(block)
+                evicted_binding = self._maybe_evict_cached_block(block)
+                if evicted_binding is not None:
+                    evicted_bindings.append(evicted_binding)
             block.incr_ref()
             new_blocks.append(block)
-        return new_blocks
+        return BlockPoolAllocation(
+            blocks=tuple(new_blocks),
+            evicted_bindings=tuple(evicted_bindings),
+        )
 
     def touch(self, blocks: list[KVCacheBlock]) -> None:
         for block in blocks:
@@ -84,12 +116,21 @@ class BlockPool:
         block_hashes: list[Hashable],
         num_cached_blocks: int,
         num_full_blocks: int,
-    ) -> None:
+        creator_request_id: int,
+    ) -> tuple[KVCacheBlockBinding, ...]:
         if num_cached_blocks >= num_full_blocks:
-            return
+            return ()
         upper_bound = min(num_full_blocks, len(block_hashes))
+        new_bindings: list[KVCacheBlockBinding] = []
         for block_index in range(num_cached_blocks, upper_bound):
             block = blocks[block_index]
             if block.block_hash is None:
-                block.block_hash = block_hashes[block_index]
-                self.cached_block_hash_to_block[block.block_hash][block.block_id] = block
+                binding = block.bind(
+                    block_hashes[block_index],
+                    creator_request_id=creator_request_id,
+                )
+                self.cached_block_hash_to_block[binding.block_hash][
+                    binding.block_id
+                ] = block
+                new_bindings.append(binding)
+        return tuple(new_bindings)

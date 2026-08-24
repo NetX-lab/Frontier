@@ -6,7 +6,7 @@ from math import ceil
 from typing import Optional
 
 from frontier.entities.request import Request
-from frontier.kv_cache.kv_cache_block import KVCacheBlock
+from frontier.kv_cache.kv_cache_block import KVCacheBlock, KVCacheBlockBinding
 from frontier.kv_cache.kv_cache_block_pool import BlockPool
 
 
@@ -16,6 +16,30 @@ class PrefixCacheStats:
     requests: int = 0
     queries: int = 0
     hits: int = 0
+
+
+@dataclass(frozen=True)
+class KVCacheAllocationResult:
+    reused_blocks: tuple[KVCacheBlock, ...]
+    new_blocks: tuple[KVCacheBlock, ...]
+    evicted_bindings: tuple[KVCacheBlockBinding, ...]
+    new_bindings: tuple[KVCacheBlockBinding, ...]
+
+
+def _require_positive_int(value: int, *, field: str) -> int:
+    if type(value) is not int or value <= 0:
+        raise ValueError(
+            f"{field} must be a positive integer, got {value!r}"
+        )
+    return value
+
+
+def _require_nonnegative_int(value: int, *, field: str) -> int:
+    if type(value) is not int or value < 0:
+        raise ValueError(
+            f"{field} must be a non-negative integer, got {value!r}"
+        )
+    return value
 
 
 class KVCacheManager:
@@ -61,6 +85,19 @@ class KVCacheManager:
     def _get_request_block_hashes(self, request: Request) -> list[int]:
         return list(request.block_hash_ids or [])
 
+    def _resolve_scheduler_num_computed_tokens(
+        self,
+        request: Request,
+        scheduler_num_computed_tokens: Optional[int],
+    ) -> int:
+        """Resolve the scheduler frontier before this allocation."""
+        if scheduler_num_computed_tokens is None:
+            return int(request.num_processed_tokens)
+        return _require_nonnegative_int(
+            scheduler_num_computed_tokens,
+            field="scheduler_num_computed_tokens",
+        )
+
     def get_computed_blocks(self, request: Request) -> tuple[list[KVCacheBlock], int]:
         if not self.enable_caching:
             return [], 0
@@ -83,14 +120,16 @@ class KVCacheManager:
         request: Request,
         num_tokens: int,
         new_computed_blocks: Optional[list[KVCacheBlock]] = None,
+        *,
+        scheduler_num_computed_tokens: Optional[int] = None,
     ) -> int:
-        if num_tokens <= 0:
-            raise ValueError("num_tokens must be > 0")
+        _require_positive_int(num_tokens, field="num_tokens")
 
         computed_blocks = new_computed_blocks or []
-        num_computed_tokens = int(request.num_processed_tokens) + len(
-            computed_blocks
-        ) * self.block_size
+        num_computed_tokens = self._resolve_scheduler_num_computed_tokens(
+            request,
+            scheduler_num_computed_tokens,
+        ) + len(computed_blocks) * self.block_size
         num_required_blocks = ceil((num_computed_tokens + num_tokens) / self.block_size)
         current_blocks = self.req_to_blocks[request.id]
         return num_required_blocks - len(current_blocks) - len(computed_blocks)
@@ -100,11 +139,14 @@ class KVCacheManager:
         request: Request,
         num_tokens: int,
         new_computed_blocks: Optional[list[KVCacheBlock]] = None,
+        *,
+        scheduler_num_computed_tokens: Optional[int] = None,
     ) -> bool:
         num_new_blocks = self._get_num_new_blocks_required(
             request,
             num_tokens,
             new_computed_blocks,
+            scheduler_num_computed_tokens=scheduler_num_computed_tokens,
         )
         evictable_computed_blocks = sum(
             1 for block in (new_computed_blocks or []) if block.ref_cnt == 0
@@ -118,9 +160,16 @@ class KVCacheManager:
         request: Request,
         num_tokens: int,
         new_computed_blocks: Optional[list[KVCacheBlock]] = None,
-    ) -> Optional[list[KVCacheBlock]]:
+        *,
+        scheduler_num_computed_tokens: Optional[int] = None,
+    ) -> Optional[KVCacheAllocationResult]:
         computed_blocks = list(new_computed_blocks or [])
-        if not self.can_allocate_slots(request, num_tokens, computed_blocks):
+        if not self.can_allocate_slots(
+            request,
+            num_tokens,
+            computed_blocks,
+            scheduler_num_computed_tokens=scheduler_num_computed_tokens,
+        ):
             return None
 
         if self.enable_caching:
@@ -134,35 +183,51 @@ class KVCacheManager:
             request,
             num_tokens,
             computed_blocks,
+            scheduler_num_computed_tokens=scheduler_num_computed_tokens,
         )
         request_blocks = self.req_to_blocks[request.id]
         request_blocks.extend(computed_blocks)
+        evicted_bindings: tuple[KVCacheBlockBinding, ...] = ()
         if num_new_blocks > 0:
             num_new_blocks = min(
                 num_new_blocks + self.num_preallocate_blocks,
                 self.block_pool.get_num_free_blocks(),
             )
-            new_blocks = self.block_pool.get_new_blocks(num_new_blocks)
+            pool_allocation = self.block_pool.get_new_blocks(num_new_blocks)
+            new_blocks = list(pool_allocation.blocks)
+            evicted_bindings = pool_allocation.evicted_bindings
             request_blocks.extend(new_blocks)
         else:
             new_blocks = []
 
         if not self.enable_caching:
-            return new_blocks
+            return KVCacheAllocationResult(
+                reused_blocks=tuple(computed_blocks),
+                new_blocks=tuple(new_blocks),
+                evicted_bindings=evicted_bindings,
+                new_bindings=(),
+            )
 
-        num_computed_tokens = int(request.num_processed_tokens) + len(
-            computed_blocks
-        ) * self.block_size
+        num_computed_tokens = self._resolve_scheduler_num_computed_tokens(
+            request,
+            scheduler_num_computed_tokens,
+        ) + len(computed_blocks) * self.block_size
         num_full_blocks = (num_computed_tokens + num_tokens) // self.block_size
         num_cached_blocks = self.num_cached_blocks.get(request.id, len(computed_blocks))
-        self.block_pool.cache_full_blocks(
+        new_bindings = self.block_pool.cache_full_blocks(
             blocks=request_blocks,
             block_hashes=self._get_request_block_hashes(request),
             num_cached_blocks=num_cached_blocks,
             num_full_blocks=num_full_blocks,
+            creator_request_id=request.id,
         )
         self.num_cached_blocks[request.id] = num_full_blocks
-        return new_blocks
+        return KVCacheAllocationResult(
+            reused_blocks=tuple(computed_blocks),
+            new_blocks=tuple(new_blocks),
+            evicted_bindings=evicted_bindings,
+            new_bindings=new_bindings,
+        )
 
     def free(self, request: Request) -> None:
         request_blocks = self.req_to_blocks.pop(request.id, [])

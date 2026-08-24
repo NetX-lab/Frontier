@@ -242,8 +242,8 @@ def _case_parallelism(case: Mapping[str, Any]) -> GoldenParallelism:
         attn_tensor_parallel_size=int(
             raw_parallelism.get("attn_tensor_parallel_size", 1)
         ),
-        attn_data_parallel_size=int(
-            raw_parallelism.get("attn_data_parallel_size", 1)
+        attn_dp=int(
+            raw_parallelism.get("attn_dp", 1)
         ),
         moe_tensor_parallel_size=int(
             raw_parallelism.get("moe_tensor_parallel_size", 1)
@@ -265,16 +265,14 @@ def _colocation_flags(parallelism: GoldenParallelism) -> list[str]:
         "h800",
         "--replica_config_attn_tensor_parallel_size",
         str(parallelism.attn_tensor_parallel_size),
-        "--replica_config_attn_data_parallel_size",
-        str(parallelism.attn_data_parallel_size),
         "--replica_config_moe_tensor_parallel_size",
         str(parallelism.moe_tensor_parallel_size),
         "--replica_config_moe_expert_parallel_size",
         str(parallelism.moe_expert_parallel_size),
         "--replica_config_num_pipeline_stages",
         str(parallelism.num_pipeline_stages),
-        "--replica_config_moe_routing_mode",
-        "uniform_random",
+        "--replica_config_moe_routing_distribution_type",
+        "random",
         "--replica_config_moe_routing_seed",
         "42",
     ]
@@ -295,8 +293,6 @@ def _pdd_flags(parallelism: GoldenParallelism) -> list[str]:
         "h800",
         "--cluster_config_prefill_replica_config_attn_tensor_parallel_size",
         str(parallelism.attn_tensor_parallel_size),
-        "--cluster_config_prefill_replica_config_attn_data_parallel_size",
-        str(parallelism.attn_data_parallel_size),
         "--cluster_config_prefill_replica_config_moe_tensor_parallel_size",
         str(parallelism.moe_tensor_parallel_size),
         "--cluster_config_prefill_replica_config_moe_expert_parallel_size",
@@ -305,8 +301,6 @@ def _pdd_flags(parallelism: GoldenParallelism) -> list[str]:
         str(parallelism.num_pipeline_stages),
         "--cluster_config_decode_replica_config_attn_tensor_parallel_size",
         str(parallelism.attn_tensor_parallel_size),
-        "--cluster_config_decode_replica_config_attn_data_parallel_size",
-        str(parallelism.attn_data_parallel_size),
         "--cluster_config_decode_replica_config_moe_tensor_parallel_size",
         str(parallelism.moe_tensor_parallel_size),
         "--cluster_config_decode_replica_config_moe_expert_parallel_size",
@@ -315,8 +309,8 @@ def _pdd_flags(parallelism: GoldenParallelism) -> list[str]:
         str(parallelism.num_pipeline_stages),
         "--replica_config_device",
         "h800",
-        "--replica_config_moe_routing_mode",
-        "uniform_random",
+        "--replica_config_moe_routing_distribution_type",
+        "random",
         "--replica_config_moe_routing_seed",
         "42",
         "--analytical_kv_cache_transfer_config_network_bandwidth_gbps",

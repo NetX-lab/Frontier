@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from copy import deepcopy
 import csv
+from enum import Enum
+import logging
 import math
 from pathlib import Path
 from numbers import Real
@@ -19,8 +21,20 @@ from frontier.model_architectures import (
     ExpertParallelCollective,
     ModelArchitectureProfile,
 )
+from frontier.moe_ep_workload import (
+    LayerEPWorkload,
+    build_contiguous_expert_ownership,
+    materialize_layer_ep_workload,
+    resolve_routing_details,
+)
 from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
     ReplicaSchedulerRegistry,
+)
+from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
+    EP_WAVE,
+    FULL_STAGE_WORLD,
+    StageAdmissionTicket,
+    StageExecutionContext,
 )
 from frontier.types import (
     ClusterType,
@@ -28,6 +42,9 @@ from frontier.types import (
     ReplicaSchedulerType,
     RequestGeneratorType,
 )
+
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from frontier.kv_cache_transfer import BaseKVCacheTransferPredictor
@@ -57,9 +74,19 @@ def resolve_ep_collective_kind(
             "model_config.get_model_architecture_profile() must return "
             "ModelArchitectureProfile"
         )
-    if profile.uses_expert_parallel_alltoall(cluster_type, expected_ep_size):
-        return ExpertParallelCollective.ALLTOALL
-    return ExpertParallelCollective.ALLGATHER
+    if not profile.uses_expert_parallel_alltoall(cluster_type, expected_ep_size):
+        raise ValueError(
+            f"Model architecture profile {profile.profile_id} does not support "
+            f"EP collectives for {cluster_type.name}"
+        )
+    return profile.expert_parallel_collective
+
+
+class M2NLaneIdentityScope(Enum):
+    """Replica-local identity rule for one M2N lane contract."""
+
+    FULL_STAGE = "full_stage"
+    REPLICA_LOCAL = "replica_local"
 
 
 class EPBatchGroupPlan(NamedTuple):
@@ -77,6 +104,832 @@ class EPBatchGroupPlan(NamedTuple):
 
 
 class BaseClusterScheduler(ABC):
+    @staticmethod
+    def get_pipeline_stage_layer_bounds(
+        stage_id: int,
+        num_layers_per_pipeline_stage: int,
+    ) -> tuple[int, int]:
+        """Return the global half-open layer range owned by one PP stage."""
+
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError(
+                "pipeline stage_id must be an exact non-negative int, "
+                f"got {stage_id!r}"
+            )
+        if (
+            type(num_layers_per_pipeline_stage) is not int
+            or num_layers_per_pipeline_stage <= 0
+        ):
+            raise ValueError(
+                "num_layers_per_pipeline_stage must be an exact positive int, "
+                f"got {num_layers_per_pipeline_stage!r}"
+            )
+        first_layer_id = stage_id * num_layers_per_pipeline_stage
+        return first_layer_id, first_layer_id + num_layers_per_pipeline_stage
+
+    @staticmethod
+    def _aggregate_decode_ffn_afd_metadata(
+        source_batches: List[Batch] | Tuple[Batch, ...],
+    ) -> tuple[Any | None, bool]:
+        """Aggregate AFD metadata for one synthetic DECODE_FFN batch.
+
+        DECODE_FFN groups may combine source batches from multiple attention
+        Replicas.  The synthetic target batch therefore needs the sum of each
+        source batch's already-padded stage tokens, rather than one arbitrary
+        source metadata object.  All source batches must agree on the metadata
+        configuration and on whether they represent one stage or a macro wave.
+        """
+
+        from frontier.entities.batch import AFDStageMetadata
+
+        if type(source_batches) not in (list, tuple) or not source_batches:
+            raise ValueError(
+                "DECODE_FFN metadata aggregation requires a non-empty "
+                "source-batch list or tuple"
+            )
+
+        metadata_entries = []
+        representation_flags = []
+        missing_metadata = False
+        for index, source_batch in enumerate(source_batches):
+            if not isinstance(source_batch, Batch):
+                raise TypeError(
+                    "DECODE_FFN metadata aggregation requires Batch instances, "
+                    f"got {type(source_batch).__name__} at index {index}"
+                )
+            metadata = getattr(source_batch, "afd_stage_metadata", None)
+            if metadata is None:
+                missing_metadata = True
+                continue
+            if type(metadata) is not AFDStageMetadata:
+                raise TypeError(
+                    "DECODE_FFN source afd_stage_metadata must be an exact "
+                    f"AFDStageMetadata, got {type(metadata).__name__}"
+                )
+            represents_all_stages = getattr(
+                source_batch,
+                "afd_stage_represents_all_stages",
+                False,
+            )
+            if type(represents_all_stages) is not bool:
+                raise TypeError(
+                    "DECODE_FFN source afd_stage_represents_all_stages must be "
+                    f"an exact bool, got {represents_all_stages!r}"
+                )
+            metadata_entries.append(metadata)
+            representation_flags.append(represents_all_stages)
+
+        if not metadata_entries:
+            return None, False
+        if missing_metadata:
+            raise ValueError(
+                "DECODE_FFN source batches must either all provide "
+                "afd_stage_metadata or all omit it"
+            )
+        if len(set(representation_flags)) != 1:
+            raise ValueError(
+                "DECODE_FFN source batches disagree on "
+                "afd_stage_represents_all_stages"
+            )
+
+        first = metadata_entries[0]
+        scalar_fields = (
+            "num_stages",
+            "attention_use_cuda_graph",
+            "ffn_use_cuda_graph",
+            "attention_cudagraph_capture_sizes",
+            "ffn_cudagraph_capture_sizes",
+        )
+        for metadata in metadata_entries[1:]:
+            for field_name in scalar_fields:
+                if getattr(metadata, field_name) != getattr(first, field_name):
+                    raise ValueError(
+                        "DECODE_FFN source AFD metadata configuration mismatch: "
+                        f"field={field_name!r}"
+                    )
+
+        num_stages = first.num_stages
+        if type(num_stages) is not int or num_stages <= 0:
+            raise ValueError(
+                "DECODE_FFN source AFD metadata num_stages must be an exact "
+                f"positive int, got {num_stages!r}"
+            )
+
+        vector_fields = (
+            ("original_stage_token_lens", False),
+            ("padded_stage_token_lens", True),
+            ("ffn_compute_stage_token_lens", True),
+        )
+        vector_totals: dict[str, List[int]] = {}
+        for field_name, require_full_length in vector_fields:
+            vectors = []
+            for metadata in metadata_entries:
+                vector = getattr(metadata, field_name)
+                if type(vector) is not list:
+                    raise ValueError(
+                        "DECODE_FFN source AFD metadata field must be an exact "
+                        f"list: field={field_name!r}, got {type(vector).__name__}"
+                    )
+                if require_full_length and len(vector) != num_stages:
+                    raise ValueError(
+                        "DECODE_FFN source AFD metadata stage vector length "
+                        f"must equal num_stages: field={field_name!r}, "
+                        f"length={len(vector)}, num_stages={num_stages}"
+                    )
+                if len(vector) > num_stages:
+                    raise ValueError(
+                        "DECODE_FFN source AFD metadata stage vector exceeds "
+                        f"num_stages: field={field_name!r}, length={len(vector)}, "
+                        f"num_stages={num_stages}"
+                    )
+                if any(type(value) is not int or value < 0 for value in vector):
+                    raise ValueError(
+                        "DECODE_FFN source AFD metadata stage vector must contain "
+                        f"exact non-negative ints: field={field_name!r}"
+                    )
+                vectors.append(vector)
+
+            max_length = max(len(vector) for vector in vectors)
+            aggregate = [
+                sum(
+                    vector[index] if index < len(vector) else 0
+                    for vector in vectors
+                )
+                for index in range(max_length)
+            ]
+            vector_totals[field_name] = aggregate
+
+        scalar_token_fields = (
+            "original_total_tokens",
+            "padded_total_tokens",
+            "ffn_compute_total_tokens",
+        )
+        scalar_token_totals = {}
+        for field_name in scalar_token_fields:
+            values = [getattr(metadata, field_name) for metadata in metadata_entries]
+            if any(type(value) is not int or value < 0 for value in values):
+                raise ValueError(
+                    "DECODE_FFN source AFD metadata token totals must be exact "
+                    f"non-negative ints: field={field_name!r}"
+                )
+            scalar_token_totals[field_name] = sum(values)
+
+        aggregated = AFDStageMetadata(
+            num_stages=num_stages,
+            original_total_tokens=scalar_token_totals["original_total_tokens"],
+            padded_total_tokens=scalar_token_totals["padded_total_tokens"],
+            ffn_compute_total_tokens=scalar_token_totals[
+                "ffn_compute_total_tokens"
+            ],
+            original_stage_token_lens=vector_totals["original_stage_token_lens"],
+            padded_stage_token_lens=vector_totals["padded_stage_token_lens"],
+            ffn_compute_stage_token_lens=vector_totals[
+                "ffn_compute_stage_token_lens"
+            ],
+            attention_use_cuda_graph=first.attention_use_cuda_graph,
+            attention_cudagraph_capture_sizes=(
+                list(first.attention_cudagraph_capture_sizes)
+                if first.attention_cudagraph_capture_sizes is not None
+                else None
+            ),
+            ffn_use_cuda_graph=first.ffn_use_cuda_graph,
+            ffn_cudagraph_capture_sizes=(
+                list(first.ffn_cudagraph_capture_sizes)
+                if first.ffn_cudagraph_capture_sizes is not None
+                else None
+            ),
+        )
+        return aggregated, representation_flags[0]
+
+    @staticmethod
+    def _resolve_ep_trace_identity(
+        ep_batches: Dict[int, Any],
+        batch_global_id: int,
+    ) -> tuple[int, int]:
+        """Resolve one logical batch/layer identity for a completed EP wave."""
+
+        if not isinstance(ep_batches, dict) or not ep_batches:
+            raise ValueError("EP trace identity requires a non-empty batch map")
+        if type(batch_global_id) is not int or batch_global_id < 0:
+            raise ValueError(
+                "EP trace identity batch_global_id must be a non-negative int"
+            )
+
+        layer_ids: set[int] = set()
+        source_id_lists: list[tuple[int, ...]] = []
+        for ep_id, ep_batch in ep_batches.items():
+            if type(ep_id) is not int or ep_id < 0:
+                raise ValueError(f"EP trace identity has invalid ep_id={ep_id!r}")
+            layer_id = getattr(ep_batch, "decode_ffn_layer_id", None)
+            if type(layer_id) is not int or layer_id < 0:
+                raise ValueError(
+                    "EP trace identity requires decode_ffn_layer_id on every lane"
+                )
+            layer_ids.add(layer_id)
+            raw_source_ids = getattr(ep_batch, "source_batch_ids", None)
+            if not isinstance(raw_source_ids, (list, tuple)):
+                raise ValueError(
+                    "EP trace identity requires source_batch_ids on every lane"
+                )
+            source_ids = tuple(raw_source_ids)
+            if any(type(source_id) is not int or source_id < 0 for source_id in source_ids):
+                raise ValueError(
+                    "EP trace identity source_batch_ids must be non-negative ints"
+                )
+            source_id_lists.append(source_ids)
+
+        if len(layer_ids) != 1:
+            raise ValueError(
+                f"EP trace identity has inconsistent layer IDs: {sorted(layer_ids)}"
+            )
+        logical_batch_id = batch_global_id
+        if source_id_lists and all(len(ids) == 1 for ids in source_id_lists):
+            source_ids = {ids[0] for ids in source_id_lists}
+            if len(source_ids) == 1:
+                logical_batch_id = next(iter(source_ids))
+        return logical_batch_id, next(iter(layer_ids))
+
+    @staticmethod
+    def _build_ep_trace_identity(
+        *,
+        batch: Any,
+        replica_id: int,
+        stage_id: int,
+        operation_id: int,
+        operation_kind: str,
+        afd_stage_idx: int | None = None,
+    ) -> dict[str, Any]:
+        """Build the structured identity attached to every EP trace record."""
+
+        if type(replica_id) is not int or replica_id < 0:
+            raise ValueError("EP trace replica_id must be a non-negative int")
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError("EP trace stage_id must be a non-negative int")
+        if type(operation_id) is not int or operation_id < 0:
+            raise ValueError("EP trace operation_id must be a non-negative int")
+        if not isinstance(operation_kind, str) or not operation_kind.strip():
+            raise ValueError("EP trace operation_kind must be a non-empty string")
+
+        source_batches = getattr(batch, "source_batches", None)
+        if source_batches is not None:
+            if not isinstance(source_batches, (list, tuple)) or not source_batches:
+                raise ValueError(
+                    "EP trace source_batches must be a non-empty list or tuple"
+                )
+            source_requests = []
+            for source_batch in source_batches:
+                requests_for_source = getattr(source_batch, "requests", None)
+                if not isinstance(requests_for_source, (list, tuple)) or not requests_for_source:
+                    raise ValueError(
+                        "EP trace source batch must carry a non-empty request list"
+                    )
+                source_requests.extend(requests_for_source)
+            requests = source_requests
+        else:
+            requests = getattr(batch, "requests", None)
+        if not isinstance(requests, (list, tuple)) or not requests:
+            raise ValueError("EP trace identity requires a non-empty request list")
+        request_ids = [getattr(request, "id", None) for request in requests]
+        if any(type(request_id) is not int or request_id < 0 for request_id in request_ids):
+            raise ValueError("EP trace request_ids must be non-negative ints")
+        if len(set(request_ids)) != len(request_ids):
+            raise ValueError("EP trace request_ids must be unique")
+
+        raw_epochs = None
+        if source_batches is not None:
+            raw_epochs = [
+                int(runtime_epoch)
+                for source_batch in source_batches
+                for runtime_epoch in getattr(
+                    source_batch,
+                    "request_runtime_epochs",
+                    [],
+                )
+            ]
+        if not isinstance(raw_epochs, (list, tuple)) or len(raw_epochs) != len(request_ids):
+            raw_epochs = getattr(batch, "request_runtime_epochs", None)
+        if not isinstance(raw_epochs, (list, tuple)):
+            raw_epochs = [
+                getattr(request, "runtime_epoch", None) for request in requests
+            ]
+        request_runtime_epochs = list(raw_epochs)
+        if len(request_runtime_epochs) != len(request_ids) or any(
+            type(epoch) is not int or epoch < 0
+            for epoch in request_runtime_epochs
+        ):
+            raise ValueError(
+                "EP trace request_runtime_epochs must align with request_ids"
+            )
+
+        iteration_ids = []
+        for request in requests:
+            token_index = getattr(request, "current_decode_token_index", None)
+            if type(token_index) is not int or token_index < 1:
+                raise ValueError(
+                    "EP trace request current_decode_token_index must be >= 1"
+                )
+            iteration_ids.append(token_index - 1)
+
+        schedule_epoch = getattr(batch, "schedule_epoch", 0)
+        if type(schedule_epoch) is not int or schedule_epoch < 0:
+            raise ValueError("EP trace schedule_epoch must be a non-negative int")
+        if afd_stage_idx is None:
+            afd_stage_idx = getattr(batch, "afd_stage_idx", None)
+        if afd_stage_idx is None:
+            afd_stage_idx = -1
+        if type(afd_stage_idx) is not int or afd_stage_idx < -1:
+            raise ValueError("EP trace afd_stage_idx must be >= -1")
+
+        return {
+            "replica_id": replica_id,
+            "stage_id": stage_id,
+            "request_ids": tuple(request_ids),
+            "request_runtime_epochs": tuple(request_runtime_epochs),
+            "iteration_ids": tuple(iteration_ids),
+            "schedule_epoch": schedule_epoch,
+            "afd_stage_idx": afd_stage_idx,
+            "operation_id": operation_id,
+            "operation_kind": operation_kind.strip(),
+        }
+
+    @staticmethod
+    def _format_ep_trace_identity(identity: Dict[str, Any]) -> str:
+        """Serialize an already validated identity in a stable log order."""
+
+        required = (
+            "replica_id",
+            "stage_id",
+            "request_ids",
+            "request_runtime_epochs",
+            "iteration_ids",
+            "schedule_epoch",
+            "afd_stage_idx",
+            "operation_id",
+            "operation_kind",
+        )
+        if any(field not in identity for field in required):
+            raise ValueError("EP trace identity is incomplete")
+        return (
+            f"replica_id={int(identity['replica_id'])}, "
+            f"stage_id={int(identity['stage_id'])}, "
+            f"request_ids={list(identity['request_ids'])}, "
+            f"request_runtime_epochs={list(identity['request_runtime_epochs'])}, "
+            f"iteration_ids={list(identity['iteration_ids'])}, "
+            f"schedule_epoch={int(identity['schedule_epoch'])}, "
+            f"afd_stage_idx={int(identity['afd_stage_idx'])}, "
+            f"operation_id={int(identity['operation_id'])}, "
+            f"operation_kind={identity['operation_kind']}"
+        )
+
+    @staticmethod
+    def _log_ep_workload_trace(
+        *,
+        cluster_type: ClusterType,
+        batch_id: int,
+        layer_id: int,
+        ep_id: int,
+        moe_ep_size: int,
+        per_expert_tokens: Dict[int, int],
+        lane_compute_ms: float,
+        routed_compute_ms: float,
+        lane_comm_ms: float,
+        pre_dispatch_ms: float,
+        dispatch_ms: float,
+        combine_ms: float,
+        post_combine_ms: float,
+        trace_identity: Dict[str, Any],
+    ) -> None:
+        """Emit one source-level record for a materialized EP participant.
+
+        This is observability only.  The values are the already-computed lane
+        prediction and the explicit EP collective time; no timing is changed
+        and no synthetic contribution is introduced.
+        """
+
+        if type(batch_id) is not int or batch_id < 0:
+            raise ValueError(f"EP workload batch_id must be a non-negative int, got {batch_id!r}")
+        if type(layer_id) is not int or layer_id < 0:
+            raise ValueError(f"EP workload layer_id must be a non-negative int, got {layer_id!r}")
+        if type(ep_id) is not int or ep_id < 0:
+            raise ValueError(f"EP workload ep_id must be a non-negative int, got {ep_id!r}")
+        if type(moe_ep_size) is not int or moe_ep_size <= 0 or ep_id >= moe_ep_size:
+            raise ValueError(
+                "EP workload moe_ep_size/ep_id are inconsistent: "
+                f"ep_id={ep_id!r}, moe_ep_size={moe_ep_size!r}"
+            )
+        if not isinstance(per_expert_tokens, dict):
+            raise ValueError("EP workload per_expert_tokens must be a dict")
+        normalized_tokens: dict[int, int] = {}
+        for expert_id, token_count in per_expert_tokens.items():
+            if (
+                type(expert_id) is not int
+                or type(token_count) is not int
+                or expert_id < 0
+                or token_count < 0
+            ):
+                raise ValueError(
+                    "EP workload per_expert_tokens must contain non-negative integer pairs"
+                )
+            normalized_tokens[int(expert_id)] = int(token_count)
+        phase_values = (
+            ("pre_dispatch_ms", pre_dispatch_ms),
+            ("dispatch_ms", dispatch_ms),
+            ("routed_compute_ms", routed_compute_ms),
+            ("combine_ms", combine_ms),
+            ("post_combine_ms", post_combine_ms),
+        )
+        for name, value in (
+            ("lane_compute_ms", lane_compute_ms),
+            ("lane_comm_ms", lane_comm_ms),
+            *phase_values,
+        ):
+            if not isinstance(value, Real) or isinstance(value, bool):
+                raise ValueError(f"EP workload {name} must be a real number")
+            value = float(value)
+            if not math.isfinite(value) or value < 0:
+                raise ValueError(
+                    f"EP workload {name} must be finite and non-negative, got {value!r}"
+                )
+        expected_lane_compute_ms = math.fsum(
+            float(value)
+            for name, value in phase_values
+            if name in {"pre_dispatch_ms", "routed_compute_ms", "post_combine_ms"}
+        )
+        expected_lane_comm_ms = float(dispatch_ms) + float(combine_ms)
+        if not math.isclose(
+            float(lane_compute_ms),
+            expected_lane_compute_ms,
+            rel_tol=1e-12,
+            abs_tol=1e-9,
+        ):
+            raise ValueError(
+                "EP workload lane_compute_ms does not equal "
+                "pre_dispatch_ms + routed_compute_ms + post_combine_ms: "
+                f"lane_compute_ms={lane_compute_ms!r}, "
+                f"expected={expected_lane_compute_ms!r}"
+            )
+        if not math.isclose(
+            float(lane_comm_ms),
+            expected_lane_comm_ms,
+            rel_tol=1e-12,
+            abs_tol=1e-9,
+        ):
+            raise ValueError(
+                "EP workload lane_comm_ms does not equal "
+                "dispatch_ms + combine_ms: "
+                f"lane_comm_ms={lane_comm_ms!r}, expected={expected_lane_comm_ms!r}"
+            )
+
+        cluster_name = getattr(cluster_type, "name", str(cluster_type))
+        logger.info(
+            "[EP-WORKLOAD][%s] batch_id=%d, layer_id=%d, ep_id=%d, "
+            "moe_ep_size=%d, per_expert_tokens=%s, lane_compute_ms=%.6f, "
+            "routed_compute_ms=%.6f, lane_comm_ms=%.6f, "
+            "pre_dispatch_ms=%.6f, dispatch_ms=%.6f, "
+            "combine_ms=%.6f, post_combine_ms=%.6f, %s",
+            cluster_name,
+            batch_id,
+            layer_id,
+            ep_id,
+            moe_ep_size,
+            dict(sorted(normalized_tokens.items())),
+            float(lane_compute_ms),
+            float(routed_compute_ms),
+            float(lane_comm_ms),
+            float(pre_dispatch_ms),
+            float(dispatch_ms),
+            float(combine_ms),
+            float(post_combine_ms),
+            BaseClusterScheduler._format_ep_trace_identity(trace_identity),
+        )
+
+    @staticmethod
+    def _log_ep_wave_end_trace(
+        *,
+        cluster_type: ClusterType,
+        batch_id: int,
+        layer_id: int,
+        wave_start_time_s: float,
+        combine_barrier_end_time_s: float,
+        post_combine_time_ms: float,
+        wave_end_time_s: float,
+        trace_identity: Dict[str, Any],
+    ) -> None:
+        """Emit the final post-combine end of one EP wave."""
+
+        for name, value in (
+            ("wave_start_time_s", wave_start_time_s),
+            ("combine_barrier_end_time_s", combine_barrier_end_time_s),
+            ("post_combine_time_ms", post_combine_time_ms),
+            ("wave_end_time_s", wave_end_time_s),
+        ):
+            if (
+                not isinstance(value, Real)
+                or isinstance(value, bool)
+                or not math.isfinite(float(value))
+                or float(value) < 0.0
+            ):
+                raise ValueError(
+                    f"EP wave end {name} must be finite and non-negative, got {value!r}"
+                )
+        expected_end_time_s = (
+            float(combine_barrier_end_time_s) + float(post_combine_time_ms) * 1e-3
+        )
+        if not math.isclose(
+            float(wave_end_time_s),
+            expected_end_time_s,
+            rel_tol=0.0,
+            abs_tol=1e-9,
+        ):
+            raise ValueError(
+                "EP wave end time does not match combine end plus post-combine "
+                f"time: expected={expected_end_time_s!r}, actual={wave_end_time_s!r}"
+            )
+        if float(wave_end_time_s) < float(wave_start_time_s):
+            raise ValueError("EP wave end time cannot precede wave start")
+
+        cluster_name = getattr(cluster_type, "name", str(cluster_type))
+        wave_time_ms = (float(wave_end_time_s) - float(wave_start_time_s)) * 1000.0
+        logger.info(
+            "[EP-WAVE-END][%s] batch_id=%d, layer_id=%d, "
+            "wave_start_time_s=%.12f, combine_barrier_end_time_s=%.12f, "
+            "post_combine_time_ms=%.12f, wave_end_time_s=%.12f, "
+            "wave_time_ms=%.12f, %s",
+            cluster_name,
+            batch_id,
+            layer_id,
+            float(wave_start_time_s),
+            float(combine_barrier_end_time_s),
+            float(post_combine_time_ms),
+            float(wave_end_time_s),
+            wave_time_ms,
+            BaseClusterScheduler._format_ep_trace_identity(trace_identity),
+        )
+
+    @staticmethod
+    def _log_ep_barrier_trace(
+        *,
+        cluster_type: ClusterType,
+        batch_id: int,
+        layer_id: int,
+        phase: str,
+        expected_ep_ids: Tuple[int, ...],
+        arrived_ep_ids: Tuple[int, ...],
+        max_lane_time_ms: float,
+        collective_time_ms: float,
+        barrier_time_ms: float,
+        barrier_start_time_s: float,
+        barrier_end_time_s: float,
+        trace_identity: Dict[str, Any],
+    ) -> None:
+        """Emit the completed per-layer EP barrier without changing timing."""
+
+        if phase not in {"dispatch", "combine"}:
+            raise ValueError(f"unsupported EP barrier phase: {phase!r}")
+        if type(batch_id) is not int or batch_id < 0:
+            raise ValueError("EP barrier batch_id must be a non-negative int")
+        if type(layer_id) is not int or layer_id < 0:
+            raise ValueError("EP barrier layer_id must be a non-negative int")
+        expected = tuple(sorted(expected_ep_ids))
+        arrived = tuple(sorted(arrived_ep_ids))
+        if not expected or arrived != expected:
+            raise ValueError(
+                "EP barrier must log the complete participant set: "
+                f"expected={expected!r}, arrived={arrived!r}"
+            )
+        for name, value in (
+            ("max_lane_time_ms", max_lane_time_ms),
+            ("collective_time_ms", collective_time_ms),
+            ("barrier_time_ms", barrier_time_ms),
+            ("barrier_start_time_s", barrier_start_time_s),
+            ("barrier_end_time_s", barrier_end_time_s),
+        ):
+            if not isinstance(value, Real) or isinstance(value, bool):
+                raise ValueError(f"EP barrier {name} must be a real number")
+            value = float(value)
+            if not math.isfinite(value) or value < 0:
+                raise ValueError(
+                    f"EP barrier {name} must be finite and non-negative, got {value!r}"
+                )
+        if float(barrier_time_ms) < float(max_lane_time_ms):
+            raise ValueError(
+                "EP barrier time cannot be shorter than the slowest lane: "
+                f"barrier={barrier_time_ms!r}, max_lane={max_lane_time_ms!r}"
+            )
+        expected_barrier_time_ms = float(max_lane_time_ms) + float(collective_time_ms)
+        if not math.isclose(
+            float(barrier_time_ms),
+            expected_barrier_time_ms,
+            rel_tol=1e-12,
+            abs_tol=1e-9,
+        ):
+            raise ValueError(
+                "EP barrier time does not equal lane arrival plus collective time: "
+                f"barrier={barrier_time_ms!r}, max_lane={max_lane_time_ms!r}, "
+                f"collective={collective_time_ms!r}, expected={expected_barrier_time_ms!r}"
+            )
+        expected_end_time_s = float(barrier_start_time_s) + float(barrier_time_ms) * 1e-3
+        if not math.isclose(
+            float(barrier_end_time_s),
+            expected_end_time_s,
+            rel_tol=0.0,
+            abs_tol=1e-9,
+        ):
+            raise ValueError(
+                "EP barrier end time does not match start plus duration: "
+                f"start={barrier_start_time_s!r}, duration_ms={barrier_time_ms!r}, "
+                f"end={barrier_end_time_s!r}, expected={expected_end_time_s!r}"
+            )
+
+        cluster_name = getattr(cluster_type, "name", str(cluster_type))
+        logger.info(
+            "[EP-BARRIER][%s] batch_id=%d, layer_id=%d, phase=%s, "
+            "expected_ep_ids=%s, arrived_ep_ids=%s, max_lane_time_ms=%.12f, "
+            "collective_time_ms=%.12f, barrier_time_ms=%.12f, "
+            "barrier_start_time_s=%.12f, "
+            "barrier_end_time_s=%.12f, %s",
+            cluster_name,
+            batch_id,
+            layer_id,
+            phase,
+            list(expected),
+            list(arrived),
+            float(max_lane_time_ms),
+            float(collective_time_ms),
+            float(barrier_time_ms),
+            float(barrier_start_time_s),
+            float(barrier_end_time_s),
+            BaseClusterScheduler._format_ep_trace_identity(trace_identity),
+        )
+
+    @staticmethod
+    def _log_ep_conservation_trace(
+        *,
+        cluster_type: ClusterType,
+        batch_id: int,
+        layer_id: int,
+        routing_token_count: int,
+        router_topk: int,
+        total_routed_assignments: int,
+        per_ep_routed_tokens: Dict[int, int],
+        trace_identity: Dict[str, Any],
+    ) -> None:
+        """Emit exact routing-to-EP token conservation for one layer wave."""
+
+        if type(batch_id) is not int or batch_id < 0:
+            raise ValueError("EP conservation batch_id must be non-negative")
+        if type(layer_id) is not int or layer_id < 0:
+            raise ValueError("EP conservation layer_id must be non-negative")
+        for name, value, minimum in (
+            ("routing_token_count", routing_token_count, 0),
+            ("router_topk", router_topk, 1),
+            ("total_routed_assignments", total_routed_assignments, 0),
+        ):
+            if type(value) is not int or value < minimum:
+                raise ValueError(f"EP conservation {name} is invalid: {value!r}")
+        if routing_token_count * router_topk != total_routed_assignments:
+            raise ValueError(
+                "EP conservation total must equal routing_token_count * router_topk"
+            )
+        if not isinstance(per_ep_routed_tokens, dict) or not per_ep_routed_tokens:
+            raise ValueError("EP conservation requires a non-empty per-EP map")
+        normalized: dict[int, int] = {}
+        for ep_id, token_count in per_ep_routed_tokens.items():
+            if (
+                type(ep_id) is not int
+                or ep_id < 0
+                or type(token_count) is not int
+                or token_count < 0
+            ):
+                raise ValueError("EP conservation per-EP values must be non-negative ints")
+            normalized[ep_id] = token_count
+        if sum(normalized.values()) != total_routed_assignments:
+            raise ValueError(
+                "EP conservation per-EP total does not match routed assignments"
+            )
+        cluster_name = getattr(cluster_type, "name", str(cluster_type))
+        logger.info(
+            "[EP-CONSERVATION][%s] batch_id=%d, layer_id=%d, "
+            "routing_token_count=%d, router_topk=%d, "
+            "total_routed_assignments=%d, per_ep_routed_tokens=%s, %s",
+            cluster_name,
+            batch_id,
+            layer_id,
+            routing_token_count,
+            router_topk,
+            total_routed_assignments,
+            dict(sorted(normalized.items())),
+            BaseClusterScheduler._format_ep_trace_identity(trace_identity),
+        )
+
+    @staticmethod
+    def _get_shared_ep_phase_times_ms(
+        execution_time,
+        *,
+        cluster_type: ClusterType,
+        batch_id: int,
+        layer_id: int,
+        ep_id: int,
+    ) -> tuple[float, float, float, float, float]:
+        """Read and validate one lane's exact five-phase MoE decomposition."""
+
+        getter_names = (
+            "get_single_layer_moe_pre_dispatch_time",
+            "get_single_layer_moe_dispatch_time",
+            "get_single_layer_moe_post_dispatch_compute_time",
+            "get_single_layer_moe_combine_time",
+            "get_single_layer_moe_post_combine_time",
+        )
+        phase_times: list[float] = []
+        for getter_name in getter_names:
+            getter = getattr(execution_time, getter_name, None)
+            if not callable(getter):
+                raise ValueError(
+                    "Shared EP predictor result is missing phase accessor "
+                    f"{getter_name}: cluster={cluster_type}, batch={batch_id}, "
+                    f"layer={layer_id}, ep_id={ep_id}"
+                )
+            phase_time = getter()
+            if (
+                not isinstance(phase_time, Real)
+                or isinstance(phase_time, bool)
+                or not math.isfinite(float(phase_time))
+                or float(phase_time) < 0
+            ):
+                raise ValueError(
+                    "Shared EP phase time must be finite and non-negative: "
+                    f"accessor={getter_name}, value={phase_time!r}, "
+                    f"cluster={cluster_type}, batch={batch_id}, "
+                    f"layer={layer_id}, ep_id={ep_id}"
+                )
+            phase_times.append(float(phase_time))
+
+        post_attention_getter = getattr(
+            execution_time,
+            "get_single_layer_post_attention_time",
+            None,
+        )
+        if not callable(post_attention_getter):
+            raise ValueError(
+                "Shared EP predictor result is missing post-attention timing"
+            )
+        post_attention_time_ms = float(post_attention_getter())
+        decomposed_time_ms = math.fsum(phase_times)
+        if (
+            not math.isfinite(post_attention_time_ms)
+            or post_attention_time_ms < 0
+            or not math.isclose(
+                decomposed_time_ms,
+                post_attention_time_ms,
+                rel_tol=1e-12,
+                abs_tol=1e-9,
+            )
+        ):
+            raise ValueError(
+                "Shared EP phase decomposition does not conserve post-attention "
+                f"time: phases={tuple(phase_times)!r}, "
+                f"post_attention_ms={post_attention_time_ms!r}, "
+                f"cluster={cluster_type}, batch={batch_id}, "
+                f"layer={layer_id}, ep_id={ep_id}"
+            )
+        return tuple(phase_times)
+
+    @staticmethod
+    def _map_source_attn_replica_to_ffn_replica(
+        source_replica_ordinal: int,
+        target_ffn_replica_ids: List[int] | Tuple[int, ...],
+    ) -> int:
+        """Map one Attention-Replica ordinal to a sticky FFN Replica.
+
+        The mapping is intentionally based on the source Replica ordinal, not
+        on a retired attention-DP lane.  A target list may be larger than the
+        source population; those extra FFN Replicas remain valid and idle.
+        """
+        if type(source_replica_ordinal) is not int or source_replica_ordinal < 0:
+            raise ValueError(
+                "source_replica_ordinal must be an exact non-negative int, "
+                f"got {source_replica_ordinal!r}"
+            )
+        if type(target_ffn_replica_ids) not in {list, tuple}:
+            raise ValueError(
+                "target_ffn_replica_ids must be an exact list or tuple, "
+                f"got {target_ffn_replica_ids!r}"
+            )
+        if not target_ffn_replica_ids:
+            raise ValueError("target_ffn_replica_ids must not be empty")
+        if any(
+            type(replica_id) is not int or replica_id < 0
+            for replica_id in target_ffn_replica_ids
+        ):
+            raise ValueError(
+                "target_ffn_replica_ids must contain exact non-negative ints"
+            )
+        if len(set(target_ffn_replica_ids)) != len(target_ffn_replica_ids):
+            raise ValueError("target_ffn_replica_ids must not contain duplicates")
+        return target_ffn_replica_ids[
+            source_replica_ordinal % len(target_ffn_replica_ids)
+        ]
+
     def _validate_prefix_cache_cluster_config(self, replica_scheduler_config) -> None:
         prefix_enabled = bool(
             getattr(replica_scheduler_config, "enable_prefix_caching", False)
@@ -243,7 +1096,9 @@ class BaseClusterScheduler(ABC):
         # Override individual parameters if specified (cluster-specific values take precedence)
         param_fields = [
             "batch_size_cap",
-            "max_tokens_in_batch", 
+            "max_tokens_in_batch",
+            "enable_chunked_prefill",
+            "long_prefill_token_threshold",
             "num_blocks",
             "block_size",
             "watermark_blocks_fraction",
@@ -275,30 +1130,60 @@ class BaseClusterScheduler(ABC):
         self._predictor = predictor
         self._kv_cache_transfer_predictor = kv_cache_transfer_predictor
         self._m2n_transfer_predictor = m2n_transfer_predictor
-        self._replica_dp_size = self._config.replica_config.data_parallel_size
+        # Attention-DP lanes are retired.  Cluster capacity is represented by
+        # ``len(cluster.replicas)``; every physical Replica owns one shared
+        # attention world, while MoE-only work creates replica-local EP lanes.
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            self._replica_ep_size = int(
+                self._config.replica_config.moe_expert_parallel_size
+            )
+            self._replica_scheduler_count = self._replica_ep_size
+        else:
+            attn_dp = getattr(self._config.replica_config, "attn_dp", None)
+            if type(attn_dp) is not int or attn_dp != 1:
+                raise ValueError(
+                    "Replica-local attention DP lanes are retired; "
+                    f"{self._cluster_type.name} requires attn_dp=1, got {attn_dp!r}"
+                )
+            self._replica_ep_size = None
+            self._replica_scheduler_count = 1
         self._available_clusters = available_clusters or set()
         self._request_generator_config = request_generator_config
-        self._decode_shared_domain_related_wait_ms_by_batch: Dict[
-            Tuple[int, int, int], float
-        ] = defaultdict(float)
+        self._stage_execution_contexts = self._build_stage_execution_contexts()
 
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name)
 
-        # Validate and fix data_parallel_size if needed
-        if self._replica_dp_size is None or self._replica_dp_size <= 0:
-            logger.error(f"Invalid data_parallel_size: {self._replica_dp_size}, defaulting to 1")
-            raise ValueError(f"Invalid data_parallel_size: {self._replica_dp_size}")
+        # Validate the canonical replica-local lane count.
+        if (
+            type(self._replica_scheduler_count) is not int
+            or self._replica_scheduler_count <= 0
+        ):
+            logger.error(
+                "Invalid replica-local scheduler count: %s",
+                self._replica_scheduler_count,
+            )
+            raise ValueError(
+                "Invalid replica-local scheduler count: "
+                f"{self._replica_scheduler_count}"
+            )
 
         # Initialize replica schedulers based on cluster type
         # DECODE_FFN: Use EP (Expert Parallel) concept instead of DP
-        # Other clusters: Use DP (Data Parallel) concept
-        self._dp_replica_schedulers = {}
+        # Other clusters: one full-model child scheduler per Replica.
+        self._replica_schedulers = {}
+        self._full_stage_replica_schedulers = {}
 
         # Get cluster-specific replica scheduler configuration
         cluster_specific_config = self._get_cluster_specific_replica_scheduler_config(
             self._config, self._cluster_type
         )
+        self._replica_scheduler_type = cluster_specific_config.get_type()
+        if type(self._replica_scheduler_type) is not ReplicaSchedulerType:
+            raise TypeError(
+                "Cluster replica scheduler type must be an exact "
+                f"ReplicaSchedulerType, got {self._replica_scheduler_type!r}"
+            )
         self._validate_prefix_cache_cluster_config(cluster_specific_config)
 
         # Validate scheduler type for DECODE_FFN cluster
@@ -312,13 +1197,12 @@ class BaseClusterScheduler(ABC):
                 )
 
         if self._cluster_type == ClusterType.DECODE_FFN:
-            # For DECODE_FFN cluster: use EP (Expert Parallel) instead of DP
-            # Each replica has ep_size EP replicas for expert parallelism
+            # MoE routed-expert work owns explicit local EP children.
             self._replica_ep_size = self._config.replica_config.moe_expert_parallel_size
             for replica_id, replica in self._cluster.replicas.items():
                 for ep_id in range(self._replica_ep_size):
                     scheduler_key = (replica_id, ep_id)
-                    self._dp_replica_schedulers[scheduler_key] = ReplicaSchedulerRegistry.get(
+                    self._replica_schedulers[scheduler_key] = ReplicaSchedulerRegistry.get(
                         cluster_specific_config.get_type(),
                         replica_config=self._config.replica_config,
                         replica_scheduler_config=cluster_specific_config,
@@ -326,27 +1210,51 @@ class BaseClusterScheduler(ABC):
                         replica=replica,
                         predictor=self._predictor,
                         cluster_type=self._cluster_type,
-                        dp_id=ep_id,  # Use ep_id as dp_id for compatibility
+                        replica_local_id=ep_id,
                         af_pipeline_num_micro_batch=getattr(self._config, 'af_pipeline_num_micro_batch', -1),
                         cluster_scheduler=self,
                     )
+                # Dense FFN work owns the complete stage world and therefore
+                # uses a separate child scheduler keyed by no EP lane.
+                self._full_stage_replica_schedulers[replica_id] = (
+                    ReplicaSchedulerRegistry.get(
+                        cluster_specific_config.get_type(),
+                        replica_config=self._config.replica_config,
+                        replica_scheduler_config=cluster_specific_config,
+                        request_generator_config=request_generator_config,
+                        replica=replica,
+                        predictor=self._predictor,
+                        cluster_type=self._cluster_type,
+                        replica_local_id=None,
+                        af_pipeline_num_micro_batch=getattr(
+                            self._config, "af_pipeline_num_micro_batch", -1
+                        ),
+                        cluster_scheduler=self,
+                    )
+                )
         else:
-            # For other clusters: use traditional DP concept
+            # Every non-FFN Replica owns one complete full-stage scheduler.
+            # Attention-DP lanes are retired; ``None`` is the explicit absence
+            # of a replica-local EP identity.
             for replica_id, replica in self._cluster.replicas.items():
-                for dp_id in range(self._replica_dp_size):
-                    scheduler_key = (replica_id, dp_id)
-                    self._dp_replica_schedulers[scheduler_key] = ReplicaSchedulerRegistry.get(
-                        cluster_specific_config.get_type(),
-                        replica_config=self._config.replica_config,
-                        replica_scheduler_config=cluster_specific_config,
-                        request_generator_config=request_generator_config,
-                        replica=replica,
-                        predictor=self._predictor,
-                        cluster_type=self._cluster_type,
-                        dp_id=dp_id,
-                        af_pipeline_num_micro_batch=getattr(self._config, 'af_pipeline_num_micro_batch', -1),
-                        cluster_scheduler=self,
-                    )
+                full_stage_scheduler = ReplicaSchedulerRegistry.get(
+                    cluster_specific_config.get_type(),
+                    replica_config=self._config.replica_config,
+                    replica_scheduler_config=cluster_specific_config,
+                    request_generator_config=request_generator_config,
+                    replica=replica,
+                    predictor=self._predictor,
+                    cluster_type=self._cluster_type,
+                    replica_local_id=None,
+                    af_pipeline_num_micro_batch=getattr(
+                        self._config, "af_pipeline_num_micro_batch", -1
+                    ),
+                    cluster_scheduler=self,
+                )
+                self._full_stage_replica_schedulers[replica_id] = (
+                    full_stage_scheduler
+                )
+                self._replica_schedulers[(replica_id, None)] = full_stage_scheduler
         self._request_queue = []
 
         # Initialize specialized queues for PD+AF disaggregation
@@ -357,9 +1265,8 @@ class BaseClusterScheduler(ABC):
             # key=(wire_layer_id, afd_stage_idx) -> {per_lane_queues}
             self._a2f_waiting_by_layer: Dict[tuple[int, int], dict] = {}
             self._a2f_expected_lanes = [
-                (replica_id, dp_id)
+                (replica_id, None)
                 for replica_id in list(self._cluster.replicas.keys())
-                for dp_id in range(int(self._replica_dp_size))
             ]
             self._a2f_group_micro_batches = len(self._a2f_expected_lanes)
             # F→A waiting room keeps per-lane FIFO semantics scoped by next_layer
@@ -368,28 +1275,6 @@ class BaseClusterScheduler(ABC):
             self._f2a_group_micro_batches = len(self._f2a_expected_lanes)
             self._decode_attn_barrier_round_counter = 0
         elif self._cluster_type == ClusterType.DECODE_FFN:
-            allow_multi_decode_ffn = bool(
-                getattr(
-                    self._config,
-                    "allow_experiment_multi_decode_ffn_replicas",
-                    False,
-                )
-            )
-            model_is_moe = self._config.replica_config.model_config.is_moe
-            # Fail fast at runtime as well: multiple MoE DECODE_FFN replicas
-            # duplicate the expert set. Dense replicas do not have that cost.
-            if (
-                model_is_moe
-                and self._num_replicas != 1
-                and not allow_multi_decode_ffn
-            ):
-                raise ValueError(
-                    "MoE DECODE_FFN cluster requires exactly one replica by default; "
-                    f"got {self._num_replicas} replicas. Set "
-                    "allow_experiment_multi_decode_ffn_replicas=True only for "
-                    "explicit experiment-only studies."
-                )
-
             # Per-key waiting rooms for grouping distinct lanes (attn→ffn arrivals)
             # key=(layer_id, afd_stage_idx[, barrier_round_id])
             # -> {per_lane_queues, lanes_rr_order, rr_cursor,
@@ -398,26 +1283,20 @@ class BaseClusterScheduler(ABC):
                 tuple[int, int] | tuple[int, int, int], dict
             ] = {}
             self._m2n_ready_groups = deque()  # Deque[List[(batch, transfer_info)]]
-            # Determine grouping lanes for decode-ffn based on DECODE_ATTN configuration
-            # Prefer cross-cluster value propagated via config; fallback to local if absent
-            attn_dp_lanes = getattr(self._config, 'decode_attn_dp_lanes_for_ffn', None)
-            assert attn_dp_lanes is not None, "decode_attn_dp_lanes_for_ffn must be set for DECODE_FFN cluster"
-            dp_lanes = int(attn_dp_lanes)
-            dp_lanes = max(1, dp_lanes)
-            self._ffn_group_micro_batches = dp_lanes
             attn_num_replicas = getattr(self._config, "decode_attn_cluster_num_replicas", None)
-            attn_dp_size = getattr(
-                self._config, "decode_attn_replica_config_attn_data_parallel_size", None
-            )
-            if attn_num_replicas is None or attn_dp_size is None:
+            if attn_num_replicas is None:
                 raise ValueError(
-                    "decode_attn_cluster_num_replicas and decode_attn_replica_config_attn_data_parallel_size "
-                    "must be set for DECODE_FFN lane barrier"
+                    "decode_attn_cluster_num_replicas must be set for DECODE_FFN grouping"
                 )
-            if int(attn_num_replicas) <= 0 or int(attn_dp_size) <= 0:
+            if int(attn_num_replicas) <= 0:
                 raise ValueError(
-                    f"Invalid decode-attn lane config: replicas={attn_num_replicas}, dp_size={attn_dp_size}"
+                    "DECODE_ATTN cluster capacity must be a positive cluster-level "
+                    f"num_replicas, got {attn_num_replicas}"
                 )
+            # AFD source identity is one full-stage tuple per attention Replica;
+            # no attention-DP lane dimension participates in this grouping.
+            source_replica_count = int(attn_num_replicas)
+            self._ffn_group_micro_batches = source_replica_count
             attn_replica_id_start = getattr(
                 self._config, "decode_attn_replica_id_start_for_ffn", None
             )
@@ -428,14 +1307,13 @@ class BaseClusterScheduler(ABC):
                 )
             attn_replica_id_start = int(attn_replica_id_start)
             self._ffn_expected_lanes = [
-                (attn_replica_id_start + replica_ordinal, dp_id)
-                for replica_ordinal in range(int(attn_num_replicas))
-                for dp_id in range(int(attn_dp_size))
+                (attn_replica_id_start + replica_ordinal, None)
+                for replica_ordinal in range(source_replica_count)
             ]
-            if len(self._ffn_expected_lanes) != dp_lanes:
+            if len(self._ffn_expected_lanes) != source_replica_count:
                 raise ValueError(
-                    "decode_attn_dp_lanes_for_ffn mismatch with expected lane topology: "
-                    f"expected={len(self._ffn_expected_lanes)} configured={dp_lanes}"
+                    "DECODE_ATTN Replica grouping mismatch with expected source topology: "
+                    f"expected={len(self._ffn_expected_lanes)} configured={source_replica_count}"
                 )
             self._ffn_replica_ids = sorted(self._cluster.replicas.keys())
             if not self._ffn_replica_ids:
@@ -450,21 +1328,20 @@ class BaseClusterScheduler(ABC):
             }
             self._ffn_lane_to_target_replica: Dict[Tuple[int, int], int] = {}
             for lane_ordinal, lane in enumerate(self._ffn_expected_lanes):
-                target_replica_id = self._ffn_replica_ids[
-                    lane_ordinal % len(self._ffn_replica_ids)
-                ]
+                target_replica_id = self._map_source_attn_replica_to_ffn_replica(
+                    lane_ordinal,
+                    self._ffn_replica_ids,
+                )
                 self._ffn_lane_to_target_replica[lane] = target_replica_id
                 self._ffn_expected_lanes_by_target[target_replica_id].append(lane)
             expected_group_sizes = {
                 replica_id: len(lanes)
                 for replica_id, lanes in self._ffn_expected_lanes_by_target.items()
             }
-            if any(group_size <= 0 for group_size in expected_group_sizes.values()):
-                raise ValueError(
-                    "DECODE_FFN experiment lane assignment must give every target "
-                    f"replica at least one decode-attn lane, got {expected_group_sizes}"
-                )
-            self._ffn_group_micro_batches = max(expected_group_sizes.values())
+            self._ffn_group_micro_batches = max(
+                expected_group_sizes.values(),
+                default=1,
+            )
             self._ffn_idle_lanes = set()
             total_requests = getattr(self._request_generator_config, "num_requests", None)
             if total_requests is not None:
@@ -478,7 +1355,7 @@ class BaseClusterScheduler(ABC):
                         )
             self._ffn_outstanding_group_credit_per_lane = 0
             logger.info(
-                f"[FFN-GROUPING] Initialized with {dp_lanes} lanes for strict (layer_id, afd_stage_idx) grouping"
+                f"[FFN-GROUPING] Initialized with {source_replica_count} full-stage source Replicas for strict (layer_id, afd_stage_idx) grouping"
             )
 
             # EP waiting room for combine synchronization in decode-ffn cluster
@@ -497,7 +1374,7 @@ class BaseClusterScheduler(ABC):
                 )
             )
         elif self._cluster_type in [ClusterType.PREFILL, ClusterType.MONOLITHIC]:
-            # Prefill sync waiting room: replica_id -> stage_id -> batch_global_id -> layer_id -> sync_stage -> {dp_id: {batch, time}}
+            # Prefill sync waiting room: replica_id -> stage_id -> batch_global_id -> layer_id -> sync_stage -> {replica_local_id: {batch, time}}
             # Used by disaggregated PREFILL and monolithic MoE prefill layer-by-layer paths.
             # MONOLITHIC MoE decode now also reuses the decode sync waiting-room path.
             model_is_moe = (
@@ -531,7 +1408,7 @@ class BaseClusterScheduler(ABC):
                 self._prefill_sync_waiting_room = None
                 self._decode_sync_waiting_room = None
         elif self._cluster_type == ClusterType.DECODE:
-            # Decode sync waiting room: replica_id -> stage_id -> batch_global_id -> layer_id -> sync_stage -> {dp_id: {batch, time}}
+            # Decode sync waiting room: replica_id -> stage_id -> batch_global_id -> layer_id -> sync_stage -> {replica_local_id: {batch, time}}
             # Similar to PREFILL, used for DP synchronization in unified DECODE cluster with MoE
             # Only initialize for MoE models (dense models don't need sync)
             # Use model_config.is_moe for MoE detection - NOT parallelism settings
@@ -579,6 +1456,63 @@ class BaseClusterScheduler(ABC):
 
         self._batch_group_creation_counter = 0
 
+    def _build_stage_execution_contexts(self) -> dict[tuple[int, int], StageExecutionContext]:
+        """Create one parent admission context for every physical Replica stage."""
+
+        replica_config = getattr(
+            getattr(self, "_config", None),
+            "replica_config",
+            None,
+        )
+        model_config = getattr(replica_config, "model_config", None)
+        if replica_config is None or model_config is None:
+            raise ValueError(
+                "Stage execution contexts require replica_config.model_config"
+            )
+        model_is_moe = bool(getattr(model_config, "is_moe", False))
+        # Shared full-model roles (co-location, PDD PREFILL/DECODE) execute
+        # routed-expert work inline, while PD-AF DECODE_FFN uses explicit EP
+        # children.  All of those MoE operation paths must validate the same
+        # Replica-local participant domain.  DECODE_ATTN has no routed-expert
+        # operation and therefore keeps the dense/full-stage singleton scope.
+        has_local_ep_domain = model_is_moe and self._cluster_type in (
+            ClusterType.MONOLITHIC,
+            ClusterType.PREFILL,
+            ClusterType.DECODE,
+            ClusterType.DECODE_FFN,
+        )
+        configured_ep_size = getattr(replica_config, "moe_expert_parallel_size", None)
+        if model_is_moe and has_local_ep_domain:
+            if type(configured_ep_size) is not int or configured_ep_size <= 0:
+                raise ValueError(
+                    "MoE stage execution contexts require an exact positive "
+                    "moe_expert_parallel_size"
+                )
+            ep_size = configured_ep_size
+        else:
+            ep_size = 1
+
+        contexts: dict[tuple[int, int], StageExecutionContext] = {}
+        for replica_id, replica in self._cluster.replicas.items():
+            if type(replica_id) is not int or replica_id < 0:
+                raise ValueError(
+                    "Cluster Replica IDs must be exact non-negative ints"
+                )
+            num_stages = getattr(replica, "num_pipeline_stages", None)
+            if num_stages is None:
+                num_stages = getattr(replica_config, "num_pipeline_stages", None)
+            if type(num_stages) is not int or num_stages <= 0:
+                raise ValueError(
+                    "Replica num_pipeline_stages must be an exact positive int"
+                )
+            for stage_id in range(num_stages):
+                contexts[(replica_id, stage_id)] = StageExecutionContext(
+                    replica_id=replica_id,
+                    stage_id=stage_id,
+                    ep_size=ep_size,
+                )
+        return contexts
+
 
     def sort_requests(self) -> None:
         self._request_queue.sort(key=lambda request: request._arrived_at)
@@ -620,18 +1554,180 @@ class BaseClusterScheduler(ABC):
     def get_replica(self, replica_id: int) -> Replica:
         return self._cluster.replicas[replica_id]
 
-    def get_dp_replica_scheduler(self, replica_id: int, dp_id: int):
-        return self._dp_replica_schedulers[(replica_id, dp_id)]
+    def get_full_stage_replica_scheduler(self, replica_id: int):
+        try:
+            return self._full_stage_replica_schedulers[replica_id]
+        except KeyError as exc:
+            raise ValueError(
+                "Full-stage Replica scheduler is unavailable: "
+                f"replica_id={replica_id}"
+            ) from exc
 
-    def get_dp_replica_stage_scheduler(self, replica_id: int, dp_id: int, stage_id: int):
-        return self._dp_replica_schedulers[(replica_id, dp_id)].get_replica_stage_scheduler(
-            stage_id
+    def get_replica_scheduler(self, replica_id: int, replica_local_id: int | None):
+        if replica_local_id is None:
+            return self.get_full_stage_replica_scheduler(replica_id)
+        return self._replica_schedulers[(replica_id, replica_local_id)]
+
+    def get_replica_stage_scheduler(
+        self, replica_id: int, replica_local_id: int | None, stage_id: int
+    ):
+        if replica_local_id is None:
+            return self.get_full_stage_replica_scheduler(
+                replica_id
+            ).get_replica_stage_scheduler(stage_id)
+        return self._replica_schedulers[
+            (replica_id, replica_local_id)
+        ].get_replica_stage_scheduler(stage_id)
+
+    def get_stage_execution_context(
+        self, replica_id: int, stage_id: int
+    ) -> StageExecutionContext:
+        """Return the parent admission owner for one physical Replica stage."""
+
+        if type(replica_id) is not int or replica_id < 0:
+            raise ValueError("replica_id must be an exact non-negative int")
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError("stage_id must be an exact non-negative int")
+        contexts = getattr(self, "_stage_execution_contexts", None)
+        if type(contexts) is not dict:
+            raise RuntimeError("Stage execution contexts were not initialized")
+        try:
+            return contexts[(replica_id, stage_id)]
+        except KeyError as exc:
+            raise ValueError(
+                "Unknown Replica/stage admission context: "
+                f"replica_id={replica_id}, stage_id={stage_id}"
+            ) from exc
+
+    def release_stage_admission_for_batch(
+        self,
+        batch: Batch,
+        *,
+        stage_id: int | None = None,
+    ) -> None:
+        """Release a batch's parent stage owner at its true completion boundary."""
+
+        ticket = getattr(batch, "_stage_admission_ticket", None)
+        if ticket is None:
+            return
+        if stage_id is None:
+            stage_id = getattr(batch, "afd_stage_idx", None)
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError(
+                "stage_id is required to release a stage admission ticket"
+            )
+        context = self.get_stage_execution_context(
+            int(ticket.replica_id),
+            stage_id,
+        )
+        context.release(ticket)
+        batch.__dict__.pop("_stage_admission_ticket", None)
+
+    def discard_stage_admission_ticket(
+        self,
+        ticket: StageAdmissionTicket,
+        *,
+        stage_id: int,
+    ) -> None:
+        """Clean up one ticket captured by a stale stage event."""
+
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError(
+                "stage_id is required to discard a stage admission ticket"
+            )
+        context = self.get_stage_execution_context(
+            int(ticket.replica_id),
+            stage_id,
+        )
+        if context.is_active(ticket):
+            context.release(ticket)
+        elif context.is_queued(ticket):
+            context.cancel(ticket)
+        elif not context.is_cancelled(ticket):
+            raise ValueError(
+                "stale stage event carries an unknown stage admission ticket: "
+                f"{ticket.operation_id!r}"
+            )
+
+    def transition_stage_admission_for_layer(
+        self,
+        batch: Batch,
+        *,
+        stage_id: int,
+        layer_id: int,
+        operation_kind: str,
+        scope: str,
+        participant_ep_ids: tuple[int, ...] = (),
+    ) -> None:
+        """Switch a shared batch's active parent scope at a layer boundary.
+
+        Shared co-location/PDD execution keeps the outer batch admitted to one
+        pipeline stage, but its layer operation alternates between full-stage
+        attention/dense work and a complete local EP wave.  The active ticket is
+        replaced atomically so the stage never becomes idle between those
+        dependent operations.
+
+        Direct unit probes may call the pure layer helpers without constructing a
+        cluster scheduler.  Such probes have neither a context registry nor a
+        ticket; production schedulers always have both, and missing state there
+        is an explicit error rather than a fallback.
+        """
+
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError("stage_id must be an exact non-negative int")
+        if type(layer_id) is not int or layer_id < 0:
+            raise ValueError("layer_id must be an exact non-negative int")
+        if operation_kind not in ("attention", "ffn"):
+            raise ValueError(
+                "operation_kind must be 'attention' or 'ffn', "
+                f"got {operation_kind!r}"
+            )
+        ticket = getattr(batch, "_stage_admission_ticket", None)
+        contexts = getattr(self, "_stage_execution_contexts", None)
+        if ticket is None and contexts is None:
+            # Standalone materializer tests intentionally omit the outer DES
+            # scheduler.  They do not claim stage ownership and therefore have
+            # no scope to transition.
+            return
+        if ticket is None:
+            raise ValueError(
+                "shared layer operation is missing its stage admission ticket"
+            )
+        context = self.get_stage_execution_context(ticket.replica_id, stage_id)
+        operation_id = (
+            "shared_layer",
+            int(batch.id),
+            int(batch.schedule_epoch),
+            int(stage_id),
+            int(layer_id),
+            operation_kind,
+            scope,
+        )
+        next_ticket = context.transition_active_scope(
+            ticket,
+            operation_id=operation_id,
+            scope=scope,
+            participant_ep_ids=participant_ep_ids,
+        )
+        batch._stage_admission_ticket = next_ticket
+        history = getattr(batch, "_stage_admission_scope_history", None)
+        if history is None:
+            history = []
+            batch._stage_admission_scope_history = history
+        history.append(
+            {
+                "stage_id": int(stage_id),
+                "layer_id": int(layer_id),
+                "scope": scope,
+                "admission_seq": int(next_ticket.admission_seq),
+                "participant_ep_ids": tuple(next_ticket.participant_ep_ids),
+            }
         )
 
     def make_decode_sync_global_id(
         self,
         replica_id: int,
-        dp_id: int,
+        replica_local_id: int,
         lane_decode_sync_counter: int,
     ) -> int:
         """Encode a MONOLITHIC MoE decode-sync id with lane scope."""
@@ -646,13 +1742,17 @@ class BaseClusterScheduler(ABC):
             )
         ep_participant_count = max(1, int(ep_participant_count or 1))
 
-        lane_id = int(dp_id or 0)
+        lane_id = int(replica_local_id or 0)
         if lane_id < 0:
-            raise ValueError(f"dp_id must be non-negative, got {dp_id!r}")
+            raise ValueError(
+                "replica_local_id must be non-negative, "
+                f"got {replica_local_id!r}"
+            )
         if lane_id >= ep_participant_count:
             raise ValueError(
                 "MONOLITHIC decode sync lane id must be within the EP participant "
-                f"domain, got dp_id={lane_id}, ep_participant_count={ep_participant_count}"
+                f"domain, got replica_local_id={lane_id}, "
+                f"ep_participant_count={ep_participant_count}"
             )
 
         lane_counter = int(lane_decode_sync_counter or 0)
@@ -768,7 +1868,10 @@ class BaseClusterScheduler(ABC):
     @staticmethod
     def _debug_lane_tuple(lane: Any) -> List[Any]:
         if not isinstance(lane, tuple) or len(lane) != 2:
-            raise TypeError(f"Expected lane tuple(replica_id, dp_id), got {lane!r}")
+            raise TypeError(
+                "Expected lane tuple(replica_id, replica_local_id), "
+                f"got {lane!r}"
+            )
         return [lane[0], lane[1]]
 
     @classmethod
@@ -788,7 +1891,7 @@ class BaseClusterScheduler(ABC):
                     "request_ids": list(getattr(batch, "request_ids", [])),
                     "source_lane": [
                         getattr(transfer_info, "source_replica_id", None),
-                        getattr(transfer_info, "source_dp_id", None),
+                        getattr(transfer_info, "source_replica_local_id", None),
                     ],
                     "target_ffn_replica_id": getattr(
                         transfer_info, "target_ffn_replica_id", None
@@ -890,7 +1993,7 @@ class BaseClusterScheduler(ABC):
         required_attrs = [
             "_cluster_type",
             "_request_queue",
-            "_dp_replica_schedulers",
+            "_replica_schedulers",
             "_raw_batch_waiting_for_m2n_back",
         ]
         for attr_name in required_attrs:
@@ -922,8 +2025,15 @@ class BaseClusterScheduler(ABC):
             m2n_ready_groups = {"status": "not_applicable"}
 
         replica_states = {}
+        scheduler_items = list(self._replica_schedulers.items())
+        scheduler_items.extend(
+            ((replica_id, None), replica_scheduler)
+            for replica_id, replica_scheduler in getattr(
+                self, "_full_stage_replica_schedulers", {}
+            ).items()
+        )
         for scheduler_key, replica_scheduler in sorted(
-            self._dp_replica_schedulers.items(), key=lambda item: str(item[0])
+            scheduler_items, key=lambda item: str(item[0])
         ):
             if not hasattr(replica_scheduler, "get_debug_state"):
                 raise RuntimeError(
@@ -955,7 +2065,14 @@ class BaseClusterScheduler(ABC):
 
         replica_states = []
         all_empty = True
-        for key, replica_scheduler in self._dp_replica_schedulers.items():
+        scheduler_items = list(self._replica_schedulers.items())
+        scheduler_items.extend(
+            ((replica_id, None), replica_scheduler)
+            for replica_id, replica_scheduler in getattr(
+                self, "_full_stage_replica_schedulers", {}
+            ).items()
+        )
+        for key, replica_scheduler in scheduler_items:
             rs_empty = replica_scheduler.is_empty()
             replica_states.append((key, rs_empty))
             all_empty = all_empty and rs_empty
@@ -966,156 +2083,17 @@ class BaseClusterScheduler(ABC):
         return rq_len == 0 and af_q_len == 0 and all_empty
 
     @staticmethod
-    def _conserve_tokens_allocation(total_tokens: int, expert_ids: List[int], ratios: Dict[int, float]) -> Dict[int, int]:
-        """Allocate integer tokens per expert with strict conservation using the
-        Largest Remainder Method (Hamilton).
+    def _validate_token_conservation(
+        input_tokens: int,
+        per_expert_tokens: Dict[int, int],
+        context: str,
+    ) -> None:
+        """Validate exact conservation for one already-materialized EP subset.
 
-        Args:
-            total_tokens: Target total tokens to distribute (non-negative integer)
-            expert_ids: Ordered list of expert global IDs to allocate to
-            ratios: Mapping expert_id -> routing ratio (non-negative floats). Ratios
-                    are allowed to sum to a value different from 1.0; they will be
-                    normalized internally when total_tokens > 0.
-
-        Returns:
-            Dict[expert_id, tokens] with sum(values) == total_tokens.
-
-        Raises:
-            ValueError: If total_tokens < 0, or ratios contain negative values,
-                        or ratios sum to 0 while total_tokens > 0
-        """
-        if total_tokens < 0:
-            raise ValueError("total_tokens must be non-negative")
-        if any(r < 0.0 for r in ratios.values()):
-            raise ValueError("Routing ratios must be non-negative")
-
-        # Edge case: no tokens to distribute => all zeros
-        if total_tokens == 0:
-            return {eid: 0 for eid in expert_ids}
-
-        # Normalize ratios if necessary
-        sum_ratios = sum(ratios.get(eid, 0.0) for eid in expert_ids)
-        if sum_ratios <= 0.0:
-            # No routing mass but need to place tokens => fail fast
-            raise ValueError("Sum of routing ratios must be > 0 when total_tokens > 0")
-
-        normalized = {eid: (ratios.get(eid, 0.0) / sum_ratios) for eid in expert_ids}
-
-        # Initial allocation by floor
-        ideal = {eid: total_tokens * normalized[eid] for eid in expert_ids}
-        base = {eid: int(math.floor(ideal[eid])) for eid in expert_ids}
-        allocated = sum(base.values())
-        remainder = total_tokens - allocated
-
-        # Distribute remaining tokens to experts with largest fractional parts
-        # Deterministic tie-breaker: lower expert_id first
-        if remainder > 0:
-            ranked = sorted(
-                ((eid, ideal[eid] - base[eid]) for eid in expert_ids),
-                key=lambda x: (-x[1], x[0])
-            )
-            for i in range(remainder):
-                eid = ranked[i % len(ranked)][0]
-                base[eid] += 1
-
-        # Validation: non-negative and exact conservation
-        assert all(v >= 0 for v in base.values()), "Negative allocation detected"
-        assert sum(base.values()) == total_tokens, (
-            f"Token conservation violated: allocated={sum(base.values())}, target={total_tokens}"
-        )
-
-        return base
-
-    @staticmethod
-    def _get_ep_subset_routed_token_total(
-        total_routed_tokens: int,
-        expert_ids: List[int],
-        ratios: Dict[int, float],
-    ) -> int:
-        """Return the routed-token total that belongs to one EP expert subset.
-
-        ``ratios`` describes the global routing distribution across all experts.
-        A single EP lane owns only ``expert_ids``, so it must receive only the
-        routing mass covered by that subset. Allocating the full global token
-        count to every EP lane would multiply MoE work by ``ep_size`` and create
-        pathological O(total_tokens) remainder loops for large prefill batches.
-        """
-        allocation = BaseClusterScheduler._get_ep_subset_routed_token_allocation(
-            total_routed_tokens,
-            expert_ids,
-            ratios,
-        )
-        return sum(allocation.values())
-
-    def _get_cached_ep_subset_routed_token_allocation(
-        self,
-        total_routed_tokens: int,
-        expert_ids: List[int],
-        ratios: Dict[int, float],
-    ) -> Dict[int, int]:
-        """Allocate routed tokens for an EP subset using an exact global cache.
-
-        DECODE_FFN creates one EPBatchGroup per EP lane for the same ready group.
-        The Hamilton allocation across the global expert set is identical for all
-        EP lanes in that group, so recomputing it once per lane is pure overhead.
-        Cache the exact global allocation and then return the requested subset.
-        """
-        global_expert_ids = tuple(sorted(set(ratios.keys()) | set(expert_ids)))
-        cache_key = (id(ratios), int(total_routed_tokens), global_expert_ids)
-        cache = getattr(self, "_ep_routed_token_allocation_cache", None)
-        if cache is None:
-            cache = {}
-            self._ep_routed_token_allocation_cache = cache
-
-        global_allocation = cache.get(cache_key)
-        if global_allocation is None:
-            global_allocation = self._conserve_tokens_allocation(
-                total_routed_tokens,
-                list(global_expert_ids),
-                ratios,
-            )
-            cache[cache_key] = global_allocation
-
-        return {eid: global_allocation.get(eid, 0) for eid in expert_ids}
-
-    @staticmethod
-    def _get_ep_subset_routed_token_allocation(
-        total_routed_tokens: int,
-        expert_ids: List[int],
-        ratios: Dict[int, float],
-    ) -> Dict[int, int]:
-        """Allocate routed tokens to one EP subset from a global expert split.
-
-        The global expert allocation is computed once with strict conservation,
-        then restricted to the experts owned by the EP lane. This avoids
-        independent per-subset rounding, whose accumulated error can create or
-        drop routed tokens across the full EP group.
-        """
-        global_expert_ids = sorted(set(ratios.keys()) | set(expert_ids))
-        if not global_expert_ids:
-            if total_routed_tokens == 0:
-                return {}
-            raise ValueError(
-                "At least one expert ID is required when total_routed_tokens > 0"
-            )
-        global_allocation = BaseClusterScheduler._conserve_tokens_allocation(
-            total_routed_tokens,
-            global_expert_ids,
-            ratios,
-        )
-        return {eid: global_allocation.get(eid, 0) for eid in expert_ids}
-
-    def _validate_token_conservation(self, input_tokens: int, per_expert_tokens: Dict[int, int], context: str):
-        """
-        Phase 3 Task 2: Validate that tokens are conserved in MoE routing.
-
-        Args:
-            input_tokens: Total number of tokens entering MoE layer
-            per_expert_tokens: Dict mapping expert_id -> token_count
-            context: Description of where validation is happening (for error messages)
-
-        Raises:
-            ValueError: If token conservation is violated
+        The shared MoE materializer owns integerization.  The scheduler keeps
+        this small fail-fast check at the entity-construction boundary so a
+        malformed lane workload cannot enter the event queue.  It intentionally
+        does not allocate or rebalance tokens.
         """
         total_expert_tokens = sum(per_expert_tokens.values())
         if total_expert_tokens != input_tokens:
@@ -1126,6 +2104,73 @@ class BaseClusterScheduler(ABC):
                 f"Per-expert allocation={per_expert_tokens}"
             )
 
+
+    def _materialize_ep_wave_workload(
+        self,
+        group: List[Tuple[Batch, Any]],
+        replica_id: int,
+        layer_global_id: int,
+        routing_details,
+    ) -> LayerEPWorkload:
+        """Materialize one aggregate workload shared by every EP lane in a wave."""
+        if type(group) is not list or not group:
+            raise ValueError("DECODE_FFN EP wave group must be a non-empty list")
+        routing_token_count = 0
+        for entry in group:
+            if type(entry) is not tuple or len(entry) != 2:
+                raise ValueError(
+                    "DECODE_FFN EP wave group entries must be (batch, transfer_info) tuples"
+                )
+            batch = entry[0]
+            batch_tokens = getattr(batch, "total_num_tokens", None)
+            if type(batch_tokens) is not int or batch_tokens < 0:
+                raise ValueError(
+                    "DECODE_FFN EP wave source batch total_num_tokens must be a "
+                    f"non-negative int, got {batch_tokens!r}"
+                )
+            routing_token_count += batch_tokens
+
+        replica_config = getattr(self._config, "replica_config", None)
+        if replica_config is None:
+            raise ValueError("DECODE_FFN requires replica_config for EP materialization")
+        total_expert_num = getattr(replica_config, "total_expert_num", None)
+        moe_expert_parallel_size = getattr(
+            replica_config,
+            "moe_expert_parallel_size",
+            None,
+        )
+        router_topk = getattr(replica_config, "router_topk", None)
+        if type(total_expert_num) is not int or total_expert_num <= 0:
+            raise ValueError(
+                "DECODE_FFN total_expert_num must be an exact positive int for EP materialization"
+            )
+        if type(moe_expert_parallel_size) is not int or moe_expert_parallel_size <= 0:
+            raise ValueError(
+                "DECODE_FFN moe_expert_parallel_size must be an exact positive int for EP materialization"
+            )
+        if type(router_topk) is not int or router_topk <= 0:
+            raise ValueError(
+                "DECODE_FFN router_topk must be an exact positive int for EP materialization"
+            )
+        expert_to_ep = build_contiguous_expert_ownership(
+            total_expert_num,
+            moe_expert_parallel_size,
+        )
+        return materialize_layer_ep_workload(
+            routing_ratios=resolve_routing_details(
+                routing_details,
+                target_replica_id=replica_id,
+                global_layer_id=layer_global_id,
+            ),
+            target_replica_id=replica_id,
+            global_layer_id=layer_global_id,
+            routing_token_count=routing_token_count,
+            router_topk=router_topk,
+            total_expert_num=total_expert_num,
+            moe_expert_parallel_size=moe_expert_parallel_size,
+            expert_to_ep=expert_to_ep,
+        )
+
     def _prepare_ep_batch_group_plan(
         self,
         group: List[Batch],
@@ -1134,6 +2179,7 @@ class BaseClusterScheduler(ABC):
         expert_global_ids,
         layer_global_id,
         routing_details,
+        layer_workload: Optional[LayerEPWorkload] = None,
     ) -> EPBatchGroupPlan:
         """Prepare one EP batch without constructing entities or mutating caches."""
 
@@ -1187,14 +2233,27 @@ class BaseClusterScheduler(ABC):
         if self._cluster_type == ClusterType.DECODE_FFN:
             for (batch, _) in group:
                 orig_replica_id = getattr(batch, 'decode_attn_original_replica_id', None)
-                orig_dp_id = getattr(batch, 'decode_attn_original_dp_id', None)
-                if orig_replica_id is None or orig_dp_id is None:
+                orig_replica_local_id = getattr(batch, 'decode_attn_original_replica_local_id', None)
+                if orig_replica_id is None:
                     raise ValueError(
-                        f"[ISSUE-007] Batch {batch.id} entering DECODE_FFN without decode_attn_original_* attributes. "
+                        f"[ISSUE-007] Batch {batch.id} entering DECODE_FFN without "
+                        "decode_attn_original_replica_id. "
                         f"decode_attn_original_replica_id={orig_replica_id}, "
-                        f"decode_attn_original_dp_id={orig_dp_id}. "
-                        f"This indicates a bug in the A→F transfer path - the original batch from DECODE_ATTN "
-                        f"should have these attributes set when created by _create_batch()."
+                        f"decode_attn_original_replica_local_id={orig_replica_local_id}. "
+                        "The A→F source identity is the attention serving Replica; "
+                        "its full-stage local identity is None."
+                    )
+                if type(orig_replica_id) is not int or orig_replica_id < 0:
+                    raise ValueError(
+                        "DECODE_FFN source decode_attn_original_replica_id must be "
+                        f"an exact non-negative int, got {orig_replica_id!r}"
+                    )
+                if orig_replica_local_id is not None and (
+                    type(orig_replica_local_id) is not int or orig_replica_local_id < 0
+                ):
+                    raise ValueError(
+                        "DECODE_FFN source decode_attn_original_replica_local_id must be None "
+                        f"or an exact non-negative int, got {orig_replica_local_id!r}"
                     )
 
         source_batches = []
@@ -1246,28 +2305,73 @@ class BaseClusterScheduler(ABC):
                 "DECODE_FFN router_topk must be an exact positive int, "
                 f"got {router_topk!r}"
             )
-        ep_batch_group_total_num_token *= router_topk
-
         group_time = max((b.time or 0.0) for (b, _) in group)
 
-        replica_routing_details = routing_details.get(replica_id)
-        if type(replica_routing_details) is not dict:
-            raise ValueError(
-                "DECODE_FFN routing_details missing exact target replica mapping: "
-                f"replica_id={replica_id}"
-            )
-        global_routing_ratios = replica_routing_details.get(layer_global_id)
-        if type(global_routing_ratios) is not dict:
-            raise ValueError(
-                "DECODE_FFN routing_details missing exact layer mapping: "
-                f"replica_id={replica_id}, layer_global_id={layer_global_id}"
-            )
-        experts_tokens_mapping = self._get_ep_subset_routed_token_allocation(
-            ep_batch_group_total_num_token,
-            expert_global_ids,
-            global_routing_ratios,
+        replica_config = getattr(self._config, "replica_config", None)
+        if replica_config is None:
+            raise ValueError("DECODE_FFN requires replica_config for EP materialization")
+        total_expert_num = getattr(replica_config, "total_expert_num", None)
+        moe_expert_parallel_size = getattr(
+            replica_config,
+            "moe_expert_parallel_size",
+            None,
         )
-        ep_batch_group_total_num_token = sum(experts_tokens_mapping.values())
+        if type(total_expert_num) is not int or total_expert_num <= 0:
+            raise ValueError(
+                "DECODE_FFN total_expert_num must be an exact positive int for "
+                "EP materialization"
+            )
+        if type(moe_expert_parallel_size) is not int or moe_expert_parallel_size <= 0:
+            raise ValueError(
+                "DECODE_FFN moe_expert_parallel_size must be an exact positive int "
+                "for EP materialization"
+            )
+        expert_to_ep = build_contiguous_expert_ownership(
+            total_expert_num,
+            moe_expert_parallel_size,
+        )
+        expected_expert_ids = [
+            expert_id
+            for expert_id in range(total_expert_num)
+            if expert_to_ep[expert_id] == ep_id
+        ]
+        if sorted(expert_global_ids) != expected_expert_ids:
+            raise ValueError(
+                "DECODE_FFN expert_global_ids do not match contiguous ownership "
+                f"for ep_id={ep_id}: expected={expected_expert_ids}, "
+                f"got={expert_global_ids}"
+            )
+        if layer_workload is None:
+            layer_workload = self._materialize_ep_wave_workload(
+                group,
+                replica_id,
+                layer_global_id,
+                routing_details,
+            )
+        if not isinstance(layer_workload, LayerEPWorkload):
+            raise ValueError(
+                "DECODE_FFN shared EP workload must be a LayerEPWorkload instance"
+            )
+        if layer_workload.target_replica_id != replica_id:
+            raise ValueError(
+                "DECODE_FFN shared EP workload target replica mismatch: "
+                f"expected={replica_id}, got={layer_workload.target_replica_id}"
+            )
+        if layer_workload.global_layer_id != layer_global_id:
+            raise ValueError(
+                "DECODE_FFN shared EP workload layer mismatch: "
+                f"expected={layer_global_id}, got={layer_workload.global_layer_id}"
+            )
+        if layer_workload.routing_token_count != ep_batch_group_total_num_token:
+            raise ValueError(
+                "DECODE_FFN shared EP workload routing-token mismatch: "
+                f"expected={ep_batch_group_total_num_token}, "
+                f"got={layer_workload.routing_token_count}"
+            )
+        experts_tokens_mapping = dict(
+            layer_workload.per_ep_per_expert_tokens[ep_id]
+        )
+        ep_batch_group_total_num_token = layer_workload.per_ep_routed_tokens[ep_id]
 
         self._validate_token_conservation(
             input_tokens=ep_batch_group_total_num_token,
@@ -1313,6 +2417,21 @@ class BaseClusterScheduler(ABC):
         )
         ep_batch_group.afd_stage_idx = plan.afd_stage_idx
         ep_batch_group.decode_ffn_layer_id = plan.layer_global_id
+        (
+            ep_batch_group.afd_stage_metadata,
+            ep_batch_group.afd_stage_represents_all_stages,
+        ) = self._aggregate_decode_ffn_afd_metadata(plan.source_batches)
+        routing_token_count = sum(
+            int(source_batch.total_num_tokens) for source_batch in plan.source_batches
+        )
+        router_topk = getattr(self._config.replica_config, "router_topk", None)
+        if type(router_topk) is not int or router_topk <= 0:
+            raise ValueError(
+                "DECODE_FFN EP group requires a positive integer router_topk"
+            )
+        ep_batch_group.routing_token_count = routing_token_count
+        ep_batch_group.router_topk = router_topk
+        ep_batch_group.total_routed_assignments = routing_token_count * router_topk
         ep_batch_group.moe_pre_routing_effective_total_tokens = (
             plan.pre_routing_effective_total_tokens
         )
@@ -1328,6 +2447,7 @@ class BaseClusterScheduler(ABC):
         expert_global_ids,
         layer_global_id,
         routing_details,
+        layer_workload: Optional[LayerEPWorkload] = None,
     ) -> EPBatchGroup:
         """Build one EP batch without committing scheduler-owned state."""
 
@@ -1338,6 +2458,7 @@ class BaseClusterScheduler(ABC):
             expert_global_ids,
             layer_global_id,
             routing_details,
+            layer_workload=layer_workload,
         )
         return self._materialize_ep_batch_group(plan)
 
@@ -1651,12 +2772,77 @@ class BaseClusterScheduler(ABC):
             sync_time=ep_collective_sync_time,
         )
 
+        trace_batch_id, trace_layer_id = self._resolve_ep_trace_identity(
+            prospective_batches,
+            batch_global_id,
+        )
+        trace_routing_token_count = getattr(
+            next(iter(prospective_batches.values())), "routing_token_count", None
+        )
+        trace_router_topk = getattr(
+            next(iter(prospective_batches.values())), "router_topk", None
+        )
+        trace_total_routed_assignments = getattr(
+            next(iter(prospective_batches.values())),
+            "total_routed_assignments",
+            None,
+        )
+        if any(
+            getattr(ep_batch, "routing_token_count", None)
+            != trace_routing_token_count
+            or getattr(ep_batch, "router_topk", None) != trace_router_topk
+            or getattr(ep_batch, "total_routed_assignments", None)
+            != trace_total_routed_assignments
+            for ep_batch in prospective_batches.values()
+        ):
+            raise ValueError("EP dispatch lanes disagree on routing metadata")
+        trace_identity = self._build_ep_trace_identity(
+            batch=next(iter(prospective_batches.values())),
+            replica_id=replica_id,
+            stage_id=stage_id,
+            operation_id=trace_batch_id,
+            operation_kind="ep_ffn",
+        )
+        self._log_ep_conservation_trace(
+            cluster_type=self._cluster_type,
+            batch_id=trace_batch_id,
+            layer_id=trace_layer_id,
+            routing_token_count=trace_routing_token_count,
+            router_topk=trace_router_topk,
+            total_routed_assignments=trace_total_routed_assignments,
+            per_ep_routed_tokens={
+                int(ep_id): sum(getattr(ep_batch, "per_expert_tokens", {}).values())
+                for ep_id, ep_batch in prospective_batches.items()
+            },
+            trace_identity=trace_identity,
+        )
+        trace_origin_s = min(prospective_arrival_times.values())
+        self._log_ep_barrier_trace(
+            cluster_type=self._cluster_type,
+            batch_id=trace_batch_id,
+            layer_id=trace_layer_id,
+            phase="dispatch",
+            expected_ep_ids=tuple(sorted(expected_ep_ids)),
+            arrived_ep_ids=tuple(sorted(expected_ep_ids)),
+            max_lane_time_ms=(ep_collective_sync_time - trace_origin_s) * 1000.0,
+            collective_time_ms=ep_collective_exec_time_ms,
+            barrier_time_ms=(collective_event_time - trace_origin_s) * 1000.0,
+            barrier_start_time_s=trace_origin_s,
+            barrier_end_time_s=collective_event_time,
+            trace_identity=trace_identity,
+        )
+
         if dispatch_wait_room is None:
             dispatch_wait_room = self._ep_alltoall_dispatch_waiting_room[
                 replica_id
             ][stage_id][batch_global_id]
         dispatch_wait_room["batches"][ep_id] = batch
         dispatch_wait_room["arrival_times"][ep_id] = time
+        dispatch_start_time_s = min(prospective_arrival_times.values())
+        for ep_batch in prospective_batches.values():
+            ep_batch._ep_dispatch_collective_start_time_s = float(
+                dispatch_start_time_s
+            )
         logger.info(
             f"[EP-DISPATCH][COLLECTIVE] global_id={batch_global_id}, "
             f"sync_time={ep_collective_sync_time:.6f}s, "
@@ -1713,6 +2899,7 @@ class BaseClusterScheduler(ABC):
             batch_global_id
         )
         for ep_batch, ready_time, _ in prepared_lanes:
+            ep_batch._ep_dispatch_collective_end_time_s = float(time)
             ep_batch.time = ready_time
 
         return [event for _, _, event in prepared_lanes]
@@ -1863,6 +3050,24 @@ class BaseClusterScheduler(ABC):
                 exec_time_ms=ep_collective_exec_time_ms,
                 sync_time=ep_collective_sync_time,
             )
+            post_combine_times_s = []
+            for lane_ep_id, ep_batch in prospective_batches.items():
+                post_combine_time_s = getattr(ep_batch, "post_combine_time", None)
+                if (
+                    not isinstance(post_combine_time_s, Real)
+                    or isinstance(post_combine_time_s, bool)
+                    or not math.isfinite(float(post_combine_time_s))
+                    or float(post_combine_time_s) < 0.0
+                ):
+                    raise ValueError(
+                        "EP combine lane is missing a finite non-negative "
+                        "post_combine_time in seconds: "
+                        f"ep_id={lane_ep_id}, value={post_combine_time_s!r}"
+                    )
+                post_combine_times_s.append(float(post_combine_time_s))
+            post_combine_time_s = max(post_combine_times_s)
+            combine_end_time = float(collective_event_time)
+            final_event_time = combine_end_time + post_combine_time_s
 
             if ep_wait_room is None:
                 ep_wait_room = self._ep_allgather_waiting_room[replica_id][stage_id][
@@ -1872,14 +3077,20 @@ class BaseClusterScheduler(ABC):
             ep_wait_room["arrival_times"][ep_id] = time
 
             logger.info(
-                f"[DEBUG] Creating EPAllToAllCombineCollectiveEvent at time={collective_event_time:.3f}s, "
+                f"[DEBUG] Creating EPAllToAllCombineCollectiveEvent at time={final_event_time:.3f}s, "
+                f"combine_end_time={combine_end_time:.3f}s, "
                 f"sync_time={ep_collective_sync_time:.3f}s, exec_time={ep_collective_exec_time_ms:.3f}ms, "
+                f"post_combine_time={post_combine_time_s:.6f}s, "
                 f"data_size={data_size_bytes} bytes ({payload_description})"
             )
 
             return [
                 EPAllToAllCombineCollectiveEvent(
-                    collective_event_time, replica_id, stage_id, batch_global_id
+                    final_event_time,
+                    replica_id,
+                    stage_id,
+                    batch_global_id,
+                    combine_end_time=combine_end_time,
                 )
             ]
         else:
@@ -1948,7 +3159,13 @@ class BaseClusterScheduler(ABC):
         return max(positive_execution_times)
 
     def on_ep_alltoall_combine_collective_schedule(
-        self, time: float, replica_id: int, stage_id: int, batch_global_id: int, metrics_store
+        self,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch_global_id: int,
+        metrics_store,
+        combine_end_time: float,
     ):
         """
         Handle EP AllToAll combine collective synchronization in decode-ffn cluster.
@@ -1971,6 +3188,26 @@ class BaseClusterScheduler(ABC):
             f"replica_id={replica_id}, stage_id={stage_id}, batch_global_id={batch_global_id}"
         )
 
+        if (
+            not isinstance(time, Real)
+            or isinstance(time, bool)
+            or not math.isfinite(float(time))
+        ):
+            raise ValueError("EP combine completion time must be finite")
+        time = float(time)
+        if (
+            not isinstance(combine_end_time, Real)
+            or isinstance(combine_end_time, bool)
+            or not math.isfinite(float(combine_end_time))
+        ):
+            raise ValueError("EP combine end time must be finite")
+        combine_end_time = float(combine_end_time)
+        if combine_end_time > time:
+            raise ValueError(
+                "EP combine end time cannot be later than final completion time: "
+                f"combine_end_time={combine_end_time!r}, time={time!r}"
+            )
+
         ep_wait_room = self._ep_allgather_waiting_room[replica_id][stage_id][
             batch_global_id
         ]
@@ -1980,6 +3217,92 @@ class BaseClusterScheduler(ABC):
             raise ValueError(
                 "EP all-to-all collective reached with empty ep_batches"
             )
+
+        arrival_times = ep_wait_room.get("arrival_times")
+        if not isinstance(arrival_times, dict) or set(arrival_times) != set(ep_batches):
+            raise ValueError(
+                "EP combine collective requires one arrival time for every lane"
+            )
+        trace_batch_id, trace_layer_id = self._resolve_ep_trace_identity(
+            ep_batches,
+            batch_global_id,
+        )
+        trace_sync_s = max(arrival_times.values())
+        if not isinstance(time, Real) or isinstance(time, bool) or not math.isfinite(float(time)):
+            raise ValueError("EP combine collective time must be finite")
+        if combine_end_time < trace_sync_s:
+            raise ValueError(
+                "EP combine end time cannot precede the slowest lane"
+            )
+        trace_identity = self._build_ep_trace_identity(
+            batch=next(iter(ep_batches.values())),
+            replica_id=replica_id,
+            stage_id=stage_id,
+            operation_id=trace_batch_id,
+            operation_kind="ep_ffn",
+        )
+        dispatch_end_times = {
+            getattr(ep_batch, "_ep_dispatch_collective_end_time_s", None)
+            for ep_batch in ep_batches.values()
+        }
+        if len(dispatch_end_times) != 1 or None in dispatch_end_times:
+            raise ValueError(
+                "EP combine collective requires one dispatch collective end time "
+                f"for every lane: values={sorted(dispatch_end_times, key=repr)}"
+            )
+        dispatch_end_time_s = float(next(iter(dispatch_end_times)))
+        dispatch_start_times = {
+            getattr(ep_batch, "_ep_dispatch_collective_start_time_s", None)
+            for ep_batch in ep_batches.values()
+        }
+        if len(dispatch_start_times) != 1 or None in dispatch_start_times:
+            raise ValueError(
+                "EP combine collective requires one dispatch collective arrival "
+                "time for every lane: "
+                f"values={sorted(dispatch_start_times, key=repr)}"
+            )
+        dispatch_start_time_s = float(next(iter(dispatch_start_times)))
+        if dispatch_end_time_s < dispatch_start_time_s:
+            raise ValueError(
+                "EP dispatch collective end cannot precede dispatch arrival"
+            )
+        if trace_sync_s < dispatch_end_time_s:
+            raise ValueError(
+                "EP combine lane arrival cannot precede dispatch collective end"
+            )
+        self._log_ep_barrier_trace(
+            cluster_type=self._cluster_type,
+            batch_id=trace_batch_id,
+            layer_id=trace_layer_id,
+            phase="combine",
+            expected_ep_ids=tuple(sorted(ep_batches)),
+            arrived_ep_ids=tuple(sorted(ep_batches)),
+            max_lane_time_ms=(trace_sync_s - dispatch_end_time_s) * 1000.0,
+            collective_time_ms=(combine_end_time - trace_sync_s) * 1000.0,
+            barrier_time_ms=(combine_end_time - dispatch_end_time_s) * 1000.0,
+            barrier_start_time_s=dispatch_end_time_s,
+            barrier_end_time_s=combine_end_time,
+            trace_identity=trace_identity,
+        )
+        self._log_ep_wave_end_trace(
+            cluster_type=self._cluster_type,
+            batch_id=trace_batch_id,
+            layer_id=trace_layer_id,
+            wave_start_time_s=dispatch_start_time_s,
+            combine_barrier_end_time_s=combine_end_time,
+            post_combine_time_ms=(time - combine_end_time) * 1000.0,
+            wave_end_time_s=time,
+            trace_identity=trace_identity,
+        )
+        logger.info(
+            "[EP-POST-COMBINE] batch_global_id=%s combine_end_time=%.12f "
+            "final_completion_time=%.12f post_combine_duration_ms=%.6f %s",
+            batch_global_id,
+            combine_end_time,
+            time,
+            (time - combine_end_time) * 1000.0,
+            self._format_ep_trace_identity(trace_identity),
+        )
 
         logger.info(f"[DEBUG] Retrieved {len(ep_batches)} EP batches from waiting room: "
                    f"ep_ids={list(ep_batches.keys())}")
@@ -2042,13 +3365,13 @@ class BaseClusterScheduler(ABC):
             raw_batches.append((batch_id, raw_batch))
 
         stage_schedulers = {
-            ep_id: self.get_dp_replica_stage_scheduler(
+            ep_id: self.get_replica_stage_scheduler(
                 replica_id, ep_id, stage_id
             )
             for ep_id in ep_batches.keys()
         }
         replica_schedulers = {
-            ep_id: self.get_dp_replica_scheduler(replica_id, ep_id)
+            ep_id: self.get_replica_scheduler(replica_id, ep_id)
             for ep_id in ep_batches.keys()
         }
         activation_bytes_by_ep_id = {}
@@ -2074,7 +3397,10 @@ class BaseClusterScheduler(ABC):
 
             prepared_events = (
                 self._create_m2n_transfer_events_for_aggregated_batch(
-                    raw_batch, time
+                    raw_batch,
+                    time,
+                    source_replica_id=replica_id,
+                    source_replica_local_id=canonical_ep_id,
                 )
             )
             m2n_events.extend(prepared_events)
@@ -2098,6 +3424,29 @@ class BaseClusterScheduler(ABC):
             if not callable(getattr(stage_scheduler, "is_empty", None))
             or not bool(stage_scheduler.is_empty())
         ]
+
+        # DECODE_FFN owns one additional lane-free scheduler for dense FFN
+        # operations.  The EP path bypasses ``BatchStageEndEvent`` and thus
+        # cannot rely on that event to wake a queued full-stage batch.  Once
+        # the EP parent ticket is released below, emit the corresponding
+        # schedule event when dense work is waiting; the stage admission FIFO
+        # still decides whether it may start at this timestamp.
+        full_stage_scheduler = self.get_full_stage_replica_scheduler(replica_id)
+        full_stage_is_empty = getattr(full_stage_scheduler, "is_empty", None)
+        if not callable(full_stage_is_empty):
+            raise ValueError(
+                "DECODE_FFN full-stage Replica scheduler must expose is_empty()"
+            )
+        if not bool(full_stage_is_empty()):
+            schedule_events.append(
+                ReplicaStageScheduleEvent(
+                    time,
+                    replica_id,
+                    stage_id,
+                    self._cluster_type,
+                    None,
+                )
+            )
 
         self._ep_allgather_waiting_room[replica_id][stage_id].pop(
             batch_global_id
@@ -2138,7 +3487,7 @@ class BaseClusterScheduler(ABC):
                     replica_id,
                     replica_scheduler.memory_usage_percent,
                     self._cluster_type,
-                    dp_id=ep_id,
+                    replica_local_id=ep_id,
                 )
 
         for ep_id, ep_batch in ep_batches.items():
@@ -2148,7 +3497,7 @@ class BaseClusterScheduler(ABC):
                 replica_id=replica_id,
                 stage_id=stage_id,
                 cluster_type=self._cluster_type,
-                dp_id=ep_id,
+                replica_local_id=ep_id,
                 completion_source="ep_alltoall_combine_collective",
             )
 
@@ -2167,7 +3516,7 @@ class BaseClusterScheduler(ABC):
             logger.info(
                 f"[ISSUE-007][F2A][CREATE] batch_id={raw_batch.id}, "
                 f"decode_attn_original_replica_id={getattr(raw_batch, 'decode_attn_original_replica_id', 'MISSING')}, "
-                f"decode_attn_original_dp_id={getattr(raw_batch, 'decode_attn_original_dp_id', 'MISSING')}"
+                f"decode_attn_original_replica_local_id={getattr(raw_batch, 'decode_attn_original_replica_local_id', 'MISSING')}"
             )
 
             # Record DECODE_FFN execution time for each request using the synchronized
@@ -2192,12 +3541,27 @@ class BaseClusterScheduler(ABC):
             )
 
             raw_batch.time = time
+
+        # Parent ownership is released only after combine, transfer creation,
+        # request accounting, and activation cleanup have all completed.
+        canonical_ep_batch = ep_batches[canonical_ep_id]
+        self.release_stage_admission_for_batch(
+            canonical_ep_batch,
+            stage_id=stage_id,
+        )
         logger.info(f"[DEBUG] Created {len(m2n_events)} M2N transfer events: "
                     f"{[event.event_type.name if event and hasattr(event, 'event_type') and event.event_type else 'Unknown' for event in m2n_events]}")
 
         return m2n_events + schedule_events
 
-    def _create_m2n_transfer_events_for_aggregated_batch(self, batch, current_time):
+    def _create_m2n_transfer_events_for_aggregated_batch(
+        self,
+        batch,
+        current_time,
+        *,
+        source_replica_id: int,
+        source_replica_local_id: int | None,
+    ):
         """Create M2N transfer events for aggregated batch to return to decode-attn cluster."""
         from frontier.events.m2n_transfer_start_event import M2NTransferStartEvent
         from frontier.types import ClusterType
@@ -2221,7 +3585,7 @@ class BaseClusterScheduler(ABC):
         m2n_event = M2NTransferStartEvent(
             time=current_time,
             source_replica_id=batch.decode_attn_original_replica_id,
-            source_dp_id=batch.decode_attn_original_dp_id,
+            source_replica_local_id=batch.decode_attn_original_replica_local_id,
             source_cluster_type=ClusterType.DECODE_FFN,
             target_cluster_type=ClusterType.DECODE_ATTN,
             batch=batch,
@@ -2229,6 +3593,12 @@ class BaseClusterScheduler(ABC):
             transfer_time_ms=transfer_time,
             layer_id=layer_id,
             afd_stage_idx=batch.afd_stage_idx,
+            source_execution_replica_id=source_replica_id,
+            source_execution_replica_local_id=source_replica_local_id,
+            target_execution_replica_id=batch.decode_attn_original_replica_id,
+            target_execution_replica_local_id=(
+                batch.decode_attn_original_replica_local_id
+            ),
         )
 
         try:
@@ -2236,7 +3606,7 @@ class BaseClusterScheduler(ABC):
             logger.info(
                 f"[M2N][F2A][CREATE] batch_id={batch.id} reqs={req_ids} "
                 f"batch_global_id={getattr(batch, 'global_id', '?')} "
-                f"decode_attn_orig=(replica={getattr(batch, 'decode_attn_original_replica_id', '?')},dp={getattr(batch, 'decode_attn_original_dp_id', '?')}) "
+                f"decode_attn_orig=(replica={getattr(batch, 'decode_attn_original_replica_id', '?')},dp={getattr(batch, 'decode_attn_original_replica_local_id', '?')}) "
                 f"target={ClusterType.DECODE_ATTN.name} size={activation_size}B t_ms={transfer_time:.3f}"
             )
         except Exception:
@@ -2265,159 +3635,845 @@ class BaseClusterScheduler(ABC):
     Layer N-1: attn → sync → moe_comm → moe_comp → sync → moe_comm
     Pipeline: pipeline_time
     """
-    def on_prefill_sync(self, time: float, replica_id: int, stage_id: int, batch: Batch,
-                       dp_id: int, sync_stage: str, layer_id: int, stage_execution_time: float):
-        """
-        Handle prefill cluster synchronization points.
+    def _materialize_layer_ep_workload_for_batch(
+        self,
+        *,
+        batch: Batch,
+        target_replica_id: int,
+        global_layer_id: int,
+    ):
+        """Materialize one canonical per-layer workload for a full-model MoE batch."""
 
-        Args:
-            time: Current simulation time
-            replica_id: ID of the replica
-            stage_id: Pipeline stage ID
-            batch: The batch being processed
-            dp_id: Data parallel replica ID within the replica
-            sync_stage: "pre_moe" or "post_moe"
-            layer_id: Current layer being processed
-            stage_execution_time: Execution time for this stage
-        """
-        # Guard: This method should only be called for MoE models
-        if self._prefill_sync_waiting_room is None:
+        replica_config = getattr(self._config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        if replica_config is None or model_config is None:
             raise ValueError(
-                f"on_prefill_sync called for non-MoE model in PREFILL cluster. "
-                f"Dense models should not use sync events."
+                "Per-layer EP materialization requires replica_config.model_config"
             )
-
-        from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveEvent
-        from frontier.logger import get_cluster_logger
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-
-        batch_global_id = batch.global_id
-        # DP waiting room for prefill cluster
-        sync_wait_room = self._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id][sync_stage]
-
-        # CRITICAL FIX: If this is an idle batch and there's already a real batch
-        # in the waiting room for this dp_id, skip the idle batch.
-        if batch.is_idle and dp_id in sync_wait_room["batches"]:
-            existing_batch = sync_wait_room["batches"][dp_id]
-            if not existing_batch.is_idle:
-                logger.info(
-                    f"[PREFILL_SYNC][IDLE_SKIP] Skipping idle batch {batch.id} for dp_id={dp_id} "
-                    f"because real batch {existing_batch.id} already exists in waiting room"
-                )
-                return []
-
-        sync_wait_room["batches"][dp_id] = batch
-        sync_wait_room["arrival_times"][dp_id] = time
-
-        # Get the replica to check dp_size
-        replica = self.get_replica(replica_id)
-        dp_size = replica.dp_size
-
-        arrived = len(sync_wait_room["batches"])
-        logger.info(
-            f"[PREFILL_SYNC][ARRIVAL] stage={stage_id}, layer={layer_id}, sync_stage={sync_stage}, "
-            f"replica={replica_id}, dp_id={dp_id}, arrived={arrived}/{dp_size}, is_idle={batch.is_idle}, t={time:.6f}s"
+        if not model_config.is_moe:
+            raise ValueError(
+                "Per-layer EP materialization is invalid for a dense model"
+            )
+        if type(target_replica_id) is not int or target_replica_id < 0:
+            raise ValueError("target_replica_id must be an exact non-negative int")
+        if type(global_layer_id) is not int or global_layer_id < 0:
+            raise ValueError("global_layer_id must be an exact non-negative int")
+        routing_attr_by_cluster = {
+            ClusterType.PREFILL: "_prefill_routing_details",
+            ClusterType.DECODE: "_decode_routing_details",
+            ClusterType.DECODE_FFN: "_decode_ffn_routing_details",
+            ClusterType.MONOLITHIC: "_monolithic_routing_details",
+        }
+        routing_attr = routing_attr_by_cluster.get(self._cluster_type)
+        if routing_attr is None:
+            raise ValueError(
+                "Per-layer EP materialization is unsupported for cluster "
+                f"{self._cluster_type!r}"
+            )
+        routing_details = getattr(self._predictor, routing_attr, None)
+        if routing_details is None:
+            raise ValueError(
+                f"Missing {routing_attr} for {self._cluster_type.name} EP materialization"
+            )
+        total_expert_num = getattr(replica_config, "total_expert_num", None)
+        moe_ep_size = getattr(replica_config, "moe_expert_parallel_size", None)
+        router_topk = getattr(replica_config, "router_topk", None)
+        if type(total_expert_num) is not int or total_expert_num <= 0:
+            raise ValueError("total_expert_num must be an exact positive int")
+        if type(moe_ep_size) is not int or moe_ep_size <= 0:
+            raise ValueError("moe_expert_parallel_size must be an exact positive int")
+        if type(router_topk) is not int or router_topk <= 0:
+            raise ValueError("router_topk must be an exact positive int")
+        routing_token_count = getattr(batch, "total_num_tokens", None)
+        if type(routing_token_count) is not int or routing_token_count < 0:
+            raise ValueError(
+                "batch.total_num_tokens must be an exact non-negative int for routing"
+            )
+        expert_to_ep = build_contiguous_expert_ownership(
+            total_expert_num,
+            moe_ep_size,
+        )
+        routing_ratios = resolve_routing_details(
+            routing_details,
+            target_replica_id,
+            global_layer_id,
+        )
+        return materialize_layer_ep_workload(
+            routing_ratios=routing_ratios,
+            target_replica_id=target_replica_id,
+            global_layer_id=global_layer_id,
+            routing_token_count=routing_token_count,
+            router_topk=router_topk,
+            total_expert_num=total_expert_num,
+            moe_expert_parallel_size=moe_ep_size,
+            expert_to_ep=expert_to_ep,
         )
 
-        # Check if all DP replicas in this replica have arrived
-        if arrived == dp_size:
-            # Synchronize to the maximum time across all DP replicas
-            sync_time = max(sync_wait_room["arrival_times"].values())
-            logger.info(
-                f"[PREFILL_SYNC][COLLECTIVE_READY] Scheduling PrefillSyncCollectiveEvent at t={sync_time:.6f}s "
-                f"for batch_global_id={batch_global_id}, stage={stage_id}, layer={layer_id}, sync_stage={sync_stage}"
+    def _build_prefill_ep_lane_batch(
+        self,
+        *,
+        source_batch: Batch,
+        layer_id: int,
+        ep_id: int,
+        layer_workload,
+    ) -> EPBatchGroup:
+        """Build an EP lane batch for predictor evaluation without request mutation."""
+
+        per_expert_tokens = dict(layer_workload.per_ep_per_expert_tokens[ep_id])
+        logic_num_tokens = list(per_expert_tokens.values())
+        logic_requests = [
+            Request(0.0, 0, num_tokens) for num_tokens in logic_num_tokens
+        ]
+        lane_batch = self._create_batch_group(
+            logic_requests,
+            logic_num_tokens,
+            source_batch.replica_id,
+            ep_id,
+            getattr(source_batch, "time", 0.0) or 0.0,
+            [source_batch.id],
+            per_expert_tokens,
+        )
+        lane_batch.set_global_id(source_batch.global_id)
+        lane_batch.source_batches = [source_batch]
+        lane_batch.decode_ffn_layer_id = layer_id
+        lane_batch.afd_stage_idx = getattr(source_batch, "afd_stage_idx", None)
+        effective_tokens_getter = getattr(
+            source_batch,
+            "get_effective_total_tokens_for_compute",
+            None,
+        )
+        effective_tokens = (
+            int(effective_tokens_getter(self._cluster_type))
+            if callable(effective_tokens_getter)
+            else int(source_batch.total_num_tokens)
+        )
+        if effective_tokens <= 0:
+            raise ValueError(
+                "Prefill EP lane requires positive pre-routing effective tokens"
             )
+        lane_batch.moe_pre_routing_effective_total_tokens = effective_tokens
+        return lane_batch
+
+    def _on_prefill_ep_wave_ready(
+        self,
+        *,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch: Batch,
+        layer_id: int,
+        replica_local_id: int | None = None,
+    ) -> List:
+        """Run one layer's FFN wave and schedule its slowest-lane barrier."""
+
+        from frontier.events.prefill_sync_collective_event import (
+            PrefillSyncCollectiveEvent,
+        )
+
+        if not isinstance(time, Real) or not math.isfinite(float(time)):
+            raise ValueError("prefill EP wave time must be finite")
+        time = float(time)
+        model_config = self._config.replica_config.model_config
+        predictor = self._predictor
+        layer_workload = None
+        lane_compute_times_ms: list[float] = []
+        pre_dispatch_times_ms: list[float] = []
+        dispatch_times_ms: list[float] = []
+        routed_compute_times_ms: list[float] = []
+        combine_times_ms: list[float] = []
+        post_combine_times_ms: list[float] = []
+        if model_config.is_moe_layer(layer_id):
+            layer_workload = self._materialize_layer_ep_workload_for_batch(
+                batch=batch,
+                target_replica_id=replica_id,
+                global_layer_id=layer_id,
+            )
+            trace_identity = self._build_ep_trace_identity(
+                batch=batch,
+                replica_id=replica_id,
+                stage_id=stage_id,
+                operation_id=int(batch.id),
+                operation_kind="ep_ffn",
+            )
+            self._log_ep_conservation_trace(
+                cluster_type=self._cluster_type,
+                batch_id=int(batch.id),
+                layer_id=layer_id,
+                routing_token_count=int(layer_workload.routing_token_count),
+                router_topk=int(layer_workload.router_topk),
+                total_routed_assignments=int(layer_workload.total_routed_assignments),
+                per_ep_routed_tokens=dict(layer_workload.per_ep_routed_tokens),
+                trace_identity=trace_identity,
+            )
+            for ep_id in layer_workload.participant_ep_ids:
+                lane_batch = self._build_prefill_ep_lane_batch(
+                    source_batch=batch,
+                    layer_id=layer_id,
+                    ep_id=ep_id,
+                    layer_workload=layer_workload,
+                )
+                execution_time = predictor.predict_stage_execution_time(
+                    lane_batch,
+                    stage_id,
+                    cluster_type=self._cluster_type,
+                    num_layers=1,
+                    layer_id=layer_id,
+                    include_attention=False,
+                )
+                (
+                    pre_dispatch_ms,
+                    dispatch_ms,
+                    routed_compute_ms,
+                    combine_ms,
+                    post_combine_ms,
+                ) = self._get_shared_ep_phase_times_ms(
+                    execution_time,
+                    cluster_type=self._cluster_type,
+                    batch_id=int(batch.id),
+                    layer_id=layer_id,
+                    ep_id=int(ep_id),
+                )
+                lane_compute_ms = (
+                    pre_dispatch_ms + routed_compute_ms + post_combine_ms
+                )
+                lane_comm_ms = dispatch_ms + combine_ms
+                self._log_ep_workload_trace(
+                    cluster_type=self._cluster_type,
+                    batch_id=int(batch.id),
+                    layer_id=layer_id,
+                    ep_id=int(ep_id),
+                    moe_ep_size=int(self._config.replica_config.moe_expert_parallel_size),
+                    per_expert_tokens=dict(lane_batch.per_expert_tokens),
+                    lane_compute_ms=lane_compute_ms,
+                    routed_compute_ms=routed_compute_ms,
+                    lane_comm_ms=lane_comm_ms,
+                    pre_dispatch_ms=pre_dispatch_ms,
+                    dispatch_ms=dispatch_ms,
+                    combine_ms=combine_ms,
+                    post_combine_ms=post_combine_ms,
+                    trace_identity=trace_identity,
+                )
+                lane_compute_times_ms.append(lane_compute_ms)
+                pre_dispatch_times_ms.append(pre_dispatch_ms)
+                dispatch_times_ms.append(dispatch_ms)
+                routed_compute_times_ms.append(routed_compute_ms)
+                combine_times_ms.append(combine_ms)
+                post_combine_times_ms.append(post_combine_ms)
+            self.transition_stage_admission_for_layer(
+                batch,
+                stage_id=stage_id,
+                layer_id=layer_id,
+                operation_kind="ffn",
+                scope=EP_WAVE,
+                participant_ep_ids=tuple(layer_workload.participant_ep_ids),
+            )
+        else:
+            execution_time = predictor.predict_stage_execution_time(
+                batch,
+                stage_id,
+                cluster_type=self._cluster_type,
+                num_layers=1,
+                layer_id=layer_id,
+            )
+            post_attention_getter = getattr(
+                execution_time,
+                "get_single_layer_post_attention_time",
+                None,
+            )
+            if not callable(post_attention_getter):
+                raise ValueError(
+                    "Prefill dense predictor result is missing post-attention timing"
+                )
+            dense_time_ms = float(post_attention_getter())
+            if not math.isfinite(dense_time_ms) or dense_time_ms < 0:
+                raise ValueError(
+                    "Prefill dense post-attention time must be finite and non-negative"
+                )
+            self.transition_stage_admission_for_layer(
+                batch,
+                stage_id=stage_id,
+                layer_id=layer_id,
+                operation_kind="ffn",
+                scope=FULL_STAGE_WORLD,
+            )
+            component_ledger = getattr(
+                batch,
+                "_prefill_model_execution_components_ms_by_stage",
+                None,
+            )
+            if (
+                not isinstance(component_ledger, dict)
+                or stage_id not in component_ledger
+                or not isinstance(component_ledger[stage_id], list)
+            ):
+                raise ValueError(
+                    "missing PREFILL model-execution component ledger for dense layer: "
+                    f"replica={replica_id}, stage={stage_id}, layer={layer_id}, batch={batch.id}"
+                )
+            component_ledger[stage_id].append(dense_time_ms)
+            from frontier.events.dense_layer_complete_event import (
+                DenseLayerCompleteEvent,
+            )
+
             return [
-                PrefillSyncCollectiveEvent(
-                    sync_time,
+                DenseLayerCompleteEvent(
+                    time + dense_time_ms * 1e-3,
                     replica_id,
                     stage_id,
-                    batch_global_id,
-                    sync_stage,
+                    batch,
                     layer_id,
-                    cluster_type=self._cluster_type,
+                    "prefill",
+                    self._cluster_type,
                 )
             ]
+
+        if not lane_compute_times_ms:
+            raise ValueError("Prefill layer wave produced no participant timing")
+        max_pre_dispatch_ms = max(pre_dispatch_times_ms)
+        max_dispatch_ms = max(dispatch_times_ms)
+        dispatch_barrier_time_ms = max_pre_dispatch_ms + max_dispatch_ms
+        dispatch_barrier_end_time_s = time + dispatch_barrier_time_ms * 1e-3
+        participant_ep_ids = tuple(layer_workload.participant_ep_ids)
+        self._log_ep_barrier_trace(
+            cluster_type=self._cluster_type,
+            batch_id=int(batch.id),
+            layer_id=layer_id,
+            phase="dispatch",
+            expected_ep_ids=participant_ep_ids,
+            arrived_ep_ids=participant_ep_ids,
+            max_lane_time_ms=max_pre_dispatch_ms,
+            collective_time_ms=max_dispatch_ms,
+            barrier_time_ms=dispatch_barrier_time_ms,
+            barrier_start_time_s=time,
+            barrier_end_time_s=dispatch_barrier_end_time_s,
+            trace_identity=trace_identity,
+        )
+        max_routed_compute_ms = max(routed_compute_times_ms)
+        max_combine_ms = max(combine_times_ms)
+        combine_barrier_time_ms = max_routed_compute_ms + max_combine_ms
+        combine_barrier_end_time_s = (
+            dispatch_barrier_end_time_s + combine_barrier_time_ms * 1e-3
+        )
+        self._log_ep_barrier_trace(
+            cluster_type=self._cluster_type,
+            batch_id=int(batch.id),
+            layer_id=layer_id,
+            phase="combine",
+            expected_ep_ids=participant_ep_ids,
+            arrived_ep_ids=participant_ep_ids,
+            max_lane_time_ms=max_routed_compute_ms,
+            collective_time_ms=max_combine_ms,
+            barrier_time_ms=combine_barrier_time_ms,
+            barrier_start_time_s=dispatch_barrier_end_time_s,
+            barrier_end_time_s=combine_barrier_end_time_s,
+            trace_identity=trace_identity,
+        )
+        post_combine_barrier_time_ms = max(post_combine_times_ms)
+        barrier_end_time_s = (
+            combine_barrier_end_time_s + post_combine_barrier_time_ms * 1e-3
+        )
+        self._log_ep_wave_end_trace(
+            cluster_type=self._cluster_type,
+            batch_id=int(batch.id),
+            layer_id=layer_id,
+            wave_start_time_s=time,
+            combine_barrier_end_time_s=combine_barrier_end_time_s,
+            post_combine_time_ms=post_combine_barrier_time_ms,
+            wave_end_time_s=barrier_end_time_s,
+            trace_identity=trace_identity,
+        )
+        wave_time_ms = (
+            dispatch_barrier_time_ms
+            + combine_barrier_time_ms
+            + post_combine_barrier_time_ms
+        )
+        component_ledger = getattr(
+            batch,
+            "_prefill_model_execution_components_ms_by_stage",
+            None,
+        )
+        if (
+            not isinstance(component_ledger, dict)
+            or stage_id not in component_ledger
+            or not isinstance(component_ledger[stage_id], list)
+        ):
+            raise ValueError(
+                "missing PREFILL model-execution component ledger for EP wave: "
+                f"replica={replica_id}, stage={stage_id}, layer={layer_id}, batch={batch.id}"
+            )
+        component_ledger[stage_id].append(wave_time_ms)
+        batch._prefill_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
+        batch._prefill_ep_wave_workload = layer_workload
+
+        sync_room = self._prefill_sync_waiting_room[replica_id][stage_id][
+            batch.global_id
+        ][layer_id]["post_moe"]
+        if sync_room["batches"]:
+            raise ValueError(
+                "PREFILL EP wave post_moe room already contains a batch: "
+                f"replica={replica_id}, stage={stage_id}, layer={layer_id}, "
+                f"batch_global_id={batch.global_id}"
+            )
+        sync_room["batches"][0] = batch
+        sync_room["arrival_times"][0] = barrier_end_time_s
+        return [
+            PrefillSyncCollectiveEvent(
+                barrier_end_time_s,
+                replica_id,
+                stage_id,
+                batch.global_id,
+                "post_moe",
+                layer_id,
+                cluster_type=self._cluster_type,
+            )
+        ]
+
+    def _uses_shared_prefill_ep_wave(self, batch: Batch, layer_id: int) -> bool:
+        """Return whether the canonical shared-domain PREFILL path is active."""
+
+        if self._cluster_type not in (ClusterType.PREFILL, ClusterType.MONOLITHIC):
+            return False
+        replica_config = getattr(self._config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        if model_config is None or not getattr(model_config, "is_moe", False):
+            return False
+        if getattr(replica_config, "attn_dp", None) != 1:
+            raise ValueError(
+                "Shared-domain MoE PREFILL requires attn_dp=1"
+            )
+        if not isinstance(layer_id, int) or layer_id < 0:
+            raise ValueError("PREFILL layer_id must be an exact non-negative int")
+        if not model_config.is_moe_layer(layer_id):
+            return False
+        routing_attr = (
+            "_prefill_routing_details"
+            if self._cluster_type == ClusterType.PREFILL
+            else "_monolithic_routing_details"
+        )
+        routing_details = getattr(self._predictor, routing_attr, None)
+        if routing_details is None:
+            raise ValueError(f"Missing {routing_attr} for MoE PREFILL")
+        return True
+
+    def _uses_shared_prefill_layer_protocol(self, batch: Batch, layer_id: int) -> bool:
+        """Return whether a shared-domain MoE model needs layer stepping.
+
+        Mixed models use the same per-layer event loop for both protocols.  The
+        dense branch is still a full-stage operation and bypasses routing and EP
+        materialization inside ``_on_prefill_ep_wave_ready``; this predicate is
+        deliberately broader than ``_uses_shared_prefill_ep_wave`` so dense
+        layers cannot fall into the legacy aggregate MoE path.
+        """
+        if self._cluster_type not in (ClusterType.PREFILL, ClusterType.MONOLITHIC):
+            return False
+        replica_config = getattr(self._config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        if model_config is None or not getattr(model_config, "is_moe", False):
+            return False
+        if getattr(replica_config, "attn_dp", None) != 1:
+            raise ValueError(
+                "Shared-domain MoE PREFILL requires attn_dp=1"
+            )
+        if not isinstance(layer_id, int) or layer_id < 0:
+            raise ValueError("PREFILL layer_id must be an exact non-negative int")
+        if model_config.is_moe_layer(layer_id):
+            routing_attr = (
+                "_prefill_routing_details"
+                if self._cluster_type == ClusterType.PREFILL
+                else "_monolithic_routing_details"
+            )
+            if getattr(self._predictor, routing_attr, None) is None:
+                raise ValueError(f"Missing {routing_attr} for MoE PREFILL")
+        return True
+
+    def _on_decode_ep_wave_ready(
+        self,
+        *,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch: Batch,
+        layer_id: int,
+        replica_local_id: int | None = None,
+    ) -> List:
+        """Run one unified-DECODE layer's local EP wave and barrier."""
+
+        from frontier.events.decode_sync_collective_event import (
+            DecodeSyncCollectiveEvent,
+        )
+
+        if not isinstance(time, Real) or not math.isfinite(float(time)):
+            raise ValueError("decode EP wave time must be finite")
+        time = float(time)
+        model_config = self._config.replica_config.model_config
+        predictor = self._predictor
+        layer_workload = None
+        lane_compute_times_ms: list[float] = []
+        pre_dispatch_times_ms: list[float] = []
+        dispatch_times_ms: list[float] = []
+        routed_compute_times_ms: list[float] = []
+        combine_times_ms: list[float] = []
+        post_combine_times_ms: list[float] = []
+        if model_config.is_moe_layer(layer_id):
+            layer_workload = self._materialize_layer_ep_workload_for_batch(
+                batch=batch,
+                target_replica_id=replica_id,
+                global_layer_id=layer_id,
+            )
+            trace_identity = self._build_ep_trace_identity(
+                batch=batch,
+                replica_id=replica_id,
+                stage_id=stage_id,
+                operation_id=int(batch.id),
+                operation_kind="ep_ffn",
+            )
+            self._log_ep_conservation_trace(
+                cluster_type=self._cluster_type,
+                batch_id=int(batch.id),
+                layer_id=layer_id,
+                routing_token_count=int(layer_workload.routing_token_count),
+                router_topk=int(layer_workload.router_topk),
+                total_routed_assignments=int(layer_workload.total_routed_assignments),
+                per_ep_routed_tokens=dict(layer_workload.per_ep_routed_tokens),
+                trace_identity=trace_identity,
+            )
+            for ep_id in layer_workload.participant_ep_ids:
+                lane_batch = self._build_prefill_ep_lane_batch(
+                    source_batch=batch,
+                    layer_id=layer_id,
+                    ep_id=ep_id,
+                    layer_workload=layer_workload,
+                )
+                execution_time = predictor.predict_stage_execution_time(
+                    lane_batch,
+                    stage_id,
+                    cluster_type=self._cluster_type,
+                    num_layers=1,
+                    layer_id=layer_id,
+                    include_attention=False,
+                )
+                (
+                    pre_dispatch_ms,
+                    dispatch_ms,
+                    routed_compute_ms,
+                    combine_ms,
+                    post_combine_ms,
+                ) = self._get_shared_ep_phase_times_ms(
+                    execution_time,
+                    cluster_type=self._cluster_type,
+                    batch_id=int(batch.id),
+                    layer_id=layer_id,
+                    ep_id=int(ep_id),
+                )
+                lane_compute_ms = (
+                    pre_dispatch_ms + routed_compute_ms + post_combine_ms
+                )
+                lane_comm_ms = dispatch_ms + combine_ms
+                self._log_ep_workload_trace(
+                    cluster_type=self._cluster_type,
+                    batch_id=int(batch.id),
+                    layer_id=layer_id,
+                    ep_id=int(ep_id),
+                    moe_ep_size=int(self._config.replica_config.moe_expert_parallel_size),
+                    per_expert_tokens=dict(lane_batch.per_expert_tokens),
+                    lane_compute_ms=lane_compute_ms,
+                    routed_compute_ms=routed_compute_ms,
+                    lane_comm_ms=lane_comm_ms,
+                    pre_dispatch_ms=pre_dispatch_ms,
+                    dispatch_ms=dispatch_ms,
+                    combine_ms=combine_ms,
+                    post_combine_ms=post_combine_ms,
+                    trace_identity=trace_identity,
+                )
+                lane_compute_times_ms.append(lane_compute_ms)
+                pre_dispatch_times_ms.append(pre_dispatch_ms)
+                dispatch_times_ms.append(dispatch_ms)
+                routed_compute_times_ms.append(routed_compute_ms)
+                combine_times_ms.append(combine_ms)
+                post_combine_times_ms.append(post_combine_ms)
+            self.transition_stage_admission_for_layer(
+                batch,
+                stage_id=stage_id,
+                layer_id=layer_id,
+                operation_kind="ffn",
+                scope=EP_WAVE,
+                participant_ep_ids=tuple(layer_workload.participant_ep_ids),
+            )
         else:
-            # Not all DP replicas have arrived yet.
-            # For pre_moe sync, create idle batches for missing DP lanes so the
-            # collective can complete when num_requests < dp_size.
-            if sync_stage == "pre_moe" and not batch.is_idle:
-                arrived_dp_ids = set(sync_wait_room["batches"].keys())
-                all_dp_ids = set(range(dp_size))
-                missing_dp_ids = all_dp_ids - arrived_dp_ids
-
-                if missing_dp_ids:
-                    logger.info(
-                        f"[PREFILL_SYNC][IDLE_CREATE] Creating idle batches for missing DP replicas: "
-                        f"missing_dp_ids={sorted(missing_dp_ids)}, arrived_dp_ids={sorted(arrived_dp_ids)}"
-                    )
-
-                    from frontier.events.prefill_sync_event import PrefillSyncEvent
-
-                    idle_batch_events = []
-                    for missing_dp_id in sorted(missing_dp_ids):
-                        if missing_dp_id in sync_wait_room["batches"]:
-                            logger.info(
-                                f"[PREFILL_SYNC][IDLE_SKIP] Skipping idle batch creation for dp_id={missing_dp_id} "
-                                f"(already exists in waiting room)"
-                            )
-                            continue
-
-                        idle_batch = Batch(
-                            replica_id=replica_id,
-                            requests=[],
-                            num_tokens=[],
-                            is_idle=True,
-                            is_moe=batch.is_moe,
-                        )
-                        idle_batch.set_global_id(batch_global_id)
-
-                        logger.info(
-                            f"[PREFILL_SYNC][IDLE_CREATE] Created idle batch {idle_batch.id} for "
-                            f"replica={replica_id}, dp_id={missing_dp_id}, "
-                            f"batch_global_id={batch_global_id}, layer={layer_id}"
-                        )
-
-                        idle_batch_events.append(
-                            PrefillSyncEvent(
-                                time=time,
-                                replica_id=replica_id,
-                                stage_id=stage_id,
-                                batch=idle_batch,
-                                dp_id=missing_dp_id,
-                                sync_stage=sync_stage,
-                                layer_id=layer_id,
-                                stage_execution_time=0.0,
-                                cluster_type=self._cluster_type,
-                            )
-                        )
-
-                    return idle_batch_events
-
-            logger.info(
-                f"[PREFILL_SYNC][WAITING] Not all DP replicas arrived yet: "
-                f"arrived={arrived}/{dp_size}, batch_global_id={batch_global_id}, "
-                f"layer={layer_id}, sync_stage={sync_stage}"
+            execution_time = predictor.predict_stage_execution_time(
+                batch,
+                stage_id,
+                cluster_type=self._cluster_type,
+                num_layers=1,
+                layer_id=layer_id,
+            )
+            post_attention_getter = getattr(
+                execution_time,
+                "get_single_layer_post_attention_time",
+                None,
+            )
+            if not callable(post_attention_getter):
+                raise ValueError(
+                    "Decode dense predictor result is missing post-attention timing"
+                )
+            dense_time_ms = float(post_attention_getter())
+            if not math.isfinite(dense_time_ms) or dense_time_ms < 0:
+                raise ValueError(
+                    "Decode dense post-attention time must be finite and non-negative"
+                )
+            self.transition_stage_admission_for_layer(
+                batch,
+                stage_id=stage_id,
+                layer_id=layer_id,
+                operation_kind="ffn",
+                scope=FULL_STAGE_WORLD,
+            )
+            from frontier.events.dense_layer_complete_event import (
+                DenseLayerCompleteEvent,
             )
 
-        return []
+            return [
+                DenseLayerCompleteEvent(
+                    time + dense_time_ms * 1e-3,
+                    replica_id,
+                    stage_id,
+                    batch,
+                    layer_id,
+                    "decode",
+                    self._cluster_type,
+                )
+            ]
 
-    def on_prefill_sync_collective(self, time: float, replica_id: int, stage_id: int,
-                                  batch_global_id: int, sync_stage: str, layer_id: int, metrics_store):
+        if not lane_compute_times_ms:
+            raise ValueError("Decode layer wave produced no participant timing")
+        max_pre_dispatch_ms = max(pre_dispatch_times_ms)
+        max_dispatch_ms = max(dispatch_times_ms)
+        dispatch_barrier_time_ms = max_pre_dispatch_ms + max_dispatch_ms
+        dispatch_barrier_end_time_s = time + dispatch_barrier_time_ms * 1e-3
+        participant_ep_ids = tuple(layer_workload.participant_ep_ids)
+        self._log_ep_barrier_trace(
+            cluster_type=self._cluster_type,
+            batch_id=int(batch.id),
+            layer_id=layer_id,
+            phase="dispatch",
+            expected_ep_ids=participant_ep_ids,
+            arrived_ep_ids=participant_ep_ids,
+            max_lane_time_ms=max_pre_dispatch_ms,
+            collective_time_ms=max_dispatch_ms,
+            barrier_time_ms=dispatch_barrier_time_ms,
+            barrier_start_time_s=time,
+            barrier_end_time_s=dispatch_barrier_end_time_s,
+            trace_identity=trace_identity,
+        )
+        max_routed_compute_ms = max(routed_compute_times_ms)
+        max_combine_ms = max(combine_times_ms)
+        combine_barrier_time_ms = max_routed_compute_ms + max_combine_ms
+        combine_barrier_end_time_s = (
+            dispatch_barrier_end_time_s + combine_barrier_time_ms * 1e-3
+        )
+        self._log_ep_barrier_trace(
+            cluster_type=self._cluster_type,
+            batch_id=int(batch.id),
+            layer_id=layer_id,
+            phase="combine",
+            expected_ep_ids=participant_ep_ids,
+            arrived_ep_ids=participant_ep_ids,
+            max_lane_time_ms=max_routed_compute_ms,
+            collective_time_ms=max_combine_ms,
+            barrier_time_ms=combine_barrier_time_ms,
+            barrier_start_time_s=dispatch_barrier_end_time_s,
+            barrier_end_time_s=combine_barrier_end_time_s,
+            trace_identity=trace_identity,
+        )
+        post_combine_barrier_time_ms = max(post_combine_times_ms)
+        barrier_end_time_s = (
+            combine_barrier_end_time_s + post_combine_barrier_time_ms * 1e-3
+        )
+        self._log_ep_wave_end_trace(
+            cluster_type=self._cluster_type,
+            batch_id=int(batch.id),
+            layer_id=layer_id,
+            wave_start_time_s=time,
+            combine_barrier_end_time_s=combine_barrier_end_time_s,
+            post_combine_time_ms=post_combine_barrier_time_ms,
+            wave_end_time_s=barrier_end_time_s,
+            trace_identity=trace_identity,
+        )
+        batch._decode_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
+
+        batch_global_id = self._get_decode_sync_wait_key(batch)
+        sync_room = self._decode_sync_waiting_room[replica_id][stage_id][
+            batch_global_id
+        ][layer_id]["post_moe"]
+        if sync_room["batches"]:
+            raise ValueError(
+                "DECODE EP wave post_moe room already contains a batch: "
+                f"replica={replica_id}, stage={stage_id}, layer={layer_id}, "
+                f"batch_global_id={batch_global_id}"
+            )
+        sync_room["batches"][0] = batch
+        sync_room["arrival_times"][0] = barrier_end_time_s
+        return [
+            DecodeSyncCollectiveEvent(
+                barrier_end_time_s,
+                replica_id,
+                stage_id,
+                batch_global_id,
+                "post_moe",
+                layer_id,
+                cluster_type=self._cluster_type,
+            )
+        ]
+
+    def _uses_shared_decode_ep_wave(self, batch: Batch, layer_id: int) -> bool:
+        """Return whether canonical PDD unified-DECODE EP waves are active."""
+
+        if self._cluster_type not in (ClusterType.DECODE, ClusterType.MONOLITHIC):
+            return False
+        replica_config = getattr(self._config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        if model_config is None or not getattr(model_config, "is_moe", False):
+            return False
+        if getattr(replica_config, "attn_dp", None) != 1:
+            raise ValueError(
+                "Shared-domain MoE DECODE requires attn_dp=1"
+            )
+        if not isinstance(layer_id, int) or layer_id < 0:
+            raise ValueError("DECODE layer_id must be an exact non-negative int")
+        if not model_config.is_moe_layer(layer_id):
+            return False
+        routing_attr = (
+            "_decode_routing_details"
+            if self._cluster_type == ClusterType.DECODE
+            else "_monolithic_routing_details"
+        )
+        routing_details = getattr(self._predictor, routing_attr, None)
+        if routing_details is None:
+            raise ValueError(f"Missing {routing_attr} for MoE DECODE")
+        return True
+
+    def _uses_shared_decode_layer_protocol(self, batch: Batch, layer_id: int) -> bool:
+        """Return whether a shared-domain DECODE model needs layer stepping."""
+        if self._cluster_type not in (ClusterType.DECODE, ClusterType.MONOLITHIC):
+            return False
+        replica_config = getattr(self._config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        if model_config is None or not getattr(model_config, "is_moe", False):
+            return False
+        if getattr(replica_config, "attn_dp", None) != 1:
+            raise ValueError(
+                "Shared-domain MoE DECODE requires attn_dp=1"
+            )
+        if not isinstance(layer_id, int) or layer_id < 0:
+            raise ValueError("DECODE layer_id must be an exact non-negative int")
+        if model_config.is_moe_layer(layer_id):
+            routing_attr = (
+                "_decode_routing_details"
+                if self._cluster_type == ClusterType.DECODE
+                else "_monolithic_routing_details"
+            )
+            if getattr(self._predictor, routing_attr, None) is None:
+                raise ValueError(f"Missing {routing_attr} for MoE DECODE")
+        return True
+
+    def on_prefill_sync(self, time: float, replica_id: int, stage_id: int, batch: Batch,
+                       replica_local_id: int | None, sync_stage: str, layer_id: int, stage_execution_time: float):
+        del stage_execution_time, replica_local_id
+        if self._prefill_sync_waiting_room is None:
+            raise ValueError(
+                "PREFILL synchronization is unavailable for a dense model; "
+                "dense execution must use the full-stage protocol"
+            )
+        if sync_stage != "pre_moe":
+            raise ValueError(
+                "PREFILL synchronization entry must start at pre_moe; "
+                "post_moe completion is handled by PrefillSyncCollectiveEvent"
+            )
+        if not self._uses_shared_prefill_layer_protocol(batch, layer_id):
+            raise RuntimeError(
+                "Legacy PREFILL DP synchronization is removed; "
+                "the current layer must use the canonical per-layer protocol"
+            )
+        return self._on_prefill_ep_wave_ready(
+            time=time,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            batch=batch,
+            layer_id=layer_id,
+        )
+
+    def on_dense_layer_complete(
+        self,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch: Batch,
+        layer_id: int,
+        phase: str,
+        metrics_store,
+    ) -> List:
+        """Advance a dense layer without emitting or waiting on an EP collective.
+
+        The existing layer-transition code is shared with the post-MoE path so
+        request counters, per-layer attention scheduling, and final stage
+        accounting stay identical.  A single local entry is used only as an
+        internal handoff to that transition helper; no collective event is
+        created and no EP participant is admitted.
+        """
+        if phase == "prefill":
+            batch_global_id = int(batch.global_id)
+            return self.on_prefill_sync_collective(
+                time,
+                replica_id,
+                stage_id,
+                batch_global_id,
+                "post_moe",
+                layer_id,
+                metrics_store,
+                direct_batch=batch,
+            )
+
+        if phase == "decode":
+            batch_global_id = self._get_decode_sync_wait_key(batch)
+            return self.on_decode_sync_collective(
+                time,
+                replica_id,
+                stage_id,
+                batch_global_id,
+                "post_moe",
+                layer_id,
+                metrics_store,
+                direct_batch=batch,
+            )
+
+        raise ValueError(f"Unsupported dense layer completion phase: {phase!r}")
+
+    def on_prefill_sync_collective(
+        self,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch_global_id: int,
+        sync_stage: str,
+        layer_id: int,
+        metrics_store,
+        *,
+        direct_batch: Optional[Batch] = None,
+    ):
         """
         Handle collective synchronization completion in prefill cluster.
 
-        This method implements the exact layer-by-layer processing flow:
-        - pre_moe sync: execute get_moe_comm_time() + get_moe_comp_time(), then schedule post_moe sync
-        - post_moe sync: execute get_moe_comm_time(), then continue to next layer or finish
+        This method handles completion of a canonical layer-local PREFILL wave.
+        The entry side is materialized and predicted by
+        ``_on_prefill_ep_wave_ready``; this method receives only the resulting
+        ``post_moe`` completion and advances to the next layer or handoff.
 
         Args:
-            time: Synchronized time when all DP replicas have reached this point
+            time: Synchronized time when the complete EP wave has reached this point
             replica_id: ID of the replica
             stage_id: Pipeline stage ID
             batch_global_id: Global ID of the batch
-            sync_stage: "pre_moe" or "post_moe"
+            sync_stage: only "post_moe" is valid here
             layer_id: Current layer being processed
             metrics_store: Metrics store for recording performance data
         """
@@ -2428,138 +4484,62 @@ class BaseClusterScheduler(ABC):
 
         # Check if this sync_stage has already been processed by another replica
         # This can happen when multiple replicas reach the same sync point and each creates a PrefillSyncCollectiveEvent
-        if sync_stage not in self._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id]:
-            logger.debug(
-                f"[PREFILL_SYNC][COLLECTIVE_SKIP] sync_stage={sync_stage} already processed for "
-                f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
-            )
-            return []
+        if direct_batch is not None:
+            if sync_stage != "post_moe":
+                raise ValueError(
+                    "Direct dense PREFILL completion is valid only for post_moe transition"
+                )
+            sync_wait_room = {
+                # Dense completion is a full-stage operation.  Keep the
+                # internal handoff lane-free; using EP0 here would make the
+                # subsequent stage lookup accidentally depend on an EP child.
+                "batches": {None: direct_batch},
+                "arrival_times": {None: time},
+            }
+            participant_batches = sync_wait_room["batches"]
+        else:
+            if sync_stage not in self._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id]:
+                logger.debug(
+                    f"[PREFILL_SYNC][COLLECTIVE_SKIP] sync_stage={sync_stage} already processed for "
+                    f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
+                )
+                return []
 
-        # Get the synchronized batches and clean up waiting room
-        sync_wait_room = self._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id].pop(sync_stage)
-        dp_batches = sync_wait_room["batches"]
+            # Get the synchronized batches and clean up waiting room
+            sync_wait_room = self._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id].pop(sync_stage)
+            participant_batches = sync_wait_room["batches"]
 
         try:
-            dp_keys = list(dp_batches.keys())
+            participant_keys = list(participant_batches.keys())
         except Exception:
-            dp_keys = []
+            participant_keys = []
         logger.info(
             f"[PREFILL_SYNC][COLLECTIVE] ENTER: t={time:.6f}s, replica={replica_id}, stage={stage_id}, "
-            f"layer={layer_id}, sync_stage={sync_stage}, batch_global_id={batch_global_id}, dp_keys={dp_keys}, "
-            f"dp_batches_type={type(dp_batches).__name__}"
+            f"layer={layer_id}, sync_stage={sync_stage}, batch_global_id={batch_global_id}, "
+            f"participant_keys={participant_keys}, "
+            f"participant_batches_type={type(participant_batches).__name__}"
         )
 
+        if sync_stage != "post_moe":
+            raise ValueError(
+                "PREFILL collective completion accepts only post_moe for the "
+                "canonical per-layer EP protocol"
+            )
+
+        # Shared-domain PREFILL/MONOLITHIC MoE uses the canonical per-layer
+        # protocol.  The EP key (currently 0 in the waiting room) identifies
+        # the materialized wave, not a scheduler lane for the layer
+        # transition after combine.  All downstream stage/metrics/events must
+        # therefore use the full-stage identity ``None``.
         events = []
 
-        if sync_stage == "pre_moe":
-            # After pre_moe sync, execute: DP Gather + MoE computation + DP Scatter
-            # Then schedule post_moe sync
-
-            # Get DP size and aggregate tokens for observability.
-            # Timing composition comes from canonical single-layer ExecutionTime.
-            replica = self.get_replica(replica_id)
-            dp_size = replica.dp_size
-            total_global_tokens = 0
-            for dp_id, batch in dp_batches.items():
-                if not batch.is_idle:
-                    total_global_tokens += batch.total_num_tokens
-
-            logger.info(
-                f"[GLOBAL_TOKEN_AGGREGATION] total_global_tokens={total_global_tokens}, "
-                f"dp_size={dp_size}, batches={[(dp_id, batch.total_num_tokens, batch.is_idle) for dp_id, batch in dp_batches.items()]}"
-            )
-
-            # Use one non-idle batch to derive shared layer timings for all DP lanes.
-            sample_batch = next((b for b in dp_batches.values() if not b.is_idle), None)
-            if sample_batch is None:
-                raise ValueError(
-                    f"pre_moe collective has no non-idle batch for replica={replica_id}, "
-                    f"stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
-                )
-
-            stage_scheduler = self.get_dp_replica_stage_scheduler(replica_id, 0, stage_id)
-            execution_time_predictor = stage_scheduler._execution_time_predictor
-
-            # Canonical post-attention already includes MoE computation + DP comm semantics.
-            # Predictor returns milliseconds for single-layer components.
-            execution_time = execution_time_predictor.predict_stage_execution_time(
-                sample_batch,
-                stage_id,
-                cluster_type=self._cluster_type,
-                num_layers=1,
-                layer_id=layer_id,
-            )
-            post_attention_time_ms = (
-                execution_time.get_single_layer_post_attention_time()
-            )
-            moe_stage_time = post_attention_time_ms * 1e-3
-            dp_input_allreduce_time = (
-                execution_time.get_single_layer_dp_input_allreduce_time() * 1e-3
-            )
-            dp_output_allreduce_time = (
-                execution_time.get_single_layer_dp_output_allreduce_time() * 1e-3
-            )
-
-            logger.info(
-                f"[MoE_TIME_BREAKDOWN] post_attention={moe_stage_time:.6f}s, "
-                f"dp_input_allreduce={dp_input_allreduce_time:.6f}s, "
-                f"dp_output_allreduce={dp_output_allreduce_time:.6f}s"
-            )
-
-            for dp_id, batch in dp_batches.items():
-                if not batch.is_idle:
-                    component_ledger = getattr(
-                        batch,
-                        "_prefill_model_execution_components_ms_by_stage",
-                        None,
-                    )
-                    if (
-                        not isinstance(component_ledger, dict)
-                        or stage_id not in component_ledger
-                        or not isinstance(component_ledger[stage_id], list)
-                    ):
-                        raise ValueError(
-                            "missing PREFILL model-execution component ledger: "
-                            f"replica={replica_id}, dp_id={dp_id}, "
-                            f"stage={stage_id}, layer={layer_id}, "
-                            f"batch_global_id={batch_global_id}, batch_id={batch.id}"
-                        )
-                    component_ledger[stage_id].append(post_attention_time_ms)
-
-                # Schedule post_moe sync for this layer
-                events.append(
-                    PrefillSyncEvent(
-                        time + moe_stage_time,
-                        replica_id,
-                        stage_id,
-                        batch,
-                        dp_id,
-                        "post_moe",
-                        layer_id,
-                        moe_stage_time,
-                        cluster_type=self._cluster_type,
-                    )
-                )
-
-            # for dp_id, batch in batches.items():
-            #     execution_time = self._predictor.get_execution_time(batch, stage_id, self._cluster_type)
-
-            #     # Calculate MoE stage time: ONLY pre_moe_comm + moe_comp
-            #     moe_comm_time = execution_time.get_single_layer_moe_comm_time()
-            #     moe_comp_time = execution_time.get_single_layer_moe_comp_time()
-            #     moe_stage_time = moe_comm_time + moe_comp_time
-
-            #     # Schedule post_moe sync for this layer
-            #     events.append(PrefillSyncEvent(
-            #         time + moe_stage_time, replica_id, stage_id, batch,
-            #         dp_id, "post_moe", layer_id, moe_stage_time
-            #     ))
-
-        elif sync_stage == "post_moe":
+        if sync_stage == "post_moe":
             # post_moe is a synchronization boundary. Model execution for this layer has
             # already been accounted in pre_moe; only layer transition / pipeline handoff
             # remains after this collective.
-            sample_batch = next((b for b in dp_batches.values() if not b.is_idle), None)
+            sample_batch = next(
+                (b for b in participant_batches.values() if not b.is_idle), None
+            )
             if sample_batch is None:
                 logger.warning(
                     f"[PREFILL_SYNC][COLLECTIVE] post_moe has no non-idle batch for "
@@ -2574,38 +4554,47 @@ class BaseClusterScheduler(ABC):
                 cluster_type=self._cluster_type,
                 num_layers=1,  # Single-layer granularity for prefill sync
                 layer_id=layer_id,
+                include_ffn=False,
             )
 
             # IMPORTANT: execution_time here is a single-layer prediction (num_layers=1)
             # for component extraction, so it cannot be used as the stage layer count.
             num_layers = self._predictor._num_layers_per_pipeline_stage
-            if num_layers < 1:
-                raise ValueError(
-                    f"Invalid prefill stage layer count: num_layers={num_layers} "
-                    f"(replica={replica_id}, stage={stage_id})"
-                )
+            _, stage_layer_end = BaseClusterScheduler.get_pipeline_stage_layer_bounds(
+                stage_id,
+                num_layers,
+            )
 
-            if layer_id < num_layers - 1:
+            if layer_id < stage_layer_end - 1:
                 # Not the last layer, continue to next layer by paying next-layer attention.
                 next_layer_id = layer_id + 1
+                self.transition_stage_admission_for_layer(
+                    sample_batch,
+                    stage_id=stage_id,
+                    layer_id=next_layer_id,
+                    operation_kind="attention",
+                    scope=FULL_STAGE_WORLD,
+                )
                 next_layer_execution_time = self._predictor.predict_stage_execution_time(
                     sample_batch,
                     stage_id,
                     cluster_type=self._cluster_type,
                     num_layers=1,
                     layer_id=next_layer_id,
+                    include_ffn=False,
                 )
                 attention_time_ms = (
-                    next_layer_execution_time.get_single_layer_attention_time()
+                    next_layer_execution_time.get_single_layer_attention_scope_time()
                 )
                 attention_time = attention_time_ms * 1e-3
                 total_time_to_next_sync = attention_time
 
-                for dp_id, batch in dp_batches.items():
+                for replica_local_id, batch in participant_batches.items():
                     if batch.is_idle:
                         logger.info(
                             f"[PREFILL_SYNC][IDLE_SKIP] Skip next-layer pre_moe scheduling for idle batch {batch.id} "
-                            f"(replica={replica_id}, dp_id={dp_id}, layer={layer_id})"
+                            f"(replica={replica_id}, replica_local_id={replica_local_id}, "
+                            f"layer={layer_id})"
                         )
                         continue
                     component_ledger = getattr(
@@ -2620,7 +4609,7 @@ class BaseClusterScheduler(ABC):
                     ):
                         raise ValueError(
                             "missing PREFILL model-execution component ledger: "
-                            f"replica={replica_id}, dp_id={dp_id}, "
+                            f"replica={replica_id}, replica_local_id={replica_local_id}, "
                             f"stage={stage_id}, layer={layer_id}, "
                             f"batch_global_id={batch_global_id}, batch_id={batch.id}"
                         )
@@ -2631,7 +4620,7 @@ class BaseClusterScheduler(ABC):
                             replica_id,
                             stage_id,
                             batch,
-                            dp_id,
+                            None,
                             "pre_moe",
                             next_layer_id,
                             total_time_to_next_sync,
@@ -2642,21 +4631,25 @@ class BaseClusterScheduler(ABC):
                 # Last layer completed, proceed to pipeline communication.
                 # Idle batches are synthetic synchronization placeholders and should not
                 # create stage-end / kv-transfer events in PREFILL.
-                for dp_id, batch in dp_batches.items():
+                for replica_local_id, batch in participant_batches.items():
                     if batch.is_idle:
                         logger.info(
                             f"[PREFILL_SYNC][IDLE_SKIP] Skip final stage-end for idle batch {batch.id} "
-                            f"(replica={replica_id}, dp_id={dp_id}, layer={layer_id})"
+                            f"(replica={replica_id}, replica_local_id={replica_local_id}, "
+                            f"layer={layer_id})"
                         )
                         continue
 
-                    stage_scheduler = self.get_dp_replica_stage_scheduler(replica_id, dp_id, stage_id)
+                    stage_identity = None
+                    stage_scheduler = self.get_replica_stage_scheduler(
+                        replica_id, stage_identity, stage_id
+                    )
                     is_last_stage = stage_scheduler.is_last_stage
                     pipeline_time = execution_time.pipeline_time * 1e-3
                     if not hasattr(batch, "_prefill_stage_start_time"):
                         raise ValueError(
                             "missing PREFILL stage start time: "
-                            f"replica={replica_id}, dp_id={dp_id}, "
+                            f"replica={replica_id}, replica_local_id={replica_local_id}, "
                             f"stage={stage_id}, layer={layer_id}, "
                             f"batch_global_id={batch_global_id}, batch_id={batch.id}"
                         )
@@ -2666,7 +4659,8 @@ class BaseClusterScheduler(ABC):
                         raise ValueError(
                             "Prefill sync completion time is earlier than the recorded "
                             "stage start time: "
-                            f"replica={replica_id}, dp_id={dp_id}, stage={stage_id}, "
+                            f"replica={replica_id}, replica_local_id={replica_local_id}, "
+                            f"stage={stage_id}, "
                             f"layer={layer_id}, batch_global_id={batch_global_id}, "
                             f"time={time}, original_start_time={original_start_time}, "
                             f"elapsed_stage_wall_time={elapsed_stage_wall_time}"
@@ -2685,7 +4679,7 @@ class BaseClusterScheduler(ABC):
                     ):
                         raise ValueError(
                             "missing PREFILL model-execution component ledger: "
-                            f"replica={replica_id}, dp_id={dp_id}, "
+                            f"replica={replica_id}, replica_local_id={replica_local_id}, "
                             f"stage={stage_id}, layer={layer_id}, "
                             f"batch_global_id={batch_global_id}, batch_id={batch.id}"
                         )
@@ -2697,7 +4691,8 @@ class BaseClusterScheduler(ABC):
                     if stage_cpu_overhead < 0:
                         raise ValueError(
                             "Prefill stage CPU overhead cannot be negative: "
-                            f"replica={replica_id}, dp_id={dp_id}, stage={stage_id}, "
+                            f"replica={replica_id}, replica_local_id={replica_local_id}, "
+                            f"stage={stage_id}, "
                             f"layer={layer_id}, batch_global_id={batch_global_id}, "
                             f"total_time={execution_time.total_time}, "
                             f"model_time={execution_time.model_time}, "
@@ -2743,19 +4738,19 @@ class BaseClusterScheduler(ABC):
                     # Record metrics with correct start time and corrected execution time
                     metrics_store.on_replica_stage_schedule(
                         original_start_time, replica_id, stage_id, batch_stage, corrected_execution_time,
-                        self._cluster_type, dp_id
+                        self._cluster_type, stage_identity
                     )
 
                     # Schedule batch stage end
                     events.append(BatchStageEndEvent(
                         completion_time, replica_id, stage_id, is_last_stage,
-                        batch, batch_stage, self._cluster_type, dp_id
+                        batch, batch_stage, self._cluster_type, stage_identity
                     ))
 
                     # Check if KV cache transfer should be triggered
                     if self._should_trigger_kv_transfer(batch):
                         kv_transfer_events = self._create_kv_transfer_events(
-                            completion_time, batch, replica_id, dp_id
+                            completion_time, batch, replica_id, stage_identity
                         )
                         events.extend(kv_transfer_events)
 
@@ -3001,450 +4996,79 @@ class BaseClusterScheduler(ABC):
         time: float,
         batch: Batch,
         replica_id: int,
-        dp_id: int
+        replica_local_id: int | None,
     ) -> List:
         """Disaggregated KV cache transfer events are not included in this release."""
         raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
 
-    def _create_virtual_global_batch(
-        self,
-        sample_batch: Batch,
-        total_global_tokens: int,
-        total_global_prefill_tokens: int,
-    ) -> Batch:
-        """
-        Create a virtual global batch for MoE execution time prediction.
-
-        In DP-based MoE processing, all DP replicas gather their tokens into a global buffer
-        before MoE computation. This method creates a virtual batch that represents this
-        global token set for accurate execution time prediction.
-
-        Args:
-            sample_batch: A sample batch from one DP replica (used for metadata)
-            total_global_tokens: Total number of tokens across all DP replicas
-            total_global_prefill_tokens: Aggregated prefill tokens across all
-                non-idle DP participants. The virtual batch preserves this split
-                so decode-only runtime paths keep their decode semantics.
-
-        Returns:
-            A virtual Batch object with total_global_tokens for execution time prediction
-
-        Note:
-            - The virtual batch reuses the sample_batch's replica_id and other metadata
-            - Only the token count is modified to reflect the global aggregation
-            - This batch should ONLY be used for execution time prediction, not actual processing
-        """
-        import copy
-        from dataclasses import replace
-        from frontier.entities.batch import DecodeCudaGraphMetadata
-
-        # Create a shallow copy of the sample batch
-        virtual_batch = copy.copy(sample_batch)
-
-        # Override token count to reflect global aggregation
-        # Use a single-element list with total tokens
-        virtual_batch._num_tokens = [total_global_tokens]
-        virtual_batch._total_num_tokens = total_global_tokens
-
-        if total_global_prefill_tokens < 0 or total_global_prefill_tokens > total_global_tokens:
-            raise ValueError(
-                "Virtual global batch requires prefill tokens to be within the "
-                f"aggregated token range, got total_global_prefill_tokens="
-                f"{total_global_prefill_tokens}, total_global_tokens={total_global_tokens}"
-            )
-
-        # Preserve the aggregated prefill/decode split.
-        # This is critical for decode CUDA graph semantics because pure-decode
-        # batches must keep num_decode_tokens > 0 for launch-overhead stripping.
-        virtual_batch._num_prefill_tokens = total_global_prefill_tokens
-
-        # Decode CUDA Graph metadata is attached per scheduler-visible local lane.
-        # A virtual global sync batch represents the DP-gathered token domain, so
-        # it must not reuse one lane's local token count for MoE/communication
-        # prediction. Preserve the runtime mode but rebase token-count fields to
-        # the aggregated batch domain.
-        metadata = getattr(virtual_batch, "decode_cuda_graph_metadata", None)
-        if metadata is not None and total_global_tokens != sample_batch.total_num_tokens:
-            if not isinstance(metadata, DecodeCudaGraphMetadata):
-                raise TypeError(
-                    "decode_cuda_graph_metadata must be DecodeCudaGraphMetadata "
-                    f"when rebasing virtual global batch tokens, got {type(metadata).__name__}"
-                )
-            global_decode_tokens = total_global_tokens - total_global_prefill_tokens
-            virtual_batch.decode_cuda_graph_metadata = replace(
-                metadata,
-                original_total_tokens=total_global_tokens,
-                padded_total_tokens=total_global_tokens,
-                original_decode_batch_size=global_decode_tokens,
-                padded_decode_batch_size=global_decode_tokens,
-            )
-
-        # Keep other attributes unchanged (replica_id, requests, etc.)
-        # These are used for metadata but not for token-based predictions
-
-        from frontier.logger import get_cluster_logger
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-        logger.debug(
-            f"[VIRTUAL-BATCH] Created virtual global batch: "
-            f"sample_batch_id={sample_batch.id}, total_global_tokens={total_global_tokens}, "
-            f"num_prefill_tokens={total_global_prefill_tokens}, "
-            f"num_decode_tokens={total_global_tokens - total_global_prefill_tokens}"
-        )
-
-        return virtual_batch
-
-
-    def _is_monolithic_decode_shared_domain_sync(self, batch: Batch) -> bool:
-        """Return whether decode sync should use shared-domain EP lanes."""
-        model_config = getattr(getattr(self, "_config", None), "replica_config", None)
-        model_config = getattr(model_config, "model_config", None)
-        model_is_moe = model_config is not None and model_config.is_moe
-        if not model_is_moe:
-            return False
-        if self._cluster_type != ClusterType.MONOLITHIC:
-            return False
-
-        ep_size = getattr(self, "_replica_ep_size", None)
-        if ep_size is None and hasattr(self, "_config"):
-            ep_size = getattr(self._config.replica_config, "moe_expert_parallel_size", 1)
-        ep_size = int(ep_size or 1)
-        if ep_size <= 1:
-            return False
-
-        if batch.is_idle:
-            return True
-        return batch.num_prefill_tokens == 0 and batch.num_decode_tokens > 0
-
-    def _get_decode_sync_participant_count(self, replica: Replica, batch: Batch) -> int:
-        """Return the synchronization cardinality for the current decode sync event."""
-        if self._is_monolithic_decode_shared_domain_sync(batch):
-            participant_count = getattr(replica, "ep_size", None)
-            if participant_count is None:
-                participant_count = getattr(self, "_replica_ep_size", None)
-            if participant_count is None and hasattr(self, "_config"):
-                participant_count = getattr(
-                    self._config.replica_config,
-                    "moe_expert_parallel_size",
-                    1,
-                )
-            participant_count = int(participant_count)
-            if participant_count <= 0:
-                raise ValueError(
-                    f"Invalid shared-domain decode sync participant_count={participant_count}"
-                )
-            return participant_count
-
-        participant_count = int(replica.dp_size)
-        if participant_count <= 0:
-            raise ValueError(
-                f"Invalid decode sync dp_size={participant_count} for replica={replica.id}"
-            )
-        return participant_count
-
     def _get_decode_sync_wait_key(self, batch: Batch) -> int:
-        if self._is_monolithic_decode_shared_domain_sync(batch):
-            if batch.is_idle:
-                return int(batch.global_id)
-            if not hasattr(batch, "decode_sync_global_id"):
-                raise ValueError(
-                    "MONOLITHIC MoE decode shared-domain batch is missing "
-                    "decode_sync_global_id; real decode batches must be created "
-                    "through BaseReplicaScheduler._create_batch so lane-scoped "
-                    "decode sync ids are assigned."
-                )
-            return int(batch.decode_sync_global_id)
+        decode_sync_global_id = getattr(batch, "decode_sync_global_id", None)
+        if decode_sync_global_id is not None:
+            return int(decode_sync_global_id)
         return int(batch.global_id)
 
-    def _build_monolithic_decode_shared_domain_trace_execution_time(
+    def on_decode_sync(
         self,
-        base_execution_time,
-        related_wait_ms: float,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch: Batch,
+        replica_local_id: int | None,
+        sync_stage: str,
+        layer_id: int,
+        stage_execution_time: float,
     ):
-        """Clone trace payload and attach shared-domain wait as a separate trace component."""
-        import copy
+        """Enter the canonical layer-local DECODE MoE protocol.
 
-        trace_execution_time = copy.deepcopy(base_execution_time)
-        merged_wait_ms = max(0.0, float(related_wait_ms))
-        num_layers = max(
-            1,
-            int(getattr(base_execution_time, "_num_layers_per_pipeline_stage", 1)),
+        A DECODE sync entry is valid only before the current layer's EP wave.
+        The old DP waiting-room and aggregate scalar path is retired; the
+        complete replica-local EP participant set is materialized by
+        ``_on_decode_ep_wave_ready`` and its collective completion event owns
+        the layer transition.
+        """
+        del stage_execution_time, replica_local_id
+        if self._decode_sync_waiting_room is None:
+            raise ValueError(
+                "DECODE synchronization is unavailable for a dense model; "
+                "dense execution must use the full-stage protocol"
+            )
+        if sync_stage != "pre_moe":
+            raise ValueError(
+                "DECODE synchronization entry must start at pre_moe; "
+                "post_moe completion is handled by DecodeSyncCollectiveEvent"
+            )
+        if not self._uses_shared_decode_layer_protocol(batch, layer_id):
+            raise RuntimeError(
+                "Legacy DECODE DP synchronization is removed; "
+                "the current layer must use the canonical per-layer protocol"
+            )
+        return self._on_decode_ep_wave_ready(
+            time=time,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            batch=batch,
+            layer_id=layer_id,
         )
-        per_layer_wait_ms = merged_wait_ms / num_layers
-        trace_execution_time._shared_domain_wait_merged_ms = merged_wait_ms
-        trace_execution_time._trace_related_collective_waits = []
-        if merged_wait_ms > 0.0:
-            trace_execution_time._trace_related_collective_waits = [
-                {
-                    "op_name": "expert_parallel_allreduce",
-                    "related_wait_ms": merged_wait_ms,
-                    "per_layer_related_wait_ms": per_layer_wait_ms,
-                    "collective_domain": "EP_SHARED_DOMAIN",
-                    "scope_alignment_mode": "wait_inclusive",
-                    "reason": "monolithic_decode_shared_domain_sync_wait",
-                }
-            ]
-        return trace_execution_time
 
-    def _accumulate_monolithic_decode_shared_domain_related_wait_ms(
+    def on_decode_sync_collective(
         self,
-        *,
+        time: float,
         replica_id: int,
         stage_id: int,
         batch_global_id: int,
         sync_stage: str,
-        sync_wait_room: dict,
-    ) -> float:
-        """Accumulate decode shared-domain wait from sync arrival skew."""
-        if sync_stage != "post_moe":
-            return 0.0
-
-        arrival_times = sync_wait_room.get("arrival_times")
-        if not isinstance(arrival_times, dict) or not arrival_times:
-            return 0.0
-
-        sync_time = max(float(arrival_time) for arrival_time in arrival_times.values())
-        related_wait_ms = 0.0
-        for arrival_time in arrival_times.values():
-            wait_s = max(0.0, sync_time - float(arrival_time))
-            related_wait_ms += wait_s * 1e3
-
-        key = (int(replica_id), int(stage_id), int(batch_global_id))
-        self._decode_shared_domain_related_wait_ms_by_batch[key] += related_wait_ms
-        return related_wait_ms
-
-    def _pop_monolithic_decode_shared_domain_related_wait_ms(
-        self,
+        layer_id: int,
+        metrics_store,
         *,
-        replica_id: int,
-        stage_id: int,
-        batch_global_id: int,
-    ) -> float:
-        """Pop accumulated decode shared-domain wait for one batch lifecycle."""
-        key = (int(replica_id), int(stage_id), int(batch_global_id))
-        related_wait_ms = float(
-            self._decode_shared_domain_related_wait_ms_by_batch.pop(key, 0.0) or 0.0
-        )
-        return max(0.0, related_wait_ms)
-
-    def on_decode_sync(self, time: float, replica_id: int, stage_id: int, batch: Batch,
-                      dp_id: int, sync_stage: str, layer_id: int, stage_execution_time: float):
-        """
-        Handle DECODE cluster synchronization points.
-
-        Similar to on_prefill_sync(), this method handles DP synchronization in the
-        unified DECODE cluster when MoE is enabled.
-
-        Args:
-            time: Current simulation time
-            replica_id: ID of the replica
-            stage_id: Pipeline stage ID
-            batch: The batch being processed
-            dp_id: Data parallel replica ID within the replica
-            sync_stage: "pre_moe" or "post_moe"
-            layer_id: Current layer being processed
-            stage_execution_time: Execution time for this stage
-        """
-        if self._decode_sync_waiting_room is None:
-            raise ValueError(
-                f"on_decode_sync called for non-MoE model in DECODE cluster. "
-                f"Dense models should not use sync events."
-            )
-
-        from frontier.events.decode_sync_collective_event import DecodeSyncCollectiveEvent
-        from frontier.logger import get_cluster_logger
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-
-        batch_global_id = self._get_decode_sync_wait_key(batch)
-        sync_wait_room = self._decode_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id][sync_stage]
-
-        if batch.is_idle and dp_id in sync_wait_room["batches"]:
-            existing_batch = sync_wait_room["batches"][dp_id]
-            if not existing_batch.is_idle:
-                logger.info(
-                    f"[IDLE_BATCH][SKIP] Skipping idle batch {batch.id} for dp_id={dp_id} "
-                    f"because real batch {existing_batch.id} already exists in waiting room"
-                )
-                return []
-
-        sync_wait_room["batches"][dp_id] = batch
-        sync_wait_room["arrival_times"][dp_id] = time
-
-        replica = self.get_replica(replica_id)
-        participant_count = self._get_decode_sync_participant_count(replica, batch)
-        participant_domain = (
-            "EP_SHARED_DOMAIN"
-            if self._is_monolithic_decode_shared_domain_sync(batch)
-            else "DP"
-        )
-
-        arrived = len(sync_wait_room["batches"])
-
-        request_ids = [req.id for req in batch.requests] if batch.requests else []
-        waiting_room_key = f"[{replica_id}][{stage_id}][{batch_global_id}][{layer_id}][{sync_stage}]"
-        participant_ids_in_room = list(sync_wait_room["batches"].keys())
-        debug_msg = (
-            f"[DECODE_SYNC][ARRIVAL] batch_id={batch.id}, global_id={batch_global_id}, "
-            f"requests={request_ids}, replica={replica_id}, dp_id={dp_id}, "
-            f"stage={stage_id}, layer={layer_id}, sync_stage={sync_stage}, "
-            f"arrived={arrived}/{participant_count}, participant_domain={participant_domain}, "
-            f"participant_ids_in_room={participant_ids_in_room}, "
-            f"waiting_room_key={waiting_room_key}, is_idle={batch.is_idle}, t={time:.6f}s"
-        )
-        logger.info(debug_msg)
-
-        if arrived == participant_count:
-            sync_time = max(sync_wait_room["arrival_times"].values())
-            logger.info(
-                f"[DECODE_SYNC][COLLECTIVE_READY] Scheduling DecodeSyncCollectiveEvent at t={sync_time:.6f}s "
-                f"for batch_global_id={batch_global_id}, stage={stage_id}, layer={layer_id}, "
-                f"sync_stage={sync_stage}, participant_domain={participant_domain}"
-            )
-            return [
-                DecodeSyncCollectiveEvent(
-                    sync_time,
-                    replica_id,
-                    stage_id,
-                    batch_global_id,
-                    sync_stage,
-                    layer_id,
-                    cluster_type=self._cluster_type,
-                )
-            ]
-
-        if (
-            sync_stage == "pre_moe"
-            and not batch.is_idle
-            and self._is_monolithic_decode_shared_domain_sync(batch)
-        ):
-            arrived_participant_ids = set(sync_wait_room["batches"].keys())
-            all_participant_ids = set(range(participant_count))
-            missing_participant_ids = all_participant_ids - arrived_participant_ids
-
-            if missing_participant_ids:
-                logger.info(
-                    f"[DECODE_SYNC][IDLE_COMPACT] Compacting missing shared-domain lanes into waiting room: "
-                    f"missing_participant_ids={sorted(missing_participant_ids)}, "
-                    f"arrived_participant_ids={sorted(arrived_participant_ids)}, "
-                    f"participant_domain={participant_domain}"
-                )
-
-                for missing_participant_id in sorted(missing_participant_ids):
-                    if missing_participant_id in sync_wait_room["batches"]:
-                        logger.info(
-                            f"[DECODE_SYNC][IDLE_COMPACT][SKIP] Lane {missing_participant_id} already exists in waiting room"
-                        )
-                        continue
-
-                    idle_batch = Batch(
-                        replica_id=replica_id,
-                        requests=[],
-                        num_tokens=[],
-                        is_idle=True,
-                        is_moe=self._config.replica_config.model_config.is_moe,
-                    )
-                    idle_batch.set_global_id(batch_global_id)
-                    sync_wait_room["batches"][missing_participant_id] = idle_batch
-                    sync_wait_room["arrival_times"][missing_participant_id] = time
-
-                    logger.info(
-                        f"[DECODE_SYNC][IDLE_COMPACT] Inserted idle batch {idle_batch.id} for "
-                        f"replica={replica_id}, dp_id={missing_participant_id}, "
-                        f"batch_global_id={batch_global_id}, layer={layer_id}, "
-                        f"participant_domain={participant_domain}"
-                    )
-
-                compact_arrived = len(sync_wait_room["batches"])
-                if compact_arrived != participant_count:
-                    raise ValueError(
-                        f"Shared-domain decode idle compaction produced arrived={compact_arrived} "
-                        f"but expected participant_count={participant_count} "
-                        f"for replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, "
-                        f"layer={layer_id}, sync_stage={sync_stage}"
-                    )
-
-                sync_time = max(sync_wait_room["arrival_times"].values())
-                logger.info(
-                    f"[DECODE_SYNC][COLLECTIVE_READY][IDLE_COMPACT] Scheduling DecodeSyncCollectiveEvent at "
-                    f"t={sync_time:.6f}s for batch_global_id={batch_global_id}, stage={stage_id}, "
-                    f"layer={layer_id}, sync_stage={sync_stage}, participant_domain={participant_domain}"
-                )
-                return [
-                    DecodeSyncCollectiveEvent(
-                        sync_time,
-                        replica_id,
-                        stage_id,
-                        batch_global_id,
-                        sync_stage,
-                        layer_id,
-                        cluster_type=self._cluster_type,
-                    )
-                ]
-
-        if sync_stage == "pre_moe" and not batch.is_idle:
-            arrived_participant_ids = set(sync_wait_room["batches"].keys())
-            all_participant_ids = set(range(participant_count))
-            missing_participant_ids = all_participant_ids - arrived_participant_ids
-
-            if missing_participant_ids:
-                logger.info(
-                    f"[IDLE_BATCH] Creating idle batches for missing decode sync participants: "
-                    f"missing_participant_ids={sorted(missing_participant_ids)}, "
-                    f"arrived_participant_ids={sorted(arrived_participant_ids)}, "
-                    f"participant_domain={participant_domain}"
-                )
-
-                from frontier.events.decode_sync_event import DecodeSyncEvent
-                idle_batch_events = []
-
-                for missing_participant_id in sorted(missing_participant_ids):
-                    if missing_participant_id not in sync_wait_room["batches"]:
-                        idle_batch = Batch(
-                            replica_id=replica_id,
-                            requests=[],
-                            num_tokens=[],
-                            is_idle=True,
-                            is_moe=self._config.replica_config.model_config.is_moe,
-                        )
-                        idle_batch.set_global_id(batch_global_id)
-
-                        logger.info(
-                            f"[IDLE_BATCH] Created idle batch {idle_batch.id} for "
-                            f"replica={replica_id}, dp_id={missing_participant_id}, "
-                            f"batch_global_id={batch_global_id}, layer={layer_id}, "
-                            f"participant_domain={participant_domain}"
-                        )
-
-                        idle_sync_event = DecodeSyncEvent(
-                            time=time,
-                            replica_id=replica_id,
-                            stage_id=stage_id,
-                            batch=idle_batch,
-                            dp_id=missing_participant_id,
-                            sync_stage=sync_stage,
-                            layer_id=layer_id,
-                            stage_execution_time=0.0,
-                            cluster_type=self._cluster_type,
-                        )
-                        idle_batch_events.append(idle_sync_event)
-                    else:
-                        logger.info(
-                            f"[IDLE_BATCH] Skipping idle batch creation for dp_id={missing_participant_id} "
-                            f"(already exists in waiting room)"
-                        )
-
-                return idle_batch_events
-
-        return []
-
-    def on_decode_sync_collective(self, time: float, replica_id: int, stage_id: int,
-                                  batch_global_id: int, sync_stage: str, layer_id: int, metrics_store):
+        direct_batch: Optional[Batch] = None,
+    ):
         """
         Handle collective synchronization completion in DECODE cluster.
 
         Similar to on_prefill_sync_collective(), this method implements the layer-by-layer
         processing flow for the unified DECODE cluster with MoE:
-        - pre_moe sync: execute pre-collective MoE work, then schedule post_moe sync
-        - post_moe sync: execute post-MoE communication, then continue to next layer or finish
+        - pre_moe sync: execute the canonical EP wave, then schedule post_moe sync
+        - post_moe sync: continue to the next layer or finish after combine completion
 
         Args:
             time: Current simulation time
@@ -3460,15 +5084,28 @@ class BaseClusterScheduler(ABC):
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name)
 
-        if sync_stage not in self._decode_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id]:
-            logger.debug(
-                f"[DECODE_SYNC][COLLECTIVE_SKIP] sync_stage={sync_stage} already processed for "
-                f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
-            )
-            return []
+        if direct_batch is not None:
+            if sync_stage != "post_moe":
+                raise ValueError(
+                    "Direct dense DECODE completion is valid only for post_moe transition"
+                )
+            sync_wait_room = {
+                # Dense completion is a full-stage handoff; EP0 is not a
+                # valid scheduler identity for the next layer.
+                "batches": {None: direct_batch},
+                "arrival_times": {None: time},
+            }
+            dp_batches = sync_wait_room["batches"]
+        else:
+            if sync_stage not in self._decode_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id]:
+                logger.debug(
+                    f"[DECODE_SYNC][COLLECTIVE_SKIP] sync_stage={sync_stage} already processed for "
+                    f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
+                )
+                return []
 
-        sync_wait_room = self._decode_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id].pop(sync_stage)
-        dp_batches = sync_wait_room["batches"]
+            sync_wait_room = self._decode_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id].pop(sync_stage)
+            dp_batches = sync_wait_room["batches"]
 
         try:
             dp_keys = list(dp_batches.keys())
@@ -3482,169 +5119,23 @@ class BaseClusterScheduler(ABC):
         events = []
         non_idle_batches = [batch for batch in dp_batches.values() if not batch.is_idle]
         sample_batch = non_idle_batches[0] if non_idle_batches else next(iter(dp_batches.values()))
-        total_global_tokens = sum(batch.total_num_tokens for batch in non_idle_batches)
-        total_global_prefill_tokens = sum(
-            batch.num_prefill_tokens for batch in non_idle_batches
-        )
-        if total_global_tokens <= 0:
-            total_global_tokens = sample_batch.total_num_tokens
-            total_global_prefill_tokens = sample_batch.num_prefill_tokens
-
-        stage_scheduler = self.get_dp_replica_stage_scheduler(replica_id, 0, stage_id)
-        execution_time_predictor = stage_scheduler._execution_time_predictor
-        replica = self.get_replica(replica_id)
-        participant_count = self._get_decode_sync_participant_count(replica, sample_batch)
-        shared_domain_sync = self._is_monolithic_decode_shared_domain_sync(sample_batch)
-        global_batch = self._create_virtual_global_batch(
-            sample_batch,
-            total_global_tokens,
-            total_global_prefill_tokens,
-        )
-        if shared_domain_sync:
-            related_wait_ms = (
-                self._accumulate_monolithic_decode_shared_domain_related_wait_ms(
-                    replica_id=replica_id,
-                    stage_id=stage_id,
-                    batch_global_id=batch_global_id,
-                    sync_stage=sync_stage,
-                    sync_wait_room=sync_wait_room,
-                )
+        canonical_ep_wave = hasattr(sample_batch, "_decode_ep_wave_lane_times_ms")
+        if direct_batch is None and not canonical_ep_wave:
+            raise RuntimeError(
+                "Legacy DECODE aggregate synchronization is removed; "
+                "collective completion requires a canonical EP_WAVE or dense full-stage handoff"
             )
-            if related_wait_ms > 0.0:
-                logger.info(
-                    f"[MONOLITHIC_DECODE_SYNC][WAIT] batch_global_id={batch_global_id}, "
-                    f"stage={stage_id}, layer={layer_id}, sync_stage={sync_stage}, "
-                    f"related_wait_ms={related_wait_ms:.6f}"
-                )
+        stage_identity = None
+        stage_scheduler = self.get_replica_stage_scheduler(
+            replica_id, stage_identity, stage_id
+        )
+        execution_time_predictor = stage_scheduler._execution_time_predictor
 
         if sync_stage == "pre_moe":
-            if shared_domain_sync:
-                if not hasattr(
-                    execution_time_predictor,
-                    "predict_monolithic_decode_shared_domain_lane_moe_times_ms",
-                ):
-                    raise AttributeError(
-                        f"{type(execution_time_predictor).__name__} does not expose "
-                        "predict_monolithic_decode_shared_domain_lane_moe_times_ms required for "
-                        "monolithic decode shared-domain sync"
-                    )
-
-                lane_times_ms = (
-                    execution_time_predictor
-                    .predict_monolithic_decode_shared_domain_lane_moe_times_ms(
-                        global_batch,
-                        layer_id,
-                    )
-                )
-                expected_lane_ids = set(dp_batches.keys())
-                missing_lane_ids = expected_lane_ids - set(lane_times_ms.keys())
-                if missing_lane_ids:
-                    raise ValueError(
-                        "predict_monolithic_decode_shared_domain_lane_moe_times_ms did not return "
-                        f"timings for lane_ids={sorted(missing_lane_ids)}"
-                    )
-
-                logger.info(
-                    f"[MONOLITHIC_DECODE_SYNC][PRE_MOE] total_global_tokens={total_global_tokens}, "
-                    f"participant_count={participant_count}, lane_times_ms={lane_times_ms}"
-                )
-
-                for participant_id, batch in dp_batches.items():
-                    lane_time_ms = float(lane_times_ms[participant_id])
-                    if lane_time_ms < 0.0:
-                        raise ValueError(
-                            f"Negative shared-domain lane_time_ms={lane_time_ms} for lane={participant_id}"
-                        )
-                    lane_time_s = lane_time_ms * 1e-3
-                    events.append(DecodeSyncEvent(
-                        time + lane_time_s,
-                        replica_id,
-                        stage_id,
-                        batch,
-                        participant_id,
-                        "post_moe",
-                        layer_id,
-                        lane_time_s,
-                        cluster_type=self._cluster_type,
-                    ))
-
-                logger.info(
-                    f"[DECODE_SYNC][COLLECTIVE] pre_moe shared-domain completed, "
-                    f"scheduled post_moe sync arrivals using lane-specific times"
-                )
-                return events
-
-            dp_gather_time = execution_time_predictor.predict_dp_gather_time(
-                total_global_tokens,
-                participant_count,
+            raise ValueError(
+                "DECODE collective completion cannot start at pre_moe; "
+                "the canonical EP_WAVE enters this method at post_moe"
             )
-
-            per_expert_tokens = None
-            if hasattr(global_batch, "per_expert_tokens") and global_batch.per_expert_tokens:
-                per_expert_tokens = global_batch.per_expert_tokens
-            elif hasattr(execution_time_predictor, "_calculate_expert_token_allocation"):
-                per_expert_tokens = execution_time_predictor._calculate_expert_token_allocation(
-                    batch=global_batch,
-                    cluster_type=self._cluster_type,
-                    layer_id=layer_id,
-                )
-            elif hasattr(execution_time_predictor, "_get_moe_tokens_input"):
-                moe_tokens_input = execution_time_predictor._get_moe_tokens_input(
-                    global_batch,
-                    layer_id=layer_id,
-                )
-                if isinstance(moe_tokens_input, dict):
-                    per_expert_tokens = moe_tokens_input
-                elif hasattr(execution_time_predictor, "_build_uniform_per_expert_tokens"):
-                    per_expert_tokens = execution_time_predictor._build_uniform_per_expert_tokens(
-                        int(moe_tokens_input)
-                    )
-                else:
-                    raise ValueError(
-                        "predictor returned scalar moe_tokens_input but does not expose "
-                        "_build_uniform_per_expert_tokens for decode sync collective"
-                    )
-            else:
-                raise AttributeError(
-                    f"{type(execution_time_predictor).__name__} does not expose a supported "
-                    "MoE token-allocation API for decode sync collective"
-                )
-
-            moe_time = execution_time_predictor.predict_moe_layer_time(
-                global_batch,
-                layer_id,
-                self._cluster_type,
-                per_expert_tokens=per_expert_tokens,
-            )
-            dp_scatter_time = execution_time_predictor.predict_dp_scatter_time(
-                total_global_tokens,
-                participant_count,
-            )
-            moe_compute_time = moe_time.total_time() * 1e-3
-            moe_stage_time = dp_gather_time + moe_compute_time + dp_scatter_time
-
-            logger.info(
-                f"[MoE_TIME_BREAKDOWN] dp_gather={dp_gather_time:.6f}s, moe_comp={moe_compute_time:.6f}s, "
-                f"dp_scatter={dp_scatter_time:.6f}s, total={moe_stage_time:.6f}s"
-            )
-
-            for participant_id, batch in dp_batches.items():
-                events.append(DecodeSyncEvent(
-                    time + moe_stage_time,
-                    replica_id,
-                    stage_id,
-                    batch,
-                    participant_id,
-                    "post_moe",
-                    layer_id,
-                    moe_stage_time,
-                    cluster_type=self._cluster_type,
-                ))
-
-            logger.info(
-                f"[DECODE_SYNC][COLLECTIVE] pre_moe completed, scheduled post_moe sync at t={time + moe_stage_time:.6f}s"
-            )
-            return events
 
         total_layers = self._config.replica_config.model_config.num_layers
         active_unique_requests = []
@@ -3675,35 +5166,33 @@ class BaseClusterScheduler(ABC):
         for request in active_unique_requests:
             request.mb_on_step_layer_count_increment(num_layers_completed=1)
 
-        single_layer_execution_time = execution_time_predictor.predict_stage_execution_time(
-            sample_batch,
-            stage_id,
-            self._cluster_type,
-            num_layers=1,
-            layer_id=layer_id,
-        )
-        if hasattr(execution_time_predictor, "_get_expert_parallel_communication_time"):
-            post_moe_comm_time = (
-                execution_time_predictor._get_expert_parallel_communication_time(global_batch)
-                * 1e-3
-            )
-        else:
-            post_moe_comm_time = (
-                single_layer_execution_time.expert_parallel_communication_time * 1e-3
-            )
-
         num_layers = execution_time_predictor._num_layers_per_pipeline_stage
+        _, stage_layer_end = BaseClusterScheduler.get_pipeline_stage_layer_bounds(
+            stage_id,
+            num_layers,
+        )
         next_layer_id = layer_id + 1
 
-        if next_layer_id < num_layers:
+        if next_layer_id < stage_layer_end:
+            self.transition_stage_admission_for_layer(
+                sample_batch,
+                stage_id=stage_id,
+                layer_id=next_layer_id,
+                operation_kind="attention",
+                scope=FULL_STAGE_WORLD,
+            )
             next_layer_execution_time = execution_time_predictor.predict_stage_execution_time(
                 sample_batch,
                 stage_id,
                 self._cluster_type,
                 num_layers=1,
                 layer_id=next_layer_id,
+                include_ffn=False,
             )
-            attention_time = next_layer_execution_time.get_single_layer_attention_time() * 1e-3
+            attention_time = (
+                next_layer_execution_time.get_single_layer_attention_scope_time()
+                * 1e-3
+            )
 
             for participant_id, batch in dp_batches.items():
                 if batch.is_idle:
@@ -3713,13 +5202,16 @@ class BaseClusterScheduler(ABC):
                     )
                     continue
 
-                total_time_to_next_sync = post_moe_comm_time + attention_time
+                total_time_to_next_sync = attention_time
+                transition_identity = (
+                    None if stage_identity is None else participant_id
+                )
                 events.append(DecodeSyncEvent(
                     time + total_time_to_next_sync,
                     replica_id,
                     stage_id,
                     batch,
-                    participant_id,
+                    transition_identity,
                     "pre_moe",
                     next_layer_id,
                     total_time_to_next_sync,
@@ -3728,7 +5220,7 @@ class BaseClusterScheduler(ABC):
 
             logger.info(
                 f"[DECODE_SYNC][COLLECTIVE] post_moe completed, incremented layer count for {len(active_unique_requests)} unique requests, "
-                f"scheduled next layer pre_moe sync at t={time + post_moe_comm_time + attention_time:.6f}s"
+                f"scheduled next layer pre_moe sync at t={time + attention_time:.6f}s"
             )
             return events
 
@@ -3737,6 +5229,7 @@ class BaseClusterScheduler(ABC):
             stage_id,
             self._cluster_type,
             num_layers=num_layers,
+            include_ffn=False,
         )
         is_last_stage = stage_scheduler.is_last_stage
         pipeline_time = full_stage_execution_time.pipeline_time * 1e-3
@@ -3759,21 +5252,10 @@ class BaseClusterScheduler(ABC):
             * 1e-3
         )
         total_final_time = (
-            post_moe_comm_time
-            + pipeline_time
+            pipeline_time
             + cpu_overhead_time
             + decode_draft_proposer_time
         )
-        shared_domain_related_wait_ms = 0.0
-        if shared_domain_sync:
-            shared_domain_related_wait_ms = (
-                self._pop_monolithic_decode_shared_domain_related_wait_ms(
-                    replica_id=replica_id,
-                    stage_id=stage_id,
-                    batch_global_id=batch_global_id,
-                )
-            )
-
         for participant_id, batch in dp_batches.items():
             if batch.is_idle:
                 logger.info(
@@ -3786,7 +5268,10 @@ class BaseClusterScheduler(ABC):
                 mtp_terminal_overshoot_time,
             )
 
-            dp_stage_scheduler = self.get_dp_replica_stage_scheduler(replica_id, participant_id, stage_id)
+            transition_identity = None if stage_identity is None else participant_id
+            dp_stage_scheduler = self.get_replica_stage_scheduler(
+                replica_id, transition_identity, stage_id
+            )
             batch_stage, _ = dp_stage_scheduler.predict_and_create_stage(batch, skip_get_execution_time=True)
 
             original_start_time = getattr(
@@ -3807,13 +5292,6 @@ class BaseClusterScheduler(ABC):
                 original_start_time,
             )
             trace_execution_time = full_stage_execution_time
-            if shared_domain_sync:
-                trace_execution_time = (
-                    self._build_monolithic_decode_shared_domain_trace_execution_time(
-                        full_stage_execution_time,
-                        related_wait_ms=shared_domain_related_wait_ms,
-                    )
-                )
             corrected_execution_time._trace_execution_time_override = trace_execution_time
 
             metrics_store.on_replica_stage_schedule(
@@ -3823,7 +5301,7 @@ class BaseClusterScheduler(ABC):
                 batch_stage,
                 corrected_execution_time,
                 self._cluster_type,
-                participant_id,
+                transition_identity,
             )
 
             events.append(BatchStageEndEvent(
@@ -3834,7 +5312,7 @@ class BaseClusterScheduler(ABC):
                 batch,
                 batch_stage,
                 self._cluster_type,
-                participant_id,
+                transition_identity,
             ))
 
         logger.info(
@@ -4024,15 +5502,42 @@ class BaseClusterScheduler(ABC):
         time: float,
         batch: Batch,
         transfer_info,
+        *,
+        expected_roundtrip_inflight: bool = False,
+        request_end_deferred: bool = False,
     ) -> List:
-        """Route M2N transfer arrival to the appropriate cluster handler."""
+        """Route M2N transfer arrival to the appropriate cluster handler.
+
+        ``expected_roundtrip_inflight`` describes the request lifecycle state
+        that the handler must validate against.  The M2N end event uses
+        ``False`` while the request's F→A end hook is still deferred until the
+        target admission succeeds.  Direct scheduler callers retain the
+        historical default, where the end hook has already been applied.
+        """
         from frontier.logger import get_cluster_logger
+
+        if type(expected_roundtrip_inflight) is not bool:
+            raise ValueError(
+                "M2N arrival expected_roundtrip_inflight must be an exact bool, "
+                f"got {expected_roundtrip_inflight!r}"
+            )
+        if type(request_end_deferred) is not bool:
+            raise ValueError(
+                "M2N arrival request_end_deferred must be an exact bool, "
+                f"got {request_end_deferred!r}"
+            )
+        if request_end_deferred and expected_roundtrip_inflight is not False:
+            raise ValueError(
+                "M2N arrival with deferred request end must validate the "
+                "projected roundtrip_inflight=False state"
+            )
 
         if self._cluster_type is ClusterType.DECODE_ATTN:
             self._validate_decode_attn_m2n_receipt(
                 batch,
                 transfer_info,
-                expected_roundtrip_inflight=False,
+                expected_roundtrip_inflight=expected_roundtrip_inflight,
+                request_end_deferred=request_end_deferred,
             )
         else:
             self.preflight_m2n_arrival(batch, transfer_info)
@@ -4048,7 +5553,14 @@ class BaseClusterScheduler(ABC):
         if self._cluster_type == ClusterType.DECODE_FFN:
             return self._handle_m2n_arrival_decode_ffn(time, batch, transfer_info, logger)
         if self._cluster_type == ClusterType.DECODE_ATTN:
-            return self._handle_m2n_arrival_decode_attn(time, batch, transfer_info, logger)
+            return self._handle_m2n_arrival_decode_attn(
+                time,
+                batch,
+                transfer_info,
+                logger,
+                expected_roundtrip_inflight=expected_roundtrip_inflight,
+                request_end_deferred=request_end_deferred,
+            )
         raise RuntimeError(
             f"Validated M2N arrival has no handler for cluster {self._cluster_type.name}"
         )
@@ -4099,35 +5611,51 @@ class BaseClusterScheduler(ABC):
     def _normalize_m2n_lane_contract(
         raw_lanes,
         *,
+        identity_scope: M2NLaneIdentityScope,
         field_name: str,
         require_nonempty: bool,
-    ) -> List[tuple[int, int]]:
+    ) -> List[tuple[int, int | None]]:
         """Validate and normalize one exact M2N lane contract."""
 
+        if type(identity_scope) is not M2NLaneIdentityScope:
+            raise ValueError(
+                "identity_scope must be an exact M2NLaneIdentityScope, "
+                f"got {identity_scope!r}"
+            )
         if type(raw_lanes) not in {list, tuple}:
             raise ValueError(
                 f"{field_name} must be an exact list or tuple, got {raw_lanes!r}"
             )
 
-        normalized_lanes: List[tuple[int, int]] = []
+        allow_full_stage_identity = (
+            identity_scope is M2NLaneIdentityScope.FULL_STAGE
+        )
+        normalized_lanes: List[tuple[int, int | None]] = []
         seen_lanes = set()
         for raw_lane in raw_lanes:
             if type(raw_lane) is not tuple or len(raw_lane) != 2:
                 raise ValueError(
                     f"{field_name} must contain exact 2-tuples, got {raw_lane!r}"
                 )
-            lane_replica_id, lane_dp_id = raw_lane
+            lane_replica_id, lane_replica_local_id = raw_lane
             if type(lane_replica_id) is not int or lane_replica_id < 0:
                 raise ValueError(
                     f"{field_name} replica_id must be an exact non-negative int, "
                     f"got {lane_replica_id!r}"
                 )
-            if type(lane_dp_id) is not int or lane_dp_id < 0:
+            if lane_replica_local_id is not None and (
+                type(lane_replica_local_id) is not int or lane_replica_local_id < 0
+            ):
                 raise ValueError(
-                    f"{field_name} dp_id must be an exact non-negative int, "
-                    f"got {lane_dp_id!r}"
+                    f"{field_name} replica_local_id must be an exact "
+                    f"non-negative int, got {lane_replica_local_id!r}"
                 )
-            lane = (lane_replica_id, lane_dp_id)
+            if lane_replica_local_id is None and not allow_full_stage_identity:
+                raise ValueError(
+                    f"{field_name} replica_local_id cannot be None in "
+                    f"{identity_scope.value} identity scope"
+                )
+            lane = (lane_replica_id, lane_replica_local_id)
             if lane in seen_lanes:
                 raise ValueError(f"{field_name} contains duplicate lane {lane!r}")
             seen_lanes.add(lane)
@@ -4223,6 +5751,7 @@ class BaseClusterScheduler(ABC):
         room_contract = tuple(
             self._normalize_m2n_lane_contract(
                 raw_room_contract,
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN waiting-room expected lane contract",
                 require_nonempty=True,
             )
@@ -4238,6 +5767,7 @@ class BaseClusterScheduler(ABC):
                 sorted(
                     self._normalize_m2n_lane_contract(
                         expected_lane_contract,
+                        identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                         field_name="DECODE_FFN receipt expected lane contract",
                         require_nonempty=True,
                     )
@@ -4254,6 +5784,7 @@ class BaseClusterScheduler(ABC):
         queue_lanes = tuple(
             self._normalize_m2n_lane_contract(
                 tuple(per_lane_queues),
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN waiting-room queue lanes",
                 require_nonempty=False,
             )
@@ -4261,6 +5792,7 @@ class BaseClusterScheduler(ABC):
         rr_lanes = tuple(
             self._normalize_m2n_lane_contract(
                 tuple(lanes_rr_order),
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN waiting-room round-robin lanes",
                 require_nonempty=False,
             )
@@ -4335,18 +5867,23 @@ class BaseClusterScheduler(ABC):
                         "DECODE_ATTN -> DECODE_FFN transfer"
                     )
                 queued_source_replica_id = queued_transfer_info.source_replica_id
-                queued_source_dp_id = queued_transfer_info.source_dp_id
+                queued_source_replica_local_id = queued_transfer_info.source_replica_local_id
                 if (
                     type(queued_source_replica_id) is not int
                     or queued_source_replica_id < 0
-                    or type(queued_source_dp_id) is not int
-                    or queued_source_dp_id < 0
-                    or (queued_source_replica_id, queued_source_dp_id) != queue_lane
+                    or (
+                        queued_source_replica_local_id is not None
+                        and (
+                            type(queued_source_replica_local_id) is not int
+                            or queued_source_replica_local_id < 0
+                        )
+                    )
+                    or (queued_source_replica_id, queued_source_replica_local_id) != queue_lane
                 ):
                     raise RuntimeError(
                         "DECODE_FFN waiting-room queued transfer lane mismatch: "
                         f"queue={queue_lane}, transfer="
-                        f"{(queued_source_replica_id, queued_source_dp_id)}"
+                        f"{(queued_source_replica_id, queued_source_replica_local_id)}"
                     )
                 queued_layer_id = queued_transfer_info.layer_id
                 if type(queued_layer_id) is not int or queued_layer_id != layer_id:
@@ -4395,6 +5932,7 @@ class BaseClusterScheduler(ABC):
                     sorted(
                         self._normalize_m2n_lane_contract(
                             queued_expected_lanes,
+                            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                             field_name=(
                                 "DECODE_FFN waiting-room queued batch expected "
                                 "lane metadata"
@@ -4445,9 +5983,9 @@ class BaseClusterScheduler(ABC):
                     "decode_attn_original_replica_id",
                     None,
                 )
-                queued_original_dp_id = getattr(
+                queued_original_replica_local_id = getattr(
                     queued_batch,
-                    "decode_attn_original_dp_id",
+                    "decode_attn_original_replica_local_id",
                     None,
                 )
                 if queued_original_replica_id is not None and (
@@ -4459,13 +5997,13 @@ class BaseClusterScheduler(ABC):
                         f"queue={queue_lane[0]!r}, "
                         f"batch={queued_original_replica_id!r}"
                     )
-                if queued_original_dp_id is not None and (
-                    type(queued_original_dp_id) is not int
-                    or queued_original_dp_id != queue_lane[1]
+                if queued_original_replica_local_id is not None and (
+                    type(queued_original_replica_local_id) is not int
+                    or queued_original_replica_local_id != queue_lane[1]
                 ):
                     raise RuntimeError(
-                        "DECODE_FFN waiting-room queued batch DP lane mismatch: "
-                        f"queue={queue_lane[1]!r}, batch={queued_original_dp_id!r}"
+                        "DECODE_FFN waiting-room queued batch local identity mismatch: "
+                        f"queue={queue_lane[1]!r}, batch={queued_original_replica_local_id!r}"
                     )
 
         if set(rr_lanes) != nonempty_queue_lanes:
@@ -4489,6 +6027,7 @@ class BaseClusterScheduler(ABC):
         int,
         tuple[int, int] | tuple[int, int, int],
         tuple[tuple[int, int], ...],
+        int,
     ]:
         """Validate one A-to-F receipt without mutating scheduler or batch state."""
 
@@ -4533,13 +6072,16 @@ class BaseClusterScheduler(ABC):
                 "DECODE_FFN receipt source_replica_id must be an exact "
                 f"non-negative int, got {source_replica_id!r}"
             )
-        source_dp_id = getattr(transfer_info, "source_dp_id", None)
-        if type(source_dp_id) is not int or source_dp_id < 0:
+        source_replica_local_id = getattr(transfer_info, "source_replica_local_id", None)
+        if source_replica_local_id is not None and (
+            type(source_replica_local_id) is not int or source_replica_local_id < 0
+        ):
             raise ValueError(
-                "DECODE_FFN receipt source_dp_id must be an exact non-negative int, "
-                f"got {source_dp_id!r}"
+                "DECODE_FFN receipt source_replica_local_id must be None or an exact "
+                "non-negative int, "
+                f"got {source_replica_local_id!r}"
             )
-        lane = (source_replica_id, source_dp_id)
+        lane = (source_replica_id, source_replica_local_id)
 
         raw_expected_lanes = getattr(
             batch,
@@ -4550,6 +6092,7 @@ class BaseClusterScheduler(ABC):
             raw_expected_lanes = ()
         barrier_expected_lanes = self._normalize_m2n_lane_contract(
             raw_expected_lanes,
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_FFN receipt expected lane metadata",
             require_nonempty=False,
         )
@@ -4565,6 +6108,7 @@ class BaseClusterScheduler(ABC):
         else:
             scheduler_expected_lanes = self._normalize_m2n_lane_contract(
                 getattr(self, "_ffn_expected_lanes", None),
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN scheduler lane topology",
                 require_nonempty=True,
             )
@@ -4604,6 +6148,50 @@ class BaseClusterScheduler(ABC):
                 incoming_batch=batch,
             )
 
+        lane_to_target_replica = getattr(
+            self,
+            "_ffn_lane_to_target_replica",
+            None,
+        )
+        if type(lane_to_target_replica) is not dict:
+            raise RuntimeError(
+                "DECODE_FFN receipt requires an exact lane-to-target Replica map"
+            )
+        if lane not in lane_to_target_replica:
+            raise ValueError(
+                "DECODE_FFN receipt lane has no target Replica mapping: "
+                f"lane={lane}"
+            )
+        target_replica_id = lane_to_target_replica[lane]
+        if type(target_replica_id) is not int or target_replica_id < 0:
+            raise ValueError(
+                "DECODE_FFN receipt target Replica mapping must be an exact "
+                f"non-negative int, got {target_replica_id!r}"
+            )
+        for field_name in (
+            "target_ffn_replica_id",
+            "target_execution_replica_id",
+        ):
+            existing_target = getattr(transfer_info, field_name, None)
+            if existing_target is None:
+                continue
+            if type(existing_target) is not int or existing_target < 0:
+                raise ValueError(
+                    f"DECODE_FFN receipt {field_name} must be None or an exact "
+                    f"non-negative int, got {existing_target!r}"
+                )
+            if existing_target != target_replica_id:
+                raise ValueError(
+                    f"DECODE_FFN receipt {field_name} does not match the "
+                    "lane-to-target Replica mapping: "
+                    f"field={existing_target}, mapping={target_replica_id}"
+                )
+        if transfer_info.target_execution_replica_local_id is not None:
+            raise ValueError(
+                "DECODE_FFN A-to-F target execution identity must not carry "
+                "a Replica-local lane"
+            )
+
         return (
             layer_id,
             afd_stage_idx,
@@ -4613,6 +6201,7 @@ class BaseClusterScheduler(ABC):
             expected_lanes,
             group_key,
             expected_lane_contract,
+            target_replica_id,
         )
 
     def _validate_decode_attn_f2a_cohort_binding(
@@ -4638,7 +6227,7 @@ class BaseClusterScheduler(ABC):
             getattr(batch, "decode_attn_cohort_id", None),
             f"DECODE_ATTN {context} decode_attn_cohort_id",
         )
-        replica_schedulers = getattr(self, "_dp_replica_schedulers", None)
+        replica_schedulers = getattr(self, "_replica_schedulers", None)
         if type(replica_schedulers) is not dict:
             raise RuntimeError(
                 "DECODE_ATTN replica scheduler topology must be an exact dict"
@@ -4802,6 +6391,7 @@ class BaseClusterScheduler(ABC):
         transfer_info: "M2NTransferInfo",
         *,
         expected_roundtrip_inflight: bool,
+        request_end_deferred: bool = False,
     ) -> Dict[str, Any]:
         """Validate one F-to-A receipt without mutating runtime state."""
 
@@ -4816,6 +6406,16 @@ class BaseClusterScheduler(ABC):
             raise ValueError(
                 "DECODE_ATTN expected roundtrip state must be an exact bool, "
                 f"got {expected_roundtrip_inflight!r}"
+            )
+        if type(request_end_deferred) is not bool:
+            raise ValueError(
+                "DECODE_ATTN request_end_deferred must be an exact bool, "
+                f"got {request_end_deferred!r}"
+            )
+        if request_end_deferred and expected_roundtrip_inflight is not False:
+            raise ValueError(
+                "DECODE_ATTN deferred request end requires the projected "
+                "roundtrip_inflight=False state"
             )
 
         self.validate_m2n_arrival_target(transfer_info)
@@ -4842,10 +6442,12 @@ class BaseClusterScheduler(ABC):
             getattr(transfer_info, "source_replica_id", None),
             "DECODE_ATTN receipt source_replica_id",
         )
-        source_dp_id = require_non_negative_int(
-            getattr(transfer_info, "source_dp_id", None),
-            "DECODE_ATTN receipt source_dp_id",
-        )
+        source_replica_local_id = getattr(transfer_info, "source_replica_local_id", None)
+        if source_replica_local_id is not None:
+            source_replica_local_id = require_non_negative_int(
+                source_replica_local_id,
+                "DECODE_ATTN receipt source_replica_local_id",
+            )
         transfer_layer_id = require_non_negative_int(
             getattr(transfer_info, "layer_id", None),
             "DECODE_ATTN receipt layer_id",
@@ -4858,10 +6460,12 @@ class BaseClusterScheduler(ABC):
             getattr(batch, "decode_attn_original_replica_id", None),
             "DECODE_ATTN receipt decode_attn_original_replica_id",
         )
-        dp_id = require_non_negative_int(
-            getattr(batch, "decode_attn_original_dp_id", None),
-            "DECODE_ATTN receipt decode_attn_original_dp_id",
-        )
+        replica_local_id = getattr(batch, "decode_attn_original_replica_local_id", None)
+        if replica_local_id is not None:
+            replica_local_id = require_non_negative_int(
+                replica_local_id,
+                "DECODE_ATTN receipt decode_attn_original_replica_local_id",
+            )
         batch_global_id = require_non_negative_int(
             getattr(batch, "global_id", None),
             "DECODE_ATTN receipt batch.global_id",
@@ -4870,8 +6474,8 @@ class BaseClusterScheduler(ABC):
             getattr(batch, "afd_stage_idx", None),
             "DECODE_ATTN receipt batch.afd_stage_idx",
         )
-        lane = (replica_id, dp_id)
-        source_lane = (source_replica_id, source_dp_id)
+        lane = (replica_id, replica_local_id)
+        source_lane = (source_replica_id, source_replica_local_id)
         if source_lane != lane:
             raise ValueError(
                 "DECODE_ATTN receipt source lane does not match the original ATTN "
@@ -4907,7 +6511,12 @@ class BaseClusterScheduler(ABC):
                     f"exact bool, got {roundtrip_inflight!r} for request "
                     f"{getattr(request, 'id', '?')}"
                 )
-            if roundtrip_inflight is not expected_roundtrip_inflight:
+            roundtrip_matches = (
+                roundtrip_inflight is True
+                if request_end_deferred
+                else roundtrip_inflight is expected_roundtrip_inflight
+            )
+            if not roundtrip_matches:
                 raise ValueError(
                     "DECODE_ATTN receipt request roundtrip state does not match the "
                     f"admission phase: expected={expected_roundtrip_inflight}, "
@@ -4991,6 +6600,7 @@ class BaseClusterScheduler(ABC):
                 replica_id,
                 afd_stage_idx=afd_stage_idx,
             ),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN F-to-A scheduler lane topology",
             require_nonempty=True,
         )
@@ -5001,14 +6611,42 @@ class BaseClusterScheduler(ABC):
             )
         scheduler_expected_lane_set = set(scheduler_expected_lanes)
 
-        self._validate_decode_attn_f2a_cohort_binding(
+        replica_scheduler_type = getattr(self, "_replica_scheduler_type", None)
+        if type(replica_scheduler_type) is not ReplicaSchedulerType:
+            raise RuntimeError(
+                "DECODE_ATTN receipt requires an exact replica scheduler type, "
+                f"got {replica_scheduler_type!r}"
+            )
+        cohort_id = getattr(batch, "decode_attn_cohort_id", None)
+        cohort_request_ids = getattr(
             batch,
-            lane=lane,
-            afd_stage_idx=afd_stage_idx,
-            requests=requests,
-            active_requests=active_requests,
-            context="receipt",
+            "decode_attn_cohort_request_ids",
+            None,
         )
+        cohort_scheduler_types = {
+            ReplicaSchedulerType.VLLM_V1,
+            ReplicaSchedulerType.SGLANG,
+            ReplicaSchedulerType.SJ2Q_FASTSERVE_LITE,
+            ReplicaSchedulerType.SJ2Q_PENALTY_ONLY,
+            ReplicaSchedulerType.SJ2Q_BOUNDED_CARRYOVER,
+        }
+        if replica_scheduler_type in cohort_scheduler_types:
+            self._validate_decode_attn_f2a_cohort_binding(
+                batch,
+                lane=lane,
+                afd_stage_idx=afd_stage_idx,
+                requests=requests,
+                active_requests=active_requests,
+                context="receipt",
+            )
+        elif cohort_id is not None or cohort_request_ids is not None:
+            raise ValueError(
+                "DECODE_ATTN receipt from a non-cohort scheduler must not carry "
+                "decode_attn_cohort_id or decode_attn_cohort_request_ids: "
+                f"scheduler_type={replica_scheduler_type}, "
+                f"cohort_id={cohort_id!r}, "
+                f"cohort_request_ids={cohort_request_ids!r}"
+            )
 
         barrier_round_id = getattr(batch, "decode_attn_barrier_round_id", None)
         if barrier_round_id is not None:
@@ -5026,6 +6664,7 @@ class BaseClusterScheduler(ABC):
             raw_expected_lanes = ()
         barrier_expected_lanes = self._normalize_m2n_lane_contract(
             raw_expected_lanes,
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN receipt expected lane metadata",
             require_nonempty=False,
         )
@@ -5049,6 +6688,7 @@ class BaseClusterScheduler(ABC):
                         expected_replica_id,
                         afd_stage_idx=afd_stage_idx,
                     ),
+                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name=(
                         "DECODE_ATTN F-to-A scheduler lane topology for "
                         f"replica {expected_replica_id}"
@@ -5112,6 +6752,7 @@ class BaseClusterScheduler(ABC):
                 existing_expected_lanes = tuple(
                     self._normalize_m2n_lane_contract(
                         raw_room_expected_lanes,
+                        identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                         field_name="DECODE_ATTN F-to-A waiting room expected lanes",
                         require_nonempty=True,
                     )
@@ -5177,6 +6818,7 @@ class BaseClusterScheduler(ABC):
                 )
             room_lanes = self._normalize_m2n_lane_contract(
                 list(per_lane_queues.keys()),
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_ATTN F-to-A waiting room queue lanes",
                 require_nonempty=False,
             )
@@ -5261,7 +6903,7 @@ class BaseClusterScheduler(ABC):
             "current_layer_id": current_layer_id,
             "next_layer_id": next_layer_id,
             "replica_id": replica_id,
-            "dp_id": dp_id,
+            "replica_local_id": replica_local_id,
             "lane": lane,
             "batch_global_id": batch_global_id,
             "decode_token_index": decode_token_index,
@@ -5310,11 +6952,16 @@ class BaseClusterScheduler(ABC):
                 getattr(queued_batch, "decode_attn_original_replica_id", None),
                 "DECODE_ATTN F-to-A queued batch original replica_id",
             ),
-            require_non_negative_int(
-                getattr(queued_batch, "decode_attn_original_dp_id", None),
-                "DECODE_ATTN F-to-A queued batch original dp_id",
-            ),
+            getattr(queued_batch, "decode_attn_original_replica_local_id", None),
         )
+        if queued_lane[1] is not None:
+            queued_lane = (
+                queued_lane[0],
+                require_non_negative_int(
+                    queued_lane[1],
+                    "DECODE_ATTN F-to-A queued batch original replica_local_id",
+                ),
+            )
         if queued_lane != queue_lane or queued_lane not in expected_lanes:
             raise RuntimeError(
                 "DECODE_ATTN F-to-A queued batch lane does not match its waiting "
@@ -5366,6 +7013,7 @@ class BaseClusterScheduler(ABC):
             raw_queued_expected_lanes = ()
         queued_expected_lanes = self._normalize_m2n_lane_contract(
             raw_queued_expected_lanes,
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN F-to-A queued batch expected lanes",
             require_nonempty=False,
         )
@@ -5499,7 +7147,12 @@ class BaseClusterScheduler(ABC):
             expected_lanes,
             group_key,
             expected_lane_contract,
+            target_replica_id,
         ) = self._validate_decode_ffn_m2n_receipt(batch, transfer_info)
+
+        transfer_info.target_ffn_replica_id = target_replica_id
+        transfer_info.target_execution_replica_id = target_replica_id
+        transfer_info.target_execution_replica_local_id = None
 
         for request in batch.requests:
             request.on_arrival(time, self._cluster_type)
@@ -5516,8 +7169,6 @@ class BaseClusterScheduler(ABC):
             }
             self._m2n_waiting_by_layer[group_key] = room
 
-        if hasattr(self, '_ffn_lane_to_target_replica'):
-            transfer_info.target_ffn_replica_id = self._ffn_lane_to_target_replica.get(lane)
         if lane not in room['per_lane_queues']:
             room['per_lane_queues'][lane] = deque()
         was_empty = (len(room['per_lane_queues'][lane]) == 0)
@@ -5594,6 +7245,7 @@ class BaseClusterScheduler(ABC):
                 sorted(
                     self._normalize_m2n_lane_contract(
                         expected_lane_ids,
+                        identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                         field_name="DECODE_FFN promotion expected lane IDs",
                         require_nonempty=True,
                     )
@@ -5630,6 +7282,7 @@ class BaseClusterScheduler(ABC):
             normalized_idle_lanes = set(
                 self._normalize_m2n_lane_contract(
                     tuple(raw_idle_lanes),
+                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name="DECODE_FFN idle lane inventory",
                     require_nonempty=False,
                 )
@@ -5754,6 +7407,7 @@ class BaseClusterScheduler(ABC):
         normalized_idle_lanes = set(
             self._normalize_m2n_lane_contract(
                 tuple(ffn_idle_lanes),
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN idle lane inventory",
                 require_nonempty=False,
             )
@@ -5768,6 +7422,7 @@ class BaseClusterScheduler(ABC):
         if expected_lane_ids is not None:
             normalized_expected_lane_ids = self._normalize_m2n_lane_contract(
                 expected_lane_ids,
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN idle injection candidate lanes",
                 require_nonempty=False,
             )
@@ -5825,7 +7480,7 @@ class BaseClusterScheduler(ABC):
             )
             idle_batch.afd_stage_idx = afd_stage_idx
             idle_batch.decode_attn_original_replica_id = missing_lane[0]
-            idle_batch.decode_attn_original_dp_id = missing_lane[1]
+            idle_batch.decode_attn_original_replica_local_id = missing_lane[1]
             idle_batch.decode_attn_barrier_round_id = barrier_round_id
             idle_batch.decode_attn_barrier_expected_lanes = room_lane_contract
             idle_batch.decode_ffn_layer_id = wire_layer_id
@@ -5837,7 +7492,7 @@ class BaseClusterScheduler(ABC):
                 source_cluster_type=ClusterType.DECODE_ATTN,
                 target_cluster_type=ClusterType.DECODE_FFN,
                 source_replica_id=missing_lane[0],
-                source_dp_id=missing_lane[1],
+                source_replica_local_id=missing_lane[1],
                 activation_size_bytes=0,
                 transfer_time_ms=0.0,
                 transfer_start_time=time,
@@ -6066,6 +7721,9 @@ class BaseClusterScheduler(ABC):
         micro_batch: Batch,
         transfer_info,
         logger,
+        *,
+        expected_roundtrip_inflight: bool = False,
+        request_end_deferred: bool = False,
     ) -> List:
         """Handle M2N transfer arrival at decode-attn cluster (return from decode-ffn).
 
@@ -6081,7 +7739,8 @@ class BaseClusterScheduler(ABC):
         receipt = self._validate_decode_attn_m2n_receipt(
             micro_batch,
             transfer_info,
-            expected_roundtrip_inflight=False,
+            expected_roundtrip_inflight=expected_roundtrip_inflight,
+            request_end_deferred=request_end_deferred,
         )
         logger.info(f"[AF-ARRIVAL] M2N returned micro batch {micro_batch.id} at decode-attn; advancing request states")
 
@@ -6112,7 +7771,7 @@ class BaseClusterScheduler(ABC):
         )
 
         replica_id = receipt["replica_id"]
-        dp_id = receipt["dp_id"]
+        replica_local_id = receipt["replica_local_id"]
 
         ready_for_reschedule = False
         if not is_mb_last_layer:
@@ -6128,7 +7787,8 @@ class BaseClusterScheduler(ABC):
             )
             logger.info(
                 f"[AF-ARRIVAL][FINAL-LAYER] mb={micro_batch.id} emitting GlobalBatchEndEvent; "
-                f"replica={replica_id}, dp={dp_id}, global_end_time={global_end_time}"
+                f"replica={replica_id}, replica_local_id={replica_local_id}, "
+                f"global_end_time={global_end_time}"
             )
             current_exec_sigs = [
                 Batch._get_request_execution_signature(r) for r in micro_batch.requests
@@ -6140,7 +7800,7 @@ class BaseClusterScheduler(ABC):
                 GlobalBatchEndEvent(
                     global_end_time,
                     replica_id,
-                    dp_id,
+                    replica_local_id,
                     micro_batch,
                     self._cluster_type,
                     request_execution_signatures=current_exec_sigs,
@@ -6236,6 +7896,7 @@ class BaseClusterScheduler(ABC):
             )
         normalized_lane = self._normalize_m2n_lane_contract(
             [lane],
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name=f"DECODE_ATTN A-to-F {context} lane",
             require_nonempty=True,
         )[0]
@@ -6279,17 +7940,19 @@ class BaseClusterScheduler(ABC):
             )
         batch_lane = (
             getattr(batch, "decode_attn_original_replica_id", None),
-            getattr(batch, "decode_attn_original_dp_id", None),
+            getattr(batch, "decode_attn_original_replica_local_id", None),
         )
         if (
             type(batch_lane[0]) is not int
             or batch_lane[0] < 0
-            or type(batch_lane[1]) is not int
-            or batch_lane[1] < 0
+            or (
+                batch_lane[1] is not None
+                and (type(batch_lane[1]) is not int or batch_lane[1] < 0)
+            )
         ):
             raise ValueError(
-                f"DECODE_ATTN A-to-F {context} original lane must contain exact "
-                f"non-negative ints, got {batch_lane!r}"
+                f"DECODE_ATTN A-to-F {context} original lane must contain a "
+                f"Replica ID and optional full-stage identity, got {batch_lane!r}"
             )
         if batch_lane != normalized_lane:
             raise ValueError(
@@ -6507,9 +8170,9 @@ class BaseClusterScheduler(ABC):
         cohort_id = getattr(batch, "decode_attn_cohort_id", None)
         lane = (
             getattr(batch, "decode_attn_original_replica_id", None),
-            getattr(batch, "decode_attn_original_dp_id", None),
+            getattr(batch, "decode_attn_original_replica_local_id", None),
         )
-        replica_schedulers = getattr(self, "_dp_replica_schedulers", None)
+        replica_schedulers = getattr(self, "_replica_schedulers", None)
         if type(replica_schedulers) is not dict or lane not in replica_schedulers:
             raise ValueError(
                 f"DECODE_ATTN A-to-F {context} cohort lane is absent from the "
@@ -6604,6 +8267,7 @@ class BaseClusterScheduler(ABC):
             sorted(
                 self._normalize_m2n_lane_contract(
                     expected_lane_contract,
+                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name="DECODE_ATTN A-to-F expected lane topology",
                     require_nonempty=True,
                 )
@@ -6646,6 +8310,7 @@ class BaseClusterScheduler(ABC):
             sorted(
                 self._normalize_m2n_lane_contract(
                     raw_room_contract,
+                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name=(
                         "DECODE_ATTN A-to-F waiting-room expected lane contract"
                     ),
@@ -6675,6 +8340,7 @@ class BaseClusterScheduler(ABC):
             )
         queue_lanes = self._normalize_m2n_lane_contract(
             tuple(per_lane_queues),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN A-to-F waiting-room queue lanes",
             require_nonempty=False,
         )
@@ -6748,20 +8414,23 @@ class BaseClusterScheduler(ABC):
                     "decode_attn_original_replica_id",
                     None,
                 )
-                queued_dp_id = getattr(
+                queued_replica_local_id = getattr(
                     queued_batch,
-                    "decode_attn_original_dp_id",
+                    "decode_attn_original_replica_local_id",
                     None,
                 )
                 if (
                     type(queued_replica_id) is not int
-                    or type(queued_dp_id) is not int
-                    or (queued_replica_id, queued_dp_id) != queue_lane
+                    or (
+                        queued_replica_local_id is not None
+                        and type(queued_replica_local_id) is not int
+                    )
+                    or (queued_replica_id, queued_replica_local_id) != queue_lane
                 ):
                     raise RuntimeError(
                         "DECODE_ATTN A-to-F waiting-room queued batch lane "
                         f"mismatch: queue={queue_lane}, batch="
-                        f"{(queued_replica_id, queued_dp_id)}"
+                        f"{(queued_replica_id, queued_replica_local_id)}"
                     )
 
                 self._validate_decode_attn_a2f_batch_entry(
@@ -6874,6 +8543,7 @@ class BaseClusterScheduler(ABC):
 
         normalized_idle_lanes = self._normalize_m2n_lane_contract(
             idle_lanes,
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN A-to-F prepared idle lanes",
             require_nonempty=False,
         )
@@ -6895,7 +8565,7 @@ class BaseClusterScheduler(ABC):
             )
             idle_batch.afd_stage_idx = afd_stage_idx
             idle_batch.decode_attn_original_replica_id = missing_lane[0]
-            idle_batch.decode_attn_original_dp_id = missing_lane[1]
+            idle_batch.decode_attn_original_replica_local_id = missing_lane[1]
             idle_batch.time = time
             prepared_entries.append(
                 (missing_lane, (layer_id, idle_batch))
@@ -6908,7 +8578,7 @@ class BaseClusterScheduler(ABC):
         batch: Batch,
         *,
         replica_id: int,
-        dp_id: int,
+        replica_local_id: int | None,
         layer_id: int,
         logger,
     ) -> List:
@@ -6916,7 +8586,7 @@ class BaseClusterScheduler(ABC):
         from frontier.events.m2n_transfer_start_event import M2NTransferStartEvent
         from frontier.events.replica_schedule_event import ReplicaScheduleEvent
 
-        lane = (replica_id, dp_id)
+        lane = (replica_id, replica_local_id)
         barrier_round_id = self._peek_decode_attn_barrier_round_id()
         activation_size, transfer_time = (
             self._validate_decode_attn_a2f_predictor_result(
@@ -6932,7 +8602,7 @@ class BaseClusterScheduler(ABC):
         transfer_event = M2NTransferStartEvent(
             time=time,
             source_replica_id=replica_id,
-            source_dp_id=dp_id,
+            source_replica_local_id=replica_local_id,
             source_cluster_type=ClusterType.DECODE_ATTN,
             target_cluster_type=ClusterType.DECODE_FFN,
             batch=batch,
@@ -6940,18 +8610,20 @@ class BaseClusterScheduler(ABC):
             transfer_time_ms=transfer_time,
             layer_id=layer_id,
             afd_stage_idx=batch.afd_stage_idx,
+            source_execution_replica_id=replica_id,
+            source_execution_replica_local_id=replica_local_id,
         )
         schedule_event = ReplicaScheduleEvent(
             time,
             replica_id,
             self._cluster_type,
-            dp_id,
+            replica_local_id,
         )
         prepared_cohort_update = self._set_decode_attn_batch_cohort_phase(
             batch,
             phase="ffn_inflight",
             replica_id=replica_id,
-            dp_id=dp_id,
+            replica_local_id=replica_local_id,
             layer_id=layer_id,
             prepare_only=True,
         )
@@ -6972,7 +8644,7 @@ class BaseClusterScheduler(ABC):
         batch: Batch,
         *,
         replica_id: int,
-        dp_id: int,
+        replica_local_id: int | None,
         layer_id: int,
         logger,
     ) -> List:
@@ -7001,10 +8673,14 @@ class BaseClusterScheduler(ABC):
             replica_id,
             field_name="replica_id",
         )
-        dp_id = self._validate_decode_attn_a2f_topology_value(
-            dp_id,
-            field_name="dp_id",
-        )
+        # DECODE_ATTN has one full-stage scheduler per serving Replica.  The
+        # second tuple coordinate is intentionally absent; it is not an
+        # attention-DP lane and must remain ``None`` on A→F transport.
+        if replica_local_id is not None:
+            raise ValueError(
+                "DECODE_ATTN A-to-F requires full-stage identity with "
+                f"replica_local_id=None, got {replica_local_id!r}"
+            )
         if (
             not isinstance(time, Real)
             or isinstance(time, bool)
@@ -7021,6 +8697,34 @@ class BaseClusterScheduler(ABC):
         time = float(time)
         if self._m2n_transfer_predictor is None:
             raise ValueError("M2N transfer predictor not found in decode-attn cluster scheduler")
+
+        # Bind the source Attention Replica at the A→F boundary.  The
+        # DECODE_ATTN scheduler is full-stage, so there is no local DP value to
+        # carry; ``None`` is the only valid second coordinate.
+        original_replica_id = getattr(
+            batch, "decode_attn_original_replica_id", None
+        )
+        if original_replica_id is not None:
+            original_replica_id = self._validate_decode_attn_a2f_topology_value(
+                original_replica_id,
+                field_name="batch original replica_id",
+            )
+            if original_replica_id != replica_id:
+                raise ValueError(
+                    "DECODE_ATTN A-to-F batch source Replica mismatch: "
+                    f"batch={original_replica_id!r}, event={replica_id!r}"
+                )
+        batch.decode_attn_original_replica_id = replica_id
+        original_replica_local_id = getattr(
+            batch, "decode_attn_original_replica_local_id", None
+        )
+        if original_replica_local_id is not None:
+            raise ValueError(
+                "DECODE_ATTN A-to-F batch must use full-stage identity with "
+                "decode_attn_original_replica_local_id=None, got "
+                f"{original_replica_local_id!r}"
+            )
+        batch.decode_attn_original_replica_local_id = None
 
         replica_config = getattr(self._config, "replica_config", None)
         if replica_config is None:
@@ -7041,7 +8745,7 @@ class BaseClusterScheduler(ABC):
 
         self._validate_decode_attn_a2f_batch_entry(
             batch=batch,
-            lane=(replica_id, dp_id),
+            lane=(replica_id, replica_local_id),
             layer_id=layer_id,
             afd_stage_idx=afd_stage_idx,
             model_is_moe=model_is_moe,
@@ -7062,6 +8766,7 @@ class BaseClusterScheduler(ABC):
                 sorted(
                     self._normalize_m2n_lane_contract(
                         active_local_attn_lanes,
+                        identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                         field_name=(
                             "DECODE_ATTN A-to-F active cohort local_attn topology"
                         ),
@@ -7077,6 +8782,7 @@ class BaseClusterScheduler(ABC):
                             afd_stage_idx,
                             layer_id=layer_id,
                         ),
+                        identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                         field_name="DECODE_ATTN A-to-F expected lane topology",
                         require_nonempty=True,
                     )
@@ -7084,7 +8790,7 @@ class BaseClusterScheduler(ABC):
             )
 
         group_key = (layer_id, afd_stage_idx)
-        lane = (replica_id, dp_id)
+        lane = (replica_id, replica_local_id)
         if lane not in expected_lane_contract:
             raise ValueError(
                 "Unexpected lane observed in DECODE_ATTN A→F waiting room: "
@@ -7101,6 +8807,7 @@ class BaseClusterScheduler(ABC):
             normalized_idle_expected_lanes = set(
                 self._normalize_m2n_lane_contract(
                     tuple(idle_expected_lanes),
+                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name="DECODE_ATTN A-to-F idle lane topology",
                     require_nonempty=False,
                 )
@@ -7115,7 +8822,7 @@ class BaseClusterScheduler(ABC):
                 time,
                 batch,
                 replica_id=replica_id,
-                dp_id=dp_id,
+                replica_local_id=replica_local_id,
                 layer_id=layer_id,
                 logger=logger,
             )
@@ -7257,7 +8964,7 @@ class BaseClusterScheduler(ABC):
         events = []
         prepared_cohort_updates = []
         if barrier_is_ready:
-            for (source_replica_id, source_dp_id), ready_layer_id, ready_batch in picked:
+            for (source_replica_id, source_replica_local_id), ready_layer_id, ready_batch in picked:
                 if ready_batch.is_idle:
                     continue
                 activation_size, transfer_time = transfer_plan_by_batch[
@@ -7267,7 +8974,7 @@ class BaseClusterScheduler(ABC):
                     M2NTransferStartEvent(
                         time=time,
                         source_replica_id=source_replica_id,
-                        source_dp_id=source_dp_id,
+                        source_replica_local_id=source_replica_local_id,
                         source_cluster_type=ClusterType.DECODE_ATTN,
                         target_cluster_type=ClusterType.DECODE_FFN,
                         batch=ready_batch,
@@ -7275,6 +8982,8 @@ class BaseClusterScheduler(ABC):
                         transfer_time_ms=transfer_time,
                         layer_id=ready_layer_id,
                         afd_stage_idx=ready_batch.afd_stage_idx,
+                        source_execution_replica_id=source_replica_id,
+                        source_execution_replica_local_id=source_replica_local_id,
                     )
                 )
                 events.append(
@@ -7282,7 +8991,7 @@ class BaseClusterScheduler(ABC):
                         time,
                         source_replica_id,
                         self._cluster_type,
-                        source_dp_id,
+                        source_replica_local_id,
                     )
                 )
                 prepared_cohort_updates.append(
@@ -7290,7 +8999,7 @@ class BaseClusterScheduler(ABC):
                         ready_batch,
                         phase="ffn_inflight",
                         replica_id=source_replica_id,
-                        dp_id=source_dp_id,
+                        replica_local_id=source_replica_local_id,
                         layer_id=ready_layer_id,
                         prepare_only=True,
                     )
@@ -7365,7 +9074,7 @@ class BaseClusterScheduler(ABC):
         *,
         phase: str,
         replica_id: int,
-        dp_id: int,
+        replica_local_id: int | None,
         layer_id: int | None = None,
     ) -> Optional[dict[str, Any]]:
         """Prepare a cohort phase update without mutating cohort state."""
@@ -7385,20 +9094,26 @@ class BaseClusterScheduler(ABC):
             raise ValueError(f"Unsupported DECODE_ATTN cohort phase: {phase!r}")
 
         batch_replica_id = getattr(batch, "decode_attn_original_replica_id", None)
-        batch_dp_id = getattr(batch, "decode_attn_original_dp_id", None)
+        batch_replica_local_id = getattr(
+            batch, "decode_attn_original_replica_local_id", None
+        )
         if batch_replica_id is None:
             batch_replica_id = replica_id
-        if batch_dp_id is None:
-            batch_dp_id = dp_id
+        if replica_local_id is not None:
+            raise ValueError(
+                "DECODE_ATTN cohort phase requires full-stage identity with "
+                f"replica_local_id=None, got {replica_local_id!r}"
+            )
+        if batch_replica_local_id is not None:
+            raise ValueError(
+                "DECODE_ATTN cohort batch requires full-stage identity with "
+                f"replica_local_id=None, got {batch_replica_local_id!r}"
+            )
+        batch_replica_local_id = None
         if type(batch_replica_id) is not int or batch_replica_id < 0:
             raise ValueError(
                 "DECODE_ATTN cohort lane replica_id must be an exact "
                 f"non-negative int, got {batch_replica_id!r}"
-            )
-        if type(batch_dp_id) is not int or batch_dp_id < 0:
-            raise ValueError(
-                "DECODE_ATTN cohort lane dp_id must be an exact non-negative "
-                f"int, got {batch_dp_id!r}"
             )
         if type(layer_id) is not int and layer_id is not None:
             raise ValueError(
@@ -7411,12 +9126,12 @@ class BaseClusterScheduler(ABC):
                 f"got {layer_id!r}"
             )
 
-        replica_schedulers = getattr(self, "_dp_replica_schedulers", None)
+        replica_schedulers = getattr(self, "_replica_schedulers", None)
         if type(replica_schedulers) is not dict:
             raise RuntimeError(
                 "DECODE_ATTN replica scheduler topology must be an exact dict"
             )
-        lane = (batch_replica_id, batch_dp_id)
+        lane = (batch_replica_id, batch_replica_local_id)
         if lane not in replica_schedulers:
             raise ValueError(
                 "DECODE_ATTN cohort lane is absent from the replica scheduler "
@@ -7550,7 +9265,7 @@ class BaseClusterScheduler(ABC):
         *,
         phase: str,
         replica_id: int,
-        dp_id: int,
+        replica_local_id: int | None,
         layer_id: int | None = None,
         prepare_only: bool = False,
     ) -> Optional[dict[str, Any]]:
@@ -7558,7 +9273,7 @@ class BaseClusterScheduler(ABC):
             batch,
             phase=phase,
             replica_id=replica_id,
-            dp_id=dp_id,
+            replica_local_id=replica_local_id,
             layer_id=layer_id,
         )
         if prepare_only:
@@ -7614,13 +9329,14 @@ class BaseClusterScheduler(ABC):
             field_name="active local-attn layer_id",
         )
 
-        replica_schedulers = getattr(self, "_dp_replica_schedulers", None)
+        replica_schedulers = getattr(self, "_replica_schedulers", None)
         if type(replica_schedulers) is not dict:
             raise RuntimeError(
                 "DECODE_ATTN A-to-F replica scheduler topology must be an exact dict"
             )
         scheduler_lanes = self._normalize_m2n_lane_contract(
             list(replica_schedulers),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN A-to-F active lane topology",
             require_nonempty=False,
         )
@@ -7720,6 +9436,7 @@ class BaseClusterScheduler(ABC):
             if stage_slot_lanes:
                 return self._normalize_m2n_lane_contract(
                     stage_slot_lanes,
+                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name="DECODE_ATTN A-to-F active stage lane topology",
                     require_nonempty=True,
                 )
@@ -7736,6 +9453,7 @@ class BaseClusterScheduler(ABC):
         )
         normalized_active_wave_lanes = self._normalize_m2n_lane_contract(
             active_wave_expected_lanes,
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN A-to-F active wave lane topology",
             require_nonempty=False,
         )
@@ -7746,6 +9464,7 @@ class BaseClusterScheduler(ABC):
             )
         normalized_active_wave_request_lanes = self._normalize_m2n_lane_contract(
             list(active_wave_request_ids_by_lane),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN A-to-F active wave request lane topology",
             require_nonempty=False,
         )
@@ -7758,6 +9477,7 @@ class BaseClusterScheduler(ABC):
         if configured_lanes is not None:
             return self._normalize_m2n_lane_contract(
                 configured_lanes,
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_ATTN A-to-F scheduler lane topology",
                 require_nonempty=False,
             )
@@ -7790,20 +9510,23 @@ class BaseClusterScheduler(ABC):
             )
 
         active_lanes: List[tuple[int, int]] = []
-        replica_schedulers = getattr(self, "_dp_replica_schedulers", {})
+        replica_schedulers = getattr(self, "_replica_schedulers", {})
         if type(replica_schedulers) is not dict:
             raise RuntimeError(
                 "DECODE_ATTN replica scheduler topology must be an exact dict"
             )
         scheduler_lanes = self._normalize_m2n_lane_contract(
             list(replica_schedulers.keys()),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN replica scheduler lane topology",
             require_nonempty=False,
         )
-        for lane_replica_id, lane_dp_id in scheduler_lanes:
+        for lane_replica_id, lane_replica_local_id in scheduler_lanes:
             if replica_id is not None and lane_replica_id != replica_id:
                 continue
-            replica_scheduler = replica_schedulers[(lane_replica_id, lane_dp_id)]
+            replica_scheduler = replica_schedulers[
+                (lane_replica_id, lane_replica_local_id)
+            ]
 
             get_active_stage_slots = getattr(
                 replica_scheduler,
@@ -7861,7 +9584,7 @@ class BaseClusterScheduler(ABC):
                 active_stage_slots.add(active_stage_idx)
 
             if afd_stage_idx in active_stage_slots:
-                active_lanes.append((lane_replica_id, lane_dp_id))
+                active_lanes.append((lane_replica_id, lane_replica_local_id))
 
         return active_lanes
 
@@ -7919,6 +9642,7 @@ class BaseClusterScheduler(ABC):
         idle_expected_lanes = set(
             self._normalize_m2n_lane_contract(
                 list(raw_idle_expected_lanes),
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_ATTN idle lane topology",
                 require_nonempty=False,
             )
@@ -7949,6 +9673,7 @@ class BaseClusterScheduler(ABC):
         )
         normalized_active_wave_lanes = self._normalize_m2n_lane_contract(
             active_wave_expected_lanes,
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN active wave lane topology",
             require_nonempty=False,
         )
@@ -7958,6 +9683,7 @@ class BaseClusterScheduler(ABC):
             )
         normalized_active_wave_request_lanes = self._normalize_m2n_lane_contract(
             list(active_wave_request_ids_by_lane.keys()),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN active wave request lane topology",
             require_nonempty=False,
         )
@@ -7978,6 +9704,7 @@ class BaseClusterScheduler(ABC):
         if configured_lanes is not None:
             normalized_configured_lanes = self._normalize_m2n_lane_contract(
                 configured_lanes,
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_ATTN F-to-A scheduler lane topology",
                 require_nonempty=False,
             )
@@ -7988,16 +9715,16 @@ class BaseClusterScheduler(ABC):
                     if lane[0] == replica_id and lane not in idle_expected_lanes
                 ]
 
-        if type(self._replica_dp_size) is not int or self._replica_dp_size <= 0:
+        if (
+            type(self._replica_scheduler_count) is not int
+            or self._replica_scheduler_count <= 0
+        ):
             raise RuntimeError(
-                "DECODE_ATTN _replica_dp_size must be an exact positive int, "
-                f"got {self._replica_dp_size!r}"
+                "DECODE_ATTN replica scheduler count must be an exact positive int, "
+                f"got {self._replica_scheduler_count!r}"
             )
-        return [
-            (replica_id, dp_id)
-            for dp_id in range(self._replica_dp_size)
-            if (replica_id, dp_id) not in idle_expected_lanes
-        ]
+        full_stage_lane = (replica_id, None)
+        return [] if full_stage_lane in idle_expected_lanes else [full_stage_lane]
 
     def _release_decode_attn_ready_return_round(
         self,
@@ -8087,7 +9814,7 @@ class BaseClusterScheduler(ABC):
                 ready_batch,
                 phase="local_attn",
                 replica_id=int(ready_batch.decode_attn_original_replica_id),
-                dp_id=int(ready_batch.decode_attn_original_dp_id),
+                replica_local_id=ready_batch.decode_attn_original_replica_local_id,
                 layer_id=int(ready_batch.af_inflight_layer_count),
             )
             if getattr(
@@ -8095,9 +9822,9 @@ class BaseClusterScheduler(ABC):
                 "trace_replay_initial_hydration_moe_head_consumed",
                 False,
             ):
-                self.get_dp_replica_scheduler(
+                self.get_replica_scheduler(
                     int(ready_batch.decode_attn_original_replica_id),
-                    int(ready_batch.decode_attn_original_dp_id),
+                    ready_batch.decode_attn_original_replica_local_id,
                 ).on_batch_end(ready_batch)
                 logger.info(
                     "[AF-ARRIVAL][DROP] mb=%s global_id=%s dropped after synthetic "

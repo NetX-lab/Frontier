@@ -37,7 +37,7 @@ class PeriodicScheduleEvent(BaseEvent):
 
         logger = get_cluster_logger(__name__, self._cluster_type.name)
 
-        self._dp_replica_set = set()
+        self._replica_local_set = set()
         cluster_scheduler: BaseClusterScheduler = scheduler.get_cluster_scheduler(self._cluster_type)
 
         # Log periodic scheduling details
@@ -104,19 +104,19 @@ class PeriodicScheduleEvent(BaseEvent):
         #     )
 
         # Distribute requests to replica schedulers
-        for replica_id, dp_id, request in self._request_mapping:
-            self._dp_replica_set.add((replica_id, dp_id))
+        for replica_id, replica_local_id, request in self._request_mapping:
+            self._replica_local_set.add((replica_id, replica_local_id))
             # Only add individual requests to replica scheduler
             # Batch-level assignments (request=None) are already handled by the cluster scheduler
             if request is not None:
-                cluster_scheduler.get_dp_replica_scheduler(
-                    replica_id, dp_id
+                cluster_scheduler.get_replica_scheduler(
+                    replica_id, replica_local_id
                 ).add_request(request)
 
         # Create replica schedule events for affected replicas
         replica_events = [
-            ReplicaScheduleEvent(self.time, replica_id, self._cluster_type, dp_id)
-            for replica_id, dp_id in self._dp_replica_set
+            ReplicaScheduleEvent(self.time, replica_id, self._cluster_type, replica_local_id)
+            for replica_id, replica_local_id in self._replica_local_set
         ]
 
         # Create next periodic event with proper termination checks
@@ -286,9 +286,9 @@ class PeriodicScheduleEvent(BaseEvent):
             "event_type": str(self.event_type),
             "cluster_type": str(self._cluster_type),
             "scheduling_interval_ms": self._scheduling_interval_ms,
-            "replica_dp_set": list(getattr(self, '_dp_replica_set', [])),
+            "replica_local_set": list(getattr(self, '_replica_local_set', [])),
             "request_mapping": [
-                (replica_id, dp_id, request.id)
-                for replica_id, dp_id, request in getattr(self, '_request_mapping', [])
+                (replica_id, replica_local_id, request.id)
+                for replica_id, replica_local_id, request in getattr(self, '_request_mapping', [])
             ],
         }

@@ -81,28 +81,26 @@ class BaseGlobalScheduler(ABC):
         expected_lanes = []
         if callable(get_current_expected_lanes):
             expected_lanes = [
-                (int(replica_id), int(dp_id))
-                for replica_id, dp_id in get_current_expected_lanes()
+                (
+                    int(replica_id),
+                    None if replica_local_id is None else int(replica_local_id),
+                )
+                for replica_id, replica_local_id in get_current_expected_lanes()
             ]
         if not expected_lanes:
             expected_lanes = [
-                (int(replica_id), int(dp_id))
-                for replica_id, dp_id in getattr(
+                (
+                    int(replica_id),
+                    None if replica_local_id is None else int(replica_local_id),
+                )
+                for replica_id, replica_local_id in getattr(
                     decode_attn_scheduler, "_a2f_expected_lanes", []
                 )
             ]
         if not expected_lanes:
-            attn_replica_ids = list(decode_attn_scheduler._cluster.replicas.keys())
-            attn_dp_size = int(getattr(decode_attn_scheduler, "_replica_dp_size", 0))
-            if not attn_replica_ids or attn_dp_size <= 0:
-                raise ValueError(
-                    "Unable to derive DECODE_FFN barrier lanes from DECODE_ATTN scheduler"
-                )
-            expected_lanes = [
-                (int(replica_id), dp_id)
-                for replica_id in attn_replica_ids
-                for dp_id in range(attn_dp_size)
-            ]
+            raise ValueError(
+                "DECODE_ATTN must expose an explicit A-to-F full-stage lane contract"
+            )
 
         configured_group_size = len(expected_lanes)
         if configured_group_size <= 0:

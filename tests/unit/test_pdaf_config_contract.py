@@ -23,6 +23,9 @@ from frontier.config.config import (
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
+from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+    BaseClusterScheduler,
+)
 from frontier.types import ClusterType
 
 
@@ -33,7 +36,6 @@ def _build_pdaf_cluster_config(
     *,
     model_name: str,
     decode_ffn_replicas: int = 1,
-    allow_experiment_multi_decode_ffn_replicas: bool = False,
     **overrides,
 ) -> ClusterConfig:
     config_kwargs = dict(
@@ -43,9 +45,6 @@ def _build_pdaf_cluster_config(
         prefill_cluster_num_replicas=1,
         decode_attn_cluster_num_replicas=2,
         decode_ffn_cluster_num_replicas=decode_ffn_replicas,
-        allow_experiment_multi_decode_ffn_replicas=(
-            allow_experiment_multi_decode_ffn_replicas
-        ),
         decode_attn_af_pipeline_num_micro_batch=1,
         decode_ffn_af_pipeline_num_micro_batch=1,
     )
@@ -130,6 +129,32 @@ def test_pdaf_decode_pipeline_defaults_do_not_restrict_prefill_pipeline_parallel
     assert config.prefill_replica_config.num_pipeline_stages == 2
     assert config.decode_attn_replica_config.num_pipeline_stages == 1
     assert config.decode_ffn_replica_config.num_pipeline_stages == 1
+
+
+def test_pdaf_prefill_vllm_scheduler_receives_role_specific_chunked_prefill_controls() -> None:
+    config = _build_pdaf_cluster_config(
+        model_name="step-moe-noquant",
+        prefill_replica_scheduler_config_type="vllm_v1",
+        prefill_replica_scheduler_config_max_tokens_in_batch=64,
+        prefill_replica_scheduler_config_enable_chunked_prefill=True,
+        prefill_replica_scheduler_config_long_prefill_token_threshold=16,
+    )
+    prefill_config = config.get_cluster_configs_for_disaggregation()[
+        ClusterType.PREFILL
+    ]
+
+    scheduler_config = (
+        BaseClusterScheduler._get_cluster_specific_replica_scheduler_config(
+            None,
+            prefill_config,
+            ClusterType.PREFILL,
+        )
+    )
+
+    assert isinstance(scheduler_config, VllmV1SchedulerConfig)
+    assert scheduler_config.max_tokens_in_batch == 64
+    assert scheduler_config.enable_chunked_prefill is True
+    assert scheduler_config.long_prefill_token_threshold == 16
 
 
 def _build_decode_ffn_scheduler(
@@ -288,19 +313,31 @@ def test_non_pdaf_architectures_keep_prefix_caching_surface(
 
 
 def test_dense_pdaf_decode_attn_rejects_data_parallelism() -> None:
-    replica_config = ReplicaConfig(
-        model_name="llama2_7b_dense_example",
-        cluster_prefix="decode_attn",
-        attn_data_parallel_size=2,
-        moe_tensor_parallel_size=0,
-        moe_expert_parallel_size=0,
-        total_expert_num=0,
-        local_expert_num=0,
-    )
-    cluster_config = object.__new__(ClusterConfig)
+    with pytest.raises(ValueError, match="attn_dp.*fixed to 1"):
+        ReplicaConfig(
+            model_name="llama2_7b_dense_example",
+            cluster_prefix="decode_attn",
+            attn_dp=2,
+            moe_tensor_parallel_size=0,
+            moe_expert_parallel_size=0,
+            total_expert_num=0,
+            local_expert_num=0,
+        )
 
-    with pytest.raises(ValueError, match="attn_data_parallel_size=1.*decode_attn"):
-        cluster_config._validate_replica_config(replica_config, "decode_attn")
+
+@pytest.mark.parametrize("cluster_name", ["prefill", "decode", "monolithic"])
+def test_shared_moe_roles_reject_attention_data_parallelism(
+    cluster_name: str,
+) -> None:
+    with pytest.raises(ValueError, match="attn_dp.*fixed to 1"):
+        ReplicaConfig(
+            model_name="step-moe-noquant",
+            cluster_prefix=cluster_name,
+            attn_tensor_parallel_size=2,
+            attn_dp=2,
+            moe_tensor_parallel_size=2,
+            moe_expert_parallel_size=2,
+        )
 
 
 @pytest.mark.parametrize(
@@ -330,7 +367,7 @@ def test_dense_pdaf_decode_role_invariants_accept_unit_parallelism() -> None:
     decode_attn_config = ReplicaConfig(
         model_name="llama2_7b_dense_example",
         cluster_prefix="decode_attn",
-        attn_data_parallel_size=1,
+        attn_dp=1,
         moe_tensor_parallel_size=0,
         moe_expert_parallel_size=0,
         total_expert_num=0,
@@ -347,25 +384,18 @@ def test_dense_pdaf_decode_role_invariants_accept_unit_parallelism() -> None:
     cluster_config._validate_replica_config(decode_ffn_config, "decode_ffn")
 
 
-def test_moe_pdaf_config_rejects_multiple_decode_ffn_replicas_by_default() -> None:
-    with pytest.raises(
-        ValueError,
-        match="decode_ffn_cluster_num_replicas must be 1 for MoE models",
-    ):
-        _build_pdaf_cluster_config(
-            model_name="step-moe-noquant",
-            decode_ffn_replicas=2,
-        )
-
-
-def test_moe_pdaf_config_allows_explicit_multi_replica_experiment() -> None:
+def test_moe_pdaf_config_accepts_multiple_decode_ffn_replicas_as_capacity() -> None:
     config = _build_pdaf_cluster_config(
         model_name="step-moe-noquant",
         decode_ffn_replicas=2,
-        allow_experiment_multi_decode_ffn_replicas=True,
     )
-
     assert config.decode_ffn_cluster_num_replicas == 2
+
+
+def test_removed_multi_replica_opt_in_is_not_a_config_field() -> None:
+    assert "allow_experiment_multi_decode_ffn_replicas" not in (
+        ClusterConfig.__dataclass_fields__
+    )
 
 
 def test_dense_pdaf_runtime_allows_multiple_decode_ffn_replicas() -> None:
@@ -378,32 +408,24 @@ def test_dense_pdaf_runtime_allows_multiple_decode_ffn_replicas() -> None:
 
     assert scheduler._ffn_replica_ids == [3, 4]
     assert scheduler._ffn_expected_lanes_by_target == {
-        3: [(1, 0)],
-        4: [(2, 0)],
+        3: [(1, None)],
+        4: [(2, None)],
     }
 
 
-def test_moe_pdaf_runtime_rejects_multiple_decode_ffn_replicas_by_default() -> None:
+def test_moe_pdaf_runtime_accepts_multiple_decode_ffn_replicas() -> None:
     config = _build_pdaf_cluster_config(
         model_name="step-moe-noquant",
         decode_ffn_replicas=2,
-        allow_experiment_multi_decode_ffn_replicas=True,
     )
-    # Bypass the already-tested config guard to exercise runtime defense in depth.
-    config.allow_experiment_multi_decode_ffn_replicas = False
-
-    with pytest.raises(
-        ValueError,
-        match="MoE DECODE_FFN cluster requires exactly one replica by default",
-    ):
-        _build_decode_ffn_scheduler(config)
+    scheduler = _build_decode_ffn_scheduler(config)
+    assert scheduler._ffn_replica_ids == [3, 4]
 
 
-def test_moe_pdaf_runtime_allows_explicit_multi_replica_experiment() -> None:
+def test_moe_pdaf_runtime_preserves_multi_replica_capacity() -> None:
     config = _build_pdaf_cluster_config(
         model_name="step-moe-noquant",
         decode_ffn_replicas=2,
-        allow_experiment_multi_decode_ffn_replicas=True,
     )
 
     scheduler = _build_decode_ffn_scheduler(config)
@@ -415,10 +437,4 @@ def test_decode_ffn_replica_help_distinguishes_dense_and_moe_contracts() -> None
     help_text = ClusterConfig.__dataclass_fields__[
         "decode_ffn_cluster_num_replicas"
     ].metadata["help"]
-    experiment_help_text = ClusterConfig.__dataclass_fields__[
-        "allow_experiment_multi_decode_ffn_replicas"
-    ].metadata["help"]
-
-    assert "Dense models may use multiple replicas" in help_text
-    assert "MoE models require exactly one replica by default" in help_text
-    assert "Dense models do not require this flag" in experiment_help_text
+    assert "independent FFN serving copy" in help_text

@@ -96,6 +96,12 @@ def _record(
         }
     elif event_class == "EPAllToAllDispatchReadyEvent":
         fields = {"replica_id": 3, "stage_id": 1, "ep_id": 0}
+    elif event_class == "EPAllToAllCombineCollectiveEvent":
+        fields = {
+            "replica_id": 3,
+            "stage_id": 1,
+            "combine_end_time": 1.0,
+        }
     elif event_class == "GlobalScheduleEvent":
         fields = {
             "cluster_set": ["PREFILL", "DECODE_ATTN", "DECODE_FFN"],
@@ -293,6 +299,24 @@ def test_event_semantic_normalization_passes(
 
     assert result.passed is True
     assert result.first_divergence_event_index is None
+
+
+def test_combine_collective_accepts_optional_combine_end_time(
+    tmp_path: Path,
+) -> None:
+    record = _record(
+        "EPAllToAllCombineCollectiveEvent",
+        event_time=1.1,
+        combine_end_time=1.0,
+    )
+    result = _compare(
+        tmp_path,
+        {"DECODE_FFN": [record]},
+        {"DECODE_FFN": [deepcopy(record)]},
+    )
+
+    assert result.passed is True
+    assert result.per_role["DECODE_FFN"].main_count == 1
 
 
 @pytest.mark.parametrize("group_size", [8, 12])
