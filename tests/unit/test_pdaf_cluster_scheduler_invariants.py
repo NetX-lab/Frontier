@@ -18,6 +18,7 @@ from frontier.events.ep_alltoall_dispatch_collective_event import (
 from frontier.events.m2n_transfer_end_event import M2NTransferEndEvent
 from frontier.events.global_batch_end_event import GlobalBatchEndEvent
 from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
+from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )
@@ -6417,10 +6418,18 @@ def test_ep_batch_group_preserves_pre_routing_tokens_for_zero_lane() -> None:
         requests=[Request(0.0, 0, 0)],
         num_tokens=[0],
         replica_id=0,
-        ep_id=4,
+        ep_id=2,
         time=0.0,
         source_batch_ids=[17],
-        per_expert_tokens={6: 0},
+        lane_workload=EPLaneWorkload(
+            ep_id=2,
+            moe_expert_parallel_size=4,
+            total_expert_num=8,
+            owned_expert_ids=(4, 5),
+            local_token_counts=(0, 0),
+            routed_token_count=0,
+            router_topk=1,
+        ),
         cluster_type=ClusterType.DECODE_FFN,
         is_moe=True,
     )

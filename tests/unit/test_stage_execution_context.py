@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from frontier.entities import Batch, EPBatchGroup, Request
+from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
 from frontier.events.cluster_batch_end_event import ClusterBatchEndEvent
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
@@ -534,7 +535,15 @@ def test_decode_ffn_ep_batch_without_wave_ticket_fails_fast() -> None:
         ep_id=0,
         time=0.0,
         source_batch_ids=[1],
-        per_expert_tokens={0: 1},
+        lane_workload=EPLaneWorkload(
+            ep_id=0,
+            moe_expert_parallel_size=2,
+            total_expert_num=2,
+            owned_expert_ids=(0,),
+            local_token_counts=(1,),
+            routed_token_count=1,
+            router_topk=1,
+        ),
         cluster_type=ClusterType.DECODE_FFN,
         is_moe=True,
     )

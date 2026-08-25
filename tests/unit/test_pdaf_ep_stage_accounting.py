@@ -13,6 +13,7 @@ from frontier.events.ep_alltoall_combine_collective_event import (
 )
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.model_architectures import ModelArchitectureProfile
+from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )
@@ -42,7 +43,15 @@ def _batch(ep_id: int) -> EPBatchGroup:
         ep_id=ep_id,
         time=0.0,
         source_batch_ids=[1],
-        per_expert_tokens={ep_id: 1},
+        lane_workload=EPLaneWorkload(
+            ep_id=ep_id,
+            moe_expert_parallel_size=2,
+            total_expert_num=2,
+            owned_expert_ids=(ep_id,),
+            local_token_counts=(1,),
+            routed_token_count=1,
+            router_topk=1,
+        ),
         cluster_type=ClusterType.DECODE_FFN,
         is_moe=True,
     )

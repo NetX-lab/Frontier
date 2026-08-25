@@ -125,10 +125,7 @@ class ReplicaStageScheduler:
 
         if isinstance(batch, EPBatchGroup):
             batch_stage.ep_id = int(batch.ep_id)
-            batch_stage.per_expert_tokens = {
-                int(expert_id): int(token_count)
-                for expert_id, token_count in batch.per_expert_tokens.items()
-            }
+            batch_stage.attach_lane_workload(batch.lane_workload)
 
     def add_batch(self, batch: Batch) -> None:
         """

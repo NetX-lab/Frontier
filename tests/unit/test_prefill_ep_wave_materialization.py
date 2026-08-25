@@ -9,6 +9,7 @@ import pytest
 
 from frontier.entities import Batch, Request
 from frontier.entities.batch import EPBatchGroup
+from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.events.dense_layer_complete_event import DenseLayerCompleteEvent
 from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveEvent
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
@@ -278,7 +279,15 @@ def test_shared_ep_lane_preserves_source_pre_routing_tokens_for_zero_lane() -> N
         ep_id=1,
         time=0.0,
         source_batch_ids=[1],
-        per_expert_tokens={2: 0, 3: 0},
+        lane_workload=EPLaneWorkload(
+            ep_id=1,
+            moe_expert_parallel_size=2,
+            total_expert_num=4,
+            owned_expert_ids=(2, 3),
+            local_token_counts=(0, 0),
+            routed_token_count=0,
+            router_topk=1,
+        ),
         cluster_type=ClusterType.PREFILL,
         is_moe=True,
     )

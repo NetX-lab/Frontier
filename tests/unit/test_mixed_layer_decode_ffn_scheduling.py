@@ -28,7 +28,7 @@ from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_pre
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
-from frontier.moe_ep_workload import LayerEPWorkload
+from frontier.moe_ep_workload import EPLaneWorkload, LayerEPWorkload
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
@@ -1639,7 +1639,15 @@ def test_mixed_moe_ffn_event_keeps_ep_dispatch_lifecycle(monkeypatch) -> None:
         ep_id=0,
         time=0.0,
         source_batch_ids=[1],
-        per_expert_tokens={0: 1},
+        lane_workload=EPLaneWorkload(
+            ep_id=0,
+            moe_expert_parallel_size=1,
+            total_expert_num=1,
+            owned_expert_ids=(0,),
+            local_token_counts=(1,),
+            routed_token_count=1,
+            router_topk=1,
+        ),
         cluster_type=ClusterType.DECODE_FFN,
         is_moe=True,
     )

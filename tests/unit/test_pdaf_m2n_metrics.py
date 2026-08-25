@@ -6,6 +6,7 @@ import pytest
 from frontier.entities import Request
 from frontier.entities.batch import Batch, DenseFFNBatchGroup, EPBatchGroup
 from frontier.entities.m2n_transfer_info import M2NTransferInfo
+from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.events.m2n_transfer_end_event import M2NTransferEndEvent
 from frontier.events.m2n_transfer_start_event import M2NTransferStartEvent
 from frontier.metrics.metrics_store import MetricsStore
@@ -149,7 +150,15 @@ def _materialized_ep_ffn_batch(
         pre_routing_effective_total_tokens=1,
         source_batches=(source_batch,),
         source_batch_ids=(source_batch.id,),
-        per_expert_tokens=((ep_id, 1),),
+        lane_workload=EPLaneWorkload(
+            ep_id=ep_id,
+            moe_expert_parallel_size=2,
+            total_expert_num=2,
+            owned_expert_ids=(ep_id,),
+            local_token_counts=(1,),
+            routed_token_count=1,
+            router_topk=1,
+        ),
     )
     return cluster_scheduler._materialize_ep_batch_group(plan)
 
@@ -244,7 +253,15 @@ def test_decode_ffn_invalid_ep_batch_does_not_partially_close_waiting() -> None:
         ep_id=0,
         time=1.0,
         source_batch_ids=[7],
-        per_expert_tokens={0: 1},
+        lane_workload=EPLaneWorkload(
+            ep_id=0,
+            moe_expert_parallel_size=1,
+            total_expert_num=1,
+            owned_expert_ids=(0,),
+            local_token_counts=(1,),
+            routed_token_count=1,
+            router_topk=1,
+        ),
         cluster_type=ClusterType.DECODE_FFN,
         is_moe=True,
     )
@@ -283,7 +300,15 @@ def test_decode_ffn_ep_source_batch_without_requests_fails_fast() -> None:
         ep_id=0,
         time=1.0,
         source_batch_ids=[empty_source_batch.id],
-        per_expert_tokens={0: 1},
+        lane_workload=EPLaneWorkload(
+            ep_id=0,
+            moe_expert_parallel_size=1,
+            total_expert_num=1,
+            owned_expert_ids=(0,),
+            local_token_counts=(1,),
+            routed_token_count=1,
+            router_topk=1,
+        ),
         cluster_type=ClusterType.DECODE_FFN,
         is_moe=True,
     )

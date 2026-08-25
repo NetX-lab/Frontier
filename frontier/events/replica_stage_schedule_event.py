@@ -706,6 +706,8 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     effective_total_tokens_rounded=effective_tokens_rounded,
                     tokens_are_post_routing=tokens_are_post_routing,
                 )
+                if isinstance(batch, EPBatchGroup):
+                    batch_stage.attach_lane_workload(batch.lane_workload)
                 batch_stage.attach_runtime_identity(batch)
 
                 # Mark stage as busy

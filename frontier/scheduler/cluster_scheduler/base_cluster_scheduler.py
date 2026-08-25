@@ -22,6 +22,7 @@ from frontier.model_architectures import (
     ModelArchitectureProfile,
 )
 from frontier.moe_ep_workload import (
+    EPLaneWorkload,
     LayerEPWorkload,
     build_contiguous_expert_ownership,
     materialize_layer_ep_workload,
@@ -100,7 +101,13 @@ class EPBatchGroupPlan(NamedTuple):
     pre_routing_effective_total_tokens: int
     source_batches: Tuple[Batch, ...]
     source_batch_ids: Tuple[int, ...]
-    per_expert_tokens: Tuple[Tuple[int, int], ...]
+    lane_workload: EPLaneWorkload
+
+    @property
+    def per_expert_tokens(self) -> Tuple[Tuple[int, int], ...]:
+        """Return the legacy tuple view without storing a second map owner."""
+
+        return tuple(self.lane_workload.per_expert_tokens.items())
 
 
 class BaseClusterScheduler(ABC):
@@ -2368,10 +2375,15 @@ class BaseClusterScheduler(ABC):
                 f"expected={ep_batch_group_total_num_token}, "
                 f"got={layer_workload.routing_token_count}"
             )
-        experts_tokens_mapping = dict(
-            layer_workload.per_ep_per_expert_tokens[ep_id]
-        )
-        ep_batch_group_total_num_token = layer_workload.per_ep_routed_tokens[ep_id]
+        lane_workload = layer_workload.lane(ep_id)
+        if tuple(expert_global_ids) != lane_workload.owned_expert_ids:
+            raise ValueError(
+                "DECODE_FFN expert_global_ids do not match the canonical lane "
+                f"descriptor: expected={lane_workload.owned_expert_ids}, "
+                f"got={tuple(expert_global_ids)}"
+            )
+        experts_tokens_mapping = dict(lane_workload.per_expert_tokens)
+        ep_batch_group_total_num_token = lane_workload.routed_token_count
 
         self._validate_token_conservation(
             input_tokens=ep_batch_group_total_num_token,
@@ -2389,10 +2401,7 @@ class BaseClusterScheduler(ABC):
             pre_routing_effective_total_tokens=pre_routing_effective_total_tokens,
             source_batches=tuple(source_batches),
             source_batch_ids=tuple(source_batch_ids),
-            per_expert_tokens=tuple(
-                (expert_id, experts_tokens_mapping[expert_id])
-                for expert_id in expert_global_ids
-            ),
+            lane_workload=lane_workload,
         )
 
     def _materialize_ep_batch_group(
@@ -2401,8 +2410,8 @@ class BaseClusterScheduler(ABC):
     ) -> EPBatchGroup:
         """Materialize one already validated DECODE_FFN EP batch plan."""
 
-        experts_tokens_mapping = dict(plan.per_expert_tokens)
-        logic_num_tokens = list(experts_tokens_mapping.values())
+        lane_workload = plan.lane_workload
+        logic_num_tokens = list(lane_workload.local_token_counts)
         logic_requests = [
             Request(0.0, 0, num_tokens) for num_tokens in logic_num_tokens
         ]
@@ -2413,7 +2422,7 @@ class BaseClusterScheduler(ABC):
             plan.ep_id,
             plan.group_time,
             list(plan.source_batch_ids),
-            experts_tokens_mapping,
+            lane_workload,
         )
         ep_batch_group.afd_stage_idx = plan.afd_stage_idx
         ep_batch_group.decode_ffn_layer_id = plan.layer_global_id
@@ -2424,14 +2433,11 @@ class BaseClusterScheduler(ABC):
         routing_token_count = sum(
             int(source_batch.total_num_tokens) for source_batch in plan.source_batches
         )
-        router_topk = getattr(self._config.replica_config, "router_topk", None)
-        if type(router_topk) is not int or router_topk <= 0:
-            raise ValueError(
-                "DECODE_FFN EP group requires a positive integer router_topk"
-            )
         ep_batch_group.routing_token_count = routing_token_count
-        ep_batch_group.router_topk = router_topk
-        ep_batch_group.total_routed_assignments = routing_token_count * router_topk
+        ep_batch_group.router_topk = lane_workload.router_topk
+        ep_batch_group.total_routed_assignments = (
+            routing_token_count * lane_workload.router_topk
+        )
         ep_batch_group.moe_pre_routing_effective_total_tokens = (
             plan.pre_routing_effective_total_tokens
         )
@@ -3719,8 +3725,8 @@ class BaseClusterScheduler(ABC):
     ) -> EPBatchGroup:
         """Build an EP lane batch for predictor evaluation without request mutation."""
 
-        per_expert_tokens = dict(layer_workload.per_ep_per_expert_tokens[ep_id])
-        logic_num_tokens = list(per_expert_tokens.values())
+        lane_workload = layer_workload.lane(ep_id)
+        logic_num_tokens = list(lane_workload.local_token_counts)
         logic_requests = [
             Request(0.0, 0, num_tokens) for num_tokens in logic_num_tokens
         ]
@@ -3731,7 +3737,7 @@ class BaseClusterScheduler(ABC):
             ep_id,
             getattr(source_batch, "time", 0.0) or 0.0,
             [source_batch.id],
-            per_expert_tokens,
+            lane_workload,
         )
         lane_batch.set_global_id(source_batch.global_id)
         lane_batch.source_batches = [source_batch]
@@ -9857,8 +9863,16 @@ class BaseClusterScheduler(ABC):
             return batches
         return []
 
-    def _create_batch_group(self, requests: List[Request], num_tokens: List[int], replica_id: int, ep_id: int, time: float,
-                            source_batch_ids: List[int], per_expert_tokens: Dict[int, int]) -> EPBatchGroup:
+    def _create_batch_group(
+        self,
+        requests: List[Request],
+        num_tokens: List[int],
+        replica_id: int,
+        ep_id: int,
+        time: float,
+        source_batch_ids: List[int],
+        lane_workload: EPLaneWorkload,
+    ) -> EPBatchGroup:
         batch_group = EPBatchGroup(
             requests,
             num_tokens,
@@ -9866,7 +9880,7 @@ class BaseClusterScheduler(ABC):
             ep_id,
             time,
             source_batch_ids,
-            per_expert_tokens,
+            lane_workload,
             self._cluster_type,
             is_moe=self._config.replica_config.model_config.is_moe,
         )

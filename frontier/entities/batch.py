@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional
+from types import MappingProxyType
 
 from frontier.entities.base_entity import BaseEntity
 from frontier.entities.request import Request
 from frontier.logger import init_logger
+from frontier.moe_ep_workload import EPLaneWorkload
 
 logger = init_logger(__name__)
 
@@ -1282,15 +1284,25 @@ class EPBatchGroup(Batch):
         ep_id: int,
         time: float,
         source_batch_ids: List[int],
-        per_expert_tokens: Dict[int, int],
+        lane_workload: EPLaneWorkload,
         cluster_type: "ClusterType",
         is_moe: bool,
     ) -> None:
+        if not isinstance(lane_workload, EPLaneWorkload):
+            raise TypeError(
+                "EPBatchGroup requires an EPLaneWorkload descriptor, got "
+                f"{type(lane_workload).__name__}"
+            )
+        if type(ep_id) is not int or ep_id != lane_workload.ep_id:
+            raise ValueError(
+                "EPBatchGroup ep_id must match lane_workload.ep_id: "
+                f"entity={ep_id!r}, descriptor={lane_workload.ep_id!r}"
+            )
         super().__init__(replica_id, requests, num_tokens, is_moe=is_moe)
         self._ep_id = ep_id
         self._time = time
         self._source_batch_ids = source_batch_ids
-        self._per_expert_tokens = per_expert_tokens
+        self._lane_workload = lane_workload
         self._cluster_type = cluster_type
         # Full DECODE_FFN stage duration in seconds for request-level metrics.
         # Expert-only compute is stored separately for runtime event scheduling.
@@ -1337,8 +1349,16 @@ class EPBatchGroup(Batch):
         return self._source_batch_ids
 
     @property
-    def per_expert_tokens(self) -> Dict[int, int]:
-        return self._per_expert_tokens
+    def lane_workload(self) -> EPLaneWorkload:
+        """Return the canonical physical workload descriptor for this lane."""
+
+        return self._lane_workload
+
+    @property
+    def per_expert_tokens(self) -> MappingProxyType:
+        """Return a read-only descriptor-backed compatibility projection."""
+
+        return self._lane_workload.per_expert_tokens
     
     @property
     def cluster_type(self) -> "ClusterType":
