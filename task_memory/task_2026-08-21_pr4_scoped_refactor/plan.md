@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-25 | Added the MTP scope decision gate and the typed trace-helper completion step after implementation audit. |
 | 2026-08-25 | Added the docs-first A' implementation plan for post-PR17 typed EP lanes, predictor/communication migration, pure MTP phases, and PR20/PR21 refresh gates. |
 | 2026-08-22 | Synchronized PR #20/#21 descriptions to their published heads and archived the producer-metadata and MTP interface audits. |
 | 2026-08-22 | Completed the Option-B standard-attention explicit-KV repair, warning visibility audit, two-round review archive, and targeted verification. |
@@ -44,7 +45,9 @@ docs-freeze
   -> scheduler-plan/entity-propagation
   -> predictor-interface
   -> communication-consumers
+  -> MTP-contract-decision
   -> MTP-pure-path
+  -> typed-trace-observability
   -> focused-verification
   -> PR20/PR21 merge-readiness
 ```
@@ -131,7 +134,16 @@ docs-freeze
      `isinstance(EPBatchGroup)` branching.
    - Commit: one communication-consumer commit.
 
-7. **`MTP-pure-path`**
+7. **`MTP-contract-decision`**
+   - Evidence: `issues.md:SCOPE-026` documents the implemented physical lane
+     seam and the still-existing generic block-shape replay.
+   - Boundary: obtain the maintainer's choice between the narrow physical-lane
+     contract and a new shared pure-MTP descriptor interface.
+   - Acceptance: the selected contract is reflected consistently in
+     `design.md`, `harness.md`, tests, and the remaining file map.
+   - No production edit occurs before this gate is resolved.
+
+8. **`MTP-pure-path`**
    - Files: `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`
      and its MTP-focused tests.
    - RED command: MTP phase tests that reject synthetic scheduler entity
@@ -139,17 +151,26 @@ docs-freeze
    - Boundary: pure descriptor and phase calculation only; preserve existing
      decomposition and lane-wise max.
    - GREEN: MTP-focused matrix plus the target-embedded registry tests.
-   - Acceptance: no synthetic `Request`/`EPBatchGroup` is created by MTP.
+   - Acceptance: the selected SCOPE-026 contract is met; the narrow option
+     forbids synthetic physical EP entities while retaining the explicit
+     generic shape adapter.
    - Commit: one MTP-path commit.
 
-8. **`focused-verification`**
+9. **`typed-trace-observability`**
+   - Files: `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py`,
+     `frontier/events/replica_stage_schedule_event.py`, and focused trace tests.
+   - Boundary: pass `EPLaneWorkload` to the trace helper and create the raw-map
+     projection only inside the serialization/logging boundary.
+   - Acceptance: no production trace helper accepts a raw expert-token map.
+
+10. **`focused-verification`**
    - Commands: focused tests, PR17-sensitive tests, `py_compile`,
      `git diff --check`, and direct EP=1/EP=2 zero-lane probes.
    - Acceptance: numeric evidence records model-call counts, local widths,
      routed-token sums, barrier participant sets, and exact stage/KV identities.
    - Commit: verification report/documentation update only.
 
-9. **`PR20/PR21 merge-readiness`**
+11. **`PR20/PR21 merge-readiness`**
    - Boundary: refresh PR20's post-PR17 conflict resolution first, then
      rebase/refresh stacked PR21 against the corrected PR20 base. Do not push,
      merge, or alter remote PR state without a separate authorization gate.
@@ -201,6 +222,16 @@ task in `future.md`.
 **Branch:** `refactor/pr4-scoped-lookup-boundary-20260821`
 
 **Base:** `origin/main` at `9e9fa94c`.
+
+### Post-PR17 implementation audit status (2026-08-25)
+
+The synthetic post-PR17 integration branch has completed the descriptor,
+scheduler/entity, predictor, communication, and MoE-specific MTP lane slices.
+The remaining implementation gate is SCOPE-026: decide whether “pure MTP” is
+limited to the physical MoE lane phase (recommended) or requires a new shared
+descriptor interface for the generic block/terminal shape replay. The raw-map
+trace helper is a separate localized follow-up and will run only after that
+decision gate. PR20/PR21 refresh and merge-readiness remain pending.
 
 ## 2026-08-22 two-PR continuation
 

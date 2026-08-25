@@ -2,6 +2,8 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-25 | Added the implementation audit separating the physical MoE MTP lane seam from the existing generic MTP shape replay. |
+| 2026-08-25 | Closed aggregate lane-domain validation and documented the bounded scalar compatibility path. |
 | 2026-08-25 | Froze the post-PR17 A' typed-lane architecture, physical/runtime ownership boundary, EP symmetry, zero-lane semantics, and pure MTP contract. |
 | 2026-08-22 | Added the standard-attention Option-B contract: target-local physical filtering, mandatory discard warnings, retained-value union, and all-target fail-fast. |
 | 2026-08-22 | Recorded the two confirmed PR #20 gaps between the selected design and the current one-feature MoE/MTP TP-consumer implementation. |
@@ -356,6 +358,29 @@ one helper; they do not use `isinstance(EPBatchGroup)` as their domain test.
 The projection remains a dict-shaped view only while downstream consumers are
 migrated, and no second mutable map is stored.
 
+### Scalar compatibility boundary
+
+The typed descriptor is mandatory for every physical, load-aware EP lane path.
+The remaining integer token path is deliberately narrower and does not accept
+or reconstruct a raw expert-token map:
+
+- Standard one-feature MoE lookups use the source batch's pre-routing token
+  count. This keeps the existing scalar profiling schema usable for ordinary
+  non-lane callers whose model has no load-imbalance feature columns.
+- Shared-domain communication uses the source batch's effective pre-routing
+  token count when no physical lane is present. This is the all-reduce contract;
+  it does not describe a local expert map.
+- EP lane entities, load-aware shuffling/grouped-GEMM, dispatch/combine payloads,
+  and EP>1 aggregate calls that need local load all require an
+  `EPLaneWorkload`. A regular EP>1 aggregate fails before model or backend
+  access until the scheduler materializes its lanes.
+- Raw mappings and partial local maps remain invalid predictor inputs. The only
+  mapping-shaped value exposed by an entity is the read-only compatibility view
+  derived from its descriptor.
+
+This boundary preserves the existing one-feature/shared-domain callers while
+preventing a scalar fallback from silently selecting a physical expert domain.
+
 ### Pure MTP phase path
 
 MTP decoder timing uses the materialized lane descriptor and a pure phase
@@ -363,6 +388,23 @@ calculation seam. It retains the existing phase decomposition and lane-wise
 `max()` semantics without constructing synthetic `Request`, `Batch`, or
 `EPBatchGroup` entities. MTP receives only physical descriptor data and
 explicit model/config inputs; scheduler identity remains absent.
+
+#### Implementation audit boundary (2026-08-25)
+
+The physical MoE/EP part of this contract is implemented by
+`predict_moe_lane_phase_times()`: it receives the source batch plus one
+immutable `EPLaneWorkload` and does not construct an `EPBatchGroup` or copy
+scheduler identity. The surrounding generic target-embedded MTP replay still
+uses a short-lived block-shape `Batch` and copied request progress to reuse the
+existing attention/token-shape predictor protocol. That object never enters a
+scheduler queue and is not a physical lane descriptor.
+
+The broad “no synthetic `Batch`” sentence above remains the acceptance target
+only if the maintainer selects the full pure-MTP interface in
+`issues.md:SCOPE-026`. The narrow A' implementation recommendation is to
+rename this gate to “pure physical MoE MTP lane phase” and document the
+generic shape adapter as a separate, scheduler-independent contract. No shared
+MTP interface expansion occurs before that decision.
 
 ### Extension gate
 

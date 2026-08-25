@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-25 | Opened the post-implementation MTP scope audit and recorded the typed trace boundary evidence. |
 | 2026-08-25 | Added the formal post-PR17 typed-lane RCA and reclassified the existing Gate 2 probe as provisional until the A' ownership and interface invariants are implemented. |
 | 2026-08-25 | Resolved the Gate 2 regular-Batch EP workload contract and zero-routed shuffling admission defect; recorded unrelated broad-unit baseline failures. |
 | 2026-08-22 | Archived the six deferred-WATCH probes and confirmed their scope and non-blocking status. |
@@ -636,6 +637,49 @@
   keep `predict_stage_execution_time()` stable for dense callers, and move MTP
   to a pure descriptor/phase seam. Delete the escape hatch and reject a raw
   local map without an explicit typed lane.
+
+### SCOPE-026 - Generic MTP synthetic-shape path exceeds the implemented A' seam
+
+- **Status:** Decision required before the remaining implementation; this is a
+  real scope fork, not a test-only discrepancy.
+- **Evidence:** The MoE-specific decoder hook now materializes one
+  `EPLaneWorkload` per participant and calls `predict_moe_lane_phase_times()`
+  (`frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py:2558-2670`).
+  The outer target-embedded MTP replay still constructs a block-shaped
+  `Batch` in `_build_mtp_synthetic_batch()`
+  (`sklearn_execution_time_predictor.py:5107-5175`) and a terminal `Batch`
+  plus copied request progress in `_get_mtp_terminal_overshoot_time()`
+  (`sklearn_execution_time_predictor.py:5270-5347`). Those objects carry
+  per-block token counts and speculative metadata into the existing predictor
+  API; they are not admitted to the scheduler or event queue and do not carry
+  EP lane identity.
+- **Root cause:** The approved A' text used “pure MTP” for the whole structural
+  replay, while the implementation only replaced the physical MoE lane
+  sub-path. The generic predictor API still accepts `Batch` because attention,
+  token-shape, terminal-progress, and metadata calculations are coupled to
+  that existing entity protocol.
+- **Option A - narrow A' seam (recommended):** Define the A' gate as the
+  physical MoE/EP phase path. Keep the generic block-shaped `Batch` replay as
+  an explicitly named, scheduler-independent MTP shape adapter; prohibit
+  synthetic `EPBatchGroup`, lane identity, and lifecycle fields. Update the
+  design/harness/plan wording and tests to distinguish these contracts. This
+  keeps the repair within the already verified MoE predictor seam and avoids a
+  new shared predictor interface.
+- **Option B - full pure MTP interface:** Introduce an immutable MTP phase
+  descriptor carrying token shape, active-request count, terminal progress, and
+  metadata; refactor the generic and MoE predictor paths to consume it without
+  any synthetic `Batch` or copied `Request`. This satisfies the broad wording,
+  but changes shared predictor contracts and the terminal speculative replay
+  path across more than the current A' file map. It needs a separate RED test,
+  interface review, and a larger compatibility audit.
+- **Trace finding:** `_log_ep_workload_trace()` currently accepts a raw map but
+  only validates/serializes it for observability; the two scheduler calls and
+  the direct event call pass the descriptor-backed projection. Converting this
+  helper to accept `EPLaneWorkload` is a localized completion of the A' owner
+  boundary and is independent of the MTP fork.
+- **Escalation:** Do not change the shared MTP interface until the maintainer
+  selects Option A or Option B. The recommendation is Option A, followed by
+  the typed trace helper migration and focused verification.
 
 ## Explicitly deferred questions
 

@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-25 | Audited the implemented A' MTP seam versus generic shape replay and opened the maintainer decision gate; no shared-interface edit made. |
 | 2026-08-25 | Froze the A' RCA/design/plan before implementation and marked the existing Gate 2 probe as provisional. |
 | 2026-08-25 | Implemented and verified typed EP lane workload admission, closed the zero-routed shuffling model-query defect, and recorded the broad unit baseline. |
 | 2026-08-22 | Synchronized both remote PR descriptions and archived the producer-metadata and MTP interface audit conclusions. |
@@ -1209,3 +1210,39 @@ cache. Evidence is in `test_report_2026-08-21_a2_finite_lookup.md`.
 - **Result:** Documentation scan and terminology checks are the RED/GREEN gate
   for this sub-step. No production or test source was changed by the docs
   checkpoint.
+
+## 2026-08-25 - Scheduler/entity typed-lane propagation
+
+- **Status:** Complete; committed as `c70d2052`.
+- **Motivation:** The canonical `EPLaneWorkload` descriptor must survive the
+  scheduler plan, EP entity, stage ledger, and direct event path without a
+  second mutable expert-token owner. Existing EP fixtures also used the removed
+  raw-map constructor.
+- **Expectation:** `EPBatchGroupPlan`, `EPBatchGroup`, and `BatchStage` carry the
+  same descriptor; compatibility maps are created only at explicit output
+  boundaries; stage/KV provenance and complete EP barriers remain unchanged.
+- **Method:** Threaded `lane_workload` through scheduler plan/materialization and
+  predictor-evaluation lane construction, replaced stage-ledger map copying
+  with typed attachment, updated the direct event path and metrics projection,
+  and migrated all scheduler/entity EP fixtures to legal fixed-width topology.
+- **Result:** The focused scheduler/entity matrix passed `611` tests with `19`
+  skips and `1` expected failure. Module compilation and `git diff --check`
+  passed. Provisional predictor files remain uncommitted and unchanged by this
+  sub-step.
+
+## 2026-08-25 - Post-implementation MTP and trace boundary audit
+
+- **Status:** Decision gate open; production edits paused at the shared-MTP
+  boundary.
+- **Motivation:** Verify that the implementation satisfies the frozen A'
+  wording instead of treating the remaining generic MTP synthetic shape as an
+  unexamined compatibility detail.
+- **Evidence:** The MoE override consumes typed lane descriptors and aggregates
+  the five physical phase values with lane-wise `max()`. The generic replay
+  still creates block and terminal `Batch` objects so the existing predictor
+  API can receive per-request token vectors and speculative metadata. The
+  objects do not enter scheduler admission or carry EP identity. The trace
+  helper receives only descriptor-backed map projections and emits logs.
+- **Decision needed:** SCOPE-026 presents the narrow physical-lane contract
+  (recommended) and the larger shared pure-MTP descriptor interface. No code
+  change is made until the maintainer selects one.

@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-25 | Recorded the post-implementation MTP scope audit, trace ownership evidence, and escalation gate. |
 | 2026-08-25 | Recorded the docs-freeze review: formal RCA, A' ownership graph, and TDD dependency plan are complete; the dirty Gate 2 probe remains provisional. |
 | 2026-08-25 | Reviewed Gate 2 typed-lane integration, zero-routed shuffling admission, and focused/broad verification evidence. |
 | 2026-08-22 | Recorded the evidence-backed six-item deferred-WATCH audit and its non-blocking disposition. |
@@ -949,3 +950,52 @@ PR20 base. No remote state was changed.
   changed in this checkpoint.
 - **Final Status:** **PASS for docs freeze; implementation pending.** The next
   allowed code action is the descriptor-contract RED tests.
+
+## CP-32 - Scheduler/entity typed-lane propagation
+
+- **Target Component/Phase:** `scheduler-plan/entity-propagation`.
+- **Reviewer Agent Identity:** `/root` (direct implementation and independent
+  focused verification).
+- **Inspected Artifacts:** `frontier/entities/batch.py`,
+  `frontier/entities/batch_stage.py`,
+  `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py`,
+  `frontier/scheduler/replica_stage_scheduler/replica_stage_schduler.py`,
+  `frontier/events/replica_stage_schedule_event.py`,
+  `frontier/metrics/metrics_store.py`, and the EP scheduler/entity tests.
+- **Identified Issues/Anomalies:** The plan/entity API still accepted a raw map,
+  stage-ledger projection copied that map into a mutable second owner, and
+  several fixtures encoded expert IDs inconsistent with canonical contiguous
+  ownership.
+- **Remediation/Verification Code Actions Taken:** Propagated the immutable
+  `EPLaneWorkload`, attached it to `BatchStage`, moved map creation to the
+  metrics output boundary, added descriptor identity assertions, and migrated
+  fixtures to fixed-width legal topology. Commit `c70d2052` contains only this
+  sub-step's source and tests.
+- **Verification:** `611 passed, 19 skipped, 1 xfailed`; targeted module
+  `py_compile` and `git diff --check` passed.
+- **Final Status:** **PASS.** Predictor-interface RED tests are the next gate.
+
+## CP-33 - MTP and trace ownership audit
+
+- **Target Component/Phase:** Post-implementation A' contract audit before
+  the remaining MTP/observability edits.
+- **Reviewer Agent Identity:** `/root` (direct source audit; no external review
+  conclusion is claimed).
+- **Inspected Artifacts:**
+  `frontier/execution_time_predictor/sklearn_execution_time_predictor.py:5107-5347,5364-5443,5689-5707`,
+  `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py:2165-2235,2558-2670`,
+  `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py:493-612,3835-3850,4167-4182`,
+  `frontier/events/replica_stage_schedule_event.py:395-405`, and the MTP/typed-lane
+  focused tests.
+- **Identified Issues/Anomalies:** The physical MoE MTP path is descriptor-only,
+  while generic target-embedded MTP still uses short-lived block/terminal
+  `Batch` objects and copied request progress. The trace helper still accepts a
+  raw map even though all callers derive it from a typed descriptor.
+- **Remediation/Verification Code Actions Taken:** Added SCOPE-026 with the
+  two evidence-backed options, split the harness gate, and inserted a typed
+  trace-helper sub-step. No production or test source was changed during this
+  audit.
+- **Escalation:** A maintainer decision is required before expanding the shared
+  MTP predictor interface. Option A (narrow physical lane seam) is recommended;
+  the typed trace migration remains independent and can follow that decision.
+- **Final Status:** **BLOCKED AT DECISION GATE, NOT AT ENVIRONMENT.**

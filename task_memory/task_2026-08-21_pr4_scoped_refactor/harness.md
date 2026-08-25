@@ -2,6 +2,8 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-25 | Split the physical MoE MTP lane gate from the unresolved generic MTP shape-adapter decision. |
+| 2026-08-25 | Recorded the explicit scalar compatibility boundary and aggregate-domain validation gate. |
 | 2026-08-25 | Added A' typed-lane, scheduler-identity, zero-lane, communication, and pure-MTP gates for the post-PR17 integration repair. |
 | 2026-08-22 | Added the Option-B warning/coverage gates for standard-attention explicit KV filtering and archived the final PR #21 review status. |
 | 2026-08-22 | Advanced the PR #21 completion gates with final synthetic-stack, routing-environment, memory-accounting, and static-hygiene evidence; recorded APPROVE/CLEAR review closure and push authorization. |
@@ -89,10 +91,15 @@
   raw map only as a read-only compatibility projection.
 - [ ] Predictor base/concrete/disaggregation/mocks/tests share one typed
   contract. Predictor code does not re-split global maps or infer topology.
+- [ ] The only retained scalar path is the documented standard one-feature or
+  shared-domain pre-routing path; load-aware and physical EP consumers require
+  `EPLaneWorkload`, and raw/partial maps fail before model access.
 - [ ] Communication payload consumers read the typed projection instead of
   using entity type as the domain discriminator.
-- [ ] MTP phase timing uses a pure descriptor seam and never constructs a
-  synthetic `Request`, `Batch`, or `EPBatchGroup`.
+- [ ] Physical MoE MTP phase timing uses a pure `EPLaneWorkload` seam and never
+  constructs a synthetic `EPBatchGroup` or copies scheduler lifecycle identity.
+- [ ] The generic target-embedded MTP shape replay contract is resolved through
+  the SCOPE-026 decision before any shared predictor-interface expansion.
 - [ ] Dense `predict_stage_execution_time()` callers retain their existing
   signature; lane context is obtained from the typed batch/entity path.
 
