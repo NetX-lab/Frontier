@@ -5,9 +5,11 @@ from types import MappingProxyType
 import pytest
 
 from frontier.moe_ep_workload import (
+    EPLaneWorkload,
     LayerEPWorkload,
     materialize_layer_ep_workload,
     resolve_routing_details,
+    split_global_expert_tokens_into_lanes,
 )
 
 
@@ -79,6 +81,59 @@ def test_zero_tokens_preserve_all_experts_and_all_ep_participants() -> None:
     }
     assert workload.participant_ep_ids == (0, 1)
     assert dict(workload.per_ep_routed_tokens) == {0: 0, 1: 0}
+
+
+def test_layer_workload_exposes_typed_local_lane_identity() -> None:
+    workload = materialize_layer_ep_workload(
+        routing_ratios={0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25},
+        target_replica_id=2,
+        global_layer_id=5,
+        routing_token_count=4,
+        router_topk=1,
+        total_expert_num=4,
+        moe_expert_parallel_size=2,
+        expert_to_ep=_ownership(),
+    )
+
+    lane = workload.lane(1)
+
+    assert isinstance(lane, EPLaneWorkload)
+    assert lane.ep_id == 1
+    assert lane.local_expert_width == 2
+    assert lane.owned_expert_ids == (2, 3)
+    assert lane.local_token_counts == (1, 1)
+    assert dict(lane.per_expert_tokens) == {2: 1, 3: 1}
+    assert not hasattr(lane, "source_batch_ids")
+    assert not hasattr(lane, "target_replica_id")
+    assert not hasattr(lane, "global_layer_id")
+
+
+def test_lane_rejects_non_conserving_local_counts() -> None:
+    with pytest.raises(ValueError, match="routed_token_count"):
+        EPLaneWorkload(
+            ep_id=0,
+            moe_expert_parallel_size=1,
+            total_expert_num=2,
+            owned_expert_ids=(0, 1),
+            local_token_counts=(1, 0),
+            routed_token_count=2,
+            router_topk=1,
+        )
+
+
+def test_global_map_splitter_preserves_global_ids_and_token_conservation() -> None:
+    lanes = split_global_expert_tokens_into_lanes(
+        {0: 3, 1: 0, 2: 4, 3: 1},
+        total_expert_num=4,
+        moe_expert_parallel_size=2,
+    )
+
+    assert tuple(lane.ep_id for lane in lanes) == (0, 1)
+    assert [dict(lane.per_expert_tokens) for lane in lanes] == [
+        {0: 3, 1: 0},
+        {2: 4, 3: 1},
+    ]
+    assert sum(sum(lane.per_expert_tokens.values()) for lane in lanes) == 8
 
 
 def test_materializer_result_and_nested_maps_are_immutable() -> None:
