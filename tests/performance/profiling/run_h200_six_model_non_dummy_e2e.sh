@@ -194,27 +194,35 @@ print(
     contract.num_experts,
     contract.router_topk,
     contract.num_pipeline_stages,
+    contract.cluster_num_replicas,
+    contract.attn_tensor_parallel_size,
+    contract.attn_data_parallel_size,
+    contract.moe_tensor_parallel_size,
+    contract.moe_expert_parallel_size,
 )
 PY
   )"
   read -r is_moe num_experts router_topk num_pipeline_stages \
+    cluster_num_replicas attn_tp attn_dp moe_tp moe_ep \
     <<<"$(tail -n 1 <<<"$contract_values")"
   if [[ ! "$is_moe" =~ ^[01]$ ]] \
     || [[ ! "$num_experts" =~ ^[0-9]+$ ]] \
     || [[ ! "$router_topk" =~ ^[0-9]+$ ]] \
     || [[ ! "$num_pipeline_stages" =~ ^[0-9]+$ ]] \
-    || [ "$num_pipeline_stages" -lt 1 ]; then
+    || [ "$num_pipeline_stages" -lt 1 ] \
+    || [[ ! "$cluster_num_replicas" =~ ^[0-9]+$ ]] \
+    || [ "$cluster_num_replicas" -lt 1 ] \
+    || [[ ! "$attn_tp" =~ ^[0-9]+$ ]] \
+    || [ "$attn_tp" -lt 1 ] \
+    || [[ ! "$attn_dp" =~ ^[0-9]+$ ]] \
+    || [ "$attn_dp" -lt 1 ] \
+    || [[ ! "$moe_tp" =~ ^[0-9]+$ ]] \
+    || [ "$moe_tp" -lt 1 ] \
+    || [[ ! "$moe_ep" =~ ^[0-9]+$ ]] \
+    || [ "$moe_ep" -lt 1 ]; then
     echo "ERROR: invalid registry-derived contract values for $model." >&2
     printf '%s\n' "$contract_values" >&2
     exit 1
-  fi
-
-  if [ "$is_moe" = "1" ]; then
-    attn_dp=2
-    moe_ep=2
-  else
-    attn_dp=1
-    moe_ep=1
   fi
 
   model_report_dir="$REPORT_ROOT/$model"
@@ -252,13 +260,13 @@ PY
     --simulation_mode offline
     --sys_arch co-location
     --decode_cuda_graph_mode full_decode_only
-    --cluster_config_num_replicas 1
+    --cluster_config_num_replicas "$cluster_num_replicas"
     --replica_config_model_name "$model"
     --replica_config_device h200
     --replica_config_num_pipeline_stages "$num_pipeline_stages"
-    --replica_config_attn_tensor_parallel_size 1
+    --replica_config_attn_tensor_parallel_size "$attn_tp"
     --replica_config_attn_data_parallel_size "$attn_dp"
-    --replica_config_moe_tensor_parallel_size 1
+    --replica_config_moe_tensor_parallel_size "$moe_tp"
     --replica_config_moe_expert_parallel_size "$moe_ep"
     --cc_backend_config_type analytical
     --replica_scheduler_config_type vllm_v1

@@ -35,6 +35,13 @@ def test_six_model_contract_is_registry_derived() -> None:
     dense = build_model_contract("llama3.1-8b")
     assert dense.is_moe is False
     assert dense.num_pipeline_stages == 1
+    assert (
+        dense.cluster_num_replicas,
+        dense.attn_tensor_parallel_size,
+        dense.attn_data_parallel_size,
+        dense.moe_tensor_parallel_size,
+        dense.moe_expert_parallel_size,
+    ) == (1, 1, 1, 1, 1)
     assert dense.profile_filenames == (
         "linear_op.csv",
         "linear_op_kernel_only.csv",
@@ -51,17 +58,38 @@ def test_six_model_contract_is_registry_derived() -> None:
     assert pure_moe.num_pipeline_stages == 2
     assert "time_stats.mlp_up_proj.median" not in pure_moe.linear_target_columns
     assert pure_moe.routing_runtime_path == "standard_fused_topk"
+    assert (
+        pure_moe.vllm_tensor_parallel_size,
+        pure_moe.vllm_data_parallel_size,
+        pure_moe.enable_expert_parallel,
+        pure_moe.attn_tensor_parallel_size,
+        pure_moe.attn_data_parallel_size,
+        pure_moe.moe_tensor_parallel_size,
+        pure_moe.moe_expert_parallel_size,
+    ) == (1, 2, True, 1, 2, 1, 2)
 
     step3 = build_model_contract("step3-moe-noquant")
     assert step3.is_moe is True
     assert step3.is_mixed_layer_moe is True
     assert step3.num_pipeline_stages == 1
+    assert (
+        step3.vllm_tensor_parallel_size,
+        step3.vllm_data_parallel_size,
+        step3.enable_expert_parallel,
+        step3.cluster_num_replicas,
+        step3.attn_tensor_parallel_size,
+        step3.attn_data_parallel_size,
+        step3.moe_tensor_parallel_size,
+        step3.moe_expert_parallel_size,
+    ) == (8, 1, True, 1, 8, 1, 1, 8)
     assert step3.dense_layer_count == 5
     assert step3.moe_layer_count == 56
     assert "time_stats.mlp_up_proj.median" in step3.linear_target_columns
     assert "time_stats.share_expert_up_proj.median" in step3.linear_target_columns
     assert "time_stats.attn_pre_proj_qkv.median" in step3.linear_target_columns
     assert step3.profile_filenames[-2:] == ("moe.csv", "moe_kernel_only.csv")
+    assert dict(step3.linear_tp_by_op)["attn_pre_proj"] == 8
+    assert dict(step3.linear_tp_by_op)["mlp_up_proj"] == 1
 
 
 def test_explicit_uniform_mode_selects_uniform_profile_rows() -> None:
@@ -93,7 +121,6 @@ def _write_profile_fixture(profile_dir: Path, model_name: str) -> None:
         "use_gated_mlp": contract.use_gated_mlp,
         "use_qk_norm": contract.use_qk_norm,
         "attn_output_gate": contract.attn_output_gate,
-        "num_tensor_parallel_workers": 1,
         "padded_n_embd": contract.embedding_dim,
         "padded_n_expanded_embd": contract.mlp_hidden_dim,
         "share_expert_dim": contract.share_expert_dim,
@@ -106,7 +133,7 @@ def _write_profile_fixture(profile_dir: Path, model_name: str) -> None:
         "n_q_head": contract.num_q_heads,
         "n_kv_head": contract.num_kv_heads,
         "block_size": 16,
-        "num_tensor_parallel_workers": 1,
+        "num_tensor_parallel_workers": contract.attn_tensor_parallel_size,
         "max_model_len": 2,
         "batch_size": 1,
         "attention_backend": "FLASHINFER",
@@ -116,15 +143,17 @@ def _write_profile_fixture(profile_dir: Path, model_name: str) -> None:
         **common_metadata,
         "num_tokens": 1,
         "num_experts": contract.num_experts,
-        "num_experts_per_device": contract.num_experts // 2,
-        "expert_parallel_size": 2,
+        "num_experts_per_device": (
+            contract.num_experts // contract.moe_expert_parallel_size
+        ),
+        "expert_parallel_size": contract.moe_expert_parallel_size,
         "routing_runtime_path": contract.routing_runtime_path,
         **direct_gating_metadata,
         "router_topk": contract.router_topk,
         "hidden_dim": contract.embedding_dim,
         "expert_hidden_dim": contract.mlp_hidden_dim,
         "use_gated": contract.use_gated_mlp,
-        "num_tensor_parallel_workers": 1,
+        "num_tensor_parallel_workers": contract.moe_tensor_parallel_size,
     }
 
     profile_dir.mkdir(parents=True)
@@ -133,12 +162,31 @@ def _write_profile_fixture(profile_dir: Path, model_name: str) -> None:
             "KERNEL_ONLY" if filename.endswith("_kernel_only.csv") else "CUDA_EVENT"
         )
         if filename.startswith("linear_op"):
-            row = {
-                **linear_metadata,
-                **{column: 1.0 for column in contract.linear_target_columns},
-                "measurement_type": measurement_type,
-            }
-            frame = pd.DataFrame([row])
+            tp_by_op = dict(contract.linear_tp_by_op)
+            rows = []
+            for tp_size in sorted(set(tp_by_op.values())):
+                row = {
+                    **linear_metadata,
+                    "num_tensor_parallel_workers": tp_size,
+                    "measurement_type": measurement_type,
+                }
+                row.update(
+                    {
+                        column: (
+                            1.0
+                            if tp_by_op[
+                                column.removeprefix("time_stats.").removesuffix(
+                                    ".median"
+                                )
+                            ]
+                            == tp_size
+                            else float("nan")
+                        )
+                        for column in contract.linear_target_columns
+                    }
+                )
+                rows.append(row)
+            frame = pd.DataFrame(rows)
         elif filename.startswith("attention"):
             decode_row = {
                 **attention_metadata,
@@ -395,11 +443,11 @@ def _write_runtime_artifacts(
         "model_name": contract.model_name,
         "device": "h200",
         "num_pipeline_stages": contract.num_pipeline_stages,
-        "attn_tensor_parallel_size": 1,
-        "attn_data_parallel_size": 2 if contract.is_moe else 1,
-        "data_parallel_size": 2 if contract.is_moe else 1,
-        "moe_tensor_parallel_size": 1,
-        "moe_expert_parallel_size": 2 if contract.is_moe else 1,
+        "attn_tensor_parallel_size": contract.attn_tensor_parallel_size,
+        "attn_data_parallel_size": contract.attn_data_parallel_size,
+        "data_parallel_size": contract.attn_data_parallel_size,
+        "moe_tensor_parallel_size": contract.moe_tensor_parallel_size,
+        "moe_expert_parallel_size": contract.moe_expert_parallel_size,
         "total_expert_num": contract.num_experts if contract.is_moe else 1,
         "router_topk": contract.router_topk if contract.is_moe else 1,
         "moe_routing_mode": "simulation",
@@ -420,6 +468,7 @@ def _write_runtime_artifacts(
                     },
                 },
                 "cluster_config": {
+                    "num_replicas": contract.cluster_num_replicas,
                     "replica_config": replica_config,
                     "execution_time_predictor_config": predictor_config,
                 },
@@ -460,8 +509,18 @@ def test_runtime_artifact_validation_closes_numeric_and_config_contract(
         report["config"]["replica"]["num_pipeline_stages"]
         == contract.num_pipeline_stages
     )
-    assert report["config"]["replica"]["attn_data_parallel_size"] == 2
-    assert report["config"]["replica"]["moe_expert_parallel_size"] == 2
+    assert (
+        report["config"]["replica"]["attn_tensor_parallel_size"]
+        == contract.attn_tensor_parallel_size
+    )
+    assert (
+        report["config"]["replica"]["attn_data_parallel_size"]
+        == contract.attn_data_parallel_size
+    )
+    assert (
+        report["config"]["replica"]["moe_expert_parallel_size"]
+        == contract.moe_expert_parallel_size
+    )
 
 
 def test_runtime_artifact_validation_rejects_dummy_mode(tmp_path: Path) -> None:

@@ -11,6 +11,10 @@ from typing import Any, Mapping, Sequence
 
 import pandas as pd
 
+from frontier.config.parallel_semantics import (
+    FrontierParallelismMapping,
+    resolve_frontier_parallelism_mapping,
+)
 from frontier.moe_gating_runtime import (
     DIRECT_MOE_GATING_RUNTIME_CONTEXT,
     PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
@@ -20,21 +24,41 @@ from frontier.moe_gating_runtime import (
 from frontier.moe_routing_runtime import (
     resolve_moe_gating_routing_runtime_path,
 )
-from frontier.operators.families import MOE_FAMILY, get_family_profiling_names
+from frontier.operators.binding import bind_operator_query, resolve_operator_query_tp_mode
+from frontier.operators.families import (
+    FFN_FAMILY,
+    MOE_FAMILY,
+    SHARE_EXPERT_FAMILY,
+    get_family_profiling_names,
+)
+from frontier.operators.spec import TensorParallelMode
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
 
 
-_MODEL_PIPELINE_STAGES = {
-    "llama3.1-8b": 1,
-    "llama3.3-70b": 2,
-    "Qwen3-235B-A22B": 2,
-    "qwen3-a3b-30b-moe": 1,
-    "step3-moe-noquant": 1,
-    "mixtral_8x7b_moe": 1,
+@dataclass(frozen=True)
+class _ModelRuntimeRegistryEntry:
+    """One model's PP and vLLM parallelism contract."""
+
+    num_pipeline_stages: int
+    tensor_parallel_size: int
+    data_parallel_size: int
+    enable_expert_parallel: bool
+
+
+# Keep PP and vLLM-facing choices in one registry. Frontier fields are derived
+# through the resolver below so the E2E runner and validator cannot silently
+# diverge on MoE TP/EP semantics.
+_MODEL_RUNTIME_REGISTRY = {
+    "llama3.1-8b": _ModelRuntimeRegistryEntry(1, 1, 1, False),
+    "llama3.3-70b": _ModelRuntimeRegistryEntry(2, 1, 1, False),
+    "Qwen3-235B-A22B": _ModelRuntimeRegistryEntry(2, 1, 2, True),
+    "qwen3-a3b-30b-moe": _ModelRuntimeRegistryEntry(1, 1, 2, True),
+    "step3-moe-noquant": _ModelRuntimeRegistryEntry(1, 8, 1, True),
+    "mixtral_8x7b_moe": _ModelRuntimeRegistryEntry(1, 1, 2, True),
 }
 
-SUPPORTED_MODELS = tuple(_MODEL_PIPELINE_STAGES)
+SUPPORTED_MODELS = tuple(_MODEL_RUNTIME_REGISTRY)
 
 _PROFILE_MEASUREMENT_TYPES = {
     "linear_op.csv": "CUDA_EVENT",
@@ -62,6 +86,15 @@ class ModelContract:
     is_mixed_layer_moe: bool
     num_layers: int
     num_pipeline_stages: int
+    vllm_tensor_parallel_size: int
+    vllm_data_parallel_size: int
+    enable_expert_parallel: bool
+    cluster_num_replicas: int
+    attn_tensor_parallel_size: int
+    attn_data_parallel_size: int
+    moe_tensor_parallel_size: int
+    moe_expert_parallel_size: int
+    linear_tp_by_op: tuple[tuple[str, int], ...]
     dense_layer_count: int
     moe_layer_count: int
     profile_filenames: tuple[str, ...]
@@ -98,7 +131,8 @@ def build_model_contract(
         )
 
     model_config = ModelConfig.from_model_name(model_name)
-    num_pipeline_stages = _MODEL_PIPELINE_STAGES[model_name]
+    runtime_registry_entry = _MODEL_RUNTIME_REGISTRY[model_name]
+    num_pipeline_stages = runtime_registry_entry.num_pipeline_stages
     if int(model_config.num_layers) % num_pipeline_stages != 0:
         raise ValueError(
             f"Model runtime contract for {model_name!r} requires PP"
@@ -106,6 +140,12 @@ def build_model_contract(
             "is not evenly divisible."
         )
     is_moe = bool(model_config.is_moe)
+    parallel_mapping = resolve_frontier_parallelism_mapping(
+        model_profile="moe" if is_moe else "dense",
+        tensor_parallel_size=runtime_registry_entry.tensor_parallel_size,
+        data_parallel_size=runtime_registry_entry.data_parallel_size,
+        enable_expert_parallel=runtime_registry_entry.enable_expert_parallel,
+    )
     moe_layer_count = len(model_config.get_moe_layer_ids())
     dense_layer_count = int(model_config.num_layers) - moe_layer_count
     is_mixed_layer_moe = is_moe and dense_layer_count > 0
@@ -120,6 +160,20 @@ def build_model_contract(
     enabled_ops = list(profiling_plan["enabled_ops"])
     if model_config.uses_fused_add_norm:
         enabled_ops = [op_name for op_name in enabled_ops if op_name != "add"]
+
+    architecture_profile = model_config.get_model_architecture_profile()
+    linear_tp_by_op = tuple(
+        (
+            op_name,
+            _resolve_linear_profile_tp(
+                op_name,
+                architecture_profile=architecture_profile,
+                mapping=parallel_mapping,
+                is_moe=is_moe,
+            ),
+        )
+        for op_name in enabled_ops
+    )
 
     profile_filenames = (
         "linear_op.csv",
@@ -136,6 +190,15 @@ def build_model_contract(
         is_mixed_layer_moe=is_mixed_layer_moe,
         num_layers=int(model_config.num_layers),
         num_pipeline_stages=num_pipeline_stages,
+        vllm_tensor_parallel_size=runtime_registry_entry.tensor_parallel_size,
+        vllm_data_parallel_size=runtime_registry_entry.data_parallel_size,
+        enable_expert_parallel=runtime_registry_entry.enable_expert_parallel,
+        cluster_num_replicas=parallel_mapping.cluster_num_replicas,
+        attn_tensor_parallel_size=parallel_mapping.attn_tensor_parallel_size,
+        attn_data_parallel_size=parallel_mapping.attn_data_parallel_size,
+        moe_tensor_parallel_size=parallel_mapping.moe_tensor_parallel_size,
+        moe_expert_parallel_size=parallel_mapping.moe_expert_parallel_size,
+        linear_tp_by_op=linear_tp_by_op,
         dense_layer_count=dense_layer_count,
         moe_layer_count=moe_layer_count,
         profile_filenames=profile_filenames,
@@ -176,6 +239,48 @@ def build_model_contract(
         ),
         num_experts=int(model_config.num_experts),
         router_topk=int(model_config.num_experts_per_tok),
+    )
+
+
+def _resolve_linear_profile_tp(
+    op_name: str,
+    *,
+    architecture_profile: Any,
+    mapping: FrontierParallelismMapping,
+    is_moe: bool,
+) -> int:
+    """Resolve one linear operator's profiling TP from the operator registry."""
+
+    # Mixed-layer MoE models have two distinct FFN domains.  The dense
+    # boundary MLP family is trained and queried as a dense model (therefore
+    # on the attention TP domain), while shared-expert operations remain in
+    # the routed MoE domain.  Resolve this distinction from the operator
+    # registry instead of inferring it from operator-name prefixes.
+    try:
+        binding = bind_operator_query(op_name)
+    except ValueError:
+        binding = None
+    if binding is not None and binding.family is FFN_FAMILY:
+        return mapping.attn_tensor_parallel_size
+    if binding is not None and binding.family is SHARE_EXPERT_FAMILY:
+        return mapping.moe_tensor_parallel_size
+
+    tp_mode = resolve_operator_query_tp_mode(
+        op_name,
+        architecture_profile=architecture_profile,
+    )
+    if tp_mode is TensorParallelMode.REPLICATED:
+        return 1
+    if tp_mode is TensorParallelMode.ATTENTION_TP:
+        return mapping.attn_tensor_parallel_size
+    if tp_mode is TensorParallelMode.FFN_TP:
+        return (
+            mapping.moe_tensor_parallel_size
+            if is_moe
+            else mapping.attn_tensor_parallel_size
+        )
+    raise ValueError(
+        f"Unsupported linear profiling TP mode for {op_name!r}: {tp_mode}"
     )
 
 
@@ -321,13 +426,26 @@ def _select_runtime_profile_rows(
     path: Path,
     contract: ModelContract,
 ) -> pd.DataFrame:
-    if not path.name.startswith("moe"):
+    if path.name.startswith("attention"):
         return _select_numeric_runtime_rows(
             frame,
             path=path,
             column="num_tensor_parallel_workers",
-            expected=1,
+            expected=contract.attn_tensor_parallel_size,
         )
+
+    if path.name.startswith("linear_op"):
+        required_tp_sizes = sorted({tp for _, tp in contract.linear_tp_by_op})
+        selected_rows = [
+            _select_numeric_runtime_rows(
+                frame,
+                path=path,
+                column="num_tensor_parallel_workers",
+                expected=tp_size,
+            )
+            for tp_size in required_tp_sizes
+        ]
+        return pd.concat(selected_rows, ignore_index=True)
 
     required_contexts = [DIRECT_MOE_GATING_RUNTIME_CONTEXT]
     if should_enable_prefill_warmed_moe_gating_contract(
@@ -346,13 +464,13 @@ def _select_runtime_profile_rows(
             selected,
             path=path,
             column="num_tensor_parallel_workers",
-            expected=1,
+            expected=contract.moe_tensor_parallel_size,
         )
         selected = _select_numeric_runtime_rows(
             selected,
             path=path,
             column="expert_parallel_size",
-            expected=2,
+            expected=contract.moe_expert_parallel_size,
         )
         runtime_context_rows.append(selected)
     return pd.concat(runtime_context_rows, ignore_index=True)
@@ -373,7 +491,6 @@ def _validate_linear_profile(
         "use_gated_mlp": contract.use_gated_mlp,
         "use_qk_norm": contract.use_qk_norm,
         "attn_output_gate": contract.attn_output_gate,
-        "num_tensor_parallel_workers": 1,
         "padded_n_embd": contract.embedding_dim,
         "padded_n_expanded_embd": contract.mlp_hidden_dim,
         "share_expert_dim": contract.share_expert_dim,
@@ -381,13 +498,28 @@ def _validate_linear_profile(
     }
     for column, value in expected.items():
         _require_exact_column(frame, path=path, column=column, expected=value)
-    target_minima = {
-        column: _require_positive_target(frame, path=path, column=column)
-        for column in contract.linear_target_columns
-    }
+    tp_series = pd.to_numeric(
+        frame["num_tensor_parallel_workers"], errors="coerce"
+    )
+    if tp_series.isna().any():
+        raise ValueError(
+            f"{path.name} column 'num_tensor_parallel_workers' contains non-numeric values."
+        )
+    tp_by_op = dict(contract.linear_tp_by_op)
+    target_minima = {}
+    for column in contract.linear_target_columns:
+        op_name = column.removeprefix("time_stats.").removesuffix(".median")
+        expected_tp = tp_by_op[op_name]
+        target_minima[column] = _require_positive_target(
+            frame,
+            path=path,
+            column=column,
+            mask=tp_series == expected_tp,
+        )
     return {
         "target_count": len(target_minima),
         "minimum_positive_target_ms": min(target_minima.values()),
+        "validated_tp_by_operator": dict(sorted(tp_by_op.items())),
     }
 
 
@@ -403,7 +535,7 @@ def _validate_attention_profile(
         "n_q_head": contract.num_q_heads,
         "n_kv_head": contract.num_kv_heads,
         "block_size": 16,
-        "num_tensor_parallel_workers": 1,
+        "num_tensor_parallel_workers": contract.attn_tensor_parallel_size,
     }
     for column, value in expected.items():
         _require_exact_column(frame, path=path, column=column, expected=value)
@@ -445,20 +577,23 @@ def _validate_moe_profile(
     path: Path,
     contract: ModelContract,
 ) -> dict[str, Any]:
-    if contract.num_experts % 2:
+    if contract.num_experts % contract.moe_expert_parallel_size:
         raise ValueError(
-            f"{contract.model_name} num_experts={contract.num_experts} is not divisible by EP=2."
+            f"{contract.model_name} num_experts={contract.num_experts} is not divisible by "
+            f"EP={contract.moe_expert_parallel_size}."
         )
     expected = {
         "num_experts": contract.num_experts,
-        "num_experts_per_device": contract.num_experts // 2,
-        "expert_parallel_size": 2,
+        "num_experts_per_device": (
+            contract.num_experts // contract.moe_expert_parallel_size
+        ),
+        "expert_parallel_size": contract.moe_expert_parallel_size,
         "routing_runtime_path": contract.routing_runtime_path,
         "router_topk": contract.router_topk,
         "hidden_dim": contract.embedding_dim,
         "expert_hidden_dim": contract.mlp_hidden_dim,
         "use_gated": contract.use_gated_mlp,
-        "num_tensor_parallel_workers": 1,
+        "num_tensor_parallel_workers": contract.moe_tensor_parallel_size,
     }
     for column, value in expected.items():
         _require_exact_column(frame, path=path, column=column, expected=value)
@@ -631,6 +766,12 @@ def _validate_runtime_config(
     cluster_config = config.get("cluster_config")
     if not isinstance(cluster_config, dict):
         raise ValueError("config.json must contain cluster_config.")
+    actual_cluster_replicas = cluster_config.get("num_replicas")
+    if actual_cluster_replicas != contract.cluster_num_replicas:
+        raise ValueError(
+            "config.json cluster_config field 'num_replicas' must equal "
+            f"{contract.cluster_num_replicas}, got {actual_cluster_replicas!r}."
+        )
     replica_config = cluster_config.get("replica_config")
     predictor_config = cluster_config.get("execution_time_predictor_config")
     if not isinstance(replica_config, dict) or not isinstance(predictor_config, dict):
@@ -646,15 +787,15 @@ def _validate_runtime_config(
         "model_name": contract.model_name,
         "device": "h200",
         "num_pipeline_stages": contract.num_pipeline_stages,
-        "attn_tensor_parallel_size": 1,
-        "attn_data_parallel_size": 2 if contract.is_moe else 1,
-        "data_parallel_size": 2 if contract.is_moe else 1,
+        "attn_tensor_parallel_size": contract.attn_tensor_parallel_size,
+        "attn_data_parallel_size": contract.attn_data_parallel_size,
+        "data_parallel_size": contract.attn_data_parallel_size,
     }
     if contract.is_moe:
         expected_replica.update(
             {
-                "moe_tensor_parallel_size": 1,
-                "moe_expert_parallel_size": 2,
+                "moe_tensor_parallel_size": contract.moe_tensor_parallel_size,
+                "moe_expert_parallel_size": contract.moe_expert_parallel_size,
                 "total_expert_num": contract.num_experts,
                 "router_topk": contract.router_topk,
                 "moe_routing_mode": contract.moe_routing_mode,
@@ -691,6 +832,17 @@ def _validate_runtime_config(
         "decode_cuda_graph_mode": "full_decode_only",
         "request": expected_request,
         "replica": expected_replica,
+        "cluster_num_replicas": contract.cluster_num_replicas,
+        "parallelism": {
+            "vllm_tensor_parallel_size": contract.vllm_tensor_parallel_size,
+            "vllm_data_parallel_size": contract.vllm_data_parallel_size,
+            "enable_expert_parallel": contract.enable_expert_parallel,
+            "cluster_num_replicas": contract.cluster_num_replicas,
+            "attn_tensor_parallel_size": contract.attn_tensor_parallel_size,
+            "attn_data_parallel_size": contract.attn_data_parallel_size,
+            "moe_tensor_parallel_size": contract.moe_tensor_parallel_size,
+            "moe_expert_parallel_size": contract.moe_expert_parallel_size,
+        },
         "profile_files": profile_files,
     }
 
