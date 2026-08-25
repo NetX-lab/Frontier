@@ -78,6 +78,227 @@ class LayerEPWorkload:
         object.__setattr__(self, "expert_to_ep", _freeze_map(self.expert_to_ep))
         object.__setattr__(self, "participant_ep_ids", tuple(self.participant_ep_ids))
 
+    def lane(self, ep_id: int) -> "EPLaneWorkload":
+        """Return the canonical physical workload for one materialized lane."""
+
+        if type(ep_id) is not int or ep_id < 0:
+            raise ValueError("ep_id must be an exact non-negative int")
+        if ep_id not in self.per_ep_per_expert_tokens:
+            raise ValueError(
+                f"ep_id={ep_id} is not present in the materialized EP workload"
+            )
+        total_expert_num = len(self.global_per_expert_tokens)
+        moe_expert_parallel_size = len(self.participant_ep_ids)
+        return _build_lane_descriptor(
+            ep_id=ep_id,
+            moe_expert_parallel_size=moe_expert_parallel_size,
+            total_expert_num=total_expert_num,
+            per_expert_tokens=self.per_ep_per_expert_tokens[ep_id],
+            router_topk=self.router_topk,
+        )
+
+
+@dataclass(frozen=True)
+class EPLaneWorkload:
+    """Immutable physical workload for one local expert-parallel lane."""
+
+    ep_id: int
+    moe_expert_parallel_size: int
+    total_expert_num: int
+    owned_expert_ids: tuple[int, ...]
+    local_token_counts: tuple[int, ...]
+    routed_token_count: int
+    router_topk: int
+
+    def __post_init__(self) -> None:
+        if type(self.ep_id) is not int or self.ep_id < 0:
+            raise ValueError("ep_id must be an exact non-negative int")
+        if (
+            type(self.moe_expert_parallel_size) is not int
+            or self.moe_expert_parallel_size <= 0
+        ):
+            raise ValueError("moe_expert_parallel_size must be an exact positive int")
+        if type(self.total_expert_num) is not int or self.total_expert_num <= 0:
+            raise ValueError("total_expert_num must be an exact positive int")
+        if self.ep_id >= self.moe_expert_parallel_size:
+            raise ValueError("ep_id is outside moe_expert_parallel_size")
+        if self.total_expert_num % self.moe_expert_parallel_size != 0:
+            raise ValueError(
+                "total_expert_num must be divisible by moe_expert_parallel_size"
+            )
+        expected_width = self.total_expert_num // self.moe_expert_parallel_size
+        owned_expert_ids = tuple(self.owned_expert_ids)
+        expected_owned_ids = tuple(
+            range(self.ep_id * expected_width, (self.ep_id + 1) * expected_width)
+        )
+        if owned_expert_ids != expected_owned_ids:
+            raise ValueError(
+                "owned_expert_ids do not match canonical contiguous ownership: "
+                f"expected={expected_owned_ids}, got={owned_expert_ids}"
+            )
+        local_token_counts = tuple(self.local_token_counts)
+        if len(local_token_counts) != expected_width:
+            raise ValueError(
+                "local_token_counts must have the fixed local expert width: "
+                f"expected={expected_width}, got={len(local_token_counts)}"
+            )
+        if any(type(value) is not int or value < 0 for value in local_token_counts):
+            raise ValueError(
+                "local_token_counts must contain exact non-negative integers"
+            )
+        if type(self.routed_token_count) is not int or self.routed_token_count < 0:
+            raise ValueError(
+                "routed_token_count must be an exact non-negative integer"
+            )
+        if sum(local_token_counts) != self.routed_token_count:
+            raise ValueError(
+                "routed_token_count must equal the sum of local_token_counts: "
+                f"routed={self.routed_token_count}, sum={sum(local_token_counts)}"
+            )
+        if type(self.router_topk) is not int or self.router_topk <= 0:
+            raise ValueError("router_topk must be an exact positive integer")
+        object.__setattr__(self, "owned_expert_ids", owned_expert_ids)
+        object.__setattr__(self, "local_token_counts", local_token_counts)
+
+    @property
+    def local_expert_width(self) -> int:
+        """Return the configured number of experts owned by this lane."""
+
+        return self.total_expert_num // self.moe_expert_parallel_size
+
+    @property
+    def per_expert_tokens(self) -> ExpertTokenMap:
+        """Return a read-only compatibility view keyed by global expert ID."""
+
+        return _freeze_map(dict(zip(self.owned_expert_ids, self.local_token_counts)))
+
+    @property
+    def num_experts_per_device(self) -> int:
+        """Compatibility alias for the canonical local expert width."""
+
+        return self.local_expert_width
+
+    def materialize_expert_token_counts(self) -> tuple[int, ...]:
+        """Return the fixed-width local token vector."""
+
+        return self.local_token_counts
+
+
+def _build_lane_descriptor(
+    *,
+    ep_id: int,
+    moe_expert_parallel_size: int,
+    total_expert_num: int,
+    per_expert_tokens: Mapping[int, int],
+    router_topk: int,
+) -> EPLaneWorkload:
+    """Build one descriptor and densify its canonical local expert map."""
+
+    ep_id = _require_int(ep_id, "ep_id", minimum=0)
+    moe_expert_parallel_size = _require_int(
+        moe_expert_parallel_size,
+        "moe_expert_parallel_size",
+        minimum=1,
+    )
+    total_expert_num = _require_int(
+        total_expert_num,
+        "total_expert_num",
+        minimum=1,
+    )
+    router_topk = _require_int(router_topk, "router_topk", minimum=1)
+    if total_expert_num % moe_expert_parallel_size != 0:
+        raise ValueError(
+            "total_expert_num must be divisible by moe_expert_parallel_size"
+        )
+    if ep_id >= moe_expert_parallel_size:
+        raise ValueError("ep_id is outside moe_expert_parallel_size")
+    if not isinstance(per_expert_tokens, Mapping):
+        raise ValueError("per_expert_tokens must be a mapping")
+    width = total_expert_num // moe_expert_parallel_size
+    owned_ids = tuple(range(ep_id * width, (ep_id + 1) * width))
+    owned_id_set = set(owned_ids)
+    normalized: dict[int, int] = {}
+    for expert_id, token_count in per_expert_tokens.items():
+        if type(expert_id) is not int or expert_id < 0:
+            raise ValueError("lane expert IDs must be exact non-negative integers")
+        if type(token_count) is not int or token_count < 0:
+            raise ValueError(
+                "lane expert token counts must be exact non-negative integers"
+            )
+        if expert_id not in owned_id_set:
+            raise ValueError(
+                "lane workload contains an expert outside canonical ownership: "
+                f"ep_id={ep_id}, expert_id={expert_id}"
+            )
+        normalized[expert_id] = token_count
+    local_token_counts = tuple(normalized.get(expert_id, 0) for expert_id in owned_ids)
+    return EPLaneWorkload(
+        ep_id=ep_id,
+        moe_expert_parallel_size=moe_expert_parallel_size,
+        total_expert_num=total_expert_num,
+        owned_expert_ids=owned_ids,
+        local_token_counts=local_token_counts,
+        routed_token_count=sum(local_token_counts),
+        router_topk=router_topk,
+    )
+
+
+def split_global_expert_tokens_into_lanes(
+    global_per_expert_tokens: Mapping[int, int],
+    *,
+    total_expert_num: int,
+    moe_expert_parallel_size: int,
+    router_topk: int = 1,
+) -> tuple[EPLaneWorkload, ...]:
+    """Split a complete global expert map using canonical contiguous ownership."""
+
+    total_expert_num = _require_int(total_expert_num, "total_expert_num", minimum=1)
+    moe_expert_parallel_size = _require_int(
+        moe_expert_parallel_size,
+        "moe_expert_parallel_size",
+        minimum=1,
+    )
+    ownership = build_contiguous_expert_ownership(
+        total_expert_num,
+        moe_expert_parallel_size,
+    )
+    if not isinstance(global_per_expert_tokens, Mapping):
+        raise ValueError("global_per_expert_tokens must be a mapping")
+    if set(global_per_expert_tokens) != set(range(total_expert_num)):
+        raise ValueError(
+            "global expert map must contain every global expert exactly once"
+        )
+    for expert_id, token_count in global_per_expert_tokens.items():
+        if type(expert_id) is not int or expert_id < 0:
+            raise ValueError("global expert IDs must be exact non-negative integers")
+        if type(token_count) is not int or token_count < 0:
+            raise ValueError(
+                "global expert token counts must be exact non-negative integers"
+            )
+        if expert_id not in ownership:
+            raise ValueError(
+                "global expert ID is outside total_expert_num: "
+                f"expert_id={expert_id}"
+            )
+    per_ep: dict[int, dict[int, int]] = {
+        ep_id: {
+            expert_id: int(global_per_expert_tokens[expert_id])
+            for expert_id, owner_ep_id in ownership.items()
+            if owner_ep_id == ep_id
+        }
+        for ep_id in range(moe_expert_parallel_size)
+    }
+    return tuple(
+        _build_lane_descriptor(
+            ep_id=ep_id,
+            moe_expert_parallel_size=moe_expert_parallel_size,
+            total_expert_num=total_expert_num,
+            per_expert_tokens=per_ep[ep_id],
+            router_topk=router_topk,
+        )
+        for ep_id in range(moe_expert_parallel_size)
+    )
+
 
 def resolve_routing_details(
     routing_details: RoutingDetails,
@@ -294,6 +515,7 @@ def materialize_layer_ep_workload(
 
 
 __all__ = [
+    "EPLaneWorkload",
     "ExpertOwnership",
     "ExpertTokenMap",
     "LayerEPWorkload",
@@ -301,4 +523,5 @@ __all__ = [
     "build_contiguous_expert_ownership",
     "materialize_layer_ep_workload",
     "resolve_routing_details",
+    "split_global_expert_tokens_into_lanes",
 ]
