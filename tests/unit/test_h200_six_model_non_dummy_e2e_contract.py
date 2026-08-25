@@ -89,7 +89,10 @@ def test_six_model_contract_is_registry_derived() -> None:
     assert "time_stats.attn_pre_proj_qkv.median" in step3.linear_target_columns
     assert step3.profile_filenames[-2:] == ("moe.csv", "moe_kernel_only.csv")
     assert dict(step3.linear_tp_by_op)["attn_pre_proj"] == 8
-    assert dict(step3.linear_tp_by_op)["mlp_up_proj"] == 1
+    # Dense boundary layers use the dense FFN predictor domain (attention TP8)
+    # even though the model also contains routed MoE layers (MoE TP1/EP8).
+    assert dict(step3.linear_tp_by_op)["mlp_up_proj"] == 8
+    assert dict(step3.linear_tp_by_op)["share_expert_up_proj"] == 1
 
 
 def test_explicit_uniform_mode_selects_uniform_profile_rows() -> None:
