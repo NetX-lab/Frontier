@@ -2,6 +2,11 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Recorded the EP>1 aggregate/structural-MTP audit and opened the focused PDD attention-only layer-identity repair gate. |
+| 2026-08-26 | Completed the predictor-layer-identity audit; recorded RED/GREEN propagation evidence and the remaining commit/merge-readiness gates. |
+| 2026-08-26 | Implemented and verified the terminal MTP EP>1 physical-lane hook; recorded `178` focused passes and numeric evidence. |
+| 2026-08-26 | Confirmed the terminal MTP overshoot EP>1 RED and recorded the hook-based physical-lane repair handoff. |
+| 2026-08-26 | Completed the typed-trace observability migration with RED/GREEN evidence and committed it as `183cfd61`. |
 | 2026-08-26 | Recorded maintainer approval of the shared token-ledger repair and completed the docs-first implementation handoff. |
 | 2026-08-25 | Audited the implemented A' MTP seam versus generic shape replay and opened the maintainer decision gate; no shared-interface edit made. |
 | 2026-08-25 | Froze the A' RCA/design/plan before implementation and marked the existing Gate 2 probe as provisional. |
@@ -1367,3 +1372,125 @@ cache. Evidence is in `test_report_2026-08-21_a2_finite_lookup.md`.
 - **Result:** The documentation checkpoint is complete. The next code action
   is to run the existing typed-lane RED matrix, then finish and commit the
   predictor/communication/trace slices in dependency order.
+
+## 2026-08-26 - Typed-trace observability migration
+
+- **Status:** Complete; committed as `183cfd61`.
+- **Motivation:** Close the remaining production boundary where the EP trace
+  helper accepted a raw expert-token map even though scheduler and entity code
+  already owned an immutable `EPLaneWorkload` descriptor.
+- **Expectation:** The helper accepts only the typed descriptor, derives
+  `ep_id`, EP size, and the fixed-width map from it, and preserves the existing
+  log record shape and scheduler trace identity. Raw maps remain output views.
+- **Method:** Added
+  `tests/unit/test_typed_ep_trace_contract.py`, observed the intended RED
+  `TypeError` for the missing `lane_workload` keyword, migrated the helper and
+  all three production callers, then ran the focused trace/materialization
+  matrix.
+- **Result:** The RED test passed after the migration. Fresh verification
+  passed `168` tests; `py_compile` and `git diff --check` were clean. The
+  helper's production workload contract no longer accepts `per_expert_tokens`.
+
+## 2026-08-26 - Terminal MTP overshoot EP>1 RED
+
+- **Status:** RED confirmed; production edits remain pending.
+- **Motivation:** The real terminal metadata path must remain compatible with
+  the typed EP lane contract after PR17 conflict repair. A terminal synthetic
+  batch cannot carry a fabricated lane descriptor, so the test must expose the
+  missing physical seam before any hook implementation.
+- **Expectation:** The scheduler builder produces a terminal row with
+  `verify=[3]` and `terminal_verify=[[1]]`; the EP=2 MoE predictor then reaches
+  a narrow physical-lane hook that can materialize two participants and
+  aggregate their five phases.
+- **Method:** Added
+  `tests/unit/test_mtp_terminal_overshoot_ep_replay.py` using the real
+  `VLLMv1EngineReplicaScheduler._build_spec_decode_batch_metadata()` and a
+  non-dummy `SklearnMoEExecutionTimePredictor`. Corrected the fixture's
+  expected phase total from `27.0` to `25.0` (`attention=7`, lane maxima sum
+  `18`). Ran:
+
+  ```text
+  PYTHONPATH=$PWD python -m pytest -q -p no:cacheprovider \
+    tests/unit/test_mtp_terminal_overshoot_ep_replay.py
+  ```
+
+- **Observed result:** `1 failed`. Metadata assertions passed. The failure is
+  the expected production error from
+  `frontier/operators/families.py:375`:
+  `ValueError: expert-parallel all-to-all payload requires an EPLaneWorkload
+  descriptor`. The test reaches the target seam without profiling-cache,
+  model-schema, or fixture-construction errors.
+- **Next action:** Add the default terminal-row hook and MoE physical-lane
+  override described in `design.md`, then rerun this exact test before the
+  broader focused matrix.
+
+## 2026-08-26 - Terminal MTP physical-lane hook implementation
+
+- **Status:** Complete for the terminal hook sub-step; PR20/PR21
+  merge-readiness remains pending.
+- **Motivation:** Close the confirmed EP>1 MoE terminal replay failure without
+  putting scheduler identity or a fabricated lane descriptor into the generic
+  synthetic MTP `Batch`.
+- **Expectation:** Dense and EP=1 terminal rows keep the generic stage path;
+  EP>1 MoE rows use one shared attention/overhead probe and the existing typed
+  five-phase lane seam, with only per-layer physical phases scaled.
+- **Method:** Added the default `_predict_mtp_terminal_row_time_ms()` hook in
+  `sklearn_execution_time_predictor.py`; extracted the reusable typed-lane
+  aggregation helper and added the EP>1 MoE override in
+  `sklearn_moe_execution_time_predictor.py`. Corrected the terminal regression
+  fixture to carry the real `moe_expert_parallel_size=2` topology field.
+- **Result:** The terminal replay returns `25.0 ms` from `7.0 ms` shared
+  attention/total scope plus phase maxima `(2, 2, 4, 4, 6) ms`. Lane IDs are
+  `[0, 1]`, local expert widths are `[4, 4]`, and routed counts sum to `2`.
+  A `num_layers=3` direct probe returns `61.0 ms` and sends `num_layers=1`
+  to the attention probe. EP=1 and dense fallbacks each return `5.0 ms` via
+  one generic stage call. The terminal/structural/typed subset passes `32`
+  tests; the full focused matrix passes `178` tests.
+
+## 2026-08-26 - Predictor layer-identity propagation audit
+
+- **Status:** Complete; production and regression changes are ready for the
+  dedicated sub-step commit.
+- **Motivation:** The public MoE predictor already received a global
+  `layer_id`, but the internal execution-time seam dropped it. Attention probes
+  defaulted to layer zero and terminal MTP replay used `pipeline_stage`, which
+  can select the wrong layer for mixed-layer or non-zero-layer requests.
+- **Expectation:** Preserve `pipeline_stage`/`stage_id` for stage-local work and
+  forward the explicit global `layer_id` through routing lookup, internal
+  execution-time prediction, attention prediction, and the terminal MTP hook.
+  Legacy internal callers without a layer identity retain the documented
+  compatibility default.
+- **Method:** Added `layer_id: int = 0` to
+  `_get_execution_time_internal()`, forwarded the public argument, replaced
+  the fixed attention layer and terminal-stage substitution, and added
+  propagation assertions in
+  `tests/unit/test_moe_predictor_layer_id_semantics.py`. The RED assertion
+  first failed with `KeyError: 'layer_id'` because the internal call omitted
+  the keyword.
+- **Result:** The layer-semantics, terminal-MTP, and structural-MTP subset
+  passed `32` tests after the repair. The focused report records the fresh
+  combined matrix, compile, whitespace, and subsequent PR20/PR21 audit gates.
+  No identity inference, fallback scaling, or second predictor wrapper was
+  introduced.
+
+## 2026-08-26 - Boundary audit and PDD attention-only identity gap
+
+- **Status:** Audit complete; SCOPE-032 is the next TDD sub-step.
+- **Motivation:** Close the remaining identity seam before the local PR20/PR21
+  merge-readiness audit. The public PDD scheduler calls already carry a global
+  layer identity, so the helper must preserve it rather than silently querying
+  layer zero.
+- **Method:** Read the routed EP operator payload path and directly constructed
+  aggregate `CommPayloadContext` inputs for both all-to-all directions. Both
+  failed at the existing payload boundary with
+  `ValueError: expert-parallel all-to-all payload requires an EPLaneWorkload
+  descriptor`, confirming that the operator contract already owns this guard.
+  Enumerated the structural-MTP registry/configs: local entries loaded with
+  `num_layers=48`, `2`, and `20`, all with `layer0_is_moe=True`; two names
+  failed explicitly because their local JSON paths are absent.
+- **Expectation:** Add one focused regression that sends a non-zero global
+  `layer_id` through `predict_stage_execution_time(..., include_ffn=False)` and
+  observes the current helper's `layer_id=0` lookup. Then propagate that one
+  parameter without changing stage, communication, or MTP ownership.
+- **Result:** The audit produced no justification for an extra EP guard or
+  speculative config asset. Production repair and RED evidence remain pending.

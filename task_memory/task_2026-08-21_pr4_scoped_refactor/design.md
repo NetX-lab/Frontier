@@ -2,6 +2,10 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Added the PDD attention-only identity seam contract and the EP>1 aggregate/structural-MTP audit boundaries. |
+| 2026-08-26 | Added the global-layer versus pipeline-stage identity invariant and the predictor propagation contract. |
+| 2026-08-26 | Closed the terminal MTP physical-lane seam with a shared one-layer attention probe and lane-wise barrier aggregation. |
+| 2026-08-26 | Defined the terminal MTP overshoot physical-lane hook and its shared-phase/lane-barrier aggregation contract. |
 | 2026-08-26 | Recorded the pre-implementation audit boundary for the remaining typed-lane, predictor, communication, MTP, and trace changes. |
 | 2026-08-26 | Documented the verified MONOLITHIC initial-decode scheduler frontier boundary. |
 | 2026-08-26 | Added the approved canonical MTP/MoE token ledger and shared compute-contract repair design. |
@@ -76,6 +80,32 @@ Batch.total_num_tokens
 
 No consumer may substitute the assignment count for the pre-routing count, or
 add planned metadata to a batch width that already contains verification rows.
+
+### Layer identity propagation invariant
+
+`pipeline_stage`/`stage_id` and `layer_id` have separate owners and meanings:
+
+| Identity | Meaning | Owner | Valid consumers |
+|----------|---------|-------|-----------------|
+| `stage_id` / `pipeline_stage` | Pipeline partition used for stage-local communication and scheduling | scheduler/predictor stage context | stage communication, stage boundary and pipeline overhead |
+| `layer_id` | Global transformer-layer identity used for mixed-layer classification, routing lookup, attention rows, and terminal MTP policy | public predictor call and model configuration | `is_moe_layer`, routing materialization, attention prediction, terminal-row hook |
+
+The propagation contract is explicit:
+
+```text
+predict_stage_execution_time(layer_id)
+    -> _get_moe_tokens_input(layer_id)
+    -> _get_execution_time_internal(layer_id)
+        -> predict_attention_layer_time(layer_id)
+        -> _get_mtp_terminal_overshoot_time(layer_id)
+```
+
+The internal method keeps a default `layer_id=0` only for legacy internal
+post-attention callers that genuinely lack a layer identity. A caller that has
+the global identity passes it explicitly. The implementation never derives a
+layer from `pipeline_stage`, a name prefix, or an entity type. This preserves
+the PR17 stage/KV identity boundary while making layer-aware predictor paths
+correct for non-zero and mixed layers.
 
 ### MONOLITHIC initial-decode frontier boundary
 
@@ -506,3 +536,80 @@ The implementation must preserve the post-PR17 scheduler ownership of stage,
 KV, admission, barrier, and stale-wave identity. Any change that introduces a
 second mutable map owner, reconstructs a physical lane from `len(map)`, or
 uses a caller-specific token-width bypass violates this design.
+
+### Terminal MTP overshoot physical-lane seam (approved continuation)
+
+Terminal overshoot replay has two different responsibilities that remain
+separate:
+
+1. The generic target-embedded MTP adapter owns terminal token vectors,
+   copied request progress, and speculative metadata. It continues to create a
+   short-lived `Batch` because the existing attention and metadata predictor
+   contract consumes that shape. The object never enters scheduler admission,
+   an event queue, or an EP participant set.
+2. The MoE predictor owns physical EP timing. It receives a source batch and
+   explicit `stage_id`/`pipeline_stage`, `cluster_type`, `layer_id`, and
+   `num_layers`; it obtains physical lanes only from
+   `LayerEPWorkload.lane(ep_id)`.
+
+The terminal-row hook follows this composition:
+
+```text
+terminal synthetic Batch
+    -> dense/default terminal-row hook
+    -> MoE override for an actual EP>1 MoE layer
+         -> attention-only stage prediction (shared attention, pipeline, CPU)
+         -> LayerEPWorkload materialization
+         -> predict_moe_lane_phase_times(one EPLaneWorkload per participant)
+         -> max each of the five physical phases
+         -> scale only per-layer phase work by num_layers
+```
+
+The attention-only result supplies the shared attention model time, one
+pipeline boundary, and the batch-level CPU overhead. The five phase values
+(`pre-dispatch`, `dispatch`, `routed compute`, `combine`, `post-combine`) are
+already the canonical physical decomposition. Their lane-wise maxima model the
+dispatch/combine barrier and preserve zero-routed lanes as participants. A
+zero-routed lane therefore makes no positive-load shuffling or grouped-GEMM
+lookup, while shared pre/post phases still execute.
+
+The hook returns the same total-time unit as the existing generic terminal
+path. It does not fabricate an `EPLaneWorkload`, pass a raw expert map, create
+an `EPBatchGroup`, or duplicate the phase decomposition. `EP=1` keeps the same
+typed lane contract and only observes zero physical collective cost; dense and
+non-MoE layers use the default hook. `stage_id` remains the pipeline-stage
+identity and `layer_id` remains the predictor routing-layer identity; the
+implementation never substitutes one for the other.
+
+The shared helper deliberately asks the attention-only predictor for
+`num_layers=1`. That result contains one shared attention scope, one pipeline
+boundary, and one batch-level CPU/overhead scope. The terminal caller then
+multiplies only the five physical lane maxima by its requested `num_layers`.
+The structural MTP caller consumes the same decomposition with
+`model_time_ms`, preserving its existing proposer accounting; the terminal
+caller consumes `total_time` so its CPU/overhead contract matches the generic
+terminal path without multiplying that overhead by layer count.
+
+## Boundary audit and PDD identity seam (2026-08-26)
+
+The existing communication operator contract remains the only admission
+boundary for routed EP traffic. An aggregate `CommPayloadContext` is valid for
+attention-only, dense, and shared-domain work; an EP>1 routed all-to-all
+dispatch or combine payload requires an explicit `EPLaneWorkload` and fails at
+payload construction when it is absent. Callers do not add a second guard or
+reconstruct a lane from a raw map.
+
+The structural MTP registry audit is a configuration-coverage check, not a new
+runtime policy. The three locally present configs load their declared layer
+counts (`48`, `2`, and `20`) and identify layer zero as MoE. Two registry names
+have no local structural JSON and continue to fail explicitly with the existing
+missing-path error. The repair does not invent configuration assets or broaden
+the registry.
+
+For PDD shared-domain attention-only prediction, the public
+`predict_stage_execution_time()` `layer_id` is the global transformer-layer
+identity. `_predict_attention_only_stage_execution_time()` receives that value
+explicitly and forwards it to `predict_attention_layer_time()`. Its optional
+`layer_id=0` compatibility default applies only to direct legacy helper calls
+that have no real identity; `stage_id` remains pipeline placement and is never
+used to derive a layer.

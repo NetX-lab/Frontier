@@ -2,6 +2,11 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Opened SCOPE-032 for the PDD attention-only helper dropping the caller's global layer identity; recorded the EP>1 all-to-all and structural-MTP configuration audit evidence. |
+| 2026-08-26 | Resolved SCOPE-031 by forwarding the global layer identity through the complete MoE predictor path and recorded RED/GREEN evidence. |
+| 2026-08-26 | Resolved SCOPE-030 with the typed terminal-row hook, physical lane barriers, and focused numeric verification. |
+| 2026-08-26 | Opened the terminal MTP overshoot EP>1 descriptor gap and recorded the approved hook-based repair boundary. |
+| 2026-08-26 | Resolved SCOPE-029 by migrating the EP trace helper to the typed descriptor contract. |
 | 2026-08-26 | Opened the remaining typed-lane implementation audit and recorded the trace raw-map boundary for resolution. |
 | 2026-08-26 | Closed the MONOLITHIC initial-decode boundary audit with direct Request/scheduler probe evidence. |
 | 2026-08-26 | Recorded the approved MTP/MoE token ledger, the compute-helper double-count RCA, and the structural verification-shape repair gate. |
@@ -765,24 +770,163 @@
 
 ### SCOPE-029 - Remaining typed-lane implementation must close the raw-map trace boundary
 
-- **Status:** Open implementation audit; no additional design choice is
-  required.
-- **Observed state:** The scheduler and metrics paths already carry an
-  `EPLaneWorkload`, while the direct event trace call still passes
+- **Status:** Resolved by commit `183cfd61` on 2026-08-26.
+- **Observed state:** The scheduler and metrics paths already carried an
+  `EPLaneWorkload`, while the direct event trace call passed
   `dict(batch.per_expert_tokens)` into `_log_ep_workload_trace`.
 - **Root cause:** The descriptor migration moved ownership of physical workload
   data, but the logging helper's parameter shape remained the old
   serialization-oriented map contract. Keeping that shape in a production
   helper permits future callers to bypass lane identity and topology checks.
-- **Required resolution:** Make the production trace helper consume the typed
-  descriptor (or a typed event payload that contains it). Build the raw map
-  only immediately before serialization/logging, where it is an output view.
-  Preserve scheduler-owned stage, KV, operation, and barrier identity.
-- **Verification gate:** A focused trace test must prove descriptor identity is
-  preserved, the emitted map is a read-only projection, and no production trace
-  caller accepts a raw expert-token map as its workload input.
+- **Resolution:** The helper now consumes `EPLaneWorkload`, derives all physical
+  lane fields from the descriptor, and builds the raw map only inside the
+  logging boundary. PREFILL, DECODE, and direct event callers pass the typed
+  descriptor while scheduler-owned stage, KV, operation, and barrier identity
+  remain unchanged.
+- **Verification:** `test_typed_ep_trace_contract.py` first failed on the old
+  signature and then passed after the migration. The fresh trace/materializer
+  matrix passed `168` tests, and a production search found no raw-map trace
+  caller.
 - **Scope:** This is a localized continuation of the approved A' plan. It does
   not expand the MTP interface or change canonical profiling data.
+
+### SCOPE-030 - Terminal MTP overshoot replay lacks a physical EP lane descriptor
+
+- **Status:** Resolved by the narrow typed terminal-row hook and focused
+  regression in `tests/unit/test_mtp_terminal_overshoot_ep_replay.py`.
+- **Observed production chain:**
+  `VLLMv1EngineReplicaScheduler._build_spec_decode_batch_metadata()` emits a
+  terminal row, `_get_mtp_terminal_overshoot_time()` constructs a
+  scheduler-independent terminal `Batch`, and
+  `SklearnExecutionTimePredictor._get_mtp_terminal_overshoot_time()` calls
+  `predict_stage_execution_time()`. On an EP=2 MoE predictor this reaches
+  `_predict_expert_parallel_phase_operator_times()` and the canonical
+  `expert_parallel_alltoall_*` payload builders.
+- **Direct evidence:** A real scheduler metadata probe produced
+  `verify=[3]`, `terminal_verify=[[1]]`, `planned=[2,1]`, and a terminal row.
+  The focused non-dummy EP=2 regression then failed at
+  `frontier/operators/families.py:375` with
+  `ValueError: expert-parallel all-to-all payload requires an EPLaneWorkload
+  descriptor`. The failure occurs after metadata construction and before any
+  positive-load lane model lookup; it is not a profiling-cache or topology
+  configuration failure.
+- **Root cause:** The generic terminal shape adapter intentionally creates a
+  short-lived `Batch` carrying token vectors and copied request progress, but
+  it does not and must not carry scheduler-owned EP lane identity. The MoE
+  predictor's normal EP>1 path now correctly requires a typed physical lane,
+  so terminal replay crosses the physical communication seam without the
+  descriptor that identifies the participant and its local expert domain.
+- **Impact:** EP=1 and dense terminal replay continue to use the generic path,
+  while EP>1 MoE terminal replay fails late. Adding a fake descriptor to the
+  terminal `Batch` would create a second physical-workload owner, select an
+  arbitrary lane for an aggregate row, and violate the approved narrow A'
+  boundary.
+- **Rejected repair:** Passing a raw expert map, constructing an
+  `EPBatchGroup`, or attaching a fabricated lane to the synthetic `Batch`
+  would reintroduce topology inference and scheduler identity into the
+  generic MTP adapter. A second terminal-only MoE phase implementation would
+  also duplicate the already verified lane/barrier aggregation.
+- **Resolution:** Added `_predict_mtp_terminal_row_time_ms()` as the default
+  dense hook. `SklearnMoEExecutionTimePredictor` overrides it only for an
+  actual supported MONOLITHIC/DECODE MoE layer with EP>1. The override runs a
+  single-layer attention-only probe, materializes the canonical
+  `LayerEPWorkload`, calls `predict_moe_lane_phase_times()` for every physical
+  participant, and sums the five lane-wise maxima. The terminal result uses
+  the shared probe's `total_time` once; only physical per-layer phases are
+  multiplied by `num_layers`. Structural MTP replay reuses the same helper but
+  retains its model-time semantics.
+- **Acceptance evidence:** The real scheduler metadata path produces
+  `verify=[3]`, `terminal_verify=[[1]]`, and one terminal row. The EP=2
+  regression invokes lane IDs `[0, 1]`, local expert widths `[4, 4]`, routed
+  counts summing to `2`, phase maxima `(2, 2, 4, 4, 6) ms`, and returns
+  `25.0 ms` (`7 + 18`). A direct `num_layers=3` probe returns `61.0 ms`
+  (`7 + 3*18`) while the attention probe receives `num_layers=1`; EP=1 and
+  dense fallback probes each preserve one generic stage call and `5.0 ms`.
+  Existing structural MTP replay remains `29.0 ms`. No raw map, fabricated
+  descriptor, or synthetic `EPBatchGroup` enters the predictor.
+
+### SCOPE-031 - MoE predictor loses global layer identity at an internal seam
+
+- **Status:** Resolved in the current integration worktree; the production
+  and regression changes remain pending their dedicated sub-step commit.
+- **Observed call chain:** The public
+  `predict_stage_execution_time(..., stage_id, layer_id=17)` entry point already
+  used `layer_id=17` for layer classification and routing lookup. Before this
+  repair, `_get_execution_time_internal()` did not receive that identity,
+  attention probes used a hard-coded `layer_id=0`, and the terminal MTP hook
+  received `pipeline_stage` instead of the global layer identity.
+- **Root cause:** Pipeline-stage identity and transformer-layer identity are
+  independent dimensions. The internal predictor seam dropped the explicit
+  global layer argument, so a non-zero global layer or a mixed-layer model could
+  query the attention and terminal paths for the wrong layer even though the
+  outer MoE routing decision used the correct one.
+- **Impact:** A mixed-layer or non-zero-layer request could select incorrect
+  attention profiling rows, terminal MTP layer policy, or layer-specific
+  routing data. The defect is semantic and can remain numerically plausible,
+  which makes a stage-only smoke test insufficient.
+- **Rejected repairs:** Deriving `layer_id` from `pipeline_stage`, changing
+  callers to pass the stage as the layer, or adding a model-name/layer prefix
+  fallback would collapse two identities and violate the post-PR17 ownership
+  boundary. A second layer-specific predictor wrapper would duplicate the
+  existing internal contract.
+- **Resolution:** Add a compatibility-defaulted `layer_id` parameter to
+  `_get_execution_time_internal()`, pass the public entry point's explicit
+  global identity into it, use that identity for attention prediction, and
+  pass it to the terminal MTP hook. Existing internal post-attention callers
+  retain the documented layer-zero default until they carry a real identity;
+  no caller infers identity from a name or stage.
+- **RED/GREEN evidence:** The new propagation regression first failed because
+  the internal call omitted `layer_id` (`KeyError: 'layer_id'`). After the
+  focused repair, the layer-semantics, terminal-MTP, and structural-MTP subset
+  passed `32` tests. The fresh combined A' matrix is recorded in
+  `test_report_2026-08-26_terminal_mtp_ep_repair.md`.
+
+### SCOPE-032 - PDD attention-only helper drops the caller's global layer identity
+
+- **Status:** Open; the focused TDD repair is the next implementation
+  sub-step. The current helper still hard-codes `layer_id=0`.
+- **Observed call chain:** The PREFILL/DECODE cluster schedulers call
+  `predict_stage_execution_time(..., include_ffn=False, layer_id=<global
+  layer>)` for the attention prefix. The public disaggregation predictor then
+  calls `_predict_attention_only_stage_execution_time()`, whose attention
+  lookup currently passes `layer_id=0` unconditionally.
+- **Root cause:** The private attention-only helper predates the explicit
+  global-layer contract and omitted the caller's identity when the helper was
+  introduced. `stage_id`/`pipeline_stage` cannot repair this omission because
+  they identify pipeline placement rather than a transformer layer.
+- **Impact:** A non-zero pipeline stage or mixed-layer model can select a valid
+  but wrong attention profiling row. The result remains numerically plausible,
+  so a stage-only smoke test does not expose the semantic error.
+- **Boundary:** Add `layer_id` to the private helper, pass the public
+  `predict_stage_execution_time()` value explicitly, and retain a compatibility
+  default only for direct legacy internal calls that have no global identity.
+  Keep communication/overhead ownership unchanged, preserve the public method
+  signature, and do not infer a layer from stage identity or add a wrapper.
+- **RED/GREEN gate:** A focused regression must record a non-zero global layer
+  reaching `predict_attention_layer_time()` and fail before the production
+  propagation edit. The repaired test must pass together with the existing
+  disaggregation and layer-identity matrices.
+
+### Audit-2026-08-26 - EP>1 all-to-all and structural-MTP boundaries
+
+- **EP>1 aggregate entry audit:** Directly constructing an aggregate
+  `CommPayloadContext` and invoking both
+  `expert_parallel_alltoall_dispatch` and
+  `expert_parallel_alltoall_combine` fails at payload construction with
+  `ValueError: expert-parallel all-to-all payload requires an EPLaneWorkload
+  descriptor`. Aggregate attention-only, dense, and shared-domain paths remain
+  valid; routed EP>1 paths must carry the typed physical lane. This confirms
+  the existing operator contract is the single fail-fast boundary and no
+  duplicate caller-side guard is warranted.
+- **Structural-MTP configuration audit:** The local registry/config probe
+  loaded `qwen3-a3b-30b-moe` (`num_layers=48`),
+  `qwen3-next-80b-a3b-instruct-reduced-l2` (`num_layers=2`), and
+  `qwen3-next-80b-a3b-instruct-reduced-l20` (`num_layers=20`); each has
+  `layer0_is_moe=True`. `tiny-random/qwen3-next-moe` and
+  `Qwen/Qwen3-Next-80B-A3B-Instruct` lack their local structural JSON and
+  fail explicitly with the missing-path `ValueError`. This is an existing
+  registry/config coverage gap, not a typed-lane regression; no guessed JSON
+  asset belongs in the current repair.
 
 ## Explicitly deferred questions
 

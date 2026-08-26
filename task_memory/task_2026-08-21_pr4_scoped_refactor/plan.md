@@ -2,6 +2,11 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Added the EP>1 aggregate/structural-MTP audit gate and the focused PDD attention-only layer-identity repair sub-step. |
+| 2026-08-26 | Added and completed the independent predictor-layer-identity audit after the terminal MTP hook. |
+| 2026-08-26 | Completed the terminal MTP EP>1 hook, focused GREEN matrix, numeric report, and implementation commits; merge-readiness remains pending. |
+| 2026-08-26 | Added the terminal MTP overshoot EP>1 RED/GREEN hook sub-step and its numeric acceptance gates. |
+| 2026-08-26 | Completed and committed the typed-trace observability sub-step as `183cfd61`; predictor-interface audit is next. |
 | 2026-08-26 | Recorded the implementation handoff audit and promoted the trace-helper migration to the next concrete sub-step. |
 | 2026-08-26 | Closed the MONOLITHIC initial-decode boundary audit and added its focused regression gate. |
 | 2026-08-26 | Added the approved token-ledger repair sub-steps, RED/GREEN gates, and MONOLITHIC boundary audit. |
@@ -159,7 +164,7 @@ docs-freeze
      generic shape adapter.
    - Commit: one MTP-path commit.
 
-9. **`typed-trace-observability`**
+9. **`typed-trace-observability`** (completed in `183cfd61`)
    - Files: `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py`,
      `frontier/events/replica_stage_schedule_event.py`, and focused trace tests.
    - Boundary: pass `EPLaneWorkload` to the trace helper and create the raw-map
@@ -261,15 +266,15 @@ descriptor-contract-tests
   -> predictor-interface
   -> communication-consumers
   -> MTP-pure-path
-  -> typed-trace-observability
+  -> typed-trace-observability (complete: `183cfd61`)
   -> focused-verification
   -> PR20/PR21 merge-readiness
 ```
 
-The worktree contains the provisional implementation for these sub-steps;
-each dirty slice must be independently re-vetted against the design and then
-committed only after its focused RED/GREEN gate passes. The raw-map trace call
-is the currently identified production boundary still requiring migration.
+The worktree contains provisional implementation for the remaining dirty
+sub-steps; each slice must be independently re-vetted against the design and
+committed only after its focused RED/GREEN gate passes. The raw-map trace
+boundary is closed; predictor-interface audit is the next concrete gate.
 
 **Current phase:** PR #20 remains maintainer-approved, open, and unmerged at
 `18d1a23e`. PR #21 is published at `8cc267ea`, based on PR #20, and remains
@@ -766,3 +771,93 @@ gates.
   body now reports head `8cc267ea`, the warning/union/all-target evidence, and
   the Claude timeout as inconclusive. Both PRs remain `OPEN/CLEAN` and
   unmerged.
+
+## Terminal MTP overshoot continuation (SCOPE-030)
+
+### Dependency map
+
+```text
+terminal-mtp-red
+  -> terminal-row-hook
+  -> focused-terminal-green
+  -> predictor-layer-identity-audit
+  -> focused-report-and-commit
+  -> PR20/PR21 merge-readiness
+```
+
+### Sub-steps and gates
+
+12. **`terminal-mtp-red`** (completed)
+    - File: `tests/unit/test_mtp_terminal_overshoot_ep_replay.py`.
+    - Boundary: exercise the real scheduler metadata builder and the real
+      non-dummy EP=2 MoE predictor path. Assert terminal metadata, physical
+      lane expectations, stage/layer propagation, and lane assignment
+      conservation.
+    - Evidence: after correcting the fixture's phase arithmetic, the test
+      fails only with the missing `EPLaneWorkload` descriptor error from the
+      canonical all-to-all payload builder.
+
+13. **`terminal-row-hook`** (completed)
+    - Files: `frontier/execution_time_predictor/sklearn_execution_time_predictor.py`
+      and `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`.
+    - Boundary: add a default dense terminal-row hook and a MoE override that
+      reuses `predict_moe_lane_phase_times()` and `LayerEPWorkload.lane()`. Keep
+      the generic synthetic batch as a scheduler-independent shape adapter.
+    - Contract: shared attention/pipeline/CPU scope is evaluated once;
+      physical five-phase lane values are aggregated with `max()` per phase;
+      `num_layers` scales only per-layer physical phases; `stage_id` and
+      `layer_id` remain distinct.
+    - Forbidden: raw expert maps, fabricated descriptors, synthetic
+      `EPBatchGroup`, a second phase aggregator, or a new shared MTP descriptor.
+
+14. **`focused-terminal-green`** (completed)
+    - Run the terminal regression together with the existing structural MTP,
+      typed-lane, predictor-effective-token, communication, and disaggregation
+      matrices listed in `progress.md`.
+    - Record terminal row count, verification width, lane IDs/local widths,
+      routed counts, zero-lane model-call counts, five phase values, phase-wise
+      maxima, total time, and stage/layer identity in the task test report.
+    - **Evidence:** The terminal regression and structural/typed-lane matrix
+      pass (`32 passed` for the terminal/structural/typed subset; `178 passed`
+      for the full focused matrix). Numeric terminal evidence is recorded in
+      `test_report_2026-08-26_terminal_mtp_ep_repair.md`.
+
+15. **`predictor-layer-identity-audit`** (completed)
+    - Files: `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`
+      and `tests/unit/test_moe_predictor_layer_id_semantics.py`.
+    - Boundary: preserve separate `pipeline_stage` and global `layer_id`
+      identities through the public predictor, internal execution-time probe,
+      attention probe, and terminal MTP hook. Keep the internal layer-zero
+      default only for legacy callers without a real global layer identity.
+    - RED: assert that a non-zero public `layer_id` reaches the internal method
+      and terminal hook; the pre-fix internal call omits the keyword.
+    - GREEN: use the explicit layer identity for attention and terminal calls;
+      do not derive it from stage identity or add a fallback wrapper.
+    - Evidence: the RED regression observed `KeyError: 'layer_id'`; the focused
+      layer/terminal/structural subset passed `32` tests after the repair.
+
+16. **`all-to-all-structural-MTP-audit`** (completed)
+    - Boundary: audit the existing EP>1 payload admission and local
+      structural-MTP registry/config coverage without adding a caller-side
+      guard or guessed configuration asset.
+    - Evidence: aggregate dispatch and combine both fail at payload
+      construction without `EPLaneWorkload`; configs load with layer counts
+      `48/2/20`, while two missing JSON paths fail explicitly.
+
+17. **`pdd-attention-only-identity-repair`** (in progress)
+    - Files: `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`
+      and `tests/unit/test_sklearn_disaggregation_execution_time_predictor.py`.
+    - RED: call the real public attention-only path with a non-zero global
+      `layer_id` and assert the attention lookup receives it; observe the
+      current hard-coded-zero failure.
+    - GREEN: add one explicit private-helper parameter and forward the public
+      identity. Preserve the public signature, stage/communication behavior,
+      and the compatibility default for callers without an identity.
+    - Forbidden: stage-to-layer inference, fallback scaling, wrapper layers,
+      or unrelated predictor refactoring.
+
+18. **`focused-report-and-commit`** (pending the identity repair)
+    - Update the task report with the layer-identity evidence, run the fresh
+    combined A' matrix, compileall, documentation gates, and `git diff --check`.
+    - Commit each coherent production/test/docs sub-step separately before the
+      local PR20/PR21 merge-readiness audit. No remote operation is included.

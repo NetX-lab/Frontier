@@ -2,6 +2,11 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Added CP-40 for the EP>1 aggregate/structural-MTP audit and the open PDD attention-only identity seam. |
+| 2026-08-26 | Added CP-39 for the predictor global-layer identity propagation audit and RED/GREEN verification. |
+| 2026-08-26 | Recorded CP-38 terminal MTP EP>1 hook GREEN evidence and numeric phase/layer verification. |
+| 2026-08-26 | Recorded CP-37 terminal MTP overshoot EP>1 RCA, RED evidence, and the hook-based remediation boundary. |
+| 2026-08-26 | Reviewed and accepted the descriptor-backed EP trace helper migration at commit `183cfd61`. |
 | 2026-08-26 | Recorded the implementation handoff review and the raw-map trace boundary that must close before merge readiness. |
 | 2026-08-26 | Recorded the MONOLITHIC initial-decode boundary audit and focused regression decision. |
 | 2026-08-25 | Recorded the post-implementation MTP scope audit, trace ownership evidence, and escalation gate. |
@@ -1044,3 +1049,137 @@ PR20 base. No remote state was changed.
   behavior was changed during this documentation checkpoint.
 - **Final Status:** **PASS for docs; implementation and focused verification
   remain in progress.**
+
+## CP-36 - Typed-trace observability migration
+
+- **Target Component/Phase:** `typed-trace-observability`.
+- **Reviewer Agent Identity:** `/root` (direct implementation and focused
+  verification).
+- **Inspected Artifacts:**
+  `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py`,
+  `frontier/events/replica_stage_schedule_event.py`,
+  `tests/unit/test_typed_ep_trace_contract.py`, and all production call sites
+  found by the repository-wide trace search.
+- **Identified Issues/Anomalies:** The helper's old signature accepted
+  `per_expert_tokens: Dict[int, int]`, allowing a caller to bypass typed lane
+  identity and topology validation. The direct event path still projected the
+  map before entering the helper.
+- **Remediation/Verification Code Actions Taken:** Changed the helper to
+  require `EPLaneWorkload`, derive `ep_id`, `moe_expert_parallel_size`, and the
+  serialization map internally, and migrated PREFILL, DECODE, and direct
+  DECODE_FFN callers. Added the minimal contract regression and kept the
+  legacy log field as an output projection.
+- **Verification:** The RED test first failed with the expected unexpected
+  keyword error. Fresh GREEN verification passed `168` tests across the trace,
+  EP materialization, and non-dummy MoE matrix; module compilation and
+  `git diff --check` passed. Commit `183cfd61` contains only this sub-step.
+- **Final Status:** **PASS.** No production trace helper accepts a raw map as
+  its workload input; the next gate is predictor-interface audit.
+
+## CP-37 - Terminal MTP overshoot EP>1 RED and repair design
+
+- **Target Component/Phase:** `terminal-mtp-red` before the physical-lane hook.
+- **Reviewer Agent Identity:** `/root` (direct production call-chain audit and
+  TDD RED verification).
+- **Inspected Artifacts:**
+  `VLLMv1EngineReplicaScheduler._build_spec_decode_batch_metadata()`,
+  `SklearnExecutionTimePredictor._get_mtp_terminal_overshoot_time()`,
+  `SklearnMoEExecutionTimePredictor._get_execution_time_internal()`,
+  `predict_moe_lane_phase_times()`, `LayerEPWorkload.lane()`, the canonical EP
+  payload builder, and `tests/unit/test_mtp_terminal_overshoot_ep_replay.py`.
+- **Identified Issues/Anomalies:** Real terminal metadata produces a row, but
+  the generic terminal `Batch` has no physical EP lane descriptor. EP>1 MoE
+  replay therefore reaches the all-to-all payload builder and fails with
+  `ValueError` before physical lane aggregation. The fixture's phase values
+  sum to `25.0ms` (`attention=7.0`, phase maxima `2+2+4+4+6=18.0`), not
+  `27.0ms`.
+- **Remediation/Verification Code Actions Taken:** Corrected the RED expected
+  value, reran the real test, and recorded the failure as the intended seam
+  signal. The approved repair is a default terminal-row hook plus a MoE
+  override that reuses the existing typed lane phase API, preserves
+  `stage_id`/`layer_id`, scales only per-layer phases by `num_layers`, and
+  leaves the generic scheduler-independent shape adapter unchanged.
+- **Verification:** Metadata assertions passed; one focused test failed with
+  exactly `expert-parallel all-to-all payload requires an EPLaneWorkload
+  descriptor`. No cache, schema, or fixture setup error preceded the target
+  failure. Production edits are intentionally pending this RED checkpoint.
+- **Final Status:** **PASS for RED/design gate; implementation pending.**
+
+## CP-38 - Terminal MTP EP>1 physical-lane hook GREEN
+
+- **Target Component/Phase:** `terminal-row-hook` and
+  `focused-terminal-green`.
+- **Reviewer Agent Identity:** `/root` (direct implementation and fresh
+  verification).
+- **Inspected Artifacts:**
+  `sklearn_execution_time_predictor.py`,
+  `sklearn_moe_execution_time_predictor.py`,
+  `tests/unit/test_mtp_terminal_overshoot_ep_replay.py`, the structural MTP
+  replay tests, and the typed EP predictor contract tests.
+- **Identified Issues/Anomalies:** The RED fixture lacked the real
+  `moe_expert_parallel_size` field and stopped in configuration validation
+  before reaching the intended seam. No production fallback was added; the
+  fixture was corrected to match `ReplicaConfig`.
+- **Remediation/Verification Code Actions Taken:** Added the default
+  terminal-row hook, extracted one shared typed-lane phase aggregator, and
+  added the EP>1 MoE override. The helper materializes only
+  `LayerEPWorkload.lane(ep_id)`, calls the canonical five-phase API for every
+  participant, and keeps the attention probe at one layer so CPU/pipeline
+  scope is not multiplied.
+- **Verification:** Terminal replay returns `25.0 ms`; lane IDs `[0, 1]`,
+  local widths `[4, 4]`, routed sum `2`, phase maxima `(2, 2, 4, 4, 6) ms`.
+  `num_layers=3` returns `61.0 ms` with attention probe `num_layers=1`.
+  EP=1 and dense fallbacks each return `5.0 ms`. The terminal/structural/typed
+  subset passes `32` tests and the complete focused matrix passes `178` tests;
+  compile and whitespace checks pass.
+- **Final Status:** **PASS.** The terminal physical-lane seam is closed;
+  focused report and sub-step commits remain before PR20/PR21 merge-readiness.
+
+## CP-39 - Predictor global-layer identity propagation audit
+
+- **Target Component/Phase:** `predictor-layer-identity-audit` after the
+  terminal MTP physical-lane hook.
+- **Reviewer Agent Identity:** `/root` (direct call-chain audit and focused
+  TDD verification; no independent review conclusion is claimed).
+- **Inspected Artifacts:**
+  `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`,
+  `frontier/execution_time_predictor/sklearn_execution_time_predictor.py`,
+  `tests/unit/test_moe_predictor_layer_id_semantics.py`, the terminal MTP
+  regression, and the structural MTP replay tests.
+- **Identified Issues/Anomalies:** The public predictor accepted the real global
+  `layer_id`, but the internal execution-time method previously omitted it;
+  attention probes therefore used layer zero and terminal replay substituted
+  `pipeline_stage`. Stage identity and layer identity are distinct in the
+  post-PR17 contract.
+- **Remediation/Verification Code Actions Taken:** Added a compatibility-
+  defaulted internal `layer_id`, forwarded the public value, and used it for
+  attention and terminal MTP calls. The RED propagation assertion failed with
+  `KeyError: 'layer_id'`; the repaired layer/terminal/structural subset passed
+  `32` tests. No stage-derived layer fallback or second predictor wrapper was
+  added.
+- **Final Status:** **PASS.** The remaining action is the fresh combined
+  verification and coherent sub-step commits before the local PR20/PR21
+  merge-readiness audit.
+
+## CP-40 - EP>1 boundary audit and PDD attention-only identity seam
+
+- **Target Component/Phase:** `all-to-all-structural-MTP-audit` and the
+  pending `pdd-attention-only-identity-repair`.
+- **Reviewer Agent Identity:** `/root` (direct production call-chain audit;
+  TDD RED is pending and no repair conclusion is claimed).
+- **Inspected Artifacts:** `frontier/operators/families.py`,
+  `frontier/operators/spec.py`, the aggregate `CommPayloadContext` payload
+  path, structural-MTP registry/config loaders, PDD scheduler call sites, and
+  `_predict_attention_only_stage_execution_time()`.
+- **Identified Issues/Anomalies:** EP>1 routed aggregate dispatch/combine
+  already fails at payload construction without an `EPLaneWorkload`, so a new
+  caller-side guard would duplicate the existing owner. The local structural
+  registry loads configs with `48/2/20` layers and explicit MoE layer zero;
+  two names have missing local JSON and remain a coverage gap. Separately,
+  the PDD attention-only helper receives no `layer_id` and hard-codes zero,
+  despite scheduler callers passing non-zero global identities.
+- **Remediation/Verification Code Actions Taken:** Recorded the audit in the
+  design/harness and queued a single private-helper parameter propagation
+  regression. No production edit or speculative configuration asset was added
+  in this checkpoint.
+- **Final Status:** **PASS for audit; SCOPE-032 remains open pending RED/GREEN.**

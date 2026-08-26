@@ -2,6 +2,11 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Added the PDD attention-only identity gate and recorded the aggregate all-to-all/structural-MTP audit evidence. |
+| 2026-08-26 | Added the global-layer identity propagation gate and recorded its RED/GREEN contract. |
+| 2026-08-26 | Closed the terminal MTP EP>1 hook gates with `178` focused tests and numeric phase/layer evidence. |
+| 2026-08-26 | Added the terminal MTP overshoot EP>1 descriptor RED/GREEN gates and numeric evidence requirements. |
+| 2026-08-26 | Closed the typed-trace gate: descriptor-only workload input, output-only map projection, and `168`-test evidence. |
 | 2026-08-26 | Recorded the implementation handoff audit and the remaining typed-lane verification boundaries. |
 | 2026-08-26 | Recorded the closed MONOLITHIC initial-decode frontier gate and its numeric probe contract. |
 | 2026-08-26 | Added the canonical token-ledger gates and recorded approval of the shared compute-contract and structural MTP shape repairs. |
@@ -106,6 +111,43 @@
   expansion is introduced by the token-ledger repair.
 - [ ] Dense `predict_stage_execution_time()` callers retain their existing
   signature; lane context is obtained from the typed batch/entity path.
+
+### Terminal MTP overshoot gates
+
+- [x] The RED regression reaches the real terminal metadata builder and fails
+  only because EP>1 MoE terminal replay lacks an `EPLaneWorkload` descriptor.
+- [x] The default terminal-row hook preserves dense/EP=1 behavior and the MoE
+  override is selected only for an actual MoE layer on the supported MTP
+  cluster path.
+- [x] The MoE hook executes one shared attention-only prediction and one typed
+  lane phase call per physical participant, including zero-routed lanes.
+- [x] The five lane phases use the existing `predict_moe_lane_phase_times()`
+  decomposition and lane-wise `max()`; no raw map, fabricated descriptor, or
+  synthetic `EPBatchGroup` enters the predictor.
+- [x] `stage_id`/`pipeline_stage`, `cluster_type`, `layer_id`, and `num_layers`
+  are passed explicitly. Per-layer physical phases scale with `num_layers`,
+  while pipeline and CPU overhead remain single batch-level terms.
+- [x] Numeric evidence records terminal row count, verification width, each
+  lane ID/local width/routed count, zero-lane model calls, phase values,
+  phase-wise maxima, total time, and stage/layer identity.
+- [x] Global `layer_id` remains distinct from `pipeline_stage`/`stage_id` in
+  the public predictor, internal execution-time probe, attention probe, and
+  terminal MTP hook; no layer identity is derived from stage identity.
+- [x] The internal `layer_id=0` default is documented as compatibility for
+  callers without a real global layer identity, while callers that have one
+  pass it explicitly.
+
+### PDD identity and boundary audit gates
+
+- [ ] PDD `include_ffn=False` attention-only prediction forwards the explicit
+  global `layer_id` into its attention profiling lookup.
+- [ ] The helper keeps a compatibility default only for direct callers that
+  lack a global identity and never derives a layer from `stage_id`.
+- [x] EP>1 routed aggregate all-to-all dispatch/combine fails at the existing
+  payload boundary without `EPLaneWorkload`; no duplicate caller-side guard is
+  added.
+- [x] Structural MTP local-config coverage is recorded with loaded layer
+  counts and explicit missing-path failures; no guessed JSON is introduced.
 
 ### MTP/MoE token-ledger gates
 
