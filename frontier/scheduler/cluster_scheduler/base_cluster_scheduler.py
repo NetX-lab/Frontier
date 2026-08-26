@@ -494,9 +494,7 @@ class BaseClusterScheduler(ABC):
         cluster_type: ClusterType,
         batch_id: int,
         layer_id: int,
-        ep_id: int,
-        moe_ep_size: int,
-        per_expert_tokens: Dict[int, int],
+        lane_workload: EPLaneWorkload,
         lane_compute_ms: float,
         routed_compute_ms: float,
         lane_comm_ms: float,
@@ -513,31 +511,18 @@ class BaseClusterScheduler(ABC):
         and no synthetic contribution is introduced.
         """
 
+        if not isinstance(lane_workload, EPLaneWorkload):
+            raise ValueError(
+                "EP workload trace requires an EPLaneWorkload descriptor, got "
+                f"{type(lane_workload).__name__}"
+            )
+        ep_id = lane_workload.ep_id
+        moe_ep_size = lane_workload.moe_expert_parallel_size
+        normalized_tokens = dict(lane_workload.per_expert_tokens)
         if type(batch_id) is not int or batch_id < 0:
             raise ValueError(f"EP workload batch_id must be a non-negative int, got {batch_id!r}")
         if type(layer_id) is not int or layer_id < 0:
             raise ValueError(f"EP workload layer_id must be a non-negative int, got {layer_id!r}")
-        if type(ep_id) is not int or ep_id < 0:
-            raise ValueError(f"EP workload ep_id must be a non-negative int, got {ep_id!r}")
-        if type(moe_ep_size) is not int or moe_ep_size <= 0 or ep_id >= moe_ep_size:
-            raise ValueError(
-                "EP workload moe_ep_size/ep_id are inconsistent: "
-                f"ep_id={ep_id!r}, moe_ep_size={moe_ep_size!r}"
-            )
-        if not isinstance(per_expert_tokens, dict):
-            raise ValueError("EP workload per_expert_tokens must be a dict")
-        normalized_tokens: dict[int, int] = {}
-        for expert_id, token_count in per_expert_tokens.items():
-            if (
-                type(expert_id) is not int
-                or type(token_count) is not int
-                or expert_id < 0
-                or token_count < 0
-            ):
-                raise ValueError(
-                    "EP workload per_expert_tokens must contain non-negative integer pairs"
-                )
-            normalized_tokens[int(expert_id)] = int(token_count)
         phase_values = (
             ("pre_dispatch_ms", pre_dispatch_ms),
             ("dispatch_ms", dispatch_ms),
@@ -3847,9 +3832,7 @@ class BaseClusterScheduler(ABC):
                     cluster_type=self._cluster_type,
                     batch_id=int(batch.id),
                     layer_id=layer_id,
-                    ep_id=int(ep_id),
-                    moe_ep_size=int(self._config.replica_config.moe_expert_parallel_size),
-                    per_expert_tokens=dict(lane_batch.per_expert_tokens),
+                    lane_workload=lane_batch.lane_workload,
                     lane_compute_ms=lane_compute_ms,
                     routed_compute_ms=routed_compute_ms,
                     lane_comm_ms=lane_comm_ms,
@@ -4179,9 +4162,7 @@ class BaseClusterScheduler(ABC):
                     cluster_type=self._cluster_type,
                     batch_id=int(batch.id),
                     layer_id=layer_id,
-                    ep_id=int(ep_id),
-                    moe_ep_size=int(self._config.replica_config.moe_expert_parallel_size),
-                    per_expert_tokens=dict(lane_batch.per_expert_tokens),
+                    lane_workload=lane_batch.lane_workload,
                     lane_compute_ms=lane_compute_ms,
                     routed_compute_ms=routed_compute_ms,
                     lane_comm_ms=lane_comm_ms,
