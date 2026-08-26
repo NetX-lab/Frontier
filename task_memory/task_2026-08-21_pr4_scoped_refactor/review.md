@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Added CP-41 for SCOPE-032 RED/GREEN verification and the completed PDD attention-only identity repair. |
 | 2026-08-26 | Added CP-40 for the EP>1 aggregate/structural-MTP audit and the open PDD attention-only identity seam. |
 | 2026-08-26 | Added CP-39 for the predictor global-layer identity propagation audit and RED/GREEN verification. |
 | 2026-08-26 | Recorded CP-38 terminal MTP EP>1 hook GREEN evidence and numeric phase/layer verification. |
@@ -1183,3 +1184,28 @@ PR20 base. No remote state was changed.
   regression. No production edit or speculative configuration asset was added
   in this checkpoint.
 - **Final Status:** **PASS for audit; SCOPE-032 remains open pending RED/GREEN.**
+
+## CP-41 - PDD attention-only identity repair RED/GREEN
+
+- **Target Component/Phase:** `pdd-attention-only-identity-repair` after the
+  EP>1 boundary audit.
+- **Reviewer Agent Identity:** `/root` (direct TDD implementation and fresh
+  focused verification).
+- **Inspected Artifacts:**
+  `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`,
+  `tests/unit/test_sklearn_disaggregation_execution_time_predictor.py`, the
+  PDD scheduler `include_ffn=False` call sites, and the layer/terminal MTP
+  regression files.
+- **Identified Issues/Anomalies:** Before the edit, the real public path
+  passed `layer_id=17` to the predictor but the private helper queried
+  attention with `layer_id=0`; the focused assertion failed exactly as
+  `assert 0 == 17`.
+- **Remediation/Verification Code Actions Taken:** Added the private helper's
+  compatibility-defaulted `layer_id`, forwarded the public value, and added
+  one focused regression. No stage-derived identity or fallback wrapper was
+  added.
+- **Verification:** The affected matrix passed `64` tests in `2.77s`; the
+  captured attention call received `layer_id=17` while `stage_id=3` remained
+  unchanged.
+- **Final Status:** **PASS.** SCOPE-032 is resolved; the next gate is the
+  full focused report, dirty-diff review, and local PR20/PR21 merge-readiness.

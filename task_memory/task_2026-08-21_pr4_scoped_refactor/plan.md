@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Completed the PDD attention-only identity repair with `64` focused GREEN tests; focused reporting and merge-readiness remain. |
 | 2026-08-26 | Added the EP>1 aggregate/structural-MTP audit gate and the focused PDD attention-only layer-identity repair sub-step. |
 | 2026-08-26 | Added and completed the independent predictor-layer-identity audit after the terminal MTP hook. |
 | 2026-08-26 | Completed the terminal MTP EP>1 hook, focused GREEN matrix, numeric report, and implementation commits; merge-readiness remains pending. |
@@ -844,7 +845,7 @@ terminal-mtp-red
       construction without `EPLaneWorkload`; configs load with layer counts
       `48/2/20`, while two missing JSON paths fail explicitly.
 
-17. **`pdd-attention-only-identity-repair`** (in progress)
+17. **`pdd-attention-only-identity-repair`** (completed)
     - Files: `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`
       and `tests/unit/test_sklearn_disaggregation_execution_time_predictor.py`.
     - RED: call the real public attention-only path with a non-zero global
@@ -855,8 +856,11 @@ terminal-mtp-red
       and the compatibility default for callers without an identity.
     - Forbidden: stage-to-layer inference, fallback scaling, wrapper layers,
       or unrelated predictor refactoring.
+    - Evidence: RED observed `assert 0 == 17`; GREEN passed the focused
+      disaggregation/layer-identity/terminal-MTP/structural-MTP matrix with
+      `64 passed in 2.77s`.
 
-18. **`focused-report-and-commit`** (pending the identity repair)
+18. **`focused-report-and-commit`** (in progress)
     - Update the task report with the layer-identity evidence, run the fresh
     combined A' matrix, compileall, documentation gates, and `git diff --check`.
     - Commit each coherent production/test/docs sub-step separately before the

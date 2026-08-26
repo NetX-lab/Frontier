@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Completed SCOPE-032 PDD attention-only identity propagation; recorded RED `0 -> 17` and GREEN `64`-test evidence. |
 | 2026-08-26 | Recorded the EP>1 aggregate/structural-MTP audit and opened the focused PDD attention-only layer-identity repair gate. |
 | 2026-08-26 | Completed the predictor-layer-identity audit; recorded RED/GREEN propagation evidence and the remaining commit/merge-readiness gates. |
 | 2026-08-26 | Implemented and verified the terminal MTP EP>1 physical-lane hook; recorded `178` focused passes and numeric evidence. |
@@ -1494,3 +1495,26 @@ cache. Evidence is in `test_report_2026-08-21_a2_finite_lookup.md`.
   parameter without changing stage, communication, or MTP ownership.
 - **Result:** The audit produced no justification for an extra EP guard or
   speculative config asset. Production repair and RED evidence remain pending.
+
+## 2026-08-26 - SCOPE-032 PDD attention-only identity repair
+
+- **Status:** Complete for the production/test sub-step; focused reporting and
+  merge-readiness remain pending.
+- **Motivation:** Preserve the global transformer-layer identity already
+  supplied by PREFILL/DECODE scheduler callers when they request an
+  attention-only stage prediction.
+- **Expectation:** A non-zero public `layer_id=17` reaches the attention lookup;
+  `stage_id=3` remains pipeline identity and does not participate in the
+  lookup decision.
+- **Method:** Added one regression to the real public
+  `predict_stage_execution_time(..., include_ffn=False)` path. The pre-fix run
+  failed with `assert 0 == 17`. Added only the private helper's explicit
+  `layer_id` parameter (default `0` for legacy direct callers) and forwarded
+  the public value.
+- **Result:** The focused regression passed. The combined affected matrix
+  (`test_sklearn_disaggregation_execution_time_predictor.py`,
+  `test_moe_predictor_layer_id_semantics.py`,
+  `test_mtp_terminal_overshoot_ep_replay.py`, and
+  `test_spec_decode_mtp_structural_moe_replay.py`) passed `64` tests in
+  `2.77s`. Stage, communication, overhead, and MTP ownership remained
+  unchanged.

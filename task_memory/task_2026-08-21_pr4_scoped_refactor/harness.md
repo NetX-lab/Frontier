@@ -139,10 +139,11 @@
 
 ### PDD identity and boundary audit gates
 
-- [ ] PDD `include_ffn=False` attention-only prediction forwards the explicit
+- [x] PDD `include_ffn=False` attention-only prediction forwards the explicit
   global `layer_id` into its attention profiling lookup.
-- [ ] The helper keeps a compatibility default only for direct callers that
+- [x] The helper keeps a compatibility default only for direct callers that
   lack a global identity and never derives a layer from `stage_id`.
+- The RED/GREEN matrix records `0 -> 17` and `64` passing tests.
 - [x] EP>1 routed aggregate all-to-all dispatch/combine fails at the existing
   payload boundary without `EPLaneWorkload`; no duplicate caller-side guard is
   added.

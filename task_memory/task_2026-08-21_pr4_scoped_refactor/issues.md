@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Resolved SCOPE-032 by forwarding PDD attention-only global layer identity and recorded the `0 -> 17` RED/GREEN evidence. |
 | 2026-08-26 | Opened SCOPE-032 for the PDD attention-only helper dropping the caller's global layer identity; recorded the EP>1 all-to-all and structural-MTP configuration audit evidence. |
 | 2026-08-26 | Resolved SCOPE-031 by forwarding the global layer identity through the complete MoE predictor path and recorded RED/GREEN evidence. |
 | 2026-08-26 | Resolved SCOPE-030 with the typed terminal-row hook, physical lane barriers, and focused numeric verification. |
@@ -883,8 +884,8 @@
 
 ### SCOPE-032 - PDD attention-only helper drops the caller's global layer identity
 
-- **Status:** Open; the focused TDD repair is the next implementation
-  sub-step. The current helper still hard-codes `layer_id=0`.
+- **Status:** Resolved in the current integration worktree; the focused
+  production/test changes are ready for their dedicated commit.
 - **Observed call chain:** The PREFILL/DECODE cluster schedulers call
   `predict_stage_execution_time(..., include_ffn=False, layer_id=<global
   layer>)` for the attention prefix. The public disaggregation predictor then
@@ -906,6 +907,14 @@
   reaching `predict_attention_layer_time()` and fail before the production
   propagation edit. The repaired test must pass together with the existing
   disaggregation and layer-identity matrices.
+- **Resolution:** `_predict_attention_only_stage_execution_time()` now accepts
+  `layer_id` with the documented compatibility default and forwards the public
+  `predict_stage_execution_time()` value. No stage-to-layer inference,
+  communication change, fallback scale, or wrapper was introduced.
+- **RED/GREEN evidence:** Before the production edit, the focused test failed
+  with `assert 0 == 17` after reaching the real attention lookup. After the
+  edit, the same test passed and the disaggregation/layer-identity/terminal-
+  MTP/structural-MTP matrix passed `64` tests in `2.77s`.
 
 ### Audit-2026-08-26 - EP>1 all-to-all and structural-MTP boundaries
 

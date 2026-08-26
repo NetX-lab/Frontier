@@ -1177,6 +1177,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         stage_id: int,
         cluster_type: ClusterType,
         num_layers: int,
+        layer_id: int = 0,
     ) -> ExecutionTime:
         """Predict only attention for a shared-domain layer probe.
 
@@ -1184,10 +1185,13 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         attention prefix before the layer-local MoE wave.  It must not inspect
         either dense FFN or routed-expert profiling rows; the subsequent
         dense/EP operation performs the only FFN lookup for the layer.
+
+        ``layer_id`` is the global transformer-layer identity. The default is
+        retained for legacy direct helper callers that do not carry it.
         """
 
         attention_time = self.predict_attention_layer_time(
-            batch, layer_id=0, cluster_type=cluster_type
+            batch, layer_id=layer_id, cluster_type=cluster_type
         )
         communication_time = self._get_communication_time(
             batch, stage_id, cluster_type
@@ -1512,6 +1516,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 stage_id=stage_id,
                 cluster_type=cluster_type,
                 num_layers=num_layers,
+                layer_id=layer_id,
             )
 
         # Phase 2.5: Refactored to use new unified APIs instead of deprecated get_execution_time()

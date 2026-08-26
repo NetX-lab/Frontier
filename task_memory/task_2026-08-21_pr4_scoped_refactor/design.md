@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Implemented the PDD attention-only layer-identity propagation contract after the focused RED/GREEN gate. |
 | 2026-08-26 | Added the PDD attention-only identity seam contract and the EP>1 aggregate/structural-MTP audit boundaries. |
 | 2026-08-26 | Added the global-layer versus pipeline-stage identity invariant and the predictor propagation contract. |
 | 2026-08-26 | Closed the terminal MTP physical-lane seam with a shared one-layer attention probe and lane-wise barrier aggregation. |
