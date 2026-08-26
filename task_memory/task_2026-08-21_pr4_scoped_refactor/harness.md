@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Added the canonical token-ledger gates and recorded approval of the shared compute-contract and structural MTP shape repairs. |
 | 2026-08-25 | Split the physical MoE MTP lane gate from the unresolved generic MTP shape-adapter decision. |
 | 2026-08-25 | Recorded the explicit scalar compatibility boundary and aggregate-domain validation gate. |
 | 2026-08-25 | Added A' typed-lane, scheduler-identity, zero-lane, communication, and pure-MTP gates for the post-PR17 integration repair. |
@@ -98,10 +99,32 @@
   using entity type as the domain discriminator.
 - [ ] Physical MoE MTP phase timing uses a pure `EPLaneWorkload` seam and never
   constructs a synthetic `EPBatchGroup` or copies scheduler lifecycle identity.
-- [ ] The generic target-embedded MTP shape replay contract is resolved through
-  the SCOPE-026 decision before any shared predictor-interface expansion.
+- [x] The generic target-embedded MTP shape replay remains the approved narrow,
+  scheduler-independent adapter from SCOPE-026; no shared predictor-interface
+  expansion is introduced by the token-ledger repair.
 - [ ] Dense `predict_stage_execution_time()` callers retain their existing
   signature; lane context is obtained from the typed batch/entity path.
+
+### MTP/MoE token-ledger gates
+
+- [ ] For ordinary target-embedded MTP, `Batch.num_tokens` represents the full
+  verification width and the shared compute helper does not add planned draft
+  metadata a second time.
+- [ ] Structural target verification uses the complete `verify_tokens` shape;
+  rejected drafts affect only post-forward outcome/progression accounting.
+- [ ] Gating and all pre-routing shared compute use the canonical physical
+  token count, while `LayerEPWorkload` materialization uses
+  `Batch.total_num_tokens`.
+- [ ] `total_routed_assignments == routing_token_count * router_topk`, and the
+  sum of typed lane routed counts equals that assignment count.
+- [ ] Routed-dependent zero-lane phases return `0.0` without positive-load
+  model lookup, while physical participant/barrier membership remains intact.
+- [ ] Explicit AFD/CUDA Graph compute padding retains precedence over the
+  ordinary MTP width rule; transfer sizing keeps its raw physical payload
+  contract.
+- [ ] The MONOLITHIC initial decode `max(planned_drafts, 1)` path is directly
+  audited and any distinct boundary is represented in the existing scheduler/
+  `Batch` seam.
 
 ### Registry
 

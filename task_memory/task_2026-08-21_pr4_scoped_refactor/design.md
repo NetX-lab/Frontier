@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Added the approved canonical MTP/MoE token ledger and shared compute-contract repair design. |
 | 2026-08-25 | Added the implementation audit separating the physical MoE MTP lane seam from the existing generic MTP shape replay. |
 | 2026-08-25 | Closed aggregate lane-domain validation and documented the bounded scalar compatibility path. |
 | 2026-08-25 | Froze the post-PR17 A' typed-lane architecture, physical/runtime ownership boundary, EP symmetry, zero-lane semantics, and pure MTP contract. |
@@ -24,6 +25,55 @@ Keep the first PR deep in one problem: a runtime query must be bound to a
 validated, explicit registry declaration even when a finite prediction table
 does not contain the requested key. The PR should not become a second runtime
 model, a profiling publication system, or a generic data-contract framework.
+
+## Canonical MTP/MoE token ledger (approved 2026-08-26)
+
+The target-embedded MTP path uses one physical-width ledger and several
+phase-specific projections. The projections are intentionally different and
+have distinct owners:
+
+| Projection | Definition | Owner | Consumers |
+|------------|------------|-------|-----------|
+| `planned_draft_tokens` | Reserved speculative slots selected before target verification | MTP runtime/config and scheduler metadata | admission, block reservation, active-block selection, acceptance/outcome bookkeeping, metrics |
+| `verify_tokens` | `1 + planned_draft_tokens` for each target-embedded request | MTP runtime outcome and `SpecDecodeBatchMetadata` | target attention/verification and structural replay shape |
+| `Batch.num_tokens` / `Batch.total_num_tokens` | Scheduler-visible physical rows for the current forward; for the ordinary target-embedded path it equals the verification width | scheduler and `Batch` | attention, compute shape, pre-routing MoE gating, routing materialization |
+| `total_routed_assignments` | `routing_token_count * router_topk` after gating | `LayerEPWorkload` materializer | dispatch, expert compute, combine, EP conservation/barriers |
+| `EPLaneWorkload.routed_token_count` | Assignment count for one physical EP lane | typed lane descriptor | lane-local grouped GEMM, shuffling, all-to-all payloads, lane phase timing |
+| acceptance outcome | accepted/rejected/committed counts after target verification | MTP runtime/request progression | next scheduling iteration and request metrics |
+
+For a step with `planned=[2,1]` and `router_topk=2`:
+
+```text
+verify width             = [3,2]
+pre-routing forward rows = sum([3,2]) = 5
+router assignments       = 5 * 2 = 10
+```
+
+`planned_draft_tokens` is not an additional physical token vector once the
+verification width has been placed in `Batch.num_tokens`. The shared
+`Batch.get_effective_total_tokens_for_compute()` helper therefore returns the
+existing physical width for target-embedded MTP, except where an explicit
+AFD/CUDA Graph metadata contract supplies a padded compute shape. The transfer
+helper keeps its existing raw physical payload rule.
+
+The structural MTP replay uses the complete `verify_tokens` vector for the
+first target-verification block. Rejection is an outcome observed after that
+forward and cannot be subtracted from the already executed target shape. The
+generic replay remains the narrow, scheduler-independent shape adapter defined
+in SCOPE-026; the physical MoE portion continues to use the pure typed
+`EPLaneWorkload` phase seam.
+
+The conservation boundary is explicit:
+
+```text
+Batch.total_num_tokens
+    -> routing_token_count
+    -> routing_token_count * router_topk
+    -> sum(EPLaneWorkload.routed_token_count)
+```
+
+No consumer may substitute the assignment count for the pre-routing count, or
+add planned metadata to a batch width that already contains verification rows.
 
 ## Target ownership
 
@@ -399,12 +449,11 @@ uses a short-lived block-shape `Batch` and copied request progress to reuse the
 existing attention/token-shape predictor protocol. That object never enters a
 scheduler queue and is not a physical lane descriptor.
 
-The broad “no synthetic `Batch`” sentence above remains the acceptance target
-only if the maintainer selects the full pure-MTP interface in
-`issues.md:SCOPE-026`. The narrow A' implementation recommendation is to
-rename this gate to “pure physical MoE MTP lane phase” and document the
-generic shape adapter as a separate, scheduler-independent contract. No shared
-MTP interface expansion occurs before that decision.
+The broad “no synthetic `Batch`” sentence above belongs to the rejected full
+pure-MTP alternative. The approved narrow A' contract is the “pure physical
+MoE MTP lane phase”; the generic shape adapter remains an explicit,
+scheduler-independent compatibility boundary. No shared MTP interface
+expansion is in scope.
 
 ### Extension gate
 

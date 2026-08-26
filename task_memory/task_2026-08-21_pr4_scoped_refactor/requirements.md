@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Confirmed the shared `Batch` compute-contract repair and the structural MTP verification-width correction after the token-ledger RCA. |
 | 2026-08-25 | Recorded the post-PR17 PR20/PR21 merge-conflict RCA, the maintainer-approved A' typed-lane contract, and the docs-first implementation request. |
 | 2026-08-22 | Recorded the maintainer's Option-B decision for target-local explicit KV filtering and mandatory discard warnings. |
 | 2026-08-22 | Recorded the request for two independent PR #21 review rounds plus a concurrent 30-minute Ask Claude review. |
@@ -248,3 +249,17 @@ constraints only; implementation choices belong in `plan.md` and `design.md`.
 - **Captured intent:** Documentation is the first implementation sub-step.
   Production changes must follow TDD, remain modular, remove temporary probe
   escapes, and preserve the PR #17 runtime-identity boundary.
+
+## R-026 - Confirm the shared MTP/MoE token-ledger repair
+
+- **Attribute:** `[Original Request]`
+- **Raw request:** Confirm the recommended repair: correct the shared
+  `Batch.get_effective_total_tokens_for_compute()` contract so target-embedded
+  MTP does not add `planned_draft_tokens` twice, and make structural MTP replay
+  use the complete verification width rather than subtracting
+  `rejected_draft_tokens`.
+- **Captured intent:** Keep `planned_draft_tokens` as scheduling and acceptance
+  metadata, use the target-forward physical width for compute and MoE gating,
+  use `Batch.total_num_tokens` as the pre-routing materializer input, and keep
+  routed assignment counts lane-local after top-k routing. Preserve explicit
+  AFD/CUDA Graph padding semantics and the narrow A' physical-lane boundary.

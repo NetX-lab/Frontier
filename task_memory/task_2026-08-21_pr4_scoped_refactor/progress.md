@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Recorded maintainer approval of the shared token-ledger repair and completed the docs-first implementation handoff. |
 | 2026-08-25 | Audited the implemented A' MTP seam versus generic shape replay and opened the maintainer decision gate; no shared-interface edit made. |
 | 2026-08-25 | Froze the A' RCA/design/plan before implementation and marked the existing Gate 2 probe as provisional. |
 | 2026-08-25 | Implemented and verified typed EP lane workload admission, closed the zero-routed shuffling model-query defect, and recorded the broad unit baseline. |
@@ -1232,8 +1233,8 @@ cache. Evidence is in `test_report_2026-08-21_a2_finite_lookup.md`.
 
 ## 2026-08-25 - Post-implementation MTP and trace boundary audit
 
-- **Status:** Decision gate open; production edits paused at the shared-MTP
-  boundary.
+- **Status:** Historical decision-gate record; resolved by the 2026-08-26
+  narrow A' approval.
 - **Motivation:** Verify that the implementation satisfies the frozen A'
   wording instead of treating the remaining generic MTP synthetic shape as an
   unexamined compatibility detail.
@@ -1243,6 +1244,25 @@ cache. Evidence is in `test_report_2026-08-21_a2_finite_lookup.md`.
   API can receive per-request token vectors and speculative metadata. The
   objects do not enter scheduler admission or carry EP identity. The trace
   helper receives only descriptor-backed map projections and emits logs.
-- **Decision needed:** SCOPE-026 presents the narrow physical-lane contract
-  (recommended) and the larger shared pure-MTP descriptor interface. No code
-  change is made until the maintainer selects one.
+- **Disposition:** The maintainer selected the narrow physical-lane contract.
+  The generic block/terminal replay remains a scheduler-independent shape
+  adapter, and no shared MTP interface expansion is made.
+
+## 2026-08-26 - Token-ledger RCA and implementation handoff
+
+- **Status:** Documentation sub-step complete; implementation is next.
+- **Motivation:** The maintainer confirmed the shared `Batch` compute-contract
+  repair after the direct probe showed `planned=[2,1]`, `verify=[3,2]`, raw
+  physical width `5`, current compute lookup `8`, transfer width `5`, and
+  top-k-2 assignment count `10`.
+- **Expectation:** The task record must state one canonical owner for each
+  projection, identify `8` as a double-counted lookup rather than a physical
+  workload, and preserve the narrow A' typed-lane boundary.
+- **Method:** Added R-026, SCOPE-027, the canonical ledger in `design.md`, the
+  dependency-ordered RED/GREEN addendum in `plan.md`, and hard token-ledger
+  gates in `harness.md`. The approved production changes are limited to the
+  shared target-embedded MTP compute branch and the first structural
+  verification-block shape.
+- **Result:** Documentation now records the exact equations and acceptance
+  criteria. No production or test source changed in this documentation step;
+  the next step is the TDD RED regression.

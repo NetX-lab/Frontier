@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Recorded the approved MTP/MoE token ledger, the compute-helper double-count RCA, and the structural verification-shape repair gate. |
 | 2026-08-25 | Opened the post-implementation MTP scope audit and recorded the typed trace boundary evidence. |
 | 2026-08-25 | Added the formal post-PR17 typed-lane RCA and reclassified the existing Gate 2 probe as provisional until the A' ownership and interface invariants are implemented. |
 | 2026-08-25 | Resolved the Gate 2 regular-Batch EP workload contract and zero-routed shuffling admission defect; recorded unrelated broad-unit baseline failures. |
@@ -640,8 +641,9 @@
 
 ### SCOPE-026 - Generic MTP synthetic-shape path exceeds the implemented A' seam
 
-- **Status:** Decision required before the remaining implementation; this is a
-  real scope fork, not a test-only discrepancy.
+- **Status:** Resolved on 2026-08-26 by the approved narrow A' decision;
+  the historical fork is retained below as design evidence, not as an open
+  implementation gate.
 - **Evidence:** The MoE-specific decoder hook now materializes one
   `EPLaneWorkload` per participant and calls `predict_moe_lane_phase_times()`
   (`frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py:2558-2670`).
@@ -677,9 +679,53 @@
   the direct event call pass the descriptor-backed projection. Converting this
   helper to accept `EPLaneWorkload` is a localized completion of the A' owner
   boundary and is independent of the MTP fork.
-- **Escalation:** Do not change the shared MTP interface until the maintainer
-  selects Option A or Option B. The recommendation is Option A, followed by
-  the typed trace helper migration and focused verification.
+- **Disposition:** Option A is selected. The physical MoE/EP phase uses the
+  typed lane descriptor; the generic target-embedded replay remains an
+  explicitly named scheduler-independent shape adapter. The typed trace
+  helper migration and focused verification proceed within that boundary.
+
+### SCOPE-027 - Target-embedded MTP token ledger mixes metadata, forward width, and routed assignments
+
+- **Status:** Approved for implementation on 2026-08-26; production changes are
+  pending the TDD RED gate.
+- **Observed input:** For one target-embedded MTP structural step,
+  `planned_draft_tokens_per_request=[2, 1]` and the scheduler/runtime contract
+  produces `verify_tokens_per_request=[3, 2]` (`1 + planned_draft_tokens`).
+  The scheduler-visible `Batch.num_tokens` therefore has the physical shape
+  `[3, 2]`, with `_total_num_tokens=5`.
+- **Observed derived values:** The current compute helper in
+  `frontier/entities/batch.py:821-834` returns `5 + (2 + 1) = 8`, while the
+  transfer helper in `frontier/entities/batch.py:869-878` returns `5`. The
+  runtime verification metadata sums to `5`. The current structural replay in
+  `frontier/execution_time_predictor/sklearn_execution_time_predictor.py:5670-5688`
+  can instead construct `verify - rejected`, which describes post-outcome
+  progression rather than the target forward that already occurred.
+- **Root cause:** Two historical contracts were left active after the scheduler
+  migrated `Batch.num_tokens` to verification-window width. The compute helper
+  still assumes that `Batch.num_tokens` contains only a base decode token and
+  adds planned slots; the structural replay still treats rejection outcome as a
+  pre-forward shape. Both assumptions double-count or prune the same target
+  work.
+- **Canonical ledger:**
+  `planned_draft_tokens` is control metadata; `verify_tokens` is the complete
+  target-forward per-request width; `Batch.total_num_tokens` is the aggregate
+  pre-routing physical token count; `routing_token_count * router_topk` is the
+  post-routing assignment count; and accepted/rejected/committed values belong
+  to the outcome and next-iteration progression.
+- **Example conservation:** With `[3, 2]` and `router_topk=2`, the physical
+  forward/gating/materializer count is `5`, the assignment count is `10`, and
+  the per-lane assignment counts must sum to `10`. Using `8` would invent three
+  forward tokens; using `10` as the materializer input would multiply top-k a
+  second time.
+- **Resolution:** Correct the shared target-embedded MTP compute helper to use
+  the existing physical batch width, while retaining the earlier AFD/CUDA Graph
+  precedence. Make the first structural verification replay block use the full
+  `verify_tokens` vector. Keep materialization on `batch.total_num_tokens` and
+  keep routed-dependent work on typed `EPLaneWorkload` counts. Audit the
+  MONOLITHIC initial decode boundary separately because its `max(planned, 1)`
+  path may represent a distinct scheduler frontier.
+- **Non-goals:** Do not add a caller-specific bypass, a second token metadata
+  flag, a new MTP descriptor, or a change to the narrow A' physical lane seam.
 
 ## Explicitly deferred questions
 

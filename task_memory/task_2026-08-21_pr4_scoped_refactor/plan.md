@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Added the approved token-ledger repair sub-steps, RED/GREEN gates, and MONOLITHIC boundary audit. |
 | 2026-08-25 | Added the MTP scope decision gate and the typed trace-helper completion step after implementation audit. |
 | 2026-08-25 | Added the docs-first A' implementation plan for post-PR17 typed EP lanes, predictor/communication migration, pure MTP phases, and PR20/PR21 refresh gates. |
 | 2026-08-22 | Synchronized PR #20/#21 descriptions to their published heads and archived the producer-metadata and MTP interface audits. |
@@ -45,8 +46,8 @@ docs-freeze
   -> scheduler-plan/entity-propagation
   -> predictor-interface
   -> communication-consumers
-  -> MTP-contract-decision
-  -> MTP-pure-path
+  -> MTP-contract-decision (historical; resolved by the 2026-08-26 narrow A' approval)
+  -> MTP-pure-path (narrow physical MoE/EP phase)
   -> typed-trace-observability
   -> focused-verification
   -> PR20/PR21 merge-readiness
@@ -177,6 +178,67 @@ docs-freeze
    - Acceptance: local heads, base relationship, and diff ownership are
      explicit; no unresolved A' gate remains.
 
+## Approved token-ledger repair addendum (2026-08-26)
+
+This addendum supersedes the earlier open `MTP-contract-decision` wording for
+the confirmed narrow A' path. The maintainer approved the shared `Batch`
+compute-contract correction and the structural verification-shape correction.
+
+### Dependency map
+
+```text
+token-ledger-RED-tests
+  -> shared-Batch-compute-contract
+  -> structural-MTP-verify-shape
+  -> monolithic-initial-boundary-audit
+  -> focused-token-ledger-verification
+  -> PR20/PR21 merge-readiness refresh
+```
+
+The shared helper and structural replay edits are sequential because both
+depend on the same canonical ledger. The boundary audit runs after those edits
+and before the final matrix; it may remain unchanged if the existing scheduler
+frontier is proven to represent a distinct, explicit shape.
+
+### Sub-steps
+
+1. **`token-ledger-RED-tests`**
+   - Add the smallest regression cases for target-embedded MTP:
+     `planned=[2,1]`, `verify=[3,2]`, compute width `5`, transfer width `5`,
+     and routing assignments `10` at top-k 2.
+   - Assert that rejection metadata does not prune the first target-forward
+     structural shape and that the materializer consumes the pre-routing count.
+   - Run the new tests before production edits and record the expected failures.
+
+2. **`shared-Batch-compute-contract`**
+   - Update `Batch.get_effective_total_tokens_for_compute()` only at its
+     target-embedded MTP branch. Preserve explicit decode CUDA Graph and AFD
+     stage precedence and all non-MTP behavior.
+   - Verify the shared helper through compute, gating, communication, and stage
+     ledger callers rather than adding caller-specific bypasses.
+
+3. **`structural-MTP-verify-shape`**
+   - Update the first structural MTP verification block to use complete
+     `verify_tokens_per_request` values. Keep later MTP block selection and
+     acceptance/progression metadata unchanged.
+   - Preserve the generic scheduler-independent shape adapter and the pure
+     typed MoE lane phase seam.
+
+4. **`monolithic-initial-boundary-audit`**
+   - Exercise the `max(planned_drafts, 1)` MONOLITHIC initial decode path and
+     compare its scheduler-visible width with the metadata/forward ledger.
+   - Encode a rule only if the direct probe establishes a distinct physical
+     boundary; keep the rule in the existing scheduler/Batch seam.
+
+5. **`focused-token-ledger-verification`**
+   - Run the MTP, MoE, EP=1/EP>1, zero-lane, communication, scheduler, and
+     PR17-sensitive tests, plus `py_compile` and `git diff --check`.
+   - Record actual model-call counts, token widths, assignment conservation,
+     lane participants, and boundary observations in the task report.
+
+Each production sub-step is committed only after its RED/GREEN verification;
+the pre-existing dirty A' probe files remain in scope and are not reverted.
+
 ## Status
 
 **Current phase:** PR #20 remains maintainer-approved, open, and unmerged at
@@ -223,15 +285,15 @@ task in `future.md`.
 
 **Base:** `origin/main` at `9e9fa94c`.
 
-### Post-PR17 implementation audit status (2026-08-25)
+### Post-PR17 implementation audit status (2026-08-25; superseded by the 2026-08-26 approval)
 
 The synthetic post-PR17 integration branch has completed the descriptor,
 scheduler/entity, predictor, communication, and MoE-specific MTP lane slices.
-The remaining implementation gate is SCOPE-026: decide whether “pure MTP” is
-limited to the physical MoE lane phase (recommended) or requires a new shared
-descriptor interface for the generic block/terminal shape replay. The raw-map
-trace helper is a separate localized follow-up and will run only after that
-decision gate. PR20/PR21 refresh and merge-readiness remain pending.
+The historical remaining gate was SCOPE-026. The maintainer subsequently
+selected the narrow physical-lane contract, so the generic block/terminal
+shape replay remains a named scheduler-independent adapter. The raw-map trace
+helper is a separate localized follow-up, and PR20/PR21 refresh and
+merge-readiness remain pending.
 
 ## 2026-08-22 two-PR continuation
 
