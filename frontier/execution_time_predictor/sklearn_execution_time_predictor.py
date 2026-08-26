@@ -5673,15 +5673,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             if use_verify_window_shape:
                 verify_step_num_tokens = []
                 for idx in active_indices:
-                    step_tokens = int(metadata.verify_tokens_per_request[idx]) - int(
-                        metadata.rejected_draft_tokens_per_request[idx]
-                    )
+                    # Rejection is an outcome of the target forward.  The
+                    # first structural block must retain the complete shape
+                    # that was executed, including drafts later rejected.
+                    step_tokens = int(metadata.verify_tokens_per_request[idx])
                     if step_tokens <= 0:
                         raise ValueError(
                             "target-embedded MTP structural replay requires positive "
-                            "pruned verify tokens per request, "
+                            "verify tokens per request, "
                             f"got verify_tokens={metadata.verify_tokens_per_request[idx]!r}, "
-                            f"rejected_tokens={metadata.rejected_draft_tokens_per_request[idx]!r}, "
                             f"request_index={idx}"
                         )
                     verify_step_num_tokens.append(step_tokens)

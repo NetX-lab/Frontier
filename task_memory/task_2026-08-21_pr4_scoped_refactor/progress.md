@@ -1305,3 +1305,21 @@ cache. Evidence is in `test_report_2026-08-21_a2_finite_lookup.md`.
   token suite, `9 passed` for CUDA Graph/AFD stage-token coverage,
   `py_compile` succeeded, and `git diff --check` was clean. No caller-specific
   bypass or new metadata field was introduced.
+
+## 2026-08-26 - Structural MTP verification shape GREEN
+
+- **Status:** Complete; the MONOLITHIC boundary audit is the next sub-step.
+- **Motivation:** Keep post-forward rejection outcomes from shrinking the
+  physical target-verification shape used by structural replay.
+- **Expectation:** For `verify=[3,2]` and `rejected=[2,1]`, the first replay
+  block constructs `Batch.num_tokens=[3,2]`; rejected values remain available
+  only for outcome/progression accounting.
+- **Method:** Changed the first-block shape calculation in
+  `frontier/execution_time_predictor/sklearn_execution_time_predictor.py` to
+  consume complete verification widths. Ran the new token-ledger regression,
+  the structural MoE replay tests, and the ordinary speculative verify-prefill
+  matrix, followed by module compilation and whitespace validation.
+- **Result:** The targeted structural assertion passed, the existing
+  structural-MTP file passed `4` tests, the combined token-ledger and verify
+  prefill run passed `17` tests, `py_compile` succeeded, and `git diff --check`
+  was clean. No MTP descriptor or shared predictor interface was added.
