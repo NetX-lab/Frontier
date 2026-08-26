@@ -1323,3 +1323,31 @@ cache. Evidence is in `test_report_2026-08-21_a2_finite_lookup.md`.
   structural-MTP file passed `4` tests, the combined token-ledger and verify
   prefill run passed `17` tests, `py_compile` succeeded, and `git diff --check`
   was clean. No MTP descriptor or shared predictor interface was added.
+
+## 2026-08-26 - MONOLITHIC initial-decode boundary audit
+
+- **Status:** Complete; the existing scheduler branch is retained and a focused
+  regression is the next implementation step.
+- **Motivation:** Determine whether the `max(planned_drafts, 1)` branch is an
+  accidental third token ledger or an intentional scheduler frontier needed by
+  the MONOLITHIC prefill-completion lifecycle.
+- **Expectation:** A real `Request` probe must distinguish the one-time
+  prefill boundary from ordinary target-verification batch width and show that
+  the shared compute/materializer ledger remains independent.
+- **Method:** Called the production
+  `VLLMv1EngineReplicaScheduler._get_scheduler_num_computed_tokens()` and
+  `_get_request_next_num_tokens()` methods on a real `Request` with
+  `num_prefill_tokens=8`, `num_decode_tokens=32`, and target-embedded MTP.
+  Covered `planned_drafts` values `0, 1, 2, 4`, post-boundary progress, and
+  explicit scheduler frontiers.
+- **Observed values:** At `num_processed_tokens=9`
+  (`num_processed_decode_tokens=1`), the scheduler frontier is `8` and next
+  widths are `[1, 1, 2, 4]`. At `num_processed_tokens=10` and `12`, the
+  frontier is `9` and `11`, and next widths are `[1, 2, 3, 5]`. With explicit
+  frontiers `8, 9, 10, 12` and `planned=2`, next widths are `2, 3, 3, 3`.
+- **Result:** The branch is an intentional one-time admission projection:
+  MONOLITHIC `Request.on_batch_end()` grants one output token at the final
+  prefill callback, while the scheduler frontier remains at the prefill width
+  until the first decode scheduling step. No physical-width correction is
+  needed in this seam. Evidence and acceptance criteria are recorded in
+  `issues.md:SCOPE-028`, `design.md`, and `harness.md`.

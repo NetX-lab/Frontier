@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Closed the MONOLITHIC initial-decode boundary audit and added its focused regression gate. |
 | 2026-08-26 | Added the approved token-ledger repair sub-steps, RED/GREEN gates, and MONOLITHIC boundary audit. |
 | 2026-08-25 | Added the MTP scope decision gate and the typed trace-helper completion step after implementation audit. |
 | 2026-08-25 | Added the docs-first A' implementation plan for post-PR17 typed EP lanes, predictor/communication migration, pure MTP phases, and PR20/PR21 refresh gates. |
@@ -229,6 +230,12 @@ frontier is proven to represent a distinct, explicit shape.
      compare its scheduler-visible width with the metadata/forward ledger.
    - Encode a rule only if the direct probe establishes a distinct physical
      boundary; keep the rule in the existing scheduler/Batch seam.
+
+   - **Audit result:** The production `Request`/scheduler probe confirmed a
+     distinct one-time admission frontier (`num_processed_tokens =
+     num_prefill_tokens + 1`, scheduler frontier at `num_prefill_tokens`).
+     Keep the existing branch and add a focused regression; do not change the
+     shared Batch compute or MoE materializer contracts.
 
 5. **`focused-token-ledger-verification`**
    - Run the MTP, MoE, EP=1/EP>1, zero-lane, communication, scheduler, and

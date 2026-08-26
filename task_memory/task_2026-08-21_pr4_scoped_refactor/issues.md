@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Closed the MONOLITHIC initial-decode boundary audit with direct Request/scheduler probe evidence. |
 | 2026-08-26 | Recorded the approved MTP/MoE token ledger, the compute-helper double-count RCA, and the structural verification-shape repair gate. |
 | 2026-08-25 | Opened the post-implementation MTP scope audit and recorded the typed trace boundary evidence. |
 | 2026-08-25 | Added the formal post-PR17 typed-lane RCA and reclassified the existing Gate 2 probe as provisional until the A' ownership and interface invariants are implemented. |
@@ -726,6 +727,40 @@
   path may represent a distinct scheduler frontier.
 - **Non-goals:** Do not add a caller-specific bypass, a second token metadata
   flag, a new MTP descriptor, or a change to the narrow A' physical lane seam.
+
+### SCOPE-028 - MONOLITHIC initial target-embedded decode uses a distinct scheduler frontier
+
+- **Status:** Resolved by direct boundary audit on 2026-08-26; no production
+  change is required.
+- **Probe setup:** A real `Request` was configured with
+  `num_prefill_tokens=8`, `num_decode_tokens=32`, target-embedded MTP enabled,
+  and `spec_next_planned_draft_tokens` in `{0, 1, 2, 4}`. The scheduler probe
+  used `ClusterType.MONOLITHIC` and the production
+  `_get_scheduler_num_computed_tokens()` and
+  `_get_request_next_num_tokens()` methods.
+- **Observed boundary:** When the prefill callback has already granted the
+  first decode token (`num_processed_tokens=9`,
+  `num_processed_decode_tokens=1`), the scheduler frontier is `8` and the
+  next scheduled widths are respectively `[1, 1, 2, 4]`. When the frontier is
+  already beyond the boundary (`num_processed_tokens` in `{10, 12}`), the
+  next widths are the ordinary complete verification widths `[1, 2, 3, 5]`.
+  With an explicit frontier of `8`, `9`, `10`, or `12`, the helper returns
+  `2`, `3`, `3`, or `3` for `planned=2`, selecting the full width once the
+  explicit frontier has advanced beyond the prefill boundary.
+- **Root cause interpretation:** `Request.on_batch_end()` intentionally rolls
+  one output token into `num_processed_tokens` in the MONOLITHIC prefill
+  completion callback, while `_get_scheduler_num_computed_tokens()` keeps the
+  scheduler-visible frontier at the prefill token count until the first decode
+  scheduling step. The `max(planned_drafts, 1)` branch therefore schedules the
+  remaining draft slots at that one boundary, rather than describing a second
+  physical verification width. The branch is a scheduler admission/frontier
+  rule; it does not feed the compute helper or MoE materializer ledger.
+- **Resolution:** Keep the existing branch in the scheduler seam. The canonical
+  physical ledger remains owned by `Batch.num_tokens`/`Batch.total_num_tokens`
+  after batch formation, and the target-forward structural replay continues to
+  use complete `verify_tokens`. Add a focused regression covering the boundary
+  values so a future token-ledger change cannot erase this intentional
+  distinction.
 
 ## Explicitly deferred questions
 

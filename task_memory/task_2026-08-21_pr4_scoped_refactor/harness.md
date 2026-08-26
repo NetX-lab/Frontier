@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Recorded the closed MONOLITHIC initial-decode frontier gate and its numeric probe contract. |
 | 2026-08-26 | Added the canonical token-ledger gates and recorded approval of the shared compute-contract and structural MTP shape repairs. |
 | 2026-08-25 | Split the physical MoE MTP lane gate from the unresolved generic MTP shape-adapter decision. |
 | 2026-08-25 | Recorded the explicit scalar compatibility boundary and aggregate-domain validation gate. |
@@ -122,9 +123,12 @@
 - [ ] Explicit AFD/CUDA Graph compute padding retains precedence over the
   ordinary MTP width rule; transfer sizing keeps its raw physical payload
   contract.
-- [ ] The MONOLITHIC initial decode `max(planned_drafts, 1)` path is directly
-  audited and any distinct boundary is represented in the existing scheduler/
-  `Batch` seam.
+- [x] The MONOLITHIC initial decode `max(planned_drafts, 1)` path is directly
+  audited: with `num_prefill_tokens=8` and the boundary state
+  `num_processed_tokens=9`, the scheduler frontier is `8` and planned values
+  `[0,1,2,4]` produce next widths `[1,1,2,4]`; the ordinary full verification
+  width resumes after the frontier advances. The rule remains in the existing
+  scheduler seam and is covered by a focused regression.
 
 ### Registry
 

@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Recorded the MONOLITHIC initial-decode boundary audit and focused regression decision. |
 | 2026-08-25 | Recorded the post-implementation MTP scope audit, trace ownership evidence, and escalation gate. |
 | 2026-08-25 | Recorded the docs-freeze review: formal RCA, A' ownership graph, and TDD dependency plan are complete; the dirty Gate 2 probe remains provisional. |
 | 2026-08-25 | Reviewed Gate 2 typed-lane integration, zero-routed shuffling admission, and focused/broad verification evidence. |
@@ -999,3 +1000,26 @@ PR20 base. No remote state was changed.
   MTP predictor interface. Option A (narrow physical lane seam) is recommended;
   the typed trace migration remains independent and can follow that decision.
 - **Final Status:** **BLOCKED AT DECISION GATE, NOT AT ENVIRONMENT.**
+
+## CP-34 - MONOLITHIC initial-decode frontier audit
+
+- **Target Component/Phase:** `monolithic-initial-boundary-audit` in the
+  approved token-ledger addendum.
+- **Reviewer Agent Identity:** `/root` (direct production-method probe).
+- **Inspected Artifacts:** `frontier/entities/request.py:1190-1335`,
+  `frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py:2665-2770`,
+  the target-embedded MTP metadata builder, and the token-ledger regression
+  fixtures.
+- **Identified Issues/Anomalies:** The scheduler exposes two related values at
+  the prefill boundary: request progress already includes one output token,
+  while the scheduler-visible computed frontier intentionally remains at the
+  prompt width. This can look like a second physical token contract if it is
+  read without the lifecycle context.
+- **Remediation/Verification Code Actions Taken:** Ran a real `Request` matrix
+  (`P=8`, `D=32`, planned `0/1/2/4`) through the production helper methods.
+  The boundary state (`processed=9`, decode progress `1`) yielded frontier `8`
+  and widths `1/1/2/4`; post-boundary states yielded full widths `1/2/3/5`.
+  No source change was made. A focused regression will preserve this rule.
+- **Final Status:** **PASS.** The `max(planned_drafts, 1)` branch is a
+  scheduler admission/frontier projection, not a compute/gating/materializer
+  width. The canonical physical token ledger remains unchanged.

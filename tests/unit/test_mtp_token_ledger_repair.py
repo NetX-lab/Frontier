@@ -9,6 +9,9 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
 from frontier.moe_ep_workload import materialize_layer_ep_workload
+from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
+    VLLMv1EngineReplicaScheduler,
+)
 from frontier.types import ClusterType
 
 
@@ -111,3 +114,63 @@ def test_moe_materializer_conserves_pre_routing_tokens_and_topk_assignments() ->
     assert workload.total_routed_assignments == 10
     assert sum(workload.per_ep_routed_tokens.values()) == 10
     assert sum(workload.lane(ep_id).routed_token_count for ep_id in (0, 1)) == 10
+
+
+@pytest.mark.parametrize(
+    ("planned_drafts", "expected_next_width"),
+    [(0, 1), (1, 1), (2, 2), (4, 4)],
+)
+def test_monolithic_mtp_prefill_boundary_schedules_remaining_draft_slots(
+    planned_drafts: int,
+    expected_next_width: int,
+) -> None:
+    scheduler = VLLMv1EngineReplicaScheduler.__new__(
+        VLLMv1EngineReplicaScheduler
+    )
+    scheduler._cluster_type = ClusterType.MONOLITHIC
+    scheduler._scheduled_num_computed_tokens_by_request = {}
+
+    request = Request(
+        arrived_at=0.0,
+        num_prefill_tokens=8,
+        num_decode_tokens=32,
+        num_processed_tokens=9,
+    )
+    request._is_prefill_complete = True
+    request.initialize_spec_decode_state(
+        enabled=True,
+        method="qwen3_moe_mtp",
+        num_speculative_tokens=planned_drafts,
+        method_uses_lookahead_slots=True,
+    )
+    request.set_spec_next_planned_draft_tokens(planned_drafts)
+
+    assert request.num_processed_decode_tokens == 1
+    assert scheduler._get_scheduler_num_computed_tokens(request) == 8
+    assert scheduler._get_request_next_num_tokens(request) == expected_next_width
+
+
+def test_monolithic_mtp_boundary_returns_full_width_after_frontier_advances() -> None:
+    scheduler = VLLMv1EngineReplicaScheduler.__new__(
+        VLLMv1EngineReplicaScheduler
+    )
+    scheduler._cluster_type = ClusterType.MONOLITHIC
+    scheduler._scheduled_num_computed_tokens_by_request = {}
+
+    request = Request(
+        arrived_at=0.0,
+        num_prefill_tokens=8,
+        num_decode_tokens=32,
+        num_processed_tokens=10,
+    )
+    request._is_prefill_complete = True
+    request.initialize_spec_decode_state(
+        enabled=True,
+        method="qwen3_moe_mtp",
+        num_speculative_tokens=2,
+        method_uses_lookahead_slots=True,
+    )
+    request.set_spec_next_planned_draft_tokens(2)
+
+    assert scheduler._get_scheduler_num_computed_tokens(request) == 9
+    assert scheduler._get_request_next_num_tokens(request) == 3

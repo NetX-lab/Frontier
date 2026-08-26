@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Documented the verified MONOLITHIC initial-decode scheduler frontier boundary. |
 | 2026-08-26 | Added the approved canonical MTP/MoE token ledger and shared compute-contract repair design. |
 | 2026-08-25 | Added the implementation audit separating the physical MoE MTP lane seam from the existing generic MTP shape replay. |
 | 2026-08-25 | Closed aggregate lane-domain validation and documented the bounded scalar compatibility path. |
@@ -74,6 +75,25 @@ Batch.total_num_tokens
 
 No consumer may substitute the assignment count for the pre-routing count, or
 add planned metadata to a batch width that already contains verification rows.
+
+### MONOLITHIC initial-decode frontier boundary
+
+The MONOLITHIC scheduler has one explicit boundary projection that precedes
+ordinary batch physical-width accounting. `Request.on_batch_end()` grants the
+first output token when the final prefill callback completes, so
+`num_processed_tokens` can be `num_prefill_tokens + 1` before a decode batch is
+admitted. `_get_scheduler_num_computed_tokens()` deliberately reports the
+prefill frontier at that point. `_get_request_next_num_tokens()` consequently
+returns `max(planned_drafts, 1)` for the first target-embedded MTP admission,
+which schedules the still-unadmitted draft slots and avoids replaying the
+already-granted boundary token.
+
+This is a scheduler-frontier rule, not a second physical token ledger. Once the
+frontier advances, the helper returns the ordinary `1 + planned_drafts`
+verification width. Batch formation, compute lookup, MoE gating, and lane
+materialization continue to consume the physical `Batch.num_tokens` width and
+never infer it from this admission rule. The direct probe recorded in
+`issues.md:SCOPE-028` is the regression contract for this distinction.
 
 ## Target ownership
 
