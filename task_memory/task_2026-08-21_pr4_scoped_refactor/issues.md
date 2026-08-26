@@ -2,6 +2,9 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Resolved the EP>1 aggregate dummy/non-dummy mode split with the approved narrow A' admission contract and recorded the implementation boundary. |
+| 2026-08-26 | Resolved the raw/effective MoE width conservation mismatch and opened the EP>1 aggregate admission decision gate. |
+| 2026-08-26 | Resolved SCOPE-033: dummy terminal-MTP lane phases now reuse the typed dummy execution seam and preserve zero-lane barriers. |
 | 2026-08-26 | Resolved SCOPE-032 by forwarding PDD attention-only global layer identity and recorded the `0 -> 17` RED/GREEN evidence. |
 | 2026-08-26 | Opened SCOPE-032 for the PDD attention-only helper dropping the caller's global layer identity; recorded the EP>1 all-to-all and structural-MTP configuration audit evidence. |
 | 2026-08-26 | Resolved SCOPE-031 by forwarding the global layer identity through the complete MoE predictor path and recorded RED/GREEN evidence. |
@@ -936,6 +939,109 @@
   fail explicitly with the missing-path `ValueError`. This is an existing
   registry/config coverage gap, not a typed-lane regression; no guessed JSON
   asset belongs in the current repair.
+
+### SCOPE-033 - Dummy terminal-MTP lane phase path entered the non-dummy all-to-all seam
+
+- **Status:** Resolved in the current integration worktree; the production
+  change and regression evidence remain to be committed as one focused
+  predictor sub-step.
+- **Motivation:** The real terminal-MTP metadata path is reachable with dummy
+  execution enabled, and the typed terminal hook must preserve the same physical
+  lane contract in that mode.
+- **Observed behavior:** `predict_moe_lane_phase_times()` dispatched dummy
+  calls into `_get_execution_time_internal()`. That method reached the
+  canonical all-to-all payload builder, which correctly rejects a missing
+  physical lane descriptor and raises `NotImplementedError: MoE all-to-all
+  prediction not implemented` in the dummy communication seam before a phase
+  result was returned.
+- **Root cause:** The new typed phase API had a dummy/non-dummy branch at the
+  outer stage predictor, but the lane-specific helper bypassed the existing
+  dummy execution owner. Dummy terminal-MTP replay therefore crossed into a
+  profiling/communication path that dummy mode intentionally does not
+  implement.
+- **Impact:** A supported terminal-MTP dummy run failed even though its lane
+  descriptors, token conservation, and barrier participants were valid. The
+  failure was mode-specific and did not indicate a malformed descriptor or a
+  missing profiling row.
+- **Resolution:** Added an optional typed `lane_workload` argument to
+  `_get_dummy_execution_time()`. `predict_moe_lane_phase_times()` now reuses
+  that seam when `_enable_dummy_mode` is true and keeps
+  `_get_execution_time_internal()` exclusively for non-dummy prediction. The
+  descriptor's `routed_token_count` clears only routed grouped-GEMM and
+  shuffling for a zero lane; dispatch/combine barriers, shared gating, and the
+  shared MoE-TP all-reduce remain present.
+- **Verification:** A direct dummy terminal probe returned `27.0 ms`. Lane `0`
+  carried `6` routed tokens and phases `(3.5, 1.0, 1.0, 1.0, 0.5) ms`; lane
+  `1` carried `0` routed tokens and phases `(2.5, 1.0, 0.0, 1.0, 0.5) ms`.
+  The corresponding phase sums were `7.0` and `5.0 ms`, and the zero lane
+  performed no positive-load model lookup. Architecture probes returned
+  `27.0 ms` for the generic profile and `33.0 ms` for both `step2_mini` and
+  `step3_text`. The focused A' matrix passed `350` tests after the fix.
+- **Boundary:** No synthetic `EPBatchGroup`, raw expert-token fallback,
+  second phase implementation, or dummy-only scaling factor was introduced.
+
+### SCOPE-034 - Source-batch conservation used compute-effective width
+
+- **Status:** Resolved in the current integration worktree; the focused
+  predictor regression is GREEN and the production change is pending its
+  coherent sub-step commit.
+- **Observed ledger:** A target-embedded MTP batch can expose
+  `Batch.total_num_tokens=5` as its physical pre-routing width while
+  `get_effective_total_tokens_rounded()` returns `8` for compute lookup. With
+  `router_topk=2`, the materializer therefore creates `10` routed assignments.
+  The explicit-lane predictor fallback instead multiplied the compute width and
+  expected `16`, rejecting a valid descriptor before any model lookup.
+- **Root cause:** `predict_moe_layer_time()` used the compute-effective helper
+  for a source-batch conservation check. That helper intentionally serves
+  profiling/compute features and has a different contract from the physical
+  routing width owned by `Batch.total_num_tokens`.
+- **Resolution:** The explicit-lane/source-batch fallback now computes
+  `Batch.total_num_tokens * router_topk`. The descriptor-present batch branch,
+  gating/compute feature helpers, transfer sizing, and materializer ownership
+  remain unchanged. No token scaling, tolerance, or raw-map inference was
+  added.
+- **RED/GREEN evidence:** The new regression first failed with
+  `allocated 10, expected 16`. After the one-line contract correction, the
+  complete typed predictor contract module passed `28` tests in `2.55s`.
+
+### Audit-2026-08-26 - EP>1 aggregate admission mode split
+
+- **Observed behavior:** The canonical EP all-to-all payload operator already
+  rejects a routed aggregate without `EPLaneWorkload` at payload construction.
+  Non-dummy public predictor paths can nevertheless perform attention/profile
+  work before reaching that operator, while dummy aggregate paths return a
+  structural result without a descriptor.
+- **Design question:** Decide whether the public EP>1 aggregate predictor
+  boundary should require a physical descriptor in both dummy and non-dummy
+  modes, or retain the existing dummy structural compatibility path while
+  making only routed/non-dummy admission strict.
+- **Impact:** Unifying the boundary would make invalid direct dummy aggregate
+  calls fail before model/backend access and align the public contract with the
+  typed-lane design. Retaining compatibility avoids changing legacy structural
+  callers but leaves mode-dependent admission semantics that must stay explicit
+  and regression-tested.
+- **Decision:** Narrow A' is approved. A routed MoE public predictor call with
+  `ep_size > 1` requires an `EPLaneWorkload` in both dummy and non-dummy modes.
+  The invariant is enforced before dummy timing, measurement activation, and
+  all attention/model/backend/routing lookup. This closes the mode split at the
+  semantic predictor boundary while retaining the communication operator's
+  final structural validation.
+- **Concrete classification boundary:** The helper consumes only the routed
+  classification already produced by each concrete predictor. MONOLITHIC keeps
+  its explicit `include_moe`/`include_ffn` and one-layer model-layer rules;
+  multi-layer aggregate behavior remains unchanged. In disaggregation,
+  `DECODE_ATTN` remains attention-only and `PREFILL`/unified `DECODE`/
+  `DECODE_FFN` retain their existing cluster/layer MoE rules. The helper never
+  guesses from names, stage identity, or `num_layers`.
+- **Implementation boundary:** Add one shared protected admission helper that
+  resolves EP size from existing topology and checks only
+  `routed_moe && ep_size > 1 && lane is None`. Keep the scheduler's descriptor
+  materialization and the payload builder's final descriptor check unchanged.
+  The focused RED/GREEN test must observe zero measurement/model/backend
+  lookups on the missing-lane failure and preserved behavior for attention-only,
+  dense, EP=1, valid-lane, and zero-routed-lane cases.
+- **Status:** Decision resolved; production/test implementation and final
+  verification remain pending.
 
 ## Explicitly deferred questions
 

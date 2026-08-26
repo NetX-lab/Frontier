@@ -2,6 +2,9 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Froze the approved narrow A' EP>1 aggregate admission contract in all task docs; implementation and RED/GREEN verification are next. |
+| 2026-08-26 | Added and passed the raw/effective width RED/GREEN regression; opened the EP>1 aggregate dummy-admission decision gate. |
+| 2026-08-26 | Recorded SCOPE-033 dummy terminal-MTP RCA, typed dummy seam repair, numeric probe, and focused `350`-test evidence. |
 | 2026-08-26 | Completed SCOPE-032 PDD attention-only identity propagation; recorded RED `0 -> 17` and GREEN `64`-test evidence. |
 | 2026-08-26 | Recorded the EP>1 aggregate/structural-MTP audit and opened the focused PDD attention-only layer-identity repair gate. |
 | 2026-08-26 | Completed the predictor-layer-identity audit; recorded RED/GREEN propagation evidence and the remaining commit/merge-readiness gates. |
@@ -1518,3 +1521,30 @@ cache. Evidence is in `test_report_2026-08-21_a2_finite_lookup.md`.
   `test_spec_decode_mtp_structural_moe_replay.py`) passed `64` tests in
   `2.77s`. Stage, communication, overhead, and MTP ownership remained
   unchanged.
+
+## 2026-08-26 - SCOPE-033 dummy terminal-MTP lane repair
+
+- **Status:** Complete for the dummy physical-lane sub-step; focused report,
+  coherent commits, and PR20/PR21 merge-readiness remain pending.
+- **Motivation:** A real terminal-MTP metadata replay with dummy execution
+  enabled entered the typed MoE lane phase helper. The helper still called the
+  non-dummy internal predictor, so dummy mode failed at the communication seam
+  before returning phase values.
+- **Expectation:** Dummy and non-dummy phase calls use the same typed
+  `EPLaneWorkload` input. Dummy mode reuses the existing fixed execution owner;
+  non-dummy mode retains the profiling-backed internal path. A zero-routed lane
+  keeps dispatch/combine participation and shared pre-routing work while
+  avoiding routed shuffling and grouped-GEMM lookup.
+- **Method:** Added `lane_workload` to `_get_dummy_execution_time()` and routed
+  the dummy branch of `predict_moe_lane_phase_times()` through it. Kept
+  `_get_execution_time_internal()` on the non-dummy branch. Corrected the PDD
+  communication comments so MoE TP all-reduce, allgather, and shared-expert
+  collectives are described as source-batch pre-routing work; only EP
+  all-to-all is lane-local.
+- **Result:** The direct dummy probe returned `27.0 ms`. Lane `0` had routed
+  count `6` and phases `(3.5, 1.0, 1.0, 1.0, 0.5) ms`; lane `1` had routed
+  count `0` and phases `(2.5, 1.0, 0.0, 1.0, 0.5) ms`. Phase sums were `7.0`
+  and `5.0 ms`; the zero lane made no positive-load lookup. Generic,
+  `step2_mini`, and `step3_text` probes returned `27.0`, `33.0`, and `33.0 ms`.
+  The fresh focused A' matrix passed `350` tests. No synthetic entity, raw-map
+  fallback, or second phase implementation was added.

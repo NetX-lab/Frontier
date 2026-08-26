@@ -2,6 +2,9 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Resolved the EP>1 aggregate admission gate as narrow A' and queued the shared early-admission TDD sub-step. |
+| 2026-08-26 | Added the raw/effective width conservation repair and the explicit EP>1 aggregate admission decision gate. |
+| 2026-08-26 | Recorded the dummy terminal-MTP physical-lane RCA, typed dummy seam gate, fresh focused matrix, and remaining commit/review gates. |
 | 2026-08-26 | Completed the PDD attention-only identity repair with `64` focused GREEN tests; focused reporting and merge-readiness remain. |
 | 2026-08-26 | Added the EP>1 aggregate/structural-MTP audit gate and the focused PDD attention-only layer-identity repair sub-step. |
 | 2026-08-26 | Added and completed the independent predictor-layer-identity audit after the terminal MTP hook. |
@@ -57,6 +60,8 @@ docs-freeze
   -> MTP-contract-decision (historical; resolved by the 2026-08-26 narrow A' approval)
   -> MTP-pure-path (narrow physical MoE/EP phase)
   -> typed-trace-observability
+  -> raw-width-conservation
+  -> EP>1-aggregate-admission
   -> focused-verification
   -> PR20/PR21 merge-readiness
 ```
@@ -282,6 +287,33 @@ boundary is closed; predictor-interface audit is the next concrete gate.
 open and unmerged. Both remote PR descriptions now match their published
 heads and record the latest Option-B evidence. No merge or auto-merge is
 enabled.
+
+### 2026-08-26 continuation checkpoint
+
+The approved narrow A' production path is implemented through the terminal
+MTP dummy boundary. The remaining execution chain is now:
+
+```text
+dummy-terminal-lane-gate
+  -> focused-matrix-refresh
+  -> coherent-substep-commits
+  -> independent-code-review
+  -> PR20/PR21-read-only-merge-audit
+```
+
+- `dummy-terminal-lane-gate`: complete. Dummy lane phase prediction reuses
+  `_get_dummy_execution_time()` with the typed descriptor; non-dummy prediction
+  retains `_get_execution_time_internal()`.
+- `focused-matrix-refresh`: evidence captured as `350 passed in 10.68s`, with
+  direct dummy phase values `27.0/33.0/33.0 ms` for generic/Step2Mini/Step3
+  profiles and zero-lane routed compute `0.0 ms`.
+- `coherent-substep-commits`: pending. Production, regression, and task-doc
+  files must be staged by ownership and committed only after their focused
+  commands are rerun.
+- `independent-code-review`: pending before merge-readiness; reviewer findings
+  will be independently checked against this plan and the actual diff.
+- `PR20/PR21-read-only-merge-audit`: pending. No remote write or PR state
+  mutation is authorized by this plan.
 
 **Implementation status:** The dependency-boundary and naming decisions are
 confirmed. The maintainer approved the bounded file map and acceptance gates;
@@ -860,7 +892,37 @@ terminal-mtp-red
       disaggregation/layer-identity/terminal-MTP/structural-MTP matrix with
       `64 passed in 2.77s`.
 
-18. **`focused-report-and-commit`** (in progress)
+18. **`raw-width-conservation`** (completed)
+    - File: `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`.
+    - RED: explicit physical lane with source `Batch.total_num_tokens=5`,
+      compute-effective width `8`, and `router_topk=2` must conserve `10`
+      assignments; the pre-fix fallback expected `16`.
+    - GREEN: use the source batch's physical width for conservation while
+      leaving compute-effective lookup helpers unchanged.
+    - Evidence: RED observed `allocated 10, expected 16`; the typed predictor
+      contract module passed `28` tests after the correction.
+    - Commit: one production/test sub-step after the focused matrix is rerun.
+
+19. **`EP>1-aggregate-admission`** (decision resolved; implementation next)
+    - Decision: narrow A'. After concrete predictor classification marks a call
+      as routed MoE, EP>1 requires an `EPLaneWorkload` in both dummy and
+      non-dummy modes.
+    - Boundary: add one protected helper in the shared MoE predictor and call
+      it from the MONOLITHIC and disaggregation public predictor seams. The
+      helper runs before dummy return, measurement activation, and any model,
+      attention, routing, or communication lookup.
+    - Preservation: `DECODE_ATTN`, explicit dense/attention-only calls,
+      mixed-layer aggregate semantics, EP=1, valid lanes, and zero-routed lanes
+      retain their existing behavior. The communication payload builder keeps
+      its final descriptor invariant check.
+    - RED/GREEN: focused tests must prove missing-lane dummy and non-dummy
+      calls fail with zero lookup calls, while the preserved cases continue to
+      pass. No synthetic lane, raw-map inference, caller-side duplicate guard,
+      or scaling factor is permitted.
+    - Dependency: this sub-step follows the completed raw-width conservation
+      repair and precedes the final focused matrix and PR20/PR21 audit.
+
+20. **`focused-report-and-commit`** (pending admission GREEN)
     - Update the task report with the layer-identity evidence, run the fresh
     combined A' matrix, compileall, documentation gates, and `git diff --check`.
     - Commit each coherent production/test/docs sub-step separately before the

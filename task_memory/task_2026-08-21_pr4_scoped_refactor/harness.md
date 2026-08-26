@@ -2,6 +2,9 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Resolved the EP>1 aggregate admission gate with narrow A' and added early lookup-order acceptance criteria. |
+| 2026-08-26 | Added raw-width conservation acceptance and the EP>1 aggregate dummy-admission decision gate. |
+| 2026-08-26 | Added the dummy terminal-MTP physical-lane gate, its mode-specific RCA, and the final focused-verification/commit/review checklist. |
 | 2026-08-26 | Added the PDD attention-only identity gate and recorded the aggregate all-to-all/structural-MTP audit evidence. |
 | 2026-08-26 | Added the global-layer identity propagation gate and recorded its RED/GREEN contract. |
 | 2026-08-26 | Closed the terminal MTP EP>1 hook gates with `178` focused tests and numeric phase/layer evidence. |
@@ -226,6 +229,37 @@
   target identity, physical capacity, retained union, and the all-target
   fail-fast message.
 - No `README.md`, canonical data, remote PR state, or main checkout changes.
+
+### 2026-08-26 continuation gates
+
+- [x] Dummy terminal-MTP lane phases use the typed descriptor in both modes;
+  dummy mode reuses `_get_dummy_execution_time()` and non-dummy mode retains
+  `_get_execution_time_internal()`.
+- [x] Zero-routed dummy lanes keep dispatch/combine and shared pre-routing
+  work, return routed shuffling/grouped-GEMM `0.0`, and perform no positive-load
+  model lookup.
+- [x] MoE TP all-reduce comments and registry semantics agree on the shared
+  source-batch pre-routing width; only EP all-to-all is lane-local.
+- [x] Source-batch routed assignment conservation uses
+  `Batch.total_num_tokens * router_topk`; compute-effective width remains
+  reserved for compute/gating lookup features.
+- [x] Narrow A' is the public EP>1 aggregate admission contract: a routed MoE
+  call requires `EPLaneWorkload` in dummy and non-dummy modes before dummy
+  return, measurement activation, attention/model lookup, or backend lookup.
+- [x] The admission helper runs only after each concrete predictor has resolved
+  its existing routed/dense/attention-only classification. It does not
+  reinterpret `DECODE_ATTN`, mixed-layer aggregates, or stage identity.
+- [x] Attention-only, dense, EP=1, valid typed-lane, and zero-routed-lane
+  calls retain their existing behavior; the communication payload builder
+  remains the final structural descriptor check.
+- [x] Focused A' matrix evidence is recorded as `350 passed in 10.68s`, with
+  direct dummy totals `27.0/33.0/33.0 ms` for generic/Step2Mini/Step3.
+- [ ] Re-run the complete focused command, compile/whitespace checks, and
+  documentation gates at the final dirty state.
+- [ ] Stage and commit production, tests, and task docs as coherent
+  sub-steps, then obtain an independent code review.
+- [ ] Complete the read-only PR20/PR21 merge-readiness audit. Keep all remote
+  PR state unchanged until a separate authorization gate.
 
 ## Scoped completion checkpoint
 

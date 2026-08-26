@@ -2,6 +2,9 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Added CP-44 documenting the narrow A' admission decision, concrete-classification audit, and docs-freeze consistency check. |
+| 2026-08-26 | Added CP-43 for the raw/effective width conservation repair and EP>1 admission decision gate. |
+| 2026-08-26 | Added CP-42 for the dummy terminal-MTP lane RCA, typed seam repair, and numeric verification. |
 | 2026-08-26 | Added CP-41 for SCOPE-032 RED/GREEN verification and the completed PDD attention-only identity repair. |
 | 2026-08-26 | Added CP-40 for the EP>1 aggregate/structural-MTP audit and the open PDD attention-only identity seam. |
 | 2026-08-26 | Added CP-39 for the predictor global-layer identity propagation audit and RED/GREEN verification. |
@@ -1209,3 +1212,85 @@ PR20 base. No remote state was changed.
   unchanged.
 - **Final Status:** **PASS.** SCOPE-032 is resolved; the next gate is the
   full focused report, dirty-diff review, and local PR20/PR21 merge-readiness.
+
+## CP-42 - Dummy terminal-MTP physical-lane repair
+
+- **Target Component/Phase:** Dummy branch of the typed terminal-MTP MoE lane
+  phase seam, after the non-dummy terminal hook and PDD identity repair.
+- **Reviewer Agent Identity:** `/root` (direct production call-chain audit and
+  focused verification; independent review is still pending).
+- **Inspected Artifacts:**
+  `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`,
+  `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`,
+  `frontier/operators/families.py`, the terminal-MTP regression, the typed
+  predictor/scheduler tests, and the direct dummy probe.
+- **Identified Issues/Anomalies:** The typed lane helper entered
+  `_get_execution_time_internal()` even when dummy mode was enabled. That path
+  reached the intentionally unsupported dummy MoE all-to-all predictor and
+  raised `NotImplementedError` before producing phases. The existing PDD
+  comments also described MoE TP all-reduce as lane-local although the registry
+  payload builder uses the source batch's shared pre-routing width.
+- **Remediation/Verification Code Actions Taken:** Added the optional typed
+  lane argument to `_get_dummy_execution_time()` and routed the dummy branch
+  through it. Kept the non-dummy branch unchanged. Updated only the misleading
+  PDD communication comments. Zero-routed lanes now retain dispatch/combine and
+  shared all-reduce while returning `0.0` for routed shuffling/grouped-GEMM.
+- **Verification:** The direct dummy probe returned `27.0 ms`; lane phase sums
+  were `7.0` and `5.0 ms`, with lane `1` routed count `0` and no positive-load
+  lookup. Generic/`step2_mini`/`step3_text` probes returned `27.0/33.0/33.0 ms`.
+  The focused A' matrix passed `350` tests in `10.68s`; compile and whitespace
+  checks remained clean.
+- **Final Status:** **PASS for this sub-step.** The production/test/doc files
+  still require coherent commits, a fresh final audit, and an independent
+  code-review checkpoint before merge-readiness is reported.
+
+## CP-43 - Physical source-width conservation and aggregate admission audit (historical)
+
+- **Target Component/Phase:** `raw-width-conservation` plus the then-open
+  `EP>1-aggregate-admission` gate. This checkpoint predates the decision
+  recorded in CP-44.
+- **Reviewer Agent Identity:** `/root` (direct TDD implementation and source
+  audit; no independent review conclusion is claimed).
+- **Inspected Artifacts:**
+  `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`,
+  `tests/unit/test_typed_ep_predictor_contract.py`,
+  `frontier/moe_ep_workload.py`, the canonical communication payload builder,
+  and the typed-lane scheduler/entity call chain.
+- **Identified Issues/Anomalies:** The explicit-lane source-batch fallback
+  multiplied compute-effective width (`8`) by `router_topk` and rejected a
+  materialized physical workload with `10` assignments (`expected 16`). The
+  all-to-all operator already rejects routed aggregate calls without a lane,
+  but dummy public aggregate prediction can return structurally before that
+  boundary while non-dummy paths may perform lookup work first.
+- **Remediation/Verification Code Actions Taken:** Added one regression with
+  physical width `5`, effective width `8`, and top-k `2`; observed the intended
+  RED `allocated 10, expected 16`; changed only the fallback conservation
+  expression to `batch.total_num_tokens * router_topk`. The typed predictor
+  contract module then passed `28` tests in `2.55s`. No admission change was
+  made while the dummy compatibility surface remains a design fork.
+- **Final Status:** **PASS for width repair at that checkpoint.** The
+  aggregate-admission decision was subsequently resolved by CP-44; this
+  historical entry intentionally preserves the earlier observation.
+
+## CP-44 - Narrow A' aggregate admission docs freeze
+
+- **Target Component/Phase:** EP>1 routed aggregate public predictor boundary
+  after the raw-width conservation repair.
+- **Reviewer Agent Identity:** `/root` (direct source audit and maintainer
+  decision recording; implementation review remains pending).
+- **Inspected Artifacts:** `design.md`, `harness.md`, `plan.md`, `issues.md`,
+  `requirements.md`, the two public predictor entry points, the scheduler lane
+  materializers, and the communication payload builder.
+- **Identified Issues/Anomalies:** The prior docs described communication
+  payload construction as the only admission boundary and left the dummy vs
+  non-dummy decision pending, although the selected architecture requires a
+  semantic predictor boundary before mode-dependent lookup.
+- **Remediation/Verification Code Actions Taken:** Recorded narrow A' as the
+  approved contract, documented the concrete MONOLITHIC/PDD classification
+  rules, separated the early semantic check from the final payload invariant,
+  and added zero-lookup acceptance criteria for dummy and non-dummy failures.
+  No production code or test source was changed in this docs sub-step.
+- **Verification:** Cross-file scan confirms the decision is resolved and the
+  old pending/communication-only wording is removed from the active sections.
+  The next gate is TDD RED for the shared admission helper.
+- **Final Status:** **PASS for docs freeze; implementation pending.**

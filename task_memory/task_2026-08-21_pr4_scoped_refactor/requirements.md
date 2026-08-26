@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Recorded the maintainer's narrow A' decision for unified EP>1 routed aggregate admission in dummy and non-dummy modes. |
 | 2026-08-26 | Confirmed the shared `Batch` compute-contract repair and the structural MTP verification-width correction after the token-ledger RCA. |
 | 2026-08-25 | Recorded the post-PR17 PR20/PR21 merge-conflict RCA, the maintainer-approved A' typed-lane contract, and the docs-first implementation request. |
 | 2026-08-22 | Recorded the maintainer's Option-B decision for target-local explicit KV filtering and mandatory discard warnings. |
@@ -263,3 +264,16 @@ constraints only; implementation choices belong in `plan.md` and `design.md`.
   use `Batch.total_num_tokens` as the pre-routing materializer input, and keep
   routed assignment counts lane-local after top-k routing. Preserve explicit
   AFD/CUDA Graph padding semantics and the narrow A' physical-lane boundary.
+
+## R-027 - Select narrow A' EP>1 aggregate admission
+
+- **Attribute:** `[Original Request]`
+- **Raw request:** "1，继续"
+- **Captured intent:** Adopt narrow A'. Keep each concrete predictor's existing
+  layer/cluster aggregate classification. Once a call is classified as routed
+  MoE, require an explicit `EPLaneWorkload` for EP>1 in both dummy and
+  non-dummy modes before timing, measurement, or lookup. Preserve
+  attention-only, dense, EP=1, valid-lane, zero-routed-lane, and MTP explicit
+  lane behavior. Implement the invariant through one shared protected helper,
+  without synthetic descriptors, raw-map inference, caller-side duplicate
+  guards, or temporary scaling.

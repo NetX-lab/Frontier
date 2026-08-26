@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Froze narrow A' public EP>1 aggregate admission: routed calls require a typed physical lane before dummy or non-dummy lookup. |
 | 2026-08-26 | Implemented the PDD attention-only layer-identity propagation contract after the focused RED/GREEN gate. |
 | 2026-08-26 | Added the PDD attention-only identity seam contract and the EP>1 aggregate/structural-MTP audit boundaries. |
 | 2026-08-26 | Added the global-layer versus pipeline-stage identity invariant and the predictor propagation contract. |
@@ -593,12 +594,38 @@ terminal path without multiplying that overhead by layer count.
 
 ## Boundary audit and PDD identity seam (2026-08-26)
 
-The existing communication operator contract remains the only admission
-boundary for routed EP traffic. An aggregate `CommPayloadContext` is valid for
-attention-only, dense, and shared-domain work; an EP>1 routed all-to-all
-dispatch or combine payload requires an explicit `EPLaneWorkload` and fails at
-payload construction when it is absent. Callers do not add a second guard or
-reconstruct a lane from a raw map.
+Routed EP traffic has two complementary admission boundaries. The public
+predictor is the early semantic boundary: once its concrete predictor has
+classified the request as a routed MoE computation, EP>1 requires an explicit
+`EPLaneWorkload` before dummy timing, measurement activation, attention/model
+lookup, or communication lookup. The communication operator remains the final
+structural boundary: an EP>1 routed all-to-all dispatch or combine payload
+still validates the descriptor and fails if its fields are malformed. These
+checks have different owners and are intentionally not duplicated in scheduler
+callers.
+
+The public rule is narrow A': it applies only to a concrete predictor call that
+has already been classified as routed MoE and has `ep_size > 1`. Attention-only
+calls (`include_ffn=False`), dense calls (`include_moe=False` or a known dense
+layer), and EP=1 retain their existing aggregate behavior. A missing lane is a
+programming error in the routed EP>1 contract; the predictor raises a clear
+`ValueError` before mode-dependent work rather than returning a synthetic
+timing or performing partial lookup.
+
+Concrete predictor classification remains owned by the existing entry points:
+
+| Entry point context | Routed classification used by the admission helper |
+|----------------------|------------------------------------------------------|
+| MONOLITHIC | `include_ffn=False` is attention-only; `include_moe=False` is dense; explicit `include_moe=True` is routed; when the existing one-layer path has no explicit flag, use `model_config.is_moe_layer(layer_id)`; preserve the current multi-layer aggregate semantics. |
+| PDD/PD-AF predictor | `DECODE_ATTN` is attention-only; `PREFILL`, unified `DECODE`, and `DECODE_FFN` retain their current cluster/layer MoE classification. The admission helper does not reinterpret cluster names or infer mixed-layer structure. |
+
+The shared protected helper accepts only this already-resolved boolean
+classification and an optional lane descriptor. It resolves EP size from the
+existing cluster topology and enforces exactly one invariant:
+`routed_moe && ep_size > 1 && lane is None` raises. It does not parse names,
+construct descriptors, accept raw expert-token maps, or duplicate scheduler
+identity/barrier ownership. The payload builder's final descriptor validation
+remains in place.
 
 The structural MTP registry audit is a configuration-coverage check, not a new
 runtime policy. The three locally present configs load their declared layer
