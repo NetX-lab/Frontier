@@ -1266,3 +1266,23 @@ cache. Evidence is in `test_report_2026-08-21_a2_finite_lookup.md`.
 - **Result:** Documentation now records the exact equations and acceptance
   criteria. No production or test source changed in this documentation step;
   the next step is the TDD RED regression.
+
+## 2026-08-26 - Token-ledger TDD RED gate
+
+- **Status:** RED confirmed; production edits remain pending.
+- **Motivation:** Prove that the new regression cases detect the two approved
+  contract defects on the current implementation before changing production
+  code.
+- **Expectation:** A registered target-embedded MTP batch with
+  `planned=[2,1]`, `verify=[3,2]` must expose compute and transfer width `5`;
+  the first structural replay block must preserve `[3,2]`; materializer
+  assignments must conserve `5 * top_k(2) = 10`.
+- **Method:** Ran
+  `PYTHONPATH=$PWD python -m pytest -q -p no:cacheprovider
+  tests/unit/test_mtp_token_ledger_repair.py` against the uncorrected
+  implementation.
+- **Result:** `2 failed, 1 passed`. The compute assertion observed
+  `total_num_tokens=5` but helper result `8`; the structural capture observed
+  `num_tokens=[1,1]` versus expected `[3,2]`; the materializer observed
+  `routing_token_count=5`, `total_routed_assignments=10`, and lane-sum `10`.
+  Both failures are the intended RED signal, not fixture/import errors.
