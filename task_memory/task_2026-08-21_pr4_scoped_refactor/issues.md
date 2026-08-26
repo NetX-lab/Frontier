@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Opened the remaining typed-lane implementation audit and recorded the trace raw-map boundary for resolution. |
 | 2026-08-26 | Closed the MONOLITHIC initial-decode boundary audit with direct Request/scheduler probe evidence. |
 | 2026-08-26 | Recorded the approved MTP/MoE token ledger, the compute-helper double-count RCA, and the structural verification-shape repair gate. |
 | 2026-08-25 | Opened the post-implementation MTP scope audit and recorded the typed trace boundary evidence. |
@@ -761,6 +762,27 @@
   use complete `verify_tokens`. Add a focused regression covering the boundary
   values so a future token-ledger change cannot erase this intentional
   distinction.
+
+### SCOPE-029 - Remaining typed-lane implementation must close the raw-map trace boundary
+
+- **Status:** Open implementation audit; no additional design choice is
+  required.
+- **Observed state:** The scheduler and metrics paths already carry an
+  `EPLaneWorkload`, while the direct event trace call still passes
+  `dict(batch.per_expert_tokens)` into `_log_ep_workload_trace`.
+- **Root cause:** The descriptor migration moved ownership of physical workload
+  data, but the logging helper's parameter shape remained the old
+  serialization-oriented map contract. Keeping that shape in a production
+  helper permits future callers to bypass lane identity and topology checks.
+- **Required resolution:** Make the production trace helper consume the typed
+  descriptor (or a typed event payload that contains it). Build the raw map
+  only immediately before serialization/logging, where it is an output view.
+  Preserve scheduler-owned stage, KV, operation, and barrier identity.
+- **Verification gate:** A focused trace test must prove descriptor identity is
+  preserved, the emitted map is a read-only projection, and no production trace
+  caller accepts a raw expert-token map as its workload input.
+- **Scope:** This is a localized continuation of the approved A' plan. It does
+  not expand the MTP interface or change canonical profiling data.
 
 ## Explicitly deferred questions
 

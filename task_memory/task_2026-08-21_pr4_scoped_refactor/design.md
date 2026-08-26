@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Recorded the pre-implementation audit boundary for the remaining typed-lane, predictor, communication, MTP, and trace changes. |
 | 2026-08-26 | Documented the verified MONOLITHIC initial-decode scheduler frontier boundary. |
 | 2026-08-26 | Added the approved canonical MTP/MoE token ledger and shared compute-contract repair design. |
 | 2026-08-25 | Added the implementation audit separating the physical MoE MTP lane seam from the existing generic MTP shape replay. |
@@ -482,3 +483,26 @@ accessor only. Adding a new topology or expert-count policy changes the
 materializer/registry declaration and its contract tests, not scattered
 predictor branches. Any implementation that needs a second raw-map owner,
 caller-specific width flag, or synthetic scheduler entity fails the A' gate.
+
+## Implementation handoff audit (2026-08-26)
+
+The approved design is now the source of truth for the remaining dirty
+implementation slice. The audit separates the work into these ownership
+boundaries:
+
+- `moe_ep_workload.py` validates and materializes the immutable physical lane;
+  scheduler/entity code only transports it and owns lifecycle identity.
+- Predictor code consumes a descriptor for every physical or load-aware lane;
+  the scalar path remains limited to non-lane pre-routing lookups.
+- Communication builders receive the descriptor through `CommPayloadContext`;
+  they may expose a dict-shaped value only at an explicit output boundary.
+- Physical MoE MTP phase calculation calls the typed lane seam. Generic MTP
+  block-shape replay remains the already-approved scheduler-independent adapter.
+- The remaining production trace helper is the only known raw-map input site;
+  its caller must pass the descriptor and create the map projection inside the
+  logging/serialization boundary.
+
+The implementation must preserve the post-PR17 scheduler ownership of stage,
+KV, admission, barrier, and stale-wave identity. Any change that introduces a
+second mutable map owner, reconstructs a physical lane from `len(map)`, or
+uses a caller-specific token-width bypass violates this design.

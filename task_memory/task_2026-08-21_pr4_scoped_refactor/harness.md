@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Recorded the implementation handoff audit and the remaining typed-lane verification boundaries. |
 | 2026-08-26 | Recorded the closed MONOLITHIC initial-decode frontier gate and its numeric probe contract. |
 | 2026-08-26 | Added the canonical token-ledger gates and recorded approval of the shared compute-contract and structural MTP shape repairs. |
 | 2026-08-25 | Split the physical MoE MTP lane gate from the unresolved generic MTP shape-adapter decision. |

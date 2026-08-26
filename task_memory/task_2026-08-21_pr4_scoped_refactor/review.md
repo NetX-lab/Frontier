@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Recorded the implementation handoff review and the raw-map trace boundary that must close before merge readiness. |
 | 2026-08-26 | Recorded the MONOLITHIC initial-decode boundary audit and focused regression decision. |
 | 2026-08-25 | Recorded the post-implementation MTP scope audit, trace ownership evidence, and escalation gate. |
 | 2026-08-25 | Recorded the docs-freeze review: formal RCA, A' ownership graph, and TDD dependency plan are complete; the dirty Gate 2 probe remains provisional. |
@@ -1023,3 +1024,23 @@ PR20 base. No remote state was changed.
 - **Final Status:** **PASS.** The `max(planned_drafts, 1)` branch is a
   scheduler admission/frontier projection, not a compute/gating/materializer
   width. The canonical physical token ledger remains unchanged.
+
+## CP-35 - Docs-first implementation handoff review
+
+- **Target Component/Phase:** Remaining post-PR17 narrow A' implementation
+  before predictor/communication/trace commits.
+- **Reviewer Agent Identity:** `/root` (direct source and task-document audit).
+- **Inspected Artifacts:** The current worktree diff, all
+  `EPLaneWorkload`/`LayerEPWorkload` consumers, the scheduler event trace call,
+  and the approved design/plan/harness/issues records.
+- **Identified Issues/Anomalies:** The provisional dirty slice contains the
+  intended typed descriptor propagation, but the event trace helper still
+  receives a raw map at the logging call boundary. The large MoE predictor diff
+  also contains formatting noise and requires whitespace-insensitive semantic
+  review before commit.
+- **Remediation/Verification Code Actions Taken:** Added the implementation
+  handoff ownership record, named SCOPE-029, and constrained the next steps to
+  descriptor/predictor/communication/MTP/trace gates. No additional production
+  behavior was changed during this documentation checkpoint.
+- **Final Status:** **PASS for docs; implementation and focused verification
+  remain in progress.**

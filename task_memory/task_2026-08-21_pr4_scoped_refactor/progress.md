@@ -1351,3 +1351,19 @@ cache. Evidence is in `test_report_2026-08-21_a2_finite_lookup.md`.
   until the first decode scheduling step. No physical-width correction is
   needed in this seam. Evidence and acceptance criteria are recorded in
   `issues.md:SCOPE-028`, `design.md`, and `harness.md`.
+
+## 2026-08-26 - Docs-first implementation handoff audit
+
+- **Status:** Complete for documentation; implementation remains in progress.
+- **Motivation:** The approved narrow A' design must be applied to the
+  provisional dirty implementation without allowing raw expert maps or
+  scheduler identity to leak back into predictor and trace contracts.
+- **Expectation:** Every remaining code slice has one owner, one focused gate,
+  and one commit boundary. The trace helper is explicitly identified as the
+  remaining raw-map production input site.
+- **Method:** Re-read the current diff with whitespace ignored, traced all
+  `EPLaneWorkload`/`per_expert_tokens` call sites, and recorded the ownership
+  boundaries in `design.md`, `issues.md`, `plan.md`, and `harness.md`.
+- **Result:** The documentation checkpoint is complete. The next code action
+  is to run the existing typed-lane RED matrix, then finish and commit the
+  predictor/communication/trace slices in dependency order.

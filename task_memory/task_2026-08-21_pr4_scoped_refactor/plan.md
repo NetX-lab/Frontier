@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-26 | Recorded the implementation handoff audit and promoted the trace-helper migration to the next concrete sub-step. |
 | 2026-08-26 | Closed the MONOLITHIC initial-decode boundary audit and added its focused regression gate. |
 | 2026-08-26 | Added the approved token-ledger repair sub-steps, RED/GREEN gates, and MONOLITHIC boundary audit. |
 | 2026-08-25 | Added the MTP scope decision gate and the typed trace-helper completion step after implementation audit. |
@@ -247,6 +248,28 @@ Each production sub-step is committed only after its RED/GREEN verification;
 the pre-existing dirty A' probe files remain in scope and are not reverted.
 
 ## Status
+
+### 2026-08-26 implementation handoff checkpoint
+
+The documentation-first checkpoint is complete. The remaining implementation
+must proceed in dependency order:
+
+```text
+descriptor-contract-tests
+  -> canonical-materializer
+  -> scheduler-plan/entity-propagation
+  -> predictor-interface
+  -> communication-consumers
+  -> MTP-pure-path
+  -> typed-trace-observability
+  -> focused-verification
+  -> PR20/PR21 merge-readiness
+```
+
+The worktree contains the provisional implementation for these sub-steps;
+each dirty slice must be independently re-vetted against the design and then
+committed only after its focused RED/GREEN gate passes. The raw-map trace call
+is the currently identified production boundary still requiring migration.
 
 **Current phase:** PR #20 remains maintainer-approved, open, and unmerged at
 `18d1a23e`. PR #21 is published at `8cc267ea`, based on PR #20, and remains
