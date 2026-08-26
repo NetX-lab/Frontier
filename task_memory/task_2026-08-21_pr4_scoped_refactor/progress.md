@@ -1286,3 +1286,22 @@ cache. Evidence is in `test_report_2026-08-21_a2_finite_lookup.md`.
   `num_tokens=[1,1]` versus expected `[3,2]`; the materializer observed
   `routing_token_count=5`, `total_routed_assignments=10`, and lane-sum `10`.
   Both failures are the intended RED signal, not fixture/import errors.
+
+## 2026-08-26 - Shared Batch compute contract GREEN
+
+- **Status:** Complete; structural replay remains the next independent
+  production sub-step.
+- **Motivation:** Remove the target-embedded MTP planned-draft double count at
+  the shared `Batch` owner rather than compensating in individual predictors.
+- **Expectation:** The same `[3,2]` physical batch returns compute width `5`
+  and transfer width `5`, while explicit CUDA Graph/AFD metadata and unrelated
+  effective-token paths retain their existing precedence and values.
+- **Method:** Changed only the registered target-embedded MTP branch in
+  `frontier/entities/batch.py` to return `_total_num_tokens`; ran the new
+  ledger assertion, the full `tests/unit/test_predictor_effective_tokens.py`,
+  the CUDA Graph/AFD stage-token tests, module compilation, and whitespace
+  validation.
+- **Result:** `40 passed` for the ledger assertion plus predictor-effective
+  token suite, `9 passed` for CUDA Graph/AFD stage-token coverage,
+  `py_compile` succeeded, and `git diff --check` was clean. No caller-specific
+  bypass or new metadata field was introduced.

@@ -824,12 +824,10 @@ class Batch(BaseEntity):
             from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_method
 
             if is_target_embedded_mtp_method(method):
-                # vLLM target-embedded MTP target forward consumes the
-                # scheduler-visible tokens plus scheduled draft tokens.
-                return self._total_num_tokens + sum(
-                    int(value)
-                    for value in spec_metadata.planned_draft_tokens_per_request
-                )
+                # The scheduler-visible batch rows already contain the complete
+                # target verification width. Planned draft slots remain control
+                # metadata and must not be added to the physical width again.
+                return self._total_num_tokens
 
         return self._total_num_tokens
 
@@ -1273,7 +1271,11 @@ class EPBatchGroup(Batch):
     - ep_id: The ID of the Expert Parallel (EP) replica to which this batch is assigned.
     - time: The timestamp associated with this batch group.
     - source_batch_ids: List of source batch IDs that contribute to this group.
-    - per_expert_tokens: Dictionary mapping expert IDs to the number of tokens assigned to them.
+    - lane_workload: Immutable physical `EPLaneWorkload` descriptor containing
+      topology and routed-token counts for this lane.
+    - per_expert_tokens: Read-only descriptor-backed projection keyed by global
+      expert ID; it is an observability compatibility view, not an independent
+      workload owner.
     """
 
     def __init__(
