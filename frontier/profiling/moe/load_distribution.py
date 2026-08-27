@@ -43,26 +43,31 @@ def generate_expert_routing(
         topk_ids: Selected expert indices [num_tokens, top_k]
     
     Raises:
-        ValueError: If load_distribution is not recognized
+        ValueError: If dimensions are non-positive or load_distribution is not recognized
     
     Examples:
         >>> weights, ids = generate_expert_routing(1024, 8, 2, "uniform", seed=42)
         >>> weights.shape, ids.shape
         (torch.Size([1024, 2]), torch.Size([1024, 2]))
     """
-    if seed is not None:
-        torch.manual_seed(seed)
-        np.random.seed(seed)
-    
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    
-    # check top_k
+    if num_tokens <= 0:
+        raise ValueError(f"num_tokens must be positive, got {num_tokens}.")
+    if num_experts <= 0:
+        raise ValueError(f"num_experts must be positive, got {num_experts}.")
+    if top_k <= 0:
+        raise ValueError(f"top_k must be positive, got {top_k}.")
     if top_k > num_experts:
         raise ValueError(
             f"top_k ({top_k}) cannot exceed num_experts ({num_experts}). "
             f"This typically happens when EP is too large. "
             f"Reduce EP so that num_experts_per_device >= router_topk."
         )
+
+    if seed is not None:
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     
     if load_distribution == "uniform":
         # Uniform distribution: each expert has equal probability of being selected
@@ -76,9 +81,10 @@ def generate_expert_routing(
         
     elif load_distribution == "skewed":
         # Skewed distribution: some experts are more popular (power law)
-        # Use sqrt(expert_id) as probability weight - earlier experts are more likely
+        # Use a positive offset so every expert remains reachable while higher
+        # IDs remain more likely.
         expert_probs = torch.pow(
-            torch.arange(num_experts, dtype=torch.float, device=device), 
+            torch.arange(num_experts, dtype=torch.float, device=device) + 1.0,
             0.5  # Power factor: 0.5 gives moderate skew
         )
         expert_probs = expert_probs / expert_probs.sum()
@@ -97,7 +103,10 @@ def generate_expert_routing(
     elif load_distribution == "extremely_skewed":
         # Extremely skewed: 80% of tokens use only a small subset of experts
         # This simulates scenarios where certain experts become "hot"
-        popular_experts = min(num_experts // 4, 8)  # Use at most 1/4 of experts or 8
+        popular_experts = min(
+            num_experts,
+            max(top_k, min(num_experts // 4, 8)),
+        )
         
         # 80% of tokens use popular experts, 20% use all experts
         use_popular = torch.rand(num_tokens, device=device) < 0.8
@@ -255,4 +264,3 @@ if __name__ == "__main__":
         print(f"  Gini: {stats['gini']:.3f}")
         print(f"  Entropy: {stats['entropy']:.3f}")
         print(f"  Utilization: {stats['utilization']:.3f}")
-

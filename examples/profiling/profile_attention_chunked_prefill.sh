@@ -17,6 +17,7 @@ MODEL="${MODEL:-qwen2_dense_test}"
 DEVICE="${DEVICE:-rtx_pro_6000}"
 NUM_GPUS="${NUM_GPUS:-1}"
 MAX_SEQ_LEN="${MAX_SEQ_LEN:-128}"
+MAX_MODEL_LEN="${MAX_MODEL_LEN:-}"
 TP_SIZES="${TP_SIZES:-1}"
 PP_SIZES="${PP_SIZES:-1}"
 ATTENTION_BACKEND="${ATTENTION_BACKEND:-NO_OP}"
@@ -73,6 +74,7 @@ while [[ $# -gt 0 ]]; do
     --device) require_cli_value "$1" "${2-}"; DEVICE="$2"; shift 2 ;;
     --num-gpus) require_cli_value "$1" "${2-}"; NUM_GPUS="$2"; shift 2 ;;
     --max-seq-len) require_cli_value "$1" "${2-}"; MAX_SEQ_LEN="$2"; shift 2 ;;
+    --max-model-len) require_cli_value "$1" "${2-}"; MAX_MODEL_LEN="$2"; shift 2 ;;
     --tp-sizes) require_cli_value "$1" "${2-}"; TP_SIZES="$2"; shift 2 ;;
     --pp-sizes) require_cli_value "$1" "${2-}"; PP_SIZES="$2"; shift 2 ;;
     --attention-backend) require_cli_value "$1" "${2-}"; ATTENTION_BACKEND="$2"; shift 2 ;;
@@ -85,6 +87,10 @@ while [[ $# -gt 0 ]]; do
     *) echo "ERROR: unknown option: $1" >&2; exit 2 ;;
   esac
 done
+
+if [ -z "$MAX_MODEL_LEN" ]; then
+  MAX_MODEL_LEN="$MAX_SEQ_LEN"
+fi
 
 require_bool "DRY_RUN" "$DRY_RUN"
 require_bool "ENABLE_CHUNKED_PREFILL_GRID_SEARCH" "$ENABLE_CHUNKED_PREFILL_GRID_SEARCH"
@@ -109,6 +115,7 @@ CMD=(
   --models "$MODEL"
   --num_gpus "$NUM_GPUS"
   --max_seq_len "$MAX_SEQ_LEN"
+  --max_model_len "$MAX_MODEL_LEN"
   --num_tensor_parallel_workers "${TP_SIZE_ARGS[@]}"
   --max_pipeline_parallel_size "${PP_SIZE_ARGS[@]}"
   --attention_backend "$ATTENTION_BACKEND"
@@ -138,6 +145,8 @@ Output taxonomy: data/profiling/compute/<device>/<model>/attention.csv
 Resolved output: $DATA_DIR_BASE/compute/$DEVICE/$MODEL/attention.csv
 Model: $MODEL
 Device: $DEVICE
+Max sequence length: $MAX_SEQ_LEN
+Max model length: $MAX_MODEL_LEN
 TP sizes: $TP_SIZES
 Chunked prefill fixed size: $FIXED_CHUNKED_PREFILL_SIZE
 Chunked prefill grid search: $ENABLE_CHUNKED_PREFILL_GRID_SEARCH

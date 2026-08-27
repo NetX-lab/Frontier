@@ -32,8 +32,9 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import warnings
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing as mp
 
@@ -80,6 +81,7 @@ from frontier.profiling.utils import (
     normalize_profile_method,
     profile_method_to_measurement_type,
     require_profiling_dependencies,
+    _resolve_profile_max_model_len,
 )
 
 
@@ -455,7 +457,8 @@ def parse_args():
         default=None,
         help=(
             "Optional explicit decode KV-cache sizes to profile. "
-            "When provided, this overrides the default decode sequence-length grid."
+            "When provided, this overrides the default decode sequence-length grid "
+            "and may exceed max_seq_len when each value is <= max_model_len - 1."
         ),
     )
     parser.add_argument(
@@ -602,7 +605,7 @@ def parse_args():
         default=None,
         help=(
             "Optional explicit batch sizes for online_grid mixed profiling. "
-            "When provided, this overrides mixed_batch_size_min/max."
+            "When provided, these values extend the configured batch-size range."
         ),
     )
     parser.add_argument(
@@ -612,7 +615,7 @@ def parse_args():
         default=None,
         help=(
             "Optional explicit total-token values for online_grid mixed profiling. "
-            "When provided, this overrides mixed_total_tokens_min/max."
+            "When provided, these values extend the configured total-token range."
         ),
     )
     parser.add_argument(
@@ -628,7 +631,8 @@ def parse_args():
         default=[0],
         help=(
             "Explicit KV cache sizes to profile for mixed prefill inputs. "
-            "Defaults to 0 to preserve existing behavior."
+            "Defaults to 0 to preserve existing behavior. Values may exceed "
+            "max_seq_len when the complete sequence fits max_model_len."
         ),
     )
     parser.add_argument(
@@ -654,8 +658,13 @@ def parse_args():
         "--true_mixed_prefill_chunk_sizes",
         type=int,
         nargs="+",
-        default=[64, 128, 256, 512, 1024],
-        help="Prefill chunk sizes for true mixed-batch profiling.",
+        default=None,
+        help=(
+            "Optional explicit prefill chunk sizes for true mixed-batch profiling. "
+            "When omitted, canonical anchors and the max_seq_len endpoint are "
+            "derived automatically. Explicit values are checked only against "
+            "max_model_len."
+        ),
     )
     parser.add_argument(
         "--true_mixed_decode_batch_sizes",
@@ -668,8 +677,13 @@ def parse_args():
         "--true_mixed_decode_kv_cache_sizes",
         type=int,
         nargs="+",
-        default=[128, 256, 512, 1024, 2048],
-        help="Decode KV cache sizes for true mixed-batch profiling.",
+        default=None,
+        help=(
+            "Optional explicit decode KV cache sizes for true mixed-batch profiling. "
+            "When omitted, canonical anchors and the max_seq_len endpoint are "
+            "derived automatically. Explicit values are checked only against "
+            "max_model_len."
+        ),
     )
     parser.add_argument(
         "--true_mixed_prefill_kv_cache_size",
@@ -773,6 +787,8 @@ def _resolve_fp8_settings(
 
 def _validate_cli_conflicts(args: argparse.Namespace) -> None:
     """Validate unsupported argument combinations with fail-fast behavior."""
+    if hasattr(args, "max_seq_len") and hasattr(args, "max_model_len"):
+        _resolve_profile_max_model_len(args.max_seq_len, args.max_model_len)
     if args.profile_only_prefill and args.profile_only_decode:
         raise ValueError(
             "profile_only_prefill and profile_only_decode cannot both be enabled."
@@ -807,6 +823,91 @@ def _validate_cli_conflicts(args: argparse.Namespace) -> None:
             raise ValueError(
                 "--vllm_mla_cuda_op_log cannot be combined with mixed profiling modes."
             )
+
+
+def _filter_standard_attention_inputs_by_memory(
+    input_combinations: List[AttentionInput],
+    max_num_tokens: int,
+    model: str,
+    tensor_parallel_size: int,
+    explicit_decode_kv_cache_sizes: Optional[List[int]] = None,
+) -> Tuple[List[AttentionInput], Set[int]]:
+    """Filter standard attention inputs and report target-local explicit drops.
+
+    Automatic profiling points are allowed to disappear when a selected
+    model/tensor-parallel target has insufficient physical KV capacity. Explicit
+    decode KV points follow the same per-target filtering policy, but every
+    discarded explicit point is surfaced as a warning so that the resulting CSV
+    coverage is visible to the caller.
+    """
+    explicit_kv_values = {
+        int(value) for value in (explicit_decode_kv_cache_sizes or [])
+    }
+    filtered_inputs: List[AttentionInput] = []
+    retained_explicit_kv: Set[int] = set()
+    discarded_explicit_inputs: List[AttentionInput] = []
+
+    for input_combination in input_combinations:
+        under_memory_limit = input_combination.is_under_memory_limit(max_num_tokens)
+        if under_memory_limit:
+            filtered_inputs.append(input_combination)
+
+        if (
+            not input_combination.is_prefill
+            and input_combination.kv_cache_size in explicit_kv_values
+        ):
+            if under_memory_limit:
+                retained_explicit_kv.add(input_combination.kv_cache_size)
+            else:
+                discarded_explicit_inputs.append(input_combination)
+
+    if discarded_explicit_inputs:
+        discarded_values = sorted(
+            {item.kv_cache_size for item in discarded_explicit_inputs}
+        )
+        retained_values = sorted(retained_explicit_kv)
+        warnings.warn(
+            "Standard attention memory filtering discarded "
+            f"{len(discarded_explicit_inputs)} combination(s) for explicit "
+            f"decode KV values={discarded_values}; model={model!r}, "
+            f"tensor_parallel_size={tensor_parallel_size}, "
+            f"physical_capacity={max_num_tokens} tokens. "
+            f"Retained explicit KV values for this target={retained_values}. "
+            "The discarded rows were omitted for this target; other selected "
+            "targets may retain them.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
+    return filtered_inputs, retained_explicit_kv
+
+
+def _validate_explicit_decode_kv_coverage(
+    explicit_decode_kv_cache_sizes: Optional[List[int]],
+    retained_explicit_kv: Set[int],
+    target_capacities: Dict[Tuple[str, int], int],
+) -> None:
+    """Fail only when no selected target can profile an explicit KV value."""
+    if not explicit_decode_kv_cache_sizes:
+        return
+
+    requested_values = {int(value) for value in explicit_decode_kv_cache_sizes}
+    missing_values = sorted(requested_values - set(retained_explicit_kv))
+    if not missing_values:
+        return
+
+    capacity_details = ", ".join(
+        f"{model!r}/TP={tensor_parallel_size}: {capacity} tokens"
+        for (model, tensor_parallel_size), capacity in sorted(
+            target_capacities.items(),
+            key=lambda item: (item[0][0], item[0][1]),
+        )
+    )
+    raise ValueError(
+        "no physically legal pairing for explicit decode KV values "
+        f"{missing_values} across the selected model/TP targets; "
+        f"target capacities: {capacity_details or '<none>'}."
+    )
 
 
 def _attach_attention_output_metadata(
@@ -1670,6 +1771,7 @@ def main():
         decode_kv_cache_size_list=args.decode_kv_cache_size_list,
         enable_chunked_prefill_grid_search=args.enable_chunked_prefill_grid_search,
         fixed_chunked_prefill_size=args.fixed_chunked_prefill_size,
+        max_model_len=args.max_model_len,
     )
 
     # Generate mixed-length prefill input combinations if enabled
@@ -1690,6 +1792,7 @@ def main():
             )
             mixed_input_combinations = get_online_grid_mixed_prefill_input_combinations(
                 max_seq_len=args.max_seq_len,
+                max_model_len=args.max_model_len,
                 min_batch_size=args.mixed_batch_size_min,
                 max_batch_size=args.mixed_batch_size_max,
                 min_total_tokens=args.mixed_total_tokens_min,
@@ -1705,6 +1808,7 @@ def main():
             print(f"KV cache sizes: {args.mixed_kv_cache_size_list}")
             mixed_input_combinations = get_mixed_prefill_input_combinations(
                 max_seq_len=args.max_seq_len,
+                max_model_len=args.max_model_len,
                 min_batch_size=2,  # At least 2 sequences for mixed batch
                 max_batch_size=args.max_mixed_batch_size,
                 mode=args.mixed_mode,
@@ -1728,6 +1832,7 @@ def main():
         )
         true_mixed_input_combinations = get_true_mixed_attention_input_combinations(
             max_seq_len=args.max_seq_len,
+            max_model_len=args.max_model_len,
             prefill_batch_sizes=args.true_mixed_prefill_batch_sizes,
             prefill_chunk_sizes=args.true_mixed_prefill_chunk_sizes,
             decode_batch_sizes=args.true_mixed_decode_batch_sizes,
@@ -1831,6 +1936,8 @@ def main():
     # Filter standard combinations by memory
     total_combos = {}
     max_num_blocks_dict = {}
+    explicit_decode_kv_retained: Set[int] = set()
+    standard_target_capacities: Dict[Tuple[str, int], int] = {}
     for model in args.models:
         model_config = model_configs[model]
         dtype = model_dtypes[model]
@@ -1845,15 +1952,37 @@ def main():
                 dtype,
                 max_pipeline_parallel_size=args.max_pipeline_parallel_size,
             )
-            max_num_blocks_dict[(model, num_tensor_parallel_workers)] = max_num_blocks
-            total_combos[(model, num_tensor_parallel_workers)] = list(
-                filter(
-                    lambda input_combination: input_combination.is_under_memory_limit(
-                        max_num_blocks * args.block_size
-                    ),
-                    input_combinations,
-                )
+            target_key = (model, num_tensor_parallel_workers)
+            target_capacity = max_num_blocks * args.block_size
+            max_num_blocks_dict[target_key] = max_num_blocks
+            standard_target_capacities[target_key] = target_capacity
+            (
+                total_combos[target_key],
+                retained_target_explicit_kv,
+            ) = _filter_standard_attention_inputs_by_memory(
+                input_combinations,
+                max_num_tokens=target_capacity,
+                model=model,
+                tensor_parallel_size=num_tensor_parallel_workers,
+                explicit_decode_kv_cache_sizes=args.decode_kv_cache_size_list,
             )
+            explicit_decode_kv_retained.update(retained_target_explicit_kv)
+
+    _validate_explicit_decode_kv_coverage(
+        explicit_decode_kv_cache_sizes=args.decode_kv_cache_size_list,
+        retained_explicit_kv=explicit_decode_kv_retained,
+        target_capacities=standard_target_capacities,
+    )
+    if args.decode_kv_cache_size_list is not None:
+        requested_explicit_kv = sorted(
+            {int(value) for value in args.decode_kv_cache_size_list}
+        )
+        print(
+            "Standard attention explicit decode KV coverage after physical "
+            f"filtering: requested={requested_explicit_kv}, "
+            f"retained={sorted(explicit_decode_kv_retained)}, "
+            f"target_capacities={standard_target_capacities}"
+        )
 
     # Calculate total work for progress bar
     total_work = sum(len(v) for v in total_combos.values())

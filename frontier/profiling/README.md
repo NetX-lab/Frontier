@@ -2,9 +2,10 @@
 
 ## Modification History
 
-| Date | Summary of Changes |
-|------|--------------------|
+| Date       | Summary of Changes |
+|------------|--------------------|
 | 2026-08-14 | Replaced the removed routing-mode terminology in the profiling guidance. |
+| 2026-08-22 | Documented the standard attention profiling envelope and runtime KV boundary. |
 
 ## Overview
 
@@ -468,6 +469,12 @@ bash examples/profiling/smoke_simulator_moe_csv.sh
 
 Advanced users can call the package entrypoints directly. Direct CLI usage follows the same taxonomy and should pass `--output_dir data/profiling`:
 
+For standard attention, `max_seq_len` bounds automatically generated profiling
+axes. `max_model_len` is the runtime context boundary: an explicit decode KV
+value may exceed `max_seq_len` when it remains at most
+`max_model_len - 1`. The attention wrapper still enforces the available
+physical KV-block capacity during measurement.
+
 ```bash
 # Profile attention operations directly
 python -m frontier.profiling.attention.main \
@@ -476,6 +483,7 @@ python -m frontier.profiling.attention.main \
     --disable_ray \
     --profile_method cuda_event \
     --max_seq_len 4096 \
+    --max_model_len 4096 \
     --num_tensor_parallel_workers 1 2 4 \
     --output_dir data/profiling
 

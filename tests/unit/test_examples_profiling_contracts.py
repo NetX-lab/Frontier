@@ -59,6 +59,14 @@ def test_attention_recipe_explicitly_profiles_chunked_prefill_state() -> None:
     assert "chunked prefill" in text.lower()
 
 
+def test_attention_recipe_propagates_profile_and_runtime_context_lengths() -> None:
+    text = _read(PROFILING_DIR / "profile_attention_chunked_prefill.sh")
+
+    assert 'MAX_MODEL_LEN="${MAX_MODEL_LEN:-}"' in text
+    assert "--max_model_len" in text
+    assert "--max_seq_len" in text
+
+
 def test_profiling_scripts_route_outputs_to_compute_taxonomy() -> None:
     for script in EXPECTED_SCRIPTS:
         text = _read(script)
