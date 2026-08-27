@@ -61,10 +61,16 @@ def test_scheduler_rejects_ep_entity_without_typed_lane_descriptor() -> None:
 def _dispatch_scheduler() -> _ConcreteClusterScheduler:
     scheduler = object.__new__(_ConcreteClusterScheduler)
     scheduler._cluster_type = ClusterType.DECODE_FFN
+    scheduler._profile_getter = Mock(
+        side_effect=AssertionError("collective profile lookup must not run")
+    )
     scheduler._config = SimpleNamespace(
         replica_config=SimpleNamespace(
             moe_expert_parallel_size=2,
-            model_config=SimpleNamespace(embedding_dim=16),
+            model_config=SimpleNamespace(
+                embedding_dim=16,
+                get_model_architecture_profile=scheduler._profile_getter,
+            ),
         )
     )
     scheduler.get_replica = Mock(return_value=SimpleNamespace(ep_size=2))
@@ -139,6 +145,7 @@ def test_ep_collective_rejects_missing_lane_descriptor_before_lookup(
         collective_ready(2.0, 0, 0, missing_descriptor_lane, 1)
 
     scheduler._predictor.predict_alltoall_time.assert_not_called()
+    scheduler._profile_getter.assert_not_called()
     waiting_rooms = getattr(scheduler, waiting_room_attr)
     assert set(waiting_rooms[0][0][77]["batches"]) == {0}
 
@@ -169,5 +176,6 @@ def test_ep_collective_rejects_lane_entity_width_mismatch_before_lookup(
         collective_ready(2.0, 0, 0, mismatched_lane, 1)
 
     scheduler._predictor.predict_alltoall_time.assert_not_called()
+    scheduler._profile_getter.assert_not_called()
     waiting_rooms = getattr(scheduler, waiting_room_attr)
     assert set(waiting_rooms[0][0][77]["batches"]) == {0}

@@ -2,6 +2,21 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-27 | Closed the option-1 EP payload admission ordering sub-step, migrated legacy typed fixtures, and recorded the fresh `392 passed, 19 skipped` consumer matrix. |
+| 2026-08-27 | Closed the active-role topology propagation sub-step with fresh GREEN evidence and recorded formal Simulator reachability plus the aggregate-heterogeneous scope boundary. |
+| 2026-08-27 | Added the SCOPE-041 active-role topology propagation RED/GREEN sub-steps for方案 A. |
+| 2026-08-27 | Closed SCOPE-040b role-capability and SCOPE-041 topology gates with fresh probes; queued final scoped audit and coherent commit. |
+| 2026-08-27 | Added SCOPE-041 strict descriptor/predictor topology RED/GREEN and lookup-order gates. |
+| 2026-08-27 | Added SCOPE-040b PD/PD-AF role-capability RED/GREEN chain after the aggregate constructor audit. |
+| 2026-08-27 | Added SCOPE-040 constructor lifecycle RED/GREEN and focused verification gates. |
+| 2026-08-27 | Closed SCOPE-039 with the shared dummy selector handoff, early DECODE_FFN role guard, and fresh `234`-test GREEN matrix. |
+| 2026-08-27 | Added the docs-first SCOPE-039 RED/GREEN chain for disaggregation dummy attention-only semantics. |
+| 2026-08-27 | Recorded the SCOPE-039 RED run: 2 expected public dummy attention-only failures with `50.0 ms` post-attention output. |
+| 2026-08-27 | Closed the lane-conservation, routed-aggregate, and mixed-layer implementation gates; added shared-collective evidence and the final review/ownership sequence. |
+| 2026-08-27 | Added the lane-local conservation ownership correction and source-batch partial-lane regression gates. |
+| 2026-08-27 | Added the direction-A correction for routed implicit aggregates and its non-dummy zero-lookup gate. |
+| 2026-08-27 | Added the approved SCOPE-036 mixed-layer dummy repair chain and acceptance gates. |
+| 2026-08-27 | Closed the token-ledger and narrow A' admission verification gates; queued final commits, independent review, and PR20/PR21 merge-readiness. |
 | 2026-08-26 | Resolved the EP>1 aggregate admission gate as narrow A' and queued the shared early-admission TDD sub-step. |
 | 2026-08-26 | Added the raw/effective width conservation repair and the explicit EP>1 aggregate admission decision gate. |
 | 2026-08-26 | Recorded the dummy terminal-MTP physical-lane RCA, typed dummy seam gate, fresh focused matrix, and remaining commit/review gates. |
@@ -314,6 +329,55 @@ dummy-terminal-lane-gate
   will be independently checked against this plan and the actual diff.
 - `PR20/PR21-read-only-merge-audit`: pending. No remote write or PR state
   mutation is authorized by this plan.
+
+### 2026-08-27 verification checkpoint
+
+The narrow A' implementation and token-ledger repairs are GREEN through the
+fresh focused matrix. The current dependency chain is:
+
+```text
+focused-matrix-refresh (complete)
+  -> coherent-substep-commits (pending)
+  -> independent-code-review (pending)
+  -> PR20/PR21-read-only-merge-audit (pending)
+```
+
+- Standalone `tests/unit/test_mtp_token_ledger_repair.py`: `8 passed in 2.51s`.
+- Ten-file focused matrix: `181 passed in 3.37s`.
+- Documentation history/marker/placeholder/conflict gate: `10/10` files pass;
+  `git diff --check` exits `0`.
+- The former descriptor-context residual WATCH is superseded by SCOPE-041;
+  strict EP/top-k consistency is now part of the narrow A' admission invariant.
+
+### 2026-08-27 implementation-close checkpoint
+
+The approved correction sub-steps and the shared-collective semantic audit are
+now complete. The remaining work is read-only/static verification, independent
+review, diff ownership, and coherent commit packaging:
+
+```text
+lane-conservation-GREEN (complete)
+  -> routed-aggregate-GREEN (complete)
+  -> mixed-layer-dummy-GREEN (complete)
+  -> shared-collective-direct-case (complete)
+  -> final-static-gates (in progress)
+  -> independent-code-review (pending)
+  -> PR20/PR21-read-only-ownership-audit (pending)
+  -> coherent-substep-commits (pending)
+  -> final-test-report (pending)
+```
+
+- Admission, mixed-layer, and layer-identity matrix: `199 passed in 4.05s`.
+- Typed EP/MTP/communication ten-file matrix: `183 passed in 31.47s`.
+- Shared collective direct case: raw width `5`, compute-effective width `8`,
+  aggregate assignments `10`, lane counts `[6, 4]`, shared payload `128`
+  bytes, EP payloads `[96, 64]` bytes; the zero lane stays in participant set
+  `(0, 1)`, retains shared payload `128`, and has EP payload `0`.
+- `SCOPE-035` remains a residual WATCH because production materializers set
+  role-specific topology and no reachable mismatch is demonstrated. The final
+  audit must keep it out of the approved narrow A' implementation.
+- Remote PR state remains unchanged. Push, merge, force-push, and history
+  rewrite remain outside this checkpoint.
 
 **Implementation status:** The dependency-boundary and naming decisions are
 confirmed. The maintainer approved the bounded file map and acceptance gates;
@@ -903,7 +967,7 @@ terminal-mtp-red
       contract module passed `28` tests after the correction.
     - Commit: one production/test sub-step after the focused matrix is rerun.
 
-19. **`EP>1-aggregate-admission`** (decision resolved; implementation next)
+19. **`EP>1-aggregate-admission`** (completed; commit/review handoff pending)
     - Decision: narrow A'. After concrete predictor classification marks a call
       as routed MoE, EP>1 requires an `EPLaneWorkload` in both dummy and
       non-dummy modes.
@@ -912,18 +976,555 @@ terminal-mtp-red
       helper runs before dummy return, measurement activation, and any model,
       attention, routing, or communication lookup.
     - Preservation: `DECODE_ATTN`, explicit dense/attention-only calls,
-      mixed-layer aggregate semantics, EP=1, valid lanes, and zero-routed lanes
-      retain their existing behavior. The communication payload builder keeps
-      its final descriptor invariant check.
+      dense aggregates, EP=1, valid lanes, and zero-routed lanes retain their
+      existing behavior. A routed implicit multi-layer aggregate now follows
+      the same physical-lane contract as every other routed aggregate. The
+      communication payload builder keeps its final descriptor invariant check.
     - RED/GREEN: focused tests must prove missing-lane dummy and non-dummy
       calls fail with zero lookup calls, while the preserved cases continue to
       pass. No synthetic lane, raw-map inference, caller-side duplicate guard,
       or scaling factor is permitted.
+    - Evidence: the admission regression module has `12` tests; the missing
+      descriptor fails before any instrumented lookup in both dummy and
+      non-dummy modes, while attention-only, dense, EP=1, valid-lane, and
+      zero-routed-lane cases remain admitted. The final ten-file focused matrix
+      passed `181` tests.
     - Dependency: this sub-step follows the completed raw-width conservation
-      repair and precedes the final focused matrix and PR20/PR21 audit.
+      repair and is complete before the final commit/review and PR20/PR21
+      audit. The post-implementation aggregate audit below supersedes the
+      earlier compatibility wording and remains a required correction gate.
 
-20. **`focused-report-and-commit`** (pending admission GREEN)
+20. **`focused-report-and-commit`** (in progress; verification GREEN)
     - Update the task report with the layer-identity evidence, run the fresh
-    combined A' matrix, compileall, documentation gates, and `git diff --check`.
+      combined A' matrix, compileall, documentation gates, and `git diff --check`.
+      The token-ledger regression is present at
+      `tests/unit/test_mtp_token_ledger_repair.py` and passes `8` tests alone;
+      the combined matrix passes `181` tests.
     - Commit each coherent production/test/docs sub-step separately before the
       local PR20/PR21 merge-readiness audit. No remote operation is included.
+    - Close the former descriptor-context WATCH through SCOPE-041. The shared
+      admission helper now owns strict descriptor/predictor EP and top-k
+      equality; no caller-side duplicate guard or topology inference is added.
+
+## Approved SCOPE-036 extension (2026-08-27)
+
+This extension follows the same docs-first and TDD contract as the active A'
+plan. It is limited to the two existing dummy execution owners and their
+public predictor handoffs; scheduler, model-config, lane, communication, and
+MTP ownership remain outside this extension.
+
+### Dependency map
+
+```text
+mixed-layer-dummy-RED
+  -> {disaggregation-dummy-seam, monolithic-dummy-seam}
+  -> mixed-layer-focused-verification
+  -> coherent-substep-commits
+  -> independent-code-review
+  -> PR20/PR21-merge-readiness
+```
+
+`disaggregation-dummy-seam` and `monolithic-dummy-seam` are sibling
+production edits with no data dependency after the RED tests; they may be
+implemented in either order, but both must pass before the verification join.
+
+### Sub-steps and gates
+
+21. **`mixed-layer-dummy-RED`**
+    - Files: `tests/unit/test_mixed_layer_decode_ffn_scheduling.py` and
+      `tests/unit/test_moe_predictor_layer_id_semantics.py`.
+    - Add the smallest public-call regressions for a real mixed model: a dense
+      layer must return `_is_moe=False` and zero MoE fields, while an actual
+      MoE layer remains routed. Cover disaggregation and MONOLITHIC dummy
+      entry points; remove the obsolete deferred xfail only as part of the
+      RED test edit.
+    - RED command: run both files directly with `-p no:cacheprovider` and
+      record the expected pre-fix failure before any production edit.
+
+22. **`disaggregation-dummy-seam`** (runs in parallel with step 23 after step 21)
+    - File: `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`.
+    - Pass the already-resolved concrete layer classification from the public
+      method into `_get_dummy_execution_time_for_cluster()`. Keep the helper's
+      compatibility default for direct callers, preserve all four cluster
+      compositions, and construct dense fields exactly as the existing
+      non-dummy dense branches do.
+    - GREEN: disaggregation mixed-layer tests plus existing dummy cluster
+      tests; no scheduler or model-config edit.
+
+23. **`monolithic-dummy-seam`** (runs in parallel with step 22 after step 21)
+    - File: `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`.
+    - Pass the concrete one-layer classification into `_get_dummy_execution_time()`.
+      Preserve explicit routed lane-phase calls. Multi-layer aggregate behavior
+      follows the approved routed-aggregate admission contract below. Dense
+      output must use the dense MLP component family and omit the MoE operator
+      component so `ExecutionTime` invariants remain valid.
+    - GREEN: MONOLITHIC mixed-layer tests plus existing MoE dummy and MTP
+      tests; no caller-side `_is_moe` override.
+
+24. **`mixed-layer-focused-verification`**
+    - Run the two RED/GREEN files, the scheduler dense-reference consumer,
+      disaggregation predictor matrix, MoE layer-identity/MTP matrix, and the
+      PR17-sensitive tests. Include a direct `step-moe-noquant` probe that
+      records dense layer `0`, MoE layer `4`, and dense layer `60` component
+      values for PREFILL, DECODE, and DECODE_FFN.
+    - Acceptance: dense calls have `_is_moe=False`, all MoE routing/EP fields
+      are zero, and positive dense MLP fields; MoE calls retain prior values;
+      `DECODE_ATTN` remains attention-only; no new model or backend lookup is
+      introduced in dummy mode.
+
+25. **`coherent-substep-commits`**
+    - Commit the two production/test seams and task-doc updates by ownership
+      after their focused GREEN checks. Keep unrelated dirty files and the
+      untracked metrics artifact intact.
+    - Re-run `git diff --check`, compile checks, and the documentation gates
+      before the independent review and local PR20/PR21 audit.
+
+## Approved routed-aggregate correction (2026-08-27)
+
+The post-implementation audit found that the earlier step-19 code applied the
+strict lane check only to explicit or single-layer calls. PDD's implicit
+multi-layer MoE aggregate then reached measurement and communication lookups
+before the downstream lane resolver rejected it. Direction A closes that
+semantic split instead of adding an aggregate-specific fallback.
+
+### Dependency map
+
+```text
+aggregate-contract-RCA
+  -> aggregate-RED-regression
+  -> aggregate-classification-fix
+  -> aggregate-GREEN-matrix
+  -> docs-and-review-update
+  -> PR20/PR21-merge-readiness
+```
+
+### Sub-steps and gates
+
+26. **`aggregate-contract-RCA`**
+    - Record the exact PDD call path, including the observed lookup order
+      (`select -> require -> activate -> communication -> overhead -> lane
+      resolver`) for `EP=2`, `num_layers>1`, `include_moe=None`, and no lane.
+    - Freeze the direction-A contract: model-level routed aggregates require a
+      typed lane before all mode-specific work; dense and attention-only
+      aggregates retain their owners.
+
+27. **`aggregate-RED-regression`**
+    - Extend `tests/unit/test_moe_ep_aggregate_admission.py` with the real
+      PDD implicit aggregate case in both dummy and non-dummy modes. Assert a
+      clear `EPLaneWorkload` error and an empty lookup trace.
+    - Add a capability regression for a concrete MoE single-layer call whose
+      config lacks callable `is_moe_layer`; it must fail before timing/lookup
+      rather than silently falling back to model-level classification.
+    - Run the focused module and record the expected RED failures before any
+      production edit.
+
+28. **`aggregate-classification-fix`**
+    - Files: `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`
+      and `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`.
+    - Resolve implicit aggregate classification from the existing model-level
+      `is_moe` flag, run the shared `_admit_routed_ep_aggregate()` for every
+      routed public call, and pass the resolved selector into the existing
+      dummy owner. Require a callable `is_moe_layer` only when a concrete
+      single-layer classification needs it.
+    - Keep scheduler/materializer ownership, descriptor validation,
+      communication payload checks, MTP lanes, and dense/attention-only paths
+      unchanged.
+
+29. **`aggregate-GREEN-matrix`**
+    - Re-run the aggregate regression, mixed-layer dummy tests, predictor/MTP
+      matrices, and the PR17-sensitive scheduler tests.
+    - Acceptance: missing routed lanes fail identically in dummy and non-dummy
+      mode with zero lookup calls; valid typed lanes, EP=1, zero-routed lanes,
+      dense calls, and `DECODE_ATTN` remain green.
+
+30. **`docs-and-review-update`**
+    - Update `issues.md`, `design.md`, `harness.md`, `progress.md`, and
+      `review.md` with the RED/GREEN evidence and remove superseded aggregate
+      compatibility wording. Commit this correction separately from the
+      existing dirty A' work.
+
+## Approved lane-local conservation correction (SCOPE-038, 2026-08-27)
+
+The admission helper must respect the owner of each token ledger. A physical
+lane descriptor may be a strict subset of a materialized aggregate, so a
+source-batch plus explicit-lane call has no single-lane expected count that the
+predictor can derive. A batch-attached lane entity is different: its
+`total_num_tokens` is already the post-routing lane width and can be checked
+against `routed_token_count`.
+
+### Dependency map
+
+```text
+lane-conservation-RCA
+  -> lane-conservation-RED-tests
+  -> lane-conservation-ownership-fix
+  -> lane-conservation-GREEN-matrix
+  -> lane-conservation-docs-review
+  -> coherent-commits
+  -> PR20/PR21-merge-readiness
+```
+
+### Sub-steps and gates
+
+31. **`lane-conservation-RCA`**
+    - Record the `LayerEPWorkload` aggregate ledger, the lane-entity local
+      ledger, and the source-batch plus explicit-lane subset ledger in the
+      task documents.
+    - Preserve the direct RED evidence (`allocated 0, expected 4`) and the
+      MTP example where aggregate assignments exceed one lane's count.
+
+32. **`lane-conservation-RED-tests`**
+    - Keep EP-size, router-top-k, descriptor identity, and attached-lane
+      mismatch tests fail-fast before mode-specific lookup.
+    - Model a valid zero and partial lane as an explicit descriptor paired
+      with a source batch; model an attached lane entity with
+      `batch.total_num_tokens == lane.routed_token_count`.
+    - Add a regression proving an MTP/source batch lane subset is not compared
+      with `source_width * router_topk`.
+
+33. **`lane-conservation-ownership-fix`**
+    - File: `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`.
+    - Retain descriptor presence, topology, and identity checks. Apply the
+      lane-local count equality only when the descriptor came from the batch
+      entity; skip single-lane conservation inference for an explicit
+      descriptor paired with an ordinary source batch.
+    - Keep `LayerEPWorkload`, scheduler, communication, and MTP materializer
+      ownership unchanged. Do not add a zero-only branch, expected-count
+      flag, synthetic lane, raw-map inference, or scaling factor.
+
+34. **`lane-conservation-GREEN-matrix`**
+    - Run the admission module, typed predictor contract, terminal-MTP lane
+      replay, materializer, routing-conservation, communication, and
+      disaggregation suites.
+    - Acceptance: attached local mismatch fails; explicit partial/zero lanes
+      pass; aggregate totals remain `routing_width * top-k`; zero-routed lanes
+      perform no positive-load lookup while retaining physical barriers.
+
+35. **`lane-conservation-docs-review`**
+    - Record exact widths, routed counts, aggregate assignments, lookup counts,
+      and zero-lane evidence in `progress.md`, `review.md`, and the test
+      report. Mark the old source-width multiplication wording superseded.
+
+## SCOPE-039 disaggregation dummy attention-only repair
+
+### Dependency map
+
+```text
+dummy-ffn-RCA/docs-freeze
+  -> dummy-ffn-RED-regression
+  -> dummy-ffn-owner-fix
+  -> dummy-ffn-GREEN-matrix
+  -> dummy-ffn-docs-review
+  -> coherent-commits
+  -> PR20/PR21-merge-readiness
+```
+
+36. **`dummy-ffn-RCA/docs-freeze`**
+    - Record the public-to-helper call chain and the observed `60 + 50 + 10
+      + 10 + 10 + 10 = 140 ms` component breakdown plus batch overhead that
+      produced the `180 ms` dummy total.
+    - Freeze the contract that `include_ffn=False` retains attention and
+      batch-level overhead but zeroes all shared-domain FFN/MoE components.
+    - Keep `DECODE_ATTN`'s established post-attention layernorm/residual
+      semantics and leave scheduler/lane ownership unchanged.
+
+37. **`dummy-ffn-RED-regression`**
+    - Add the smallest public dummy regression to
+      `tests/unit/test_sklearn_disaggregation_execution_time_predictor.py`.
+      Exercise shared-domain `PREFILL` and unified `DECODE` with
+      `include_ffn=False`; assert positive attention, zero post-attention and
+      MLP fields, and no MoE operator components.
+    - Run the test before any production edit and record the expected failure
+      as the helper's missing `include_ffn` input. The current RED is
+      `2 failed, 32 deselected`; both roles report `50.0 ms` post-attention.
+
+38. **`dummy-ffn-owner-fix`**
+    - File: `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`.
+    - Add one optional `include_ffn` parameter to the existing dummy owner,
+      forward the public selector, and gate FFN-owned fields without changing
+      classification, typed admission, or non-dummy lookup.
+    - Preserve the compatibility default for direct helper callers and the
+      existing `DECODE_ATTN` role contract.
+
+39. **`dummy-ffn-GREEN-matrix`** (completed)
+    - Run the new regression, existing disaggregation dummy tests, mixed-layer
+      classification tests, typed EP/MTP/communication tests, and the complete
+      affected predictor matrix.
+    - Acceptance: both shared-domain roles publish zero FFN fields for
+      attention-only dummy calls; routed/dense calls, EP=1/EP>1, zero lanes,
+      and attention-role residual behavior remain unchanged.
+
+40. **`dummy-ffn-docs-review`** (completed)
+    - Record RED/GREEN counts, numeric component values, and the final
+      merge-readiness disposition in `issues.md`, `progress.md`, `review.md`,
+      and the test report. Mark SCOPE-039 resolved only after fresh evidence.
+
+## SCOPE-040 aggregate routing-map constructor lifecycle
+
+### Dependency map
+
+```text
+routing-map-RCA/docs-freeze
+  -> routing-map-RED-regression
+  -> routing-map-owner-fix
+  -> routing-map-GREEN-matrix
+  -> routing-map-docs-review
+  -> coherent-commits
+  -> PR20/PR21-merge-readiness
+```
+
+### Sub-steps and gates
+
+41. **`routing-map-RCA/docs-freeze`**
+    - Record the `cluster_type=None` aggregate call contract, the exact
+      deletion failure, and the stable three-attribute lifecycle.
+    - Keep the correction local to the existing disaggregation constructor;
+      do not reject `None`, synthesize a role, or move routing ownership.
+
+42. **`routing-map-RED-regression`**
+    - Add the smallest constructor regression in
+      `tests/unit/test_sklearn_disaggregation_execution_time_predictor.py`.
+      Stub model/routing work only as needed to isolate the attribute deletion
+      failure and assert the old `AttributeError` before the production edit.
+
+43. **`routing-map-owner-fix`**
+    - File: `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`.
+    - Keep all three routing attributes initialized to `None`; assign each
+      role's generated map without deleting siblings. Keep explicit
+      `DECODE_ATTN` no-routing values present.
+
+44. **`routing-map-GREEN-matrix`**
+    - Verify aggregate `cluster_type=None`, explicit PREFILL/DECODE/DECODE_FFN,
+      and `DECODE_ATTN` construction, then rerun the affected disaggregation
+      predictor and typed EP matrices.
+    - Acceptance: every role attribute is readable on every instance, maps
+      populate only for materialized roles, and no existing timing or routing
+      behavior changes.
+
+45. **`routing-map-docs-review`**
+    - Record the RED stack, constructor role-map values, fresh test counts, and
+    the final static audit in `issues.md`, `progress.md`, `review.md`, and
+    the test report. Mark SCOPE-040 resolved only after fresh evidence.
+
+## SCOPE-040b aggregate role-capability selection
+
+### Dependency map
+
+```text
+role-capability-RCA/docs-freeze
+  -> role-capability-RED-regression
+  -> role-capability-owner-fix
+  -> role-capability-GREEN-matrix
+  -> role-capability-docs-review
+  -> coherent-commits
+  -> PR20/PR21-merge-readiness
+```
+
+### Sub-steps and gates
+
+46. **`role-capability-RCA/docs-freeze`** (completed)
+    - Record the legal PD and PD-AF role shapes from
+      `ClusterConfig._setup_disaggregated_configs()` and the exact
+      unavailable-`DECODE_FFN` dereference.
+    - Freeze one declaration-driven role-to-config-attribute mapping as the
+      sole aggregate capability source.
+    - Keep routing ownership, stable map attributes, explicit-role behavior,
+      and `DECODE_ATTN` no-routing semantics unchanged.
+
+47. **`role-capability-RED-regression`** (completed)
+    - Add the smallest regression in
+      `tests/unit/test_sklearn_disaggregation_execution_time_predictor.py`
+      using a PD-shaped config with `decode_ffn_replica_config=None`.
+    - Stub only model/routing/snapshot work and assert the old unavailable-role
+      dereference occurs before any downstream lookup.
+
+48. **`role-capability-owner-fix`** (completed)
+    - File: `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`.
+    - Replace the aggregate fixed-role iteration with the single declarative
+      mapping filtered by non-`None` config attributes.
+    - Keep explicit role selection unchanged and retain fail-fast behavior for
+      an explicitly requested unavailable role.
+
+49. **`role-capability-GREEN-matrix`** (completed)
+    - Verify PD-shaped and PD-AF-shaped aggregates, each explicit routed role,
+      and `DECODE_ATTN` map state.
+    - Rerun the complete disaggregation predictor and typed EP matrices.
+    - Acceptance: exact applicable role sets, stable three-map attributes,
+      zero downstream lookup before a missing-role failure, and no timing or
+      routing regression.
+
+50. **`role-capability-docs-review`** (completed)
+    - Record RED/GREEN stack and role-set values in `issues.md`, `progress.md`,
+      `review.md`, and the test report. Mark SCOPE-040b resolved only after
+      fresh evidence and static source audit.
+
+## SCOPE-041 strict descriptor/predictor topology admission
+
+### Dependency map
+
+```text
+topology-context-RCA/docs-freeze
+  -> topology-context-RED-regression
+  -> topology-context-owner-fix
+  -> topology-context-GREEN-matrix
+  -> topology-context-docs-review
+  -> coherent-substep-commits
+  -> independent-code-review
+  -> PR20/PR21-read-only-merge-audit
+```
+
+### Sub-steps and gates
+
+51. **`topology-context-RCA/docs-freeze`** (completed)
+    - Record the real sources of divergence: role-specific disaggregation
+      `ClusterConfig`, predictor representative/active replica config,
+      scheduler-materialized lane descriptor, and direct helper callers.
+    - Freeze the owner boundary in `_admit_routed_ep_aggregate()` and require
+      validation before dummy timing, measurement activation, model lookup,
+      backend lookup, or communication lookup.
+
+52. **`topology-context-RED-regression`** (completed)
+    - Exercise internally valid descriptors with predictor EP `2` versus
+      descriptor EP `4`, and predictor top-k `2` versus descriptor top-k `1`.
+    - Instrument downstream measurement/model/backend/communication hooks and
+      require a zero-call count for each mismatch.
+
+53. **`topology-context-owner-fix`** (completed)
+    - Keep the existing shared helper as the single validator. Compare exact
+      positive-integer EP and router top-k values after routed classification.
+    - Preserve aggregate conservation ownership in `LayerEPWorkload`, lane
+      construction in the scheduler/materializer, and the payload builder's
+      final structural check. Do not add a wrapper, fallback, or duplicate
+      caller validation.
+
+54. **`topology-context-GREEN-matrix`** (completed)
+    - Verify dummy and non-dummy MONOLITHIC/PDD mismatch paths, valid typed
+      lanes, EP=1, zero/partial source-batch lane subsets, and explicit
+      descriptor identity checks.
+    - Acceptance: every mismatch raises the topology-specific `ValueError`
+      before downstream lookup; valid and zero-lane cases retain their prior
+      behavior.
+
+55. **`topology-context-docs-review`** (completed)
+    - Record exact mismatch values, lookup counts, commands, and environment
+      in `issues.md`, `progress.md`, `review.md`, and the test report.
+    - Mark SCOPE-041 resolved only after the fresh focused matrix, compile,
+      whitespace, conflict-marker, and static owner audits pass.
+
+## SCOPE-041 active-role topology propagation
+
+### Dependency map
+
+```text
+active-topology-RCA/docs-freeze
+  -> active-topology-RED-regression
+  -> active-topology-owner-fix
+  -> active-topology-GREEN-matrix
+  -> active-topology-docs-review
+  -> coherent-substep-commit
+  -> independent-code-review
+```
+
+56. **`active-topology-RCA/docs-freeze`** (completed)
+    - Record the two-admission call chain and the concrete representative
+      `router_topk=1` versus active/descriptor `router_topk=2` failure.
+    - Freeze方案 A: pass optional active `ep_size`/`router_topk` through the
+      existing inherited MoE API; keep role config as the topology owner and
+      the shared helper as the sole validator.
+
+57. **`active-topology-RED-regression`** (completed)
+    - Add one non-dummy aggregate `DECODE_FFN` regression with an internally
+      valid `EP=2`, `router_topk=2` descriptor, an active role config carrying
+      the same values, and an aggregate representative top-k of `1`.
+    - Assert the pre-fix error is the second admission's
+      `descriptor=2, predictor=1`, after the first active-role admission has
+      succeeded and before downstream MoE lookup.
+
+58. **`active-topology-owner-fix`** (completed)
+    - Update the existing base/typed MoE method contract and concrete
+      implementation with optional active topology values.
+    - Forward the active values from all three disaggregation routed-role
+      call sites and use them at every inherited admission point. Preserve
+      default behavior for MONOLITHIC and direct callers; do not mutate
+      predictor topology fields or add wrappers.
+
+59. **`active-topology-GREEN-matrix`** (completed)
+    - Verify the new non-dummy aggregate case, dummy aggregate behavior,
+      MONOLITHIC/default callers, valid EP=1/EP>1 lanes, and true topology
+      mismatches.
+    - Acceptance: the valid active-role descriptor completes, both admissions
+      observe identical active values, and mismatches still fail before any
+      model/backend/communication lookup.
+
+60. **`active-topology-docs-review`** (completed for scoped implementation; final static/review gates remain)
+    - Record RED/GREEN stack evidence, admission context values, downstream
+      call counts, focused matrix results, and static checks in the task docs
+      and test report. SCOPE-041 is re-closed for the formal Simulator path;
+      one aggregate predictor manually reused for heterogeneous roles remains
+      an explicitly documented future interface boundary. Independent review,
+      final static gates, and the PR20/PR21 read-only audit remain release
+      gates rather than implementation work.
+
+### Formal-path reachability boundary
+
+The active topology handoff is required at the aggregate disaggregation
+delegation boundary, but the formal runtime constructs one predictor per role.
+`Simulator` passes role-specific `ClusterConfig`/`ReplicaConfig` values, and
+the disaggregation predictor binds its own EP/top-k fields from that active
+role. Consequently the inherited phase/gating/communication helpers do not
+receive a heterogeneous role through one aggregate instance in supported
+execution. Extending those helpers for manually reused heterogeneous aggregate
+predictors would require a separate immutable execution-context design and is
+outside this plan.
+
+## SCOPE-042 EP payload admission ordering
+
+### Dependency map
+
+```text
+payload-order-call-chain-audit
+  -> payload-order-RED-regression
+  -> payload-order-owner-reorder
+  -> typed-fixture-migration
+  -> payload-order-GREEN-matrix
+  -> payload-order-docs-review
+```
+
+61. **`payload-order-call-chain-audit`** (completed)
+    - Trace dispatch and combine from barrier validation through architecture
+      collective resolution, payload construction, predictor invocation, trace
+      emission, and waiting-room commit.
+    - Keep option 1: barrier validation remains scheduler identity only; the
+      payload owner remains the final physical descriptor boundary.
+
+62. **`payload-order-RED-regression`** (completed)
+    - Exercise missing-descriptor and entity-width-mismatch lanes through both
+      dispatch and combine with predictor/profile spies.
+    - Require a typed descriptor failure before architecture collective
+      resolution, communication predictor lookup, trace publication, or final
+      lane commit.
+
+63. **`payload-order-owner-reorder`** (completed)
+    - Invoke the existing `_get_step3_ep_alltoall_payload_bytes()` owner on the
+      complete prospective combine set before `resolve_ep_collective_kind()`;
+      reuse its returned lane payload for the all-to-all branch.
+    - Preserve the existing all-gather branch, barrier identity validation,
+      event ordering, and waiting-room transaction semantics.
+
+64. **`typed-fixture-migration`** (completed)
+    - Replace legacy raw-width fixtures on successful and predictor-error paths
+      with valid `EPLaneWorkload` descriptors. Keep raw fixtures only in tests
+      that intentionally target scheduler identity rejection.
+
+65. **`payload-order-GREEN-matrix`** (completed)
+    - Run the dispatch/combine payload tests, typed scheduler-consumer tests,
+      and the complete PD-AF invariant file.
+    - Acceptance: `392` tests pass, `19` remain explicitly skipped, malformed
+      final lanes leave the prior lane in the waiting room, and predictor calls
+      remain at zero before descriptor failure.
+
+66. **`payload-order-docs-review`** (completed for this residual slice)
+    - Record the call-chain RCA, option-1 boundary, fixture migration, exact
+      command/result, and unchanged scheduler identity semantics in the task
+      docs and test report. Full static gates, independent review, coherent
+      commits, and PR20/PR21 read-only audit remain downstream gates.

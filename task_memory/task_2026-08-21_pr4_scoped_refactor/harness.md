@@ -2,6 +2,20 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-27 | Added and closed SCOPE-042 payload admission ordering gates for dispatch/combine and migrated legacy raw-width fixtures to typed lanes. |
+| 2026-08-27 | Reconciled SCOPE-041 active-role gates with the fresh 309-test matrix and formal Simulator reachability audit; retained heterogeneous aggregate reuse as a future boundary. |
+| 2026-08-27 | Added active-role topology propagation gates for the inherited MoE admission chain (SCOPE-041 residual). |
+| 2026-08-27 | Closed SCOPE-040b role-capability and SCOPE-041 topology gates with fresh evidence; final static audit remains. |
+| 2026-08-27 | Added strict descriptor/predictor EP and router top-k consistency gates (SCOPE-041). |
+| 2026-08-27 | Added SCOPE-040b PD/PD-AF role-capability and unavailable-role fail-fast gates. |
+| 2026-08-27 | Added SCOPE-040 stable routing-map attribute and constructor RED/GREEN gates. |
+| 2026-08-27 | Closed SCOPE-039 dummy attention-only gates with `234` focused passes and the shared DECODE_FFN role guard. |
+| 2026-08-27 | Recorded SCOPE-039 RED evidence: both shared-domain roles returned `50.0 ms` post-attention for `include_ffn=False`. |
+| 2026-08-27 | Added SCOPE-039 dummy attention-only RED/GREEN and role-preservation gates. |
+| 2026-08-27 | Closed SCOPE-036/037/038 gates with fresh matrices and added the shared-collective direct-case evidence. |
+| 2026-08-27 | Added lane-local versus aggregate conservation gates and the source-batch explicit-lane regression boundary. |
+| 2026-08-27 | Added direction-A aggregate classification, capability, and zero-lookup gates after the PDD RCA. |
+| 2026-08-27 | Closed the token-ledger/admission verification gates and recorded the descriptor-context topology residual watch. |
 | 2026-08-26 | Resolved the EP>1 aggregate admission gate with narrow A' and added early lookup-order acceptance criteria. |
 | 2026-08-26 | Added raw-width conservation acceptance and the EP>1 aggregate dummy-admission decision gate. |
 | 2026-08-26 | Added the dummy terminal-MTP physical-lane gate, its mode-specific RCA, and the final focused-verification/commit/review checklist. |
@@ -155,19 +169,19 @@
 
 ### MTP/MoE token-ledger gates
 
-- [ ] For ordinary target-embedded MTP, `Batch.num_tokens` represents the full
+- [x] For ordinary target-embedded MTP, `Batch.num_tokens` represents the full
   verification width and the shared compute helper does not add planned draft
   metadata a second time.
-- [ ] Structural target verification uses the complete `verify_tokens` shape;
+- [x] Structural target verification uses the complete `verify_tokens` shape;
   rejected drafts affect only post-forward outcome/progression accounting.
-- [ ] Gating and all pre-routing shared compute use the canonical physical
+- [x] Gating and all pre-routing shared compute use the canonical physical
   token count, while `LayerEPWorkload` materialization uses
   `Batch.total_num_tokens`.
-- [ ] `total_routed_assignments == routing_token_count * router_topk`, and the
+- [x] `total_routed_assignments == routing_token_count * router_topk`, and the
   sum of typed lane routed counts equals that assignment count.
-- [ ] Routed-dependent zero-lane phases return `0.0` without positive-load
+- [x] Routed-dependent zero-lane phases return `0.0` without positive-load
   model lookup, while physical participant/barrier membership remains intact.
-- [ ] Explicit AFD/CUDA Graph compute padding retains precedence over the
+- [x] Explicit AFD/CUDA Graph compute padding retains precedence over the
   ordinary MTP width rule; transfer sizing keeps its raw physical payload
   contract.
 - [x] The MONOLITHIC initial decode `max(planned_drafts, 1)` path is directly
@@ -240,15 +254,26 @@
   model lookup.
 - [x] MoE TP all-reduce comments and registry semantics agree on the shared
   source-batch pre-routing width; only EP all-to-all is lane-local.
-- [x] Source-batch routed assignment conservation uses
+- [x] Aggregate materialization routed assignment conservation uses
   `Batch.total_num_tokens * router_topk`; compute-effective width remains
   reserved for compute/gating lookup features.
-- [x] Narrow A' is the public EP>1 aggregate admission contract: a routed MoE
-  call requires `EPLaneWorkload` in dummy and non-dummy modes before dummy
-  return, measurement activation, attention/model lookup, or backend lookup.
+- [x] The predictor checks `batch.total_num_tokens ==
+  lane_workload.routed_token_count` only for a batch-attached lane entity.
+  A source `Batch` plus an explicit lane is a lane subset and receives no
+  predictor-derived `source_width * router_topk` expectation.
+- [x] Descriptor/predictor topology equality is enforced by the shared
+  routed-admission helper; mismatches fail before mode-specific work and no
+  duplicate caller-side validator exists.
+- [x] Narrow A' is the public EP>1 aggregate admission contract: every routed
+  MoE call, including an implicit multi-layer aggregate, requires
+  `EPLaneWorkload` in dummy and non-dummy modes before dummy return,
+  measurement activation, attention/model lookup, or backend lookup.
 - [x] The admission helper runs only after each concrete predictor has resolved
-  its existing routed/dense/attention-only classification. It does not
-  reinterpret `DECODE_ATTN`, mixed-layer aggregates, or stage identity.
+  its existing routed/dense/attention-only classification. Implicit aggregates
+  use the model-level `is_moe` flag; concrete single-layer calls use
+  `is_moe_layer(layer_id)` or an explicit selector, and a missing required
+  predicate fails at the public boundary. The helper does not reinterpret
+  `DECODE_ATTN` or stage identity.
 - [x] Attention-only, dense, EP=1, valid typed-lane, and zero-routed-lane
   calls retain their existing behavior; the communication payload builder
   remains the final structural descriptor check.
@@ -260,6 +285,138 @@
   sub-steps, then obtain an independent code review.
 - [ ] Complete the read-only PR20/PR21 merge-readiness audit. Keep all remote
   PR state unchanged until a separate authorization gate.
+
+### Routed aggregate correction gates
+
+- [x] PDD `EP=2`, `num_layers>1`, `include_moe=None`, and no lane fails with
+  `ValueError` before `select`, `require`, `activate`, communication,
+  overhead, attention, model, or backend lookup in both execution modes.
+- [x] MONOLITHIC and PDD implicit aggregates use the same routed/dense
+  classification in dummy and non-dummy paths; no downstream resolver is the
+  first failure site.
+- [x] A concrete model-level MoE call without callable `is_moe_layer` fails
+  explicitly before timing/lookup unless `include_moe` is supplied.
+
+### Lane-local conservation correction gates
+
+- [x] `LayerEPWorkload` remains the sole owner of aggregate assignment
+  conservation and materializes every physical lane, including zero lanes.
+- [x] Attached lane entities reject a local-width mismatch before any model or
+  communication lookup; zero is valid when both entity and descriptor widths
+  are zero.
+- [x] Source-batch plus explicit partial/zero lane calls pass without a guessed
+  lane expected count, including the terminal MTP lane subset path.
+- [x] The focused report records source width, lane routed count, aggregate
+  assignment count, downstream lookup count, and barrier participants.
+
+### Disaggregation dummy attention-only gates (SCOPE-039)
+
+- [x] The RED regression reaches the public disaggregation dummy path and fails
+  because `_get_dummy_execution_time_for_cluster()` has no `include_ffn`
+  selector; the failure records non-zero FFN fields rather than a fixture or
+  import error (`PREFILL` and unified `DECODE`: `50.0 ms` post-attention).
+- [x] The public `include_ffn=False` value is forwarded through the existing
+  dummy owner without changing the predictor signature or adding a second
+  timing owner.
+- [x] Shared-domain `PREFILL` and unified `DECODE` dummy results retain
+  attention and batch-level overhead while setting all FFN/MoE fields,
+  post-attention time, and FFN communication components to zero.
+- [x] `DECODE_ATTN` retains its established post-attention layernorm/residual
+  behavior; `DECODE_FFN` remains an invalid attention-only public role.
+- [x] Dense/MoE classification, typed EP admission, zero-routed lanes,
+  non-dummy lookup order, and the affected predictor matrix remain green.
+- [x] Fresh RED/GREEN numeric evidence and the final SCOPE-039 status are
+  recorded in `issues.md`, `progress.md`, `review.md`, and the test report.
+
+### Aggregate routing-map constructor gates (SCOPE-040)
+
+- [x] The `cluster_type=None` constructor deletion failure is reproduced with
+  a deterministic probe and recorded before the production edit.
+- [x] The RED regression isolates the repeated `del` operation rather than a
+  model, routing, or environment failure.
+- [x] All three routing attributes remain present and independently readable
+  for aggregate, explicit-role, and `DECODE_ATTN` instances.
+- [x] Role maps populate only for materialized MoE roles; no routing data is
+  synthesized for attention-only roles.
+- [x] Existing disaggregation/typed-EP matrices, compile, whitespace, and
+  conflict-marker checks remain green after the correction.
+- [x] Fresh RED/GREEN numeric evidence and the final SCOPE-040 status are
+  recorded in `issues.md`, `progress.md`, `review.md`, and the test report.
+
+### Aggregate role-capability gates (SCOPE-040b)
+
+- [x] A legal PD-shaped aggregate materializes only PREFILL and unified
+  DECODE; it never dereferences or synthesizes DECODE_FFN.
+- [x] A legal PD-AF-shaped aggregate materializes PREFILL and DECODE_FFN while
+  leaving DECODE_ATTN outside routed maps.
+- [x] The role-to-config-attribute mapping is the single declaration-driven
+  capability source; no mode-string branch or duplicate validator is added.
+- [x] An explicitly requested unavailable role preserves the existing
+  fail-fast error and performs zero downstream model/routing lookup.
+- [x] Every constructor instance exposes all three stable routing attributes,
+  with `None` for non-materialized roles and no timing/scheduler change.
+- [x] Fresh RED/GREEN numeric evidence, focused matrices, compile, whitespace,
+  and conflict-marker checks are recorded before SCOPE-040b closes.
+
+### Descriptor/predictor topology gates (SCOPE-041)
+
+- [x] The active predictor EP size and router top-k are read from the existing
+  predictor/role topology owner; the lane descriptor remains scheduler-built.
+- [x] A routed descriptor with EP `4` against predictor EP `2` fails with a
+  topology-specific `ValueError` before any dummy, measurement, model,
+  backend, or communication lookup.
+- [x] A routed descriptor with top-k `1` against predictor top-k `2` fails at
+  the same boundary and produces downstream lookup count `0`.
+- [x] Dummy and non-dummy MONOLITHIC/PDD entry points share this ordering;
+  valid EP=1, valid EP>1, partial source-batch subsets, and zero-routed lanes
+  retain their existing behavior.
+- [x] Aggregate conservation remains owned by `LayerEPWorkload`, physical
+  lane construction remains scheduler/materializer-owned, and the payload
+  builder remains the final structural descriptor check.
+- [ ] Fresh final matrix, compile, whitespace, conflict-marker, and static
+  owner audits are recorded in the task report before SCOPE-041 closes.
+
+### Active-role topology propagation gates (SCOPE-041)
+
+- [x] The non-dummy aggregate disaggregation regression demonstrates that the
+  first admission uses active `DECODE_FFN` `EP=2/top-k=2`, while the pre-fix
+  second inherited admission incorrectly reads representative top-k `1`.
+- [x] The MoE API carries optional active `EP/top-k` context without changing
+  direct MONOLITHIC/default call behavior or introducing mutable predictor
+  state.
+- [x] Every disaggregation routed role forwards the same active context to the
+  inherited method, and every admission within that method uses it.
+- [x] A valid active-role descriptor passes both admission points in non-dummy
+  mode; true EP or
+  top-k mismatches still fail before timing, measurement, model, backend, or
+  communication lookup.
+- [x] The focused RED/GREEN evidence records descriptor, representative,
+  active-role values and downstream call counts before SCOPE-041 is re-closed.
+
+The formal `Simulator` constructs one predictor per disaggregation role, so
+downstream phase/gating/communication helpers read role-local topology from
+their own predictor instance. A manually reused `cluster_type=None` aggregate
+predictor executing a heterogeneous role has no supported downstream context
+contract and remains outside this gate; adding such a contract requires a
+separate immutable execution-context design.
+
+### EP payload admission ordering gates (SCOPE-042)
+
+- [x] `_validate_ep_barrier_arrival()` remains the scheduler-owned identity and
+  waiting-room validator; no physical descriptor check is duplicated there.
+- [x] Dispatch and combine invoke the existing payload owner on the complete
+  prospective lane set before architecture collective resolution,
+  communication predictor/backend lookup, trace publication, or final-lane
+  commit.
+- [x] Missing descriptors and entity-width mismatches fail with the typed
+  `ValueError` on both entrances, and `predict_alltoall_time` remains uncalled.
+- [x] A prior valid lane may remain in the waiting room when the final malformed
+  lane fails; this option-1 behavior is explicit and transactional.
+- [x] Successful and predictor-error fixtures carry valid `EPLaneWorkload`
+  descriptors; raw-width fixtures remain only where identity rejection is the
+  behavior under test.
+- [x] The dispatch/combine payload and PD-AF invariant matrix passes `392` tests
+  with `19` explicit skips.
 
 ## Scoped completion checkpoint
 

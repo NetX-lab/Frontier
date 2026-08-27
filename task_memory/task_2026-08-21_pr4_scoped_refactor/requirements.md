@@ -2,6 +2,10 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-27 | Confirmed方案 A for propagating active disaggregation topology through the inherited MoE API. |
+| 2026-08-27 | Approved strict descriptor/predictor topology validation for routed EP admission. |
+| 2026-08-27 | Selected the unified routed-aggregate fail-fast contract after the PDD non-dummy RCA. |
+| 2026-08-27 | Approved inclusion of the mixed-layer dummy predictor repair (SCOPE-036) in the current merge-readiness scope. |
 | 2026-08-26 | Recorded the maintainer's narrow A' decision for unified EP>1 routed aggregate admission in dummy and non-dummy modes. |
 | 2026-08-26 | Confirmed the shared `Batch` compute-contract repair and the structural MTP verification-width correction after the token-ledger RCA. |
 | 2026-08-25 | Recorded the post-PR17 PR20/PR21 merge-conflict RCA, the maintainer-approved A' typed-lane contract, and the docs-first implementation request. |
@@ -277,3 +281,78 @@ constraints only; implementation choices belong in `plan.md` and `design.md`.
   lane behavior. Implement the invariant through one shared protected helper,
   without synthetic descriptors, raw-map inference, caller-side duplicate
   guards, or temporary scaling.
+
+## R-028 - Include SCOPE-036 mixed-layer dummy classification repair
+
+- **Attribute:** `[Original Request]`
+- **Raw request:** "A"
+- **Captured intent:** Include the newly verified mixed-layer dummy predictor
+  defect in the current PR20/PR21 merge-readiness scope. Make dummy execution
+  timing consume the same concrete `layer_id` classification already used by
+  the public predictor and non-dummy path. Dense layers must return dense
+  execution semantics with zero MoE fields; actual MoE layers must preserve
+  their existing MoE semantics. Keep `DECODE_ATTN` attention-only, preserve
+  multi-layer aggregate behavior, avoid scheduler-side overrides and
+  name-based classification, and verify both monolithic and disaggregation
+  entry points before the final merge audit.
+
+## R-029 - Select unified routed-aggregate fail-fast policy
+
+- **Attribute:** `[Original Request]`
+- **Raw request:** "A"
+- **Captured intent:** Select direction A from the post-implementation PDD
+  aggregate RCA. Treat an implicit multi-layer FFN aggregate as routed when
+  the existing model-level classification is MoE, and require its physical
+  `EPLaneWorkload` for EP>1 before dummy timing, measurement activation, or any
+  model/backend/communication lookup. Keep dense and attention-only aggregates
+  on their existing owners, use `is_moe_layer(layer_id)` for concrete
+  single-layer classification, and fail explicitly when a concrete MoE config
+  lacks that callable. This decision supersedes the earlier compatibility
+  wording that left routed implicit aggregates on a lookup path without a
+  physical lane.
+
+## R-030 - Require strict descriptor/predictor topology consistency
+
+- **Attribute:** `[Original Request]`
+- **Raw request:** "A" after reviewing why an `EPLaneWorkload` descriptor and
+  a predictor can carry different EP or router top-k values even when the
+  runtime appears to use one model configuration.
+- **Captured intent:** Include the descriptor/predictor topology contract in
+  the current PR20/PR21 merge-readiness scope. A routed MoE admission must
+  compare the physical descriptor's `moe_expert_parallel_size` and
+  `router_topk` with the active predictor topology, and fail fast on any
+  mismatch before dummy timing, measurement activation, model lookup,
+  backend lookup, or communication lookup. Keep the check in the existing
+  shared predictor admission owner; do not infer topology from names or raw
+  maps, fabricate a descriptor, add a caller-side duplicate guard, or add a
+  compatibility fallback. Preserve scheduler/materializer ownership of
+  physical lane construction and keep EP=1 as the same typed interface's
+  degenerate physical case.
+
+## R-031 - Propagate active role topology through inherited MoE prediction
+
+- **Attribute:** `[Original Request]`
+- **Raw request:** "A"
+- **Captured intent:** Adopt方案 A for the newly identified aggregate
+  disaggregation topology-context gap. The active role's existing
+  `moe_expert_parallel_size` and `router_topk` must travel through the full
+  inherited `predict_moe_layer_time()` call chain, so every admission of one
+  routed stage uses the same active topology. Keep strict fail-fast mismatch
+  behavior, preserve the shared admission owner and role configuration as the
+  source of truth, and avoid mutable-field overrides, synthetic descriptors,
+  duplicate caller guards, fallbacks, or unrelated refactors.
+
+## R-032 - Keep EP barrier identity and payload admission as separate owners
+
+- **Attribute:** `[Original Request]`
+- **Raw request:** "1，继续"
+- **Captured intent:** Select option 1 for the residual EP consumer boundary:
+  keep `_validate_ep_barrier_arrival()` responsible for scheduler identity,
+  participant, and waiting-room invariants, while the existing
+  `_get_step3_ep_alltoall_payload_bytes()` owner performs the final typed
+  `EPLaneWorkload` admission. The final lane must be rejected before
+  architecture collective resolution, communication predictor/backend lookup,
+  trace publication, or waiting-room commit. Preserve the temporary waiting
+  room state for an earlier valid lane, avoid duplicating descriptor checks at
+  the barrier boundary, and keep both dispatch and combine on the same payload
+  owner.

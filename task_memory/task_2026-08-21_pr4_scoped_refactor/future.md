@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-27 | Recorded the unsupported downstream context contract for manually reused heterogeneous aggregate predictors after SCOPE-041 propagation. |
 | 2026-08-25 | Added explicitly deferred post-PR17 work that is outside the A' lane contract and merge-conflict repair. |
 | 2026-08-22 | Added evidence from the producer-metadata and MTP unified-interface audits and recorded the remote PR description synchronization. |
 | 2026-08-22 | Added the PR #21 Option-B deferred WATCH items: true-mixed block rounding, duplicate targets, CLI derivation, strict integer APIs, and exception narrowing. |
@@ -22,6 +23,11 @@ and design decisions:
   stage/KV fields that A' must preserve.
 - Unsupported or non-equal expert ownership topologies; the current runtime
   contract requires divisible equal-width ownership.
+- A unified immutable execution-context interface for a single
+  `cluster_type=None` aggregate predictor that is intentionally reused across
+  heterogeneous disaggregation roles. The current formal `Simulator` creates
+  one predictor per role; extending downstream gating/phase/communication
+  helpers for cross-role reuse needs a separate design and regression matrix.
 - The existing broad post-PR17 unit baseline failures unrelated to typed lanes.
 
 The following items are intentionally outside this session and must not be

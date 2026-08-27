@@ -2,6 +2,21 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-27 | Added CP-61 for SCOPE-042 combine lookup-order correction, typed fixture migration, and fresh dispatch/combine evidence. |
+| 2026-08-27 | Added CP-60 for fresh focused/PR17 verification, corrected static owner audit, and PR20/PR21 ancestry evidence. |
+| 2026-08-27 | Added CP-61 for the pre-commit narrow A' merge-readiness checkpoint and independent-review status. |
+| 2026-08-27 | Added CP-59: independent formal-path reachability review, active-topology GREEN evidence, and aggregate-heterogeneous residual disposition. |
+| 2026-08-27 | Added CP-58 for the SCOPE-041 active-role topology propagation RCA/docs freeze and方案 A handoff. |
+| 2026-08-27 | Added CP-57 for fresh role-capability and topology mismatch GREEN evidence and closed SCOPE-040b/SCOPE-041. |
+| 2026-08-27 | Added CP-56 for the SCOPE-041 strict descriptor/predictor topology docs freeze. |
+| 2026-08-27 | Added CP-55 for the SCOPE-040b PD-shaped role-capability RCA and docs freeze. |
+| 2026-08-27 | Added CP-52 for the SCOPE-040 routing-map constructor RCA/docs freeze and deterministic RED probe. |
+| 2026-08-27 | Added CP-51 for the SCOPE-039 GREEN repair, including the early dummy/non-dummy DECODE_FFN role guard. |
+| 2026-08-27 | Added CP-50 for the SCOPE-039 public dummy attention-only RED evidence. |
+| 2026-08-27 | Added CP-49 for the SCOPE-039 disaggregation dummy attention-only RCA/docs freeze. |
+| 2026-08-27 | Added CP-47/48 for the completed lane/admission/mixed-layer implementation and shared-collective payload audit. |
+| 2026-08-27 | Added CP-46 for the lane-local conservation RCA and docs-first correction gate. |
+| 2026-08-27 | Added CP-45 for the post-A' ledger/admission verification audit and descriptor-context topology residual watch. |
 | 2026-08-26 | Added CP-44 documenting the narrow A' admission decision, concrete-classification audit, and docs-freeze consistency check. |
 | 2026-08-26 | Added CP-43 for the raw/effective width conservation repair and EP>1 admission decision gate. |
 | 2026-08-26 | Added CP-42 for the dummy terminal-MTP lane RCA, typed seam repair, and numeric verification. |
@@ -23,6 +38,44 @@
 | 2026-08-22 | Recorded the final PR #21 architecture re-review as CLEAR and the code/spec lane as APPROVE after closing decode memory-accounting WATCH. |
 | 2026-08-22 | Recorded the focused repair checkpoint and the fresh post-repair Claude timeout without verdict. |
 | 2026-08-22 | Recorded Claude's resumed REQUEST CHANGES verdict and the independent reproduction of both P1 findings. |
+
+## CP-49 - SCOPE-039 dummy attention-only docs freeze
+
+- **Target Component/Phase:** Disaggregation dummy execution owner before the
+  RED regression.
+- **Reviewer Agent Identity:** `/root` (direct call-chain/source audit).
+- **Inspected Artifacts:**
+  `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`,
+  the shared `SklearnMoEExecutionTimePredictor` dummy owner,
+  `_predict_attention_only_stage_execution_time()`, and the existing
+  disaggregation predictor tests.
+- **Identified Issues/Anomalies:** The public `include_ffn=False` selector is
+  validated and used by the non-dummy branch, but the dummy branch forwards no
+  equivalent selector. The disaggregation helper therefore returned positive
+  FFN fields (`mlp_norm=10.0 ms`, `mlp_up=10.0 ms`, post-attention `50.0 ms`)
+  in a `180.0 ms` attention-only probe.
+- **Remediation/Verification Code Actions Taken:** Recorded SCOPE-039's RCA,
+  ownership boundary, compatibility default, and RED/GREEN dependency chain in
+  the task docs. No production or test source was changed in this checkpoint.
+- **Final Status:** **PASS for docs freeze; TDD RED is the next gate.**
+
+## CP-50 - SCOPE-039 public dummy attention-only RED
+
+- **Target Component/Phase:** Public disaggregation dummy path after the
+  docs-first contract freeze.
+- **Reviewer Agent Identity:** `/root` (fresh focused test run).
+- **Inspected Artifacts:** The new parameterized regression in
+  `tests/unit/test_sklearn_disaggregation_execution_time_predictor.py` and its
+  public `predict_stage_execution_time()` call chain.
+- **Identified Issues/Anomalies:** Both shared-domain roles failed the same
+  semantic assertion: `get_single_layer_post_attention_time()` returned
+  `50.0 ms` for `include_ffn=False` instead of `0.0 ms`. The run completed
+  normally with `2 failed, 32 deselected in 2.66s`; no fixture/import error
+  occurred.
+- **Remediation/Verification Code Actions Taken:** Kept the regression as the
+  RED gate and recorded the exact values in the issue, plan, harness, and
+  progress records. No production code was changed before this evidence.
+- **Final Status:** **PASS for the RED gate; owner handoff is next.**
 | 2026-08-22 | Recorded the 20-minute Claude Opus PR #20 review attempt, timeout evidence, and still-open external-review gate. |
 | 2026-08-22 | Reviewed the maintainer-selected exact-row default policy, RED/GREEN evidence, and committed PR #20 regression matrix. |
 | 2026-08-22 | Added the split-PR remote checkpoint and finite exact-row producer audit for PR #20. |
@@ -41,6 +94,145 @@
 | 2026-08-21 | Recorded the function-level source audit and deep-module seam review. |
 
 # Checkpoint Reviews
+
+## CP-59 - SCOPE-041 formal-path reachability and active-topology GREEN
+
+- **Target Component/Phase:** Active-role topology propagation through the
+  disaggregation public stage and inherited MoE admission chain.
+- **Reviewer Agent Identity:** `/root/behavior_review` (independent call-chain
+  review), with `/root` performing the fresh executable probe and source
+  re-vet.
+- **Inspected Artifacts:** `frontier/simulator.py:150-180`,
+  `frontier/config/config.py:4605-4721`,
+  `SklearnDisaggregationExecutionTimePredictor.__init__` and routed stage
+  branches, `SklearnMoEExecutionTimePredictor.predict_moe_layer_time()`,
+  `_get_moe_tokens_input()`, `_get_expert_parallel_communication_time()`,
+  and the focused admission/disaggregation tests.
+- **Identified Issues/Anomalies:** No supported-runtime defect remains. The
+  formal simulator creates one predictor per disaggregation role and binds
+  role-local EP/top-k fields. The only residual is a manually reused
+  `cluster_type=None` aggregate predictor asked to execute a heterogeneous
+  role; downstream helpers have no such context contract and can retain
+  representative self-field values.
+- **Remediation/Verification Code Actions Taken:** Extended the existing MoE
+  API with optional active `ep_size`/`router_topk`, forwarded them from all
+  three routed disaggregation branches, and kept `_admit_routed_ep_aggregate()`
+  as the sole validator. A real inherited-chain probe recorded two admissions,
+  both `EP=2/top-k=2`, despite representative top-k `1`; it stopped at the
+  intentional unsupported-operation boundary before model/communication
+  lookup. The fresh focused matrix passed `309` tests in `79.09s`.
+- **Final Status:** **PASS for the supported formal runtime path.** The
+  heterogeneous aggregate case is a documented future interface boundary.
+  Final static gates, coherent commit, and PR20/PR21 read-only merge audit
+  remain pending; remote PR state is unchanged.
+
+## CP-58 - SCOPE-041 active-role topology propagation RCA/docs freeze
+
+- **Target Component/Phase:** Aggregate disaggregation non-dummy routed
+  prediction after the strict descriptor/predictor validator.
+- **Reviewer Agent Identity:** `/root` (direct call-chain audit; independent
+  implementation review remains pending).
+- **Inspected Artifacts:**
+  `SklearnDisaggregationExecutionTimePredictor.predict_stage_execution_time()`,
+  `SklearnMoEExecutionTimePredictor.predict_moe_layer_time()`,
+  `_admit_routed_ep_aggregate()`, all three disaggregation routed-role call
+  sites, and the existing aggregate admission tests.
+- **Identified Issues/Anomalies:** The first admission uses active
+  `DECODE_FFN` `EP=2/router_topk=2`, but the inherited second admission falls
+  back to aggregate representative `router_topk=1` and rejects the valid
+  descriptor. Existing dummy coverage returns before the inherited second
+  admission and therefore does not expose this defect.
+- **Remediation/Verification Code Actions Taken:** Recorded the RCA and
+  approved方案 A in `requirements.md`, `design.md`, `issues.md`, `plan.md`,
+  `harness.md`, and `progress.md`. No production or test source was changed
+  in this docs checkpoint.
+- **Final Status:** **PASS for docs freeze; TDD RED regression is next.**
+
+## CP-51 - SCOPE-039 dummy attention-only GREEN
+
+- **Target Component/Phase:** Disaggregation dummy owner and the shared
+  public attention-only role boundary.
+- **Reviewer Agent Identity:** `/root` (fresh TDD RED/GREEN verification;
+  independent diff review remains a later gate).
+- **Inspected Artifacts:**
+  `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`,
+  `tests/unit/test_sklearn_disaggregation_execution_time_predictor.py`, and
+  the SCOPE-039 sections of `issues.md`, `plan.md`, `harness.md`, and
+  `progress.md`.
+- **Identified Issues/Anomalies:** The dummy owner dropped the public
+  `include_ffn=False` selector and unconditionally emitted shared-domain FFN
+  fields. A full affected matrix also exposed that the existing
+  `DECODE_FFN` invalid-role check ran only after the dummy branch.
+- **Remediation/Verification Code Actions Taken:** Added one default-compatible
+  `include_ffn` parameter at the existing dummy owner seam, forwarded the
+  public selector, gated shared-domain FFN/MoE fields, and moved the
+  `DECODE_FFN` invalid-role check to the common public boundary. The isolated
+  selector regression passed `2` cases; the complete affected matrix passed
+  `234` tests in `3.12s`, including the dummy role rejection and existing
+  MoE/EP/MTP/layer-identity cases.
+- **Final Status:** **PASS for SCOPE-039.** Final static gates, independent
+  review, coherent commits, and PR20/PR21 ownership audit remain pending.
+
+## CP-52 - SCOPE-040 routing-map constructor RCA/docs freeze
+
+- **Target Component/Phase:** Aggregate disaggregation predictor construction
+  with the public default `cluster_type=None`.
+- **Reviewer Agent Identity:** `/root` (direct source audit and controlled
+  constructor probe; production repair review remains pending).
+- **Inspected Artifacts:**
+  `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`,
+  predictor factory/default signatures, and the existing disaggregation
+  predictor unit fixtures.
+- **Identified Issues/Anomalies:** The constructor initializes three routing
+  attributes, then deletes two siblings in each role iteration. A deterministic
+  stubbed probe reproduced `AttributeError` on the next iteration at
+  `_decode_routing_details`; `DECODE_ATTN` also deletes the same attributes.
+- **Remediation/Verification Code Actions Taken:** Recorded the stable
+  lifecycle contract in `issues.md`, `design.md`, `plan.md`, and `harness.md`.
+  No production or test source was changed in this docs checkpoint.
+- **Verification:** The controlled probe produced the exact failure above;
+  the next gate is a minimal RED regression followed by removal of destructive
+  deletion while retaining `None` for non-materialized roles.
+- **Final Status:** **PASS for RCA/docs freeze; implementation pending.**
+
+## CP-53 - SCOPE-040 constructor RED regression
+
+- **Target Component/Phase:** TDD RED gate for aggregate routing-map
+  construction with `cluster_type=None`.
+- **Reviewer Agent Identity:** `/root` (fresh focused test execution; code
+  review remains pending).
+- **Inspected Artifacts:** The new constructor regression in
+  `tests/unit/test_sklearn_disaggregation_execution_time_predictor.py` and
+  the real constructor role loop.
+- **Identified Issues/Anomalies:** The test failed at the repeated destructive
+  deletion with `AttributeError` before any model, routing, CSV, or backend
+  operation. The observed result was `1 failed in 3.5s`.
+- **Remediation/Verification Code Actions Taken:** Recorded the exact RED
+  command and stack evidence in `issues.md` and `progress.md`; production
+  code remains unchanged until the next owner-fix sub-step.
+- **Final Status:** **PASS for the RED gate; production repair pending.**
+
+## CP-54 - SCOPE-040 constructor GREEN
+
+- **Target Component/Phase:** Routing-map lifecycle correction in the
+  disaggregation predictor constructor.
+- **Reviewer Agent Identity:** `/root` (fresh focused verification; an
+  independent code review remains a later gate).
+- **Inspected Artifacts:**
+  `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`,
+  `tests/unit/test_sklearn_disaggregation_execution_time_predictor.py`, and
+  all production `routing_details` readers.
+- **Identified Issues/Anomalies:** None after the correction. All production
+  readers use the stable attributes and treat `None` as missing role data at
+  their existing validation boundary.
+- **Remediation/Verification Code Actions Taken:** Removed only the six
+  destructive `del` statements. The focused constructor matrix passed `1`
+  case; the complete disaggregation predictor file passed `38` tests in
+  `2.50s`. Aggregate, explicit routed, and `DECODE_ATTN` attribute values
+  matched the lifecycle contract.
+- **Final Status:** **PASS for SCOPE-040 implementation slice; broader
+  focused matrix, static gates, independent review, and PR20/PR21 audit remain
+  pending.**
 
 ## CP-01 - Analysis baseline and scope reset
 
@@ -1294,3 +1486,250 @@ PR20 base. No remote state was changed.
   old pending/communication-only wording is removed from the active sections.
   The next gate is TDD RED for the shared admission helper.
 - **Final Status:** **PASS for docs freeze; implementation pending.**
+
+## CP-45 - Post-A' ledger and admission verification audit
+
+- **Target Component/Phase:** Final focused verification preparation after the
+  narrow A' implementation and token-ledger repairs.
+- **Reviewer Agent Identity:** `/root/audit_ep_aggregate/code_spec_lane`
+  (read-only source/doc audit; parent integration review remains pending).
+- **Inspected Artifacts:**
+  `tests/unit/test_mtp_token_ledger_repair.py`,
+  `tests/unit/test_moe_ep_aggregate_admission.py`,
+  `frontier/moe_ep_workload.py`, the shared MoE admission helper and both
+  public predictor seams, plus `plan.md`, `issues.md`, `harness.md`,
+  `progress.md`, and the terminal-MTP test report.
+- **Identified Issues/Anomalies:** The token-ledger test path was present and
+  GREEN but was not reflected in the active harness checkboxes. The active
+  issue/plan text still described the implemented admission and width repairs
+  as pending. A direct context probe showed that the narrow helper admits
+  internally valid descriptors with predictor EP `2`/descriptor EP `4` and
+  predictor top-k `2`/descriptor top-k `1`; this is a separate topology-context
+  contract and is not proven reachable from production role-specific
+  materializers.
+- **Remediation/Verification Code Actions Taken:** Updated only task-memory
+  status/evidence records, marked the completed ledger/admission gates, and
+  recorded the context mismatch as residual WATCH `SCOPE-035`. No production
+  validator, caller-side guard, topology inference, or fallback was added.
+  Ran the standalone ledger file (`8 passed in 2.51s`) and the exact ten-file
+  focused matrix (`181 passed in 3.37s`). The active nine-document history,
+  marker, placeholder, and conflict scan plus `git diff --check` were clean.
+- **Final Status:** **PASS for the documentation and verification audit.**
+  Coherent commits, independent code review, and local PR20/PR21
+  merge-readiness remain open in the parent task.
+
+## CP-46 - Lane-local conservation ownership docs freeze
+
+- **Target Component/Phase:** `lane-conservation-RCA` before the helper and
+  fixture correction.
+- **Reviewer Agent Identity:** `/root` (direct source audit) with independent
+  confirmation from `/root/behavior_review/architecture_lane`.
+- **Inspected Artifacts:** `frontier/moe_ep_workload.py`,
+  `frontier/entities/batch.py`, scheduler EP materialization, the terminal-MTP
+  lane replay, `_admit_routed_ep_aggregate()`, and
+  `tests/unit/test_moe_ep_aggregate_admission.py` plus the typed predictor
+  contract tests.
+- **Identified Issues/Anomalies:** The helper's explicit-lane fallback treated
+  `batch.total_num_tokens * router_topk` as the expected count for one physical
+  lane. The focused module therefore rejected a valid zero lane with
+  `allocated 0, expected 4`; a partial lane is affected by the same domain
+  error. A batch-attached lane entity has a different contract because its
+  `total_num_tokens` is lane-local post-routing width.
+- **Remediation/Verification Code Actions Taken:** Updated the task design,
+  issue, plan, harness, and progress records to assign aggregate conservation
+  to `LayerEPWorkload`/scheduler, local-width equality to lane entities, and
+  descriptor/topology admission only to source-batch plus explicit-lane calls.
+  No production or test source was changed in this docs checkpoint.
+- **Verification:** The pre-fix admission run remains `25 passed, 1 failed`
+  with the targeted zero-lane error. The next gate is a focused RED/GREEN
+  fixture and helper correction, followed by the full affected matrix.
+- **Final Status:** **PASS for the docs freeze; implementation pending.**
+
+## CP-61 - SCOPE-042 EP payload admission ordering
+
+- **Target Component/Phase:** Residual typed EP dispatch/combine consumer
+  boundary after the option-1 decision.
+- **Reviewer Agent Identity:** `/root` (direct call-chain audit, TDD RED/GREEN
+  reproduction, and source re-vet; independent final review remains pending).
+- **Inspected Artifacts:** `_validate_ep_barrier_arrival()`,
+  `_get_step3_ep_alltoall_payload_bytes()`,
+  `on_ep_alltoall_dispatch_ready()`, and
+  `on_ep_alltoall_combine_ready()` in
+  `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py`; the model
+  architecture resolver; `tests/unit/test_typed_ep_scheduler_consumers.py`,
+  `tests/unit/test_pdaf_step3_combine_payload.py`, and the PD-AF invariant
+  fixtures; and the active task docs.
+- **Identified Issues/Anomalies:** Combine resolved architecture collective
+  policy before typed payload admission. A malformed final lane could therefore
+  fail at the profile accessor rather than the descriptor boundary. The initial
+  residual matrix had `14` expected fixture failures because legacy successful
+  and predictor-error lanes lacked descriptors.
+- **Remediation/Verification Code Actions Taken:** Kept option 1's barrier
+  identity owner unchanged; moved the existing payload-owner call ahead of
+  combine collective resolution and reused its returned all-to-all payload;
+  migrated only fixtures whose intended behavior requires reaching the
+  predictor/payload path; parameterized typed missing-descriptor and width
+  mismatch regressions across dispatch and combine.
+- **Verification:** The focused payload/typed-consumer/PD-AF invariant command
+  passed `392` tests with `19` skips. Both malformed-lane cases made zero
+  `predict_alltoall_time` calls and preserved the prior valid lane in the
+  waiting room. Valid payload timing and predictor-error/non-finite-time
+  assertions continued to pass.
+- **Final Status:** **PASS for SCOPE-042.** Full static gates, independent
+  review, coherent commits, and PR20/PR21 read-only ownership audit remain
+  open.
+
+## CP-57 - SCOPE-040b/041 fresh GREEN and owner re-vet
+
+- **Target Component/Phase:** Role-capability and strict descriptor/predictor
+  topology gates after the approved narrow A' implementation.
+- **Reviewer Agent Identity:** `/root` (fresh source audit and direct probes;
+  independent behavior review remains a separate final gate).
+- **Inspected Artifacts:** The disaggregation constructor and
+  `_ROUTED_ROLE_CONFIG_ATTRIBUTES` declaration in
+  `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`,
+  `_admit_routed_ep_aggregate()` in
+  `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`,
+  `ClusterConfig._setup_disaggregated_configs()`, and the focused predictor,
+  admission, typed-lane, scheduler, and communication tests.
+- **Identified Issues/Anomalies:** Fresh probes found no remaining defect in
+  the approved boundaries. The legal PD and PD-AF aggregate shapes select
+  different routed role subsets, and manually divergent descriptors are
+  rejected before mode-specific work as intended.
+- **Remediation/Verification Code Actions Taken:** Recorded the exact role
+  calls and map states, the explicit missing-role exception with
+  `routing_calls=0`, and eight dummy/non-dummy MONOLITHIC/disaggregation
+  topology mismatch outcomes with `downstream_calls=0`. Re-ran the complete
+  disaggregation predictor file (`40 passed in 2.71s`), aggregate admission
+  file (`29 passed in 2.75s`), and typed predictor/scheduler pair (`32 passed
+  in 2.77s`).
+- **Final Status:** **PASS for SCOPE-040b and SCOPE-041.** Static gates,
+  broader scoped matrix, independent review, and coherent commit remain open.
+
+## CP-56 - SCOPE-041 strict descriptor/predictor topology docs freeze
+
+- **Target Component/Phase:** Strict EP/top-k equality at the shared routed
+  aggregate admission boundary.
+- **Reviewer Agent Identity:** `/root` (direct source and call-order audit;
+  independent behavior review remains pending).
+- **Inspected Artifacts:** `_admit_routed_ep_aggregate()` in
+  `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`,
+  both public predictor seams, scheduler/materializer descriptor owners,
+  `tests/unit/test_moe_ep_aggregate_admission.py`,
+  `tests/unit/test_typed_ep_predictor_contract.py`, and the active task docs.
+- **Identified Issues/Anomalies:** The descriptor and predictor can be built
+  from different role-specific configuration views. Before this decision,
+  internally valid EP `4`/top-k `1` descriptors could pass a helper configured
+  for EP `2`/top-k `2`; dummy and non-dummy paths did not share a complete
+  context-equality gate.
+- **Remediation/Verification Code Actions Taken:** Froze one shared helper as
+  the owner of positive-integer EP validation, descriptor presence, exact
+  router top-k equality, exact EP equality, descriptor identity, and applicable
+  lane-local conservation. The helper must run before mode-specific timing or
+  lookup. No caller-side guard, topology inference, synthetic descriptor, or
+  fallback was introduced in this docs checkpoint.
+- **Verification:** Existing focused regressions and the current helper source
+  show the intended checks; fresh mismatch probes, role-capability GREEN, and
+  final static gates are the next evidence step.
+- **Final Status:** **PASS for docs freeze; SCOPE-041 implementation evidence
+  pending.**
+
+## CP-47 - Lane conservation, aggregate admission, and mixed-layer GREEN
+
+- **Target Component/Phase:** SCOPE-036/037/038 production correction after the
+  docs-first ownership freeze.
+- **Reviewer Agent Identity:** `/root` (direct source re-vet and fresh focused
+  verification; independent final review remains a later checkpoint).
+- **Inspected Artifacts:**
+  `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py`,
+  `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`,
+  `frontier/execution_time_predictor/sklearn_execution_time_predictor.py`,
+  `frontier/execution_time_predictor/base_execution_time_predictor.py`,
+  `frontier/moe_ep_workload.py`, the admission/mixed-layer/layer-identity tests,
+  and the typed EP/MTP/communication ten-file matrix.
+- **Identified Issues/Anomalies:** The historical MONOLITHIC checkpoint still
+  described an implicit multi-layer aggregate compatibility bypass; Direction
+  A supersedes that provisional behavior. No new production defect was found
+  after aligning PDD classification and limiting conservation checks to their
+  actual owner.
+- **Remediation/Verification Code Actions Taken:** Passed the public predictor's
+  resolved classification into the existing dummy owners, applied the shared
+  routed admission before mode-specific work, and retained lane-local equality
+  only for a batch-attached descriptor. Preserved `LayerEPWorkload` aggregate
+  conservation, scheduler identity/barriers, and the payload builder's final
+  structural validation. The fresh matrices passed `199` tests in `4.05s` and
+  `183` tests in `31.47s`.
+- **Final Status:** **PASS for the implementation checkpoint.** Independent
+  diff review, PR20/PR21 ownership audit, and coherent commits remain open.
+
+## CP-48 - Shared collective batch-semantics audit
+
+- **Target Component/Phase:** Source effective width versus physical lane width
+  across registered MoE communication operators.
+- **Reviewer Agent Identity:** `/root` (direct call-chain inspection and
+  reproducible registered-operator probe).
+- **Inspected Artifacts:** `frontier/operators/families.py`,
+  `frontier/operators/spec.py`, `frontier/entities/batch.py`,
+  `frontier/moe_ep_workload.py`, scheduler lane materializers in
+  `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py`, and
+  `tests/unit/test_comm_operator_families.py`.
+- **Identified Issues/Anomalies:** No reachable production owner mismatch was
+  found. Shared MoE-TP payloads intentionally consume the batch's pre-routing
+  compute-effective width; EP all-to-all intentionally consumes the explicit
+  lane routed count. Production `EPBatchGroup` builders preserve the source
+  compute width through `moe_pre_routing_effective_total_tokens`.
+- **Remediation/Verification Code Actions Taken:** Ran a direct case with raw
+  width `5`, effective width `8`, top-k `2`, aggregate assignments `10`, lanes
+  `[6, 4]`, and participant IDs `(0, 1)`. Observed shared all-reduce `128`
+  bytes and EP all-to-all `[96, 64]` bytes. A zero lane retained shared `128`
+  bytes and produced EP payload `0`. Kept the existing context/operator
+  interface unchanged and added no fallback or source resolver.
+- **Final Status:** **PASS.** The shared collective contract is consistent with
+  the typed-lane architecture; `SCOPE-035` remains a separate residual WATCH.
+
+## CP-61 - Pre-commit narrow A' merge-readiness checkpoint
+
+- **Target Component/Phase:** Narrow A' implementation before the separate
+  production/test and documentation commits and local PR21 consolidation.
+- **Reviewer Agent Identity:** `/root/behavior_review` (independent runtime
+  behavior review); `/root` performed the source/diff audit. Independent code
+  review was still pending at this checkpoint.
+- **Inspected Artifacts:** The seven production modules changed by A', the
+  typed-lane and admission regressions, the formal PDD EP=2 probe, the
+  post-PR17 integration ancestry, and the PR21 merge tree.
+- **Identified Issues/Anomalies:** No CRITICAL, HIGH, or BLOCK runtime issue.
+  The only retained WATCH is an unsupported manually reused heterogeneous
+  `cluster_type=None` aggregate predictor, already documented in `future.md`.
+  PR21 is not an ancestor of the integration head; its local merge has one
+  expected content conflict in `frontier/profiling/README.md`.
+- **Remediation/Verification Code Actions Taken:** Recorded fresh focused
+  results (`309 passed in 7.55s` and `169 passed in 7.60s`), independent typed
+  resolver/runtime evidence, and the exact PR21 ancestor/conflict facts. No
+  remote push, merge, force-push, or PR-state change was performed.
+- **Final Status:** **PASS for the behavior gate; final code-review verdict,
+  static gates, commits, local PR21 merge, and merged-tree verification remain
+  open.**
+
+## CP-55 - SCOPE-040b PD-shaped role-capability RCA/docs freeze
+
+- **Target Component/Phase:** Aggregate disaggregation predictor constructor
+  after the SCOPE-040 stable-map lifecycle correction.
+- **Reviewer Agent Identity:** `/root` (direct source audit; independent
+  behavior review is queued before the owner fix is accepted).
+- **Inspected Artifacts:** `ClusterConfig._setup_disaggregated_configs()` in
+  `frontier/config/config.py`, the constructor and routing owner in
+  `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py`,
+  the aggregate constructor regression, and the active task design/plan/gates.
+- **Identified Issues/Anomalies:** A legal PD-shaped config contains
+  `prefill_replica_config` and `decode_replica_config` but no
+  `decode_ffn_replica_config`; the constructor's fixed three-role aggregate
+  set still calls the missing DECODE_FFN role and raises
+  `AttributeError: 'NoneType' object has no attribute 'model_config'`.
+  The failure occurs before model, CSV, backend, or predictor lookup.
+- **Remediation/Verification Code Actions Taken:** Updated the RCA, design,
+  dependency chain, harness gates, and progress records. The agreed repair is
+  one declaration-driven role-to-config-attribute mapping filtered by actual
+  non-`None` role configs; no production code was changed in this docs freeze.
+  The next gate is a focused PD-shaped RED regression with downstream lookup
+  count `0`.
+- **Final Status:** **PASS for the docs freeze; implementation pending.**

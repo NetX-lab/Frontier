@@ -2,6 +2,22 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-27 | Resolved the residual dispatch/combine payload lookup-order defect and recorded the selected option-1 boundary plus typed fixture migration. |
+| 2026-08-27 | Closed SCOPE-041 active-role propagation after fresh focused verification; recorded formal role-specific reachability and the aggregate-heterogeneous scope boundary. |
+| 2026-08-27 | Reopened the SCOPE-041 residual for active-role topology loss in the inherited MoE call chain;方案 A is approved. |
+| 2026-08-27 | Resolved SCOPE-040b and SCOPE-041 with fresh role-matrix, mismatch, and zero-lookup evidence. |
+| 2026-08-27 | Resolved SCOPE-035 with strict descriptor/predictor EP and router top-k admission validation before downstream lookup. |
+| 2026-08-27 | Opened SCOPE-040b for PD-shaped aggregate role availability and the declaration-driven constructor filter. |
+| 2026-08-27 | Opened SCOPE-040 for the reachable `cluster_type=None` routing-map constructor deletion defect and docs-first RED gate. |
+| 2026-08-27 | Resolved SCOPE-039: forwarded the public FFN selector through the disaggregation dummy owner and unified the DECODE_FFN rejection boundary. |
+| 2026-08-27 | Opened SCOPE-039 for the disaggregation dummy attention-only contract and its docs-first RED/GREEN gate. |
+| 2026-08-27 | Recorded SCOPE-039 RED: shared-domain dummy attention-only cases retained `50.0 ms` post-attention time. |
+| 2026-08-27 | Opened SCOPE-039 for the disaggregation dummy attention-only contract and its docs-first RED/GREEN gate. |
+| 2026-08-27 | Closed SCOPE-036/037/038 after fresh predictor matrices and recorded the shared-collective payload-width evidence. |
+| 2026-08-27 | Recorded the lane-local conservation RCA and the narrow correction boundary for source batches with explicit EP lanes. |
+| 2026-08-27 | Recorded the direction-A resolution for the PDD implicit routed-aggregate mode split and the concrete layer-capability boundary. |
+| 2026-08-27 | Approved SCOPE-036 mixed-layer dummy classification repair and opened its RED/GREEN implementation gate. |
+| 2026-08-27 | Closed the ledger/admission verification audit and recorded descriptor-context topology mismatch as a residual WATCH item. |
 | 2026-08-26 | Resolved the EP>1 aggregate dummy/non-dummy mode split with the approved narrow A' admission contract and recorded the implementation boundary. |
 | 2026-08-26 | Resolved the raw/effective MoE width conservation mismatch and opened the EP>1 aggregate admission decision gate. |
 | 2026-08-26 | Resolved SCOPE-033: dummy terminal-MTP lane phases now reuse the typed dummy execution seam and preserve zero-lane barriers. |
@@ -982,9 +998,10 @@
 
 ### SCOPE-034 - Source-batch conservation used compute-effective width
 
-- **Status:** Resolved in the current integration worktree; the focused
-  predictor regression is GREEN and the production change is pending its
-  coherent sub-step commit.
+- **Status:** Resolved and superseded by the stricter SCOPE-038 ownership
+  correction. The physical-width regression remains GREEN; the final predictor
+  no longer derives any aggregate expected count for a source batch paired with
+  one explicit lane.
 - **Observed ledger:** A target-embedded MTP batch can expose
   `Batch.total_num_tokens=5` as its physical pre-routing width while
   `get_effective_total_tokens_rounded()` returns `8` for compute lookup. With
@@ -995,11 +1012,14 @@
   for a source-batch conservation check. That helper intentionally serves
   profiling/compute features and has a different contract from the physical
   routing width owned by `Batch.total_num_tokens`.
-- **Resolution:** The explicit-lane/source-batch fallback now computes
-  `Batch.total_num_tokens * router_topk`. The descriptor-present batch branch,
-  gating/compute feature helpers, transfer sizing, and materializer ownership
-  remain unchanged. No token scaling, tolerance, or raw-map inference was
-  added.
+- **Resolution:** The first correction replaced compute-effective width with
+  `Batch.total_num_tokens` and proved which ledger owns routing. SCOPE-038 then
+  removed that source-batch-to-single-lane comparison entirely: aggregate
+  conservation is validated by `LayerEPWorkload`, while the predictor checks
+  equality only when `lane_workload` is attached to a lane entity whose
+  `total_num_tokens` is already lane-local. Gating/compute features, transfer
+  sizing, and materializer ownership remain unchanged. No token scaling,
+  tolerance, or raw-map inference was added.
 - **RED/GREEN evidence:** The new regression first failed with
   `allocated 10, expected 16`. After the one-line contract correction, the
   complete typed predictor contract module passed `28` tests in `2.55s`.
@@ -1040,8 +1060,493 @@
   The focused RED/GREEN test must observe zero measurement/model/backend
   lookups on the missing-lane failure and preserved behavior for attention-only,
   dense, EP=1, valid-lane, and zero-routed-lane cases.
-- **Status:** Decision resolved; production/test implementation and final
-  verification remain pending.
+- **Status:** Resolved in the current integration worktree; the shared helper,
+  both public predictor seams, and the focused admission regressions are GREEN.
+  Coherent commits, independent review, and PR20/PR21 merge-readiness remain
+  pending in the parent task.
+
+### SCOPE-037 - PDD implicit routed aggregate bypasses early admission
+
+- **Status:** Resolved. Direction A is implemented in both predictor modes and
+  the fresh admission/mixed-layer matrix is GREEN (`199 passed in 4.05s`).
+- **Observed behavior:** With `EP=2`, `num_layers=5`,
+  `include_moe=None`, and no lane descriptor, the PDD public predictor's dummy
+  path returned its historical aggregate result. The non-dummy path instead
+  completed `select measurement`, `require measurement`, `activate
+  measurement`, CUDA-graph activation, communication lookup, and overhead
+  lookup before `_resolve_layer_lane_workload()` rejected the missing physical
+  lane. A sentinel resolver probe observed exactly that order.
+- **Root cause:** The public classifier intentionally left an implicit
+  multi-layer call as `execution_include_moe=None` and set routed admission to
+  false. Downstream PDD role branches then re-derived model-level
+  `model_config.is_moe` and entered the physical lane resolver anyway. Dummy
+  and non-dummy modes consequently implemented different contracts, and the
+  semantic failure moved past the zero-lookup boundary.
+- **Impact:** Invalid routed aggregates can perform expensive and potentially
+  stateful measurement/backend work before failing; a dummy run can appear
+  valid while a profiling-backed run fails. The behavior also contradicts the
+  typed-lane ownership rule that the scheduler must provide a physical lane
+  before predictor work.
+- **Decision:** Direction A makes model-level MoE implicit aggregates routed at
+  the public predictor boundary. For EP>1, a missing `EPLaneWorkload` raises
+  `ValueError` in both modes before dummy timing, measurement activation,
+  attention/model/backend/communication lookup. Dense and attention-only
+  aggregates keep their existing owners. The communication payload check
+  remains a separate final structural invariant.
+- **Capability policy:** Concrete single-layer calls use the callable
+  `is_moe_layer(layer_id)` predicate when the model is MoE, unless the caller
+  supplies explicit `include_moe`. A missing predicate is an explicit
+  configuration error at the public boundary, not a model-level fallback.
+  Model-level `is_moe` remains sufficient only for an identity-free aggregate.
+- **Implementation boundary:** Reuse the existing shared
+  `_admit_routed_ep_aggregate()` helper and existing predictor/dummy owners.
+  Resolve one boolean classification before mode-specific work, pass it to the
+  dummy owner, and leave scheduler materialization, descriptor validation,
+  MTP phase ownership, and topology-context validation unchanged. Do not add
+  an aggregate scalar owner, synthetic lane, raw-map inference, duplicate
+  caller guard, or scaling factor.
+- **Acceptance:** The new PDD implicit aggregate regression fails before the
+  fix with non-empty lookup evidence, then passes with the same clear
+  `EPLaneWorkload` error and an empty lookup trace in dummy and non-dummy modes.
+  Existing dense, attention-only, EP=1, valid-lane, zero-routed-lane, and
+  concrete mixed-layer tests remain green.
+- **Resolution:** The public disaggregation predictor now resolves the routed
+  classification once, admits every model-level MoE aggregate before the
+  dummy/non-dummy split, and passes the same selector to the existing dummy
+  owner. The shared admission helper remains the single early boundary; no
+  downstream resolver, caller flag, or synthetic aggregate lane was added.
+
+### SCOPE-038 - Predictor conflates lane-local and aggregate conservation
+
+- **Status:** Resolved. Attached lane entities retain their lane-local equality
+  check; source-batch plus explicit partial/zero lanes are admitted without a
+  predictor-derived aggregate count. The fresh focused matrices are GREEN.
+- **Observed behavior:** The focused admission module passed `25` cases and
+  rejected the valid zero-routed lane case with
+  `allocated 0, expected 4`. A direct MTP-style call with a source batch of
+  width `5` and a lane carrying `7` assignments would likewise compare the
+  single lane with an aggregate-derived count instead of admitting the lane
+  subset.
+- **Root cause:** `LayerEPWorkload.total_routed_assignments` is the aggregate
+  ledger (`source_width * router_topk`), while
+  `EPLaneWorkload.routed_token_count` is one physical lane's assignment
+  subset. The helper treated an explicit descriptor paired with an ordinary
+  source `Batch` as though that descriptor represented the complete aggregate.
+  It therefore guessed `batch.total_num_tokens * router_topk` for one lane.
+- **Impact:** Valid partial and zero-routed EP lanes, including the terminal
+  MTP lane replay, fail before timing even though the canonical materializer
+  and scheduler have already validated aggregate conservation. Fixing this by
+  adding a zero-only exception or a second expected-count ledger would create
+  duplicate ownership and leave other partial lanes incorrect.
+- **Decision:** Keep descriptor/topology and identity admission in the shared
+  helper. Perform a lane-local equality check only when the descriptor is
+  attached to the batch entity, where `batch.total_num_tokens` is defined as
+  the post-routing lane width. For an explicit descriptor plus a source batch,
+  do not derive any expected lane count; aggregate conservation remains owned
+  by `LayerEPWorkload` and the scheduler/materializer. Preserve zero lanes as
+  ordinary physical participants.
+- **Acceptance:** Attached lane entities reject a mismatched local width before
+  lookup; source-batch plus partial or zero explicit lanes are admitted in both
+  dummy and non-dummy paths; aggregate/materializer conservation tests remain
+  unchanged and no synthetic lane, raw-map inference, caller-side guard, or
+  scaling factor is introduced.
+- **Verification:** The admission/mixed-layer matrix passed `199` tests in
+  `4.05s`; the ten-file typed/MTP/communication matrix passed `183` tests in
+  `31.47s`. A direct payload case observed source raw width `5`, compute-
+  effective width `8`, top-k `2`, aggregate assignments `10`, lane counts
+  `[6, 4]`, shared MoE-TP payload `128` bytes, and EP all-to-all payloads
+  `[96, 64]` bytes. A zero-routed lane remained participant `1`, retained the
+  shared `128`-byte collective, and produced a `0`-byte EP payload.
+
+### SCOPE-035 - Descriptor-context topology mismatch
+
+- **Status:** Resolved in the current integration worktree through the strict
+  SCOPE-041 admission contract.
+- **Observed behavior:** A direct helper probe admitted an internally valid
+  descriptor with `moe_expert_parallel_size=4` while the predictor topology was
+  EP `2`; a second probe admitted `router_topk=1` while the predictor was
+  configured for top-k `2`. Both cases could therefore reach mode-specific
+  work before the repair.
+- **Root cause:** The descriptor and predictor are owned by different valid
+  configuration views: role-specific disaggregation `ClusterConfig` and the
+  active predictor replica topology. The earlier narrow A' helper checked only
+  descriptor presence and had no equality check at the shared semantic seam.
+- **Impact:** Dummy paths could return a structurally plausible result and
+  non-dummy paths could activate measurement or perform partial lookup work
+  with a physically incompatible lane. This violates the typed-lane contract
+  even when each object is internally valid.
+- **Resolution:** `_admit_routed_ep_aggregate()` now validates positive EP,
+  descriptor presence for EP>1, exact router top-k equality, exact EP equality,
+  descriptor identity, and applicable lane-local conservation before dummy,
+  measurement, model, backend, or communication lookup. Aggregate conservation
+  remains owned by `LayerEPWorkload`; the scheduler still materializes lanes;
+  the payload builder keeps its final structural check.
+- **Evidence:** With predictor topology EP `2`/top-k `2`, descriptor EP `4` or
+  top-k `1` raised the topology-specific `ValueError` and produced downstream
+  lookup count `0` in both dummy and non-dummy probes. Valid explicit partial
+  and zero-routed source-batch lane subsets remained admissible. No synthetic
+  descriptor, raw-map inference, caller-side duplicate guard, fallback, or
+  scaling factor was added.
+
+### SCOPE-036 - Mixed-layer dummy execution ignores the resolved layer type
+
+- **Status:** Resolved in the current integration worktree. MONOLITHIC and
+  disaggregation dummy owners consume the public predictor's resolved layer
+  classification; the fresh combined matrix passed `199` tests in `4.05s`.
+- **Observed behavior:** The real `step-moe-noquant` model has 61 layers with
+  dense layers `0-3` and `60`, and MoE layers `4-59`. Public disaggregation
+  and MONOLITHIC predictor entry points already resolve
+  `model_config.is_moe_layer(layer_id)`, but dummy execution returns
+  `_is_moe=True` with positive gating/grouped-GEMM/shuffling fields for dense
+  layers. In the disaggregation probe, PREFILL and unified DECODE returned
+  gating/grouped values `5.0 ms` and post-attention `45.0 ms`; DECODE_FFN
+  returned gating/grouped `2.5 ms` and shuffling `5.0 ms` for both dense layer
+  `0` and MoE layer `4`. The MONOLITHIC dummy path likewise returned
+  `_is_moe=True` and positive MoE fields for dense layers.
+- **Root cause:** The public methods perform layer-specific admission before
+  the dummy branch, but the two dummy builders use different, broader rules:
+  disaggregation `_get_dummy_execution_time_for_cluster()` reads only
+  model-level `model_config.is_moe`, while the MoE predictor's
+  `_get_dummy_execution_time()` unconditionally constructs an MoE result.
+  The resolved layer classification is therefore dropped at the existing
+  predictor seam.
+- **Impact:** Dense layers in a mixed model can carry MoE metadata and timing,
+  including routed gating, grouped-GEMM, shuffling, and EP communication. The
+  scheduler's dense-reference check in
+  `BaseClusterScheduler._get_prefill_dense_reference_execution_time()` then
+  raises `ValueError` for a valid dense layer, and other lifecycle paths can
+  consume an incorrect MoE-shaped timing object.
+- **Decision:** Include the defect in this task (Option A). The fix will pass
+  the already-resolved concrete layer classification into the existing dummy
+  execution owner. It will not add a scheduler override, a layer-name branch,
+  a synthetic descriptor, a second classification table, or a timing scale.
+- **Implementation boundary:** Add one explicit optional classification
+  parameter to each existing dummy builder. The public predictor passes the
+  concrete single-layer classification; legacy direct helper callers retain
+  the current model-level default. When the classification is dense, the
+  builder emits the same dense component semantics used by the corresponding
+  non-dummy branch: `_is_moe=False`, zero MoE/EP fields, and positive dense
+  MLP fields. When it is routed MoE, the current dummy values and typed-lane
+  behavior remain unchanged. `DECODE_ATTN` remains unchanged and does not use
+  the routed classification.
+- **Acceptance:** RED tests fail on both disaggregation and MONOLITHIC public
+  dummy calls for a known dense layer and pass for a known MoE layer. GREEN
+  tests also cover PREFILL, DECODE, and DECODE_FFN role semantics,
+  attention-only behavior, EP=1/EP>1 preservation, and the existing scheduler
+  dense-reference consumer. No scheduler or model-config classification code
+  changes are needed.
+- **Resolution:** Added an optional classification argument at each existing
+  dummy builder and passed the already-resolved value from the public entry
+  point. Dense layers emit `_is_moe=False`, positive dense MLP components, and
+  zero MoE/EP fields; routed layers preserve typed-lane behavior and existing
+  dummy timing. `DECODE_ATTN` remains attention-only. The implementation adds
+  no scheduler override, model-name classification, scaling factor, or second
+  timing owner.
+
+### SCOPE-039 - Disaggregation dummy attention-only request retains FFN timing
+
+- **Status:** Resolved; the production repair and focused GREEN matrix pass.
+  This was a newly isolated production semantic defect discovered after
+  SCOPE-036/037/038 GREEN verification.
+- **Observed behavior:** A real public
+  `SklearnDisaggregationExecutionTimePredictor.predict_stage_execution_time()`
+  call with `include_ffn=False` on a shared-domain `PREFILL`/unified `DECODE`
+  role still returned FFN timing. The direct dummy probe observed
+  `attention=60.0 ms`, `post_attention=50.0 ms`, `mlp_up=10.0 ms`,
+  `mlp_norm=10.0 ms`, and `total=180.0 ms`; an attention-only result must have
+  zero post-attention/MLP components while retaining attention and batch-level
+  overhead.
+- **Reproduction boundary:** The public method validates `include_ffn`,
+  resolves `execution_include_moe=False`, and enters the dummy branch before
+  the later non-dummy `if not include_ffn` branch. The dummy branch calls
+  `_get_dummy_execution_time_for_cluster()` with `include_attention` and
+  `include_moe` only, so the helper has no representation of the public
+  `include_ffn=False` contract.
+- **RED evidence:** The new public regression failed in both parameterized
+  roles (`PREFILL` and unified `DECODE`):
+  `get_single_layer_post_attention_time()` returned `50.0 ms` instead of
+  `0.0 ms`. The assertion reached the returned `ExecutionTime`, confirming
+  that the failure is semantic and isolated to field composition.
+- **Root cause:** The disaggregation dummy owner predates the unified public
+  `include_ffn` selector. For `PREFILL` and unified `DECODE` it unconditionally
+  fills `mlp_norm_time`, `add_time`, the three dense MLP projection fields,
+  and FFN/MoE communication slots. Passing `include_moe=False` only removes
+  routed classification; it does not disable the FFN block. The existing
+  MONOLITHIC dummy owner already carries `include_ffn` and therefore does not
+  share this defect.
+- **Impact:** Dummy-mode attention-only scheduling overestimates stage time and
+  publishes a non-zero post-attention block. It can also expose fields that
+  the public contract promises not to inspect, making dummy and profiling-backed
+  execution disagree at the mode boundary.
+- **Repair decision:** Extend the existing disaggregation dummy owner with one
+  explicit `include_ffn` parameter (default `True` for direct legacy helper
+  callers), forward the public value, and gate only FFN-owned fields on that
+  parameter. Preserve attention timing, batch-level overhead, and the existing
+  `DECODE_ATTN` post-attention layernorm/residual semantics. Keep the public
+  predictor signature, scheduler ownership, typed EP admission, and non-dummy
+  lookup path unchanged.
+- **Additional boundary finding:** The same public selector was validated only
+  after the dummy branch, so `DECODE_FFN + include_ffn=False` returned a dummy
+  value instead of the established invalid-role error. The check now runs at
+  the shared public boundary before either execution mode.
+- **GREEN evidence:** The two intended RED cases now retain positive attention
+  and batch-level overhead while reporting `post_attention=0.0 ms`,
+  `mlp_norm=0.0 ms`, `mlp_up/down/act=0.0 ms`, `add=0.0 ms`, all MoE/EP fields
+  `0.0`, and `is_moe=False`. The complete affected matrix passed `234` tests
+  in `3.12s`; the dummy `DECODE_FFN` invalid-role regression passed after the
+  shared-boundary check was moved before the dummy branch. No fallback,
+  synthetic lane, scaling factor, second timing owner, or scheduler special
+  case was added.
+
+### SCOPE-040 - Aggregate disaggregation constructor deletes shared routing maps
+
+- **Status:** Resolved in the current integration worktree after the focused
+  constructor RED/GREEN matrix.
+- **Observed behavior:** Constructing the public
+  `SklearnDisaggregationExecutionTimePredictor` with its documented default
+  `cluster_type=None` enters the aggregate constructor contract, but fails
+  while initializing the role routing maps. A controlled probe that stubbed
+  only model loading and routing generation raised
+  `AttributeError: 'Probe' object has no attribute '_decode_routing_details'`.
+- **Root cause:** The constructor initializes
+  `_prefill_routing_details`, `_decode_ffn_routing_details`, and
+  `_decode_routing_details`, then iterates all three MoE role types when
+  `cluster_type=None`. Each role branch assigns its own map and uses `del` to
+  remove the other two. The next role iteration therefore deletes an already
+  absent attribute. For a single explicit role the deletion also erases the
+  stable object shape expected by aggregate callers; for `DECODE_ATTN` the
+  dedicated branch repeats the same unsafe deletion.
+- **Reachability:** `cluster_type=None` remains the default in the public
+  constructor and is accepted by the predictor factory/model-manager paths;
+  concrete simulator clusters pass a role, but that does not make the public
+  aggregate contract unreachable.
+- **Impact:** Aggregate construction can fail before prediction, and callers
+  that inspect a role map receive an attribute error rather than an explicit
+  empty/no-routing value. The defect is independent of EP lane admission and
+  does not justify a scheduler change or a second routing owner.
+- **Repair boundary:** Keep all three routing attributes present for every
+  constructor instance. Assign the computed map to its role and leave
+  non-applicable roles as `None`; keep `DECODE_ATTN` explicitly no-routing.
+  Remove only the destructive `del` operations. Preserve the existing
+  aggregate `cluster_type=None` contract, role-specific routing generation,
+  snapshot emission, scheduler ownership, and predictor lookup semantics.
+- **Acceptance:** The RED regression reproduces the old deletion failure with
+  a deterministic stubbed constructor. GREEN construction with
+  `cluster_type=None` leaves all three attributes independently readable and
+  populates each applicable role map; explicit `DECODE_ATTN` leaves all three
+  attributes present and empty (`None`). Existing disaggregation and typed EP
+  matrices remain green. No fallback, synthetic role, map reconstruction, or
+  topology validator is added.
+- **RED evidence:** The new focused regression failed `1` case in `3.5s` at
+  the real constructor line that executes `del self._decode_routing_details`.
+  The traceback contained no model, routing, CSV, or backend call; the exact
+  exception was `AttributeError` on the already-deleted attribute.
+- **GREEN evidence:** After removing only the destructive deletions, the
+  regression passed with aggregate maps populated for PREFILL, DECODE_FFN,
+  and unified DECODE. The same test also constructed each explicit routed role
+  and `DECODE_ATTN`; every instance exposed all three attributes, with only
+  the selected routed role populated and all attention-role values `None`.
+  The complete predictor file passed `38` tests in `2.50s`.
+
+### SCOPE-040b - Aggregate constructor materializes an unavailable PD role
+
+- **Status:** Resolved in the current integration worktree after the
+  declaration-driven role-capability GREEN matrix.
+- **Observed behavior:** After the destructive routing-map deletions were
+  removed, a controlled aggregate constructor probe still failed for a legal
+  PD-shaped configuration. The probe supplied
+  `prefill_replica_config` and `decode_replica_config`, left
+  `decode_ffn_replica_config` as `None`, and stubbed only parent/model loading,
+  routing generation, and snapshot emission. Construction attempted
+  `_simulate_and_store_routing(ClusterType.DECODE_FFN)` and raised
+  `AttributeError: 'NoneType' object has no attribute 'model_config'`.
+- **Root cause:** `cluster_type=None` currently sets `current_cluster_types` to
+  a fixed set containing `PREFILL`, `DECODE_FFN`, and unified `DECODE`. The
+  constructor treats role capability as an enum-set fact, while
+  `ClusterConfig._setup_disaggregated_configs()` represents capability by
+  mutually exclusive role config attributes: PD materializes PREFILL and
+  unified DECODE; PD-AF materializes PREFILL, DECODE_ATTN, and DECODE_FFN.
+  The fixed set therefore dereferences a missing role before model lookup,
+  CSV access, backend access, or predictor prediction.
+- **Reachability:** `cluster_type=None` remains the aggregate constructor's
+  public default. PD-shaped objects are produced by the normal config setup,
+  so this is a runtime-reachable path rather than a synthetic malformed
+  fixture. Explicit role constructors remain valid and must keep their
+  existing behavior.
+- **Impact:** Legal PD aggregate construction aborts during initialization and
+  cannot reach prediction. A repair that substitutes a representative config
+  would hide a role/config contract error and could publish routing for a
+  cluster that does not exist.
+- **Repair boundary:** Keep the three stable routing attributes initialized to
+  `None`. Define one declaration-driven mapping of routed role to its
+  `ClusterConfig` attribute, for example
+  `((ClusterType.PREFILL, "prefill_replica_config"),
+  (ClusterType.DECODE_FFN, "decode_ffn_replica_config"),
+  (ClusterType.DECODE, "decode_replica_config"))`. For an aggregate
+  constructor, materialize only entries whose mapped config is non-`None`;
+  for an explicit role, preserve the requested role path and its existing
+  fail-fast behavior. Leave `DECODE_ATTN` with all routing attributes at
+  `None`.
+- **Acceptance:** A PD-shaped aggregate materializes exactly PREFILL and
+  unified DECODE; a PD-AF-shaped aggregate materializes PREFILL and
+  DECODE_FFN; every non-applicable map remains readable as `None`. A missing
+  explicitly requested role still fails at the existing routing boundary.
+  No mode-string branch, synthetic role, representative-config fallback,
+  second topology validator, scheduler change, or predictor-lookup change is
+  added.
+- **Evidence boundary:** The focused RED must fail at the unavailable-role
+  dereference with downstream lookup count `0`. GREEN must report the exact
+  materialized role set and stable map values for PD, PD-AF, explicit routed
+  roles, and `DECODE_ATTN`.
+
+- **Fresh RED/GREEN evidence (2026-08-27):** The focused constructor test
+  suite ran with `/usr/bin/python` 3.12.3 and produced `40 passed in 2.71s`.
+  The PD-shaped aggregate called exactly `PREFILL, DECODE` and left
+  `_decode_ffn_routing_details=None`; the PD-AF-shaped aggregate called
+  exactly `PREFILL, DECODE_FFN` and left `_decode_routing_details=None`.
+  Explicit `PREFILL`, `DECODE_FFN`, and `DECODE` instances populated only
+  their selected map; explicit `DECODE_ATTN` populated none. An explicitly
+  missing `DECODE_FFN` failed with
+  `AttributeError: 'NoneType' object has no attribute 'moe_expert_parallel_size'`
+  before routing/model lookup (`routing_calls=0`).
+
+- **Resolution:** The aggregate constructor now filters the existing
+  declaration-driven role/config mapping by non-`None` role configuration,
+  while retaining stable map attributes and explicit-role fail-fast behavior.
+  No representative-role fallback or synthetic routing map is used.
+
+### SCOPE-041 - Descriptor/predictor topology mismatch at routed admission
+
+- **Status:** Resolved for the supported runtime path. Strict local validation
+  and active-role propagation are complete. Aggregate predictors executing a
+  heterogeneous role directly remain outside the current runtime contract and
+  are tracked as a future interface boundary below.
+- **Fresh evidence (2026-08-27):** For MONOLITHIC and disaggregation, in both
+  dummy and non-dummy paths, a descriptor with `EP=4` against predictor
+  `EP=2` raised the exact topology error with `downstream_calls=0`; a
+  descriptor with `router_topk=1` against predictor `router_topk=2` did the
+  same. The helper ran before timing, measurement, model, backend, and
+  communication hooks in all eight cases.
+- **Resolution:** The existing shared `_admit_routed_ep_aggregate()` remains
+  the sole topology admission owner. It compares positive-integer EP and
+  router top-k values after routed classification and leaves lane materializing,
+  aggregate conservation, and payload construction in their existing owners.
+
+#### SCOPE-041 residual: aggregate representative topology leaks into a second admission
+
+- **Observed call chain:**
+  `SklearnDisaggregationExecutionTimePredictor.predict_stage_execution_time()`
+  resolves the active `DECODE_FFN` role (`EP=2`, `router_topk=2`) and its first
+  `_admit_routed_ep_aggregate()` succeeds for a descriptor with the same
+  values. The method then calls inherited
+  `SklearnMoEExecutionTimePredictor.predict_moe_layer_time()` without the role
+  topology. Its second admission reads the aggregate predictor's representative
+  `self._router_topk=1` and raises
+  `ValueError: descriptor=2, predictor=1`.
+- **Root cause:** The inherited API carries the lane descriptor but not the
+  active role topology. The aggregate predictor's representative fields are
+  valid defaults for its own view, but are not a valid substitute for a
+  heterogeneous role config. This is a context propagation defect after the
+  first admission, not a scheduler descriptor or routing-map defect.
+- **Impact:** A legal non-dummy aggregate `DECODE_FFN` prediction aborts before
+  MoE model/communication lookup. Dummy mode returns earlier and hides the
+  defect, which explains why the existing dummy active-topk regression stayed
+  green.
+- **Approved repair:** Extend the existing MoE method contract with optional
+  active `ep_size`/`router_topk`; forward the values already resolved by the
+  disaggregation public stage to all routed role calls and both admissions
+  inside the inherited method. Keep `None` as the compatibility default for
+  monolithic callers and never mutate `self._router_topk` or add a second
+  validator.
+- **TDD acceptance:** The RED regression uses representative top-k `1`, active
+  `DECODE_FFN` top-k `2`, and descriptor top-k `2` in non-dummy mode. It must
+  reproduce the second-admission error before the fix. GREEN must complete the
+  same call, show both admissions using active `EP/top-k`, preserve dummy and
+  monolithic behavior, and keep true mismatches fail-fast with zero downstream
+  lookup.
+
+#### Formal runtime reachability and residual boundary
+
+- **Formal predictor construction:** `frontier/simulator.py:150-180` creates a
+  separate execution-time predictor for each cluster returned by the
+  disaggregation configuration. It passes the role's `cluster_type` and
+  role-specific `replica_config`; it does not reuse one aggregate predictor to
+  execute multiple heterogeneous roles.
+- **Role configuration source:**
+  `frontier/config/config.py:4605-4721` constructs independent PREFILL,
+  DECODE_ATTN, DECODE_FFN, and unified DECODE role configurations. The
+  disaggregation predictor constructor then binds `_moe_ep_size`,
+  `_moe_tp_size`, and `_router_topk` from the active role at
+  `frontier/execution_time_predictor/sklearn_disaggregation_execution_time_predictor.py:119-128`.
+- **Routed stage handoff:** The three supported routed role branches at
+  `...sklearn_disaggregation_execution_time_predictor.py:1787-1810,
+  2221-2239,2516-2535` materialize the typed lane and forward the active
+  `ep_size`/`router_topk` to the inherited MoE API. The inherited method uses
+  those values at both admission points, so one formal stage cannot silently
+  fall back to an aggregate representative top-k.
+- **Legacy helper reachability:** The only production calls to
+  `_get_moe_tokens_input()` are the inherited legacy stage path at
+  `frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py:3245-3250`
+  and the EP=1/load-aware compatibility branch at `:2723-2738`. Formal
+  disaggregation routed calls always pass `lane_workload`, so neither branch
+  is used to infer a lane for the supported EP>1 role path. The only production
+  caller of `_get_expert_parallel_communication_time()` is
+  `_simulate_routing_per_layer()` at `:2513-2517`; the formal disaggregation
+  constructor uses `_simulate_and_store_routing()` and named phase helpers
+  instead.
+- **Residual:** A caller that manually constructs `cluster_type=None` and then
+  asks one aggregate predictor to execute a role with different topology can
+  still obtain representative self-field values in downstream gating/phase/
+  communication helpers. Admission now receives explicit active values, but
+  those downstream helpers have no heterogeneous-role context contract. This
+  is not reachable from the formal `Simulator` construction above. A future
+  heterogeneous aggregate feature needs one separately designed immutable
+  execution-context interface; this task does not add a wrapper, duplicate
+  validator, or mutable field override.
+
+### SCOPE-042 - EP combine resolved architecture policy before typed payload admission
+
+- **Status:** Resolved in the current integration worktree. The selected
+  option-1 boundary is implemented and covered for both dispatch and combine.
+- **Observed behavior:** A malformed final lane without an `EPLaneWorkload`
+  reached `on_ep_alltoall_combine_ready()`. The method populated a complete
+  prospective lane set and called `resolve_ep_collective_kind()` before the
+  existing payload builder. A probe with a deliberately incomplete model
+  profile accessor raised
+  `TypeError: EP collective resolution requires
+  model_config.get_model_architecture_profile()`; the typed descriptor error
+  was never reached. With a valid profile, the same ordering could perform
+  architecture and communication preparation before rejecting the lane.
+- **Root cause:** Dispatch already invokes `_get_step3_ep_alltoall_payload_bytes()`
+  before `predict_alltoall_time()`, but combine retained the older
+  representative-payload setup and deferred that call until after collective
+  policy resolution. The two entrances therefore had different typed-admission
+  order despite sharing one physical all-to-all payload owner.
+- **Impact:** Malformed combine lanes could trigger a downstream architecture
+  lookup first, and the failure did not establish the intended typed payload
+  boundary. The earlier valid lane could remain in the waiting room, but the
+  malformed final lane was not committed; no event was published after the
+  eventual failure.
+- **Boundary decision:** Keep option 1. `_validate_ep_barrier_arrival()` owns
+  scheduler identity, participant-set, and waiting-room invariants. The
+  existing `_get_step3_ep_alltoall_payload_bytes()` owns final descriptor
+  admission and lane-local payload sizing for both dispatch and combine. The
+  combine path now calls that owner before `resolve_ep_collective_kind()` and
+  reuses its result for the all-to-all branch. This avoids duplicate validation
+  and leaves the selected earlier-lane waiting-room behavior explicit.
+- **RED evidence:** Before the owner reorder, the new combine cases failed at
+  `resolve_ep_collective_kind()` for a missing profile accessor rather than at
+  the descriptor boundary. The original residual matrix also reported `14`
+  failures because old success/predictor-error fixtures supplied only raw
+  `total_num_tokens` values.
+- **GREEN evidence:** Valid typed fixtures were migrated to immutable
+  `EPLaneWorkload` descriptors; predictor-error and non-finite-time fixtures
+  now reach their intended downstream assertions. The dispatch/combine payload
+  matrix and the full PD-AF invariant file passed `392` tests with `19` skips.
+  The dedicated typed consumer cases cover both entrances and verify
+  `predict_alltoall_time` is not called; a malformed final lane leaves only the
+  earlier lane in the waiting room. No barrier identity logic, raw-map fallback,
+  scaling factor, synthetic lane, or second timing owner was added.
 
 ## Explicitly deferred questions
 
