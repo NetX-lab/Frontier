@@ -6,8 +6,10 @@ Following the design principle: EP (expert_parallel_size) is a distribution para
 not a compute parameter, so we use num_experts_per_device instead.
 """
 
+import math
+import operator
 from dataclasses import dataclass
-from typing import List
+from typing import Iterable, List, Optional
 
 from frontier.moe_load_imbalance import MoELoadImbalanceInput
 
@@ -30,6 +32,73 @@ class MoEProfilingConfig:
     
     # Parallelism
     tensor_parallel_size_list: List[int]
+
+
+def get_runtime_legal_expert_parallel_sizes(num_experts: int) -> List[int]:
+    """Return every positive EP divisor accepted by the runtime topology check."""
+    if isinstance(num_experts, bool):
+        raise ValueError("num_experts must be a positive integer")
+    try:
+        normalized_num_experts = operator.index(num_experts)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("num_experts must be a positive integer") from exc
+    if normalized_num_experts <= 0:
+        raise ValueError(
+            f"num_experts must be a positive integer, got {normalized_num_experts}"
+        )
+
+    divisors = set()
+    for candidate in range(1, math.isqrt(normalized_num_experts) + 1):
+        if normalized_num_experts % candidate != 0:
+            continue
+        divisors.add(candidate)
+        divisors.add(normalized_num_experts // candidate)
+    return sorted(divisors)
+
+
+def resolve_moe_expert_parallel_sizes(
+    num_experts: int,
+    requested_sizes: Optional[Iterable[int]] = None,
+) -> List[int]:
+    """Resolve an optional EP selection against the runtime-legal domain."""
+    legal_sizes = get_runtime_legal_expert_parallel_sizes(num_experts)
+    if requested_sizes is None:
+        return legal_sizes
+
+    try:
+        requested_values = list(requested_sizes)
+    except TypeError as exc:
+        raise ValueError(
+            "expert_parallel_sizes must be an iterable of positive integer divisors"
+        ) from exc
+
+    if not requested_values:
+        raise ValueError(
+            "expert_parallel_sizes must contain at least one positive integer divisor"
+        )
+
+    resolved_sizes = []
+    for value in requested_values:
+        if isinstance(value, bool):
+            raise ValueError(
+                "expert_parallel_sizes must contain positive integer divisors; "
+                f"got {value!r}"
+            )
+        try:
+            normalized_value = operator.index(value)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError(
+                "expert_parallel_sizes must contain positive integer divisors; "
+                f"got {value!r}"
+            ) from exc
+        if normalized_value not in legal_sizes:
+            raise ValueError(
+                f"expert_parallel_size={normalized_value} must be a positive divisor "
+                f"of num_experts={num_experts}; legal values are {legal_sizes}"
+            )
+        resolved_sizes.append(normalized_value)
+
+    return list(dict.fromkeys(resolved_sizes))
 
 
 def get_default_moe_profiling_config(
@@ -60,21 +129,20 @@ def get_default_moe_profiling_config(
         + list(range(2 * 1024, max_tokens + 1, 32))
     )
     num_tokens_list = [t for t in num_tokens_list if t <= max_tokens]
-    num_tokens_list.sort()
+    if max_tokens > 0:
+        num_tokens_list.append(max_tokens)
+    num_tokens_list = sorted(set(num_tokens_list))
     
     # Expert configurations
     num_experts_list = [num_experts]  # Typically fixed per model
     router_topk_list = [router_topk]  # Typically fixed per model
     
-    # Number of experts per device (simulates different EP configurations)
-    # EP=1: all experts on one device
-    # EP=2: half experts per device
-    # EP=4: quarter experts per device
-    # EP=8: 1/8 experts per device
-    num_experts_per_device_list = []
-    for divisor in [1, 2, 4, 8]:
-        if num_experts % divisor == 0:
-            num_experts_per_device_list.append(num_experts // divisor)
+    # Include every runtime-legal EP divisor so the profiling envelope is a
+    # superset of the runtime topology domain.
+    num_experts_per_device_list = [
+        num_experts // expert_parallel_size
+        for expert_parallel_size in get_runtime_legal_expert_parallel_sizes(num_experts)
+    ]
     
     # Tensor parallelism configurations
     tensor_parallel_size_list = [1, 2, 4, 8]
@@ -88,4 +156,3 @@ def get_default_moe_profiling_config(
         expert_hidden_dim=expert_hidden_dim,
         tensor_parallel_size_list=tensor_parallel_size_list,
     )
-
