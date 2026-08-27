@@ -16,26 +16,6 @@ from frontier.spec_decode.mtp_registry import (
     get_target_embedded_mtp_same_tp_linear_ops,
 )
 
-
-ATTN_BASE_OPS = [
-    "attn_pre_proj",
-    "attn_rope",
-    "attn_post_proj",
-]
-ATTN_STEP2MINI_OPS = [
-    "attn_inter_norm",
-    "attn_wq_proj",
-]
-ATTN_STEP3TEXT_REPLICATED_OPS = [
-    "attn_pre_proj_qkv",
-    "attn_pre_proj_q_norm",
-]
-ATTN_STEP3TEXT_SHARDED_OPS = [
-    "attn_pre_proj_wq",
-]
-ATTN_REPLICATED_OPS = [
-    "input_layernorm",
-]
 TARGET_EMBEDDED_MTP_OPS = list(get_target_embedded_mtp_linear_ops())
 
 
@@ -165,14 +145,15 @@ def build_profiling_plan(
     linear_attention = architecture_profile.linear_attention
     memory_ops = _memory_profiling_names(model_config)
 
+    # MEMORY_FAMILY declaration order keeps the pre-attention normalization
+    # ahead of architecture-specific attention projections. Preserve that
+    # established output order while deriving the names from the registry.
+    memory_pre_attention_ops = memory_ops[:1]
+    memory_post_attention_ops = memory_ops[1:]
     replicated_ops: List[str] = []
-    replicated_ops.extend(
-        [op_name for op_name in ATTN_REPLICATED_OPS if op_name in memory_ops]
-    )
+    replicated_ops.extend(memory_pre_attention_ops)
     replicated_ops.extend(linear_attention.replicated_ops)
-    replicated_ops.extend(
-        [op_name for op_name in memory_ops if op_name not in ATTN_REPLICATED_OPS]
-    )
+    replicated_ops.extend(memory_post_attention_ops)
     target_embedded_same_tp_ops: List[str] = []
     if include_target_embedded_mtp:
         target_embedded_same_tp_ops.extend(

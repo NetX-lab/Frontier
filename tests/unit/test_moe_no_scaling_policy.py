@@ -9,6 +9,7 @@ from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor impo
 )
 from frontier.config import BaseExecutionTimePredictorConfig, ClusterConfig
 from frontier.model_architectures import ModelArchitectureProfile
+from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.operators.families import MOE_FAMILY
 from frontier.types import ClusterType
 
@@ -82,9 +83,59 @@ def test_ep_communication_uses_raw_collective_prediction_without_calibration_sca
     )
     predictor._expert_parallel_communication_calibration_scale = 0.25
 
-    result = predictor._get_expert_parallel_communication_time(_Batch())
+    lane = EPLaneWorkload(
+        ep_id=0,
+        moe_expert_parallel_size=2,
+        total_expert_num=4,
+        owned_expert_ids=(0, 1),
+        local_token_counts=(16, 16),
+        routed_token_count=32,
+        router_topk=2,
+    )
+    result = predictor._get_expert_parallel_communication_time(
+        _Batch(),
+        lane_workload=lane,
+    )
 
     assert result == pytest.approx(7.0)
+
+
+def test_ep_alltoall_communication_rejects_aggregate_without_lane() -> None:
+    predictor = object.__new__(_Predictor)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._model_config = SimpleNamespace(embedding_dim=8)
+    predictor._replica_config = SimpleNamespace(
+        moe_expert_parallel_size=2,
+        moe_tensor_parallel_size=1,
+    )
+    predictor._moe_ep_size = 2
+    predictor._router_topk = 2
+    predictor._cc_backend = _CCBackend()
+    predictor._enable_dummy_mode = False
+    predictor._should_strip_collective_sim_allreduce_launch_overhead = (
+        lambda _batch: False
+    )
+
+    with pytest.raises(ValueError, match="EPLaneWorkload"):
+        predictor._get_expert_parallel_communication_time(_Batch())
+
+
+def test_ep_alltoall_requires_lane_before_dummy_backend_fallback() -> None:
+    predictor = object.__new__(_Predictor)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._model_config = SimpleNamespace(embedding_dim=8)
+    predictor._replica_config = SimpleNamespace(
+        moe_expert_parallel_size=2,
+        moe_tensor_parallel_size=1,
+    )
+    predictor._moe_ep_size = 2
+    predictor._router_topk = 2
+    predictor._cc_backend = None
+    predictor._enable_dummy_mode = True
+    predictor._dummy_execution_time = 5.0
+
+    with pytest.raises(ValueError, match="EPLaneWorkload"):
+        predictor._get_expert_parallel_communication_time(_Batch())
 
 
 def test_share_expert_visibility_hook_is_removed() -> None:

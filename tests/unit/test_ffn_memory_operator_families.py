@@ -161,6 +161,11 @@ def test_linear_profiling_plan_uses_family_derived_ffn_memory_lists() -> None:
     assert not hasattr(profiling_plan, "FFN_OPS")
     assert not hasattr(profiling_plan, "FFN_REPLICATED_OPS")
     assert not hasattr(profiling_plan, "COMMON_REPLICATED_OPS")
+    assert not hasattr(profiling_plan, "ATTN_BASE_OPS")
+    assert not hasattr(profiling_plan, "ATTN_STEP2MINI_OPS")
+    assert not hasattr(profiling_plan, "ATTN_STEP3TEXT_REPLICATED_OPS")
+    assert not hasattr(profiling_plan, "ATTN_STEP3TEXT_SHARDED_OPS")
+    assert not hasattr(profiling_plan, "ATTN_REPLICATED_OPS")
 
     plan = profiling_plan.build_profiling_plan(
         _base_model_config(is_moe=False),

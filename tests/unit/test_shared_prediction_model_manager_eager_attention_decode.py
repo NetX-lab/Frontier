@@ -206,6 +206,7 @@ def test_shared_manager_dense_physical_attention_models_follow_family_mapping(
     )
 
     trained: dict[str, dict[str, object]] = {}
+    persist_flags: dict[str, object] = {}
 
     def _fake_train_single_model(
         *,
@@ -215,6 +216,7 @@ def test_shared_manager_dense_physical_attention_models_follow_family_mapping(
         target_col: str,
         **_kwargs,
     ):
+        persist_flags[model_name] = _kwargs.get("persist_exact_lookup")
         trained[model_name] = {
             "feature_cols": tuple(feature_cols),
             "target_col": target_col,
@@ -249,6 +251,7 @@ def test_shared_manager_dense_physical_attention_models_follow_family_mapping(
         "target_col": "time_stats.catalog_decode.median",
         "num_rows": 1,
     }
+    assert persist_flags["catalog_kv"] is True
 
 
 def test_shared_manager_dense_physical_attention_roles_do_not_depend_on_family_order(
@@ -477,6 +480,7 @@ def test_sklearn_kv_cache_save_training_uses_shared_family_mapping(
     )
 
     trained: dict[str, dict[str, object]] = {}
+    persist_flags: dict[str, object] = {}
 
     def _fake_train_model(
         *,
@@ -484,7 +488,9 @@ def test_sklearn_kv_cache_save_training_uses_shared_family_mapping(
         df: pd.DataFrame,
         feature_cols: list[str],
         target_col: str,
+        **_kwargs,
     ):
+        persist_flags[model_name] = _kwargs.get("persist_exact_lookup")
         trained[model_name] = {
             "feature_cols": tuple(feature_cols),
             "target_col": target_col,
@@ -503,6 +509,7 @@ def test_sklearn_kv_cache_save_training_uses_shared_family_mapping(
             "num_rows": 2,
         }
     }
+    assert persist_flags["catalog_kv"] is True
 
 
 def test_sklearn_kv_cache_save_training_uses_role_not_family_order(
@@ -572,6 +579,7 @@ def test_sklearn_kv_cache_save_training_uses_role_not_family_order(
     )
 
     trained: dict[str, dict[str, object]] = {}
+    persist_flags: dict[str, object] = {}
 
     def _fake_train_model(
         *,
@@ -579,7 +587,9 @@ def test_sklearn_kv_cache_save_training_uses_role_not_family_order(
         df: pd.DataFrame,
         feature_cols: list[str],
         target_col: str,
+        **_kwargs,
     ):
+        persist_flags[model_name] = _kwargs.get("persist_exact_lookup")
         trained[model_name] = {
             "feature_cols": tuple(feature_cols),
             "target_col": target_col,
@@ -598,6 +608,7 @@ def test_sklearn_kv_cache_save_training_uses_role_not_family_order(
             "num_rows": 2,
         }
     }
+    assert persist_flags["role_cache"] is True
 
 
 def test_sklearn_prefill_and_decode_training_use_shared_family_mapping(
@@ -676,6 +687,7 @@ def test_sklearn_prefill_and_decode_training_use_shared_family_mapping(
         df: pd.DataFrame,
         feature_cols: list[str],
         target_col: str,
+        **_kwargs,
     ):
         trained[model_name] = {
             "feature_cols": tuple(feature_cols),
@@ -779,6 +791,7 @@ def test_sklearn_prefill_and_decode_training_use_roles_not_family_order(
         df: pd.DataFrame,
         feature_cols: list[str],
         target_col: str,
+        **_kwargs,
     ):
         trained[model_name] = {
             "feature_cols": tuple(feature_cols),
@@ -929,6 +942,7 @@ def test_sklearn_runtime_prediction_caches_follow_role_names(monkeypatch) -> Non
             "kv_cache_size",
             "prefill_chunk_size_squared",
         ],
+        "_exact_lookup": {},
     }
     assert attention_predictions["runtime_decode"] == {"source_model": "runtime_decode"}
     assert "attn_kv_cache_save" not in compute_predictions

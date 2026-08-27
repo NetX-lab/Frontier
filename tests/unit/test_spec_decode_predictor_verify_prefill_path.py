@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from types import SimpleNamespace
 
 import pandas as pd
@@ -29,6 +30,56 @@ class _DummyPredictor(SklearnExecutionTimePredictor):
 
     def _get_grid_search_params(self):
         return {}
+
+
+class _CountingTwoFeatureModel:
+    def __init__(self, feature_names: tuple[str, str], result: float) -> None:
+        self.n_features_in_ = len(feature_names)
+        self._frontier_feature_names = list(feature_names)
+        self.result = result
+        self.calls = 0
+
+    def predict(self, features: pd.DataFrame) -> list[float]:
+        self.calls += 1
+        assert list(features.columns) == self._frontier_feature_names
+        return [self.result]
+
+
+def _build_finite_fallback_predictor() -> tuple[_DummyPredictor, dict[str, object]]:
+    predictor = _DummyPredictor.__new__(_DummyPredictor)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._measurement_family_name = lambda _measurement_type: "eager"
+    predictor._runtime_cache = defaultdict(lambda: defaultdict(dict))
+    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=128)
+    predictor._replica_config = SimpleNamespace(
+        speculative_decoding_config=SpeculativeDecodingConfig(
+            enabled=True,
+            method="eagle",
+        )
+    )
+    predictor._supports_operation = lambda _operation: True
+    predictor._dense_attention_prefill_op_name = lambda: "attn_prefill"
+    predictor._dense_attention_decode_op_name = lambda: "attn_decode"
+    predictor._attention_decode_batching_overhead_fraction = 0.0
+    predictor._get_calibration_scale = lambda *_args: 1.0
+    prefill_model = _CountingTwoFeatureModel(
+        ("kv_cache_size", "prefill_chunk_size_squared"),
+        6.0,
+    )
+    decode_model = _CountingTwoFeatureModel(
+        ("batch_size", "kv_cache_size"),
+        8.0,
+    )
+    predictor._models = {
+        "attn_prefill": prefill_model,
+        "attn_decode": decode_model,
+    }
+    predictor._predictions = {
+        "attn_prefill": {(512, 9): 7.0},
+        "attn_decode": {(1, 512): 5.0},
+    }
+    return predictor, {"prefill": prefill_model, "decode": decode_model}
 
 
 def _build_predictor(
@@ -181,6 +232,100 @@ def test_pure_verify_multi_request_batch_uses_batched_verify_prefill_predictor()
     assert predictor._on_demand_calls[0][1]["kv_cache_size"] == 640
 
 
+def test_spec_verify_finite_miss_uses_model_once_and_reuses_runtime_cache() -> None:
+    predictor, models = _build_finite_fallback_predictor()
+    request = _build_prefill_complete_request(num_processed_tokens=768)
+    batch = Batch(
+        replica_id=0,
+        requests=[request],
+        num_tokens=[3],
+        is_moe=False,
+    )
+    batch.spec_decode_metadata = SpecDecodeBatchMetadata(
+        method="eagle",
+        planned_draft_tokens_per_request=[2],
+        verify_tokens_per_request=[3],
+        accepted_draft_tokens_per_request=[1],
+        rejected_draft_tokens_per_request=[1],
+        committed_tokens_per_request=[2],
+        uses_lookahead_slots=True,
+    )
+
+    first = predictor._get_spec_verify_attention_prefill_execution_time(batch)
+    second = predictor._get_spec_verify_attention_prefill_execution_time(batch)
+
+    assert first == 6.0
+    assert second == 6.0
+    assert models["prefill"].calls == 1
+    assert predictor._runtime_cache["eager"]["attn_prefill"] == {
+        (768.0, 9.0): 6.0
+    }
+
+
+def test_spec_normal_decode_finite_miss_uses_model_once_and_reuses_runtime_cache() -> None:
+    predictor, models = _build_finite_fallback_predictor()
+    request = _build_prefill_complete_request(num_processed_tokens=768)
+    batch = Batch(
+        replica_id=0,
+        requests=[request],
+        num_tokens=[1],
+        is_moe=False,
+    )
+    batch.spec_decode_metadata = SpecDecodeBatchMetadata(
+        method="eagle",
+        planned_draft_tokens_per_request=[0],
+        verify_tokens_per_request=[1],
+        accepted_draft_tokens_per_request=[0],
+        rejected_draft_tokens_per_request=[0],
+        committed_tokens_per_request=[1],
+        uses_lookahead_slots=True,
+    )
+
+    first = predictor._get_spec_normal_decode_attention_execution_time(batch)
+    second = predictor._get_spec_normal_decode_attention_execution_time(batch)
+
+    assert first == 8.0
+    assert second == 8.0
+    assert models["decode"].calls == 1
+    assert predictor._runtime_cache["eager"]["attn_decode"] == {
+        (1.0, 768.0): 8.0
+    }
+
+
+def test_spec_verify_exact_record_precedes_stale_runtime_cache() -> None:
+    predictor, models = _build_finite_fallback_predictor()
+    prefill_model = models["prefill"]
+    predictor._predictions["attn_prefill"] = {
+        "_on_demand_prediction": True,
+        "_model": prefill_model,
+        "_feature_names": ["kv_cache_size", "prefill_chunk_size_squared"],
+        "_exact_lookup": {(768.0, 9.0): 6.75},
+    }
+    predictor._runtime_cache["eager"]["attn_prefill"][(768.0, 9.0)] = 99.0
+
+    request = _build_prefill_complete_request(num_processed_tokens=768)
+    batch = Batch(
+        replica_id=0,
+        requests=[request],
+        num_tokens=[3],
+        is_moe=False,
+    )
+    batch.spec_decode_metadata = SpecDecodeBatchMetadata(
+        method="eagle",
+        planned_draft_tokens_per_request=[2],
+        verify_tokens_per_request=[3],
+        accepted_draft_tokens_per_request=[1],
+        rejected_draft_tokens_per_request=[1],
+        committed_tokens_per_request=[2],
+        uses_lookahead_slots=True,
+    )
+
+    value = predictor._get_spec_verify_attention_prefill_execution_time(batch)
+
+    assert value == 6.75
+    assert prefill_model.calls == 0
+    assert predictor._runtime_cache["eager"]["attn_prefill"][(768.0, 9.0)] == 99.0
+
 def test_pdd_decode_verify_uses_prefill_kernel_prediction() -> None:
     predictor = _build_predictor()
     predictor._cluster_type = ClusterType.DECODE
@@ -242,6 +387,7 @@ def test_pdd_decode_materializes_prefill_prediction_for_spec_verify() -> None:
                 "kv_cache_size",
                 "prefill_chunk_size_squared",
             ],
+            _frontier_exact_lookup={(512.0, 9.0): 4.25},
         )
     }
 
@@ -252,7 +398,9 @@ def test_pdd_decode_materializes_prefill_prediction_for_spec_verify() -> None:
         "kv_cache_size",
         "prefill_chunk_size_squared",
     ]
-
+    assert predictions["attn_prefill"]["_exact_lookup"] == {
+        (512.0, 9.0): 4.25
+    }
 
 def test_attention_training_uses_true_mixed_rows_for_verify_prefill_model() -> None:
     predictor = _DummyPredictor.__new__(_DummyPredictor)
@@ -330,6 +478,7 @@ def test_attention_training_uses_true_mixed_rows_for_verify_prefill_model() -> N
         df: pd.DataFrame,
         feature_cols: list[str],
         target_col: str,
+        **_kwargs: object,
     ) -> object:
         trained[model_name] = {
             "df": df.copy(),
@@ -426,6 +575,7 @@ def test_attention_training_derives_true_mixed_prefill_features_from_list_column
         df: pd.DataFrame,
         feature_cols: list[str],
         target_col: str,
+        **_kwargs: object,
     ) -> object:
         trained[model_name] = {
             "df": df.copy(),

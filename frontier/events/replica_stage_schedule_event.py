@@ -396,9 +396,7 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         cluster_type=self._cluster_type,
                         batch_id=logical_batch_id,
                         layer_id=layer_id,
-                        ep_id=int(batch.ep_id),
-                        moe_ep_size=int(moe_ep_size),
-                        per_expert_tokens=dict(batch.per_expert_tokens),
+                        lane_workload=batch.lane_workload,
                         lane_compute_ms=lane_compute_ms,
                         routed_compute_ms=expert_comp_time_ms,
                         lane_comm_ms=lane_comm_ms,
@@ -706,6 +704,8 @@ class ReplicaStageScheduleEvent(BaseEvent):
                     effective_total_tokens_rounded=effective_tokens_rounded,
                     tokens_are_post_routing=tokens_are_post_routing,
                 )
+                if isinstance(batch, EPBatchGroup):
+                    batch_stage.attach_lane_workload(batch.lane_workload)
                 batch_stage.attach_runtime_identity(batch)
 
                 # Mark stage as busy

@@ -55,14 +55,14 @@ def test_monolithic_predictor_materializes_global_routing_with_shared_tie_break(
     }
     predictor._replica_config = _replica_config()
 
-    result = predictor._calculate_expert_token_allocation(
+    result = predictor._materialize_layer_ep_workload(
         batch=_Batch(),
         cluster_type=ClusterType.MONOLITHIC,
         layer_id=7,
     )
 
-    assert result == {0: 2, 1: 2, 2: 3, 3: 1}
-    assert sum(result.values()) == 8
+    assert dict(result.global_per_expert_tokens) == {0: 2, 1: 2, 2: 3, 3: 1}
+    assert sum(result.global_per_expert_tokens.values()) == 8
 
 
 def test_disaggregation_predictor_uses_shared_materializer_tie_break() -> None:
@@ -82,14 +82,14 @@ def test_disaggregation_predictor_uses_shared_materializer_tie_break() -> None:
     )
     predictor._replica_config = _replica_config()
 
-    result = predictor._calculate_expert_token_allocation(
+    result = predictor._materialize_layer_ep_workload(
         batch=_Batch(),
         cluster_type=ClusterType.PREFILL,
         layer_id=7,
     )
 
-    assert result == {0: 2, 1: 2, 2: 3, 3: 1}
-    assert sum(result.values()) == 8
+    assert dict(result.global_per_expert_tokens) == {0: 2, 1: 2, 2: 3, 3: 1}
+    assert sum(result.global_per_expert_tokens.values()) == 8
 
 
 def test_moe_layer_prediction_has_no_one_token_conservation_tolerance() -> None:

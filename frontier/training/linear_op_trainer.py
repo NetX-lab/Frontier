@@ -21,7 +21,12 @@ import pandas as pd
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
-from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_same_tp_linear_op
+from frontier.operators.binding import resolve_operator_query_tp_mode
+from frontier.operators.spec import TensorParallelMode
+from frontier.spec_decode.mtp_registry import (
+    get_target_embedded_mtp_linear_ops,
+    is_target_embedded_mtp_same_tp_linear_op,
+)
 from frontier.training.base_trainer import BaseTrainer
 from frontier.logger import init_logger
 
@@ -295,15 +300,27 @@ class LinearOpTrainer(BaseTrainer):
         return f"time_stats.{model_name}.median"
 
     def _get_training_tp_key(self, model_name: str) -> int:
-        replicated_ops = {
-            "emb",
-            "input_layernorm",
-            "post_attention_layernorm",
-            "add",
-            "attn_pre_proj_qkv",
-            "attn_pre_proj_q_norm",
-        }
-        if model_name in replicated_ops:
+        if model_name in get_target_embedded_mtp_linear_ops():
+            return resolve_effective_attention_tp_size(
+                op_name="attn_pre_proj",
+                requested_tp_size=self.tensor_parallel_size,
+                num_kv_heads=self.model_config.num_kv_heads,
+                cluster_type=None,
+                warning_cache=None,
+                include_linear_ops=True,
+            )
+
+        try:
+            tp_mode = resolve_operator_query_tp_mode(
+                model_name,
+                architecture_profile=self.model_config.get_model_architecture_profile(),
+            )
+        except (AttributeError, TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Unsupported linear op for TP mapping: {model_name}"
+            ) from exc
+
+        if tp_mode is TensorParallelMode.REPLICATED:
             if (
                 getattr(self, "_has_target_embedded_mtp_ops", False)
                 and is_target_embedded_mtp_same_tp_linear_op(model_name)
@@ -318,20 +335,10 @@ class LinearOpTrainer(BaseTrainer):
                 )
             return 1
 
-        if model_name.startswith("mlp_"):
+        if tp_mode is TensorParallelMode.FFN_TP:
             return self.tensor_parallel_size
 
-        if model_name in {"mtp_fusion_proj", "lm_head_linear"}:
-            return resolve_effective_attention_tp_size(
-                op_name="attn_pre_proj",
-                requested_tp_size=self.tensor_parallel_size,
-                num_kv_heads=self.model_config.num_kv_heads,
-                cluster_type=None,
-                warning_cache=None,
-                include_linear_ops=True,
-            )
-
-        if model_name.startswith("attn_"):
+        if tp_mode is TensorParallelMode.ATTENTION_TP:
             return resolve_effective_attention_tp_size(
                 op_name=model_name,
                 requested_tp_size=self.tensor_parallel_size,

@@ -9,6 +9,7 @@ from frontier.events.ep_alltoall_combine_collective_event import (
     EPAllToAllCombineCollectiveEvent,
 )
 from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
+from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )
@@ -82,6 +83,15 @@ def _batch(
         replica_id=replica_id,
         ep_id=ep_id,
         post_combine_time=0.0,
+        lane_workload=EPLaneWorkload(
+            ep_id=ep_id,
+            moe_expert_parallel_size=2,
+            total_expert_num=2,
+            owned_expert_ids=(ep_id,),
+            local_token_counts=(total_num_tokens,),
+            routed_token_count=total_num_tokens,
+            router_topk=1,
+        ),
     )
 
 

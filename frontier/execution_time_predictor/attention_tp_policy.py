@@ -23,13 +23,19 @@ def get_attention_non_linear_tp_policy_ops() -> frozenset[str]:
 
 ATTENTION_NON_LINEAR_OPS = get_attention_non_linear_tp_policy_ops()
 
-ATTENTION_LINEAR_OPS = frozenset(
-    {
-        "attn_pre_proj",
-        "attn_post_proj",
-        "attn_rope",
-    }
-)
+def get_attention_linear_tp_policy_ops() -> frozenset[str]:
+    """Return all explicitly declared architecture-profile linear attention ops."""
+
+    from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
+
+    operator_names = set()
+    for profile in MODEL_ARCHITECTURE_REGISTRY.iter_profiles():
+        operator_names.update(profile.linear_attention.sharded_ops)
+        operator_names.update(profile.linear_attention.replicated_ops)
+    return frozenset(operator_names)
+
+
+ATTENTION_LINEAR_OPS = get_attention_linear_tp_policy_ops()
 
 
 def is_attention_tp_supported(*, requested_tp_size: int, num_kv_heads: int) -> bool:

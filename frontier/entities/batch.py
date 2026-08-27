@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional
+from types import MappingProxyType
 
 from frontier.entities.base_entity import BaseEntity
 from frontier.entities.request import Request
 from frontier.logger import init_logger
+from frontier.moe_ep_workload import EPLaneWorkload
 
 logger = init_logger(__name__)
 
@@ -822,12 +824,10 @@ class Batch(BaseEntity):
             from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_method
 
             if is_target_embedded_mtp_method(method):
-                # vLLM target-embedded MTP target forward consumes the
-                # scheduler-visible tokens plus scheduled draft tokens.
-                return self._total_num_tokens + sum(
-                    int(value)
-                    for value in spec_metadata.planned_draft_tokens_per_request
-                )
+                # The scheduler-visible batch rows already contain the complete
+                # target verification width. Planned draft slots remain control
+                # metadata and must not be added to the physical width again.
+                return self._total_num_tokens
 
         return self._total_num_tokens
 
@@ -1271,7 +1271,11 @@ class EPBatchGroup(Batch):
     - ep_id: The ID of the Expert Parallel (EP) replica to which this batch is assigned.
     - time: The timestamp associated with this batch group.
     - source_batch_ids: List of source batch IDs that contribute to this group.
-    - per_expert_tokens: Dictionary mapping expert IDs to the number of tokens assigned to them.
+    - lane_workload: Immutable physical `EPLaneWorkload` descriptor containing
+      topology and routed-token counts for this lane.
+    - per_expert_tokens: Read-only descriptor-backed projection keyed by global
+      expert ID; it is an observability compatibility view, not an independent
+      workload owner.
     """
 
     def __init__(
@@ -1282,15 +1286,25 @@ class EPBatchGroup(Batch):
         ep_id: int,
         time: float,
         source_batch_ids: List[int],
-        per_expert_tokens: Dict[int, int],
+        lane_workload: EPLaneWorkload,
         cluster_type: "ClusterType",
         is_moe: bool,
     ) -> None:
+        if not isinstance(lane_workload, EPLaneWorkload):
+            raise TypeError(
+                "EPBatchGroup requires an EPLaneWorkload descriptor, got "
+                f"{type(lane_workload).__name__}"
+            )
+        if type(ep_id) is not int or ep_id != lane_workload.ep_id:
+            raise ValueError(
+                "EPBatchGroup ep_id must match lane_workload.ep_id: "
+                f"entity={ep_id!r}, descriptor={lane_workload.ep_id!r}"
+            )
         super().__init__(replica_id, requests, num_tokens, is_moe=is_moe)
         self._ep_id = ep_id
         self._time = time
         self._source_batch_ids = source_batch_ids
-        self._per_expert_tokens = per_expert_tokens
+        self._lane_workload = lane_workload
         self._cluster_type = cluster_type
         # Full DECODE_FFN stage duration in seconds for request-level metrics.
         # Expert-only compute is stored separately for runtime event scheduling.
@@ -1337,8 +1351,16 @@ class EPBatchGroup(Batch):
         return self._source_batch_ids
 
     @property
-    def per_expert_tokens(self) -> Dict[int, int]:
-        return self._per_expert_tokens
+    def lane_workload(self) -> EPLaneWorkload:
+        """Return the canonical physical workload descriptor for this lane."""
+
+        return self._lane_workload
+
+    @property
+    def per_expert_tokens(self) -> MappingProxyType:
+        """Return a read-only descriptor-backed compatibility projection."""
+
+        return self._lane_workload.per_expert_tokens
     
     @property
     def cluster_type(self) -> "ClusterType":

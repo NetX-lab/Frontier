@@ -305,6 +305,7 @@ def test_prefill_attention_prediction_uses_on_demand_model_for_large_context() -
             "kv_cache_size",
             "prefill_chunk_size_squared",
         ],
+        "_exact_lookup": {},
     }
 
 
@@ -528,7 +529,13 @@ def test_attention_layer_training_includes_mixed_prefill_model_when_features_exi
 
     captured: list[tuple[str, list[str], int]] = []
 
-    def _fake_train_model(model_name: str, df: pd.DataFrame, feature_cols, target_col: str):
+    def _fake_train_model(
+        model_name: str,
+        df: pd.DataFrame,
+        feature_cols,
+        target_col: str,
+        **_kwargs,
+    ):
         del target_col
         captured.append((model_name, list(feature_cols), len(df)))
         return object()
@@ -594,7 +601,13 @@ def test_attention_layer_training_honors_is_prefill_for_mixed_rows() -> None:
 
     captured: list[tuple[str, int]] = []
 
-    def _fake_train_model(model_name: str, df: pd.DataFrame, feature_cols, target_col: str):
+    def _fake_train_model(
+        model_name: str,
+        df: pd.DataFrame,
+        feature_cols,
+        target_col: str,
+        **_kwargs,
+    ):
         del feature_cols, target_col
         captured.append((model_name, len(df)))
         return object()
@@ -655,6 +668,7 @@ def test_attention_layer_training_includes_decode_in_mixed_model_when_true_mixed
         df: pd.DataFrame,
         feature_cols,
         target_col: str,
+        **_kwargs,
     ):
         del target_col
         captured.append((model_name, list(feature_cols), len(df)))

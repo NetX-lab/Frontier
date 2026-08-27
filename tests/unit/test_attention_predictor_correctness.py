@@ -201,7 +201,14 @@ def test_kernel_only_attention_trains_true_mixed_decode_when_real_rows_exist(
     )
     trained_models: dict[str, tuple[tuple[str, ...], str, int]] = {}
 
-    def _fake_train_model(*, model_name: str, df: pd.DataFrame, feature_cols, target_col):
+    def _fake_train_model(
+        *,
+        model_name: str,
+        df: pd.DataFrame,
+        feature_cols,
+        target_col,
+        **_kwargs,
+    ):
         trained_models[model_name] = (tuple(feature_cols), target_col, len(df))
         return SimpleNamespace()
 

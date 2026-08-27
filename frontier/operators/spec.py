@@ -156,6 +156,9 @@ class CommPayloadContext:
     replica_config: Any
     cluster_type: Any
     quantization_manager: Any
+    # Physical EP-lane workload, when the collective is evaluated for one
+    # materialized lane rather than the source batch.
+    lane_workload: Any | None = None
 
 
 CommPayloadBuilder = Callable[[CommPayloadContext], int]

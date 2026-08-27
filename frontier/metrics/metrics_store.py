@@ -4138,10 +4138,11 @@ class MetricsStore:
             row["source_group_ready_ts"] = float(batch_stage.source_group_ready_ts)
         if replica_local_id is not None and hasattr(batch_stage, "ep_id"):
             row["ep_id"] = int(batch_stage.ep_id)
-        if hasattr(batch_stage, "per_expert_tokens"):
+        lane_workload = getattr(batch_stage, "lane_workload", None)
+        if lane_workload is not None:
             row["per_expert_tokens"] = {
                 str(expert_id): int(token_count)
-                for expert_id, token_count in batch_stage.per_expert_tokens.items()
+                for expert_id, token_count in lane_workload.per_expert_tokens.items()
             }
         return row
 

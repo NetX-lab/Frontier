@@ -4,6 +4,7 @@ from frontier.entities.base_entity import BaseEntity
 from frontier.entities.request import Request
 from frontier.types import ClusterType
 from frontier.logger import init_logger
+from frontier.moe_ep_workload import EPLaneWorkload
 
 logger = init_logger(__name__)
 
@@ -73,11 +74,30 @@ class BatchStage(BaseEntity):
             else (self._effective_total_tokens_compute + 7) // 8 * 8
         )
         self._tokens_are_post_routing = bool(tokens_are_post_routing)
+        self._lane_workload: EPLaneWorkload | None = None
 
         self._scheduled_at = None
         self._completed_at = None
         self._scheduled = False
         self._runtime_identity: dict[str, Any] | None = None
+
+    def attach_lane_workload(self, lane_workload: EPLaneWorkload) -> None:
+        """Attach the immutable physical EP workload represented by this stage."""
+
+        if not isinstance(lane_workload, EPLaneWorkload):
+            raise TypeError(
+                "BatchStage lane_workload must be an EPLaneWorkload descriptor, "
+                f"got {type(lane_workload).__name__}"
+            )
+        if self._lane_workload is not None and self._lane_workload != lane_workload:
+            raise ValueError("BatchStage lane_workload cannot be replaced")
+        self._lane_workload = lane_workload
+
+    @property
+    def lane_workload(self) -> EPLaneWorkload | None:
+        """Return the physical EP workload, when this stage represents an EP lane."""
+
+        return self._lane_workload
 
     def attach_runtime_identity(self, batch: Any) -> None:
         """Persist the exact runtime identity that created this stage.

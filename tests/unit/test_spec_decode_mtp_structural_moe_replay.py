@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from frontier.entities import Batch, EPBatchGroup, Request, SpecDecodeBatchMetadata
+from frontier.entities import Batch, Request, SpecDecodeBatchMetadata
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
@@ -12,6 +12,7 @@ from frontier.execution_time_predictor.execution_time_predictor_registry import 
     ExecutionTimePredictorRegistry,
 )
 import frontier.execution_time_predictor.sklearn_execution_time_predictor as sklearn_predictor_module
+from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.types import ClusterType
 
 
@@ -21,43 +22,6 @@ class _DummyPredictor(SklearnMoEExecutionTimePredictor):
 
     def _get_grid_search_params(self):
         return {}
-
-
-class _LaneExecutionTime:
-    def __init__(
-        self,
-        *,
-        pre_dispatch_ms: float,
-        dispatch_ms: float,
-        routed_compute_ms: float,
-        combine_ms: float,
-        post_combine_ms: float,
-    ) -> None:
-        self._phase_times = (
-            pre_dispatch_ms,
-            dispatch_ms,
-            routed_compute_ms,
-            combine_ms,
-            post_combine_ms,
-        )
-
-    def get_single_layer_moe_pre_dispatch_time(self) -> float:
-        return self._phase_times[0]
-
-    def get_single_layer_moe_dispatch_time(self) -> float:
-        return self._phase_times[1]
-
-    def get_single_layer_moe_post_dispatch_compute_time(self) -> float:
-        return self._phase_times[2]
-
-    def get_single_layer_moe_combine_time(self) -> float:
-        return self._phase_times[3]
-
-    def get_single_layer_moe_post_combine_time(self) -> float:
-        return self._phase_times[4]
-
-    def get_single_layer_post_attention_time(self) -> float:
-        return sum(self._phase_times)
 
 
 def _request() -> Request:
@@ -83,6 +47,7 @@ def _source_batch() -> Batch:
 def _predictor() -> _DummyPredictor:
     predictor = _DummyPredictor.__new__(_DummyPredictor)
     predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._moe_ep_size = 2
     predictor._model_config = SimpleNamespace(
         is_moe=True,
         is_moe_layer=lambda layer_id: layer_id == 0,
@@ -139,34 +104,32 @@ def _secondary_predictor_parent() -> _DummyPredictor:
     return predictor
 
 
-def test_mtp_structural_moe_decoder_replays_local_ep_lanes_and_barriers() -> None:
+def test_mtp_structural_moe_decoder_replays_typed_ep_lanes_and_barriers() -> None:
     predictor = _predictor()
     source_batch = _source_batch()
-    lane_calls: list[EPBatchGroup] = []
+    lane_calls: list[EPLaneWorkload] = []
 
     def _predict_stage_execution_time(batch, stage_id, cluster_type, **kwargs):
         assert stage_id == 0
         assert cluster_type == ClusterType.MONOLITHIC
-        if not isinstance(batch, EPBatchGroup):
-            assert kwargs.get("include_ffn") is False
-            return SimpleNamespace(model_time_ms=10.0)
+        assert batch is source_batch
+        assert kwargs.get("include_ffn") is False
+        return SimpleNamespace(model_time_ms=10.0)
 
-        lane_calls.append(batch)
-        assert kwargs.get("include_attention") is False
-        assert batch.moe_pre_routing_effective_total_tokens == 4
+    def _predict_moe_lane_phase_times(*, batch, lane_workload, pipeline_stage, cluster_type):
+        assert batch is source_batch
+        assert pipeline_stage == 0
+        assert cluster_type == ClusterType.MONOLITHIC
+        assert isinstance(lane_workload, EPLaneWorkload)
+        lane_calls.append(lane_workload)
         phase_times_by_ep = {
             0: (2.0, 1.0, 4.0, 1.0, 5.0),
             1: (3.0, 2.0, 1.0, 4.0, 6.0),
         }
-        return _LaneExecutionTime(
-            pre_dispatch_ms=phase_times_by_ep[batch.ep_id][0],
-            dispatch_ms=phase_times_by_ep[batch.ep_id][1],
-            routed_compute_ms=phase_times_by_ep[batch.ep_id][2],
-            combine_ms=phase_times_by_ep[batch.ep_id][3],
-            post_combine_ms=phase_times_by_ep[batch.ep_id][4],
-        )
+        return phase_times_by_ep[lane_workload.ep_id]
 
     predictor.predict_stage_execution_time = _predict_stage_execution_time
+    predictor.predict_moe_lane_phase_times = _predict_moe_lane_phase_times
 
     result_ms = predictor._predict_mtp_decoder_layer_time_ms(
         predictor=predictor,
@@ -175,9 +138,9 @@ def test_mtp_structural_moe_decoder_replays_local_ep_lanes_and_barriers() -> Non
 
     assert result_ms == pytest.approx(29.0)
     assert [lane.ep_id for lane in lane_calls] == [0, 1]
-    assert [lane.per_expert_tokens for lane in lane_calls] == [
-        {0: 1, 1: 1},
-        {2: 2, 3: 0},
+    assert [lane.local_token_counts for lane in lane_calls] == [
+        (1, 1),
+        (2, 0),
     ]
 
 
