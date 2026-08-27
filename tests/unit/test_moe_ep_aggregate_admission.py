@@ -73,14 +73,44 @@ def _lane(*, ep_id: int = 0, routed_token_count: int = 4) -> EPLaneWorkload:
     )
 
 
-def _batch(*, lane_workload: EPLaneWorkload | None = None) -> SimpleNamespace:
+def _admission_lane(
+    *,
+    ep_size: int = 2,
+    router_topk: int = 2,
+    routed_token_count: int | None = None,
+) -> EPLaneWorkload:
+    """Build a descriptor valid in isolation for boundary-mismatch tests."""
+    total_expert_num = 4
+    local_width = total_expert_num // ep_size
+    if routed_token_count is None:
+        routed_token_count = 4 * router_topk
+    local_token_counts = (routed_token_count,) + (0,) * (local_width - 1)
+    return EPLaneWorkload(
+        ep_id=0,
+        moe_expert_parallel_size=ep_size,
+        total_expert_num=total_expert_num,
+        owned_expert_ids=tuple(range(local_width)),
+        local_token_counts=local_token_counts,
+        routed_token_count=routed_token_count,
+        router_topk=router_topk,
+    )
+
+
+def _batch(
+    *,
+    lane_workload: EPLaneWorkload | None = None,
+    total_num_tokens: int = 4,
+    effective_tokens: int | None = None,
+) -> SimpleNamespace:
+    if effective_tokens is None:
+        effective_tokens = total_num_tokens
     values: dict[str, object] = {
         "id": 1,
         "size": 1,
-        "num_tokens": 4,
-        "total_num_tokens": 4,
+        "num_tokens": total_num_tokens,
+        "total_num_tokens": total_num_tokens,
         "requests": [],
-        "get_effective_total_tokens_rounded": lambda _cluster_type: 4,
+        "get_effective_total_tokens_rounded": lambda _cluster_type: effective_tokens,
     }
     if lane_workload is not None:
         values["lane_workload"] = lane_workload
@@ -211,6 +241,51 @@ def test_direct_moe_layer_api_requires_lane_before_mode_work(dummy: bool) -> Non
         )
 
     predictor._get_dummy_execution_time.assert_not_called()
+    predictor._supports_operation.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("mismatch", "expected_message"),
+    [
+        ("ep_size", "lane_workload EP size does not match predictor topology"),
+        ("router_topk", "lane_workload router_topk does not match predictor topology"),
+        ("conservation", "Token conservation violated in predict_moe_layer_time"),
+    ],
+)
+@pytest.mark.parametrize("dummy", (True, False))
+def test_direct_moe_layer_rejects_malformed_lane_before_mode_work(
+    mismatch: str,
+    expected_message: str,
+    dummy: bool,
+) -> None:
+    """All lane invariants are admitted before dummy or lookup-specific work."""
+    lane_kwargs: dict[str, int] = {}
+    if mismatch == "ep_size":
+        lane_kwargs["ep_size"] = 1
+    elif mismatch == "router_topk":
+        lane_kwargs["router_topk"] = 1
+    else:
+        lane_kwargs["routed_token_count"] = 3
+    lane = _admission_lane(**lane_kwargs)
+    predictor = _configure_monolithic(dummy=dummy)
+    predictor._dummy_execution_time = 1.0
+    calls: list[str] = []
+    predictor._model_config.supports_share_expert = MagicMock(
+        side_effect=lambda: calls.append("share_expert") or False
+    )
+    predictor._supports_operation = MagicMock(
+        side_effect=lambda *_args, **_kwargs: calls.append("supports") or True
+    )
+
+    with pytest.raises(ValueError, match=expected_message):
+        predictor.predict_moe_layer_time(
+            _batch(lane_workload=lane),
+            layer_id=0,
+            cluster_type=ClusterType.MONOLITHIC,
+        )
+
+    assert calls == []
+    predictor._model_config.supports_share_expert.assert_not_called()
     predictor._supports_operation.assert_not_called()
 
 
@@ -465,7 +540,10 @@ def test_monolithic_valid_lane_including_zero_routed_lane_is_admitted(
     predictor._get_dummy_execution_time = MagicMock(return_value=sentinel)
 
     result = predictor.predict_stage_execution_time(
-        batch=_batch(lane_workload=_lane(routed_token_count=routed_token_count)),
+        batch=_batch(
+            lane_workload=_lane(routed_token_count=routed_token_count),
+            total_num_tokens=routed_token_count,
+        ),
         stage_id=0,
         cluster_type=ClusterType.MONOLITHIC,
         num_layers=1,
@@ -474,6 +552,155 @@ def test_monolithic_valid_lane_including_zero_routed_lane_is_admitted(
     )
 
     assert result is sentinel
+
+
+@pytest.mark.parametrize("routed_token_count", (0, 3))
+def test_source_batch_explicit_lane_accepts_partial_or_zero_assignment_subset(
+    routed_token_count: int,
+) -> None:
+    """A source batch plus one lane may represent a strict assignment subset."""
+    predictor = _configure_monolithic(dummy=True)
+    source_batch = _batch(total_num_tokens=4, effective_tokens=8)
+    lane = _lane(routed_token_count=routed_token_count)
+
+    resolved_lane = predictor._admit_routed_ep_aggregate(
+        source_batch,
+        routed_moe=True,
+        lane_workload=lane,
+    )
+
+    assert resolved_lane is lane
+
+
+def test_disaggregation_aggregate_stage_admission_uses_active_role_topk() -> None:
+    """Aggregate predictors must validate lanes against the requested role config."""
+    predictor = _configure_disaggregation(dummy=True)
+    predictor._cluster_type = None
+    # The representative config intentionally differs from the active role.
+    predictor._router_topk = 1
+    role_replica_config = SimpleNamespace(
+        model_config=_ModelConfig(),
+        moe_expert_parallel_size=2,
+        router_topk=2,
+    )
+    predictor._get_cluster_replica_config = MagicMock(
+        return_value=role_replica_config
+    )
+    sentinel = SimpleNamespace(num_layers=1)
+    predictor._get_dummy_execution_time_for_cluster = MagicMock(
+        return_value=sentinel
+    )
+
+    result = predictor.predict_stage_execution_time(
+        batch=_batch(lane_workload=_lane(), total_num_tokens=4),
+        stage_id=0,
+        cluster_type=ClusterType.DECODE_FFN,
+        num_layers=1,
+        layer_id=0,
+        include_moe=None,
+        include_ffn=True,
+    )
+
+    assert result is sentinel
+    predictor._get_dummy_execution_time_for_cluster.assert_called_once()
+
+
+def test_non_dummy_moe_layer_consumes_explicit_active_topology_before_lookup() -> None:
+    """An inherited MoE call must validate against its active role context."""
+    predictor = _configure_disaggregation(dummy=False)
+    predictor._router_topk = 1
+    predictor._supports_operation = MagicMock(return_value=False)
+
+    with pytest.raises(
+        NotImplementedError,
+        match="MoE operations not supported for cluster type",
+    ):
+        predictor.predict_moe_layer_time(
+            _batch(lane_workload=_lane(), total_num_tokens=4),
+            layer_id=0,
+            cluster_type=ClusterType.DECODE_FFN,
+            lane_workload=_lane(),
+            ep_size=2,
+            router_topk=2,
+        )
+
+    predictor._supports_operation.assert_called_once_with("moe_grouped_gemm")
+
+
+def test_disaggregation_aggregate_non_dummy_propagates_active_role_topology() -> None:
+    """The inherited non-dummy MoE call keeps the active role topology."""
+    predictor = _configure_disaggregation(dummy=False)
+    predictor._cluster_type = None
+    # The aggregate representative intentionally differs from the active role.
+    predictor._router_topk = 1
+    role_replica_config = SimpleNamespace(
+        model_config=_ModelConfig(),
+        moe_expert_parallel_size=2,
+        router_topk=2,
+        moe_tensor_parallel_size=1,
+        attn_tensor_parallel_size=1,
+        num_pipeline_stages=1,
+    )
+    predictor._get_cluster_replica_config = MagicMock(
+        return_value=role_replica_config
+    )
+    predictor._is_zero_token_decode_ffn_ep_barrier = lambda *_args: False
+    predictor._select_measurement_type_for_batch = lambda _batch: None
+    predictor._require_predictions_for_measurement_type = lambda *_args: None
+    predictor._activate_measurement_type = lambda *_args: None
+    predictor._emit_cuda_graph_activation_records = lambda *_args: None
+    predictor._get_communication_time = lambda *_args, **_kwargs: SimpleNamespace(
+        tensor_parallel_time=0.0,
+        pipeline_parallel_time=0.0,
+    )
+    predictor._get_overhead_time = lambda *_args: SimpleNamespace(
+        schedule_time=0.0,
+        sampler_e2e_time=0.0,
+        prepare_inputs_e2e_time=0.0,
+        process_model_outputs_time=0.0,
+        ray_comm_time=0.0,
+        pp_producer_send_path_runtime_time=0.0,
+        pp_receiver_head_runtime_time=0.0,
+        pp_prefill_consumer_active_runtime_time=0.0,
+        pp_stage_boundary_residual_runtime_time=0.0,
+        pp_stage_boundary_handoff_time=0.0,
+    )
+    predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
+    predictor._resolve_layer_lane_workload = lambda *_args, **_kwargs: _lane()
+    predictor._get_cluster_model_architecture_profile = lambda _cluster_type: (
+        ModelArchitectureProfile.generic()
+    )
+    predictor._get_add_layer_act_execution_time = lambda _batch: 0.0
+    predictor._predict_named_ep_phase_operator_times = lambda **_kwargs: {}
+    predictor._predict_one_op_time = lambda _name, value, *_args, **_kwargs: value
+    predictor._predict_comm_operator_with_context = lambda *_args, **_kwargs: 0.0
+    moe_call = MagicMock(
+        return_value=SimpleNamespace(
+            moe_grouped_gemm_time=0.0,
+            moe_gating_time=0.0,
+            moe_shuffling_time=0.0,
+            share_expert_up_proj_time=0.0,
+            share_expert_down_proj_time=0.0,
+            share_expert_act_time=0.0,
+        )
+    )
+    predictor.predict_moe_layer_time = moe_call
+
+    result = predictor.predict_stage_execution_time(
+        batch=_batch(lane_workload=_lane(), total_num_tokens=4),
+        stage_id=0,
+        cluster_type=ClusterType.DECODE_FFN,
+        num_layers=1,
+        layer_id=0,
+        include_moe=None,
+        include_ffn=True,
+    )
+
+    assert result._is_moe is True
+    moe_call.assert_called_once()
+    call_kwargs = moe_call.call_args.kwargs
+    assert call_kwargs["ep_size"] == 2
+    assert call_kwargs["router_topk"] == 2
 
 
 def test_disaggregation_decode_attn_remains_attention_only_without_lane() -> None:

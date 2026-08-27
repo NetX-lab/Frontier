@@ -21,6 +21,7 @@ from frontier.operators.spec import (
     TraceKind,
     ZeroPayloadPolicy,
 )
+from frontier.moe_ep_workload import resolve_ep_lane_workload
 from frontier.types import ClusterType
 
 
@@ -309,6 +310,14 @@ def _effective_tokens(ctx: CommPayloadContext) -> int:
     return int(ctx.batch.get_effective_total_tokens_rounded(ctx.cluster_type))
 
 
+def _resolve_lane_workload(ctx: CommPayloadContext):
+    """Resolve an explicit physical EP lane for lane-scoped payloads."""
+
+    if ctx.lane_workload is not None:
+        return resolve_ep_lane_workload(ctx.lane_workload, required=True)
+    return resolve_ep_lane_workload(ctx.batch, required=False)
+
+
 def _hidden_state_bytes(ctx: CommPayloadContext, collective: str) -> int:
     data_size_bytes = int(ctx.model_config.embedding_dim) * 2 * _effective_tokens(ctx)
     return int(
@@ -325,39 +334,10 @@ def _tp_allreduce_payload_bytes(ctx: CommPayloadContext) -> int:
 
 
 def _moe_tp_allreduce_payload_bytes(ctx: CommPayloadContext) -> int:
-    # EP lanes carry post-routing token counts.  A regular source batch does
-    # not: its effective token count is the correct shared-workload payload.
-    from frontier.entities.batch import EPBatchGroup
-
-    if not isinstance(ctx.batch, EPBatchGroup):
-        routed_tokens = _effective_tokens(ctx)
-    else:
-        per_expert_tokens = getattr(ctx.batch, "per_expert_tokens", None)
-        if per_expert_tokens is None:
-            raise ValueError(
-                "MoE TP allreduce requires EPBatchGroup.per_expert_tokens"
-            )
-        if not isinstance(per_expert_tokens, dict):
-            raise ValueError(
-                "MoE TP allreduce per_expert_tokens must be a dictionary"
-            )
-        if not per_expert_tokens:
-            raise ValueError(
-                "MoE TP allreduce per_expert_tokens must be a non-empty dictionary"
-            )
-        routed_tokens = 0
-        for expert_id, token_count in per_expert_tokens.items():
-            if type(expert_id) is not int or expert_id < 0:
-                raise ValueError(
-                    "MoE TP allreduce expert IDs must be non-negative integers"
-                )
-            if type(token_count) is not int or token_count < 0:
-                raise ValueError(
-                    "MoE TP allreduce token counts must be non-negative integers"
-                )
-            routed_tokens += token_count
-
-    data_size_bytes = int(ctx.model_config.embedding_dim) * 2 * routed_tokens
+    # MoE-TP all-reduce operates on the shared hidden-state domain before
+    # expert routing.  A physical lane descriptor is therefore irrelevant to
+    # this payload; only the source batch's compute-effective width applies.
+    data_size_bytes = int(ctx.model_config.embedding_dim) * 2 * _effective_tokens(ctx)
     return int(
         ctx.quantization_manager.adjust_tensor_size(
             "allreduce",
@@ -390,41 +370,13 @@ def _moe_tp_allgather_payload_bytes(ctx: CommPayloadContext) -> int:
 
 
 def _expert_parallel_payload_bytes(ctx: CommPayloadContext) -> int:
-    from frontier.entities.batch import EPBatchGroup
-
-    if isinstance(ctx.batch, EPBatchGroup):
-        per_expert_tokens = getattr(ctx.batch, "per_expert_tokens", None)
-        if per_expert_tokens is None:
-            raise ValueError(
-                "Expert-parallel all-to-all requires EPBatchGroup.per_expert_tokens"
-            )
-        if not isinstance(per_expert_tokens, dict):
-            raise ValueError(
-                "Expert-parallel all-to-all per_expert_tokens must be a dictionary"
-            )
-        if not per_expert_tokens:
-            raise ValueError(
-                "Expert-parallel all-to-all per_expert_tokens must be a "
-                "non-empty dictionary"
-            )
-        routed_tokens = 0
-        for expert_id, token_count in per_expert_tokens.items():
-            if type(expert_id) is not int or expert_id < 0:
-                raise ValueError(
-                    "Expert-parallel all-to-all expert IDs must be non-negative integers"
-                )
-            if type(token_count) is not int or token_count < 0:
-                raise ValueError(
-                    "Expert-parallel all-to-all token counts must be non-negative integers"
-                )
-            routed_tokens += token_count
-    else:
-        router_topk = int(getattr(ctx.replica_config, "router_topk", 0) or 0)
-        if router_topk <= 0:
-            router_topk = int(getattr(ctx.model_config, "num_experts_per_tok", 0) or 0)
-        if router_topk <= 0:
-            raise ValueError("router_topk must be set for expert-parallel communication")
-        routed_tokens = _effective_tokens(ctx) * router_topk
+    lane_workload = _resolve_lane_workload(ctx)
+    if lane_workload is None:
+        raise ValueError(
+            "expert-parallel all-to-all payload requires an EPLaneWorkload "
+            "descriptor"
+        )
+    routed_tokens = lane_workload.routed_token_count
     data_size_bytes = int(ctx.model_config.embedding_dim) * 2 * int(routed_tokens)
     return int(
         ctx.quantization_manager.adjust_tensor_size(

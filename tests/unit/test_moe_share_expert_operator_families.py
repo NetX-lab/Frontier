@@ -613,6 +613,7 @@ def test_moe_predictor_dummy_path_writes_structured_moe_operator_times() -> None
     predictor = object.__new__(_ConcreteSklearnMoEExecutionTimePredictor)
     predictor._enable_dummy_mode = True
     predictor._dummy_execution_time = 10.0
+    predictor._moe_ep_size = 1
     predictor._model_config = SimpleNamespace(supports_share_expert=lambda: True)
 
     moe_time = predictor.predict_moe_layer_time(

@@ -69,7 +69,18 @@ def _combine_batch(
     source_batch_ids: list[int],
     execution_time: float = 0.01,
     activation_bytes: int = 100,
+    lane_workload: EPLaneWorkload | None = None,
 ) -> SimpleNamespace:
+    if lane_workload is None:
+        lane_workload = EPLaneWorkload(
+            ep_id=ep_id,
+            moe_expert_parallel_size=2,
+            total_expert_num=2,
+            owned_expert_ids=(ep_id,),
+            local_token_counts=(1,),
+            routed_token_count=1,
+            router_topk=1,
+        )
     return SimpleNamespace(
         id=100 + ep_id,
         global_id=10,
@@ -87,7 +98,7 @@ def _combine_batch(
         afd_stage_idx=0,
         decode_ffn_layer_id=4,
         source_batch_ids=list(source_batch_ids),
-        per_expert_tokens={},
+        lane_workload=lane_workload,
         total_num_tokens=1,
         routing_token_count=1,
         router_topk=1,
@@ -611,12 +622,23 @@ def test_ep_combine_collective_rejects_invalid_source_id_cohort_before_lookup_or
 
 def test_ep_combine_collective_validates_token_conservation_before_mutation() -> None:
     batches = {
-        0: _combine_batch(0, source_batch_ids=[10]),
-        1: _combine_batch(1, source_batch_ids=[10]),
+        ep_id: _combine_batch(
+            ep_id,
+            source_batch_ids=[10],
+            lane_workload=EPLaneWorkload(
+                ep_id=ep_id,
+                moe_expert_parallel_size=2,
+                total_expert_num=2,
+                owned_expert_ids=(ep_id,),
+                local_token_counts=(2,),
+                routed_token_count=2,
+                router_topk=1,
+            ),
+        )
+        for ep_id in range(2)
     }
     for ep_id, batch in batches.items():
         batch.total_num_tokens = 1
-        batch.per_expert_tokens = {ep_id: 2}
     raw = _raw_batch(10)
     scheduler, room, stage_schedulers, replica_schedulers = _combine_scheduler(
         batches,
@@ -653,8 +675,6 @@ def test_ep_combine_collective_requires_execution_time_from_every_lane() -> None
         0: _combine_batch(0, source_batch_ids=[10], execution_time=0.01),
         1: _combine_batch(1, source_batch_ids=[10], execution_time=0.0),
     }
-    batches[1].per_expert_tokens = {1: 1}
-    batches[1].total_num_tokens = 1
     raw = _raw_batch(10)
     scheduler, room, stage_schedulers, replica_schedulers = _combine_scheduler(
         batches,

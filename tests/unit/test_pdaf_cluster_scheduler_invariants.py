@@ -5712,6 +5712,33 @@ def _ep_scheduler(
     return scheduler
 
 
+def _typed_ep_barrier_batch(
+    *,
+    batch_id: int,
+    ep_id: int,
+    total_num_tokens: int,
+    global_id: int = 0,
+    replica_id: int = 3,
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        id=batch_id,
+        global_id=global_id,
+        ep_id=ep_id,
+        replica_id=replica_id,
+        total_num_tokens=total_num_tokens,
+        post_combine_time=0.0,
+        lane_workload=EPLaneWorkload(
+            ep_id=ep_id,
+            moe_expert_parallel_size=2,
+            total_expert_num=2,
+            owned_expert_ids=(ep_id,),
+            local_token_counts=(total_num_tokens,),
+            routed_token_count=total_num_tokens,
+            router_topk=1,
+        ),
+    )
+
+
 @pytest.mark.parametrize(
     ("method_name", "waiting_attr"),
     [
@@ -6182,7 +6209,15 @@ def test_ep_dispatch_valid_exact_lanes_preserve_collective_payload_and_time() ->
         routing_token_count=300,
         router_topk=1,
         total_routed_assignments=300,
-        per_expert_tokens={0: 100},
+        lane_workload=EPLaneWorkload(
+            ep_id=0,
+            moe_expert_parallel_size=2,
+            total_expert_num=2,
+            owned_expert_ids=(0,),
+            local_token_counts=(100,),
+            routed_token_count=100,
+            router_topk=1,
+        ),
     )
     second_batch = SimpleNamespace(
         id=11,
@@ -6205,7 +6240,15 @@ def test_ep_dispatch_valid_exact_lanes_preserve_collective_payload_and_time() ->
         routing_token_count=300,
         router_topk=1,
         total_routed_assignments=300,
-        per_expert_tokens={1: 200},
+        lane_workload=EPLaneWorkload(
+            ep_id=1,
+            moe_expert_parallel_size=2,
+            total_expert_num=2,
+            owned_expert_ids=(1,),
+            local_token_counts=(200,),
+            routed_token_count=200,
+            router_topk=1,
+        ),
     )
 
     first_events = scheduler.on_ep_alltoall_dispatch_ready(
@@ -6259,18 +6302,14 @@ def test_ep_collective_predictor_failure_does_not_commit_last_lane(
 
     room = {"batches": {}, "arrival_times": {}}
     scheduler = _ep_scheduler(waiting_attr, room, batch_global_id=0)
-    first_batch = SimpleNamespace(
-        id=10,
-        global_id=0,
+    first_batch = _typed_ep_barrier_batch(
+        batch_id=10,
         ep_id=0,
-        replica_id=3,
         total_num_tokens=100,
     )
-    second_batch = SimpleNamespace(
-        id=11,
-        global_id=0,
+    second_batch = _typed_ep_barrier_batch(
+        batch_id=11,
         ep_id=1,
-        replica_id=3,
         total_num_tokens=200,
     )
     assert getattr(scheduler, method_name)(
@@ -6323,18 +6362,14 @@ def test_ep_collective_rejects_nonfinite_or_negative_predictor_time_before_commi
 
     room = {"batches": {}, "arrival_times": {}}
     scheduler = _ep_scheduler(waiting_attr, room, batch_global_id=0)
-    first_batch = SimpleNamespace(
-        id=10,
-        global_id=0,
+    first_batch = _typed_ep_barrier_batch(
+        batch_id=10,
         ep_id=0,
-        replica_id=3,
         total_num_tokens=100,
     )
-    second_batch = SimpleNamespace(
-        id=11,
-        global_id=0,
+    second_batch = _typed_ep_barrier_batch(
+        batch_id=11,
         ep_id=1,
-        replica_id=3,
         total_num_tokens=200,
     )
     assert getattr(scheduler, method_name)(
@@ -6441,13 +6476,32 @@ def test_ep_batch_group_preserves_pre_routing_tokens_for_zero_lane() -> None:
 
 def test_ep_execution_time_resolves_zero_routed_lane_without_fabrication() -> None:
     scheduler = _scheduler()
+
+    zero_descriptor = EPLaneWorkload(
+        ep_id=0,
+        moe_expert_parallel_size=2,
+        total_expert_num=4,
+        owned_expert_ids=(0, 1),
+        local_token_counts=(0, 0),
+        routed_token_count=0,
+        router_topk=2,
+    )
+    active_descriptor = EPLaneWorkload(
+        ep_id=1,
+        moe_expert_parallel_size=2,
+        total_expert_num=4,
+        owned_expert_ids=(2, 3),
+        local_token_counts=(1, 0),
+        routed_token_count=1,
+        router_topk=2,
+    )
     zero_lane = SimpleNamespace(
         execution_time=0.0,
-        per_expert_tokens={0: 0, 1: 0},
+        lane_workload=zero_descriptor,
     )
     active_lane = SimpleNamespace(
         execution_time=0.75,
-        per_expert_tokens={2: 1},
+        lane_workload=active_descriptor,
     )
 
     assert scheduler._resolve_ep_execution_time({4: zero_lane, 5: active_lane}) == 0.75
@@ -6455,7 +6509,18 @@ def test_ep_execution_time_resolves_zero_routed_lane_without_fabrication() -> No
 
 def test_ep_execution_time_rejects_zero_time_for_nonzero_routed_lane() -> None:
     scheduler = _scheduler()
-    invalid_lane = SimpleNamespace(execution_time=0.0, per_expert_tokens={0: 1})
+    invalid_lane = SimpleNamespace(
+        execution_time=0.0,
+        lane_workload=EPLaneWorkload(
+            ep_id=0,
+            moe_expert_parallel_size=1,
+            total_expert_num=2,
+            owned_expert_ids=(0, 1),
+            local_token_counts=(1, 0),
+            routed_token_count=1,
+            router_topk=1,
+        ),
+    )
 
     with pytest.raises(ValueError, match="zero execution_time.*routed tokens"):
         scheduler._resolve_ep_execution_time({4: invalid_lane})

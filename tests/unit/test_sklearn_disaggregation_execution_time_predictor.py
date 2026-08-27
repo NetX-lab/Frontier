@@ -15,6 +15,7 @@ from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor impo
     SklearnMoEExecutionTimePredictor,
 )
 from frontier.model_architectures import ModelArchitectureProfile
+from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.operators.families import get_comm_operator
 from frontier.operators.spec import CommPayloadContext
 from frontier.types import ClusterType
@@ -51,6 +52,31 @@ class _Step3NamedGenericProfileModelConfig:
         return True
 
 
+def _lane_workload(
+    *,
+    ep_id: int,
+    local_token_counts: tuple[int, ...],
+    moe_expert_parallel_size: int = 2,
+    total_expert_num: int = 4,
+    router_topk: int = 2,
+) -> EPLaneWorkload:
+    width = total_expert_num // moe_expert_parallel_size
+    if len(local_token_counts) != width:
+        raise ValueError("test lane counts must match the configured local width")
+    owned_expert_ids = tuple(
+        range(ep_id * width, (ep_id + 1) * width)
+    )
+    return EPLaneWorkload(
+        ep_id=ep_id,
+        moe_expert_parallel_size=moe_expert_parallel_size,
+        total_expert_num=total_expert_num,
+        owned_expert_ids=owned_expert_ids,
+        local_token_counts=local_token_counts,
+        routed_token_count=sum(local_token_counts),
+        router_topk=router_topk,
+    )
+
+
 def _dummy_predictor(model_config: object) -> SklearnDisaggregationExecutionTimePredictor:
     predictor = _DummyDisaggregationPredictor.__new__(_DummyDisaggregationPredictor)
     predictor._dummy_execution_time = 10.0
@@ -63,6 +89,310 @@ def _dummy_predictor(model_config: object) -> SklearnDisaggregationExecutionTime
         num_pipeline_stages=1,
     )
     return predictor
+
+
+def test_disaggregation_aggregate_constructor_preserves_all_routing_maps(
+    monkeypatch,
+) -> None:
+    """The aggregate constructor must keep one stable attribute per role."""
+    model_config = SimpleNamespace(is_moe=True)
+    representative_config = SimpleNamespace(
+        model_config=model_config,
+        moe_expert_parallel_size=2,
+        moe_tensor_parallel_size=2,
+        router_topk=2,
+        moe_routing_distribution_type="balanced",
+        moe_routing_seed=17,
+    )
+    role_configs = {
+        role: SimpleNamespace(
+            model_config=model_config,
+            moe_expert_parallel_size=2,
+            moe_tensor_parallel_size=2,
+            router_topk=2,
+            moe_routing_distribution_type="balanced",
+            moe_routing_seed=17,
+        )
+        for role in (
+            ClusterType.PREFILL,
+            ClusterType.DECODE_FFN,
+            ClusterType.DECODE,
+            ClusterType.DECODE_ATTN,
+        )
+    }
+
+    def fake_parent_init(self, _predictor_config, replica_config, *_args, **_kwargs):
+        self._replica_config = replica_config
+        self._model_config = model_config
+
+    def fake_get_cluster_replica_config(self, role):
+        return role_configs[role]
+
+    def fake_simulate_and_store_routing(self, role):
+        return {role.name: {"sentinel": role.value}}
+
+    monkeypatch.setattr(
+        SklearnMoEExecutionTimePredictor,
+        "__init__",
+        fake_parent_init,
+    )
+    monkeypatch.setattr(
+        SklearnDisaggregationExecutionTimePredictor,
+        "_get_cluster_replica_config",
+        fake_get_cluster_replica_config,
+    )
+    monkeypatch.setattr(
+        SklearnDisaggregationExecutionTimePredictor,
+        "_simulate_and_store_routing",
+        fake_simulate_and_store_routing,
+    )
+    monkeypatch.setattr(
+        SklearnMoEExecutionTimePredictor,
+        "_emit_routing_details_snapshot",
+        staticmethod(lambda *_args, **_kwargs: None),
+    )
+
+    cluster_config = SimpleNamespace(
+        prefill_replica_config=role_configs[ClusterType.PREFILL],
+        decode_attn_replica_config=role_configs[ClusterType.DECODE_ATTN],
+        decode_ffn_replica_config=role_configs[ClusterType.DECODE_FFN],
+        decode_replica_config=role_configs[ClusterType.DECODE],
+        replica_config=representative_config,
+        num_replicas=1,
+    )
+
+    predictor = _DummyDisaggregationPredictor(
+        predictor_config=SimpleNamespace(),
+        replica_config=representative_config,
+        replica_scheduler_config=SimpleNamespace(),
+        metrics_config=SimpleNamespace(),
+        cluster_config=cluster_config,
+        cluster_type=None,
+    )
+
+    assert predictor._prefill_routing_details == {
+        ClusterType.PREFILL.name: {"sentinel": ClusterType.PREFILL.value}
+    }
+    assert predictor._decode_ffn_routing_details == {
+        ClusterType.DECODE_FFN.name: {"sentinel": ClusterType.DECODE_FFN.value}
+    }
+    assert predictor._decode_routing_details == {
+        ClusterType.DECODE.name: {"sentinel": ClusterType.DECODE.value}
+    }
+
+    expected_attributes = {
+        "_prefill_routing_details": ClusterType.PREFILL,
+        "_decode_ffn_routing_details": ClusterType.DECODE_FFN,
+        "_decode_routing_details": ClusterType.DECODE,
+    }
+    for role in expected_attributes.values():
+        role_predictor = _DummyDisaggregationPredictor(
+            predictor_config=SimpleNamespace(),
+            replica_config=representative_config,
+            replica_scheduler_config=SimpleNamespace(),
+            metrics_config=SimpleNamespace(),
+            cluster_config=cluster_config,
+            cluster_type=role,
+        )
+        for attribute, materialized_role in expected_attributes.items():
+            value = getattr(role_predictor, attribute)
+            if materialized_role is role:
+                assert value == {
+                    role.name: {"sentinel": role.value}
+                }
+            else:
+                assert value is None
+
+    attention_predictor = _DummyDisaggregationPredictor(
+        predictor_config=SimpleNamespace(),
+        replica_config=representative_config,
+        replica_scheduler_config=SimpleNamespace(),
+        metrics_config=SimpleNamespace(),
+        cluster_config=cluster_config,
+        cluster_type=ClusterType.DECODE_ATTN,
+    )
+    assert attention_predictor._prefill_routing_details is None
+    assert attention_predictor._decode_ffn_routing_details is None
+    assert attention_predictor._decode_routing_details is None
+
+
+def test_disaggregation_pd_aggregate_materializes_only_available_routed_roles(
+    monkeypatch,
+) -> None:
+    """A PD aggregate must not materialize the absent DECODE_FFN role."""
+    model_config = SimpleNamespace(is_moe=True)
+    representative_config = SimpleNamespace(
+        model_config=model_config,
+        moe_expert_parallel_size=2,
+        moe_tensor_parallel_size=2,
+        router_topk=2,
+        moe_routing_distribution_type="balanced",
+        moe_routing_seed=17,
+    )
+    role_configs = {
+        ClusterType.PREFILL: SimpleNamespace(
+            model_config=model_config,
+            moe_expert_parallel_size=2,
+            moe_tensor_parallel_size=2,
+            router_topk=2,
+            moe_routing_distribution_type="balanced",
+            moe_routing_seed=17,
+        ),
+        ClusterType.DECODE: SimpleNamespace(
+            model_config=model_config,
+            moe_expert_parallel_size=2,
+            moe_tensor_parallel_size=2,
+            router_topk=2,
+            moe_routing_distribution_type="balanced",
+            moe_routing_seed=17,
+        ),
+    }
+    cluster_config = SimpleNamespace(
+        prefill_replica_config=role_configs[ClusterType.PREFILL],
+        decode_replica_config=role_configs[ClusterType.DECODE],
+        decode_attn_replica_config=None,
+        decode_ffn_replica_config=None,
+        replica_config=representative_config,
+        num_replicas=1,
+    )
+    role_to_config_attribute = {
+        ClusterType.PREFILL: "prefill_replica_config",
+        ClusterType.DECODE_FFN: "decode_ffn_replica_config",
+        ClusterType.DECODE: "decode_replica_config",
+    }
+    routing_calls = []
+
+    def fake_parent_init(self, _predictor_config, replica_config, *_args, **_kwargs):
+        self._replica_config = replica_config
+        self._model_config = model_config
+
+    def fake_get_cluster_replica_config(self, role):
+        attribute = role_to_config_attribute[role]
+        return getattr(cluster_config, attribute, None)
+
+    def fake_simulate_and_store_routing(self, role):
+        routing_calls.append(role)
+        return {role.name: {"sentinel": role.value}}
+
+    monkeypatch.setattr(SklearnMoEExecutionTimePredictor, "__init__", fake_parent_init)
+    monkeypatch.setattr(
+        SklearnDisaggregationExecutionTimePredictor,
+        "_get_cluster_replica_config",
+        fake_get_cluster_replica_config,
+    )
+    monkeypatch.setattr(
+        SklearnDisaggregationExecutionTimePredictor,
+        "_simulate_and_store_routing",
+        fake_simulate_and_store_routing,
+    )
+    monkeypatch.setattr(
+        SklearnMoEExecutionTimePredictor,
+        "_emit_routing_details_snapshot",
+        staticmethod(lambda *_args, **_kwargs: None),
+    )
+
+    predictor = _DummyDisaggregationPredictor(
+        predictor_config=SimpleNamespace(),
+        replica_config=representative_config,
+        replica_scheduler_config=SimpleNamespace(),
+        metrics_config=SimpleNamespace(),
+        cluster_config=cluster_config,
+        cluster_type=None,
+    )
+
+    assert set(routing_calls) == {ClusterType.PREFILL, ClusterType.DECODE}
+    assert predictor._prefill_routing_details == {
+        ClusterType.PREFILL.name: {"sentinel": ClusterType.PREFILL.value}
+    }
+    assert predictor._decode_routing_details == {
+        ClusterType.DECODE.name: {"sentinel": ClusterType.DECODE.value}
+    }
+    assert predictor._decode_ffn_routing_details is None
+
+
+def test_disaggregation_pd_af_aggregate_materializes_only_available_routed_roles(
+    monkeypatch,
+) -> None:
+    """A PD-AF aggregate must exclude attention and unified-DECODE roles."""
+    model_config = SimpleNamespace(is_moe=True)
+
+    def role_config() -> SimpleNamespace:
+        return SimpleNamespace(
+            model_config=model_config,
+            moe_expert_parallel_size=2,
+            moe_tensor_parallel_size=2,
+            router_topk=2,
+            moe_routing_distribution_type="balanced",
+            moe_routing_seed=17,
+        )
+
+    representative_config = role_config()
+    role_configs = {
+        ClusterType.PREFILL: role_config(),
+        ClusterType.DECODE_ATTN: role_config(),
+        ClusterType.DECODE_FFN: role_config(),
+    }
+    cluster_config = SimpleNamespace(
+        prefill_replica_config=role_configs[ClusterType.PREFILL],
+        decode_attn_replica_config=role_configs[ClusterType.DECODE_ATTN],
+        decode_ffn_replica_config=role_configs[ClusterType.DECODE_FFN],
+        decode_replica_config=None,
+        replica_config=representative_config,
+        num_replicas=1,
+    )
+    role_to_config_attribute = {
+        ClusterType.PREFILL: "prefill_replica_config",
+        ClusterType.DECODE_FFN: "decode_ffn_replica_config",
+        ClusterType.DECODE: "decode_replica_config",
+    }
+    routing_calls = []
+
+    def fake_parent_init(self, _predictor_config, replica_config, *_args, **_kwargs):
+        self._replica_config = replica_config
+        self._model_config = model_config
+
+    def fake_get_cluster_replica_config(self, role):
+        attribute = role_to_config_attribute[role]
+        return getattr(cluster_config, attribute, None)
+
+    def fake_simulate_and_store_routing(self, role):
+        routing_calls.append(role)
+        return {role.name: {"sentinel": role.value}}
+
+    monkeypatch.setattr(SklearnMoEExecutionTimePredictor, "__init__", fake_parent_init)
+    monkeypatch.setattr(
+        SklearnDisaggregationExecutionTimePredictor,
+        "_get_cluster_replica_config",
+        fake_get_cluster_replica_config,
+    )
+    monkeypatch.setattr(
+        SklearnDisaggregationExecutionTimePredictor,
+        "_simulate_and_store_routing",
+        fake_simulate_and_store_routing,
+    )
+    monkeypatch.setattr(
+        SklearnMoEExecutionTimePredictor,
+        "_emit_routing_details_snapshot",
+        staticmethod(lambda *_args, **_kwargs: None),
+    )
+
+    predictor = _DummyDisaggregationPredictor(
+        predictor_config=SimpleNamespace(),
+        replica_config=representative_config,
+        replica_scheduler_config=SimpleNamespace(),
+        metrics_config=SimpleNamespace(),
+        cluster_config=cluster_config,
+        cluster_type=None,
+    )
+
+    assert set(routing_calls) == {ClusterType.PREFILL, ClusterType.DECODE_FFN}
+    assert predictor._prefill_routing_details == {
+        ClusterType.PREFILL.name: {"sentinel": ClusterType.PREFILL.value}
+    }
+    assert predictor._decode_ffn_routing_details == {
+        ClusterType.DECODE_FFN.name: {"sentinel": ClusterType.DECODE_FFN.value}
+    }
+    assert predictor._decode_routing_details is None
 
 
 def test_dummy_decode_attn_residual_skip_uses_profile_capability_not_legacy_identity() -> None:
@@ -90,6 +420,120 @@ def test_dummy_decode_ffn_tp_collectives_use_profile_capability_not_legacy_ident
     # no empirical stage correction is applied.
     assert execution_time.moe_tensor_parallel_allgather_time == 10.0
     assert execution_time.share_expert_tensor_parallel_allreduce_time == 10.0
+
+
+@pytest.mark.parametrize("cluster_type", (ClusterType.PREFILL, ClusterType.DECODE))
+def test_public_dummy_attention_only_zeroes_shared_domain_ffn_components(
+    cluster_type: ClusterType,
+) -> None:
+    """Attention-only public probes must not retain disaggregation FFN timing."""
+    predictor = _dummy_predictor(_ProfileOnlyStep3ModelConfig())
+    predictor._enable_dummy_mode = True
+    predictor._cluster_type = cluster_type
+    predictor._moe_ep_size = 2
+    predictor._router_topk = 2
+    predictor._replica_config = SimpleNamespace(
+        moe_expert_parallel_size=2,
+        num_pipeline_stages=1,
+    )
+    predictor._log_architecture_attention_shape = lambda _batch: None
+    batch = SimpleNamespace(
+        id=7,
+        size=1,
+        num_tokens=4,
+        total_num_tokens=4,
+        requests=[],
+    )
+
+    execution_time = predictor.predict_stage_execution_time(
+        batch=batch,
+        stage_id=0,
+        cluster_type=cluster_type,
+        num_layers=1,
+        layer_id=0,
+        include_ffn=False,
+    )
+
+    assert execution_time.get_single_layer_attention_time() > 0.0
+    assert execution_time.get_single_layer_post_attention_time() == pytest.approx(0.0)
+    assert execution_time._is_moe is False
+    assert execution_time._mlp_norm_time == pytest.approx(0.0)
+    assert execution_time._add_time == pytest.approx(0.0)
+    assert execution_time._add_attn_residual_time == pytest.approx(0.0)
+    assert execution_time._add_ffn_residual_time == pytest.approx(0.0)
+    assert execution_time._mlp_layer_up_proj_execution_time == pytest.approx(0.0)
+    assert execution_time._mlp_layer_down_proj_execution_time == pytest.approx(0.0)
+    assert execution_time._mlp_layer_act_execution_time == pytest.approx(0.0)
+    assert execution_time._moe_tensor_parallel_allreduce_time == pytest.approx(0.0)
+    assert execution_time._expert_parallel_communication_time == pytest.approx(0.0)
+    assert execution_time._moe_gating_time == pytest.approx(0.0)
+    assert execution_time._moe_shuffling_time == pytest.approx(0.0)
+    assert execution_time._moe_grouped_gemm_time == pytest.approx(0.0)
+    assert execution_time._share_expert_up_proj_time == pytest.approx(0.0)
+    assert execution_time._share_expert_down_proj_time == pytest.approx(0.0)
+    assert execution_time._share_expert_act_time == pytest.approx(0.0)
+    assert execution_time.moe_operator_times is None
+
+
+def test_public_dummy_attention_only_rejects_decode_ffn_role() -> None:
+    """Attention-only prediction must reject the FFN-only cluster in dummy mode."""
+    predictor = _dummy_predictor(_ProfileOnlyStep3ModelConfig())
+    predictor._enable_dummy_mode = True
+    predictor._cluster_type = ClusterType.DECODE_FFN
+    predictor._log_architecture_attention_shape = lambda _batch: None
+    batch = SimpleNamespace(
+        id=7,
+        size=1,
+        num_tokens=4,
+        total_num_tokens=4,
+        requests=[],
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Attention-only prediction is invalid for the DECODE_FFN cluster",
+    ):
+        predictor.predict_stage_execution_time(
+            batch=batch,
+            stage_id=0,
+            cluster_type=ClusterType.DECODE_FFN,
+            num_layers=1,
+            layer_id=0,
+            include_ffn=False,
+        )
+
+
+def test_dummy_helper_rejects_attention_only_decode_ffn_role() -> None:
+    """The dummy owner must enforce the same role boundary as its public caller."""
+    predictor = _dummy_predictor(_ProfileOnlyStep3ModelConfig())
+
+    with pytest.raises(
+        ValueError,
+        match="Attention-only prediction is invalid for the DECODE_FFN cluster",
+    ):
+        predictor._get_dummy_execution_time_for_cluster(
+            batch=SimpleNamespace(),
+            pipeline_stage=0,
+            cluster_type=ClusterType.DECODE_FFN,
+            include_ffn=False,
+        )
+
+
+def test_dummy_helper_rejects_moe_selector_when_ffn_disabled() -> None:
+    """An attention-only dummy probe cannot carry a routed-MoE selector."""
+    predictor = _dummy_predictor(_ProfileOnlyStep3ModelConfig())
+
+    with pytest.raises(
+        ValueError,
+        match="include_moe must be None for an attention-only stage probe",
+    ):
+        predictor._get_dummy_execution_time_for_cluster(
+            batch=SimpleNamespace(),
+            pipeline_stage=0,
+            cluster_type=ClusterType.PREFILL,
+            include_ffn=False,
+            include_moe=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -146,6 +590,10 @@ def test_dummy_shared_domain_post_attention_zeroes_attention_components(
 ) -> None:
     predictor = _dummy_predictor(_ProfileOnlyStep3ModelConfig())
 
+    lane_workload = _lane_workload(
+        ep_id=0,
+        local_token_counts=(4, 0),
+    )
     lane = EPBatchGroup(
         requests=[batch_request],
         num_tokens=[4],
@@ -153,7 +601,7 @@ def test_dummy_shared_domain_post_attention_zeroes_attention_components(
         ep_id=0,
         time=0.0,
         source_batch_ids=[7],
-        per_expert_tokens={0: 4, 1: 0},
+        lane_workload=lane_workload,
         cluster_type=cluster_type,
         is_moe=True,
     )
@@ -182,18 +630,27 @@ def test_dummy_layer_scaling_preserves_named_tp_components(
     predictor._enable_dummy_mode = True
     predictor._num_layers_per_pipeline_stage = 32
     predictor._log_architecture_attention_shape = lambda _batch: None
+    # The public one-layer call is a concrete routed EP=2 operation and must
+    # carry the canonical physical lane descriptor before dummy timing runs.
+    batch = SimpleNamespace(
+        lane_workload=_lane_workload(
+            ep_id=0,
+            local_token_counts=(4, 0),
+        )
+    )
 
     full_execution_time = predictor.predict_stage_execution_time(
-        batch=SimpleNamespace(),
+        batch=batch,
         stage_id=0,
         cluster_type=cluster_type,
         num_layers=32,
     )
     execution_time = predictor.predict_stage_execution_time(
-        batch=SimpleNamespace(),
+        batch=batch,
         stage_id=0,
         cluster_type=cluster_type,
         num_layers=1,
+        include_moe=True,
     )
     full_communication_time = full_execution_time.communication_time_component
     communication_time = execution_time.communication_time_component
@@ -298,12 +755,16 @@ def test_common_dummy_moe_predictor_zero_lane_has_no_routed_compute() -> None:
     predictor._model_config = _ProfileOnlyStep3ModelConfig()
     predictor._replica_config = SimpleNamespace(
         attn_tensor_parallel_size=1,
-        moe_tensor_parallel_size=1,
+        moe_tensor_parallel_size=2,
         moe_expert_parallel_size=2,
         attn_dp=1,
         num_pipeline_stages=1,
     )
 
+    lane_workload = _lane_workload(
+        ep_id=1,
+        local_token_counts=(0, 0),
+    )
     lane = EPBatchGroup(
         requests=[Request(0.0, 0, 0)],
         num_tokens=[0],
@@ -311,17 +772,18 @@ def test_common_dummy_moe_predictor_zero_lane_has_no_routed_compute() -> None:
         ep_id=1,
         time=0.0,
         source_batch_ids=[7],
-        per_expert_tokens={0: 0, 1: 0},
+        lane_workload=lane_workload,
         cluster_type=ClusterType.MONOLITHIC,
         is_moe=True,
     )
 
     execution_time = predictor._get_dummy_execution_time(lane, pipeline_stage=0)
 
-    assert execution_time.get_single_layer_moe_post_dispatch_compute_time() == 0.0
+    assert execution_time.get_single_layer_moe_post_dispatch_compute_time() == pytest.approx(2.0)
     assert execution_time.get_single_layer_moe_pre_dispatch_time() > 0.0
     assert execution_time.get_single_layer_moe_dispatch_time() > 0.0
     assert execution_time.get_single_layer_moe_combine_time() > 0.0
+    assert execution_time._moe_tensor_parallel_allreduce_time == pytest.approx(2.0)
 
 
 def test_common_dummy_moe_predictor_zero_explicit_allocation_has_no_routed_compute() -> None:
@@ -331,17 +793,22 @@ def test_common_dummy_moe_predictor_zero_explicit_allocation_has_no_routed_compu
     )
     predictor._enable_dummy_mode = True
     predictor._dummy_execution_time = 2.0
+    predictor._moe_ep_size = 2
     predictor._model_config = _ProfileOnlyStep3ModelConfig()
 
+    lane_workload = _lane_workload(
+        ep_id=0,
+        local_token_counts=(0, 0),
+    )
     moe_time = predictor.predict_moe_layer_time(
         batch_or_group=SimpleNamespace(),
         layer_id=0,
         cluster_type=ClusterType.MONOLITHIC,
-        per_expert_tokens={0: 0, 1: 0},
+        lane_workload=lane_workload,
     )
 
     assert moe_time.moe_grouped_gemm_time == 0.0
-    assert moe_time.moe_shuffling_time > 0.0
+    assert moe_time.moe_shuffling_time == 0.0
     assert moe_time.operator_times is not None
     assert moe_time.operator_times.get_required_time("moe_grouped_gemm") == 0.0
 
@@ -355,6 +822,10 @@ def test_disaggregation_dummy_zero_lane_has_no_routed_compute(
 ) -> None:
     """All disaggregation MoE roles must preserve the zero-routed contract."""
     predictor = _dummy_predictor(_ProfileOnlyStep3ModelConfig())
+    lane_workload = _lane_workload(
+        ep_id=1,
+        local_token_counts=(0, 0),
+    )
     lane = EPBatchGroup(
         requests=[Request(0.0, 0, 0)],
         num_tokens=[0],
@@ -362,7 +833,7 @@ def test_disaggregation_dummy_zero_lane_has_no_routed_compute(
         ep_id=1,
         time=0.0,
         source_batch_ids=[7],
-        per_expert_tokens={0: 0, 1: 0},
+        lane_workload=lane_workload,
         cluster_type=cluster_type,
         is_moe=True,
     )
@@ -374,7 +845,9 @@ def test_disaggregation_dummy_zero_lane_has_no_routed_compute(
         include_attention=cluster_type is not ClusterType.DECODE_FFN,
     )
 
-    assert execution_time.get_single_layer_moe_post_dispatch_compute_time() == 0.0
+    assert execution_time.get_single_layer_moe_post_dispatch_compute_time() == pytest.approx(10.0)
+    assert execution_time.moe_shuffling_time == 0.0
+    assert execution_time._moe_tensor_parallel_allreduce_time == pytest.approx(10.0)
     assert execution_time.get_single_layer_moe_pre_dispatch_time() > 0.0
     assert execution_time.get_single_layer_moe_dispatch_time() > 0.0
     assert execution_time.get_single_layer_moe_combine_time() > 0.0
@@ -535,14 +1008,21 @@ def test_disaggregation_moe_live_paths_use_registered_role_context(
         "frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor.get_quantization_manager",
         lambda: quantization_manager,
     )
+    lane_workload = _lane_workload(
+        ep_id=1,
+        local_token_counts=(0, 3),
+    )
+    # EPBatchGroup.num_tokens is the physical lane-local routed width.  The
+    # original request may be wider, but the attached descriptor owns this
+    # lane's post-routing token count.
     lane = EPBatchGroup(
         requests=[Request(0.0, 100, 0)],
-        num_tokens=[100],
+        num_tokens=[3],
         replica_id=0,
         ep_id=1,
         time=0.0,
         source_batch_ids=[7],
-        per_expert_tokens={0: 0, 1: 3},
+        lane_workload=lane_workload,
         cluster_type=cluster_type,
         is_moe=True,
     )
@@ -733,7 +1213,10 @@ def test_pdd_shared_domain_post_attention_prediction_skips_attention_lookup(
     )
     batch = SimpleNamespace(
         id=7,
-        per_expert_tokens={0: 4, 1: 0},
+        lane_workload=_lane_workload(
+            ep_id=0,
+            local_token_counts=(4, 0),
+        ),
         total_num_tokens=4,
         requests=[SimpleNamespace(id=7)],
     )

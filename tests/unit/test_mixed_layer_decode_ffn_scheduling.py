@@ -1687,6 +1687,19 @@ def _trained_predictor(model_config, *, isolate_branch: bool = True):
         lambda _cluster_type: model_config.get_model_architecture_profile()
     )
     predictor._is_zero_token_decode_ffn_ep_barrier = lambda _batch, _cluster: False
+    # The production DECODE_FFN MoE path receives a physical lane from the
+    # scheduler.  Keep this branch-classification fixture on that same typed
+    # boundary instead of making the predictor infer a lane from a synthetic
+    # batch shape.
+    predictor._resolve_layer_lane_workload = lambda *_args, **_kwargs: EPLaneWorkload(
+        ep_id=0,
+        moe_expert_parallel_size=1,
+        total_expert_num=48,
+        owned_expert_ids=tuple(range(48)),
+        local_token_counts=(0,) * 48,
+        routed_token_count=0,
+        router_topk=1,
+    )
     predictor._select_measurement_type_for_batch = lambda _batch: "decode"
     predictor._require_predictions_for_measurement_type = lambda *_args: None
     predictor._activate_measurement_type = lambda *_args: None
@@ -1857,10 +1870,6 @@ def test_trained_moe_decode_ffn_excludes_post_attention_layernorm(
     assert execution_time.mlp_norm_time == 0.0
 
 
-@pytest.mark.xfail(
-    strict=False,
-    reason="D7 Option B: reference dummy predictor classifies mixed layers at model level",
-)
 def test_dummy_decode_ffn_predictor_reproducer_for_mixed_dense_layer(
     mixed_model_config,
 ) -> None:
@@ -1874,6 +1883,8 @@ def test_dummy_decode_ffn_predictor_reproducer_for_mixed_dense_layer(
         model_config=mixed_model_config,
         attn_tensor_parallel_size=1,
         moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=1,
+        total_expert_num=48,
         num_pipeline_stages=1,
     )
 
@@ -1886,3 +1897,79 @@ def test_dummy_decode_ffn_predictor_reproducer_for_mixed_dense_layer(
     )
 
     assert execution_time._is_moe is False
+    assert execution_time._moe_gating_time == pytest.approx(0.0)
+    assert execution_time._moe_shuffling_time == pytest.approx(0.0)
+    assert execution_time._moe_grouped_gemm_time == pytest.approx(0.0)
+    assert execution_time._expert_parallel_communication_time == pytest.approx(0.0)
+    assert execution_time._mlp_layer_up_proj_execution_time > 0.0
+    assert execution_time._mlp_layer_down_proj_execution_time > 0.0
+    assert execution_time._mlp_layer_act_execution_time > 0.0
+    assert execution_time.moe_operator_times is None
+
+
+def test_dummy_decode_ffn_dense_layer_uses_ffn_tp_domain(
+    mixed_model_config,
+) -> None:
+    """Dense FFN layers retain the DECODE_FFN role's configured TP owner."""
+
+    predictor = _ConcreteDisaggregationPredictor.__new__(
+        _ConcreteDisaggregationPredictor
+    )
+    predictor._enable_dummy_mode = True
+    predictor._dummy_execution_time = 10.0
+    predictor._num_layers_per_pipeline_stage = 1
+    predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
+        model_config=mixed_model_config,
+        attn_tensor_parallel_size=1,
+        moe_tensor_parallel_size=2,
+        moe_expert_parallel_size=1,
+        total_expert_num=48,
+        num_pipeline_stages=1,
+    )
+
+    execution_time = predictor.predict_stage_execution_time(
+        SimpleNamespace(),
+        stage_id=0,
+        cluster_type=ClusterType.DECODE_FFN,
+        num_layers=1,
+        layer_id=3,
+    )
+
+    assert execution_time._is_moe is False
+    assert execution_time._moe_tensor_parallel_allreduce_time == pytest.approx(10.0)
+    assert execution_time.communication_time_component.total_time() == pytest.approx(
+        10.0
+    )
+    assert execution_time._moe_gating_time == pytest.approx(0.0)
+    assert execution_time._moe_grouped_gemm_time == pytest.approx(0.0)
+
+
+def test_dummy_decode_ffn_predictor_preserves_moe_layer_semantics(
+    mixed_model_config,
+) -> None:
+    predictor = _ConcreteDisaggregationPredictor.__new__(
+        _ConcreteDisaggregationPredictor
+    )
+    predictor._enable_dummy_mode = True
+    predictor._dummy_execution_time = 10.0
+    predictor._num_layers_per_pipeline_stage = 1
+    predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
+        model_config=mixed_model_config,
+        attn_tensor_parallel_size=1,
+        moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=1,
+        total_expert_num=48,
+        num_pipeline_stages=1,
+    )
+
+    execution_time = predictor.predict_stage_execution_time(
+        SimpleNamespace(),
+        stage_id=0,
+        cluster_type=ClusterType.DECODE_FFN,
+        num_layers=1,
+        layer_id=4,
+    )
+
+    assert execution_time._is_moe is True
+    assert execution_time._moe_gating_time > 0.0
+    assert execution_time._moe_grouped_gemm_time > 0.0

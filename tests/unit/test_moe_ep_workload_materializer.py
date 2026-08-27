@@ -166,6 +166,28 @@ def test_resolver_requires_exact_replica_and_global_layer_keys() -> None:
 
 
 @pytest.mark.parametrize(
+    ("target_replica_id", "global_layer_id", "message"),
+    [
+        (False, 4, "target_replica_id"),
+        (0.0, 4, "target_replica_id"),
+        (0, True, "global_layer_id"),
+        (0, 4.0, "global_layer_id"),
+    ],
+)
+def test_resolver_rejects_bool_and_numeric_identity_aliases(
+    target_replica_id: object,
+    global_layer_id: object,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        resolve_routing_details(
+            {0: {4: {0: 1.0, 1: 1.0}}},
+            target_replica_id,
+            global_layer_id,
+        )
+
+
+@pytest.mark.parametrize(
     "kwargs, message",
     [
         ({"routing_token_count": -1}, "routing_token_count"),
@@ -238,3 +260,88 @@ def test_materializer_rejects_non_contiguous_or_incomplete_ownership() -> None:
             moe_expert_parallel_size=2,
             expert_to_ep={0: 0, 1: 0, 2: 1},
         )
+
+
+def _direct_layer_workload_kwargs() -> dict[str, object]:
+    return {
+        "target_replica_id": 0,
+        "global_layer_id": 3,
+        "routing_token_count": 3,
+        "router_topk": 2,
+        "total_routed_assignments": 6,
+        "global_per_expert_tokens": {0: 1, 1: 1, 2: 2, 3: 2},
+        "per_ep_per_expert_tokens": {
+            0: {0: 1, 1: 1},
+            1: {2: 2, 3: 2},
+        },
+        "per_ep_routed_tokens": {0: 2, 1: 4},
+        "participant_ep_ids": (0, 1),
+        "expert_to_ep": {0: 0, 1: 0, 2: 1, 3: 1},
+    }
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("total_routed_assignments", 5, "total_routed_assignments"),
+        ("global_per_expert_tokens", {0: 1, 2: 5}, "global expert"),
+        ("per_ep_routed_tokens", {0: 1, 1: 4}, "per-EP routed token"),
+    ],
+)
+def test_direct_layer_workload_rejects_inconsistent_aggregate_fields(
+    field: str,
+    value: object,
+    message: str,
+) -> None:
+    kwargs = _direct_layer_workload_kwargs()
+    kwargs[field] = value
+
+    with pytest.raises(ValueError, match=message):
+        LayerEPWorkload(**kwargs)
+
+
+def test_direct_layer_workload_rejects_noncanonical_participant_topology() -> None:
+    kwargs = _direct_layer_workload_kwargs()
+    kwargs["participant_ep_ids"] = (0, 2)
+
+    with pytest.raises(ValueError, match="participant_ep_ids"):
+        LayerEPWorkload(**kwargs)
+
+
+def test_direct_layer_workload_rejects_out_of_range_lane_expert_id() -> None:
+    kwargs = _direct_layer_workload_kwargs()
+    kwargs["per_ep_per_expert_tokens"] = {
+        0: {0: 1, 99: 0},
+        1: {2: 2, 3: 2},
+    }
+
+    with pytest.raises(ValueError, match="global expert domain"):
+        LayerEPWorkload(**kwargs)
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("expert_to_ep", {False: 0, 1: 0, 2: 1, 3: 1}),
+        ("expert_to_ep", {0.0: 0, 1: 0, 2: 1, 3: 1}),
+        (
+            "per_ep_per_expert_tokens",
+            {False: {0: 1, 1: 1}, 1: {2: 2, 3: 2}},
+        ),
+        (
+            "per_ep_per_expert_tokens",
+            {0.0: {0: 1, 1: 1}, 1: {2: 2, 3: 2}},
+        ),
+        ("per_ep_routed_tokens", {False: 2, 1: 4}),
+        ("per_ep_routed_tokens", {0.0: 2, 1: 4}),
+    ],
+)
+def test_direct_layer_workload_rejects_non_exact_outer_mapping_keys(
+    field: str,
+    value: object,
+) -> None:
+    kwargs = _direct_layer_workload_kwargs()
+    kwargs[field] = value
+
+    with pytest.raises(ValueError, match="exact"):
+        LayerEPWorkload(**kwargs)

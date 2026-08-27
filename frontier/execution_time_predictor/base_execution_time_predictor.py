@@ -14,6 +14,7 @@ from frontier.logger import init_logger
 if TYPE_CHECKING:
     from frontier.entities.time_components import AttentionTime, MLPTime, MoETime
     from frontier.entities import EPBatchGroup
+    from frontier.moe_ep_workload import EPLaneWorkload
 
 logger = init_logger(__name__)
 
@@ -238,12 +239,12 @@ class BaseExecutionTimePredictor(ABC):
         batch_or_group: "Batch | EPBatchGroup",
         layer_id: int,
         cluster_type: ClusterType,
-        per_expert_tokens: Optional[Dict[int, int]] = None
+        lane_workload: "EPLaneWorkload | None" = None,
+        ep_size: Optional[int] = None,
+        router_topk: Optional[int] = None,
     ) -> "MoETime":
         """
         Predict MoE execution time for a single transformer layer.
-
-        Phase 3 Enhancement: Parameter renamed from expert_allocation to per_expert_tokens.
 
         Only applicable for MoE models. Mutually exclusive with predict_mlp_layer_time.
 
@@ -251,10 +252,14 @@ class BaseExecutionTimePredictor(ABC):
             batch_or_group: Batch or EPBatchGroup being processed
             layer_id: Layer index (0-based, required for routing lookup)
             cluster_type: Type of cluster (PREFILL or DECODE_FFN)
-            per_expert_tokens: Optional dict {expert_id: num_tokens} for grouped GEMM.
-                              When provided (from EPBatchGroup), uses actual expert allocation.
-                              When None, falls back to routing simulation.
-                              Validates token conservation when provided.
+            lane_workload: Optional immutable physical EP-lane descriptor. When
+                           omitted, the implementation resolves it from the batch
+                           entity at the scheduler boundary.
+            ep_size: Optional active role EP size for topology admission. When
+                     omitted, the implementation uses its configured topology.
+            router_topk: Optional active role router top-k for topology admission.
+                         When omitted, the implementation uses its configured
+                         topology.
 
         Returns:
             MoETime component with all MoE-related times

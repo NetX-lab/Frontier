@@ -26,6 +26,7 @@ from frontier.moe_ep_workload import (
     LayerEPWorkload,
     build_contiguous_expert_ownership,
     materialize_layer_ep_workload,
+    resolve_ep_lane_workload,
     resolve_routing_details,
 )
 from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
@@ -2077,7 +2078,7 @@ class BaseClusterScheduler(ABC):
     @staticmethod
     def _validate_token_conservation(
         input_tokens: int,
-        per_expert_tokens: Dict[int, int],
+        lane_workload: EPLaneWorkload,
         context: str,
     ) -> None:
         """Validate exact conservation for one already-materialized EP subset.
@@ -2087,13 +2088,15 @@ class BaseClusterScheduler(ABC):
         malformed lane workload cannot enter the event queue.  It intentionally
         does not allocate or rebalance tokens.
         """
-        total_expert_tokens = sum(per_expert_tokens.values())
+        lane_workload = resolve_ep_lane_workload(lane_workload, required=True)
+        assert lane_workload is not None
+        total_expert_tokens = lane_workload.routed_token_count
         if total_expert_tokens != input_tokens:
             raise ValueError(
                 f"Token conservation violated in {context}: "
                 f"Input tokens={input_tokens}, Expert tokens={total_expert_tokens}, "
                 f"Difference={input_tokens - total_expert_tokens}, "
-                f"Per-expert allocation={per_expert_tokens}"
+                f"Per-expert allocation={dict(lane_workload.per_expert_tokens)}"
             )
 
 
@@ -2367,12 +2370,11 @@ class BaseClusterScheduler(ABC):
                 f"descriptor: expected={lane_workload.owned_expert_ids}, "
                 f"got={tuple(expert_global_ids)}"
             )
-        experts_tokens_mapping = dict(lane_workload.per_expert_tokens)
         ep_batch_group_total_num_token = lane_workload.routed_token_count
 
         self._validate_token_conservation(
             input_tokens=ep_batch_group_total_num_token,
-            per_expert_tokens=experts_tokens_mapping,
+            lane_workload=lane_workload,
             context=f"_prepare_ep_batch_group_plan (cluster={self._cluster_type.name}, "
                    f"replica={replica_id}, ep_id={ep_id}, layer={layer_global_id})"
         )
@@ -2472,11 +2474,27 @@ class BaseClusterScheduler(ABC):
         hidden_size = int(self._config.replica_config.model_config.embedding_dim)
         local_tokens_by_ep_id = {}
         for lane_ep_id, ep_batch in ep_batches.items():
-            local_tokens = int(getattr(ep_batch, "total_num_tokens", 0))
-            if local_tokens < 0:
+            lane_workload = resolve_ep_lane_workload(ep_batch, required=True)
+            assert lane_workload is not None
+            if lane_workload.ep_id != lane_ep_id:
                 raise ValueError(
-                    "EP batch has negative local token count for Step3 all-to-all: "
-                    f"ep_id={lane_ep_id}, total_num_tokens={local_tokens}"
+                    "EP batch lane key must match its EPLaneWorkload ep_id: "
+                    f"key={lane_ep_id!r}, descriptor={lane_workload.ep_id!r}"
+                )
+            entity_tokens = getattr(ep_batch, "total_num_tokens", None)
+            if type(entity_tokens) is not int or entity_tokens < 0:
+                raise ValueError(
+                    "EP batch total_num_tokens must be an exact non-negative int "
+                    "for Step3 all-to-all: "
+                    f"ep_id={lane_ep_id}, total_num_tokens={entity_tokens!r}"
+                )
+            local_tokens = lane_workload.routed_token_count
+            if entity_tokens != local_tokens:
+                raise ValueError(
+                    "EP batch total_num_tokens must equal its lane routed-token "
+                    "count for Step3 all-to-all: "
+                    f"ep_id={lane_ep_id}, total_num_tokens={entity_tokens}, "
+                    f"routed_token_count={local_tokens}"
                 )
             local_tokens_by_ep_id[int(lane_ep_id)] = local_tokens
 
@@ -2802,7 +2820,10 @@ class BaseClusterScheduler(ABC):
             router_topk=trace_router_topk,
             total_routed_assignments=trace_total_routed_assignments,
             per_ep_routed_tokens={
-                int(ep_id): sum(getattr(ep_batch, "per_expert_tokens", {}).values())
+                int(ep_id): resolve_ep_lane_workload(
+                    ep_batch,
+                    required=True,
+                ).routed_token_count
                 for ep_id, ep_batch in prospective_batches.items()
             },
             trace_identity=trace_identity,
@@ -2982,18 +3003,15 @@ class BaseClusterScheduler(ABC):
                 "[DEBUG] All EP replicas arrived! Creating EPAllToAllCombineCollectiveEvent"
             )
 
-            # Phase 1: Migrated to new unified API
-            # Calculate data_size_bytes for EP combine based on batch information
-            # Use the first batch as representative (all EP batches should have similar size)
-            representative_batch = list(prospective_batches.values())[0]
-            total_tokens = representative_batch.total_num_tokens
-
-            # Get model embedding dimension from replica config
             model_config = self._config.replica_config.model_config
-            hidden_size = model_config.embedding_dim
-
-            # Calculate data size: tokens × hidden_size × 2 bytes (float16)
-            data_size_bytes = total_tokens * hidden_size * 2
+            # Admit every physical lane before resolving the architecture
+            # collective or invoking any communication predictor/backend.
+            (
+                lane_data_size_bytes,
+                local_tokens_by_ep_id,
+                max_local_tokens,
+                lane_hidden_size,
+            ) = self._get_step3_ep_alltoall_payload_bytes(prospective_batches)
 
             ep_collective_kind = resolve_ep_collective_kind(
                 model_config,
@@ -3001,17 +3019,10 @@ class BaseClusterScheduler(ABC):
                 expected_ep_size,
             )
             if ep_collective_kind is ExpertParallelCollective.ALLTOALL:
-                (
-                    data_size_bytes,
-                    local_tokens_by_ep_id,
-                    max_local_tokens,
-                    hidden_size,
-                ) = self._get_step3_ep_alltoall_payload_bytes(
-                    prospective_batches
-                )
+                data_size_bytes = lane_data_size_bytes
                 payload_description = (
                     f"max_local_tokens={max_local_tokens}, "
-                    f"hidden_size={hidden_size}, "
+                    f"hidden_size={lane_hidden_size}, "
                     f"local_tokens_by_ep_id={local_tokens_by_ep_id}"
                 )
                 # EP alltoall combine phase
@@ -3022,6 +3033,10 @@ class BaseClusterScheduler(ABC):
                     comm_domain="EP",
                 )
             else:
+                representative_batch = next(iter(prospective_batches.values()))
+                total_tokens = representative_batch.total_num_tokens
+                hidden_size = int(model_config.embedding_dim)
+                data_size_bytes = total_tokens * hidden_size * 2
                 payload_description = (
                     f"{total_tokens} tokens × {hidden_size} hidden_size"
                 )
@@ -3112,25 +3127,9 @@ class BaseClusterScheduler(ABC):
                     f"execution_time={execution_time!r}"
                 )
 
-            per_expert_tokens = getattr(ep_batch, "per_expert_tokens", None)
-            if not isinstance(per_expert_tokens, dict):
-                raise ValueError(
-                    "EP batch must expose per_expert_tokens when resolving "
-                    f"execution_time: ep_id={ep_id}"
-                )
-            routed_tokens = 0
-            for expert_id, token_count in per_expert_tokens.items():
-                if (
-                    not isinstance(token_count, int)
-                    or isinstance(token_count, bool)
-                    or token_count < 0
-                ):
-                    raise ValueError(
-                        "EP batch per_expert_tokens must contain exact "
-                        f"non-negative ints: ep_id={ep_id}, expert_id={expert_id}, "
-                        f"token_count={token_count!r}"
-                    )
-                routed_tokens += token_count
+            lane_workload = resolve_ep_lane_workload(ep_batch, required=True)
+            assert lane_workload is not None
+            routed_tokens = lane_workload.routed_token_count
 
             execution_time_value = float(execution_time)
             if execution_time_value == 0.0:
@@ -3298,25 +3297,25 @@ class BaseClusterScheduler(ABC):
         logger.info(f"[DEBUG] Retrieved {len(ep_batches)} EP batches from waiting room: "
                    f"ep_ids={list(ep_batches.keys())}")
 
-        # Phase 3 Task 2: Validate token conservation across EP batches
-        # In EP parallelism, each EP replica processes a SUBSET of experts for the SAME tokens
-        # The total_num_tokens in EPBatchGroup already includes the router_topk effect
-        # (calculated in _distribute_tokens_within_ep_replica as: original_tokens * router_topk * ratio)
-        # So we validate that per_expert_tokens sums to total_num_tokens (no additional multiplication)
+        # Validate each materialized physical lane before combining the wave.
+        # The descriptor owns the local routed-token domain; the entity's
+        # compatibility map remains an observability projection only.
         for ep_id, ep_batch in ep_batches.items():
-            if hasattr(ep_batch, 'per_expert_tokens') and ep_batch.per_expert_tokens:
-                # Each EP batch should conserve tokens independently
-                # NOTE: Do NOT multiply by router_topk here - total_num_tokens already accounts for it
-                expected_tokens = ep_batch.total_num_tokens
-                self._validate_token_conservation(
-                    input_tokens=expected_tokens,
-                    per_expert_tokens=ep_batch.per_expert_tokens,
-                    context=(
-                        f"EP AllToAll combine collective - EP batch (cluster={self._cluster_type.name}, "
-                        f"replica={replica_id}, stage={stage_id}, ep_id={ep_id}, batch_global_id={batch_global_id})"
-                    ),
-                )
-                logger.info(f"[TOKEN_CONSERVATION] Validated EP batch {ep_id}: {expected_tokens} tokens across {len(ep_batch.per_expert_tokens)} experts")
+            lane_workload = resolve_ep_lane_workload(ep_batch, required=True)
+            assert lane_workload is not None
+            expected_tokens = int(ep_batch.total_num_tokens)
+            self._validate_token_conservation(
+                input_tokens=expected_tokens,
+                lane_workload=lane_workload,
+                context=(
+                    f"EP AllToAll combine collective - EP batch (cluster={self._cluster_type.name}, "
+                    f"replica={replica_id}, stage={stage_id}, ep_id={ep_id}, batch_global_id={batch_global_id})"
+                ),
+            )
+            logger.info(
+                f"[TOKEN_CONSERVATION] Validated EP batch {ep_id}: "
+                f"{expected_tokens} tokens across {lane_workload.local_expert_width} experts"
+            )
 
         # Instead of aggregating the batch, pick raw batches from
         # _raw_batch_waiting_for_m2n_back using a canonical EP lane.

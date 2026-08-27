@@ -305,6 +305,7 @@ def _validate_prediction_constraints(
 if TYPE_CHECKING:
     from frontier.entities import EPBatchGroup
     from frontier.cc_backend import BaseCCBackend
+    from frontier.moe_ep_workload import EPLaneWorkload
 
 logger = init_logger(__name__)
 MIGRATION_HELP_COMMAND = (
@@ -5333,18 +5334,37 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                         for _ in active_indices
                     ],
                 )
-                terminal_execution_time = self.predict_stage_execution_time(
+                total_time_ms += self._predict_mtp_terminal_row_time_ms(
                     batch=terminal_batch,
                     stage_id=stage_id,
                     cluster_type=cluster_type,
                     num_layers=num_layers,
                     layer_id=layer_id,
                 )
-                total_time_ms += terminal_execution_time.total_time * 1e3
         finally:
             self._suppress_mtp_terminal_overshoot_overhead = previous_suppression
 
         return total_time_ms
+
+    def _predict_mtp_terminal_row_time_ms(
+        self,
+        *,
+        batch: Batch,
+        stage_id: int,
+        cluster_type: ClusterType,
+        num_layers: int,
+        layer_id: int,
+    ) -> float:
+        """Predict one terminal MTP row using the normal stage contract."""
+
+        execution_time = self.predict_stage_execution_time(
+            batch=batch,
+            stage_id=stage_id,
+            cluster_type=cluster_type,
+            num_layers=num_layers,
+            layer_id=layer_id,
+        )
+        return float(execution_time.total_time * 1e3)
 
     def _predict_mtp_decoder_layer_time_ms(
         self,
@@ -5979,6 +5999,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         self,
         operator: CommOperatorSpec,
         batch: Batch,
+        *,
+        lane_workload=None,
     ) -> float:
         """Predict an operator using this predictor's default communication context."""
 
@@ -5988,6 +6010,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             replica_config=self._replica_config,
             cluster_type=self._cluster_type,
             quantization_manager=get_quantization_manager(),
+            lane_workload=lane_workload,
         )
         return self._predict_comm_operator_with_context(operator, ctx)
 
@@ -7493,7 +7516,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         batch_or_group: "Batch | EPBatchGroup",
         layer_id: int,
         cluster_type: ClusterType,
-        per_expert_tokens: Optional[Dict[int, int]] = None,
+        lane_workload: "EPLaneWorkload | None" = None,
+        ep_size: Optional[int] = None,
+        router_topk: Optional[int] = None,
     ) -> MoETime:
         """
         Predict MoE execution time for a single transformer layer.
@@ -7502,6 +7527,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         This method is implemented in frontier/execution_time_predictor/sklearn_moe_execution_time_predictor.py module
 
         """
+        del ep_size, router_topk
         raise NotImplementedError(
             "MoE operations are not supported by SklearnExecutionTimePredictor. "
             "Use SklearnMoEExecutionTimePredictor for MoE models."
