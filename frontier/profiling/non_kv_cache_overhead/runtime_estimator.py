@@ -692,7 +692,7 @@ def _build_cache_key(
         int(model_config.mlp_hidden_dim),
         int(model_config.get_head_dim()),
         int(replica_config.attn_tensor_parallel_size),
-        int(getattr(replica_config, "attn_data_parallel_size", 1)),
+        int(getattr(replica_config, "attn_dp", 1)),
         int(getattr(replica_config, "moe_tensor_parallel_size", 1)),
         int(getattr(replica_config, "moe_expert_parallel_size", 1)),
         int(replica_config.num_pipeline_stages),
@@ -750,7 +750,7 @@ def _profile_non_kv_cache_overhead_bytes_uncached(
     ep_size = int(getattr(replica_config, "moe_expert_parallel_size", 1))
     if ep_size <= 0:
         ep_size = 1
-    dp_size = int(getattr(replica_config, "attn_data_parallel_size", 1))
+    dp_size = int(getattr(replica_config, "attn_dp", 1))
     if dp_size <= 0:
         dp_size = 1
     moe_tp_size = int(getattr(replica_config, "moe_tensor_parallel_size", 1))

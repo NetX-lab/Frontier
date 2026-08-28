@@ -23,6 +23,9 @@ class _ExecutionTime:
     def get_single_layer_attention_time(self) -> float:
         return 0.0
 
+    def get_single_layer_attention_scope_time(self) -> float:
+        return 0.0
+
 
 class _Predictor:
     def __init__(self, num_layers_per_pipeline_stage: int) -> None:
@@ -72,6 +75,10 @@ class _MetricsStore:
 
 
 class _DecodeSyncScheduler:
+    transition_stage_admission_for_layer = (
+        BaseClusterScheduler.transition_stage_admission_for_layer
+    )
+
     def __init__(
         self,
         *,
@@ -125,7 +132,7 @@ class _DecodeSyncScheduler:
             "arrival_times": {participant_id: 0.0 for participant_id in batches},
         }
 
-    def get_dp_replica_stage_scheduler(
+    def get_replica_stage_scheduler(
         self,
         replica_id: int,
         dp_id: int,
@@ -211,6 +218,10 @@ def _batch(requests: list[Request], *, is_idle: bool = False) -> Batch:
         is_moe=True,
     )
     batch.set_global_id(41)
+    # This fixture represents a completed canonical EP_WAVE.  The collective
+    # completion path no longer accepts the retired aggregate/DP scalar input.
+    batch._decode_ep_wave_lane_times_ms = (0.0,)
+    batch._decode_ep_wave_post_moe_comm_time_s = 0.0
     return batch
 
 
@@ -266,7 +277,7 @@ def test_pp2_terminal_collectives_account_all_94_layers() -> None:
         scheduler,
         metrics_store,
         stage_id=1,
-        layer_id=46,
+        layer_id=93,
         batches={0: batch},
         time=2.0,
     )
@@ -307,12 +318,45 @@ def test_monolithic_shared_domain_terminal_collectives_account_all_layers(
             scheduler,
             metrics_store,
             stage_id=stage_id,
-            layer_id=layers_per_stage - 1,
+            layer_id=(stage_id + 1) * layers_per_stage - 1,
             batches={0: lane_zero_batch, 1: lane_one_batch},
             time=float(stage_id + 1),
         )
 
     assert request.completed_layer_count == total_layers
+
+
+def test_decode_pp2_stage_one_advances_with_global_layer_ids() -> None:
+    request = _request(completed_layer_count=4)
+    batch = _batch([request])
+    scheduler = _DecodeSyncScheduler(
+        total_layers=8,
+        num_layers_per_pipeline_stage=4,
+        pipeline_parallel_size=2,
+    )
+    metrics_store = _MetricsStore()
+    scheduler.add_post_moe_collective(
+        stage_id=1,
+        batch_global_id=41,
+        layer_id=4,
+        batches={0: batch},
+    )
+
+    events = BaseClusterScheduler.on_decode_sync_collective(
+        scheduler,
+        time=1.0,
+        replica_id=1,
+        stage_id=1,
+        batch_global_id=41,
+        sync_stage="post_moe",
+        layer_id=4,
+        metrics_store=metrics_store,
+    )
+
+    assert request.completed_layer_count == 5
+    assert len(events) == 1
+    assert isinstance(events[0], DecodeSyncEvent)
+    assert events[0]._layer_id == 5
 
 
 def test_terminal_collective_increments_duplicate_active_request_once() -> None:
@@ -452,7 +496,7 @@ def test_stale_batch_stage_end_does_not_mutate_or_emit() -> None:
         batch=batch,
         batch_stage=batch_stage,
         cluster_type=ClusterType.DECODE,
-        dp_id=0,
+        replica_local_id=None,
     )
     batch._schedule_epoch += 1
     scheduler = SimpleNamespace(

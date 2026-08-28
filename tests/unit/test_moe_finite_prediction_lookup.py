@@ -11,6 +11,7 @@ import pytest
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
+from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.types import ClusterType, MeasurementType
 
 
@@ -93,6 +94,25 @@ def _batch(effective_tokens: int) -> SimpleNamespace:
     )
 
 
+def _lane_workload(expert_tokens: dict[int, int]) -> EPLaneWorkload:
+    """Build the canonical EP=1 lane used by scalar/load-aware lookup tests."""
+
+    total_expert_num = 8
+    owned_expert_ids = tuple(range(total_expert_num))
+    local_token_counts = tuple(int(expert_tokens.get(expert_id, 0)) for expert_id in owned_expert_ids)
+    if set(expert_tokens) - set(owned_expert_ids):
+        raise ValueError("test expert map contains an out-of-domain expert")
+    return EPLaneWorkload(
+        ep_id=0,
+        moe_expert_parallel_size=1,
+        total_expert_num=total_expert_num,
+        owned_expert_ids=owned_expert_ids,
+        local_token_counts=local_token_counts,
+        routed_token_count=sum(local_token_counts),
+        router_topk=2,
+    )
+
+
 @pytest.mark.parametrize(
     ("method_name", "model_name"),
     [
@@ -157,7 +177,10 @@ def test_moe_grouped_gemm_allocation_miss_preserves_original_pre_routing_tokens(
         max_tokens=4,
     )
 
-    value = predictor._get_grouped_gemm_time({0: 6, 1: 6})
+    value = predictor._get_grouped_gemm_time(
+        _lane_workload({0: 6, 1: 6}),
+        batch=_batch(6),
+    )
 
     assert value == 7.0
     assert model.calls == 1
@@ -200,7 +223,8 @@ def test_moe_load_imbalance_runtime_features_match_training_schema() -> None:
     predictor, _model = _build_load_aware_predictor()
 
     features = predictor._build_moe_load_imbalance_features(
-        {0: 4, 1: 4, 2: 0, 3: 0}
+        _lane_workload({0: 4, 1: 4}),
+        batch=_batch(4),
     )
 
     assert tuple(features) == tuple(predictor.MOE_LOAD_IMBALANCE_FEATURES)
@@ -211,8 +235,14 @@ def test_moe_load_imbalance_runtime_features_match_training_schema() -> None:
 def test_equivalent_moe_allocations_share_canonical_runtime_cache() -> None:
     predictor, model = _build_load_aware_predictor()
 
-    first = predictor._get_grouped_gemm_time({0: 4, 1: 4, 2: 0, 3: 0})
-    second = predictor._get_grouped_gemm_time({10: 0, 11: 4, 12: 0, 13: 4})
+    first = predictor._get_grouped_gemm_time(
+        _lane_workload({0: 4, 1: 4}),
+        batch=_batch(4),
+    )
+    second = predictor._get_grouped_gemm_time(
+        _lane_workload({2: 4, 3: 4}),
+        batch=_batch(4),
+    )
 
     assert first == 8.5
     assert second == 8.5
@@ -226,13 +256,17 @@ def test_equivalent_moe_allocations_share_canonical_runtime_cache() -> None:
 def test_moe_exact_lookup_precedes_runtime_cache_for_load_imbalance_query() -> None:
     predictor, model = _build_load_aware_predictor()
     features = predictor._build_moe_load_imbalance_features(
-        {0: 4, 1: 4, 2: 0, 3: 0}
+        _lane_workload({0: 4, 1: 4}),
+        batch=_batch(4),
     )
     key = tuple(float(features[name]) for name in predictor.MOE_LOAD_IMBALANCE_FEATURES)
     predictor._predictions["moe_grouped_gemm"]["_exact_lookup"] = {key: 2.25}
     predictor._runtime_cache["eager"]["moe_grouped_gemm"][key] = 9.0
 
-    value = predictor._get_grouped_gemm_time({0: 4, 1: 4, 2: 0, 3: 0})
+    value = predictor._get_grouped_gemm_time(
+        _lane_workload({0: 4, 1: 4}),
+        batch=_batch(4),
+    )
 
     assert value == 2.25
     assert model.calls == 0

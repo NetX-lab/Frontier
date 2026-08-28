@@ -292,6 +292,116 @@ def test_spec_normal_decode_finite_miss_uses_model_once_and_reuses_runtime_cache
     }
 
 
+def test_spec_verify_exact_record_precedes_stale_runtime_cache() -> None:
+    predictor, models = _build_finite_fallback_predictor()
+    prefill_model = models["prefill"]
+    predictor._predictions["attn_prefill"] = {
+        "_on_demand_prediction": True,
+        "_model": prefill_model,
+        "_feature_names": ["kv_cache_size", "prefill_chunk_size_squared"],
+        "_exact_lookup": {(768.0, 9.0): 6.75},
+    }
+    predictor._runtime_cache["eager"]["attn_prefill"][(768.0, 9.0)] = 99.0
+
+    request = _build_prefill_complete_request(num_processed_tokens=768)
+    batch = Batch(
+        replica_id=0,
+        requests=[request],
+        num_tokens=[3],
+        is_moe=False,
+    )
+    batch.spec_decode_metadata = SpecDecodeBatchMetadata(
+        method="eagle",
+        planned_draft_tokens_per_request=[2],
+        verify_tokens_per_request=[3],
+        accepted_draft_tokens_per_request=[1],
+        rejected_draft_tokens_per_request=[1],
+        committed_tokens_per_request=[2],
+        uses_lookahead_slots=True,
+    )
+
+    value = predictor._get_spec_verify_attention_prefill_execution_time(batch)
+
+    assert value == 6.75
+    assert prefill_model.calls == 0
+    assert predictor._runtime_cache["eager"]["attn_prefill"][(768.0, 9.0)] == 99.0
+
+def test_pdd_decode_verify_uses_prefill_kernel_prediction() -> None:
+    predictor = _build_predictor()
+    predictor._cluster_type = ClusterType.DECODE
+    predictor._supports_operation = (
+        SklearnExecutionTimePredictor._supports_operation.__get__(predictor)
+    )
+    predictor._predictions["attn_prefill"] = {
+        "_on_demand_prediction": True,
+    }
+    predictor._on_demand_calls = []
+
+    def _on_demand_prediction(model_name: str, features: dict) -> float:
+        predictor._on_demand_calls.append((model_name, dict(features)))
+        return 7.0
+
+    predictor._get_on_demand_prediction = _on_demand_prediction
+    batch = Batch(
+        replica_id=0,
+        requests=[_build_prefill_complete_request(num_processed_tokens=512)],
+        num_tokens=[3],
+        is_moe=False,
+    )
+    batch.spec_decode_metadata = SpecDecodeBatchMetadata(
+        method="eagle",
+        planned_draft_tokens_per_request=[2],
+        verify_tokens_per_request=[3],
+        accepted_draft_tokens_per_request=[1],
+        rejected_draft_tokens_per_request=[1],
+        committed_tokens_per_request=[2],
+        uses_lookahead_slots=True,
+    )
+
+    verify_prefill_time = predictor._get_spec_verify_attention_prefill_execution_time(
+        batch
+    )
+
+    assert verify_prefill_time == 7.0
+    assert predictor._on_demand_calls == [
+        (
+            "attn_prefill",
+            {
+                "kv_cache_size": 512,
+                "prefill_chunk_size_squared": 9,
+            },
+        )
+    ]
+
+
+def test_pdd_decode_materializes_prefill_prediction_for_spec_verify() -> None:
+    predictor = _DummyPredictor.__new__(_DummyPredictor)
+    predictor._cluster_type = ClusterType.DECODE
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._config = SimpleNamespace(prediction_max_tokens_per_request=1024)
+    predictor._model_config = _dense_model_config()
+    predictor._models = {
+        "attn_prefill": SimpleNamespace(
+            n_features_in_=2,
+            _frontier_feature_names=[
+                "kv_cache_size",
+                "prefill_chunk_size_squared",
+            ],
+            _frontier_exact_lookup={(512.0, 9.0): 4.25},
+        )
+    }
+
+    predictions = predictor._predict_for_attention_layer_models()
+
+    assert predictions["attn_prefill"]["_on_demand_prediction"] is True
+    assert predictions["attn_prefill"]["_feature_names"] == [
+        "kv_cache_size",
+        "prefill_chunk_size_squared",
+    ]
+    assert predictions["attn_prefill"]["_exact_lookup"] == {
+        (512.0, 9.0): 4.25
+    }
+
 def test_attention_training_uses_true_mixed_rows_for_verify_prefill_model() -> None:
     predictor = _DummyPredictor.__new__(_DummyPredictor)
     predictor._attention_input_file = "attention.csv"

@@ -476,7 +476,7 @@ def test_shared_manager_moe_dataset_contract_uses_pdd_legacy_auxiliary_tp_key(
         ),
         moe_tensor_parallel_size=4,
         moe_expert_parallel_size=1,
-        moe_routing_mode="simulation",
+        moe_routing_distribution_type="balanced",
     )
 
     manager._validate_moe_dataset_contract(
@@ -614,6 +614,7 @@ def test_moe_predictor_dummy_path_writes_structured_moe_operator_times() -> None
     predictor = object.__new__(_ConcreteSklearnMoEExecutionTimePredictor)
     predictor._enable_dummy_mode = True
     predictor._dummy_execution_time = 10.0
+    predictor._moe_ep_size = 1
     predictor._model_config = SimpleNamespace(supports_share_expert=lambda: True)
 
     moe_time = predictor.predict_moe_layer_time(

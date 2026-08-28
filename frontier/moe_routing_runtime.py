@@ -21,15 +21,18 @@ def validate_moe_gating_routing_runtime_path(requested_runtime_path: str) -> str
     return normalized_path
 
 
-def resolve_moe_gating_routing_runtime_path(moe_routing_mode: str) -> str:
-    normalized_mode = str(moe_routing_mode).strip()
-    if normalized_mode == "simulation":
+def resolve_moe_gating_routing_runtime_path(
+    moe_routing_distribution_type: str,
+) -> str:
+    """Map the canonical routing distribution to profiling runtime metadata."""
+    normalized_distribution = str(moe_routing_distribution_type).strip().lower()
+    if normalized_distribution in {"balanced", "skewed", "zipf"}:
         return STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH
-    if normalized_mode in {"uniform_legacy", "uniform_random"}:
+    if normalized_distribution == "random":
         return UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH
     raise ValueError(
-        f"Unsupported moe_routing_mode={moe_routing_mode!r}. "
-        "Expected 'simulation', 'uniform_legacy', or 'uniform_random'."
+        f"Unsupported moe_routing_distribution_type={moe_routing_distribution_type!r}. "
+        "Expected 'balanced', 'random', 'skewed', or 'zipf'."
     )
 
 

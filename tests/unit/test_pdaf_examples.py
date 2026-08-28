@@ -47,7 +47,12 @@ def test_pdaf_example_surface_contains_offline_and_online_cases() -> None:
     assert actual == expected
 
 
-def _capture_cli(tmp_path: Path, relative: str) -> list[str]:
+def _capture_cli(
+    tmp_path: Path,
+    relative: str,
+    *,
+    env_overrides: dict[str, str] | None = None,
+) -> list[str]:
     capture_path = tmp_path / (relative.replace("/", "_") + ".argv")
     fake_python = tmp_path / "capture_python.sh"
     fake_python.write_text(
@@ -69,6 +74,8 @@ def _capture_cli(tmp_path: Path, relative: str) -> list[str]:
             "METRICS_OUTPUT_DIR": str(tmp_path / "metrics"),
         }
     )
+    if env_overrides is not None:
+        env.update(env_overrides)
     result = subprocess.run(
         ["bash", str(EXAMPLES_ROOT / relative)],
         cwd=REPO_ROOT,
@@ -107,6 +114,10 @@ def test_pdaf_example_scripts_emit_the_release_cli_contract(
         "--enable_thinking_mode",
         "--replica_scheduler_config_enable_prefix_caching",
         "--speculative_decoding_config_enabled",
+        "--cluster_config_prefill_replica_config_attn_data_parallel_size",
+        "--cluster_config_decode_attn_replica_config_attn_data_parallel_size",
+        "--cluster_config_decode_replica_config_attn_data_parallel_size",
+        "--replica_config_attn_data_parallel_size",
     }
     assert forbidden_options.isdisjoint(argv)
 
@@ -161,9 +172,6 @@ def test_pdaf_ep_recipes_exercise_ep_greater_than_one_by_default(
         argv, "--cluster_config_prefill_replica_config_attn_tensor_parallel_size"
     ) == "2"
     assert _option_value(
-        argv, "--cluster_config_prefill_replica_config_attn_data_parallel_size"
-    ) == "1"
-    assert _option_value(
         argv, "--cluster_config_prefill_replica_config_moe_tensor_parallel_size"
     ) == "1"
     assert _option_value(
@@ -174,10 +182,6 @@ def test_pdaf_ep_recipes_exercise_ep_greater_than_one_by_default(
         "--cluster_config_decode_attn_replica_config_attn_tensor_parallel_size",
     ) == "2"
     assert _option_value(
-        argv,
-        "--cluster_config_decode_attn_replica_config_attn_data_parallel_size",
-    ) == "1"
-    assert _option_value(
         argv, "--cluster_config_decode_ffn_replica_config_moe_tensor_parallel_size"
     ) == "1"
     assert _option_value(
@@ -186,6 +190,52 @@ def test_pdaf_ep_recipes_exercise_ep_greater_than_one_by_default(
     assert _option_value(
         argv, "--cluster_config_decode_attn_micro_batch_size"
     ) == "1"
+
+
+@pytest.mark.parametrize(
+    ("relative", "enabled", "expected_flag"),
+    [
+        (
+            "offline/moe_model_ep.sh",
+            "true",
+            "--cluster_config_prefill_replica_scheduler_config_enable_chunked_prefill",
+        ),
+        (
+            "online/moe_model_ep_online.sh",
+            "false",
+            "--no-cluster_config_prefill_replica_scheduler_config_enable_chunked_prefill",
+        ),
+    ],
+)
+def test_pdaf_ep_recipes_apply_chunked_prefill_controls_to_prefill_role(
+    tmp_path: Path,
+    relative: str,
+    enabled: str,
+    expected_flag: str,
+) -> None:
+    argv = _capture_cli(
+        tmp_path,
+        relative,
+        env_overrides={
+            "MAX_TOKENS_IN_BATCH": "8",
+            "LONG_PREFILL_TOKEN_THRESHOLD": "4" if enabled == "true" else "0",
+            "ENABLE_CHUNKED_PREFILL": enabled,
+        },
+    )
+
+    assert _option_value(
+        argv,
+        "--cluster_config_prefill_replica_scheduler_config_max_tokens_in_batch",
+    ) == "8"
+    assert _option_value(
+        argv,
+        "--cluster_config_prefill_replica_scheduler_config_long_prefill_token_threshold",
+    ) == ("4" if enabled == "true" else "0")
+    assert expected_flag in argv
+    assert "--vllm_v1_scheduler_config_max_tokens_in_batch" not in argv
+    assert "--vllm_v1_scheduler_config_long_prefill_token_threshold" not in argv
+    assert "--vllm_v1_scheduler_config_enable_chunked_prefill" not in argv
+    assert "--no-vllm_v1_scheduler_config_enable_chunked_prefill" not in argv
 
 
 @pytest.mark.parametrize("relative", MOE_CASES)

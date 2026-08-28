@@ -55,9 +55,9 @@ class KVCacheTransferEndEvent(BaseEvent):
             source_cluster_scheduler = scheduler.get_cluster_scheduler(
                 self._transfer_info.source_cluster_type
             )
-            source_replica_scheduler = source_cluster_scheduler.get_dp_replica_scheduler(
+            source_replica_scheduler = source_cluster_scheduler.get_replica_scheduler(
                 self._transfer_info.source_replica_id,
-                self._transfer_info.source_dp_id,
+                self._transfer_info.source_replica_local_id,
             )
             source_replica_scheduler.complete_kv_transfer_for_requests(batch.requests)
 
@@ -67,7 +67,7 @@ class KVCacheTransferEndEvent(BaseEvent):
                 self._transfer_info.source_replica_id,
                 memory_usage_percent,
                 self._transfer_info.source_cluster_type,
-                dp_id=self._transfer_info.source_dp_id,
+                replica_local_id=self._transfer_info.source_replica_local_id,
             )
 
             if source_replica_scheduler.should_schedule_after_kv_transfer_completion():
@@ -80,7 +80,7 @@ class KVCacheTransferEndEvent(BaseEvent):
                         source_reschedule_time,
                         self._transfer_info.source_replica_id,
                         self._transfer_info.source_cluster_type,
-                        self._transfer_info.source_dp_id,
+                        self._transfer_info.source_replica_local_id,
                     )
                 )
 

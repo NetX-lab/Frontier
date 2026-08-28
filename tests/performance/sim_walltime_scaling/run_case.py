@@ -44,8 +44,8 @@ PRIMARY_SHAPES = {
         "pp": 2,
     },
     "moe": {
-        "attn_tp": 4,
-        "attn_dp": 2,
+        "attn_tp": 8,
+        "attn_dp": 1,
         "moe_tp": 1,
         "moe_ep": 8,
         "pp": 2,
@@ -415,7 +415,6 @@ def build_frontier_argv(case: CaseSpec, output_root: Path) -> list[str]:
         prefix = f"--cluster_config_{cluster_name}_replica_config"
         _append_option(argv, f"{prefix}_num_pipeline_stages", shape.pp)
         _append_option(argv, f"{prefix}_attn_tensor_parallel_size", shape.attn_tp)
-        _append_option(argv, f"{prefix}_attn_data_parallel_size", shape.attn_dp)
         _append_option(argv, f"{prefix}_moe_tensor_parallel_size", shape.moe_tp)
         _append_option(argv, f"{prefix}_moe_expert_parallel_size", shape.moe_ep)
         _append_option(argv, f"{prefix}_total_expert_num", case.total_experts)
@@ -429,12 +428,11 @@ def build_frontier_argv(case: CaseSpec, output_root: Path) -> list[str]:
         "--replica_config_network_device": case.network_device,
         "--replica_config_num_pipeline_stages": shape.pp,
         "--replica_config_attn_tensor_parallel_size": shape.attn_tp,
-        "--replica_config_attn_data_parallel_size": shape.attn_dp,
         "--replica_config_moe_tensor_parallel_size": shape.moe_tp,
         "--replica_config_moe_expert_parallel_size": shape.moe_ep,
         "--replica_config_total_expert_num": case.total_experts,
         "--replica_config_router_topk": case.router_topk,
-        "--replica_config_moe_routing_mode": "simulation",
+        "--replica_config_moe_routing_distribution_type": "balanced",
         "--replica_config_moe_routing_seed": case.seed,
     }
     for option, value in replica_values.items():

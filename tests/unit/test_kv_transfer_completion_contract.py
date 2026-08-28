@@ -90,7 +90,7 @@ class _SourceClusterScheduler:
     def __init__(self, replica_scheduler) -> None:
         self.replica_scheduler = replica_scheduler
 
-    def get_dp_replica_scheduler(self, replica_id: int, dp_id: int):
+    def get_replica_scheduler(self, replica_id: int, dp_id: int):
         assert replica_id == 3
         assert dp_id == 1
         return self.replica_scheduler
@@ -151,9 +151,13 @@ class _HookReplicaScheduler:
 
 
 class _HookClusterScheduler:
-    def get_dp_replica_scheduler(self, replica_id: int, dp_id: int):
+    def get_replica_scheduler(
+        self,
+        replica_id: int,
+        replica_local_id: int | None,
+    ):
         assert replica_id == 0
-        assert dp_id == 0
+        assert replica_local_id is None
         return _HookReplicaScheduler()
 
 
@@ -169,7 +173,7 @@ def test_cluster_batch_end_fails_fast_when_stage_hook_fails() -> None:
         replica_id=0,
         batch=_HookFailingBatch(),
         cluster_type=ClusterType.DECODE_ATTN,
-        dp_id=0,
+        replica_local_id=None,
     )
 
     with pytest.raises(RuntimeError, match="stage hook failed"):
@@ -191,7 +195,7 @@ def test_kv_transfer_end_uses_public_scheduler_completion_contract() -> None:
         target_cluster_type=ClusterType.DECODE,
         source_cluster_type=ClusterType.PREFILL,
         source_replica_id=3,
-        source_dp_id=1,
+        source_replica_local_id=1,
         transfer_time_ms=2.0,
         batch=batch,
     )
@@ -226,7 +230,7 @@ def test_kv_transfer_end_reschedules_source_when_pending_work_remains() -> None:
         target_cluster_type=ClusterType.DECODE,
         source_cluster_type=ClusterType.PREFILL,
         source_replica_id=3,
-        source_dp_id=1,
+        source_replica_local_id=1,
         transfer_time_ms=2.0,
         batch=batch,
     )
@@ -269,7 +273,7 @@ def test_kv_transfer_end_uses_scheduler_reschedule_contract() -> None:
         target_cluster_type=ClusterType.DECODE,
         source_cluster_type=ClusterType.PREFILL,
         source_replica_id=3,
-        source_dp_id=1,
+        source_replica_local_id=1,
         transfer_time_ms=2.0,
         batch=batch,
     )
@@ -316,7 +320,7 @@ def test_replica_scheduler_completion_releases_allocation_and_pending_state(
     scheduler._allocation_map = {request.id: 2}
     scheduler._cluster_type = ClusterType.PREFILL
     scheduler._replica_id = 3
-    scheduler._dp_id = 1
+    scheduler._replica_local_id = 1
     freed_request_ids = []
 
     def _free_request_resources(freed_request) -> None:
@@ -345,7 +349,7 @@ def test_replica_scheduler_completion_requires_pending_transfer_state(
     scheduler._allocation_map = {request.id: 1}
     scheduler._cluster_type = ClusterType.PREFILL
     scheduler._replica_id = 3
-    scheduler._dp_id = 1
+    scheduler._replica_local_id = 1
 
     with pytest.raises(ValueError, match="without pending transfer state"):
         scheduler.complete_kv_transfer_for_requests([request])
@@ -368,7 +372,7 @@ def test_legacy_scheduler_completion_releases_allocation_and_pending_state(
     scheduler._allocation_map = {request.id: 2}
     scheduler._cluster_type = ClusterType.PREFILL
     scheduler._replica_id = 3
-    scheduler._dp_id = 1
+    scheduler._replica_local_id = 1
     freed_request_ids = []
 
     def _free_request_resources(freed_request) -> None:
@@ -440,7 +444,7 @@ def test_kv_transfer_end_does_not_reschedule_source_for_transfer_only_state() ->
         target_cluster_type=ClusterType.DECODE,
         source_cluster_type=ClusterType.PREFILL,
         source_replica_id=3,
-        source_dp_id=1,
+        source_replica_local_id=1,
         transfer_time_ms=2.0,
         batch=batch,
     )

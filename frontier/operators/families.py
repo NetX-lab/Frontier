@@ -19,7 +19,9 @@ from frontier.operators.spec import (
     ResourceClass,
     TensorParallelMode,
     TraceKind,
+    ZeroPayloadPolicy,
 )
+from frontier.moe_ep_workload import resolve_ep_lane_workload
 from frontier.types import ClusterType
 
 
@@ -112,7 +114,6 @@ MOE_FAMILY = OperatorFamilySpec(
             resource_class=ResourceClass.MEMORY,
             tp_mode=TensorParallelMode.MOE_TP,
             ep_agnostic=True,
-            calibration_key="moe_shuffling",
         ),
         OperatorSpec(
             name="moe_grouped_gemm",
@@ -123,7 +124,6 @@ MOE_FAMILY = OperatorFamilySpec(
             resource_class=ResourceClass.COMP,
             tp_mode=TensorParallelMode.MOE_TP,
             projection_ownership=ProjectionOwnership.OUTSIDE_ATTENTION,
-            calibration_key="moe_grouped_gemm",
         ),
     ),
 )
@@ -310,6 +310,14 @@ def _effective_tokens(ctx: CommPayloadContext) -> int:
     return int(ctx.batch.get_effective_total_tokens_rounded(ctx.cluster_type))
 
 
+def _resolve_lane_workload(ctx: CommPayloadContext):
+    """Resolve an explicit physical EP lane for lane-scoped payloads."""
+
+    if ctx.lane_workload is not None:
+        return resolve_ep_lane_workload(ctx.lane_workload, required=True)
+    return resolve_ep_lane_workload(ctx.batch, required=False)
+
+
 def _hidden_state_bytes(ctx: CommPayloadContext, collective: str) -> int:
     data_size_bytes = int(ctx.model_config.embedding_dim) * 2 * _effective_tokens(ctx)
     return int(
@@ -323,6 +331,20 @@ def _hidden_state_bytes(ctx: CommPayloadContext, collective: str) -> int:
 
 def _tp_allreduce_payload_bytes(ctx: CommPayloadContext) -> int:
     return _hidden_state_bytes(ctx, "allreduce")
+
+
+def _moe_tp_allreduce_payload_bytes(ctx: CommPayloadContext) -> int:
+    # MoE-TP all-reduce operates on the shared hidden-state domain before
+    # expert routing.  A physical lane descriptor is therefore irrelevant to
+    # this payload; only the source batch's compute-effective width applies.
+    data_size_bytes = int(ctx.model_config.embedding_dim) * 2 * _effective_tokens(ctx)
+    return int(
+        ctx.quantization_manager.adjust_tensor_size(
+            "allreduce",
+            data_size_bytes,
+            ctx.cluster_type,
+        )
+    )
 
 
 def _pp_send_recv_payload_bytes(ctx: CommPayloadContext) -> int:
@@ -348,16 +370,13 @@ def _moe_tp_allgather_payload_bytes(ctx: CommPayloadContext) -> int:
 
 
 def _expert_parallel_payload_bytes(ctx: CommPayloadContext) -> int:
-    per_expert_tokens = getattr(ctx.batch, "per_expert_tokens", None)
-    if per_expert_tokens:
-        routed_tokens = sum(int(token_count) for token_count in per_expert_tokens.values())
-    else:
-        router_topk = int(getattr(ctx.replica_config, "router_topk", 0) or 0)
-        if router_topk <= 0:
-            router_topk = int(getattr(ctx.model_config, "num_experts_per_tok", 0) or 0)
-        if router_topk <= 0:
-            raise ValueError("router_topk must be set for expert-parallel communication")
-        routed_tokens = _effective_tokens(ctx) * router_topk
+    lane_workload = _resolve_lane_workload(ctx)
+    if lane_workload is None:
+        raise ValueError(
+            "expert-parallel all-to-all payload requires an EPLaneWorkload "
+            "descriptor"
+        )
+    routed_tokens = lane_workload.routed_token_count
     data_size_bytes = int(ctx.model_config.embedding_dim) * 2 * int(routed_tokens)
     return int(
         ctx.quantization_manager.adjust_tensor_size(
@@ -431,9 +450,10 @@ COMM_FAMILY = OperatorFamilySpec(
             collective_alias="allreduce",
             comm_group="moe_tp",
             comm_domain="MOE_TP",
-            payload_builder=_tp_allreduce_payload_bytes,
+            payload_builder=_moe_tp_allreduce_payload_bytes,
             num_devices_builder=_moe_tp_devices,
             apply_allreduce_launch_overhead_strip=True,
+            zero_payload_policy=ZeroPayloadPolicy.EXACT_NOOP,
         ),
         CommOperatorSpec(
             name="moe_tensor_parallel_allgather",

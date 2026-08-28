@@ -291,13 +291,24 @@ class MetricsStore:
             ClusterType, List[List[List[SeriesAverageMeter]]]
         ] = {}
         self._replica_mfu: Dict[ClusterType, List[List[List[SeriesAverageMeter]]]] = {}
+        # Dense/full-stage work has no replica-local EP identity.  Keep its
+        # utilization series separate instead of encoding it as EP0.
+        self._replica_full_stage_memory_usage: Dict[
+            ClusterType, List[SeriesAverageMeter]
+        ] = {}
+        self._replica_full_stage_busy_time: Dict[
+            ClusterType, List[List[SeriesAverageMeter]]
+        ] = {}
+        self._replica_full_stage_mfu: Dict[
+            ClusterType, List[List[SeriesAverageMeter]]
+        ] = {}
         self._mfu_calculator: Dict[ClusterType, MFUCalculator] = {}
         self._pending_frontier_stage_batch_ledger_rows: Dict[int, dict[str, Any]] = {}
         self._pending_frontier_stage_batch_ledger_row_keys: Dict[
-            tuple[str, int, int, int, int], int
+            tuple[str, int, int | None, int, int], int
         ] = {}
         self._pending_frontier_stage_batch_ledger_rows_by_key: Dict[
-            tuple[str, int, int, int, int], dict[str, Any]
+            tuple[str, int, int | None, int, int], dict[str, Any]
         ] = {}
         self._frontier_stage_batch_ledger_rows: list[dict[str, Any]] = []
         self._frontier_stage_batch_ledger_summary = (
@@ -354,6 +365,13 @@ class MetricsStore:
                 self._config.store_plots,
             ),
         }
+        # Transfer lineage is kept as a small lifecycle ledger.  The row is
+        # created at transfer start and enriched when the target scheduler has
+        # selected the physical target Replica.
+        self._transfer_ledger_next_id = 0
+        self._transfer_ledger_rows: list[dict[str, Any]] = []
+        self._transfer_ledger_rows_by_info_id: dict[int, dict[str, Any]] = {}
+        self._transfer_info_objects: dict[int, Any] = {}
 
         # Initialize preemption statistics collector for system-level metrics
         # NOTE: Separation of Concerns - Request-Level vs. System-Level Metrics
@@ -785,7 +803,7 @@ class MetricsStore:
         if cluster_config is None:
             return False
         return int(
-            getattr(cluster_config.replica_config, "attn_data_parallel_size", 1)
+            getattr(cluster_config.replica_config, "attn_dp", 1)
         ) > 1
 
     def _emit_aggregated_traces(
@@ -880,13 +898,19 @@ class MetricsStore:
                     emit(
                         "COMM",
                         "expert_parallel_alltoall",
-                        execution_time.expert_parallel_communication_time / 2,
+                        (
+                            execution_time.get_single_layer_moe_dispatch_time()
+                            * execution_time.num_layers
+                        ),
                     )
                 elif use_ep_alltoall_dispatch_combine:
                     emit(
                         "COMM",
                         "expert_parallel_alltoall_dispatch",
-                        execution_time.expert_parallel_communication_time / 2,
+                        (
+                            execution_time.get_single_layer_moe_dispatch_time()
+                            * execution_time.num_layers
+                        ),
                     )
             for op_name, duration_ms in _iter_family_execution_times(
                 MOE_FAMILY,
@@ -898,7 +922,10 @@ class MetricsStore:
                     emit(
                         "COMM",
                         "expert_parallel_alltoall_combine",
-                        execution_time.expert_parallel_communication_time / 2,
+                        (
+                            execution_time.get_single_layer_moe_combine_time()
+                            * execution_time.num_layers
+                        ),
                     )
                 else:
                     emit(
@@ -1020,9 +1047,10 @@ class MetricsStore:
                     execution_time,
                 )
             )
-            per_layer_ep_comm = (
-                execution_time.expert_parallel_communication_time / num_layers
+            per_layer_ep_dispatch = (
+                execution_time.get_single_layer_moe_dispatch_time()
             )
+            per_layer_ep_combine = execution_time.get_single_layer_moe_combine_time()
             per_layer_moe_tp_allreduce = execution_time.mlp_all_reduce_time / num_layers
         else:
             per_layer_mlp_up = (
@@ -1146,7 +1174,7 @@ class MetricsStore:
                         emit(
                             "COMM",
                             "expert_parallel_alltoall",
-                            per_layer_ep_comm / 2,
+                            per_layer_ep_dispatch,
                             layer_idx,
                             layer_meta,
                         )
@@ -1154,7 +1182,7 @@ class MetricsStore:
                         emit(
                             "COMM",
                             "expert_parallel_alltoall_dispatch",
-                            per_layer_ep_comm / 2,
+                            per_layer_ep_dispatch,
                             layer_idx,
                             layer_meta,
                         )
@@ -1165,7 +1193,7 @@ class MetricsStore:
                         emit(
                             "COMM",
                             "expert_parallel_alltoall_combine",
-                            per_layer_ep_comm / 2,
+                            per_layer_ep_combine,
                             layer_idx,
                             layer_meta,
                         )
@@ -1173,7 +1201,7 @@ class MetricsStore:
                         emit(
                             "COMM",
                             "expert_parallel_allreduce",
-                            per_layer_ep_comm,
+                            per_layer_ep_dispatch + per_layer_ep_combine,
                             layer_idx,
                             layer_meta,
                         )
@@ -1265,24 +1293,27 @@ class MetricsStore:
         return True
 
     @staticmethod
-    def _get_parallel_lane_count(cluster_type: ClusterType, replica_config) -> int:
-        """Return the lane count used for utilization metrics indexing.
+    def _get_replica_local_scope_count(cluster_type: ClusterType, replica_config) -> int:
+        """Return the Replica-local scope count used for utilization indexing.
 
-        Frontier models DECODE_FFN with EP lanes (ep_id reused as dp_id in schedulers),
-        so utilization tensors must be sized by moe_expert_parallel_size there.
-        Other clusters keep data_parallel_size semantics.
+        Frontier models DECODE_FFN with replica-local EP lanes (the scheduler's
+        second key is an EP identity there), so utilization tensors are sized by
+        ``moe_expert_parallel_size``.  All other roles have one physical
+        attention/full-stage world per serving Replica; cluster capacity is
+        indexed by the outer Replica key, not by a local DP lane.
         """
         if cluster_type == ClusterType.DECODE_FFN:
-            lane_count = int(replica_config.moe_expert_parallel_size)
+            local_scope_count = int(replica_config.moe_expert_parallel_size)
         else:
-            lane_count = int(replica_config.data_parallel_size)
+            local_scope_count = 0
 
-        if lane_count <= 0:
+        if local_scope_count < 0:
             raise ValueError(
-                f"Invalid lane count for {cluster_type.name}: {lane_count}"
+                f"Invalid Replica-local scope count for {cluster_type.name}: "
+                f"{local_scope_count}"
             )
 
-        return lane_count
+        return local_scope_count
 
     def _init_per_cluster_metrics(self, cluster_type: ClusterType, cluster_config):
         # Batch metrics
@@ -1361,25 +1392,66 @@ class MetricsStore:
             for metric_name in CpuOperationMetrics
         }
 
-        # Utilization metrics - now support dp_id
+        # Utilization metrics support full-stage and Replica-local scopes.
         num_replicas = cluster_config.num_replicas
         num_pipeline_stages = cluster_config.replica_config.num_pipeline_stages
-        dp_size = self._get_parallel_lane_count(cluster_type, cluster_config.replica_config)
+        local_scope_count = self._get_replica_local_scope_count(
+            cluster_type, cluster_config.replica_config
+        )
 
         self._replica_memory_usage[cluster_type] = []
         self._replica_busy_time[cluster_type] = []
         self._replica_mfu[cluster_type] = []
+        self._replica_full_stage_memory_usage[cluster_type] = []
+        self._replica_full_stage_busy_time[cluster_type] = []
+        self._replica_full_stage_mfu[cluster_type] = []
         self._mfu_calculator[cluster_type] = MFUCalculator(
             cluster_config.replica_config, cluster_type
         )
 
         for replica_idx in range(num_replicas):
-            # Create dp_size slots for each replica
+            full_stage_memory = SeriesAverageMeter(
+                TIME_STR,
+                MEMORY_USAGE_STR,
+                save_table_to_wandb=self._config.save_table_to_wandb,
+                store_data_series=self._should_store_memory_time_series(),
+            )
+            full_stage_memory.put(0, 0)
+            self._replica_full_stage_memory_usage[cluster_type].append(
+                full_stage_memory
+            )
+
+            full_stage_busy = []
+            full_stage_mfu = []
+            for stage_idx in range(num_pipeline_stages):
+                busy_meter = SeriesAverageMeter(
+                    TIME_STR,
+                    BUSY_TIME_PERCENT,
+                    save_table_to_wandb=self._config.save_table_to_wandb,
+                )
+                busy_meter.put(0, 0)
+                full_stage_busy.append(busy_meter)
+
+                mfu_meter = SeriesAverageMeter(
+                    TIME_STR,
+                    UTILIZATION_STR,
+                    save_table_to_wandb=self._config.save_table_to_wandb,
+                )
+                mfu_meter.put(0, 0)
+                full_stage_mfu.append(mfu_meter)
+
+            self._replica_full_stage_busy_time[cluster_type].append(
+                full_stage_busy
+            )
+            self._replica_full_stage_mfu[cluster_type].append(full_stage_mfu)
+
+            # Create only the Replica-local EP scopes for DECODE_FFN. Other
+            # roles use the full-stage world and therefore have no local lane.
             self._replica_memory_usage[cluster_type].append([])
             self._replica_busy_time[cluster_type].append([])
             self._replica_mfu[cluster_type].append([])
 
-            for dp_idx in range(dp_size):
+            for replica_local_id in range(local_scope_count):
                 self._replica_memory_usage[cluster_type][replica_idx].append(
                     SeriesAverageMeter(
                         TIME_STR,
@@ -1388,31 +1460,31 @@ class MetricsStore:
                         store_data_series=self._should_store_memory_time_series(),
                     )
                 )
-                self._replica_memory_usage[cluster_type][replica_idx][dp_idx].put(0, 0)
+                self._replica_memory_usage[cluster_type][replica_idx][replica_local_id].put(0, 0)
 
                 self._replica_busy_time[cluster_type][replica_idx].append([])
                 self._replica_mfu[cluster_type][replica_idx].append([])
 
                 for stage_idx in range(num_pipeline_stages):
-                    self._replica_busy_time[cluster_type][replica_idx][dp_idx].append(
+                    self._replica_busy_time[cluster_type][replica_idx][replica_local_id].append(
                         SeriesAverageMeter(
                             TIME_STR,
                             BUSY_TIME_PERCENT,
                             save_table_to_wandb=self._config.save_table_to_wandb,
                         )
                     )
-                    self._replica_busy_time[cluster_type][replica_idx][dp_idx][
+                    self._replica_busy_time[cluster_type][replica_idx][replica_local_id][
                         stage_idx
                     ].put(0, 0)
 
-                    self._replica_mfu[cluster_type][replica_idx][dp_idx].append(
+                    self._replica_mfu[cluster_type][replica_idx][replica_local_id].append(
                         SeriesAverageMeter(
                             TIME_STR,
                             UTILIZATION_STR,
                             save_table_to_wandb=self._config.save_table_to_wandb,
                         )
                     )
-                    self._replica_mfu[cluster_type][replica_idx][dp_idx][stage_idx].put(
+                    self._replica_mfu[cluster_type][replica_idx][replica_local_id][stage_idx].put(
                         0, 0
                     )
 
@@ -1843,27 +1915,49 @@ class MetricsStore:
                 os.makedirs(cluster_plot_path, exist_ok=True)
                 num_replicas = cluster_config.num_replicas
                 num_pipeline_stages = cluster_config.replica_config.num_pipeline_stages
-                dp_size = self._get_parallel_lane_count(cluster_type, cluster_config.replica_config)
+                local_scope_count = self._get_replica_local_scope_count(
+                    cluster_type, cluster_config.replica_config
+                )
 
                 for replica_idx in range(num_replicas):
-                    for dp_idx in range(dp_size):
-                        self._replica_memory_usage[cluster_type][replica_idx][
-                            dp_idx
+                    self._replica_full_stage_memory_usage[cluster_type][
+                        replica_idx
+                    ].print_stats(
+                        f"replica_{replica_idx + 1}_full_stage_world_memory_usage",
+                        cluster_plot_path,
+                    )
+                    for stage_idx in range(num_pipeline_stages):
+                        self._replica_full_stage_busy_time[cluster_type][replica_idx][
+                            stage_idx
                         ].print_stats(
-                            f"replica_{replica_idx + 1}_dp_{dp_idx}_memory_usage",
+                            f"replica_{replica_idx + 1}_full_stage_world_stage_{stage_idx + 1}_busy_time_percent",
+                            cluster_plot_path,
+                        )
+                        self._replica_full_stage_mfu[cluster_type][replica_idx][
+                            stage_idx
+                        ].print_stats(
+                            f"replica_{replica_idx + 1}_full_stage_world_stage_{stage_idx + 1}_mfu",
+                            cluster_plot_path,
+                        )
+
+                    for replica_local_id in range(local_scope_count):
+                        self._replica_memory_usage[cluster_type][replica_idx][
+                            replica_local_id
+                        ].print_stats(
+                            f"replica_{replica_idx + 1}_local_{replica_local_id}_memory_usage",
                             cluster_plot_path,
                         )
                         for stage_idx in range(num_pipeline_stages):
-                            self._replica_busy_time[cluster_type][replica_idx][dp_idx][
+                            self._replica_busy_time[cluster_type][replica_idx][replica_local_id][
                                 stage_idx
                             ].print_stats(
-                                f"replica_{replica_idx + 1}_dp_{dp_idx}_stage_{stage_idx + 1}_busy_time_percent",
+                                f"replica_{replica_idx + 1}_local_{replica_local_id}_stage_{stage_idx + 1}_busy_time_percent",
                                 cluster_plot_path,
                             )
-                            self._replica_mfu[cluster_type][replica_idx][dp_idx][
+                            self._replica_mfu[cluster_type][replica_idx][replica_local_id][
                                 stage_idx
                             ].print_stats(
-                                f"replica_{replica_idx + 1}_dp_{dp_idx}_stage_{stage_idx + 1}_mfu",
+                                f"replica_{replica_idx + 1}_local_{replica_local_id}_stage_{stage_idx + 1}_mfu",
                                 cluster_plot_path,
                             )
 
@@ -1916,6 +2010,7 @@ class MetricsStore:
         self._write_system_metrics()
         self._write_op_precision_metadata()
         self._write_frontier_stage_batch_ledger()
+        self._write_frontier_transfer_ledger()
 
         # Flush and close TraceStore if active
         if self.trace_store:
@@ -3260,7 +3355,7 @@ class MetricsStore:
         replica_id: int,
         memory_usage_percent: int,
         cluster_type: ClusterType,
-        dp_id: int = 0,
+        replica_local_id: int | None = None,
     ) -> None:
         if (
             self._config.min_batch_index and batch.id < self._config.min_batch_index
@@ -3272,9 +3367,9 @@ class MetricsStore:
 
         if self._config.store_utilization_metrics:
             replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
-            self._replica_memory_usage[cluster_type][replica_index][dp_id].put(
-                time, memory_usage_percent
-            )
+            self._get_memory_usage_meter(
+                cluster_type, replica_index, replica_local_id
+            ).put(time, memory_usage_percent)
 
         for request in batch.requests:
             self._update_per_token_execution_times(time, request, batch)
@@ -3317,14 +3412,16 @@ class MetricsStore:
         replica_id: int,
         memory_usage_percent: int,
         cluster_type: ClusterType,
-        dp_id: int = 0,
+        replica_local_id: int | None = None,
     ) -> None:
         if not self._config.store_utilization_metrics:
             return
 
         # Convert global replica_id to cluster-relative index
         replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
-        self._replica_memory_usage[cluster_type][replica_index][dp_id].put(
+        self._get_memory_usage_meter(
+            cluster_type, replica_index, replica_local_id
+        ).put(
             time, memory_usage_percent
         )
 
@@ -3365,6 +3462,53 @@ class MetricsStore:
 
         return replica_index
 
+    def _get_memory_usage_meter(
+        self,
+        cluster_type: ClusterType,
+        replica_index: int,
+        replica_local_id: int | None,
+    ) -> SeriesAverageMeter:
+        if replica_local_id is None:
+            return self._replica_full_stage_memory_usage[cluster_type][replica_index]
+
+        lane_meters = self._replica_memory_usage[cluster_type][replica_index]
+        if replica_local_id < 0 or replica_local_id >= len(lane_meters):
+            raise ValueError(
+                f"Invalid replica-local id for utilization metrics: "
+                f"cluster={cluster_type.name} replica_index={replica_index} "
+                f"replica_local_id={replica_local_id} available={len(lane_meters)}"
+            )
+        return lane_meters[replica_local_id]
+
+    def _get_stage_utilization_meters(
+        self,
+        cluster_type: ClusterType,
+        replica_index: int,
+        stage_id: int,
+        replica_local_id: int | None,
+    ) -> tuple[SeriesAverageMeter, SeriesAverageMeter]:
+        if replica_local_id is None:
+            busy_meters = self._replica_full_stage_busy_time[cluster_type][
+                replica_index
+            ]
+            mfu_meters = self._replica_full_stage_mfu[cluster_type][replica_index]
+        else:
+            busy_meters = self._replica_busy_time[cluster_type][replica_index][
+                replica_local_id
+            ]
+            mfu_meters = self._replica_mfu[cluster_type][replica_index][
+                replica_local_id
+            ]
+
+        if stage_id < 0 or stage_id >= len(busy_meters):
+            scope = "full-stage" if replica_local_id is None else "replica-local"
+            raise ValueError(
+                f"Invalid stage id for {scope} utilization metrics: "
+                f"cluster={cluster_type.name} replica={replica_index} "
+                f"stage={stage_id} available_stages={len(busy_meters)}"
+            )
+        return busy_meters[stage_id], mfu_meters[stage_id]
+
     def on_replica_stage_schedule(
         self,
         time: float,
@@ -3373,8 +3517,22 @@ class MetricsStore:
         batch_stage: BatchStage,
         execution_time: ExecutionTime,
         cluster_type: ClusterType,
-        dp_id: int = 0,
+        replica_local_id: int | None = None,
     ) -> None:
+        if (
+            self._config.write_metrics
+            and batch_stage is not None
+            and cluster_type in {ClusterType.DECODE, ClusterType.DECODE_ATTN}
+            and stage_id == 0
+        ):
+            self._bind_pending_kv_transfer_target(
+                time=time,
+                batch_stage=batch_stage,
+                cluster_type=cluster_type,
+                replica_id=replica_id,
+                replica_local_id=replica_local_id,
+            )
+
         # Emit op-level traces if enabled (independent of write_metrics flag)
         # This must be called FIRST because it uses the raw simulation time,
         # and trace events should capture the start time of the stage execution.
@@ -3410,7 +3568,7 @@ class MetricsStore:
                 replica_id=replica_id,
                 stage_id=stage_id,
                 cluster_type=cluster_type,
-                dp_id=dp_id,
+                replica_local_id=replica_local_id,
                 stage_end_time=time + batch_stage.execution_time,
             )
             ledger_key = self._frontier_stage_batch_ledger_key(
@@ -3418,7 +3576,7 @@ class MetricsStore:
                 replica_id=replica_id,
                 stage_id=stage_id,
                 cluster_type=cluster_type,
-                dp_id=dp_id,
+                replica_local_id=replica_local_id,
             )
             self._pending_frontier_stage_batch_ledger_rows[ledger_row_id] = ledger_row
             self._pending_frontier_stage_batch_ledger_row_keys[ledger_key] = ledger_row_id
@@ -3431,26 +3589,15 @@ class MetricsStore:
             return
 
         replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
-        dp_stage_busy = self._replica_busy_time[cluster_type][replica_index]
-        if dp_id < 0 or dp_id >= len(dp_stage_busy):
-            raise ValueError(
-                f"Invalid lane id for utilization metrics: cluster={cluster_type.name} "
-                f"replica={replica_id} lane={dp_id} available_lanes={len(dp_stage_busy)}"
-            )
-        if stage_id < 0 or stage_id >= len(dp_stage_busy[dp_id]):
-            raise ValueError(
-                f"Invalid stage id for utilization metrics: cluster={cluster_type.name} "
-                f"replica={replica_id} lane={dp_id} stage={stage_id} "
-                f"available_stages={len(dp_stage_busy[dp_id])}"
-            )
-
-        self._replica_busy_time[cluster_type][replica_index][dp_id][stage_id].put(
-            time, 100
+        busy_meter, mfu_meter = self._get_stage_utilization_meters(
+            cluster_type,
+            replica_index,
+            stage_id,
+            replica_local_id,
         )
+        busy_meter.put(time, 100)
         mfu = self._mfu_calculator[cluster_type].get_mfu(batch_stage)
-        self._replica_mfu[cluster_type][replica_index][dp_id][stage_id].put(
-            time, mfu
-        )
+        mfu_meter.put(time, mfu)
 
         if not self._config.store_operation_metrics:
             return
@@ -3622,7 +3769,7 @@ class MetricsStore:
                 self._push_metric(
                     OperationMetrics.EXPERT_PARALLEL_ALLTOALL_DISPATCH,
                     batch_id,
-                    execution_time.expert_parallel_communication_time / 2,
+                    execution_time.get_single_layer_moe_dispatch_time(),
                     cluster_type,
                 )
             for op_name, metric_value in _iter_family_execution_times(
@@ -3641,7 +3788,7 @@ class MetricsStore:
                 self._push_metric(
                     OperationMetrics.EXPERT_PARALLEL_ALLTOALL_COMBINE,
                     batch_id,
-                    execution_time.expert_parallel_communication_time / 2,
+                    execution_time.get_single_layer_moe_combine_time(),
                     cluster_type,
                 )
             for op_name, metric_value in _iter_family_execution_times(
@@ -3663,28 +3810,19 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType,
-        dp_id: int = 0,
+        replica_local_id: int | None = None,
     ) -> None:
         if not self._config.store_utilization_metrics:
             return
         replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
-        dp_stage_busy = self._replica_busy_time[cluster_type][replica_index]
-        if dp_id < 0 or dp_id >= len(dp_stage_busy):
-            raise ValueError(
-                f"Invalid lane id for utilization metrics end hook: cluster={cluster_type.name} "
-                f"replica={replica_id} lane={dp_id} available_lanes={len(dp_stage_busy)}"
-            )
-        if stage_id < 0 or stage_id >= len(dp_stage_busy[dp_id]):
-            raise ValueError(
-                f"Invalid stage id for utilization metrics end hook: cluster={cluster_type.name} "
-                f"replica={replica_id} lane={dp_id} stage={stage_id} "
-                f"available_stages={len(dp_stage_busy[dp_id])}"
-            )
-
-        self._replica_busy_time[cluster_type][replica_index][dp_id][stage_id].put(
-            time, 0
+        busy_meter, mfu_meter = self._get_stage_utilization_meters(
+            cluster_type,
+            replica_index,
+            stage_id,
+            replica_local_id,
         )
-        self._replica_mfu[cluster_type][replica_index][dp_id][stage_id].put(time, 0)
+        busy_meter.put(time, 0)
+        mfu_meter.put(time, 0)
 
         ledger_row = self._pending_frontier_stage_batch_ledger_rows.pop(id(batch_stage), None)
         if ledger_row is not None:
@@ -3694,7 +3832,7 @@ class MetricsStore:
                     replica_id=ledger_row["replica_id"],
                     stage_id=ledger_row["stage_id"],
                     cluster_type=ledger_row["cluster_type"],
-                    dp_id=ledger_row["dp_id"],
+                    replica_local_id=ledger_row.get("replica_local_id"),
                 ),
                 None,
             )
@@ -3837,15 +3975,15 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType | str,
-        dp_id: int,
-    ) -> tuple[str, int, int, int, int]:
+        replica_local_id: int | None,
+    ) -> tuple[str, int, int | None, int, int]:
         cluster_type_name = (
             cluster_type.name if isinstance(cluster_type, ClusterType) else str(cluster_type)
         )
         return (
             cluster_type_name,
             int(replica_id),
-            int(dp_id),
+            None if replica_local_id is None else int(replica_local_id),
             int(stage_id),
             int(batch_id),
         )
@@ -3858,7 +3996,7 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
         completion_source: str = "manual_flush",
     ) -> None:
         if (
@@ -3872,7 +4010,7 @@ class MetricsStore:
             replica_id=replica_id,
             stage_id=stage_id,
             cluster_type=cluster_type,
-            dp_id=dp_id,
+            replica_local_id=replica_local_id,
         )
         ledger_row = self._pending_frontier_stage_batch_ledger_rows_by_key.pop(
             ledger_key, None
@@ -3880,7 +4018,8 @@ class MetricsStore:
         if ledger_row is None:
             raise ValueError(
                 "Missing pending Frontier stage-batch ledger row for manual flush: "
-                f"cluster={cluster_type.name}, replica_id={replica_id}, dp_id={dp_id}, "
+                f"cluster={cluster_type.name}, replica_id={replica_id}, "
+                f"replica_local_id={replica_local_id}, "
                 f"stage_id={stage_id}, batch_id={batch_id}"
             )
         ledger_row_id = self._pending_frontier_stage_batch_ledger_row_keys.pop(
@@ -3908,9 +4047,10 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
         stage_end_time: float,
     ) -> dict[str, Any]:
+        batch_stage_id = self._exact_batch_stage_id(batch_stage)
         component_ledger_ms = self._build_frontier_stage_batch_component_ledger(execution_time)
         diagnostic_component_ledger_ms = (
             self._build_frontier_stage_batch_diagnostic_component_ledger(execution_time)
@@ -3937,11 +4077,21 @@ class MetricsStore:
 
         row = {
             "batch_id": int(batch_stage._batch_id),
+            "batch_stage_id": batch_stage_id,
             "stage_id": int(stage_id),
             "cluster_type": cluster_type.name,
             "replica_id": int(replica_id),
-            "dp_id": int(dp_id),
+            "execution_scope": (
+                "FULL_STAGE_WORLD" if replica_local_id is None else "EP_WAVE_LANE"
+            ),
+            "replica_local_id": (
+                None if replica_local_id is None else int(replica_local_id)
+            ),
             "request_ids": [str(request_id) for request_id in batch_stage.request_ids],
+            "request_runtime_epochs": [
+                int(runtime_epoch)
+                for runtime_epoch in batch_stage.request_runtime_epochs
+            ],
             "request_num_tokens": [int(token_count) for token_count in batch_stage.num_tokens],
             "stage_start_ts": float(batch_stage.scheduled_at),
             "stage_end_ts": float(stage_end_time),
@@ -3953,6 +4103,14 @@ class MetricsStore:
                 "diagnostic_component_ledger_ms": diagnostic_component_ledger_ms,
             },
         }
+        runtime_identity = getattr(batch_stage, "runtime_identity", None)
+        if runtime_identity is not None:
+            row.update(runtime_identity)
+        request_num_prefill_tokens = batch_stage.request_num_prefill_tokens
+        if request_num_prefill_tokens is not None:
+            row["request_num_prefill_tokens"] = [
+                int(token_count) for token_count in request_num_prefill_tokens
+            ]
         if hasattr(batch_stage, "source_batch_ids"):
             row["source_batch_ids"] = [
                 int(batch_id) for batch_id in batch_stage.source_batch_ids
@@ -3960,6 +4118,11 @@ class MetricsStore:
         if hasattr(batch_stage, "source_request_ids"):
             row["source_request_ids"] = [
                 str(request_id) for request_id in batch_stage.source_request_ids
+            ]
+        if hasattr(batch_stage, "source_request_runtime_epochs"):
+            row["source_request_runtime_epochs"] = [
+                int(runtime_epoch)
+                for runtime_epoch in batch_stage.source_request_runtime_epochs
             ]
         if hasattr(batch_stage, "source_request_num_tokens"):
             row["source_request_num_tokens"] = [
@@ -3973,12 +4136,13 @@ class MetricsStore:
             ]
         if hasattr(batch_stage, "source_group_ready_ts"):
             row["source_group_ready_ts"] = float(batch_stage.source_group_ready_ts)
-        if hasattr(batch_stage, "ep_id"):
+        if replica_local_id is not None and hasattr(batch_stage, "ep_id"):
             row["ep_id"] = int(batch_stage.ep_id)
-        if hasattr(batch_stage, "per_expert_tokens"):
+        lane_workload = getattr(batch_stage, "lane_workload", None)
+        if lane_workload is not None:
             row["per_expert_tokens"] = {
                 str(expert_id): int(token_count)
-                for expert_id, token_count in batch_stage.per_expert_tokens.items()
+                for expert_id, token_count in lane_workload.per_expert_tokens.items()
             }
         return row
 
@@ -3990,7 +4154,7 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
         stage_end_time: float,
     ) -> dict[str, Any]:
         if getattr(self._config, "store_frontier_stage_batch_ledger", True):
@@ -4000,7 +4164,7 @@ class MetricsStore:
                 replica_id=replica_id,
                 stage_id=stage_id,
                 cluster_type=cluster_type,
-                dp_id=dp_id,
+                replica_local_id=replica_local_id,
                 stage_end_time=stage_end_time,
             )
         return self._build_frontier_stage_batch_ledger_summary_row(
@@ -4009,9 +4173,19 @@ class MetricsStore:
             replica_id=replica_id,
             stage_id=stage_id,
             cluster_type=cluster_type,
-            dp_id=dp_id,
+            replica_local_id=replica_local_id,
             stage_end_time=stage_end_time,
         )
+
+    @staticmethod
+    def _exact_batch_stage_id(batch_stage: BatchStage) -> int:
+        batch_stage_id = getattr(batch_stage, "id", None)
+        if type(batch_stage_id) is not int or batch_stage_id < 0:
+            raise ValueError(
+                "Frontier stage-batch ledger requires a non-negative "
+                f"batch_stage_id, got {batch_stage_id!r}"
+            )
+        return batch_stage_id
 
     def _build_frontier_stage_batch_ledger_summary_row(
         self,
@@ -4021,21 +4195,30 @@ class MetricsStore:
         replica_id: int,
         stage_id: int,
         cluster_type: ClusterType,
-        dp_id: int,
+        replica_local_id: int | None,
         stage_end_time: float,
     ) -> dict[str, Any]:
         row = {
             "batch_id": int(batch_stage._batch_id),
+            "batch_stage_id": self._exact_batch_stage_id(batch_stage),
             "stage_id": int(stage_id),
             "cluster_type": cluster_type.name,
             "replica_id": int(replica_id),
-            "dp_id": int(dp_id),
+            "execution_scope": (
+                "FULL_STAGE_WORLD" if replica_local_id is None else "EP_WAVE_LANE"
+            ),
+            "replica_local_id": (
+                None if replica_local_id is None else int(replica_local_id)
+            ),
             "stage_start_ts": float(batch_stage.scheduled_at),
             "stage_end_ts": float(stage_end_time),
             "execution_time": {
                 "total_time_ms": _round_ledger_ms(execution_time.total_time * 1e3),
             },
         }
+        runtime_identity = getattr(batch_stage, "runtime_identity", None)
+        if runtime_identity is not None:
+            row.update(runtime_identity)
         if hasattr(batch_stage, "source_batch_ids"):
             row["source_batch_ids"] = [
                 int(batch_id) for batch_id in batch_stage.source_batch_ids
@@ -4043,6 +4226,11 @@ class MetricsStore:
         if hasattr(batch_stage, "source_request_ids"):
             row["source_request_ids"] = [
                 str(request_id) for request_id in batch_stage.source_request_ids
+            ]
+        if hasattr(batch_stage, "source_request_runtime_epochs"):
+            row["source_request_runtime_epochs"] = [
+                int(runtime_epoch)
+                for runtime_epoch in batch_stage.source_request_runtime_epochs
             ]
         if hasattr(batch_stage, "source_batch_arrival_times"):
             row["source_batch_arrival_times"] = [
@@ -4290,11 +4478,473 @@ class MetricsStore:
                 )
                 handle.write("\n")
 
+    def _build_transfer_ledger_row(
+        self,
+        *,
+        transfer_info: Any,
+        transfer_kind: str,
+        source_replica_id: int,
+        source_replica_local_id: int | None,
+        target_cluster_type: ClusterType,
+        byte_count: int,
+        start_time: float,
+    ) -> dict[str, Any]:
+        if type(source_replica_id) is not int or source_replica_id < 0:
+            raise ValueError(
+                "Transfer ledger requires an exact non-negative source Replica "
+                f"ID, got {source_replica_id!r}"
+            )
+        batch = getattr(transfer_info, "batch", None)
+        requests = list(getattr(batch, "requests", ()) or ())
+        request_ids = [int(request.id) for request in requests]
+        request_runtime_epochs = list(
+            getattr(batch, "request_runtime_epochs", ()) or ()
+        )
+        if (
+            len(request_runtime_epochs) != len(request_ids)
+            or any(
+                type(runtime_epoch) is not int or runtime_epoch < 0
+                for runtime_epoch in request_runtime_epochs
+            )
+        ):
+            raise ValueError(
+                "Transfer ledger requires request_runtime_epochs aligned with "
+                "request_ids"
+            )
+        iteration_ids: list[int | None] = []
+        for request in requests:
+            token_index = getattr(request, "current_decode_token_index", None)
+            iteration_ids.append(
+                token_index - 1
+                if type(token_index) is int and token_index >= 1
+                else None
+            )
+
+        source_cluster_type = getattr(transfer_info, "source_cluster_type", None)
+        if not isinstance(source_cluster_type, ClusterType):
+            raise ValueError(
+                "Transfer ledger requires a valid source ClusterType, "
+                f"got {source_cluster_type!r}"
+            )
+        if not isinstance(target_cluster_type, ClusterType):
+            raise ValueError(
+                "Transfer ledger requires a valid target ClusterType, "
+                f"got {target_cluster_type!r}"
+            )
+
+        if transfer_kind == "kv_cache":
+            target_replica_id = getattr(transfer_info, "target_replica_id", None)
+            target_replica_local_id = getattr(
+                transfer_info, "target_replica_local_id", None
+            )
+            source_batch_stage_id = getattr(
+                transfer_info, "source_batch_stage_id", None
+            )
+            target_batch_stage_id = getattr(
+                transfer_info, "target_batch_stage_id", None
+            )
+            if (
+                type(source_batch_stage_id) is not int
+                or source_batch_stage_id < 0
+            ):
+                raise ValueError(
+                    "KV transfer ledger requires an exact non-negative "
+                    "source_batch_stage_id, got "
+                    f"{source_batch_stage_id!r}"
+                )
+            if target_batch_stage_id is not None and (
+                type(target_batch_stage_id) is not int
+                or target_batch_stage_id < 0
+            ):
+                raise ValueError(
+                    "KV transfer ledger requires an exact non-negative "
+                    "target_batch_stage_id or None, got "
+                    f"{target_batch_stage_id!r}"
+                )
+            attention_owner_replica_id = None
+            attention_owner_replica_local_id = None
+            layer_id = None
+            afd_stage_idx = None
+            pipeline_stage = None
+        elif transfer_kind == "m2n":
+            target_replica_id = getattr(
+                transfer_info, "target_execution_replica_id", None
+            )
+            target_replica_local_id = getattr(
+                transfer_info, "target_execution_replica_local_id", None
+            )
+            layer_id = getattr(transfer_info, "layer_id", None)
+            afd_stage_idx = getattr(transfer_info, "afd_stage_idx", None)
+            pipeline_stage = getattr(transfer_info, "pipeline_stage", None)
+            attention_owner_replica_id = getattr(
+                transfer_info, "source_replica_id", None
+            )
+            attention_owner_replica_local_id = getattr(
+                transfer_info, "source_replica_local_id", None
+            )
+            source_batch_stage_id = None
+            target_batch_stage_id = None
+            if (
+                type(attention_owner_replica_id) is not int
+                or attention_owner_replica_id < 0
+            ):
+                raise ValueError(
+                    "M2N transfer ledger requires an exact non-negative "
+                    "Attention owner Replica ID, got "
+                    f"{attention_owner_replica_id!r}"
+                )
+            if attention_owner_replica_local_id is not None and (
+                type(attention_owner_replica_local_id) is not int
+                or attention_owner_replica_local_id < 0
+            ):
+                raise ValueError(
+                    "M2N transfer ledger requires a non-negative Attention "
+                    "owner local Replica ID or None, got "
+                    f"{attention_owner_replica_local_id!r}"
+                )
+        else:
+            raise ValueError(
+                f"Unsupported transfer ledger kind: {transfer_kind!r}"
+            )
+
+        batch_id = getattr(batch, "id", None)
+        batch_global_id = getattr(batch, "global_id", None)
+        transfer_id = f"{transfer_kind}-{self._transfer_ledger_next_id}"
+        self._transfer_ledger_next_id += 1
+        return {
+            "transfer_id": transfer_id,
+            "transfer_kind": transfer_kind,
+            "request_ids": request_ids,
+            "request_runtime_epochs": request_runtime_epochs,
+            "batch_id": batch_id,
+            "batch_global_id": batch_global_id,
+            "source_cluster": source_cluster_type.name,
+            "target_cluster": target_cluster_type.name,
+            "source_replica_id": source_replica_id,
+            "source_replica_local_id": source_replica_local_id,
+            "attention_owner_replica_id": attention_owner_replica_id,
+            "attention_owner_replica_local_id": (
+                attention_owner_replica_local_id
+            ),
+            "target_replica_id": target_replica_id,
+            "target_replica_local_id": target_replica_local_id,
+            "source_batch_stage_id": source_batch_stage_id,
+            "target_batch_stage_id": target_batch_stage_id,
+            "target_bound": False,
+            "layer_id": layer_id,
+            "afd_stage_idx": afd_stage_idx,
+            "pipeline_stage": pipeline_stage,
+            "iteration_ids": iteration_ids,
+            "bytes": int(byte_count),
+            "start_ts_s": float(start_time),
+            "end_ts_s": None,
+            "duration_ms": None,
+            "status": "started",
+        }
+
+    def _register_transfer_ledger_start(
+        self,
+        *,
+        transfer_info: Any,
+        transfer_kind: str,
+        source_replica_id: int,
+        source_replica_local_id: int | None,
+        target_cluster_type: ClusterType,
+        byte_count: int,
+        start_time: float,
+    ) -> None:
+        if not self._config.write_metrics:
+            return
+        transfer_key = id(transfer_info)
+        if transfer_key in self._transfer_ledger_rows_by_info_id:
+            raise ValueError(
+                "Transfer ledger received a duplicate start for the same "
+                f"transfer object: kind={transfer_kind}"
+            )
+        row = self._build_transfer_ledger_row(
+            transfer_info=transfer_info,
+            transfer_kind=transfer_kind,
+            source_replica_id=source_replica_id,
+            source_replica_local_id=source_replica_local_id,
+            target_cluster_type=target_cluster_type,
+            byte_count=byte_count,
+            start_time=start_time,
+        )
+        self._transfer_ledger_rows.append(row)
+        self._transfer_ledger_rows_by_info_id[transfer_key] = row
+        self._transfer_info_objects[transfer_key] = transfer_info
+
+    def _bind_transfer_target_replica(
+        self,
+        transfer_info: Any,
+        target_replica_id: int | None,
+        target_replica_local_id: int | None = None,
+        target_batch_stage_id: int | None = None,
+    ) -> None:
+        if not self._config.write_metrics or target_replica_id is None:
+            return
+        if type(target_replica_id) is not int or target_replica_id < 0:
+            raise ValueError(
+                "Transfer target Replica ID must be a non-negative int, "
+                f"got {target_replica_id!r}"
+            )
+        if target_replica_local_id is not None and (
+            type(target_replica_local_id) is not int or target_replica_local_id < 0
+        ):
+            raise ValueError(
+                "Transfer target local Replica ID must be a non-negative int or "
+                f"None, got {target_replica_local_id!r}"
+            )
+
+        row = self._transfer_ledger_rows_by_info_id.get(id(transfer_info))
+        if row is None:
+            raise ValueError(
+                "Transfer target binding has no corresponding transfer start"
+            )
+        transfer_kind = row["transfer_kind"]
+        if transfer_kind == "kv_cache":
+            if (
+                type(target_batch_stage_id) is not int
+                or target_batch_stage_id < 0
+            ):
+                raise ValueError(
+                    "KV transfer target binding requires an exact non-negative "
+                    "target_batch_stage_id, got "
+                    f"{target_batch_stage_id!r}"
+                )
+        elif target_batch_stage_id is not None:
+            raise ValueError(
+                "Only KV transfer target binding accepts target_batch_stage_id"
+            )
+        existing_target = row.get("target_replica_id")
+        if existing_target is not None and int(existing_target) != target_replica_id:
+            raise ValueError(
+                "Transfer target Replica changed after binding: "
+                f"existing={existing_target}, new={target_replica_id}"
+            )
+        existing_local = row.get("target_replica_local_id")
+        if (
+            existing_local is not None
+            and target_replica_local_id is not None
+            and int(existing_local) != target_replica_local_id
+        ):
+            raise ValueError(
+                "Transfer target local Replica changed after binding: "
+                f"existing={existing_local}, new={target_replica_local_id}"
+            )
+        existing_target_batch_stage_id = row.get("target_batch_stage_id")
+        if (
+            existing_target_batch_stage_id is not None
+            and existing_target_batch_stage_id != target_batch_stage_id
+        ):
+            raise ValueError(
+                "Transfer target BatchStage changed after binding: "
+                f"existing={existing_target_batch_stage_id}, "
+                f"new={target_batch_stage_id}"
+            )
+
+        row["target_replica_id"] = target_replica_id
+        row["target_replica_local_id"] = target_replica_local_id
+        row["target_batch_stage_id"] = target_batch_stage_id
+        row["target_bound"] = True
+        if transfer_kind == "kv_cache":
+            transfer_info.target_replica_id = target_replica_id
+            transfer_info.target_replica_local_id = target_replica_local_id
+            transfer_info.target_batch_stage_id = target_batch_stage_id
+        elif transfer_kind == "m2n":
+            transfer_info.target_execution_replica_id = target_replica_id
+            transfer_info.target_execution_replica_local_id = (
+                target_replica_local_id
+            )
+            if transfer_info.target_cluster_type == ClusterType.DECODE_FFN:
+                transfer_info.target_ffn_replica_id = target_replica_id
+        else:
+            raise ValueError(
+                f"Unsupported transfer ledger kind during target binding: "
+                f"{transfer_kind!r}"
+            )
+        self._refresh_transfer_ledger_status(row)
+        if row["status"] == "completed":
+            transfer_key = id(transfer_info)
+            del self._transfer_ledger_rows_by_info_id[transfer_key]
+            del self._transfer_info_objects[transfer_key]
+
+    @staticmethod
+    def _refresh_transfer_ledger_status(row: dict[str, Any]) -> None:
+        if row.get("end_ts_s") is None:
+            row["status"] = "started"
+        elif row.get("target_bound") is not True:
+            row["status"] = "pending_target"
+        else:
+            row["status"] = "completed"
+
+    def _complete_transfer_ledger_end(
+        self,
+        *,
+        transfer_info: Any,
+        end_time: float,
+        duration_ms: float,
+    ) -> None:
+        if not self._config.write_metrics:
+            return
+        row = self._transfer_ledger_rows_by_info_id.get(id(transfer_info))
+        if row is None:
+            raise ValueError(
+                "Transfer ledger received an end without a recorded start"
+            )
+        if row.get("end_ts_s") is not None:
+            raise ValueError(
+                f"Transfer ledger received a duplicate end: {row['transfer_id']}"
+            )
+        row["end_ts_s"] = float(end_time)
+        row["duration_ms"] = float(duration_ms)
+        self._refresh_transfer_ledger_status(row)
+        if row["status"] == "completed":
+            transfer_key = id(transfer_info)
+            del self._transfer_ledger_rows_by_info_id[transfer_key]
+            del self._transfer_info_objects[transfer_key]
+
+    def on_m2n_transfer_target_bound(self, transfer_info: Any) -> None:
+        """Bind the physical target after M2N arrival routing is resolved."""
+        if not self._config.write_metrics:
+            return
+        target_replica_id = getattr(
+            transfer_info, "target_execution_replica_id", None
+        )
+        target_replica_local_id = getattr(
+            transfer_info, "target_execution_replica_local_id", None
+        )
+        if target_replica_id is None:
+            raise ValueError(
+                "M2N transfer target binding requires an explicit physical "
+                "target Replica"
+            )
+        self._bind_transfer_target_replica(
+            transfer_info,
+            target_replica_id,
+            target_replica_local_id,
+        )
+
+    def _bind_pending_kv_transfer_target(
+        self,
+        *,
+        time: float,
+        batch_stage: BatchStage,
+        cluster_type: ClusterType,
+        replica_id: int,
+        replica_local_id: int | None,
+    ) -> None:
+        if not self._config.write_metrics:
+            return
+        target_batch_stage_id = self._exact_batch_stage_id(batch_stage)
+        request_ids = list(batch_stage.request_ids)
+        request_runtime_epochs = list(batch_stage.request_runtime_epochs)
+        if (
+            len(request_runtime_epochs) != len(request_ids)
+            or any(
+                type(runtime_epoch) is not int or runtime_epoch < 0
+                for runtime_epoch in request_runtime_epochs
+            )
+        ):
+            raise ValueError(
+                "KV target stage requires request_runtime_epochs aligned with "
+                "request_ids"
+            )
+        request_identity = {
+            (int(request_id), runtime_epoch)
+            for request_id, runtime_epoch in zip(
+                request_ids,
+                request_runtime_epochs,
+            )
+        }
+        candidates = []
+        for transfer_info_id, row in self._transfer_ledger_rows_by_info_id.items():
+            if row.get("transfer_kind") != "kv_cache":
+                continue
+            if row.get("target_bound") is True:
+                continue
+            if row.get("target_cluster") != cluster_type.name:
+                continue
+            transfer_request_ids = list(row.get("request_ids", ()))
+            transfer_runtime_epochs = list(
+                row.get("request_runtime_epochs", ())
+            )
+            if (
+                not transfer_request_ids
+                or len(transfer_runtime_epochs) != len(transfer_request_ids)
+                or any(
+                    type(runtime_epoch) is not int or runtime_epoch < 0
+                    for runtime_epoch in transfer_runtime_epochs
+                )
+            ):
+                raise ValueError(
+                    "Pending KV transfer requires request_runtime_epochs aligned "
+                    "with request_ids"
+                )
+            transfer_identity = {
+                (int(request_id), runtime_epoch)
+                for request_id, runtime_epoch in zip(
+                    transfer_request_ids,
+                    transfer_runtime_epochs,
+                )
+            }
+            if not transfer_identity.issubset(
+                request_identity
+            ):
+                continue
+            end_time = row.get("end_ts_s")
+            if end_time is None or float(end_time) > float(time) + 1e-12:
+                continue
+            candidates.append((transfer_info_id, row, transfer_identity))
+        if not candidates:
+            return
+
+        # A target stage may legitimately receive several independent transfers
+        # (for example, one transfer per request), but two pending transfers must
+        # never claim the same request/runtime-epoch identity.  Matching only on
+        # subset membership would otherwise bind duplicate or stale transfer rows
+        # to the same stage and corrupt source/target lineage.  Detect the full
+        # ambiguity before mutating any row so the ledger remains transactional.
+        for index, (_, first_row, first_identity) in enumerate(candidates):
+            for _, second_row, second_identity in candidates[index + 1 :]:
+                overlap = first_identity & second_identity
+                if overlap:
+                    raise ValueError(
+                        "ambiguous KV transfer target: pending transfers "
+                        f"{first_row['transfer_id']!r} and "
+                        f"{second_row['transfer_id']!r} share request/runtime "
+                        f"identity {sorted(overlap)!r}"
+                    )
+
+        for transfer_info_id, _, _ in candidates:
+            transfer_info = self._transfer_info_objects.get(transfer_info_id)
+            if transfer_info is None:
+                raise ValueError(
+                    "KV transfer target binding lost its transfer object identity"
+                )
+            self._bind_transfer_target_replica(
+                transfer_info,
+                replica_id,
+                replica_local_id,
+                target_batch_stage_id,
+            )
+
+    def _write_frontier_transfer_ledger(self) -> None:
+        if not self._transfer_ledger_rows:
+            return
+        os.makedirs(self._config.output_dir, exist_ok=True)
+        output_path = os.path.join(
+            self._config.output_dir, "frontier_transfer_ledger.jsonl"
+        )
+        with open(output_path, "w", encoding="utf-8") as handle:
+            for row in self._transfer_ledger_rows:
+                handle.write(json.dumps(row, sort_keys=True) + "\n")
+
     def on_kv_cache_transfer_start(
         self,
         time: float,
         source_replica_id: int,
-        source_dp_id: int,
+        source_replica_local_id: int,
         target_cluster_type: ClusterType,
         kv_cache_size_bytes: int,
         transfer_info: Any,
@@ -4334,7 +4984,7 @@ class MetricsStore:
             transfer_meta["parallel_context"] = build_parallel_context(trace_context)
             transfer_meta["model_name"] = cluster_config.replica_config.model_name
             transfer_meta["request_ids"] = request_ids
-            transfer_meta["source_dp_id"] = source_dp_id
+            transfer_meta["source_replica_local_id"] = source_replica_local_id
 
             event = TraceEvent(
                 type="TRANSFER",
@@ -4352,6 +5002,15 @@ class MetricsStore:
         if not self._config.write_metrics:
             return
 
+        self._register_transfer_ledger_start(
+            transfer_info=transfer_info,
+            transfer_kind="kv_cache",
+            source_replica_id=source_replica_id,
+            source_replica_local_id=source_replica_local_id,
+            target_cluster_type=target_cluster_type,
+            byte_count=kv_cache_size_bytes,
+            start_time=time,
+        )
         self._kv_cache_transfer_metrics["transfer_count"] += 1
 
     def on_kv_cache_transfer_end(
@@ -4379,6 +5038,11 @@ class MetricsStore:
         )
         self._kv_cache_transfer_metrics["transfer_times"].put(transfer_id, duration)
         self._kv_cache_transfer_metrics["transfer_sizes"].put(transfer_id, size_bytes)
+        self._complete_transfer_ledger_end(
+            transfer_info=transfer_info,
+            end_time=time,
+            duration_ms=duration,
+        )
 
     def on_m2n_transfer_start(
         self,
@@ -4422,7 +5086,7 @@ class MetricsStore:
                     "parallel_context": build_parallel_context(trace_context),
                     "model_name": cluster_config.replica_config.model_name,
                     "request_ids": request_ids,
-                    "source_dp_id": transfer_info.source_dp_id,
+                    "source_replica_local_id": transfer_info.source_replica_local_id,
                 }
             )
             transfer_name = (
@@ -4448,6 +5112,27 @@ class MetricsStore:
         if not self._config.write_metrics:
             return
 
+        source_execution_replica_id = transfer_info.source_execution_replica_id
+        source_execution_replica_local_id = (
+            transfer_info.source_execution_replica_local_id
+        )
+        if (
+            type(source_execution_replica_id) is not int
+            or source_execution_replica_id < 0
+        ):
+            raise ValueError(
+                "M2N transfer ledger requires an exact non-negative source "
+                f"execution Replica ID, got {source_execution_replica_id!r}"
+            )
+        self._register_transfer_ledger_start(
+            transfer_info=transfer_info,
+            transfer_kind="m2n",
+            source_replica_id=source_execution_replica_id,
+            source_replica_local_id=source_execution_replica_local_id,
+            target_cluster_type=target_cluster_type,
+            byte_count=activation_size_bytes,
+            start_time=time,
+        )
         if not hasattr(self, "_m2n_transfer_metrics"):
             self._m2n_transfer_metrics = {
                 "transfer_count": 0,
@@ -4524,7 +5209,7 @@ class MetricsStore:
                     "parallel_context": build_parallel_context(trace_context),
                     "model_name": cluster_config.replica_config.model_name,
                     "request_ids": request_ids,
-                    "source_dp_id": transfer_info.source_dp_id,
+                    "source_replica_local_id": transfer_info.source_replica_local_id,
                     "source_cluster": source_cluster_type.name,
                 }
             )
@@ -4563,3 +5248,8 @@ class MetricsStore:
         )
         self._m2n_transfer_metrics["transfer_times"].put(transfer_id, duration)
         self._m2n_transfer_metrics["transfer_sizes"].put(transfer_id, size_bytes)
+        self._complete_transfer_ledger_end(
+            transfer_info=transfer_info,
+            end_time=time,
+            duration_ms=duration,
+        )

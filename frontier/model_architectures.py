@@ -106,7 +106,7 @@ class ModelArchitectureProfile:
     profile_id: str
     display_name: str
     linear_attention: LinearAttentionProfile
-    expert_parallel_collective: ExpertParallelCollective = ExpertParallelCollective.ALLGATHER
+    expert_parallel_collective: ExpertParallelCollective
     target_embedded_mtp: bool = False
     predictor_attention_extra_ops: tuple[str, ...] = ()
     attention_shape_log_kind: AttentionShapeLogKind | None = None
@@ -115,7 +115,6 @@ class ModelArchitectureProfile:
     skip_decode_attn_residual: bool = False
     moe_tensor_parallel_allgather_op: str | None = None
     share_expert_tensor_parallel_allreduce_op: str | None = None
-    share_expert_tp_allreduce_visibility_scale: float | None = None
     always_supports_share_expert: bool = False
     counts_share_expert_param_memory: bool = False
     structural_requirements: tuple[StructuralRequirement, ...] = ()
@@ -157,6 +156,7 @@ class ModelArchitectureProfile:
                     "attn_post_proj",
                 ),
             ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
             match=match or (lambda _config: False),
         )
 
@@ -179,6 +179,7 @@ class ModelArchitectureProfile:
                     "attn_wq_proj",
                 ),
             ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
             target_embedded_mtp=True,
             predictor_attention_extra_ops=(
                 "attn_inter_norm",
@@ -222,7 +223,6 @@ class ModelArchitectureProfile:
             share_expert_tensor_parallel_allreduce_op=(
                 "share_expert_tensor_parallel_allreduce"
             ),
-            share_expert_tp_allreduce_visibility_scale=2.0 / 3.0,
             always_supports_share_expert=True,
             counts_share_expert_param_memory=True,
             structural_requirements=(
@@ -256,8 +256,6 @@ class ModelArchitectureProfile:
     ) -> bool:
         """Return whether EP synchronization should use alltoall semantics."""
 
-        if expected_ep_size <= 1:
-            return False
         if self.expert_parallel_collective is not ExpertParallelCollective.ALLTOALL:
             return False
         return cluster_type in (
@@ -385,6 +383,12 @@ class ModelArchitectureRegistry:
     def register(self, profile: ModelArchitectureProfile) -> None:
         if profile.profile_id in self._profiles_by_id:
             raise ValueError(f"Duplicate model architecture profile: {profile.profile_id}")
+        if profile.expert_parallel_collective is not ExpertParallelCollective.ALLTOALL:
+            raise ValueError(
+                "Model architecture profiles must declare "
+                "expert_parallel_collective=ALLTOALL: "
+                f"{profile.profile_id} declares {profile.expert_parallel_collective.value}"
+            )
         self._profiles_by_id[profile.profile_id] = profile
 
     def get(self, profile_id: str) -> ModelArchitectureProfile:

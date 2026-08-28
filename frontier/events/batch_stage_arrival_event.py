@@ -12,7 +12,13 @@ logger = init_logger(__name__)
 
 class BatchStageArrivalEvent(BaseEvent):
     def __init__(
-        self, time: float, replica_id: int, stage_id: int, batch: Batch, cluster_type: ClusterType, dp_id: int
+        self,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch: Batch,
+        cluster_type: ClusterType,
+        replica_local_id: int | None,
     ):
         super().__init__(time, EventType.BATCH_STAGE_ARRIVAL)
 
@@ -20,7 +26,7 @@ class BatchStageArrivalEvent(BaseEvent):
         self._stage_id = stage_id
         self._batch = batch
         self._cluster_type = cluster_type
-        self._dp_id = dp_id
+        self._replica_local_id = replica_local_id
         self._batch_schedule_epoch = batch.schedule_epoch
 
     def handle_event(
@@ -33,8 +39,8 @@ class BatchStageArrivalEvent(BaseEvent):
 
         # Get the appropriate cluster scheduler for this cluster-internal event
         cluster_scheduler: BaseClusterScheduler = scheduler.get_cluster_scheduler(self._cluster_type)
-        stage_scheduler = cluster_scheduler.get_dp_replica_stage_scheduler(
-            self._replica_id, self._dp_id, self._stage_id
+        stage_scheduler = cluster_scheduler.get_replica_stage_scheduler(
+            self._replica_id, self._replica_local_id, self._stage_id
         )
         if self._batch.schedule_epoch != self._batch_schedule_epoch:
             logger.warning(
@@ -46,7 +52,7 @@ class BatchStageArrivalEvent(BaseEvent):
                 self._batch.schedule_epoch,
             )
             return []
-        logger.info(f"BatchStageArrivalEvent: adding batch {self._batch.id} to stage {self._stage_id}, (replica_id, dp_id) = ({self._replica_id}, {self._dp_id})")
+        logger.info(f"BatchStageArrivalEvent: adding batch {self._batch.id} to stage {self._stage_id}, (replica_id, replica_local_id) = ({self._replica_id}, {self._replica_local_id})")
         stage_scheduler.add_batch(self._batch)
 
         if stage_scheduler.is_busy:
@@ -64,7 +70,7 @@ class BatchStageArrivalEvent(BaseEvent):
                 self._replica_id,
                 self._stage_id,
                 self._cluster_type,
-                self._dp_id,
+                self._replica_local_id,
             )
         ]
 
@@ -76,5 +82,5 @@ class BatchStageArrivalEvent(BaseEvent):
             "stage_id": self._stage_id,
             "batch_id": self._batch.id,
             "cluster_type": self._cluster_type.name,
-            "dp_id": self._dp_id,
+            "replica_local_id": self._replica_local_id,
         }

@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import inspect
 from types import SimpleNamespace
 
 import pytest
 
+from frontier.execution_time_predictor.base_execution_time_predictor import (
+    BaseExecutionTimePredictor,
+)
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
@@ -94,6 +98,32 @@ def _build_predictor() -> _DummySklearnPredictor:
         lambda value, _op_name, _batch, _context: value
     )
     return predictor
+
+
+def test_dense_predictor_exposes_include_attention_contract() -> None:
+    for predictor_type in (
+        BaseExecutionTimePredictor,
+        SklearnExecutionTimePredictor,
+    ):
+        parameter = inspect.signature(
+            predictor_type.predict_stage_execution_time
+        ).parameters["include_attention"]
+        assert parameter.default is True
+
+
+def test_dense_predictor_rejects_post_attention_only_scope() -> None:
+    predictor = _build_predictor()
+
+    with pytest.raises(
+        ValueError,
+        match="Dense prediction does not support include_attention=False",
+    ):
+        predictor.predict_stage_execution_time(
+            batch=_DummyBatch(),
+            stage_id=0,
+            cluster_type=ClusterType.MONOLITHIC,
+            include_attention=False,
+        )
 
 
 def test_dense_predict_stage_execution_time_scales_linearly(monkeypatch):

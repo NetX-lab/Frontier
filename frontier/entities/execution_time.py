@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 from copy import deepcopy
+import math
 from types import MappingProxyType
 from typing import Union
 
@@ -775,6 +776,14 @@ class ExecutionTime(BaseEntity):
         """
         return self._attention_time.total_time()
 
+    def get_single_layer_attention_scope_time(self) -> float:
+        """
+        Get the complete single-layer attention scope.
+
+        This includes attention compute and its tensor-parallel all-reduce.
+        """
+        return self._get_attention_layer_execution_time()
+
     def get_single_layer_moe_comp_time(self) -> float:
         """
         Get MoE computation time for a single layer.
@@ -793,31 +802,95 @@ class ExecutionTime(BaseEntity):
         """
         Get the MoE runtime that must complete before EP dispatch begins.
 
-        This covers the explicit FFN-EP workflow segment observed in runtime
-        traces: share-expert ops, MoE gating, then token shuffling.
+        This covers the shared work before routed tokens enter their EP lanes.
         """
         if not isinstance(self._moe_or_mlp_time, MoETime):
             raise ValueError("MoE pre-dispatch time is only available for MoE models")
         return (
-            self._moe_or_mlp_time.share_expert_up_proj_time
-            + self._moe_or_mlp_time.share_expert_down_proj_time
-            + self._moe_or_mlp_time.share_expert_act_time
-            + self._moe_or_mlp_time.moe_gating_time
-            + self._moe_or_mlp_time.moe_shuffling_time
+            self._time_attr_value(
+                "add_attn_residual_time",
+                self._residual_time.add_attn_residual_time,
+            )
+            + self._time_attr_value(
+                "mlp_norm_time",
+                self._moe_or_mlp_time.mlp_norm_time,
+            )
+            + self._get_tensor_parallel_allgather_time()
+            + self._time_attr_value(
+                "share_expert_up_proj_time",
+                self._moe_or_mlp_time.share_expert_up_proj_time,
+            )
+            + self._time_attr_value(
+                "share_expert_act_time",
+                self._moe_or_mlp_time.share_expert_act_time,
+            )
+            + self._time_attr_value(
+                "share_expert_down_proj_time",
+                self._moe_or_mlp_time.share_expert_down_proj_time,
+            )
+            + self._get_share_expert_tensor_parallel_allreduce_time()
+            + self._get_moe_gating_time()
+            + self._get_moe_shuffling_time()
+            + self._get_dp_input_allreduce_time()
+        )
+
+    def _get_required_moe_ep_phase_time(self, op_name: str) -> float:
+        if not isinstance(self._moe_or_mlp_time, MoETime):
+            raise ValueError("MoE EP phase time is only available for MoE models")
+        operator_times = self._communication_time.operator_times
+        if operator_times is None:
+            raise ValueError(
+                "ExecutionTime is missing structured communication operator "
+                f"timing for {op_name}"
+            )
+        phase_time_ms = operator_times.get_required_time(op_name)
+        if not math.isfinite(phase_time_ms) or phase_time_ms < 0:
+            raise ValueError(
+                f"Invalid structured communication timing for {op_name}: "
+                f"{phase_time_ms}"
+            )
+        return phase_time_ms
+
+    def get_single_layer_moe_dispatch_time(self) -> float:
+        """Get the exact named EP dispatch latency for one MoE layer."""
+
+        return self._get_required_moe_ep_phase_time(
+            "expert_parallel_alltoall_dispatch"
         )
 
     def get_single_layer_moe_post_dispatch_compute_time(self) -> float:
         """
-        Get the MoE runtime that remains after EP dispatch finishes.
-
-        In the explicit FFN-EP workflow, only the routed grouped GEMM executes
-        between dispatch and combine.
+        Get lane-local routed expert work after EP dispatch.
         """
         if not isinstance(self._moe_or_mlp_time, MoETime):
             raise ValueError(
                 "MoE post-dispatch compute time is only available for MoE models"
             )
-        return self._moe_or_mlp_time.moe_grouped_gemm_time
+        return (
+            self._get_moe_grouped_gemm_time()
+            + self._get_moe_tp_allreduce_time()
+        )
+
+    def get_single_layer_moe_combine_time(self) -> float:
+        """Get the exact named EP combine latency for one MoE layer."""
+
+        return self._get_required_moe_ep_phase_time(
+            "expert_parallel_alltoall_combine"
+        )
+
+    def get_single_layer_moe_post_combine_time(self) -> float:
+        """Get shared work that must complete after EP combine."""
+        if not isinstance(self._moe_or_mlp_time, MoETime):
+            raise ValueError(
+                "MoE post-combine time is only available for MoE models"
+            )
+        return (
+            self._get_dp_output_allreduce_time()
+            + self._time_attr_value(
+                "add_ffn_residual_time",
+                self._residual_time.add_ffn_residual_time,
+            )
+        )
 
     def get_single_layer_moe_comm_time(self) -> float:
         """
@@ -865,16 +938,17 @@ class ExecutionTime(BaseEntity):
         """
         Get post-attention portion of one layer in milliseconds.
 
-        Equivalent to: single-layer block - single-layer attention.
+        Equivalent to: single-layer block - complete single-layer attention scope.
         """
         post_attention_time = (
-            self.get_single_layer_block_time() - self.get_single_layer_attention_time()
+            self.get_single_layer_block_time()
+            - self.get_single_layer_attention_scope_time()
         )
         if post_attention_time < 0:
             raise ValueError(
                 f"Invalid post-attention time: {post_attention_time} ms "
                 f"(block={self.get_single_layer_block_time()} ms, "
-                f"attention={self.get_single_layer_attention_time()} ms)"
+                f"attention_scope={self.get_single_layer_attention_scope_time()} ms)"
             )
         return post_attention_time
 

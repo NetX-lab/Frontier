@@ -67,7 +67,7 @@ _REQUEST_METRICS_NUMERIC_TOLERANCE = {
 @dataclass(frozen=True)
 class GoldenParallelism:
     attn_tensor_parallel_size: int = 1
-    attn_data_parallel_size: int = 1
+    attn_dp: int = 1
     moe_tensor_parallel_size: int = 1
     moe_expert_parallel_size: int = 1
     num_pipeline_stages: int = 1
@@ -134,7 +134,7 @@ PINNED_GOLDEN_PARALLELISM_BY_MODEL: dict[str, GoldenParallelism] = {
     # budget with real profiled TP=4 rows.
     "step-moe-noquant-small": GoldenParallelism(
         attn_tensor_parallel_size=4,
-        attn_data_parallel_size=1,
+        attn_dp=1,
         moe_tensor_parallel_size=4,
         moe_expert_parallel_size=1,
         num_pipeline_stages=1,
@@ -175,7 +175,7 @@ def parameter_memory_per_device_bytes(
         model_name=model_name,
         device=device,
         attn_tensor_parallel_size=parallelism.attn_tensor_parallel_size,
-        attn_data_parallel_size=parallelism.attn_data_parallel_size,
+        attn_dp=parallelism.attn_dp,
         moe_tensor_parallel_size=parallelism.moe_tensor_parallel_size,
         moe_expert_parallel_size=parallelism.moe_expert_parallel_size,
         num_pipeline_stages=parallelism.num_pipeline_stages,

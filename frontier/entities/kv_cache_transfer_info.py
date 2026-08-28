@@ -15,7 +15,8 @@ class KVCacheTransferInfo:
     source_cluster_type: ClusterType
     target_cluster_type: ClusterType
     source_replica_id: int
-    source_dp_id: int
+    source_replica_local_id: Optional[int]
+    source_batch_stage_id: int
     kv_cache_size_bytes: int
     transfer_time_ms: float
     transfer_start_time: float
@@ -25,8 +26,27 @@ class KVCacheTransferInfo:
     enable_latency_hiding: bool = False
     transfer_protocol: str = "rdma"
     transfer_requests: bool = False
+    target_replica_id: Optional[int] = None
+    target_replica_local_id: Optional[int] = None
+    target_batch_stage_id: Optional[int] = None
 
     def __post_init__(self) -> None:
+        if (
+            type(self.source_batch_stage_id) is not int
+            or self.source_batch_stage_id < 0
+        ):
+            raise ValueError(
+                "source_batch_stage_id must be a non-negative int, "
+                f"got {self.source_batch_stage_id!r}"
+            )
+        if self.target_batch_stage_id is not None and (
+            type(self.target_batch_stage_id) is not int
+            or self.target_batch_stage_id < 0
+        ):
+            raise ValueError(
+                "target_batch_stage_id must be a non-negative int or None, "
+                f"got {self.target_batch_stage_id!r}"
+            )
         if self.transfer_end_time is None:
             self.transfer_end_time = self.transfer_start_time + (self.transfer_time_ms * 1e-3)
 
@@ -47,6 +67,11 @@ class KVCacheTransferInfo:
             "source_cluster_type": self.source_cluster_type.name,
             "target_cluster_type": self.target_cluster_type.name,
             "source_replica_id": self.source_replica_id,
+            "source_replica_local_id": self.source_replica_local_id,
+            "source_batch_stage_id": self.source_batch_stage_id,
+            "target_replica_id": self.target_replica_id,
+            "target_replica_local_id": self.target_replica_local_id,
+            "target_batch_stage_id": self.target_batch_stage_id,
             "kv_cache_size_bytes": self.kv_cache_size_bytes,
             "effective_data_size_bytes": self.effective_data_size_bytes,
             "transfer_time_ms": self.transfer_time_ms,

@@ -6,6 +6,7 @@ import pytest
 from frontier.entities import Request
 from frontier.entities.batch import Batch, DenseFFNBatchGroup, EPBatchGroup
 from frontier.entities.m2n_transfer_info import M2NTransferInfo
+from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.events.m2n_transfer_end_event import M2NTransferEndEvent
 from frontier.events.m2n_transfer_start_event import M2NTransferStartEvent
 from frontier.metrics.metrics_store import MetricsStore
@@ -33,6 +34,10 @@ def _metrics_store(*, write_metrics: bool = True) -> MetricsStore:
     )
     store._trace_store = None
     store._cluster_configs = {}
+    store._transfer_ledger_next_id = 0
+    store._transfer_ledger_rows = []
+    store._transfer_ledger_rows_by_info_id = {}
+    store._transfer_info_objects = {}
     return store
 
 
@@ -40,14 +45,24 @@ def _transfer_info(
     source_cluster_type: ClusterType,
     target_cluster_type: ClusterType,
 ) -> M2NTransferInfo:
-    request = SimpleNamespace(id=7)
-    batch = SimpleNamespace(id=11, requests=[request])
+    request = SimpleNamespace(
+        id=7,
+        runtime_epoch=0,
+        current_decode_token_index=1,
+    )
+    batch = SimpleNamespace(
+        id=11,
+        requests=[request],
+        request_runtime_epochs=[0],
+    )
     return M2NTransferInfo(
         batch=batch,
         source_cluster_type=source_cluster_type,
         target_cluster_type=target_cluster_type,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
+        source_execution_replica_id=0,
+        source_execution_replica_local_id=0,
         activation_size_bytes=4096,
         transfer_time_ms=2.5,
         transfer_start_time=1.0,
@@ -84,7 +99,7 @@ def _trace_replica_config() -> SimpleNamespace:
         model_config=model_config,
         model_name="unit-model",
         attn_tensor_parallel_size=1,
-        attn_data_parallel_size=1,
+        attn_dp=1,
         moe_tensor_parallel_size=1,
         moe_expert_parallel_size=1,
         num_pipeline_stages=1,
@@ -96,7 +111,7 @@ def _decode_ffn_scheduler() -> VLLMv1EngineReplicaScheduler:
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
     scheduler._cluster_type = ClusterType.DECODE_FFN
     scheduler._replica_id = 0
-    scheduler._dp_id = 0
+    scheduler._replica_local_id = 0
     scheduler._af_pipeline_num_micro_batch = 1
     scheduler._num_running_batches = 0
     scheduler._m2n_immediate_batch_queue = []
@@ -108,7 +123,6 @@ def _dense_ffn_batch(request: Request, source_batch_id: int) -> DenseFFNBatchGro
         requests=[request],
         num_tokens=[1],
         replica_id=0,
-        lane_id=0,
         time=1.0,
         source_batch_ids=[source_batch_id],
         cluster_type=ClusterType.DECODE_FFN,
@@ -124,6 +138,7 @@ def _materialized_ep_ffn_batch(
     cluster_scheduler._config = SimpleNamespace(
         replica_config=SimpleNamespace(
             model_config=SimpleNamespace(is_moe=True),
+            router_topk=1,
         ),
     )
     plan = EPBatchGroupPlan(
@@ -135,7 +150,15 @@ def _materialized_ep_ffn_batch(
         pre_routing_effective_total_tokens=1,
         source_batches=(source_batch,),
         source_batch_ids=(source_batch.id,),
-        per_expert_tokens=((ep_id, 1),),
+        lane_workload=EPLaneWorkload(
+            ep_id=ep_id,
+            moe_expert_parallel_size=2,
+            total_expert_num=2,
+            owned_expert_ids=(ep_id,),
+            local_token_counts=(1,),
+            routed_token_count=1,
+            router_topk=1,
+        ),
     )
     return cluster_scheduler._materialize_ep_batch_group(plan)
 
@@ -230,7 +253,15 @@ def test_decode_ffn_invalid_ep_batch_does_not_partially_close_waiting() -> None:
         ep_id=0,
         time=1.0,
         source_batch_ids=[7],
-        per_expert_tokens={0: 1},
+        lane_workload=EPLaneWorkload(
+            ep_id=0,
+            moe_expert_parallel_size=1,
+            total_expert_num=1,
+            owned_expert_ids=(0,),
+            local_token_counts=(1,),
+            routed_token_count=1,
+            router_topk=1,
+        ),
         cluster_type=ClusterType.DECODE_FFN,
         is_moe=True,
     )
@@ -269,7 +300,15 @@ def test_decode_ffn_ep_source_batch_without_requests_fails_fast() -> None:
         ep_id=0,
         time=1.0,
         source_batch_ids=[empty_source_batch.id],
-        per_expert_tokens={0: 1},
+        lane_workload=EPLaneWorkload(
+            ep_id=0,
+            moe_expert_parallel_size=1,
+            total_expert_num=1,
+            owned_expert_ids=(0,),
+            local_token_counts=(1,),
+            routed_token_count=1,
+            router_topk=1,
+        ),
         cluster_type=ClusterType.DECODE_FFN,
         is_moe=True,
     )
@@ -436,7 +475,7 @@ def test_f2a_op_traces_are_emitted_when_aggregate_metrics_are_disabled() -> None
         source_cluster_type=ClusterType.DECODE_FFN,
         target_cluster_type=ClusterType.DECODE_ATTN,
         source_replica_id=0,
-        source_dp_id=1,
+        source_replica_local_id=1,
         activation_size_bytes=65536,
         transfer_time_ms=2.5,
         transfer_start_time=1.0,
@@ -517,6 +556,7 @@ class _EventScheduler:
         cluster_scheduler._cluster_type = cluster_type
         if cluster_type == ClusterType.DECODE_FFN:
             cluster_scheduler._ffn_expected_lanes = [(0, 0)]
+            cluster_scheduler._ffn_lane_to_target_replica = {(0, 0): 0}
             cluster_scheduler._ffn_group_micro_batches = 1
             cluster_scheduler._m2n_waiting_by_layer = {}
         cluster_scheduler.on_m2n_arrival = lambda *args: []
@@ -774,7 +814,7 @@ def test_m2n_start_propagates_request_timeline_invariant_failure() -> None:
     event = M2NTransferStartEvent(
         time=1.0,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
         source_cluster_type=ClusterType.DECODE_ATTN,
         target_cluster_type=ClusterType.DECODE_FFN,
         batch=_failing_hook_batch(),
@@ -796,7 +836,7 @@ def test_m2n_start_validates_all_requests_before_metrics_or_mutation() -> None:
     event = M2NTransferStartEvent(
         time=1.0,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
         source_cluster_type=ClusterType.DECODE_ATTN,
         target_cluster_type=ClusterType.DECODE_FFN,
         batch=_timeline_batch(requests),
@@ -834,7 +874,7 @@ def test_m2n_start_rejects_invalid_request_cohort_before_all_mutation(
     event = M2NTransferStartEvent(
         time=1.0,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
         source_cluster_type=ClusterType.DECODE_ATTN,
         target_cluster_type=ClusterType.DECODE_FFN,
         batch=_timeline_batch(batch_requests),
@@ -863,7 +903,7 @@ def test_m2n_f2a_start_validates_all_requests_before_mutation() -> None:
     event = M2NTransferStartEvent(
         time=1.0,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
         source_cluster_type=ClusterType.DECODE_FFN,
         target_cluster_type=ClusterType.DECODE_ATTN,
         batch=_timeline_batch(requests),
@@ -886,7 +926,7 @@ def test_m2n_end_propagates_request_timeline_invariant_failure() -> None:
         source_cluster_type=ClusterType.DECODE_ATTN,
         target_cluster_type=ClusterType.DECODE_FFN,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
         activation_size_bytes=4096,
         transfer_time_ms=2.5,
         transfer_start_time=1.0,
@@ -910,7 +950,7 @@ def test_m2n_end_validates_all_requests_before_metrics_or_mutation() -> None:
         source_cluster_type=ClusterType.DECODE_ATTN,
         target_cluster_type=ClusterType.DECODE_FFN,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
         activation_size_bytes=4096,
         transfer_time_ms=2.5,
         transfer_start_time=1.0,
@@ -934,6 +974,99 @@ def test_m2n_end_validates_all_requests_before_metrics_or_mutation() -> None:
     cluster_scheduler.on_m2n_arrival.assert_not_called()
 
 
+def test_m2n_end_keeps_transfer_and_request_state_when_arrival_fails() -> None:
+    """Arrival dispatch must not leave a committed end without a target receipt."""
+
+    request = _timeline_request()
+    request._af_roundtrip_inflight = True
+    batch = _timeline_batch([request])
+    transfer_info = M2NTransferInfo(
+        batch=batch,
+        source_cluster_type=ClusterType.DECODE_ATTN,
+        target_cluster_type=ClusterType.DECODE_FFN,
+        source_replica_id=0,
+        source_replica_local_id=0,
+        activation_size_bytes=4096,
+        transfer_time_ms=2.5,
+        transfer_start_time=1.0,
+        transfer_end_time=None,
+        layer_id=4,
+        afd_stage_idx=0,
+    )
+    before_request = _request_transfer_state(request)
+    before_transfer_end = transfer_info.transfer_end_time
+    target_scheduler = SimpleNamespace(
+        preflight_m2n_arrival=Mock(),
+        on_m2n_arrival=Mock(side_effect=RuntimeError("arrival failed")),
+    )
+    scheduler = SimpleNamespace(
+        get_cluster_scheduler=Mock(return_value=target_scheduler),
+    )
+    metrics_store = Mock()
+    event = M2NTransferEndEvent(time=1.005, transfer_info=transfer_info)
+
+    with pytest.raises(RuntimeError, match="arrival failed"):
+        event.handle_event(scheduler, metrics_store)
+
+    assert transfer_info.transfer_end_time == before_transfer_end
+    assert _request_transfer_state(request) == before_request
+    metrics_store.on_m2n_transfer_end.assert_not_called()
+    metrics_store.on_m2n_transfer_target_bound.assert_not_called()
+    target_scheduler.on_m2n_arrival.assert_called_once_with(
+        1.005,
+        batch,
+        transfer_info,
+    )
+
+
+def test_m2n_f2a_end_keeps_roundtrip_state_when_arrival_fails() -> None:
+    """F-to-A arrival failure must not close the request roundtrip early."""
+
+    request = _timeline_request()
+    request._af_roundtrip_inflight = True
+    request._decode_ffn_enter_time = 0.5
+    batch = _timeline_batch([request])
+    transfer_info = M2NTransferInfo(
+        batch=batch,
+        source_cluster_type=ClusterType.DECODE_FFN,
+        target_cluster_type=ClusterType.DECODE_ATTN,
+        source_replica_id=0,
+        source_replica_local_id=None,
+        activation_size_bytes=4096,
+        transfer_time_ms=2.5,
+        transfer_start_time=1.0,
+        transfer_end_time=None,
+        layer_id=4,
+        afd_stage_idx=0,
+    )
+    before_request = _request_transfer_state(request)
+    before_transfer_end = transfer_info.transfer_end_time
+    target_scheduler = SimpleNamespace(
+        preflight_m2n_arrival=Mock(),
+        on_m2n_arrival=Mock(side_effect=RuntimeError("arrival failed")),
+    )
+    scheduler = SimpleNamespace(
+        get_cluster_scheduler=Mock(return_value=target_scheduler),
+    )
+    metrics_store = Mock()
+    event = M2NTransferEndEvent(time=1.005, transfer_info=transfer_info)
+
+    with pytest.raises(RuntimeError, match="arrival failed"):
+        event.handle_event(scheduler, metrics_store)
+
+    assert transfer_info.transfer_end_time == before_transfer_end
+    assert _request_transfer_state(request) == before_request
+    metrics_store.on_m2n_transfer_end.assert_not_called()
+    metrics_store.on_m2n_transfer_target_bound.assert_not_called()
+    target_scheduler.on_m2n_arrival.assert_called_once_with(
+        1.005,
+        batch,
+        transfer_info,
+        expected_roundtrip_inflight=False,
+        request_end_deferred=True,
+    )
+
+
 @pytest.mark.parametrize(
     ("cohort_case", "error_match"),
     [
@@ -954,7 +1087,7 @@ def test_m2n_end_rejects_invalid_request_cohort_before_all_mutation(
         source_cluster_type=ClusterType.DECODE_ATTN,
         target_cluster_type=ClusterType.DECODE_FFN,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
         activation_size_bytes=4096,
         transfer_time_ms=2.5,
         transfer_start_time=1.0,
@@ -996,7 +1129,7 @@ def test_m2n_end_rejects_open_ffn_entry_before_all_mutation() -> None:
         source_cluster_type=ClusterType.DECODE_ATTN,
         target_cluster_type=ClusterType.DECODE_FFN,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
         activation_size_bytes=4096,
         transfer_time_ms=2.5,
         transfer_start_time=1.0,
@@ -1028,7 +1161,7 @@ def test_m2n_f2a_end_validates_all_requests_before_metrics_or_mutation() -> None
         source_cluster_type=ClusterType.DECODE_FFN,
         target_cluster_type=ClusterType.DECODE_ATTN,
         source_replica_id=0,
-        source_dp_id=0,
+        source_replica_local_id=0,
         activation_size_bytes=4096,
         transfer_time_ms=2.5,
         transfer_start_time=1.0,

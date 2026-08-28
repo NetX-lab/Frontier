@@ -46,41 +46,15 @@ class M2NTransferEndEvent(BaseEvent):
                 target_cluster=self._transfer_info.target_cluster_type,
                 activation_size_bytes=self._transfer_info.activation_size_bytes,
             )
-        self._transfer_info.transfer_end_time = self.time
 
         logger = get_cluster_logger(__name__, self._transfer_info.target_cluster_type.name)
 
         transfer_duration_s = self.time - self._transfer_info.transfer_start_time
         transfer_duration_ms = transfer_duration_s * 1e3
-        metrics_store.on_m2n_transfer_end(
-            self.time,
-            transfer_duration_ms,
-            self._transfer_info.activation_size_bytes,
-            self._transfer_info.source_cluster_type,
-            self._transfer_info.target_cluster_type,
-            self._transfer_info,
-        )
-
         is_attn_to_ffn = self._transfer_info.is_attn_to_ffn
-        for request in batch.requests:
-            request.on_m2n_transfer_complete(transfer_duration_s, is_attn_to_ffn)
 
         request_ids = [req.id for req in batch.requests]
         pipeline_stage = "attn→ffn" if is_attn_to_ffn else "ffn→attn"
-        logger.info(
-            f"M2N transfer completed at {self.time:.3f}s: "
-            f"requests {request_ids} {pipeline_stage} → {self._transfer_info.target_cluster_type.name} cluster, "
-            f"transfer_time={transfer_duration_ms:.2f}ms, size={self._transfer_info.activation_size_bytes} bytes"
-            f"{f', layer={self._transfer_info.layer_id}' if self._transfer_info.layer_id is not None else ''}"
-        )
-
-        for req in self._transfer_info.batch.requests:
-            req.on_inter_cluster_transfer_end(
-                time=self.time,
-                source_cluster=self._transfer_info.source_cluster_type,
-                target_cluster=self._transfer_info.target_cluster_type,
-                activation_size_bytes=self._transfer_info.activation_size_bytes,
-            )
 
         try:
             if (not self._transfer_info.is_attn_to_ffn) and self._transfer_info.target_cluster_type == ClusterType.DECODE_ATTN:
@@ -90,15 +64,59 @@ class M2NTransferEndEvent(BaseEvent):
                     f"[M2N][F2A][ARRIVE][PRE] batch_id={b.id} reqs={req_ids} "
                     f"batch_global_id={getattr(b, 'global_id', '?')} "
                     f"decode_attn_orig=(replica={getattr(b, 'decode_attn_original_replica_id', '?')},"
-                    f"dp={getattr(b, 'decode_attn_original_dp_id', '?')})"
+                    f"dp={getattr(b, 'decode_attn_original_replica_local_id', '?')})"
                 )
         except Exception as _e:
             logger.debug(f"[M2N][F2A][ARRIVE] pre-log error: {_e}")
 
-        arrival_events = target_cluster_scheduler.on_m2n_arrival(
+        # Target admission is the first mutating operation in this event.  The
+        # transfer timestamp, metrics ledger, and request timeline are committed
+        # only after the target scheduler has accepted the receipt.  For F→A,
+        # request.on_inter_cluster_transfer_end() is intentionally deferred, so
+        # the scheduler validates the projected post-end roundtrip state.
+        if self._transfer_info.target_cluster_type == ClusterType.DECODE_ATTN:
+            arrival_events = target_cluster_scheduler.on_m2n_arrival(
+                self.time,
+                self._transfer_info.batch,
+                self._transfer_info,
+                expected_roundtrip_inflight=False,
+                request_end_deferred=True,
+            )
+        else:
+            arrival_events = target_cluster_scheduler.on_m2n_arrival(
+                self.time,
+                self._transfer_info.batch,
+                self._transfer_info,
+            )
+
+        self._transfer_info.transfer_end_time = self.time
+        metrics_store.on_m2n_transfer_end(
             self.time,
-            self._transfer_info.batch,
+            transfer_duration_ms,
+            self._transfer_info.activation_size_bytes,
+            self._transfer_info.source_cluster_type,
+            self._transfer_info.target_cluster_type,
             self._transfer_info,
+        )
+
+        for request in batch.requests:
+            request.on_m2n_transfer_complete(transfer_duration_s, is_attn_to_ffn)
+
+        for req in self._transfer_info.batch.requests:
+            req.on_inter_cluster_transfer_end(
+                time=self.time,
+                source_cluster=self._transfer_info.source_cluster_type,
+                target_cluster=self._transfer_info.target_cluster_type,
+                activation_size_bytes=self._transfer_info.activation_size_bytes,
+            )
+
+        metrics_store.on_m2n_transfer_target_bound(self._transfer_info)
+
+        logger.info(
+            f"M2N transfer completed at {self.time:.3f}s: "
+            f"requests {request_ids} {pipeline_stage} → {self._transfer_info.target_cluster_type.name} cluster, "
+            f"transfer_time={transfer_duration_ms:.2f}ms, size={self._transfer_info.activation_size_bytes} bytes"
+            f"{f', layer={self._transfer_info.layer_id}' if self._transfer_info.layer_id is not None else ''}"
         )
 
         try:
