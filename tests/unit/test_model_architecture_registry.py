@@ -17,6 +17,9 @@ from frontier.config.model_config import BaseModelConfig, MoEModelConfig, ModelA
 from frontier.config.utils import dataclass_to_dict
 from frontier.model_architectures import (
     ExpertParallelCollective,
+    LayerContractSpec,
+    LayerDimensionSource,
+    LayerKind,
     LinearAttentionImplementation,
     LinearAttentionProfile,
     MODEL_ARCHITECTURE_REGISTRY,
@@ -26,6 +29,7 @@ from frontier.model_architectures import (
     StructuralRequirement,
     get_model_architecture_profile,
 )
+from frontier.operators.spec import TensorParallelMode
 from frontier.profiling.common.model_config import ModelConfig as ProfilingModelConfig
 from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
 from frontier.types import ActivationType, ClusterType, NormType
@@ -263,6 +267,50 @@ def test_explicit_step2_profile_drives_profiling_plan_without_model_type_branch(
     assert "attn_inter_norm" in plan["enabled_ops"]
     assert "attn_wq_proj" in plan["enabled_ops"]
     assert "share_expert_up_proj" in plan["enabled_ops"]
+
+
+def test_profile_owned_layer_activation_predicate_controls_materialization() -> None:
+    """A profile-declared activation rule must decide whether a contract is active."""
+
+    contract = LayerContractSpec(
+        LayerKind.DENSE,
+        LayerDimensionSource.DENSE,
+        TensorParallelMode.FFN_TP,
+        operator_family_ids=("ffn",),
+        activation_predicate=lambda _profile, config: bool(
+            getattr(config, "enable_custom_dense_domain", False)
+        ),
+    )
+    profile = replace(ModelArchitectureProfile.generic(), layer_contracts=(contract,))
+    config = _runtime_model_config(is_moe=False)
+    config.enable_custom_dense_domain = False
+
+    assert profile.iter_active_layer_contracts(config) == ()
+
+    config.enable_custom_dense_domain = True
+    assert profile.iter_active_layer_contracts(config) == (contract,)
+
+
+def test_resolver_rejects_inactive_dense_contract_for_pure_moe_query() -> None:
+    """Pure MoE operator queries must not fall back to an inactive dense domain."""
+
+    config = _profiling_config(
+        moe_layers_enum=None,
+        dense_mlp_hidden_dim=None,
+        routed_mlp_hidden_dim=256,
+    )
+    profile = get_model_architecture_profile(config)
+
+    assert [contract.layer_kind for contract in profile.iter_active_layer_contracts(config)] == [
+        LayerKind.ROUTED,
+        LayerKind.SHARED,
+    ]
+    with pytest.raises(ValueError, match="inactive.*dense|dense.*inactive"):
+        profile.resolve_layer_contract(
+            config,
+            operator_name="mlp_up_proj",
+            ffn_tp_size=1,
+        )
 
 
 def test_local_registry_can_plugin_custom_profile_without_global_model_branch() -> None:

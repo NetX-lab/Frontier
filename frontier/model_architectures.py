@@ -48,6 +48,9 @@ class LayerKind(Enum):
     SHARED_EXPERT = "shared"
 
 
+LayerActivationPredicate = Callable[["ModelArchitectureProfile", Any], bool]
+
+
 class LayerDimensionSource(Enum):
     """Declarative model-config source for a layer's effective FFN width."""
 
@@ -120,6 +123,11 @@ class LayerContractSpec:
     expert_parallel_mode: ExpertParallelMode = ExpertParallelMode.OFF
     operator_family_ids: tuple[str, ...] = ()
     base_layer_kinds: tuple[LayerKind, ...] = ()
+    activation_predicate: LayerActivationPredicate | None = field(
+        default=None,
+        repr=False,
+        compare=False,
+    )
 
     def __post_init__(self) -> None:
         if not isinstance(self.layer_kind, LayerKind):
@@ -149,6 +157,14 @@ class LayerContractSpec:
                 f"operator families: {family_ids}"
             )
         object.__setattr__(self, "operator_family_ids", family_ids)
+
+        if self.activation_predicate is not None and not callable(
+            self.activation_predicate
+        ):
+            raise ValueError(
+                f"{self.layer_kind.value} layer contract activation_predicate "
+                "must be callable when provided"
+            )
 
         base_kinds = tuple(self.base_layer_kinds) or (self.layer_kind,)
         normalized_base_kinds = []
@@ -180,6 +196,13 @@ class LayerContractSpec:
                 f"dimension source {expected_source.value}, got "
                 f"{self.dimension_source.value}"
             )
+
+    def is_active(self, profile: "ModelArchitectureProfile", config: Any) -> bool:
+        """Evaluate the profile-owned activation rule for this layer domain."""
+
+        if self.activation_predicate is None:
+            return True
+        return bool(self.activation_predicate(profile, config))
 
     @property
     def tp_mode(self) -> TensorParallelMode:
@@ -262,6 +285,35 @@ class ResolvedLayerContract:
         return self.expert_parallel_mode is ExpertParallelMode.ON
 
 
+def _dense_layer_contract_active(
+    profile: "ModelArchitectureProfile", config: Any
+) -> bool:
+    """Activate dense layers for dense models and mixed-layer MoE boundaries."""
+
+    return not bool(getattr(config, "is_moe", False)) or profile._is_mixed_model(config)
+
+
+def _routed_layer_contract_active(
+    _profile: "ModelArchitectureProfile", config: Any
+) -> bool:
+    """Activate routed layers for MoE model configurations."""
+
+    return bool(getattr(config, "is_moe", False))
+
+
+def _shared_layer_contract_active(
+    profile: "ModelArchitectureProfile", config: Any
+) -> bool:
+    """Activate shared-expert layers only when the profile supports them."""
+
+    if not bool(getattr(config, "is_moe", False)):
+        return False
+    configured_support = getattr(config, "supports_share_expert", None)
+    if callable(configured_support):
+        return bool(configured_support())
+    return profile.supports_share_expert(config)
+
+
 def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
     return (
         LayerContractSpec(
@@ -269,6 +321,7 @@ def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
             LayerDimensionSource.DENSE,
             TensorParallelMode.FFN_TP,
             operator_family_ids=("ffn",),
+            activation_predicate=_dense_layer_contract_active,
         ),
         LayerContractSpec(
             LayerKind.ROUTED,
@@ -276,6 +329,7 @@ def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
             TensorParallelMode.MOE_TP,
             ExpertParallelMode.ON,
             operator_family_ids=("moe",),
+            activation_predicate=_routed_layer_contract_active,
         ),
         LayerContractSpec(
             LayerKind.SHARED,
@@ -283,6 +337,7 @@ def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
             TensorParallelMode.FFN_TP,
             operator_family_ids=("share_expert",),
             base_layer_kinds=(LayerKind.ROUTED,),
+            activation_predicate=_shared_layer_contract_active,
         ),
     )
 
@@ -521,6 +576,7 @@ class ModelArchitectureProfile:
                     LayerDimensionSource.DENSE,
                     TensorParallelMode.ATTENTION_TP,
                     operator_family_ids=("ffn",),
+                    activation_predicate=_dense_layer_contract_active,
                 ),
                 LayerContractSpec(
                     LayerKind.ROUTED,
@@ -528,6 +584,7 @@ class ModelArchitectureProfile:
                     TensorParallelMode.MOE_TP,
                     ExpertParallelMode.ON,
                     operator_family_ids=("moe",),
+                    activation_predicate=_routed_layer_contract_active,
                 ),
                 LayerContractSpec(
                     LayerKind.SHARED,
@@ -535,6 +592,7 @@ class ModelArchitectureProfile:
                     TensorParallelMode.ATTENTION_TP,
                     operator_family_ids=("share_expert",),
                     base_layer_kinds=(LayerKind.ROUTED,),
+                    activation_predicate=_shared_layer_contract_active,
                 ),
             ),
         )
@@ -555,6 +613,27 @@ class ModelArchitectureProfile:
         return bool(getattr(config, "is_moe", False)) and int(
             getattr(config, "share_expert_dim", 0) or 0
         ) > 0
+
+    def iter_active_layer_contracts(
+        self,
+        config: Any,
+    ) -> tuple[LayerContractSpec, ...]:
+        """Return the typed layer contracts materialized by ``config``.
+
+        The profile owns activation of its declared domains. This keeps the
+        shared prediction manager independent of a fixed dense/routed/shared
+        family tuple while preserving the established pure-dense, pure-MoE,
+        and mixed-layer semantics.
+        """
+
+        if config is None:
+            raise ValueError("active layer contract resolution requires a model config")
+
+        active_contracts: list[LayerContractSpec] = []
+        for contract in self.layer_contracts:
+            if contract.is_active(self, config):
+                active_contracts.append(contract)
+        return tuple(active_contracts)
 
     def get_layer_contract(self, layer_kind: LayerKind) -> LayerContractSpec:
         """Return the profile-owned contract for one typed FFN domain."""
@@ -599,6 +678,7 @@ class ModelArchitectureProfile:
         config: Any,
         *,
         layer_id: int | None = None,
+        layer_kind: LayerKind | str | None = None,
         operator_name: str | None = None,
         attention_tp_size: int | None = None,
         attn_tp_size: int | None = None,
@@ -660,6 +740,12 @@ class ModelArchitectureProfile:
                     f"layer_id {layer_id} out of range [0, {num_layers})"
                 )
 
+        if layer_kind is not None and not isinstance(layer_kind, LayerKind):
+            try:
+                layer_kind = LayerKind(layer_kind)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"Unknown layer kind: {layer_kind!r}") from exc
+
         mixed_model = self._is_mixed_model(config)
         operator_family_id: str | None = None
         operator_contract: LayerContractSpec | None = None
@@ -675,6 +761,15 @@ class ModelArchitectureProfile:
                     f"Unable to bind operator {operator_name!r} to a typed layer contract"
                 ) from exc
             operator_contract = self.get_layer_contract_for_family(operator_family_id)
+
+        if layer_kind is not None:
+            kind_contract = self.get_layer_contract(layer_kind)
+            if operator_contract is not None and kind_contract is not operator_contract:
+                raise ValueError(
+                    "layer_kind conflicts with operator_name contract: "
+                    f"{layer_kind.value} != {operator_contract.layer_kind.value}"
+                )
+            operator_contract = kind_contract
 
         config_kind = self._resolve_config_layer_kind(config, layer_id)
         if operator_contract is not None:
@@ -716,6 +811,11 @@ class ModelArchitectureProfile:
             selected_kind = config_kind
 
         spec = operator_contract or self.get_layer_contract(selected_kind)
+        if not spec.is_active(self, config):
+            raise ValueError(
+                f"{spec.layer_kind.value} layer contract is inactive for "
+                f"profile {self.profile_id!r} and the supplied model configuration"
+            )
         width = spec.resolve_width(config, mixed_model=mixed_model)
         tp_size = self._resolve_tensor_parallel_size(
             spec,
