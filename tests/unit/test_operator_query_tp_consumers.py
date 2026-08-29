@@ -311,6 +311,25 @@ def test_shared_expert_contract_rejects_dense_base_layer() -> None:
         )
 
 
+def test_routed_operator_contract_rejects_dense_model_without_layer_identity() -> None:
+    dense_config = SimpleNamespace(
+        is_moe=False,
+        num_layers=2,
+        mlp_hidden_dim=256,
+        dense_mlp_hidden_dim=256,
+        routed_mlp_hidden_dim=None,
+        share_expert_dim=None,
+        num_experts=8,
+    )
+
+    with pytest.raises(ValueError, match="requires.*MoE"):
+        ModelArchitectureProfile.generic().resolve_layer_contract(
+            dense_config,
+            operator_name="moe_grouped_gemm",
+            moe_tp_size=1,
+        )
+
+
 def test_profile_contract_rejects_conflicting_generic_and_domain_tp_aliases() -> None:
     with pytest.raises(ValueError, match="tensor_parallel_size.*attention_tp_size"):
         ModelArchitectureProfile.step3_text().resolve_layer_contract(

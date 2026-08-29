@@ -678,6 +678,14 @@ class ModelArchitectureProfile:
 
         config_kind = self._resolve_config_layer_kind(config, layer_id)
         if operator_contract is not None:
+            if operator_contract.layer_kind in (
+                LayerKind.ROUTED,
+                LayerKind.SHARED,
+            ) and not bool(getattr(config, "is_moe", False)):
+                raise ValueError(
+                    f"{operator_contract.layer_kind.value} operator "
+                    f"{operator_name!r} requires an MoE model configuration"
+                )
             if layer_id is not None and config_kind not in operator_contract.base_layer_kinds:
                 allowed = ", ".join(kind.value for kind in operator_contract.base_layer_kinds)
                 raise ValueError(
