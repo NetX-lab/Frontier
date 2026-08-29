@@ -9,6 +9,8 @@ from frontier.spec_decode.mtp_runtime import (
     load_mtp_structural_model_config,
 )
 from frontier.spec_decode.runtime import MTP_METHOD_FAMILIES, SUPPORTED_SPEC_METHODS
+from frontier.model_architectures import LayerKind, ResolvedLayerContract
+from frontier.operators.spec import TensorParallelMode
 from frontier.types import ClusterType
 
 
@@ -105,24 +107,64 @@ class ParamCounter:
             getattr(self._replica_config, "moe_expert_parallel_size", 1)
         )
 
-    def _get_dense_mlp_params_per_layer(self, tensor_parallel_size: int) -> int:
-        if (not hasattr(self._model_config, "mlp_hidden_dim") or
-            self._model_config.mlp_hidden_dim == 0):
-            return 0
+    def _resolve_profile_layer_contract(
+        self,
+        layer_kind: LayerKind,
+        tensor_parallel_size: int,
+        *,
+        expert_parallel_size: int | None = None,
+    ) -> ResolvedLayerContract | None:
+        """Resolve one typed FFN domain through the model's architecture profile."""
 
-        if getattr(self._model_config, "use_gated_mlp", False):
-            return (
-                3
-                * self._model_config.embedding_dim
-                * self._model_config.mlp_hidden_dim
-                // tensor_parallel_size
+        get_profile = getattr(self._model_config, "get_model_architecture_profile", None)
+        if not callable(get_profile):
+            return None
+        profile = get_profile()
+        resolver = getattr(profile, "resolve_layer_contract", None)
+        if not callable(resolver):
+            raise TypeError(
+                "model architecture profile must expose resolve_layer_contract()"
             )
+        spec = profile.get_layer_contract(layer_kind)
+        attention_tp_size = self._get_attn_tp_size()
+        moe_tp_size = self._get_moe_tp_size()
+        ffn_tp_size = tensor_parallel_size
+        if spec.tensor_parallel_mode is TensorParallelMode.ATTENTION_TP:
+            attention_tp_size = tensor_parallel_size
+        elif spec.tensor_parallel_mode is TensorParallelMode.MOE_TP:
+            moe_tp_size = tensor_parallel_size
+        return resolver(
+            self._model_config,
+            layer_kind=layer_kind,
+            attention_tp_size=attention_tp_size,
+            moe_tp_size=moe_tp_size,
+            ffn_tp_size=ffn_tp_size,
+            tensor_parallel_size=tensor_parallel_size,
+            expert_parallel_size=expert_parallel_size,
+        )
 
-        return (
-            2
-            * self._model_config.embedding_dim
-            * self._model_config.mlp_hidden_dim
-            // tensor_parallel_size
+    @staticmethod
+    def _get_ffn_weight_params(width: int, embedding_dim: int, use_gated_mlp: bool, tensor_parallel_size: int) -> int:
+        if type(width) is not int or width <= 0:
+            return 0
+        multiplier = 3 if use_gated_mlp else 2
+        return multiplier * embedding_dim * width // tensor_parallel_size
+
+    def _get_dense_mlp_params_per_layer(self, tensor_parallel_size: int) -> int:
+        contract = self._resolve_profile_layer_contract(
+            LayerKind.DENSE,
+            tensor_parallel_size,
+        )
+        width = (
+            contract.effective_ffn_width
+            if contract is not None
+            else getattr(self._model_config, "mlp_hidden_dim", 0)
+        )
+        return self._get_ffn_weight_params(
+            width,
+            self._model_config.embedding_dim,
+            bool(getattr(self._model_config, "use_gated_mlp", False)),
+            tensor_parallel_size,
         )
 
     def _get_share_expert_params_per_layer(self, tensor_parallel_size: int) -> int:
@@ -140,16 +182,23 @@ class ParamCounter:
         if not getattr(profile, "counts_share_expert_param_memory", False):
             return 0
 
-        share_expert_dim = int(getattr(self._model_config, "share_expert_dim", 0) or 0)
+        contract = self._resolve_profile_layer_contract(
+            LayerKind.SHARED,
+            tensor_parallel_size,
+        )
+        share_expert_dim = int(
+            contract.effective_ffn_width
+            if contract is not None
+            else getattr(self._model_config, "share_expert_dim", 0) or 0
+        )
         if share_expert_dim <= 0:
             return 0
 
-        multiplier = 3 if getattr(self._model_config, "use_gated_mlp", False) else 2
-        return (
-            multiplier
-            * self._model_config.embedding_dim
-            * share_expert_dim
-            // tensor_parallel_size
+        return self._get_ffn_weight_params(
+            share_expert_dim,
+            self._model_config.embedding_dim,
+            bool(getattr(self._model_config, "use_gated_mlp", False)),
+            tensor_parallel_size,
         )
 
     def _get_num_moe_layers_per_pipeline_stage(self) -> int:
@@ -180,12 +229,27 @@ class ParamCounter:
         return max(0, min(num_layers_per_stage, estimate))
 
     def _get_routed_moe_params_per_layer(self, tensor_parallel_size: int) -> int:
-        num_parameters = self._get_dense_mlp_params_per_layer(tensor_parallel_size)
-
         is_moe = getattr(self._model_config, "is_moe", False)
         num_experts = int(getattr(self._model_config, "num_experts", 0))
         if not is_moe or num_experts <= 0:
-            return num_parameters
+            return self._get_dense_mlp_params_per_layer(tensor_parallel_size)
+
+        contract = self._resolve_profile_layer_contract(
+            LayerKind.ROUTED,
+            tensor_parallel_size,
+            expert_parallel_size=self._get_ep_size(),
+        )
+        routed_width = (
+            contract.effective_ffn_width
+            if contract is not None
+            else getattr(self._model_config, "mlp_hidden_dim", 0)
+        )
+        num_parameters = self._get_ffn_weight_params(
+            routed_width,
+            self._model_config.embedding_dim,
+            bool(getattr(self._model_config, "use_gated_mlp", False)),
+            tensor_parallel_size,
+        )
 
         ep_size = self._get_ep_size()
         if num_experts % ep_size != 0:
