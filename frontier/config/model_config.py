@@ -12,6 +12,7 @@ from frontier.logger import init_logger
 from frontier.model_architectures import (
     MODEL_ARCHITECTURE_REGISTRY,
     get_model_architecture_profile,
+    parse_moe_layer_ids,
 )
 from frontier.types import ActivationType, NormType
 
@@ -305,8 +306,32 @@ class BaseModelConfig(BaseFixedConfig):
         default=None, compare=False, hash=False, repr=False
     )
 
+    # Typed FFN widths. ``mlp_hidden_dim`` remains the legacy routed/dense
+    # value used by older consumers; these fields preserve mixed-layer source
+    # dimensions without changing the established positional constructor.
+    dense_mlp_hidden_dim: Optional[int] = field(default=None, kw_only=True)
+    routed_mlp_hidden_dim: Optional[int] = field(default=None, kw_only=True)
+
     def __post_init__(self):
         """Validate model configuration after initialization."""
+        for field_name in ("dense_mlp_hidden_dim", "routed_mlp_hidden_dim"):
+            value = getattr(self, field_name)
+            if value is not None and (type(value) is not int or value <= 0):
+                raise ValueError(
+                    f"{field_name} must be a positive int or None, got {value!r}"
+                )
+        if type(self.mlp_hidden_dim) is not int or self.mlp_hidden_dim <= 0:
+            raise ValueError(
+                f"mlp_hidden_dim must be a positive int, got {self.mlp_hidden_dim!r}"
+            )
+        if not self.is_moe and self.dense_mlp_hidden_dim is None:
+            self.dense_mlp_hidden_dim = self.mlp_hidden_dim
+        if self.is_moe and self.routed_mlp_hidden_dim is None:
+            self.routed_mlp_hidden_dim = self.mlp_hidden_dim
+        if self.is_moe:
+            # Validate the layer map at construction time and use the same
+            # parser as the architecture profile resolver.
+            parse_moe_layer_ids(self.moe_layers_enum, self.num_layers)
         if self.model_type is not None:
             self.model_type = str(self.model_type).lower()
         if self.model_architecture_profile is not None:
@@ -475,45 +500,23 @@ class BaseModelConfig(BaseFixedConfig):
         if not self.is_moe:
             return []
 
-        if self._moe_layer_ids_cache is not None:
-            return self._moe_layer_ids_cache
+        return list(parse_moe_layer_ids(self.moe_layers_enum, self.num_layers))
 
-        raw_moe_layers = self.moe_layers_enum
-        if raw_moe_layers is None or str(raw_moe_layers).strip() == "":
-            self._moe_layer_ids_cache = list(range(self.num_layers))
-            return self._moe_layer_ids_cache
+    @property
+    def intermediate_size(self) -> Optional[int]:
+        """Expose the dense HF width while preserving the legacy MoE value."""
 
-        parsed_layer_ids: List[int] = []
-        seen_layer_ids = set()
-        for token in str(raw_moe_layers).split(","):
-            token = token.strip()
-            if token == "":
-                continue
-            try:
-                layer_id = int(token)
-            except ValueError as exc:
-                raise ValueError(
-                    f"Invalid moe_layers_enum token '{token}' for model {self.get_name()}"
-                ) from exc
-            if layer_id < 0:
-                raise ValueError(
-                    f"moe_layers_enum contains negative layer id {layer_id} for model {self.get_name()}"
-                )
-            if layer_id >= self.num_layers:
-                continue
-            if layer_id in seen_layer_ids:
-                continue
-            seen_layer_ids.add(layer_id)
-            parsed_layer_ids.append(layer_id)
+        if self.dense_mlp_hidden_dim is not None:
+            return self.dense_mlp_hidden_dim
+        return self.mlp_hidden_dim
 
-        if not parsed_layer_ids:
-            raise ValueError(
-                "moe_layers_enum does not include any layer within the current model depth "
-                f"[0, {self.num_layers}) for model {self.get_name()}"
-            )
+    @property
+    def moe_intermediate_size(self) -> Optional[int]:
+        """Expose the routed HF width while preserving legacy fallback."""
 
-        self._moe_layer_ids_cache = sorted(parsed_layer_ids)
-        return self._moe_layer_ids_cache
+        if self.routed_mlp_hidden_dim is not None:
+            return self.routed_mlp_hidden_dim
+        return self.mlp_hidden_dim if self.is_moe else None
 
     def is_moe_layer(self, layer_id: int) -> bool:
         """Return whether a specific layer index uses MoE FFN."""
@@ -591,15 +594,39 @@ class BaseModelConfig(BaseFixedConfig):
         is_moe = int(cfg.get("num_experts", 0)) > 1
         model_type_lower = str(cfg.get("model_type", "")).lower()
 
-        # Map common fields
+        # Map common fields. Preserve dense and routed widths separately so a
+        # mixed architecture cannot collapse both domains into one legacy
+        # ``mlp_hidden_dim`` value.
         num_layers = int(cfg["num_hidden_layers"])
         num_q_heads = int(cfg["num_attention_heads"])
         num_kv_heads = int(cfg["num_key_value_heads"])
         embedding_dim = int(cfg["hidden_size"])
         if is_moe:
-            mlp_hidden_dim = int(cfg["moe_intermediate_size"])  # per-expert FFN dim
+            routed_mlp_hidden_dim = int(cfg["moe_intermediate_size"])
+            if routed_mlp_hidden_dim <= 0:
+                raise ValueError(
+                    f"moe_intermediate_size must be positive in {file_path}"
+                )
+            raw_layer_ids = cfg.get("moe_layers_enum")
+            moe_layer_ids = parse_moe_layer_ids(raw_layer_ids, num_layers)
+            dense_mlp_hidden_dim = (
+                int(cfg["intermediate_size"])
+                if len(moe_layer_ids) < num_layers
+                else None
+            )
+            if dense_mlp_hidden_dim is not None and dense_mlp_hidden_dim <= 0:
+                raise ValueError(
+                    f"intermediate_size must be positive in {file_path}"
+                )
+            mlp_hidden_dim = routed_mlp_hidden_dim
         else:
-            mlp_hidden_dim = int(cfg["intermediate_size"])
+            dense_mlp_hidden_dim = int(cfg["intermediate_size"])
+            if dense_mlp_hidden_dim <= 0:
+                raise ValueError(
+                    f"intermediate_size must be positive in {file_path}"
+                )
+            routed_mlp_hidden_dim = None
+            mlp_hidden_dim = dense_mlp_hidden_dim
         max_pos = int(cfg["max_position_embeddings"])
         vocab_size = int(cfg["vocab_size"])
 
@@ -735,6 +762,8 @@ class BaseModelConfig(BaseFixedConfig):
             quantization_config=quantization_config,
             fused_add_norm_capability=fused_add_norm_capability,
             moe_layers_enum=cfg.get("moe_layers_enum"),
+            dense_mlp_hidden_dim=dense_mlp_hidden_dim,
+            routed_mlp_hidden_dim=routed_mlp_hidden_dim,
         )
 
         if is_moe:

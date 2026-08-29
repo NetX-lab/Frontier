@@ -65,6 +65,51 @@ class ExpertParallelMode(Enum):
     ON = "on"
 
 
+def parse_moe_layer_ids(raw_layers: Any, num_layers: Any) -> tuple[int, ...]:
+    """Parse an explicit MoE layer map using one strict contract.
+
+    ``None`` and an empty string represent the conventional all-layer MoE
+    configuration.  Explicit maps reject empty tokens, duplicates, malformed
+    values, and IDs outside the model depth so every config consumer observes
+    the same layer identity.
+    """
+
+    if type(num_layers) is not int or num_layers <= 0:
+        raise ValueError(
+            "moe_layers_enum validation requires a positive integer num_layers"
+        )
+    if raw_layers is None:
+        return tuple(range(num_layers))
+    if not isinstance(raw_layers, str):
+        raise ValueError(
+            f"moe_layers_enum must be a comma-separated string, got {raw_layers!r}"
+        )
+    if raw_layers.strip() == "":
+        return tuple(range(num_layers))
+
+    parsed: list[int] = []
+    seen: set[int] = set()
+    for raw_token in raw_layers.split(","):
+        token = raw_token.strip()
+        if not re.fullmatch(r"[+-]?\d+", token):
+            raise ValueError(
+                f"Invalid moe_layers_enum token {token!r} in {raw_layers!r}"
+            )
+        layer_id = int(token)
+        if layer_id < 0 or layer_id >= num_layers:
+            raise ValueError(
+                f"moe_layers_enum layer id {layer_id} out of range "
+                f"[0, {num_layers})"
+            )
+        if layer_id in seen:
+            raise ValueError(
+                f"moe_layers_enum contains duplicate layer id {layer_id}"
+            )
+        seen.add(layer_id)
+        parsed.append(layer_id)
+    return tuple(sorted(parsed))
+
+
 @dataclass(frozen=True)
 class LayerContractSpec:
     """Declarative contract for one dense, routed, or shared FFN domain."""
@@ -368,6 +413,16 @@ class ModelArchitectureProfile:
                 f"model architecture profile {self.profile_id!r} declares duplicate "
                 f"operator family ownership: {family_ids}"
             )
+        try:
+            from frontier.operators.families import get_operator_family
+
+            for family_id in family_ids:
+                get_operator_family(family_id)
+        except (ImportError, TypeError, ValueError) as exc:
+            raise ValueError(
+                f"model architecture profile {self.profile_id!r} references an "
+                f"unknown operator family: {family_id!r}"
+            ) from exc
 
     @classmethod
     def generic(
@@ -776,6 +831,10 @@ class ModelArchitectureProfile:
         if not bool(getattr(config, "is_moe", False)):
             return False
         num_layers = getattr(config, "num_layers", None)
+        raw_layers = getattr(config, "moe_layers_enum", None)
+        if raw_layers is not None:
+            ids = parse_moe_layer_ids(raw_layers, num_layers)
+            return bool(ids) and len(ids) < num_layers
         get_ids = getattr(config, "get_moe_layer_ids", None)
         if callable(get_ids) and type(num_layers) is int:
             ids = tuple(get_ids())
@@ -784,11 +843,7 @@ class ModelArchitectureProfile:
         if callable(get_count) and type(num_layers) is int:
             count = int(get_count())
             return 0 < count < num_layers
-        raw_layers = getattr(config, "moe_layers_enum", None)
-        if raw_layers is None or str(raw_layers).strip() == "":
-            return False
-        ids = cls._parse_moe_layer_ids(raw_layers, num_layers)
-        return bool(ids) and len(ids) < num_layers
+        return False
 
     @classmethod
     def _resolve_config_layer_kind(
@@ -799,6 +854,14 @@ class ModelArchitectureProfile:
         num_layers = getattr(config, "num_layers", None)
         if layer_id is None:
             return LayerKind.ROUTED
+        raw_layers = getattr(config, "moe_layers_enum", None)
+        if raw_layers is not None:
+            parsed_layer_ids = set(parse_moe_layer_ids(raw_layers, num_layers))
+            return (
+                LayerKind.ROUTED
+                if layer_id in parsed_layer_ids
+                else LayerKind.DENSE
+            )
         predicate = getattr(config, "is_moe_layer", None)
         if callable(predicate):
             return LayerKind.ROUTED if bool(predicate(layer_id)) else LayerKind.DENSE
@@ -809,52 +872,12 @@ class ModelArchitectureProfile:
                 if layer_id in set(get_ids())
                 else LayerKind.DENSE
             )
-        raw_layers = getattr(config, "moe_layers_enum", None)
-        if raw_layers is not None and str(raw_layers).strip():
-            parsed_layer_ids = set(cls._parse_moe_layer_ids(raw_layers, num_layers))
-            return (
-                LayerKind.ROUTED
-                if layer_id in parsed_layer_ids
-                else LayerKind.DENSE
-            )
         return LayerKind.ROUTED
 
     @staticmethod
     def _parse_moe_layer_ids(raw_layers: Any, num_layers: Any) -> tuple[int, ...]:
         """Parse an explicit MoE layer map with one strict fail-fast contract."""
-
-        if type(num_layers) is not int or num_layers <= 0:
-            raise ValueError(
-                "moe_layers_enum validation requires a positive integer num_layers"
-            )
-        if not isinstance(raw_layers, str):
-            raise ValueError(
-                f"moe_layers_enum must be a comma-separated string, got {raw_layers!r}"
-            )
-        if raw_layers.strip() == "":
-            return tuple(range(num_layers))
-
-        parsed: list[int] = []
-        seen: set[int] = set()
-        for raw_token in raw_layers.split(","):
-            token = raw_token.strip()
-            if not re.fullmatch(r"[+-]?\d+", token):
-                raise ValueError(
-                    f"Invalid moe_layers_enum token {token!r} in {raw_layers!r}"
-                )
-            layer_id = int(token)
-            if layer_id < 0 or layer_id >= num_layers:
-                raise ValueError(
-                    f"moe_layers_enum layer id {layer_id} out of range "
-                    f"[0, {num_layers})"
-                )
-            if layer_id in seen:
-                raise ValueError(
-                    f"moe_layers_enum contains duplicate layer id {layer_id}"
-                )
-            seen.add(layer_id)
-            parsed.append(layer_id)
-        return tuple(sorted(parsed))
+        return parse_moe_layer_ids(raw_layers, num_layers)
 
     def uses_expert_parallel_alltoall(
         self,
