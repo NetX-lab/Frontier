@@ -207,6 +207,12 @@ class ParamCounter:
 
         num_layers_per_stage = int(self._num_layers_per_pipeline_stage)
         total_layers = int(getattr(self._model_config, "num_layers", num_layers_per_stage))
+        num_pipeline_stages = int(getattr(self._replica_config, "num_pipeline_stages", 1))
+        if num_pipeline_stages <= 0:
+            raise ValueError(
+                "ParamCounter requires a positive num_pipeline_stages, "
+                f"got {num_pipeline_stages!r}"
+            )
 
         num_moe_layers_total = total_layers
         if hasattr(self._model_config, "get_num_moe_layers"):
@@ -219,14 +225,56 @@ class ParamCounter:
         if num_moe_layers_total >= total_layers:
             return num_layers_per_stage
 
-        num_pipeline_stages = int(getattr(self._replica_config, "num_pipeline_stages", 1))
         if num_pipeline_stages <= 1:
             return min(num_moe_layers_total, num_layers_per_stage)
 
-        # Approximate MoE layer distribution by ratio when explicit stage slicing is unavailable.
-        ratio = float(num_moe_layers_total) / float(total_layers)
-        estimate = int(round(ratio * num_layers_per_stage))
-        return max(0, min(num_layers_per_stage, estimate))
+        get_layer_ids = getattr(self._model_config, "get_moe_layer_ids", None)
+        if not callable(get_layer_ids):
+            raise ValueError(
+                "ParamCounter cannot derive a per-pipeline-stage MoE layer count "
+                "from a partial model-level count; model config must expose "
+                "get_moe_layer_ids()"
+            )
+
+        raw_layer_ids = tuple(get_layer_ids())
+        layer_ids: tuple[int, ...] = tuple(raw_layer_ids)
+        if any(type(layer_id) is not int for layer_id in layer_ids):
+            raise ValueError(
+                "ParamCounter MoE layer IDs must be exact integers, "
+                f"got {raw_layer_ids!r}"
+            )
+        if any(layer_id < 0 or layer_id >= total_layers for layer_id in layer_ids):
+            raise ValueError(
+                "ParamCounter MoE layer IDs must fall within the model layer range "
+                f"[0, {total_layers}), got {raw_layer_ids!r}"
+            )
+        if len(set(layer_ids)) != len(layer_ids):
+            raise ValueError(
+                "ParamCounter MoE layer IDs must be unique, "
+                f"got {raw_layer_ids!r}"
+            )
+        if len(layer_ids) != num_moe_layers_total:
+            raise ValueError(
+                "ParamCounter MoE layer-ID count disagrees with the model-level "
+                f"count: ids={len(layer_ids)}, count={num_moe_layers_total}"
+            )
+
+        stage_counts = tuple(
+            sum(
+                stage_id * num_layers_per_stage <= layer_id
+                < (stage_id + 1) * num_layers_per_stage
+                for layer_id in layer_ids
+            )
+            for stage_id in range(num_pipeline_stages)
+        )
+        if len(set(stage_counts)) != 1:
+            raise ValueError(
+                "ParamCounter cannot represent a non-uniform MoE layer map with "
+                f"one per-stage count: num_pipeline_stages={num_pipeline_stages}, "
+                f"stage_moe_layer_counts={stage_counts}, layer_ids={raw_layer_ids!r}. "
+                "Use a stage-aware parameter counter for this topology."
+            )
+        return stage_counts[0]
 
     def _get_routed_moe_params_per_layer(self, tensor_parallel_size: int) -> int:
         is_moe = getattr(self._model_config, "is_moe", False)

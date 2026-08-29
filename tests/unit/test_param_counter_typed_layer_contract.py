@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
+import pytest
+
 from frontier.config import ReplicaConfig
+from frontier.config.model_config import BaseModelConfig, ModelArch
 from frontier.model_architectures import LayerKind
 from frontier.operators.spec import TensorParallelMode
-from frontier.types import ClusterType
+from frontier.types import ActivationType, ClusterType, NormType
 from frontier.utils.param_counter import ParamCounter
 
 
@@ -53,3 +58,42 @@ def test_param_counter_dispatches_tp_by_enum_identity(monkeypatch) -> None:
 
     assert contract is not None
     assert contract.tensor_parallel_size == 8
+
+
+def test_param_counter_rejects_nonuniform_moe_layer_map_with_pp() -> None:
+    """A single per-stage count cannot represent an uneven MoE layer map."""
+
+    model_config = BaseModelConfig(
+        num_layers=8,
+        num_q_heads=8,
+        num_kv_heads=4,
+        embedding_dim=128,
+        mlp_hidden_dim=256,
+        max_position_embeddings=4096,
+        use_gated_mlp=True,
+        use_bias=False,
+        use_qkv_bias=False,
+        activation=ActivationType.SILU,
+        norm=NormType.RMS_NORM,
+        post_attn_norm=True,
+        vocab_size=32000,
+        model_type="unit_custom_model",
+        model_arch=ModelArch.GENERIC,
+        is_moe=True,
+        num_experts=8,
+        num_experts_per_tok=2,
+        share_expert_dim=64,
+        # Stage 0 owns layers 0..3 (four MoE layers); stage 1 owns only layer 4.
+        moe_layers_enum="0,1,2,3,4",
+    )
+    replica_config = SimpleNamespace(
+        model_config=model_config,
+        attn_tensor_parallel_size=1,
+        moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=1,
+        num_pipeline_stages=2,
+    )
+    counter = ParamCounter(replica_config, ClusterType.MONOLITHIC)
+
+    with pytest.raises(ValueError, match="non-uniform.*MoE.*pipeline"):
+        counter._get_num_moe_layers_per_pipeline_stage()
