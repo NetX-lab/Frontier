@@ -77,7 +77,7 @@ from frontier.operators.families import (
     get_family_profiling_name_set,
     get_comm_operator,
 )
-from frontier.operators.binding import resolve_operator_query_tp_mode
+from frontier.operators.binding import bind_operator_query, resolve_operator_query_tp_mode
 from frontier.operators.spec import (
     CommOperatorSpec,
     CommPayloadContext,
@@ -2714,6 +2714,54 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             return self._replica_config.moe_tensor_parallel_size
         return self._replica_config.attn_tensor_parallel_size
 
+    def _resolve_typed_linear_tp_size(self, op_name: str) -> int | None:
+        """Resolve TP through the profile-owned typed FFN contract.
+
+        Operator family identity comes from the unified binding registry.  A
+        profile may then override the generic FFN TP mode for architectures
+        whose dense, routed, and shared paths use different domains.  None is
+        returned for families outside the typed contract so existing
+        attention, memory, and architecture-specific aliases keep their
+        established resolver path.
+        """
+
+        profile = self._get_model_architecture_profile()
+        try:
+            binding = bind_operator_query(op_name)
+        except (TypeError, ValueError):
+            # Architecture-specific attention aliases are handled by the
+            # profile-aware resolver below.
+            return None
+
+        owned_family_ids = {
+            family_id
+            for contract in profile.layer_contracts
+            for family_id in contract.operator_family_ids
+        }
+        if binding.family_id not in owned_family_ids:
+            return None
+
+        requested_ffn_tp = self._get_ffn_tp_key_for_linear_op()
+        requested_attention_tp = self._replica_config.attn_tensor_parallel_size
+        if self._cluster_type is ClusterType.DECODE_FFN:
+            # PD-AF's FFN-only role carries its local FFN TP in the MoE field;
+            # preserve that established role mapping for typed ATTENTION_TP.
+            requested_attention_tp = requested_ffn_tp
+
+        resolved = profile.resolve_layer_contract(
+            self._model_config,
+            operator_name=op_name,
+            attention_tp_size=requested_attention_tp,
+            ffn_tp_size=requested_ffn_tp,
+            moe_tp_size=self._replica_config.moe_tensor_parallel_size,
+            expert_parallel_size=getattr(
+                self._replica_config,
+                "moe_expert_parallel_size",
+                None,
+            ),
+        )
+        return resolved.tensor_parallel_size
+
     def _get_linear_op_tp_key(self, op_name: str) -> int:
         if op_name in get_target_embedded_mtp_linear_ops():
             return resolve_effective_attention_tp_size(
@@ -2732,6 +2780,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
         except (TypeError, ValueError) as exc:
             raise ValueError(f"Unsupported linear op for TP mapping: {op_name}") from exc
+
+        typed_tp_size = self._resolve_typed_linear_tp_size(op_name)
+        if typed_tp_size is not None:
+            return typed_tp_size
 
         if tp_mode is TensorParallelMode.REPLICATED:
             if (
