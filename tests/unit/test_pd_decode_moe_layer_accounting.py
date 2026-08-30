@@ -171,7 +171,10 @@ class _DecodeSyncScheduler:
         original_execution_time,
         actual_execution_time_ms: float,
         original_start_time: float,
+        *,
+        layer_id: int | None = None,
     ):
+        del original_execution_time, actual_execution_time_ms, original_start_time, layer_id
         return SimpleNamespace()
 
     def _accumulate_monolithic_decode_shared_domain_related_wait_ms(

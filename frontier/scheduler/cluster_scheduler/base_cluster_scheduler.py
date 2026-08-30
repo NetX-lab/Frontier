@@ -4718,6 +4718,7 @@ class BaseClusterScheduler(ABC):
                             execution_time,
                             actual_execution_time,
                             original_start_time,
+                            layer_id=layer_id,
                         )
                     )
 
@@ -4752,12 +4753,15 @@ class BaseClusterScheduler(ABC):
         original_execution_time,
         actual_execution_time_ms,
         original_start_time,
+        *,
+        layer_id: int | None = None,
     ):
         """Build corrected prefill metrics payload and attach mixed-layer trace hints."""
         corrected_execution_time = self._create_corrected_execution_time_for_metrics(
             original_execution_time,
             actual_execution_time_ms,
             original_start_time,
+            layer_id=layer_id,
         )
 
         dense_reference_execution_time = self._get_prefill_dense_reference_execution_time(
@@ -4851,9 +4855,37 @@ class BaseClusterScheduler(ABC):
         original_execution_time,
         actual_execution_time_ms,
         original_start_time,
+        *,
+        layer_id: int | None = None,
     ):
         """Create corrected ExecutionTime payload used by metrics/trace emission."""
         from frontier.entities.execution_time import ExecutionTime
+
+        if layer_id is not None and (type(layer_id) is not int or layer_id < 0):
+            raise ValueError(
+                "layer_id must be an exact non-negative int when provided, "
+                f"got {layer_id!r}"
+            )
+
+        original_layer_ids = getattr(original_execution_time, "layer_ids", None)
+        if original_layer_ids is not None:
+            if not isinstance(original_layer_ids, tuple):
+                original_layer_ids = tuple(original_layer_ids)
+            if layer_id is None:
+                if len(original_layer_ids) != 1:
+                    raise ValueError(
+                        "current layer_id is required when correcting a multi-layer "
+                        f"ExecutionTime payload; layer_ids={original_layer_ids!r}"
+                    )
+                layer_id = original_layer_ids[0]
+            elif layer_id not in original_layer_ids:
+                raise ValueError(
+                    "current layer_id is not represented by the original "
+                    f"ExecutionTime payload: layer_id={layer_id}, "
+                    f"layer_ids={original_layer_ids!r}"
+                )
+
+        corrected_layer_ids = None if layer_id is None else (layer_id,)
 
         corrected_execution_time = ExecutionTime(
             num_layers_per_pipeline_stage=1,  # Avoid double-counting in sync path.
@@ -4909,6 +4941,7 @@ class BaseClusterScheduler(ABC):
             mtp_terminal_overshoot_time=(
                 original_execution_time._mtp_terminal_overshoot_time
             ),
+            layer_ids=corrected_layer_ids,
         )
 
         return corrected_execution_time
@@ -5276,6 +5309,7 @@ class BaseClusterScheduler(ABC):
                 full_stage_execution_time,
                 actual_execution_time,
                 original_start_time,
+                layer_id=layer_id,
             )
             trace_execution_time = full_stage_execution_time
             corrected_execution_time._trace_execution_time_override = trace_execution_time
