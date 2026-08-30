@@ -32,6 +32,29 @@ def split_replicated_result(
     sharded_row = {**result, "time_stats": sharded_stats}
 
     replicated_row = {**result, "time_stats": replicated_stats}
+
+    # Typed metadata describes the same operator names as ``time_stats``.
+    # Keep each split row self-consistent so consumers never infer a contract
+    # for an operator whose timing value is absent from that row.  Legacy
+    # results without this field retain their historical shape.
+    typed_contracts = result.get("typed_operator_contracts")
+    if typed_contracts is not None:
+        if not isinstance(typed_contracts, dict):
+            raise TypeError(
+                "typed_operator_contracts must be a dict when present, "
+                f"got {type(typed_contracts).__name__}"
+            )
+        sharded_row["typed_operator_contracts"] = {
+            operator_name: typed_contracts[operator_name]
+            for operator_name in sharded_stats
+            if operator_name in typed_contracts
+        }
+        replicated_row["typed_operator_contracts"] = {
+            operator_name: typed_contracts[operator_name]
+            for operator_name in replicated_stats
+            if operator_name in typed_contracts
+        }
+
     replicated_row["num_tensor_parallel_workers"] = 1
     if unpadded_n_embd is not None:
         replicated_row["padded_n_embd"] = unpadded_n_embd
