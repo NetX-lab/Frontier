@@ -95,10 +95,41 @@ class ExecutionTime(BaseEntity):
         mlp_operator_times: MLPOperatorTimes | None = None,
         moe_operator_times: MoEOperatorTimes | None = None,
         op_times: Mapping[str, float] | None = None,
+        layer_ids: list[int] | tuple[int, ...] | None = None,
     ) -> None:
         self._id = ExecutionTime.generate_id()
 
+        if layer_ids is None:
+            normalized_layer_ids = None
+        else:
+            if not isinstance(layer_ids, (list, tuple)):
+                raise TypeError(
+                    "layer_ids must be a list or tuple of exact non-negative integers"
+                )
+            if len(layer_ids) != num_layers_per_pipeline_stage:
+                raise ValueError(
+                    "layer_ids length must match num_layers_per_pipeline_stage: "
+                    f"{len(layer_ids)} != {num_layers_per_pipeline_stage}"
+                )
+            if any(type(layer_id) is not int for layer_id in layer_ids):
+                raise TypeError(
+                    "layer_ids must contain exact integers, "
+                    f"got {layer_ids!r}"
+                )
+            if any(layer_id < 0 for layer_id in layer_ids):
+                raise ValueError(
+                    "layer_ids must contain non-negative integers, "
+                    f"got {layer_ids!r}"
+                )
+            if len(set(layer_ids)) != len(layer_ids):
+                raise ValueError(
+                    "layer_ids must not contain duplicate layer identities, "
+                    f"got {layer_ids!r}"
+                )
+            normalized_layer_ids = tuple(layer_ids)
+
         self._num_layers_per_pipeline_stage = num_layers_per_pipeline_stage
+        self._layer_ids = normalized_layer_ids
         self._is_moe = is_moe
         if is_moe and mlp_operator_times is not None:
             raise ValueError("mlp_operator_times are only valid for dense MLP components")
@@ -1042,6 +1073,25 @@ class ExecutionTime(BaseEntity):
     def num_layers(self) -> int:
         """Number of layers in this pipeline stage."""
         return self._num_layers_per_pipeline_stage
+
+    @property
+    def layer_ids(self) -> tuple[int, ...] | None:
+        """Immutable global layer identities represented by this execution.
+
+        ``None`` preserves the legacy identity-free aggregate contract.  When
+        present, the tuple has exactly ``num_layers`` entries and is validated
+        at construction time for type, range, and uniqueness.
+        """
+
+        return self._layer_ids
+
+    @property
+    def layer_id(self) -> int | None:
+        """Return the identity for a single-layer execution, when unambiguous."""
+
+        if self._layer_ids is None or len(self._layer_ids) != 1:
+            return None
+        return self._layer_ids[0]
 
     # MLP Component Properties
     @property
