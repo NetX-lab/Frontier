@@ -7,6 +7,8 @@ import json
 import pytest
 
 from frontier.profiling.common.model_config import ModelConfig
+from frontier.profiling.linear_op.linear_op_wrapper import LinearOpWrapper
+from frontier.profiling.linear_op import main as linear_op_main
 from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
 from frontier.profiling.utils.replicated_ops import (
     deduplicate_tp1_rows,
@@ -279,3 +281,95 @@ def test_tp1_dedup_keeps_first_typed_row_for_each_workload() -> None:
         tp1_key_fields=("num_tokens", "model_arch"),
     )
     assert deduped == [first, sharded]
+
+
+def test_linear_wrapper_result_propagates_profile_owned_typed_contracts() -> None:
+    """Wrapper output must carry typed operator metadata beside legacy scalars."""
+
+    config = ModelConfig.from_model_name("step3-moe-noquant")
+    typed_contracts = {
+        "mlp_up_proj": {
+            "operator_family_id": "ffn",
+            "layer_kind": "dense",
+            "effective_ffn_width": 18432,
+            "tensor_parallel_mode": "attention_tp",
+        },
+        "share_expert_up_proj": {
+            "operator_family_id": "share_expert",
+            "layer_kind": "shared",
+            "effective_ffn_width": 5120,
+            "tensor_parallel_mode": "attention_tp",
+        },
+    }
+    wrapper = object.__new__(LinearOpWrapper)
+    wrapper.model_config = config
+    wrapper.num_tensor_parallel_workers = 8
+    wrapper.profiling_plan = {
+        "padded_n_embd": 7168,
+        "padded_n_expanded_embd": 18432,
+        "typed_operator_contracts": typed_contracts,
+    }
+
+    stats = wrapper._build_profile_result(  # pylint: disable=protected-access
+        {"mlp_up_proj": {"mean": 1.0}},
+        num_tokens=2,
+    )
+
+    assert stats["typed_operator_contracts"] == typed_contracts
+    assert stats["typed_operator_contracts"] is not typed_contracts
+    assert stats["n_expanded_embd"] == config.mlp_hidden_dim
+    assert stats["padded_n_expanded_embd"] == 18432
+
+
+def test_main_split_preserves_typed_compatibility_width() -> None:
+    """Typed rows keep the plan-selected width when replicated timing is split."""
+
+    config = type(
+        "Config",
+        (),
+        {"embedding_dim": 7168, "mlp_hidden_dim": 5120},
+    )()
+    result = {
+        "num_tensor_parallel_workers": 8,
+        "time_stats": {"input_layernorm": 1.0, "mlp_up_proj": 2.0},
+        "padded_n_expanded_embd": 18432,
+        "typed_operator_contracts": {
+            "mlp_up_proj": {
+                "layer_kind": "dense",
+                "effective_ffn_width": 18432,
+            },
+            "input_layernorm": {"layer_kind": None},
+        },
+    }
+
+    _, replicated = linear_op_main._split_linear_op_result(  # pylint: disable=protected-access
+        result,
+        {"input_layernorm"},
+        config,
+    )
+
+    assert replicated["padded_n_expanded_embd"] == 18432
+    assert set(replicated["typed_operator_contracts"]) == {"input_layernorm"}
+
+
+def test_main_split_keeps_legacy_width_fallback_without_typed_metadata() -> None:
+    """Legacy result rows retain the historical unpadded scalar behavior."""
+
+    config = type(
+        "Config",
+        (),
+        {"embedding_dim": 7168, "mlp_hidden_dim": 5120},
+    )()
+    result = {
+        "num_tensor_parallel_workers": 8,
+        "time_stats": {"input_layernorm": 1.0},
+        "padded_n_expanded_embd": 18432,
+    }
+
+    _, replicated = linear_op_main._split_linear_op_result(  # pylint: disable=protected-access
+        result,
+        {"input_layernorm"},
+        config,
+    )
+
+    assert replicated["padded_n_expanded_embd"] == 5120

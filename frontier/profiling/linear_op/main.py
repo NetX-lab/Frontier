@@ -285,6 +285,16 @@ def parse_args():
         help="FFN TP sizes to profile (defaults to --num_tensor_parallel_workers)",
     )
     parser.add_argument(
+        "--moe_tp",
+        type=int,
+        nargs="+",
+        default=None,
+        help=(
+            "Routed MoE TP sizes to profile (defaults to --ffn_tp or "
+            "--num_tensor_parallel_workers)"
+        ),
+    )
+    parser.add_argument(
         "--max_tokens",
         type=int,
         default=4096,
@@ -388,12 +398,15 @@ def parse_args():
     return args
 
 
-def _resolve_tp_ranges(args: argparse.Namespace) -> Tuple[List[int], List[int], List[int]]:
-    """Resolve TP ranges for attention, FFN, and overall profiling loop."""
+def _resolve_tp_ranges(
+    args: argparse.Namespace,
+) -> Tuple[List[int], List[int], List[int], List[int]]:
+    """Resolve independent attention, FFN, MoE TP ranges and loop values."""
     attn_tp = args.attn_tp or args.num_tensor_parallel_workers
     ffn_tp = args.ffn_tp or args.num_tensor_parallel_workers
-    all_tps = set(attn_tp + ffn_tp)
-    return attn_tp, ffn_tp, sorted(all_tps)
+    moe_tp = args.moe_tp or ffn_tp
+    all_tps = set(attn_tp + ffn_tp + moe_tp)
+    return attn_tp, ffn_tp, moe_tp, sorted(all_tps)
 
 
 def _precision_to_torch_dtype(precision: str) -> torch.dtype:
@@ -489,6 +502,32 @@ def _fill_metadata_column(
     output_df[column_name] = normalized
 
 
+def _split_linear_op_result(
+    result: Dict[str, Any],
+    replicated_op_names: set[str],
+    model_config: ModelConfig,
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """Split one linear-op result without collapsing typed width metadata.
+
+    New producer rows carry ``typed_operator_contracts`` and already contain
+    the plan-selected compatibility width.  Leave that value untouched while
+    partitioning the operator metadata with the timing stats.  Legacy rows do
+    not carry the typed field, so retain their historical unpadded scalar
+    fallback.
+    """
+
+    split_kwargs: Dict[str, Any] = {
+        "unpadded_n_embd": model_config.embedding_dim,
+    }
+    if result.get("typed_operator_contracts") is None:
+        split_kwargs["unpadded_n_expanded_embd"] = model_config.mlp_hidden_dim
+    return split_replicated_result(
+        result,
+        replicated_op_names,
+        **split_kwargs,
+    )
+
+
 def _resolve_fp8_settings(
     model_config: ModelConfig,
     use_fp8: Optional[bool],
@@ -556,7 +595,7 @@ def profile_model(
         profile_method=args.profile_method,
     ).parent
 
-    attn_tp, ffn_tp, all_tps = _resolve_tp_ranges(args)
+    attn_tp, ffn_tp, moe_tp, all_tps = _resolve_tp_ranges(args)
 
     for num_tensor_parallel_workers in all_tps:
         profiling_plan = build_profiling_plan(
@@ -564,6 +603,7 @@ def profile_model(
             tp_size=num_tensor_parallel_workers,
             attn_tp=attn_tp,
             ffn_tp=ffn_tp,
+            moe_tp=moe_tp,
             disable_replicated=args.disable_replicated,
             is_moe=args.is_moe,
             include_target_embedded_mtp=args.include_target_embedded_mtp,
@@ -591,11 +631,10 @@ def profile_model(
             result = dict(result)
             result["measurement_type"] = measurement_type
             if _should_split:
-                sharded_row, replicated_row = split_replicated_result(
+                sharded_row, replicated_row = _split_linear_op_result(
                     result,
                     _replicated_op_names,
-                    unpadded_n_embd=model_config.embedding_dim,
-                    unpadded_n_expanded_embd=model_config.mlp_hidden_dim,
+                    model_config,
                 )
                 all_results.append(sharded_row)
                 all_results.append(replicated_row)
@@ -861,7 +900,7 @@ def main():
     ):
         sys.exit(0)
 
-    _, _, all_tps = _resolve_tp_ranges(args)
+    _, _, _, all_tps = _resolve_tp_ranges(args)
 
     total_combos = itertools.product(
         args.models,
