@@ -243,6 +243,35 @@ def test_predict_stage_execution_time_forwards_layer_id_to_moe_tokens_input() ->
     assert internal_call["layer_id"] == 17
 
 
+def test_predict_stage_execution_time_forwards_explicit_layer_ids_to_moe_internal() -> None:
+    """Aggregated MoE calls retain the complete global layer identity tuple."""
+
+    predictor = _build_predictor()
+    layer_ids = [7, 19, 41]
+    lane_workload = EPLaneWorkload(
+        ep_id=0,
+        moe_expert_parallel_size=2,
+        total_expert_num=4,
+        owned_expert_ids=(0, 1),
+        local_token_counts=(8, 8),
+        routed_token_count=16,
+        router_topk=2,
+    )
+    batch = _DummyBatch(lane_workload=lane_workload)
+
+    result = predictor.predict_stage_execution_time(
+        batch,
+        stage_id=0,
+        cluster_type=ClusterType.MONOLITHIC,
+        num_layers=len(layer_ids),
+        layer_ids=layer_ids,
+    )
+
+    internal_call = predictor._get_execution_time_internal.call_args.kwargs
+    assert internal_call["layer_ids"] == tuple(layer_ids)
+    assert result.layer_ids == tuple(layer_ids)
+
+
 def test_predict_stage_execution_time_skips_moe_tokens_for_dense_layer() -> None:
     predictor = _build_predictor()
     predictor._model_config = _DummyModelConfig(
@@ -343,6 +372,29 @@ def test_dummy_monolithic_mixed_dense_layer_uses_dense_components() -> None:
     assert execution_time._mlp_layer_down_proj_execution_time > 0.0
     assert execution_time._mlp_layer_act_execution_time > 0.0
     assert execution_time.moe_operator_times is None
+
+
+def test_dummy_moe_aggregate_preserves_explicit_layer_ids() -> None:
+    """Dummy aggregate views carry the same global identities as live calls."""
+
+    predictor = _build_dummy_mixed_layer_predictor(
+        _DummyModelConfig(
+            ModelArchitectureProfile.generic(),
+            moe_layer_ids={4, 5, 6},
+        )
+    )
+    layer_ids = [4, 5, 6]
+
+    execution_time = predictor.predict_stage_execution_time(
+        _DummyBatch(),
+        stage_id=0,
+        cluster_type=ClusterType.MONOLITHIC,
+        num_layers=len(layer_ids),
+        layer_ids=layer_ids,
+    )
+
+    assert execution_time.layer_ids == tuple(layer_ids)
+    assert execution_time.num_layers == len(layer_ids)
 
 
 def test_dummy_monolithic_mixed_dense_layer_preserves_ffn_tp_allreduce() -> None:

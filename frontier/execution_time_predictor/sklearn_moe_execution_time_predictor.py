@@ -24,7 +24,11 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
 from frontier.logger import init_logger
-from frontier.model_architectures import ResidualAddPolicy
+from frontier.model_architectures import (
+    LayerKind,
+    ResolvedLayerContract,
+    ResidualAddPolicy,
+)
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
     PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
@@ -465,12 +469,26 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         batch: Batch,
         pipeline_stage: int,
         *,
+        num_layers: Optional[int] = None,
+        layer_id: int = 0,
+        layer_ids: Optional[List[int] | tuple[int, ...]] = None,
         include_attention: bool = True,
         include_ffn: bool = True,
         include_moe: Optional[bool] = None,
         lane_workload: Optional[EPLaneWorkload] = None,
     ) -> ExecutionTime:
         """Return fixed dummy ExecutionTime object with MoE-aware fields."""
+        configured_num_layers = getattr(self, "_num_layers_per_pipeline_stage", 1)
+        effective_num_layers = (
+            configured_num_layers if num_layers is None else num_layers
+        )
+        normalized_layer_ids = self._normalize_stage_layer_ids(
+            num_layers=effective_num_layers,
+            layer_id=layer_id,
+            layer_ids=layer_ids,
+        )
+        if normalized_layer_ids is not None:
+            layer_id = normalized_layer_ids[0]
         if type(include_attention) is not bool:
             raise ValueError("include_attention must be a bool")
         if type(include_ffn) is not bool:
@@ -614,7 +632,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             moe_operator_times = None
 
         return ExecutionTime(
-            num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
+            num_layers_per_pipeline_stage=effective_num_layers,
             attention_rope_execution_time=(base_time if include_attention else 0.0),
             attention_kv_cache_save_execution_time=(
                 base_time if include_attention else 0.0
@@ -670,6 +688,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             communication_operator_times=communication_operator_times,
             mlp_operator_times=mlp_operator_times,
             moe_operator_times=moe_operator_times,
+            layer_ids=normalized_layer_ids,
         )
 
     def __init__(
@@ -1172,6 +1191,62 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 ) from exc
             raise
 
+    def _resolve_routed_moe_layer_contract(
+        self,
+        *,
+        moe_tp_size: Optional[int] = None,
+        moe_ep_size: Optional[int] = None,
+    ) -> Optional[ResolvedLayerContract]:
+        """Resolve the profile-owned routed contract used by MoE consumers.
+
+        Older lightweight predictor fixtures do not expose an architecture
+        profile and retain the legacy ``mlp_hidden_dim`` behavior. Production
+        model configs expose the profile, so routed width and parallel domains
+        are resolved from the same typed contract used by the shared manager.
+        """
+
+        model_config = getattr(self, "_model_config", None)
+        profile_getter = getattr(model_config, "get_model_architecture_profile", None)
+        if not callable(profile_getter):
+            return None
+
+        replica_config = getattr(self, "_replica_config", None)
+        if moe_tp_size is None:
+            moe_tp_size = getattr(
+                replica_config,
+                "moe_tensor_parallel_size",
+                getattr(self, "_moe_tp_size", 1),
+            )
+        if moe_ep_size is None:
+            moe_ep_size = getattr(
+                replica_config,
+                "moe_expert_parallel_size",
+                getattr(self, "_moe_ep_size", 1),
+            )
+        if type(moe_tp_size) is not int or moe_tp_size <= 0:
+            raise ValueError(
+                f"routed MoE contract requires a positive TP size, got {moe_tp_size!r}"
+            )
+        if type(moe_ep_size) is not int or moe_ep_size <= 0:
+            raise ValueError(
+                f"routed MoE contract requires a positive EP size, got {moe_ep_size!r}"
+            )
+
+        profile = self._get_model_architecture_profile()
+        contract = profile.resolve_layer_contract(
+            model_config,
+            operator_name="moe_grouped_gemm",
+            moe_tp_size=moe_tp_size,
+            ffn_tp_size=moe_tp_size,
+            expert_parallel_size=moe_ep_size,
+        )
+        if contract.layer_kind is not LayerKind.ROUTED:
+            raise ValueError(
+                "moe_grouped_gemm must resolve to a routed layer contract, got "
+                f"{contract.layer_kind.value}"
+            )
+        return contract
+
     def _validate_moe_dataset_contract(
         self,
         moe_df: pd.DataFrame,
@@ -1198,11 +1273,20 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             )
 
         model_config = self._model_config
+        routed_contract = self._resolve_routed_moe_layer_contract(
+            moe_tp_size=moe_tp_size,
+            moe_ep_size=moe_ep_size,
+        )
+        expected_expert_hidden_dim = (
+            routed_contract.effective_ffn_width
+            if routed_contract is not None
+            else model_config.mlp_hidden_dim
+        )
         base_df = moe_df[
             (moe_df["num_experts"] == model_config.num_experts)
             & (moe_df["router_topk"] == model_config.num_experts_per_tok)
             & (moe_df["hidden_dim"] == model_config.embedding_dim)
-            & (moe_df["expert_hidden_dim"] == model_config.mlp_hidden_dim)
+            & (moe_df["expert_hidden_dim"] == expected_expert_hidden_dim)
         ].copy()
 
         if len(base_df) == 0:
@@ -1210,7 +1294,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "MoE dataset contract validation failed: no rows match model configuration in "
                 f"{moe_input_file}. Required: num_experts={model_config.num_experts}, "
                 f"router_topk={model_config.num_experts_per_tok}, hidden_dim={model_config.embedding_dim}, "
-                f"expert_hidden_dim={model_config.mlp_hidden_dim}."
+                f"expert_hidden_dim={expected_expert_hidden_dim}."
             )
 
         available_pairs = sorted(
@@ -1783,11 +1867,17 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         source_num_tokens = self._get_moe_pre_routing_token_count(batch)
 
+        routed_contract = self._resolve_routed_moe_layer_contract()
+        expert_hidden_dim = (
+            routed_contract.effective_ffn_width
+            if routed_contract is not None
+            else int(self._model_config.mlp_hidden_dim)
+        )
         load_input = MoELoadImbalanceInput(
             num_tokens=source_num_tokens,
             num_experts_per_device=lane_workload.local_expert_width,
             hidden_dim=int(self._model_config.embedding_dim),
-            expert_hidden_dim=int(self._model_config.mlp_hidden_dim),
+            expert_hidden_dim=expert_hidden_dim,
             router_topk=int(lane_workload.router_topk),
             expert_token_counts=expert_token_counts,
             load_distribution="runtime",
@@ -2145,6 +2235,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         include_ffn: bool = True,
         include_attention: bool = True,
         layer_id: int = 0,
+        num_layers: Optional[int] = None,
+        layer_ids: Optional[List[int] | tuple[int, ...]] = None,
     ) -> "ExecutionTime":
         """
         Calculate execution time for a pipeline stage.
@@ -2166,6 +2258,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 attention and terminal-MTP prediction. The default preserves
                 the legacy layer-zero behavior for internal post-attention
                 callers that do not carry a layer identity.
+            num_layers: Optional requested aggregate layer count. When omitted,
+                the predictor's configured pipeline-stage count is used.
+            layer_ids: Optional complete global layer identity tuple for the
+                requested aggregate.
 
         Returns:
             ExecutionTime with all component times
@@ -2177,6 +2273,17 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             raise ValueError("include_ffn must be a bool")
         if type(include_attention) is not bool:
             raise ValueError("include_attention must be a bool")
+        configured_num_layers = getattr(self, "_num_layers_per_pipeline_stage", 1)
+        effective_num_layers = (
+            configured_num_layers if num_layers is None else num_layers
+        )
+        normalized_layer_ids = self._normalize_stage_layer_ids(
+            num_layers=effective_num_layers,
+            layer_id=layer_id,
+            layer_ids=layer_ids,
+        )
+        if normalized_layer_ids is not None:
+            layer_id = normalized_layer_ids[0]
         if not include_ffn and include_moe:
             raise ValueError("include_moe cannot be true when include_ffn is false")
         if not include_attention and not include_ffn:
@@ -2391,7 +2498,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         )
 
         return ExecutionTime(
-            num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
+            num_layers_per_pipeline_stage=effective_num_layers,
             attention_rope_execution_time=attention_time.attention_rope_execution_time,
             attention_kv_cache_save_execution_time=attention_time.attention_kv_cache_save_execution_time,
             attention_decode_execution_time=attention_time.attention_decode_execution_time,
@@ -2458,6 +2565,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 if include_ffn and include_moe
                 else None
             ),
+            layer_ids=normalized_layer_ids,
         )
 
     def _simulate_routing_per_layer(
@@ -3143,6 +3251,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         cluster_type: ClusterType,
         num_layers: int = 1,
         layer_id: int = 0,
+        layer_ids: Optional[List[int] | tuple[int, ...]] = None,
         include_moe: bool | None = None,
         include_ffn: bool = True,
         include_attention: bool = True,
@@ -3155,8 +3264,13 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         Therefore, changing ``num_layers`` must update only the layer count, not rescale
         per-layer components.
         """
-        if num_layers < 1:
-            raise ValueError(f"num_layers must be >= 1, got {num_layers}")
+        normalized_layer_ids = self._normalize_stage_layer_ids(
+            num_layers=num_layers,
+            layer_id=layer_id,
+            layer_ids=layer_ids,
+        )
+        if normalized_layer_ids is not None:
+            layer_id = normalized_layer_ids[0]
         if type(include_ffn) is not bool:
             raise ValueError("include_ffn must be a bool")
         if type(include_attention) is not bool:
@@ -3211,6 +3325,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             return self._get_dummy_execution_time(
                 batch,
                 stage_id,
+                num_layers=num_layers,
+                layer_id=layer_id,
+                layer_ids=normalized_layer_ids,
                 include_attention=include_attention,
                 include_ffn=include_ffn,
                 include_moe=include_moe_for_layer,
@@ -3282,6 +3399,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             include_ffn=include_ffn,
             include_attention=include_attention,
             layer_id=layer_id,
+            num_layers=num_layers,
+            layer_ids=normalized_layer_ids,
         )
 
         # Communication OP-TRACE: log per-layer allreduce times for op-level comparison
@@ -3488,4 +3607,5 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             attention_operator_times=base_execution_time.attention_operator_times,
             communication_operator_times=base_execution_time.communication_operator_times,
             moe_operator_times=base_execution_time.moe_operator_times,
+            layer_ids=normalized_layer_ids,
         )
