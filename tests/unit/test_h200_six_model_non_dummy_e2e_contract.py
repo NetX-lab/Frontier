@@ -58,6 +58,7 @@ def test_six_model_contract_is_registry_derived() -> None:
     assert pure_moe.num_pipeline_stages == 2
     assert "time_stats.mlp_up_proj.median" not in pure_moe.linear_target_columns
     assert pure_moe.routing_runtime_path == "standard_fused_topk"
+    assert pure_moe.moe_routing_distribution_type == "balanced"
     assert (
         pure_moe.vllm_tensor_parallel_size,
         pure_moe.vllm_data_parallel_size,
@@ -66,7 +67,7 @@ def test_six_model_contract_is_registry_derived() -> None:
         pure_moe.attn_data_parallel_size,
         pure_moe.moe_tensor_parallel_size,
         pure_moe.moe_expert_parallel_size,
-    ) == (1, 2, True, 1, 2, 1, 2)
+    ) == (1, 2, True, 1, 1, 1, 1)
 
     step3 = build_model_contract("step3-moe-noquant")
     assert step3.is_moe is True
@@ -92,14 +93,16 @@ def test_six_model_contract_is_registry_derived() -> None:
     # Dense boundary layers use the dense FFN predictor domain (attention TP8)
     # even though the model also contains routed MoE layers (MoE TP1/EP8).
     assert dict(step3.linear_tp_by_op)["mlp_up_proj"] == 8
-    assert dict(step3.linear_tp_by_op)["share_expert_up_proj"] == 1
+    # Step3 shared experts use the profile-declared attention/FFN TP domain.
+    assert dict(step3.linear_tp_by_op)["share_expert_up_proj"] == 8
 
 
 def test_explicit_uniform_mode_selects_uniform_profile_rows() -> None:
     contract = build_model_contract(
         "mixtral_8x7b_moe",
-        moe_routing_mode="uniform_random",
+        moe_routing_distribution_type="random",
     )
+    assert contract.moe_routing_distribution_type == "random"
     assert contract.routing_runtime_path == "uniform_topk"
 
 
@@ -453,7 +456,7 @@ def _write_runtime_artifacts(
         "moe_expert_parallel_size": contract.moe_expert_parallel_size,
         "total_expert_num": contract.num_experts if contract.is_moe else 1,
         "router_topk": contract.router_topk if contract.is_moe else 1,
-        "moe_routing_mode": "simulation",
+        "moe_routing_distribution_type": "balanced",
     }
     (run_dir / "config.json").write_text(
         json.dumps(

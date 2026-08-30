@@ -11,6 +11,10 @@ from typing import Any, Mapping, Sequence
 
 import pandas as pd
 
+from frontier.operators.typed_contracts import (
+    parse_typed_operator_contract_column,
+)
+
 from frontier.config.parallel_semantics import (
     FrontierParallelismMapping,
     resolve_frontier_parallelism_mapping,
@@ -26,9 +30,7 @@ from frontier.moe_routing_runtime import (
 )
 from frontier.operators.binding import bind_operator_query, resolve_operator_query_tp_mode
 from frontier.operators.families import (
-    FFN_FAMILY,
     MOE_FAMILY,
-    SHARE_EXPERT_FAMILY,
     get_family_profiling_names,
 )
 from frontier.operators.spec import TensorParallelMode
@@ -100,7 +102,7 @@ class ModelContract:
     profile_filenames: tuple[str, ...]
     linear_target_columns: tuple[str, ...]
     moe_target_columns: tuple[str, ...]
-    moe_routing_mode: str
+    moe_routing_distribution_type: str
     routing_runtime_path: str
     profiling_precision: str
     quant_signature: str
@@ -123,7 +125,7 @@ class ModelContract:
 def build_model_contract(
     model_name: str,
     *,
-    moe_routing_mode: str = "simulation",
+    moe_routing_distribution_type: str = "balanced",
 ) -> ModelContract:
     if model_name not in SUPPORTED_MODELS:
         raise ValueError(
@@ -143,7 +145,7 @@ def build_model_contract(
     parallel_mapping = resolve_frontier_parallelism_mapping(
         model_profile="moe" if is_moe else "dense",
         tensor_parallel_size=runtime_registry_entry.tensor_parallel_size,
-        data_parallel_size=runtime_registry_entry.data_parallel_size,
+        num_replicas=runtime_registry_entry.data_parallel_size,
         enable_expert_parallel=runtime_registry_entry.enable_expert_parallel,
     )
     moe_layer_count = len(model_config.get_moe_layer_ids())
@@ -167,6 +169,7 @@ def build_model_contract(
             op_name,
             _resolve_linear_profile_tp(
                 op_name,
+                model_config=model_config,
                 architecture_profile=architecture_profile,
                 mapping=parallel_mapping,
                 is_moe=is_moe,
@@ -195,7 +198,7 @@ def build_model_contract(
         enable_expert_parallel=runtime_registry_entry.enable_expert_parallel,
         cluster_num_replicas=parallel_mapping.cluster_num_replicas,
         attn_tensor_parallel_size=parallel_mapping.attn_tensor_parallel_size,
-        attn_data_parallel_size=parallel_mapping.attn_data_parallel_size,
+        attn_data_parallel_size=parallel_mapping.attn_dp,
         moe_tensor_parallel_size=parallel_mapping.moe_tensor_parallel_size,
         moe_expert_parallel_size=parallel_mapping.moe_expert_parallel_size,
         linear_tp_by_op=linear_tp_by_op,
@@ -209,9 +212,9 @@ def build_model_contract(
             f"time_stats.{op_name}.median"
             for op_name in get_family_profiling_names(MOE_FAMILY)
         ),
-        moe_routing_mode=moe_routing_mode,
+        moe_routing_distribution_type=moe_routing_distribution_type,
         routing_runtime_path=resolve_moe_gating_routing_runtime_path(
-            moe_routing_mode
+            moe_routing_distribution_type
         ),
         profiling_precision=ModelConfig._dtype_to_str(model_config.dtype),
         quant_signature=model_config.get_quant_signature(),
@@ -245,25 +248,42 @@ def build_model_contract(
 def _resolve_linear_profile_tp(
     op_name: str,
     *,
+    model_config: ModelConfig,
     architecture_profile: Any,
     mapping: FrontierParallelismMapping,
     is_moe: bool,
 ) -> int:
     """Resolve one linear operator's profiling TP from the operator registry."""
 
-    # Mixed-layer MoE models have two distinct FFN domains.  The dense
-    # boundary MLP family is trained and queried as a dense model (therefore
-    # on the attention TP domain), while shared-expert operations remain in
-    # the routed MoE domain.  Resolve this distinction from the operator
-    # registry instead of inferring it from operator-name prefixes.
+    # Profile-owned typed families carry their own layer kind, width source,
+    # and TP domain.  Resolve those facts through the same contract used by
+    # producers and predictors so mixed-layer models cannot collapse shared
+    # experts into the routed MoE TP domain.
     try:
         binding = bind_operator_query(op_name)
     except ValueError:
         binding = None
-    if binding is not None and binding.family is FFN_FAMILY:
-        return mapping.attn_tensor_parallel_size
-    if binding is not None and binding.family is SHARE_EXPERT_FAMILY:
-        return mapping.moe_tensor_parallel_size
+    if binding is not None:
+        owned_family_ids = {
+            family_id
+            for contract in architecture_profile.layer_contracts
+            for family_id in contract.operator_family_ids
+        }
+        if binding.family_id in owned_family_ids:
+            resolved_contract = architecture_profile.resolve_layer_contract(
+                model_config,
+                operator_name=op_name,
+                attention_tp_size=mapping.attn_tensor_parallel_size,
+                ffn_tp_size=mapping.attn_tensor_parallel_size,
+                moe_tp_size=mapping.moe_tensor_parallel_size,
+                expert_parallel_size=mapping.moe_expert_parallel_size,
+            )
+            if resolved_contract.tensor_parallel_size is None:
+                raise ValueError(
+                    f"Profile-owned linear contract for {op_name!r} did not "
+                    "resolve a tensor parallel size"
+                )
+            return int(resolved_contract.tensor_parallel_size)
 
     tp_mode = resolve_operator_query_tp_mode(
         op_name,
@@ -295,6 +315,9 @@ def _load_csv(path: Path) -> pd.DataFrame:
         raise ValueError(f"Profiling CSV is not parseable: {path}: {exc}") from exc
     if frame.empty:
         raise ValueError(f"Profiling CSV has no data rows: {path}")
+    # Validate optional typed metadata while preserving the existing string
+    # column for downstream feature and duplicate checks.
+    parse_typed_operator_contract_column(frame)
     return frame
 
 
@@ -798,7 +821,7 @@ def _validate_runtime_config(
                 "moe_expert_parallel_size": contract.moe_expert_parallel_size,
                 "total_expert_num": contract.num_experts,
                 "router_topk": contract.router_topk,
-                "moe_routing_mode": contract.moe_routing_mode,
+                "moe_routing_distribution_type": contract.moe_routing_distribution_type,
             }
         )
     for field, expected in expected_replica.items():
@@ -993,7 +1016,9 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Print one registry-derived model contract.",
     )
     contract_parser.add_argument("--model", required=True, choices=SUPPORTED_MODELS)
-    contract_parser.add_argument("--moe-routing-mode", default="simulation")
+    contract_parser.add_argument(
+        "--moe-routing-distribution-type", default="balanced"
+    )
 
     preflight_parser = subparsers.add_parser(
         "preflight",
@@ -1001,7 +1026,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     preflight_parser.add_argument("--model", required=True, choices=SUPPORTED_MODELS)
     preflight_parser.add_argument("--profile-dir", required=True)
-    preflight_parser.add_argument("--moe-routing-mode", default="simulation")
+    preflight_parser.add_argument(
+        "--moe-routing-distribution-type", default="balanced"
+    )
     preflight_parser.add_argument("--report-json")
 
     runtime_parser = subparsers.add_parser(
@@ -1011,7 +1038,9 @@ def _build_parser() -> argparse.ArgumentParser:
     runtime_parser.add_argument("--model", required=True, choices=SUPPORTED_MODELS)
     runtime_parser.add_argument("--run-dir", required=True)
     runtime_parser.add_argument("--profile-dir", required=True)
-    runtime_parser.add_argument("--moe-routing-mode", default="simulation")
+    runtime_parser.add_argument(
+        "--moe-routing-distribution-type", default="balanced"
+    )
     runtime_parser.add_argument("--report-json")
 
     return parser
@@ -1021,7 +1050,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     contract = build_model_contract(
         args.model,
-        moe_routing_mode=args.moe_routing_mode,
+        moe_routing_distribution_type=args.moe_routing_distribution_type,
     )
     if args.command == "contract":
         _write_report(asdict(contract), None)
