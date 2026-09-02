@@ -51,7 +51,6 @@ from frontier.model_architectures import (
     ModelArchitectureProfile,
     ResolvedLayerContract,
     get_model_architecture_profile,
-    serialize_layer_contract_identity,
 )
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
@@ -184,14 +183,6 @@ def _resolve_profile_typed_family_for_query(
             f"{sorted(family_id for family_id, _ in matches)}"
         )
     return matches[0] if matches else None
-
-
-def _serialize_layer_contract_identity(
-    layer_contract: Optional[ResolvedLayerContract],
-) -> Optional[str]:
-    """Return the full profile-owned identity for provenance metadata."""
-
-    return serialize_layer_contract_identity(layer_contract)
 
 
 def _serialize_selected_layer_cache_identity(
@@ -2882,15 +2873,6 @@ class ExecutionTimePredictionModelManager:
         setattr(best_estimator, "_frontier_model_hash", model_hash)
         if layer_contract is not None:
             self._model_contract_identity(best_estimator, layer_contract)
-            # Keep the full occurrence identity as optional provenance.  It is
-            # deliberately excluded from cache admission and reuse.
-            occurrence_identity = _serialize_layer_contract_identity(layer_contract)
-            if occurrence_identity is not None:
-                setattr(
-                    best_estimator,
-                    "_frontier_layer_contract_identity",
-                    occurrence_identity,
-                )
 
         if persist_exact_lookup:
             setattr(

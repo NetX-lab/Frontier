@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import json
 import re
 from collections import OrderedDict
 from dataclasses import dataclass, field
@@ -238,7 +237,7 @@ class ResolvedLayerContract:
         return self.expert_parallel_mode is ExpertParallelMode.ON
 
     def semantic_identity(self) -> tuple[object, ...]:
-        """Return cache identity fields while ignoring physical layer occurrence."""
+        """Return semantic identity fields while ignoring physical layer occurrence."""
 
         return (
             self.profile_id,
@@ -297,33 +296,6 @@ def _pad_width(width: int, tp_size: int) -> int:
     if type(tp_size) is not int or tp_size <= 0:
         raise ValueError(f"tensor parallel size must be positive, got {tp_size!r}")
     return ((width + tp_size - 1) // tp_size) * tp_size
-
-
-def serialize_layer_contract_identity(layer_contract: ResolvedLayerContract | None) -> str | None:
-    """Serialize semantic contract data for stable cache/provenance use."""
-
-    if layer_contract is None:
-        return None
-    if not isinstance(layer_contract, ResolvedLayerContract):
-        raise TypeError("layer_contract must be a ResolvedLayerContract")
-    return json.dumps(
-        {
-            "profile_id": layer_contract.profile_id,
-            "layer_kind": layer_contract.layer_kind.value,
-            "dimension_source": layer_contract.dimension_source.value,
-            "effective_ffn_width": layer_contract.effective_ffn_width,
-            "tensor_parallel_mode": layer_contract.tensor_parallel_mode.value,
-            "expert_parallel_mode": layer_contract.expert_parallel_mode.value,
-            "tensor_parallel_size": layer_contract.tensor_parallel_size,
-            "expert_parallel_size": layer_contract.expert_parallel_size,
-            "operator_family_id": layer_contract.operator_family_id,
-            "operator_family_ids": list(layer_contract.operator_family_ids),
-            "tensor_parallel_sizes": list(layer_contract.tensor_parallel_sizes),
-            "selected_padded_ffn_width": layer_contract.selected_padded_ffn_width,
-        },
-        sort_keys=True,
-        separators=(",", ":"),
-    )
 
 
 def _dense_layer_contract_active(profile: "ModelArchitectureProfile", config: Any) -> bool:
