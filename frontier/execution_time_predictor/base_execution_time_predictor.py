@@ -103,6 +103,85 @@ class BaseExecutionTimePredictor(ABC):
             moe_grouped_gemm_time=base_time,
         )
 
+    def _normalize_stage_layer_ids(
+        self,
+        *,
+        num_layers: int,
+        layer_id: int,
+        layer_ids: Optional[List[int] | tuple[int, ...]],
+    ) -> tuple[int, ...] | None:
+        """Validate and normalize the global layer identity for a stage call.
+
+        ``layer_ids`` is the authoritative identity for an aggregated call. The
+        scalar ``layer_id`` remains a compatibility input for single-layer
+        callers and is used as the first identity when no tuple is supplied.
+        Identity-free layer-zero aggregates retain the legacy ``None`` value so
+        pure-model callers keep their existing contract.
+        """
+
+        if type(num_layers) is not int or num_layers <= 0:
+            raise ValueError(
+                "num_layers must be an exact positive int, "
+                f"got {num_layers!r}"
+            )
+        if type(layer_id) is not int or layer_id < 0:
+            raise ValueError(
+                "layer_id must be an exact non-negative int, "
+                f"got {layer_id!r}"
+            )
+
+        model_config = getattr(self, "_model_config", None)
+        model_num_layers = getattr(model_config, "num_layers", None)
+        if model_num_layers is not None and (
+            type(model_num_layers) is not int or model_num_layers <= 0
+        ):
+            raise ValueError(
+                "model_config.num_layers must be an exact positive int when "
+                f"provided, got {model_num_layers!r}"
+            )
+
+        if layer_ids is None:
+            if model_num_layers is not None and layer_id >= model_num_layers:
+                raise ValueError(
+                    "layer_id is outside model layer range: "
+                    f"{layer_id} not in [0, {model_num_layers})"
+                )
+            if num_layers == 1 and layer_id != 0:
+                return (layer_id,)
+            return None
+
+        if not isinstance(layer_ids, (list, tuple)):
+            raise TypeError(
+                "layer_ids must be a list or tuple of exact non-negative integers"
+            )
+        if len(layer_ids) != num_layers:
+            raise ValueError(
+                "layer_ids length must match num_layers: "
+                f"{len(layer_ids)} != {num_layers}"
+            )
+        if any(type(item) is not int for item in layer_ids):
+            raise TypeError(
+                "layer_ids must contain exact integers, " f"got {layer_ids!r}"
+            )
+        if any(item < 0 for item in layer_ids):
+            raise ValueError(
+                "layer_ids must contain non-negative integers, "
+                f"got {layer_ids!r}"
+            )
+        if len(set(layer_ids)) != len(layer_ids):
+            raise ValueError(
+                "layer_ids must not contain duplicate layer identities, "
+                f"got {layer_ids!r}"
+            )
+        if model_num_layers is not None:
+            invalid_ids = tuple(item for item in layer_ids if item >= model_num_layers)
+            if invalid_ids:
+                raise ValueError(
+                    "layer_ids are outside model layer range: "
+                    f"IDs={invalid_ids!r}, valid range=[0, {model_num_layers})"
+                )
+        return tuple(layer_ids)
+
     @abstractmethod
     def _get_attention_layer_pre_proj_execution_time(self, batch: Batch) -> float:
         pass
@@ -406,6 +485,7 @@ class BaseExecutionTimePredictor(ABC):
         cluster_type: ClusterType,
         num_layers: int = 1,
         layer_id: int = 0,
+        layer_ids: Optional[List[int] | tuple[int, ...]] = None,
         include_moe: bool | None = None,
         include_ffn: bool = True,
         include_attention: bool = True,

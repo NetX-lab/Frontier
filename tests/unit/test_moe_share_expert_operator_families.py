@@ -353,14 +353,15 @@ def test_sklearn_moe_dataset_contract_filters_gating_context_from_operator_preci
         }
     )
 
-    with pytest.raises(ValueError, match="standalone_legacy"):
-        predictor._validate_moe_dataset_contract(
-            df,
-            "/tmp/moe.csv",
-            ["moe_family_gate"],
-            moe_tp_size=4,
-            moe_ep_size=1,
-        )
+    with pytest.warns(FutureWarning):
+        with pytest.raises(ValueError, match="direct"):
+            predictor._validate_moe_dataset_contract(
+                df,
+                "/tmp/moe.csv",
+                ["moe_family_gate"],
+                moe_tp_size=4,
+                moe_ep_size=1,
+            )
 
 
 def test_shared_manager_validates_moe_training_names_from_moe_family(
@@ -401,7 +402,7 @@ def test_shared_manager_validates_moe_training_names_from_moe_family(
 
     captured_cluster_types: list[ClusterType] = []
 
-    def _capture_validation(file_path, replica_config, model_names, cluster_type):
+    def _capture_validation(file_path, replica_config, model_names, cluster_type, **kwargs):
         captured_model_names.append(tuple(model_names))
         captured_cluster_types.append(cluster_type)
         raise _StopAfterValidation
@@ -409,6 +410,11 @@ def test_shared_manager_validates_moe_training_names_from_moe_family(
     manager._validate_moe_dataset_contract = _capture_validation
 
     model_config = SimpleNamespace(
+        num_layers=1,
+        num_experts=8,
+        is_moe=True,
+        mlp_hidden_dim=4096,
+        routed_mlp_hidden_dim=4096,
         get_model_arch=lambda: "unit_moe",
         supports_share_expert=lambda: False,
         use_qk_norm=False,
@@ -468,6 +474,7 @@ def test_shared_manager_moe_dataset_contract_uses_pdd_legacy_auxiliary_tp_key(
     manager = object.__new__(ExecutionTimePredictionModelManager)
     replica_config = SimpleNamespace(
         model_config=SimpleNamespace(
+            is_moe=True,
             num_experts=8,
             num_experts_per_tok=2,
             embedding_dim=4096,
@@ -689,8 +696,8 @@ def test_moe_trainer_model_names_use_moe_family_and_gating_precision(
     import frontier.training.moe_trainer as trainer_module
     from frontier.training.moe_trainer import MoETrainer
     from frontier.moe_gating_runtime import (
-        PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
-        PREFILL_HOT_MOE_GATING_RUNTIME_IMPL,
+        PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
+        PREFILL_WARMED_MOE_GATING_RUNTIME_IMPL,
     )
 
     def _operator(
@@ -725,15 +732,17 @@ def test_moe_trainer_model_names_use_moe_family_and_gating_precision(
     trainer.model_name = "qwen3-a3b-30b-moe"
     trainer.df = pd.DataFrame(
         {
-            "gating_runtime_context": [PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT],
-            "gating_runtime_context_impl": [PREFILL_HOT_MOE_GATING_RUNTIME_IMPL],
+            "gating_runtime_context": [PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT],
+            "gating_runtime_context_impl": [
+                PREFILL_WARMED_MOE_GATING_RUNTIME_IMPL
+            ],
         }
     )
 
     assert trainer._get_model_names() == [
         "moe_family_gate",
         "moe_family_expert",
-        "moe_family_gate__prefill_hot",
+        "moe_family_gate__prefill_warmed",
     ]
 
 
@@ -824,7 +833,7 @@ def test_moe_trainer_gating_context_filter_uses_operator_precision(
     trainer.moe_tensor_parallel_size = 4
     trainer.expert_parallel_size = 1
     trainer.dataset_path = "/tmp/moe.csv"
-    trainer.gating_runtime_context = "standalone_legacy"
+    trainer.gating_runtime_context = "direct"
     trainer.routing_runtime_path = "standard_fused_topk"
 
     df = pd.DataFrame(
@@ -838,14 +847,15 @@ def test_moe_trainer_gating_context_filter_uses_operator_precision(
         }
     )
 
-    training_df = trainer._get_training_df_for_model(
-        df=df,
-        model_name="moe_family_gate",
-        feature_cols=["num_tokens"],
-        target_col="time_stats.moe_family_gate.median",
-    )
+    with pytest.warns(FutureWarning):
+        training_df = trainer._get_training_df_for_model(
+            df=df,
+            model_name="moe_family_gate",
+            feature_cols=["num_tokens"],
+            target_col="time_stats.moe_family_gate.median",
+        )
 
-    assert training_df["gating_runtime_context"].tolist() == ["standalone_legacy"]
+    assert training_df["gating_runtime_context"].tolist() == ["direct"]
 
 
 def test_linear_op_wrapper_expected_keys_use_share_expert_family(monkeypatch) -> None:

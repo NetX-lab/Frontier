@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import hashlib
+import inspect
 from dataclasses import dataclass
 from typing import cast
 
@@ -12,7 +13,10 @@ from frontier.config.model_config import (
     _infer_use_qk_norm_from_hf_config,
 )
 from frontier.config.precision_type import PrecisionType
-from frontier.model_architectures import get_model_architecture_profile
+from frontier.model_architectures import (
+    get_model_architecture_profile,
+    parse_moe_layer_ids,
+)
 from frontier.profiling.common.model_config import ModelConfig as ProfilingModelConfig
 from frontier.spec_decode.mtp_registry import (
     MTPRuntimePolicy,
@@ -54,6 +58,21 @@ class StructuralModelConfigAdapter:
 
     def __getattr__(self, name: str):
         return getattr(self._profiling_config, name)
+
+    def get_declared_config_attribute(self, name: str) -> tuple[bool, object]:
+        """Expose only fields statically declared by the wrapped config.
+
+        The adapter retains its convenience ``__getattr__`` delegation for
+        legacy structural consumers, while the architecture profile resolver
+        uses this explicit protocol to avoid treating arbitrary synthesized
+        attributes as model-contract fields.
+        """
+
+        try:
+            inspect.getattr_static(self._profiling_config, name)
+        except AttributeError:
+            return False, None
+        return True, getattr(self._profiling_config, name)
 
     def get_name(self) -> str:
         return str(self._profiling_config.name)
@@ -151,14 +170,79 @@ def _load_structural_model_config_from_json(model_name: str) -> StructuralModelC
     num_q_heads = int(raw["num_attention_heads"])
     num_kv_heads = int(raw.get("num_key_value_heads", num_q_heads))
     embedding_dim = int(raw["hidden_size"])
-    num_experts = int(raw.get("n_routed_experts", raw.get("num_experts", 0)) or 0)
-    is_moe = num_experts > 0
-    mlp_hidden_dim = int(
-        raw.get(
-            "moe_intermediate_size" if is_moe else "intermediate_size",
-            raw.get("intermediate_size", 0),
+    expert_counts: dict[str, int] = {}
+    for field_name in ("n_routed_experts", "num_experts"):
+        if field_name not in raw or raw[field_name] is None:
+            continue
+        value = raw[field_name]
+        if type(value) is not int or value < 0:
+            raise ValueError(
+                f"{field_name} must be a non-negative int in structural model "
+                f"config {model_name!r}, got {value!r}"
+            )
+        expert_counts[field_name] = value
+    if len(set(expert_counts.values())) > 1:
+        raise ValueError(
+            "n_routed_experts and num_experts disagree in structural model "
+            f"config {model_name!r}: {expert_counts!r}"
         )
-    )
+    num_experts = next(iter(expert_counts.values()), 0)
+    is_moe = num_experts > 0
+    raw_moe_layers = raw.get("moe_layers_enum")
+    if is_moe:
+        moe_layer_ids = parse_moe_layer_ids(raw_moe_layers, num_layers)
+        mixed_model = len(moe_layer_ids) < num_layers
+    else:
+        if raw_moe_layers not in (None, ""):
+            raise ValueError(
+                "moe_layers_enum requires a positive expert count in structural "
+                f"model config {model_name!r}"
+            )
+        if raw.get("moe_intermediate_size") is not None:
+            raise ValueError(
+                "moe_intermediate_size requires a positive expert count in "
+                f"structural model config {model_name!r}"
+            )
+        moe_layer_ids = ()
+        mixed_model = False
+
+    def _positive_width(field_name: str, *, required: bool) -> int | None:
+        value = raw.get(field_name)
+        if value is None:
+            if required:
+                raise ValueError(
+                    f"Missing required key '{field_name}' in structural model "
+                    f"config {model_name!r}"
+                )
+            return None
+        if type(value) is not int or value <= 0:
+            raise ValueError(
+                f"{field_name} must be a positive int in structural model config "
+                f"{model_name!r}, got {value!r}"
+            )
+        return value
+
+    if is_moe:
+        routed_mlp_hidden_dim = _positive_width(
+            "moe_intermediate_size",
+            required=mixed_model,
+        )
+        if routed_mlp_hidden_dim is None:
+            # Preserve the historical pure-MoE JSON form where the sole
+            # intermediate_size field represented the routed expert width.
+            routed_mlp_hidden_dim = _positive_width(
+                "intermediate_size",
+                required=True,
+            )
+        dense_mlp_hidden_dim = _positive_width(
+            "intermediate_size",
+            required=mixed_model,
+        )
+        mlp_hidden_dim = routed_mlp_hidden_dim
+    else:
+        dense_mlp_hidden_dim = _positive_width("intermediate_size", required=True)
+        routed_mlp_hidden_dim = None
+        mlp_hidden_dim = dense_mlp_hidden_dim
     hidden_act = str(raw.get("hidden_act", "silu")).lower()
     use_gated_mlp = hidden_act == "silu"
     if hidden_act not in {"silu", "gelu"}:
@@ -186,7 +270,7 @@ def _load_structural_model_config_from_json(model_name: str) -> StructuralModelC
         is_moe=is_moe,
         num_experts=num_experts,
         num_experts_per_tok=int(raw.get("num_experts_per_tok", 0) or 0),
-        moe_layers_enum=raw.get("moe_layers_enum"),
+        moe_layers_enum=raw_moe_layers,
         use_qk_norm=_infer_use_qk_norm_from_hf_config(raw),
         attn_output_gate=_infer_attn_output_gate_from_hf_config(raw),
         rms_norm_eps=float(raw.get("rms_norm_eps", 1e-6)),
@@ -207,6 +291,8 @@ def _load_structural_model_config_from_json(model_name: str) -> StructuralModelC
         v_head_dim=raw.get("v_head_dim"),
         quantization_config=None,
         tie_word_embeddings=bool(raw.get("tie_word_embeddings", True)),
+        dense_mlp_hidden_dim=dense_mlp_hidden_dim,
+        routed_mlp_hidden_dim=routed_mlp_hidden_dim,
     )
     return StructuralModelConfigAdapter(profiling_config)
 

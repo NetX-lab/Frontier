@@ -369,6 +369,7 @@ class ReplicaStageScheduler:
         # Phase 2: Unified API for both MoE and dense models
         # Get num_layers from the execution time predictor (calculated from model config)
         num_layers = self._execution_time_predictor._num_layers_per_pipeline_stage
+        layer_ids = None
 
         # In PD+AF disaggregation mode, DECODE_ATTN and DECODE_FFN process one
         # layer per A↔F ping-pong iteration. The loop in ClusterBatchEndEvent
@@ -384,6 +385,25 @@ class ReplicaStageScheduler:
                 raise ValueError(
                     "DECODE_FFN batch is missing decode_ffn_layer_id"
                 )
+        elif self._cluster_type not in (
+            ClusterType.DECODE_ATTN,
+            ClusterType.DECODE_FFN,
+        ):
+            # A regular stage owns a global, contiguous layer interval.  Keep
+            # the existing scalar ``layer_id`` as the first-layer compatibility
+            # field while carrying the complete identity for typed aggregates.
+            from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+                BaseClusterScheduler,
+            )
+
+            first_layer_id, layer_end = (
+                BaseClusterScheduler.get_pipeline_stage_layer_bounds(
+                    self._stage_id,
+                    num_layers,
+                )
+            )
+            layer_id = first_layer_id
+            layer_ids = tuple(range(first_layer_id, layer_end))
         effective_tokens_compute = batch.get_effective_total_tokens_for_compute(
             self._cluster_type
         )
@@ -405,12 +425,17 @@ class ReplicaStageScheduler:
                     batch.id,
                     num_layers,
                 )
+            prediction_kwargs = {
+                "cluster_type": self._cluster_type,
+                "num_layers": num_layers,
+                "layer_id": layer_id,
+            }
+            if layer_ids is not None:
+                prediction_kwargs["layer_ids"] = layer_ids
             execution_time = self._execution_time_predictor.predict_stage_execution_time(
                 batch,
                 self._stage_id,
-                cluster_type=self._cluster_type,
-                num_layers=num_layers,
-                layer_id=layer_id,
+                **prediction_kwargs,
             )
             if info_logging_enabled:
                 debug_logger.info(

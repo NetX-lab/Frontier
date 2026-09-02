@@ -18,7 +18,7 @@
 #     [--ep-sizes "1 2 4"] \
 #     [--num-gpus <num>]
 #     [--routing-runtime-path standard_fused_topk|uniform_topk]
-#     [--gating-runtime-context standalone_legacy|prefill_hot]
+#     [--gating-runtime-context direct|prefill_warmed]
 #     [--dry-run]
 #
 # Note: --device accepts only a SINGLE device type (e.g., a100 OR h100).
@@ -77,7 +77,7 @@ DATA_DIR_BASE="${DATA_DIR_BASE:-$PROJECT_ROOT/data/profiling}"
 # MoE-specific parameters
 PROFILE_METHOD="cuda_event"  # default: cuda_event
 ROUTING_RUNTIME_PATH="standard_fused_topk"
-GATING_RUNTIME_CONTEXT="standalone_legacy"
+GATING_RUNTIME_CONTEXT="direct"
 
 profiled_csv_name() {
     local op_name="$1"
@@ -174,7 +174,8 @@ while [[ $# -gt 0 ]]; do
             echo "  --num-gpus <num>          Number of GPUs (default: 8)"
             echo "  --profile-method <method> Profile method (default: cuda_event; cuda_event -> CUDA_EVENT, record_function -> KERNEL_ONLY)"
             echo "  --routing-runtime-path <path> Routing runtime path: standard_fused_topk or uniform_topk"
-            echo "  --gating-runtime-context <ctx> Gating runtime context: standalone_legacy or prefill_hot"
+            echo "  --gating-runtime-context <ctx> Gating runtime context: direct or prefill_warmed"
+            echo "                                 Legacy aliases: standalone_legacy or prefill_hot"
             echo "  --load-imbalance <bool>   Enable load imbalance (true/false, default: false)"
             echo '  --load-distributions <d>  Load distributions (default: "uniform")'
             echo "  --num-samples <num>       Samples per distribution (default: 3)"

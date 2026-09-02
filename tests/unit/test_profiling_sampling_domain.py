@@ -96,6 +96,29 @@ def test_attention_combinations_cover_prefill_and_decode_endpoints_deterministic
     assert all(item.is_valid(1000) for item in first)
 
 
+def test_standard_attention_emits_unique_structural_workloads():
+    inputs = get_attention_input_combinations(
+        max_seq_len=128,
+        max_model_len=128,
+        min_batch_size=1,
+        max_batch_size=8,
+        profile_only_prefill=False,
+        profile_only_decode=False,
+    )
+    identities = _attention_input_tuples(inputs)
+
+    assert len(identities) == 47
+    assert len(identities) == len(set(identities))
+    assert identities[:6] == [
+        (64, 0, 1, True),
+        (64, 64, 1, True),
+        (80, 0, 1, True),
+        (96, 0, 1, True),
+        (112, 0, 1, True),
+        (128, 0, 1, True),
+    ]
+
+
 def test_decode_attention_input_reserves_the_current_token():
     assert AttentionInput(0, 999, 1, False).is_valid(1000)
     assert not AttentionInput(0, 1000, 1, False).is_valid(1000)

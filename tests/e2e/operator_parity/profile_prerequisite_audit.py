@@ -14,6 +14,7 @@ from frontier.model_architectures import get_model_architecture_profile
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
     MOE_GATING_RUNTIME_CONTEXT_COLUMN,
+    normalize_moe_gating_runtime_context,
 )
 
 GOLDEN_CONFIG_FILENAMES: tuple[str, ...] = (
@@ -282,12 +283,12 @@ def _audit_csv(
         true_mixed_required_numeric_valid_row_count = 0
         true_mixed_required_numeric_invalid_cell_count = 0
         invalid_true_mixed_numeric_columns: dict[str, int] = {}
-        gating_runtime_contexts: set[str] = set()
+        raw_gating_runtime_contexts: set[str] = set()
         model_architecture_profiles: set[str] = set()
         for row in reader:
             row_count += 1
             if MOE_GATING_RUNTIME_CONTEXT_COLUMN in row:
-                gating_runtime_contexts.add(
+                raw_gating_runtime_contexts.add(
                     str(row.get(MOE_GATING_RUNTIME_CONTEXT_COLUMN, "")).strip()
                 )
             if "model_architecture_profile" in row:
@@ -323,6 +324,11 @@ def _audit_csv(
             if time_stats_columns and row_valid_count == 0:
                 empty_row_count += 1
 
+    gating_runtime_contexts = {
+        normalize_moe_gating_runtime_context(raw_context)
+        for raw_context in raw_gating_runtime_contexts
+        if raw_context
+    }
     semantic_coverage_error_list: list[str] = []
     if "model_architecture_profile" not in fieldnames:
         semantic_coverage_error_list.append(

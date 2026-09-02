@@ -914,6 +914,54 @@ def test_corrected_execution_time_copy_preserves_explicit_zero_split_tp_override
     )
 
 
+def test_corrected_execution_time_copy_preserves_current_layer_identity():
+    original_execution_time = ExecutionTime(
+        **_base_execution_kwargs(
+            num_layers_per_pipeline_stage=3,
+            layer_ids=(4, 5, 6),
+        )
+    )
+
+    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+        BaseClusterScheduler,
+    )
+
+    corrected_execution_time = BaseClusterScheduler._create_corrected_execution_time_for_metrics(
+        cast(Any, None),
+        original_execution_time,
+        actual_execution_time_ms=0.0,
+        original_start_time=0.0,
+        layer_id=5,
+    )
+
+    assert corrected_execution_time.num_layers == 1
+    assert corrected_execution_time.layer_ids == (5,)
+
+
+def test_corrected_execution_time_copy_rejects_ambiguous_layer_identity():
+    original_execution_time = ExecutionTime(
+        **_base_execution_kwargs(
+            num_layers_per_pipeline_stage=3,
+            layer_ids=(4, 5, 6),
+        )
+    )
+
+    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+        BaseClusterScheduler,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="current layer_id is required when correcting a multi-layer",
+    ):
+        BaseClusterScheduler._create_corrected_execution_time_for_metrics(
+            cast(Any, None),
+            original_execution_time,
+            actual_execution_time_ms=0.0,
+            original_start_time=0.0,
+        )
+
+
 def test_execution_time_component_operator_time_setters_are_atomic_on_conflict():
     attention_time = ExecutionTime(
         **_base_execution_kwargs(

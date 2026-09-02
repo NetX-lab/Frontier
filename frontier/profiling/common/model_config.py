@@ -14,7 +14,10 @@ from frontier.config.model_config import (
     _infer_share_expert_dim_from_hf_config,
     _infer_use_qk_norm_from_hf_config,
 )
-from frontier.model_architectures import get_model_architecture_profile
+from frontier.model_architectures import (
+    get_model_architecture_profile,
+    parse_moe_layer_ids,
+)
 from frontier.profiling.common.parallel_config import ParallelConfig
 from frontier.types import ActivationType, NormType
 
@@ -69,6 +72,10 @@ class ModelConfig:
         quantization_config: Optional[QuantizationConfig] = None,
         # Whether lm_head shares weights with embed_tokens (HF standard field)
         tie_word_embeddings: bool = True,
+        # Typed FFN widths. Keep these at the end so legacy positional callers
+        # retain the constructor order that predates the mixed-layer contract.
+        dense_mlp_hidden_dim: Optional[int] = None,
+        routed_mlp_hidden_dim: Optional[int] = None,
     ):
         self.name = name
         self.num_layers = num_layers
@@ -95,6 +102,24 @@ class ModelConfig:
         self.num_experts = num_experts
         self.num_experts_per_tok = num_experts_per_tok
         self.moe_layers_enum = moe_layers_enum
+        for field_name in ("dense_mlp_hidden_dim", "routed_mlp_hidden_dim"):
+            value = locals()[field_name]
+            if value is not None and (type(value) is not int or value <= 0):
+                raise ValueError(
+                    f"{field_name} must be a positive int or None, got {value!r}"
+                )
+        if type(mlp_hidden_dim) is not int or mlp_hidden_dim <= 0:
+            raise ValueError(
+                f"mlp_hidden_dim must be a positive int, got {mlp_hidden_dim!r}"
+            )
+        if not self.is_moe and dense_mlp_hidden_dim is None:
+            dense_mlp_hidden_dim = mlp_hidden_dim
+        if self.is_moe and routed_mlp_hidden_dim is None:
+            routed_mlp_hidden_dim = mlp_hidden_dim
+        self.dense_mlp_hidden_dim = dense_mlp_hidden_dim
+        self.routed_mlp_hidden_dim = routed_mlp_hidden_dim
+        if self.is_moe:
+            parse_moe_layer_ids(self.moe_layers_enum, self.num_layers)
 
         # QK-norm support (for Qwen3, Gemma3, OLMo2, etc.)
         self.use_qk_norm = use_qk_norm
@@ -258,18 +283,38 @@ class ModelConfig:
         """
         if not self.is_moe:
             return []
-        raw = self.moe_layers_enum
-        if raw is None or str(raw).strip() == "":
-            return list(range(self.num_layers))
-        parsed = []
-        for token in str(raw).split(","):
-            token = token.strip()
-            if token == "":
-                continue
-            layer_id = int(token)
-            if 0 <= layer_id < self.num_layers:
-                parsed.append(layer_id)
-        return sorted(set(parsed))
+        return list(parse_moe_layer_ids(self.moe_layers_enum, self.num_layers))
+
+    def is_moe_layer(self, layer_id: int) -> bool:
+        """Return whether a specific layer uses the routed MoE FFN."""
+
+        if type(layer_id) is not int or layer_id < 0 or layer_id >= self.num_layers:
+            raise ValueError(
+                f"layer_id {layer_id!r} out of range for model with "
+                f"num_layers={self.num_layers}"
+            )
+        return self.is_moe and layer_id in self.get_moe_layer_ids()
+
+    def get_num_moe_layers(self) -> int:
+        """Return the number of routed MoE layers."""
+
+        return len(self.get_moe_layer_ids())
+
+    @property
+    def intermediate_size(self) -> Optional[int]:
+        """Expose the dense HF width while preserving the legacy MoE value."""
+
+        if self.dense_mlp_hidden_dim is not None:
+            return self.dense_mlp_hidden_dim
+        return self.mlp_hidden_dim
+
+    @property
+    def moe_intermediate_size(self) -> Optional[int]:
+        """Expose the routed HF width while preserving legacy fallback."""
+
+        if self.routed_mlp_hidden_dim is not None:
+            return self.routed_mlp_hidden_dim
+        return self.mlp_hidden_dim if self.is_moe else None
 
     def get_quant_signature(self) -> str:
         """Get the quantization signature for this model config.
@@ -526,6 +571,8 @@ class ModelConfig:
             "num_kv_heads": self.num_kv_heads,
             "embedding_dim": self.embedding_dim,
             "mlp_hidden_dim": self.mlp_hidden_dim,
+            "dense_mlp_hidden_dim": self.dense_mlp_hidden_dim,
+            "routed_mlp_hidden_dim": self.routed_mlp_hidden_dim,
             "max_position_embeddings": self.max_position_embeddings,
             "use_gated_mlp": self.use_gated_mlp,
             "use_bias": self.use_bias,

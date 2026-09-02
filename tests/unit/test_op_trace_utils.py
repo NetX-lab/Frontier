@@ -8,6 +8,7 @@ Tests cover:
 """
 
 from unittest.mock import MagicMock
+from types import SimpleNamespace
 
 import pytest
 
@@ -321,6 +322,130 @@ def test_moe_grouped_gemm_post_routing_shapes():
     assert meta["tensor_shape"]["output"] == [8, 8]
     assert meta["tensor_size_bytes"]["input"] == 128
     assert meta["tensor_size_bytes"]["output"] == 128
+
+
+def _build_step3_trace_context(cluster_type):
+    from frontier.metrics.op_trace_utils import OpTraceContext
+    from frontier.types import ClusterType
+
+    model_config = SimpleNamespace(
+        embedding_dim=1024,
+        num_q_heads=16,
+        num_kv_heads=8,
+        mlp_hidden_dim=5120,
+        dense_mlp_hidden_dim=18432,
+        routed_mlp_hidden_dim=5120,
+        share_expert_dim=5120,
+        num_experts=48,
+        num_experts_per_tok=3,
+        is_moe=True,
+        num_layers=61,
+        moe_layers_enum=",".join(str(layer_id) for layer_id in range(4, 60)),
+        supports_share_expert=lambda: True,
+        get_model_architecture_profile=__import__(
+            "frontier.model_architectures", fromlist=["ModelArchitectureProfile"]
+        ).ModelArchitectureProfile.step3_text,
+        get_head_dim=lambda: 64,
+    )
+    replica_config = SimpleNamespace(
+        attn_tensor_parallel_size=8 if cluster_type is not ClusterType.DECODE_FFN else 1,
+        attn_dp=1,
+        moe_tensor_parallel_size=1 if cluster_type is not ClusterType.DECODE_FFN else 8,
+        moe_expert_parallel_size=8,
+        num_pipeline_stages=1,
+        router_topk=3,
+    )
+    return OpTraceContext(
+        cluster_type=cluster_type,
+        model_config=model_config,
+        replica_config=replica_config,
+        total_tokens=8,
+        effective_tokens_compute=8,
+        effective_tokens_transfer=8,
+        effective_tokens_rounded=8,
+        tokens_are_post_routing=False,
+    )
+
+
+def test_mixed_step3_trace_shapes_use_layer_contract_width_and_tp():
+    from frontier.metrics.op_trace_utils import compute_op_trace_meta
+    from frontier.types import ClusterType
+
+    _reset_quantization()
+    ctx = _build_step3_trace_context(ClusterType.MONOLITHIC)
+
+    dense = compute_op_trace_meta("mlp_up_proj", "COMPUTE", ctx, layer_id=0)
+    routed = compute_op_trace_meta("moe_grouped_gemm", "COMPUTE", ctx, layer_id=4)
+    shared = compute_op_trace_meta(
+        "share_expert_up_proj", "COMPUTE", ctx, layer_id=4
+    )
+
+    assert dense["tensor_shape"]["output"] == [8, 2304]
+    assert routed["tensor_shape"]["output"] == [24, 5120]
+    assert shared["tensor_shape"]["output"] == [8, 640]
+
+
+def test_typed_only_mixed_trace_does_not_require_legacy_mlp_hidden_dim():
+    """Profile-owned widths must work when the legacy scalar is absent."""
+    from frontier.metrics.op_trace_utils import OpTraceContext, compute_op_trace_meta
+    from frontier.model_architectures import ModelArchitectureProfile
+    from frontier.types import ClusterType
+
+    _reset_quantization()
+    model_config = SimpleNamespace(
+        embedding_dim=1024,
+        num_q_heads=16,
+        num_kv_heads=8,
+        dense_mlp_hidden_dim=18432,
+        routed_mlp_hidden_dim=5120,
+        share_expert_dim=5120,
+        num_experts=48,
+        num_experts_per_tok=3,
+        is_moe=True,
+        num_layers=61,
+        moe_layers_enum=",".join(str(layer_id) for layer_id in range(4, 60)),
+        supports_share_expert=lambda: True,
+        get_model_architecture_profile=ModelArchitectureProfile.step3_text,
+        get_head_dim=lambda: 64,
+    )
+    replica_config = SimpleNamespace(
+        attn_tensor_parallel_size=8,
+        attn_dp=1,
+        moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=8,
+        num_pipeline_stages=1,
+        router_topk=3,
+    )
+    ctx = OpTraceContext(
+        cluster_type=ClusterType.MONOLITHIC,
+        model_config=model_config,
+        replica_config=replica_config,
+        total_tokens=8,
+        effective_tokens_compute=8,
+        effective_tokens_transfer=8,
+        effective_tokens_rounded=8,
+        tokens_are_post_routing=False,
+    )
+
+    meta = compute_op_trace_meta("mlp_up_proj", "COMPUTE", ctx, layer_id=0)
+
+    assert meta["tensor_shape"]["output"] == [8, 2304]
+
+
+def test_mixed_step3_decode_ffn_trace_uses_role_local_tp():
+    from frontier.metrics.op_trace_utils import compute_op_trace_meta
+    from frontier.types import ClusterType
+
+    _reset_quantization()
+    ctx = _build_step3_trace_context(ClusterType.DECODE_FFN)
+
+    dense = compute_op_trace_meta("mlp_up_proj", "COMPUTE", ctx, layer_id=0)
+    shared = compute_op_trace_meta(
+        "share_expert_up_proj", "COMPUTE", ctx, layer_id=4
+    )
+
+    assert dense["tensor_shape"]["output"] == [8, 2304]
+    assert shared["tensor_shape"]["output"] == [8, 640]
 
 
 def test_moe_ep_comm_post_routing_shape():

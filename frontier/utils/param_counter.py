@@ -9,6 +9,12 @@ from frontier.spec_decode.mtp_runtime import (
     load_mtp_structural_model_config,
 )
 from frontier.spec_decode.runtime import MTP_METHOD_FAMILIES, SUPPORTED_SPEC_METHODS
+from frontier.model_architectures import (
+    LayerKind,
+    ResolvedLayerContract,
+    normalize_moe_layer_ids,
+)
+from frontier.operators.spec import TensorParallelMode
 from frontier.types import ClusterType
 
 
@@ -105,24 +111,81 @@ class ParamCounter:
             getattr(self._replica_config, "moe_expert_parallel_size", 1)
         )
 
-    def _get_dense_mlp_params_per_layer(self, tensor_parallel_size: int) -> int:
-        if (not hasattr(self._model_config, "mlp_hidden_dim") or
-            self._model_config.mlp_hidden_dim == 0):
-            return 0
+    def _resolve_profile_layer_contract(
+        self,
+        layer_kind: LayerKind,
+        tensor_parallel_size: int,
+        *,
+        expert_parallel_size: int | None = None,
+    ) -> ResolvedLayerContract | None:
+        """Resolve one typed FFN domain through the model's architecture profile."""
 
-        if getattr(self._model_config, "use_gated_mlp", False):
-            return (
-                3
-                * self._model_config.embedding_dim
-                * self._model_config.mlp_hidden_dim
-                // tensor_parallel_size
+        get_profile = getattr(self._model_config, "get_model_architecture_profile", None)
+        if not callable(get_profile):
+            return None
+        profile = get_profile()
+        resolver = getattr(profile, "resolve_layer_contract", None)
+        if not callable(resolver):
+            raise TypeError(
+                "model architecture profile must expose resolve_layer_contract()"
             )
+        spec = profile.get_layer_contract(layer_kind)
+        attention_tp_size = self._get_attn_tp_size()
+        moe_tp_size = self._get_moe_tp_size()
+        ffn_tp_size = tensor_parallel_size
+        if spec.tensor_parallel_mode is TensorParallelMode.ATTENTION_TP:
+            attention_tp_size = tensor_parallel_size
+        elif spec.tensor_parallel_mode is TensorParallelMode.MOE_TP:
+            moe_tp_size = tensor_parallel_size
+        return resolver(
+            self._model_config,
+            layer_kind=layer_kind,
+            attention_tp_size=attention_tp_size,
+            moe_tp_size=moe_tp_size,
+            ffn_tp_size=ffn_tp_size,
+            tensor_parallel_size=tensor_parallel_size,
+            expert_parallel_size=expert_parallel_size,
+        )
 
-        return (
-            2
-            * self._model_config.embedding_dim
-            * self._model_config.mlp_hidden_dim
-            // tensor_parallel_size
+    @staticmethod
+    def _get_ffn_weight_params(width: int, embedding_dim: int, use_gated_mlp: bool, tensor_parallel_size: int) -> int:
+        if type(width) is not int or width <= 0:
+            raise ValueError(
+                f"width must be a positive integer, got {width!r}"
+            )
+        if type(embedding_dim) is not int or embedding_dim <= 0:
+            raise ValueError(
+                "embedding_dim must be a positive integer, "
+                f"got {embedding_dim!r}"
+            )
+        if type(tensor_parallel_size) is not int or tensor_parallel_size <= 0:
+            raise ValueError(
+                "tensor_parallel_size must be a positive integer, "
+                f"got {tensor_parallel_size!r}"
+            )
+        multiplier = 3 if use_gated_mlp else 2
+        return multiplier * embedding_dim * width // tensor_parallel_size
+
+    def _get_dense_mlp_params_per_layer(self, tensor_parallel_size: int) -> int:
+        contract = self._resolve_profile_layer_contract(
+            LayerKind.DENSE,
+            tensor_parallel_size,
+        )
+        width = (
+            contract.effective_ffn_width
+            if contract is not None
+            else getattr(self._model_config, "mlp_hidden_dim", 0)
+        )
+        parameter_tp_size = (
+            contract.tensor_parallel_size
+            if contract is not None and contract.tensor_parallel_size is not None
+            else tensor_parallel_size
+        )
+        return self._get_ffn_weight_params(
+            width,
+            self._model_config.embedding_dim,
+            bool(getattr(self._model_config, "use_gated_mlp", False)),
+            parameter_tp_size,
         )
 
     def _get_share_expert_params_per_layer(self, tensor_parallel_size: int) -> int:
@@ -140,16 +203,23 @@ class ParamCounter:
         if not getattr(profile, "counts_share_expert_param_memory", False):
             return 0
 
-        share_expert_dim = int(getattr(self._model_config, "share_expert_dim", 0) or 0)
+        contract = self._resolve_profile_layer_contract(
+            LayerKind.SHARED,
+            tensor_parallel_size,
+        )
+        share_expert_dim = int(
+            contract.effective_ffn_width
+            if contract is not None
+            else getattr(self._model_config, "share_expert_dim", 0) or 0
+        )
         if share_expert_dim <= 0:
             return 0
 
-        multiplier = 3 if getattr(self._model_config, "use_gated_mlp", False) else 2
-        return (
-            multiplier
-            * self._model_config.embedding_dim
-            * share_expert_dim
-            // tensor_parallel_size
+        return self._get_ffn_weight_params(
+            share_expert_dim,
+            self._model_config.embedding_dim,
+            bool(getattr(self._model_config, "use_gated_mlp", False)),
+            tensor_parallel_size,
         )
 
     def _get_num_moe_layers_per_pipeline_stage(self) -> int:
@@ -158,6 +228,12 @@ class ParamCounter:
 
         num_layers_per_stage = int(self._num_layers_per_pipeline_stage)
         total_layers = int(getattr(self._model_config, "num_layers", num_layers_per_stage))
+        num_pipeline_stages = int(getattr(self._replica_config, "num_pipeline_stages", 1))
+        if num_pipeline_stages <= 0:
+            raise ValueError(
+                "ParamCounter requires a positive num_pipeline_stages, "
+                f"got {num_pipeline_stages!r}"
+            )
 
         num_moe_layers_total = total_layers
         if hasattr(self._model_config, "get_num_moe_layers"):
@@ -170,22 +246,72 @@ class ParamCounter:
         if num_moe_layers_total >= total_layers:
             return num_layers_per_stage
 
-        num_pipeline_stages = int(getattr(self._replica_config, "num_pipeline_stages", 1))
         if num_pipeline_stages <= 1:
             return min(num_moe_layers_total, num_layers_per_stage)
 
-        # Approximate MoE layer distribution by ratio when explicit stage slicing is unavailable.
-        ratio = float(num_moe_layers_total) / float(total_layers)
-        estimate = int(round(ratio * num_layers_per_stage))
-        return max(0, min(num_layers_per_stage, estimate))
+        get_layer_ids = getattr(self._model_config, "get_moe_layer_ids", None)
+        if not callable(get_layer_ids):
+            raise ValueError(
+                "ParamCounter cannot derive a per-pipeline-stage MoE layer count "
+                "from a partial model-level count; model config must expose "
+                "get_moe_layer_ids()"
+            )
+
+        layer_ids = normalize_moe_layer_ids(
+            get_layer_ids(),
+            total_layers,
+            source="ParamCounter MoE layer IDs",
+        )
+        if len(layer_ids) != num_moe_layers_total:
+            raise ValueError(
+                "ParamCounter MoE layer-ID count disagrees with the model-level "
+                f"count: ids={len(layer_ids)}, count={num_moe_layers_total}"
+            )
+
+        stage_counts = tuple(
+            sum(
+                stage_id * num_layers_per_stage <= layer_id
+                < (stage_id + 1) * num_layers_per_stage
+                for layer_id in layer_ids
+            )
+            for stage_id in range(num_pipeline_stages)
+        )
+        if len(set(stage_counts)) != 1:
+            raise ValueError(
+                "ParamCounter cannot represent a non-uniform MoE layer map with "
+                f"one per-stage count: num_pipeline_stages={num_pipeline_stages}, "
+                f"stage_moe_layer_counts={stage_counts}, layer_ids={layer_ids!r}. "
+                "Use a stage-aware parameter counter for this topology."
+            )
+        return stage_counts[0]
 
     def _get_routed_moe_params_per_layer(self, tensor_parallel_size: int) -> int:
-        num_parameters = self._get_dense_mlp_params_per_layer(tensor_parallel_size)
-
         is_moe = getattr(self._model_config, "is_moe", False)
         num_experts = int(getattr(self._model_config, "num_experts", 0))
         if not is_moe or num_experts <= 0:
-            return num_parameters
+            return self._get_dense_mlp_params_per_layer(tensor_parallel_size)
+
+        contract = self._resolve_profile_layer_contract(
+            LayerKind.ROUTED,
+            tensor_parallel_size,
+            expert_parallel_size=self._get_ep_size(),
+        )
+        routed_width = (
+            contract.effective_ffn_width
+            if contract is not None
+            else getattr(self._model_config, "mlp_hidden_dim", 0)
+        )
+        parameter_tp_size = (
+            contract.tensor_parallel_size
+            if contract is not None and contract.tensor_parallel_size is not None
+            else tensor_parallel_size
+        )
+        num_parameters = self._get_ffn_weight_params(
+            routed_width,
+            self._model_config.embedding_dim,
+            bool(getattr(self._model_config, "use_gated_mlp", False)),
+            parameter_tp_size,
+        )
 
         ep_size = self._get_ep_size()
         if num_experts % ep_size != 0:
@@ -277,18 +403,30 @@ class ParamCounter:
         num_moe_layers = self._get_num_moe_layers_per_pipeline_stage()
         num_non_moe_layers = self._num_layers_per_pipeline_stage - num_moe_layers
 
-        dense_mlp_params = self._get_dense_mlp_params_per_layer(self._get_attn_tp_size())
-        share_expert_params = self._get_share_expert_params_per_layer(
-            self._get_attn_tp_size()
+        # Runtime ownership is layer-kind specific: dense boundaries own only
+        # their dense MLP, while routed layers own routed experts plus the
+        # optional shared expert.  Resolve each basis only when that layer kind
+        # is present so pure-MoE models never materialize an inactive dense
+        # contract.
+        dense_mlp_params = (
+            self._get_dense_mlp_params_per_layer(self._get_attn_tp_size())
+            if num_non_moe_layers
+            else 0
         )
-        routed_moe_params = self._get_routed_moe_params_per_layer(self._get_moe_tp_size())
-
-        moe_layer_params = dense_mlp_params + share_expert_params + routed_moe_params
-        non_moe_layer_params = dense_mlp_params + share_expert_params
+        routed_moe_params = (
+            self._get_routed_moe_params_per_layer(self._get_moe_tp_size())
+            if num_moe_layers
+            else 0
+        )
+        share_expert_params = (
+            self._get_share_expert_params_per_layer(self._get_attn_tp_size())
+            if num_moe_layers
+            else 0
+        )
 
         return (
-            num_moe_layers * moe_layer_params
-            + num_non_moe_layers * non_moe_layer_params
+            num_non_moe_layers * dense_mlp_params
+            + num_moe_layers * (routed_moe_params + share_expert_params)
         )
 
     def _get_mtp_embed_params(self, proposer_model_config) -> int:

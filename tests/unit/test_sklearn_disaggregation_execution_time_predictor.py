@@ -52,6 +52,18 @@ class _Step3NamedGenericProfileModelConfig:
         return True
 
 
+def test_explicit_moe_selector_supports_profile_only_legacy_adapter() -> None:
+    """An explicit selector remains sufficient for a legacy adapter without depth metadata."""
+
+    assert SklearnMoEExecutionTimePredictor._resolve_moe_layer_classification(
+        _ProfileOnlyStep3ModelConfig(),
+        layer_id=0,
+        num_layers=1,
+        include_moe=True,
+        include_ffn=True,
+    ) is True
+
+
 def _lane_workload(
     *,
     ep_id: int,
@@ -1050,6 +1062,7 @@ def test_disaggregation_moe_live_paths_use_registered_role_context(
         assert context.cluster_type is cluster_type
         assert context.quantization_manager is quantization_manager
     assert result._moe_tensor_parallel_allreduce_time == pytest.approx(expected_time)
+    assert result.layer_ids == (2,)
 
 
 def test_disaggregation_dense_layer_uses_shared_expert_profile_rows() -> None:
@@ -1118,17 +1131,19 @@ def test_pdd_attention_only_prediction_preserves_global_layer_id() -> None:
         return_value=AttentionTime(attention_prefill_execution_time=3.0)
     )
 
-    predictor.predict_stage_execution_time(
+    result = predictor.predict_stage_execution_time(
         batch=SimpleNamespace(id=17),
         stage_id=3,
         cluster_type=ClusterType.PREFILL,
         num_layers=1,
         layer_id=17,
+        layer_ids=(17,),
         include_ffn=False,
     )
 
     predictor.predict_attention_layer_time.assert_called_once()
     assert predictor.predict_attention_layer_time.call_args.kwargs["layer_id"] == 17
+    assert result.layer_ids == (17,)
 
 
 @pytest.mark.parametrize(

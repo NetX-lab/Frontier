@@ -15,7 +15,7 @@ PYTHON_BIN="${PYTHON_BIN:-python3}"
 TARGET="${TARGET:-/data/ycfeng/frontier_profiling_envs/issue2_py312_target_v2}"
 CUDA_HOME="${CUDA_HOME:-/data/ycfeng/frontier_profiling_envs/cuda-12.4/cuda/cuda-12.4/cuda}"
 
-MOE_GATING_CONTEXT="${MOE_GATING_CONTEXT:-standalone_legacy}"
+MOE_GATING_CONTEXT="${MOE_GATING_CONTEXT:-direct}"
 MOE_NUM_TOKENS="${MOE_NUM_TOKENS:-1 2 4 8 16 32 64}"
 TP_SIZES="${TP_SIZES:-1 2 4 8}"
 EP_SIZES="${EP_SIZES:-1 2 4 8}"

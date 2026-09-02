@@ -19,6 +19,10 @@ from frontier.profiling.common.utils import (
     configure_quantization_manager_for_model_name,
     get_operation_precision,
 )
+from frontier.model_architectures import (
+    ResolvedLayerContract,
+    get_model_architecture_profile,
+)
 from frontier.profiling.moe.moe_impl import (
     MoEGatingNetwork,
     MoETokenShuffler,
@@ -33,13 +37,35 @@ from frontier.profiling.utils import ProfileMethod, normalize_profile_method
 from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
-    PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
-    PREFILL_HOT_MOE_GATING_PREFIX_REPEATS,
+    PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
+    PREFILL_WARMED_MOE_GATING_PREFIX_REPEATS,
     get_moe_gating_runtime_context_metadata,
 )
 
 WARMUP_STEPS = 2
 ACTIVE_STEPS = 20
+
+
+def _resolve_routed_moe_layer_contract(
+    model_config: ModelConfig,
+    *,
+    tensor_parallel_size: int,
+    expert_parallel_size: int,
+) -> ResolvedLayerContract:
+    """Resolve the profile-owned contract for the routed MoE producer path."""
+
+    profile_getter = getattr(model_config, "get_model_architecture_profile", None)
+    profile = (
+        profile_getter()
+        if callable(profile_getter)
+        else get_model_architecture_profile(model_config)
+    )
+    return profile.resolve_layer_contract(
+        model_config,
+        operator_name="moe_grouped_gemm",
+        moe_tp_size=tensor_parallel_size,
+        expert_parallel_size=expert_parallel_size,
+    )
 
 
 class MoEWrapper:
@@ -103,7 +129,12 @@ class MoEWrapper:
 
         # Extract MoE parameters from ModelConfig
         self.hidden_dim = model_config.embedding_dim
-        self.expert_hidden_dim = model_config.mlp_hidden_dim  # moe_intermediate_size
+        self.routed_layer_contract = _resolve_routed_moe_layer_contract(
+            model_config,
+            tensor_parallel_size=num_tensor_parallel_workers,
+            expert_parallel_size=expert_parallel_size,
+        )
+        self.expert_hidden_dim = self.routed_layer_contract.effective_ffn_width
         self.num_experts = model_config.num_experts
         self.router_topk = model_config.num_experts_per_tok
         self.use_gated = model_config.use_gated_mlp
@@ -207,15 +238,15 @@ class MoEWrapper:
         self,
         hidden_states: torch.Tensor,
     ):
-        if self.gating_runtime_context == PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT:
-            self._run_prefill_hot_gating_prefix(hidden_states)
+        if self.gating_runtime_context == PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT:
+            self._run_prefill_warmed_gating_prefix(hidden_states)
         return self.gating(hidden_states)
 
-    def _run_prefill_hot_gating_prefix(
+    def _run_prefill_warmed_gating_prefix(
         self, hidden_states: torch.Tensor
     ) -> torch.Tensor:
         prefix_hidden_states = hidden_states
-        for _ in range(PREFILL_HOT_MOE_GATING_PREFIX_REPEATS):
+        for _ in range(PREFILL_WARMED_MOE_GATING_PREFIX_REPEATS):
             up_proj = torch.matmul(
                 prefix_hidden_states, self._gating_prefix_up_weight.transpose(0, 1)
             )

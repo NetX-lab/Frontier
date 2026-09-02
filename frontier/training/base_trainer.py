@@ -354,8 +354,11 @@ class BaseTrainer(ABC):
 
         # Combine all components
         measurement_type = self._measurement_type.value if self._measurement_type is not None else "UNKNOWN"
+        identity = self._get_model_hash_identity(model_name)
+        identity_component = f"_{identity}" if identity is not None else ""
         combined_str = (
-            f"{config_str}_{model_name}_{df_hash_str}_{self._profiling_precision.name}_{measurement_type}"
+            f"{config_str}_{model_name}_{df_hash_str}_{self._profiling_precision.name}_"
+            f"{measurement_type}{identity_component}"
         )
         hash_value = hashlib.md5(combined_str.encode("utf-8")).hexdigest()[0:8]
 
@@ -370,6 +373,17 @@ class BaseTrainer(ABC):
             logger.info(f"  - Final hash: {hash_value}")
 
         return hash_value
+
+    def _get_model_hash_identity(self, model_name: str) -> str | None:
+        """Return an optional profile-owned identity for a trained model.
+
+        Legacy trainers keep the historical cache key by returning ``None``.
+        A typed trainer can override this hook when the model name alone does
+        not identify the architecture domain used for training.
+        """
+
+        del model_name
+        return None
     
     def _load_model_from_cache(self, model_name: str, model_hash: str) -> BaseEstimator:
         """Load a cached model if it exists."""

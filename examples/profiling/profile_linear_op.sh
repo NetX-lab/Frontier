@@ -17,6 +17,7 @@ MODEL="${MODEL:-qwen2_dense_test}"
 DEVICE="${DEVICE:-rtx_pro_6000}"
 NUM_GPUS="${NUM_GPUS:-1}"
 MAX_TOKENS="${MAX_TOKENS:-128}"
+EXTRA_NUM_TOKENS="${EXTRA_NUM_TOKENS:-}"
 TP_SIZES="${TP_SIZES:-1}"
 PROFILE_METHOD="${PROFILE_METHOD:-cuda_event}"
 DATA_DIR_BASE="${DATA_DIR_BASE:-$REPO_ROOT/data/profiling}"
@@ -66,6 +67,7 @@ while [[ $# -gt 0 ]]; do
     --device) require_cli_value "$1" "${2-}"; DEVICE="$2"; shift 2 ;;
     --num-gpus) require_cli_value "$1" "${2-}"; NUM_GPUS="$2"; shift 2 ;;
     --max-tokens) require_cli_value "$1" "${2-}"; MAX_TOKENS="$2"; shift 2 ;;
+    --extra-num-tokens) require_cli_value "$1" "${2-}"; EXTRA_NUM_TOKENS="$2"; shift 2 ;;
     --tp-sizes) require_cli_value "$1" "${2-}"; TP_SIZES="$2"; shift 2 ;;
     --profile-method) require_cli_value "$1" "${2-}"; PROFILE_METHOD="$2"; shift 2 ;;
     --output-root) require_cli_value "$1" "${2-}"; DATA_DIR_BASE="$2"; shift 2 ;;
@@ -77,7 +79,12 @@ done
 
 require_bool "DRY_RUN" "$DRY_RUN"
 declare -a TP_SIZE_ARGS
+declare -a EXTRA_NUM_TOKEN_ARGS=()
 parse_positive_integer_list "TP_SIZES" "$TP_SIZES" TP_SIZE_ARGS
+if [ -n "$EXTRA_NUM_TOKENS" ]; then
+  parse_positive_integer_list \
+    "EXTRA_NUM_TOKENS" "$EXTRA_NUM_TOKENS" EXTRA_NUM_TOKEN_ARGS
+fi
 
 if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
   echo "ERROR: PYTHON_BIN is not executable or not on PATH: $PYTHON_BIN" >&2
@@ -96,6 +103,13 @@ CMD=(
   --output_dir "$DATA_DIR_BASE"
 )
 
+if [ "${#EXTRA_NUM_TOKEN_ARGS[@]}" -gt 0 ]; then
+  CMD+=(--extra_num_tokens "${EXTRA_NUM_TOKEN_ARGS[@]}")
+  RESOLVED_EXTRA_NUM_TOKENS="$EXTRA_NUM_TOKENS"
+else
+  RESOLVED_EXTRA_NUM_TOKENS="none"
+fi
+
 if [ "$#" -gt 0 ]; then
   CMD+=("$@")
 fi
@@ -108,6 +122,8 @@ Output taxonomy: data/profiling/compute/<device>/<model>/linear_op.csv
 Resolved output: $DATA_DIR_BASE/compute/$DEVICE/$MODEL/linear_op.csv
 Model: $MODEL
 Device: $DEVICE
+Max tokens: $MAX_TOKENS
+Extra token points: $RESOLVED_EXTRA_NUM_TOKENS
 TP sizes: $TP_SIZES
 Profile method: $PROFILE_METHOD
 Dry run: $DRY_RUN

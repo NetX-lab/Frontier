@@ -67,6 +67,8 @@ def _build_predictor() -> _DummySklearnPredictor:
         use_mla=False,
         num_q_heads=32,
         num_kv_heads=8,
+        embedding_dim=4096,
+        num_layers=61,
         get_model_architecture_profile=ModelArchitectureProfile.generic,
     )
 
@@ -194,3 +196,49 @@ def test_dense_predict_stage_execution_time_quantization_uses_role_names(
     assert "attn_kv_cache_save" not in quant_manager.adjusted_compute_ops
     assert "attn_prefill" not in quant_manager.adjusted_compute_ops
     assert "attn_decode" not in quant_manager.adjusted_compute_ops
+
+
+def test_dense_predict_stage_execution_time_preserves_explicit_global_layer_ids(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        "frontier.execution_time_predictor.sklearn_execution_time_predictor.get_quantization_manager",
+        lambda: _IdentityQuantizationManager(),
+    )
+
+    predictor = _build_predictor()
+    execution_time = predictor.predict_stage_execution_time(
+        batch=_DummyBatch(),
+        stage_id=0,
+        cluster_type=ClusterType.MONOLITHIC,
+        num_layers=4,
+        layer_id=4,
+        layer_ids=(4, 5, 6, 7),
+    )
+
+    assert execution_time.layer_ids == (4, 5, 6, 7)
+    assert execution_time.layer_id is None
+
+
+@pytest.mark.parametrize(
+    "layer_ids",
+    [
+        (4, 5, 6),
+        (4, 5, 5, 7),
+        (4, 5, 6, 61),
+    ],
+)
+def test_dense_predict_stage_execution_time_rejects_invalid_global_layer_ids(
+    layer_ids,
+) -> None:
+    predictor = _build_predictor()
+
+    with pytest.raises((TypeError, ValueError)):
+        predictor.predict_stage_execution_time(
+            batch=_DummyBatch(),
+            stage_id=0,
+            cluster_type=ClusterType.MONOLITHIC,
+            num_layers=4,
+            layer_id=4,
+            layer_ids=layer_ids,
+        )

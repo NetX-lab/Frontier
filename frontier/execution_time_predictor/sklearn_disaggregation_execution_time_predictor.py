@@ -599,6 +599,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         include_attention: bool = True,
         include_moe: Optional[bool] = None,
         include_ffn: bool = True,
+        layer_ids: Optional[List[int] | tuple[int, ...]] = None,
     ) -> ExecutionTime:
         """Return cluster-specific dummy ExecutionTime object."""
         if cluster_type is None:
@@ -775,6 +776,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 share_expert_down_proj_time=share_expert_time if ffn_enabled else 0.0,
                 share_expert_act_time=share_expert_time if ffn_enabled else 0.0,
                 communication_operator_times=ep_operator_times,
+                layer_ids=layer_ids,
             )
         elif cluster_type == ClusterType.DECODE:
             # Unified DECODE cluster (PD-disaggregation mode): attention + (MLP/MoE)
@@ -821,6 +823,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 share_expert_down_proj_time=share_expert_time if ffn_enabled else 0.0,
                 share_expert_act_time=share_expert_time if ffn_enabled else 0.0,
                 communication_operator_times=ep_operator_times,
+                layer_ids=layer_ids,
             )
         elif cluster_type == ClusterType.DECODE_ATTN:
             # DECODE_ATTN cluster only handles attention operations
@@ -856,6 +859,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 mlp_layer_down_proj_execution_time=0.0,
                 mlp_layer_act_execution_time=0.0,
                 moe_grouped_gemm_time=0.0,  # No MoE in attention cluster
+                layer_ids=layer_ids,
             )
         elif cluster_type == ClusterType.DECODE_FFN:
             # DECODE_FFN cluster only handles FFN/MoE operations
@@ -900,6 +904,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 tensor_parallel_allgather_time=ffn_tp_allgather_time,
                 share_expert_tensor_parallel_allreduce_time=share_expert_tp_allreduce_time,
                 communication_operator_times=ep_operator_times,
+                layer_ids=layer_ids,
             )
 
         raise ValueError(
@@ -960,6 +965,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
     @staticmethod
     def _get_zero_decode_ffn_ep_barrier_execution_time(
         num_layers: int,
+        layer_ids: Optional[List[int] | tuple[int, ...]] = None,
     ) -> ExecutionTime:
         """Build a zero-cost execution-time object for DECODE_FFN EP barriers."""
         return ExecutionTime(
@@ -1005,6 +1011,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     "expert_parallel_alltoall_combine": 0.0,
                 }
             ),
+            layer_ids=layer_ids,
         )
 
     # Phase 2.5: Removed deprecated get_moe_stage_execution_details() method
@@ -1221,6 +1228,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         cluster_type: ClusterType,
         num_layers: int,
         layer_id: int = 0,
+        layer_ids: Optional[List[int] | tuple[int, ...]] = None,
     ) -> ExecutionTime:
         """Predict only attention for a shared-domain layer probe.
 
@@ -1343,6 +1351,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             mlp_layer_down_proj_execution_time=0.0,
             mlp_layer_act_execution_time=0.0,
             attention_operator_times=attention_time.operator_times,
+            layer_ids=layer_ids,
             **self._get_zero_moe_params(),
         )
 
@@ -1353,6 +1362,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         cluster_type: ClusterType,
         num_layers: int = 1,
         layer_id: int = 0,
+        layer_ids: Optional[List[int] | tuple[int, ...]] = None,
         include_moe: bool | None = None,
         include_ffn: bool = True,
         include_attention: bool = True,
@@ -1371,6 +1381,13 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         """
         if num_layers < 1:
             raise ValueError(f"num_layers must be >= 1, got {num_layers}")
+        normalized_layer_ids = self._normalize_stage_layer_ids(
+            num_layers=num_layers,
+            layer_id=layer_id,
+            layer_ids=layer_ids,
+        )
+        if normalized_layer_ids is not None:
+            layer_id = normalized_layer_ids[0]
         if type(include_ffn) is not bool:
             raise ValueError("include_ffn must be a bool")
         if type(include_attention) is not bool:
@@ -1425,6 +1442,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 admission_model_config,
                 layer_id=layer_id,
                 num_layers=num_layers,
+                layer_ids=normalized_layer_ids,
                 include_moe=include_moe,
                 include_ffn=True,
             )
@@ -1469,6 +1487,18 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 include_attention=include_attention,
                 include_moe=(execution_include_moe if include_ffn else None),
                 include_ffn=include_ffn,
+                layer_ids=(
+                    normalized_layer_ids
+                    if normalized_layer_ids is not None
+                    and len(normalized_layer_ids)
+                    == (
+                        self._num_layers_per_pipeline_stage
+                        if cluster_type
+                        in (ClusterType.PREFILL, ClusterType.DECODE)
+                        else 1
+                    )
+                    else None
+                ),
             )
 
             # If num_layers matches, return as-is
@@ -1564,6 +1594,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 share_expert_act_time=dummy_exec_time._share_expert_act_time
                 * scale_factor,
                 communication_operator_times=scaled_communication_operator_times,
+                layer_ids=normalized_layer_ids,
             )
 
         logger.debug(
@@ -1577,7 +1608,10 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 "execution time without predictor lookup.",
                 getattr(batch, "id", "N/A"),
             )
-            return self._get_zero_decode_ffn_ep_barrier_execution_time(num_layers)
+            return self._get_zero_decode_ffn_ep_barrier_execution_time(
+                num_layers,
+                layer_ids=normalized_layer_ids,
+            )
 
         measurement_type = self._select_measurement_type_for_batch(batch)
         self._require_predictions_for_measurement_type(measurement_type, batch)
@@ -1602,6 +1636,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 cluster_type=cluster_type,
                 num_layers=num_layers,
                 layer_id=layer_id,
+                layer_ids=normalized_layer_ids,
             )
 
         # Phase 2.5: Refactored to use new unified APIs instead of deprecated get_execution_time()
@@ -1752,6 +1787,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 moe_gating_time=0.0,
                 moe_shuffling_time=0.0,
                 is_moe=False,
+                layer_ids=normalized_layer_ids,
             )
 
         elif cluster_type == ClusterType.DECODE_FFN:
@@ -2013,6 +2049,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
                     is_moe=True,
                     **self._get_zero_attn_params(),
+                    layer_ids=normalized_layer_ids,
                 )
             else:
                 # Dense layer: use MLP operations
@@ -2122,6 +2159,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
                     **self._get_zero_attn_params(),
                     **self._get_zero_moe_params(),
+                    layer_ids=normalized_layer_ids,
                 )
 
         elif cluster_type == ClusterType.DECODE:
@@ -2389,6 +2427,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
                     is_moe=True,
+                    layer_ids=normalized_layer_ids,
                 )
             else:
                 # Dense model: use MLP operations
@@ -2473,6 +2512,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
                     **self._get_zero_moe_params(),
+                    layer_ids=normalized_layer_ids,
                 )
 
         elif cluster_type == ClusterType.PREFILL:
@@ -2819,6 +2859,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
                     is_moe=True,
+                    layer_ids=normalized_layer_ids,
                 )
             else:
                 # Dense model: use MLP operations for FFN
@@ -2960,6 +3001,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                     ),
                     pp_stage_boundary_handoff_time=overhead_time.pp_stage_boundary_handoff_time,
                     **self._get_zero_moe_params(),
+                    layer_ids=normalized_layer_ids,
                 )
 
             # High-level batch execution summary for PREFILL cluster

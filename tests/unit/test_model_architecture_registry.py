@@ -17,6 +17,9 @@ from frontier.config.model_config import BaseModelConfig, MoEModelConfig, ModelA
 from frontier.config.utils import dataclass_to_dict
 from frontier.model_architectures import (
     ExpertParallelCollective,
+    LayerContractSpec,
+    LayerDimensionSource,
+    LayerKind,
     LinearAttentionImplementation,
     LinearAttentionProfile,
     MODEL_ARCHITECTURE_REGISTRY,
@@ -26,6 +29,7 @@ from frontier.model_architectures import (
     StructuralRequirement,
     get_model_architecture_profile,
 )
+from frontier.operators.spec import TensorParallelMode
 from frontier.profiling.common.model_config import ModelConfig as ProfilingModelConfig
 from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
 from frontier.types import ActivationType, ClusterType, NormType
@@ -263,6 +267,104 @@ def test_explicit_step2_profile_drives_profiling_plan_without_model_type_branch(
     assert "attn_inter_norm" in plan["enabled_ops"]
     assert "attn_wq_proj" in plan["enabled_ops"]
     assert "share_expert_up_proj" in plan["enabled_ops"]
+
+
+def test_profile_owned_layer_activation_predicate_controls_materialization() -> None:
+    """A profile-declared activation rule must decide whether a contract is active."""
+
+    contract = LayerContractSpec(
+        LayerKind.DENSE,
+        LayerDimensionSource.DENSE,
+        TensorParallelMode.FFN_TP,
+        operator_family_ids=("ffn",),
+        activation_predicate=lambda _profile, config: bool(
+            getattr(config, "enable_custom_dense_domain", False)
+        ),
+    )
+    profile = replace(ModelArchitectureProfile.generic(), layer_contracts=(contract,))
+    config = _runtime_model_config(is_moe=False)
+    config.enable_custom_dense_domain = False
+
+    assert profile.iter_active_layer_contracts(config) == ()
+
+    config.enable_custom_dense_domain = True
+    assert profile.iter_active_layer_contracts(config) == (contract,)
+
+
+def test_resolver_rejects_inactive_dense_contract_for_pure_moe_query() -> None:
+    """Pure MoE operator queries must not fall back to an inactive dense domain."""
+
+    config = _profiling_config(
+        moe_layers_enum=None,
+        dense_mlp_hidden_dim=None,
+        routed_mlp_hidden_dim=256,
+    )
+    profile = get_model_architecture_profile(config)
+
+    assert [contract.layer_kind for contract in profile.iter_active_layer_contracts(config)] == [
+        LayerKind.ROUTED,
+        LayerKind.SHARED,
+    ]
+    with pytest.raises(ValueError, match="inactive.*dense|dense.*inactive"):
+        profile.resolve_layer_contract(
+            config,
+            operator_name="mlp_up_proj",
+            ffn_tp_size=1,
+        )
+
+
+def test_mixed_dense_width_error_names_the_required_canonical_source() -> None:
+    """Mixed dense resolution must identify the field it actually accepts."""
+
+    config = _profiling_config(
+        model_architecture_profile="step3_text",
+        num_layers=2,
+        moe_layers_enum="1",
+        dense_mlp_hidden_dim=None,
+        routed_mlp_hidden_dim=256,
+    )
+    profile = get_model_architecture_profile(config)
+
+    with pytest.raises(ValueError, match="dense_mlp_hidden_dim") as exc_info:
+        profile.resolve_layer_contract(
+            config,
+            layer_id=0,
+            layer_kind=LayerKind.DENSE,
+            attention_tp_size=1,
+            moe_tp_size=1,
+            ffn_tp_size=1,
+        )
+
+    assert "intermediate_size" not in str(exc_info.value)
+
+
+@pytest.mark.parametrize(
+    "layer_ids",
+    ([1, 1, 9], ["1"], [1.0]),
+)
+def test_getter_layer_map_is_validated_before_any_typed_resolution(
+    layer_ids,
+) -> None:
+    """Every profile layer-map consumer rejects the same malformed getter output."""
+
+    config = _profiling_config(
+        model_architecture_profile="step3_text",
+        num_layers=4,
+        moe_layers_enum=None,
+        dense_mlp_hidden_dim=18432,
+        routed_mlp_hidden_dim=5120,
+    )
+    config.get_moe_layer_ids = lambda: layer_ids
+    profile = get_model_architecture_profile(config)
+
+    operations = (
+        lambda: profile._is_mixed_model(config),
+        lambda: profile._resolve_config_layer_kind(config, 0),
+        lambda: profile.get_layer_contract_identity(config),
+    )
+    for operation in operations:
+        with pytest.raises(ValueError, match="model config MoE layer IDs"):
+            operation()
 
 
 def test_local_registry_can_plugin_custom_profile_without_global_model_branch() -> None:
@@ -550,7 +652,12 @@ def test_raw_model_profile_resolution_callsites_are_allowlisted() -> None:
         ): 1,
         (
             "frontier/profiling/linear_op/linear_op_impl.py",
-            "build_linear_op_attention_module",
+            "_get_architecture_profile",
+            "helper",
+        ): 1,
+        (
+            "frontier/profiling/moe/moe_wrapper.py",
+            "_resolve_routed_moe_layer_contract",
             "helper",
         ): 1,
         (
@@ -1239,6 +1346,73 @@ def test_mtp_structural_adapter_uses_explicit_architecture_profile() -> None:
     assert adapter.supports_share_expert()
 
 
+def test_mtp_structural_adapter_preserves_typed_layer_contract_fields() -> None:
+    """Delegated structural configs expose fields needed by the profile resolver."""
+
+    from frontier.spec_decode.mtp_runtime import StructuralModelConfigAdapter
+
+    profiling_config = _real_profiling_model_config(
+        model_type="unit_new_step3_like",
+        model_arch=ModelArch.GENERIC,
+        model_architecture_profile="step3_text",
+        is_moe=True,
+        num_experts=8,
+        dense_mlp_hidden_dim=18432,
+        routed_mlp_hidden_dim=5120,
+        moe_layers_enum="1",
+        share_expert_dim=5120,
+        **_step3_mfa_overrides(),
+    )
+    adapter = StructuralModelConfigAdapter(profiling_config)
+    profile = adapter.get_model_architecture_profile()
+
+    assert [
+        contract.layer_kind
+        for contract in profile.iter_active_layer_contracts(adapter)
+    ] == [LayerKind.DENSE, LayerKind.ROUTED, LayerKind.SHARED]
+
+    dense = profile.resolve_layer_contract(
+        adapter,
+        layer_id=0,
+        attention_tp_size=8,
+        moe_tp_size=1,
+        ffn_tp_size=8,
+        expert_parallel_size=8,
+    )
+    routed = profile.resolve_layer_contract(
+        adapter,
+        layer_id=1,
+        attention_tp_size=8,
+        moe_tp_size=1,
+        ffn_tp_size=8,
+        expert_parallel_size=8,
+    )
+    shared = profile.resolve_layer_contract(
+        adapter,
+        operator_name="share_expert_up_proj",
+        attention_tp_size=8,
+        moe_tp_size=1,
+        ffn_tp_size=8,
+        expert_parallel_size=8,
+    )
+
+    assert (dense.layer_kind, dense.width, dense.tensor_parallel_size) == (
+        LayerKind.DENSE,
+        18432,
+        8,
+    )
+    assert (routed.layer_kind, routed.width, routed.tensor_parallel_size) == (
+        LayerKind.ROUTED,
+        5120,
+        1,
+    )
+    assert (shared.layer_kind, shared.width, shared.tensor_parallel_size) == (
+        LayerKind.SHARED,
+        5120,
+        8,
+    )
+
+
 def test_mtp_json_fallback_preserves_explicit_architecture_profile(
     monkeypatch,
     tmp_path,
@@ -1287,6 +1461,73 @@ def test_mtp_json_fallback_preserves_explicit_architecture_profile(
     assert adapter.supports_share_expert()
     assert adapter.use_mfa is True
     assert adapter.get_attention_family().family_id == "dense_attention"
+
+
+def test_mtp_json_fallback_preserves_typed_dense_and_routed_widths(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    """JSON structural fallback maps both mixed-layer FFN widths explicitly."""
+
+    import json
+
+    from frontier.spec_decode.mtp_runtime import (
+        _load_structural_model_config_from_json,
+    )
+
+    config_dir = tmp_path / "data" / "config" / "models"
+    config_dir.mkdir(parents=True)
+    (config_dir / "unit-json-step3-widths.json").write_text(
+        json.dumps(
+            {
+                "num_hidden_layers": 2,
+                "num_attention_heads": 8,
+                "num_key_value_heads": 1,
+                "hidden_size": 128,
+                "intermediate_size": 18432,
+                "moe_intermediate_size": 5120,
+                "max_position_embeddings": 4096,
+                "vocab_size": 32000,
+                "hidden_act": "silu",
+                "model_type": "unit_new_step3_like",
+                "model_arch": "generic",
+                "model_architecture_profile": "step3_text",
+                "n_routed_experts": 8,
+                "num_experts_per_tok": 2,
+                "moe_layers_enum": "1",
+                "share_expert_dim": 5120,
+                "share_q_dim": 16,
+                "head_dim": 16,
+                "use_mfa": True,
+                "torch_dtype": "float16",
+                "tie_word_embeddings": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+
+    adapter = _load_structural_model_config_from_json("unit-json-step3-widths")
+    profile = adapter.get_model_architecture_profile()
+    dense = profile.resolve_layer_contract(
+        adapter,
+        layer_id=0,
+        attention_tp_size=8,
+        moe_tp_size=1,
+        ffn_tp_size=8,
+        expert_parallel_size=8,
+    )
+    routed = profile.resolve_layer_contract(
+        adapter,
+        layer_id=1,
+        attention_tp_size=8,
+        moe_tp_size=1,
+        ffn_tp_size=8,
+        expert_parallel_size=8,
+    )
+
+    assert dense.width == 18432
+    assert routed.width == 5120
 
 
 def test_mtp_structural_loader_does_not_mask_internal_profiling_errors(

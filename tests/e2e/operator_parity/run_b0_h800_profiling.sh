@@ -195,7 +195,7 @@ for method in "${METHOD_ARGS[@]}"; do
           --load_distributions uniform \
           --num_samples_per_distribution 1 \
           --routing_runtime_path uniform_topk \
-          --gating_runtime_context prefill_hot \
+          --gating_runtime_context prefill_warmed \
           --device "$DEVICE" \
           --profile_method "$method" \
           --output_dir "$OUTPUT_ROOT" \
@@ -242,7 +242,7 @@ for method in "${METHOD_ARGS[@]}"; do
         --load_distributions uniform \
         --num_samples_per_distribution 1 \
         --routing_runtime_path uniform_topk \
-        --gating_runtime_context prefill_hot \
+        --gating_runtime_context prefill_warmed \
         --device "$DEVICE" \
         --profile_method "$method" \
         --output_dir "$OUTPUT_ROOT" \

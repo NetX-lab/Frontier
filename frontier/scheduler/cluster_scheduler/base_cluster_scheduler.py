@@ -1005,43 +1005,43 @@ class BaseClusterScheduler(ABC):
         """
         Get cluster-specific replica scheduler configuration.
         Priority: cluster-specific config -> global replica_scheduler_config -> default
-        
+
         For scheduler type override:
         1. If cluster-specific type is specified (e.g., prefill_replica_scheduler_config_type),
            create a new config instance of that type and copy compatible parameters.
         2. Otherwise, use the global replica_scheduler_config.
-        
+
         Args:
             config: ClusterConfig object
             cluster_type: Type of the cluster
-            
+
         Returns:
             BaseReplicaSchedulerConfig: Configuration for the replica scheduler
         """
         from frontier.config import BaseReplicaSchedulerConfig
         from frontier.types import ReplicaSchedulerType
-        
+
         # Get the base configuration
         base_config = config.replica_scheduler_config
-        
+
         # Map cluster type to prefix
         prefix_map = {
             ClusterType.PREFILL: "prefill",
-            ClusterType.DECODE: "decode", 
+            ClusterType.DECODE: "decode",
             ClusterType.DECODE_ATTN: "decode_attn",
             ClusterType.DECODE_FFN: "decode_ffn",
         }
-        
+
         prefix = prefix_map.get(cluster_type)
         if not prefix:
             # If cluster type not in map, use global config
             import copy
             return copy.deepcopy(base_config)
-        
+
         # Check for cluster-specific scheduler type override
         type_field_name = f"{prefix}_replica_scheduler_config_type"
         override_type_str = getattr(config, type_field_name, None) if hasattr(config, type_field_name) else None
-        
+
         if override_type_str is not None:
             # Map string type to ReplicaSchedulerType enum
             type_mapping = {
@@ -1062,7 +1062,7 @@ class BaseClusterScheduler(ABC):
                     f"Invalid scheduler type '{override_type_str}' for {cluster_type.name}. "
                     f"Valid options: {list(type_mapping.keys())}"
                 )
-            
+
             # Create new config instance of the overridden type
             cluster_config = BaseReplicaSchedulerConfig.create_from_type(override_type)
 
@@ -1085,7 +1085,7 @@ class BaseClusterScheduler(ABC):
             # No type override, use a copy of the base config
             import copy
             cluster_config = copy.deepcopy(base_config)
-        
+
         # Override individual parameters if specified (cluster-specific values take precedence)
         param_fields = [
             "batch_size_cap",
@@ -1096,14 +1096,14 @@ class BaseClusterScheduler(ABC):
             "block_size",
             "watermark_blocks_fraction",
         ]
-        
+
         for param in param_fields:
             field_name = f"{prefix}_replica_scheduler_config_{param}"
             if hasattr(config, field_name):
                 value = getattr(config, field_name)
                 if value is not None and hasattr(cluster_config, param):
                     setattr(cluster_config, param, value)
-        
+
         return cluster_config
 
     def __init__(
@@ -4718,6 +4718,7 @@ class BaseClusterScheduler(ABC):
                             execution_time,
                             actual_execution_time,
                             original_start_time,
+                            layer_id=layer_id,
                         )
                     )
 
@@ -4752,12 +4753,15 @@ class BaseClusterScheduler(ABC):
         original_execution_time,
         actual_execution_time_ms,
         original_start_time,
+        *,
+        layer_id: int | None = None,
     ):
         """Build corrected prefill metrics payload and attach mixed-layer trace hints."""
         corrected_execution_time = self._create_corrected_execution_time_for_metrics(
             original_execution_time,
             actual_execution_time_ms,
             original_start_time,
+            layer_id=layer_id,
         )
 
         dense_reference_execution_time = self._get_prefill_dense_reference_execution_time(
@@ -4851,9 +4855,37 @@ class BaseClusterScheduler(ABC):
         original_execution_time,
         actual_execution_time_ms,
         original_start_time,
+        *,
+        layer_id: int | None = None,
     ):
         """Create corrected ExecutionTime payload used by metrics/trace emission."""
         from frontier.entities.execution_time import ExecutionTime
+
+        if layer_id is not None and (type(layer_id) is not int or layer_id < 0):
+            raise ValueError(
+                "layer_id must be an exact non-negative int when provided, "
+                f"got {layer_id!r}"
+            )
+
+        original_layer_ids = getattr(original_execution_time, "layer_ids", None)
+        if original_layer_ids is not None:
+            if not isinstance(original_layer_ids, tuple):
+                original_layer_ids = tuple(original_layer_ids)
+            if layer_id is None:
+                if len(original_layer_ids) != 1:
+                    raise ValueError(
+                        "current layer_id is required when correcting a multi-layer "
+                        f"ExecutionTime payload; layer_ids={original_layer_ids!r}"
+                    )
+                layer_id = original_layer_ids[0]
+            elif layer_id not in original_layer_ids:
+                raise ValueError(
+                    "current layer_id is not represented by the original "
+                    f"ExecutionTime payload: layer_id={layer_id}, "
+                    f"layer_ids={original_layer_ids!r}"
+                )
+
+        corrected_layer_ids = None if layer_id is None else (layer_id,)
 
         corrected_execution_time = ExecutionTime(
             num_layers_per_pipeline_stage=1,  # Avoid double-counting in sync path.
@@ -4909,6 +4941,7 @@ class BaseClusterScheduler(ABC):
             mtp_terminal_overshoot_time=(
                 original_execution_time._mtp_terminal_overshoot_time
             ),
+            layer_ids=corrected_layer_ids,
         )
 
         return corrected_execution_time
@@ -5276,6 +5309,7 @@ class BaseClusterScheduler(ABC):
                 full_stage_execution_time,
                 actual_execution_time,
                 original_start_time,
+                layer_id=layer_id,
             )
             trace_execution_time = full_stage_execution_time
             corrected_execution_time._trace_execution_time_override = trace_execution_time

@@ -20,7 +20,7 @@ EP_SIZE=2
 PREDICTOR_TYPE="random_forest"
 MEASUREMENT_TYPE="CUDA_EVENT"
 ROUTING_RUNTIME_PATH="standard_fused_topk"
-GATING_RUNTIME_CONTEXT="standalone_legacy"
+GATING_RUNTIME_CONTEXT="direct"
 
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
@@ -78,7 +78,8 @@ while [[ $# -gt 0 ]]; do
             echo "  --predictor_type TYPE        Predictor type: random_forest or linear_regression (default: random_forest)"
             echo "  --measurement_type TYPE      Measurement type: CUDA_EVENT or KERNEL_ONLY (default: CUDA_EVENT)"
             echo "  --routing_runtime_path PATH  MoE routing path: standard_fused_topk or uniform_topk (default: standard_fused_topk)"
-            echo "  --gating_runtime_context CTX MoE gating context: standalone_legacy or prefill_hot (default: standalone_legacy)"
+            echo "  --gating_runtime_context CTX MoE gating context: direct or prefill_warmed (default: direct)"
+            echo "                               Legacy aliases: standalone_legacy or prefill_hot"
             echo "  -h, --help                   Show this help message"
             echo ""
             echo "Examples:"
@@ -90,10 +91,10 @@ while [[ $# -gt 0 ]]; do
             echo "  $0 --dataset_path data/profiling/compute/a100/mixtral_8x7b_moe/moe.csv \\"
             echo "     --model_name mixtral_8x7b_moe --moe_tensor_parallel_size 2 --expert_parallel_size 2"
             echo ""
-            echo "  # Train Qwen3 RTX PRO 6000 prefill-hot uniform-topk rows"
+            echo "  # Train Qwen3 RTX PRO 6000 prefill-warmed uniform-topk rows"
             echo "  $0 --dataset_path data/profiling/compute/rtx_pro_6000/Qwen3-30B-A3B-tiny/moe.csv \\"
             echo "     --model_name Qwen3-30B-A3B-tiny --device rtx_pro_6000 \\"
-            echo "     --routing_runtime_path uniform_topk --gating_runtime_context prefill_hot"
+            echo "     --routing_runtime_path uniform_topk --gating_runtime_context prefill_warmed"
             exit 0
             ;;
         *)

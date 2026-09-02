@@ -29,11 +29,16 @@ from frontier.profiling.common.utils import (
 )
 from frontier.profiling.common.layers.layernorm import RMSNorm
 from frontier.profiling.common.layers.rotary_embedding import clear_rope_cache
+from frontier.model_architectures import (
+    LayerKind,
+    resolve_model_architecture_profile,
+)
 from frontier.profiling.linear_op.linear_op_impl import (
     GPTBlock,
     GPTModel,
     VocabParallelEmbedding,
 )
+from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
 from frontier.profiling.non_kv_cache_overhead.memory_accounting import MemorySnapshot
 from frontier.profiling.non_kv_cache_overhead.nccl_buffer_estimator import (
     NCCLBufferEstimationConfig,
@@ -235,7 +240,45 @@ def _supports_share_expert_weights(config: ModelConfig) -> bool:
         return False
     if hasattr(config, "supports_share_expert"):
         return bool(config.supports_share_expert())
-    return int(getattr(config, "share_expert_dim", 0) or 0) > 0
+    return bool(
+        resolve_model_architecture_profile(config).supports_share_expert(config)
+    )
+
+
+def _resolve_runtime_layer_width(
+    config: ModelConfig,
+    layer_kind: LayerKind,
+    *,
+    tensor_parallel_size: int | None = None,
+    expert_parallel_size: int | None = None,
+) -> int:
+    """Resolve one runtime weight width through the architecture profile.
+
+    Runtime model loading must use the same typed layer contract as linear-op
+    profiling and parameter counting. Keeping this lookup at the runtime
+    boundary prevents mixed models from falling back to ``mlp_hidden_dim`` or
+    from treating the shared-expert alias as a separate contract.
+    """
+
+    profile_getter = getattr(config, "get_model_architecture_profile", None)
+    if not callable(profile_getter):
+        raise TypeError(
+            "runtime typed layer loading requires "
+            "config.get_model_architecture_profile()"
+        )
+    profile = profile_getter()
+    contract = profile.resolve_layer_contract(
+        config,
+        layer_kind=layer_kind,
+        tensor_parallel_size=tensor_parallel_size,
+        expert_parallel_size=expert_parallel_size,
+    )
+    width = int(contract.effective_ffn_width)
+    if width <= 0:
+        raise ValueError(
+            f"Resolved {layer_kind.value} runtime width must be positive, got {width}"
+        )
+    return width
 
 
 def _build_sparse_moe_block_profiling_plan(
@@ -295,6 +338,9 @@ class _FullStructureGPTModel(torch.nn.Module):
         enabled_ops = (
             set(profiling_plan.get("enabled_ops", [])) if profiling_plan else None
         )
+        ffn_enabled = (
+            profiling_plan.get("ffn_enabled", True) if profiling_plan else True
+        )
         self._profile_emb = (
             stage_slice.include_embed_tokens
             and (True if enabled_ops is None else "emb" in enabled_ops)
@@ -334,6 +380,7 @@ class _FullStructureGPTModel(torch.nn.Module):
                     config,
                     world_size=world_size,
                     profiling_plan=block_profiling_plan,
+                    layer_id=int(layer_id),
                 )
             )
         self.layers = torch.nn.ModuleList(layers)
@@ -369,20 +416,25 @@ class _FullStructureGPTModel(torch.nn.Module):
         else:
             self.register_parameter("mtp_parameter_reservoir", None)
 
-        # MoE routed expert weights (for MoE layers only)
-        self.moe_expert_weights = self._build_moe_expert_weights(
-            config,
-            ep_size=ep_size,
-            moe_tp_size=moe_tp_size,
-            start_layer_idx=int(stage_slice.start_layer_idx),
-            end_layer_idx=int(stage_slice.end_layer_idx),
-        )
-        self.moe_shared_expert_weights = self._build_moe_shared_expert_weights(
-            config,
-            tensor_parallel_size=world_size,
-            start_layer_idx=int(stage_slice.start_layer_idx),
-            end_layer_idx=int(stage_slice.end_layer_idx),
-        )
+        # MoE containers are part of the FFN path. An attention-only role has
+        # no MoE domain, so retain its zero parallel values and skip them.
+        if ffn_enabled:
+            self.moe_expert_weights = self._build_moe_expert_weights(
+                config,
+                ep_size=ep_size,
+                moe_tp_size=moe_tp_size,
+                start_layer_idx=int(stage_slice.start_layer_idx),
+                end_layer_idx=int(stage_slice.end_layer_idx),
+            )
+            self.moe_shared_expert_weights = self._build_moe_shared_expert_weights(
+                config,
+                tensor_parallel_size=world_size,
+                start_layer_idx=int(stage_slice.start_layer_idx),
+                end_layer_idx=int(stage_slice.end_layer_idx),
+            )
+        else:
+            self.moe_expert_weights = None
+            self.moe_shared_expert_weights = None
 
     @staticmethod
     def _build_moe_expert_weights(
@@ -426,7 +478,12 @@ class _FullStructureGPTModel(torch.nn.Module):
             return None
 
         embedding_dim = int(config.embedding_dim)
-        mlp_hidden_dim = int(config.mlp_hidden_dim)
+        mlp_hidden_dim = _resolve_runtime_layer_width(
+            config,
+            LayerKind.ROUTED,
+            tensor_parallel_size=int(moe_tp_size),
+            expert_parallel_size=int(ep_size),
+        )
         use_gated_mlp = bool(getattr(config, "use_gated_mlp", True))
 
         expert_modules = []
@@ -467,7 +524,11 @@ class _FullStructureGPTModel(torch.nn.Module):
             return None
 
         embedding_dim = int(config.embedding_dim)
-        share_expert_dim = int(getattr(config, "share_expert_dim", 0) or 0)
+        share_expert_dim = _resolve_runtime_layer_width(
+            config,
+            LayerKind.SHARED,
+            tensor_parallel_size=int(tensor_parallel_size),
+        )
         use_gated_mlp = bool(getattr(config, "use_gated_mlp", True))
 
         shared_expert_modules = []
@@ -561,6 +622,7 @@ def _build_runtime_profile_model(
     num_pipeline_stages: int = 1,
     pipeline_stage_idx: int = 0,
     mtp_parameter_count: int = 0,
+    profiling_plan: Optional[dict] = None,
 ) -> torch.nn.Module:
     """Build profiling model according to the selected weights-memory semantics."""
     normalized_source = _validate_weights_memory_source(weights_memory_source)
@@ -569,6 +631,7 @@ def _build_runtime_profile_model(
             profiling_model_config,
             world_size=tp_size,
             pad_vocab_size=pad_vocab_size,
+            profiling_plan=profiling_plan,
             ep_size=ep_size,
             moe_tp_size=moe_tp_size,
             num_pipeline_stages=num_pipeline_stages,
@@ -580,6 +643,7 @@ def _build_runtime_profile_model(
         world_size=tp_size,
         num_repeat_steps=1,
         pad_vocab_size=pad_vocab_size,
+        profiling_plan=profiling_plan,
     )
 
 
@@ -707,8 +771,16 @@ def _build_cache_key(
         _get_current_cuda_total_memory_cache_key(),
     )
 
+    # Keep runtime non-KV measurements partitioned by the complete typed
+    # architecture contract.  The legacy scalar above is intentionally kept
+    # for compatibility, but cannot distinguish mixed dense/routed/shared
+    # widths by itself.
+    typed_contract_identity = resolve_model_architecture_profile(
+        model_config
+    ).get_layer_contract_identity(model_config)
+
     effective_nccl_config = get_effective_nccl_buffer_config(nccl_buffer_config)
-    return base_key + effective_nccl_config.cache_fingerprint()
+    return base_key + (typed_contract_identity,) + effective_nccl_config.cache_fingerprint()
 
 
 def _profile_non_kv_cache_overhead_bytes_uncached(
@@ -747,15 +819,36 @@ def _profile_non_kv_cache_overhead_bytes_uncached(
             f"got={replica_config.attn_tensor_parallel_size!r}"
         )
 
-    ep_size = int(getattr(replica_config, "moe_expert_parallel_size", 1))
-    if ep_size <= 0:
-        ep_size = 1
+    attention_only = cluster_type is ClusterType.DECODE_ATTN
+    ep_size = int(
+        getattr(replica_config, "moe_expert_parallel_size", 0 if attention_only else 1)
+    )
+    moe_tp_size = int(
+        getattr(replica_config, "moe_tensor_parallel_size", 0 if attention_only else 1)
+    )
+    if attention_only:
+        if ep_size != 0 or moe_tp_size != 0:
+            raise ValueError(
+                "DECODE_ATTN must use moe_tensor_parallel_size=0 and "
+                "moe_expert_parallel_size=0, "
+                f"got moe_tp={moe_tp_size}, moe_ep={ep_size}"
+            )
+    elif ep_size <= 0:
+        raise ValueError(
+            "replica_config.moe_expert_parallel_size must be > 0, "
+            f"got={getattr(replica_config, 'moe_expert_parallel_size', None)!r}"
+        )
     dp_size = int(getattr(replica_config, "attn_dp", 1))
     if dp_size <= 0:
-        dp_size = 1
-    moe_tp_size = int(getattr(replica_config, "moe_tensor_parallel_size", 1))
-    if moe_tp_size <= 0:
-        moe_tp_size = 1
+        raise ValueError(
+            "replica_config.attn_dp must be > 0, "
+            f"got={getattr(replica_config, 'attn_dp', None)!r}"
+        )
+    if not attention_only and moe_tp_size <= 0:
+        raise ValueError(
+            "replica_config.moe_tensor_parallel_size must be > 0, "
+            f"got={getattr(replica_config, 'moe_tensor_parallel_size', None)!r}"
+        )
 
     num_pipeline_stages = int(getattr(replica_config, "num_pipeline_stages", 1))
     if num_pipeline_stages <= 0:
@@ -777,6 +870,19 @@ def _profile_non_kv_cache_overhead_bytes_uncached(
             f"got num_layers={profiling_model_config.num_layers}, "
             f"num_pipeline_stages={num_pipeline_stages}"
         )
+
+    # Keep one profile-owned plan for both the loader and the runtime block.
+    # DECODE_ATTN owns attention only; its configured zero MoE domains remain
+    # visible while the plan omits all FFN and routed/shared operators.
+    profiling_plan = build_profiling_plan(
+        model_config=profiling_model_config,
+        tp_size=tp_size,
+        attn_tp=(tp_size,),
+        ffn_tp=() if attention_only else (tp_size,),
+        moe_tp=() if attention_only else (moe_tp_size,),
+        is_moe=bool(getattr(profiling_model_config, "is_moe", False)),
+        include_ffn=not attention_only,
+    )
 
     def _profile_single_pipeline_stage(
         *, pipeline_stage_idx: int
@@ -821,6 +927,7 @@ def _profile_non_kv_cache_overhead_bytes_uncached(
                     num_pipeline_stages=num_pipeline_stages,
                     pipeline_stage_idx=int(pipeline_stage_idx),
                     mtp_parameter_count=mtp_parameter_count,
+                    profiling_plan=profiling_plan,
                 )
                 initialize_dummy_weights(loaded_model)
                 loaded_model = loaded_model.to(dtype=profiling_model_config.dtype).cuda().eval()
@@ -849,13 +956,21 @@ def _profile_non_kv_cache_overhead_bytes_uncached(
             else:
                 model = _load_profile_model()
 
+            # The estimator models communication domains, not the raw
+            # attention-only configuration sentinel. Keep the configured zero
+            # MoE values above and use an explicit non-MoE effective domain.
+            effective_ep_size = 1 if attention_only else ep_size
             nccl_estimate = estimate_vllm_worker_non_torch_bytes(
                 tp_size=tp_size,
                 pp_size=num_pipeline_stages,
                 dp_size=dp_size,
-                ep_size=ep_size,
+                ep_size=effective_ep_size,
                 pipeline_stage_idx=int(pipeline_stage_idx),
-                is_moe=bool(getattr(replica_config.model_config, "is_moe", False)),
+                is_moe=(
+                    False
+                    if attention_only
+                    else bool(getattr(replica_config.model_config, "is_moe", False))
+                ),
                 config=nccl_buffer_config,
             )
             aux_non_torch_bytes = nccl_estimate.total_bytes

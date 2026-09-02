@@ -53,6 +53,7 @@ from frontier.metrics.op_trace_utils import (
 from frontier.metrics.wandb_utils import get_wandb, require_wandb
 from frontier.utils.mfu_calculator import MFUCalculator
 from frontier.types import ClusterType
+from frontier.model_architectures import LayerKind, resolve_model_architecture_profile
 
 wandb = get_wandb()
 logger = init_logger(__name__)
@@ -550,6 +551,15 @@ class MetricsStore:
             "parallel_context": parallel_context,
         }
 
+        trace_layer_ids = self._validate_mixed_layer_identity_for_trace(
+            trace_context=trace_context,
+            execution_time=execution_time,
+            cluster_type=cluster_type,
+            require_aggregate_identity=not should_expand_layers,
+        )
+        if trace_layer_ids is not None:
+            base_meta["layer_ids"] = trace_layer_ids
+
         def emit(
             op_type: str,
             op_name: str,
@@ -562,15 +572,31 @@ class MetricsStore:
             if duration_ms <= 0:
                 return  # Skip zero-duration ops
 
-            if extra_meta is None and op_type in ("COMPUTE", "COMM"):
-                extra_meta = compute_op_trace_meta(op_name, op_type, trace_context)
+            canonical_meta = None
+            if op_type in ("COMPUTE", "COMM"):
+                has_canonical_meta = extra_meta is not None and all(
+                    key in extra_meta
+                    for key in ("precision_op", "dtype", "dtype_bytes", "tensor_shape")
+                )
+                if not has_canonical_meta and op_name not in {
+                    "decode_draft_proposer",
+                    "mtp_terminal_overshoot",
+                }:
+                    canonical_meta = compute_op_trace_meta(
+                        op_name,
+                        op_type,
+                        trace_context,
+                        layer_id=layer_id if layer_id >= 0 else None,
+                    )
 
-            if op_type in ("COMPUTE", "COMM") and not extra_meta:
+            if op_type in ("COMPUTE", "COMM") and not canonical_meta and not extra_meta:
                 raise ValueError(
                     f"Missing op trace metadata for op={op_name} type={op_type}"
                 )
 
             meta = base_meta.copy()
+            if canonical_meta:
+                meta.update(canonical_meta)
             if extra_meta:
                 meta.update(extra_meta)
 
@@ -624,7 +650,15 @@ class MetricsStore:
                 if should_expand_layers and num_layers > 1:
                     if per_layer_related_wait_ms <= 0.0:
                         continue
-                    for layer_idx in range(num_layers):
+                    # Reuse the validated global stage interval when the
+                    # execution payload carries layer identity.  Legacy
+                    # identity-free traces retain their local index fallback.
+                    layer_ids = (
+                        trace_layer_ids
+                        if trace_layer_ids is not None
+                        else tuple(range(num_layers))
+                    )
+                    for layer_idx in layer_ids:
                         emit(
                             "COMM",
                             wait_event_name,
@@ -706,6 +740,7 @@ class MetricsStore:
                 skip_add_attn_residual=skip_add_attn_residual,
                 use_profile_ep_alltoall=use_profile_ep_alltoall,
                 use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
+                trace_context=trace_context,
             )
         else:
             # Aggregated mode (default): emit single spans for all layers
@@ -788,6 +823,85 @@ class MetricsStore:
                 return True
 
         return False
+
+    @staticmethod
+    def _validate_mixed_layer_identity_for_trace(
+        *,
+        trace_context: OpTraceContext,
+        execution_time: ExecutionTime,
+        cluster_type: ClusterType,
+        require_aggregate_identity: bool,
+    ) -> tuple[int, ...] | None:
+        """Validate layer identity before emitting a mixed-model trace.
+
+        Pure dense, pure MoE, and attention-only traces retain their legacy
+        identity-free aggregate behavior.  A mixed FFN aggregate must carry
+        the exact global layer IDs so the trace cannot imply one typed timing
+        domain for all layers.
+        """
+
+        layer_ids = execution_time.layer_ids
+        if trace_context is None:
+            return layer_ids
+
+        profile = resolve_model_architecture_profile(trace_context.model_config)
+        is_mixed_model = profile._is_mixed_model(trace_context.model_config)
+        is_mixed_ffn = (
+            is_mixed_model
+            and execution_time._is_moe
+            and cluster_type is not ClusterType.DECODE_ATTN
+            and execution_time.num_layers > 1
+        )
+
+        if layer_ids is None:
+            if require_aggregate_identity and is_mixed_ffn:
+                raise ValueError(
+                    "mixed-layer FFN aggregate requires explicit layer identity "
+                    "through ExecutionTime.layer_ids"
+                )
+            return None
+
+        expected_count = execution_time.num_layers
+        if len(layer_ids) != expected_count:
+            raise ValueError(
+                "layer identity length must match execution_time.num_layers: "
+                f"{len(layer_ids)} != {expected_count}"
+            )
+        if any(type(layer_id) is not int for layer_id in layer_ids):
+            raise ValueError(
+                "layer identity values must be exact integers, "
+                f"got {layer_ids!r}"
+            )
+        if any(layer_id < 0 for layer_id in layer_ids):
+            raise ValueError(
+                "layer identity values must be non-negative, "
+                f"got {layer_ids!r}"
+            )
+        if len(set(layer_ids)) != len(layer_ids):
+            raise ValueError(
+                "layer identity values must not contain duplicate IDs, "
+                f"got {layer_ids!r}"
+            )
+
+        if is_mixed_ffn:
+            model_num_layers = getattr(trace_context.model_config, "num_layers", None)
+            if type(model_num_layers) is not int or model_num_layers <= 0:
+                raise ValueError(
+                    "mixed-layer trace validation requires a positive integer "
+                    "model_config.num_layers"
+                )
+            invalid_ids = tuple(
+                layer_id
+                for layer_id in layer_ids
+                if layer_id >= model_num_layers
+            )
+            if invalid_ids:
+                raise ValueError(
+                    "mixed-layer trace layer identity out of range: "
+                    f"IDs={invalid_ids!r}, valid range=[0, {model_num_layers})"
+                )
+
+        return tuple(layer_ids)
 
     def _use_ep_alltoall_dispatch_combine(
         self,
@@ -998,6 +1112,7 @@ class MetricsStore:
         skip_add_attn_residual: bool = False,
         use_profile_ep_alltoall: bool = False,
         use_ep_alltoall_dispatch_combine: bool = True,
+        trace_context: OpTraceContext | None = None,
     ) -> None:
         """
         Emit per-layer traces (individual spans for each layer).
@@ -1031,6 +1146,14 @@ class MetricsStore:
         per_layer_share_expert_allreduce = (
             execution_time.share_expert_tensor_parallel_allreduce_time / num_layers
         )
+        per_layer_mlp_up = (
+            execution_time.mlp_layer_up_proj_execution_time / num_layers
+        )
+        per_layer_mlp_act = execution_time.mlp_layer_act_execution_time / num_layers
+        per_layer_mlp_down = (
+            execution_time.mlp_layer_down_proj_execution_time / num_layers
+        )
+        per_layer_mlp_allreduce = execution_time.mlp_all_reduce_time / num_layers
 
         if is_moe:
             per_layer_moe_times = tuple(
@@ -1052,19 +1175,34 @@ class MetricsStore:
             )
             per_layer_ep_combine = execution_time.get_single_layer_moe_combine_time()
             per_layer_moe_tp_allreduce = execution_time.mlp_all_reduce_time / num_layers
-        else:
-            per_layer_mlp_up = (
-                execution_time.mlp_layer_up_proj_execution_time / num_layers
-            )
-            per_layer_mlp_act = execution_time.mlp_layer_act_execution_time / num_layers
-            per_layer_mlp_down = (
-                execution_time.mlp_layer_down_proj_execution_time / num_layers
-            )
-            per_layer_mlp_allreduce = execution_time.mlp_all_reduce_time / num_layers
-
         # Emit traces for each layer
-        for layer_idx in range(num_layers):
+        profile = (
+            resolve_model_architecture_profile(trace_context.model_config)
+            if trace_context is not None and is_moe
+            else None
+        )
+        layer_ids = execution_time.layer_ids
+        if layer_ids is None:
+            layer_ids = tuple(range(num_layers))
+        elif len(layer_ids) != num_layers:
+            raise ValueError(
+                "layer identity length must match per-layer trace count: "
+                f"{len(layer_ids)} != {num_layers}"
+            )
+
+        for layer_idx in layer_ids:
             layer_meta = {"layer_idx": layer_idx}
+            layer_is_moe = is_moe
+            if profile is not None:
+                layer_contract = profile.resolve_layer_contract(
+                    trace_context.model_config,
+                    layer_id=layer_idx,
+                    attention_tp_size=trace_context.attn_tp,
+                    moe_tp_size=trace_context.moe_tp,
+                    ffn_tp_size=trace_context.role_local_ffn_tp,
+                    expert_parallel_size=trace_context.moe_ep,
+                )
+                layer_is_moe = layer_contract.layer_kind is LayerKind.ROUTED
 
             # Attention Block
             for op_name, duration_ms in _iter_memory_execution_times(
@@ -1148,7 +1286,7 @@ class MetricsStore:
             if cluster_type == ClusterType.DECODE_ATTN:
                 continue
 
-            if is_moe:
+            if layer_is_moe:
                 emit(
                     "COMM",
                     "moe_tensor_parallel_allgather",
@@ -1214,48 +1352,38 @@ class MetricsStore:
                         layer_meta,
                     )
 
-                dense_layer_id = getattr(execution_time, "_trace_dense_layer_id", None)
-                dense_trace_up = float(
-                    getattr(
-                        execution_time,
-                        "_trace_dense_mlp_layer_up_proj_execution_time",
-                        0.0,
-                    )
-                )
-                dense_trace_act = float(
-                    getattr(
-                        execution_time,
-                        "_trace_dense_mlp_layer_act_execution_time",
-                        0.0,
-                    )
-                )
-                dense_trace_down = float(
-                    getattr(
-                        execution_time,
-                        "_trace_dense_mlp_layer_down_proj_execution_time",
-                        0.0,
-                    )
-                )
-                if dense_layer_id == layer_idx and (
-                    dense_trace_up > 0.0
-                    or dense_trace_act > 0.0
-                    or dense_trace_down > 0.0
-                ):
-                    emit("COMPUTE", "mlp_up_proj", dense_trace_up, layer_idx, layer_meta)
-                    emit("COMPUTE", "mlp_act", dense_trace_act, layer_idx, layer_meta)
-                    emit(
-                        "COMPUTE",
-                        "mlp_down_proj",
-                        dense_trace_down,
-                        layer_idx,
-                        layer_meta,
-                    )
             else:
                 per_layer_ffn_times = {
                     "mlp_layer_up_proj_execution_time": per_layer_mlp_up,
                     "mlp_layer_act_execution_time": per_layer_mlp_act,
                     "mlp_layer_down_proj_execution_time": per_layer_mlp_down,
                 }
+                if is_moe:
+                    dense_layer_id = getattr(execution_time, "_trace_dense_layer_id", None)
+                    if dense_layer_id == layer_idx:
+                        per_layer_ffn_times = {
+                            "mlp_layer_up_proj_execution_time": float(
+                                getattr(
+                                    execution_time,
+                                    "_trace_dense_mlp_layer_up_proj_execution_time",
+                                    0.0,
+                                )
+                            ),
+                            "mlp_layer_act_execution_time": float(
+                                getattr(
+                                    execution_time,
+                                    "_trace_dense_mlp_layer_act_execution_time",
+                                    0.0,
+                                )
+                            ),
+                            "mlp_layer_down_proj_execution_time": float(
+                                getattr(
+                                    execution_time,
+                                    "_trace_dense_mlp_layer_down_proj_execution_time",
+                                    0.0,
+                                )
+                            ),
+                        }
                 for operator in FFN_FAMILY.e2e_trace_ops():
                     if operator.execution_time_attr is None:
                         continue

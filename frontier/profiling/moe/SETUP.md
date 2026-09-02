@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-08-23 | Adopt canonical direct and prefill_warmed gating-context labels with temporary warned legacy aliases |
 | 2026-03-13 | Align setup/troubleshooting notes with measurement-aware profiling contract |
 
 ## Prerequisites
@@ -238,8 +239,8 @@ head -n 5 data/profiling/compute/a100/<model_name>/moe.csv
 Expected columns:
 ```
 time_stats.moe_gating_linear.median,time_stats.moe_gating_routing_topk.median,time_stats.moe_shuffling.median,time_stats.moe_grouped_gemm.median,num_tokens,num_experts,num_experts_per_device,expert_parallel_size,routing_runtime_path,routing_assignment_policy,routing_weight_policy,routing_uses_router_logits,gating_runtime_context,gating_runtime_context_impl,router_topk,hidden_dim,expert_hidden_dim,use_gated,num_tensor_parallel_workers,measurement_type
-0.1234,0.0100,0.0670,2.2200,8,8,8,1,standard_fused_topk,logit_topk,router_softmax,True,standalone_legacy,linear_plus_routing,2,4096,14336,True,1,CUDA_EVENT
-0.2345,0.0050,0.0660,2.1450,16,8,8,1,uniform_topk,round_robin_uniform,uniform,False,prefill_hot,linear_only,2,4096,14336,True,1,CUDA_EVENT
+0.1234,0.0100,0.0670,2.2200,8,8,8,1,standard_fused_topk,logit_topk,router_softmax,True,direct,none,2,4096,14336,True,1,CUDA_EVENT
+0.2345,0.0050,0.0660,2.1450,16,8,8,1,uniform_topk,round_robin_uniform,uniform,False,prefill_warmed,ffn_like_prefix_20x,2,4096,14336,True,1,CUDA_EVENT
 ...
 ```
 
@@ -288,4 +289,3 @@ After successful profiling:
 - Main documentation: `vidur/profiling/moe/README.md`
 - Profiling guide: `docs/profiling.md`
 - Sarathi-serve repository: https://github.com/microsoft/sarathi-serve
-

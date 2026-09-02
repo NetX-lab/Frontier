@@ -782,6 +782,55 @@ def test_moe_stage_live_path_records_comm_operator_sequence_and_totals() -> None
     assert execution_time.total_time * 1e3 == pytest.approx(10.28)
 
 
+def test_routed_moe_tp_one_does_not_emit_dense_ffn_collective() -> None:
+    """Routed MoE TP=1 must not inherit the attention TP all-reduce alias."""
+
+    batch = _Batch()
+    predictor = _moe_predictor()
+    predictor._replica_config.moe_tensor_parallel_size = 1
+    lane_workload = _lane_workload({0: 5, 1: 5})
+
+    predictor.predict_attention_layer_time = lambda **_kwargs: AttentionTime()
+    predictor._get_gating_linear_time = lambda _batch: 0.0
+    predictor._get_gating_routing_topk_time = lambda _batch: 0.0
+    predictor._get_moe_shuffling_time = lambda _batch, moe_tokens_input: 0.0
+    predictor._get_grouped_gemm_time = lambda _tokens, batch: 0.0
+    predictor._apply_moe_grouped_gemm_decode_visibility = (
+        lambda raw_time_ms, _batch: raw_time_ms
+    )
+    predictor._get_add_layer_act_execution_time = lambda _batch: 0.0
+    predictor._get_mlp_norm_layer_act_execution_time = lambda _batch: 0.0
+    predictor._get_schedule_time = lambda _batch: 0.0
+    predictor._get_sampler_e2e_time = lambda _batch: 0.0
+    predictor._get_prepare_inputs_e2e_time = lambda _batch: 0.0
+    predictor._get_process_model_outputs_time = lambda _batch: 0.0
+    predictor._get_ray_comm_time = lambda _batch: 0.0
+    predictor.predict_dp_moe_allreduce_times = lambda _batch, _cluster_type: (0.0, 0.0)
+    predictor._get_pp_producer_send_path_runtime_time = lambda _batch, _stage_id: 0.0
+    predictor._get_pp_receiver_head_runtime_time = lambda _batch, _stage_id: 0.0
+    predictor._get_pp_prefill_consumer_active_runtime_time = (
+        lambda _batch, _stage_id: 0.0
+    )
+    predictor._get_pp_stage_boundary_handoff_time = lambda _batch, _stage_id: 0.0
+    predictor._should_include_spec_decode_proposer_overhead = lambda _batch: False
+    predictor._get_mtp_terminal_overshoot_time = lambda *_args, **_kwargs: 0.0
+    predictor._get_expert_parallel_communication_calibration_scale = lambda _batch: 1.0
+
+    execution_time = predictor._get_execution_time_internal(
+        batch=batch,
+        pipeline_stage=0,
+        moe_tokens_input=lane_workload,
+        include_moe=True,
+        include_ffn=True,
+    )
+
+    assert execution_time.communication_operator_times is not None
+    operator_times = execution_time.communication_operator_times.op_times
+    assert "mlp_tensor_parallel_allreduce" not in operator_times
+    assert "moe_tensor_parallel_allreduce" not in operator_times
+    assert execution_time._moe_tensor_parallel_allreduce_time == pytest.approx(0.0)
+
+
 def test_moe_stage_num_layers_view_preserves_comm_operator_times() -> None:
     batch, lane_workload = _lane_stage_batch()
     predictor = _moe_predictor()

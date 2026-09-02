@@ -8,7 +8,14 @@ import pytest
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )
-from frontier.types import ClusterType
+from frontier.model_architectures import (
+    LayerContractSpec,
+    LayerDimensionSource,
+    LayerKind,
+    ModelArchitectureProfile,
+)
+from frontier.operators.spec import TensorParallelMode
+from frontier.types import ClusterType, MeasurementType
 
 
 def test_mixed_layer_moe_materializes_moe_and_dense_mlp_predictors(
@@ -25,7 +32,10 @@ def test_mixed_layer_moe_materializes_moe_and_dense_mlp_predictors(
     model_config = SimpleNamespace(
         is_moe=True,
         num_layers=3,
+        num_experts=8,
         get_num_moe_layers=lambda: 2,
+        dense_mlp_hidden_dim=18432,
+        routed_mlp_hidden_dim=5120,
         get_model_arch=lambda: "unit_mixed_moe",
         supports_share_expert=lambda: False,
         use_qk_norm=False,
@@ -44,6 +54,7 @@ def test_mixed_layer_moe_materializes_moe_and_dense_mlp_predictors(
     linear_df = pd.DataFrame(
         {
             "num_tokens": [1, 2],
+            "n_expanded_embd": [18432, 18432],
             "time_stats.mlp_up_proj.median": [1.0, 2.0],
             "time_stats.mlp_down_proj.median": [1.0, 2.0],
             "time_stats.mlp_act.median": [1.0, 2.0],
@@ -60,7 +71,7 @@ def test_mixed_layer_moe_materializes_moe_and_dense_mlp_predictors(
     manager._active_measurement_type = SimpleNamespace(value="cuda_event")
     manager._measurement_family_name = lambda _measurement_type: "cuda_event"
     manager._validate_moe_dataset_contract = lambda *args, **kwargs: None
-    manager._load_linear_op_df = lambda _path, tp: linear_df.assign(_loaded_tp=tp)
+    manager._load_linear_op_df = lambda _path, tp, **kwargs: linear_df.assign(_loaded_tp=tp)
     manager._load_moe_df = lambda *args, **kwargs: moe_df
 
     trained = []
@@ -111,6 +122,101 @@ def test_mixed_layer_moe_materializes_moe_and_dense_mlp_predictors(
     }["moe_grouped_gemm"] is True
 
 
+def test_mixed_layer_signature_changes_when_secondary_attention_tp_changes(
+    monkeypatch, tmp_path
+) -> None:
+    """Every typed FFN domain must participate in the training signature."""
+    import frontier.execution_time_predictor.shared_prediction_model_manager as manager_module
+
+    linear_file = tmp_path / "linear_op.csv"
+    moe_file = tmp_path / "moe.csv"
+    linear_file.write_text("placeholder\n", encoding="utf-8")
+    moe_file.write_text("placeholder\n", encoding="utf-8")
+
+    model_config = SimpleNamespace(
+        is_moe=True,
+        num_layers=3,
+        num_experts=8,
+        get_num_moe_layers=lambda: 2,
+        dense_mlp_hidden_dim=18432,
+        routed_mlp_hidden_dim=5120,
+        share_expert_dim=5120,
+        get_model_arch=lambda: "step3_text",
+        supports_share_expert=lambda: False,
+        use_qk_norm=False,
+        num_kv_heads=8,
+        get_model_architecture_profile=__import__(
+            "frontier.model_architectures", fromlist=["ModelArchitectureProfile"]
+        ).ModelArchitectureProfile.step3_text,
+    )
+    replica_config = SimpleNamespace(
+        device="h200",
+        model_name="step3-moe-noquant",
+        model_config=model_config,
+        attn_tensor_parallel_size=8,
+        moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=8,
+        speculative_decoding_config=None,
+    )
+    linear_df = pd.DataFrame(
+        {
+            "num_tokens": [1],
+            "n_expanded_embd": [18432],
+            "time_stats.mlp_up_proj.median": [1.0],
+            "time_stats.mlp_down_proj.median": [1.0],
+            "time_stats.mlp_act.median": [1.0],
+            "time_stats.post_attention_layernorm.median": [1.0],
+        }
+    )
+    moe_df = pd.DataFrame(
+        {
+            "num_tokens": [1],
+            "time_stats.moe_grouped_gemm.median": [1.0],
+        }
+    )
+    manager = object.__new__(ExecutionTimePredictionModelManager)
+    manager._active_measurement_type = MeasurementType.CUDA_EVENT
+    manager._measurement_family_name = lambda _measurement_type: "cuda_event"
+    manager._validate_moe_dataset_contract = lambda *args, **kwargs: None
+    manager._load_linear_op_df = lambda *_args, **kwargs: linear_df
+    manager._load_moe_df = lambda *_args, **kwargs: moe_df
+    trained = []
+    manager._train_single_model = lambda **kwargs: trained.append(kwargs) or kwargs[
+        "model_name"
+    ]
+    monkeypatch.setattr(
+        manager_module,
+        "_get_moe_family_model_names",
+        lambda: ["moe_grouped_gemm"],
+    )
+
+    signatures = set()
+    manager._train_ffn_models_for_cluster(
+        ClusterType.MONOLITHIC,
+        replica_config,
+        SimpleNamespace(),
+        str(linear_file),
+        str(moe_file),
+        True,
+        signatures,
+    )
+    first_training_count = len(trained)
+
+    replica_config.attn_tensor_parallel_size = 4
+    manager._train_ffn_models_for_cluster(
+        ClusterType.MONOLITHIC,
+        replica_config,
+        SimpleNamespace(),
+        str(linear_file),
+        str(moe_file),
+        True,
+        signatures,
+    )
+
+    assert first_training_count > 0
+    assert len(trained) > first_training_count
+
+
 def test_mixed_layer_predicate_preserves_pure_moe_and_dense_contracts() -> None:
     manager = object.__new__(ExecutionTimePredictionModelManager)
     mixed = SimpleNamespace(is_moe=True, num_layers=3, get_num_moe_layers=lambda: 2)
@@ -120,6 +226,47 @@ def test_mixed_layer_predicate_preserves_pure_moe_and_dense_contracts() -> None:
     assert manager._is_mixed_layer_moe_model(mixed, True)
     assert not manager._is_mixed_layer_moe_model(pure_moe, True)
     assert not manager._is_mixed_layer_moe_model(dense, False)
+
+
+def test_mixed_layer_predicate_uses_active_profile_contracts() -> None:
+    """Profile-owned activation wins when a legacy layer count is misleading."""
+
+    profile = ModelArchitectureProfile.generic(
+        profile_id="unit_profile_mixed_activation"
+    )
+    profile = profile.__class__(
+        profile_id=profile.profile_id,
+        display_name=profile.display_name,
+        linear_attention=profile.linear_attention,
+        expert_parallel_collective=profile.expert_parallel_collective,
+        layer_contracts=(
+            LayerContractSpec(
+                LayerKind.DENSE,
+                LayerDimensionSource.DENSE,
+                TensorParallelMode.FFN_TP,
+                operator_family_ids=("ffn",),
+            ),
+            LayerContractSpec(
+                LayerKind.ROUTED,
+                LayerDimensionSource.ROUTED,
+                TensorParallelMode.MOE_TP,
+                operator_family_ids=("moe",),
+            ),
+        ),
+        match=profile.match,
+    )
+    model_config = SimpleNamespace(
+        is_moe=True,
+        num_layers=3,
+        moe_layers_enum="0,1,2",
+        get_num_moe_layers=lambda: 3,
+        dense_mlp_hidden_dim=16,
+        routed_mlp_hidden_dim=8,
+        get_model_architecture_profile=lambda: profile,
+    )
+    manager = object.__new__(ExecutionTimePredictionModelManager)
+
+    assert manager._is_mixed_layer_moe_model(model_config, True)
 
 
 @pytest.mark.parametrize(
@@ -164,7 +311,11 @@ def test_mixed_layer_dense_training_does_not_reorder_legacy_share_expert_models(
     model_config = SimpleNamespace(
         is_moe=True,
         num_layers=3,
+        num_experts=8,
         get_num_moe_layers=lambda: 2,
+        dense_mlp_hidden_dim=18432,
+        routed_mlp_hidden_dim=5120,
+        share_expert_dim=5120,
         get_model_arch=lambda: "unit_mixed_moe",
         supports_share_expert=lambda: True,
         use_qk_norm=False,
@@ -182,6 +333,7 @@ def test_mixed_layer_dense_training_does_not_reorder_legacy_share_expert_models(
     linear_df = pd.DataFrame(
         {
             "num_tokens": [1, 2],
+            "n_expanded_embd": [18432, 18432],
             "time_stats.mlp_up_proj.median": [1.0, 2.0],
             "time_stats.mlp_down_proj.median": [1.0, 2.0],
             "time_stats.mlp_act.median": [1.0, 2.0],
@@ -196,7 +348,7 @@ def test_mixed_layer_dense_training_does_not_reorder_legacy_share_expert_models(
     manager._active_measurement_type = SimpleNamespace(value="cuda_event")
     manager._measurement_family_name = lambda _measurement_type: "cuda_event"
     manager._validate_moe_dataset_contract = lambda *args, **kwargs: None
-    manager._load_linear_op_df = lambda _path, _tp: linear_df
+    manager._load_linear_op_df = lambda _path, _tp, **kwargs: linear_df
     manager._load_moe_df = lambda *args, **kwargs: moe_df
     manager._get_linear_op_tp_key = lambda *args, **kwargs: 8
     trained = []
@@ -205,9 +357,15 @@ def test_mixed_layer_dense_training_does_not_reorder_legacy_share_expert_models(
     monkeypatch.setattr(
         manager_module,
         "get_family_profiling_names",
-        lambda family: ["share_expert_up_proj"]
-        if family is manager_module.SHARE_EXPERT_FAMILY
-        else ["moe_grouped_gemm"],
+        lambda family: (
+            ["share_expert_up_proj"]
+            if family is manager_module.SHARE_EXPERT_FAMILY
+            else (
+                ["mlp_up_proj", "mlp_down_proj", "mlp_act"]
+                if family is manager_module.FFN_FAMILY
+                else ["moe_grouped_gemm"]
+            )
+        ),
     )
 
     manager._train_ffn_models_for_cluster(
@@ -222,6 +380,10 @@ def test_mixed_layer_dense_training_does_not_reorder_legacy_share_expert_models(
 
     names = [row["model_name"] for row in trained]
     assert names.index("share_expert_up_proj") < names.index("mlp_up_proj")
+    assert all(
+        "profile_layer_contract_identity" not in row.get("training_context", {})
+        for row in trained
+    )
 
 
 def test_shared_expert_only_profile_skips_standard_dense_mlp_training(
@@ -231,18 +393,32 @@ def test_shared_expert_only_profile_skips_standard_dense_mlp_training(
 
     linear_file = tmp_path / "linear_op.csv"
     linear_file.write_text("placeholder\n", encoding="utf-8")
-    model_config = SimpleNamespace(supports_share_expert=lambda: True)
-    replica_config = SimpleNamespace(model_config=model_config)
+    model_config = SimpleNamespace(
+        is_moe=True,
+        num_layers=1,
+        get_num_moe_layers=lambda: 1,
+        dense_mlp_hidden_dim=4096,
+        routed_mlp_hidden_dim=4096,
+        share_expert_dim=4096,
+        supports_share_expert=lambda: True,
+    )
+    replica_config = SimpleNamespace(
+        model_config=model_config,
+        attn_tensor_parallel_size=4,
+        moe_tensor_parallel_size=4,
+        moe_expert_parallel_size=1,
+    )
     linear_df = pd.DataFrame(
         {
             "num_tokens": [1, 2],
+            "n_expanded_embd": [4096, 4096],
             "time_stats.share_expert_up_proj.median": [1.0, 2.0],
             "time_stats.share_expert_down_proj.median": [1.0, 2.0],
             "time_stats.share_expert_act.median": [1.0, 2.0],
         }
     )
     manager = object.__new__(ExecutionTimePredictionModelManager)
-    manager._load_linear_op_df = lambda _path, _tp: linear_df
+    manager._load_linear_op_df = lambda _path, _tp, **kwargs: linear_df
     trained: list[str] = []
     manager._train_single_model = lambda **kwargs: trained.append(kwargs["model_name"])
 

@@ -264,6 +264,7 @@ def test_build_golden_cases_fails_when_pinned_parallelism_profile_coverage_is_mi
 
 
 def test_step_moe_pinned_parallelism_is_memory_feasible_for_h800() -> None:
+    """The pinned mixed-layer layout uses the profile-owned dense width."""
     parallelism = selected_parallelism_for_model("step-moe-noquant-small")
 
     parameter_memory = parameter_memory_per_device_bytes(
@@ -274,7 +275,11 @@ def test_step_moe_pinned_parallelism_is_memory_feasible_for_h800() -> None:
     requested_memory = requested_memory_bytes_for_device(device="h800")
 
     assert parameter_memory < requested_memory
-    assert parameter_memory == 42963156992
+    # The typed Step3 contract counts dense boundary layers at
+    # intermediate_size=18432 and routed/shared layers at 5120.  The previous
+    # 47,400,206,336-byte assertion counted dense and shared weights on every
+    # MoE layer instead of following runtime layer ownership.
+    assert parameter_memory == 41829122048
     assert requested_memory == 77309411328
 
 
