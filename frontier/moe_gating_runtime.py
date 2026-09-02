@@ -23,6 +23,10 @@ _SUPPORTED_MOE_GATING_RUNTIME_CONTEXTS = {
 }
 
 
+class PrefillHotRowsUnavailableError(ValueError):
+    """Raised when an optional prefill-hot slice has no matching rows."""
+
+
 def should_enable_prefill_hot_moe_gating_contract(
     *,
     model_config: Any | None = None,
@@ -144,11 +148,14 @@ def filter_moe_gating_rows_by_runtime_context(
             .unique()
             .tolist()
         )
-        raise ValueError(
+        message = (
             "No MoE gating profiling rows match the requested "
             f"{MOE_GATING_RUNTIME_CONTEXT_COLUMN}={normalized_context!r}. "
             f"Available contexts: {available_contexts}. Source: {source_name}"
         )
+        if normalized_context == PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT:
+            raise PrefillHotRowsUnavailableError(message)
+        raise ValueError(message)
     return filtered_df
 
 

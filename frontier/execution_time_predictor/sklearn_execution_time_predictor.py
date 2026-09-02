@@ -8,7 +8,18 @@ from abc import abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
 from itertools import product
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TYPE_CHECKING
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    cast,
+)
 import math
 
 import numpy as np
@@ -68,7 +79,7 @@ from frontier.execution_time_predictor.attention_dataset_contract import (
 )
 from frontier.logger import init_logger
 from frontier.moe_gating_runtime import get_moe_gating_base_model_name
-from frontier.model_architectures import ModelArchitectureProfile
+from frontier.model_architectures import ModelArchitectureProfile, ResolvedLayerContract
 from frontier.operators.families import (
     FFN_FAMILY,
     MEMORY_FAMILY,
@@ -76,8 +87,15 @@ from frontier.operators.families import (
     get_family_profiling_names,
     get_family_profiling_name_set,
     get_comm_operator,
+    get_operator_family,
 )
-from frontier.operators.binding import resolve_operator_query_tp_mode
+from frontier.operators.binding import bind_operator_query, resolve_operator_query_tp_mode
+from frontier.operators.typed_contracts import (
+    TYPED_OPERATOR_CONTRACTS_COLUMN,
+    matches_resolved_layer_contract,
+    parse_typed_operator_contract_column,
+    validate_typed_operator_contracts,
+)
 from frontier.operators.spec import (
     CommOperatorSpec,
     CommPayloadContext,
@@ -1150,9 +1168,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         file_path: str,
         tensor_parallel_size: Optional[int] = None,
         required_columns: Optional[List[str]] = None,
+        operator_name: Optional[str] = None,
+        layer_contract: Optional[ResolvedLayerContract] = None,
     ) -> pd.DataFrame:
         df = self._read_input_file(file_path)
-        df = df.drop_duplicates()
 
         metadata = self._get_profiling_metadata(df, file_path)
         self._validate_active_measurement_type(metadata, file_path)
@@ -1166,6 +1185,55 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         logger.debug(f"self._mlp_hidden_dim: {self._model_config.mlp_hidden_dim}")
         logger.debug(f"self._use_gated_mlp: {self._model_config.use_gated_mlp}")
         logger.debug(f"self._vocab_size: {self._model_config.vocab_size}")
+
+        if layer_contract is not None and not isinstance(
+            layer_contract, ResolvedLayerContract
+        ):
+            raise TypeError(
+                "layer_contract must be a ResolvedLayerContract when provided"
+            )
+        has_typed_contracts = TYPED_OPERATOR_CONTRACTS_COLUMN in df.columns
+        typed_operator_name: Optional[str] = None
+        if has_typed_contracts and operator_name is None:
+            raise ValueError(
+                "typed linear filtering requires operator_name when the canonical "
+                f"{TYPED_OPERATOR_CONTRACTS_COLUMN!r} column is present"
+            )
+        if has_typed_contracts:
+            if not isinstance(operator_name, str) or not operator_name:
+                raise ValueError(
+                    "typed linear filtering requires a non-empty operator_name"
+                )
+            typed_operator_name = operator_name
+            # Validate every row before scalar filtering so malformed metadata
+            # remains visible even when the selected operator has no layer
+            # contract or the row would be excluded by TP/model fields.
+            typed_contract_series = cast(
+                pd.Series, df[TYPED_OPERATOR_CONTRACTS_COLUMN]
+            )
+            df[TYPED_OPERATOR_CONTRACTS_COLUMN] = typed_contract_series.map(
+                validate_typed_operator_contracts
+            )
+        if has_typed_contracts and layer_contract is None and operator_name is not None:
+            resolver = getattr(self, "_resolve_typed_linear_contract", None)
+            if callable(resolver):
+                typed_resolver = cast(
+                    Callable[[str], Optional[ResolvedLayerContract]], resolver
+                )
+                resolved_contract = typed_resolver(typed_operator_name or operator_name)
+                if resolved_contract is not None and not isinstance(
+                    resolved_contract, ResolvedLayerContract
+                ):
+                    raise TypeError(
+                        "typed linear contract resolver must return a "
+                        "ResolvedLayerContract or None"
+                    )
+                layer_contract = resolved_contract
+
+        # A CSV without the canonical typed column is intentionally admitted by
+        # the legacy scalar contract.  The scalar remains the only width source
+        # on that path, even when a caller supplies an operator name.
+        expanded_width = self._model_config.mlp_hidden_dim
         # NOTE: linear_op.csv compute profiling now uses op-specific TP assignment:
         # - Replicated ops: TP=1
         # - Attention-sharded ops: attn_tensor_parallel_size
@@ -1176,18 +1244,37 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             f"Filtering linear-op compute data by num_tensor_parallel_workers={tensor_parallel_size}"
         )
 
-        df = df[
+        df = cast(pd.DataFrame, df[
             (df["n_head"] == self._model_config.num_q_heads)
             & (df["n_kv_head"] == self._model_config.num_kv_heads)
             & (df["n_embd"] == self._model_config.embedding_dim)
-            & (df["n_expanded_embd"] == self._model_config.mlp_hidden_dim)
             & (df["use_gated_mlp"] == self._model_config.use_gated_mlp)
             & (df["vocab_size"] == self._model_config.vocab_size)
             & (
                 df["num_tensor_parallel_workers"]
                 == tensor_parallel_size
             )
-        ]
+        ])
+
+        if has_typed_contracts and layer_contract is not None:
+            if typed_operator_name is None:
+                raise ValueError(
+                    "typed linear filtering requires operator_name when a layer "
+                    "contract is selected"
+                )
+            typed_contract_series = cast(
+                pd.Series, df[TYPED_OPERATOR_CONTRACTS_COLUMN]
+            )
+            typed_mask = typed_contract_series.map(
+                lambda raw_contracts: matches_resolved_layer_contract(
+                    raw_contracts,
+                    layer_contract,
+                    operator_name=typed_operator_name,
+                )
+            )
+            df = cast(pd.DataFrame, df[typed_mask].copy())
+        elif not has_typed_contracts:
+            df = cast(pd.DataFrame, df[df["n_expanded_embd"] == expanded_width])
 
         expected_use_qk_norm = bool(getattr(self._model_config, "use_qk_norm", False))
         if expected_use_qk_norm and "use_qk_norm" not in df.columns:
@@ -1197,7 +1284,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"file={file_path}, model={self._model_config.get_name()}"
             )
         if "use_qk_norm" in df.columns:
-            df = df[df["use_qk_norm"].astype(bool) == expected_use_qk_norm]
+            df = cast(
+                pd.DataFrame,
+                df[df["use_qk_norm"].astype(bool) == expected_use_qk_norm],
+            )
 
         expected_attn_output_gate = bool(
             getattr(self._model_config, "attn_output_gate", False)
@@ -1209,18 +1299,20 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"file={file_path}, model={self._model_config.get_name()}"
             )
         if "attn_output_gate" in df.columns:
-            gate_mask = df["attn_output_gate"].map(
+            gate_series = cast(pd.Series, df["attn_output_gate"])
+            gate_mask = gate_series.map(
                 lambda value: bool(value) if pd.notna(value) else False
             )
-            df = (
-                df[gate_mask == expected_attn_output_gate]
-                .copy()
+            df = cast(
+                pd.DataFrame,
+                df[gate_mask == expected_attn_output_gate].copy(),
             )
 
         if len(df) == 0:
             raise ValueError(
                 "No compute profiling rows remain after model and TP filtering. "
                 f"file={file_path}, tp={tensor_parallel_size}, "
+                f"n_expanded_embd={expanded_width}, "
                 f"use_qk_norm={expected_use_qk_norm}, "
                 f"attn_output_gate={expected_attn_output_gate}"
             )
@@ -2164,6 +2256,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _read_input_file(self, file_path: str) -> pd.DataFrame:
         df = pd.read_csv(file_path)
         df = df.drop_duplicates()
+        df = parse_typed_operator_contract_column(df)
         return df
 
     def _get_profiling_metadata(
@@ -2342,14 +2435,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _register_profiling_metadata_from_file(
         self, file_path: str, operation_names: List[str]
     ) -> None:
-        if not file_path or not os.path.exists(file_path):
+        if not file_path:
             logger.warning("Profiling file missing: %s", file_path)
             self._register_missing_profiling_metadata(operation_names, file_path)
             return
         try:
             df = pd.read_csv(file_path)
-        except Exception as exc:
-            logger.warning("Failed to read profiling file %s: %s", file_path, exc)
+        except FileNotFoundError:
+            logger.warning("Profiling file missing: %s", file_path)
             self._register_missing_profiling_metadata(operation_names, file_path)
             return
         metadata = self._get_profiling_metadata(df, file_path)
@@ -2714,6 +2807,65 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             return self._replica_config.moe_tensor_parallel_size
         return self._replica_config.attn_tensor_parallel_size
 
+    def _resolve_typed_linear_contract(
+        self, op_name: str
+    ) -> Optional[ResolvedLayerContract]:
+        """Resolve typed FFN metadata through the architecture profile owner."""
+
+        profile = self._get_model_architecture_profile()
+        owned_family_ids = {
+            family_id
+            for contract in profile.layer_contracts
+            for family_id in contract.operator_family_ids
+        }
+        matching_family_ids = []
+        for family_id in owned_family_ids:
+            family = get_operator_family(family_id)
+            if any(
+                op_name == operator.name
+                or op_name == operator.profiling_name()
+                for operator in family.operators
+            ):
+                matching_family_ids.append(family_id)
+        if not matching_family_ids:
+            return None
+        if len(matching_family_ids) != 1:
+            raise ValueError(
+                f"Operator query {op_name!r} belongs to multiple typed layer "
+                f"families: {sorted(matching_family_ids)}"
+            )
+
+        family_id = matching_family_ids[0]
+        binding = bind_operator_query(op_name, family_id=family_id)
+        if binding.family_id != family_id:
+            raise ValueError(
+                f"Operator query {op_name!r} resolved to family "
+                f"{binding.family_id!r}, expected {family_id!r}"
+            )
+
+        requested_ffn_tp = self._get_ffn_tp_key_for_linear_op()
+        requested_attention_tp = self._replica_config.attn_tensor_parallel_size
+        if self._cluster_type is ClusterType.DECODE_FFN:
+            # The FFN-only role stores its local shard count in the MoE field.
+            requested_attention_tp = requested_ffn_tp
+
+        return profile.resolve_layer_contract(
+            self._model_config,
+            operator_name=op_name,
+            attention_tp_size=requested_attention_tp,
+            ffn_tp_size=requested_ffn_tp,
+            moe_tp_size=self._replica_config.moe_tensor_parallel_size,
+            expert_parallel_size=getattr(
+                self._replica_config,
+                "moe_expert_parallel_size",
+                None,
+            ),
+        )
+
+    def _resolve_typed_linear_tp_size(self, op_name: str) -> Optional[int]:
+        contract = self._resolve_typed_linear_contract(op_name)
+        return None if contract is None else contract.tensor_parallel_size
+
     def _get_linear_op_tp_key(self, op_name: str) -> int:
         if op_name in get_target_embedded_mtp_linear_ops():
             return resolve_effective_attention_tp_size(
@@ -2732,6 +2884,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
         except (TypeError, ValueError) as exc:
             raise ValueError(f"Unsupported linear op for TP mapping: {op_name}") from exc
+
+        typed_tp_size = self._resolve_typed_linear_tp_size(op_name)
+        if typed_tp_size is not None:
+            return typed_tp_size
 
         if tp_mode is TensorParallelMode.REPLICATED:
             if (
@@ -3072,16 +3228,25 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
     def _train_compute_models(self) -> Dict[str, BaseEstimator]:
         models = {}
-        compute_df_cache: Dict[int, pd.DataFrame] = {}
+        compute_df_cache: Dict[
+            Tuple[int, Optional[ResolvedLayerContract]], pd.DataFrame
+        ] = {}
 
-        def _get_compute_df_for_tp(tp_size: int) -> pd.DataFrame:
-            if tp_size not in compute_df_cache:
-                compute_df_cache[tp_size] = self._get_compute_df_with_derived_features(
+        def _get_compute_df_for_model(
+            model_name: str, tp_size: int
+        ) -> pd.DataFrame:
+            layer_contract = self._resolve_typed_linear_contract(model_name)
+            cache_key = (tp_size, layer_contract)
+            if cache_key not in compute_df_cache:
+                compute_df_cache[cache_key] = self._get_compute_df_with_derived_features(
                     self._load_compute_df(
-                        self._compute_input_file, tensor_parallel_size=tp_size
+                        self._compute_input_file,
+                        tensor_parallel_size=tp_size,
+                        operator_name=model_name,
+                        layer_contract=layer_contract,
                     )
                 )
-            return compute_df_cache[tp_size]
+            return compute_df_cache[cache_key]
 
         model_names = self._get_compute_model_names()
         predictor_attention_extra_ops = self._get_predictor_attention_extra_ops()
@@ -3095,7 +3260,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         for model_name in model_names:
             target_col = f"time_stats.{model_name}.median"
             tp_key = self._get_linear_op_tp_key(model_name)
-            compute_df = _get_compute_df_for_tp(tp_key)
+            compute_df = _get_compute_df_for_model(model_name, tp_key)
             if target_col not in compute_df.columns:
                 # For model-arch-required operations, raise error instead of warning.
                 # - Architecture profile attention extras, e.g. attn_inter_norm, attn_wq_proj

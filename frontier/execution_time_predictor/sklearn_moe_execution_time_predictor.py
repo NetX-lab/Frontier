@@ -27,6 +27,7 @@ from frontier.logger import init_logger
 from frontier.model_architectures import ResidualAddPolicy
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
+    PrefillHotRowsUnavailableError,
     PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
     filter_moe_gating_rows_by_runtime_context,
     get_moe_gating_base_model_name,
@@ -53,6 +54,10 @@ from frontier.operators.families import (
     get_comm_operator,
     is_moe_operator_ep_agnostic,
     resolve_moe_operator_tp_key,
+)
+from frontier.operators.typed_contracts import (
+    TYPED_OPERATOR_CONTRACTS_COLUMN,
+    validate_typed_operator_contracts,
 )
 
 if TYPE_CHECKING:
@@ -1295,11 +1300,13 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             logger.warning(f"MoE input file does not exist: {moe_input_file}")
             return models
 
-        try:
-            moe_df = pd.read_csv(moe_input_file)
-        except Exception as e:
-            logger.warning(f"Failed to load MoE data from {moe_input_file}: {e}")
-            return models
+        moe_df = pd.read_csv(moe_input_file)
+        if TYPED_OPERATOR_CONTRACTS_COLUMN in moe_df.columns:
+            # Validate every row before scalar or TP/EP filtering can hide a
+            # malformed typed contract.
+            moe_df[TYPED_OPERATOR_CONTRACTS_COLUMN].map(
+                validate_typed_operator_contracts
+            )
 
         metadata = self._get_profiling_metadata(moe_df, moe_input_file)
         self._validate_active_measurement_type(metadata, moe_input_file)
@@ -1412,16 +1419,14 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         for model_name in model_names:
             try:
                 op_df, moe_tp_key, moe_ep_key = _get_moe_df_for_op(model_name)
-            except ValueError as e:
-                if model_name.endswith("__prefill_hot"):
-                    logger.warning(
-                        "Skipping %s because prefill-hot gating rows are unavailable "
-                        "for the requested TP/EP slice (%s).",
-                        model_name,
-                        e,
-                    )
-                    continue
-                raise
+            except PrefillHotRowsUnavailableError as exc:
+                logger.warning(
+                    "Skipping %s because prefill-hot gating rows are unavailable "
+                    "for the requested TP/EP slice (%s).",
+                    model_name,
+                    exc,
+                )
+                continue
             target_op_name = get_moe_gating_base_model_name(model_name)
             target_col = f"time_stats.{target_op_name}.median"
             if target_col not in op_df.columns:
@@ -1497,9 +1502,14 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             include_prefill_hot_models = False
             try:
                 moe_df = pd.read_csv(moe_input_file)
+            except FileNotFoundError:
+                moe_df = None
+            if moe_df is not None:
+                if TYPED_OPERATOR_CONTRACTS_COLUMN in moe_df.columns:
+                    moe_df[TYPED_OPERATOR_CONTRACTS_COLUMN].map(
+                        validate_typed_operator_contracts
+                    )
                 include_prefill_hot_models = has_prefill_hot_moe_gating_rows(moe_df)
-            except Exception:
-                include_prefill_hot_models = False
             if include_prefill_hot_models:
                 model_names.extend(_get_prefill_hot_moe_gating_model_names())
         self._register_profiling_metadata_from_file(moe_input_file, model_names)

@@ -1,8 +1,9 @@
 import hashlib
+import json
 import os
 import pickle
 from itertools import product
-from typing import Dict, Set, List, Any, Tuple, Optional, Mapping
+from typing import Dict, Set, List, Any, Tuple, Optional, Mapping, Iterable, cast
 
 import numpy as np
 import pandas as pd
@@ -39,10 +40,22 @@ from frontier.execution_time_predictor.attention_dataset_contract import (
     enforce_mixed_attention_input_contract,
 )
 from frontier.operators.binding import resolve_operator_query_tp_mode
+from frontier.operators.typed_contracts import (
+    TYPED_OPERATOR_CONTRACTS_COLUMN,
+    matches_resolved_layer_contract,
+    validate_typed_operator_contracts,
+)
 from frontier.logger import init_logger
-from frontier.model_architectures import get_model_architecture_profile
+from frontier.model_architectures import (
+    LayerKind,
+    ModelArchitectureProfile,
+    ResolvedLayerContract,
+    get_model_architecture_profile,
+    serialize_layer_contract_identity,
+)
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
+    PrefillHotRowsUnavailableError,
     PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
     filter_moe_gating_rows_by_runtime_context,
     get_moe_gating_base_model_name,
@@ -58,6 +71,7 @@ from frontier.operators.families import (
     MEMORY_FAMILY,
     MOE_FAMILY,
     SHARE_EXPERT_FAMILY,
+    get_operator_family,
     get_family_profiling_names,
     get_family_profiling_name_set,
     is_moe_operator_ep_agnostic,
@@ -109,12 +123,33 @@ def _get_prefill_hot_moe_gating_model_names() -> List[str]:
     ]
 
 
-def _resolve_model_architecture_profile(model_config):
+def _resolve_model_architecture_profile(
+    model_config: Any,
+    *,
+    allow_generic: bool = False,
+) -> Optional[ModelArchitectureProfile]:
     if model_config is None:
         return None
     getter = getattr(model_config, "get_model_architecture_profile", None)
     if callable(getter):
-        return getter()
+        return cast(Optional[ModelArchitectureProfile], getter())
+
+    # Lightweight test/config adapters that predate the typed contract do not
+    # expose a profile accessor or typed widths.  Keep those callers on the
+    # scalar compatibility path instead of treating the generic fallback as a
+    # complete typed declaration.  An explicit profile or typed width opts the
+    # adapter into strict profile-owned resolution.
+    typed_fields = (
+        "model_architecture_profile",
+        "dense_mlp_hidden_dim",
+        "routed_mlp_hidden_dim",
+        "share_expert_dim",
+    )
+    if not allow_generic and not any(
+        getattr(model_config, field_name, None) is not None
+        for field_name in typed_fields
+    ):
+        return None
     return get_model_architecture_profile(model_config)
 
 
@@ -123,6 +158,223 @@ def _resolve_model_architecture_profile_id(model_config) -> str:
     if architecture_profile is None:
         return "generic"
     return architecture_profile.profile_id
+
+
+def _resolve_profile_typed_family_for_query(
+    architecture_profile: ModelArchitectureProfile,
+    op_name: str,
+) -> Optional[Tuple[str, LayerKind]]:
+    """Resolve a query to the profile-owned typed operator family."""
+
+    if not isinstance(op_name, str) or not op_name:
+        raise ValueError("typed operator query name must be a non-empty string")
+    matches: list[Tuple[str, LayerKind]] = []
+    for layer_contract in architecture_profile.layer_contracts:
+        for family_id in layer_contract.operator_family_ids:
+            family = get_operator_family(family_id)
+            if any(
+                op_name == operator.name
+                or op_name == operator.profiling_name()
+                for operator in family.operators
+            ):
+                matches.append((family_id, layer_contract.layer_kind))
+    if len(matches) > 1:
+        raise ValueError(
+            f"Operator query {op_name!r} belongs to multiple typed layer families: "
+            f"{sorted(family_id for family_id, _ in matches)}"
+        )
+    return matches[0] if matches else None
+
+
+def _serialize_layer_contract_identity(
+    layer_contract: Optional[ResolvedLayerContract],
+) -> Optional[str]:
+    """Return the full profile-owned identity for provenance metadata."""
+
+    return serialize_layer_contract_identity(layer_contract)
+
+
+def _serialize_selected_layer_cache_identity(
+    layer_contract: Optional[ResolvedLayerContract],
+) -> Optional[str]:
+    """Serialize the selected semantic domain used by a model cache.
+
+    Physical ``layer_id`` and producer-side domain envelopes do not identify a
+    trained estimator.  Keep only the selected fields that affect estimator
+    admission and reuse, in deterministic JSON form.
+    """
+
+    if layer_contract is None:
+        return None
+    if not isinstance(layer_contract, ResolvedLayerContract):
+        raise TypeError(
+            "layer_contract must be a ResolvedLayerContract when provided"
+        )
+    metadata = layer_contract.typed_metadata_identity()
+    selected_fields = (
+        "profile_id",
+        "operator_family_id",
+        "layer_kind",
+        "dimension_source",
+        "effective_ffn_width",
+        "tensor_parallel_mode",
+        "expert_parallel_mode",
+        "selected_expert_parallel_size",
+        "selected_tensor_parallel_size",
+        "selected_padded_ffn_width",
+    )
+    return json.dumps(
+        {field_name: metadata[field_name] for field_name in selected_fields},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+        allow_nan=False,
+    )
+
+
+def _get_contract_hash(
+    layer_contract: Optional[ResolvedLayerContract],
+) -> str:
+    """Return a short deterministic hash for an optional selected contract."""
+
+    identity = _serialize_selected_layer_cache_identity(layer_contract)
+    if identity is None:
+        return "none"
+    return hashlib.sha256(identity.encode("utf-8")).hexdigest()[:16]
+
+
+def _validate_typed_parallel_selection(
+    layer_contract: ResolvedLayerContract,
+    *,
+    tensor_parallel_size: Optional[int] = None,
+    expert_parallel_size: Optional[int] = None,
+) -> None:
+    """Validate explicit loader selectors against a resolved contract."""
+
+    if not isinstance(layer_contract, ResolvedLayerContract):
+        raise TypeError("layer_contract must be a ResolvedLayerContract")
+    contract_tp = layer_contract.tensor_parallel_size
+    if (
+        contract_tp is not None
+        and tensor_parallel_size is not None
+        and contract_tp != tensor_parallel_size
+    ):
+        raise ValueError(
+            f"typed layer contract TP {contract_tp} conflicts with "
+            f"tensor_parallel_size {tensor_parallel_size}"
+        )
+    contract_ep = layer_contract.expert_parallel_size
+    if (
+        contract_ep is not None
+        and expert_parallel_size is not None
+        and contract_ep != expert_parallel_size
+    ):
+        raise ValueError(
+            f"typed layer contract EP {contract_ep} conflicts with "
+            f"expert_parallel_size {expert_parallel_size}"
+        )
+
+
+def _typed_row_matches_contract(
+    raw_contracts: Any,
+    layer_contract: ResolvedLayerContract,
+    *,
+    operator_name: Optional[str],
+) -> bool:
+    """Match one parsed or serialized row to its exact typed operator contract."""
+
+    if not isinstance(operator_name, str) or not operator_name:
+        raise ValueError(
+            "typed profiling loading requires a non-empty operator_name when "
+            f"the canonical {TYPED_OPERATOR_CONTRACTS_COLUMN!r} column is present"
+        )
+    if not isinstance(layer_contract.operator_family_id, str) or not layer_contract.operator_family_id:
+        raise ValueError(
+            "typed profiling loading requires a layer contract with an operator family id"
+        )
+    return matches_resolved_layer_contract(
+        raw_contracts,
+        layer_contract,
+        operator_name=operator_name,
+    )
+
+
+def _normalize_layer_contract_context(
+    training_context: Optional[Mapping[str, Any]],
+    explicit_layer_contract: Optional[ResolvedLayerContract] = None,
+) -> Tuple[Optional[ResolvedLayerContract], Dict[str, Any]]:
+    """Resolve one contract and keep every context representation consistent."""
+
+    context = dict(training_context or {})
+    context_contract = context.get("layer_contract")
+    if context_contract is not None and not isinstance(
+        context_contract, ResolvedLayerContract
+    ):
+        raise TypeError(
+            "training_context['layer_contract'] must be a ResolvedLayerContract"
+        )
+    if explicit_layer_contract is not None and not isinstance(
+        explicit_layer_contract, ResolvedLayerContract
+    ):
+        raise TypeError("layer_contract must be a ResolvedLayerContract")
+
+    if context_contract is not None and explicit_layer_contract is not None:
+        if not context_contract.is_semantically_equivalent(explicit_layer_contract):
+            raise ValueError(
+                "conflicting layer_contract values were provided through the "
+                "explicit argument and training_context"
+            )
+
+    resolved_contract = explicit_layer_contract or context_contract
+    context_identity = context.get("layer_contract_identity")
+    if context_identity is not None and not isinstance(context_identity, str):
+        raise TypeError(
+            "training_context['layer_contract_identity'] must be a string"
+        )
+    selected_identity = _serialize_selected_layer_cache_identity(resolved_contract)
+    if context_identity is not None and context_identity != selected_identity:
+        raise ValueError(
+            "training_context['layer_contract_identity'] does not match the "
+            "supplied layer_contract"
+        )
+    if resolved_contract is None:
+        return None, context
+
+    context["layer_contract"] = resolved_contract
+    context["layer_contract_identity"] = selected_identity
+    context["layer_kind"] = resolved_contract.layer_kind.value
+    context["effective_ffn_width"] = resolved_contract.effective_ffn_width
+    context["tensor_parallel_mode"] = resolved_contract.tensor_parallel_mode.value
+    context["expert_parallel_mode"] = resolved_contract.expert_parallel_mode.value
+    return resolved_contract, context
+
+
+def _add_layer_contract_to_training_context(
+    training_context: Mapping[str, Any],
+    layer_contract: Optional[ResolvedLayerContract],
+) -> Dict[str, Any]:
+    """Copy a training context and attach a resolved typed contract."""
+
+    _, context = _normalize_layer_contract_context(
+        training_context,
+        explicit_layer_contract=layer_contract,
+    )
+    return context
+
+
+def _layer_contract_kwargs(
+    layer_contract: Optional[ResolvedLayerContract],
+    *,
+    operator_name: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Return typed keyword arguments only for an opted-in contract path."""
+
+    if layer_contract is None:
+        return {}
+    kwargs: Dict[str, Any] = {"layer_contract": layer_contract}
+    if operator_name is not None:
+        kwargs["operator_name"] = operator_name
+    return kwargs
 
 
 def _is_moe_gating_family_model_name(model_name: str) -> bool:
@@ -181,6 +433,12 @@ class ExecutionTimePredictionModelManager:
         self._models_by_precision_kernel_only = {}
         self._model_profiling_precision_eager = {}
         self._model_profiling_precision_kernel_only = {}
+        # Typed FFN models are keyed by their selected semantic domain.  Keep
+        # the historical bare registries for untyped/legacy models only.
+        self._trained_models_eager_by_contract = {}
+        self._trained_models_kernel_only_by_contract = {}
+        self._models_by_precision_eager_by_contract = {}
+        self._models_by_precision_kernel_only_by_contract = {}
 
         if self._all_dummy_mode:
             logger.info("ExecutionTimePredictionModelManager running in DUMMY mode")
@@ -596,6 +854,200 @@ class ExecutionTimePredictionModelManager:
             return replica_config.moe_tensor_parallel_size
         return replica_config.attn_tensor_parallel_size
 
+    def _resolve_typed_layer_contract(
+        self,
+        op_name: str,
+        cluster_type: ClusterType,
+        replica_config,
+        *,
+        is_moe_model: bool,
+        layer_id: Optional[int] = None,
+    ) -> Optional[ResolvedLayerContract]:
+        """Resolve a typed FFN contract through the architecture profile."""
+
+        model_config = getattr(replica_config, "model_config", None)
+        architecture_profile = _resolve_model_architecture_profile(model_config)
+        if architecture_profile is None:
+            return None
+
+        typed_family = _resolve_profile_typed_family_for_query(
+            architecture_profile, op_name
+        )
+        if typed_family is None:
+            return None
+        typed_family_id, _ = typed_family
+
+        # DECODE_ATTN is attention-only. Its exact zero domain is a deliberate
+        # sentinel; any non-zero value indicates a malformed configuration.
+        if cluster_type == ClusterType.DECODE_ATTN:
+            zero_fields = (
+                "attn_tensor_parallel_size",
+                "moe_tensor_parallel_size",
+                "moe_expert_parallel_size",
+            )
+            invalid = {
+                field_name: getattr(replica_config, field_name, None)
+                for field_name in zero_fields
+                if getattr(replica_config, field_name, None) != 0
+            }
+            if invalid:
+                raise ValueError(
+                    "DECODE_ATTN typed FFN resolution requires exact zero "
+                    f"parallel sizes, got {invalid!r}"
+                )
+            return None
+
+        from frontier.operators.binding import bind_operator_query
+
+        binding = bind_operator_query(op_name, family_id=typed_family_id)
+        if binding.family_id != typed_family_id:
+            raise ValueError(
+                f"Operator query {op_name!r} resolved to family "
+                f"{binding.family_id!r}, expected {typed_family_id!r}"
+            )
+
+        moe_tp_size = getattr(replica_config, "moe_tensor_parallel_size", None)
+        attention_tp_size = getattr(
+            replica_config, "attn_tensor_parallel_size", None
+        )
+        if cluster_type == ClusterType.DECODE_FFN:
+            # The FFN-only role stores its domain size in the existing MoE TP
+            # field, while the profile still owns the semantic TP mode.
+            attention_tp_size = moe_tp_size
+        ffn_tp_size = self._get_ffn_tp_key(
+            cluster_type, replica_config, is_moe_model
+        )
+        return architecture_profile.resolve_layer_contract(
+            model_config,
+            layer_id=layer_id,
+            operator_name=op_name,
+            attention_tp_size=attention_tp_size,
+            moe_tp_size=moe_tp_size,
+            ffn_tp_size=ffn_tp_size,
+            expert_parallel_size=getattr(
+                replica_config, "moe_expert_parallel_size", None
+            ),
+        )
+
+    def _resolve_ffn_layer_contracts(
+        self,
+        cluster_type: ClusterType,
+        replica_config,
+        is_moe_model: bool,
+    ) -> Tuple[Tuple[str, ResolvedLayerContract], ...]:
+        """Resolve each profile-owned FFN domain used by one training pass."""
+
+        if cluster_type == ClusterType.DECODE_ATTN:
+            zero_fields = (
+                "attn_tensor_parallel_size",
+                "moe_tensor_parallel_size",
+                "moe_expert_parallel_size",
+            )
+            invalid = {
+                field_name: getattr(replica_config, field_name, None)
+                for field_name in zero_fields
+                if getattr(replica_config, field_name, None) != 0
+            }
+            if invalid:
+                raise ValueError(
+                    "DECODE_ATTN FFN contract resolution requires exact zero "
+                    f"parallel sizes, got {invalid!r}"
+                )
+            return ()
+
+        model_config = getattr(replica_config, "model_config", None)
+        if model_config is None:
+            return ()
+        architecture_profile = _resolve_model_architecture_profile(model_config)
+        if architecture_profile is None:
+            return ()
+        if bool(is_moe_model) != bool(getattr(model_config, "is_moe", False)):
+            raise ValueError(
+                "is_moe_model does not match model configuration while resolving "
+                "typed FFN contracts"
+            )
+
+        contracts: list[Tuple[str, ResolvedLayerContract]] = []
+        for spec in architecture_profile.iter_active_layer_contracts(model_config):
+            family_is_moe = spec.layer_kind is not LayerKind.DENSE
+            for family_id in spec.operator_family_ids:
+                family = get_operator_family(family_id)
+                profiling_ops = tuple(family.profiling_ops())
+                if not profiling_ops:
+                    raise ValueError(
+                        f"Typed operator family {family_id!r} has no profiling operators"
+                    )
+                contract = self._resolve_typed_layer_contract(
+                    profiling_ops[0].name,
+                    cluster_type,
+                    replica_config,
+                    is_moe_model=family_is_moe,
+                )
+                if contract is None:
+                    raise ValueError(
+                        f"Missing typed layer contract for operator family {family_id!r}"
+                    )
+                if contract.operator_family_id != family_id:
+                    raise ValueError(
+                        f"Operator family {family_id!r} resolved to "
+                        f"{contract.operator_family_id!r}"
+                    )
+                contracts.append((family_id, contract))
+        return tuple(contracts)
+
+    def _get_ffn_contract_signature(
+        self,
+        cluster_type: ClusterType,
+        replica_config,
+        is_moe_model: bool,
+    ) -> str:
+        """Return a deterministic signature for the active FFN domains."""
+
+        entries = self._resolve_ffn_layer_contracts(
+            cluster_type, replica_config, is_moe_model
+        )
+        if not entries:
+            return "none"
+        payload = []
+        for family_id, contract in entries:
+            family = get_operator_family(family_id)
+            profiling_ops = tuple(family.profiling_ops())
+            if not profiling_ops:
+                raise ValueError(
+                    f"Typed operator family {family_id!r} has no profiling operators"
+                )
+
+            # The first operator is the compatibility representative returned
+            # by _resolve_ffn_layer_contracts().  Include every sibling as
+            # well: a family may mix EP-agnostic routing operators with an
+            # EP-sensitive grouped GEMM, and the cache signature must retain
+            # both semantics.
+            for operator in profiling_ops:
+                operator_contract = contract
+                if operator is not profiling_ops[0]:
+                    operator_contract = self._resolve_typed_layer_contract(
+                        operator.profiling_name(),
+                        cluster_type,
+                        replica_config,
+                        is_moe_model=contract.layer_kind is not LayerKind.DENSE,
+                    )
+                    if operator_contract is None:
+                        raise ValueError(
+                            "Missing typed layer contract for operator "
+                            f"{operator.profiling_name()!r} in family {family_id!r}"
+                        )
+                payload.append(
+                    {
+                        "family_id": family_id,
+                        "operator_name": operator.profiling_name(),
+                        "identity": _serialize_selected_layer_cache_identity(
+                            operator_contract
+                        ),
+                    }
+                )
+        serialized = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(serialized.encode("utf-8")).hexdigest()[:16]
+
     @staticmethod
     def _is_mixed_layer_moe_model(model_config, is_moe_model: bool) -> bool:
         """Return whether a model needs both MoE and dense FFN predictors.
@@ -615,8 +1067,13 @@ class ExecutionTimePredictionModelManager:
         return False
 
     def _get_linear_op_tp_key(self, op_name: str, cluster_type: ClusterType, replica_config, is_moe_model: bool) -> int:
+        model_config = getattr(replica_config, "model_config", None)
+        # Lightweight configs retain the scalar FFN compatibility path, but
+        # generic linear attention names still require a profile declaration
+        # for TP-mode lookup.
         architecture_profile = _resolve_model_architecture_profile(
-            getattr(replica_config, "model_config", None)
+            model_config,
+            allow_generic=True,
         )
         if op_name in get_target_embedded_mtp_linear_ops():
             return resolve_effective_attention_tp_size(
@@ -705,6 +1162,7 @@ class ExecutionTimePredictionModelManager:
         replica_config,
         model_names: List[str],
         cluster_type: ClusterType,
+        layer_contract: Optional[ResolvedLayerContract] = None,
     ) -> None:
         """Validate op-level MoE profiling key coverage before model training."""
         df = pd.read_csv(file_path)
@@ -724,11 +1182,30 @@ class ExecutionTimePredictionModelManager:
             )
 
         model_config = replica_config.model_config
+        if layer_contract is None:
+            # A legacy caller has no profile-owned contract to validate.  Keep
+            # the historical scalar admission rule, while refusing to guess
+            # when the dataset advertises typed metadata.
+            if TYPED_OPERATOR_CONTRACTS_COLUMN in df.columns:
+                raise ValueError(
+                    "typed MoE profiling data requires an explicit routed layer contract"
+                )
+            expected_expert_width = getattr(model_config, "mlp_hidden_dim", None)
+            if type(expected_expert_width) is not int or expected_expert_width <= 0:
+                raise ValueError(
+                    "legacy MoE dataset validation requires a positive model_config.mlp_hidden_dim"
+                )
+        else:
+            if layer_contract.layer_kind is not LayerKind.ROUTED:
+                raise ValueError(
+                    "MoE dataset contract validation requires a routed layer contract"
+                )
+            expected_expert_width = layer_contract.effective_ffn_width
         base_df = df[
             (df["num_experts"] == model_config.num_experts)
             & (df["router_topk"] == model_config.num_experts_per_tok)
             & (df["hidden_dim"] == model_config.embedding_dim)
-            & (df["expert_hidden_dim"] == model_config.mlp_hidden_dim)
+            & (df["expert_hidden_dim"] == expected_expert_width)
         ]
 
         if len(base_df) == 0:
@@ -736,7 +1213,7 @@ class ExecutionTimePredictionModelManager:
                 "MoE dataset contract validation failed: no rows match model configuration in "
                 f"{file_path}. Required: num_experts={model_config.num_experts}, "
                 f"router_topk={model_config.num_experts_per_tok}, hidden_dim={model_config.embedding_dim}, "
-                f"expert_hidden_dim={model_config.mlp_hidden_dim}."
+                f"expert_hidden_dim={expected_expert_width}."
             )
 
         available_pairs = sorted(
@@ -816,12 +1293,24 @@ class ExecutionTimePredictionModelManager:
         model_config = replica_config.model_config
         model_arch = model_config.get_model_arch() if model_config is not None else "generic"
         architecture_profile_id = _resolve_model_architecture_profile_id(model_config)
+        primary_contract = self._resolve_typed_layer_contract(
+            "moe_grouped_gemm" if is_moe_model else "mlp_up_proj",
+            cluster_type,
+            replica_config,
+            is_moe_model=is_moe_model,
+        )
+        typed_contract_hash = self._get_ffn_contract_signature(
+            cluster_type,
+            replica_config,
+            is_moe_model,
+        )
         active_measurement_type = getattr(
             self, "_active_measurement_type", MeasurementType.CUDA_EVENT
         )
         ffn_signature = (
             f"ffn_{replica_config.device}_{replica_config.model_name}_{tp_size}"
             f"_moe{is_moe_model}_arch_profile{architecture_profile_id}"
+            f"_layer_contracts{typed_contract_hash}"
             f"_family{self._measurement_family_name(active_measurement_type)}"
         )
 
@@ -859,19 +1348,10 @@ class ExecutionTimePredictionModelManager:
                 model_arch=model_arch,
                 model_name=replica_config.model_name,
             ):
-                include_prefill_hot_models = False
-                try:
-                    prefill_hot_probe_df = pd.read_csv(moe_input_file)
-                    include_prefill_hot_models = has_prefill_hot_moe_gating_rows(
-                        prefill_hot_probe_df
-                    )
-                except Exception as e:
-                    logger.warning(
-                        "Unable to probe prefill-hot gating rows in %s: %s",
-                        moe_input_file,
-                        e,
-                    )
-                    include_prefill_hot_models = False
+                prefill_hot_probe_df = pd.read_csv(moe_input_file)
+                include_prefill_hot_models = has_prefill_hot_moe_gating_rows(
+                    prefill_hot_probe_df
+                )
 
                 if include_prefill_hot_models:
                     moe_model_names.extend(_get_prefill_hot_moe_gating_model_names())
@@ -888,19 +1368,38 @@ class ExecutionTimePredictionModelManager:
                 replica_config,
                 base_moe_model_names,
                 cluster_type,
+                **_layer_contract_kwargs(primary_contract),
             )
             requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
                 getattr(replica_config, "moe_routing_distribution_type", "balanced")
             )
 
             moe_df_cache: Dict[
-                Tuple[int, Optional[int], Optional[str], Optional[str]], pd.DataFrame
+                Tuple[
+                    int,
+                    Optional[int],
+                    Optional[str],
+                    Optional[str],
+                    Optional[str],
+                ],
+                pd.DataFrame,
             ] = {}
 
             def _get_moe_df_for_op(
                 model_name: str,
-            ) -> Tuple[pd.DataFrame, int, Optional[int]]:
+            ) -> Tuple[
+                pd.DataFrame,
+                int,
+                Optional[int],
+                Optional[ResolvedLayerContract],
+            ]:
                 base_model_name = get_moe_gating_base_model_name(model_name)
+                op_layer_contract = self._resolve_typed_layer_contract(
+                    base_model_name,
+                    cluster_type,
+                    replica_config,
+                    is_moe_model=True,
+                )
                 tp_key = self._get_moe_op_tp_key(
                     base_model_name,
                     replica_config,
@@ -927,7 +1426,16 @@ class ExecutionTimePredictionModelManager:
                     if model_name.endswith("__prefill_hot"):
                         gating_context_key = PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT
 
-                cache_key = (tp_key, ep_key, runtime_path_key, gating_context_key)
+                contract_identity = _serialize_selected_layer_cache_identity(
+                    op_layer_contract
+                )
+                cache_key = (
+                    tp_key,
+                    ep_key,
+                    runtime_path_key,
+                    gating_context_key,
+                    contract_identity,
+                )
                 if cache_key not in moe_df_cache:
                     op_df = self._load_moe_df(
                         moe_input_file,
@@ -935,6 +1443,10 @@ class ExecutionTimePredictionModelManager:
                         load_imbalance=False,
                         tensor_parallel_size=tp_key,
                         expert_parallel_size=ep_key,
+                        **_layer_contract_kwargs(
+                            op_layer_contract,
+                            operator_name=base_model_name,
+                        ),
                     )
                     if runtime_path_key is not None:
                         op_df = filter_moe_gating_routing_topk_rows(
@@ -957,25 +1469,32 @@ class ExecutionTimePredictionModelManager:
                         f"gating_runtime_context={gating_context_key or 'ANY'}, "
                         "auto feature mode)"
                     )
-                return moe_df_cache[cache_key], tp_key, ep_key
+                return moe_df_cache[cache_key], tp_key, ep_key, op_layer_contract
 
             for model_name in moe_model_names:
                 model_signature = f"{model_name}_{ffn_signature}"
                 if model_signature not in trained_model_signatures:
                     try:
-                        op_moe_df, moe_tp_key, moe_ep_key = _get_moe_df_for_op(model_name)
-                    except ValueError as e:
-                        if model_name.endswith("__prefill_hot"):
-                            logger.warning(
-                                "Skipping %s because prefill-hot gating rows are unavailable "
-                                "for the requested TP/EP slice (%s).",
-                                model_name,
-                                e,
-                            )
-                            continue
-                        raise
-                    training_context['tensor_parallel_size'] = moe_tp_key
-                    training_context['expert_parallel_size'] = (
+                        (
+                            op_moe_df,
+                            moe_tp_key,
+                            moe_ep_key,
+                            op_layer_contract,
+                        ) = _get_moe_df_for_op(model_name)
+                    except PrefillHotRowsUnavailableError as exc:
+                        logger.warning(
+                            "Skipping %s because prefill-hot gating rows are unavailable "
+                            "for the requested TP/EP slice (%s).",
+                            model_name,
+                            exc,
+                        )
+                        continue
+                    op_training_context = _add_layer_contract_to_training_context(
+                        training_context,
+                        op_layer_contract,
+                    )
+                    op_training_context['tensor_parallel_size'] = moe_tp_key
+                    op_training_context['expert_parallel_size'] = (
                         "ANY" if moe_ep_key is None else moe_ep_key
                     )
 
@@ -1038,16 +1557,20 @@ class ExecutionTimePredictionModelManager:
                         )
 
                     # Store feature_cols in training_context for this specific operation
-                    training_context['feature_cols'] = op_feature_cols
+                    op_training_context['feature_cols'] = op_feature_cols
 
                     target_op_name = get_moe_gating_base_model_name(model_name)
-                    models[model_name] = self._train_single_model(
+                    train_kwargs: Dict[str, Any] = dict(
                         model_name=model_name,
                         df=op_moe_df,
                         feature_cols=op_feature_cols,
                         target_col=f"time_stats.{target_op_name}.median",
                         execution_time_predictor_config=execution_time_predictor_config,
-                        training_context=training_context,
+                        training_context=op_training_context,
+                    )
+                    train_kwargs.update(_layer_contract_kwargs(op_layer_contract))
+                    models[model_name] = self._train_single_model(
+                        **train_kwargs,
                     )
                     trained_model_signatures.add(model_signature)
                     logger.info(f"Trained {model_name} for {cluster_type} with features: {op_feature_cols}")
@@ -1064,14 +1587,34 @@ class ExecutionTimePredictionModelManager:
                 step2mini_share_expert_model_names = list(
                     get_family_profiling_names(SHARE_EXPERT_FAMILY)
                 )
+                if not step2mini_share_expert_model_names:
+                    raise ValueError("Shared-expert operator family has no profiling names")
                 share_expert_tp_key = self._get_linear_op_tp_key(
                     step2mini_share_expert_model_names[0],
                     cluster_type,
                     replica_config,
                     is_moe_model,
                 )
+                shared_layer_contract = self._resolve_typed_layer_contract(
+                    step2mini_share_expert_model_names[0],
+                    cluster_type,
+                    replica_config,
+                    is_moe_model=True,
+                )
+                if (
+                    shared_layer_contract is None
+                    and _resolve_model_architecture_profile(model_config) is not None
+                ):
+                    raise ValueError(
+                        "Missing shared layer contract for share-expert training"
+                    )
                 share_expert_linear_ops_df = self._load_linear_op_df(
-                    linear_ops_file, share_expert_tp_key
+                    linear_ops_file,
+                    share_expert_tp_key,
+                    **_layer_contract_kwargs(
+                        shared_layer_contract,
+                        operator_name=step2mini_share_expert_model_names[0],
+                    ),
                 )
                 logger.info(f"Loaded {len(share_expert_linear_ops_df)} rows for share_expert training")
 
@@ -1079,8 +1622,12 @@ class ExecutionTimePredictionModelManager:
                     model_signature = f"{model_name}_{ffn_signature}"
                     if model_signature not in trained_model_signatures:
                         # Update training context to reflect linear_op.csv source.
-                        training_context['input_file'] = linear_ops_file
-                        training_context['tensor_parallel_size'] = share_expert_tp_key
+                        shared_training_context = _add_layer_contract_to_training_context(
+                            training_context,
+                            shared_layer_contract,
+                        )
+                        shared_training_context['input_file'] = linear_ops_file
+                        shared_training_context['tensor_parallel_size'] = share_expert_tp_key
                         target_col = f"time_stats.{model_name}.median"
                         if target_col not in share_expert_linear_ops_df.columns:
                             raise ValueError(
@@ -1088,13 +1635,19 @@ class ExecutionTimePredictionModelManager:
                                 f"Ensure profiling was run with a model architecture that includes share_expert. "
                                 f"Available columns: {list(share_expert_linear_ops_df.columns)}"
                             )
-                        models[model_name] = self._train_single_model(
+                        train_kwargs: Dict[str, Any] = dict(
                             model_name=model_name,
                             df=share_expert_linear_ops_df,
                             feature_cols=["num_tokens"],
                             target_col=target_col,
                             execution_time_predictor_config=execution_time_predictor_config,
-                            training_context=training_context,
+                            training_context=shared_training_context,
+                        )
+                        train_kwargs.update(
+                            _layer_contract_kwargs(shared_layer_contract)
+                        )
+                        models[model_name] = self._train_single_model(
+                            **train_kwargs,
                         )
                         trained_model_signatures.add(model_signature)
                         logger.info(f"Trained {model_name} for {cluster_type}")
@@ -1107,14 +1660,25 @@ class ExecutionTimePredictionModelManager:
                 dense_ffn_tp_key = self._get_ffn_tp_key(
                     cluster_type, replica_config, is_moe_model=False
                 )
+                dense_layer_contract = self._resolve_typed_layer_contract(
+                    "mlp_up_proj",
+                    cluster_type,
+                    replica_config,
+                    is_moe_model=False,
+                )
                 dense_ffn_signature = (
                     f"ffn_{replica_config.device}_{replica_config.model_name}_{dense_ffn_tp_key}"
                     f"_moeFalse_arch_profile{architecture_profile_id}"
+                    f"_layer_contracts{_get_contract_hash(dense_layer_contract)}"
                     f"_family{self._measurement_family_name(active_measurement_type)}"
                 )
                 dense_training_context = dict(training_context)
                 dense_training_context["is_moe_model"] = False
                 dense_training_context["tensor_parallel_size"] = dense_ffn_tp_key
+                dense_training_context = _add_layer_contract_to_training_context(
+                    dense_training_context,
+                    dense_layer_contract,
+                )
                 self._train_dense_mlp_models_for_cluster(
                     cluster_type=cluster_type,
                     replica_config=replica_config,
@@ -1125,6 +1689,7 @@ class ExecutionTimePredictionModelManager:
                     training_context=dense_training_context,
                     trained_model_signatures=trained_model_signatures,
                     models=models,
+                    layer_contract=dense_layer_contract,
                 )
         else:
             self._train_dense_mlp_models_for_cluster(
@@ -1137,6 +1702,7 @@ class ExecutionTimePredictionModelManager:
                 training_context=training_context,
                 trained_model_signatures=trained_model_signatures,
                 models=models,
+                layer_contract=primary_contract,
             )
 
         # Pre-FFN normalization (post_attention_layernorm) - always from linear_op.csv
@@ -1183,18 +1749,54 @@ class ExecutionTimePredictionModelManager:
         training_context: Dict[str, Any],
         trained_model_signatures: set,
         models: Dict[str, BaseEstimator],
+        layer_contract: Optional[ResolvedLayerContract] = None,
     ) -> None:
         """Materialize dense MLP predictors from the linear-op profile."""
         if not os.path.exists(linear_ops_file):
             raise FileNotFoundError(f"Linear ops input file {linear_ops_file} not found")
+        if (
+            layer_contract is None
+            and _resolve_model_architecture_profile(
+                getattr(replica_config, "model_config", None)
+            )
+            is not None
+        ):
+            layer_contract = self._resolve_typed_layer_contract(
+                "mlp_up_proj",
+                cluster_type,
+                replica_config,
+                is_moe_model=False,
+            )
+        if (
+            layer_contract is not None
+            and layer_contract.tensor_parallel_size is not None
+            and layer_contract.tensor_parallel_size != ffn_tp_key
+        ):
+            raise ValueError(
+                "Dense FFN training TP conflicts with its typed layer contract: "
+                f"ffn_tp_key={ffn_tp_key}, "
+                f"contract_tp={layer_contract.tensor_parallel_size}"
+            )
         logger.info(f"Loading MLP data for {cluster_type} from: {linear_ops_file}")
-        linear_ops_df = self._load_linear_op_df(linear_ops_file, ffn_tp_key)
+        dense_model_names = tuple(get_family_profiling_names(FFN_FAMILY))
+        if not dense_model_names:
+            raise ValueError("FFN operator family has no profiling names")
+        linear_ops_df = self._load_linear_op_df(
+            linear_ops_file,
+            ffn_tp_key,
+            **_layer_contract_kwargs(
+                layer_contract,
+                operator_name=dense_model_names[0],
+            ),
+        )
         logger.info(f"Loaded {len(linear_ops_df)} rows for MLP training")
-        dense_training_context = dict(training_context)
+        dense_training_context = _add_layer_contract_to_training_context(
+            training_context,
+            layer_contract,
+        )
         dense_training_context["input_file"] = linear_ops_file
         dense_training_context["tensor_parallel_size"] = ffn_tp_key
 
-        dense_model_names = ("mlp_up_proj", "mlp_down_proj", "mlp_act")
         missing_standard_columns = [
             f"time_stats.{model_name}.median"
             for model_name in dense_model_names
@@ -1223,7 +1825,7 @@ class ExecutionTimePredictionModelManager:
             model_signature = f"{model_name}_{ffn_signature}"
             if model_signature in trained_model_signatures:
                 continue
-            models[model_name] = self._train_single_model(
+            train_kwargs: Dict[str, Any] = dict(
                 model_name=model_name,
                 df=linear_ops_df,
                 feature_cols=["num_tokens"],
@@ -1231,6 +1833,8 @@ class ExecutionTimePredictionModelManager:
                 execution_time_predictor_config=execution_time_predictor_config,
                 training_context=dense_training_context,
             )
+            train_kwargs.update(_layer_contract_kwargs(layer_contract))
+            models[model_name] = self._train_single_model(**train_kwargs)
             trained_model_signatures.add(model_signature)
             logger.info(f"Trained {model_name} for {cluster_type}")
 
@@ -2091,8 +2695,22 @@ class ExecutionTimePredictionModelManager:
         trained_model_signatures.add(cpu_signature)
         return models
 
-    def _train_single_model(self, model_name: str, df: pd.DataFrame, feature_cols: List[str], target_col: str, execution_time_predictor_config, training_context: Dict[str, Any] = None, persist_exact_lookup: bool = True) -> BaseEstimator:
+    def _train_single_model(
+        self,
+        model_name: str,
+        df: pd.DataFrame,
+        feature_cols: List[str],
+        target_col: str,
+        execution_time_predictor_config,
+        training_context: Optional[Dict[str, Any]] = None,
+        persist_exact_lookup: bool = True,
+        layer_contract: Optional[ResolvedLayerContract] = None,
+    ) -> BaseEstimator:
         """Train a single model with given data and configuration."""
+        layer_contract, training_context = _normalize_layer_contract_context(
+            training_context,
+            explicit_layer_contract=layer_contract,
+        )
         if len(df) == 0:
             # 提供详细的错误信息，以便调试
             context_info = ""
@@ -2134,15 +2752,32 @@ class ExecutionTimePredictionModelManager:
 
         profiling_precision = self._get_profiling_precision_from_df(df)
         measurement_type = self._validate_active_measurement_type(df)
-        model_hash = self._get_model_hash(
+        hash_args = (
             model_name,
             df,
             execution_time_predictor_config,
             profiling_precision,
             measurement_type,
         )
+        model_hash = self._get_model_hash(
+            *hash_args,
+            **_layer_contract_kwargs(layer_contract),
+        )
         cached_model = self._load_model_from_cache(model_name, model_hash)
-        if cached_model:
+        if cached_model is not None:
+            if layer_contract is not None:
+                requested_identity = _serialize_selected_layer_cache_identity(
+                    layer_contract
+                )
+                if requested_identity is None:
+                    raise ValueError(
+                        "resolved layer contract did not produce a cache identity"
+                    )
+                self._validate_cached_layer_cache_identity(
+                    model_name=model_name,
+                    model=cached_model,
+                    requested_identity=requested_identity,
+                )
             if persist_exact_lookup:
                 self._ensure_exact_lookup_metadata(
                     model_name=model_name,
@@ -2152,7 +2787,12 @@ class ExecutionTimePredictionModelManager:
                     feature_cols=feature_cols,
                     target_col=target_col,
                 )
-            self._store_model_precision(model_name, profiling_precision, cached_model)
+            self._store_model_precision(
+                model_name,
+                profiling_precision,
+                cached_model,
+                **_layer_contract_kwargs(layer_contract),
+            )
             return cached_model
 
         # ============================================================
@@ -2240,6 +2880,17 @@ class ExecutionTimePredictionModelManager:
         setattr(best_estimator, "_frontier_target_col", target_col)
         # Tie the trained estimator to its cache hash so prediction caches can include model identity.
         setattr(best_estimator, "_frontier_model_hash", model_hash)
+        if layer_contract is not None:
+            self._model_contract_identity(best_estimator, layer_contract)
+            # Keep the full occurrence identity as optional provenance.  It is
+            # deliberately excluded from cache admission and reuse.
+            occurrence_identity = _serialize_layer_contract_identity(layer_contract)
+            if occurrence_identity is not None:
+                setattr(
+                    best_estimator,
+                    "_frontier_layer_contract_identity",
+                    occurrence_identity,
+                )
 
         if persist_exact_lookup:
             setattr(
@@ -2249,7 +2900,12 @@ class ExecutionTimePredictionModelManager:
             )
 
         self._store_model_in_cache(model_name, model_hash, best_estimator)
-        self._store_model_precision(model_name, profiling_precision, best_estimator)
+        self._store_model_precision(
+            model_name,
+            profiling_precision,
+            best_estimator,
+            **_layer_contract_kwargs(layer_contract),
+        )
         return best_estimator
 
     # ========================================================================
@@ -2277,6 +2933,8 @@ class ExecutionTimePredictionModelManager:
         tensor_parallel_size: int,
         required_columns: Optional[List[str]] = None,
         training_context: Optional[Dict[str, Any]] = None,
+        layer_contract: Optional[ResolvedLayerContract] = None,
+        operator_name: Optional[str] = None,
     ) -> pd.DataFrame:
         """
         Load linear operation dataframe (linear_op.csv or mlp.csv) with tensor parallel filtering.
@@ -2300,6 +2958,12 @@ class ExecutionTimePredictionModelManager:
             FileNotFoundError: If the input file does not exist
             ValueError: If required columns are missing or no data matches filtering criteria
         """
+        if layer_contract is not None:
+            _validate_typed_parallel_selection(
+                layer_contract,
+                tensor_parallel_size=tensor_parallel_size,
+            )
+
         # Check file existence
         if not os.path.exists(file_path):
             raise FileNotFoundError(
@@ -2319,6 +2983,28 @@ class ExecutionTimePredictionModelManager:
                 f"This may indicate a corrupted or incompatible profiling file."
             )
 
+        has_typed_contracts = TYPED_OPERATOR_CONTRACTS_COLUMN in df.columns
+        parsed_typed_contracts: Optional[pd.Series] = None
+        if has_typed_contracts:
+            if not operator_name and layer_contract is not None:
+                raise ValueError(
+                    "typed profiling loading requires operator_name when the "
+                    f"canonical {TYPED_OPERATOR_CONTRACTS_COLUMN!r} column is present"
+                )
+            if operator_name is not None and layer_contract is None:
+                raise ValueError(
+                    "typed profiling loading requires layer_contract when the "
+                    f"canonical {TYPED_OPERATOR_CONTRACTS_COLUMN!r} column is present"
+                )
+            # Parse every row before applying scalar filters so malformed metadata
+            # cannot be hidden by an unrelated TP or width selector.
+            parsed_typed_contracts = cast(
+                pd.Series,
+                df[TYPED_OPERATOR_CONTRACTS_COLUMN].map(
+                    validate_typed_operator_contracts
+                ),
+            )
+
         # Show filtering conditions
         available_tp = sorted(df['num_tensor_parallel_workers'].unique())
         logger.info(f"Filtering conditions:")
@@ -2326,7 +3012,44 @@ class ExecutionTimePredictionModelManager:
         logger.info(f"  - Available num_tensor_parallel_workers: {available_tp}")
 
         # Apply filtering
-        filtered_df = df[df["num_tensor_parallel_workers"] == tensor_parallel_size]
+        filtered_df: pd.DataFrame = cast(
+            pd.DataFrame,
+            df[df["num_tensor_parallel_workers"] == tensor_parallel_size],
+        )
+        if parsed_typed_contracts is not None and layer_contract is not None:
+            selected_layer_contract = layer_contract
+            if not isinstance(operator_name, str) or not operator_name:
+                raise ValueError(
+                    "typed profiling loading requires a non-empty operator_name "
+                    "for contract matching"
+                )
+            typed_mask = parsed_typed_contracts.loc[filtered_df.index].map(
+                lambda raw_contracts: _typed_row_matches_contract(
+                    raw_contracts,
+                    selected_layer_contract,
+                    operator_name=operator_name,
+                )
+            )
+            filtered_df = cast(pd.DataFrame, filtered_df[typed_mask])
+            if filtered_df.empty:
+                raise ValueError(
+                    "No linear-op rows match the selected typed layer contract "
+                    f"for operator={operator_name!r}, TP={tensor_parallel_size} "
+                    f"in {file_path}"
+                )
+        elif layer_contract is not None:
+            if "n_expanded_embd" not in filtered_df.columns:
+                raise ValueError(
+                    "Legacy linear-op profiling data is missing 'n_expanded_embd' "
+                    f"for typed contract loading in {file_path}"
+                )
+            filtered_df = cast(
+                pd.DataFrame,
+                filtered_df[
+                    filtered_df["n_expanded_embd"]
+                    == layer_contract.effective_ffn_width
+                ],
+            )
         logger.info(f"After filtering: {len(filtered_df)} rows")
 
         expected_use_qk_norm = None
@@ -2351,10 +3074,16 @@ class ExecutionTimePredictionModelManager:
             )
 
         if len(filtered_df) == 0:
+            width_requirement = (
+                layer_contract.effective_ffn_width
+                if layer_contract is not None
+                else "legacy model width"
+            )
             raise ValueError(
                 f"No data matches the filtering criteria in {file_path}\n"
                 f"Required tensor_parallel_size: {tensor_parallel_size}\n"
                 f"Available tensor_parallel_sizes: {available_tp}\n"
+                f"Required effective_ffn_width: {width_requirement}\n"
                 f"Please run profiling with the correct configuration."
             )
 
@@ -2766,6 +3495,8 @@ class ExecutionTimePredictionModelManager:
         load_imbalance: bool = True,
         tensor_parallel_size: Optional[int] = None,
         expert_parallel_size: Optional[int] = None,
+        layer_contract: Optional[ResolvedLayerContract] = None,
+        operator_name: Optional[str] = None,
     ) -> pd.DataFrame:
         """
         Load MoE dataframe with cluster-specific configuration filtering.
@@ -2808,6 +3539,13 @@ class ExecutionTimePredictionModelManager:
             FileNotFoundError: If the input file does not exist
             ValueError: If no data matches filtering criteria or required features are missing
         """
+        if layer_contract is not None:
+            _validate_typed_parallel_selection(
+                layer_contract,
+                tensor_parallel_size=tensor_parallel_size,
+                expert_parallel_size=expert_parallel_size,
+            )
+
         if not os.path.exists(file_path):
             raise FileNotFoundError(
                 f"MoE input file does not exist: {file_path}\n"
@@ -2817,6 +3555,28 @@ class ExecutionTimePredictionModelManager:
 
         df = pd.read_csv(file_path)
         logger.info(f"Original MoE data: {len(df)} rows, {len(df.columns)} columns")
+
+        has_typed_contracts = TYPED_OPERATOR_CONTRACTS_COLUMN in df.columns
+        parsed_typed_contracts: Optional[pd.Series] = None
+        if has_typed_contracts:
+            if not operator_name:
+                raise ValueError(
+                    "typed profiling loading requires operator_name when the "
+                    f"canonical {TYPED_OPERATOR_CONTRACTS_COLUMN!r} column is present"
+                )
+            if layer_contract is None:
+                raise ValueError(
+                    "typed profiling loading requires layer_contract when the "
+                    f"canonical {TYPED_OPERATOR_CONTRACTS_COLUMN!r} column is present"
+                )
+            # Parse every row before applying scalar filters so malformed metadata
+            # cannot be hidden by an unrelated TP, EP, or width selector.
+            parsed_typed_contracts = cast(
+                pd.Series,
+                df[TYPED_OPERATOR_CONTRACTS_COLUMN].map(
+                    validate_typed_operator_contracts
+                ),
+            )
 
         model_config = replica_config.model_config
         training_mode = "load_imbalance (load_imbalance=True)" if load_imbalance else "standard (load_imbalance=False)"
@@ -2832,7 +3592,12 @@ class ExecutionTimePredictionModelManager:
         logger.info(f"  - num_experts == {model_config.num_experts}")
         logger.info(f"  - router_topk == {model_config.num_experts_per_tok}")
         logger.info(f"  - hidden_dim == {model_config.embedding_dim}")
-        logger.info(f"  - expert_hidden_dim == {model_config.mlp_hidden_dim}")
+        expected_expert_width = (
+            layer_contract.effective_ffn_width
+            if layer_contract is not None
+            else model_config.mlp_hidden_dim
+        )
+        logger.info(f"  - expert_hidden_dim == {expected_expert_width}")
         logger.info(f"  - num_tensor_parallel_workers == {tensor_parallel_size}")
         if expert_parallel_size is None:
             logger.info("  - expert_parallel_size == ANY (EP-agnostic op)")
@@ -2858,14 +3623,41 @@ class ExecutionTimePredictionModelManager:
             logger.info(info)
 
         # Apply filtering based on MoE configuration
-        filtered_df = df[
+        filtered_df = cast(pd.DataFrame, df[
             (df["num_experts"] == model_config.num_experts)
             & (df["router_topk"] == model_config.num_experts_per_tok)
             & (df["hidden_dim"] == model_config.embedding_dim)
-            & (df["expert_hidden_dim"] == model_config.mlp_hidden_dim)
             & (df["num_tensor_parallel_workers"] == tensor_parallel_size)
-        ]
+        ])
+        if not has_typed_contracts:
+            filtered_df = filtered_df[
+                filtered_df["expert_hidden_dim"] == expected_expert_width
+            ]
+        else:
+            if parsed_typed_contracts is None:
+                raise RuntimeError(
+                    "typed MoE metadata column was detected but could not be parsed"
+                )
+            if layer_contract is None:
+                raise ValueError(
+                    "typed MoE filtering requires a resolved layer contract"
+                )
+            selected_layer_contract = layer_contract
+            typed_mask = parsed_typed_contracts.loc[filtered_df.index].map(
+                lambda raw_contracts: _typed_row_matches_contract(
+                    raw_contracts,
+                    selected_layer_contract,
+                    operator_name=operator_name,
+                )
+            )
+            filtered_df = cast(pd.DataFrame, filtered_df[typed_mask])
+        filtered_df = cast(pd.DataFrame, filtered_df)
         if expert_parallel_size is not None:
+            if "expert_parallel_size" not in filtered_df.columns:
+                raise ValueError(
+                    "MoE profiling data is missing 'expert_parallel_size' while "
+                    f"EP={expert_parallel_size} is required in {file_path}"
+                )
             filtered_df = filtered_df[
                 filtered_df["expert_parallel_size"] == expert_parallel_size
             ]
@@ -2899,11 +3691,16 @@ class ExecutionTimePredictionModelManager:
                 f"  - num_experts: {model_config.num_experts}\n"
                 f"  - router_topk: {model_config.num_experts_per_tok}\n"
                 f"  - hidden_dim: {model_config.embedding_dim}\n"
-                f"  - expert_hidden_dim: {model_config.mlp_hidden_dim}\n"
+                f"  - expert_hidden_dim: {expected_expert_width}\n"
                 f"  - tensor_parallel_size: {tensor_parallel_size}\n"
                 f"  - expert_parallel_size: {ep_requirement}\n"
                 f"  - training_mode: {training_mode}\n"
             )
+            if has_typed_contracts:
+                message += (
+                    f"  - typed operator: {operator_name!r}\n"
+                    "  - typed layer contract admission: required\n"
+                )
             if available_info_text:
                 message += available_info_text
             raise ValueError(
@@ -3122,7 +3919,15 @@ class ExecutionTimePredictionModelManager:
 
         return hash_relevant_params
 
-    def _get_model_hash(self, model_name: str, df: pd.DataFrame, execution_time_predictor_config, profiling_precision: str, measurement_type: MeasurementType) -> str:
+    def _get_model_hash(
+        self,
+        model_name: str,
+        df: pd.DataFrame,
+        execution_time_predictor_config,
+        profiling_precision: str,
+        measurement_type: MeasurementType,
+        layer_contract: Optional[ResolvedLayerContract] = None,
+    ) -> str:
         """
         Calculate hash for model caching based on configuration and data.
 
@@ -3141,8 +3946,17 @@ class ExecutionTimePredictionModelManager:
         # Calculate DataFrame hash
         df_hash_str = hashlib.md5(df.to_json().encode("utf-8")).hexdigest()
 
-        # Combine all components
-        combined_str = f"{config_str}_{model_name}_{df_hash_str}_{profiling_precision}_{measurement_type.value}"
+        selected_identity = _serialize_selected_layer_cache_identity(layer_contract)
+        contract_component = (
+            f"_{selected_identity}" if selected_identity is not None else ""
+        )
+
+        # Combine all components.  The selected semantic domain is part of a
+        # typed key; physical layer occurrence is intentionally absent.
+        combined_str = (
+            f"{config_str}_{model_name}_{df_hash_str}_{profiling_precision}_"
+            f"{measurement_type.value}{contract_component}"
+        )
         hash_value = hashlib.md5(combined_str.encode("utf-8")).hexdigest()[0:8]
 
         # Debug output for hash calculation
@@ -3201,45 +4015,353 @@ class ExecutionTimePredictionModelManager:
             )
         return measurement_type
 
-    def _store_model_precision(self, model_name: str, precision: str, model: BaseEstimator) -> None:
+    @staticmethod
+    def _validate_cached_layer_cache_identity(
+        *,
+        model_name: str,
+        model: BaseEstimator,
+        requested_identity: str,
+    ) -> None:
+        """Reject a typed cache entry whose selected domain does not match."""
+
+        cached_identity = getattr(model, "_frontier_layer_cache_identity", None)
+        if cached_identity is None:
+            raise ValueError(
+                f"Cached model {model_name!r} is missing selected layer cache identity"
+            )
+        if not isinstance(cached_identity, str):
+            raise ValueError(
+                f"Cached model {model_name!r} has an invalid selected layer cache "
+                f"identity of type {type(cached_identity).__name__}"
+            )
+        if cached_identity != requested_identity:
+            raise ValueError(
+                f"Cached model {model_name!r} selected layer cache identity mismatch: "
+                f"cached={cached_identity!r}, requested={requested_identity!r}"
+            )
+
+    @staticmethod
+    def _model_contract_identity(
+        model: BaseEstimator,
+        layer_contract: Optional[ResolvedLayerContract],
+    ) -> Optional[str]:
+        """Attach and return the selected semantic identity for a model."""
+
+        requested_identity = _serialize_selected_layer_cache_identity(layer_contract)
+        attached_identity = getattr(model, "_frontier_layer_cache_identity", None)
+        if attached_identity is not None and not isinstance(attached_identity, str):
+            raise TypeError(
+                "_frontier_layer_cache_identity must be a string when present"
+            )
+        if (
+            requested_identity is not None
+            and attached_identity is not None
+            and requested_identity != attached_identity
+        ):
+            raise ValueError(
+                "model selected layer cache identity conflicts with the requested "
+                "contract"
+            )
+        identity = requested_identity or attached_identity
+        if identity is not None:
+            setattr(model, "_frontier_layer_cache_identity", identity)
+        return identity
+
+    def _contract_model_registry(
+        self, family_name: str
+    ) -> Dict[Tuple[str, Optional[str]], BaseEstimator]:
+        registry_attr = {
+            "eager": "_trained_models_eager_by_contract",
+            "kernel_only": "_trained_models_kernel_only_by_contract",
+        }.get(family_name)
+        if registry_attr is None:
+            raise ValueError(f"Unsupported family_name={family_name!r}")
+        registry = getattr(self, registry_attr, None)
+        if registry is None:
+            registry = {}
+            setattr(self, registry_attr, registry)
+        return registry
+
+    def _contract_precision_registry(
+        self, family_name: str
+    ) -> Dict[str, Dict[Tuple[str, Optional[str]], BaseEstimator]]:
+        registry_attr = {
+            "eager": "_models_by_precision_eager_by_contract",
+            "kernel_only": "_models_by_precision_kernel_only_by_contract",
+        }.get(family_name)
+        if registry_attr is None:
+            raise ValueError(f"Unsupported family_name={family_name!r}")
+        registry = getattr(self, registry_attr, None)
+        if registry is None:
+            registry = {}
+            setattr(self, registry_attr, registry)
+        return registry
+
+    def _legacy_model_registry(self, family_name: str) -> Dict[str, BaseEstimator]:
+        registry_attr = {
+            "eager": "_trained_models_eager",
+            "kernel_only": "_trained_models_kernel_only",
+        }.get(family_name)
+        if registry_attr is None:
+            raise ValueError(f"Unsupported family_name={family_name!r}")
+        registry = getattr(self, registry_attr, None)
+        if registry is None:
+            registry = {}
+            setattr(self, registry_attr, registry)
+        return registry
+
+    def _legacy_precision_registry(
+        self, family_name: str
+    ) -> Dict[str, Dict[str, BaseEstimator]]:
+        registry_attr = {
+            "eager": "_models_by_precision_eager",
+            "kernel_only": "_models_by_precision_kernel_only",
+        }.get(family_name)
+        if registry_attr is None:
+            raise ValueError(f"Unsupported family_name={family_name!r}")
+        registry = getattr(self, registry_attr, None)
+        if registry is None:
+            registry = {}
+            setattr(self, registry_attr, registry)
+        return registry
+
+    def _legacy_precision_bucket(
+        self, family_name: str, precision_key: str
+    ) -> Dict[str, BaseEstimator]:
+        if not isinstance(precision_key, str) or not precision_key:
+            raise ValueError(
+                f"precision_key must be a non-empty string, got {precision_key!r}"
+            )
+        registry = self._legacy_precision_registry(family_name)
+        canonical_key = precision_key.upper()
+        bucket = registry.get(canonical_key)
+        if bucket is not None:
+            return bucket
+        for stored_key, stored_bucket in registry.items():
+            if str(stored_key).upper() == canonical_key:
+                return stored_bucket
+        return {}
+
+    def _store_model_precision(
+        self,
+        model_name: str,
+        precision: str,
+        model: BaseEstimator,
+        layer_contract: Optional[ResolvedLayerContract] = None,
+    ) -> None:
+        if not isinstance(precision, str) or not precision.strip():
+            raise ValueError(f"precision must be a non-empty string, got {precision!r}")
         precision_key = precision.upper()
         family_name = self._measurement_family_name(self._active_measurement_type)
-        if family_name == "eager":
-            self._trained_models_eager[model_name] = model
-            self._models_by_precision_eager.setdefault(precision_key, {})[model_name] = model
-            self._model_profiling_precision_eager[model_name] = precision_key
-        elif family_name == "kernel_only":
-            self._trained_models_kernel_only[model_name] = model
-            self._models_by_precision_kernel_only.setdefault(precision_key, {})[model_name] = model
-            self._model_profiling_precision_kernel_only[model_name] = precision_key
+        identity = self._model_contract_identity(model, layer_contract)
+        if identity is None:
+            self._legacy_model_registry(family_name)[model_name] = model
+            self._legacy_precision_registry(family_name).setdefault(
+                precision_key, {}
+            )[model_name] = model
+            return
+
+        model_key = (model_name, identity)
+        self._contract_model_registry(family_name)[model_key] = model
+        self._contract_precision_registry(family_name).setdefault(
+            precision_key, {}
+        )[model_key] = model
+
+    def _get_family_model(
+        self,
+        family_name: str,
+        model_name: str,
+        *,
+        precision_key: Optional[str] = None,
+        requested_identity: Optional[str] = None,
+    ) -> Optional[BaseEstimator]:
+        if precision_key is not None:
+            precision_key = precision_key.upper()
+            source = self._contract_precision_registry(family_name).get(
+                precision_key, {}
+            )
         else:
-            raise ValueError(f"Unsupported family_name={family_name!r}")
+            source = self._contract_model_registry(family_name)
 
-        self._models_by_precision.setdefault(precision_key, {})[f"{family_name}:{model_name}"] = model
-        self._model_profiling_precision[f"{family_name}:{model_name}"] = precision_key
+        typed_candidates = {
+            identity: candidate
+            for (candidate_name, identity), candidate in source.items()
+            if candidate_name == model_name
+        }
+        legacy = (
+            self._legacy_precision_bucket(family_name, precision_key).get(model_name)
+            if precision_key is not None
+            else self._legacy_model_registry(family_name).get(model_name)
+        )
+        legacy_identity = (
+            getattr(legacy, "_frontier_layer_cache_identity", None)
+            if legacy is not None
+            else None
+        )
 
-    def get_model(self, model_name: str, precision: Optional[str] = None) -> Optional[BaseEstimator]:
-        """Get a trained prediction model by name and precision."""
-        if self._all_dummy_mode:
+        if requested_identity is not None:
+            model = typed_candidates.get(requested_identity)
+            if model is not None:
+                return model
+            if legacy is not None and legacy_identity == requested_identity:
+                return legacy
             return None
 
-        if precision:
-            precision_key = precision.upper()
-            for registry in (self._models_by_precision_eager, self._models_by_precision_kernel_only):
-                model = registry.get(precision_key, {}).get(model_name)
-                if model is not None:
-                    return model
+        if len(typed_candidates) > 1:
+            identities = sorted(
+                "<legacy>" if identity is None else identity
+                for identity in typed_candidates
+            )
+            raise ValueError(
+                f"Model '{model_name}' has multiple layer contracts; provide "
+                f"layer_contract. Available identities: {identities}"
+            )
+        if len(typed_candidates) == 1:
+            typed_identity = next(iter(typed_candidates))
+            if legacy is not None and legacy_identity != typed_identity:
+                raise ValueError(
+                    f"Model '{model_name}' has multiple layer contracts; provide "
+                    f"layer_contract. Available identities: "
+                    f"[{typed_identity!r}, {legacy_identity or '<legacy>'!r}]"
+                )
+            return next(iter(typed_candidates.values()))
+        return legacy
 
+    def _resolve_cluster_model_contract(
+        self,
+        cluster_type: Optional[ClusterType],
+        model_name: str,
+    ) -> Optional[ResolvedLayerContract]:
+        """Resolve the typed domain requested by one cluster view."""
+
+        if cluster_type is None:
+            return None
+        cluster_configs = getattr(self, "_cluster_configs", None) or {}
+        cluster_config = cluster_configs.get(cluster_type)
+        if cluster_config is None:
+            return None
+        replica_config = getattr(cluster_config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        if replica_config is None or model_config is None:
+            return None
+        architecture_profile = _resolve_model_architecture_profile(model_config)
+        if architecture_profile is None:
+            return None
+        base_name = get_moe_gating_base_model_name(model_name)
+        typed_family = _resolve_profile_typed_family_for_query(
+            architecture_profile, base_name
+        )
+        if typed_family is None:
+            return None
+        _, layer_kind = typed_family
+        return self._resolve_typed_layer_contract(
+            base_name,
+            cluster_type,
+            replica_config,
+            is_moe_model=layer_kind is not LayerKind.DENSE,
+        )
+
+    def _is_ffn_typed_model_for_cluster(
+        self,
+        cluster_type: Optional[ClusterType],
+        model_name: str,
+    ) -> bool:
+        """Return whether a model belongs to an FFN domain excluded by a view."""
+
+        if cluster_type != ClusterType.DECODE_ATTN:
+            return False
+        cluster_config = (getattr(self, "_cluster_configs", None) or {}).get(
+            cluster_type
+        )
+        replica_config = getattr(cluster_config, "replica_config", None)
+        model_config = getattr(replica_config, "model_config", None)
+        architecture_profile = _resolve_model_architecture_profile(model_config)
+        if architecture_profile is None:
+            return False
+        base_name = get_moe_gating_base_model_name(model_name)
+        return _resolve_profile_typed_family_for_query(
+            architecture_profile, base_name
+        ) is not None
+
+    def _models_view_for_family(
+        self,
+        family_name: str,
+        cluster_type: Optional[ClusterType] = None,
+    ) -> Dict[str, BaseEstimator]:
+        """Project one measurement family's canonical registries to model names."""
+
+        names = set(self._legacy_model_registry(family_name))
+        names.update(
+            model_name
+            for model_name, _identity in self._contract_model_registry(family_name)
+        )
+        models: Dict[str, BaseEstimator] = {}
+        for model_name in sorted(names):
+            if self._is_ffn_typed_model_for_cluster(cluster_type, model_name):
+                continue
+            contract = self._resolve_cluster_model_contract(cluster_type, model_name)
+            identity = _serialize_selected_layer_cache_identity(contract)
+            model = self._get_family_model(
+                family_name,
+                model_name,
+                requested_identity=identity,
+            )
+            if identity is not None and model is None:
+                raise ValueError(
+                    f"No trained model for {model_name!r} matches the typed contract "
+                    f"requested by cluster {cluster_type!r}: {identity}"
+                )
+            if model is not None:
+                models[model_name] = model
+        return models
+
+    def get_model(
+        self,
+        model_name: str,
+        precision: Optional[str] = None,
+        layer_contract: Optional[ResolvedLayerContract] = None,
+    ) -> Optional[BaseEstimator]:
+        """Get a model by name, precision, and optional typed contract."""
+
+        if self._all_dummy_mode:
+            return None
+        requested_identity = _serialize_selected_layer_cache_identity(layer_contract)
+        precision_key = precision.upper() if precision else None
+        for family_name in ("eager", "kernel_only"):
+            model = self._get_family_model(
+                family_name,
+                model_name,
+                precision_key=precision_key,
+                requested_identity=requested_identity,
+            )
+            if model is not None:
+                return model
+
+        if precision_key is not None:
             available_precisions = sorted(
-                set(self._models_by_precision_eager.keys()) | set(self._models_by_precision_kernel_only.keys())
+                {
+                    str(value).upper()
+                    for value in self._contract_precision_registry("eager")
+                }
+                | {
+                    str(value).upper()
+                    for value in self._contract_precision_registry("kernel_only")
+                }
+                | {
+                    str(value).upper()
+                    for value in self._legacy_precision_registry("eager")
+                }
+                | {
+                    str(value).upper()
+                    for value in self._legacy_precision_registry("kernel_only")
+                }
             )
             raise ValueError(
                 f"Model '{model_name}' not available for precision '{precision_key}'. "
                 f"Available precisions: {available_precisions}. "
-                f"Ensure profiling data matches the requested precision."
+                "Ensure profiling data matches the requested precision."
             )
-
-        return self._trained_models_eager.get(model_name) or self._trained_models_kernel_only.get(model_name)
+        return None
 
     def _load_model_from_cache(self, model_name: str, model_hash: str) -> BaseEstimator:
         with InterProcessReaderWriterLock(f"{self._cache_dir}/{model_hash}_model_lock.file").read_lock():
@@ -3289,8 +4411,8 @@ class ExecutionTimePredictionModelManager:
             logger.debug("Returning empty models dict for dummy mode")
             return {"eager": {}, "kernel_only": {}}
         return {
-            "eager": dict(self._trained_models_eager),
-            "kernel_only": dict(self._trained_models_kernel_only),
+            "eager": self._models_view_for_family("eager"),
+            "kernel_only": self._models_view_for_family("kernel_only"),
         }
 
     def get_models_for_cluster(self, cluster_type: ClusterType) -> Dict[str, Dict[str, BaseEstimator]]:
@@ -3299,25 +4421,40 @@ class ExecutionTimePredictionModelManager:
             return {"eager": {}, "kernel_only": {}}
 
         if cluster_type == ClusterType.PREFILL:
-            return {"eager": dict(self._trained_models_eager), "kernel_only": {}}
+            return {
+                "eager": self._models_view_for_family("eager", cluster_type),
+                "kernel_only": {},
+            }
         if cluster_type in [ClusterType.DECODE, ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN]:
             if (
                 global_vars.get_sys_arch() == "pd-af-disaggregation"
                 and cluster_type == ClusterType.DECODE_ATTN
             ):
                 return {
-                    "eager": dict(self._trained_models_eager),
-                    "kernel_only": dict(self._trained_models_kernel_only),
+                    "eager": self._models_view_for_family("eager", cluster_type),
+                    "kernel_only": self._models_view_for_family(
+                        "kernel_only", cluster_type
+                    ),
                 }
             if not self._is_kernel_only_measurement_enabled_for_cluster(cluster_type):
-                return {"eager": dict(self._trained_models_eager), "kernel_only": {}}
-            return {"eager": {}, "kernel_only": dict(self._trained_models_kernel_only)}
+                return {
+                    "eager": self._models_view_for_family("eager", cluster_type),
+                    "kernel_only": {},
+                }
+            return {
+                "eager": {},
+                "kernel_only": self._models_view_for_family(
+                    "kernel_only", cluster_type
+                ),
+            }
         if cluster_type == ClusterType.MONOLITHIC:
             kernel_only_models = {}
             if self._is_kernel_only_measurement_enabled_for_cluster(cluster_type):
-                kernel_only_models = dict(self._trained_models_kernel_only)
+                kernel_only_models = self._models_view_for_family(
+                    "kernel_only", cluster_type
+                )
             return {
-                "eager": dict(self._trained_models_eager),
+                "eager": self._models_view_for_family("eager", cluster_type),
                 "kernel_only": kernel_only_models,
             }
         raise ValueError(f"Unsupported cluster_type={cluster_type!r}")

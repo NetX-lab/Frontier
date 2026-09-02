@@ -14,6 +14,7 @@ from frontier.training.base_trainer import BaseTrainer
 from frontier.logger import init_logger
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
+    PrefillHotRowsUnavailableError,
     PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
     filter_moe_gating_rows_by_runtime_context,
     get_moe_gating_base_model_name,
@@ -27,6 +28,10 @@ from frontier.moe_routing_runtime import (
 )
 from frontier.operators.families import MOE_FAMILY, get_family_profiling_names
 from frontier.operators.spec import TensorParallelMode
+from frontier.operators.typed_contracts import (
+    TYPED_OPERATOR_CONTRACTS_COLUMN,
+    validate_typed_operator_contracts,
+)
 
 logger = init_logger(__name__)
 
@@ -214,6 +219,11 @@ class MoETrainer(BaseTrainer):
         
         # Load CSV
         df = pd.read_csv(self.dataset_path)
+        if TYPED_OPERATOR_CONTRACTS_COLUMN in df.columns:
+            # Validate every row before scalar configuration filtering.
+            df[TYPED_OPERATOR_CONTRACTS_COLUMN].map(
+                validate_typed_operator_contracts
+            )
         self._set_dataset_metadata(df, source="moe_dataset")
         logger.info(f"Original MoE data: {len(df)} rows, {len(df.columns)} columns")
         
@@ -501,16 +511,14 @@ class MoETrainer(BaseTrainer):
                     feature_cols=feature_cols,
                     target_col=target_col,
                 )
-            except ValueError as e:
-                if model_name.endswith("__prefill_hot"):
-                    logger.warning(
-                        "Skipping %s: prefill-hot gating rows are unavailable for "
-                        "the requested TP/EP slice (%s).",
-                        model_name,
-                        e,
-                    )
-                    continue
-                raise
+            except PrefillHotRowsUnavailableError as exc:
+                logger.warning(
+                    "Skipping %s: prefill-hot gating rows are unavailable for "
+                    "the requested TP/EP slice (%s).",
+                    model_name,
+                    exc,
+                )
+                continue
 
             logger.info(f"\n--- Training {model_name} ---")
             logger.info(f"Features: {feature_cols}")

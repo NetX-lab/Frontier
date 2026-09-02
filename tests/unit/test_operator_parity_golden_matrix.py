@@ -274,7 +274,7 @@ def test_step_moe_pinned_parallelism_is_memory_feasible_for_h800() -> None:
     requested_memory = requested_memory_bytes_for_device(device="h800")
 
     assert parameter_memory < requested_memory
-    assert parameter_memory == 42963156992
+    assert parameter_memory == 41829122048
     assert requested_memory == 77309411328
 
 

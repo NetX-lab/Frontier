@@ -1,4 +1,6 @@
+import copy
 import os
+from collections.abc import Mapping
 
 import torch
 
@@ -111,6 +113,70 @@ class LinearOpWrapper:
             expected_keys.extend(_share_expert_profiling_names())
         return expected_keys
 
+    def _build_profile_result(self, time_stats, *, num_tokens: int) -> dict:
+        """Build one profiling row and preserve its typed operator contracts."""
+
+        stats = {
+            "time_stats": time_stats,
+            "n_head": self.model_config.num_q_heads,
+            "n_kv_head": self.model_config.num_kv_heads,
+            "n_embd": self.model_config.embedding_dim,
+            "n_expanded_embd": self.model_config.mlp_hidden_dim,
+            "vocab_size": self.model_config.vocab_size,
+            "use_gated_mlp": self.model_config.use_gated_mlp,
+            "use_qk_norm": getattr(self.model_config, "use_qk_norm", False),
+            "attn_output_gate": getattr(self.model_config, "attn_output_gate", False),
+            "num_tokens": num_tokens,
+            "num_tensor_parallel_workers": self.num_tensor_parallel_workers,
+            "padded_n_embd": (
+                self.profiling_plan.get("padded_n_embd", self.model_config.embedding_dim)
+                if self.profiling_plan is not None
+                else self.model_config.embedding_dim
+            ),
+            "padded_n_expanded_embd": (
+                self.profiling_plan.get(
+                    "padded_n_expanded_embd", self.model_config.mlp_hidden_dim
+                )
+                if self.profiling_plan is not None
+                else self.model_config.mlp_hidden_dim
+            ),
+            "model_arch": self.model_config.model_arch,
+            "model_architecture_profile": (
+                self.model_config.get_model_architecture_profile().profile_id
+            ),
+            "share_expert_dim": self.model_config.share_expert_dim,
+            "share_q_dim": self.model_config.share_q_dim,
+        }
+
+        if self.profiling_plan is not None and "typed_operator_contracts" in self.profiling_plan:
+            typed_contracts = self.profiling_plan["typed_operator_contracts"]
+            if not isinstance(typed_contracts, Mapping):
+                raise TypeError(
+                    "profiling_plan['typed_operator_contracts'] must be a mapping, "
+                    f"got {type(typed_contracts).__name__}"
+                )
+            normalized_contracts = {}
+            for operator_name, metadata in typed_contracts.items():
+                if not isinstance(operator_name, str) or not operator_name.strip():
+                    raise TypeError(
+                        "typed operator contract names must be non-empty strings"
+                    )
+                if not isinstance(metadata, Mapping):
+                    raise TypeError(
+                        "typed operator contract metadata must be mappings, "
+                        f"got {type(metadata).__name__} for {operator_name!r}"
+                    )
+                if operator_name not in time_stats:
+                    continue
+                normalized_contracts[operator_name] = dict(metadata)
+            if not normalized_contracts:
+                raise ValueError(
+                    "profiling_plan['typed_operator_contracts'] must contain at least one contract"
+                )
+            stats["typed_operator_contracts"] = copy.deepcopy(normalized_contracts)
+
+        return stats
+
     @torch.inference_mode()  # disable gradient calculation
     def profile(self, num_tokens: int):
         vocab_range = self.padded_vocab_size // self.num_tensor_parallel_workers
@@ -179,37 +245,7 @@ class LinearOpWrapper:
             time_stats = self.timer_stats_store.get_stats()
 
 
-        stats = {
-            "time_stats": time_stats,
-            "n_head": self.model_config.num_q_heads,
-            "n_kv_head": self.model_config.num_kv_heads,
-            "n_embd": self.model_config.embedding_dim,
-            "n_expanded_embd": self.model_config.mlp_hidden_dim,
-            "vocab_size": self.model_config.vocab_size,
-            "use_gated_mlp": self.model_config.use_gated_mlp,
-            "use_qk_norm": getattr(self.model_config, "use_qk_norm", False),
-            "attn_output_gate": getattr(self.model_config, "attn_output_gate", False),
-            "num_tokens": num_tokens,
-            "num_tensor_parallel_workers": self.num_tensor_parallel_workers,
-            "padded_n_embd": (
-                self.profiling_plan.get("padded_n_embd", self.model_config.embedding_dim)
-                if self.profiling_plan is not None
-                else self.model_config.embedding_dim
-            ),
-            "padded_n_expanded_embd": (
-                self.profiling_plan.get(
-                    "padded_n_expanded_embd", self.model_config.mlp_hidden_dim
-                )
-                if self.profiling_plan is not None
-                else self.model_config.mlp_hidden_dim
-            ),
-            "model_arch": self.model_config.model_arch,
-            "model_architecture_profile": (
-                self.model_config.get_model_architecture_profile().profile_id
-            ),
-            "share_expert_dim": self.model_config.share_expert_dim,
-            "share_q_dim": self.model_config.share_q_dim,
-        }
+        stats = self._build_profile_result(time_stats, num_tokens=num_tokens)
         self.timer_stats_store.clear_stats()
 
         return stats
