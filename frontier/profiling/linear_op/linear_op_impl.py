@@ -24,8 +24,11 @@ from frontier.profiling.common.utils import raise_if_fp8_requested
 from frontier.profiling.linear_op.profiling_plan import memory_operator_enabled
 from frontier.model_architectures import (
     LinearAttentionImplementation,
+    LayerKind,
+    ResolvedLayerContract,
     get_model_architecture_profile,
 )
+from frontier.operators.typed_contracts import typed_metadata_value_matches
 
 REUSE_MEMORY = True
 
@@ -55,9 +58,160 @@ def _resolve_num_kv_heads_per_worker(num_kv_heads: int, world_size: int) -> int:
 def _supports_share_expert(config: ModelConfig) -> bool:
     if hasattr(config, "supports_share_expert"):
         return bool(config.supports_share_expert())
-    return bool(getattr(config, "is_moe", False)) and int(
-        getattr(config, "share_expert_dim", 0) or 0
-    ) > 0
+    return bool(
+        _get_architecture_profile(config).supports_share_expert(config)
+    )
+
+
+def _get_architecture_profile(config: ModelConfig):
+    """Resolve the architecture profile through the config-owned API."""
+
+    profile_getter = getattr(config, "get_model_architecture_profile", None)
+    if callable(profile_getter):
+        return profile_getter()
+    return get_model_architecture_profile(config)
+
+
+def _has_active_layer_kind(config: ModelConfig, layer_kind: LayerKind) -> bool:
+    """Return whether the profile materializes a typed layer domain."""
+
+    profile = _get_architecture_profile(config)
+    return any(
+        contract.layer_kind is layer_kind
+        for contract in profile.iter_active_layer_contracts(config)
+    )
+
+
+def _typed_operator_is_selected(
+    profiling_plan: Optional[dict], operator_name: str, world_size: int
+) -> bool:
+    """Check a plan's typed selection without weakening legacy plans."""
+
+    if profiling_plan is None or "typed_operator_contracts" not in profiling_plan:
+        return True
+    typed_contracts = profiling_plan["typed_operator_contracts"]
+    if not isinstance(typed_contracts, dict):
+        raise TypeError(
+            "profiling_plan['typed_operator_contracts'] must be a dict, "
+            f"got {type(typed_contracts).__name__}"
+        )
+    metadata = typed_contracts.get(operator_name)
+    if metadata is None:
+        return False
+    if not isinstance(metadata, dict):
+        raise TypeError(
+            "typed operator contract metadata must be a dict, "
+            f"got {type(metadata).__name__} for {operator_name!r}"
+        )
+    selected_size = metadata.get("selected_tensor_parallel_size")
+    if selected_size is None:
+        return False
+    if selected_size != world_size:
+        raise ValueError(
+            f"Typed operator {operator_name!r} selected TP={selected_size}, "
+            f"but GPTBlock was built with world_size={world_size}"
+        )
+    return True
+
+
+def _resolve_typed_linear_contract(
+    config: ModelConfig,
+    *,
+    operator_name: str,
+    world_size: int,
+    layer_id: int | None = None,
+    profiling_plan: Optional[dict] = None,
+) -> tuple[ResolvedLayerContract, int]:
+    """Resolve one profile-owned linear contract and its selected padded width."""
+
+    profile = _get_architecture_profile(config)
+    contract = profile.resolve_layer_contract(
+        config,
+        layer_id=layer_id,
+        operator_name=operator_name,
+        tensor_parallel_size=world_size,
+    )
+    width = contract.effective_ffn_width
+
+    if profiling_plan is None or "typed_operator_contracts" not in profiling_plan:
+        return contract, width
+
+    typed_contracts = profiling_plan["typed_operator_contracts"]
+    metadata = typed_contracts.get(operator_name)
+    if metadata is None:
+        raise ValueError(
+            f"Profiling plan is missing typed metadata for active operator "
+            f"{operator_name!r}"
+        )
+    if not isinstance(metadata, dict):
+        raise TypeError(
+            "typed operator contract metadata must be a dict, "
+            f"got {type(metadata).__name__} for {operator_name!r}"
+        )
+    padded_width = _validate_typed_linear_metadata(
+        metadata,
+        contract,
+        operator_name=operator_name,
+        world_size=world_size,
+    )
+    return contract, padded_width
+
+
+def _validate_typed_linear_metadata(
+    metadata: dict,
+    contract: ResolvedLayerContract,
+    *,
+    operator_name: str,
+    world_size: int,
+) -> int:
+    """Validate serialized producer metadata against the resolved contract."""
+
+    expected_fields = contract.typed_metadata_identity()
+    missing_fields = [
+        field_name
+        for field_name in expected_fields
+        if field_name not in metadata
+    ]
+    if missing_fields:
+        raise ValueError(
+            f"Typed operator {operator_name!r} metadata is missing required "
+            f"contract fields: {', '.join(missing_fields)}"
+        )
+
+    for field_name, expected_value in expected_fields.items():
+        actual_value = metadata[field_name]
+        if not typed_metadata_value_matches(actual_value, expected_value):
+            raise ValueError(
+                f"Typed operator {operator_name!r} {field_name} disagrees with "
+                "its resolved profile contract: "
+                f"plan={actual_value!r}, resolved={expected_value!r}"
+            )
+
+    selected_tp = metadata["selected_tensor_parallel_size"]
+    if type(selected_tp) is not int or selected_tp <= 0:
+        raise ValueError(
+            f"Typed operator {operator_name!r} selected TP must be a positive "
+            f"int, got {selected_tp!r}"
+        )
+    if selected_tp != world_size:
+        raise ValueError(
+            f"Typed operator {operator_name!r} selected TP={selected_tp} does "
+            f"not match runtime world_size={world_size}"
+        )
+
+    padded_width = metadata.get("selected_padded_ffn_width")
+    if type(padded_width) is not int or padded_width < contract.effective_ffn_width:
+        raise ValueError(
+            f"Typed operator {operator_name!r} has invalid selected padded width "
+            f"{padded_width!r} for resolved width "
+            f"{contract.effective_ffn_width}"
+        )
+    if padded_width % selected_tp != 0:
+        raise ValueError(
+            f"Typed operator {operator_name!r} selected padded width="
+            f"{padded_width} must be divisible by selected TP={selected_tp}"
+        )
+    return padded_width
 
 
 def _uses_gemma_rms_norm(config: ModelConfig) -> bool:
@@ -561,9 +715,32 @@ class MLP(torch.nn.Module):
         self.embedding_dim = (
             embedding_dim if embedding_dim is not None else config.embedding_dim
         )
-        self.mlp_hidden_dim = (
-            mlp_hidden_dim if mlp_hidden_dim is not None else config.mlp_hidden_dim
+        self.layer_contract, profile_width = _resolve_typed_linear_contract(
+            config,
+            operator_name="mlp_up_proj",
+            world_size=world_size,
         )
+        # Keep the explicit constructor override for legacy callers that pass a
+        # deliberately padded width. GPTBlock supplies this value only after it
+        # has resolved the profile-owned contract above.
+        self.mlp_hidden_dim = (
+            mlp_hidden_dim if mlp_hidden_dim is not None else profile_width
+        )
+        if type(self.mlp_hidden_dim) is not int or self.mlp_hidden_dim <= 0:
+            raise ValueError(
+                "MLP mlp_hidden_dim must be a positive int, "
+                f"got {self.mlp_hidden_dim!r}"
+            )
+        if mlp_hidden_dim is not None and self.mlp_hidden_dim < profile_width:
+            raise ValueError(
+                "MLP explicit mlp_hidden_dim is below the profile-owned width: "
+                f"override={self.mlp_hidden_dim}, profile_width={profile_width}"
+            )
+        if self.mlp_hidden_dim % world_size != 0:
+            raise ValueError(
+                "MLP mlp_hidden_dim must be divisible by world_size, "
+                f"got width={self.mlp_hidden_dim}, world_size={world_size}"
+            )
 
         assert self.embedding_dim % world_size == 0
 
@@ -634,6 +811,7 @@ class ShareExpertMLP(torch.nn.Module):
         config: ModelConfig,
         world_size: int,
         embedding_dim: Optional[int] = None,
+        mlp_hidden_dim: Optional[int] = None,
     ):
         super().__init__()
 
@@ -641,8 +819,33 @@ class ShareExpertMLP(torch.nn.Module):
             raise ValueError(
                 "ShareExpertMLP requires a model config that supports share_expert"
             )
-        if config.share_expert_dim is None:
-            raise ValueError("ShareExpertMLP requires share_expert_dim to be specified")
+
+        self.layer_contract, profile_width = _resolve_typed_linear_contract(
+            config,
+            operator_name="share_expert_up_proj",
+            world_size=world_size,
+        )
+        # Match MLP's compatibility behavior while keeping the profile-owned
+        # shared width as the default source of truth.
+        self.mlp_hidden_dim = (
+            mlp_hidden_dim if mlp_hidden_dim is not None else profile_width
+        )
+        if type(self.mlp_hidden_dim) is not int or self.mlp_hidden_dim <= 0:
+            raise ValueError(
+                "ShareExpertMLP mlp_hidden_dim must be a positive int, "
+                f"got {self.mlp_hidden_dim!r}"
+            )
+        if mlp_hidden_dim is not None and self.mlp_hidden_dim < profile_width:
+            raise ValueError(
+                "ShareExpertMLP explicit mlp_hidden_dim is below the "
+                "profile-owned width: "
+                f"override={self.mlp_hidden_dim}, profile_width={profile_width}"
+            )
+        if self.mlp_hidden_dim % world_size != 0:
+            raise ValueError(
+                "ShareExpertMLP mlp_hidden_dim must be divisible by world_size, "
+                f"got width={self.mlp_hidden_dim}, world_size={world_size}"
+            )
 
         self.embedding_dim = (
             embedding_dim if embedding_dim is not None else config.embedding_dim
@@ -657,7 +860,7 @@ class ShareExpertMLP(torch.nn.Module):
         # Reuse the gated-MLP structure used by the shared-expert branch.
         self.up_proj = ColumnParallelLinear(
             self.embedding_dim,
-            2 * config.share_expert_dim,  # Use share_expert_dim instead of mlp_hidden_dim
+            2 * self.mlp_hidden_dim,
             bias=False,  # Step2Mini uses no bias
             gather_output=False,
             world_size=world_size,
@@ -667,7 +870,7 @@ class ShareExpertMLP(torch.nn.Module):
         self.act = SiluAndMul()
 
         self.down_proj = RowParallelLinear(
-            config.share_expert_dim,  # Use share_expert_dim
+            self.mlp_hidden_dim,
             self.embedding_dim,
             bias=False,  # Step2Mini uses no bias
             input_is_parallel=True,
@@ -699,7 +902,7 @@ def build_linear_op_attention_module(
 ) -> torch.nn.Module:
     """Build the linear-op profiling attention module from architecture profile."""
 
-    linear_attention = get_model_architecture_profile(config).linear_attention
+    linear_attention = _get_architecture_profile(config).linear_attention
 
     if attn_sharded_enabled:
         if linear_attention.sharded_impl is LinearAttentionImplementation.STEP3_TEXT:
@@ -729,10 +932,20 @@ class GPTBlock(torch.nn.Module):
         config: ModelConfig,
         world_size: int,
         profiling_plan: Optional[dict] = None,
+        layer_id: int | None = None,
     ):
         super().__init__()
 
         self._profiling_plan = profiling_plan
+        self.layer_id = layer_id
+        layer_kind = None
+        if layer_id is not None:
+            # Full-structure runtime loading supplies the global layer identity
+            # so mixed models materialize only the domain owned by that layer.
+            layer_kind = _get_architecture_profile(config).resolve_layer_contract(
+                config,
+                layer_id=layer_id,
+            ).layer_kind
         self._attn_enabled = (
             profiling_plan.get("attn_enabled", True) if profiling_plan else True
         )
@@ -825,22 +1038,70 @@ class GPTBlock(torch.nn.Module):
             attn_sharded_enabled=self._attn_sharded_enabled,
         )
 
-        if self._ffn_sharded_enabled:
+        self.mlp_layer_contract = None
+        dense_contract_active = (
+            layer_kind is LayerKind.DENSE
+            if layer_kind is not None
+            else _has_active_layer_kind(config, LayerKind.DENSE)
+        )
+        if self._ffn_sharded_enabled and dense_contract_active:
+            if not _typed_operator_is_selected(
+                profiling_plan, "mlp_up_proj", world_size
+            ):
+                raise ValueError(
+                    "GPTBlock requested a sharded dense FFN without a selected "
+                    "mlp_up_proj typed contract"
+                )
+            self.mlp_layer_contract, dense_width = _resolve_typed_linear_contract(
+                config,
+                operator_name="mlp_up_proj",
+                world_size=world_size,
+                layer_id=layer_id,
+                profiling_plan=profiling_plan,
+            )
             self.mlp = MLP(
                 config,
                 world_size,
                 embedding_dim=self._padded_n_embd,
-                mlp_hidden_dim=self._padded_n_expanded_embd,
+                mlp_hidden_dim=dense_width,
             )
         else:
+            # Pure routed-MoE layers are materialized by the dedicated MoE
+            # producer/weight path and must not allocate a dense FFN here.
             self.mlp = DummyMLP()
 
-        # Add the shared-expert branch for models whose MoE FFN includes it.
-        if self._ffn_sharded_enabled and config.is_moe and _supports_share_expert(config):
+        self.share_expert_layer_contract = None
+        # A layer-aware full-structure block leaves routed/shared weights to
+        # the dedicated MoE containers. Legacy representative blocks without
+        # layer identity retain the existing profile-level shared branch.
+        shared_contract_active = (
+            False
+            if layer_kind is not None
+            else _has_active_layer_kind(config, LayerKind.SHARED)
+        )
+        if self._ffn_sharded_enabled and shared_contract_active:
+            if not _typed_operator_is_selected(
+                profiling_plan, "share_expert_up_proj", world_size
+            ):
+                raise ValueError(
+                    "GPTBlock requested a sharded shared expert without a selected "
+                    "share_expert_up_proj typed contract"
+                )
+            (
+                self.share_expert_layer_contract,
+                shared_width,
+            ) = _resolve_typed_linear_contract(
+                config,
+                operator_name="share_expert_up_proj",
+                world_size=world_size,
+                layer_id=layer_id,
+                profiling_plan=profiling_plan,
+            )
             self.share_expert = ShareExpertMLP(
                 config,
                 world_size,
                 embedding_dim=self._padded_n_embd,
+                mlp_hidden_dim=shared_width,
             )
         else:
             self.share_expert = None
@@ -972,6 +1233,14 @@ class GPTBlock(torch.nn.Module):
             if residual is None:
                 residual = hidden_states
             attn_outputs = hidden_states
+
+        # An attention-only role has no FFN contribution.  DummyMLP is an
+        # identity module for constructor compatibility, so invoking it here
+        # would incorrectly add the input a second time on the residual path.
+        if self._attn_enabled and not self._ffn_enabled:
+            with self.add_timer if self._profile_add else nullcontext():
+                hidden_states = attn_outputs + residual
+            return hidden_states, residual
 
         if self._ffn_enabled:
             hidden_states = self._maybe_pad_tensor(hidden_states)

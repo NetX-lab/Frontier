@@ -374,3 +374,61 @@ def test_shared_manager_exact_lookup_survives_cache_round_trip_by_default(
     expected = {(2.0, 8.0): 2.25, (3.0, 8.0): 3.5}
     assert loaded._frontier_exact_lookup == expected
     assert reloaded._frontier_exact_lookup == expected
+
+
+def test_legacy_manager_hash_override_keeps_historical_call_shape(tmp_path) -> None:
+    """Legacy hash overrides receive only the pre-contract call arguments."""
+
+    manager = ExecutionTimePredictionModelManager.__new__(
+        ExecutionTimePredictionModelManager
+    )
+    manager._cache_dir = str(tmp_path)
+    manager._active_measurement_type = MeasurementType.CUDA_EVENT
+    calls: list[tuple[object, ...]] = []
+
+    def legacy_hash(
+        model_name,
+        dataframe,
+        predictor_config,
+        profiling_precision,
+        measurement_type,
+    ):
+        calls.append(
+            (
+                model_name,
+                dataframe,
+                predictor_config,
+                profiling_precision,
+                measurement_type,
+            )
+        )
+        return "legacy-shape"
+
+    manager._get_model_hash = legacy_hash
+    manager._store_model_precision = lambda *_args: None
+    legacy_model = _CountingModel(("num_tokens",), result=7.0)
+    manager._store_model_in_cache("test_operator", "legacy-shape", legacy_model)
+    dataframe = pd.DataFrame(
+        {
+            "num_tokens": [1, 2],
+            "target": [1.0, 2.0],
+            "profiling_precision": ["FP16", "FP16"],
+            "measurement_type": [
+                MeasurementType.CUDA_EVENT.value,
+                MeasurementType.CUDA_EVENT.value,
+            ],
+        }
+    )
+
+    loaded = manager._train_single_model(
+        model_name="test_operator",
+        df=dataframe,
+        feature_cols=["num_tokens"],
+        target_col="target",
+        execution_time_predictor_config=SimpleNamespace(),
+    )
+
+    assert loaded.result == legacy_model.result
+    assert loaded.feature_names_in_ == legacy_model.feature_names_in_
+    assert len(calls) == 1
+    assert len(calls[0]) == 5

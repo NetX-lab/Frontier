@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
+import pandas as pd
 
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
@@ -105,6 +106,13 @@ def test_predictor_rejects_undeclared_attention_name_before_tp_policy() -> None:
         predictor._get_linear_op_tp_key("attn_not_declared")
 
 
+def test_predictor_keeps_ambiguous_memory_alias_on_legacy_path() -> None:
+    """The memory ``add`` alias stays outside the typed FFN contract."""
+    predictor = _predictor()
+
+    assert predictor._get_linear_op_tp_key("add") == 1
+
+
 def test_predictor_routes_declared_architecture_attention_name() -> None:
     predictor = _predictor(profile=ModelArchitectureProfile.step2_mini())
 
@@ -165,6 +173,131 @@ def test_mixed_moe_routed_and_shared_ops_use_typed_domains() -> None:
 
     assert predictor._get_linear_op_tp_key("moe_grouped_gemm") == 1
     assert predictor._get_linear_op_tp_key("share_expert_up_proj") == 8
+
+
+def test_mixed_moe_linear_loader_selects_typed_dense_width() -> None:
+    """A mixed Step3 linear query must filter by its profile-owned width."""
+    predictor = cast(Any, object.__new__(_ConcreteSklearnExecutionTimePredictor))
+    predictor._model_config = SimpleNamespace(
+        is_moe=True,
+        num_layers=61,
+        num_q_heads=16,
+        num_kv_heads=8,
+        num_experts=48,
+        moe_layers_enum=",".join(str(layer_id) for layer_id in range(4, 60)),
+        embedding_dim=1024,
+        mlp_hidden_dim=5120,
+        dense_mlp_hidden_dim=18432,
+        routed_mlp_hidden_dim=5120,
+        share_expert_dim=5120,
+        use_gated_mlp=True,
+        vocab_size=100,
+        supports_share_expert=lambda: True,
+        get_name=lambda: "step3-moe-noquant",
+        get_model_architecture_profile=ModelArchitectureProfile.step3_text,
+    )
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._replica_config = SimpleNamespace(
+        attn_tensor_parallel_size=8,
+        moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=8,
+    )
+    predictor._active_measurement_type = None
+    predictor._read_input_file = lambda _path: pd.DataFrame(
+        {
+            "n_head": [16, 16],
+            "n_kv_head": [8, 8],
+            "n_embd": [1024, 1024],
+            "n_expanded_embd": [18432, 5120],
+            "use_gated_mlp": [True, True],
+            "vocab_size": [100, 100],
+            "num_tensor_parallel_workers": [8, 8],
+            "time_stats.mlp_up_proj.median": [1.0, 2.0],
+        }
+    )
+    predictor._get_profiling_metadata = lambda *_args: None
+    predictor._validate_active_measurement_type = lambda *_args: None
+    predictor._register_profiling_metadata_for_ops = lambda *_args: None
+    predictor._get_compute_model_names = lambda: ["mlp_up_proj"]
+
+    filtered = predictor._load_compute_df(
+        "linear_op.csv",
+        tensor_parallel_size=8,
+        operator_name="mlp_up_proj",
+    )
+
+    assert filtered["n_expanded_embd"].tolist() == [18432]
+
+
+def test_mixed_moe_compute_training_separates_same_tp_typed_widths() -> None:
+    """Dense and shared-expert training frames keep distinct contract keys."""
+    predictor = cast(Any, object.__new__(_ConcreteSklearnExecutionTimePredictor))
+    predictor._model_config = SimpleNamespace(
+        is_moe=True,
+        num_layers=61,
+        num_q_heads=16,
+        num_kv_heads=8,
+        num_experts=48,
+        moe_layers_enum=",".join(str(layer_id) for layer_id in range(4, 60)),
+        embedding_dim=1024,
+        mlp_hidden_dim=5120,
+        dense_mlp_hidden_dim=18432,
+        routed_mlp_hidden_dim=5120,
+        share_expert_dim=5120,
+        use_gated_mlp=True,
+        vocab_size=100,
+        uses_fused_add_norm=True,
+        supports_share_expert=lambda: True,
+        get_name=lambda: "step3-moe-noquant",
+        get_model_architecture_profile=ModelArchitectureProfile.step3_text,
+    )
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._replica_config = SimpleNamespace(
+        attn_tensor_parallel_size=8,
+        moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=8,
+    )
+    predictor._compute_input_file = "linear_op.csv"
+    predictor._get_compute_model_names = lambda: [
+        "mlp_up_proj",
+        "share_expert_up_proj",
+    ]
+    predictor._get_predictor_attention_extra_ops = lambda: ()
+    predictor._get_attention_model_names = lambda: []
+    predictor._get_compute_df_with_derived_features = lambda frame: frame
+
+    loaded = []
+
+    def _load_compute_df(
+        _path,
+        *,
+        tensor_parallel_size,
+        operator_name,
+        layer_contract,
+    ):
+        loaded.append(
+            (
+                operator_name,
+                tensor_parallel_size,
+                layer_contract.effective_ffn_width,
+            )
+        )
+        return pd.DataFrame(
+            {
+                "num_tokens": [1],
+                f"time_stats.{operator_name}.median": [1.0],
+            }
+        )
+
+    predictor._load_compute_df = _load_compute_df
+    predictor._train_model = lambda **kwargs: object()
+
+    predictor._train_compute_models()
+
+    assert loaded == [
+        ("mlp_up_proj", 8, 18432),
+        ("share_expert_up_proj", 8, 5120),
+    ]
 
 
 def test_typed_dense_domain_preserves_decode_ffn_role_tp() -> None:

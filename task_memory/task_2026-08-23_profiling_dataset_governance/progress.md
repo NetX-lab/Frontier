@@ -2,6 +2,12 @@
 
 | Date | Summary of Changes |
 | --- | --- |
+| 2026-09-02 | Created the reproducible cross-session handoff and synchronized the actual worktree/ref state, six-model measurement closure, runtime-lane result, and remaining REVISE/BLOCK gates. |
+| 2026-09-01 | Unified typed metadata required fields across runtime and profiling imports; direct typed/loader/attention/DECODE_ATTN matrix passes `37/37`. |
+| 2026-09-01 | Fixed explicit shared-layer zero-width diagnostics while preserving optional zero-sentinel alias resolution; architecture/shared regression matrix passes `73/73`. |
+| 2026-09-01 | Completed the independent double-check and 30-minute Claude Code review; all independent verdicts agree on REVISE, so implementation remains paused and the blockers are recorded. |
+| 2026-09-01 | Completed an independent minimality review and recorded the implementation gate: preserve the profile-owned resolver, pause unproven typed-row and manager projection layers, and await scope confirmation. |
+| 2026-08-29 | Completed the MoE trainer factory typed-width sub-step: routed `expert_hidden_dim` now comes from the profile-owned contract; the focused factory/trainer matrix passes `33/33`. |
 | 2026-08-29 | Completed the ReplicaStageScheduler global layer-identity propagation sub-step: PP stage calls now carry the profile-relevant global layer interval; focused RED/GREEN and mixed-layer regressions pass. |
 | 2026-08-30 | Closed the profile-resolver activation gap: inactive dense contracts now fail fast for pure-MoE operator queries; the registry regression matrix passes `64/64`. |
 | 2026-08-29 | Removed ParamCounter's unverified MoE/PP ratio estimate: explicit layer IDs are counted per stage and non-uniform maps fail fast; focused matrix passes `70/70`. |
@@ -11,6 +17,41 @@
 | 2026-08-29 | Completed the predictor typed-width sub-step: mixed dense/shared training now resolves profile-owned widths and separates same-TP cache entries; `152` focused regressions pass. |
 | 2026-08-29 | Completed the first Option-1 consumer sub-step: the sklearn predictor now resolves typed dense/routed/shared TP through the profile-owned contract; RED `1` vs `8` became GREEN with `161` focused tests passing. |
 | 2026-08-29 | Maintainer selected Option-2 dedicated typed `LayerContract` ownership; synchronized docs and entered RED source implementation with the existing TP1-vs-TP8 failure preserved. |
+
+## Verification record - explicit shared zero-width resolution 2026-09-01
+
+- **Motivation:** An explicit `LayerKind.SHARED` query with a declared
+  `share_expert_dim=0` was classified as an absent width and raised the
+  generic "shared width is not declared" message. The optional capability
+  path intentionally treats zero as a disabled sentinel, but an explicit
+  selected shared domain must expose the malformed positive-width input.
+- **Expectation:** Keep zero as an inactive value for optional shared-expert
+  activation; when a selected shared contract has no positive alias, raise a
+  field-specific positive-integer error. Preserve fallback to a later positive
+  legacy alias and all existing pure-dense/pure-MoE behavior.
+- **Method:** The existing regression was run first and failed with the
+  observed message mismatch. Extended the profile-owned
+  `get_declared_layer_width()` helper with a bounded `reject_zero_sentinel`
+  switch and used it only in explicit shared-contract admission. No new
+  registry, wrapper, or model-name branch was introduced. Ran:
+
+  ```bash
+  timeout 180s env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD \
+    python -m pytest -q -p no:cacheprovider \
+    tests/unit/test_optional_shared_layer_contract.py \
+    tests/unit/test_model_architecture_registry.py
+  python -m py_compile frontier/model_architectures.py
+  git diff --check -- frontier/model_architectures.py
+  ```
+
+- **Result:** **PASS.** The RED case became GREEN and the combined architecture
+  matrix reports `73 passed in 85.09s`. Compilation and whitespace checks exit
+  `0`. Optional `share_expert_dim=0` activation remains inactive, while the
+  explicit resolver now reports `share_expert_dim layer width must be a
+  positive int, got 0`.
+- **Remediation/Verification Code Actions Taken:** Changed only
+  `frontier/model_architectures.py` in this sub-step and preserved accepted
+  CSVs, manifests, README files, workers, remote state, and `=10.1`.
 
 ## Verification record - ReplicaStageScheduler global layer identity 2026-08-29
 
@@ -2448,3 +2489,95 @@
   `test_report_2026-08-29_sklearn_moe_typed_contract.md` and left the next
   pending consumer as the shared-manager cluster model-contract view and its
   `add` alias path.
+
+## Verification record - MoE trainer factory typed routed width 2026-08-29
+
+- **Motivation:** The convenience factory in `frontier/training/moe_trainer.py`
+  still passed `model_config.mlp_hidden_dim` into `MoETrainer`. For a
+  Step3-like mixed model this legacy field is the routed width only by
+  convention and can be stale or intentionally different from the profile's
+  routed contract.
+- **Expectation:** Resolve `moe_grouped_gemm` through the existing
+  `ModelArchitectureProfile` resolver and pass its `effective_ffn_width` to
+  the trainer. Preserve the factory's existing model validation, TP/EP
+  arguments, and no-profile behavior outside this typed path.
+- **Method:** Added
+  `tests/unit/test_moe_trainer_typed_contract.py`. The test loads the official
+  Step3 config, sets the legacy `mlp_hidden_dim` to `9999`, retains routed
+  width `5120`, and captures the factory's trainer arguments. The fresh
+  verification command was:
+
+  ```bash
+  timeout 180s env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=$PWD \
+    python3 -m pytest -q -p no:cacheprovider \
+    tests/unit/test_moe_trainer_typed_contract.py \
+    tests/unit/test_linear_op_trainer_typed_contract.py \
+    tests/unit/test_moe_share_expert_operator_families.py
+  ```
+
+  Environment: `/usr/bin/python3` (Python `3.12.3`), pandas `3.0.3`.
+- **Result:** **PASS.** The matrix reports `33 passed in 4.97s`; the captured
+  trainer argument is `expert_hidden_dim=5120`, while the deliberately stale
+  legacy field is `9999`. The resolver therefore reaches the routed semantic
+  source without changing accepted CSVs, manifests, runtime artifacts,
+  README files, workers, or remote state.
+- **Remediation/Verification Code Actions Taken:** Updated
+  `create_moe_trainer_from_model_config()` to resolve the profile-owned routed
+  contract and added the regression test. The next source boundary is the
+  shared prediction-manager precision/cache identity audit.
+
+## Verification record - independent minimality review 2026-09-01
+
+- **Motivation:** The current source migration has passed focused tests but
+  has grown beyond the proven Step3 width/TP failure. A second pass was needed
+  to distinguish required propagation from speculative schema and compatibility
+  machinery before more shared-interface edits.
+- **Method:** Audited the task requirements and plan, diff counts, all typed
+  schema owners, manager and predictor callers, active CSV headers, cache
+  filenames, and the Step3 profile resolver. Ran the resolver/matcher probes,
+  import probe, and the focused architecture/operator/typed-validator/manager
+  matrix.
+- **Result:** Step3 resolved to `61` layers, dense `18432/TP8`, routed
+  `5120/TP1/EP8`, and shared `5120/TP8`; active CSVs are `117` legacy-header
+  files with zero typed metadata columns. The focused matrix reports
+  `170 passed in 7.05s`. The matcher/validator field sets remain inconsistent,
+  and no external production caller proves the manager's legacy projection or
+  last-write registry is necessary. The review verdict is **REVISE / BLOCK**
+  for further implementation until the scope is confirmed.
+- **Remediation/Verification Code Actions Taken:** Updated `review.md`,
+  `issues.md`, and this record only. Preserved all source, accepted data,
+  manifests, README files, workers, remote state, and `=10.1`.
+
+## Verification record - Claude Code independent double-check 2026-09-01
+
+- **Motivation:** The maintainer requested a second independent RCA and a
+  local Claude Code review with a 30-minute timeout before any implementation.
+  The existing focused tests were green, but the current source diff had grown
+  across shared predictors, training, cache, trace, and parameter counting.
+- **Expectation:** Proceed only when Claude and the local review agree that the
+  proposed profile-owned typed-layer implementation is both correct and
+  minimal. Treat an incomplete or timed-out advisor output as unavailable
+  evidence rather than as approval.
+- **Method:** Read the task records and relevant production paths, ran the
+  local resolver/matcher probes and focused matrix, and invoked
+  `stepcode claude --model claude-opus-5 --effort max` under `timeout 1800s`
+  with a read-only prompt. The first direct capture timed out with empty
+  stdout; a second bounded Claude review completed and was preserved in
+  `.omx/artifacts/ask-claude-step3-typed-20260901.md`.
+- **Result:** **REVISE / implementation gate closed.** Claude and both local
+  independent reviews agree that the RCA is supported: Step3 has 61 layers,
+  dense width 18432, routed/shared width 5120, and the legacy path can select
+  dense TP1 instead of Attention TP8. They also agree on three correctness
+  blockers: PD-AF `DECODE_ATTN` can pass zero FFN parallel sizes into the typed
+  resolver; the matcher catches and hides semantic `ValueError`s; and the
+  nine-field row identity does not cover the validator's twelve expected
+  fields. Claude additionally measured the dirty ParamCounter memory-accounting
+  deltas as approximately Mixtral `-50.00%`, Qwen3-A3B `-5.86%`, Qwen3-235B
+  `-5.87%`, and Step3 `-1.71%`, and found no demonstrated production need for
+  the large manager projection/provenance layer. Inherited profiling README
+  edits also violate the protected README scope.
+- **Remediation/Verification Code Actions Taken:** Added the advisor record
+  and synchronized `review.md`, `issues.md`, `plan.md`, and this progress log.
+  No source, CSV, manifest, README, remote, worker, or `=10.1` was changed.
+  The next step requires maintainer scope confirmation, followed by direct
+  regressions for the three blockers before any bounded implementation.

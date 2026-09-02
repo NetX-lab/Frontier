@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import logging
+import inspect
+import json
 import re
+from collections.abc import Iterable, Mapping
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
@@ -68,6 +71,256 @@ class ExpertParallelMode(Enum):
     ON = "on"
 
 
+# Dimension aliases are architecture-contract data.  Consumers resolve a
+# source through this table instead of interpreting model-config field names
+# independently.
+_LAYER_DIMENSION_SOURCE_ATTRIBUTES: dict[LayerDimensionSource, tuple[str, ...]] = {
+    LayerDimensionSource.DENSE: (
+        "dense_mlp_hidden_dim",
+        "intermediate_size",
+        "mlp_hidden_dim",
+    ),
+    LayerDimensionSource.ROUTED: (
+        "routed_mlp_hidden_dim",
+        "moe_intermediate_size",
+        "mlp_hidden_dim",
+    ),
+    LayerDimensionSource.SHARED: (
+        "share_expert_dim",
+        "shared_expert_intermediate_size",
+    ),
+}
+
+_MISSING_CONFIG_ATTRIBUTE = object()
+_DECLARED_CONFIG_ATTRIBUTE_PROVIDER = "get_declared_config_attribute"
+
+
+def _get_declared_config_attribute(
+    config: Any,
+    attribute_name: str,
+) -> Any:
+    """Read an attribute only when the config actually declares it.
+
+    Duck-typed test/config adapters may expose fields through ``__getattr__``.
+    Treating every dynamically synthesized attribute as a contract would turn
+    an arbitrary object (for example a bare mock) into a fake architecture
+    profile. ``inspect.getattr_static`` lets the resolver distinguish a real
+    instance/class declaration from such synthesized values. An adapter that
+    deliberately delegates declared fields may implement the explicit
+    ``get_declared_config_attribute`` protocol; the provider itself must be a
+    statically declared method, so a dynamic ``__getattr__`` cannot opt an
+    arbitrary value into the architecture contract.
+    """
+
+    try:
+        inspect.getattr_static(config, attribute_name)
+    except AttributeError:
+        try:
+            inspect.getattr_static(config, _DECLARED_CONFIG_ATTRIBUTE_PROVIDER)
+        except AttributeError:
+            return _MISSING_CONFIG_ATTRIBUTE
+        provider = getattr(config, _DECLARED_CONFIG_ATTRIBUTE_PROVIDER)
+        if not callable(provider):
+            raise TypeError(
+                f"{_DECLARED_CONFIG_ATTRIBUTE_PROVIDER} must be callable when "
+                "declared"
+            )
+        declaration = provider(attribute_name)
+        if (
+            not isinstance(declaration, tuple)
+            or len(declaration) != 2
+            or type(declaration[0]) is not bool
+        ):
+            raise TypeError(
+                f"{_DECLARED_CONFIG_ATTRIBUTE_PROVIDER} must return "
+                "(declared: bool, value: object)"
+            )
+        declared, value = declaration
+        return value if declared else _MISSING_CONFIG_ATTRIBUTE
+    return getattr(config, attribute_name)
+
+
+def _get_config_value(config: Any, attribute_name: str, default: Any = None) -> Any:
+    """Return a declared config value, ignoring synthesized duck-typed attrs."""
+
+    value = _get_declared_config_attribute(config, attribute_name)
+    return default if value is _MISSING_CONFIG_ATTRIBUTE else value
+
+
+def _pad_to_multiple(value: int, multiple: int) -> int:
+    """Return ``value`` rounded up to the selected parallel shard multiple."""
+
+    if type(value) is not int or value <= 0:
+        raise ValueError(f"value must be a positive int, got {value!r}")
+    if type(multiple) is not int or multiple <= 0:
+        raise ValueError(f"multiple must be a positive int, got {multiple!r}")
+    return ((value + multiple - 1) // multiple) * multiple
+
+
+def _normalize_dimension_source(
+    dimension_source: LayerDimensionSource | str,
+) -> LayerDimensionSource:
+    if isinstance(dimension_source, LayerDimensionSource):
+        return dimension_source
+    try:
+        return LayerDimensionSource(dimension_source)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"Unknown layer dimension source: {dimension_source!r}"
+        ) from exc
+
+
+def get_declared_layer_width(
+    config: Any,
+    dimension_source: LayerDimensionSource | str,
+    *,
+    mixed_model: bool = False,
+    reject_zero_sentinel: bool = False,
+) -> int | None:
+    """Read one profile-owned layer width from its canonical field or alias.
+
+    ``None`` means the source is not declared.  A present but malformed value
+    raises immediately so callers cannot silently fall back to a different
+    typed domain.  Mixed dense layers intentionally require the explicit
+    ``dense_mlp_hidden_dim`` field; the legacy ``intermediate_size`` property
+    on model-config adapters may otherwise mirror the routed width.
+    """
+
+    source = _normalize_dimension_source(dimension_source)
+    attributes = _LAYER_DIMENSION_SOURCE_ATTRIBUTES[source]
+    if source is LayerDimensionSource.DENSE and mixed_model:
+        attributes = ("dense_mlp_hidden_dim",)
+
+    zero_attribute: str | None = None
+    for attribute in attributes:
+        candidate = _get_config_value(config, attribute)
+        if candidate is None:
+            continue
+        if (
+            source is LayerDimensionSource.SHARED
+            and type(candidate) is int
+            and candidate == 0
+        ):
+            zero_attribute = attribute
+            continue
+        if type(candidate) is not int or candidate <= 0:
+            raise ValueError(
+                f"{source.value} layer width must be a positive int, "
+                f"got {candidate!r} from {attribute}"
+            )
+        return candidate
+    if reject_zero_sentinel and zero_attribute is not None:
+        raise ValueError(
+            f"{source.value} layer width must be a positive int, got 0 "
+            f"from {zero_attribute}"
+        )
+    return None
+
+
+def _get_optional_shared_expert_width(config: Any) -> int | None:
+    """Resolve the optional shared-expert width while honoring the legacy zero sentinel.
+
+    A zero value means that the optional shared-expert path is not declared.
+    Positive values still use :func:`get_declared_layer_width` for strict type
+    validation, and malformed non-positive values continue to fail fast.
+    Explicit shared-layer resolution intentionally calls the strict helper
+    directly so a selected shared contract can never materialize with width 0.
+    """
+
+    for attribute in _LAYER_DIMENSION_SOURCE_ATTRIBUTES[LayerDimensionSource.SHARED]:
+        candidate = _get_config_value(config, attribute)
+        if candidate is None:
+            continue
+        if type(candidate) is int and candidate == 0:
+            continue
+        return get_declared_layer_width(config, LayerDimensionSource.SHARED)
+    return None
+
+
+def resolve_model_architecture_profile(config: Any) -> "ModelArchitectureProfile":
+    """Return the construction-time profile when a config owns one.
+
+    Lightweight config adapters may expose only the registry-facing profile
+    selector.  Runtime configs expose a construction-time accessor so a
+    single simulation keeps a stable profile snapshot; both paths converge on
+    the same profile-owned contract implementation.
+    """
+
+    profile_getter = _get_declared_config_attribute(
+        config,
+        "get_model_architecture_profile",
+    )
+    if profile_getter is not _MISSING_CONFIG_ATTRIBUTE:
+        if not callable(profile_getter):
+            raise TypeError(
+                "get_model_architecture_profile must be callable when declared"
+            )
+        profile = profile_getter()
+        if not isinstance(profile, ModelArchitectureProfile):
+            raise TypeError(
+                "get_model_architecture_profile() must return "
+                f"ModelArchitectureProfile, got {type(profile).__name__}"
+            )
+        return profile
+
+    profile = get_model_architecture_profile(config)
+    if not isinstance(profile, ModelArchitectureProfile):
+        raise TypeError(
+            "architecture registry resolution must return "
+            f"ModelArchitectureProfile, got {type(profile).__name__}"
+        )
+    return profile
+
+
+def normalize_moe_layer_ids(
+    raw_ids: Any,
+    num_layers: Any,
+    *,
+    source: str = "model config MoE layer IDs",
+) -> tuple[int, ...]:
+    """Validate and canonicalize layer IDs returned by a config adapter.
+
+    Config files use the comma-separated ``moe_layers_enum`` representation,
+    while lightweight adapters expose ``get_moe_layer_ids()`` as an iterable.
+    Both representations converge here so every typed-contract consumer sees
+    exact integer IDs, a sorted order, and the same duplicate/range failures.
+    """
+
+    if not isinstance(source, str) or not source.strip():
+        raise ValueError("layer-map validation source must be a non-empty string")
+    if type(num_layers) is not int or num_layers <= 0:
+        raise ValueError(
+            f"{source} validation requires a positive integer num_layers"
+        )
+    if isinstance(raw_ids, (str, bytes)) or isinstance(raw_ids, Mapping):
+        raise ValueError(
+            f"{source} must return an iterable of exact integer IDs, "
+            f"got {raw_ids!r}"
+        )
+    if not isinstance(raw_ids, Iterable):
+        raise ValueError(
+            f"{source} must return an iterable of exact integer IDs, "
+            f"got {raw_ids!r}"
+        )
+    normalized = tuple(raw_ids)
+    if any(type(layer_id) is not int for layer_id in normalized):
+        raise ValueError(
+            f"{source} must be exact integers, got {normalized!r}"
+        )
+    if any(layer_id < 0 or layer_id >= num_layers for layer_id in normalized):
+        raise ValueError(
+            f"{source} contains a layer ID out of range; values must fall "
+            f"within the model range [0, {num_layers}), "
+            f"got {normalized!r}"
+        )
+    if len(set(normalized)) != len(normalized):
+        raise ValueError(
+            f"{source} contains duplicate layer IDs; IDs must be unique, "
+            f"got {normalized!r}"
+        )
+    return tuple(sorted(normalized))
+
+
 def parse_moe_layer_ids(raw_layers: Any, num_layers: Any) -> tuple[int, ...]:
     """Parse an explicit MoE layer map using one strict contract.
 
@@ -82,16 +335,23 @@ def parse_moe_layer_ids(raw_layers: Any, num_layers: Any) -> tuple[int, ...]:
             "moe_layers_enum validation requires a positive integer num_layers"
         )
     if raw_layers is None:
-        return tuple(range(num_layers))
+        return normalize_moe_layer_ids(
+            range(num_layers),
+            num_layers,
+            source="moe_layers_enum",
+        )
     if not isinstance(raw_layers, str):
         raise ValueError(
             f"moe_layers_enum must be a comma-separated string, got {raw_layers!r}"
         )
     if raw_layers.strip() == "":
-        return tuple(range(num_layers))
+        return normalize_moe_layer_ids(
+            range(num_layers),
+            num_layers,
+            source="moe_layers_enum",
+        )
 
     parsed: list[int] = []
-    seen: set[int] = set()
     for raw_token in raw_layers.split(","):
         token = raw_token.strip()
         if not re.fullmatch(r"[+-]?\d+", token):
@@ -99,18 +359,12 @@ def parse_moe_layer_ids(raw_layers: Any, num_layers: Any) -> tuple[int, ...]:
                 f"Invalid moe_layers_enum token {token!r} in {raw_layers!r}"
             )
         layer_id = int(token)
-        if layer_id < 0 or layer_id >= num_layers:
-            raise ValueError(
-                f"moe_layers_enum layer id {layer_id} out of range "
-                f"[0, {num_layers})"
-            )
-        if layer_id in seen:
-            raise ValueError(
-                f"moe_layers_enum contains duplicate layer id {layer_id}"
-            )
-        seen.add(layer_id)
         parsed.append(layer_id)
-    return tuple(sorted(parsed))
+    return normalize_moe_layer_ids(
+        parsed,
+        num_layers,
+        source="moe_layers_enum",
+    )
 
 
 @dataclass(frozen=True)
@@ -219,33 +473,17 @@ class LayerContractSpec:
     def resolve_width(self, config: Any, *, mixed_model: bool = False) -> int:
         """Resolve and validate the width declared by this contract."""
 
-        source_attributes = {
-            LayerDimensionSource.DENSE: ("dense_mlp_hidden_dim", "intermediate_size"),
-            LayerDimensionSource.ROUTED: (
-                "routed_mlp_hidden_dim",
-                "moe_intermediate_size",
-                "mlp_hidden_dim",
-            ),
-            LayerDimensionSource.SHARED: (
-                "share_expert_dim",
-                "shared_expert_intermediate_size",
-            ),
-        }[self.dimension_source]
-        value = None
-        for attribute in source_attributes:
-            candidate = getattr(config, attribute, None)
-            if candidate is not None:
-                value = candidate
-                break
+        value = get_declared_layer_width(
+            config,
+            self.dimension_source,
+            mixed_model=mixed_model,
+        )
         if value is None and self.dimension_source is LayerDimensionSource.DENSE:
-            # A mixed model must carry an explicit dense width. Falling back to
-            # the legacy model-wide field would silently reuse the routed width.
             if mixed_model:
                 raise ValueError(
-                    "dense layer width requires dense_mlp_hidden_dim or "
-                    "intermediate_size for a mixed model"
+                    "dense layer width requires dense_mlp_hidden_dim for a mixed "
+                    "model"
                 )
-            value = getattr(config, "mlp_hidden_dim", None)
         if type(value) is not int or value <= 0:
             raise ValueError(
                 f"{self.layer_kind.value} layer width must be a positive int, got {value!r}"
@@ -267,6 +505,13 @@ class ResolvedLayerContract:
     tensor_parallel_size: int | None = None
     expert_parallel_size: int | None = None
     operator_family_id: str | None = None
+    # Keep the declared family and TP domain alongside the selected values.
+    # A resolver call that supplies one concrete TP value materializes a
+    # singleton domain; producers that own a wider domain can attach it when
+    # they construct a contract in a later migration.
+    operator_family_ids: tuple[str, ...] = ()
+    tensor_parallel_sizes: tuple[int, ...] = ()
+    selected_padded_ffn_width: int | None = None
 
     @property
     def width(self) -> int:
@@ -284,13 +529,134 @@ class ResolvedLayerContract:
     def is_expert_parallel(self) -> bool:
         return self.expert_parallel_mode is ExpertParallelMode.ON
 
+    def semantic_identity(self) -> tuple[object, ...]:
+        """Return the identity used when two transport paths share one domain.
+
+        ``layer_id`` is intentionally absent: a profile-level operator query
+        and a concrete layer query describe the same typed domain when every
+        width, parallel, and operator-family field agrees.  Cache and
+        provenance callers must continue using
+        :func:`serialize_layer_contract_identity`, which retains ``layer_id``.
+        """
+
+        return (
+            self.profile_id,
+            self.layer_kind,
+            self.dimension_source,
+            self.effective_ffn_width,
+            self.tensor_parallel_mode,
+            self.expert_parallel_mode,
+            self.tensor_parallel_size,
+            self.expert_parallel_size,
+            self.operator_family_id,
+        )
+
+    def is_semantically_equivalent(self, other: object) -> bool:
+        """Compare typed-domain semantics while ignoring layer identity scope."""
+
+        if not isinstance(other, ResolvedLayerContract):
+            return False
+        return self.semantic_identity() == other.semantic_identity()
+
+    def typed_metadata_identity(self) -> dict[str, object]:
+        """Return the canonical fields required in a typed profiling row."""
+
+        family_ids = self.operator_family_ids
+        if not family_ids and self.operator_family_id is not None:
+            family_ids = (self.operator_family_id,)
+        operator_family_id = self.operator_family_id
+        if operator_family_id is None and len(family_ids) == 1:
+            operator_family_id = family_ids[0]
+        if operator_family_id is None:
+            raise ValueError(
+                "typed metadata identity requires one resolved operator family; "
+                "pass operator_name when a layer contract owns multiple families"
+            )
+
+        tensor_parallel_sizes = self.tensor_parallel_sizes
+        if not tensor_parallel_sizes and self.tensor_parallel_size is not None:
+            tensor_parallel_sizes = (self.tensor_parallel_size,)
+
+        padded_width = self.selected_padded_ffn_width
+        if padded_width is None and self.tensor_parallel_size is not None:
+            padded_width = _pad_to_multiple(
+                self.effective_ffn_width,
+                self.tensor_parallel_size,
+            )
+
+        metadata = {
+            "profile_id": self.profile_id,
+            "operator_family_id": operator_family_id,
+            "operator_family_ids": list(family_ids),
+            "layer_kind": self.layer_kind.value,
+            "dimension_source": self.dimension_source.value,
+            "effective_ffn_width": self.effective_ffn_width,
+            "tensor_parallel_mode": self.tensor_parallel_mode.value,
+            "expert_parallel_mode": self.expert_parallel_mode.value,
+            "selected_expert_parallel_size": self.expert_parallel_size,
+            "tensor_parallel_sizes": list(tensor_parallel_sizes),
+            "selected_tensor_parallel_size": self.tensor_parallel_size,
+            "selected_padded_ffn_width": padded_width,
+        }
+
+        # Keep the architecture-owned value object and the shared serializer
+        # on one field source.  The import is local so the architecture module
+        # does not acquire pandas during package initialization.
+        from frontier.operators.typed_contracts import TYPED_METADATA_REQUIRED_FIELDS
+
+        missing_fields = tuple(
+            field_name
+            for field_name in TYPED_METADATA_REQUIRED_FIELDS
+            if field_name not in metadata
+        )
+        if missing_fields:
+            raise ValueError(
+                "typed metadata identity is missing required fields: "
+                f"{', '.join(missing_fields)}"
+            )
+        return {
+            field_name: metadata[field_name]
+            for field_name in TYPED_METADATA_REQUIRED_FIELDS
+        }
+
+
+def serialize_layer_contract_identity(
+    layer_contract: ResolvedLayerContract | None,
+) -> str | None:
+    """Serialize one resolved contract for stable cache and provenance identity.
+
+    Cache producers and consumers must use the same representation. Keeping
+    this serialization next to the profile-owned value object prevents a
+    training-only or runtime-only identity from silently diverging.
+    """
+
+    if layer_contract is None:
+        return None
+    if not isinstance(layer_contract, ResolvedLayerContract):
+        raise TypeError(
+            "layer_contract must be a ResolvedLayerContract when provided"
+        )
+    payload = {
+        "profile_id": layer_contract.profile_id,
+        "layer_id": layer_contract.layer_id,
+        "layer_kind": layer_contract.layer_kind.value,
+        "dimension_source": layer_contract.dimension_source.value,
+        "effective_ffn_width": layer_contract.effective_ffn_width,
+        "tensor_parallel_mode": layer_contract.tensor_parallel_mode.value,
+        "expert_parallel_mode": layer_contract.expert_parallel_mode.value,
+        "tensor_parallel_size": layer_contract.tensor_parallel_size,
+        "expert_parallel_size": layer_contract.expert_parallel_size,
+        "operator_family_id": layer_contract.operator_family_id,
+    }
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
+
 
 def _dense_layer_contract_active(
     profile: "ModelArchitectureProfile", config: Any
 ) -> bool:
     """Activate dense layers for dense models and mixed-layer MoE boundaries."""
 
-    return not bool(getattr(config, "is_moe", False)) or profile._is_mixed_model(config)
+    return not bool(_get_config_value(config, "is_moe", False)) or profile._is_mixed_model(config)
 
 
 def _routed_layer_contract_active(
@@ -298,7 +664,7 @@ def _routed_layer_contract_active(
 ) -> bool:
     """Activate routed layers for MoE model configurations."""
 
-    return bool(getattr(config, "is_moe", False))
+    return bool(_get_config_value(config, "is_moe", False))
 
 
 def _shared_layer_contract_active(
@@ -306,10 +672,15 @@ def _shared_layer_contract_active(
 ) -> bool:
     """Activate shared-expert layers only when the profile supports them."""
 
-    if not bool(getattr(config, "is_moe", False)):
+    if not bool(_get_config_value(config, "is_moe", False)):
         return False
-    configured_support = getattr(config, "supports_share_expert", None)
-    if callable(configured_support):
+    configured_support = _get_declared_config_attribute(
+        config,
+        "supports_share_expert",
+    )
+    if configured_support is not _MISSING_CONFIG_ATTRIBUTE and callable(
+        configured_support
+    ):
         return bool(configured_support())
     return profile.supports_share_expert(config)
 
@@ -400,7 +771,9 @@ class StructuralRequirement:
         try:
             passed = self.predicate(config)
         except ValueError as exc:
-            raise ValueError(self.message(profile, config)) from exc
+            raise ValueError(
+                f"{self.message(profile, config)}: {exc}"
+            ) from exc
         if not passed:
             raise ValueError(self.message(profile, config))
 
@@ -468,6 +841,7 @@ class ModelArchitectureProfile:
                 f"model architecture profile {self.profile_id!r} declares duplicate "
                 f"operator family ownership: {family_ids}"
             )
+        family_id: str | None = None
         try:
             from frontier.operators.families import get_operator_family
 
@@ -610,9 +984,11 @@ class ModelArchitectureProfile:
 
         if self.always_supports_share_expert:
             return True
-        return bool(getattr(config, "is_moe", False)) and int(
-            getattr(config, "share_expert_dim", 0) or 0
-        ) > 0
+        if not bool(_get_config_value(config, "is_moe", False)):
+            return False
+        return (
+            _get_optional_shared_expert_width(config) is not None
+        )
 
     def iter_active_layer_contracts(
         self,
@@ -634,6 +1010,92 @@ class ModelArchitectureProfile:
             if contract.is_active(self, config):
                 active_contracts.append(contract)
         return tuple(active_contracts)
+
+    def get_layer_contract_identity(self, config: Any) -> tuple[object, ...]:
+        """Return a stable identity for all active typed layer contracts.
+
+        Runtime caches must distinguish configurations that retain the same
+        legacy ``mlp_hidden_dim`` but declare different typed widths or layer
+        maps or model depth.  The profile owns both the semantic contract
+        fields and the width aliases, so cache callers only need this one
+        identity method.
+        Parallel sizes remain in the caller's topology key; the identity here
+        records the semantic TP/EP modes without creating a second topology
+        source of truth.
+        """
+
+        if config is None:
+            raise ValueError("layer contract identity requires a model config")
+
+        mixed_model = self._is_mixed_model(config)
+        contract_identity = tuple(
+            (
+                contract.layer_kind.value,
+                contract.dimension_source.value,
+                contract.resolve_width(config, mixed_model=mixed_model),
+                contract.tensor_parallel_mode.value,
+                contract.expert_parallel_mode.value,
+                tuple(contract.operator_family_ids),
+                tuple(base_kind.value for base_kind in contract.base_layer_kinds),
+            )
+            for contract in self.iter_active_layer_contracts(config)
+        )
+
+        if not bool(_get_config_value(config, "is_moe", False)):
+            moe_layer_ids: tuple[int, ...] = ()
+        else:
+            raw_layers = _get_config_value(config, "moe_layers_enum")
+            if raw_layers is not None:
+                moe_layer_ids = parse_moe_layer_ids(
+                    raw_layers,
+                    _get_config_value(config, "num_layers"),
+                )
+            else:
+                get_layer_ids = _get_declared_config_attribute(
+                    config,
+                    "get_moe_layer_ids",
+                )
+                if get_layer_ids is not _MISSING_CONFIG_ATTRIBUTE and callable(
+                    get_layer_ids
+                ):
+                    num_layers = _get_config_value(config, "num_layers")
+                    moe_layer_ids = normalize_moe_layer_ids(
+                        get_layer_ids(),
+                        num_layers,
+                    )
+                else:
+                    moe_layer_ids = parse_moe_layer_ids(
+                        None,
+                        _get_config_value(config, "num_layers"),
+                    )
+
+        # Keep the existing leading tuple members stable for callers that
+        # inspect profile, contract, and layer-map components positionally.
+        # Model depth remains an independent identity dimension: the same
+        # explicit MoE IDs can be valid in models with different trailing
+        # dense layers.
+        num_layers = _get_config_value(config, "num_layers")
+        return (self.profile_id, contract_identity, moe_layer_ids, num_layers)
+
+    def serialize_layer_contract_identity(
+        self,
+        config: Any,
+        layer_contract: ResolvedLayerContract | None = None,
+    ) -> str:
+        """Serialize the profile-wide and optional resolved contract identity.
+
+        The profile-wide component includes every active typed domain and the
+        complete MoE layer map.  A resolved operator contract is included when
+        a cache entry or model artifact represents one concrete domain.  This
+        method is the single serialization boundary for typed cache identity;
+        callers do not reconstruct architecture fields independently.
+        """
+
+        return serialize_profile_layer_contract_identity(
+            self,
+            config,
+            layer_contract=layer_contract,
+        )
 
     def get_layer_contract(self, layer_kind: LayerKind) -> LayerContractSpec:
         """Return the profile-owned contract for one typed FFN domain."""
@@ -727,7 +1189,7 @@ class ModelArchitectureProfile:
             expert_parallel_size if expert_parallel_size is not None else ep_size
         )
 
-        num_layers = getattr(config, "num_layers", None)
+        num_layers = _get_config_value(config, "num_layers")
         if layer_id is not None:
             if type(layer_id) is not int:
                 raise ValueError(f"layer_id must be an int, got {layer_id!r}")
@@ -758,7 +1220,8 @@ class ModelArchitectureProfile:
                 operator_family_id = bind_operator_query(operator_name).family_id
             except (ImportError, TypeError, ValueError) as exc:
                 raise ValueError(
-                    f"Unable to bind operator {operator_name!r} to a typed layer contract"
+                    f"Unable to bind operator {operator_name!r} to a typed layer "
+                    f"domain: {exc}"
                 ) from exc
             operator_contract = self.get_layer_contract_for_family(operator_family_id)
 
@@ -776,7 +1239,7 @@ class ModelArchitectureProfile:
             if operator_contract.layer_kind in (
                 LayerKind.ROUTED,
                 LayerKind.SHARED,
-            ) and not bool(getattr(config, "is_moe", False)):
+            ) and not bool(_get_config_value(config, "is_moe", False)):
                 raise ValueError(
                     f"{operator_contract.layer_kind.value} operator "
                     f"{operator_name!r} requires an MoE model configuration"
@@ -789,16 +1252,30 @@ class ModelArchitectureProfile:
                     f"{allowed}, but layer_id={layer_id} is {config_kind.value}"
                 )
             if operator_contract.layer_kind is LayerKind.SHARED:
-                supports_shared = getattr(config, "supports_share_expert", None)
-                if callable(supports_shared):
+                supports_shared = _get_declared_config_attribute(
+                    config,
+                    "supports_share_expert",
+                )
+                if supports_shared is not _MISSING_CONFIG_ATTRIBUTE and callable(
+                    supports_shared
+                ):
                     if not bool(supports_shared()):
                         raise ValueError(
                             "shared-expert operator requested for a config that "
                             "does not support shared experts"
                         )
-                elif getattr(config, "share_expert_dim", None) is None:
+                elif (
+                    get_declared_layer_width(
+                        config,
+                        LayerDimensionSource.SHARED,
+                        reject_zero_sentinel=True,
+                    )
+                    is None
+                ):
                     raise ValueError(
-                        "shared-expert operator requires share_expert_dim"
+                        "shared-expert operator requires a declared shared width "
+                        "(share_expert_dim or shared_expert_intermediate_size); "
+                        "share_expert_dim must be set"
                     )
             selected_kind = operator_contract.layer_kind
         elif layer_id is not None:
@@ -838,7 +1315,7 @@ class ModelArchitectureProfile:
                     )
 
         if spec.expert_parallel_mode is ExpertParallelMode.ON:
-            num_experts = getattr(config, "num_experts", None)
+            num_experts = _get_config_value(config, "num_experts")
             if num_experts is not None and (type(num_experts) is not int or num_experts <= 0):
                 raise ValueError(
                     "num_experts must be a positive int, got " f"{num_experts!r}"
@@ -863,6 +1340,27 @@ class ModelArchitectureProfile:
         else:
             expert_parallel_size = None
 
+        family_ids = tuple(spec.operator_family_ids)
+        if operator_family_id is None and len(family_ids) > 1:
+            raise ValueError(
+                f"{spec.layer_kind.value} layer contract for profile "
+                f"{self.profile_id!r} owns multiple operator families "
+                f"{family_ids}; pass operator_name to select one"
+            )
+        resolved_family_id = operator_family_id
+        if resolved_family_id is None and len(family_ids) == 1:
+            resolved_family_id = family_ids[0]
+
+        # The resolver receives one selected value at a time. Preserve that
+        # value as a singleton domain so typed metadata never invents a wider
+        # profiling envelope than the caller supplied.
+        tensor_parallel_sizes = () if tp_size is None else (tp_size,)
+        selected_padded_ffn_width = (
+            None
+            if tp_size is None
+            else _pad_to_multiple(width, tp_size)
+        )
+
         return ResolvedLayerContract(
             profile_id=self.profile_id,
             layer_id=layer_id,
@@ -873,7 +1371,10 @@ class ModelArchitectureProfile:
             expert_parallel_mode=spec.expert_parallel_mode,
             tensor_parallel_size=tp_size,
             expert_parallel_size=expert_parallel_size,
-            operator_family_id=operator_family_id,
+            operator_family_id=resolved_family_id,
+            operator_family_ids=family_ids,
+            tensor_parallel_sizes=tensor_parallel_sizes,
+            selected_padded_ffn_width=selected_padded_ffn_width,
         )
 
     @staticmethod
@@ -936,20 +1437,35 @@ class ModelArchitectureProfile:
 
     @classmethod
     def _is_mixed_model(cls, config: Any) -> bool:
-        if not bool(getattr(config, "is_moe", False)):
+        if not bool(_get_config_value(config, "is_moe", False)):
             return False
-        num_layers = getattr(config, "num_layers", None)
-        raw_layers = getattr(config, "moe_layers_enum", None)
+        num_layers = _get_config_value(config, "num_layers")
+        raw_layers = _get_config_value(config, "moe_layers_enum")
         if raw_layers is not None:
             ids = parse_moe_layer_ids(raw_layers, num_layers)
             return bool(ids) and len(ids) < num_layers
-        get_ids = getattr(config, "get_moe_layer_ids", None)
-        if callable(get_ids) and type(num_layers) is int:
-            ids = tuple(get_ids())
+        get_ids = _get_declared_config_attribute(config, "get_moe_layer_ids")
+        if (
+            get_ids is not _MISSING_CONFIG_ATTRIBUTE
+            and callable(get_ids)
+            and type(num_layers) is int
+        ):
+            ids = normalize_moe_layer_ids(get_ids(), num_layers)
             return bool(ids) and len(ids) < num_layers
-        get_count = getattr(config, "get_num_moe_layers", None)
-        if callable(get_count) and type(num_layers) is int:
-            count = int(get_count())
+        get_count = _get_declared_config_attribute(config, "get_num_moe_layers")
+        if get_count is not _MISSING_CONFIG_ATTRIBUTE:
+            if not callable(get_count):
+                raise TypeError("get_num_moe_layers must be callable when declared")
+            if type(num_layers) is not int or num_layers <= 0:
+                raise ValueError(
+                    "get_num_moe_layers requires a positive integer num_layers"
+                )
+            count = get_count()
+            if type(count) is not int or count < 0 or count > num_layers:
+                raise ValueError(
+                    "get_num_moe_layers() must return an integer in the range "
+                    f"[0, {num_layers}], got {count!r}"
+                )
             return 0 < count < num_layers
         return False
 
@@ -957,12 +1473,12 @@ class ModelArchitectureProfile:
     def _resolve_config_layer_kind(
         cls, config: Any, layer_id: int | None
     ) -> LayerKind:
-        if not bool(getattr(config, "is_moe", False)):
+        if not bool(_get_config_value(config, "is_moe", False)):
             return LayerKind.DENSE
-        num_layers = getattr(config, "num_layers", None)
+        num_layers = _get_config_value(config, "num_layers")
         if layer_id is None:
             return LayerKind.ROUTED
-        raw_layers = getattr(config, "moe_layers_enum", None)
+        raw_layers = _get_config_value(config, "moe_layers_enum")
         if raw_layers is not None:
             parsed_layer_ids = set(parse_moe_layer_ids(raw_layers, num_layers))
             return (
@@ -970,14 +1486,17 @@ class ModelArchitectureProfile:
                 if layer_id in parsed_layer_ids
                 else LayerKind.DENSE
             )
-        predicate = getattr(config, "is_moe_layer", None)
-        if callable(predicate):
+        predicate = _get_declared_config_attribute(config, "is_moe_layer")
+        if predicate is not _MISSING_CONFIG_ATTRIBUTE and callable(predicate):
             return LayerKind.ROUTED if bool(predicate(layer_id)) else LayerKind.DENSE
-        get_ids = getattr(config, "get_moe_layer_ids", None)
-        if callable(get_ids):
+        get_ids = _get_declared_config_attribute(config, "get_moe_layer_ids")
+        if get_ids is not _MISSING_CONFIG_ATTRIBUTE and callable(get_ids):
+            parsed_layer_ids = set(
+                normalize_moe_layer_ids(get_ids(), num_layers)
+            )
             return (
                 LayerKind.ROUTED
-                if layer_id in set(get_ids())
+                if layer_id in parsed_layer_ids
                 else LayerKind.DENSE
             )
         return LayerKind.ROUTED
@@ -1004,6 +1523,51 @@ class ModelArchitectureProfile:
         )
 
 
+def serialize_profile_layer_contract_identity(
+    profile: ModelArchitectureProfile,
+    config: Any,
+    *,
+    layer_contract: ResolvedLayerContract | None = None,
+) -> str:
+    """Return canonical JSON for a profile-owned typed contract identity.
+
+    The profile-wide identity and the concrete contract use the serializers
+    defined in this module, so cache consumers share one representation.  A
+    contract from another profile is rejected instead of producing an
+    identity that appears valid but cannot be resolved by the requested
+    architecture.
+    """
+
+    if not isinstance(profile, ModelArchitectureProfile):
+        raise TypeError(
+            "profile must be a ModelArchitectureProfile when serializing a "
+            "typed layer identity"
+        )
+    if layer_contract is not None:
+        if not isinstance(layer_contract, ResolvedLayerContract):
+            raise TypeError(
+                "layer_contract must be a ResolvedLayerContract when provided"
+            )
+        if layer_contract.profile_id != profile.profile_id:
+            raise ValueError(
+                "layer_contract profile does not match the architecture profile: "
+                f"{layer_contract.profile_id!r} != {profile.profile_id!r}"
+            )
+
+    contract_payload = None
+    if layer_contract is not None:
+        serialized_contract = serialize_layer_contract_identity(layer_contract)
+        if serialized_contract is None:
+            raise ValueError("typed layer contract serialization unexpectedly returned None")
+        contract_payload = json.loads(serialized_contract)
+
+    payload = {
+        "profile_identity": profile.get_layer_contract_identity(config),
+        "resolved_contract": contract_payload,
+    }
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
+
+
 def _model_identifier(config: Any) -> str:
     identifier_parts = []
     get_name = getattr(config, "get_name", None)
@@ -1022,7 +1586,7 @@ def _moe_share_expert_requirements() -> tuple[StructuralRequirement, ...]:
     return (
         StructuralRequirement(
             name="requires_moe",
-            predicate=lambda config: bool(getattr(config, "is_moe", False)),
+            predicate=lambda config: bool(_get_config_value(config, "is_moe", False)),
             message=lambda profile, config: (
                 f"{profile.display_name} profile {profile.profile_id} "
                 f"requires is_moe=True. Model: {_model_identifier(config)}"
@@ -1030,11 +1594,16 @@ def _moe_share_expert_requirements() -> tuple[StructuralRequirement, ...]:
         ),
         StructuralRequirement(
             name="requires_share_expert_dim",
-            predicate=lambda config: getattr(config, "share_expert_dim", None)
+            predicate=lambda config: get_declared_layer_width(
+                config,
+                LayerDimensionSource.SHARED,
+            )
             is not None,
             message=lambda profile, config: (
                 f"{profile.display_name} profile {profile.profile_id} "
-                f"requires share_expert_dim. Model: {_model_identifier(config)}"
+                "requires a declared shared width "
+                "(share_expert_dim or shared_expert_intermediate_size). "
+                f"Model: {_model_identifier(config)}"
             ),
         ),
     )
@@ -1139,8 +1708,16 @@ class ModelArchitectureRegistry:
         return tuple(self._profiles_by_id.values())
 
     def resolve(self, config: Any) -> ModelArchitectureProfile:
-        explicit_profile = getattr(config, "model_architecture_profile", None)
-        if explicit_profile:
+        explicit_profile = _get_declared_config_attribute(
+            config,
+            "model_architecture_profile",
+        )
+        if explicit_profile is not _MISSING_CONFIG_ATTRIBUTE and explicit_profile:
+            if not isinstance(explicit_profile, str):
+                raise TypeError(
+                    "model_architecture_profile must be a string when declared, "
+                    f"got {type(explicit_profile).__name__}"
+                )
             return self.get(str(explicit_profile).lower())
         for profile in self.iter_profiles():
             if profile.match(config):

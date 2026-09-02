@@ -40,6 +40,7 @@ from frontier.spec_decode.mtp_registry import (
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
     MOE_GATING_RUNTIME_CONTEXT_COLUMN,
+    normalize_moe_gating_runtime_context,
 )
 from frontier.moe_routing_runtime import resolve_moe_gating_routing_runtime_path
 from frontier.operators.families import (
@@ -2300,7 +2301,14 @@ def _validate_moe_profile_keys(
             ep_size = int(str(row["expert_parallel_size"]).strip())
         except ValueError as exc:
             raise ValueError(f"{path} contains non-integer MoE TP/EP metadata") from exc
-        normalized_rows.append((row, tp_size, ep_size))
+        normalized_row = dict(row)
+        if MOE_GATING_RUNTIME_CONTEXT_COLUMN in fieldnames:
+            normalized_row[MOE_GATING_RUNTIME_CONTEXT_COLUMN] = (
+                normalize_moe_gating_runtime_context(
+                    normalized_row.get(MOE_GATING_RUNTIME_CONTEXT_COLUMN, "")
+                )
+            )
+        normalized_rows.append((normalized_row, tp_size, ep_size))
 
     available_keys = sorted(
         {

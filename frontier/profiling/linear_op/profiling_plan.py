@@ -50,6 +50,36 @@ def _share_expert_profiling_names() -> List[str]:
     return list(get_family_profiling_names(SHARE_EXPERT_FAMILY))
 
 
+def _typed_linear_profiling_names(
+    typed_layer_contracts: Sequence[Dict[str, object]],
+    *,
+    selected_tp_size: int | None = None,
+) -> List[str]:
+    """Return linear FFN names owned by active typed layer contracts.
+
+    Routed MoE operators have a separate profiling producer. Restrict this
+    helper to the FFN and shared-expert families, while deriving ownership from
+    the profile declarations instead of the model's legacy ``is_moe`` flag.
+    """
+
+    linear_family_ids = {
+        FFN_FAMILY.family_id,
+        SHARE_EXPERT_FAMILY.family_id,
+    }
+    names: List[str] = []
+    for contract in typed_layer_contracts:
+        if selected_tp_size is not None and contract.get(
+            "selected_tensor_parallel_size"
+        ) != selected_tp_size:
+            continue
+        for family_id in contract.get("operator_family_ids", ()):
+            if family_id not in linear_family_ids:
+                continue
+            family = get_operator_family(str(family_id))
+            names.extend(get_family_profiling_names(family))
+    return _dedupe_preserving_order(names)
+
+
 def memory_operator_enabled(
     enabled_ops: Sequence[str] | set[str] | None,
     operator_name: str,
@@ -187,6 +217,9 @@ def _typed_layer_contracts(
                 "effective_ffn_width": width,
                 "tensor_parallel_mode": spec.tensor_parallel_mode.value,
                 "expert_parallel_mode": spec.expert_parallel_mode.value,
+                # Linear-op planning does not select an EP domain. The
+                # dedicated MoE producer supplies concrete EP identities.
+                "selected_expert_parallel_size": None,
                 "operator_family_ids": list(spec.operator_family_ids),
                 "tensor_parallel_sizes": list(sizes),
                 "selected_tensor_parallel_size": selected_size,
@@ -219,6 +252,7 @@ def _non_layer_operator_contract(
         "effective_ffn_width": None,
         "tensor_parallel_mode": tensor_parallel_mode.value,
         "expert_parallel_mode": "off",
+        "selected_expert_parallel_size": None,
         "tensor_parallel_sizes": list(tensor_parallel_sizes),
         "selected_tensor_parallel_size": selected_tensor_parallel_size,
         "selected_padded_ffn_width": None,
@@ -364,6 +398,7 @@ def build_profiling_plan(
     is_moe: bool = False,
     include_target_embedded_mtp: bool = False,
     moe_tp: Sequence[int] | None = None,
+    include_ffn: bool = True,
 ) -> Dict[str, object]:
     tp_size = _validate_positive_int(tp_size, name="tp_size")
     if moe_tp is None:
@@ -414,17 +449,21 @@ def build_profiling_plan(
                         f"TP={tp_size} must be divisible by num_kv_heads={model_config.num_kv_heads} for KV-head replication"
                     )
 
-        ffn_sharded_enabled = tp_size in ffn_tp_set
+        ffn_sharded_enabled = include_ffn and tp_size in ffn_tp_set
 
     padded_n_embd = model_config.embedding_dim
     architecture_profile = get_model_architecture_profile(model_config)
-    typed_layer_contracts = _typed_layer_contracts(
-        model_config,
-        profile=architecture_profile,
-        tp_size=tp_size,
-        attn_tp=attn_tp,
-        ffn_tp=ffn_tp,
-        moe_tp=moe_tp,
+    typed_layer_contracts = (
+        _typed_layer_contracts(
+            model_config,
+            profile=architecture_profile,
+            tp_size=tp_size,
+            attn_tp=attn_tp,
+            ffn_tp=ffn_tp,
+            moe_tp=moe_tp,
+        )
+        if include_ffn
+        else []
     )
     selected_typed_contracts = [
         contract
@@ -435,7 +474,7 @@ def build_profiling_plan(
     # Mixed-layer profiles can place the standard dense FFN in the attention
     # TP domain. Keep the historical FFN-list behavior for pure models while
     # deriving the mixed decision from the registered family owner.
-    if architecture_profile._is_mixed_model(model_config):
+    if include_ffn and architecture_profile._is_mixed_model(model_config):
         ffn_family_ids = {
             FFN_FAMILY.family_id,
             SHARE_EXPERT_FAMILY.family_id,
@@ -455,21 +494,22 @@ def build_profiling_plan(
     # that have not migrated to the typed list. Prefer the selected dense
     # domain, then routed/shared domains, and finally the legacy scalar.
     padded_n_expanded_embd = model_config.mlp_hidden_dim
-    for preferred_kind in ("dense", "routed", "shared"):
-        matching = [
-            contract
-            for contract in selected_typed_contracts
-            if contract["layer_kind"] == preferred_kind
-        ]
-        if matching:
-            padded_n_expanded_embd = int(matching[0]["selected_padded_ffn_width"])
-            break
+    if include_ffn:
+        for preferred_kind in ("dense", "routed", "shared"):
+            matching = [
+                contract
+                for contract in selected_typed_contracts
+                if contract["layer_kind"] == preferred_kind
+            ]
+            if matching:
+                padded_n_expanded_embd = int(matching[0]["selected_padded_ffn_width"])
+                break
     if ffn_sharded_enabled:
         padded_n_embd = _pad_to_multiple(model_config.embedding_dim, tp_size)
 
     replicated_enabled = not disable_replicated
     attn_enabled = attn_sharded_enabled or replicated_enabled
-    ffn_enabled = ffn_sharded_enabled or replicated_enabled
+    ffn_enabled = include_ffn and (ffn_sharded_enabled or replicated_enabled)
 
     linear_attention = architecture_profile.linear_attention
     memory_ops = _memory_profiling_names(model_config)
@@ -520,20 +560,19 @@ def build_profiling_plan(
             enabled_ops.extend(TARGET_EMBEDDED_MTP_OPS)
 
     if ffn_sharded_enabled:
-        if not is_moe:
-            enabled_ops.extend(_ffn_profiling_names())
-        if getattr(model_config, "is_moe", False) and _supports_share_expert(model_config):
-            enabled_ops.extend(_share_expert_profiling_names())
+        enabled_ops.extend(
+            _typed_linear_profiling_names(
+                typed_layer_contracts,
+                selected_tp_size=tp_size,
+            )
+        )
 
     all_ops: List[str] = []
     all_ops.extend(replicated_ops)
     all_ops.extend(linear_attention.sharded_ops)
     if include_target_embedded_mtp:
         all_ops.extend(TARGET_EMBEDDED_MTP_OPS)
-    if not is_moe:
-        all_ops.extend(_ffn_profiling_names())
-    if getattr(model_config, "is_moe", False) and _supports_share_expert(model_config):
-        all_ops.extend(_share_expert_profiling_names())
+    all_ops.extend(_typed_linear_profiling_names(typed_layer_contracts))
     # Remove duplicates while preserving order.
     all_ops = list(dict.fromkeys(all_ops))
     enabled_ops = list(dict.fromkeys(enabled_ops))

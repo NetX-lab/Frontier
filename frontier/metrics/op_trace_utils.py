@@ -20,6 +20,11 @@ from frontier.operators.families import (
 )
 from frontier.operators.spec import OperatorFamilySpec, OperatorRole, OperatorSpec
 from frontier.types import ClusterType
+from frontier.model_architectures import (
+    LayerKind,
+    ResolvedLayerContract,
+    resolve_model_architecture_profile,
+)
 
 
 @dataclass(frozen=True)
@@ -91,10 +96,44 @@ class OpTraceContext:
         return self.model_config.mlp_hidden_dim
 
     @property
+    def role_local_ffn_tp(self) -> int:
+        """Return the TP domain that owns FFN work for this cluster role."""
+
+        if self.cluster_type is ClusterType.DECODE_FFN:
+            return self.moe_tp
+        return self.attn_tp
+
+    @property
     def share_expert_dim(self) -> int:
-        if self.model_config.share_expert_dim is None:
+        profile = resolve_model_architecture_profile(self.model_config)
+        declared_width = profile.resolve_layer_contract(
+            self.model_config,
+            layer_kind=LayerKind.SHARED,
+            attention_tp_size=self.role_local_ffn_tp,
+            moe_tp_size=self.moe_tp,
+            ffn_tp_size=self.role_local_ffn_tp,
+        )
+        if declared_width is None:
             raise ValueError("share_expert_dim must be set for share_expert ops")
-        return int(self.model_config.share_expert_dim)
+        return int(declared_width.effective_ffn_width)
+
+    @property
+    def share_expert_tp(self) -> int:
+        """Return the profile-declared TP domain for shared-expert operators."""
+
+        profile = resolve_model_architecture_profile(self.model_config)
+        contract = profile.resolve_layer_contract(
+            self.model_config,
+            layer_kind=LayerKind.SHARED,
+            attention_tp_size=self.role_local_ffn_tp,
+            moe_tp_size=self.moe_tp,
+            ffn_tp_size=self.role_local_ffn_tp,
+        )
+        if contract.tensor_parallel_size is None:
+            raise ValueError(
+                "shared-expert contract did not resolve a tensor parallel size"
+            )
+        return int(contract.tensor_parallel_size)
 
     @property
     def num_experts(self) -> int:
@@ -212,6 +251,44 @@ def _get_family_operator_by_name(
     return matches[0]
 
 
+def _resolve_profile_trace_contract(
+    ctx: OpTraceContext,
+    family: OperatorFamilySpec,
+    *,
+    layer_id: int | None,
+) -> ResolvedLayerContract | None:
+    """Resolve a trace operator through the profile-owned layer contract.
+
+    A custom family used by an extension can remain on the historical scalar
+    trace path when the selected profile does not own that family. Registered
+    dense/routed/shared families are resolved strictly through the profile.
+    """
+
+    profile = resolve_model_architecture_profile(ctx.model_config)
+    owned_contracts = tuple(
+        contract
+        for contract in profile.layer_contracts
+        if family.family_id in contract.operator_family_ids
+    )
+    if not owned_contracts:
+        return None
+    if len(owned_contracts) != 1:
+        raise ValueError(
+            f"Profile {profile.profile_id!r} declares {len(owned_contracts)} "
+            f"layer contracts for operator family {family.family_id!r}; expected exactly one"
+        )
+
+    return profile.resolve_layer_contract(
+        ctx.model_config,
+        layer_id=layer_id,
+        layer_kind=owned_contracts[0].layer_kind,
+        attention_tp_size=ctx.role_local_ffn_tp,
+        moe_tp_size=ctx.moe_tp,
+        ffn_tp_size=ctx.role_local_ffn_tp,
+        expert_parallel_size=ctx.moe_ep,
+    )
+
+
 def _get_pre_routing_tokens(tokens: int, ctx: OpTraceContext) -> int:
     if not ctx.model_config.is_moe:
         return tokens
@@ -254,6 +331,8 @@ def compute_op_trace_meta(
     op_name: str,
     op_type: str,
     ctx: OpTraceContext,
+    *,
+    layer_id: int | None = None,
 ) -> Dict[str, Any]:
     precision_op = map_trace_op_to_precision_op(op_name)
     precision = _precision_for_op(op_name, ctx.cluster_type)
@@ -261,7 +340,6 @@ def compute_op_trace_meta(
 
     tokens = ctx.effective_tokens_rounded
     hidden_size = ctx.hidden_size
-    intermediate_size = ctx.intermediate_size
 
     attention_meta: Optional[Tuple[int, int, int, int]] = None
     mla_attention_meta: Optional[
@@ -375,8 +453,25 @@ def compute_op_trace_meta(
         )
 
     def _ffn_family_tensor_shape(operator: OperatorSpec) -> Dict[str, Any]:
-        _validate_divisible(intermediate_size, ctx.attn_tp, "intermediate_size")
-        intermediate_size_per_tp = intermediate_size // ctx.attn_tp
+        contract = _resolve_profile_trace_contract(
+            ctx,
+            FFN_FAMILY,
+            layer_id=layer_id,
+        )
+        ffn_width = (
+            contract.effective_ffn_width
+            if contract is not None
+            else ctx.intermediate_size
+        )
+        ffn_tp = (
+            contract.tensor_parallel_size
+            if contract is not None
+            else ctx.attn_tp
+        )
+        if ffn_tp is None:
+            raise ValueError("dense FFN contract did not resolve a tensor parallel size")
+        _validate_divisible(ffn_width, ffn_tp, "intermediate_size")
+        intermediate_size_per_tp = ffn_width // ffn_tp
         if operator.execution_time_attr == "mlp_layer_up_proj_execution_time":
             return {
                 "input": [tokens, hidden_size],
@@ -531,24 +626,78 @@ def compute_op_trace_meta(
                 "output": [tokens, hidden_size],
             }
         elif op_name == "share_expert_up_proj":
-            share_expert_dim = ctx.share_expert_dim
-            _validate_divisible(share_expert_dim, ctx.moe_tp, "share_expert_dim")
+            contract = _resolve_profile_trace_contract(
+                ctx,
+                SHARE_EXPERT_FAMILY,
+                layer_id=layer_id,
+            )
+            share_expert_dim = (
+                contract.effective_ffn_width
+                if contract is not None
+                else ctx.share_expert_dim
+            )
+            share_expert_tp = (
+                contract.tensor_parallel_size
+                if contract is not None
+                else ctx.moe_tp
+            )
+            if share_expert_tp is None:
+                raise ValueError(
+                    "shared-expert contract did not resolve a tensor parallel size"
+                )
+            _validate_divisible(share_expert_dim, share_expert_tp, "share_expert_dim")
             tensor_shape = {
                 "input": [tokens, hidden_size],
-                "output": [tokens, share_expert_dim // ctx.moe_tp],
+                "output": [tokens, share_expert_dim // share_expert_tp],
             }
         elif op_name == "share_expert_act":
-            share_expert_dim = ctx.share_expert_dim
-            _validate_divisible(share_expert_dim, ctx.moe_tp, "share_expert_dim")
+            contract = _resolve_profile_trace_contract(
+                ctx,
+                SHARE_EXPERT_FAMILY,
+                layer_id=layer_id,
+            )
+            share_expert_dim = (
+                contract.effective_ffn_width
+                if contract is not None
+                else ctx.share_expert_dim
+            )
+            share_expert_tp = (
+                contract.tensor_parallel_size
+                if contract is not None
+                else ctx.moe_tp
+            )
+            if share_expert_tp is None:
+                raise ValueError(
+                    "shared-expert contract did not resolve a tensor parallel size"
+                )
+            _validate_divisible(share_expert_dim, share_expert_tp, "share_expert_dim")
             tensor_shape = {
-                "input": [tokens, share_expert_dim // ctx.moe_tp],
-                "output": [tokens, share_expert_dim // ctx.moe_tp],
+                "input": [tokens, share_expert_dim // share_expert_tp],
+                "output": [tokens, share_expert_dim // share_expert_tp],
             }
         elif op_name == "share_expert_down_proj":
-            share_expert_dim = ctx.share_expert_dim
-            _validate_divisible(share_expert_dim, ctx.moe_tp, "share_expert_dim")
+            contract = _resolve_profile_trace_contract(
+                ctx,
+                SHARE_EXPERT_FAMILY,
+                layer_id=layer_id,
+            )
+            share_expert_dim = (
+                contract.effective_ffn_width
+                if contract is not None
+                else ctx.share_expert_dim
+            )
+            share_expert_tp = (
+                contract.tensor_parallel_size
+                if contract is not None
+                else ctx.moe_tp
+            )
+            if share_expert_tp is None:
+                raise ValueError(
+                    "shared-expert contract did not resolve a tensor parallel size"
+                )
+            _validate_divisible(share_expert_dim, share_expert_tp, "share_expert_dim")
             tensor_shape = {
-                "input": [tokens, share_expert_dim // ctx.moe_tp],
+                "input": [tokens, share_expert_dim // share_expert_tp],
                 "output": [tokens, hidden_size],
             }
         elif op_name == "moe_gating_linear":
@@ -572,11 +721,28 @@ def compute_op_trace_meta(
                 "output": [pre_routing_tokens, ctx.router_topk, hidden_size],
             }
         elif op_name == "moe_grouped_gemm":
-            _validate_divisible(intermediate_size, ctx.moe_tp, "moe_intermediate_size")
+            contract = _resolve_profile_trace_contract(
+                ctx,
+                MOE_FAMILY,
+                layer_id=layer_id,
+            )
+            routed_width = (
+                contract.effective_ffn_width
+                if contract is not None
+                else ctx.intermediate_size
+            )
+            routed_tp = (
+                contract.tensor_parallel_size
+                if contract is not None
+                else ctx.moe_tp
+            )
+            if routed_tp is None:
+                raise ValueError("routed MoE contract did not resolve a tensor parallel size")
+            _validate_divisible(routed_width, routed_tp, "moe_intermediate_size")
             routed_tokens = _get_routed_tokens(tokens, ctx)
             tensor_shape = {
                 "input": [routed_tokens, hidden_size],
-                "output": [routed_tokens, intermediate_size // ctx.moe_tp],
+                "output": [routed_tokens, routed_width // routed_tp],
             }
         else:
             raise ValueError(f"Unsupported compute op for tracing: {op_name}")

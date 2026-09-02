@@ -24,9 +24,9 @@ def test_qwen3_next_param_counter_excludes_shared_expert_from_system_metrics_mem
     assert replica_config.model_config.supports_share_expert()
 
     assert counter._get_share_expert_params_per_layer(tensor_parallel_size=1) == 0
-    assert counter.get_num_mlp_parameters_per_device() == 3_229_614_080
-    assert counter.get_num_parameters_per_device() == 3_267_362_816
-    assert 2 * counter.get_num_parameters_per_device() == 6_534_725_632
+    assert counter.get_num_mlp_parameters_per_device() == 3_223_322_624
+    assert counter.get_num_parameters_per_device() == 3_261_071_360
+    assert 2 * counter.get_num_parameters_per_device() == 6_522_142_720
 
 
 @pytest.mark.parametrize(
@@ -48,8 +48,8 @@ def test_qwen3_next_param_counter_excludes_shared_expert_from_system_metrics_mem
             2,
             "step2_mini",
             6_291_456,
-            214_040_576,
-            428_081_152,
+            188_874_752,
+            377_749_504,
         ),
         (
             "step-moe-noquant-small",
@@ -58,8 +58,8 @@ def test_qwen3_next_param_counter_excludes_shared_expert_from_system_metrics_mem
             4,
             "step3_text",
             27_525_120,
-            8_104_370_176,
-            16_208_740_352,
+            7_537_352_704,
+            15_074_705_408,
         ),
     ],
 )

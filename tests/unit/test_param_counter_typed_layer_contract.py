@@ -28,7 +28,29 @@ def test_step3_param_counter_uses_profile_owned_mixed_layer_widths() -> None:
     assert counter._get_dense_mlp_params_per_layer(tensor_parallel_size=8) == 49_545_216
     assert counter._get_routed_moe_params_per_layer(tensor_parallel_size=1) == 660_946_944
     assert counter._get_share_expert_params_per_layer(tensor_parallel_size=8) == 13_762_560
-    assert counter.get_num_mlp_parameters_per_device() == 40_874_803_200
+    # Five dense boundary layers own only dense weights; the 56 routed layers
+    # own routed experts plus the shared expert.
+    assert counter.get_num_mlp_parameters_per_device() == 38_031_458_304
+
+
+def test_pure_moe_parameter_basis_uses_routed_width_and_moe_tp() -> None:
+    """The public pure-MoE path must not use the dense helper as a routed alias."""
+
+    replica_config = ReplicaConfig(
+        model_name="qwen3-next-80b-a3b-instruct-reduced-l2",
+        device="h800",
+        attn_tensor_parallel_size=8,
+        moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=8,
+        num_pipeline_stages=1,
+    )
+    counter = ParamCounter(replica_config, ClusterType.MONOLITHIC)
+
+    # Qwen3-Next is pure MoE: the routed basis belongs to the MoE TP domain,
+    # while the private dense helper has no valid dense layer to resolve.
+    with pytest.raises(ValueError, match="dense layer contract is inactive"):
+        counter._get_dense_mlp_params_per_layer(tensor_parallel_size=8)
+    assert counter.get_num_mlp_parameters_per_device() == 404_750_336
 
 
 def test_param_counter_dispatches_tp_by_enum_identity(monkeypatch) -> None:
@@ -97,3 +119,39 @@ def test_param_counter_rejects_nonuniform_moe_layer_map_with_pp() -> None:
 
     with pytest.raises(ValueError, match="non-uniform.*MoE.*pipeline"):
         counter._get_num_moe_layers_per_pipeline_stage()
+
+
+def test_ffn_parameter_count_rejects_invalid_width() -> None:
+    """An invalid FFN width must fail before producing a misleading zero count."""
+
+    with pytest.raises(ValueError, match="width.*positive integer"):
+        ParamCounter._get_ffn_weight_params(
+            width=0,
+            embedding_dim=128,
+            use_gated_mlp=True,
+            tensor_parallel_size=1,
+        )
+
+
+def test_ffn_parameter_count_rejects_invalid_embedding_dim() -> None:
+    """An invalid model hidden size must not be converted into zero parameters."""
+
+    with pytest.raises(ValueError, match="embedding_dim.*positive integer"):
+        ParamCounter._get_ffn_weight_params(
+            width=128,
+            embedding_dim=0,
+            use_gated_mlp=True,
+            tensor_parallel_size=1,
+        )
+
+
+def test_ffn_parameter_count_rejects_invalid_tensor_parallel_size() -> None:
+    """A non-positive or non-integral TP domain must fail explicitly."""
+
+    with pytest.raises(ValueError, match="tensor_parallel_size.*positive integer"):
+        ParamCounter._get_ffn_weight_params(
+            width=128,
+            embedding_dim=128,
+            use_gated_mlp=True,
+            tensor_parallel_size=0,
+        )

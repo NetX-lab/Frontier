@@ -65,10 +65,16 @@ from frontier.execution_time_predictor.attention_tp_policy import (
 )
 from frontier.execution_time_predictor.attention_dataset_contract import (
     enforce_mixed_attention_input_contract,
+    resolve_attention_input_file,
 )
 from frontier.logger import init_logger
 from frontier.moe_gating_runtime import get_moe_gating_base_model_name
-from frontier.model_architectures import ModelArchitectureProfile
+from frontier.model_architectures import (
+    LayerKind,
+    ModelArchitectureProfile,
+    ResolvedLayerContract,
+    serialize_layer_contract_identity,
+)
 from frontier.operators.families import (
     FFN_FAMILY,
     MEMORY_FAMILY,
@@ -76,6 +82,7 @@ from frontier.operators.families import (
     get_family_profiling_names,
     get_family_profiling_name_set,
     get_comm_operator,
+    get_operator_family,
 )
 from frontier.operators.binding import bind_operator_query, resolve_operator_query_tp_mode
 from frontier.operators.spec import (
@@ -97,6 +104,10 @@ from frontier.profiling.other_overhead.validation import (
     validate_pp_producer_send_path_dataframe,
     validate_pp_receiver_head_dataframe,
     validate_pp_stage_boundary_dataframe,
+)
+from frontier.operators.typed_contracts import (
+    matches_resolved_layer_contract,
+    parse_typed_operator_contract_column,
 )
 from frontier.spec_decode import (
     build_mtp_runtime_contract,
@@ -380,6 +391,94 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _get_predictor_attention_extra_ops(self) -> tuple[str, ...]:
         return tuple(
             self._get_model_architecture_profile().predictor_attention_extra_ops
+        )
+
+    def _resolve_mlp_layer_contract(
+        self,
+        *,
+        layer_id: int,
+        layer_ids: Optional[List[int] | tuple[int, ...]] = None,
+    ) -> Optional[ResolvedLayerContract]:
+        """Resolve the homogeneous typed FFN domain for a layer-aware call.
+
+        Production model configs expose both a model depth and an architecture
+        profile.  Resolve every supplied identity through that profile so a
+        mixed aggregate cannot silently select the first layer's FFN family.
+        Lightweight legacy fixtures without those declarations retain their
+        historical model-level dispatch through the ``None`` result.
+        """
+
+        model_config = getattr(self, "_model_config", None)
+        profile_getter = getattr(model_config, "get_model_architecture_profile", None)
+        if not callable(profile_getter) or type(
+            getattr(model_config, "num_layers", None)
+        ) is not int:
+            return None
+
+        profile = self._get_model_architecture_profile()
+        identities = (layer_id,) if layer_ids is None else tuple(layer_ids)
+        if not identities:
+            raise ValueError("layer-aware FFN resolution requires at least one layer id")
+
+        contracts = tuple(
+            profile.resolve_layer_contract(model_config, layer_id=identity)
+            for identity in identities
+        )
+        distinct_kinds = {contract.layer_kind for contract in contracts}
+        if len(distinct_kinds) > 1:
+            kind_names = ", ".join(
+                sorted(layer_kind.value for layer_kind in distinct_kinds)
+            )
+            raise ValueError(
+                "mixed-model FFN lookup requires homogeneous layer identity; "
+                f"got layer kinds ({kind_names}) for IDs={identities!r}"
+            )
+        return contracts[0]
+
+    def _use_shared_expert_mlp_path(
+        self,
+        *,
+        layer_id: int,
+        layer_ids: Optional[List[int] | tuple[int, ...]] = None,
+    ) -> bool:
+        """Select the shared-expert auxiliary family for a typed FFN layer.
+
+        A routed layer may carry a shared auxiliary expert, while a dense
+        boundary layer must use the standard ``mlp_*`` family even when the
+        model also exposes shared-expert operations.  The profile owns both
+        decisions; legacy profile-free fixtures keep their old capability
+        predicate.
+        """
+
+        layer_contract = self._resolve_mlp_layer_contract(
+            layer_id=layer_id,
+            layer_ids=layer_ids,
+        )
+        if layer_contract is None:
+            supports_share_expert = getattr(
+                self._model_config,
+                "supports_share_expert",
+                False,
+            )
+            return bool(
+                supports_share_expert()
+                if callable(supports_share_expert)
+                else supports_share_expert
+            )
+        if layer_contract.layer_kind is LayerKind.DENSE:
+            return False
+        if layer_contract.layer_kind is LayerKind.SHARED:
+            return True
+        if layer_contract.layer_kind is not LayerKind.ROUTED:
+            raise ValueError(
+                "Unsupported typed FFN layer kind for shared-expert dispatch: "
+                f"{layer_contract.layer_kind!r}"
+            )
+
+        profile = self._get_model_architecture_profile()
+        return any(
+            contract.layer_kind is LayerKind.SHARED
+            for contract in profile.iter_active_layer_contracts(self._model_config)
         )
 
     def __init__(
@@ -774,6 +873,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 .replace("{NETWORK_DEVICE}", self._replica_config.network_device)
             )
 
+        # Training-file overrides follow the same combined-first attention
+        # contract as config-derived paths. Keep initialization non-strict so
+        # dummy and legacy callers may intentionally leave a family disabled.
+        self._attention_input_file_eager = resolve_attention_input_file(
+            self._attention_input_file_eager,
+            require_exists=False,
+        )
+        self._attention_input_file_kernel_only = resolve_attention_input_file(
+            self._attention_input_file_kernel_only,
+            require_exists=False,
+        )
+
         self._compute_input_file = self._compute_input_file_eager
         self._attention_input_file = self._attention_input_file_eager
         self._moe_input_file = self._moe_input_file_eager
@@ -809,6 +920,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 .replace("{MODEL}", self._model_config.get_name())
                 .replace("{NETWORK_DEVICE}", self._replica_config.network_device)
             )
+
+        # Resolve the effective attention artifact once at the shared input
+        # boundary.  Initialization remains non-strict for dummy-mode callers;
+        # the loader applies the strict existence check before reading data.
+        input_files[1] = resolve_attention_input_file(
+            input_files[1],
+            require_exists=False,
+        )
 
         return tuple(input_files)
 
@@ -1150,6 +1269,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         file_path: str,
         tensor_parallel_size: Optional[int] = None,
         required_columns: Optional[List[str]] = None,
+        operator_name: Optional[str] = None,
+        layer_contract: Optional[ResolvedLayerContract] = None,
     ) -> pd.DataFrame:
         df = self._read_input_file(file_path)
         df = df.drop_duplicates()
@@ -1164,6 +1285,34 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         logger.debug(f"self._num_q_heads: {self._model_config.num_q_heads}")
         logger.debug(f"self._embedding_dim: {self._model_config.embedding_dim}")
         logger.debug(f"self._mlp_hidden_dim: {self._model_config.mlp_hidden_dim}")
+
+        if layer_contract is not None and not isinstance(
+            layer_contract, ResolvedLayerContract
+        ):
+            raise TypeError(
+                "layer_contract must be a ResolvedLayerContract when provided"
+            )
+        resolved_contract = (
+            self._resolve_typed_linear_contract(operator_name)
+            if operator_name is not None
+            else None
+        )
+        if (
+            layer_contract is not None
+            and resolved_contract is not None
+            and not layer_contract.is_semantically_equivalent(resolved_contract)
+        ):
+            raise ValueError(
+                "operator_name and layer_contract resolve to different typed "
+                "linear contracts"
+            )
+        layer_contract = layer_contract or resolved_contract
+        expanded_width = (
+            layer_contract.effective_ffn_width
+            if layer_contract is not None
+            else self._model_config.mlp_hidden_dim
+        )
+        logger.debug("Filtering linear-op compute data by n_expanded_embd=%s", expanded_width)
         logger.debug(f"self._use_gated_mlp: {self._model_config.use_gated_mlp}")
         logger.debug(f"self._vocab_size: {self._model_config.vocab_size}")
         # NOTE: linear_op.csv compute profiling now uses op-specific TP assignment:
@@ -1180,14 +1329,28 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             (df["n_head"] == self._model_config.num_q_heads)
             & (df["n_kv_head"] == self._model_config.num_kv_heads)
             & (df["n_embd"] == self._model_config.embedding_dim)
-            & (df["n_expanded_embd"] == self._model_config.mlp_hidden_dim)
             & (df["use_gated_mlp"] == self._model_config.use_gated_mlp)
             & (df["vocab_size"] == self._model_config.vocab_size)
-            & (
-                df["num_tensor_parallel_workers"]
-                == tensor_parallel_size
-            )
+            & (df["num_tensor_parallel_workers"] == tensor_parallel_size)
         ]
+        if layer_contract is not None and "typed_operator_contracts" in df.columns:
+            if operator_name is None:
+                raise ValueError(
+                    "typed linear filtering requires operator_name when the "
+                    "canonical typed_operator_contracts column is present"
+                )
+            typed_mask = df["typed_operator_contracts"].map(
+                lambda raw_contracts: matches_resolved_layer_contract(
+                    raw_contracts,
+                    layer_contract,
+                    operator_name=operator_name,
+                )
+            )
+            df = df[typed_mask].copy()
+        else:
+            # Legacy producers have no typed row contract. Preserve their
+            # historical scalar width filter only on that path.
+            df = df[df["n_expanded_embd"] == expanded_width]
 
         expected_use_qk_norm = bool(getattr(self._model_config, "use_qk_norm", False))
         if expected_use_qk_norm and "use_qk_norm" not in df.columns:
@@ -1221,6 +1384,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             raise ValueError(
                 "No compute profiling rows remain after model and TP filtering. "
                 f"file={file_path}, tp={tensor_parallel_size}, "
+                f"n_expanded_embd={expanded_width}, "
                 f"use_qk_norm={expected_use_qk_norm}, "
                 f"attn_output_gate={expected_attn_output_gate}"
             )
@@ -1247,6 +1411,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
 
     def _load_attention_df(self, file_path: str) -> pd.DataFrame:
+        file_path = resolve_attention_input_file(file_path, require_exists=True)
         df = pd.read_csv(file_path)
         df = df.drop_duplicates()
 
@@ -2163,6 +2328,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
     def _read_input_file(self, file_path: str) -> pd.DataFrame:
         df = pd.read_csv(file_path)
+        # Validate the optional typed contract column while retaining its
+        # canonical JSON representation for numeric feature processing.
+        parse_typed_operator_contract_column(df)
         df = df.drop_duplicates()
         return df
 
@@ -2342,16 +2510,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _register_profiling_metadata_from_file(
         self, file_path: str, operation_names: List[str]
     ) -> None:
-        if not file_path or not os.path.exists(file_path):
-            logger.warning("Profiling file missing: %s", file_path)
-            self._register_missing_profiling_metadata(operation_names, file_path)
-            return
+        if not file_path:
+            raise FileNotFoundError("Profiling file path is empty")
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Profiling file does not exist: {file_path}")
         try:
             df = pd.read_csv(file_path)
         except Exception as exc:
-            logger.warning("Failed to read profiling file %s: %s", file_path, exc)
-            self._register_missing_profiling_metadata(operation_names, file_path)
-            return
+            raise ValueError(
+                f"Failed to read profiling file {file_path}: {exc}"
+            ) from exc
         metadata = self._get_profiling_metadata(df, file_path)
         self._validate_active_measurement_type(metadata, file_path)
         self._register_profiling_metadata_for_ops(operation_names, metadata, file_path)
@@ -2364,8 +2532,13 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             self._compute_input_file, self._get_compute_model_names()
         )
         if self._cluster_type != ClusterType.DECODE_FFN:
+            attention_input_file = resolve_attention_input_file(
+                self._attention_input_file,
+                require_exists=False,
+            )
+            self._attention_input_file = attention_input_file
             self._register_profiling_metadata_from_file(
-                self._attention_input_file, self._get_attention_model_names()
+                attention_input_file, self._get_attention_model_names()
             )
         self._register_additional_profiling_metadata_from_files()
 
@@ -2659,14 +2832,27 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         if not getattr(self._model_config, "is_moe", False):
             return True
 
+        profile_getter = getattr(
+            self._model_config,
+            "get_model_architecture_profile",
+            None,
+        )
+        if callable(profile_getter):
+            profile = self._get_model_architecture_profile()
+            active_kinds = {
+                contract.layer_kind
+                for contract in profile.iter_active_layer_contracts(
+                    self._model_config
+                )
+            }
+            return LayerKind.DENSE in active_kinds
+
         supports_share_expert = getattr(
             self._model_config, "supports_share_expert", None
         )
         if callable(supports_share_expert) and supports_share_expert():
-            # Step2Mini/Step3 mixed layers use the profiled shared-expert FFN
-            # path for their non-routed layers.  They do not expose the
-            # standard mlp_* profiling rows, so requesting those models would
-            # make a valid non-dummy profile fail at runtime.
+            # Legacy profile-free fixtures retain the historical shared-only
+            # admission behavior until they declare typed layer contracts.
             return False
 
         get_num_moe_layers = getattr(self._model_config, "get_num_moe_layers", None)
@@ -2714,7 +2900,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             return self._replica_config.moe_tensor_parallel_size
         return self._replica_config.attn_tensor_parallel_size
 
-    def _resolve_typed_linear_tp_size(self, op_name: str) -> int | None:
+    def _resolve_typed_linear_contract(
+        self, op_name: str
+    ) -> ResolvedLayerContract | None:
         """Resolve TP through the profile-owned typed FFN contract.
 
         Operator family identity comes from the unified binding registry.  A
@@ -2726,20 +2914,37 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         """
 
         profile = self._get_model_architecture_profile()
-        try:
-            binding = bind_operator_query(op_name)
-        except (TypeError, ValueError):
-            # Architecture-specific attention aliases are handled by the
-            # profile-aware resolver below.
-            return None
-
         owned_family_ids = {
             family_id
             for contract in profile.layer_contracts
             for family_id in contract.operator_family_ids
         }
-        if binding.family_id not in owned_family_ids:
+        matching_family_ids = []
+        for family_id in owned_family_ids:
+            family = get_operator_family(family_id)
+            if any(
+                op_name == operator.name or op_name == operator.profiling_name()
+                for operator in family.operators
+            ):
+                matching_family_ids.append(family_id)
+        if not matching_family_ids:
+            # Architecture-specific attention aliases and non-FFN registry
+            # families retain their established resolver path.
             return None
+        if len(matching_family_ids) != 1:
+            raise ValueError(
+                f"Operator query {op_name!r} belongs to multiple typed layer "
+                f"families: {sorted(matching_family_ids)}"
+            )
+        binding = bind_operator_query(
+            op_name,
+            family_id=matching_family_ids[0],
+        )
+        if binding.family_id != matching_family_ids[0]:
+            raise ValueError(
+                f"Operator query {op_name!r} resolved to family "
+                f"{binding.family_id!r}, expected {matching_family_ids[0]!r}"
+            )
 
         requested_ffn_tp = self._get_ffn_tp_key_for_linear_op()
         requested_attention_tp = self._replica_config.attn_tensor_parallel_size
@@ -2748,7 +2953,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             # preserve that established role mapping for typed ATTENTION_TP.
             requested_attention_tp = requested_ffn_tp
 
-        resolved = profile.resolve_layer_contract(
+        return profile.resolve_layer_contract(
             self._model_config,
             operator_name=op_name,
             attention_tp_size=requested_attention_tp,
@@ -2760,7 +2965,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 None,
             ),
         )
-        return resolved.tensor_parallel_size
+
+    def _resolve_typed_linear_tp_size(self, op_name: str) -> int | None:
+        """Resolve TP through the profile-owned typed FFN contract."""
+
+        resolved = self._resolve_typed_linear_contract(op_name)
+        return None if resolved is None else resolved.tensor_parallel_size
 
     def _get_linear_op_tp_key(self, op_name: str) -> int:
         if op_name in get_target_embedded_mtp_linear_ops():
@@ -2847,6 +3057,31 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             greater_is_better=False,
         )
 
+    def _get_model_hash_identity(self, model_name: str) -> str | None:
+        """Return the profile-owned typed contract identity for one operator.
+
+        The standalone predictor cache historically keyed only on the model-wide
+        ``mlp_hidden_dim`` and therefore conflated mixed-layer dense and routed
+        domains.  Resolve the operator through the existing architecture and
+        operator registries so only typed FFN families gain the additional
+        identity; profile-free and non-typed legacy callers retain their key.
+        """
+
+        model_config = getattr(self, "_model_config", None)
+        profile_getter = getattr(model_config, "get_model_architecture_profile", None)
+        if not callable(profile_getter):
+            return None
+
+        base_model_name = get_moe_gating_base_model_name(model_name)
+        layer_contract = self._resolve_typed_linear_contract(base_model_name)
+        if layer_contract is None:
+            return None
+        profile = self._get_model_architecture_profile()
+        return profile.serialize_layer_contract_identity(
+            model_config,
+            layer_contract=layer_contract,
+        )
+
     @abstractmethod
     def _get_grid_search_params(self) -> Dict[str, Any]:
         pass
@@ -2857,12 +3092,22 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
     def _get_model_hash(self, model_name: str, df: pd.DataFrame = None) -> str:
         config_str = str(self.to_dict())
+        model_hash_identity = self._get_model_hash_identity(model_name)
+        identity_component = (
+            f"_{model_hash_identity}" if model_hash_identity is not None else ""
+        )
 
         if df is None:
-            combined_str = f"{config_str}_{model_name}_{self._active_measurement_type.value}"
+            combined_str = (
+                f"{config_str}_{model_name}_{self._active_measurement_type.value}"
+                f"{identity_component}"
+            )
         else:
             df_hash_str = hashlib.md5(df.to_json().encode("utf-8")).hexdigest()
-            combined_str = f"{config_str}_{model_name}_{df_hash_str}_{self._active_measurement_type.value}"
+            combined_str = (
+                f"{config_str}_{model_name}_{df_hash_str}_"
+                f"{self._active_measurement_type.value}{identity_component}"
+            )
 
         return hashlib.md5(combined_str.encode("utf-8")).hexdigest()[0:8]
 
@@ -3124,16 +3369,25 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
     def _train_compute_models(self) -> Dict[str, BaseEstimator]:
         models = {}
-        compute_df_cache: Dict[int, pd.DataFrame] = {}
+        compute_df_cache: Dict[
+            Tuple[int, Optional[ResolvedLayerContract]], pd.DataFrame
+        ] = {}
 
-        def _get_compute_df_for_tp(tp_size: int) -> pd.DataFrame:
-            if tp_size not in compute_df_cache:
-                compute_df_cache[tp_size] = self._get_compute_df_with_derived_features(
+        def _get_compute_df_for_model(
+            model_name: str, tp_size: int
+        ) -> pd.DataFrame:
+            layer_contract = self._resolve_typed_linear_contract(model_name)
+            cache_key = (tp_size, layer_contract)
+            if cache_key not in compute_df_cache:
+                compute_df_cache[cache_key] = self._get_compute_df_with_derived_features(
                     self._load_compute_df(
-                        self._compute_input_file, tensor_parallel_size=tp_size
+                        self._compute_input_file,
+                        tensor_parallel_size=tp_size,
+                        operator_name=model_name,
+                        layer_contract=layer_contract,
                     )
                 )
-            return compute_df_cache[tp_size]
+            return compute_df_cache[cache_key]
 
         model_names = self._get_compute_model_names()
         predictor_attention_extra_ops = self._get_predictor_attention_extra_ops()
@@ -3147,7 +3401,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         for model_name in model_names:
             target_col = f"time_stats.{model_name}.median"
             tp_key = self._get_linear_op_tp_key(model_name)
-            compute_df = _get_compute_df_for_tp(tp_key)
+            compute_df = _get_compute_df_for_model(model_name, tp_key)
             if target_col not in compute_df.columns:
                 # For model-arch-required operations, raise error instead of warning.
                 # - Architecture profile attention extras, e.g. attn_inter_norm, attn_wq_proj
@@ -5573,7 +5827,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             legacy_linear_op_input_file
         ):
             linear_op_input_file = legacy_linear_op_input_file
-        attention_input_file = os.path.join(model_root, "attention.csv")
+        attention_input_file = resolve_attention_input_file(
+            os.path.join(model_root, "attention.csv"),
+            require_exists=False,
+        )
         moe_input_file = os.path.join(model_root, "moe.csv")
         if not os.path.exists(linear_op_input_file):
             raise ValueError(
@@ -7460,10 +7717,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 mlp_norm_time=base_time,
             )
 
-        supports_share_expert = bool(
-            getattr(self._model_config, "supports_share_expert", lambda: False)()
+        use_shared_expert_path = self._use_shared_expert_mlp_path(
+            layer_id=layer_id
         )
-        if supports_share_expert:
+        if use_shared_expert_path:
             required_operations = (
                 "share_expert_up_proj",
                 "share_expert_down_proj",
@@ -7495,10 +7752,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
 
         # Get individual MLP operation times for detailed tracing
-        if supports_share_expert:
-            # Step2Mini/Step3 dense boundary layers use the profiled shared
-            # expert operators.  They remain a dense FULL_STAGE_WORLD
-            # operation; only the profile row names differ.
+        if use_shared_expert_path:
+            # Routed layers with a shared auxiliary expert use its dedicated
+            # profile family while retaining the dense component shape.
             mlp_up_proj_time = self._get_share_expert_up_proj_execution_time(batch)
             mlp_down_proj_time = self._get_share_expert_down_proj_execution_time(batch)
             mlp_act_time = self._get_share_expert_act_execution_time(batch)
@@ -7514,7 +7770,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         cluster_name = cluster_type.name
 
         # Header log with batch details
-        trace_family = "DENSE_FFN" if supports_share_expert else "MLP"
+        trace_family = "DENSE_FFN" if use_shared_expert_path else "MLP"
         logger.info(
             f"[OP-TRACE][{cluster_name}][{trace_family}] batch_id={batch.id}, layer_id={layer_id}, "
             f"num_tokens={batch.total_num_tokens}, batch_size={len(batch.requests)}, "
@@ -7797,6 +8053,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         cluster_type: ClusterType,
         num_layers: int = 1,
         layer_id: int = 0,
+        layer_ids: Optional[List[int] | tuple[int, ...]] = None,
         include_moe: bool | None = None,
         include_ffn: bool = True,
         include_attention: bool = True,
@@ -7829,6 +8086,13 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             raise ValueError("include_ffn must be a bool")
         if type(include_attention) is not bool:
             raise ValueError("include_attention must be a bool")
+        normalized_layer_ids = self._normalize_stage_layer_ids(
+            num_layers=num_layers,
+            layer_id=layer_id,
+            layer_ids=layer_ids,
+        )
+        if normalized_layer_ids is not None:
+            layer_id = normalized_layer_ids[0]
         if not include_attention:
             raise ValueError(
                 "Dense prediction does not support include_attention=False"
@@ -8153,6 +8417,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     "mlp_down_proj": mlp_down_proj_time,
                 }
             ),
+            layer_ids=(normalized_layer_ids[0],)
+            if normalized_layer_ids is not None
+            else None,
         )
 
         # If num_layers is 1, return as-is
@@ -8212,4 +8479,5 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 base_execution_time.communication_operator_times
             ),
             mlp_operator_times=base_execution_time.mlp_operator_times,
+            layer_ids=normalized_layer_ids,
         )

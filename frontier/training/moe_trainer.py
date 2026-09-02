@@ -6,20 +6,28 @@ allowing pre-training and saving of model weights for later use in simulations.
 """
 
 import os
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import pandas as pd
 
 from frontier.training.base_trainer import BaseTrainer
 from frontier.logger import init_logger
+from frontier.model_architectures import (
+    LayerKind,
+    ModelArchitectureProfile,
+    ResolvedLayerContract,
+    resolve_model_architecture_profile,
+)
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
+    MOE_GATING_RUNTIME_CONTEXT_COLUMN,
     PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
     filter_moe_gating_rows_by_runtime_context,
     get_moe_gating_base_model_name,
     get_moe_gating_prediction_model_context,
     get_moe_gating_prediction_model_name,
     has_prefill_warmed_moe_gating_rows,
+    normalize_moe_gating_runtime_context,
     validate_moe_gating_runtime_context,
 )
 from frontier.moe_routing_runtime import (
@@ -31,6 +39,10 @@ from frontier.operators.families import MOE_FAMILY, get_family_profiling_names
 from frontier.operators.spec import TensorParallelMode
 
 logger = init_logger(__name__)
+
+
+class _MissingPrefillWarmedSlice(Exception):
+    """Signal that a valid TP/EP slice has no prefill-warmed gating rows."""
 
 
 def _get_moe_family_model_names() -> List[str]:
@@ -145,6 +157,8 @@ class MoETrainer(BaseTrainer):
         predictor_type: str = "random_forest",
         model_name: str = None,
         device: str = None,
+        model_config: Any = None,
+        layer_contract: ResolvedLayerContract | None = None,
         **kwargs
     ):
         """
@@ -189,7 +203,48 @@ class MoETrainer(BaseTrainer):
         # Optional attributes for consistency with other trainers
         self.model_name = model_name
         self.device = device
-        
+        self.model_config = model_config
+        self._architecture_profile: ModelArchitectureProfile | None = None
+        self._routed_layer_contract: ResolvedLayerContract | None = None
+
+        if model_config is not None or layer_contract is not None:
+            if model_config is None:
+                raise ValueError(
+                    "a profile-owned MoE layer contract requires model_config"
+                )
+            self._architecture_profile = resolve_model_architecture_profile(
+                model_config
+            )
+            expected_contract = self._architecture_profile.resolve_layer_contract(
+                model_config,
+                operator_name="moe_grouped_gemm",
+                moe_tp_size=self.moe_tensor_parallel_size,
+                expert_parallel_size=self.expert_parallel_size,
+            )
+            if layer_contract is not None:
+                if not isinstance(layer_contract, ResolvedLayerContract):
+                    raise TypeError(
+                        "layer_contract must be a ResolvedLayerContract when provided"
+                    )
+                if not layer_contract.is_semantically_equivalent(expected_contract):
+                    raise ValueError(
+                        "layer_contract does not match the profile-owned routed "
+                        "MoE contract for the requested TP/EP sizes"
+                    )
+            layer_contract = expected_contract
+            if layer_contract.layer_kind is not LayerKind.ROUTED:
+                raise ValueError(
+                    "MoETrainer requires a routed layer contract, got "
+                    f"{layer_contract.layer_kind.value}"
+                )
+            if layer_contract.effective_ffn_width != self.expert_hidden_dim:
+                raise ValueError(
+                    "expert_hidden_dim conflicts with the profile-owned routed "
+                    f"width {layer_contract.effective_ffn_width}: "
+                    f"got {self.expert_hidden_dim}"
+                )
+            self._routed_layer_contract = layer_contract
+
         # Dataset will be loaded and stored in _load_dataset()
         self.df = None
 
@@ -206,6 +261,27 @@ class MoETrainer(BaseTrainer):
         logger.info(f"  - expert_parallel_size: {expert_parallel_size}")
         logger.info(f"  - routing_runtime_path: {self.routing_runtime_path}")
         logger.info(f"  - gating_runtime_context: {self.gating_runtime_context}")
+
+    def _get_model_hash_identity(self, model_name: str) -> str | None:
+        """Return the profile-owned routed contract identity for cache keys.
+
+        Explicit-parameter callers without a model configuration retain the
+        historical cache identity. Factory-created typed trainers carry the
+        architecture profile and resolved routed contract, which isolates
+        caches by width, TP/EP domain, and MoE layer map.
+        """
+
+        del model_name
+        if self._routed_layer_contract is None:
+            return None
+        if self._architecture_profile is None or self.model_config is None:
+            raise RuntimeError(
+                "typed routed contract is present without its architecture profile"
+            )
+        return self._architecture_profile.serialize_layer_contract_identity(
+            self.model_config,
+            layer_contract=self._routed_layer_contract,
+        )
     
     def _load_dataset(self) -> pd.DataFrame:
         """
@@ -454,6 +530,24 @@ class MoETrainer(BaseTrainer):
                 requested_context = get_moe_gating_prediction_model_context(
                     model_name
                 )
+            if (
+                requested_context == PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT
+                and MOE_GATING_RUNTIME_CONTEXT_COLUMN in training_df.columns
+            ):
+                available_contexts = {
+                    normalize_moe_gating_runtime_context(str(value))
+                    for value in training_df[
+                        MOE_GATING_RUNTIME_CONTEXT_COLUMN
+                    ].dropna().unique()
+                }
+                if (
+                    requested_context not in available_contexts
+                    and DEFAULT_MOE_GATING_RUNTIME_CONTEXT in available_contexts
+                ):
+                    raise _MissingPrefillWarmedSlice(
+                        "no prefill-warmed gating rows remain after "
+                        f"selecting TP={tp_key}{ep_desc}"
+                    )
             training_df = filter_moe_gating_rows_by_runtime_context(
                 training_df,
                 requested_context=requested_context,
@@ -508,16 +602,9 @@ class MoETrainer(BaseTrainer):
                     feature_cols=feature_cols,
                     target_col=target_col,
                 )
-            except ValueError as e:
-                if get_moe_gating_base_model_name(model_name) != model_name:
-                    logger.warning(
-                        "Skipping %s: prefill-warmed gating rows are unavailable for "
-                        "the requested TP/EP slice (%s).",
-                        model_name,
-                        e,
-                    )
-                    continue
-                raise
+            except _MissingPrefillWarmedSlice as exc:
+                logger.warning("Skipping %s: %s.", model_name, exc)
+                continue
 
             logger.info(f"\n--- Training {model_name} ---")
             logger.info(f"Features: {feature_cols}")
@@ -573,12 +660,23 @@ def create_moe_trainer_from_model_config(
     if not model_config.is_moe:
         raise ValueError(f"Model {model_name} is not a MoE model")
 
+    architecture_profile = model_config.get_model_architecture_profile()
+    routed_layer_contract = architecture_profile.resolve_layer_contract(
+        model_config,
+        operator_name="moe_grouped_gemm",
+        moe_tp_size=moe_tensor_parallel_size,
+        expert_parallel_size=expert_parallel_size,
+    )
+
     logger.info(f"Creating MoE trainer for model: {model_name}")
     logger.info(f"Model configuration:")
     logger.info(f"  - num_experts: {model_config.num_experts}")
     logger.info(f"  - num_experts_per_tok: {model_config.num_experts_per_tok}")
     logger.info(f"  - embedding_dim: {model_config.embedding_dim}")
-    logger.info(f"  - mlp_hidden_dim: {model_config.mlp_hidden_dim}")
+    logger.info(
+        "  - routed_mlp_hidden_dim: "
+        f"{routed_layer_contract.effective_ffn_width}"
+    )
 
     return MoETrainer(
         dataset_path=dataset_path,
@@ -586,11 +684,13 @@ def create_moe_trainer_from_model_config(
         num_experts=model_config.num_experts,
         router_topk=model_config.num_experts_per_tok,
         hidden_dim=model_config.embedding_dim,
-        expert_hidden_dim=model_config.mlp_hidden_dim,
+        expert_hidden_dim=routed_layer_contract.effective_ffn_width,
         moe_tensor_parallel_size=moe_tensor_parallel_size,
         expert_parallel_size=expert_parallel_size,
         predictor_type=predictor_type,
         model_name=model_name,
         device=device,
+        model_config=model_config,
+        layer_contract=routed_layer_contract,
         **kwargs
     )

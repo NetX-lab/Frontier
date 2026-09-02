@@ -2,6 +2,9 @@
 
 | Date | Summary of Changes |
 | --- | --- |
+| 2026-09-01 | Claude Code 30-minute independent review agreed with the local RCA but returned REVISE; implementation remains gated by typed metadata correctness and scope issues. |
+| 2026-09-01 | Independent minimality review: confirmed the RCA, separated typed-layer essentials from unrelated governance/compatibility work, and blocked further source edits pending scope confirmation. |
+| 2026-08-29 | Checkpoint 51: reviewed the MoE trainer factory typed-width migration; a stale `mlp_hidden_dim=9999` no longer overrides routed width `5120`, and the focused `33/33` matrix passes. |
 | 2026-08-29 | Checkpoint 50: reviewed and verified global layer identity propagation at the ReplicaStageScheduler PP boundary; the new RED test and mixed-layer scheduler regressions pass. |
 | 2026-08-30 | Checkpoint 49: independently reproduced and fixed the pure-MoE inactive dense-contract leak; resolver/registry matrix passes `64/64`. |
 | 2026-08-29 | Checkpoint 48: reviewed ParamCounter enum TP dispatch and non-uniform MoE/PP layer-map boundary; strict identity/counting matrix passes `70/70`. |
@@ -171,6 +174,42 @@
 | 2026-08-23 | Initialized the checkpoint review ledger. |
 
 # Review
+
+## Checkpoint 52
+
+- **Target Component/Phase:** Independent double-check of the profile-owned
+  Step3 typed-layer migration and implementation gate
+- **Reviewer Agent Identity:** Local `stepcode claude` (`claude-opus-5`, `max`,
+  1800-second bound), corroborated by `/root/independent_rca` and
+  `/root/diff_minimality`
+- **Inspected Artifacts:** `requirements.md`, `plan.md`, `design.md`,
+  `issues.md`, `progress.md`, current dirty diff, `frontier/model_architectures.py`,
+  `frontier/operators/typed_contracts.py`,
+  `frontier/config/model_config.py`,
+  `frontier/execution_time_predictor/shared_prediction_model_manager.py`,
+  `frontier/execution_time_predictor/sklearn_execution_time_predictor.py`,
+  `frontier/utils/param_counter.py`, and active Step3 CSV headers. The full
+  advisor record is `.omx/artifacts/ask-claude-step3-typed-20260901.md`.
+- **Identified Issues/Anomalies:** The RCA is independently supported: the
+  official Step3 profile has 61 layers, dense width 18432, routed/shared width
+  5120, and the current path can select dense TP1 instead of Attention TP8.
+  The implementation is not ready. PD-AF `DECODE_ATTN` can pass zero MoE
+  parallel sizes into the resolver (`frontier/config.py:4249-4252`, manager
+  `:870-895`); typed admission catches and hides `ValueError` at
+  `frontier/operators/typed_contracts.py:570-578`; and the row identity emitted
+  at `frontier/model_architectures.py:529-542` has 9 fields while validation
+  requires 12, allowing wrong family/domain/padded-width values through the
+  matcher. The dirty ParamCounter formula also changes measured memory by
+  approximately -50.00% (Mixtral), -5.86% (Qwen3-A3B), -5.87% (Qwen3-235B),
+  and -1.71% (Step3), which affects OOM admission and E2E reproducibility.
+  Manager projection/provenance additions have no demonstrated production
+  callers, and inherited profiling README edits violate the protected README
+  scope.
+- **Remediation/Verification Code Actions Taken:** No source, CSV, manifest,
+  README, remote, worker, or preserved untracked file was changed. The
+  implementation gate remains `REVISE/BLOCK`; the findings are recorded for a
+  bounded follow-up. The focused local matrix passed, but it does not cover
+  the three metadata/admission regressions or the PD-AF zero-domain path.
 
 ## Checkpoint 45
 
@@ -1132,3 +1171,74 @@
   ownership. Dense-`18432` H200 profiling also needs separate authorization.
   Pure dense/pure MoE and downstream consumer compatibility remain unknown
   until the approved migration and focused GREEN checks run.
+
+## Checkpoint 51
+
+- **Target Component/Phase:** `create_moe_trainer_from_model_config()` routed
+  width binding
+- **Reviewer Agent Identity:** `/root`
+- **Inspected Artifacts:** `frontier/training/moe_trainer.py`,
+  `frontier/model_architectures.py`, the Step3 model configuration, and
+  `tests/unit/test_moe_trainer_typed_contract.py` plus the focused trainer
+  regressions.
+- **Identified Issues/Anomalies:** The factory used the model-wide
+  `mlp_hidden_dim` instead of the profile-owned routed contract. A controlled
+  Step3-like config with legacy width `9999` would therefore construct a
+  trainer with the wrong expert width even though the routed profile width is
+  `5120`.
+- **Remediation/Verification Code Actions Taken:** The factory now resolves
+  `moe_grouped_gemm` through the existing architecture profile and passes
+  `effective_ffn_width` to `MoETrainer`. Fresh verification reports `33 passed
+  in 4.97s`; no accepted data, manifest, README, worker, or remote state
+  changed. The manager/cache identity audit remains the next boundary.
+
+## Checkpoint 52
+
+- **Target Component/Phase:** Independent minimality and integration review of
+  the profile-owned typed-layer migration
+- **Reviewer Agent Identity:** `/root`, with independent reviews from
+  `architecture_surface`, `diff_architecture_review`, `manifest_callgraph`,
+  and `architecture_surface/manifest_trace`
+- **Inspected Artifacts:** `requirements.md`, `plan.md`, `issues.md`,
+  `summary.md`, the current worktree diff, runtime and profiling model
+  loaders, `model_architectures.py`, the sklearn predictor and shared manager,
+  both typed-schema modules, profiling plans, active CSV headers, cache
+  inventory, and focused regression output
+- **Identified Issues/Anomalies:** The RCA remains independently supported:
+  Step3 declares dense width `18432` and routed/shared width `5120` over
+  `61` layers, while the legacy loader exposes one `mlp_hidden_dim` and the
+  old predictor path selects dense FFN TP `1` instead of required TP `8`.
+  The profile resolver now returns dense `18432/TP8`, routed
+  `5120/TP1/EP8`, and shared `5120/TP8`. However, the current dirty source
+  tree is not merge-ready: it adds `+4,293/-386` production lines, an
+  untracked `frontier/operators/typed_contracts.py` of `605` lines, and a
+  second row-schema builder; active `data/profiling` CSVs contain
+  `typed_operator_contracts` in `0` of `117` files. The matcher at
+  `typed_contracts.py:529-564` checks only the nine-field profile identity,
+  while the strict validator at `:101-342` requires twelve fields, so a row
+  with a wrong family, TP domain, or padded width can still pass the matcher
+  used by manager/predictor loaders. The manager's
+  `_refresh_legacy_model_views()` (`:4120-4347`) and related precision and
+  provenance maps have no existing production callers outside the manager's
+  own new tests. Dynamic adapter logic and strict layer-map parsing likewise
+  have no demonstrated production dependency. Independent workflows for H200
+  governance, MoE context naming, and combined-attention fallback are mixed
+  into the same dirty tree but are not caused by the Step3 width/TP RCA.
+- **Remediation/Verification Code Actions Taken:** Ran fresh read-only
+  probes. `BaseModelConfig.create_from_name('step3-moe-noquant')` resolved
+  `61/5120/18432/5120`; profile queries resolved dense `18432, TP8`, routed
+  `5120, TP1, EP8`, shared `5120, TP8`. The focused matrix
+  `tests/unit/test_model_architecture_registry.py`,
+  `tests/unit/test_operator_query_tp_consumers.py`,
+  `tests/unit/test_typed_operator_contract_validator.py`, and
+  `tests/unit/test_shared_prediction_model_manager_typed_contract.py`
+  passed `170` tests, and imports passed. These tests establish behavior of
+  the new paths but do not establish that the 605-line schema or manager
+  projection is needed by active data. No source, CSV, manifest, README,
+  worker, `=10.1`, or remote state was changed in this checkpoint.
+- **Verdict:** **REVISE / BLOCK implementation gate.** Keep the proven
+  profile-owned resolver and the minimum dense/routed/shared width and
+  TP/EP propagation. Before any further source edit, obtain confirmation to
+  remove or defer unproven row-schema/manager projection layers and to split
+  the independent workflows. Do not create a PR or re-profile from this
+  snapshot.

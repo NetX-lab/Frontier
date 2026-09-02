@@ -2,6 +2,8 @@
 
 | Date | Summary of Changes |
 | --- | --- |
+| 2026-09-02 | Synchronized the minimal cross-session handoff to the actual worktree path, HEAD, runtime-lane evidence, and remaining source gates; no implementation or measurement action was taken. |
+| 2026-09-01 | Claude Code and two local independent reviews returned REVISE; paused source implementation, isolated three correctness blockers, and deferred unproven manager/ParamCounter/README changes. |
 | 2026-08-29 | Completed the first runtime identity propagation boundary: ReplicaStageScheduler now derives global PP layer IDs and forwards them to multi-layer predictor calls; focused regressions pass. |
 | 2026-08-29 | Completed the predictor typed-width sub-step with registry-owned dense/routed/shared filtering and per-contract dataframe caching; `152` focused regressions pass. |
 | 2026-08-29 | Completed the predictor consumer sub-step: profile-owned typed dense/routed/shared TP resolution is GREEN with `161` focused tests; manager/config/training/cache/trace/runtime migrations remain pending. |
@@ -149,6 +151,44 @@ is part of this checkpoint.
 Completed source sub-step: predictor typed consumer. The next active sub-step
 is the shared prediction-manager TP/width/signature migration, followed by the
 runtime/profiling config field propagation.
+
+Implementation gate after the 2026-09-01 independent review: **REVISE / BLOCK**.
+The profile-owned resolver direction remains valid, but no further source edit
+is authorized from this snapshot until typed-row admission fields are made
+consistent, PD-AF `DECODE_ATTN` is excluded from FFN-only resolution, and the
+manager/ParamCounter scope is explicitly narrowed. The first direct Claude
+capture timed out without stdout; the second bounded review and both local
+reviews agreed on `REVISE`. Preserve the current dirty tree for maintainer
+scope review rather than presenting it as a completed implementation.
+
+## Cross-session checkpoint (2026-09-02)
+
+- **Motivation:** A new session needs one authoritative resume point. Existing
+  history contains older HEAD and worker snapshots, while the current worktree
+  has a later source revision and a completed runtime lane.
+- **Expectation:** The next agent can restore context from one prompt, verify
+  the current filesystem state, and resume at the typed-admission and
+  minimality gates without repeating closed H200 measurements.
+- **Method:** Reconciled git status, git rev-parse, commit distance,
+  staged/unstaged whitespace checks, runtime_lane_status.txt, the Claude
+  artifact, and the six-model frozen-manifest records. Stored the copyable
+  prompt at
+  task_memory/task_2026-08-23_profiling_dataset_governance/handoff_2026-09-02.md.
+- **Result:** PASS for documentation synchronization; source gate remains
+  REVISE/BLOCK. Current HEAD is adc61915, main and origin/main are
+  a24cedab, the branch is 28 commits ahead, and no task-owned worker is
+  active. The frozen measurement scope is closed at 6/6 models, while Step3
+  strict semantic acceptance and the three review blockers remain open.
+- **Remediation/Verification Code Actions Taken:** Updated only task
+  documentation and created the handoff file. No source, CSV, manifest,
+  README, worker, remote ref, or preserved untracked file changed.
+
+Resume dependency:
+read handoff -> verify refs/tree -> inspect runtime lane -> close typed
+admission and DECODE_ATTN gates -> narrow manager/ParamCounter scope -> fresh
+verification -> separate approval for dense-18432 profiling and strict Step3
+E2E. Do not reorder the gates or treat historical test output as fresh
+evidence.
 
 1. **Completed — isolated baseline**
    - Start from PR #21 local head `f8fea750`.

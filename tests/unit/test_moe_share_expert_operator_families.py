@@ -402,7 +402,7 @@ def test_shared_manager_validates_moe_training_names_from_moe_family(
 
     captured_cluster_types: list[ClusterType] = []
 
-    def _capture_validation(file_path, replica_config, model_names, cluster_type):
+    def _capture_validation(file_path, replica_config, model_names, cluster_type, **kwargs):
         captured_model_names.append(tuple(model_names))
         captured_cluster_types.append(cluster_type)
         raise _StopAfterValidation
@@ -410,6 +410,11 @@ def test_shared_manager_validates_moe_training_names_from_moe_family(
     manager._validate_moe_dataset_contract = _capture_validation
 
     model_config = SimpleNamespace(
+        num_layers=1,
+        num_experts=8,
+        is_moe=True,
+        mlp_hidden_dim=4096,
+        routed_mlp_hidden_dim=4096,
         get_model_arch=lambda: "unit_moe",
         supports_share_expert=lambda: False,
         use_qk_norm=False,
@@ -469,6 +474,7 @@ def test_shared_manager_moe_dataset_contract_uses_pdd_legacy_auxiliary_tp_key(
     manager = object.__new__(ExecutionTimePredictionModelManager)
     replica_config = SimpleNamespace(
         model_config=SimpleNamespace(
+            is_moe=True,
             num_experts=8,
             num_experts_per_tok=2,
             embedding_dim=4096,

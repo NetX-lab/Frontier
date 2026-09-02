@@ -17,6 +17,10 @@ from typing import Any, Iterable
 
 import pandas as pd
 
+from frontier.operators.typed_contracts import (
+    parse_typed_operator_contract_column,
+)
+
 from frontier.moe_gating_runtime import (
     MOE_GATING_RUNTIME_CONTEXT_COLUMN,
     MOE_GATING_RUNTIME_CONTEXT_IMPL_COLUMN,
@@ -221,6 +225,9 @@ def _read_csv(path: Path) -> pd.DataFrame:
     if path.stat().st_size == 0:
         raise ValueError(f"Profiling CSV is empty: {path}")
     frame = pd.read_csv(path)
+    # Validate optional typed metadata without replacing the JSON strings used
+    # by the existing duplicate and coverage checks.
+    parse_typed_operator_contract_column(frame)
     if frame.empty:
         raise ValueError(f"Profiling CSV has no rows: {path}")
     return frame

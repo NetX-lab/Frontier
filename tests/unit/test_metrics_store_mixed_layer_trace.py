@@ -270,6 +270,42 @@ def test_mixed_step3_per_layer_trace_uses_layer_contract() -> None:
     assert dense_mlp_event.meta["tensor_size_bytes"]
 
 
+def test_mixed_step3_related_wait_trace_preserves_global_layer_ids() -> None:
+    model_config = BaseModelConfig.create_from_name("step3-moe-noquant")
+    global_layer_ids = tuple(range(31, 61))
+    execution_time = _build_step3_execution_time(
+        num_layers=len(global_layer_ids),
+        layer_ids=global_layer_ids,
+    )
+    execution_time._trace_related_collective_waits = [
+        {
+            "op_name": "expert_parallel_alltoall",
+            "related_wait_ms": 0.5,
+            "per_layer_related_wait_ms": 0.25,
+            "collective_domain": "moe_ep",
+            "reason": "mixed-layer regression",
+        }
+    ]
+    metrics_store, trace_store = _build_metrics_store(model_config)
+
+    metrics_store._emit_op_level_traces(
+        time=0.0,
+        batch_stage=_build_batch_stage(),
+        replica_id=0,
+        execution_time=execution_time,
+        cluster_type=ClusterType.MONOLITHIC,
+        request_ids=["request-related-wait"],
+    )
+
+    wait_events = [
+        event
+        for event in trace_store.events
+        if event.name == "expert_parallel_alltoall_wait"
+    ]
+    assert [event.layer_id for event in wait_events] == list(global_layer_ids)
+    assert [event.meta["layer_idx"] for event in wait_events] == list(global_layer_ids)
+
+
 @pytest.mark.parametrize("layer_id", [0, 1, 2, 3, 60])
 def test_step3_dense_layer_map_is_profile_owned(layer_id: int) -> None:
     model_config = BaseModelConfig.create_from_name("step3-moe-noquant")

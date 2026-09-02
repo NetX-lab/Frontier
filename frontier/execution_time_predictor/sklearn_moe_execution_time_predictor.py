@@ -26,17 +26,20 @@ from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
 from frontier.logger import init_logger
 from frontier.model_architectures import (
     LayerKind,
+    ModelArchitectureProfile,
     ResolvedLayerContract,
     ResidualAddPolicy,
 )
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
+    MOE_GATING_RUNTIME_CONTEXT_COLUMN,
     PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT,
     filter_moe_gating_rows_by_runtime_context,
     get_moe_gating_base_model_name,
     get_moe_gating_prediction_model_context,
     get_moe_gating_prediction_model_name,
     has_prefill_warmed_moe_gating_rows,
+    normalize_moe_gating_runtime_context,
     should_enable_prefill_warmed_moe_gating_contract,
     should_use_prefill_warmed_moe_gating_context,
 )
@@ -76,6 +79,10 @@ from frontier.execution_time_predictor.shared_prediction_model_manager import (
 )
 
 logger = init_logger(__name__)
+
+
+class _MissingPrefillWarmedSlice(Exception):
+    """Signal that a valid TP/EP slice has no prefill-warmed gating rows."""
 
 
 def _normalize_routing_details_for_trace(
@@ -425,16 +432,18 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         *,
         layer_id: int,
         num_layers: int,
+        layer_ids: Optional[List[int] | tuple[int, ...]] = None,
         include_moe: Optional[bool],
         include_ffn: bool,
     ) -> bool:
         """Resolve the routed/dense selector owned by a public predictor call.
 
-        A call with an explicit ``include_moe`` selector already carries its
-        classification.  Identity-free multi-layer aggregates use the model
-        level ``is_moe`` capability.  A concrete single-layer call needs the
-        model-owned ``is_moe_layer`` predicate so mixed-layer models cannot be
-        silently treated as routed or dense based on a broad model flag.
+        A concrete layer is resolved through the profile-owned typed contract.
+        A mixed multi-layer aggregate is admitted only when its complete layer
+        identity tuple is present and homogeneous; a dense/routed mixture has
+        no scalar representation in ``ExecutionTime`` and fails before any
+        timing or EP work.  Lightweight legacy fixtures that do not declare a
+        model depth/profile retain their established predicate-based path.
         """
         if type(num_layers) is not int or num_layers < 1:
             raise ValueError(
@@ -447,22 +456,158 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             raise ValueError("include_moe must be a bool or None")
         if not include_ffn:
             return False
-        if include_moe is not None:
+
+        model_num_layers = getattr(model_config, "num_layers", None)
+        if model_num_layers is not None and (
+            type(model_num_layers) is not int or model_num_layers <= 0
+        ):
+            raise ValueError(
+                "model_config.num_layers must be a positive integer when "
+                f"provided, got {model_num_layers!r}"
+            )
+
+        # A legacy adapter may expose only the model-level capability and an
+        # explicit selector, without the depth/layer predicate required to
+        # resolve a concrete typed contract.  Preserve that established
+        # selector path while keeping typed models on the strict resolver.
+        layer_predicate = getattr(model_config, "is_moe_layer", None)
+        profile_getter = getattr(model_config, "get_model_architecture_profile", None)
+        has_typed_layer_identity = (
+            isinstance(model_num_layers, int)
+            and (callable(layer_predicate) or callable(profile_getter))
+        )
+        if include_moe is not None and not has_typed_layer_identity:
             return include_moe
+
+        normalized_layer_ids: tuple[int, ...] | None = None
+        if layer_ids is not None:
+            if not isinstance(layer_ids, (list, tuple)):
+                raise TypeError(
+                    "layer_ids must be a list or tuple of exact non-negative integers"
+                )
+            if len(layer_ids) != num_layers:
+                raise ValueError(
+                    "layer_ids length must match num_layers: "
+                    f"{len(layer_ids)} != {num_layers}"
+                )
+            if any(type(item) is not int for item in layer_ids):
+                raise TypeError(
+                    "layer_ids must contain exact integers, " f"got {layer_ids!r}"
+                )
+            if any(item < 0 for item in layer_ids):
+                raise ValueError(
+                    "layer_ids must contain non-negative integers, "
+                    f"got {layer_ids!r}"
+                )
+            if len(set(layer_ids)) != len(layer_ids):
+                raise ValueError(
+                    "layer_ids must not contain duplicate layer identities, "
+                    f"got {layer_ids!r}"
+                )
+            if model_num_layers is not None:
+                invalid_ids = tuple(
+                    item for item in layer_ids if item >= model_num_layers
+                )
+                if invalid_ids:
+                    raise ValueError(
+                        "layer_ids are outside model layer range: "
+                        f"IDs={invalid_ids!r}, valid range=[0, {model_num_layers})"
+                    )
+            normalized_layer_ids = tuple(layer_ids)
+
+        profile: ModelArchitectureProfile | None = None
+        if callable(profile_getter) and isinstance(model_num_layers, int):
+            profile = profile_getter()
+            if not isinstance(profile, ModelArchitectureProfile):
+                raise TypeError(
+                    "model_config.get_model_architecture_profile() must return "
+                    "ModelArchitectureProfile"
+                )
 
         model_is_moe = bool(getattr(model_config, "is_moe", False))
         if not model_is_moe:
-            return False
-        if num_layers != 1:
-            return True
+            # A typed pure-dense configuration owns its selector through the
+            # same profile/predicate contract as a mixed model.  Keep the
+            # explicit selector compatibility path only for profile-free
+            # legacy adapters, which cannot provide a layer identity.
+            if profile is not None:
+                resolved_is_moe = (
+                    profile.resolve_layer_contract(
+                        model_config,
+                        layer_id=layer_id,
+                    ).layer_kind
+                    is LayerKind.ROUTED
+                )
+            elif isinstance(model_num_layers, int) and callable(layer_predicate):
+                resolved_is_moe = bool(layer_predicate(layer_id))
+            else:
+                return False if include_moe is None else include_moe
+            if include_moe is not None and include_moe != resolved_is_moe:
+                raise ValueError(
+                    "include_moe does not match the typed layer identity: "
+                    f"include_moe={include_moe}, layer_kind="
+                    f"{'routed' if resolved_is_moe else 'dense'}"
+                )
+            return resolved_is_moe
 
-        layer_predicate = getattr(model_config, "is_moe_layer", None)
-        if not callable(layer_predicate):
+        # A concrete layer identity cannot be classified from the public
+        # ``num_layers`` argument alone. Require the model-owned depth and a
+        # declared layer capability before entering any timing or EP path;
+        # otherwise the historical routed default could silently misclassify a
+        # dense boundary (or an incomplete adapter) as MoE.
+        concrete_layer_request = normalized_layer_ids is not None or num_layers == 1
+        if concrete_layer_request and model_num_layers is None:
+            if not callable(layer_predicate):
+                raise ValueError(
+                    "Concrete MoE layer classification requires "
+                    "model_config.is_moe_layer and model_config.num_layers"
+                )
+
+        def _resolve_kind(identity: int) -> LayerKind:
+            if profile is not None:
+                return profile.resolve_layer_contract(
+                    model_config,
+                    layer_id=identity,
+                ).layer_kind
+            layer_predicate = getattr(model_config, "is_moe_layer", None)
+            if callable(layer_predicate):
+                return (
+                    LayerKind.ROUTED
+                    if bool(layer_predicate(identity))
+                    else LayerKind.DENSE
+                )
+            # A legacy all-layer MoE adapter has no layer map.  Its historical
+            # public contract treats every concrete layer as routed.
+            return LayerKind.ROUTED
+
+        if normalized_layer_ids is not None:
+            resolved_kinds = tuple(_resolve_kind(identity) for identity in normalized_layer_ids)
+        elif num_layers == 1:
+            resolved_kinds = (_resolve_kind(layer_id),)
+        else:
+            mixed_model = profile._is_mixed_model(model_config) if profile else False
+            if mixed_model:
+                raise ValueError(
+                    "mixed-model FFN prediction requires explicit layer identity "
+                    "for a multi-layer aggregate"
+                )
+            resolved_kinds = (LayerKind.ROUTED,)
+
+        distinct_kinds = set(resolved_kinds)
+        if len(distinct_kinds) > 1:
+            kind_names = ", ".join(sorted(kind.value for kind in distinct_kinds))
             raise ValueError(
-                "Concrete MoE layer prediction requires callable "
-                "model_config.is_moe_layer(layer_id)"
+                "mixed-model aggregate cannot combine layer kinds "
+                f"({kind_names}); provide a homogeneous layer identity tuple"
             )
-        return bool(layer_predicate(layer_id))
+
+        resolved_is_moe = resolved_kinds[0] is LayerKind.ROUTED
+        if include_moe is not None and include_moe != resolved_is_moe:
+            raise ValueError(
+                "include_moe does not match the typed layer identity: "
+                f"include_moe={include_moe}, layer_kind={resolved_kinds[0].value}"
+            )
+        return resolved_is_moe
 
     def _get_dummy_execution_time(
         self,
@@ -1380,14 +1525,16 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         moe_input_file = getattr(self, "_moe_input_file", "/synthetic/moe.csv")
 
         if not os.path.exists(moe_input_file):
-            logger.warning(f"MoE input file does not exist: {moe_input_file}")
-            return models
+            raise FileNotFoundError(
+                f"MoE input file does not exist: {moe_input_file}"
+            )
 
         try:
             moe_df = pd.read_csv(moe_input_file)
-        except Exception as e:
-            logger.warning(f"Failed to load MoE data from {moe_input_file}: {e}")
-            return models
+        except Exception as exc:
+            raise ValueError(
+                f"Failed to load MoE data from {moe_input_file}: {exc}"
+            ) from exc
 
         metadata = self._get_profiling_metadata(moe_df, moe_input_file)
         self._validate_active_measurement_type(metadata, moe_input_file)
@@ -1480,6 +1627,28 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                         source_name=moe_input_file,
                     )
                 if gating_context_key is not None:
+                    if (
+                        gating_context_key
+                        == PREFILL_WARMED_MOE_GATING_RUNTIME_CONTEXT
+                        and MOE_GATING_RUNTIME_CONTEXT_COLUMN
+                        in filtered_df.columns
+                    ):
+                        available_contexts = {
+                            normalize_moe_gating_runtime_context(str(value))
+                            for value in filtered_df[
+                                MOE_GATING_RUNTIME_CONTEXT_COLUMN
+                            ].dropna().unique()
+                        }
+                        if (
+                            gating_context_key not in available_contexts
+                            and DEFAULT_MOE_GATING_RUNTIME_CONTEXT
+                            in available_contexts
+                        ):
+                            ep_desc = "ANY" if ep_key is None else str(ep_key)
+                            raise _MissingPrefillWarmedSlice(
+                                "no prefill-warmed gating rows remain after "
+                                f"selecting TP={tp_key}, EP={ep_desc}"
+                            )
                     filtered_df = filter_moe_gating_rows_by_runtime_context(
                         filtered_df,
                         requested_context=gating_context_key,
@@ -1500,16 +1669,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         for model_name in model_names:
             try:
                 op_df, moe_tp_key, moe_ep_key = _get_moe_df_for_op(model_name)
-            except ValueError as e:
-                if get_moe_gating_base_model_name(model_name) != model_name:
-                    logger.warning(
-                        "Skipping %s because prefill-warmed gating rows are unavailable "
-                        "for the requested TP/EP slice (%s).",
-                        model_name,
-                        e,
-                    )
-                    continue
-                raise
+            except _MissingPrefillWarmedSlice as exc:
+                logger.warning("Skipping %s: %s.", model_name, exc)
+                continue
             target_op_name = get_moe_gating_base_model_name(model_name)
             target_col = f"time_stats.{target_op_name}.median"
             if target_col not in op_df.columns:
@@ -2290,6 +2452,38 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             raise ValueError(
                 "include_attention=False requires an FFN/MoE post-attention probe"
             )
+
+        model_config = getattr(self, "_model_config", None)
+        model_num_layers = getattr(model_config, "num_layers", None)
+        has_typed_layer_identity = (
+            type(model_num_layers) is int
+            and (
+                callable(getattr(model_config, "is_moe_layer", None))
+                or callable(
+                    getattr(model_config, "get_model_architecture_profile", None)
+                )
+            )
+        )
+        if include_ffn and has_typed_layer_identity:
+            # Validate the typed layer identity before any routed workload or
+            # profiling lookup. ``include_moe=False`` is an execution selector
+            # for the legal routed shared-only path, so it must not be passed
+            # as a strict layer-kind assertion here. An explicit routed
+            # selector still has to agree with the resolved identity.
+            resolved_layer_is_moe = self._resolve_moe_layer_classification(
+                self._model_config,
+                layer_id=layer_id,
+                num_layers=effective_num_layers,
+                layer_ids=normalized_layer_ids,
+                include_moe=None,
+                include_ffn=True,
+            )
+            if include_moe is True and not resolved_layer_is_moe:
+                raise ValueError(
+                    "include_moe does not match the typed layer identity: "
+                    f"include_moe=True, layer_kind=dense"
+                )
+
         moe_tokens_input, lane_workload = self._resolve_moe_execution_inputs(
             moe_tokens_input=moe_tokens_input,
             lane_workload=lane_workload,
@@ -2348,7 +2542,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             communication_operator_times["moe_tensor_parallel_allreduce"] = (
                 moe_tp_allreduce_time
             )
-        elif include_ffn and self._replica_config.attn_tensor_parallel_size > 1:
+        elif (
+            include_ffn
+            and not include_moe
+            and self._replica_config.attn_tensor_parallel_size > 1
+        ):
             moe_tp_allreduce_time = attn_tp_allreduce_time
             communication_operator_times["mlp_tensor_parallel_allreduce"] = (
                 moe_tp_allreduce_time
@@ -2396,11 +2594,13 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             moe_gating_routing_topk_time = 0.0
             moe_shuffling_time = 0.0
             moe_grouped_gemm_time = 0.0
-            if self._model_config.supports_share_expert():
-                # Step2Mini/Step3 dense layers are the shared-expert FFN.  Map
-                # those profiled operations into the dense MLP component
-                # fields so the layer remains a FULL_STAGE_WORLD operation and
-                # does not acquire MoE routing or EP collective semantics.
+            if self._use_shared_expert_mlp_path(
+                layer_id=layer_id,
+                layer_ids=normalized_layer_ids,
+            ):
+                # A routed layer's shared auxiliary expert is represented in
+                # the dense component fields when the caller requests the
+                # post-routing-free FFN branch.
                 mlp_up_proj_time = self._get_share_expert_up_proj_execution_time(batch)
                 mlp_down_proj_time = self._get_share_expert_down_proj_execution_time(batch)
                 mlp_act_time = self._get_share_expert_act_execution_time(batch)
@@ -3304,6 +3504,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             self._model_config,
             layer_id=layer_id,
             num_layers=num_layers,
+            layer_ids=normalized_layer_ids,
             include_moe=include_moe,
             include_ffn=include_ffn,
         )

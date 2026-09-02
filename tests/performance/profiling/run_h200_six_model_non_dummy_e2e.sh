@@ -310,7 +310,7 @@ PY
     frontier_cmd+=(
       --replica_config_total_expert_num "$num_experts"
       --replica_config_router_topk "$router_topk"
-      --replica_config_moe_routing_mode simulation
+      --replica_config_moe_routing_distribution_type balanced
       --replica_config_moe_routing_seed 42
       --random_forrest_execution_time_predictor_config_moe_input_file "$profile_dir/moe.csv"
       --random_forrest_execution_time_predictor_config_moe_kernel_only_input_file "$profile_dir/moe_kernel_only.csv"

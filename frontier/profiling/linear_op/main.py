@@ -36,6 +36,7 @@ import argparse
 import itertools
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -68,6 +69,17 @@ from frontier.profiling.linear_op.ray_setup_hook import (
     disable_ray_datasets_serializers,
 )
 from frontier.profiling.linear_op.profiling_plan import build_profiling_plan
+from frontier.operators.families import (
+    FFN_FAMILY,
+    get_family_profiling_name_set,
+    get_operator_family,
+    iter_operator_families,
+)
+from frontier.operators.typed_contracts import (
+    serialize_typed_operator_contract_column,
+    validate_typed_operator_metadata,
+)
+from frontier.profiling.common.typed_contracts import parse_typed_operator_contracts
 from frontier.profiling.utils import (
     EXPORTABLE_PROFILE_METHOD_CHOICES,
     ProfileMethod,
@@ -471,6 +483,12 @@ def _attach_linear_op_output_metadata(
     return output_df
 
 
+def _serialize_linear_op_output(df: pd.DataFrame) -> pd.DataFrame:
+    """Serialize profile-owned typed contracts before writing a CSV."""
+
+    return serialize_typed_operator_contract_column(df)
+
+
 def _fill_metadata_column(
     output_df: pd.DataFrame,
     column_name: str,
@@ -805,28 +823,182 @@ def profile_model(
     return df
 
 
-def filter_mlp_columns(df):
-    """
-    Filter out MLP-specific columns from the DataFrame.
+def _linear_profile_operator_name(column: object, family) -> str | None:
+    """Resolve a flattened ``time_stats`` column through a registered family."""
 
-    For MoE models, we want to keep only common linear operation columns
-    and exclude MLP-specific columns (mlp_up_proj, mlp_down_proj, mlp_act).
+    if not isinstance(column, str):
+        return None
+    profiling_names = get_family_profiling_name_set(family)
+    if column in profiling_names:
+        return column
+    prefix = "time_stats."
+    if not column.startswith(prefix):
+        return None
+    suffix = column[len(prefix) :]
+    matches = tuple(
+        name
+        for name in profiling_names
+        if suffix == name or suffix.startswith(f"{name}.")
+    )
+    if len(matches) > 1:
+        raise ValueError(
+            f"Ambiguous registered profiling operator column {column!r}: {matches}"
+        )
+    return matches[0] if matches else None
 
-    Args:
-        df: Input DataFrame with all profiling data
 
-    Returns:
-        DataFrame with MLP-specific columns removed
-    """
-    mlp_patterns = ["mlp_up_proj", "mlp_down_proj", "mlp_act"]
-    cols_to_drop = []
+def _registered_operator_family_ids(operator_name: str) -> tuple[str, ...]:
+    """Return the registered families that expose one profiling operator."""
 
-    for col in df.columns:
-        for pattern in mlp_patterns:
-            if pattern in col:
-                cols_to_drop.append(col)
-                break
+    matches = tuple(
+        family.family_id
+        for family in iter_operator_families()
+        if operator_name in get_family_profiling_name_set(family)
+    )
+    if len(matches) > 1:
+        raise ValueError(
+            f"Profiling operator {operator_name!r} is registered by multiple "
+            f"operator families: {matches}"
+        )
+    return matches
 
+
+def _typed_contract_family_id(
+    operator_name: str,
+    metadata: Mapping[str, object],
+) -> str:
+    """Validate one typed contract and return its registered family owner."""
+
+    # Producer rows and runtime loaders share one complete metadata schema.
+    # Validate intrinsic fields before checking registry ownership so malformed
+    # rows fail at the producer boundary instead of being partially admitted.
+    validate_typed_operator_metadata(
+        metadata,
+        operator_name=operator_name,
+        expected_metadata={},
+    )
+
+    # The shared validator requires this field, so ownership never falls back
+    # to an inferred family when a producer row is incomplete.
+    family_id = metadata["operator_family_id"]
+
+    family = get_operator_family(family_id)
+    if operator_name not in get_family_profiling_name_set(family):
+        raise ValueError(
+            f"Typed operator contract for {operator_name!r} declares family "
+            f"{family_id!r}, but that family does not register the operator"
+        )
+
+    layer_kind = metadata.get("layer_kind")
+    if layer_kind is not None and not isinstance(layer_kind, str):
+        raise ValueError(
+            f"Typed operator contract for {operator_name!r} has invalid "
+            f"layer_kind {layer_kind!r}"
+        )
+    dense_family_id = FFN_FAMILY.family_id
+    if layer_kind == "dense" and family_id != dense_family_id:
+        raise ValueError(
+            f"Typed operator contract for {operator_name!r} marks a non-dense "
+            f"family {family_id!r} as dense"
+        )
+    if layer_kind not in (None, "dense") and family_id == dense_family_id:
+        raise ValueError(
+            f"Typed operator contract for {operator_name!r} marks the dense "
+            f"family as {layer_kind!r}"
+        )
+    return family_id
+
+
+def _typed_dense_operator_names(df: pd.DataFrame) -> set[str] | None:
+    """Return typed dense operators, or ``None`` for a legacy result frame."""
+
+    column_name = "typed_operator_contracts"
+    if column_name not in df.columns:
+        return None
+
+    dense_operator_names = get_family_profiling_name_set(FFN_FAMILY)
+    ownership: dict[str, str] = {}
+    for row_index, raw_contracts in df[column_name].items():
+        contracts = parse_typed_operator_contracts(raw_contracts)
+        for operator_name, metadata in contracts.items():
+            # A linear-op row carries metadata for attention, memory, and
+            # optional MTP operators as well.  This helper owns only dense FFN
+            # filtering; each other family is admitted by its own consumer.
+            if operator_name not in dense_operator_names:
+                validate_typed_operator_metadata(
+                    metadata,
+                    operator_name=operator_name,
+                    expected_metadata={},
+                )
+                registered_family_ids = _registered_operator_family_ids(operator_name)
+                if (
+                    registered_family_ids
+                    and metadata["operator_family_id"] not in registered_family_ids
+                ):
+                    raise ValueError(
+                        f"Typed operator contract for {operator_name!r} declares "
+                        f"family {metadata['operator_family_id']!r}, expected one "
+                        f"of {registered_family_ids}"
+                    )
+                continue
+            family_id = _typed_contract_family_id(operator_name, metadata)
+            previous_family_id = ownership.get(operator_name)
+            if previous_family_id is not None and previous_family_id != family_id:
+                raise ValueError(
+                    f"Typed operator contract for {operator_name!r} changes family "
+                    f"from {previous_family_id!r} to {family_id!r} at row {row_index}"
+                )
+            ownership[operator_name] = family_id
+
+    return {
+        operator_name
+        for operator_name, family_id in ownership.items()
+        if family_id == FFN_FAMILY.family_id
+    }
+
+
+def filter_mlp_columns(df: pd.DataFrame, *, model_config: Any = None) -> pd.DataFrame:
+    """Filter dense FFN columns using registered operator and typed metadata."""
+
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError(f"df must be a pandas DataFrame, got {type(df).__name__}")
+
+    dense_operator_names = get_family_profiling_name_set(FFN_FAMILY)
+    typed_dense_names = _typed_dense_operator_names(df)
+    if typed_dense_names is None:
+        # Legacy producers did not emit typed metadata; preserve their
+        # historical MoE behavior while routing classification through the
+        # registered FFN family.
+        keep_dense_names: set[str] = set()
+    else:
+        keep_dense_names = typed_dense_names
+        if model_config is not None:
+            profile_getter = getattr(model_config, "get_model_architecture_profile", None)
+            if not callable(profile_getter):
+                raise TypeError(
+                    "model_config must expose get_model_architecture_profile()"
+                )
+            profile = profile_getter()
+            active_family_ids = {
+                family_id
+                for contract in profile.iter_active_layer_contracts(model_config)
+                for family_id in contract.operator_family_ids
+            }
+            if keep_dense_names and FFN_FAMILY.family_id not in active_family_ids:
+                raise ValueError(
+                    "Typed metadata declares dense FFN operators for a profile "
+                    "without an active dense layer contract"
+                )
+
+    cols_to_drop = [
+        column
+        for column in df.columns
+        if (
+            (operator_name := _linear_profile_operator_name(column, FFN_FAMILY))
+            in dense_operator_names
+            and operator_name not in keep_dense_names
+        )
+    ]
     if cols_to_drop:
         print(f"Filtering out MLP-specific columns: {cols_to_drop}")
         return df.drop(columns=cols_to_drop)
@@ -918,11 +1090,12 @@ def main():
             pbar,
         )
 
+        model_config = ModelConfig.from_model_name(model)
+
         # Filter out MLP columns if is_moe is set
         if args.is_moe:
-            result_df = filter_mlp_columns(result_df)
+            result_df = filter_mlp_columns(result_df, model_config=model_config)
 
-        model_config = ModelConfig.from_model_name(model)
         _, precision_str = _resolve_precision_for_model(model_config, args.precision, model)
         model_arch = _resolve_model_arch_for_metadata(model_config)
         result_df = _attach_linear_op_output_metadata(
@@ -944,6 +1117,7 @@ def main():
             profile_method=args.profile_method,
         )
         output_file.parent.mkdir(parents=True, exist_ok=True)
+        result_df = _serialize_linear_op_output(result_df)
         result_df.to_csv(output_file, index=False)
         print(f"✓ Saved linear-op profiling data to: {output_file}")
 

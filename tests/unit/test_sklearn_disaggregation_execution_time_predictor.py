@@ -52,6 +52,18 @@ class _Step3NamedGenericProfileModelConfig:
         return True
 
 
+def test_explicit_moe_selector_supports_profile_only_legacy_adapter() -> None:
+    """An explicit selector remains sufficient for a legacy adapter without depth metadata."""
+
+    assert SklearnMoEExecutionTimePredictor._resolve_moe_layer_classification(
+        _ProfileOnlyStep3ModelConfig(),
+        layer_id=0,
+        num_layers=1,
+        include_moe=True,
+        include_ffn=True,
+    ) is True
+
+
 def _lane_workload(
     *,
     ep_id: int,

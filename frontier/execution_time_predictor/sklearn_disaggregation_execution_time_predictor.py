@@ -1442,6 +1442,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 admission_model_config,
                 layer_id=layer_id,
                 num_layers=num_layers,
+                layer_ids=normalized_layer_ids,
                 include_moe=include_moe,
                 include_ffn=True,
             )

@@ -9,7 +9,11 @@ from frontier.spec_decode.mtp_runtime import (
     load_mtp_structural_model_config,
 )
 from frontier.spec_decode.runtime import MTP_METHOD_FAMILIES, SUPPORTED_SPEC_METHODS
-from frontier.model_architectures import LayerKind, ResolvedLayerContract
+from frontier.model_architectures import (
+    LayerKind,
+    ResolvedLayerContract,
+    normalize_moe_layer_ids,
+)
 from frontier.operators.spec import TensorParallelMode
 from frontier.types import ClusterType
 
@@ -146,7 +150,19 @@ class ParamCounter:
     @staticmethod
     def _get_ffn_weight_params(width: int, embedding_dim: int, use_gated_mlp: bool, tensor_parallel_size: int) -> int:
         if type(width) is not int or width <= 0:
-            return 0
+            raise ValueError(
+                f"width must be a positive integer, got {width!r}"
+            )
+        if type(embedding_dim) is not int or embedding_dim <= 0:
+            raise ValueError(
+                "embedding_dim must be a positive integer, "
+                f"got {embedding_dim!r}"
+            )
+        if type(tensor_parallel_size) is not int or tensor_parallel_size <= 0:
+            raise ValueError(
+                "tensor_parallel_size must be a positive integer, "
+                f"got {tensor_parallel_size!r}"
+            )
         multiplier = 3 if use_gated_mlp else 2
         return multiplier * embedding_dim * width // tensor_parallel_size
 
@@ -160,11 +176,16 @@ class ParamCounter:
             if contract is not None
             else getattr(self._model_config, "mlp_hidden_dim", 0)
         )
+        parameter_tp_size = (
+            contract.tensor_parallel_size
+            if contract is not None and contract.tensor_parallel_size is not None
+            else tensor_parallel_size
+        )
         return self._get_ffn_weight_params(
             width,
             self._model_config.embedding_dim,
             bool(getattr(self._model_config, "use_gated_mlp", False)),
-            tensor_parallel_size,
+            parameter_tp_size,
         )
 
     def _get_share_expert_params_per_layer(self, tensor_parallel_size: int) -> int:
@@ -236,23 +257,11 @@ class ParamCounter:
                 "get_moe_layer_ids()"
             )
 
-        raw_layer_ids = tuple(get_layer_ids())
-        layer_ids: tuple[int, ...] = tuple(raw_layer_ids)
-        if any(type(layer_id) is not int for layer_id in layer_ids):
-            raise ValueError(
-                "ParamCounter MoE layer IDs must be exact integers, "
-                f"got {raw_layer_ids!r}"
-            )
-        if any(layer_id < 0 or layer_id >= total_layers for layer_id in layer_ids):
-            raise ValueError(
-                "ParamCounter MoE layer IDs must fall within the model layer range "
-                f"[0, {total_layers}), got {raw_layer_ids!r}"
-            )
-        if len(set(layer_ids)) != len(layer_ids):
-            raise ValueError(
-                "ParamCounter MoE layer IDs must be unique, "
-                f"got {raw_layer_ids!r}"
-            )
+        layer_ids = normalize_moe_layer_ids(
+            get_layer_ids(),
+            total_layers,
+            source="ParamCounter MoE layer IDs",
+        )
         if len(layer_ids) != num_moe_layers_total:
             raise ValueError(
                 "ParamCounter MoE layer-ID count disagrees with the model-level "
@@ -271,7 +280,7 @@ class ParamCounter:
             raise ValueError(
                 "ParamCounter cannot represent a non-uniform MoE layer map with "
                 f"one per-stage count: num_pipeline_stages={num_pipeline_stages}, "
-                f"stage_moe_layer_counts={stage_counts}, layer_ids={raw_layer_ids!r}. "
+                f"stage_moe_layer_counts={stage_counts}, layer_ids={layer_ids!r}. "
                 "Use a stage-aware parameter counter for this topology."
             )
         return stage_counts[0]
@@ -292,11 +301,16 @@ class ParamCounter:
             if contract is not None
             else getattr(self._model_config, "mlp_hidden_dim", 0)
         )
+        parameter_tp_size = (
+            contract.tensor_parallel_size
+            if contract is not None and contract.tensor_parallel_size is not None
+            else tensor_parallel_size
+        )
         num_parameters = self._get_ffn_weight_params(
             routed_width,
             self._model_config.embedding_dim,
             bool(getattr(self._model_config, "use_gated_mlp", False)),
-            tensor_parallel_size,
+            parameter_tp_size,
         )
 
         ep_size = self._get_ep_size()
@@ -389,18 +403,30 @@ class ParamCounter:
         num_moe_layers = self._get_num_moe_layers_per_pipeline_stage()
         num_non_moe_layers = self._num_layers_per_pipeline_stage - num_moe_layers
 
-        dense_mlp_params = self._get_dense_mlp_params_per_layer(self._get_attn_tp_size())
-        share_expert_params = self._get_share_expert_params_per_layer(
-            self._get_attn_tp_size()
+        # Runtime ownership is layer-kind specific: dense boundaries own only
+        # their dense MLP, while routed layers own routed experts plus the
+        # optional shared expert.  Resolve each basis only when that layer kind
+        # is present so pure-MoE models never materialize an inactive dense
+        # contract.
+        dense_mlp_params = (
+            self._get_dense_mlp_params_per_layer(self._get_attn_tp_size())
+            if num_non_moe_layers
+            else 0
         )
-        routed_moe_params = self._get_routed_moe_params_per_layer(self._get_moe_tp_size())
-
-        moe_layer_params = dense_mlp_params + share_expert_params + routed_moe_params
-        non_moe_layer_params = dense_mlp_params + share_expert_params
+        routed_moe_params = (
+            self._get_routed_moe_params_per_layer(self._get_moe_tp_size())
+            if num_moe_layers
+            else 0
+        )
+        share_expert_params = (
+            self._get_share_expert_params_per_layer(self._get_attn_tp_size())
+            if num_moe_layers
+            else 0
+        )
 
         return (
-            num_moe_layers * moe_layer_params
-            + num_non_moe_layers * non_moe_layer_params
+            num_non_moe_layers * dense_mlp_params
+            + num_moe_layers * (routed_moe_params + share_expert_params)
         )
 
     def _get_mtp_embed_params(self, proposer_model_config) -> int:

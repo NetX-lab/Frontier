@@ -9,7 +9,9 @@ This module provides a trainer for Attention-specific models, including:
 - Common models (input_layernorm, add)
 """
 
+import json
 import os
+from numbers import Integral
 from typing import Dict, List
 
 import pandas as pd
@@ -28,9 +30,20 @@ from frontier.attention.profiling_mapping import (
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
+from frontier.execution_time_predictor.attention_dataset_contract import (
+    enforce_mixed_attention_input_contract,
+    resolve_attention_input_file,
+)
 from frontier.logger import init_logger
+from frontier.model_architectures import resolve_model_architecture_profile
 from frontier.operators.binding import resolve_operator_query_tp_mode
 from frontier.operators.spec import TensorParallelMode
+from frontier.operators.typed_contracts import (
+    TYPED_OPERATOR_CONTRACTS_COLUMN,
+    build_non_layer_typed_operator_expectation,
+    parse_typed_operator_contracts,
+    validate_typed_operator_metadata,
+)
 from frontier.training.base_trainer import BaseTrainer
 
 logger = init_logger(__name__)
@@ -136,6 +149,37 @@ class AttentionTrainer(BaseTrainer):
             logger.info(f"  NOTE: compute_dataset_path not provided, will skip:")
             for model_name in self.COMPUTE_DEPENDENT_MODELS:
                 logger.info(f"        - {model_name}")
+
+    def _get_model_hash_identity(self, model_name: str) -> str | None:
+        """Return profile and attention-shape identity for standalone caches.
+
+        AttentionTrainer's base hash contains the operator name and dataframe,
+        but historically omitted the owning model architecture and attention
+        shape.  Include the same profile-owned contract identity used by runtime
+        consumers, together with the trainer's attention-specific dimensions,
+        so two architectures cannot reuse an otherwise identical cache entry.
+        """
+
+        del model_name
+        model_config = getattr(self, "model_config", None)
+        profile_getter = getattr(model_config, "get_model_architecture_profile", None)
+        if not callable(profile_getter):
+            return None
+        profile = resolve_model_architecture_profile(model_config)
+        profile_identity = profile.serialize_layer_contract_identity(model_config)
+        if not isinstance(profile_identity, str):
+            raise TypeError(
+                "architecture profile serialization must return a string for "
+                "standalone attention cache identity"
+            )
+        payload = {
+            "profile_identity": json.loads(profile_identity),
+            "model_name": self.model_name,
+            "device": self.device,
+            "tensor_parallel_size": self.tensor_parallel_size,
+            "block_size": self.block_size,
+        }
+        return json.dumps(payload, sort_keys=True, separators=(",", ":"))
     
     def _load_dataset(self) -> pd.DataFrame:
         """
@@ -161,15 +205,25 @@ class AttentionTrainer(BaseTrainer):
         logger.info(f"  - n_head == {self.model_config.num_q_heads}")
         logger.info(f"  - n_kv_head == {self.model_config.num_kv_heads}")
         logger.info(f"  - n_embd == {self.model_config.embedding_dim}")
-        logger.info(f"  - n_expanded_embd == {self.model_config.mlp_hidden_dim}")
+        has_typed_contracts = TYPED_OPERATOR_CONTRACTS_COLUMN in df.columns
+        if not has_typed_contracts:
+            logger.info(f"  - n_expanded_embd == {self.model_config.mlp_hidden_dim}")
         logger.info(f"  - use_gated_mlp == {self.model_config.use_gated_mlp}")
         logger.info(f"  - vocab_size == {self.model_config.vocab_size}")
 
+        if has_typed_contracts:
+            self._validate_typed_compute_dataset(df)
+
+        width_mask = (
+            pd.Series(True, index=df.index)
+            if has_typed_contracts
+            else (df["n_expanded_embd"] == self.model_config.mlp_hidden_dim)
+        )
         filtered_df = df[
             (df["n_head"] == self.model_config.num_q_heads)
             & (df["n_kv_head"] == self.model_config.num_kv_heads)
             & (df["n_embd"] == self.model_config.embedding_dim)
-            & (df["n_expanded_embd"] == self.model_config.mlp_hidden_dim)
+            & width_mask
             & (df["use_gated_mlp"] == self.model_config.use_gated_mlp)
             & (df["vocab_size"] == self.model_config.vocab_size)
         ].copy()
@@ -198,6 +252,129 @@ class AttentionTrainer(BaseTrainer):
         self._verify_compute_dataset_columns(filtered_df)
 
         return filtered_df
+
+    def _typed_compute_operator_names_with_measurements(
+        self,
+        df: pd.DataFrame,
+    ) -> tuple[str, ...]:
+        """Return required typed operators that have measured target values."""
+
+        operator_names = [
+            "attn_pre_proj",
+            "attn_post_proj",
+            "attn_rope",
+            "input_layernorm",
+        ]
+        if not bool(getattr(self.model_config, "uses_fused_add_norm", False)):
+            operator_names.append("add")
+
+        profile_getter = getattr(
+            self.model_config,
+            "get_model_architecture_profile",
+            None,
+        )
+        if not callable(profile_getter):
+            raise TypeError(
+                "typed attention compute loading requires model_config."
+                "get_model_architecture_profile()"
+            )
+        profile = profile_getter()
+        linear_attention = getattr(profile, "linear_attention", None)
+        if linear_attention is None:
+            raise TypeError(
+                "model architecture profile must expose linear_attention for "
+                "typed attention compute loading"
+            )
+        operator_names.extend(getattr(linear_attention, "sharded_ops", ()))
+
+        measured_names: list[str] = []
+        for operator_name in dict.fromkeys(operator_names):
+            target_column = f"time_stats.{operator_name}.median"
+            if target_column in df.columns and df[target_column].notna().any():
+                measured_names.append(operator_name)
+        return tuple(measured_names)
+
+    def _validate_typed_compute_dataset(self, df: pd.DataFrame) -> None:
+        """Validate row-level typed metadata before mixed-width filtering.
+
+        The typed column is an all-or-nothing contract for a dataset. Parsing
+        every row makes malformed values visible, while requiring only measured
+        operator targets keeps optional architecture-specific columns compatible
+        with the existing producer surface.
+        """
+
+        required_operator_names = self._typed_compute_operator_names_with_measurements(df)
+        profile = self.model_config.get_model_architecture_profile()
+        for row_index, row in df.iterrows():
+            try:
+                contracts = parse_typed_operator_contracts(
+                    row[TYPED_OPERATOR_CONTRACTS_COLUMN]
+                )
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    "Invalid typed operator metadata at row "
+                    f"{row_index} in {self.compute_dataset_path}: {exc}"
+                ) from exc
+
+            for operator_name in required_operator_names:
+                target_column = f"time_stats.{operator_name}.median"
+                if pd.isna(row[target_column]):
+                    continue
+                metadata = contracts.get(operator_name)
+                if metadata is None:
+                    raise ValueError(
+                        "Typed operator metadata is missing measured operator "
+                        f"{operator_name!r} at row {row_index} in "
+                        f"{self.compute_dataset_path}"
+                    )
+                selected_tp = self._typed_metadata_row_tp_size(row)
+                try:
+                    expected_metadata = build_non_layer_typed_operator_expectation(
+                        operator_name=operator_name,
+                        model_config=self.model_config,
+                        architecture_profile=profile,
+                        selected_tensor_parallel_size=selected_tp,
+                    )
+                    validate_typed_operator_metadata(
+                        metadata,
+                        operator_name=operator_name,
+                        expected_metadata=expected_metadata,
+                    )
+                except (TypeError, ValueError) as exc:
+                    raise ValueError(
+                        "Invalid typed metadata for measured operator "
+                        f"{operator_name!r} at row {row_index} in "
+                        f"{self.compute_dataset_path}: {exc}"
+                    ) from exc
+
+        logger.info(
+            "Validated typed compute metadata for %d measured attention/common operators",
+            len(required_operator_names),
+        )
+
+    def _typed_metadata_row_tp_size(self, row: pd.Series) -> int | None:
+        """Return the row's concrete TP when the dataset records one.
+
+        A few direct unit fixtures intentionally omit the worker-count column;
+        in that case the trainer's configured TP supplies the expectation.  A
+        missing value leaves selected-TP comparison to the schema's domain
+        membership check, preserving multi-TP datasets without inventing a
+        topology.
+        """
+
+        value = row.get("num_tensor_parallel_workers")
+        if value is None or (
+            pd.api.types.is_scalar(value) and bool(pd.isna(value))
+        ):
+            value = getattr(self, "tensor_parallel_size", None)
+        if value is None:
+            return None
+        if isinstance(value, bool) or not isinstance(value, Integral) or int(value) <= 0:
+            raise ValueError(
+                "typed metadata row num_tensor_parallel_workers must be a "
+                f"positive integer, got {value!r}"
+            )
+        return int(value)
     
     def _load_layer_dataset(self) -> pd.DataFrame:
         """
@@ -206,10 +383,26 @@ class AttentionTrainer(BaseTrainer):
         Returns:
             Filtered layer dataframe with derived features
         """
-        logger.info(f"Loading layer data from: {self.layer_dataset_path}")
-        df = pd.read_csv(self.layer_dataset_path)
+        resolved_layer_path = resolve_attention_input_file(
+            self.layer_dataset_path,
+            require_exists=True,
+        )
+        if resolved_layer_path != self.layer_dataset_path:
+            logger.info(
+                "Using resolved attention layer input %s (configured path %s)",
+                resolved_layer_path,
+                self.layer_dataset_path,
+            )
+            self.layer_dataset_path = resolved_layer_path
+        logger.info(f"Loading layer data from: {resolved_layer_path}")
+        df = pd.read_csv(resolved_layer_path)
         self._set_dataset_metadata(df, source="layer_dataset")
         df = df.drop_duplicates()
+
+        enforce_mixed_attention_input_contract(
+            attention_file_path=resolved_layer_path,
+            available_columns=df.columns,
+        )
         
         logger.info(f"Original layer data: {len(df)} rows, {len(df.columns)} columns")
         

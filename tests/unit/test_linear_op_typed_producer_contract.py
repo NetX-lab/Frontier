@@ -48,6 +48,7 @@ def test_step3_plan_binds_each_operator_to_its_profile_owned_contract() -> None:
     assert dense["tensor_parallel_mode"] == "attention_tp"
     assert dense["tensor_parallel_sizes"] == [8]
     assert dense["selected_tensor_parallel_size"] == 8
+    assert dense["selected_expert_parallel_size"] is None
     assert dense["expert_parallel_mode"] == "off"
 
     assert shared["operator_family_id"] == "share_expert"
@@ -65,6 +66,7 @@ def test_step3_plan_binds_each_operator_to_its_profile_owned_contract() -> None:
     assert routed["tensor_parallel_mode"] == "moe_tp"
     assert routed["tensor_parallel_sizes"] == [1]
     assert routed["selected_tensor_parallel_size"] is None
+    assert routed["selected_expert_parallel_size"] is None
     assert routed["expert_parallel_mode"] == "on"
 
     assert attention["operator_family_id"] == "dense_attention"
