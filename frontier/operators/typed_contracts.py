@@ -99,6 +99,10 @@ def validate_typed_operator_metadata(
     operator_name: str,
     expected_metadata: Mapping[str, Any],
     expected_tensor_parallel_sizes: Sequence[int] | None = None,
+    architecture_profile: Any | None = None,
+    architecture_family_id: str | None = None,
+    mtp_method: str | None = None,
+    model_config: Any | None = None,
 ) -> dict[str, Any]:
     """Validate one complete metadata object against resolver expectations."""
 
@@ -121,6 +125,19 @@ def validate_typed_operator_metadata(
         raise ValueError(
             f"typed metadata for {operator_name!r} is missing required fields: {', '.join(missing)}"
         )
+
+    if model_config is not None:
+        if architecture_profile is None:
+            getter = getattr(model_config, "get_model_architecture_profile", None)
+            if callable(getter):
+                architecture_profile = getter()
+        if architecture_family_id is None:
+            from frontier.attention.model_binding import bind_attention_family
+
+            architecture_family_id = bind_attention_family(model_config).family_id
+        if mtp_method is None:
+            spec_config = getattr(model_config, "speculative_decoding_config", None)
+            mtp_method = getattr(spec_config, "method", None)
 
     from frontier.model_architectures import ExpertParallelMode, LayerDimensionSource, LayerKind
     from frontier.operators.spec import TensorParallelMode
@@ -152,6 +169,81 @@ def validate_typed_operator_metadata(
     if metadata["operator_family_id"] not in family_ids:
         raise ValueError(
             f"typed metadata for {operator_name!r} names an operator family outside operator_family_ids"
+        )
+
+    # Resolve ownership from the existing registries.  Typed metadata is a
+    # singleton operator declaration, so extra family IDs are ambiguous even
+    # when the authoritative family happens to be present.
+    from frontier.operators.binding import bind_operator_query
+    from frontier.spec_decode.mtp_registry import get_target_embedded_mtp_linear_ops
+
+    owners: list[tuple[str, str]] = []
+    try:
+        binding = bind_operator_query(operator_name)
+    except ValueError:
+        binding = None
+    if binding is not None:
+        owners.append(("registry", binding.family_id))
+
+    architecture_names: set[str] = set()
+    if architecture_profile is None:
+        from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
+
+        for registered_profile in MODEL_ARCHITECTURE_REGISTRY.iter_profiles():
+            linear_attention = getattr(registered_profile, "linear_attention", None)
+            if linear_attention is not None:
+                architecture_names.update(linear_attention.sharded_ops)
+                architecture_names.update(linear_attention.replicated_ops)
+    if architecture_profile is not None:
+        linear_attention = getattr(architecture_profile, "linear_attention", None)
+        if linear_attention is None:
+            raise TypeError("architecture_profile must expose linear_attention")
+        architecture_names.update(linear_attention.sharded_ops)
+        architecture_names.update(linear_attention.replicated_ops)
+    if operator_name in architecture_names:
+        if architecture_profile is None:
+            if operator_name in {"attn_pre_proj", "attn_rope", "attn_post_proj"}:
+                owners.append(("architecture", "dense_attention"))
+            else:
+                raise ValueError(
+                    f"architecture_profile is required for architecture-owned operator {operator_name!r}"
+                )
+        else:
+            if not isinstance(architecture_family_id, str) or not architecture_family_id:
+                raise ValueError(
+                    f"architecture_family_id is required for architecture-owned operator {operator_name!r}"
+                )
+            owners.append(("architecture", architecture_family_id))
+
+    if operator_name in get_target_embedded_mtp_linear_ops():
+        if not isinstance(mtp_method, str) or not mtp_method.strip():
+            raise ValueError(
+                f"mtp_method is required for target-embedded MTP operator {operator_name!r}"
+            )
+        from frontier.spec_decode.mtp_registry import (
+            get_target_embedded_mtp_method_contract,
+        )
+
+        mtp_contract = get_target_embedded_mtp_method_contract(mtp_method)
+        owners.append(("mtp", str(mtp_contract["mtp_family"])))
+
+    if not owners:
+        raise ValueError(f"Unknown typed operator {operator_name!r}")
+    owner_families = {family_id for _, family_id in owners}
+    if len(owners) != 1 or len(owner_families) != 1:
+        raise ValueError(
+            f"typed operator {operator_name!r} has conflicting owners: {owners}"
+        )
+    authoritative_family = next(iter(owner_families))
+    if metadata["operator_family_id"] != authoritative_family:
+        raise ValueError(
+            f"typed metadata for {operator_name!r} operator family mismatch: "
+            f"actual={metadata['operator_family_id']!r}, expected={authoritative_family!r}"
+        )
+    if family_ids != (authoritative_family,):
+        raise ValueError(
+            f"typed metadata for {operator_name!r} must declare exactly one "
+            f"operator family: {authoritative_family!r}"
         )
 
     layer_kind = metadata["layer_kind"]
@@ -311,7 +403,14 @@ def parse_typed_operator_contracts(value: Any) -> dict[str, dict[str, Any]]:
     return _copy_contract_mapping(decoded)
 
 
-def validate_typed_operator_contracts(value: Any) -> dict[str, dict[str, Any]]:
+def validate_typed_operator_contracts(
+    value: Any,
+    *,
+    architecture_profile: Any | None = None,
+    architecture_family_id: str | None = None,
+    mtp_method: str | None = None,
+    model_config: Any | None = None,
+) -> dict[str, dict[str, Any]]:
     """Parse and validate every operator metadata object in one typed row.
 
     Parsing validates the JSON envelope and mapping shape. Loader admission
@@ -326,6 +425,10 @@ def validate_typed_operator_contracts(value: Any) -> dict[str, dict[str, Any]]:
             metadata,
             operator_name=operator_name,
             expected_metadata={},
+            architecture_profile=architecture_profile,
+            architecture_family_id=architecture_family_id,
+            mtp_method=mtp_method,
+            model_config=model_config,
         )
     return contracts
 

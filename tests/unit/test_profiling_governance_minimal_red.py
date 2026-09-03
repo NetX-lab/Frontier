@@ -2013,7 +2013,7 @@ def test_typed_metadata_requires_registry_owned_operator_and_family() -> None:
         "frontier.operators.typed_contracts", "validate_typed_operator_metadata"
     )
     metadata = contract.typed_metadata_identity()
-    with pytest.raises(ValueError, match="Unknown operator|operator family"):
+    with pytest.raises(ValueError, match="Unknown typed operator|operator family"):
         validator(metadata, operator_name="unknown_linear", expected_metadata={})
     wrong_family = dict(metadata)
     wrong_family["operator_family_id"] = "moe"

@@ -46,6 +46,11 @@ from frontier.operators.typed_contracts import (
     validate_typed_operator_contracts,
 )
 from frontier.logger import init_logger
+from frontier.execution_time_predictor.profiling_metadata import (
+    infer_single_runtime_model_config,
+    infer_single_runtime_profile,
+    validate_model_architecture_profile,
+)
 from frontier.model_architectures import (
     LayerKind,
     ModelArchitectureProfile,
@@ -2956,6 +2961,17 @@ class ExecutionTimePredictionModelManager:
 
         df = pd.read_csv(file_path)
         logger.info(f"Original linear ops data: {len(df)} rows, {len(df.columns)} columns")
+        expected_profile = (
+            layer_contract.profile_id
+            if layer_contract is not None
+            else infer_single_runtime_profile(self)
+        )
+        if expected_profile is not None and "model_architecture_profile" in df.columns:
+            validate_model_architecture_profile(
+                df,
+                file_path=file_path,
+                expected_profile=expected_profile,
+            )
 
         # Check required column
         if 'num_tensor_parallel_workers' not in df.columns:
@@ -2983,7 +2999,10 @@ class ExecutionTimePredictionModelManager:
             parsed_typed_contracts = cast(
                 pd.Series,
                 df[TYPED_OPERATOR_CONTRACTS_COLUMN].map(
-                    validate_typed_operator_contracts
+                    lambda raw_contracts: validate_typed_operator_contracts(
+                        raw_contracts,
+                        model_config=infer_single_runtime_model_config(self),
+                    )
                 ),
             )
 
@@ -3537,6 +3556,17 @@ class ExecutionTimePredictionModelManager:
 
         df = pd.read_csv(file_path)
         logger.info(f"Original MoE data: {len(df)} rows, {len(df.columns)} columns")
+        expected_profile = (
+            layer_contract.profile_id
+            if layer_contract is not None
+            else infer_single_runtime_profile(self)
+        )
+        if expected_profile is not None and "model_architecture_profile" in df.columns:
+            validate_model_architecture_profile(
+                df,
+                file_path=file_path,
+                expected_profile=expected_profile,
+            )
 
         has_typed_contracts = TYPED_OPERATOR_CONTRACTS_COLUMN in df.columns
         parsed_typed_contracts: Optional[pd.Series] = None
@@ -3556,7 +3586,10 @@ class ExecutionTimePredictionModelManager:
             parsed_typed_contracts = cast(
                 pd.Series,
                 df[TYPED_OPERATOR_CONTRACTS_COLUMN].map(
-                    validate_typed_operator_contracts
+                    lambda raw_contracts: validate_typed_operator_contracts(
+                        raw_contracts,
+                        model_config=replica_config.model_config,
+                    )
                 ),
             )
 

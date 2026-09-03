@@ -127,6 +127,9 @@ from frontier.spec_decode.mtp_registry import (
     is_target_embedded_mtp_same_tp_linear_op,
 )
 from frontier.spec_decode.mtp_runtime import load_mtp_structural_model_config
+from frontier.execution_time_predictor.profiling_metadata import (
+    validate_model_architecture_profile,
+)
 from frontier.entities import ExecutionTime
 from frontier.types import ClusterType, MeasurementType
 
@@ -1212,7 +1215,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 pd.Series, df[TYPED_OPERATOR_CONTRACTS_COLUMN]
             )
             df[TYPED_OPERATOR_CONTRACTS_COLUMN] = typed_contract_series.map(
-                validate_typed_operator_contracts
+                lambda raw_contracts: validate_typed_operator_contracts(
+                    raw_contracts,
+                    model_config=self._model_config,
+                )
             )
         if has_typed_contracts and layer_contract is None and operator_name is not None:
             resolver = getattr(self, "_resolve_typed_linear_contract", None)
@@ -2304,32 +2310,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 f"File: '{file_path}'"
             )
 
-        if "model_architecture_profile" not in df.columns:
-            raise ValueError(
-                f"model_architecture_profile column is missing from '{file_path}'. "
-                f"Run '{MIGRATION_HELP_COMMAND}' to add required metadata columns."
-            )
-
-        profile_values = df["model_architecture_profile"].dropna().unique().tolist()
-        if not profile_values:
-            raise ValueError(
-                f"model_architecture_profile column is empty in '{file_path}'"
-            )
-        if len(profile_values) > 1:
-            raise ValueError(
-                "Multiple model_architecture_profile values found in "
-                f"'{file_path}': {profile_values}. Profiling data should have "
-                "consistent architecture profile."
-            )
-
         expected_profile = self._get_model_architecture_profile().profile_id
-        actual_profile = str(profile_values[0])
-        if actual_profile != expected_profile:
-            raise ValueError(
-                "model_architecture_profile mismatch: expected "
-                f"'{expected_profile}' but profiling data has '{actual_profile}'. "
-                f"File: '{file_path}'"
-            )
+        actual_profile = validate_model_architecture_profile(
+            df,
+            file_path=file_path,
+            expected_profile=expected_profile,
+        )
 
         profiling_precision = PrecisionType.from_string(precision_values[0])
 

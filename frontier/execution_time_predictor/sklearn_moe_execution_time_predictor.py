@@ -1305,7 +1305,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             # Validate every row before scalar or TP/EP filtering can hide a
             # malformed typed contract.
             moe_df[TYPED_OPERATOR_CONTRACTS_COLUMN].map(
-                validate_typed_operator_contracts
+                lambda raw_contracts: validate_typed_operator_contracts(
+                    raw_contracts,
+                    model_config=self._model_config,
+                )
             )
 
         metadata = self._get_profiling_metadata(moe_df, moe_input_file)
@@ -1507,7 +1510,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             if moe_df is not None:
                 if TYPED_OPERATOR_CONTRACTS_COLUMN in moe_df.columns:
                     moe_df[TYPED_OPERATOR_CONTRACTS_COLUMN].map(
-                        validate_typed_operator_contracts
+                        lambda raw_contracts: validate_typed_operator_contracts(
+                            raw_contracts,
+                            model_config=self._model_config,
+                        )
                     )
                 include_prefill_hot_models = has_prefill_hot_moe_gating_rows(moe_df)
             if include_prefill_hot_models:
