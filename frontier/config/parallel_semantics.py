@@ -6,6 +6,9 @@ from dataclasses import asdict, dataclass
 from functools import lru_cache
 from pathlib import Path
 
+from frontier.operators.spec import TensorParallelMode
+from frontier.types import ClusterType
+
 
 @dataclass(frozen=True)
 class FrontierParallelismMapping:
@@ -75,6 +78,74 @@ def validate_frontier_shared_parallel_domains(
             "Frontier shared attention/MoE parallel domain requires "
             "attn_tp*attn_dp == moe_tp*moe_ep"
         )
+
+
+def resolve_shared_expert_tensor_parallel_mode(
+    *,
+    model_config: object,
+) -> TensorParallelMode:
+    """Return the profile-owned semantic TP mode for shared-expert work."""
+
+    profile_getter = getattr(model_config, "get_model_architecture_profile", None)
+    if not callable(profile_getter):
+        raise ValueError(
+            "Shared-expert TP requires model_config.get_model_architecture_profile()"
+        )
+
+    from frontier.model_architectures import LayerKind
+
+    mode = profile_getter().get_layer_contract(
+        LayerKind.SHARED
+    ).tensor_parallel_mode
+    if not isinstance(mode, TensorParallelMode):
+        raise ValueError(
+            "Shared-expert layer contract must declare a TensorParallelMode, "
+            f"got {mode!r}"
+        )
+    return mode
+
+
+def resolve_shared_expert_tensor_parallel_size(
+    *,
+    cluster_type: ClusterType,
+    replica_config: object,
+    model_config: object | None = None,
+) -> int:
+    """Resolve shared-expert TP through the model architecture profile."""
+
+    if cluster_type not in {
+        ClusterType.MONOLITHIC,
+        ClusterType.PREFILL,
+        ClusterType.DECODE,
+        ClusterType.DECODE_FFN,
+    }:
+        raise ValueError(
+            f"Shared-expert TP is unavailable for cluster type {cluster_type!r}"
+        )
+
+    if model_config is None:
+        model_config = getattr(replica_config, "model_config", None)
+    if model_config is None:
+        raise ValueError("Shared-expert TP requires replica_config.model_config")
+    mode = resolve_shared_expert_tensor_parallel_mode(model_config=model_config)
+    if cluster_type is ClusterType.DECODE_FFN or mode in {
+        TensorParallelMode.FFN_TP,
+        TensorParallelMode.MOE_TP,
+    }:
+        field_name = "moe_tensor_parallel_size"
+    elif mode is TensorParallelMode.ATTENTION_TP:
+        field_name = "attn_tensor_parallel_size"
+    elif mode is TensorParallelMode.REPLICATED:
+        return 1
+    else:
+        raise ValueError(f"Unsupported shared-expert TP mode: {mode!r}")
+
+    value = getattr(replica_config, field_name, None)
+    if type(value) is not int or value <= 0:
+        raise ValueError(
+            f"{field_name} must be a positive int for shared-expert TP, got {value!r}"
+        )
+    return value
 
 
 def resolve_frontier_parallelism_mapping(

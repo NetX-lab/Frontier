@@ -753,6 +753,7 @@ def test_common_dummy_moe_predictor_zero_lane_has_no_routed_compute() -> None:
     predictor._dummy_execution_time = 2.0
     predictor._num_layers_per_pipeline_stage = 1
     predictor._model_config = _ProfileOnlyStep3ModelConfig()
+    predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._replica_config = SimpleNamespace(
         attn_tensor_parallel_size=1,
         moe_tensor_parallel_size=2,

@@ -6180,6 +6180,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             return 0.0
 
         num_devices = operator.num_devices(ctx)
+        comm_domain = operator.resolve_comm_domain(ctx)
 
         if operator.collective_alias == "allreduce":
             if num_devices is None:
@@ -6190,10 +6191,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 data_size_bytes=data_size_bytes,
                 num_devices=num_devices,
                 cluster_type=ctx.cluster_type,
-                comm_domain=operator.comm_domain,
+                comm_domain=comm_domain,
             )
             if operator.apply_allreduce_launch_overhead_strip:
-                if operator.comm_domain is None:
+                if comm_domain is None:
                     raise ValueError(
                         f"CommOperator {operator.name} requires comm_domain for "
                         "allreduce launch-overhead stripping"
@@ -6203,7 +6204,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                         batch=ctx.batch,
                         predicted_ms=predicted_ms,
                         num_devices=num_devices,
-                        comm_domain=operator.comm_domain,
+                        comm_domain=comm_domain,
                     )
                 )
             return predicted_ms
@@ -6217,7 +6218,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 data_size_bytes=data_size_bytes,
                 num_devices=num_devices,
                 cluster_type=ctx.cluster_type,
-                comm_domain=operator.comm_domain,
+                comm_domain=comm_domain,
             )
 
         if operator.collective_alias == "alltoall":
@@ -6229,14 +6230,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 data_size_bytes=data_size_bytes,
                 num_devices=num_devices,
                 cluster_type=ctx.cluster_type,
-                comm_domain=operator.comm_domain,
+                comm_domain=comm_domain,
             )
 
         if operator.collective_alias == "send_recv":
             return self.predict_p2p_time(
                 data_size_bytes=data_size_bytes,
                 cluster_type=ctx.cluster_type,
-                comm_domain=operator.comm_domain,
+                comm_domain=comm_domain,
             )
 
         raise ValueError(

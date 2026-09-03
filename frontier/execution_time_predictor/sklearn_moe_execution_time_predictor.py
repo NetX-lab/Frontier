@@ -70,6 +70,9 @@ from frontier.config import (
     BaseReplicaSchedulerConfig,
     get_quantization_manager,
 )
+from frontier.config.parallel_semantics import (
+    resolve_shared_expert_tensor_parallel_size,
+)
 from frontier.types import ClusterType
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
@@ -538,13 +541,23 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         ffn_tp_allgather_time = 0.0
         share_expert_tp_allreduce_time = 0.0
-        if is_moe and architecture_profile.moe_tensor_parallel_allgather_op and moe_tp_size > 1:
+        if (
+            is_moe
+            and architecture_profile.moe_tensor_parallel_allgather_op
+            and moe_tp_size > 1
+        ):
             ffn_tp_allgather_time = base_time
-            if (
-                share_expert_enabled
-                and architecture_profile.share_expert_tensor_parallel_allreduce_op
-            ):
-                share_expert_tp_allreduce_time = base_time
+        if (
+            share_expert_enabled
+            and architecture_profile.share_expert_tensor_parallel_allreduce_op
+            and resolve_shared_expert_tensor_parallel_size(
+                cluster_type=self._cluster_type,
+                replica_config=self._replica_config,
+                model_config=self._model_config,
+            )
+            > 1
+        ):
+            share_expert_tp_allreduce_time = base_time
 
         add_time = base_time if include_ffn else 0.0
         add_attn_residual_time = 0.0
@@ -2336,29 +2349,42 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         ffn_tp_allgather_time = 0.0
         share_expert_tp_allreduce_time = 0.0
         moe_tp_allgather_op = architecture_profile.moe_tensor_parallel_allgather_op
-        if include_ffn and include_moe and moe_tp_allgather_op:
-            moe_tp_size = self._replica_config.moe_tensor_parallel_size
-            if moe_tp_size > 1:
+        if include_ffn and include_moe:
+            if (
+                moe_tp_allgather_op
+                and self._replica_config.moe_tensor_parallel_size > 1
+            ):
                 ffn_tp_allgather_time = self._predict_comm_operator(
                     get_comm_operator(moe_tp_allgather_op),
                     batch,
                 )
                 communication_operator_times[moe_tp_allgather_op] = ffn_tp_allgather_time
-                share_expert_tp_allreduce_op = (
-                    architecture_profile.share_expert_tensor_parallel_allreduce_op
+            share_expert_tp_allreduce_op = (
+                architecture_profile.share_expert_tensor_parallel_allreduce_op
+            )
+            shared_expert_compute_time = (
+                share_expert_up_proj_time
+                + share_expert_down_proj_time
+                + share_expert_act_time
+            )
+            if (
+                share_expert_tp_allreduce_op
+                and shared_expert_compute_time > 0
+                and resolve_shared_expert_tensor_parallel_size(
+                    cluster_type=self._cluster_type,
+                    replica_config=self._replica_config,
+                    model_config=self._model_config,
                 )
-                if (
+                > 1
+            ):
+                raw_share_expert_tp_allreduce_time = self._predict_comm_operator(
+                    get_comm_operator(share_expert_tp_allreduce_op),
+                    batch,
+                )
+                share_expert_tp_allreduce_time = raw_share_expert_tp_allreduce_time
+                communication_operator_times[
                     share_expert_tp_allreduce_op
-                    and share_expert_up_proj_time + share_expert_down_proj_time + share_expert_act_time > 0
-                ):
-                    raw_share_expert_tp_allreduce_time = self._predict_comm_operator(
-                        get_comm_operator(share_expert_tp_allreduce_op),
-                        batch,
-                    )
-                    share_expert_tp_allreduce_time = raw_share_expert_tp_allreduce_time
-                    communication_operator_times[
-                        share_expert_tp_allreduce_op
-                    ] = share_expert_tp_allreduce_time
+                ] = share_expert_tp_allreduce_time
 
         dp_input_allreduce_time = 0.0
         dp_output_allreduce_time = 0.0

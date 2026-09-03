@@ -1089,6 +1089,18 @@ class ExecutionTimePredictionModelManager:
         except (TypeError, ValueError) as exc:
             raise ValueError(f"Unsupported linear op for TP mapping: {op_name}") from exc
 
+        typed_contract = self._resolve_typed_layer_contract(
+            op_name,
+            cluster_type,
+            replica_config,
+            is_moe_model=is_moe_model,
+        )
+        if (
+            typed_contract is not None
+            and typed_contract.tensor_parallel_size is not None
+        ):
+            return typed_contract.tensor_parallel_size
+
         if tp_mode is TensorParallelMode.REPLICATED:
             if (
                 is_target_embedded_mtp_enabled(

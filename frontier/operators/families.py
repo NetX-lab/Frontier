@@ -7,6 +7,10 @@ from frontier.attention.families import (
     DSA_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
 )
+from frontier.config.parallel_semantics import (
+    resolve_shared_expert_tensor_parallel_mode,
+    resolve_shared_expert_tensor_parallel_size,
+)
 from frontier.operators.registry import OperatorRegistry
 from frontier.operators.spec import (
     CommOperatorSpec,
@@ -395,6 +399,34 @@ def _moe_tp_devices(ctx: CommPayloadContext) -> int:
     return int(ctx.replica_config.moe_tensor_parallel_size)
 
 
+def _shared_expert_tp_devices(ctx: CommPayloadContext) -> int:
+    return resolve_shared_expert_tensor_parallel_size(
+        cluster_type=ctx.cluster_type,
+        replica_config=ctx.replica_config,
+        model_config=ctx.model_config,
+    )
+
+
+def _shared_expert_tp_group(ctx: CommPayloadContext) -> str:
+    if ctx.cluster_type is ClusterType.DECODE_FFN:
+        return "moe_tp"
+
+    tp_mode = resolve_shared_expert_tensor_parallel_mode(
+        model_config=ctx.model_config
+    )
+    if tp_mode is TensorParallelMode.ATTENTION_TP:
+        return "attn_tp"
+    if tp_mode in {TensorParallelMode.FFN_TP, TensorParallelMode.MOE_TP}:
+        return "moe_tp"
+    raise ValueError(
+        f"Shared-expert all-reduce does not support TP mode {tp_mode!r}"
+    )
+
+
+def _shared_expert_tp_domain(ctx: CommPayloadContext) -> str:
+    return "MOE_TP" if _shared_expert_tp_group(ctx) == "moe_tp" else "ATTN_TP"
+
+
 def _moe_ep_devices(ctx: CommPayloadContext) -> int:
     return int(ctx.replica_config.moe_expert_parallel_size)
 
@@ -478,10 +510,12 @@ COMM_FAMILY = OperatorFamilySpec(
             execution_time_attr="share_expert_tensor_parallel_allreduce_time",
             precision_op="allreduce",
             collective_alias="allreduce",
-            comm_group="moe_tp",
-            comm_domain="MOE_TP",
+            comm_group="attn_tp",
+            comm_group_builder=_shared_expert_tp_group,
+            comm_domain="ATTN_TP",
+            comm_domain_builder=_shared_expert_tp_domain,
             payload_builder=_tp_allreduce_payload_bytes,
-            num_devices_builder=_moe_tp_devices,
+            num_devices_builder=_shared_expert_tp_devices,
             apply_allreduce_launch_overhead_strip=True,
         ),
         CommOperatorSpec(

@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 |------------|--------------------|
+| 2026-09-03 | Defined shared-expert and routed-expert TP/EP authority across shared-domain and DECODE_FFN roles. |
 | 2026-08-09 | Restored the sequential-only public PDD guard and documented current post-ISSUE-022 slowdown evidence. |
 | 2026-08-08 | Clarified that parallel PDD preserves sequential-DES correctness without promising wall-clock speedup. |
 | 2026-08-07 | Corrected the PDD parallel runtime contract while retaining sequential public examples and the PD-AF parallel guard. |
@@ -515,6 +516,25 @@ Configuration inheritance for the co-location path:
 1. Prefer explicitly provided co-location fields.
 2. Fall back to the base `replica_config`.
 3. Fall back to dataclass defaults.
+
+### MoE TP/EP Authority
+
+Frontier assigns parallel fields by workload ownership:
+
+- In Step3 co-location, `PREFILL`, and unified `DECODE` roles, shared-expert
+  ordinary FFN work uses `attn_tensor_parallel_size`. Its output all-reduce
+  uses the `ATTN_TP` communication domain with the same participant count.
+- Routed-expert compute uses `moe_tensor_parallel_size` for intra-expert TP
+  sharding and `moe_expert_parallel_size` for expert placement and EP
+  communication.
+- In the FFN-only `DECODE_FFN` role, ordinary/shared local FFN work and routed
+  intra-expert compute use that role's `moe_tensor_parallel_size`. Routed
+  expert placement uses that role's `moe_expert_parallel_size`, and the
+  shared-expert output all-reduce uses the role-local `MOE_TP` domain.
+- The existing `attn_tensor_parallel_size`, `moe_tensor_parallel_size`, and
+  `moe_expert_parallel_size` fields fully represent these semantics. The
+  architecture profile selects each operator's semantic TP domain, and the
+  role mapping selects the physical communication domain.
 
 ## System Architecture
 

@@ -18,6 +18,9 @@ from frontier.config import (
     get_quantization_manager,
 )
 from frontier.config import global_vars
+from frontier.config.parallel_semantics import (
+    resolve_shared_expert_tensor_parallel_size,
+)
 from frontier.entities import Batch, EPBatchGroup, ExecutionTime
 from frontier.entities.time_components import (
     AttentionTime,
@@ -629,12 +632,14 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         model_is_moe = bool(
             model_config is not None and getattr(model_config, "is_moe", False)
         )
-        # Shared-domain dummy stages use this selector to suppress their FFN
-        # portion.  DECODE_ATTN and DECODE_FFN retain their role-owned legacy
-        # composition; the public stage boundary validates their selectors.
-        ffn_enabled = include_ffn or cluster_type not in (
-            ClusterType.PREFILL,
-            ClusterType.DECODE,
+        # DECODE_ATTN is an attention-only role. Shared-domain roles honor the
+        # caller selector, while DECODE_FFN always retains its local FFN work.
+        ffn_enabled = cluster_type != ClusterType.DECODE_ATTN and (
+            include_ffn
+            or cluster_type not in (
+                ClusterType.PREFILL,
+                ClusterType.DECODE,
+            )
         )
         is_moe_model = (
             ffn_enabled and (model_is_moe if include_moe is None else include_moe)
@@ -719,11 +724,19 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             and moe_tp_size > 1
         )
         ffn_tp_allgather_time = base_time if ffn_tp_comm_enabled else 0.0
+        shared_tp_size = (
+            resolve_shared_expert_tensor_parallel_size(
+                cluster_type=cluster_type,
+                replica_config=cluster_replica_config,
+            )
+            if share_expert_enabled
+            else 1
+        )
         share_expert_tp_allreduce_time = (
             base_time
             if (
-                ffn_tp_comm_enabled
-                and share_expert_enabled
+                share_expert_enabled
+                and shared_tp_size > 1
                 and architecture_profile.share_expert_tensor_parallel_allreduce_op is not None
             )
             else 0.0
@@ -774,6 +787,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 share_expert_up_proj_time=share_expert_time if ffn_enabled else 0.0,
                 share_expert_down_proj_time=share_expert_time if ffn_enabled else 0.0,
                 share_expert_act_time=share_expert_time if ffn_enabled else 0.0,
+                share_expert_tensor_parallel_allreduce_time=(
+                    share_expert_tp_allreduce_time if ffn_enabled else 0.0
+                ),
                 communication_operator_times=ep_operator_times,
             )
         elif cluster_type == ClusterType.DECODE:
@@ -820,6 +836,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 share_expert_up_proj_time=share_expert_time if ffn_enabled else 0.0,
                 share_expert_down_proj_time=share_expert_time if ffn_enabled else 0.0,
                 share_expert_act_time=share_expert_time if ffn_enabled else 0.0,
+                share_expert_tensor_parallel_allreduce_time=(
+                    share_expert_tp_allreduce_time if ffn_enabled else 0.0
+                ),
                 communication_operator_times=ep_operator_times,
             )
         elif cluster_type == ClusterType.DECODE_ATTN:
@@ -1856,17 +1875,38 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         cluster_type=cluster_type,
                         comm_domain="MOE_TP",
                     )
-                    if moe_time.share_expert_time > 0:
-                        allreduce_bytes = quant_manager.adjust_tensor_size(
-                            "allreduce", data_size_bytes, cluster_type
+                if (
+                    moe_time.share_expert_up_proj_time
+                    + moe_time.share_expert_down_proj_time
+                    + moe_time.share_expert_act_time
+                    > 0
+                ):
+                    shared_tp_size = resolve_shared_expert_tensor_parallel_size(
+                        cluster_type=cluster_type,
+                        replica_config=cluster_replica_config,
+                        model_config=model_config,
+                    )
+                    if shared_tp_size > 1:
+                        share_expert_op = (
+                            architecture_profile.share_expert_tensor_parallel_allreduce_op
                         )
-                        raw_share_expert_tp_allreduce_time = self.predict_allreduce_time(
-                            data_size_bytes=allreduce_bytes,
-                            num_devices=moe_tp_size,
-                            cluster_type=cluster_type,
-                            comm_domain="MOE_TP",
+                        if share_expert_op is None:
+                            raise ValueError(
+                                "Shared-expert timing requires a profile-declared all-reduce operator"
+                            )
+                        share_expert_tp_allreduce_time = (
+                            self._predict_comm_operator_with_context(
+                                get_comm_operator(share_expert_op),
+                                CommPayloadContext(
+                                    batch=batch,
+                                    model_config=model_config,
+                                    replica_config=cluster_replica_config,
+                                    cluster_type=cluster_type,
+                                    quantization_manager=get_quantization_manager(),
+                                    lane_workload=lane_workload,
+                                ),
+                            )
                         )
-                        share_expert_tp_allreduce_time = raw_share_expert_tp_allreduce_time
                 return ExecutionTime(
                     num_layers_per_pipeline_stage=num_layers,
                     mlp_norm_time=self._predict_one_op_time(
@@ -2562,6 +2602,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                 )
                 ffn_tp_allgather_time = 0.0
                 share_expert_tp_allreduce_time = 0.0
+                architecture_profile = self._resolve_model_architecture_profile_for_config(
+                    cluster_replica_config.model_config
+                )
                 if moe_tp_size > 1:
                     # Use compute-effective tokens. AFD paths already include CUDA Graph
                     # padding in metadata; non-CUDA-Graph paths keep exact token counts.
@@ -2579,9 +2622,6 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                         )
                     per_device_data_size_bytes = data_size_bytes // moe_tp_size
                     quant_manager = get_quantization_manager()
-                    architecture_profile = self._resolve_model_architecture_profile_for_config(
-                        cluster_replica_config.model_config
-                    )
                     if architecture_profile.moe_tensor_parallel_allgather_op:
                         allgather_bytes = quant_manager.adjust_tensor_size(
                             "allgather", per_device_data_size_bytes, cluster_type
@@ -2592,22 +2632,38 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
                             cluster_type=cluster_type,
                             comm_domain="MOE_TP",
                         )
-                        if (
-                            moe_time.share_expert_up_proj_time
-                            + moe_time.share_expert_down_proj_time
-                            + moe_time.share_expert_act_time
-                            > 0
-                        ):
-                            moe_tp_allreduce_bytes = quant_manager.adjust_tensor_size(
-                                "allreduce", data_size_bytes, cluster_type
+                if (
+                    moe_time.share_expert_up_proj_time
+                    + moe_time.share_expert_down_proj_time
+                    + moe_time.share_expert_act_time
+                    > 0
+                ):
+                    shared_tp_size = resolve_shared_expert_tensor_parallel_size(
+                        cluster_type=cluster_type,
+                        replica_config=cluster_replica_config,
+                        model_config=model_config,
+                    )
+                    if shared_tp_size > 1:
+                        share_expert_op = (
+                            architecture_profile.share_expert_tensor_parallel_allreduce_op
+                        )
+                        if share_expert_op is None:
+                            raise ValueError(
+                                "Shared-expert timing requires a profile-declared all-reduce operator"
                             )
-                            raw_share_expert_tp_allreduce_time = self.predict_allreduce_time(
-                                data_size_bytes=moe_tp_allreduce_bytes,
-                                num_devices=moe_tp_size,
-                                cluster_type=cluster_type,
-                                comm_domain="MOE_TP",
+                        share_expert_tp_allreduce_time = (
+                            self._predict_comm_operator_with_context(
+                                get_comm_operator(share_expert_op),
+                                CommPayloadContext(
+                                    batch=batch,
+                                    model_config=model_config,
+                                    replica_config=cluster_replica_config,
+                                    cluster_type=cluster_type,
+                                    quantization_manager=get_quantization_manager(),
+                                    lane_workload=lane_workload,
+                                ),
                             )
-                            share_expert_tp_allreduce_time = raw_share_expert_tp_allreduce_time
+                        )
 
                 # Build ExecutionTime object for MoE model
                 exec_time = ExecutionTime(

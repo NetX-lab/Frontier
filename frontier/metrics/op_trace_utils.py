@@ -10,6 +10,9 @@ from frontier.attention.model_binding import bind_attention_family
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.config import get_quantization_manager
 from frontier.config.model_config import BaseModelConfig
+from frontier.config.parallel_semantics import (
+    resolve_shared_expert_tensor_parallel_size,
+)
 from frontier.config.precision_type import PrecisionType
 from frontier.operators.families import (
     COMM_FAMILY,
@@ -115,6 +118,16 @@ class OpTraceContext:
     @property
     def moe_ep(self) -> int:
         return int(self.replica_config.moe_expert_parallel_size)
+
+    @property
+    def share_expert_tp(self) -> int:
+        """Return the ordinary TP domain used by the shared expert branch."""
+
+        return resolve_shared_expert_tensor_parallel_size(
+            cluster_type=self.cluster_type,
+            replica_config=self.replica_config,
+            model_config=self.model_config,
+        )
 
     @property
     def pp(self) -> int:
@@ -532,23 +545,35 @@ def compute_op_trace_meta(
             }
         elif op_name == "share_expert_up_proj":
             share_expert_dim = ctx.share_expert_dim
-            _validate_divisible(share_expert_dim, ctx.moe_tp, "share_expert_dim")
+            _validate_divisible(
+                share_expert_dim,
+                ctx.share_expert_tp,
+                "share_expert_dim",
+            )
             tensor_shape = {
                 "input": [tokens, hidden_size],
-                "output": [tokens, share_expert_dim // ctx.moe_tp],
+                "output": [tokens, share_expert_dim // ctx.share_expert_tp],
             }
         elif op_name == "share_expert_act":
             share_expert_dim = ctx.share_expert_dim
-            _validate_divisible(share_expert_dim, ctx.moe_tp, "share_expert_dim")
+            _validate_divisible(
+                share_expert_dim,
+                ctx.share_expert_tp,
+                "share_expert_dim",
+            )
             tensor_shape = {
-                "input": [tokens, share_expert_dim // ctx.moe_tp],
-                "output": [tokens, share_expert_dim // ctx.moe_tp],
+                "input": [tokens, share_expert_dim // ctx.share_expert_tp],
+                "output": [tokens, share_expert_dim // ctx.share_expert_tp],
             }
         elif op_name == "share_expert_down_proj":
             share_expert_dim = ctx.share_expert_dim
-            _validate_divisible(share_expert_dim, ctx.moe_tp, "share_expert_dim")
+            _validate_divisible(
+                share_expert_dim,
+                ctx.share_expert_tp,
+                "share_expert_dim",
+            )
             tensor_shape = {
-                "input": [tokens, share_expert_dim // ctx.moe_tp],
+                "input": [tokens, share_expert_dim // ctx.share_expert_tp],
                 "output": [tokens, hidden_size],
             }
         elif op_name == "moe_gating_linear":
