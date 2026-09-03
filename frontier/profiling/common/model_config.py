@@ -270,18 +270,9 @@ class ModelConfig:
         """
         if not self.is_moe:
             return []
-        raw = self.moe_layers_enum
-        if raw is None or str(raw).strip() == "":
-            return list(range(self.num_layers))
-        parsed = []
-        for token in str(raw).split(","):
-            token = token.strip()
-            if token == "":
-                continue
-            layer_id = int(token)
-            if 0 <= layer_id < self.num_layers:
-                parsed.append(layer_id)
-        return sorted(set(parsed))
+        from frontier.model_architectures import parse_moe_layer_ids
+
+        return list(parse_moe_layer_ids(self.moe_layers_enum, self.num_layers))
 
     def get_quant_signature(self) -> str:
         """Get the quantization signature for this model config.

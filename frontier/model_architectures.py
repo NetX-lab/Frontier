@@ -821,18 +821,49 @@ class ModelArchitectureProfile:
         if not bool(getattr(config, "is_moe", False)):
             return False
         num_layers = getattr(config, "num_layers", None)
-        get_ids = getattr(config, "get_moe_layer_ids", None)
-        if callable(get_ids) and type(num_layers) is int:
-            typed_get_ids = cast(Callable[[], Iterable[int]], get_ids)
-            ids = tuple(typed_get_ids())
-            return 0 < len(ids) < num_layers
-        raw_layers = getattr(config, "moe_layers_enum", None)
-        if raw_layers is not None:
-            if type(num_layers) is not int:
-                raise ValueError("moe layer validation requires a positive num_layers")
-            ids = parse_moe_layer_ids(raw_layers, num_layers)
-            return 0 < len(ids) < num_layers
-        return False
+        if type(num_layers) is not int or num_layers <= 0:
+            raise ValueError("moe layer validation requires a positive num_layers")
+        ids = cls._resolve_moe_layer_ids(config)
+        return 0 < len(ids) < num_layers
+
+    @classmethod
+    def _resolve_moe_layer_ids(cls, config: Any) -> tuple[int, ...]:
+        """Resolve one canonical MoE layer set and verify custom adapters."""
+
+        num_layers = getattr(config, "num_layers", None)
+        if type(num_layers) is not int or num_layers <= 0:
+            raise ValueError("moe layer validation requires a positive num_layers")
+        getter = getattr(config, "get_moe_layer_ids", None)
+        predicate = getattr(config, "is_moe_layer", None)
+        if callable(getter):
+            try:
+                raw_ids = tuple(getter())
+            except TypeError as exc:
+                raise ValueError("get_moe_layer_ids() must return an iterable") from exc
+            if any(type(layer_id) is not int for layer_id in raw_ids):
+                raise ValueError("get_moe_layer_ids() must return integer layer IDs")
+            if len(set(raw_ids)) != len(raw_ids):
+                raise ValueError("get_moe_layer_ids() returned duplicate layer IDs")
+            if any(layer_id < 0 or layer_id >= num_layers for layer_id in raw_ids):
+                raise ValueError(
+                    f"get_moe_layer_ids() returned an out-of-range layer ID for [0, {num_layers})"
+                )
+            canonical = tuple(sorted(raw_ids))
+            if callable(predicate):
+                predicate_ids = tuple(
+                    layer_id for layer_id in range(num_layers) if bool(predicate(layer_id))
+                )
+                if predicate_ids != canonical:
+                    raise ValueError(
+                        "custom MoE layer getter and predicate disagree: "
+                        f"get_moe_layer_ids={list(canonical)}, is_moe_layer={list(predicate_ids)}"
+                    )
+            return canonical
+        if callable(predicate):
+            return tuple(
+                layer_id for layer_id in range(num_layers) if bool(predicate(layer_id))
+            )
+        return parse_moe_layer_ids(getattr(config, "moe_layers_enum", None), num_layers)
 
     @classmethod
     def _resolve_config_layer_kind(cls, config: Any, layer_id: int | None) -> LayerKind:
@@ -840,25 +871,8 @@ class ModelArchitectureProfile:
             return LayerKind.DENSE
         if layer_id is None:
             return LayerKind.ROUTED
-        predicate = getattr(config, "is_moe_layer", None)
-        if callable(predicate):
-            return LayerKind.ROUTED if bool(predicate(layer_id)) else LayerKind.DENSE
-        getter = getattr(config, "get_moe_layer_ids", None)
-        if callable(getter):
-            typed_getter = cast(Callable[[], Iterable[int]], getter)
-            return (
-                LayerKind.ROUTED
-                if layer_id in set(typed_getter())
-                else LayerKind.DENSE
-            )
-        raw_layers = getattr(config, "moe_layers_enum", None)
-        if raw_layers is not None:
-            num_layers = getattr(config, "num_layers", None)
-            if type(num_layers) is not int:
-                raise ValueError("moe layer validation requires a positive num_layers")
-            ids = parse_moe_layer_ids(raw_layers, num_layers)
-            return LayerKind.ROUTED if layer_id in ids else LayerKind.DENSE
-        return LayerKind.ROUTED
+        ids = cls._resolve_moe_layer_ids(config)
+        return LayerKind.ROUTED if layer_id in ids else LayerKind.DENSE
 
     def uses_expert_parallel_alltoall(
         self,

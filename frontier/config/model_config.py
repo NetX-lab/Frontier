@@ -490,41 +490,11 @@ class BaseModelConfig(BaseFixedConfig):
         if self._moe_layer_ids_cache is not None:
             return self._moe_layer_ids_cache
 
-        raw_moe_layers = self.moe_layers_enum
-        if raw_moe_layers is None or str(raw_moe_layers).strip() == "":
-            self._moe_layer_ids_cache = list(range(self.num_layers))
-            return self._moe_layer_ids_cache
+        from frontier.model_architectures import parse_moe_layer_ids
 
-        parsed_layer_ids: List[int] = []
-        seen_layer_ids = set()
-        for token in str(raw_moe_layers).split(","):
-            token = token.strip()
-            if token == "":
-                continue
-            try:
-                layer_id = int(token)
-            except ValueError as exc:
-                raise ValueError(
-                    f"Invalid moe_layers_enum token '{token}' for model {self.get_name()}"
-                ) from exc
-            if layer_id < 0:
-                raise ValueError(
-                    f"moe_layers_enum contains negative layer id {layer_id} for model {self.get_name()}"
-                )
-            if layer_id >= self.num_layers:
-                continue
-            if layer_id in seen_layer_ids:
-                continue
-            seen_layer_ids.add(layer_id)
-            parsed_layer_ids.append(layer_id)
-
-        if not parsed_layer_ids:
-            raise ValueError(
-                "moe_layers_enum does not include any layer within the current model depth "
-                f"[0, {self.num_layers}) for model {self.get_name()}"
-            )
-
-        self._moe_layer_ids_cache = sorted(parsed_layer_ids)
+        self._moe_layer_ids_cache = list(
+            parse_moe_layer_ids(self.moe_layers_enum, self.num_layers)
+        )
         return self._moe_layer_ids_cache
 
     def is_moe_layer(self, layer_id: int) -> bool:

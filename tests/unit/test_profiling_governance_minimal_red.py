@@ -1993,7 +1993,7 @@ def test_custom_moe_getter_and_predicate_conflict_fails_fast() -> None:
         embedding_dim=7168,
         num_experts=8,
     )
-    with pytest.raises(ValueError, match="is_moe_layer.*get_moe_layer_ids|conflict"):
+    with pytest.raises(ValueError, match="disagree|conflict"):
         profile.resolve_layer_contract(config, layer_id=1)
 
 
