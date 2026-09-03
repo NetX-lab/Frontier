@@ -842,7 +842,8 @@ class ModelArchitectureProfile:
         predicate = getattr(config, "is_moe_layer", None)
         if callable(getter):
             try:
-                raw_ids = tuple(getter())
+                typed_getter = cast(Callable[[], Iterable[int]], getter)
+                raw_ids = tuple(typed_getter())
             except TypeError as exc:
                 raise ValueError("get_moe_layer_ids() must return an iterable") from exc
             if any(type(layer_id) is not int for layer_id in raw_ids):

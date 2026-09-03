@@ -1977,6 +1977,26 @@ def test_builtin_moe_layer_getters_delegate_to_strict_parser(monkeypatch, config
     assert calls == [("1,2", config.num_layers)]
 
 
+def test_profiling_model_config_moe_getter_delegates_to_strict_parser(monkeypatch) -> None:
+    """The profiling adapter uses the same canonical parser as runtime config."""
+
+    model_architectures = importlib.import_module("frontier.model_architectures")
+    profiling_config_type = importlib.import_module(
+        "frontier.profiling.common.model_config"
+    ).ModelConfig
+    calls = []
+
+    def _parse(raw_layers, num_layers):
+        calls.append((raw_layers, num_layers))
+        return (1,)
+
+    monkeypatch.setattr(model_architectures, "parse_moe_layer_ids", _parse)
+    config = profiling_config_type.from_model_name("step-moe-noquant")
+    config.moe_layers_enum = "1,2"
+    assert config.get_moe_layer_ids() == [1]
+    assert calls == [("1,2", config.num_layers)]
+
+
 def test_custom_moe_getter_and_predicate_conflict_fails_fast() -> None:
     """A custom config cannot expose contradictory MoE layer semantics."""
 
