@@ -57,7 +57,7 @@ def infer_single_runtime_profile(manager: Any) -> str | None:
 
 
 def infer_single_runtime_model_config(manager: Any) -> Any | None:
-    """Return a manager model config only when all clusters share one object identity."""
+    """Return a representative model config when all clusters share one profile."""
 
     cluster_configs = getattr(manager, "_cluster_configs", None)
     if not isinstance(cluster_configs, dict):
@@ -68,8 +68,15 @@ def infer_single_runtime_model_config(manager: Any) -> Any | None:
         model_config = getattr(replica_config, "model_config", None)
         if model_config is not None:
             configs.append(model_config)
-    if configs and all(config is configs[0] for config in configs[1:]):
-        return configs[0]
+    if configs:
+        profile_ids = set()
+        for config in configs:
+            getter = getattr(config, "get_model_architecture_profile", None)
+            if not callable(getter):
+                return None
+            profile_ids.add(str(getter().profile_id))
+        if len(profile_ids) == 1:
+            return configs[0]
     return None
 
 

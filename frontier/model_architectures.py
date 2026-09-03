@@ -822,7 +822,12 @@ class ModelArchitectureProfile:
             return False
         num_layers = getattr(config, "num_layers", None)
         if type(num_layers) is not int or num_layers <= 0:
-            raise ValueError("moe layer validation requires a positive num_layers")
+            if any(
+                callable(getattr(config, name, None))
+                for name in ("get_moe_layer_ids", "is_moe_layer")
+            ) or getattr(config, "moe_layers_enum", None) is not None:
+                raise ValueError("moe layer validation requires a positive num_layers")
+            return False
         ids = cls._resolve_moe_layer_ids(config)
         return 0 < len(ids) < num_layers
 
