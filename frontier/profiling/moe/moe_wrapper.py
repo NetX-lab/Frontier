@@ -6,6 +6,7 @@ This module wraps MoE operations for profiling, following the same pattern as th
 
 import operator
 import os
+from collections.abc import Mapping
 from typing import List, Optional
 
 import torch
@@ -19,6 +20,8 @@ from frontier.profiling.common.utils import (
     configure_quantization_manager_for_model_name,
     get_operation_precision,
 )
+from frontier.model_architectures import LayerKind, ResolvedLayerContract
+from frontier.operators.families import MOE_FAMILY
 from frontier.profiling.moe.moe_impl import (
     MoEGatingNetwork,
     MoETokenShuffler,
@@ -103,7 +106,8 @@ class MoEWrapper:
 
         # Extract MoE parameters from ModelConfig
         self.hidden_dim = model_config.embedding_dim
-        self.expert_hidden_dim = model_config.mlp_hidden_dim  # moe_intermediate_size
+        routed_contract = self._resolve_routed_layer_contract()
+        self.expert_hidden_dim = routed_contract.effective_ffn_width
         self.num_experts = model_config.num_experts
         self.router_topk = model_config.num_experts_per_tok
         self.use_gated = model_config.use_gated_mlp
@@ -700,6 +704,81 @@ class MoEWrapper:
 
         return time_stats
 
+    def _resolve_routed_layer_contract(
+        self,
+        *,
+        operator_name: str | None = None,
+    ) -> ResolvedLayerContract:
+        """Resolve the routed MoE contract for one profiling TP/EP point."""
+
+        profile = self.model_config.get_model_architecture_profile()
+        return profile.resolve_layer_contract(
+            self.model_config,
+            layer_kind=LayerKind.ROUTED,
+            operator_name=operator_name,
+            moe_tp_size=self.num_tensor_parallel_workers,
+            expert_parallel_size=self.expert_parallel_size,
+        )
+
+    def _build_profile_result(
+        self,
+        time_stats: Mapping[str, object],
+        *,
+        num_tokens: int,
+    ) -> dict:
+        """Build one MoE row and attach metadata for measured routed operators."""
+
+        if not isinstance(time_stats, Mapping):
+            raise TypeError(
+                f"MoE profiling time_stats must be a mapping, got {type(time_stats).__name__}"
+            )
+
+        stats = {
+            "time_stats": dict(time_stats),
+            "num_tokens": num_tokens,
+            "num_experts": self.num_experts,
+            "num_experts_per_device": self.num_experts_per_device,
+            "expert_parallel_size": self.expert_parallel_size,
+            **self.routing_runtime_metadata,
+            **self.gating_runtime_context_metadata,
+            "router_topk": self.router_topk,
+            "hidden_dim": self.hidden_dim,
+            "expert_hidden_dim": self.expert_hidden_dim,
+            "use_gated": self.use_gated,
+            "num_tensor_parallel_workers": self.num_tensor_parallel_workers,
+        }
+
+        measured_names = set(time_stats)
+        moe_operator_names = tuple(
+            operator.profiling_name() for operator in MOE_FAMILY.profiling_ops()
+        )
+        measured_moe_names = [
+            operator_name
+            for operator_name in moe_operator_names
+            if operator_name in measured_names
+        ]
+        if measured_moe_names:
+            typed_contracts = {}
+            routed_width = None
+            for operator_name in measured_moe_names:
+                routed_contract = self._resolve_routed_layer_contract(
+                    operator_name=operator_name
+                )
+                metadata = routed_contract.typed_metadata_identity()
+                typed_contracts[operator_name] = dict(metadata)
+                if routed_width is None:
+                    routed_width = routed_contract.effective_ffn_width
+                elif routed_width != routed_contract.effective_ffn_width:
+                    raise ValueError(
+                        "MoE operators resolved to conflicting routed widths: "
+                        f"{routed_width} and {routed_contract.effective_ffn_width}"
+                    )
+            stats["typed_operator_contracts"] = typed_contracts
+            if routed_width is not None:
+                stats["expert_hidden_dim"] = routed_width
+
+        return stats
+
     @torch.inference_mode()
     def profile(
         self,
@@ -749,20 +828,7 @@ class MoEWrapper:
         combined_time_stats.update(grouped_gemm_stats["time_stats"])
 
         # Combine all stats (including load imbalance features from grouped_gemm_stats)
-        stats = {
-            "time_stats": combined_time_stats,
-            "num_tokens": num_tokens,
-            "num_experts": self.num_experts,
-            "num_experts_per_device": self.num_experts_per_device,
-            "expert_parallel_size": self.expert_parallel_size,
-            **self.routing_runtime_metadata,
-            **self.gating_runtime_context_metadata,
-            "router_topk": self.router_topk,
-            "hidden_dim": self.hidden_dim,
-            "expert_hidden_dim": self.expert_hidden_dim,
-            "use_gated": self.use_gated,
-            "num_tensor_parallel_workers": self.num_tensor_parallel_workers,
-        }
+        stats = self._build_profile_result(combined_time_stats, num_tokens=num_tokens)
         
         # Add load imbalance features from grouped_gemm_stats (if present)
         # These are added by profile_grouped_gemm when load imbalance is enabled

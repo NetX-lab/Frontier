@@ -202,12 +202,13 @@ def test_mixed_layer_dense_training_does_not_reorder_legacy_share_expert_models(
     trained = []
     manager._train_single_model = lambda **kwargs: trained.append(kwargs) or kwargs["model_name"]
     monkeypatch.setattr(manager_module, "_get_moe_family_model_names", lambda: ["moe_grouped_gemm"])
+    original_family_names = manager_module.get_family_profiling_names
     monkeypatch.setattr(
         manager_module,
         "get_family_profiling_names",
         lambda family: ["share_expert_up_proj"]
         if family is manager_module.SHARE_EXPERT_FAMILY
-        else ["moe_grouped_gemm"],
+        else original_family_names(family),
     )
 
     manager._train_ffn_models_for_cluster(

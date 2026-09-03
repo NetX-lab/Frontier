@@ -1,8 +1,14 @@
 from math import ceil
 from types import SimpleNamespace
-from typing import cast
+from typing import Callable, Iterable, cast
 
 from frontier.config import ReplicaConfig
+from frontier.model_architectures import (
+    LayerKind,
+    ModelArchitectureProfile,
+    ResolvedLayerContract,
+)
+from frontier.operators.spec import TensorParallelMode
 from frontier.spec_decode.mtp_registry import is_target_embedded_mtp_method
 from frontier.spec_decode.mtp_runtime import (
     build_mtp_runtime_contract,
@@ -105,24 +111,138 @@ class ParamCounter:
             getattr(self._replica_config, "moe_expert_parallel_size", 1)
         )
 
-    def _get_dense_mlp_params_per_layer(self, tensor_parallel_size: int) -> int:
-        if (not hasattr(self._model_config, "mlp_hidden_dim") or
-            self._model_config.mlp_hidden_dim == 0):
+    def _select_profile_layer_id(self, layer_kind: LayerKind) -> int | None:
+        """Select a representative physical layer for a typed contract."""
+
+        if not bool(getattr(self._model_config, "is_moe", False)):
             return 0
 
-        if getattr(self._model_config, "use_gated_mlp", False):
-            return (
-                3
-                * self._model_config.embedding_dim
-                * self._model_config.mlp_hidden_dim
-                // tensor_parallel_size
+        get_layer_ids = getattr(self._model_config, "get_moe_layer_ids", None)
+        if not callable(get_layer_ids):
+            # A model without an explicit layer map is an all-routed model.
+            return None
+
+        typed_get_layer_ids = cast(Callable[[], Iterable[int]], get_layer_ids)
+        raw_layer_ids = tuple(typed_get_layer_ids())
+        if layer_kind is LayerKind.DENSE:
+            moe_layer_ids = set(raw_layer_ids)
+            num_layers = getattr(self._model_config, "num_layers", None)
+            if type(num_layers) is not int or num_layers <= 0:
+                raise ValueError(
+                    "ParamCounter requires a positive num_layers to resolve dense layers"
+                )
+            return next(
+                (
+                    layer_id
+                    for layer_id in range(num_layers)
+                    if layer_id not in moe_layer_ids
+                ),
+                None,
             )
 
-        return (
-            2
-            * self._model_config.embedding_dim
-            * self._model_config.mlp_hidden_dim
-            // tensor_parallel_size
+        if layer_kind in (LayerKind.ROUTED, LayerKind.SHARED):
+            if not raw_layer_ids:
+                raise ValueError(
+                    f"ParamCounter cannot resolve {layer_kind.value} layer without an MoE layer"
+                )
+            return raw_layer_ids[0]
+
+        raise ValueError(f"Unsupported typed FFN layer kind: {layer_kind!r}")
+
+    def _resolve_profile_layer_contract(
+        self,
+        layer_kind: LayerKind,
+        tensor_parallel_size: int,
+        *,
+        expert_parallel_size: int | None = None,
+    ) -> ResolvedLayerContract | None:
+        """Resolve one FFN domain through the model architecture profile."""
+
+        get_profile = getattr(
+            self._model_config, "get_model_architecture_profile", None
+        )
+        if not callable(get_profile):
+            # Synthetic configs used by isolated MTP tests predate typed profiles.
+            return None
+
+        profile = cast(ModelArchitectureProfile, get_profile())
+        resolver = getattr(profile, "resolve_layer_contract", None)
+        if not callable(resolver):
+            raise TypeError(
+                "model architecture profile must expose resolve_layer_contract()"
+            )
+        typed_resolver = cast(Callable[..., ResolvedLayerContract], resolver)
+
+        spec = profile.get_layer_contract(layer_kind)
+        attention_tp_size = self._get_attn_tp_size()
+        moe_tp_size = self._get_moe_tp_size()
+        ffn_tp_size = tensor_parallel_size
+        if spec.tensor_parallel_mode is TensorParallelMode.ATTENTION_TP:
+            attention_tp_size = tensor_parallel_size
+        elif spec.tensor_parallel_mode is TensorParallelMode.MOE_TP:
+            moe_tp_size = tensor_parallel_size
+
+        layer_id = self._select_profile_layer_id(layer_kind)
+        if layer_kind is LayerKind.DENSE and layer_id is None:
+            # An all-MoE model has no dense layer contract to account for.
+            return None
+
+        resolver_kwargs = {
+            "layer_kind": layer_kind,
+            "attention_tp_size": attention_tp_size,
+            "moe_tp_size": moe_tp_size,
+            "ffn_tp_size": ffn_tp_size,
+            "tensor_parallel_size": tensor_parallel_size,
+            "expert_parallel_size": expert_parallel_size,
+        }
+        if layer_id is not None:
+            resolver_kwargs["layer_id"] = layer_id
+        contract = typed_resolver(self._model_config, **resolver_kwargs)
+        if not isinstance(contract, ResolvedLayerContract):
+            raise TypeError(
+                "model architecture profile resolver must return a "
+                "ResolvedLayerContract"
+            )
+        return contract
+
+    @staticmethod
+    def _get_ffn_weight_params(
+        width: int,
+        embedding_dim: int,
+        use_gated_mlp: bool,
+        tensor_parallel_size: int,
+    ) -> int:
+        """Return one FFN's local weight count for a typed width."""
+
+        if type(width) is not int or width <= 0:
+            return 0
+        if type(tensor_parallel_size) is not int or tensor_parallel_size <= 0:
+            raise ValueError(
+                "tensor_parallel_size must be a positive int, "
+                f"got {tensor_parallel_size!r}"
+            )
+        multiplier = 3 if use_gated_mlp else 2
+        return multiplier * embedding_dim * width // tensor_parallel_size
+
+    def _get_dense_mlp_params_per_layer(self, tensor_parallel_size: int) -> int:
+        contract = self._resolve_profile_layer_contract(
+            LayerKind.DENSE,
+            tensor_parallel_size,
+        )
+        width = (
+            contract.effective_ffn_width
+            if contract is not None
+            else getattr(
+                self._model_config,
+                "dense_mlp_hidden_dim",
+                getattr(self._model_config, "mlp_hidden_dim", 0),
+            )
+        )
+        return self._get_ffn_weight_params(
+            width,
+            self._model_config.embedding_dim,
+            bool(getattr(self._model_config, "use_gated_mlp", False)),
+            tensor_parallel_size,
         )
 
     def _get_share_expert_params_per_layer(self, tensor_parallel_size: int) -> int:
@@ -140,16 +260,23 @@ class ParamCounter:
         if not getattr(profile, "counts_share_expert_param_memory", False):
             return 0
 
-        share_expert_dim = int(getattr(self._model_config, "share_expert_dim", 0) or 0)
+        contract = self._resolve_profile_layer_contract(
+            LayerKind.SHARED,
+            tensor_parallel_size,
+        )
+        share_expert_dim = int(
+            contract.effective_ffn_width
+            if contract is not None
+            else getattr(self._model_config, "share_expert_dim", 0) or 0
+        )
         if share_expert_dim <= 0:
             return 0
 
-        multiplier = 3 if getattr(self._model_config, "use_gated_mlp", False) else 2
-        return (
-            multiplier
-            * self._model_config.embedding_dim
-            * share_expert_dim
-            // tensor_parallel_size
+        return self._get_ffn_weight_params(
+            share_expert_dim,
+            self._model_config.embedding_dim,
+            bool(getattr(self._model_config, "use_gated_mlp", False)),
+            tensor_parallel_size,
         )
 
     def _get_num_moe_layers_per_pipeline_stage(self) -> int:
@@ -180,12 +307,31 @@ class ParamCounter:
         return max(0, min(num_layers_per_stage, estimate))
 
     def _get_routed_moe_params_per_layer(self, tensor_parallel_size: int) -> int:
-        num_parameters = self._get_dense_mlp_params_per_layer(tensor_parallel_size)
-
         is_moe = getattr(self._model_config, "is_moe", False)
         num_experts = int(getattr(self._model_config, "num_experts", 0))
         if not is_moe or num_experts <= 0:
-            return num_parameters
+            return self._get_dense_mlp_params_per_layer(tensor_parallel_size)
+
+        contract = self._resolve_profile_layer_contract(
+            LayerKind.ROUTED,
+            tensor_parallel_size,
+            expert_parallel_size=self._get_ep_size(),
+        )
+        routed_width = (
+            contract.effective_ffn_width
+            if contract is not None
+            else getattr(
+                self._model_config,
+                "routed_mlp_hidden_dim",
+                getattr(self._model_config, "mlp_hidden_dim", 0),
+            )
+        )
+        num_parameters = self._get_ffn_weight_params(
+            routed_width,
+            self._model_config.embedding_dim,
+            bool(getattr(self._model_config, "use_gated_mlp", False)),
+            tensor_parallel_size,
+        )
 
         ep_size = self._get_ep_size()
         if num_experts % ep_size != 0:
@@ -277,18 +423,28 @@ class ParamCounter:
         num_moe_layers = self._get_num_moe_layers_per_pipeline_stage()
         num_non_moe_layers = self._num_layers_per_pipeline_stage - num_moe_layers
 
-        dense_mlp_params = self._get_dense_mlp_params_per_layer(self._get_attn_tp_size())
-        share_expert_params = self._get_share_expert_params_per_layer(
-            self._get_attn_tp_size()
+        # Each layer owns only the FFN domains that execute on that layer.
+        # Dense boundaries do not carry routed or shared-expert weights, and
+        # pure-MoE models do not have an inactive dense contract to resolve.
+        dense_mlp_params = (
+            self._get_dense_mlp_params_per_layer(self._get_attn_tp_size())
+            if num_non_moe_layers
+            else 0
         )
-        routed_moe_params = self._get_routed_moe_params_per_layer(self._get_moe_tp_size())
-
-        moe_layer_params = dense_mlp_params + share_expert_params + routed_moe_params
-        non_moe_layer_params = dense_mlp_params + share_expert_params
+        routed_moe_params = (
+            self._get_routed_moe_params_per_layer(self._get_moe_tp_size())
+            if num_moe_layers
+            else 0
+        )
+        share_expert_params = (
+            self._get_share_expert_params_per_layer(self._get_attn_tp_size())
+            if num_moe_layers
+            else 0
+        )
 
         return (
-            num_moe_layers * moe_layer_params
-            + num_non_moe_layers * non_moe_layer_params
+            num_non_moe_layers * dense_mlp_params
+            + num_moe_layers * (routed_moe_params + share_expert_params)
         )
 
     def _get_mtp_embed_params(self, proposer_model_config) -> int:

@@ -1,15 +1,5 @@
 # Frontier Examples
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-08-09 | Restored the sequential-only public PDD guard and removed parallel-enablement instructions. |
-| 2026-08-08 | Clarified the parallel-PDD correctness and wall-clock-speed boundary. |
-| 2026-08-07 | Distinguished PDD parallel runtime support from the sequential example defaults and retained the PD-AF parallel guard. |
-| 2026-07-23 | Added the complete PD-AF dense/MoE/EP/CUDA Graph offline and online example set. |
-| 2026-07-22 | Added the initial sequential PD-AF MoE examples. |
-
 This directory contains runnable examples for the release-supported Frontier simulator surface.
 
 ## Release Scope

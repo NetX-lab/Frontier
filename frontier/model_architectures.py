@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Iterable, Literal, cast
 
+from frontier.operators.spec import TensorParallelMode
 from frontier.types import ClusterType
 
 
@@ -34,6 +36,309 @@ class ResidualAddPolicy(Enum):
 
     STANDARD = "standard"
     FFN_RESIDUAL_ONLY = "ffn_residual_only"
+
+
+class LayerKind(Enum):
+    """Typed FFN domain exposed by a model architecture profile."""
+
+    DENSE = "dense"
+    ROUTED = "routed"
+    SHARED = "shared"
+
+
+class LayerDimensionSource(Enum):
+    """Configuration field that supplies a typed FFN width."""
+
+    DENSE = "dense_mlp_hidden_dim"
+    ROUTED = "routed_mlp_hidden_dim"
+    SHARED = "share_expert_dim"
+
+
+class ExpertParallelMode(Enum):
+    """Whether a typed FFN domain uses expert parallelism."""
+
+    OFF = "off"
+    ON = "on"
+
+
+LayerActivationPredicate = Callable[["ModelArchitectureProfile", Any], bool]
+
+
+def parse_moe_layer_ids(raw_layers: Any, num_layers: Any) -> tuple[int, ...]:
+    """Parse a model's explicit MoE layer map with strict validation."""
+
+    if type(num_layers) is not int or num_layers <= 0:
+        raise ValueError("moe layer validation requires a positive num_layers")
+    if raw_layers is None or (isinstance(raw_layers, str) and not raw_layers.strip()):
+        return tuple(range(num_layers))
+    if not isinstance(raw_layers, str):
+        raise ValueError(
+            f"moe_layers_enum must be a comma-separated string, got {raw_layers!r}"
+        )
+    parsed: list[int] = []
+    seen: set[int] = set()
+    for raw_token in raw_layers.split(","):
+        token = raw_token.strip()
+        if not re.fullmatch(r"[+-]?\d+", token):
+            raise ValueError(f"Invalid moe_layers_enum token {token!r}")
+        layer_id = int(token)
+        if layer_id < 0 or layer_id >= num_layers:
+            raise ValueError(
+                f"moe_layers_enum layer id {layer_id} out of range [0, {num_layers})"
+            )
+        if layer_id in seen:
+            raise ValueError(f"moe_layers_enum contains duplicate layer id {layer_id}")
+        seen.add(layer_id)
+        parsed.append(layer_id)
+    return tuple(sorted(parsed))
+
+
+@dataclass(frozen=True)
+class LayerContractSpec:
+    """Declarative contract for one dense, routed, or shared FFN domain."""
+
+    layer_kind: LayerKind
+    dimension_source: LayerDimensionSource
+    tensor_parallel_mode: TensorParallelMode
+    expert_parallel_mode: ExpertParallelMode = ExpertParallelMode.OFF
+    operator_family_ids: tuple[str, ...] = ()
+    base_layer_kinds: tuple[LayerKind, ...] = ()
+    activation_predicate: LayerActivationPredicate | None = field(
+        default=None, repr=False, compare=False
+    )
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.layer_kind, LayerKind):
+            object.__setattr__(self, "layer_kind", LayerKind(self.layer_kind))
+        if not isinstance(self.dimension_source, LayerDimensionSource):
+            object.__setattr__(
+                self, "dimension_source", LayerDimensionSource(self.dimension_source)
+            )
+        if not isinstance(self.tensor_parallel_mode, TensorParallelMode):
+            object.__setattr__(
+                self, "tensor_parallel_mode", TensorParallelMode(self.tensor_parallel_mode)
+            )
+        if not isinstance(self.expert_parallel_mode, ExpertParallelMode):
+            object.__setattr__(
+                self, "expert_parallel_mode", ExpertParallelMode(self.expert_parallel_mode)
+            )
+        family_ids = tuple(self.operator_family_ids)
+        if any(not isinstance(value, str) or not value for value in family_ids):
+            raise ValueError("layer contract operator family IDs must be non-empty strings")
+        if len(set(family_ids)) != len(family_ids):
+            raise ValueError(f"layer contract has duplicate operator families: {family_ids}")
+        object.__setattr__(self, "operator_family_ids", family_ids)
+        base_kinds = tuple(self.base_layer_kinds) or (self.layer_kind,)
+        normalized_base_kinds = tuple(
+            value if isinstance(value, LayerKind) else LayerKind(value)
+            for value in base_kinds
+        )
+        if len(set(normalized_base_kinds)) != len(normalized_base_kinds):
+            raise ValueError(f"layer contract has duplicate base layer kinds: {base_kinds}")
+        object.__setattr__(self, "base_layer_kinds", normalized_base_kinds)
+        expected_source = {
+            LayerKind.DENSE: LayerDimensionSource.DENSE,
+            LayerKind.ROUTED: LayerDimensionSource.ROUTED,
+            LayerKind.SHARED: LayerDimensionSource.SHARED,
+        }[self.layer_kind]
+        if self.dimension_source is not expected_source:
+            raise ValueError(
+                f"{self.layer_kind.value} contract must use {expected_source.value}"
+            )
+        if self.activation_predicate is not None and not callable(self.activation_predicate):
+            raise ValueError("layer contract activation_predicate must be callable")
+
+    def is_active(self, profile: "ModelArchitectureProfile", config: Any) -> bool:
+        if self.activation_predicate is None:
+            return True
+        return bool(self.activation_predicate(profile, config))
+
+    @property
+    def tp_mode(self) -> TensorParallelMode:
+        return self.tensor_parallel_mode
+
+    @property
+    def ep_mode(self) -> ExpertParallelMode:
+        return self.expert_parallel_mode
+
+    def resolve_width(self, config: Any, *, mixed_model: bool = False) -> int:
+        """Resolve this contract's width without coercing malformed values."""
+
+        source_attributes = {
+            LayerDimensionSource.DENSE: ("dense_mlp_hidden_dim", "intermediate_size"),
+            LayerDimensionSource.ROUTED: (
+                "routed_mlp_hidden_dim",
+                "moe_intermediate_size",
+                "mlp_hidden_dim",
+            ),
+            LayerDimensionSource.SHARED: (
+                "share_expert_dim",
+                "shared_expert_intermediate_size",
+            ),
+        }[self.dimension_source]
+        value = next(
+            (getattr(config, name, None) for name in source_attributes
+             if getattr(config, name, None) is not None),
+            None,
+        )
+        if (
+            mixed_model
+            and self.dimension_source is LayerDimensionSource.ROUTED
+            and getattr(config, "routed_mlp_hidden_dim", None) is None
+        ):
+            raise ValueError(
+                "routed layer width requires routed_mlp_hidden_dim for a mixed model"
+            )
+        if value is None and self.dimension_source is LayerDimensionSource.DENSE:
+            if mixed_model:
+                raise ValueError(
+                    "dense layer width requires dense_mlp_hidden_dim for a mixed model"
+                )
+            value = getattr(config, "mlp_hidden_dim", None)
+        if type(value) is not int or value <= 0:
+            raise ValueError(
+                f"{self.layer_kind.value} layer width must be a positive int, got {value!r}"
+            )
+        return value
+
+
+@dataclass(frozen=True)
+class ResolvedLayerContract:
+    """Immutable typed layer contract after configuration resolution."""
+
+    profile_id: str
+    layer_id: int | None
+    layer_kind: LayerKind
+    dimension_source: LayerDimensionSource
+    effective_ffn_width: int
+    tensor_parallel_mode: TensorParallelMode
+    expert_parallel_mode: ExpertParallelMode
+    tensor_parallel_size: int | None = None
+    expert_parallel_size: int | None = None
+    operator_family_id: str | None = None
+    operator_family_ids: tuple[str, ...] = ()
+    tensor_parallel_sizes: tuple[int, ...] = ()
+    selected_padded_ffn_width: int | None = None
+
+    @property
+    def width(self) -> int:
+        return self.effective_ffn_width
+
+    @property
+    def tp_mode(self) -> TensorParallelMode:
+        return self.tensor_parallel_mode
+
+    @property
+    def ep_mode(self) -> ExpertParallelMode:
+        return self.expert_parallel_mode
+
+    @property
+    def is_expert_parallel(self) -> bool:
+        return self.expert_parallel_mode is ExpertParallelMode.ON
+
+    def semantic_identity(self) -> tuple[object, ...]:
+        """Return semantic identity fields while ignoring physical layer occurrence."""
+
+        return (
+            self.profile_id,
+            self.layer_kind.value,
+            self.dimension_source.value,
+            self.effective_ffn_width,
+            self.tensor_parallel_mode.value,
+            self.expert_parallel_mode.value,
+            self.tensor_parallel_size,
+            self.expert_parallel_size,
+            self.operator_family_id,
+            tuple(self.operator_family_ids),
+            tuple(self.tensor_parallel_sizes),
+            self.selected_padded_ffn_width,
+        )
+
+    def is_semantically_equivalent(self, other: object) -> bool:
+        return isinstance(other, ResolvedLayerContract) and self.semantic_identity() == other.semantic_identity()
+
+    def typed_metadata_identity(self) -> dict[str, object]:
+        """Return the canonical typed metadata fields for one operator row."""
+
+        family_ids = self.operator_family_ids
+        family_id = self.operator_family_id
+        if not family_ids and family_id is not None:
+            family_ids = (family_id,)
+        if family_id is None and len(family_ids) == 1:
+            family_id = family_ids[0]
+        if family_id is None:
+            raise ValueError(
+                "typed metadata identity requires one operator family"
+            )
+        tp_sizes = self.tensor_parallel_sizes
+        if not tp_sizes and self.tensor_parallel_size is not None:
+            tp_sizes = (self.tensor_parallel_size,)
+        padded_width = self.selected_padded_ffn_width
+        if padded_width is None and self.tensor_parallel_size is not None:
+            padded_width = _pad_width(self.effective_ffn_width, self.tensor_parallel_size)
+        return {
+            "profile_id": self.profile_id,
+            "operator_family_id": family_id,
+            "operator_family_ids": list(family_ids),
+            "layer_kind": self.layer_kind.value,
+            "dimension_source": self.dimension_source.value,
+            "effective_ffn_width": self.effective_ffn_width,
+            "tensor_parallel_mode": self.tensor_parallel_mode.value,
+            "expert_parallel_mode": self.expert_parallel_mode.value,
+            "selected_expert_parallel_size": self.expert_parallel_size,
+            "tensor_parallel_sizes": list(tp_sizes),
+            "selected_tensor_parallel_size": self.tensor_parallel_size,
+            "selected_padded_ffn_width": padded_width,
+        }
+
+
+def _pad_width(width: int, tp_size: int) -> int:
+    if type(tp_size) is not int or tp_size <= 0:
+        raise ValueError(f"tensor parallel size must be positive, got {tp_size!r}")
+    return ((width + tp_size - 1) // tp_size) * tp_size
+
+
+def _dense_layer_contract_active(profile: "ModelArchitectureProfile", config: Any) -> bool:
+    return not bool(getattr(config, "is_moe", False)) or profile._is_mixed_model(config)
+
+
+def _routed_layer_contract_active(_profile: "ModelArchitectureProfile", config: Any) -> bool:
+    return bool(getattr(config, "is_moe", False))
+
+
+def _shared_layer_contract_active(profile: "ModelArchitectureProfile", config: Any) -> bool:
+    if not bool(getattr(config, "is_moe", False)):
+        return False
+    supports = getattr(config, "supports_share_expert", None)
+    return bool(supports()) if callable(supports) else profile.supports_share_expert(config)
+
+
+def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
+    return (
+        LayerContractSpec(
+            LayerKind.DENSE,
+            LayerDimensionSource.DENSE,
+            TensorParallelMode.FFN_TP,
+            operator_family_ids=("ffn",),
+            activation_predicate=_dense_layer_contract_active,
+        ),
+        LayerContractSpec(
+            LayerKind.ROUTED,
+            LayerDimensionSource.ROUTED,
+            TensorParallelMode.MOE_TP,
+            ExpertParallelMode.ON,
+            operator_family_ids=("moe",),
+            activation_predicate=_routed_layer_contract_active,
+        ),
+        LayerContractSpec(
+            LayerKind.SHARED,
+            LayerDimensionSource.SHARED,
+            TensorParallelMode.FFN_TP,
+            operator_family_ids=("share_expert",),
+            base_layer_kinds=(LayerKind.ROUTED,),
+            activation_predicate=_shared_layer_contract_active,
+        ),
+    )
 
 
 @dataclass(frozen=True)
@@ -119,6 +424,9 @@ class ModelArchitectureProfile:
     counts_share_expert_param_memory: bool = False
     structural_requirements: tuple[StructuralRequirement, ...] = ()
     match: ArchitectureMatcher = field(default=lambda _config: False, repr=False, compare=False)
+    layer_contracts: tuple[LayerContractSpec, ...] = field(
+        default_factory=_default_layer_contracts
+    )
 
     def __post_init__(self) -> None:
         if not self.profile_id:
@@ -138,6 +446,33 @@ class ModelArchitectureProfile:
                 "predictor_attention_extra_ops must be declared in linear_attention.sharded_ops, "
                 f"got unknown ops: {sorted(unknown_predictor_ops)}"
             )
+        if not self.layer_contracts:
+            raise ValueError(
+                f"model architecture profile {self.profile_id!r} must declare layer contracts"
+            )
+        layer_kinds = [contract.layer_kind for contract in self.layer_contracts]
+        if len(set(layer_kinds)) != len(layer_kinds):
+            raise ValueError(
+                f"model architecture profile {self.profile_id!r} declares duplicate layer kinds"
+            )
+        family_ids = [
+            family_id
+            for contract in self.layer_contracts
+            for family_id in contract.operator_family_ids
+        ]
+        if len(set(family_ids)) != len(family_ids):
+            raise ValueError(
+                f"model architecture profile {self.profile_id!r} declares duplicate family ownership"
+            )
+        try:
+            from frontier.operators.families import get_operator_family
+
+            for family_id in family_ids:
+                get_operator_family(family_id)
+        except (ImportError, TypeError, ValueError) as exc:
+            raise ValueError(
+                f"model architecture profile {self.profile_id!r} references unknown operator family"
+            ) from exc
 
     @classmethod
     def generic(
@@ -230,6 +565,31 @@ class ModelArchitectureProfile:
                 _requires_step3_mfa_attention_contract(),
             ),
             match=match or _matches_step3_text,
+            layer_contracts=(
+                LayerContractSpec(
+                    LayerKind.DENSE,
+                    LayerDimensionSource.DENSE,
+                    TensorParallelMode.ATTENTION_TP,
+                    operator_family_ids=("ffn",),
+                    activation_predicate=_dense_layer_contract_active,
+                ),
+                LayerContractSpec(
+                    LayerKind.ROUTED,
+                    LayerDimensionSource.ROUTED,
+                    TensorParallelMode.MOE_TP,
+                    ExpertParallelMode.ON,
+                    operator_family_ids=("moe",),
+                    activation_predicate=_routed_layer_contract_active,
+                ),
+                LayerContractSpec(
+                    LayerKind.SHARED,
+                    LayerDimensionSource.SHARED,
+                    TensorParallelMode.ATTENTION_TP,
+                    operator_family_ids=("share_expert",),
+                    base_layer_kinds=(LayerKind.ROUTED,),
+                    activation_predicate=_shared_layer_contract_active,
+                ),
+            ),
         )
 
     def validate_structural_requirements(self, config: Any) -> None:
@@ -248,6 +608,277 @@ class ModelArchitectureProfile:
         return bool(getattr(config, "is_moe", False)) and int(
             getattr(config, "share_expert_dim", 0) or 0
         ) > 0
+
+    def iter_active_layer_contracts(self, config: Any) -> tuple[LayerContractSpec, ...]:
+        """Return the profile-owned contracts active for a model config."""
+
+        if config is None:
+            raise ValueError("model config is required for layer contract resolution")
+        return tuple(
+            contract
+            for contract in self.layer_contracts
+            if contract.is_active(self, config)
+        )
+
+    def get_layer_contract(self, layer_kind: LayerKind | str) -> LayerContractSpec:
+        if not isinstance(layer_kind, LayerKind):
+            try:
+                layer_kind = LayerKind(layer_kind)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"Unknown layer kind: {layer_kind!r}") from exc
+        for contract in self.layer_contracts:
+            if contract.layer_kind is layer_kind:
+                return contract
+        raise ValueError(
+            f"Profile {self.profile_id!r} does not declare layer kind {layer_kind.value!r}"
+        )
+
+    def get_layer_contract_for_family(self, family_id: str) -> LayerContractSpec:
+        if not isinstance(family_id, str) or not family_id:
+            raise ValueError("operator family ID must be a non-empty string")
+        matches = tuple(
+            contract
+            for contract in self.layer_contracts
+            if family_id in contract.operator_family_ids
+        )
+        if len(matches) != 1:
+            raise ValueError(
+                f"Profile {self.profile_id!r} declares {len(matches)} contracts for family {family_id!r}"
+            )
+        return matches[0]
+
+    def resolve_layer_contract(
+        self,
+        config: Any,
+        *,
+        layer_id: int | None = None,
+        layer_kind: LayerKind | str | None = None,
+        operator_name: str | None = None,
+        attention_tp_size: int | None = None,
+        attn_tp_size: int | None = None,
+        moe_tp_size: int | None = None,
+        ffn_tp_size: int | None = None,
+        tensor_parallel_size: int | None = None,
+        expert_parallel_size: int | None = None,
+        ep_size: int | None = None,
+    ) -> ResolvedLayerContract:
+        """Resolve layer kind, width, and parallel domains from one profile."""
+
+        if config is None:
+            raise ValueError("model config is required for layer contract resolution")
+        for name, value in (
+            ("attention_tp_size", attention_tp_size),
+            ("attn_tp_size", attn_tp_size),
+            ("moe_tp_size", moe_tp_size),
+            ("ffn_tp_size", ffn_tp_size),
+            ("tensor_parallel_size", tensor_parallel_size),
+            ("expert_parallel_size", expert_parallel_size),
+            ("ep_size", ep_size),
+        ):
+            if value is not None and (type(value) is not int or value <= 0):
+                raise ValueError(f"{name} must be a positive int, got {value!r}")
+        if attention_tp_size is not None and attn_tp_size is not None:
+            if attention_tp_size != attn_tp_size:
+                raise ValueError("attention_tp_size and attn_tp_size disagree")
+        attention_tp_size = attention_tp_size or attn_tp_size
+        if expert_parallel_size is not None and ep_size is not None:
+            if expert_parallel_size != ep_size:
+                raise ValueError("expert_parallel_size and ep_size disagree")
+        expert_parallel_size = expert_parallel_size or ep_size
+
+        if layer_id is not None:
+            if type(layer_id) is not int:
+                raise ValueError(f"layer_id must be an int, got {layer_id!r}")
+            num_layers = getattr(config, "num_layers", None)
+            if type(num_layers) is not int or num_layers <= 0:
+                raise ValueError("config must declare a positive num_layers")
+            if layer_id < 0 or layer_id >= num_layers:
+                raise ValueError(f"layer_id {layer_id} out of range [0, {num_layers})")
+        if layer_kind is not None and not isinstance(layer_kind, LayerKind):
+            try:
+                layer_kind = LayerKind(layer_kind)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"Unknown layer kind: {layer_kind!r}") from exc
+
+        operator_family_id = None
+        operator_contract = None
+        operator_ep_agnostic = False
+        if operator_name is not None:
+            if not isinstance(operator_name, str) or not operator_name:
+                raise ValueError("operator_name must be a non-empty string")
+            try:
+                from frontier.operators.binding import bind_operator_query
+
+                operator_binding = bind_operator_query(operator_name)
+                operator_family_id = operator_binding.family_id
+                # EP semantics belong to the operator registry, not to the
+                # layer kind.  A routed family can contain both EP-agnostic
+                # routing work and EP-sensitive grouped GEMM.
+                operator_ep_agnostic = bool(operator_binding.operator.ep_agnostic)
+            except (ImportError, TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Unable to bind operator {operator_name!r} to a layer contract"
+                ) from exc
+            operator_contract = self.get_layer_contract_for_family(operator_family_id)
+
+        if layer_kind is not None:
+            kind_contract = self.get_layer_contract(layer_kind)
+            if operator_contract is not None and kind_contract is not operator_contract:
+                raise ValueError("layer_kind conflicts with operator_name contract")
+            operator_contract = kind_contract
+
+        config_kind = self._resolve_config_layer_kind(config, layer_id)
+        mixed_model = self._is_mixed_model(config)
+        if operator_contract is not None:
+            if operator_contract.layer_kind in (LayerKind.ROUTED, LayerKind.SHARED) and not bool(
+                getattr(config, "is_moe", False)
+            ):
+                raise ValueError(
+                    f"{operator_contract.layer_kind.value} operator requires an MoE model"
+                )
+            if layer_id is not None and config_kind not in operator_contract.base_layer_kinds:
+                allowed = ", ".join(kind.value for kind in operator_contract.base_layer_kinds)
+                raise ValueError(
+                    f"operator {operator_name!r} requires base layer kind {allowed}; "
+                    f"layer_id={layer_id} is {config_kind.value}"
+                )
+            if operator_contract.layer_kind is LayerKind.SHARED:
+                supports = getattr(config, "supports_share_expert", None)
+                if callable(supports) and not bool(supports()):
+                    raise ValueError("shared-expert operator requires shared-expert support")
+            selected_kind = operator_contract.layer_kind
+        elif layer_id is not None:
+            selected_kind = config_kind
+        elif mixed_model:
+            raise ValueError("mixed-model resolution requires layer_id or operator_name")
+        else:
+            selected_kind = config_kind
+
+        spec = operator_contract or self.get_layer_contract(selected_kind)
+        if not spec.is_active(self, config):
+            raise ValueError(
+                f"{spec.layer_kind.value} layer contract is inactive for profile {self.profile_id!r}"
+            )
+        width = spec.resolve_width(config, mixed_model=mixed_model)
+        if spec.tensor_parallel_mode is TensorParallelMode.REPLICATED:
+            selected_tp = 1
+        elif spec.tensor_parallel_mode is TensorParallelMode.ATTENTION_TP:
+            selected_tp = attention_tp_size
+        elif spec.tensor_parallel_mode is TensorParallelMode.MOE_TP:
+            selected_tp = moe_tp_size
+        elif spec.tensor_parallel_mode is TensorParallelMode.FFN_TP:
+            selected_tp = ffn_tp_size if ffn_tp_size is not None else attention_tp_size
+        else:
+            raise ValueError(f"Unsupported tensor parallel mode: {spec.tensor_parallel_mode!r}")
+        if tensor_parallel_size is not None and selected_tp is not None and tensor_parallel_size != selected_tp:
+            raise ValueError("tensor_parallel_size conflicts with the selected domain TP")
+        selected_tp = tensor_parallel_size if tensor_parallel_size is not None else selected_tp
+        if selected_tp is not None and spec.tensor_parallel_mode is not TensorParallelMode.REPLICATED:
+            if width % selected_tp != 0:
+                raise ValueError(
+                    f"{selected_kind.value} width {width} must be divisible by TP={selected_tp}"
+                )
+
+        if spec.expert_parallel_mode is ExpertParallelMode.ON:
+            num_experts = getattr(config, "num_experts", None)
+            if type(num_experts) is not int or num_experts <= 0:
+                raise ValueError("routed contract requires a positive num_experts")
+            if expert_parallel_size is not None and num_experts % expert_parallel_size != 0:
+                raise ValueError(
+                    f"num_experts ({num_experts}) must be divisible by EP={expert_parallel_size}"
+                )
+            if operator_ep_agnostic:
+                # Keep validating the runtime topology above, but omit EP from
+                # the selected estimator identity for operations whose timing
+                # is independent of expert placement.
+                expert_parallel_size = None
+        else:
+            expert_parallel_size = None
+
+        domain_sizes = ()
+        if selected_tp is not None:
+            domain_sizes = (selected_tp,)
+        return ResolvedLayerContract(
+            profile_id=self.profile_id,
+            layer_id=layer_id,
+            layer_kind=selected_kind,
+            dimension_source=spec.dimension_source,
+            effective_ffn_width=width,
+            tensor_parallel_mode=spec.tensor_parallel_mode,
+            expert_parallel_mode=spec.expert_parallel_mode,
+            tensor_parallel_size=selected_tp,
+            expert_parallel_size=expert_parallel_size,
+            operator_family_id=operator_family_id,
+            operator_family_ids=spec.operator_family_ids,
+            tensor_parallel_sizes=domain_sizes,
+            selected_padded_ffn_width=(
+                _pad_width(width, selected_tp) if selected_tp is not None else None
+            ),
+        )
+
+    @classmethod
+    def _is_mixed_model(cls, config: Any) -> bool:
+        if not bool(getattr(config, "is_moe", False)):
+            return False
+        num_layers = getattr(config, "num_layers", None)
+        if type(num_layers) is not int or num_layers <= 0:
+            if any(
+                callable(getattr(config, name, None))
+                for name in ("get_moe_layer_ids", "is_moe_layer")
+            ) or getattr(config, "moe_layers_enum", None) is not None:
+                raise ValueError("moe layer validation requires a positive num_layers")
+            return False
+        ids = cls._resolve_moe_layer_ids(config)
+        return 0 < len(ids) < num_layers
+
+    @classmethod
+    def _resolve_moe_layer_ids(cls, config: Any) -> tuple[int, ...]:
+        """Resolve one canonical MoE layer set and verify custom adapters."""
+
+        num_layers = getattr(config, "num_layers", None)
+        if type(num_layers) is not int or num_layers <= 0:
+            raise ValueError("moe layer validation requires a positive num_layers")
+        getter = getattr(config, "get_moe_layer_ids", None)
+        predicate = getattr(config, "is_moe_layer", None)
+        if callable(getter):
+            try:
+                typed_getter = cast(Callable[[], Iterable[int]], getter)
+                raw_ids = tuple(typed_getter())
+            except TypeError as exc:
+                raise ValueError("get_moe_layer_ids() must return an iterable") from exc
+            if any(type(layer_id) is not int for layer_id in raw_ids):
+                raise ValueError("get_moe_layer_ids() must return integer layer IDs")
+            if len(set(raw_ids)) != len(raw_ids):
+                raise ValueError("get_moe_layer_ids() returned duplicate layer IDs")
+            if any(layer_id < 0 or layer_id >= num_layers for layer_id in raw_ids):
+                raise ValueError(
+                    f"get_moe_layer_ids() returned an out-of-range layer ID for [0, {num_layers})"
+                )
+            canonical = tuple(sorted(raw_ids))
+            if callable(predicate):
+                predicate_ids = tuple(
+                    layer_id for layer_id in range(num_layers) if bool(predicate(layer_id))
+                )
+                if predicate_ids != canonical:
+                    raise ValueError(
+                        "custom MoE layer getter and predicate disagree: "
+                        f"get_moe_layer_ids={list(canonical)}, is_moe_layer={list(predicate_ids)}"
+                    )
+            return canonical
+        if callable(predicate):
+            return tuple(
+                layer_id for layer_id in range(num_layers) if bool(predicate(layer_id))
+            )
+        return parse_moe_layer_ids(getattr(config, "moe_layers_enum", None), num_layers)
+
+    @classmethod
+    def _resolve_config_layer_kind(cls, config: Any, layer_id: int | None) -> LayerKind:
+        if not bool(getattr(config, "is_moe", False)):
+            return LayerKind.DENSE
+        if layer_id is None:
+            return LayerKind.ROUTED
+        ids = cls._resolve_moe_layer_ids(config)
+        return LayerKind.ROUTED if layer_id in ids else LayerKind.DENSE
 
     def uses_expert_parallel_alltoall(
         self,

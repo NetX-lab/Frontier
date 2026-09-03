@@ -1,17 +1,10 @@
 # Linear Operations Profiling and Training Module
 
-## Modification History
-
-| Date       | Summary of Changes                                                                 |
-|------------|------------------------------------------------------------------------------------|
-| 2025-12-05 | Updated is_moe behavior: now filters MLP columns instead of skipping entirely     |
-| 2025-12-04 | Initial creation of the linear_op release guide with is_moe parameter support   |
-
----
-
 ## Overview
 
-This module provides profiling and training capabilities for **linear operations** in LLM inference simulation. Linear operations are characterized by having **linear complexity with respect to sequence length**.
+This module profiles and trains predictors for operations whose work scales with
+the number of tokens. It owns common attention projections, normalization,
+residual adds, dense FFN layers, and shared-expert linear layers.
 
 ### Rationale for Renaming from MLP to linear_op
 
@@ -25,7 +18,7 @@ The original "MLP" naming was too narrow and did not accurately describe the ful
 
 2. **Better Categorization**: Aligns with the three-category model structure:
    - `attn`: Attention operations (prefill, decode, KV cache)
-   - `moe`: Mixture of Experts operations (gating, shuffling, grouped GEMM)
+   - `moe`: Routed-expert operations (gating, shuffling, grouped GEMM)
    - `linear_op`: Linear operations (this module)
 
 3. **Extensibility**: Easier to add new linear-complexity operations in the future.
@@ -44,15 +37,19 @@ The `is_moe` parameter controls which linear operations to profile and train:
 ### Behavior
 
 When `is_moe=True`:
-- **Profiling**: Collects data for all operations, but **filters out** MLP-specific columns (`mlp_up_proj`, `mlp_down_proj`, `mlp_act`) from the output CSV
+- **Profiling**: The profiling plan omits dense MLP targets before collection and
+  keeps common and shared-expert linear targets. The output writer also removes
+  legacy MLP columns if an older result contains them.
 - **Training**: Only trains models for common linear operations (LayerNorm, attention projections, residual add)
 
 ### Rationale
 
-In MoE (Mixture of Experts) models, the dense MLP layers are replaced by expert layers. Therefore:
-- MoE models do **not** need `mlp_up_proj`, `mlp_down_proj`, `mlp_act` profiling data or trained models
-- MoE models should use the dedicated `moe` profiling module for expert-specific operations
-- However, MoE models **still need** common linear operations (LayerNorm, attention projections, residual add)
+Routed experts replace the dense MLP path, so routed gating, token movement,
+and grouped GEMM belong to the dedicated `moe` producer. Shared experts are
+ordinary FFN layers: their linear work remains in `linear_op.csv` and follows
+the architecture profile's FFN/attention TP authority. MoE models still need
+common linear operations such as LayerNorm, attention projections, residual
+adds, and shared-expert projections.
 
 ### Usage
 
@@ -61,7 +58,7 @@ In MoE (Mixture of Experts) models, the dense MLP layers are replaced by expert 
 # For dense models (default)
 bash frontier/profiling/example/test_profiling_linear_op.sh --model meta-llama/Llama-2-7b-hf --device a100
 
-# For MoE models (skip linear op profiling)
+# For MoE models (omit dense MLP targets while retaining common/shared linear work)
 bash frontier/profiling/example/test_profiling_linear_op.sh --model mixtral_8x7b_moe --device a100 --is-moe
 ```
 
@@ -73,7 +70,7 @@ python -m frontier.training.cli linear_op \
     --model_name meta-llama/Llama-2-7b-hf \
     --device a100
 
-# For MoE models (skip linear op training)
+# For MoE models (train common linear targets; shared-expert targets use the typed E2E path)
 python -m frontier.training.cli linear_op \
     --dataset_path data/profiling/compute/a100/mixtral_8x7b_moe/linear_op.csv \
     --model_name mixtral_8x7b_moe \
@@ -85,8 +82,7 @@ python -m frontier.training.cli linear_op \
 
 ## Current Release Naming Contract
 
-The pre-release-v0.1 public contract uses the `linear_op` module name and the
-canonical profiling dataset path:
+The public contract uses the `linear_op` module name and the canonical profiling dataset path:
 
 ```text
 data/profiling/compute/<device>/<model_name>/linear_op.csv
@@ -108,9 +104,11 @@ python -m frontier.training.cli linear_op \
     --measurement_type CUDA_EVENT
 ```
 
-Historical names from earlier internal prototypes are intentionally omitted from
-this release-facing guide to avoid suggesting unsupported CSV filenames or
-compatibility aliases.
+Current profiler rows may also include `model_architecture_profile` and
+`typed_operator_contracts`. The contract records one owner and one semantic TP
+mode per measured operator: `replicated`, `attention_tp`, `ffn_tp`, or
+`moe_tp`. Runtime admission checks these fields when present and uses the
+legacy scalar compatibility path for older CSVs.
 
 ---
 
@@ -129,4 +127,3 @@ frontier/training/
 └── example/
     └── train_linear_op_models.sh  # Training shell script
 ```
-

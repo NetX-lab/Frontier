@@ -27,6 +27,7 @@ from frontier.logger import init_logger
 from frontier.model_architectures import ResidualAddPolicy
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
+    PrefillHotRowsUnavailableError,
     PREFILL_HOT_MOE_GATING_RUNTIME_CONTEXT,
     filter_moe_gating_rows_by_runtime_context,
     get_moe_gating_base_model_name,
@@ -54,6 +55,10 @@ from frontier.operators.families import (
     is_moe_operator_ep_agnostic,
     resolve_moe_operator_tp_key,
 )
+from frontier.operators.typed_contracts import (
+    TYPED_OPERATOR_CONTRACTS_COLUMN,
+    validate_typed_operator_contracts,
+)
 
 if TYPE_CHECKING:
     from frontier.entities import EPBatchGroup
@@ -64,6 +69,9 @@ from frontier.config import (
     ReplicaConfig,
     BaseReplicaSchedulerConfig,
     get_quantization_manager,
+)
+from frontier.config.parallel_semantics import (
+    resolve_shared_expert_tensor_parallel_size,
 )
 from frontier.types import ClusterType
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
@@ -533,13 +541,23 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         ffn_tp_allgather_time = 0.0
         share_expert_tp_allreduce_time = 0.0
-        if is_moe and architecture_profile.moe_tensor_parallel_allgather_op and moe_tp_size > 1:
+        if (
+            is_moe
+            and architecture_profile.moe_tensor_parallel_allgather_op
+            and moe_tp_size > 1
+        ):
             ffn_tp_allgather_time = base_time
-            if (
-                share_expert_enabled
-                and architecture_profile.share_expert_tensor_parallel_allreduce_op
-            ):
-                share_expert_tp_allreduce_time = base_time
+        if (
+            share_expert_enabled
+            and architecture_profile.share_expert_tensor_parallel_allreduce_op
+            and resolve_shared_expert_tensor_parallel_size(
+                cluster_type=self._cluster_type,
+                replica_config=self._replica_config,
+                model_config=self._model_config,
+            )
+            > 1
+        ):
+            share_expert_tp_allreduce_time = base_time
 
         add_time = base_time if include_ffn else 0.0
         add_attn_residual_time = 0.0
@@ -1295,11 +1313,16 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             logger.warning(f"MoE input file does not exist: {moe_input_file}")
             return models
 
-        try:
-            moe_df = pd.read_csv(moe_input_file)
-        except Exception as e:
-            logger.warning(f"Failed to load MoE data from {moe_input_file}: {e}")
-            return models
+        moe_df = pd.read_csv(moe_input_file)
+        if TYPED_OPERATOR_CONTRACTS_COLUMN in moe_df.columns:
+            # Validate every row before scalar or TP/EP filtering can hide a
+            # malformed typed contract.
+            moe_df[TYPED_OPERATOR_CONTRACTS_COLUMN].map(
+                lambda raw_contracts: validate_typed_operator_contracts(
+                    raw_contracts,
+                    model_config=self._model_config,
+                )
+            )
 
         metadata = self._get_profiling_metadata(moe_df, moe_input_file)
         self._validate_active_measurement_type(metadata, moe_input_file)
@@ -1412,16 +1435,14 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         for model_name in model_names:
             try:
                 op_df, moe_tp_key, moe_ep_key = _get_moe_df_for_op(model_name)
-            except ValueError as e:
-                if model_name.endswith("__prefill_hot"):
-                    logger.warning(
-                        "Skipping %s because prefill-hot gating rows are unavailable "
-                        "for the requested TP/EP slice (%s).",
-                        model_name,
-                        e,
-                    )
-                    continue
-                raise
+            except PrefillHotRowsUnavailableError as exc:
+                logger.warning(
+                    "Skipping %s because prefill-hot gating rows are unavailable "
+                    "for the requested TP/EP slice (%s).",
+                    model_name,
+                    exc,
+                )
+                continue
             target_op_name = get_moe_gating_base_model_name(model_name)
             target_col = f"time_stats.{target_op_name}.median"
             if target_col not in op_df.columns:
@@ -1497,9 +1518,17 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             include_prefill_hot_models = False
             try:
                 moe_df = pd.read_csv(moe_input_file)
+            except FileNotFoundError:
+                moe_df = None
+            if moe_df is not None:
+                if TYPED_OPERATOR_CONTRACTS_COLUMN in moe_df.columns:
+                    moe_df[TYPED_OPERATOR_CONTRACTS_COLUMN].map(
+                        lambda raw_contracts: validate_typed_operator_contracts(
+                            raw_contracts,
+                            model_config=self._model_config,
+                        )
+                    )
                 include_prefill_hot_models = has_prefill_hot_moe_gating_rows(moe_df)
-            except Exception:
-                include_prefill_hot_models = False
             if include_prefill_hot_models:
                 model_names.extend(_get_prefill_hot_moe_gating_model_names())
         self._register_profiling_metadata_from_file(moe_input_file, model_names)
@@ -2320,29 +2349,42 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         ffn_tp_allgather_time = 0.0
         share_expert_tp_allreduce_time = 0.0
         moe_tp_allgather_op = architecture_profile.moe_tensor_parallel_allgather_op
-        if include_ffn and include_moe and moe_tp_allgather_op:
-            moe_tp_size = self._replica_config.moe_tensor_parallel_size
-            if moe_tp_size > 1:
+        if include_ffn and include_moe:
+            if (
+                moe_tp_allgather_op
+                and self._replica_config.moe_tensor_parallel_size > 1
+            ):
                 ffn_tp_allgather_time = self._predict_comm_operator(
                     get_comm_operator(moe_tp_allgather_op),
                     batch,
                 )
                 communication_operator_times[moe_tp_allgather_op] = ffn_tp_allgather_time
-                share_expert_tp_allreduce_op = (
-                    architecture_profile.share_expert_tensor_parallel_allreduce_op
+            share_expert_tp_allreduce_op = (
+                architecture_profile.share_expert_tensor_parallel_allreduce_op
+            )
+            shared_expert_compute_time = (
+                share_expert_up_proj_time
+                + share_expert_down_proj_time
+                + share_expert_act_time
+            )
+            if (
+                share_expert_tp_allreduce_op
+                and shared_expert_compute_time > 0
+                and resolve_shared_expert_tensor_parallel_size(
+                    cluster_type=self._cluster_type,
+                    replica_config=self._replica_config,
+                    model_config=self._model_config,
                 )
-                if (
+                > 1
+            ):
+                raw_share_expert_tp_allreduce_time = self._predict_comm_operator(
+                    get_comm_operator(share_expert_tp_allreduce_op),
+                    batch,
+                )
+                share_expert_tp_allreduce_time = raw_share_expert_tp_allreduce_time
+                communication_operator_times[
                     share_expert_tp_allreduce_op
-                    and share_expert_up_proj_time + share_expert_down_proj_time + share_expert_act_time > 0
-                ):
-                    raw_share_expert_tp_allreduce_time = self._predict_comm_operator(
-                        get_comm_operator(share_expert_tp_allreduce_op),
-                        batch,
-                    )
-                    share_expert_tp_allreduce_time = raw_share_expert_tp_allreduce_time
-                    communication_operator_times[
-                        share_expert_tp_allreduce_op
-                    ] = share_expert_tp_allreduce_time
+                ] = share_expert_tp_allreduce_time
 
         dp_input_allreduce_time = 0.0
         dp_output_allreduce_time = 0.0

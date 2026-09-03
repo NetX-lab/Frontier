@@ -1,17 +1,5 @@
 # CLI User Guide
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-08-15 | Removed retired attention-DP CLI examples and documented fixed `attn_dp=1` plus cluster/EP scope semantics. |
-| 2026-08-14 | Replaced the removed MoE routing-mode CLI with `moe_routing_distribution_type`. |
-| 2026-08-09 | Restored the sequential-only public PDD guard and documented current post-ISSUE-022 slowdown evidence. |
-| 2026-08-08 | Clarified the parallel-PDD correctness and wall-clock-speed boundary. |
-| 2026-08-07 | Corrected the PDD parallel CLI contract while retaining sequential examples and the PD-AF parallel guard. |
-| 2026-07-23 | Added the complete PD-AF dense/MoE/EP/CUDA Graph entrypoint set and corrected v0.3 runtime boundaries. |
-| 2026-07-22 | Documented the sequential PD-AF CLI surface and one-click example entrypoints. |
-
 ## Scope
 
 This guide covers the public CLI surface for the `pre-release-v0.3` branch. The supported runtime architectures are `co-location`, sequential `pd-disaggregation`, and sequential `pd-af-disaggregation`.
@@ -48,7 +36,7 @@ python -m pip install -e ".[test]"
 export PYTHONPATH=$PWD
 ```
 
-The co-location example suite defaults to `--cc_backend_config_type analytical` for one-click smoke runs and does not require the optional `collective_sim` submodule. Build `collective_sim` only when you explicitly select it:
+All public architecture examples default to `--cc_backend_config_type analytical` and pass the selected backend explicitly for one-click smoke runs. Direct CLI/config construction defaults to `astra_sim_analytical`. Build the optional `collective_sim` submodule when you explicitly select it:
 
 ```bash
 git submodule update --init --recursive frontier/cc_backend/backends/collective-sim
@@ -56,7 +44,7 @@ cd frontier/cc_backend/backends/collective-sim/sim
 make -j"$(nproc)"
 ```
 
-Use `--cc_backend_config_type analytical` for the release co-location smoke examples. Use `--cc_backend_config_type astra_sim_analytical` when you intentionally want the ASTRA-Sim-inspired lightweight topology model.
+Use `--cc_backend_config_type analytical` to match the release examples. Use `--cc_backend_config_type astra_sim_analytical` when you intentionally want the ASTRA-Sim-inspired lightweight topology model.
 
 ## Recommended Entry Points
 
@@ -79,6 +67,19 @@ bash examples/architecture/co-location/online/moe_model_basic_online.sh
 bash examples/architecture/co-location/online/thinking_mode_basic_online.sh
 bash examples/architecture/co-location/online/moe_spec_dec_online.sh
 bash examples/architecture/co-location/online/moe_prefix_caching_online.sh
+
+# PDD / pd-disaggregation (sequential).
+bash examples/architecture/pdd/run_all.sh
+bash examples/architecture/pdd/offline/dense_model_basic.sh
+bash examples/architecture/pdd/offline/moe_model_basic.sh
+bash examples/architecture/pdd/offline/thinking_mode_basic.sh
+bash examples/architecture/pdd/offline/moe_spec_dec.sh
+bash examples/architecture/pdd/offline/moe_prefix_caching.sh
+bash examples/architecture/pdd/online/dense_model_basic_online.sh
+bash examples/architecture/pdd/online/moe_model_basic_online.sh
+bash examples/architecture/pdd/online/thinking_mode_basic_online.sh
+bash examples/architecture/pdd/online/moe_spec_dec_online.sh
+bash examples/architecture/pdd/online/moe_prefix_caching_online.sh
 
 # PD-AF / pd-af-disaggregation (sequential).
 bash examples/architecture/pd-af-disagg/run_all.sh
@@ -161,6 +162,10 @@ Dummy predictor mode is useful for smoke tests. For latency studies, disable dum
 | `--sys_arch pd-disaggregation` | Sequential PDD architecture; requires `--no-enable_parallel_clusters`. |
 | `--sys_arch pd-af-disaggregation` | Sequential PD-AF architecture; requires `--no-enable_parallel_clusters`. |
 
+PDD uses `--cluster_config_prefill_*` and `--cluster_config_decode_*` fields.
+PD-AF uses `--cluster_config_prefill_*`, `--cluster_config_decode_attn_*`,
+`--cluster_config_decode_ffn_*`, and the configured KV/M2N transfer fields.
+
 ### Model and parallelism
 
 | Option | Use |
@@ -168,13 +173,24 @@ Dummy predictor mode is useful for smoke tests. For latency studies, disable dum
 | `--replica_config_model_name` | Model name used to resolve model config and output taxonomy. |
 | `--cluster_config_num_replicas` | Number of monolithic replicas. |
 | `--replica_config_attn_tensor_parallel_size` | Attention tensor parallel size. |
-Attention data parallelism is retired in Frontier's shared domains and is fixed internally to `1`; it is not a CLI option. Use cluster-level `num_replicas` for serving capacity and `moe_expert_parallel_size` for Replica-local EP lanes.
 | `--replica_config_num_pipeline_stages` | Pipeline parallel stages. |
 | `--replica_config_moe_tensor_parallel_size` | MoE tensor parallel size. |
 | `--replica_config_moe_expert_parallel_size` | MoE expert parallel size. |
 | `--replica_config_total_expert_num` | Total expert count for MoE models. |
 | `--replica_config_router_topk` | Number of routed experts per token. |
 | `--replica_config_moe_routing_distribution_type` | MoE expert-load distribution: `balanced`, `random`, `skewed`, or `zipf`. |
+
+Attention data parallelism is fixed internally to `1` in Frontier's shared
+domains. Use cluster-level `num_replicas` for serving capacity and
+`moe_expert_parallel_size` for Replica-local EP lanes.
+
+For Step3 co-location, `PREFILL`, and unified `DECODE`, shared-expert linear
+work uses `attn_tensor_parallel_size`; routed-expert compute uses
+`moe_tensor_parallel_size`, and routed placement/communication uses
+`moe_expert_parallel_size`. In the FFN-only `DECODE_FFN` role, both
+shared-expert local work and routed intra-expert work use the role-local
+`moe_tensor_parallel_size`; routed placement still uses
+`moe_expert_parallel_size`. The model architecture profile owns this mapping.
 
 ### Runtime optimization
 

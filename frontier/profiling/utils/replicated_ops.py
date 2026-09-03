@@ -1,5 +1,7 @@
 """Shared utility for splitting profiling results into sharded and replicated rows."""
 
+from collections.abc import Mapping
+from copy import deepcopy
 from typing import Dict, List, Optional, Set, Tuple
 
 
@@ -32,6 +34,29 @@ def split_replicated_result(
     sharded_row = {**result, "time_stats": sharded_stats}
 
     replicated_row = {**result, "time_stats": replicated_stats}
+
+    typed_contracts = result.get("typed_operator_contracts")
+    if typed_contracts is not None:
+        if not isinstance(typed_contracts, Mapping):
+            raise TypeError(
+                "typed_operator_contracts must be a mapping when present, "
+                f"got {type(typed_contracts).__name__}"
+            )
+        sharded_row["typed_operator_contracts"] = deepcopy(
+            {
+                operator_name: typed_contracts[operator_name]
+                for operator_name in sharded_stats
+                if operator_name in typed_contracts
+            }
+        )
+        replicated_row["typed_operator_contracts"] = deepcopy(
+            {
+                operator_name: typed_contracts[operator_name]
+                for operator_name in replicated_stats
+                if operator_name in typed_contracts
+            }
+        )
+
     replicated_row["num_tensor_parallel_workers"] = 1
     if unpadded_n_embd is not None:
         replicated_row["padded_n_embd"] = unpadded_n_embd

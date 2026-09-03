@@ -163,6 +163,7 @@ class CommPayloadContext:
 
 CommPayloadBuilder = Callable[[CommPayloadContext], int]
 CommNumDevicesBuilder = Callable[[CommPayloadContext], int]
+CommStringBuilder = Callable[[CommPayloadContext], str]
 
 
 @dataclass(frozen=True)
@@ -171,9 +172,11 @@ class CommOperatorSpec(OperatorSpec):
 
     collective_alias: str = ""
     comm_group: str = ""
+    comm_group_builder: CommStringBuilder | None = None
     payload_builder: CommPayloadBuilder | None = None
     num_devices_builder: CommNumDevicesBuilder | None = None
     comm_domain: str | None = None
+    comm_domain_builder: CommStringBuilder | None = None
     apply_allreduce_launch_overhead_strip: bool = False
     zero_payload_policy: ZeroPayloadPolicy = ZeroPayloadPolicy.PREDICT
 
@@ -220,6 +223,30 @@ class CommOperatorSpec(OperatorSpec):
                 f"CommOperator {self.name} produced invalid num_devices: {num_devices}"
             )
         return num_devices
+
+    def resolve_comm_group(self, ctx: CommPayloadContext) -> str:
+        value = (
+            self.comm_group_builder(ctx)
+            if self.comm_group_builder is not None
+            else self.comm_group
+        )
+        if not isinstance(value, str) or not value:
+            raise ValueError(
+                f"CommOperator {self.name} produced an invalid comm_group: {value!r}"
+            )
+        return value
+
+    def resolve_comm_domain(self, ctx: CommPayloadContext) -> str | None:
+        value = (
+            self.comm_domain_builder(ctx)
+            if self.comm_domain_builder is not None
+            else self.comm_domain
+        )
+        if value is not None and (not isinstance(value, str) or not value):
+            raise ValueError(
+                f"CommOperator {self.name} produced an invalid comm_domain: {value!r}"
+            )
+        return value
 
 
 @dataclass(frozen=True)

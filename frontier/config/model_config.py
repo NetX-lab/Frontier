@@ -299,6 +299,11 @@ class BaseModelConfig(BaseFixedConfig):
     # Explicit fused add+norm capability. When None, decide from model-type allowlist.
     fused_add_norm_capability: Optional[bool] = None
 
+    # Typed FFN widths. ``mlp_hidden_dim`` remains the legacy scalar while
+    # these fields preserve dense and routed domains independently.
+    dense_mlp_hidden_dim: Optional[int] = None
+    routed_mlp_hidden_dim: Optional[int] = None
+
     # Internal fields (excluded from hash/comparison)
     _model_name: Optional[str] = field(default=None, compare=False, hash=False)
     _moe_layer_ids_cache: Optional[List[int]] = field(
@@ -333,6 +338,13 @@ class BaseModelConfig(BaseFixedConfig):
                 "fused_add_norm_capability must be bool or None, "
                 f"got {type(self.fused_add_norm_capability)}"
             )
+
+        for field_name in ("dense_mlp_hidden_dim", "routed_mlp_hidden_dim"):
+            value = getattr(self, field_name)
+            if value is not None and (type(value) is not int or value <= 0):
+                raise ValueError(
+                    f"{field_name} must be a positive int when provided, got {value!r}"
+                )
 
         if self.use_mla and self.use_mfa:
             raise ValueError("use_mla and use_mfa are mutually exclusive")
@@ -478,41 +490,11 @@ class BaseModelConfig(BaseFixedConfig):
         if self._moe_layer_ids_cache is not None:
             return self._moe_layer_ids_cache
 
-        raw_moe_layers = self.moe_layers_enum
-        if raw_moe_layers is None or str(raw_moe_layers).strip() == "":
-            self._moe_layer_ids_cache = list(range(self.num_layers))
-            return self._moe_layer_ids_cache
+        from frontier.model_architectures import parse_moe_layer_ids
 
-        parsed_layer_ids: List[int] = []
-        seen_layer_ids = set()
-        for token in str(raw_moe_layers).split(","):
-            token = token.strip()
-            if token == "":
-                continue
-            try:
-                layer_id = int(token)
-            except ValueError as exc:
-                raise ValueError(
-                    f"Invalid moe_layers_enum token '{token}' for model {self.get_name()}"
-                ) from exc
-            if layer_id < 0:
-                raise ValueError(
-                    f"moe_layers_enum contains negative layer id {layer_id} for model {self.get_name()}"
-                )
-            if layer_id >= self.num_layers:
-                continue
-            if layer_id in seen_layer_ids:
-                continue
-            seen_layer_ids.add(layer_id)
-            parsed_layer_ids.append(layer_id)
-
-        if not parsed_layer_ids:
-            raise ValueError(
-                "moe_layers_enum does not include any layer within the current model depth "
-                f"[0, {self.num_layers}) for model {self.get_name()}"
-            )
-
-        self._moe_layer_ids_cache = sorted(parsed_layer_ids)
+        self._moe_layer_ids_cache = list(
+            parse_moe_layer_ids(self.moe_layers_enum, self.num_layers)
+        )
         return self._moe_layer_ids_cache
 
     def is_moe_layer(self, layer_id: int) -> bool:
@@ -598,8 +580,16 @@ class BaseModelConfig(BaseFixedConfig):
         embedding_dim = int(cfg["hidden_size"])
         if is_moe:
             mlp_hidden_dim = int(cfg["moe_intermediate_size"])  # per-expert FFN dim
+            routed_mlp_hidden_dim = mlp_hidden_dim
+            dense_mlp_hidden_dim = (
+                int(cfg["intermediate_size"])
+                if "intermediate_size" in cfg
+                else None
+            )
         else:
             mlp_hidden_dim = int(cfg["intermediate_size"])
+            dense_mlp_hidden_dim = mlp_hidden_dim
+            routed_mlp_hidden_dim = None
         max_pos = int(cfg["max_position_embeddings"])
         vocab_size = int(cfg["vocab_size"])
 
@@ -734,6 +724,8 @@ class BaseModelConfig(BaseFixedConfig):
             torch_dtype=torch_dtype,
             quantization_config=quantization_config,
             fused_add_norm_capability=fused_add_norm_capability,
+            dense_mlp_hidden_dim=dense_mlp_hidden_dim,
+            routed_mlp_hidden_dim=routed_mlp_hidden_dim,
             moe_layers_enum=cfg.get("moe_layers_enum"),
         )
 

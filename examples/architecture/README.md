@@ -1,18 +1,5 @@
 # Architecture Examples
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-08-09 | Restored the sequential-only public PDD guard and removed parallel-enablement instructions. |
-| 2026-08-08 | Clarified the parallel-PDD correctness and wall-clock-speed boundary. |
-| 2026-08-07 | Distinguished PDD parallel runtime support from the sequential example defaults and retained the PD-AF parallel guard. |
-| 2026-07-23 | Completed the five-offline/five-online PD-AF dense/MoE/EP/CUDA Graph recipe surface and dummy matrix coverage. |
-| 2026-07-22 | Added the `pd-af-disaggregation` offline/online MoE example surface and one-click smoke contract. |
-| 2026-07-05 | Added profiling-independent dummy smoke matrix runner documentation. |
-| 2026-06-22 | Removed legacy split-decode terminology from the public PDD surface. |
-| 2026-06-14 | Added PDD pd-disaggregation script list, configuration contract, and validation criteria for local PR preparation. |
-
 This directory contains one-click architecture entrypoints for Frontier's release-supported runtime layouts.
 
 ## Release Scope

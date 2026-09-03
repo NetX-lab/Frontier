@@ -47,6 +47,7 @@ from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
 )
 from frontier.operators.families import MOE_FAMILY, get_family_profiling_names
+from frontier.operators.typed_contracts import serialize_typed_operator_contract_column
 # Conditionally import ray - only needed when not using --disable_ray
 try:
     import ray
@@ -903,6 +904,7 @@ def profile_model(
         .add_prefix("time_stats.")
         .join(df.drop(columns=["time_stats"]))
     )
+    df = serialize_typed_operator_contract_column(df)
     for key, value in routing_runtime_metadata.items():
         if key not in df.columns:
             df[key] = value

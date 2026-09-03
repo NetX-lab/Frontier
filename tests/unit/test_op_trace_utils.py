@@ -392,6 +392,7 @@ def test_moe_shuffling_non_divisible_tokens():
 
 
 def test_share_expert_trace_shapes():
+    from frontier.model_architectures import ModelArchitectureProfile
     from frontier.metrics.op_trace_utils import OpTraceContext, compute_op_trace_meta
     from frontier.types import ClusterType
 
@@ -407,6 +408,9 @@ def test_share_expert_trace_shapes():
     model_config.num_experts_per_tok = 2
     model_config.is_moe = True
     model_config.get_head_dim = MagicMock(return_value=4)
+    model_config.get_model_architecture_profile = MagicMock(
+        return_value=ModelArchitectureProfile.generic()
+    )
 
     replica_config = MagicMock()
     replica_config.attn_tensor_parallel_size = 1

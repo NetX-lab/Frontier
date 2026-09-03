@@ -69,6 +69,10 @@ class ModelConfig:
         quantization_config: Optional[QuantizationConfig] = None,
         # Whether lm_head shares weights with embed_tokens (HF standard field)
         tie_word_embeddings: bool = True,
+        # Typed FFN widths. Keep the legacy scalar for compatibility while
+        # preserving dense and routed domains independently.
+        dense_mlp_hidden_dim: Optional[int] = None,
+        routed_mlp_hidden_dim: Optional[int] = None,
     ):
         self.name = name
         self.num_layers = num_layers
@@ -76,6 +80,14 @@ class ModelConfig:
         self.num_kv_heads = num_kv_heads
         self.embedding_dim = embedding_dim
         self.mlp_hidden_dim = mlp_hidden_dim
+        self.dense_mlp_hidden_dim = dense_mlp_hidden_dim
+        self.routed_mlp_hidden_dim = routed_mlp_hidden_dim
+        for field_name in ("dense_mlp_hidden_dim", "routed_mlp_hidden_dim"):
+            value = getattr(self, field_name)
+            if value is not None and (type(value) is not int or value <= 0):
+                raise ValueError(
+                    f"{field_name} must be a positive int when provided, got {value!r}"
+                )
         self.max_position_embeddings = max_position_embeddings
         self.use_gated_mlp = use_gated_mlp
         self.vocab_size = vocab_size
@@ -258,18 +270,9 @@ class ModelConfig:
         """
         if not self.is_moe:
             return []
-        raw = self.moe_layers_enum
-        if raw is None or str(raw).strip() == "":
-            return list(range(self.num_layers))
-        parsed = []
-        for token in str(raw).split(","):
-            token = token.strip()
-            if token == "":
-                continue
-            layer_id = int(token)
-            if 0 <= layer_id < self.num_layers:
-                parsed.append(layer_id)
-        return sorted(set(parsed))
+        from frontier.model_architectures import parse_moe_layer_ids
+
+        return list(parse_moe_layer_ids(self.moe_layers_enum, self.num_layers))
 
     def get_quant_signature(self) -> str:
         """Get the quantization signature for this model config.
@@ -526,6 +529,8 @@ class ModelConfig:
             "num_kv_heads": self.num_kv_heads,
             "embedding_dim": self.embedding_dim,
             "mlp_hidden_dim": self.mlp_hidden_dim,
+            "dense_mlp_hidden_dim": self.dense_mlp_hidden_dim,
+            "routed_mlp_hidden_dim": self.routed_mlp_hidden_dim,
             "max_position_embeddings": self.max_position_embeddings,
             "use_gated_mlp": self.use_gated_mlp,
             "use_bias": self.use_bias,
