@@ -106,7 +106,8 @@ class MoEWrapper:
 
         # Extract MoE parameters from ModelConfig
         self.hidden_dim = model_config.embedding_dim
-        self.expert_hidden_dim = model_config.mlp_hidden_dim  # moe_intermediate_size
+        routed_contract = self._resolve_routed_layer_contract()
+        self.expert_hidden_dim = routed_contract.effective_ffn_width
         self.num_experts = model_config.num_experts
         self.router_topk = model_config.num_experts_per_tok
         self.use_gated = model_config.use_gated_mlp

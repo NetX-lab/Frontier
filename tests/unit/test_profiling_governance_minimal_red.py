@@ -1897,3 +1897,165 @@ def test_manager_keeps_eager_and_kernel_only_typed_registries_separate() -> None
 
     assert manager.get_models()["eager"]["mlp_up_proj"] is eager
     assert manager.get_models()["kernel_only"]["mlp_up_proj"] is kernel
+
+
+def test_moe_wrapper_initializes_runtime_with_routed_width(monkeypatch, tmp_path) -> None:
+    """The existing MoE producer uses the profile-owned routed width end to end."""
+
+    moe_module = importlib.import_module("frontier.profiling.moe.moe_wrapper")
+    captured = {}
+
+    class _FakeModule:
+        def __init__(self, **kwargs):
+            captured.setdefault(type(self).__name__, []).append(kwargs)
+
+        def to(self, **_kwargs):
+            return self
+
+        def cuda(self):
+            return self
+
+        def eval(self):
+            return self
+
+        def parameters(self):
+            return ()
+
+    class _FakeGating(_FakeModule):
+        pass
+
+    class _FakeShuffler(_FakeModule):
+        pass
+
+    class _FakeGroupedGemm(_FakeModule):
+        pass
+
+    monkeypatch.setattr(moe_module, "MoEGatingNetwork", _FakeGating)
+    monkeypatch.setattr(moe_module, "MoETokenShuffler", _FakeShuffler)
+    monkeypatch.setattr(moe_module, "MoEGroupedGEMM", _FakeGroupedGemm)
+    monkeypatch.setattr(moe_module.MoEWrapper, "_initialize_weights", lambda self: None)
+    monkeypatch.setattr(
+        moe_module.MoEWrapper,
+        "_init_gating_runtime_context_state",
+        lambda self: None,
+    )
+
+    config = importlib.import_module("frontier.profiling.common.model_config").ModelConfig.from_model_name(
+        "step-moe-noquant"
+    )
+    config.mlp_hidden_dim = 18432
+    moe_module.MoEWrapper(
+        model_config=config,
+        num_tensor_parallel_workers=1,
+        expert_parallel_size=8,
+        profile_method="cuda_event",
+        rank=0,
+        output_dir=str(tmp_path),
+        use_vllm_kernel=False,
+    )
+
+    assert captured["_FakeShuffler"][0]["expert_hidden_dim"] == 5120
+    assert captured["_FakeGroupedGemm"][0]["expert_hidden_dim"] == 5120
+
+
+@pytest.mark.parametrize("config_factory", [_step3_config])
+def test_builtin_moe_layer_getters_delegate_to_strict_parser(monkeypatch, config_factory) -> None:
+    """Built-in config getters share the canonical strict layer parser."""
+
+    model_architectures = importlib.import_module("frontier.model_architectures")
+    calls = []
+
+    def _parse(raw_layers, num_layers):
+        calls.append((raw_layers, num_layers))
+        return (1,)
+
+    monkeypatch.setattr(model_architectures, "parse_moe_layer_ids", _parse)
+    config = config_factory()
+    config.moe_layers_enum = "1,2"
+    config._moe_layer_ids_cache = None
+    assert config.get_moe_layer_ids() == [1]
+    assert calls == [("1,2", config.num_layers)]
+
+
+def test_custom_moe_getter_and_predicate_conflict_fails_fast() -> None:
+    """A custom config cannot expose contradictory MoE layer semantics."""
+
+    profile = _step3_config().get_model_architecture_profile()
+    config = SimpleNamespace(
+        is_moe=True,
+        num_layers=4,
+        moe_layers_enum=None,
+        get_moe_layer_ids=lambda: [1],
+        is_moe_layer=lambda layer_id: layer_id == 2,
+        routed_mlp_hidden_dim=5120,
+        dense_mlp_hidden_dim=18432,
+        mlp_hidden_dim=18432,
+        embedding_dim=7168,
+        num_experts=8,
+    )
+    with pytest.raises(ValueError, match="is_moe_layer.*get_moe_layer_ids|conflict"):
+        profile.resolve_layer_contract(config, layer_id=1)
+
+
+def test_typed_metadata_requires_registry_owned_operator_and_family() -> None:
+    """Typed rows admit only names and family IDs owned by the registry."""
+
+    config = _step3_config()
+    contract = config.get_model_architecture_profile().resolve_layer_contract(
+        config,
+        layer_id=0,
+        operator_name="mlp_up_proj",
+        attention_tp_size=8,
+        moe_tp_size=1,
+        expert_parallel_size=8,
+    )
+    validator = _require_symbol(
+        "frontier.operators.typed_contracts", "validate_typed_operator_metadata"
+    )
+    metadata = contract.typed_metadata_identity()
+    with pytest.raises(ValueError, match="Unknown operator|operator family"):
+        validator(metadata, operator_name="unknown_linear", expected_metadata={})
+    wrong_family = dict(metadata)
+    wrong_family["operator_family_id"] = "moe"
+    with pytest.raises(ValueError, match="family"):
+        validator(wrong_family, operator_name="mlp_up_proj", expected_metadata={})
+
+
+def test_typed_architecture_operator_requires_profile_context() -> None:
+    """Architecture-owned attention names require selected profile context."""
+
+    validator = _require_symbol(
+        "frontier.operators.typed_contracts", "validate_typed_operator_metadata"
+    )
+    metadata = {
+        "profile_id": "step2_mini",
+        "operator_family_id": "dense_attention",
+        "operator_family_ids": ["dense_attention"],
+        "layer_kind": None,
+        "dimension_source": None,
+        "effective_ffn_width": None,
+        "tensor_parallel_mode": "attention_tp",
+        "expert_parallel_mode": "off",
+        "selected_expert_parallel_size": None,
+        "tensor_parallel_sizes": [8],
+        "selected_tensor_parallel_size": 8,
+        "selected_padded_ffn_width": None,
+    }
+    with pytest.raises(ValueError, match="architecture_profile"):
+        validator(metadata, operator_name="attn_inter_norm", expected_metadata={})
+
+
+def test_profile_file_identity_check_is_shared_by_predictor_and_manager(tmp_path) -> None:
+    """Both CSV consumers reject outer profile IDs that differ from runtime profile."""
+
+    from frontier.execution_time_predictor.profiling_metadata import (
+        validate_model_architecture_profile,
+    )
+
+    frame = pd.DataFrame({"model_architecture_profile": ["generic"]})
+    with pytest.raises(ValueError, match="model_architecture_profile mismatch"):
+        validate_model_architecture_profile(
+            frame,
+            file_path=str(tmp_path / "wrong-profile.csv"),
+            expected_profile="step3_text",
+        )
