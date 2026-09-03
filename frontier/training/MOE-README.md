@@ -1,7 +1,8 @@
 # MoE Training Guide and Technical Notes
 
 **Version**: v1.0  
-**Date**: 2025-11-24
+This guide covers standalone training for routed-expert predictors. Shared
+expert FFN projections are trained through the typed linear_op path.
 
 ---
 
@@ -28,16 +29,16 @@ This guide explains how to use the enhanced `MoETrainer` to train MoE execution 
 
 ### Key Enhancements
 
-✅ **Automatic feature detection** - Detects and uses 15 load imbalance features  
-✅ **Smart feature selection** - Different models use different feature sets  
-✅ **Full backward compatibility** - Auto-fallback to legacy mode  
-✅ **Enhanced logging** - Reports feature usage and data distribution
+**Automatic feature detection** - Detects and uses 14 load-imbalance features
+**Smart feature selection** - Different models use different feature sets
+**Legacy compatibility** - Datasets without these columns use `num_tokens`
+**Explicit logging** - Reports feature usage and data distribution
 
 ---
 
 ## Feature Support
 
-### Load Imbalance Features (15 total)
+### Load Imbalance Features (14 total)
 
 #### Core Features (4)
 - `total_routed_tokens`: Total tokens after routing
@@ -67,17 +68,23 @@ This guide explains how to use the enhanced `MoETrainer` to train MoE execution 
 
 ## Feature Selection Strategy
 
-### 1. moe_grouped_gemm (Most affected by load imbalance)
-- **Uses all 14 load imbalance features**
-- Grouped GEMM performance is most sensitive to load imbalance
+### 1. moe_grouped_gemm and moe_shuffling
+- **Use all 14 load-imbalance features when the complete set is present**
+- Grouped GEMM and local token shuffling depend on routed-token distribution
 
-### 2. moe_gating & moe_shuffling
-- **Uses only `num_tokens`**
-- These operations are less affected by load imbalance
+### 2. Gating operators (`moe_gating_linear`, `moe_gating_routing_topk`)
+- **Use only `num_tokens`**
+- These operations are less affected by load imbalance. They still select the
+  requested `moe_tensor_parallel_size` row; gating is not a replicated TP=1
+  target in the standalone MoE trainer.
 
 ### 3. Backward Compatibility Mode
-- If dataset **does not contain** load imbalance features, auto-fallback to legacy mode
-- Only uses `num_tokens` as feature
+- If a dataset has no load-imbalance columns, every target uses legacy
+  `num_tokens` input.
+- The standalone MoE trainer rejects a partial load-imbalance set as an
+  inconsistent dataset. The E2E manager keeps the existing target-specific
+  behavior: grouped GEMM requires the full set, while shuffling can fall back
+  to `num_tokens`.
 
 ---
 
@@ -160,19 +167,30 @@ INFO:     * extremely_skewed: 1800 samples
 INFO:     * skewed: 1800 samples
 INFO:     * uniform: 1800 samples
 
-INFO: --- Training moe_gating ---
-INFO:   Using num_tokens only for moe_gating (1 feature)
+INFO: --- Training moe_gating_linear ---
+INFO:   Using num_tokens only for moe_gating_linear (1 feature)
 INFO: Features: ['num_tokens']
-INFO: Target: time_stats.moe_gating.median
+INFO: Target: time_stats.moe_gating_linear.median
 INFO: Training random_forest predictor...
-INFO: ✓ Model saved to: /path/to/trained_models/moe_gating.pkl
+INFO: ✓ Model saved to: /path/to/trained_models/moe_gating_linear_<hash>.pkl
+
+INFO: --- Training moe_gating_routing_topk ---
+INFO:   Using num_tokens only for moe_gating_routing_topk (1 feature)
+INFO: Features: ['num_tokens']
+INFO: Target: time_stats.moe_gating_routing_topk.median
+INFO: Training random_forest predictor...
+INFO: ✓ Model saved to: /path/to/trained_models/moe_gating_routing_topk_<hash>.pkl
 
 INFO: --- Training moe_shuffling ---
-INFO:   Using num_tokens only for moe_shuffling (1 feature)
-INFO: Features: ['num_tokens']
+INFO:   Using load imbalance features for moe_shuffling (14 features)
+INFO: Features: ['total_routed_tokens', 'num_experts_per_device', 'hidden_dim',
+                'expert_hidden_dim', 'router_topk', 'model_expansion_ratio',
+                'tokens_per_expert_avg', 'tokens_to_experts_ratio', 'expert_utilization',
+                'min_load_ratio', 'load_imbalance_cv', 'max_load_ratio',
+                'load_entropy', 'load_gini_coefficient']
 INFO: Target: time_stats.moe_shuffling.median
 INFO: Training random_forest predictor...
-INFO: ✓ Model saved to: /path/to/trained_models/moe_shuffling.pkl
+INFO: ✓ Model saved to: /path/to/trained_models/moe_shuffling_<hash>.pkl
 
 INFO: --- Training moe_grouped_gemm ---
 INFO:   Using load imbalance features for moe_grouped_gemm (14 features)
@@ -183,7 +201,7 @@ INFO: Features: ['total_routed_tokens', 'num_experts_per_device', 'hidden_dim',
                 'load_entropy', 'load_gini_coefficient']
 INFO: Target: time_stats.moe_grouped_gemm.median
 INFO: Training random_forest predictor...
-INFO: ✓ Model saved to: /path/to/trained_models/moe_grouped_gemm.pkl
+INFO: ✓ Model saved to: /path/to/trained_models/moe_grouped_gemm_<hash>.pkl
 ```
 
 ### Example Output in Legacy Mode
@@ -191,8 +209,8 @@ INFO: ✓ Model saved to: /path/to/trained_models/moe_grouped_gemm.pkl
 ```
 INFO: ⚠ No load imbalance features detected - using legacy mode (num_tokens only)
 
-INFO: --- Training moe_gating ---
-INFO:   Using legacy features for moe_gating (1 feature)
+INFO: --- Training moe_gating_linear ---
+INFO:   Using legacy features for moe_gating_linear (1 feature)
 INFO: Features: ['num_tokens']
 ...
 ```
@@ -206,9 +224,10 @@ INFO: Features: ['num_tokens']
 ```bash
 ls -lh /path/to/trained_models/
 # Output:
-# moe_gating.pkl
-# moe_shuffling.pkl
-# moe_grouped_gemm.pkl
+# moe_gating_linear_<hash>.pkl
+# moe_gating_routing_topk_<hash>.pkl
+# moe_shuffling_<hash>.pkl
+# moe_grouped_gemm_<hash>.pkl
 ```
 
 ### Load and Test Model
@@ -218,7 +237,7 @@ import pickle
 import pandas as pd
 
 # Load model
-with open("/path/to/trained_models/moe_grouped_gemm.pkl", "rb") as f:
+with open("/path/to/trained_models/moe_grouped_gemm_<hash>.pkl", "rb") as f:
     model = pickle.load(f)
 
 # Prepare test data (with load imbalance features)
@@ -269,11 +288,14 @@ print(f"Predicted execution time: {prediction[0]:.4f} ms")
 ## Important Notes
 
 1. **Dataset Requirements**:
-   - Must contain `time_stats.moe_gating.median`, `time_stats.moe_shuffling.median`, `time_stats.moe_grouped_gemm.median` columns
+   - Must contain `time_stats.moe_gating_linear.median`, `time_stats.moe_gating_routing_topk.median`, `time_stats.moe_shuffling.median`, and `time_stats.moe_grouped_gemm.median` columns
    - Load imbalance features are optional (auto-detected)
 
 2. **Filtering Conditions**:
-   - Trainer filters data based on `num_experts`, `router_topk`, `hidden_dim`, `expert_hidden_dim`, `num_tensor_parallel_workers`, `expert_parallel_size`
+   - Trainer filters model dimensions first, then selects the TP row from the
+     operator registry. Routed grouped-GEMM rows also match
+     `expert_parallel_size`; both gating operators use the requested MoE TP
+     row and remain EP-agnostic.
    - Ensure profiling data contains matching configurations
 
 3. **Feature Consistency**:
@@ -281,8 +303,20 @@ print(f"Predicted execution time: {prediction[0]:.4f} ms")
    - If trained with load imbalance features, prediction must also provide these features
 
 4. **Model Save Path**:
-   - Models saved to `{output_dir}/{model_name}.pkl`
-   - Example: `/path/to/trained_models/moe_grouped_gemm.pkl`
+   - Models are saved as hashed files under `{output_dir}`.
+   - Example: `/path/to/trained_models/moe_grouped_gemm_<hash>.pkl`
+
+5. **Typed Metadata**:
+   - When `typed_operator_contracts` is present, every row is validated before
+     filtering. The contract must match the active
+     `model_architecture_profile`, operator owner, routed TP, EP, and width.
+   - Legacy CSVs without typed metadata use the scalar compatibility path.
+
+6. **Shared and Routed Experts**:
+   - This trainer covers routed gating, shuffling, and grouped GEMM.
+   - Shared-expert FFN projections remain linear-op targets. They use the
+     architecture profile's shared/FFN TP authority and do not consume routed
+     EP settings.
 
 ---
 
@@ -322,16 +356,8 @@ To support **MoE Load Imbalance Profiling**, the following enhancements were mad
 **New Functionality**:
 ```python
 # Check for load imbalance features
-load_imbalance_features = [
-    "total_routed_tokens",
-    "load_imbalance_cv",
-    "load_gini_coefficient",
-    "expert_utilization",
-]
-
-has_load_imbalance = all(
-    feat in df.columns for feat in load_imbalance_features
-)
+load_imbalance_features = self.LOAD_IMBALANCE_FEATURES
+has_load_imbalance = all(feat in df.columns for feat in load_imbalance_features)
 
 if has_load_imbalance:
     logger.info("✓ Load imbalance features detected - will use enhanced feature set")
@@ -376,12 +402,12 @@ def _get_feature_cols(self, model_name: str) -> List[str]:
     )
     
     if has_load_imbalance:
-        # Use load imbalance features for grouped_gemm (most affected)
-        if model_name == "moe_grouped_gemm":
+        # Use load-imbalance features for routed workload-sensitive targets.
+        if model_name in {"moe_grouped_gemm", "moe_shuffling"}:
             logger.info(f"  Using load imbalance features for {model_name} (14 features)")
             return load_imbalance_features
         else:
-            # For gating and shuffling, use num_tokens only
+            # Gating remains a token-count model.
             logger.info(f"  Using num_tokens only for {model_name} (1 feature)")
             return ["num_tokens"]
     else:
@@ -395,8 +421,8 @@ def _get_feature_cols(self, model_name: str) -> List[str]:
 | Model | With Load Imbalance Features | Without Load Imbalance Features |
 |-------|------------------------------|--------------------------------|
 | `moe_grouped_gemm` | 14 features (all) | 1 feature (`num_tokens`) |
-| `moe_gating` | 1 feature (`num_tokens`) | 1 feature (`num_tokens`) |
-| `moe_shuffling` | 1 feature (`num_tokens`) | 1 feature (`num_tokens`) |
+| `moe_gating_linear`, `moe_gating_routing_topk` | 1 feature (`num_tokens`) | 1 feature (`num_tokens`) |
+| `moe_shuffling` | 14 features (all) | 1 feature (`num_tokens`) |
 
 ### Backward Compatibility Guarantee
 
@@ -408,8 +434,8 @@ def _get_feature_cols(self, model_name: str) -> List[str]:
 
 #### Enhanced Dataset (with load imbalance features)
 - ✅ Auto-detects load imbalance features
-- ✅ Uses all 14 features for `moe_grouped_gemm`
-- ✅ Uses `num_tokens` only for `moe_gating` and `moe_shuffling`
+- Uses all 14 features for `moe_grouped_gemm` and `moe_shuffling`
+- Uses `num_tokens` only for the two gating operators
 - ✅ Clear log message: "✓ Load imbalance features detected - will use enhanced feature set"
 
 ---
@@ -588,4 +614,3 @@ After fix, `profile_fused_moe_kernel` can:
 
 **Version**: v1.0  
 **Last Updated**: 2025-11-24
-

@@ -1,80 +1,69 @@
 # Mixed-Length Batch Prefilling Support
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-08-22 | Documented profiling-envelope versus runtime-context semantics for mixed and true-mixed sampling |
-| 2026-06-06 | Replaced private checkout path with a repo-relative profiling example; refreshed legacy CSV naming note for release docs |
-| 2026-02-22 | Added true mixed (`--enable_true_mixed`) full CLI parameter set, output files, and mixed dataset fail-fast input contract notes |
-| 2025-12-06 | Added multi-GPU mode documentation; updated CSV naming from legacy MLP naming to `linear_op.csv`; added --disable_ray usage; documented optional --compute_dataset_path |
-| 2025-11-09 | Initial documentation for mixed-length batch prefilling support                    |
-
----
-
-## 环境要求
+## Environment
 
 - **FlashInfer**: `flashinfer-python==0.3.0`
 
 ---
 
-## 概述
+## Overview
 
-支持混合长度 batch 的 attention prefill profiling 和预测，更贴近真实 serving 场景。
+This module profiles and predicts attention prefill for batches containing
+different sequence lengths. It models the shape diversity seen in serving.
 
 ### Mixed sampling envelope
 
-`max_seq_len` 是 profiling envelope；`max_model_len` 是 runtime context
-limit（prompt 与 output 的总长度边界）。物理 KV block / batch token 容量由
-实际执行配置独立约束。
+`max_seq_len` is the profiling envelope. `max_model_len` is the runtime context
+limit for the complete prompt plus output. Physical KV-block and batch-token
+capacity remain independent runtime constraints.
 
-Legacy mixed 和 true mixed 使用同一边界契约：序列轴默认落在
-`max_seq_len` 内，显式 KV / chunk 可以超过该 profiling envelope，但每个
-完整序列必须满足 `max_model_len`。没有 runtime-legal 配对的显式值会
-fail fast。
+Legacy mixed and true mixed use the same boundary contract. The default sequence
+axis stays within `max_seq_len`; explicit KV or chunk values may exceed that
+envelope, but every complete sequence must satisfy `max_model_len`. Invalid
+runtime combinations fail fast.
 
-当 `--true_mixed_prefill_chunk_sizes` 或
-`--true_mixed_decode_kv_cache_sizes` 省略时，采样器按 `max_seq_len`
-构造 profiling envelope：
+When `--true_mixed_prefill_chunk_sizes` or
+`--true_mixed_decode_kv_cache_sizes` is omitted, the sampler derives the
+profiling envelope from `max_seq_len`:
 
-1. 保留不超过配置 endpoint 的 canonical anchors；
-2. 保留配置 endpoint（prefill 为
-   `max_seq_len - prefill_kv_cache_size`，decode 为 `max_seq_len - 1`）；
-3. 追加 endpoint 上方第一个仍落在 `max_model_len` runtime 边界内的
-   canonical anchor；当该 anchor 超出 runtime 边界时，追加 boundary；
-4. 显式传入的 chunk/KV 值与自动轴合并，并按 `max_model_len` 校验
-   runtime 合法性，因此显式值可以超过 `max_seq_len`；完整 workload
-   仍需满足 `max_model_len`（prefill 还要计入 `prefill_kv_cache_size`，
-   decode 还要为当前 token 预留 1 个位置）。
+1. Keep canonical anchors at or below the configured endpoint.
+2. Keep the endpoint (`max_seq_len - prefill_kv_cache_size` for prefill and
+   `max_seq_len - 1` for decode).
+3. Add the first canonical anchor above the endpoint that stays within the
+   `max_model_len` runtime boundary, or add that boundary when no anchor fits.
+4. Merge explicit chunk/KV values with the automatic axis and validate runtime
+   legality against `max_model_len`. Explicit values may exceed `max_seq_len`,
+   but the complete workload must still fit the runtime limit. Prefill includes
+   `prefill_kv_cache_size`; decode reserves one position for the current token.
 
-`max_seq_len` 与 `max_model_len` 的关系必须满足
-`max_model_len >= max_seq_len`。自动候选超出 runtime 边界时会跳过；用户
-显式提供的 runtime 非法值会立即 fail fast。
+`max_model_len` must be at least `max_seq_len`. Automatic candidates outside
+the runtime boundary are skipped; explicitly invalid values fail fast.
 
-## 核心特性
+## Features
 
 ### Profiling
-- 支持单个 batch 中多个不同长度的序列
-- **Even 模式**: 所有序列相同长度（baseline）
-- **Random 模式**: 序列长度随机分布（真实混合）
-- **True Mixed 模式**: 同一 batch 内同时包含 prefill + decode（`--enable_true_mixed`）
-- 收集长度分布统计（方差、变异系数等）
-- 与原有功能完全兼容
-- **Multi-GPU 支持**: 使用 `--disable_ray` 启用 multiprocessing 模式
+- Multiple sequence lengths in one batch.
+- **Even mode:** all sequences have the same length (baseline).
+- **Random mode:** sequence lengths are sampled to represent mixed workloads.
+- **True mixed mode:** prefill and decode sequences share one batch
+  (`--enable_true_mixed`).
+- Sequence-distribution statistics such as variance and coefficient of variation.
+- Multi-GPU execution through multiprocessing with `--disable_ray`.
 
 ### Prediction
-- 专用 Random Forest 预测器 (`attn_prefill_mixed`)
-- 11 个特征：batch_size, total_tokens, avg/min/max_seq_len, variance, CV 等
-- 若缺少 mixed predictor，则明确报错并提示先收集 mixed profiling 数据
+- Dedicated Random Forest predictor: `attn_prefill_mixed`.
+- Twelve features including batch size, KV-cache size, total tokens, sequence
+  statistics, variance, coefficient of variation, and interaction terms.
+- A missing mixed predictor produces an explicit error with collection guidance.
 
-## 快速开始
+## Quick Start
 
 ### 1. Profiling
 
 ```bash
 cd /path/to/frontier
 
-# 基础测试 (使用 --disable_ray 避免 Ray 兼容性问题)
+# Basic run (use --disable_ray for the supported local path)
 python -m frontier.profiling.attention.main \
     --disable_ray \
     --enable_mixed_prefill \
@@ -88,7 +77,9 @@ python -m frontier.profiling.attention.main \
     --models "meta-llama/Llama-2-7b-hf" \
     --num_gpus 1 \
     --max_seq_len 4096 \
-    --max_model_len 4096
+    --max_model_len 4096 \
+    --device a100 \
+    --profile_method cuda_event
 
 # Multi-GPU profiling
 export CUDA_VISIBLE_DEVICES=0,1,2,3
@@ -99,19 +90,21 @@ python -m frontier.profiling.attention.main \
     --enable_true_mixed \
     --mixed_mode random \
     --models "meta-llama/Llama-2-7b-hf" \
-    --max_seq_len 4096
+    --max_seq_len 4096 \
+    --device a100 \
+    --profile_method cuda_event
 
-# 输出文件:
-# - attention.csv (标准)
-# - attention_mixed.csv (混合)
-# - attention_true_mixed.csv (prefill+decode 同批)
-# - attention_combined.csv (合并)
+# Output files:
+# - attention.csv (standard)
+# - attention_mixed.csv (mixed)
+# - attention_true_mixed.csv (prefill and decode in one batch)
+# - attention_combined.csv (merged dataset)
 ```
 
 ### 2. Training
 
 ```bash
-# Full training (with compute dataset - trains all 10 models)
+# Full training (with compute dataset - trains up to 10 models, depending on config)
 python -m frontier.training.cli attention \
     --compute_dataset_path path/to/linear_op.csv \
     --layer_dataset_path path/to/attention_combined.csv \
@@ -120,7 +113,7 @@ python -m frontier.training.cli attention \
     --device a100 \
     --tensor_parallel_size 1
 
-# Attention-only training (without compute dataset - trains 4 layer models only)
+# Attention-only training (without compute dataset - trains the layer/mixed models)
 python -m frontier.training.cli attention \
     --layer_dataset_path path/to/attention_combined.csv \
     --output_dir ./cache/models \
@@ -129,38 +122,40 @@ python -m frontier.training.cli attention \
     --tensor_parallel_size 1
 ```
 
-**Note**: `--compute_dataset_path` is now OPTIONAL. When not provided, compute-dependent models (attn_pre_proj, attn_post_proj, attn_rope, input_layernorm, post_attention_layernorm, add) are skipped.
+**Note:** `--compute_dataset_path` is optional. Without it, compute-dependent
+models (`attn_pre_proj`, `attn_post_proj`, `attn_rope`, `input_layernorm`,
+`post_attention_layernorm`, and `add`) are skipped.
 
 ### 3. Prediction
 
-预测器自动集成到 `SklearnExecutionTimePredictor`：
-- 检测到 `is_mixed_batch=True` 数据时自动训练
-- 预测时优先使用 mixed predictor
-- true mixed decode 使用 `attn_decode_in_mixed`
-- 当检测到 mixed profiling 文件存在但输入数据不包含 mixed 列时，触发 fail-fast 阻断
+The predictor is integrated into `SklearnExecutionTimePredictor`:
+- Train automatically when `is_mixed_batch=True` rows are present.
+- Prefer the mixed predictor for mixed prefill requests.
+- Use `attn_decode_in_mixed` for true-mixed decode.
+- Fail fast when a mixed profiling file exists but the input lacks mixed columns.
 
-## 关键参数
+## Key Parameters
 
-| 参数 | 默认值 | 说明 |
+| Parameter | Default | Description |
 |------|--------|------|
-| `--enable_mixed_prefill` | False | 启用混合 batch profiling |
-| `--mixed_mode` | even | even/random/both |
-| `--max_mixed_batch_size` | 8 | 混合 batch 最大大小 |
-| `--mixed_num_samples` | 3 | Random 模式样本数 |
-| `--mixed_kv_cache_size_list` | `0` | 显式 KV；可超过 `max_seq_len`，但每个生成序列必须满足 `max_model_len` |
-| `--enable_true_mixed` | False | 启用 true mixed profiling（prefill+decode 同批） |
-| `--true_mixed_prefill_batch_sizes` | `1 2 4` | true mixed 中 prefill 序列数 |
-| `--true_mixed_prefill_chunk_sizes` | 自动 | 省略时按 `max_seq_len` 派生 canonical anchors、配置 endpoint 和上方首个合法 anchor；若下一个 anchor 超容量则使用 physical boundary；显式值只按 `max_model_len` 校验 |
-| `--true_mixed_decode_batch_sizes` | `1 2 4 8` | true mixed 中 decode 序列数 |
-| `--true_mixed_decode_kv_cache_sizes` | 自动 | 省略时按 `max_seq_len - 1` 配置 endpoint 和上方首个合法 canonical anchor 派生；若下一个 anchor 超容量则使用 physical boundary；显式值可超过 `max_seq_len`，但必须满足 `max_model_len - 1` |
-| `--true_mixed_prefill_kv_cache_size` | 0 | true mixed 中 prefill 侧 KV cache size |
-| `--max_seq_len` | 4096 | 自动 profiling envelope 的最大长度 |
-| `--max_model_len` | 4096 | runtime context limit；必须满足 `max_model_len >= max_seq_len` |
-| `--max_pipeline_parallel_size` | 8 | Pipeline 并行度（影响内存计算） |
+| `--enable_mixed_prefill` | False | Enable mixed-batch profiling. |
+| `--mixed_mode` | even | Select `even`, `random`, or `both`. |
+| `--max_mixed_batch_size` | 8 | Maximum mixed batch size. |
+| `--mixed_num_samples` | 3 | Samples per random-mode configuration. |
+| `--mixed_kv_cache_size_list` | `0` | Explicit KV sizes; each sequence must fit `max_model_len`. |
+| `--enable_true_mixed` | False | Profile prefill and decode in one batch. |
+| `--true_mixed_prefill_batch_sizes` | `1 2 4` | Prefill sequence counts. |
+| `--true_mixed_prefill_chunk_sizes` | automatic | Derived envelope when omitted; explicit values are checked against `max_model_len`. |
+| `--true_mixed_decode_batch_sizes` | `1 2 4 8` | Decode sequence counts. |
+| `--true_mixed_decode_kv_cache_sizes` | automatic | Derived from `max_seq_len - 1`; explicit values must fit `max_model_len - 1`. |
+| `--true_mixed_prefill_kv_cache_size` | 0 | Prefill-side KV cache size. |
+| `--max_seq_len` | 4096 | Maximum automatic profiling-envelope length. |
+| `--max_model_len` | 4096 | Runtime context limit; must be at least `max_seq_len`. |
+| `--max_pipeline_parallel_size` | 8 | Pipeline parallelism used by memory calculations. |
 
-## CSV 字段
+## CSV Fields
 
-### 标准字段
+### Standard fields
 ```
 time_stats.attn_prefill.{min,max,mean,median,std}
 n_embd, n_q_head, n_kv_head
@@ -168,7 +163,7 @@ batch_size, prefill_chunk_size, kv_cache_size
 is_prefill, is_mixed_batch
 ```
 
-### 混合 Batch 特有字段
+### Mixed-batch fields
 ```
 mode                # even/random
 seq_lens            # [128, 256, 512, 1024]
@@ -179,112 +174,114 @@ avg_seq_len         # mean(seq_lens)
 equal_seq_len       # sqrt(sum(s_i^2))
 seq_len_variance    # var(seq_lens)
 seq_len_std         # std(seq_lens)
-seq_len_cv          # std/mean (变异系数)
+seq_len_cv          # std / mean (coefficient of variation)
 ```
 
-### True Mixed Batch 特有字段
+### True-mixed fields
 ```
-is_true_mixed_batch      # true mixed 行标记
-num_prefill_seqs         # 同批 prefill 序列数
-num_decode_seqs          # 同批 decode 序列数
-total_prefill_tokens     # 同批 prefill token 总数
-decode_avg_kv_cache_size # 同批 decode 平均 KV cache
+is_true_mixed_batch      # true-mixed row marker
+num_prefill_seqs         # prefill sequences in the batch
+num_decode_seqs          # decode sequences in the batch
+total_prefill_tokens     # total prefill tokens in the batch
+decode_avg_kv_cache_size # average decode KV cache size
 batch_composition_ratio  # num_prefill_seqs / total_batch_size
 ```
 
-## 架构设计
+## Architecture
 
-### 文件结构
+### File structure
 ```
 frontier/profiling/attention/
 ├── mixed_attention_input.py    # MixedAttentionInput dataclass
-├── attention_wrapper.py        # profile_mixed() 方法
-├── main.py                     # CLI 入口
+├── attention_wrapper.py        # profile_mixed() implementation
+├── main.py                     # CLI entry point
 └── utils/__init__.py           # get_mixed_prefill_input_combinations()
 
 frontier/training/
-└── attention_trainer.py        # 集成 attn_prefill_mixed 训练
+└── attention_trainer.py        # attn_prefill_mixed training integration
 
 frontier/execution_time_predictor/
-└── sklearn_execution_time_predictor.py  # 集成预测逻辑
+└── sklearn_execution_time_predictor.py  # prediction integration
 ```
 
-### 数据流
+### Data flow
 ```
 Profiling → CSV (is_mixed_batch=True)
          ↓
-Training → attn_prefill_mixed.pkl
+Training → attn_prefill_mixed_<hash>.pkl
          ↓
-Prediction → 优先使用 mixed predictor
+Prediction → prefer the mixed predictor for mixed prefill
           ↓
       (true mixed decode) → attn_decode_in_mixed
 ```
 
-## 特征工程
+## Feature Engineering
 
-### 训练特征 (11个)
+### Training features (12)
 ```python
 [
-    "batch_size",              # 批次大小
-    "total_tokens",            # 总 token 数
-    "avg_seq_len",             # 平均序列长度
-    "min_seq_len",             # 最短序列
-    "max_seq_len",             # 最长序列
+    "batch_size",              # batch size
+    "kv_cache_size",           # KV-cache size
+    "total_tokens",            # total token count
+    "avg_seq_len",             # average sequence length
+    "min_seq_len",             # shortest sequence
+    "max_seq_len",             # longest sequence
     "total_tokens_squared",    # total_tokens^2
-    "seq_len_variance",        # 方差
-    "seq_len_cv",              # 变异系数
+    "seq_len_variance",        # variance
+    "seq_len_cv",              # coefficient of variation
     "seq_len_range",           # max - min
     "batch_variance_interaction",  # batch_size * variance
     "batch_cv_interaction",    # batch_size * cv
 ]
 ```
 
-### 目标变量
+### Target variable
 ```python
-"time_stats.attn_prefill.median"  # 注意：不是 attn_prefill_mixed
+"time_stats.attn_prefill.median"  # target column, not attn_prefill_mixed
 ```
 
-## 兼容性
+## Compatibility
 
-### 向后兼容
-- ✅ 无 `is_mixed_batch` 列 → 自动填充 False
-- ✅ 无 mixed 数据 → 明确跳过 mixed predictor 训练，并在请求 mixed 预测时给出清晰错误
-- ✅ 标准 prefill → 不受影响
+### Backward compatibility
+- Missing `is_mixed_batch` is filled with `False`.
+- Missing mixed data skips mixed-predictor training and produces a clear error
+  when a mixed prediction is requested.
+- Standard prefill behavior is unchanged.
 
-### 预测兼容
+### Prediction guard
 ```python
-# 三层防御
+# Use the mixed predictor only for eligible mixed prefill requests.
 if (batch_size > 1 
-    and "attn_prefill_mixed" in models  # 模型存在
-    and not has_chunked_prefill):       # 纯 prefill
+    and "attn_prefill_mixed" in models  # model exists
+    and not has_chunked_prefill):       # pure prefill
     try:
         return mixed_predictor.predict(...)
     except:
         # Explicit error path
 ```
 
-## 数据分析示例
+## Data Analysis Example
 
 ```python
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# 加载数据
+# Load data
 df = pd.read_csv("attention_mixed.csv")
 
-# 1. 变异系数 vs 性能
+# 1. Coefficient of variation versus latency
 plt.scatter(df['seq_len_cv'], df['time_stats.attn_prefill.median'])
 plt.xlabel('Coefficient of Variation')
 plt.ylabel('Attention Time (ms)')
 plt.savefig('cv_vs_time.png')
 
-# 2. Even vs Random 对比
+# 2. Compare even and random modes
 even_df = df[df['mode'] == 'even']
 random_df = df[df['mode'] == 'random']
 print(f"Even avg: {even_df['time_stats.attn_prefill.median'].mean():.3f} ms")
 print(f"Random avg: {random_df['time_stats.attn_prefill.median'].mean():.3f} ms")
 
-# 3. 特征重要性
+# 3. Feature importance
 from sklearn.ensemble import RandomForestRegressor
 model = RandomForestRegressor()
 X = df[['batch_size', 'total_tokens', 'seq_len_cv', ...]]
@@ -293,41 +290,48 @@ model.fit(X, y)
 print(pd.Series(model.feature_importances_, index=X.columns).sort_values(ascending=False))
 ```
 
-## 常见问题
+## FAQ
 
-### Q1: 为什么目标列是 `attn_prefill` 而不是 `attn_prefill_mixed`?
-**A**: Profiling 阶段使用相同的 attention kernel，统计键名统一为 `attn_prefill`。通过 `is_mixed_batch` 列区分数据类型。
+### Q1: Why is the target `attn_prefill` instead of `attn_prefill_mixed`?
+**A:** Profiling uses the same attention kernel. The target key remains
+`attn_prefill`, while `is_mixed_batch` identifies mixed rows.
 
-### Q2: Even 模式有什么用？
-**A**: Even 模式作为 baseline，用于对比真实混合（Random）的性能差异。
+### Q2: What is even mode used for?
+**A:** It provides a same-length baseline for comparison with random mixed
+workloads.
 
-### Q3: 如何验证 mixed predictor 是否生效？
-**A**: 查看日志中的 `Using mixed prefill predictor` 信息，或检查模型文件 `attn_prefill_mixed.pkl` 是否存在。
+### Q3: How can I verify that the mixed predictor is active?
+**A:** Check for `Using mixed prefill predictor` in the logs or confirm that an
+`attn_prefill_mixed_<hash>.pkl` artifact exists.
 
-### Q4: `max_pipeline_parallel_size` 有什么影响？
-**A**: 影响 `get_max_num_blocks()` 的内存计算。模型层数必须能被此值整除（如 Qwen2.5-7B 28层，用4或7）。
+### Q4: What does `max_pipeline_parallel_size` affect?
+**A:** It affects the memory calculation in `get_max_num_blocks()`. The layer
+count must be divisible by this value; for example, 28 layers can use 4 or 7.
 
-### Q5: Random 模式如何生成序列长度？
-**A**: 在指定的长度范围内随机采样，每个配置生成 `--mixed_num_samples` 个样本（默认3个）。
+### Q5: How does random mode generate sequence lengths?
+**A:** It samples within the configured range and generates
+`--mixed_num_samples` samples per configuration (default: 3).
 
-## 测试验证
+## Validation
 
-### 基础测试
+### Basic test
 ```bash
-# 1. Profiling 正确性
+# 1. Profiling
 python -m frontier.profiling.attention.main \
     --enable_mixed_prefill \
     --mixed_mode both \
     --max_mixed_batch_size 4 \
     --models "microsoft/phi-2" \
     --num_gpus 1 \
-    --max_seq_len 2048
+    --max_seq_len 2048 \
+    --device a100 \
+    --profile_method cuda_event
 
-# 检查输出
+# Inspect output
 head -n 2 data/profiling/compute/a100/microsoft/phi-2/attention_mixed.csv
-# 应包含: is_mixed_batch=True, mode, seq_lens, seq_len_cv 等字段
+# Expected fields include is_mixed_batch=True, mode, seq_lens, and seq_len_cv.
 
-# 2. Training 正确性
+# 2. Training
 python -m frontier.training.cli attention \
     --compute_dataset_path path/to/linear_op.csv \
     --layer_dataset_path path/to/attention_combined.csv \
@@ -335,19 +339,19 @@ python -m frontier.training.cli attention \
     --model_name "microsoft/phi-2" \
     --device a100
 
-# 检查输出
-ls ./test_cache/microsoft/phi-2/a100/tp_1/attn_prefill_mixed.pkl
-# 应存在此文件
+# Inspect output
+ls ./test_cache/microsoft/phi-2/a100/tp_1/attn_prefill_mixed_*.pkl
+# The hashed artifact should exist.
 
-# 3. Prediction 正确性
-# 在日志中查找:
+# 3. Prediction
+# Look for:
 # "Training mixed-batch prefill model with XXX samples"
 # "Using mixed prefill predictor: batch_size=X, seq_lens=[...]"
 ```
 
-## 性能基准
+## Performance Baseline
 
-基于 Llama-2-7B, A100, TP=1:
+Measured with Llama-2-7B on A100, TP=1:
 
 | Batch Size | Seq Lens | Even Time | Random Time | Overhead |
 |------------|----------|-----------|-------------|----------|
@@ -356,25 +360,24 @@ ls ./test_cache/microsoft/phi-2/a100/tp_1/attn_prefill_mixed.pkl
 | 8 | [1024]*8 | 8.5 ms | 8.5 ms | 0% |
 | 8 | [512,768,1024,1280,1536,1792,2048,2304] | - | 9.2 ms | +8.2% |
 
-**结论**: 长度异质性引入约 8-10% 的性能开销。
+**Conclusion:** Sequence-length heterogeneity adds about 8-10% overhead in
+this baseline.
 
-## 相关文件
+## Related Files
 
-### 核心代码
-- `frontier/profiling/attention/mixed_attention_input.py` (198 行)
-- `frontier/profiling/attention/attention_wrapper.py` (291 行)
-- `frontier/profiling/attention/main.py` (461 行)
-- `frontier/training/attention_trainer.py` (549 行)
+### Core code
+- `frontier/profiling/attention/mixed_attention_input.py`
+- `frontier/profiling/attention/attention_wrapper.py`
+- `frontier/profiling/attention/main.py`
+- `frontier/training/attention_trainer.py`
 - `frontier/execution_time_predictor/sklearn_execution_time_predictor.py`
 
-### 文档
-- `PROFILING_TEST_GUIDE.md` - 详细测试指南
-- `README_MIXED_BATCH.md` - 本文档
+### Documentation
+- `PROFILING_TEST_GUIDE.md` - profiling test guide
+- `README_MIXED_BATCH.md` - this document
 
-## 版本历史
+## Version
 
-- **v1.0** (2025-11): 初始实现
-  - Mixed batch profiling
-  - attn_prefill_mixed 训练和预测
-  - 集成到 AttentionTrainer
-  - 完整文档和测试
+- **v1.0** (2025-11): Initial implementation with mixed-batch profiling,
+  `attn_prefill_mixed` training and prediction, AttentionTrainer integration,
+  and validation coverage.

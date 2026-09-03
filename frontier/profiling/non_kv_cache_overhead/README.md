@@ -1,13 +1,5 @@
 # Non-KV Cache Overhead Profiling
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-02-12 | Switched `memory_planner_profiled` default to measured param memory; added `use_analytical_param_memory` opt-in |
-| 2026-02-12 | Clarified `overhead` vs `non_kv_cache_memory` and added mode-specific formulas for block calculation |
-| 2026-02-12 | Added `Profile return vs Planner input` section to explain why planner consumes `overhead_bytes` |
-
 ## Overview
 
 This module measures **non-KV cache GPU memory overhead** for LLM inference — all GPU memory consumed by a model *except* the KV cache. The measured overhead feeds into Frontier's `MemoryPlanner` to compute accurate KV cache block counts, aligning with vLLM's runtime memory planning.

@@ -1,22 +1,11 @@
 # Frontier: LLM Inference Simulator (Co-location + PDD + PD-AF Release)
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-09-03 | Defined shared-expert and routed-expert TP/EP authority across shared-domain and DECODE_FFN roles. |
-| 2026-08-09 | Restored the sequential-only public PDD guard and documented current post-ISSUE-022 slowdown evidence. |
-| 2026-08-08 | Clarified that parallel PDD preserves sequential-DES correctness without promising wall-clock speedup. |
-| 2026-08-07 | Corrected the PDD parallel runtime contract while retaining sequential public examples and the PD-AF parallel guard. |
-| 2026-07-23 | Completed the `pre-release-v0.3` PD-AF dense, MoE, EP, and CUDA Graph example surface and documented deferred feature boundaries. |
-| 2026-07-22 | Documented sequential PD-AF runtime support. |
-
 ## Release Status: `pre-release-v0.3`
 
 - Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
-- The co-location example suite uses `--cc_backend_config_type analytical` for one-click smoke runs without the optional network simulator; direct CLI experiments may still select `astra_sim_analytical` explicitly.
-- The PDD example suite also uses `--cc_backend_config_type analytical` and `--no-enable_parallel_clusters` for one-click sequential smoke runs.
-- collective_sim is optional. Initialize and build its submodule only when you explicitly select `--cc_backend_config_type collective_sim`.
+- The public co-location, PDD, and PD-AF examples explicitly select `--cc_backend_config_type analytical` for one-click smoke runs using the built-in analytical model.
+- Direct CLI/config construction defaults to `astra_sim_analytical`; pass `--cc_backend_config_type analytical` to match the public examples.
+- `collective_sim` is optional. Initialize and build its submodule only when you explicitly select `--cc_backend_config_type collective_sim`.
 
 Frontier is a modular **discrete-event simulator (DES)** for large language model (LLM) inference. This `pre-release-v0.3` branch supports the **co-location** architecture, sequential **PDD / `pd-disaggregation`**, and sequential **PD-AF / `pd-af-disaggregation`**. PD-AF uses separate `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` roles with KV and M2N transfer events.
 
@@ -68,16 +57,16 @@ Frontier models an LLM serving system as a set of clusters and replicas processi
 
 ## Key Features
 
-- `co-location`, sequential or parallel `pd-disaggregation`, and sequential `pd-af-disaggregation` system architectures for this release
-- Runtime guard for parallel PD-AF and unsupported research surfaces
+- `co-location`, sequential `pd-disaggregation`, and sequential `pd-af-disaggregation` system architectures for this release
+- Runtime guards for parallel PDD, parallel PD-AF, and unsupported research surfaces
 - MoE support (EP synchronization, routing and imbalance modeling)
 - Speculative decoding support via `frontier/spec_decode/` and `ReplicaConfig.speculative_decoding_config` on supported co-location/PDD paths
 - Prefix caching for supported replica schedulers (`vllm_v1`, `sglang`) on supported co-location/PDD paths
 - PD-AF dense, MoE, EP>1, and global CUDA Graph one-click examples in offline and online modes
 - Pluggable **communication-cost backend**:
-  - ASTRA-Sim-inspired analytical backend (default for public examples and direct CLI defaults)
+  - Analytical backend (default selected by public examples)
+  - ASTRA-Sim-inspired analytical backend (direct CLI/config default)
   - Collective-sim topology-aware backend (optional; requires explicit `--cc_backend_config_type collective_sim`)
-  - Analytical backend
   - Vidur (sklearn-based) backend trained on profiling data
 - Detailed metrics collection + optional plots
 - Optional per-cluster **event logging** for debugging
@@ -96,6 +85,8 @@ The CLI/config parser still accepts the historical `sys_arch` choices so existin
 - `online + co-location` is supported where the selected scheduler/runtime path supports online mode.
 - `offline + pd-disaggregation` is supported with `--no-enable_parallel_clusters`.
 - `online + pd-disaggregation` is supported with `--no-enable_parallel_clusters`.
+- `offline + pd-af-disaggregation` is supported with `--no-enable_parallel_clusters`.
+- `online + pd-af-disaggregation` is supported with `--no-enable_parallel_clusters`.
 - `pd-disaggregation` aborts unless `--no-enable_parallel_clusters` is provided.
 - `pd-af-disaggregation` aborts unless `--no-enable_parallel_clusters` is provided.
 
@@ -144,9 +135,10 @@ Use this README for the project overview and installation path. Use the focused 
 
 | Guide                      | Use                                                                                                                           |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `docs/cli/README.md`       | CLI environment, co-location examples, direct `frontier.main` flags, metrics output, and guarded release paths.               |
-| `docs/profiling/README.md` | Public profiling wrappers, operator coverage, Chunked Prefill attention profiling, output taxonomy, and simulator CSV smokes. |
-| `docs/training/README.md`  | Standalone predictor training, cache management, and E2E on-demand predictor training behavior.                               |
+| `docs/cli/README.md`       | CLI environment, supported architecture examples, direct `frontier.main` flags, metrics output, and release guards.                    |
+| `docs/profiling/README.md` | Public profiling wrappers, typed operator metadata, Chunked Prefill attention profiling, output taxonomy, and simulator CSV smokes.    |
+| `docs/training/README.md`  | Standalone predictor training, typed E2E admission, cache management, and on-demand predictor training behavior.                       |
+| `docs/roadmap/README.md`   | Current release-hardening priorities and longer-term modeling work.                                                                    |
 
 The release examples remain under `examples/`. The `docs/` guides explain how to adapt those examples into custom commands without starting from the full dataclass-generated CLI surface.
 
@@ -154,7 +146,7 @@ The release examples remain under `examples/`. The `docs/` guides explain how to
 
 ### Python
 
-Frontier is a Python project with a minimal top-level `pyproject.toml` for the co-location release surface.
+Frontier is a Python project with a minimal top-level `pyproject.toml` for the public release surface.
 
 For conda users, start from the checked-in minimal release environment:
 
@@ -478,7 +470,7 @@ bash examples/architecture/co-location/offline/moe_spec_dec.sh
 bash examples/architecture/co-location/offline/moe_prefix_caching.sh
 ```
 
-The dense, MoE, Thinking Mode, Speculative Decoding / MTP, and Prefix Caching examples all default to `--cc_backend_config_type analytical`. `collective_sim` is optional: build `frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp` only when you explicitly select `--cc_backend_config_type collective_sim`.
+All public architecture examples default to `--cc_backend_config_type analytical` and pass the selected backend explicitly. Thinking Mode, Speculative Decoding / MTP, and Prefix Caching examples are limited to the supported co-location/PDD paths described above. `collective_sim` is optional: build `frontier/cc_backend/backends/collective-sim/sim/datacenter/htsim_ndp` only when you explicitly select `--cc_backend_config_type collective_sim`.
 
 Dummy mode (`--random_forrest_execution_time_predictor_config_enable_dummy_mode`) skips ML predictor training and profiling metadata loading; it is suitable for structural smoke tests, not realistic latency prediction. In particular, dummy-mode evidence is not trained numerical parity. For production simulations, disable dummy mode and provide matching CSV datasets under `data/profiling/compute/<device>/<model>/`.
 
@@ -507,7 +499,7 @@ Practical implications:
 - Defaults exist for many fields, but some options may be required depending on which config objects are instantiated.
 - Backend-specific CC subconfigs use backend-prefixed flat flags such as `--analytical_cc_backend_config_*`, `--collective_sim_cc_backend_config_*`, and `--astra_sim_analytical_cc_backend_config_*`.
 - PDD cluster-specific parser fields such as `--cluster_config_prefill_*` and `--cluster_config_decode_*` are release-supported for `pd-disaggregation`.
-- Historical AFD parser fields such as `--cluster_config_decode_attn_*`, `--cluster_config_decode_ffn_*`, and M2N transfer fields remain guarded out of this release.
+- PD-AF parser fields such as `--cluster_config_decode_attn_*`, `--cluster_config_decode_ffn_*`, and M2N transfer fields are release-supported for `pd-af-disaggregation`.
 - KV-cache transfer parser fields such as `--kv_cache_transfer_config_type` and `--analytical_kv_cache_transfer_config_*` are release-supported for the public PDD path.
 - For `astra_sim_analytical`, runtime-materialized layout fields such as `cluster_servers`, `cluster_gpus_per_server`, and `runtime_*` are internal only and intentionally omitted from the public CLI.
 
@@ -536,9 +528,27 @@ Frontier assigns parallel fields by workload ownership:
   architecture profile selects each operator's semantic TP domain, and the
   role mapping selects the physical communication domain.
 
+### Profiling Contract Authority
+
+- Current profiler outputs write `model_architecture_profile` as the CSV-level
+  architecture identity. Runtime loading validates it against the profile
+  resolved from the active model config when the column is present.
+- Current `linear_op.csv` and `moe.csv` outputs store
+  `typed_operator_contracts` as a JSON mapping keyed by operator name. Each
+  operator entry records its single owning family, profile, layer/width identity
+  when applicable, and semantic TP/EP selection.
+- The architecture profile selects `replicated`, `attention_tp`, `ffn_tp`, or
+  `moe_tp` for each operator. When typed contracts are present, runtime lookup
+  requires the matching operator contract and TP row; malformed, conflicting,
+  or unmatched typed data fails fast. Legacy CSVs follow the existing scalar
+  TP/width compatibility path when the typed column is absent.
+- Shared-expert operations remain linear-op work. Routed-expert gating,
+  shuffling, and grouped GEMM remain MoE work. Both paths reuse the existing
+  linear-op and MoE producers.
+
 ## System Architecture
 
-Frontier uses a hierarchical scheduling and simulation approach. In this release, the supported runtime maps those layers onto a single `MONOLITHIC` cluster.
+Frontier uses a hierarchical scheduling and simulation approach. The runtime maps that hierarchy to one `MONOLITHIC` cluster for co-location, `PREFILL` plus unified `DECODE` clusters for PDD, and `PREFILL`, `DECODE_ATTN`, and `DECODE_FFN` clusters for PD-AF.
 
 ### 1. Scheduler Hierarchy
 
@@ -547,7 +557,7 @@ The scheduling logic is split across four distinct layers to mirror real-world s
 1.  **Global Scheduler** (`BaseGlobalScheduler`):
     - **Role**: Top-level orchestrator.
     - **Entry Point**: Receives all incoming `RequestArrivalEvent`s.
-    - **Routing**: Routes requests into the monolithic cluster in this release.
+    - **Routing**: Routes requests through the cluster roles selected by `sys_arch`.
     - _Implementation Note_: While named `BaseGlobalScheduler`, this class is instantiated directly in `simulator.py` and serves as the concrete global scheduler.
 
 2.  **Cluster Scheduler** (`ClusterSchedulerRegistry`):
@@ -573,7 +583,7 @@ The scheduling logic is split across four distinct layers to mirror real-world s
 
 ### 2. Key Entities
 
-- **Cluster**: Represents the monolithic compute pool. It manages a set of Replicas and lazy-loads the communication (`CCBackend`) model.
+- **Cluster**: Represents one architecture role (`MONOLITHIC`, `PREFILL`, `DECODE`, `DECODE_ATTN`, or `DECODE_FFN`). It manages a set of Replicas and lazy-loads the communication (`CCBackend`) model.
 - **Replica**: Represents a physical serving instance (e.g., an 8-GPU node). It validates hardware configurations (TP/PP sizes) and maintains local state (memory usage, running batches).
 - **Request**: Tracks the full lifecycle of an inference query.
   - Tracks latency components: Arrival, Scheduling Delay, and Preemption overhead.
@@ -587,6 +597,8 @@ The scheduling logic is split across four distinct layers to mirror real-world s
 - **Event Logic**: The simulation is driven by specific event types:
   - `ClusterBatchEndEvent`: Handles cluster-local completion for monolithic batches.
   - `GlobalBatchEndEvent`: Handles request-level decode completion, metrics, and memory release.
+  - `KVCacheTransferStartEvent` / `KVCacheTransferEndEvent`: Model PDD and PD-AF KV handoff after prefill.
+  - `M2NTransferStartEvent` / `M2NTransferEndEvent`: Model PD-AF activation transfer between attention and FFN roles.
 
 ## Metrics & Outputs
 
@@ -654,7 +666,9 @@ See `docs/training/README.md` for the command-level training guide.
 
 `frontier/profiling/` contains the profiling implementation. The user-facing release examples live in `examples/profiling/`, while the legacy internal helper scripts under `frontier/profiling/example/` remain available for backward reference.
 
-The top-level examples cover `linear_op`, `attention`, and `moe` operator classes. `examples/profiling/profile_attention_chunked_prefill.sh` demonstrates attention profiling under a Chunked Prefill runtime state. `examples/profiling/smoke_simulator_dense_csv.sh` and `examples/profiling/smoke_simulator_moe_csv.sh` feed checked-in CSV profiles directly into the simulator with dummy predictor mode disabled. The MoE downstream smoke uses `uniform_random` routing because the checked-in tiny MoE CSV contains `routing_runtime_path=uniform_topk` rows.
+The top-level examples cover `linear_op`, `attention`, and `moe` operator classes. `examples/profiling/profile_attention_chunked_prefill.sh` demonstrates attention profiling under a Chunked Prefill runtime state. `examples/profiling/smoke_simulator_dense_csv.sh` and `examples/profiling/smoke_simulator_moe_csv.sh` feed checked-in CSV profiles directly into the simulator with dummy predictor mode disabled. The MoE downstream smoke uses the `random` routing-distribution selector because the checked-in tiny MoE CSV contains `routing_runtime_path=uniform_topk` rows.
+
+The linear-op and MoE profilers resolve operator ownership and TP domains from the model architecture profile. Their outputs preserve the file-level profile identity and per-operator typed contracts. The E2E predictor manager validates those identities before training or lookup, keeping replicated, attention, dense/shared FFN, and routed MoE semantics distinct even when they use the same numeric TP column.
 
 All release-facing profiling examples use the canonical taxonomy:
 
@@ -720,9 +734,10 @@ Frontier `pre-release-v0.3` is released under the MIT License. See `LICENSE` for
 
 These checked-in docs are useful follow-up references:
 
-- `docs/cli/README.md` - CLI user guide for co-location simulation and metrics output
-- `docs/profiling/README.md` - profiling user guide for public wrappers and simulator CSV smokes
-- `docs/training/README.md` - predictor training guide, including E2E on-demand cache training
+- `docs/cli/README.md` - CLI guide for all release-supported architectures and metrics output
+- `docs/profiling/README.md` - profiling guide for public wrappers, typed metadata, and simulator CSV smokes
+- `docs/training/README.md` - predictor training guide, including typed E2E admission and on-demand cache training
+- `docs/roadmap/README.md` - current release-hardening and longer-term modeling priorities
 - `examples/README.md` - runnable example catalog
 - `frontier/profiling/README.md` - profiling workflow details
 - `tests/comparison/README.md` - Frontier vs vLLM comparison workflow

@@ -1,19 +1,13 @@
 # MoE Profiling Module
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-03-29 | Add the explicit `--routing_runtime_path` profiling control and record the current Phase-A landing: `uniform_topk` gating measurements can now be collected directly, and canonical `moe.csv` rows carry routing-path metadata instead of relying on unlabeled standard-path rows. |
-| 2026-03-29 | Add the uniform-routing contract reminder: when runtime enables uniform routing, `moe_gating_routing_topk` profiling/modeling must switch to the `uniform_topk` runtime path instead of reusing standard `fused_topk/topk_softmax` rows. |
-| 2026-03-13 | Align README with measurement-aware profiling contract and add explicit `profile_method -> measurement_type` mapping |
-
 **Version**: 2.4 (Updated 2026-06-06)
-**Status**: Production Ready ✅
 
-This module profiles MoE (Mixture-of-Experts) compute operations for the Frontier LLM inference simulator.
+This module profiles routed-expert compute for the Frontier LLM inference
+simulator. Shared-expert FFN projections remain in the `linear_op` module.
 
-> **⚠️ Important**: Always use `--disable_ray` flag. Ray mode is currently broken due to grpcio 1.67.1 incompatibility with Ray 2.52.1. See [Troubleshooting](#troubleshooting) for details.
+Use `--disable_ray` for the supported local profiling path. The Ray path is
+currently incompatible with the checked-in grpcio/Ray versions; see
+[Troubleshooting](#troubleshooting).
 
 ---
 
@@ -40,11 +34,10 @@ The MoE profiling module generates timing data for Mixture-of-Experts operations
 
 ### Key Features
 
-- ✅ **Model-based profiling**: Supports predefined MoE models (Mixtral, Qwen2-MoE, etc.)
-- ✅ **Expert Parallelism (EP) support**: Grid-search profiling across multiple EP configurations
-- ✅ **Tensor Parallelism (TP) support**: Multi-GPU profiling with different TP sizes
-- ✅ **sarathi-serve operators**: Uses optimized CUDA kernels for expert computation
-- ✅ **Comprehensive metrics**: Captures min, max, mean, median, std for all operations
+- Model-based profiling for predefined and custom MoE configurations.
+- Expert Parallelism (EP) grid search for routed-expert placement.
+- Tensor Parallelism (TP) grid search for routed-expert weight sharding.
+- Timing statistics (min, max, mean, median, and standard deviation).
 
 > **Measurement Contract**
 > - `record_function -> KERNEL_ONLY`
@@ -160,32 +153,39 @@ python -m frontier.profiling.moe.main \
 
 ### Hybrid Operator Approach
 
-**sarathi-serve operators** (for main computation):
+**Frontier profiling layers** (for main computation):
 - `ColumnParallelLinear`: Expert up projection
 - `RowParallelLinear`: Expert down projection
 - `SiluAndMul`: Custom CUDA kernel for SwiGLU activation
 
-**Native PyTorch operators** (for lightweight operations):
-- `nn.Linear`: Gating network (small operation, avoids distributed setup complexity)
+**Lightweight gating operators**:
+- vLLM `ReplicatedLinear` is used when the fused vLLM path is available.
+- Native PyTorch `nn.Linear` is used only when vLLM fused gating is disabled.
 
 **Rationale**: Balances performance optimization with profiling simplicity.
 
 ## Operations Profiled
 
-The MoE profiling module captures timing data for five core operations:
+The MoE profiling module captures timing data for four routed-expert
+operations/scopes:
 
-### 1. `moe_gating` (Router/Gating Network)
+### 1. `moe_gating_linear` and `moe_gating_routing_topk` (Router/Gating)
 
 **What it does**: Computes routing scores for all experts and selects top-K experts per token.
 
-**Implementation**: Native PyTorch `nn.Linear` (hidden_dim → num_experts)
+**Implementation**: vLLM `ReplicatedLinear` (hidden_dim -> num_experts) by
+default, with native PyTorch `nn.Linear` as the explicit fallback when the
+fused vLLM path is disabled.
 
 **Profiling parameters**:
 - `num_tokens`: Number of input tokens
 - `num_experts`: Total number of experts (NOT per-device)
 - `router_topk`: Number of experts selected per token
 - `hidden_dim`: Model hidden dimension
-- `num_tensor_parallel_workers`: Tensor parallelism size
+- `num_tensor_parallel_workers`: Requested MoE TP grid value recorded in the
+  row. Runtime admission follows the operator registry: co-location uses the
+  MoE TP key, while auxiliary gating/routing operators may use the TP=1
+  compatibility key on deferred disaggregated clusters.
 
 **Typical timing**: ~0.026 ms (very fast, small operation)
 
@@ -200,7 +200,9 @@ The MoE profiling module captures timing data for five core operations:
 
 **What it does**: Reorders tokens based on routing decisions (GPU memory operations).
 
-**Implementation**: Native PyTorch tensor operations
+**Implementation**: vLLM `moe_align_block_size` for alignment and local token
+reordering, followed by native PyTorch tensor operations for the remaining
+local gather steps.
 
 **Profiling parameters**:
 - `num_tokens`: Number of input tokens
@@ -215,7 +217,9 @@ The MoE profiling module captures timing data for five core operations:
 
 **What it does**: Executes complete expert FFN computation for the routed tokens.
 
-**Implementation**: Composite operation using sarathi-serve operators.
+**Implementation**: Composite operation using Frontier profiling layers. An
+optional vLLM fused-kernel path can be selected when the profiling environment
+provides it.
 
 **Profiling parameters**:
 - `num_tokens`: Number of input tokens
@@ -224,11 +228,16 @@ The MoE profiling module captures timing data for five core operations:
 - `expert_hidden_dim`: Expert FFN hidden dimension
 - `hidden_dim`: Model hidden dimension
 - `use_gated`: Whether to use gated FFN (SwiGLU)
-- `num_tensor_parallel_workers`: Tensor parallelism size
+- `num_tensor_parallel_workers`: Requested TP grid value recorded in the row
 
 **Typical timing**: Main MoE computation bottleneck.
 
 **Why use `num_experts_per_device`**: This represents the actual workload per device. When EP=2 with 8 total experts, each device processes 4 experts, so we profile with `num_experts_per_device=4`.
+
+The routed-expert TP value is `--num_tensor_parallel_workers`; it partitions
+the expert hidden dimension. The EP value is `--expert_parallel_sizes`; it
+determines expert placement and therefore `num_experts_per_device`. These
+parameters do not describe shared-expert linear work.
 
 ### 4. Runtime Metadata Columns
 
@@ -241,6 +250,9 @@ match the simulator runtime path:
 - `routing_uses_router_logits`
 - `gating_runtime_context`
 - `gating_runtime_context_impl`
+- `model_architecture_profile`: File-level architecture identity.
+- `typed_operator_contracts`: Per-row operator ownership and TP/EP contract
+  when generated by the current profiler.
 
 ---
 
@@ -590,22 +602,23 @@ python -m frontier.profiling.moe.main \
 
 **Note**: This is a known issue. Ray mode is not functional until Ray/grpcio compatibility is resolved.
 
-#### Issue 2: `ModuleNotFoundError: No module named 'flashinfer'`
+#### Issue 2: Missing profiling dependency
 
-**Cause**: flashinfer is required by sarathi-serve operators but not installed.
+**Cause**: the MoE entrypoint requires `torch`, `vllm`, and `triton`. The
+selected vLLM fused-kernel path also requires a compatible vLLM installation.
 
-**Solution**:
-
-```bash
-pip install flashinfer
-```
-
-**Alternative**: Use system Python with flashinfer pre-installed:
+**Solution**: Use the checked-in profiling environment or an existing matching
+vLLM environment:
 
 ```bash
-# Check if flashinfer is available
-python -c "import flashinfer; print('flashinfer available')"
+conda env create -f environment_profiling.yml
+conda activate frontier-profiling
+python -c "import torch, vllm, triton; print('profiling dependencies available')"
 ```
+
+The optional `flashinfer-python` package is part of the profiling environment
+for attention and other CUDA workloads, but it is not a direct MoE entrypoint
+dependency.
 
 #### Issue 3: `ray.exceptions.ActorDiedError` (Legacy Issue)
 
@@ -626,7 +639,7 @@ python -c "import flashinfer; print('flashinfer available')"
 
 ```bash
 # Verify monkey patching is present in moe_wrapper.py
-grep -A 3 "sarathi.metrics.cuda_timer.CudaTimer" frontier/profiling/moe/moe_wrapper.py
+rg -n "CudaTimer|Timer" frontier/profiling/moe/moe_wrapper.py
 ```
 
 #### Issue 5: CSV file is empty or has fewer results than expected
@@ -671,7 +684,8 @@ grep -A 3 "sarathi.metrics.cuda_timer.CudaTimer" frontier/profiling/moe/moe_wrap
 
 ### Similarities
 
-- Both use sarathi-serve operators (`ColumnParallelLinear`, `RowParallelLinear`)
+- Both use the same Frontier profiling layers (`ColumnParallelLinear`,
+  `RowParallelLinear`) where the operation requires them.
 - Both support TP scaling profiling
 - Both generate CSV files with timing statistics
 - Both use Ray for parallel profiling
@@ -683,8 +697,8 @@ grep -A 3 "sarathi.metrics.cuda_timer.CudaTimer" frontier/profiling/moe/moe_wrap
 | **Operations** | Attention, FFN, LayerNorm | Gating, Shuffling, Expert FFN |
 | **Parallelism** | TP only | TP + EP |
 | **Key Parameter** | `num_layers` | `num_experts`, `router_topk` |
-| **Gating Network** | N/A | Native PyTorch (not TP-parallelized) |
-| **Expert Computation** | N/A | sarathi-serve operators |
+| **Gating Network** | N/A | vLLM `ReplicatedLinear` by default; native PyTorch fallback when fused gating is disabled |
+| **Expert Computation** | N/A | Frontier profiling layers; optional vLLM fused kernels |
 | **CSV Output** | Separate files per operation | Single consolidated file |
 | **EP Support** | N/A | ✅ Grid-search across EP sizes |
 
@@ -764,11 +778,13 @@ See `CHANGELOG_MULTI_GPU.md` for detailed implementation notes.
    - CSV output includes `expert_parallel_size` column
    - Automatic calculation of `num_experts_per_device`
 
-2. ✅ **sarathi-serve Operator Migration**: Migrated expert FFNs to use optimized operators
+2. **Expert profiling layers**: Routed expert FFNs use the checked-in Frontier
+   profiling layers, with an optional vLLM fused-kernel path.
    - `ColumnParallelLinear` for expert up projection
    - `RowParallelLinear` for expert down projection
    - `SiluAndMul` custom CUDA kernel for SwiGLU activation
-   - Hybrid approach: native PyTorch for gating, sarathi-serve for experts
+   - Hybrid approach: native PyTorch for gating and Frontier profiling layers
+     for expert projections
 
 3. ✅ **Consolidated CSV Output**: All operations now in single CSV file
    - Easier data analysis and visualization
@@ -783,7 +799,7 @@ See `CHANGELOG_MULTI_GPU.md` for detailed implementation notes.
 5. ✅ **Enhanced Testing**: Comprehensive integration test suite
    - `tests/test_moe_profiling_refactor.sh`
    - Validates EP parameter support
-   - Validates sarathi-serve operator migration
+   - Validates routed-expert profiling layer behavior
    - Automated CSV output validation
 
 **Bug Fixes**:
@@ -795,7 +811,7 @@ See `CHANGELOG_MULTI_GPU.md` for detailed implementation notes.
 **Performance**:
 
 - EP=4 provides 64% reduction in grouped GEMM time vs EP=1
-- sarathi-serve operators validated and working correctly
+- Routed-expert profiling layers validated and working correctly
 - No performance regressions observed
 
 ### Version 1.0 (Original)
@@ -822,7 +838,7 @@ bash tests/test_moe_profiling_refactor.sh
 - EP parameter support (TP=1,2 × EP=1,2,4)
 - CSV output format and columns
 - EP calculation correctness
-- sarathi-serve operator functionality
+- Routed-expert profiling layer functionality
 
 **Expected output**:
 - ✅ All 7 validation steps pass
@@ -949,13 +965,16 @@ The `ExecutionTimePredictionModelManager` handles centralized model training:
 
 ### Hybrid Operator Approach
 
-**Design Decision**: Use native PyTorch for gating, sarathi-serve for expert FFNs.
+**Design Decision**: Use vLLM `ReplicatedLinear` for gating when the fused vLLM
+path is available, fall back to native PyTorch `nn.Linear` only when that path
+is disabled, and use the checked-in Frontier profiling layers for expert FFNs
+with an optional vLLM fused-kernel path.
 
 **Rationale**:
 
 1. **Gating Network**: Small operation (hidden_dim → num_experts), doesn't benefit from TP
 2. **Expert FFNs**: Large operations (hidden_dim → expert_hidden_dim), benefit from optimized CUDA kernels
 3. **Profiling Simplicity**: Avoids needing distributed initialization for single-GPU profiling
-4. **Performance**: Main computation still uses sarathi-serve operators
+4. **Performance**: Main expert computation uses the optimized profiling layers
 
 **Trade-off**: Gating network not TP-parallelized, but this is acceptable since it's a small operation (~0.026 ms).

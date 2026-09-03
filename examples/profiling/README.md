@@ -1,15 +1,5 @@
 # Profiling Examples
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-08-14 | Replaced the removed routing-mode CLI with the canonical `moe_routing_distribution_type` selector. |
-| 2026-06-07 | Added support matrix clarifying wrapper defaults, measurement family, checked-in CSV smokes, and dry-run scope. |
-| 2026-06-07 | Clarified release-facing simulator smoke output defaults and smoke script CLI override behavior. |
-| 2026-06-07 | Documented MoE downstream random-routing alignment for checked-in `uniform_topk` profiling rows. |
-| 2026-06-07 | Added top-level, non-destructive profiling examples for linear_op, attention chunked prefill, MoE, metadata smoke, and downstream simulator CSV smoke. |
-
 ## Scope
 
 This directory is the release-facing entry point for profiling examples. The migration is **non-destructive**: the legacy internal scripts under `frontier/profiling/example` remain in place because repository rules forbid deleting or moving files without explicit approval.
@@ -29,7 +19,7 @@ You can override `PYTHON_BIN`, `MODEL`, `DEVICE`, `DATA_DIR_BASE`, and script-sp
 
 | Script | Operator class | Primary output | Notes |
 |--------|----------------|----------------|-------|
-| `profile_linear_op.sh` | `linear_op` | `data/profiling/compute/<device>/<model>/linear_op.csv` | Dense linear and replicated operators. |
+| `profile_linear_op.sh` | `linear_op` | `data/profiling/compute/<device>/<model>/linear_op.csv` | Attention projections, normalization, residual, dense FFN, and shared-expert linear work. |
 | `profile_attention_chunked_prefill.sh` | `attention` | `data/profiling/compute/<device>/<model>/attention.csv` | Explicit chunked prefill recipe using `--fixed_chunked_prefill_size` and `--enable_chunked_prefill_grid_search`. |
 | `profile_moe.sh` | `moe` | `data/profiling/compute/<device>/<model>/moe.csv` | MoE expert compute with routing/gating runtime controls. |
 
@@ -37,11 +27,17 @@ You can override `PYTHON_BIN`, `MODEL`, `DEVICE`, `DATA_DIR_BASE`, and script-sp
 
 | Contract | Release wrapper behavior |
 |----------|--------------------------|
-| Measurement default | Wrapper default is `PROFILE_METHOD=cuda_event`, producing simulator-ready `CUDA_EVENT` rows. The lower-level implementation CLIs may default to `record_function` for `KERNEL_ONLY`; the wrappers pass `--profile_method "$PROFILE_METHOD"` explicitly. |
+| Measurement default | The wrapper default is `PROFILE_METHOD=cuda_event`, producing simulator-ready `CUDA_EVENT` rows. The lower-level implementation CLIs may default to `record_function` for `KERNEL_ONLY`; the wrappers pass `--profile_method "$PROFILE_METHOD"` explicitly. |
 | Output taxonomy | All wrapper outputs are routed under `data/profiling/compute/<device>/<model>/`. |
 | Dry-run scope | `--dry-run` validates command construction, path routing, argument parsing, and defaults; it does not collect GPU timing data. |
 | Downstream CSV smokes | `smoke_simulator_dense_csv.sh` and `smoke_simulator_moe_csv.sh` consume checked-in CSV profiles by default, rather than freshly generated CSVs from the current shell session. |
 | MoE routing alignment | The MoE downstream smoke binds `moe_routing_distribution_type=random` to `uniform_topk` rows. A mismatched CSV fails fast instead of falling back to another routing family. |
+
+Current profiler CSVs may include `model_architecture_profile` and
+`typed_operator_contracts`. These columns bind each measured operator to its
+owner and semantic TP mode. Routed-expert operators use `moe_tp` and
+`expert_parallel_size`; shared-expert linear operators remain in
+`linear_op.csv` and use their architecture-profile-owned TP domain.
 
 ## Quick Validation
 

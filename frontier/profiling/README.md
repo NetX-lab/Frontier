@@ -1,12 +1,5 @@
 # Frontier Profiling Module
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-08-14 | Replaced the removed routing-mode terminology in the profiling guidance. |
-| 2026-08-22 | Documented the standard attention profiling envelope and runtime KV boundary. |
-
 ## Overview
 
 The `frontier/profiling` module is the hardware profiling subsystem of the Frontier LLM inference simulator. It collects timing data for various LLM operations on real GPU hardware, which is then used to train ML-based execution time predictors for accurate simulation.
@@ -56,14 +49,19 @@ Profiling-time `profile_method` and training-time `measurement_type` are related
 - `cuda_event` → `CUDA_EVENT`
 - `kineto` / `perf_counter` are debug-only and must not be used as predictor-training inputs
 
-Current profiling CLIs default to `record_function`, because decode CUDA graph modeling trains a dedicated kernel-only family. When generating eager-family training data, you must explicitly pass `--profile_method cuda_event`.
+The lower-level profiling CLIs default to `record_function`, which writes
+`KERNEL_ONLY` rows. The release wrappers under `examples/profiling/` override
+that default with `cuda_event` and write simulator-ready `CUDA_EVENT` rows.
+Choose the method explicitly when invoking a lower-level CLI.
 
 ### MoE Uniform-Routing Reminder
 
 If the target runtime enables MoE uniform routing, profiling and modeling must target the same uniform-routing runtime path.
 
 - vLLM example: `VLLM_MOE_UNIFORM_ROUTING=1`
-- Frontier example: the canonical `moe_routing_distribution_type=balanced` selector
+- Frontier runtime: `moe_routing_distribution_type` accepts `balanced`,
+  `random`, `skewed`, or `zipf`. The checked-in uniform-top-k MoE smoke
+  uses `random` because its CSV rows are labeled `uniform_topk`.
 - For `moe_gating_routing_topk`, the target path becomes `uniform_topk`, not the standard `fused_topk -> topk_softmax` path
 
 Do not reuse standard routing rows as a surrogate for a uniform-routing runtime. Until a runtime-equivalent uniform-routing profiling contract is materialized, any `routing_topk` gap must be treated as path-mismatch evidence first, not as proof that the standard profiling target is numerically too low.

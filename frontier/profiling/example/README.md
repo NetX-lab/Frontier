@@ -1,13 +1,5 @@
 # Architecture-Based Profiling Scripts
 
-## Modification History
-
-| Date       | Summary of Changes |
-|------------|--------------------|
-| 2026-06-07 | Marked this directory as legacy/internal and directed release users to `examples/profiling/`. |
-| 2026-06-06 | Updated visible examples to current release paths, linear_op script names, canonical compute output schema, and user-controlled GPU/arch selection. |
-| 2026-03-13 | Align example script docs with measurement-aware profiling contract |
-
 ## Overview
 
 This directory is retained as a legacy/internal profiling script reference. For release-facing one-click examples, start with `examples/profiling/`, which contains readable wrappers for `linear_op`, Chunked Prefill attention, MoE, metadata smoke, and downstream simulator CSV smoke.
@@ -17,6 +9,12 @@ This directory contains independent profiling scripts for the three operator fam
 - `test_profiling_linear_op.sh` for linear operators.
 - `test_profiling_attn.sh` for attention operators.
 - `test_profiling_moe.sh` for MoE operators.
+
+Release users should run `examples/profiling/profile_linear_op.sh`,
+`examples/profiling/profile_attention_chunked_prefill.sh`, and
+`examples/profiling/profile_moe.sh`. The scripts documented below are retained
+as legacy/internal references and may depend on internal test helpers that are
+not included in this checkout.
 
 The scripts profile model architecture components rather than deployment topology. Each run records data for one hardware label and writes canonical CSV files under `data/profiling/compute/<device>/<model>/`.
 
@@ -61,7 +59,7 @@ CUDA_VISIBLE_DEVICES=0 bash frontier/profiling/example/test_profiling_attn.sh \
   --profile-method cuda_event
 ```
 
-### 2. `frontier/profiling/example/test_profiling_linear_op.sh` - Linear Operators
+### 2. `frontier/profiling/example/test_profiling_linear_op.sh` - Legacy Linear Operators
 
 Profiles linear-complexity operators such as MLP, LayerNorm, and projection layers. Linear operators collect `num_tokens` as the primary feature dimension.
 
@@ -86,7 +84,7 @@ CUDA_VISIBLE_DEVICES=0 bash frontier/profiling/example/test_profiling_linear_op.
   --profile-method cuda_event
 ```
 
-### 3. `frontier/profiling/example/test_profiling_moe.sh` - MoE Component
+### 3. `frontier/profiling/example/test_profiling_moe.sh` - Legacy MoE Component
 
 Profiles Mixture-of-Experts operators, including routing, gating, grouped GEMM, expert parallelism, and load-distribution dimensions.
 
@@ -200,7 +198,11 @@ Each script owns the dimensions relevant to one operator family:
 
 ### 2. Fail-Fast Device Validation
 
-The scripts source `tests/common/device_validation.sh` and validate that the requested `--device` label matches the detected GPU model. A mismatch is an error, not a warning, because otherwise profiling data could be saved under the wrong hardware directory.
+The legacy scripts were designed to source an internal
+`tests/common/device_validation.sh` helper. That helper is not part of this
+checkout, so use the release wrappers for executable commands and their
+argument validation. A device mismatch must remain an error rather than a
+warning so profiling data cannot be stored under the wrong hardware directory.
 
 ### 3. User-Controlled GPU and CUDA Architecture Selection
 
