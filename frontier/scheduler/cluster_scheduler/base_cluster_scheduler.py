@@ -49,6 +49,7 @@ from frontier.scheduler.utils.pdaf_transfer import (
     validate_decode_attn_receipt,
     validate_decode_attn_queued_batch,
     prepare_dp_padding,
+    prepare_decode_attn_idle_lanes,
 )
 from frontier.scheduler.utils.pdaf_phase import (
     prepare_decode_attn_batch_phase,
@@ -7257,38 +7258,13 @@ class BaseClusterScheduler(ABC):
         idle_lanes: List[tuple[int, int]],
         is_moe: bool,
     ) -> List[tuple[tuple[int, int], tuple[int, Batch]]]:
-        """Build A-to-F idle entries without mutating the waiting room."""
-
-        normalized_idle_lanes = self._normalize_m2n_lanes(
-            idle_lanes,
-            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
-            field_name="DECODE_ATTN A-to-F prepared idle lanes",
-            require_nonempty=False,
+        """Build A-to-F idle entries through the transfer utility."""
+        return prepare_decode_attn_idle_lanes(
+            time=time,
+            group_key=group_key,
+            idle_lanes=idle_lanes,
+            is_moe=is_moe,
         )
-        if type(is_moe) is not bool:
-            raise RuntimeError(
-                "DECODE_ATTN A-to-F idle batch is_moe must be an exact bool, "
-                f"got {is_moe!r}"
-            )
-
-        layer_id, afd_stage_idx = group_key
-        prepared_entries = []
-        for missing_lane in normalized_idle_lanes:
-            idle_batch = Batch(
-                replica_id=missing_lane[0],
-                requests=[],
-                num_tokens=[],
-                is_idle=True,
-                is_moe=is_moe,
-            )
-            idle_batch.afd_stage_idx = afd_stage_idx
-            idle_batch.decode_attn_original_replica_id = missing_lane[0]
-            idle_batch.decode_attn_original_replica_local_id = missing_lane[1]
-            idle_batch.time = time
-            prepared_entries.append(
-                (missing_lane, (layer_id, idle_batch))
-            )
-        return prepared_entries
 
     def _release_dense_decode_ffn_a2f_without_lane_barrier(
         self,

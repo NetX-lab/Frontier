@@ -1638,3 +1638,43 @@ def prepare_dp_padding(
         for batch, metadata, _ in batches_with_meta
     ]
     return padding_plan, (len(batches_with_meta), dp_stage_max_tokens)
+def prepare_decode_attn_idle_lanes(
+
+    *,
+    time: float,
+    group_key: tuple[int, int],
+    idle_lanes: List[tuple[int, int]],
+    is_moe: bool,
+) -> List[tuple[tuple[int, int], tuple[int, Batch]]]:
+    """Build A-to-F idle entries without mutating the waiting room."""
+
+    normalized_idle_lanes = normalize_lanes(
+        idle_lanes,
+        identity_scope=LaneIdentityScope.FULL_STAGE,
+        field_name="DECODE_ATTN A-to-F prepared idle lanes",
+        require_nonempty=False,
+    )
+    if type(is_moe) is not bool:
+        raise RuntimeError(
+            "DECODE_ATTN A-to-F idle batch is_moe must be an exact bool, "
+            f"got {is_moe!r}"
+        )
+
+    layer_id, afd_stage_idx = group_key
+    prepared_entries = []
+    for missing_lane in normalized_idle_lanes:
+        idle_batch = Batch(
+            replica_id=missing_lane[0],
+            requests=[],
+            num_tokens=[],
+            is_idle=True,
+            is_moe=is_moe,
+        )
+        idle_batch.afd_stage_idx = afd_stage_idx
+        idle_batch.decode_attn_original_replica_id = missing_lane[0]
+        idle_batch.decode_attn_original_replica_local_id = missing_lane[1]
+        idle_batch.time = time
+        prepared_entries.append(
+            (missing_lane, (layer_id, idle_batch))
+        )
+    return prepared_entries
