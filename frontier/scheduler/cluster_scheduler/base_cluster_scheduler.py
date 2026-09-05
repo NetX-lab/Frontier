@@ -40,7 +40,10 @@ from frontier.scheduler.utils.expert_parallel import (
     validate_token_conservation,
     validate_collective_exec_time,
 )
-from frontier.scheduler.utils.scheduler_diagnostics import SchedulerDiagnostics
+from frontier.scheduler.utils.scheduler_diagnostics import (
+    SchedulerDiagnostics,
+    format_ep_trace_identity,
+)
 from frontier.scheduler.utils.pdaf_transfer import (
     LaneIdentityScope,
     normalize_lanes,
@@ -470,31 +473,7 @@ class BaseClusterScheduler(ABC):
     @staticmethod
     def _format_ep_trace_identity(identity: Dict[str, Any]) -> str:
         """Serialize an already validated identity in a stable log order."""
-
-        required = (
-            "replica_id",
-            "stage_id",
-            "request_ids",
-            "request_runtime_epochs",
-            "iteration_ids",
-            "schedule_epoch",
-            "afd_stage_idx",
-            "operation_id",
-            "operation_kind",
-        )
-        if any(field not in identity for field in required):
-            raise ValueError("EP trace identity is incomplete")
-        return (
-            f"replica_id={int(identity['replica_id'])}, "
-            f"stage_id={int(identity['stage_id'])}, "
-            f"request_ids={list(identity['request_ids'])}, "
-            f"request_runtime_epochs={list(identity['request_runtime_epochs'])}, "
-            f"iteration_ids={list(identity['iteration_ids'])}, "
-            f"schedule_epoch={int(identity['schedule_epoch'])}, "
-            f"afd_stage_idx={int(identity['afd_stage_idx'])}, "
-            f"operation_id={int(identity['operation_id'])}, "
-            f"operation_kind={identity['operation_kind']}"
-        )
+        return format_ep_trace_identity(identity)
 
     @staticmethod
     def _log_ep_workload_trace(
