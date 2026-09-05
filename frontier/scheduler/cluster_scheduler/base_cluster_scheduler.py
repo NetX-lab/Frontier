@@ -33,6 +33,7 @@ from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
     ReplicaSchedulerRegistry,
 )
 from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
+from frontier.scheduler.utils.scheduler_diagnostics import SchedulerDiagnostics
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -1909,129 +1910,27 @@ class BaseClusterScheduler(ABC):
 
     @staticmethod
     def _debug_request_id(request: Request) -> int:
-        if not hasattr(request, "id"):
-            raise TypeError(f"Expected Request-like object with id, got {type(request)}")
-        return int(request.id)
+        return SchedulerDiagnostics.request_id(request)
 
     @classmethod
     def _debug_request_collection_state(cls, requests: Any) -> Dict[str, Any]:
-        if requests is None:
-            return {"status": "not_applicable"}
-        request_values = list(requests.values()) if isinstance(requests, dict) else list(requests)
-        return {
-            "count": len(request_values),
-            "request_ids": [
-                cls._debug_request_id(request) for request in request_values
-            ],
-            "requests": [
-                {
-                    "id": cls._debug_request_id(request),
-                    "arrived_at": getattr(request, "arrived_at", None),
-                    "num_prefill_tokens": getattr(
-                        request, "num_prefill_tokens", None
-                    ),
-                    "num_decode_tokens": getattr(request, "num_decode_tokens", None),
-                    "num_processed_tokens": getattr(
-                        request, "num_processed_tokens", None
-                    ),
-                    "current_decode_token_index": getattr(
-                        request, "current_decode_token_index", None
-                    ),
-                    "completed_layer_count": getattr(
-                        request, "completed_layer_count", None
-                    ),
-                    "af_roundtrip_inflight": getattr(
-                        request, "af_roundtrip_inflight", None
-                    ),
-                    "completed": getattr(request, "completed", None),
-                }
-                for request in request_values
-            ],
-        }
+        return SchedulerDiagnostics.request_collection(requests)
 
     @staticmethod
     def _debug_batch_id(batch: Batch) -> int:
-        if not hasattr(batch, "id"):
-            raise TypeError(f"Expected Batch-like object with id, got {type(batch)}")
-        return int(batch.id)
+        return SchedulerDiagnostics.batch_id(batch)
 
     @classmethod
     def _debug_batch_collection_state(cls, batches: Any) -> Dict[str, Any]:
-        if batches is None:
-            return {"status": "not_applicable"}
-        batch_values = list(batches)
-        return {
-            "count": len(batch_values),
-            "batch_ids": [cls._debug_batch_id(batch) for batch in batch_values],
-            "batch_global_ids": [
-                getattr(batch, "global_id", None) for batch in batch_values
-            ],
-            "request_ids": [
-                list(getattr(batch, "request_ids", [])) for batch in batch_values
-            ],
-            "batches": [
-                {
-                    "id": cls._debug_batch_id(batch),
-                    "global_id": getattr(batch, "global_id", None),
-                    "replica_id": getattr(batch, "replica_id", None),
-                    "afd_stage_idx": getattr(batch, "afd_stage_idx", None),
-                    "target_ffn_replica_id": getattr(
-                        batch, "target_ffn_replica_id", None
-                    ),
-                    "total_num_tokens": getattr(batch, "total_num_tokens", None),
-                    "request_ids": list(getattr(batch, "request_ids", [])),
-                    "is_idle": getattr(batch, "is_idle", None),
-                }
-                for batch in batch_values
-            ],
-        }
+        return SchedulerDiagnostics.batch_collection(batches)
 
     @staticmethod
     def _debug_lane_tuple(lane: Any) -> List[Any]:
-        if not isinstance(lane, tuple) or len(lane) != 2:
-            raise TypeError(
-                "Expected lane tuple(replica_id, replica_local_id), "
-                f"got {lane!r}"
-            )
-        return [lane[0], lane[1]]
+        return SchedulerDiagnostics.lane_tuple(lane)
 
     @classmethod
     def _debug_batch_transfer_pairs_state(cls, pairs: Any) -> Dict[str, Any]:
-        pair_values = list(pairs)
-        batch_values = []
-        pair_details = []
-        for pair in pair_values:
-            if not isinstance(pair, tuple) or len(pair) != 2:
-                raise TypeError(f"Expected (batch, transfer_info) pair, got {pair!r}")
-            batch, transfer_info = pair
-            batch_values.append(batch)
-            pair_details.append(
-                {
-                    "batch_id": cls._debug_batch_id(batch),
-                    "batch_global_id": getattr(batch, "global_id", None),
-                    "request_ids": list(getattr(batch, "request_ids", [])),
-                    "source_lane": [
-                        getattr(transfer_info, "source_replica_id", None),
-                        getattr(transfer_info, "source_replica_local_id", None),
-                    ],
-                    "target_ffn_replica_id": getattr(
-                        transfer_info, "target_ffn_replica_id", None
-                    ),
-                    "layer_id": getattr(transfer_info, "layer_id", None),
-                    "afd_stage_idx": getattr(transfer_info, "afd_stage_idx", None),
-                    "activation_size_bytes": getattr(
-                        transfer_info, "activation_size_bytes", None
-                    ),
-                }
-            )
-        return {
-            "count": len(pair_values),
-            "batch_ids": [cls._debug_batch_id(batch) for batch in batch_values],
-            "request_ids": [
-                list(getattr(batch, "request_ids", [])) for batch in batch_values
-            ],
-            "pairs": pair_details,
-        }
+        return SchedulerDiagnostics.transfer_pairs(pairs)
 
     @classmethod
     def _debug_m2n_waiting_groups_state(
@@ -2040,142 +1939,20 @@ class BaseClusterScheduler(ABC):
             tuple[int, int] | tuple[int, int, int], Dict[str, Any]
         ],
     ) -> List[Dict[str, Any]]:
-        groups = []
-        for group_key, room in sorted(
-            waiting_by_layer.items(), key=lambda item: str(item[0])
-        ):
-            if not isinstance(group_key, tuple) or len(group_key) not in (2, 3):
-                raise TypeError(
-                    "Expected DECODE_FFN waiting key(layer, stage[, round]), "
-                    f"got {group_key!r}"
-                )
-            layer_id, afd_stage_idx = group_key[:2]
-            key_state = {
-                "layer_id": layer_id,
-                "afd_stage_idx": afd_stage_idx,
-            }
-            if len(group_key) == 3:
-                key_state["barrier_round_id"] = group_key[2]
-            if "per_lane_queues" not in room or "lanes_rr_order" not in room:
-                raise RuntimeError(
-                    f"M2N waiting room {group_key} missing per_lane_queues or lanes_rr_order"
-                )
-            lane_queues = []
-            for lane, lane_queue in sorted(
-                room["per_lane_queues"].items(), key=lambda item: str(item[0])
-            ):
-                lane_queues.append(
-                    {
-                        "lane": cls._debug_lane_tuple(lane),
-                        "queue": cls._debug_batch_transfer_pairs_state(lane_queue),
-                    }
-                )
-            groups.append(
-                {
-                    "key": key_state,
-                    "lanes_rr_order": [
-                        cls._debug_lane_tuple(lane)
-                        for lane in list(room["lanes_rr_order"])
-                    ],
-                    "rr_cursor": room.get("rr_cursor"),
-                    "lane_queues": lane_queues,
-                }
-            )
-        return groups
+        return SchedulerDiagnostics.waiting_groups(waiting_by_layer)
 
     @classmethod
     def _debug_m2n_ready_groups_state(cls, ready_groups: Any) -> List[Dict[str, Any]]:
-        return [
-            cls._debug_batch_transfer_pairs_state(group)
-            for group in list(ready_groups)
-        ]
+        return SchedulerDiagnostics.ready_groups(ready_groups)
 
     @classmethod
     def _debug_raw_batch_waiting_map_state(
         cls, raw_batch_waiting_map: Dict[Any, Batch]
     ) -> Dict[str, Any]:
-        if raw_batch_waiting_map is None:
-            raise RuntimeError(
-                "_raw_batch_waiting_for_m2n_back is required for cluster diagnostics"
-            )
-        keys = sorted(raw_batch_waiting_map.keys())
-        batches = [raw_batch_waiting_map[key] for key in keys]
-        return {
-            "count": len(raw_batch_waiting_map),
-            "keys": [int(key) for key in keys],
-            "batch_ids": [cls._debug_batch_id(batch) for batch in batches],
-            "request_ids": [
-                list(getattr(batch, "request_ids", [])) for batch in batches
-            ],
-        }
+        return SchedulerDiagnostics.raw_waiting_map(raw_batch_waiting_map)
 
     def get_debug_state(self) -> Dict[str, Any]:
-        """Return fail-fast diagnostic state for this cluster scheduler."""
-        required_attrs = [
-            "_cluster_type",
-            "_request_queue",
-            "_replica_schedulers",
-            "_raw_batch_waiting_for_m2n_back",
-        ]
-        for attr_name in required_attrs:
-            if not hasattr(self, attr_name):
-                raise RuntimeError(
-                    f"Cluster scheduler missing required debug field {attr_name}"
-                )
-
-        if self._cluster_type == ClusterType.DECODE_ATTN:
-            if not hasattr(self, "_af_batch_queue"):
-                raise RuntimeError("DECODE_ATTN scheduler missing _af_batch_queue")
-            af_queue = self._debug_batch_collection_state(self._af_batch_queue)
-        else:
-            af_queue = {"status": "not_applicable"}
-
-        if self._cluster_type == ClusterType.DECODE_FFN:
-            if not hasattr(self, "_m2n_waiting_by_layer"):
-                raise RuntimeError("DECODE_FFN scheduler missing _m2n_waiting_by_layer")
-            if not hasattr(self, "_m2n_ready_groups"):
-                raise RuntimeError("DECODE_FFN scheduler missing _m2n_ready_groups")
-            m2n_waiting_groups = self._debug_m2n_waiting_groups_state(
-                self._m2n_waiting_by_layer
-            )
-            m2n_ready_groups = self._debug_m2n_ready_groups_state(
-                self._m2n_ready_groups
-            )
-        else:
-            m2n_waiting_groups = {"status": "not_applicable"}
-            m2n_ready_groups = {"status": "not_applicable"}
-
-        replica_states = {}
-        scheduler_items = list(self._replica_schedulers.items())
-        scheduler_items.extend(
-            ((replica_id, None), replica_scheduler)
-            for replica_id, replica_scheduler in getattr(
-                self, "_full_stage_replica_schedulers", {}
-            ).items()
-        )
-        for scheduler_key, replica_scheduler in sorted(
-            scheduler_items, key=lambda item: str(item[0])
-        ):
-            if not hasattr(replica_scheduler, "get_debug_state"):
-                raise RuntimeError(
-                    f"Replica scheduler {scheduler_key} missing get_debug_state()"
-                )
-            replica_states[str(scheduler_key)] = replica_scheduler.get_debug_state()
-
-        return {
-            "scheduler_class": self.__class__.__name__,
-            "cluster_type": self._cluster_type.name,
-            "request_queue": self._debug_request_collection_state(
-                self._request_queue
-            ),
-            "af_queue": af_queue,
-            "m2n_waiting_groups": m2n_waiting_groups,
-            "m2n_ready_groups": m2n_ready_groups,
-            "raw_batch_waiting_map": self._debug_raw_batch_waiting_map_state(
-                self._raw_batch_waiting_for_m2n_back
-            ),
-            "replica_schedulers": replica_states,
-        }
+        return SchedulerDiagnostics.collect(self)
 
     def is_empty(self) -> bool:
         from frontier.logger import get_cluster_logger
