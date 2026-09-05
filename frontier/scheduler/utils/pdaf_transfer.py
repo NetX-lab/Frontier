@@ -1525,3 +1525,116 @@ def validate_decode_attn_receipt(
         "room": room,
         "is_last_layer": is_last_layer,
     }
+def prepare_dp_padding(
+
+    picked: List[tuple],
+) -> tuple[List[tuple[Any, Any]], Optional[tuple[int, List[int]]]]:
+    """Build DP-padding replacements without mutating queued batches."""
+
+    from frontier.entities.batch import AFDStageMetadata
+    from frontier.entities.m2n_transfer_info import M2NTransferInfo
+
+    batches_with_meta = []
+    for picked_index, picked_entry in enumerate(picked):
+        if type(picked_entry) is not tuple or len(picked_entry) != 2:
+            raise RuntimeError(
+                "DECODE_FFN promotion entry must be an exact "
+                f"(batch, transfer_info) tuple, got {picked_entry!r} at "
+                f"index {picked_index}"
+            )
+        batch, transfer_info = picked_entry
+        if type(transfer_info) is not M2NTransferInfo:
+            raise RuntimeError(
+                "DECODE_FFN promotion transfer must be an exact "
+                f"M2NTransferInfo at index {picked_index}"
+            )
+        if transfer_info.batch is not batch:
+            raise RuntimeError(
+                "DECODE_FFN promotion batch identity does not match "
+                f"transfer_info.batch at index {picked_index}"
+            )
+        is_idle = getattr(batch, "is_idle", None)
+        if type(is_idle) is not bool:
+            raise RuntimeError(
+                "DECODE_FFN promotion batch is_idle must be an exact bool, "
+                f"got {is_idle!r}"
+            )
+        metadata = getattr(batch, "afd_stage_metadata", None)
+        if is_idle or metadata is None:
+            continue
+        if type(metadata) is not AFDStageMetadata:
+            raise RuntimeError(
+                "DECODE_FFN promotion afd_stage_metadata must be an exact "
+                f"AFDStageMetadata, got {type(metadata).__name__}"
+            )
+        requests = getattr(batch, "requests", None)
+        num_tokens = getattr(batch, "num_tokens", None)
+        if type(requests) is not list or type(num_tokens) is not list:
+            raise RuntimeError(
+                "DECODE_FFN promotion batch requests and num_tokens must be "
+                "exact lists before DP padding"
+            )
+        if len(requests) != len(num_tokens):
+            raise RuntimeError(
+                "DECODE_FFN promotion batch request/token lengths mismatch: "
+                f"requests={len(requests)}, num_tokens={len(num_tokens)}"
+            )
+        for token_count in num_tokens:
+            if type(token_count) is not int or token_count < 0:
+                raise RuntimeError(
+                    "DECODE_FFN promotion num_tokens must contain exact "
+                    f"non-negative ints, got {token_count!r}"
+                )
+        batches_with_meta.append((batch, metadata, num_tokens))
+
+    if len(batches_with_meta) <= 1:
+        return [], None
+
+    num_stages = batches_with_meta[0][1].num_stages
+    if type(num_stages) is not int or num_stages <= 0:
+        raise RuntimeError(
+            "DECODE_FFN promotion metadata num_stages must be an exact "
+            f"positive int, got {num_stages!r}"
+        )
+
+    all_stage_lens = []
+    for batch, metadata, num_tokens in batches_with_meta:
+        if type(metadata.num_stages) is not int or metadata.num_stages <= 0:
+            raise RuntimeError(
+                "DECODE_FFN promotion metadata num_stages must be an exact "
+                f"positive int, got {metadata.num_stages!r}"
+            )
+        if metadata.num_stages != num_stages:
+            raise ValueError(
+                "Inconsistent num_stages across DP lanes: "
+                f"expected {num_stages}, got {metadata.num_stages}"
+            )
+        stage_lens = AFDStageMetadata.compute_stage_token_lens(
+            num_reqs=len(batch.requests),
+            num_tokens_per_req=list(num_tokens),
+            num_stages=num_stages,
+        )
+        while len(stage_lens) < num_stages:
+            stage_lens.append(1)
+        if len(stage_lens) != num_stages:
+            raise RuntimeError(
+                "DECODE_FFN promotion stage-token plan does not match "
+                f"num_stages: planned={len(stage_lens)}, "
+                f"num_stages={num_stages}"
+            )
+        all_stage_lens.append(stage_lens)
+
+    dp_stage_max_tokens = [
+        max(lane_lens[stage_index] for lane_lens in all_stage_lens)
+        for stage_index in range(num_stages)
+    ]
+    padding_plan = [
+        (
+            batch,
+            metadata.with_dp_padding(
+                dp_stage_max_tokens=dp_stage_max_tokens,
+            ),
+        )
+        for batch, metadata, _ in batches_with_meta
+    ]
+    return padding_plan, (len(batches_with_meta), dp_stage_max_tokens)
