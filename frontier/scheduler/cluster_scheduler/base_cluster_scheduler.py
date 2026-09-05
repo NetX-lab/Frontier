@@ -32,6 +32,7 @@ from frontier.moe_ep_workload import (
 from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
     ReplicaSchedulerRegistry,
 )
+from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -1274,16 +1275,8 @@ class BaseClusterScheduler(ABC):
         # Sync completion is tracked per concrete batch event.  A cohort ID is
         # a reusable lane-local hint, so it cannot by itself identify a
         # duplicate after an idle-placeholder wave has closed.
-        self._prefill_sync_completed_keys: set[tuple[int, int, int, int, int, int, str]] = set()
-        self._decode_sync_completed_keys: set[tuple[int, int, int, int, int, int, str]] = set()
-        self._prefill_sync_open_steps: dict[tuple[int, int, int, str, int], int] = {}
-        self._decode_sync_open_steps: dict[tuple[int, int, int, str, int], int] = {}
-        self._prefill_sync_closed_steps: set[tuple[int, int, int, str, int]] = set()
-        self._decode_sync_closed_steps: set[tuple[int, int, int, str, int]] = set()
-        self._next_forward_step_id_by_replica: dict[int, int] = {}
-        self._forward_step_used_ids_by_scope: dict[
-            tuple[int, int, int, str], set[int]
-        ] = {}
+        self._forward_sync_state = ForwardSyncState()
+        self._bind_forward_sync_state_views()
 
         # Initialize specialized queues for PD+AF disaggregation
         if self._cluster_type == ClusterType.DECODE_ATTN:
@@ -3923,22 +3916,28 @@ class BaseClusterScheduler(ABC):
 
     @staticmethod
     def _get_forward_step_id(batch: Batch) -> int:
-        """Return the shared forward-step identity for one scheduler batch.
+        """Return the shared forward-step identity for one scheduler batch."""
 
-        Lane-scoped ``global_id`` values intentionally remain distinct for
-        request ownership and queue ordering.  Older direct probes do not set
-        the new field, so their global ID is the compatibility fallback.
-        """
+        return ForwardSyncState.get_step_id(batch)
 
-        cohort_id = getattr(batch, "_forward_cohort_id", None)
-        if cohort_id is None:
-            cohort_id = getattr(batch, "global_id", None)
-        if type(cohort_id) is not int or cohort_id < 0:
-            raise ValueError(
-                "forward cohort ID must be an exact non-negative int, "
-                f"got {cohort_id!r}"
-            )
-        return cohort_id
+    def _get_forward_sync_state(self) -> ForwardSyncState:
+        state = getattr(self, "_forward_sync_state", None)
+        if state is None:
+            state = ForwardSyncState()
+            self._forward_sync_state = state
+            self._bind_forward_sync_state_views()
+        return state
+
+    def _bind_forward_sync_state_views(self) -> None:
+        state = self._forward_sync_state
+        self._prefill_sync_completed_keys = state.completed_keys("prefill")
+        self._decode_sync_completed_keys = state.completed_keys("decode")
+        self._prefill_sync_open_steps = state.open_steps("prefill")
+        self._decode_sync_open_steps = state.open_steps("decode")
+        self._prefill_sync_closed_steps = state.closed_steps("prefill")
+        self._decode_sync_closed_steps = state.closed_steps("decode")
+        self._next_forward_step_id_by_replica = state._next_step_id_by_replica
+        self._forward_step_used_ids_by_scope = state._used_ids_by_scope
 
     def _resolve_forward_step(
         self,
@@ -3952,127 +3951,27 @@ class BaseClusterScheduler(ABC):
         layer_id: int,
         sync_stage: str,
     ) -> tuple[int, bool]:
-        """Resolve one lane hint to a Replica-local open sync cohort.
+        """Resolve one lane through the forward-sync state owner."""
 
-        Child schedulers intentionally keep independent batch counters.  The
-        first lane opens a Replica-local room using its hint; a sibling with
-        the same hint joins that room while it is open.  After the room closes,
-        a new real batch with the reused hint receives a fresh identity instead
-        of matching the completed wave.  The boolean result identifies a
-        duplicate event for the same concrete batch.
-        """
+        state = self._get_forward_sync_state()
 
-        if sync_kind not in ("prefill", "decode"):
-            raise ValueError(f"unknown synchronization kind: {sync_kind!r}")
-        if type(replica_id) is not int or replica_id < 0:
-            raise ValueError("sync replica_id must be an exact non-negative int")
-        if type(stage_id) is not int or stage_id < 0:
-            raise ValueError("sync stage_id must be an exact non-negative int")
-        if type(lane_id) is not int or lane_id < 0:
-            raise ValueError("sync lane_id must be an exact non-negative int")
-        if type(layer_id) is not int or layer_id < 0:
-            raise ValueError("sync layer_id must be an exact non-negative int")
-        provisional_id = getattr(batch, "_forward_cohort_provisional_id", None)
-        current_id = self._get_forward_step_id(batch)
-        if provisional_id is None:
-            provisional_id = current_id
-            batch._forward_cohort_provisional_id = provisional_id
-        if type(provisional_id) is not int or provisional_id < 0:
-            raise ValueError(
-                "forward cohort provisional ID must be an exact non-negative int, "
-                f"got {provisional_id!r}"
-            )
-
-        completed_attr = f"_{sync_kind}_sync_completed_keys"
-        completed_keys = getattr(self, completed_attr, None)
-        if completed_keys is None:
-            completed_keys = set()
-            setattr(self, completed_attr, completed_keys)
-        completed_key = (
-            replica_id,
-            stage_id,
-            current_id,
-            lane_id,
-            int(batch.id),
-            layer_id,
-            sync_stage,
-        )
-        if completed_key in completed_keys:
-            return current_id, True
-
-        open_attr = f"_{sync_kind}_sync_open_steps"
-        closed_attr = f"_{sync_kind}_sync_closed_steps"
-        open_steps = getattr(self, open_attr, None)
-        if open_steps is None:
-            open_steps = {}
-            setattr(self, open_attr, open_steps)
-        closed_steps = getattr(self, closed_attr, None)
-        if closed_steps is None:
-            closed_steps = set()
-            setattr(self, closed_attr, closed_steps)
-
-        binding_key = (
-            replica_id,
-            stage_id,
-            layer_id,
-            sync_stage,
-            provisional_id,
-        )
-        cohort_id = open_steps.get(binding_key)
-        if cohort_id is not None:
+        def lookup(step_id: int):
             replica_rooms = waiting_room.get(replica_id)
             stage_rooms = replica_rooms.get(stage_id) if replica_rooms else None
-            cohort_rooms = stage_rooms.get(cohort_id) if stage_rooms else None
-            layer_rooms = cohort_rooms.get(layer_id) if cohort_rooms else None
-            sync_room = layer_rooms.get(sync_stage) if layer_rooms else None
-            if sync_room is not None:
-                existing_batch = sync_room.get("batches", {}).get(lane_id)
-                if (
-                    existing_batch is None
-                    or existing_batch is batch
-                    or (existing_batch.is_idle and not batch.is_idle)
-                ):
-                    if current_id != cohort_id:
-                        batch._forward_cohort_id = cohort_id
-                    return cohort_id, False
-                raise ValueError(
-                    "one attention-DP lane cannot occupy two open sync cohorts: "
-                    f"replica={replica_id}, stage={stage_id}, lane={lane_id}, "
-                    f"layer={layer_id}, sync_stage={sync_stage}"
-                )
-            open_steps.pop(binding_key, None)
+            step_rooms = stage_rooms.get(step_id) if stage_rooms else None
+            layer_rooms = step_rooms.get(layer_id) if step_rooms else None
+            return layer_rooms.get(sync_stage) if layer_rooms else None
 
-        used_ids_by_scope = getattr(self, "_forward_step_used_ids_by_scope", None)
-        if used_ids_by_scope is None:
-            used_ids_by_scope = {}
-            self._forward_step_used_ids_by_scope = used_ids_by_scope
-        used_scope = (replica_id, stage_id, layer_id, sync_stage)
-        used_ids = used_ids_by_scope.setdefault(used_scope, set())
-        closed_key = (*used_scope, provisional_id)
-        if closed_key in closed_steps or current_id in used_ids:
-            next_ids = getattr(self, "_next_forward_step_id_by_replica", None)
-            if next_ids is None:
-                next_ids = {}
-                self._next_forward_step_id_by_replica = next_ids
-            candidate = max(
-                int(next_ids.get(replica_id, 0)),
-                int(current_id) + 1,
-            )
-            while candidate in used_ids:
-                candidate += 1
-            cohort_id = candidate
-            next_ids[replica_id] = candidate + 1
-        else:
-            cohort_id = current_id
-        used_ids.add(cohort_id)
-        next_ids = getattr(self, "_next_forward_step_id_by_replica", None)
-        if next_ids is None:
-            next_ids = {}
-            self._next_forward_step_id_by_replica = next_ids
-        next_ids[replica_id] = max(int(next_ids.get(replica_id, 0)), cohort_id + 1)
-        open_steps[binding_key] = cohort_id
-        batch._forward_cohort_id = cohort_id
-        return cohort_id, False
+        return state.resolve_step(
+            sync_kind=sync_kind,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            batch=batch,
+            lane_id=lane_id,
+            layer_id=layer_id,
+            sync_stage=sync_stage,
+            room_lookup=lookup,
+        )
 
     def _close_forward_step(
         self,
@@ -4086,39 +3985,18 @@ class BaseClusterScheduler(ABC):
         cohort_id: int,
         cohort_batches: dict[int, Batch],
     ) -> None:
-        """Close one room and record duplicate suppression per source batch."""
+        """Close one room through the forward-sync state owner."""
 
-        if sync_kind not in ("prefill", "decode"):
-            raise ValueError(f"unknown synchronization kind: {sync_kind!r}")
-        open_steps = getattr(self, f"_{sync_kind}_sync_open_steps", None)
-        if open_steps is not None:
-            open_steps.pop(
-                (replica_id, stage_id, layer_id, sync_stage, provisional_id),
-                None,
-            )
-        closed_steps = getattr(self, f"_{sync_kind}_sync_closed_steps", None)
-        if closed_steps is None:
-            closed_steps = set()
-            setattr(self, f"_{sync_kind}_sync_closed_steps", closed_steps)
-        closed_steps.add(
-            (replica_id, stage_id, layer_id, sync_stage, provisional_id)
+        self._get_forward_sync_state().close_step(
+            sync_kind=sync_kind,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            layer_id=layer_id,
+            sync_stage=sync_stage,
+            provisional_id=provisional_id,
+            step_id=cohort_id,
+            source_batches=cohort_batches,
         )
-        completed_keys = getattr(self, f"_{sync_kind}_sync_completed_keys", None)
-        if completed_keys is None:
-            completed_keys = set()
-            setattr(self, f"_{sync_kind}_sync_completed_keys", completed_keys)
-        for lane_id, source_batch in cohort_batches.items():
-            completed_keys.add(
-                (
-                    replica_id,
-                    stage_id,
-                    cohort_id,
-                    int(lane_id),
-                    int(source_batch.id),
-                    layer_id,
-                    sync_stage,
-                )
-            )
 
     @staticmethod
     def _forward_step_source_batches(cohort_batches: dict[int, Batch] | None, batch: Batch) -> dict[int, Batch]:
@@ -4142,6 +4020,7 @@ class BaseClusterScheduler(ABC):
                 )
             normalized[lane_id] = source_batch
         return normalized
+
 
     def _promote_forward_step_to_ep_wave(
         self,
@@ -4274,7 +4153,6 @@ class BaseClusterScheduler(ABC):
         for source_batch, owner in zip(live_batches, owners):
             source_batch._stage_admission_ticket = owner
         return True
-
     def _on_prefill_ep_wave_ready(
         self,
         *,
