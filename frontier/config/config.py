@@ -1967,6 +1967,10 @@ class ReplicaConfig:
                 "attn_dp must be a positive integer, "
                 f"got {self.attn_dp!r}"
             )
+        if self.cluster_prefix == "decode_attn" and self.attn_dp != 1:
+            raise ValueError(
+                "DECODE_ATTN requires attn_dp=1 because it is the PD-AF attention role"
+            )
         # Load model and device configs first (needed for validation)
         self.model_config: BaseModelConfig = BaseModelConfig.create_from_name(
             self.model_name
