@@ -7454,14 +7454,14 @@ class BaseClusterScheduler(ABC):
             "decode_attn_cohort_request_ids",
             None,
         )
-        cohort_scheduler_types = {
+        wave_scheduler_types = {
             ReplicaSchedulerType.VLLM_V1,
             ReplicaSchedulerType.SGLANG,
             ReplicaSchedulerType.SJ2Q_FASTSERVE_LITE,
             ReplicaSchedulerType.SJ2Q_PENALTY_ONLY,
             ReplicaSchedulerType.SJ2Q_BOUNDED_CARRYOVER,
         }
-        if replica_scheduler_type in cohort_scheduler_types:
+        if replica_scheduler_type in wave_scheduler_types:
             self._validate_decode_attn_wave_binding(
                 batch,
                 lane=lane,
@@ -9450,7 +9450,7 @@ class BaseClusterScheduler(ABC):
             self._cluster_type,
             replica_local_id,
         )
-        prepared_cohort_update = self._set_decode_attn_batch_cohort_phase(
+        prepared_phase_update = self._set_decode_attn_batch_cohort_phase(
             batch,
             phase="ffn_inflight",
             replica_id=replica_id,
@@ -9459,7 +9459,7 @@ class BaseClusterScheduler(ABC):
             prepare_only=True,
         )
 
-        self._commit_decode_attn_batch_phases([prepared_cohort_update])
+        self._commit_decode_attn_batch_phases([prepared_phase_update])
         batch.decode_attn_barrier_round_id = barrier_round_id
         batch.decode_attn_barrier_expected_lanes = (lane,)
         self._decode_attn_barrier_round_counter = barrier_round_id + 1
@@ -9793,7 +9793,7 @@ class BaseClusterScheduler(ABC):
         }
 
         events = []
-        prepared_cohort_updates = []
+        prepared_phase_updates = []
         if barrier_is_ready:
             for (source_replica_id, source_replica_local_id), ready_layer_id, ready_batch in picked:
                 if ready_batch.is_idle:
@@ -9825,7 +9825,7 @@ class BaseClusterScheduler(ABC):
                         source_replica_local_id,
                     )
                 )
-                prepared_cohort_updates.append(
+                prepared_phase_updates.append(
                     self._set_decode_attn_batch_cohort_phase(
                         ready_batch,
                         phase="ffn_inflight",
@@ -9836,7 +9836,7 @@ class BaseClusterScheduler(ABC):
                     )
                 )
 
-        self._commit_decode_attn_batch_phases(prepared_cohort_updates)
+        self._commit_decode_attn_batch_phases(prepared_phase_updates)
 
         if room_exists:
             committed_room = room
