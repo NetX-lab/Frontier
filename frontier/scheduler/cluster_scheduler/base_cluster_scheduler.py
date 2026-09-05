@@ -5969,7 +5969,9 @@ class BaseClusterScheduler(ABC):
             num_layers,
         )
         next_layer_id = layer_id + 1
-        restored_full_stage_owners = self._restore_forward_step_full_stage_owners(
+        # Dispatch through the legacy private alias so lightweight scheduler
+        # fixtures that implement the pre-refactor hook remain compatible.
+        restored_full_stage_owners = self._restore_cohort_full_stage_owners(
             source_batches=dp_batches,
             replica_id=replica_id,
             stage_id=stage_id,
