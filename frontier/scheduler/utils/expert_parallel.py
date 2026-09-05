@@ -42,6 +42,18 @@ class EPBatchGroupPlan(NamedTuple):
         return tuple(self.lane_workload.per_expert_tokens.items())
 
 
+class EPCombineTimingPlan(NamedTuple):
+    """Pure timing and payload inputs for an EP combine collective."""
+
+    sync_time: float
+    exec_time_ms: float
+    combine_end_time: float
+    post_combine_time_s: float
+    final_event_time: float
+    data_size_bytes: int
+    payload_description: str
+
+
 def validate_token_conservation(
     input_tokens: int, lane_workload: EPLaneWorkload, context: str
 ) -> None:
@@ -441,3 +453,84 @@ def summarize_alltoall_payload(
         local_tokens_by_ep_id[int(lane_ep_id)] = local_tokens
     max_local_tokens = max(local_tokens_by_ep_id.values(), default=0)
     return max_local_tokens * hidden_size * 2, local_tokens_by_ep_id, max_local_tokens, hidden_size
+
+
+def prepare_combine_timing(
+    *,
+    prospective_batches: dict[int, Any],
+    prospective_arrival_times: dict[int, float],
+    expected_ep_size: int,
+    collective_kind: Any,
+    cluster_type: Any,
+    hidden_size: int,
+    predict_alltoall: Callable[..., Real],
+    predict_allgather: Callable[..., Real],
+    collective_time_validator: Callable[..., tuple[float, float]] = validate_collective_exec_time,
+) -> EPCombineTimingPlan:
+    """Prepare pure EP combine timing inputs without mutating scheduler state."""
+
+    if not prospective_batches:
+        raise ValueError("EP combine timing requires at least one lane")
+    if not prospective_arrival_times or set(prospective_arrival_times) != set(prospective_batches):
+        raise ValueError("EP combine timing requires one arrival time for every lane")
+    hidden_size = int(hidden_size)
+    from frontier.model_architectures import ExpertParallelCollective
+
+    if collective_kind is ExpertParallelCollective.ALLTOALL:
+        data_size_bytes, local_tokens_by_ep_id, max_local_tokens, _ = summarize_alltoall_payload(
+            prospective_batches, hidden_size
+        )
+        payload_description = (
+            f"max_local_tokens={max_local_tokens}, hidden_size={hidden_size}, "
+            f"local_tokens_by_ep_id={local_tokens_by_ep_id}"
+        )
+        exec_time = predict_alltoall(
+            data_size_bytes=data_size_bytes,
+            num_devices=expected_ep_size,
+            cluster_type=cluster_type,
+            comm_domain="EP",
+        )
+    else:
+        representative_batch = next(iter(prospective_batches.values()))
+        total_tokens = getattr(representative_batch, "total_num_tokens", None)
+        if type(total_tokens) is not int or total_tokens < 0:
+            raise ValueError(
+                "EP combine representative batch total_num_tokens must be an exact non-negative int"
+            )
+        data_size_bytes = total_tokens * hidden_size * 2
+        payload_description = f"{total_tokens} tokens × {hidden_size} hidden_size"
+        exec_time = predict_allgather(
+            data_size_bytes=data_size_bytes,
+            num_devices=expected_ep_size,
+            cluster_type=cluster_type,
+            comm_domain="EP",
+        )
+
+    sync_time = max(prospective_arrival_times.values())
+    exec_time_ms, combine_end_time = collective_time_validator(
+        phase="combine", exec_time_ms=exec_time, sync_time=sync_time
+    )
+    post_combine_times: list[float] = []
+    for lane_ep_id, ep_batch in prospective_batches.items():
+        post_combine_time = getattr(ep_batch, "post_combine_time", None)
+        if (
+            not isinstance(post_combine_time, Real)
+            or isinstance(post_combine_time, bool)
+            or not math.isfinite(float(post_combine_time))
+            or float(post_combine_time) < 0.0
+        ):
+            raise ValueError(
+                "EP combine lane is missing a finite non-negative post_combine_time in seconds: "
+                f"ep_id={lane_ep_id}, value={post_combine_time!r}"
+            )
+        post_combine_times.append(float(post_combine_time))
+    post_combine_time_s = max(post_combine_times)
+    return EPCombineTimingPlan(
+        sync_time=float(sync_time),
+        exec_time_ms=exec_time_ms,
+        combine_end_time=float(combine_end_time),
+        post_combine_time_s=post_combine_time_s,
+        final_event_time=float(combine_end_time) + post_combine_time_s,
+        data_size_bytes=data_size_bytes,
+        payload_description=payload_description,
+    )

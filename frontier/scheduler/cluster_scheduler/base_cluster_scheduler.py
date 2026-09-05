@@ -42,6 +42,7 @@ from frontier.scheduler.utils.expert_parallel import (
     validate_collective_exec_time,
     validate_barrier_arrival,
     summarize_alltoall_payload,
+    prepare_combine_timing,
 )
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
@@ -2110,76 +2111,31 @@ class BaseClusterScheduler(ABC):
             )
 
             model_config = self._config.replica_config.model_config
-            # Admit every physical lane before resolving the architecture
-            # collective or invoking any communication predictor/backend.
-            (
-                lane_data_size_bytes,
-                local_tokens_by_ep_id,
-                max_local_tokens,
-                lane_hidden_size,
-            ) = self._get_step3_ep_alltoall_payload_bytes(prospective_batches)
-
+            # Validate every lane descriptor before resolving the model profile.
+            self._get_step3_ep_alltoall_payload_bytes(prospective_batches)
             ep_collective_kind = resolve_ep_collective_kind(
                 model_config,
                 self._cluster_type,
                 expected_ep_size,
             )
-            if ep_collective_kind is ExpertParallelCollective.ALLTOALL:
-                data_size_bytes = lane_data_size_bytes
-                payload_description = (
-                    f"max_local_tokens={max_local_tokens}, "
-                    f"hidden_size={lane_hidden_size}, "
-                    f"local_tokens_by_ep_id={local_tokens_by_ep_id}"
-                )
-                # EP alltoall combine phase
-                ep_collective_exec_time_ms = self._predictor.predict_alltoall_time(
-                    data_size_bytes=data_size_bytes,
-                    num_devices=expected_ep_size,
-                    cluster_type=self._cluster_type,
-                    comm_domain="EP",
-                )
-            else:
-                representative_batch = next(iter(prospective_batches.values()))
-                total_tokens = representative_batch.total_num_tokens
-                hidden_size = int(model_config.embedding_dim)
-                data_size_bytes = total_tokens * hidden_size * 2
-                payload_description = (
-                    f"{total_tokens} tokens × {hidden_size} hidden_size"
-                )
-                ep_collective_exec_time_ms = self._predictor.predict_allgather_time(
-                    data_size_bytes=data_size_bytes,
-                    num_devices=expected_ep_size,
-                    cluster_type=self._cluster_type,
-                    comm_domain="EP",
-                )
-
-            ep_collective_sync_time = max(prospective_arrival_times.values())
-            (
-                ep_collective_exec_time_ms,
-                collective_event_time,
-            ) = self._validate_ep_collective_exec_time(
-                phase="combine",
-                exec_time_ms=ep_collective_exec_time_ms,
-                sync_time=ep_collective_sync_time,
+            timing = prepare_combine_timing(
+                prospective_batches=prospective_batches,
+                prospective_arrival_times=prospective_arrival_times,
+                expected_ep_size=expected_ep_size,
+                collective_kind=ep_collective_kind,
+                cluster_type=self._cluster_type,
+                hidden_size=int(model_config.embedding_dim),
+                predict_alltoall=self._predictor.predict_alltoall_time,
+                predict_allgather=self._predictor.predict_allgather_time,
+                collective_time_validator=self._validate_ep_collective_exec_time,
             )
-            post_combine_times_s = []
-            for lane_ep_id, ep_batch in prospective_batches.items():
-                post_combine_time_s = getattr(ep_batch, "post_combine_time", None)
-                if (
-                    not isinstance(post_combine_time_s, Real)
-                    or isinstance(post_combine_time_s, bool)
-                    or not math.isfinite(float(post_combine_time_s))
-                    or float(post_combine_time_s) < 0.0
-                ):
-                    raise ValueError(
-                        "EP combine lane is missing a finite non-negative "
-                        "post_combine_time in seconds: "
-                        f"ep_id={lane_ep_id}, value={post_combine_time_s!r}"
-                    )
-                post_combine_times_s.append(float(post_combine_time_s))
-            post_combine_time_s = max(post_combine_times_s)
-            combine_end_time = float(collective_event_time)
-            final_event_time = combine_end_time + post_combine_time_s
+            data_size_bytes = timing.data_size_bytes
+            payload_description = timing.payload_description
+            ep_collective_sync_time = timing.sync_time
+            ep_collective_exec_time_ms = timing.exec_time_ms
+            combine_end_time = timing.combine_end_time
+            post_combine_time_s = timing.post_combine_time_s
+            final_event_time = timing.final_event_time
 
             if ep_wait_room is None:
                 ep_wait_room = self._ep_allgather_waiting_room[replica_id][stage_id][
