@@ -47,6 +47,7 @@ from frontier.scheduler.utils.pdaf_transfer import (
     validate_decode_ffn_waiting_room,
     validate_decode_attn_wave_binding,
     validate_decode_attn_receipt,
+    validate_decode_attn_queued_batch,
 )
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
@@ -5920,202 +5921,18 @@ class BaseClusterScheduler(ABC):
         expected_lanes: List[tuple[int, int]],
         current_batch: Batch,
     ) -> tuple[int, int]:
-        """Validate an existing F-to-A queue entry without mutating it."""
+        """Validate a queued F-to-A batch through the transfer utility."""
 
-        def require_non_negative_int(value, field_name: str) -> int:
-            if type(value) is not int or value < 0:
-                raise RuntimeError(
-                    f"{field_name} must be an exact non-negative int, got {value!r}"
-                )
-            return value
-
-        if type(queued_batch) is not Batch:
-            raise RuntimeError(
-                "DECODE_ATTN F-to-A waiting room contains a queued object that is "
-                f"not an exact Batch: lane={queue_lane}, value={queued_batch!r}"
-            )
-        if queued_batch is current_batch:
-            raise ValueError(
-                "Duplicate DECODE_ATTN F-to-A receipt for the same batch object: "
-                f"round_key={round_key}, lane={queue_lane}"
-            )
-
-        replica_id, next_layer_id, afd_stage_idx = round_key[:3]
-        barrier_round_id = round_key[3] if len(round_key) == 4 else None
-        queued_lane = (
-            require_non_negative_int(
-                getattr(queued_batch, "decode_attn_original_replica_id", None),
-                "DECODE_ATTN F-to-A queued batch original replica_id",
-            ),
-            getattr(queued_batch, "decode_attn_original_replica_local_id", None),
-        )
-        if queued_lane[1] is not None:
-            queued_lane = (
-                queued_lane[0],
-                require_non_negative_int(
-                    queued_lane[1],
-                    "DECODE_ATTN F-to-A queued batch original replica_local_id",
-                ),
-            )
-        if queued_lane != queue_lane or queued_lane not in expected_lanes:
-            raise RuntimeError(
-                "DECODE_ATTN F-to-A queued batch lane does not match its waiting "
-                f"room: queued={queued_lane}, room={queue_lane}, "
-                f"expected_lanes={expected_lanes}"
-            )
-        if queued_lane[0] != replica_id:
-            raise RuntimeError(
-                "DECODE_ATTN F-to-A queued batch belongs to a different replica: "
-                f"round_key={round_key}, queued_lane={queued_lane}"
-            )
-
-        queued_global_id = require_non_negative_int(
-            getattr(queued_batch, "global_id", None),
-            "DECODE_ATTN F-to-A queued batch global_id",
-        )
-        queued_stage_idx = require_non_negative_int(
-            getattr(queued_batch, "afd_stage_idx", None),
-            "DECODE_ATTN F-to-A queued batch afd_stage_idx",
-        )
-        if queued_stage_idx != afd_stage_idx:
-            raise RuntimeError(
-                "DECODE_ATTN F-to-A queued batch stage does not match its waiting "
-                f"room: queued={queued_stage_idx}, expected={afd_stage_idx}"
-            )
-
-        queued_round_id = getattr(
+        return validate_decode_attn_queued_batch(
+            self,
             queued_batch,
-            "decode_attn_barrier_round_id",
-            None,
-        )
-        if queued_round_id is not None:
-            queued_round_id = require_non_negative_int(
-                queued_round_id,
-                "DECODE_ATTN F-to-A queued batch barrier_round_id",
-            )
-        if queued_round_id != barrier_round_id:
-            raise RuntimeError(
-                "DECODE_ATTN F-to-A queued batch round does not match its waiting "
-                f"room: queued={queued_round_id}, expected={barrier_round_id}"
-            )
-
-        raw_queued_expected_lanes = getattr(
-            queued_batch,
-            "decode_attn_barrier_expected_lanes",
-            (),
-        )
-        if raw_queued_expected_lanes is None:
-            raw_queued_expected_lanes = ()
-        queued_expected_lanes = self._normalize_m2n_lanes(
-            raw_queued_expected_lanes,
-            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
-            field_name="DECODE_ATTN F-to-A queued batch expected lanes",
-            require_nonempty=False,
-        )
-        if queued_expected_lanes:
-            queued_replica_lanes = tuple(
-                lane for lane in queued_expected_lanes if lane[0] == replica_id
-            )
-            if queued_replica_lanes != tuple(expected_lanes):
-                raise RuntimeError(
-                    "DECODE_ATTN F-to-A queued batch expected lanes do not match the "
-                    f"waiting room: queued={queued_replica_lanes}, "
-                    f"room={expected_lanes}"
-                )
-
-        queued_requests = getattr(queued_batch, "requests", None)
-        if type(queued_requests) is not list or not queued_requests:
-            raise RuntimeError(
-                "DECODE_ATTN F-to-A queued Batch requires a non-empty request list"
-            )
-        active_requests = []
-        for queued_request in queued_requests:
-            if type(queued_request) is not Request:
-                raise ValueError(
-                    "DECODE_ATTN F-to-A queued Batch contains a queued request "
-                    "that is not an exact Request: "
-                    f"value={queued_request!r}"
-                )
-            completed = getattr(queued_request, "completed", None)
-            if type(completed) is not bool:
-                raise RuntimeError(
-                    "DECODE_ATTN F-to-A queued request.completed must be an exact "
-                    f"bool, got {completed!r}"
-                )
-            roundtrip_inflight = getattr(
-                queued_request,
-                "af_roundtrip_inflight",
-                None,
-            )
-            if type(roundtrip_inflight) is not bool:
-                raise RuntimeError(
-                    "DECODE_ATTN F-to-A queued request.af_roundtrip_inflight must "
-                    f"be an exact bool, got {roundtrip_inflight!r}"
-                )
-            if roundtrip_inflight is not False:
-                raise RuntimeError(
-                    "DECODE_ATTN F-to-A queued request roundtrip must already be "
-                    f"complete, got {roundtrip_inflight!r}"
-                )
-            if not completed:
-                active_requests.append(queued_request)
-        if not active_requests:
-            raise RuntimeError(
-                "DECODE_ATTN F-to-A queued Batch requires an active request"
-            )
-
-        self._validate_decode_attn_wave_binding(
-            queued_batch,
-            lane=queue_lane,
-            afd_stage_idx=queued_stage_idx,
-            requests=queued_requests,
-            active_requests=active_requests,
-            context="queued batch",
+            queue_lane=queue_lane,
+            round_key=round_key,
+            expected_lanes=expected_lanes,
+            current_batch=current_batch,
         )
 
-        queued_layers = [
-            require_non_negative_int(
-                getattr(queued_request, "completed_layer_count", None),
-                "DECODE_ATTN F-to-A queued request completed_layer_count",
-            )
-            for queued_request in active_requests
-        ]
-        if set(queued_layers) != {next_layer_id}:
-            raise RuntimeError(
-                "DECODE_ATTN F-to-A queued requests do not match the waiting-room "
-                f"layer: queued={queued_layers}, expected={next_layer_id}"
-            )
 
-        queued_request_token_indices = [
-            require_non_negative_int(
-                getattr(queued_request, "current_decode_token_index", None),
-                "DECODE_ATTN F-to-A queued request decode_token_index",
-            )
-            for queued_request in active_requests
-        ]
-        queued_replay_token_index = getattr(
-            queued_batch,
-            "replay_decode_token_index",
-            None,
-        )
-        if queued_replay_token_index is None:
-            if len(set(queued_request_token_indices)) != 1:
-                raise RuntimeError(
-                    "DECODE_ATTN F-to-A queued Batch has mixed decode token indices "
-                    "without replay identity"
-                )
-            queued_token_index = queued_request_token_indices[0]
-        else:
-            queued_token_index = require_non_negative_int(
-                queued_replay_token_index,
-                "DECODE_ATTN F-to-A queued batch replay_decode_token_index",
-            )
-            if queued_token_index != queued_request_token_indices[0]:
-                raise RuntimeError(
-                    "DECODE_ATTN F-to-A queued batch replay decode token does not "
-                    "match its active request head"
-                )
-        return queued_global_id, queued_token_index
 
     def _handle_m2n_arrival_decode_ffn(
         self,
