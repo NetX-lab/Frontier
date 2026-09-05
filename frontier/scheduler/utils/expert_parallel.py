@@ -302,3 +302,142 @@ def validate_collective_exec_time(
             f"sync={sync_time!r}, event={event_time!r}"
         )
     return exec_time_value, event_time
+
+
+def validate_barrier_arrival(
+    *,
+    phase: str,
+    waiting_rooms: Any,
+    get_replica: Callable[[int], Any],
+    default_ep_size: int,
+    replica_id: int,
+    stage_id: int,
+    batch: Any,
+    ep_id: int,
+) -> tuple[int, Optional[dict], frozenset[int], bool]:
+    """Validate one EP lane arrival without mutating its waiting room."""
+
+    if type(replica_id) is not int or replica_id < 0:
+        raise ValueError(
+            f"EP {phase} replica_id must be an exact non-negative int, got {replica_id!r}"
+        )
+    if type(stage_id) is not int or stage_id < 0:
+        raise ValueError(
+            f"EP {phase} stage_id must be an exact non-negative int, got {stage_id!r}"
+        )
+
+    batch_global_id = getattr(batch, "global_id", None)
+    if type(batch_global_id) is not int or batch_global_id < 0:
+        raise ValueError(
+            f"EP {phase} batch global_id must be an exact non-negative int, got {batch_global_id!r}"
+        )
+    batch_replica_id = getattr(batch, "replica_id", None)
+    if type(batch_replica_id) is not int or batch_replica_id < 0:
+        raise ValueError(
+            f"EP {phase} batch replica_id must be an exact non-negative int, got {batch_replica_id!r}"
+        )
+    if batch_replica_id != replica_id:
+        raise ValueError(
+            f"EP {phase} event/batch replica_id mismatch: event={replica_id!r}, batch={batch_replica_id!r}"
+        )
+
+    replica = get_replica(replica_id)
+    expected_ep_size = getattr(replica, "ep_size", default_ep_size)
+    if type(expected_ep_size) is not int or expected_ep_size <= 0:
+        raise ValueError(
+            f"EP {phase} expected_ep_size must be an exact positive int, got {expected_ep_size!r}"
+        )
+    expected_ep_ids = frozenset(range(expected_ep_size))
+    if type(ep_id) is not int or ep_id not in expected_ep_ids:
+        raise ValueError(
+            f"EP {phase} ep_id must be an exact int in {sorted(expected_ep_ids)}, got {ep_id!r}"
+        )
+    batch_ep_id = getattr(batch, "ep_id", None)
+    if type(batch_ep_id) is not int or batch_ep_id != ep_id:
+        raise ValueError(
+            f"EP {phase} event/batch ep_id mismatch: event={ep_id!r}, batch={batch_ep_id!r}"
+        )
+
+    replica_rooms = waiting_rooms.get(replica_id)
+    stage_rooms = replica_rooms.get(stage_id) if replica_rooms is not None else None
+    room = stage_rooms.get(batch_global_id) if stage_rooms is not None else None
+    if room is None:
+        existing_ep_ids = set()
+    else:
+        batch_ep_ids = set(room["batches"])
+        arrival_ep_ids = set(room["arrival_times"])
+        if batch_ep_ids != arrival_ep_ids:
+            raise ValueError(
+                f"EP {phase} waiting-room batch/arrival key mismatch: "
+                f"batches={sorted(batch_ep_ids, key=repr)}, arrival_times={sorted(arrival_ep_ids, key=repr)}"
+            )
+        if any(type(existing_ep_id) is not int for existing_ep_id in batch_ep_ids):
+            raise ValueError(
+                f"EP {phase} waiting room contains a non-exact ep_id: {sorted(batch_ep_ids, key=repr)}"
+            )
+        if not batch_ep_ids.issubset(expected_ep_ids):
+            raise ValueError(
+                f"EP {phase} waiting-room lane set is outside the expected ep_id domain: "
+                f"lanes={sorted(batch_ep_ids)}, expected={sorted(expected_ep_ids)}"
+            )
+        for lane_ep_id, stored_batch in room["batches"].items():
+            stored_global_id = getattr(stored_batch, "global_id", None)
+            if type(stored_global_id) is not int or stored_global_id != batch_global_id:
+                raise ValueError(
+                    f"EP {phase} waiting-room batch global_id mismatch: room={batch_global_id!r}, "
+                    f"stored={stored_global_id!r}, lane={lane_ep_id!r}"
+                )
+            stored_ep_id = getattr(stored_batch, "ep_id", None)
+            if type(stored_ep_id) is not int or stored_ep_id != lane_ep_id:
+                raise ValueError(
+                    f"EP {phase} waiting-room batch ep_id mismatch: lane={lane_ep_id!r}, stored={stored_ep_id!r}"
+                )
+            stored_replica_id = getattr(stored_batch, "replica_id", None)
+            if type(stored_replica_id) is not int or stored_replica_id != replica_id:
+                raise ValueError(
+                    f"EP {phase} waiting-room batch replica_id mismatch: event={replica_id!r}, "
+                    f"stored={stored_replica_id!r}, lane={lane_ep_id!r}"
+                )
+        existing_ep_ids = batch_ep_ids
+
+    if ep_id in existing_ep_ids:
+        raise ValueError(
+            f"EP {phase} duplicate ep_id arrival: ep_id={ep_id}, global_id={batch_global_id}"
+        )
+    arrived_ep_ids = existing_ep_ids | {ep_id}
+    return batch_global_id, room, expected_ep_ids, arrived_ep_ids == expected_ep_ids
+
+
+def summarize_alltoall_payload(
+    ep_batches: dict[int, Any], hidden_size: int
+) -> tuple[int, dict[int, int], int, int]:
+    """Return max-lane payload bytes and token counts for an EP all-to-all."""
+
+    if not ep_batches:
+        raise ValueError("Step3 EP all-to-all payload requested with no EP batches")
+    hidden_size = int(hidden_size)
+    local_tokens_by_ep_id: dict[int, int] = {}
+    for lane_ep_id, ep_batch in ep_batches.items():
+        lane_workload = resolve_ep_lane_workload(ep_batch, required=True)
+        assert lane_workload is not None
+        if lane_workload.ep_id != lane_ep_id:
+            raise ValueError(
+                "EP batch lane key must match its EPLaneWorkload ep_id: "
+                f"key={lane_ep_id!r}, descriptor={lane_workload.ep_id!r}"
+            )
+        entity_tokens = getattr(ep_batch, "total_num_tokens", None)
+        if type(entity_tokens) is not int or entity_tokens < 0:
+            raise ValueError(
+                "EP batch total_num_tokens must be an exact non-negative int "
+                f"for Step3 all-to-all: ep_id={lane_ep_id}, total_num_tokens={entity_tokens!r}"
+            )
+        local_tokens = lane_workload.routed_token_count
+        if entity_tokens != local_tokens:
+            raise ValueError(
+                "EP batch total_num_tokens must equal its lane routed-token count "
+                f"for Step3 all-to-all: ep_id={lane_ep_id}, total_num_tokens={entity_tokens}, "
+                f"routed_token_count={local_tokens}"
+            )
+        local_tokens_by_ep_id[int(lane_ep_id)] = local_tokens
+    max_local_tokens = max(local_tokens_by_ep_id.values(), default=0)
+    return max_local_tokens * hidden_size * 2, local_tokens_by_ep_id, max_local_tokens, hidden_size
