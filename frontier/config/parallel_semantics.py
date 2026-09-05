@@ -68,11 +68,6 @@ def _validate_positive(name: str, value: int) -> int:
 def validate_frontier_shared_parallel_domains(
     mapping: FrontierParallelismMapping,
 ) -> None:
-    if mapping.attn_dp != 1:
-        raise ValueError(
-            "Frontier shared attention/MoE parallel domain requires "
-            "attn_dp=1"
-        )
     if mapping.attention_parallel_size != mapping.moe_parallel_size:
         raise ValueError(
             "Frontier shared attention/MoE parallel domain requires "

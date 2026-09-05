@@ -38,22 +38,30 @@ def test_dense_num_replicas_creates_replicas_without_ep_lanes() -> None:
     assert mapping.moe_expert_parallel_size == 1
 
 
-def test_shared_domain_rejects_attention_dp_lanes() -> None:
+def test_shared_domain_accepts_attention_dp_lanes_when_domains_match() -> None:
     mapping = resolve_frontier_parallelism_mapping(
         model_profile="moe",
         tensor_parallel_size=4,
         num_replicas=1,
         enable_expert_parallel=True,
     )
-    invalid = mapping.__class__(
+    valid = mapping.__class__(
         cluster_num_replicas=mapping.cluster_num_replicas,
         attn_tensor_parallel_size=4,
         attn_dp=2,
-        moe_tensor_parallel_size=2,
+        moe_tensor_parallel_size=1,
+        moe_expert_parallel_size=8,
+    )
+    validate_frontier_shared_parallel_domains(valid)
+
+    invalid = valid.__class__(
+        cluster_num_replicas=valid.cluster_num_replicas,
+        attn_tensor_parallel_size=4,
+        attn_dp=2,
+        moe_tensor_parallel_size=1,
         moe_expert_parallel_size=4,
     )
-
-    with pytest.raises(ValueError, match="attn_dp=1"):
+    with pytest.raises(ValueError, match="attn_tp\\*attn_dp"):
         validate_frontier_shared_parallel_domains(invalid)
 
 

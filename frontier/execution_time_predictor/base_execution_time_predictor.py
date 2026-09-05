@@ -390,12 +390,6 @@ class BaseExecutionTimePredictor(ABC):
         of deriving a second communication domain.
         """
         del batch, cluster_type
-        attn_dp_size = int(getattr(self._replica_config, "attn_dp", 1))
-        if attn_dp_size != 1:
-            raise ValueError(
-                "MoE attention-DP communication is retired; expected "
-                f"attn_dp=1, got {attn_dp_size}"
-            )
         return 0.0, 0.0
 
     @abstractmethod

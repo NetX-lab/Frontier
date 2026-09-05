@@ -1123,9 +1123,8 @@ class BaseClusterScheduler(ABC):
         self._predictor = predictor
         self._kv_cache_transfer_predictor = kv_cache_transfer_predictor
         self._m2n_transfer_predictor = m2n_transfer_predictor
-        # Attention-DP lanes are retired.  Cluster capacity is represented by
-        # ``len(cluster.replicas)``; every physical Replica owns one shared
-        # attention world, while MoE-only work creates replica-local EP lanes.
+        # Non-FFN Replicas own one logical scheduler per attention-DP lane.
+        # TP ranks remain abstracted inside each logical execution unit.
         if self._cluster_type == ClusterType.DECODE_FFN:
             self._replica_ep_size = int(
                 self._config.replica_config.moe_expert_parallel_size
@@ -1133,13 +1132,11 @@ class BaseClusterScheduler(ABC):
             self._replica_scheduler_count = self._replica_ep_size
         else:
             attn_dp = getattr(self._config.replica_config, "attn_dp", None)
-            if type(attn_dp) is not int or attn_dp != 1:
-                raise ValueError(
-                    "Replica-local attention DP lanes are retired; "
-                    f"{self._cluster_type.name} requires attn_dp=1, got {attn_dp!r}"
-                )
+            if type(attn_dp) is not int or attn_dp <= 0:
+                raise ValueError(f"{self._cluster_type.name} requires positive attn_dp, got {attn_dp!r}")
+            self._replica_dp_size = attn_dp
             self._replica_ep_size = None
-            self._replica_scheduler_count = 1
+            self._replica_scheduler_count = attn_dp
         self._available_clusters = available_clusters or set()
         self._request_generator_config = request_generator_config
         self._stage_execution_contexts = self._build_stage_execution_contexts()
@@ -1226,28 +1223,23 @@ class BaseClusterScheduler(ABC):
                     )
                 )
         else:
-            # Every non-FFN Replica owns one complete full-stage scheduler.
-            # Attention-DP lanes are retired; ``None`` is the explicit absence
-            # of a replica-local EP identity.
+            # Every non-FFN Replica owns one logical full-stage scheduler per
+            # attention-DP lane. Lane zero remains the compatibility full-stage lookup.
             for replica_id, replica in self._cluster.replicas.items():
-                full_stage_scheduler = ReplicaSchedulerRegistry.get(
-                    cluster_specific_config.get_type(),
-                    replica_config=self._config.replica_config,
-                    replica_scheduler_config=cluster_specific_config,
-                    request_generator_config=request_generator_config,
-                    replica=replica,
-                    predictor=self._predictor,
-                    cluster_type=self._cluster_type,
-                    replica_local_id=None,
-                    af_pipeline_num_micro_batch=getattr(
-                        self._config, "af_pipeline_num_micro_batch", -1
-                    ),
-                    cluster_scheduler=self,
-                )
-                self._full_stage_replica_schedulers[replica_id] = (
-                    full_stage_scheduler
-                )
-                self._replica_schedulers[(replica_id, None)] = full_stage_scheduler
+                for dp_id in range(self._replica_dp_size):
+                    self._replica_schedulers[(replica_id, dp_id)] = ReplicaSchedulerRegistry.get(
+                        cluster_specific_config.get_type(),
+                        replica_config=self._config.replica_config,
+                        replica_scheduler_config=cluster_specific_config,
+                        request_generator_config=request_generator_config,
+                        replica=replica,
+                        predictor=self._predictor,
+                        cluster_type=self._cluster_type,
+                        replica_local_id=dp_id,
+                        af_pipeline_num_micro_batch=getattr(self._config, "af_pipeline_num_micro_batch", -1),
+                        cluster_scheduler=self,
+                    )
+                self._full_stage_replica_schedulers[replica_id] = self._replica_schedulers[(replica_id, 0)]
         self._request_queue = []
 
         # Initialize specialized queues for PD+AF disaggregation
@@ -4025,10 +4017,6 @@ class BaseClusterScheduler(ABC):
         model_config = getattr(replica_config, "model_config", None)
         if model_config is None or not getattr(model_config, "is_moe", False):
             return False
-        if getattr(replica_config, "attn_dp", None) != 1:
-            raise ValueError(
-                "Shared-domain MoE PREFILL requires attn_dp=1"
-            )
         if not isinstance(layer_id, int) or layer_id < 0:
             raise ValueError("PREFILL layer_id must be an exact non-negative int")
         if not model_config.is_moe_layer(layer_id):
@@ -4058,10 +4046,6 @@ class BaseClusterScheduler(ABC):
         model_config = getattr(replica_config, "model_config", None)
         if model_config is None or not getattr(model_config, "is_moe", False):
             return False
-        if getattr(replica_config, "attn_dp", None) != 1:
-            raise ValueError(
-                "Shared-domain MoE PREFILL requires attn_dp=1"
-            )
         if not isinstance(layer_id, int) or layer_id < 0:
             raise ValueError("PREFILL layer_id must be an exact non-negative int")
         if model_config.is_moe_layer(layer_id):
@@ -4320,10 +4304,6 @@ class BaseClusterScheduler(ABC):
         model_config = getattr(replica_config, "model_config", None)
         if model_config is None or not getattr(model_config, "is_moe", False):
             return False
-        if getattr(replica_config, "attn_dp", None) != 1:
-            raise ValueError(
-                "Shared-domain MoE DECODE requires attn_dp=1"
-            )
         if not isinstance(layer_id, int) or layer_id < 0:
             raise ValueError("DECODE layer_id must be an exact non-negative int")
         if not model_config.is_moe_layer(layer_id):
@@ -4346,10 +4326,6 @@ class BaseClusterScheduler(ABC):
         model_config = getattr(replica_config, "model_config", None)
         if model_config is None or not getattr(model_config, "is_moe", False):
             return False
-        if getattr(replica_config, "attn_dp", None) != 1:
-            raise ValueError(
-                "Shared-domain MoE DECODE requires attn_dp=1"
-            )
         if not isinstance(layer_id, int) or layer_id < 0:
             raise ValueError("DECODE layer_id must be an exact non-negative int")
         if model_config.is_moe_layer(layer_id):
