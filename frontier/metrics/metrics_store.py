@@ -1315,6 +1315,19 @@ class MetricsStore:
 
         return local_scope_count
 
+    @staticmethod
+    def _get_frontier_stage_execution_scope(
+        cluster_type: ClusterType,
+        replica_local_id: int | None,
+    ) -> str:
+        """Classify the local identity used by one stage-batch ledger row."""
+
+        if replica_local_id is None:
+            return "FULL_STAGE_WORLD"
+        if cluster_type == ClusterType.DECODE_FFN:
+            return "EP_WAVE_LANE"
+        return "ATTN_DP_LANE"
+
     def _init_per_cluster_metrics(self, cluster_type: ClusterType, cluster_config):
         # Batch metrics
         self._batch_metrics_count_distribution[cluster_type] = {
@@ -4081,8 +4094,9 @@ class MetricsStore:
             "stage_id": int(stage_id),
             "cluster_type": cluster_type.name,
             "replica_id": int(replica_id),
-            "execution_scope": (
-                "FULL_STAGE_WORLD" if replica_local_id is None else "EP_WAVE_LANE"
+            "execution_scope": self._get_frontier_stage_execution_scope(
+                cluster_type,
+                replica_local_id,
             ),
             "replica_local_id": (
                 None if replica_local_id is None else int(replica_local_id)
@@ -4204,8 +4218,9 @@ class MetricsStore:
             "stage_id": int(stage_id),
             "cluster_type": cluster_type.name,
             "replica_id": int(replica_id),
-            "execution_scope": (
-                "FULL_STAGE_WORLD" if replica_local_id is None else "EP_WAVE_LANE"
+            "execution_scope": self._get_frontier_stage_execution_scope(
+                cluster_type,
+                replica_local_id,
             ),
             "replica_local_id": (
                 None if replica_local_id is None else int(replica_local_id)

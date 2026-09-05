@@ -16,6 +16,7 @@ from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
 from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
     BaseReplicaScheduler,
 )
+from frontier.metrics.metrics_store import MetricsStore
 from frontier.types import ClusterType
 
 
@@ -125,3 +126,18 @@ def test_replica_child_batch_creation_uses_lane_scoped_global_ids() -> None:
     batches = [child._create_batch([_request()], [6]) for child in children]
 
     assert [batch.global_id for batch in batches] == [0, 1]
+
+
+def test_metrics_distinguish_attention_dp_and_ep_lane_scopes() -> None:
+    assert MetricsStore._get_frontier_stage_execution_scope(
+        ClusterType.MONOLITHIC,
+        1,
+    ) == "ATTN_DP_LANE"
+    assert MetricsStore._get_frontier_stage_execution_scope(
+        ClusterType.DECODE_FFN,
+        1,
+    ) == "EP_WAVE_LANE"
+    assert MetricsStore._get_frontier_stage_execution_scope(
+        ClusterType.DECODE_ATTN,
+        None,
+    ) == "FULL_STAGE_WORLD"

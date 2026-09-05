@@ -43,3 +43,10 @@
 - Expectation: batch IDs remain unique within each physical Replica's attention-DP lanes, default single-lane IDs remain stable, and decode-sync IDs accept the full configured attention-DP domain.
 - Method: added Replica-local batch ID packing through the cluster scheduler, reused the lane cardinality for decode-sync IDs, and added direct identity/boundary tests.
 - Result: `python -m pytest tests/unit/test_cluster_scheduler_dp_lanes.py tests/unit/test_shared_ep_layer_protocol_guard.py tests/unit/test_pd_moe_lifecycle_reproducer.py tests/unit/test_pd_decode_moe_layer_accounting.py -q -p no:cacheprovider` -> `40 passed`.
+
+### Sub-step 4: metrics identity scope
+
+- Motivation: stage-batch ledger rows labeled every non-`None` local identity as `EP_WAVE_LANE`, which misclassified attention-DP scheduler lanes.
+- Expectation: `DECODE_FFN` local IDs remain `EP_WAVE_LANE`, shared-domain non-FFN local IDs become `ATTN_DP_LANE`, and full-stage `None` remains `FULL_STAGE_WORLD`.
+- Method: centralized scope classification in `MetricsStore` and added role-specific assertions.
+- Result: `python -m pytest tests/unit/test_cluster_scheduler_dp_lanes.py tests/unit/test_transfer_metrics_contract.py tests/unit/test_pdaf_m2n_metrics.py -q -p no:cacheprovider` -> `114 passed`.
