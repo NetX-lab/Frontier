@@ -26,8 +26,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         super().__init__(*args, **kwargs)
         self._request_counter = 0
 
-        # DECODE_ATTN load is tracked per serving Replica.  There is no
-        # intra-Replica attention-DP lane dimension.
+        # DECODE_ATTN owns one full-stage scheduler per serving Replica.
         self._replica_load_tracker = {}
         if self._cluster_type == ClusterType.DECODE_ATTN:
             replica_ids = list(self._cluster.replicas.keys())
@@ -376,16 +375,16 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         self._request_counter += request_idx
 
-        # Requests stay on the selected serving Replica's full-stage scheduler.
+        # Distribute requests across logical DP lanes inside each Replica.
         request_mapping = []
         for replica_idx, requests in enumerate(replica_requests):
             if not requests:
                 continue
 
             replica_id = replica_ids[replica_idx]
-            request_mapping.extend(
-                (replica_id, None, request) for request in requests
-            )
+            for local_idx, request in enumerate(requests):
+                dp_id = local_idx % self._replica_dp_size
+                request_mapping.append((replica_id, dp_id, request))
 
         return request_mapping
 
@@ -424,24 +423,21 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         return request_mapping
 
-    def _schedule_decode_lane_round_robin(self) -> List[Tuple[int, None, Request]]:
-        """Schedule unified PD decode requests across serving Replicas.
-
-        The retired attention-DP dimension is absent from the mapping; each
-        selected Replica receives the request through its full-stage scheduler.
-        """
+    def _schedule_decode_lane_round_robin(self) -> List[Tuple[int, int, Request]]:
+        """Schedule unified PD decode requests across Replica-local DP lanes."""
         replica_ids = list(self._cluster.replicas.keys())
         if not replica_ids:
             return []
 
         num_replicas = len(replica_ids)
-        request_mapping: List[Tuple[int, None, Request]] = []
+        request_mapping: List[Tuple[int, int, Request]] = []
 
         request_idx = 0
         while self._request_queue:
             request = self._request_queue.pop(0)
             replica_idx = (self._request_counter + request_idx) % num_replicas
-            request_mapping.append((replica_ids[replica_idx], None, request))
+            dp_id = (self._request_counter + request_idx) // num_replicas % self._replica_dp_size
+            request_mapping.append((replica_ids[replica_idx], dp_id, request))
             request_idx += 1
 
         self._request_counter += request_idx
@@ -458,7 +454,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         """
         request_mapping = []
 
-        # Update load tracker with current pending requests from replica schedulers
+        # Update load tracker with current pending requests from replica-local DP schedulers.
         self._update_load_tracker()
 
         # Process each request in the queue
@@ -497,10 +493,14 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         including requests that may have been processed or completed since
         the last scheduling round.
         """
-        for replica_id in self._replica_load_tracker.keys():
-            scheduler_key = (replica_id, None)
+        for lane in self._replica_load_tracker.keys():
+            if self._cluster_type == ClusterType.DECODE_ATTN:
+                replica_id, replica_local_id = lane, None
+            else:
+                replica_id, replica_local_id = lane
+            scheduler_key = (replica_id, replica_local_id)
             current_pending = self._replica_schedulers[scheduler_key].num_pending_requests
-            self._replica_load_tracker[replica_id] = current_pending
+            self._replica_load_tracker[lane] = current_pending
 
     def _schedule_dynamic_with_af_priority(self) -> List[Tuple[int, int, Request]]:
         """
@@ -532,6 +532,12 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
                     )
 
                 target_replica_id = batch.decode_attn_original_replica_id
+                target_dp_id = getattr(batch, "decode_attn_original_dp_id", None)
+                if target_dp_id is not None:
+                    raise ValueError(
+                        f"Batch {batch.id} returning with unexpected DECODE_ATTN DP lane "
+                        f"{target_dp_id!r}"
+                    )
 
                 # Schedule the entire batch to the original Replica.
                 scheduler_key = (target_replica_id, None)
@@ -554,19 +560,18 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
 
         return request_mapping
 
-    def _get_least_loaded_replica(self) -> Tuple[int, None]:
-        """
-        Find the serving Replica with the least load.
-
-        Returns:
-            Tuple[int, None]: (replica_id, None) for the full-stage scheduler
-        """
+    def _get_least_loaded_replica(self) -> Tuple[int, int | None]:
+        """Find the least-loaded serving Replica or Replica-local DP lane."""
         # Initialize load tracker if not exists
         if not hasattr(self, '_replica_load_tracker') or not self._replica_load_tracker:
             self._replica_load_tracker = {}
             replica_ids = list(self._cluster.replicas.keys())
             for replica_id in replica_ids:
-                self._replica_load_tracker[replica_id] = 0
+                if self._cluster_type == ClusterType.DECODE_ATTN:
+                    self._replica_load_tracker[replica_id] = 0
+                else:
+                    for dp_id in range(self._replica_dp_size):
+                        self._replica_load_tracker[(replica_id, dp_id)] = 0
 
         # Update load tracker with current pending requests from replica schedulers
         self._update_load_tracker()
@@ -574,14 +579,17 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         # Find the serving Replica with minimum load.
         min_load = min(self._replica_load_tracker.values())
         candidates = [
-            replica_id
-            for replica_id, load in self._replica_load_tracker.items()
+            lane
+            for lane, load in self._replica_load_tracker.items()
             if load == min_load
         ]
 
         # Use round-robin among candidates with minimum load
         selected_idx = self._request_counter % len(candidates)
-        return candidates[selected_idx], None
+        selected = candidates[selected_idx]
+        if self._cluster_type == ClusterType.DECODE_ATTN:
+            return selected, None
+        return selected
 
     def _commit_decode_ffn_m2n_queue_operations(self, operations) -> None:
         """Commit prepared DECODE_FFN queue writes as one validated batch."""

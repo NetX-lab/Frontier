@@ -59,9 +59,14 @@ class BatchStageEndEvent(BaseEvent):
                 cluster_scheduler = scheduler.get_cluster_scheduler(
                     self._cluster_type
                 )
+                owner_replica_local_id = getattr(
+                    self._batch,
+                    "_stage_owner_replica_local_id",
+                    self._replica_local_id,
+                )
                 stage_scheduler = cluster_scheduler.get_replica_stage_scheduler(
                     self._replica_id,
-                    self._replica_local_id,
+                    owner_replica_local_id,
                     self._stage_id,
                 )
                 context = cluster_scheduler.get_stage_execution_context(
@@ -80,6 +85,30 @@ class BatchStageEndEvent(BaseEvent):
                     self._batch.__dict__.pop("_stage_admission_ticket", None)
                 if was_active:
                     stage_scheduler.on_stage_end()
+                    next_events = []
+                    # A stale active owner still released the shared stage. Wake
+                    # queued work on the owner lane before waking its siblings;
+                    # otherwise the owner's queue can remain stranded without a
+                    # DES retry event.
+                    if not stage_scheduler.is_empty():
+                        next_events.append(
+                            ReplicaStageScheduleEvent(
+                                self.time,
+                                self._replica_id,
+                                self._stage_id,
+                                self._cluster_type,
+                                owner_replica_local_id,
+                            )
+                    )
+                    next_events.extend(
+                        cluster_scheduler.get_waiting_replica_stage_schedule_events(
+                            time=self.time,
+                            replica_id=self._replica_id,
+                            stage_id=self._stage_id,
+                            exclude_replica_local_id=owner_replica_local_id,
+                        )
+                    )
+                    return next_events
             return []
 
         # Get the appropriate cluster scheduler for this cluster-internal event
@@ -115,6 +144,18 @@ class BatchStageEndEvent(BaseEvent):
                 self._cluster_type,
                 self._replica_local_id,
             ))
+
+        # A sibling attention-DP/EP lane may have attempted to schedule while
+        # this stage owner was active. That event returned with no work and is
+        # gone from the DES queue, so wake queued sibling lanes at release.
+        next_events.extend(
+            cluster_scheduler.get_waiting_replica_stage_schedule_events(
+                time=self.time,
+                replica_id=self._replica_id,
+                stage_id=self._stage_id,
+                exclude_replica_local_id=self._replica_local_id,
+            )
+        )
 
         if self._is_last_stage:
             return next_events + [

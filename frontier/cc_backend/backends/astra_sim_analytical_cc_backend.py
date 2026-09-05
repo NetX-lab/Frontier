@@ -105,8 +105,9 @@ class AstraSimAnalyticalCCBackend(BaseCCBackend):
         return {
             "TP": int(self._config.runtime_attn_tensor_parallel_size),
             "CP": int(self._config.runtime_num_pipeline_stages),
-            "DP": int(self._config.runtime_attn_dp)
-            * int(self._config.runtime_num_replicas),
+            # The backend models one complete Replica pod. Outer serving
+            # replicas remain scheduler capacity and never join this domain.
+            "DP": int(self._config.runtime_attn_dp),
             "EP": 1,
         }
 
@@ -114,7 +115,8 @@ class AstraSimAnalyticalCCBackend(BaseCCBackend):
         return {
             "TP": int(self._config.runtime_moe_tensor_parallel_size),
             "CP": int(self._config.runtime_num_pipeline_stages),
-            "DP": int(self._config.runtime_num_replicas),
+            # MoE TP/EP collectives stay inside the materialized Replica pod.
+            "DP": 1,
             "EP": int(self._config.runtime_moe_expert_parallel_size),
         }
 

@@ -313,7 +313,7 @@ def test_non_pdaf_architectures_keep_prefix_caching_surface(
 
 
 def test_dense_pdaf_decode_attn_rejects_data_parallelism() -> None:
-    with pytest.raises(ValueError, match="attn_dp.*fixed to 1"):
+    with pytest.raises(ValueError, match="DECODE_ATTN.*attn_dp=1"):
         ReplicaConfig(
             model_name="llama2_7b_dense_example",
             cluster_prefix="decode_attn",
@@ -326,18 +326,17 @@ def test_dense_pdaf_decode_attn_rejects_data_parallelism() -> None:
 
 
 @pytest.mark.parametrize("cluster_name", ["prefill", "decode", "monolithic"])
-def test_shared_moe_roles_reject_attention_data_parallelism(
+def test_shared_moe_roles_accept_attention_data_parallelism(
     cluster_name: str,
 ) -> None:
-    with pytest.raises(ValueError, match="attn_dp.*fixed to 1"):
-        ReplicaConfig(
-            model_name="step-moe-noquant",
-            cluster_prefix=cluster_name,
-            attn_tensor_parallel_size=2,
-            attn_dp=2,
-            moe_tensor_parallel_size=2,
-            moe_expert_parallel_size=2,
-        )
+    ReplicaConfig(
+        model_name="step-moe-noquant",
+        cluster_prefix=cluster_name,
+        attn_tensor_parallel_size=2,
+        attn_dp=2,
+        moe_tensor_parallel_size=2,
+        moe_expert_parallel_size=2,
+    )
 
 
 @pytest.mark.parametrize(

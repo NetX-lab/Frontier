@@ -1876,8 +1876,7 @@ class ReplicaConfig:
     attn_dp: int = field(
         default=1,
         metadata={
-            "help": "Fixed attention data-parallel domain for one Replica.",
-            "include_in_cli": False,
+            "help": "Attention data-parallel lanes owned by one Replica.",
         },
     )
     moe_tensor_parallel_size: int = field(
@@ -1962,10 +1961,14 @@ class ReplicaConfig:
     model_name: str = "meta-llama/Llama-2-7b-hf"
 
     def __post_init__(self):
-        if type(self.attn_dp) is not int or self.attn_dp != 1:
+        if type(self.attn_dp) is not int or self.attn_dp <= 0:
             raise ValueError(
-                "attn_dp is retired as a selectable technology dimension and "
-                f"must be fixed to 1, got {self.attn_dp!r}"
+                "attn_dp must be a positive integer, "
+                f"got {self.attn_dp!r}"
+            )
+        if self.cluster_prefix == "decode_attn" and self.attn_dp != 1:
+            raise ValueError(
+                "DECODE_ATTN requires attn_dp=1 because it is the PD-AF attention role"
             )
         # Load model and device configs first (needed for validation)
         self.model_config: BaseModelConfig = BaseModelConfig.create_from_name(
@@ -4362,17 +4365,6 @@ class ClusterConfig:
                 )
 
         normalized_cluster_name = str(cluster_name).strip().lower()
-        if (
-            normalized_cluster_name in {"prefill", "decode", "monolithic"}
-            and replica_config.model_config.is_moe
-            and replica_config.attn_dp != 1
-        ):
-            raise ValueError(
-                "MoE shared-domain roles require "
-                f"attn_dp=1 in {cluster_name} cluster, got "
-                f"{replica_config.attn_dp}."
-            )
-
         if normalized_cluster_name in {"prefill", "decode", "monolithic"} and replica_config.model_config.is_moe:
             validate_frontier_shared_parallel_domains(
                 FrontierParallelismMapping(

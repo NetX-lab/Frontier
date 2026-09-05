@@ -424,7 +424,34 @@ class BaseReplicaScheduler(ABC):
             num_tokens,
             is_moe=self._replica_is_moe,
         )
-        batch.set_global_id(self._batch_creation_counter)
+        # Preserve the scheduler lane that owns this batch across asynchronous
+        # layer-sync and stage-completion events. ``None`` remains the explicit
+        # full-stage identity for single-lane paths.
+        batch._stage_owner_replica_local_id = self._replica_local_id
+        lane_batch_counter = self._batch_creation_counter
+        # ``global_id`` remains lane-scoped for queue ordering and ownership.
+        # The forward cohort is the cross-DP identity used only at the shared
+        # attention/EP synchronization boundary.
+        batch._forward_cohort_id = lane_batch_counter
+        # Keep the child scheduler's monotonic lane hint separate from the
+        # Replica-local cohort identity assigned when a sync room opens.
+        batch._forward_cohort_provisional_id = lane_batch_counter
+        cluster_scheduler = getattr(self, "_cluster_scheduler", None)
+        if (
+            cluster_scheduler is not None
+            and hasattr(cluster_scheduler, "make_attention_dp_batch_global_id")
+            and self._cluster_type
+            in (ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE)
+            and getattr(self, "_replica_local_id", None) is not None
+        ):
+            global_id = cluster_scheduler.make_attention_dp_batch_global_id(
+                self._replica_id,
+                self._replica_local_id,
+                lane_batch_counter,
+            )
+        else:
+            global_id = lane_batch_counter
+        batch.set_global_id(global_id)
         self._batch_creation_counter += 1
         if self._should_assign_decode_sync_global_id(batch):
             batch.decode_sync_global_id = self._allocate_decode_sync_global_id()

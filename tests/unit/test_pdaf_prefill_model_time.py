@@ -110,6 +110,44 @@ def test_prefill_final_sync_records_elapsed_model_time_not_full_stage_prediction
     )
 
 
+def test_prefill_final_sync_releases_the_batch_owner_lane() -> None:
+    batch = SimpleNamespace(
+        id=13,
+        is_idle=False,
+        _stage_owner_replica_local_id=1,
+        _prefill_stage_start_time=0.0,
+        _prefill_model_execution_components_ms_by_stage={0: [1.0]},
+        schedule_epoch=0,
+        request_execution_signatures=[],
+        request_mutation_signatures=[],
+        thinking_round_start_times=[],
+    )
+    execution_time = _LayerExecutionTime(
+        attention_ms=1.0,
+        post_attention_ms=1.0,
+        pipeline_ms=1.0,
+    )
+    scheduler, _batch_stage = _make_final_sync_scheduler(
+        batch=batch,
+        execution_time=execution_time,
+        num_layers=1,
+    )
+
+    events = scheduler.on_prefill_sync_collective(
+        time=0.001,
+        replica_id=0,
+        stage_id=0,
+        batch_global_id=9,
+        sync_stage="post_moe",
+        layer_id=0,
+        metrics_store=Mock(),
+    )
+
+    scheduler.get_replica_stage_scheduler.assert_called_once_with(0, 1, 0)
+    assert len(events) == 1
+    assert events[0]._replica_local_id == 1
+
+
 class _LayerExecutionTime:
     def __init__(
         self,

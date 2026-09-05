@@ -154,8 +154,8 @@ def test_decode_ffn_scheduler_uses_replica_local_ep_capacity_name() -> None:
     ).read_text(encoding="utf-8")
 
     assert "self._replica_ep_size = int(" in source
-    assert "self._replica_dp_size" not in source
-    assert "_replica_dp_size" not in round_robin_source
+    assert "self._replica_dp_size" in source
+    assert "_replica_dp_size" in round_robin_source
     assert "Use ep_id as dp_id for compatibility" not in source
     assert "replica_local_id=ep_id" in source
 
@@ -198,7 +198,9 @@ def test_decode_collective_has_no_legacy_aggregate_helpers() -> None:
         "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"
     ).read_text(encoding="utf-8")
 
-    assert "def _create_virtual_global_batch" not in source
+    # The predictor-only aggregate helper is part of the canonical shared-DP
+    # EP wave path; legacy scalar DP synchronization remains removed below.
+    assert "def _create_virtual_global_batch" in source
     assert "def _get_decode_sync_participant_count" not in source
     assert "predict_dp_gather_time" not in source
     assert "predict_dp_scatter_time" not in source

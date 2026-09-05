@@ -17,8 +17,14 @@ class StickyRoundRobinClusterScheduler(RoundRobinClusterScheduler):
 
     def _get_ordered_targets(self) -> list[tuple[int, int | None]]:
         replica_ids = list(self._cluster.replicas.keys())
-        if self._cluster_type != ClusterType.DECODE_FFN:
+        if self._cluster_type == ClusterType.DECODE_ATTN:
             return [(replica_id, None) for replica_id in replica_ids]
+        if self._cluster_type != ClusterType.DECODE_FFN:
+            return [
+                (replica_id, dp_id)
+                for replica_id in replica_ids
+                for dp_id in range(self._replica_dp_size)
+            ]
         return [
             (replica_id, ep_id)
             for replica_id in replica_ids
