@@ -149,6 +149,7 @@ def resolve_frontier_parallelism_mapping(
     tensor_parallel_size: int,
     num_replicas: int,
     enable_expert_parallel: bool,
+    attn_dp: int = 1,
 ) -> FrontierParallelismMapping:
     normalized_model_profile = str(model_profile).strip().lower()
     if normalized_model_profile not in {"dense", "moe"}:
@@ -158,6 +159,7 @@ def resolve_frontier_parallelism_mapping(
 
     resolved_tp = _validate_positive("tensor_parallel_size", tensor_parallel_size)
     resolved_num_replicas = _validate_positive("num_replicas", num_replicas)
+    resolved_attn_dp = _validate_positive("attn_dp", attn_dp)
 
     if normalized_model_profile == "dense":
         if enable_expert_parallel:
@@ -165,24 +167,23 @@ def resolve_frontier_parallelism_mapping(
         return FrontierParallelismMapping(
             cluster_num_replicas=resolved_num_replicas,
             attn_tensor_parallel_size=resolved_tp,
-            attn_dp=1,
+            attn_dp=resolved_attn_dp,
             moe_tensor_parallel_size=1,
             moe_expert_parallel_size=1,
         )
 
-    # ``num_replicas`` is the outer serving-capacity dimension. A
-    # Replica never owns an attention-DP lane; MoE EP is always local to one
-    # Replica and therefore must not absorb the Replica count.
+    # ``num_replicas`` is the outer serving-capacity dimension. Attention-DP
+    # lanes and MoE EP ranks are local to one complete Replica pod.
     if enable_expert_parallel:
         moe_tensor_parallel_size = 1
-        moe_expert_parallel_size = resolved_tp
+        moe_expert_parallel_size = resolved_tp * resolved_attn_dp
     else:
-        moe_tensor_parallel_size = resolved_tp
+        moe_tensor_parallel_size = resolved_tp * resolved_attn_dp
         moe_expert_parallel_size = 1
     mapping = FrontierParallelismMapping(
         cluster_num_replicas=resolved_num_replicas,
         attn_tensor_parallel_size=resolved_tp,
-        attn_dp=1,
+        attn_dp=resolved_attn_dp,
         moe_tensor_parallel_size=moe_tensor_parallel_size,
         moe_expert_parallel_size=moe_expert_parallel_size,
     )
@@ -208,7 +209,7 @@ def build_collective_sim_layout(
             cp=resolved_pp,
             dp=_validate_positive(
                 "attention_dp",
-                mapping.cluster_num_replicas,
+                mapping.attn_dp,
             ),
             ep=1,
         )

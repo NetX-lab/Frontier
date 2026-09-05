@@ -1876,8 +1876,7 @@ class ReplicaConfig:
     attn_dp: int = field(
         default=1,
         metadata={
-            "help": "Fixed attention data-parallel domain for one Replica.",
-            "include_in_cli": False,
+            "help": "Attention data-parallel lanes owned by one Replica.",
         },
     )
     moe_tensor_parallel_size: int = field(
