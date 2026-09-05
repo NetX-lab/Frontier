@@ -139,7 +139,7 @@ Reviewer Agent Identity: primary `/root`
 
 Inspected Artifacts: GitHub issue #27, PR #28, remote head commit
 `0fe9b0de23aed7517996c000da663840e2eb5a7d` semantic commit plus publication
-head `65984b4e`, updated PR description, and the
+audit commit `65984b4e`, updated PR description, and the
 final English review comment.
 
 Identified Issues/Anomalies: no new runtime blocker. The public wrapper guard,

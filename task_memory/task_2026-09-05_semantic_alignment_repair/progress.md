@@ -220,7 +220,7 @@
 ## Remote Publication
 
 - Semantic repair commit: pushed `0fe9b0de23aed7517996c000da663840e2eb5a7d`;
-  final publication head: `65984b4e`, both on
+  publication audit commits include `65984b4e` and `cb09bcbf`, all on
   `origin/feat/semantic-alignment-repair-20260905`, after configuring the HTTP
   proxy with `eval $(curl -s http://deploy.i.shaipower.com/httpproxy)`.
 - Issue: #27 remains OPEN and links PR #28.
