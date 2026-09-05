@@ -7035,7 +7035,7 @@ class BaseClusterScheduler(ABC):
             target_replica_id,
         )
 
-    def _validate_decode_attn_f2a_cohort_binding(
+    def _validate_decode_attn_wave_binding(
         self,
         batch: Batch,
         *,
@@ -7462,7 +7462,7 @@ class BaseClusterScheduler(ABC):
             ReplicaSchedulerType.SJ2Q_BOUNDED_CARRYOVER,
         }
         if replica_scheduler_type in cohort_scheduler_types:
-            self._validate_decode_attn_f2a_cohort_binding(
+            self._validate_decode_attn_wave_binding(
                 batch,
                 lane=lane,
                 afd_stage_idx=afd_stage_idx,
@@ -7900,7 +7900,7 @@ class BaseClusterScheduler(ABC):
                 "DECODE_ATTN F-to-A queued Batch requires an active request"
             )
 
-        self._validate_decode_attn_f2a_cohort_binding(
+        self._validate_decode_attn_wave_binding(
             queued_batch,
             lane=queue_lane,
             afd_stage_idx=queued_stage_idx,
@@ -8893,7 +8893,7 @@ class BaseClusterScheduler(ABC):
                 f"DECODE_ATTN A-to-F {context} cohort request IDs must be an "
                 f"exact tuple, got {cohort_request_ids!r}"
             )
-        self._validate_decode_attn_f2a_cohort_binding(
+        self._validate_decode_attn_wave_binding(
             batch,
             lane=normalized_lane,
             afd_stage_idx=afd_stage_idx,
@@ -8901,7 +8901,7 @@ class BaseClusterScheduler(ABC):
             active_requests=active_requests,
             context=f"A-to-F {context}",
         )
-        self._validate_decode_attn_a2f_cohort_phase(
+        self._validate_decode_attn_a2f_wave_phase(
             batch,
             layer_id=layer_id,
             afd_stage_idx=afd_stage_idx,
@@ -8909,7 +8909,7 @@ class BaseClusterScheduler(ABC):
         )
 
     @staticmethod
-    def _validate_decode_attn_cohort_stage_maps(
+    def _validate_decode_attn_wave_stages(
         cohort_state: dict[str, Any],
         *,
         context: str,
@@ -8988,7 +8988,7 @@ class BaseClusterScheduler(ABC):
 
         return active_stage_indices, stage_phases, stage_layers
 
-    def _validate_decode_attn_a2f_cohort_phase(
+    def _validate_decode_attn_a2f_wave_phase(
         self,
         batch: Batch,
         *,
@@ -9026,7 +9026,7 @@ class BaseClusterScheduler(ABC):
                 f"cohort: cohort_id={cohort_id}, lane={lane}"
             )
         active_stage_indices, stage_phases, stage_layers = (
-            self._validate_decode_attn_cohort_stage_maps(
+            self._validate_decode_attn_wave_stages(
                 cohort_state,
                 context=f"A-to-F {context}",
             )
@@ -9459,7 +9459,7 @@ class BaseClusterScheduler(ABC):
             prepare_only=True,
         )
 
-        self._commit_decode_attn_batch_cohort_phases([prepared_cohort_update])
+        self._commit_decode_attn_batch_phases([prepared_cohort_update])
         batch.decode_attn_barrier_round_id = barrier_round_id
         batch.decode_attn_barrier_expected_lanes = (lane,)
         self._decode_attn_barrier_round_counter = barrier_round_id + 1
@@ -9836,7 +9836,7 @@ class BaseClusterScheduler(ABC):
                     )
                 )
 
-        self._commit_decode_attn_batch_cohort_phases(prepared_cohort_updates)
+        self._commit_decode_attn_batch_phases(prepared_cohort_updates)
 
         if room_exists:
             committed_room = room
@@ -9899,7 +9899,7 @@ class BaseClusterScheduler(ABC):
                 )
         return events
 
-    def _prepare_decode_attn_batch_cohort_phase(
+    def _prepare_decode_attn_batch_phase(
         self,
         batch: Batch,
         *,
@@ -9994,7 +9994,7 @@ class BaseClusterScheduler(ABC):
             )
         if cohort_state is not None and afd_stage_idx is not None:
             active_stage_indices, _, _ = (
-                self._validate_decode_attn_cohort_stage_maps(
+                self._validate_decode_attn_wave_stages(
                     cohort_state,
                     context="cohort phase update",
                 )
@@ -10016,7 +10016,7 @@ class BaseClusterScheduler(ABC):
         }
 
     @staticmethod
-    def _apply_decode_attn_batch_cohort_phase(
+    def _apply_decode_attn_batch_phase(
         prepared_update: Optional[dict[str, Any]],
     ) -> None:
         """Commit a previously validated cohort phase update."""
@@ -10046,7 +10046,7 @@ class BaseClusterScheduler(ABC):
         phases = set(stage_phases.values())
         cohort_state["af_phase"] = phases.pop() if len(phases) == 1 else "mixed"
 
-    def _commit_decode_attn_batch_cohort_phases(
+    def _commit_decode_attn_batch_phases(
         self,
         prepared_updates: List[Optional[dict[str, Any]]],
     ) -> None:
@@ -10090,7 +10090,7 @@ class BaseClusterScheduler(ABC):
             cohort_state.clear()
             cohort_state.update(prospective_state)
 
-    def _set_decode_attn_batch_cohort_phase(
+    def _set_decode_attn_batch_phase(
         self,
         batch: Batch,
         *,
@@ -10100,7 +10100,7 @@ class BaseClusterScheduler(ABC):
         layer_id: int | None = None,
         prepare_only: bool = False,
     ) -> Optional[dict[str, Any]]:
-        prepared_update = self._prepare_decode_attn_batch_cohort_phase(
+        prepared_update = self._prepare_decode_attn_batch_phase(
             batch,
             phase=phase,
             replica_id=replica_id,
@@ -10210,7 +10210,7 @@ class BaseClusterScheduler(ABC):
             if not pending_request_ids or not requested_ids.issubset(all_request_ids):
                 continue
             active_stage_indices, stage_phases, stage_layers = (
-                self._validate_decode_attn_cohort_stage_maps(
+                self._validate_decode_attn_wave_stages(
                     cohort_state,
                     context="A-to-F active local-attn lane",
                 )
@@ -10720,6 +10720,13 @@ class BaseClusterScheduler(ABC):
     _cohort_source_batches = _forward_step_source_batches
     _promote_cohort_to_ep_wave = _promote_forward_step_to_ep_wave
     _restore_cohort_full_stage_owners = _restore_forward_step_full_stage_owners
+    _validate_decode_attn_f2a_cohort_binding = _validate_decode_attn_wave_binding
+    _validate_decode_attn_cohort_stage_maps = _validate_decode_attn_wave_stages
+    _validate_decode_attn_a2f_cohort_phase = _validate_decode_attn_a2f_wave_phase
+    _prepare_decode_attn_batch_cohort_phase = _prepare_decode_attn_batch_phase
+    _apply_decode_attn_batch_cohort_phase = _apply_decode_attn_batch_phase
+    _commit_decode_attn_batch_cohort_phases = _commit_decode_attn_batch_phases
+    _set_decode_attn_batch_cohort_phase = _set_decode_attn_batch_phase
 
     @abstractmethod
     def schedule(self) -> List[Tuple[int, Request]]:
