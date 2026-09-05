@@ -432,83 +432,20 @@ class BaseClusterScheduler(ABC):
         trace_identity: Dict[str, Any],
     ) -> None:
         """Emit the completed per-layer EP barrier without changing timing."""
-
-        if phase not in {"dispatch", "combine"}:
-            raise ValueError(f"unsupported EP barrier phase: {phase!r}")
-        if type(batch_id) is not int or batch_id < 0:
-            raise ValueError("EP barrier batch_id must be a non-negative int")
-        if type(layer_id) is not int or layer_id < 0:
-            raise ValueError("EP barrier layer_id must be a non-negative int")
-        expected = tuple(sorted(expected_ep_ids))
-        arrived = tuple(sorted(arrived_ep_ids))
-        if not expected or arrived != expected:
-            raise ValueError(
-                "EP barrier must log the complete participant set: "
-                f"expected={expected!r}, arrived={arrived!r}"
-            )
-        for name, value in (
-            ("max_lane_time_ms", max_lane_time_ms),
-            ("collective_time_ms", collective_time_ms),
-            ("barrier_time_ms", barrier_time_ms),
-            ("barrier_start_time_s", barrier_start_time_s),
-            ("barrier_end_time_s", barrier_end_time_s),
-        ):
-            if not isinstance(value, Real) or isinstance(value, bool):
-                raise ValueError(f"EP barrier {name} must be a real number")
-            value = float(value)
-            if not math.isfinite(value) or value < 0:
-                raise ValueError(
-                    f"EP barrier {name} must be finite and non-negative, got {value!r}"
-                )
-        if float(barrier_time_ms) < float(max_lane_time_ms):
-            raise ValueError(
-                "EP barrier time cannot be shorter than the slowest lane: "
-                f"barrier={barrier_time_ms!r}, max_lane={max_lane_time_ms!r}"
-            )
-        expected_barrier_time_ms = float(max_lane_time_ms) + float(collective_time_ms)
-        if not math.isclose(
-            float(barrier_time_ms),
-            expected_barrier_time_ms,
-            rel_tol=1e-12,
-            abs_tol=1e-9,
-        ):
-            raise ValueError(
-                "EP barrier time does not equal lane arrival plus collective time: "
-                f"barrier={barrier_time_ms!r}, max_lane={max_lane_time_ms!r}, "
-                f"collective={collective_time_ms!r}, expected={expected_barrier_time_ms!r}"
-            )
-        expected_end_time_s = float(barrier_start_time_s) + float(barrier_time_ms) * 1e-3
-        if not math.isclose(
-            float(barrier_end_time_s),
-            expected_end_time_s,
-            rel_tol=0.0,
-            abs_tol=1e-9,
-        ):
-            raise ValueError(
-                "EP barrier end time does not match start plus duration: "
-                f"start={barrier_start_time_s!r}, duration_ms={barrier_time_ms!r}, "
-                f"end={barrier_end_time_s!r}, expected={expected_end_time_s!r}"
-            )
-
-        cluster_name = getattr(cluster_type, "name", str(cluster_type))
-        logger.info(
-            "[EP-BARRIER][%s] batch_id=%d, layer_id=%d, phase=%s, "
-            "expected_ep_ids=%s, arrived_ep_ids=%s, max_lane_time_ms=%.12f, "
-            "collective_time_ms=%.12f, barrier_time_ms=%.12f, "
-            "barrier_start_time_s=%.12f, "
-            "barrier_end_time_s=%.12f, %s",
-            cluster_name,
-            batch_id,
-            layer_id,
-            phase,
-            list(expected),
-            list(arrived),
-            float(max_lane_time_ms),
-            float(collective_time_ms),
-            float(barrier_time_ms),
-            float(barrier_start_time_s),
-            float(barrier_end_time_s),
-            BaseClusterScheduler._format_ep_trace_identity(trace_identity),
+        ep_trace.log_barrier_trace(
+            cluster_type=cluster_type,
+            batch_id=batch_id,
+            layer_id=layer_id,
+            phase=phase,
+            expected_ep_ids=expected_ep_ids,
+            arrived_ep_ids=arrived_ep_ids,
+            max_lane_time_ms=max_lane_time_ms,
+            collective_time_ms=collective_time_ms,
+            barrier_time_ms=barrier_time_ms,
+            barrier_start_time_s=barrier_start_time_s,
+            barrier_end_time_s=barrier_end_time_s,
+            trace_identity=trace_identity,
+            format_identity=BaseClusterScheduler._format_ep_trace_identity,
         )
 
     @staticmethod
