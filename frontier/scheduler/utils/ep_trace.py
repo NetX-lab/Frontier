@@ -270,3 +270,66 @@ def log_workload_trace(
         float(post_combine_ms),
         format_identity(trace_identity),
     )
+
+
+def log_wave_end_trace(
+    *,
+    cluster_type: ClusterType,
+    batch_id: int,
+    layer_id: int,
+    wave_start_time_s: float,
+    combine_barrier_end_time_s: float,
+    post_combine_time_ms: float,
+    wave_end_time_s: float,
+    trace_identity: Dict[str, Any],
+    format_identity: Callable[[Dict[str, Any]], str] | None = None,
+) -> None:
+    """Emit the final post-combine end of one EP wave."""
+
+    if format_identity is None:
+        from frontier.scheduler.utils.scheduler_diagnostics import (
+            format_ep_trace_identity,
+        )
+
+        format_identity = format_ep_trace_identity
+
+    for name, value in (
+        ("wave_start_time_s", wave_start_time_s),
+        ("combine_barrier_end_time_s", combine_barrier_end_time_s),
+        ("post_combine_time_ms", post_combine_time_ms),
+        ("wave_end_time_s", wave_end_time_s),
+    ):
+        if (
+            not isinstance(value, Real)
+            or isinstance(value, bool)
+            or not math.isfinite(float(value))
+            or float(value) < 0.0
+        ):
+            raise ValueError(
+                f"EP wave end {name} must be finite and non-negative, got {value!r}"
+            )
+    expected_end_time_s = float(combine_barrier_end_time_s) + float(post_combine_time_ms) * 1e-3
+    if not math.isclose(float(wave_end_time_s), expected_end_time_s, rel_tol=0.0, abs_tol=1e-9):
+        raise ValueError(
+            "EP wave end time does not match combine end plus post-combine "
+            f"time: expected={expected_end_time_s!r}, actual={wave_end_time_s!r}"
+        )
+    if float(wave_end_time_s) < float(wave_start_time_s):
+        raise ValueError("EP wave end time cannot precede wave start")
+    cluster_name = getattr(cluster_type, "name", str(cluster_type))
+    wave_time_ms = (float(wave_end_time_s) - float(wave_start_time_s)) * 1000.0
+    logger.info(
+        "[EP-WAVE-END][%s] batch_id=%d, layer_id=%d, "
+        "wave_start_time_s=%.12f, combine_barrier_end_time_s=%.12f, "
+        "post_combine_time_ms=%.12f, wave_end_time_s=%.12f, "
+        "wave_time_ms=%.12f, %s",
+        cluster_name,
+        batch_id,
+        layer_id,
+        float(wave_start_time_s),
+        float(combine_barrier_end_time_s),
+        float(post_combine_time_ms),
+        float(wave_end_time_s),
+        wave_time_ms,
+        format_identity(trace_identity),
+    )
