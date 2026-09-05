@@ -154,8 +154,8 @@ def test_decode_ffn_scheduler_uses_replica_local_ep_capacity_name() -> None:
     ).read_text(encoding="utf-8")
 
     assert "self._replica_ep_size = int(" in source
-    assert "self._replica_dp_size" not in source
-    assert "_replica_dp_size" not in round_robin_source
+    assert "self._replica_dp_size" in source
+    assert "_replica_dp_size" in round_robin_source
     assert "Use ep_id as dp_id for compatibility" not in source
     assert "replica_local_id=ep_id" in source
 

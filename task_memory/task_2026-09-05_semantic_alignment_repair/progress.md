@@ -29,3 +29,10 @@
 - Expectation: formal CLI/config construction and the canonical resolver produce `TP4 x DP2 x EP8`, while collective layout keeps attention DP local to one complete Replica pod.
 - Method: exposed `ReplicaConfig.attn_dp`, added resolver propagation and local EP derivation, changed attention layout DP to `mapping.attn_dp`, and added parser/resolver/layout tests.
 - Result: `python -m pytest tests/unit/test_parallel_semantics.py tests/unit/test_canonical_parallel_names.py -q -p no:cacheprovider` -> `8 passed`; `frontier.main --help` lists `--replica_config_attn_dp`.
+
+### Sub-step 2: scheduler lane routing
+
+- Motivation: reviewed non-RoundRobin schedulers still emitted `(replica_id, None)` for non-FFN requests, and load tracking mixed integer Replica keys with tuple lane keys.
+- Expectation: every shared-domain request selects one explicit `(replica_id, dp_id)` owner; PD-AF `DECODE_ATTN` keeps its intentional full-stage `(replica_id, None)` identity.
+- Method: routed LOR, Random, and Sticky Round Robin through Replica-local DP lanes, normalized RoundRobin load tracking, and updated the affected identity-contract tests.
+- Result: `python -m pytest tests/unit/test_cluster_scheduler_dp_lanes.py tests/unit/test_replica_identity_contract.py tests/unit/test_moe_routing_conservation.py -q -p no:cacheprovider` -> `30 passed`.

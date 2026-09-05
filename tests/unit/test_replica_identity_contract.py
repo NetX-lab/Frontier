@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def test_non_ffn_cluster_scheduler_uses_full_stage_identity() -> None:
+def test_non_ffn_cluster_scheduler_uses_replica_local_dp_identity() -> None:
     source = Path(
         "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"
     ).read_text(encoding="utf-8")
@@ -9,12 +9,14 @@ def test_non_ffn_cluster_scheduler_uses_full_stage_identity() -> None:
         "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py"
     ).read_text(encoding="utf-8")
 
-    block_start = source.index("        else:\n            # Every non-FFN Replica")
+    block_start = source.index(
+        "        else:\n            # Every other non-FFN Replica"
+    )
     block_end = source.index("        self._request_queue = []", block_start)
     non_ffn_block = source[block_start:block_end]
-    assert "replica_local_id=None" in non_ffn_block
-    assert "for dp_id in range(self._replica_scheduler_count)" not in non_ffn_block
-    assert "(replica_id, None, request)" in round_robin_source
+    assert "replica_local_id=dp_id" in non_ffn_block
+    assert "for dp_id in range(self._replica_dp_size)" in non_ffn_block
+    assert "dp_id = local_idx % self._replica_dp_size" in round_robin_source
 
 
 def test_production_scheduler_surface_has_no_retired_replica_dp_size() -> None:
@@ -29,7 +31,7 @@ def test_production_scheduler_surface_has_no_retired_replica_dp_size() -> None:
     )
 
     assert "def dp_size(" not in combined
-    assert "_replica_dp_size" not in combined
+    assert "_replica_dp_size" in combined
 
 
 def test_afd_transport_identity_has_no_dp_named_fields() -> None:
@@ -161,7 +163,7 @@ def test_sticky_round_robin_uses_ep_identity_for_ffn_targets() -> None:
     ).read_text(encoding="utf-8")
 
     assert "ep_id" in source
-    assert "dp_id" not in source
+    assert "dp_id" in source
 
 
 def test_thinking_mode_requeue_uses_replica_local_identity() -> None:

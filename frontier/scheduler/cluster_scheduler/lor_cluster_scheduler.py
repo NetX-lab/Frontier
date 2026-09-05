@@ -25,34 +25,25 @@ class LORClusterScheduler(BaseClusterScheduler):
 
     def _schedule_lor(self) -> List[Tuple[int, Optional[int], Request]]:
         """Original LOR scheduling logic."""
-        # First, distribute requests to replicas using LOR strategy
-        replica_requests = [[] for _ in range(self._num_replicas)]
+        # Select the least-loaded Replica-local attention-DP owner.
         replica_ids = list(self._cluster.replicas.keys())
-        
-        # Keep a map of Replica -> pending requests in its full-stage child.
-        pending_requests_map = {}
+        pending_requests_map: dict[tuple[int, int], int] = {}
         for replica_id in replica_ids:
-            scheduler_key = (replica_id, None)
-            pending_requests_map[replica_id] = self._replica_schedulers[
-                scheduler_key
-            ].num_pending_requests
+            for dp_id in range(self._replica_dp_size):
+                scheduler_key = (replica_id, dp_id)
+                pending_requests_map[scheduler_key] = self._replica_schedulers[
+                    scheduler_key
+                ].num_pending_requests
 
-        # Distribute requests using LOR strategy
+        request_mapping: List[Tuple[int, int, Request]] = []
         while self._request_queue:
             request = self._request_queue.pop(0)
-            replica_id = min(pending_requests_map.items(), key=lambda x: x[1])[0]
-            replica_idx = replica_ids.index(replica_id)
-            replica_requests[replica_idx].append(request)
-            pending_requests_map[replica_id] += 1
-
-        # A non-FFN Replica has one full-stage child; no local DP lane exists.
-        request_mapping = []
-        for replica_idx, requests in enumerate(replica_requests):
-            if not requests:
-                continue
-                
-            replica_id = replica_ids[replica_idx]
-            request_mapping.extend((replica_id, None, request) for request in requests)
+            target = min(
+                pending_requests_map,
+                key=lambda lane: (pending_requests_map[lane], lane[0], lane[1]),
+            )
+            request_mapping.append((target[0], target[1], request))
+            pending_requests_map[target] += 1
 
         return request_mapping
 

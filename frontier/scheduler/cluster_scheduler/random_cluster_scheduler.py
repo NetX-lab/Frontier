@@ -31,13 +31,16 @@ class RandomClusterScheduler(BaseClusterScheduler):
             replica_idx = randint(0, self._num_replicas - 1)
             replica_requests[replica_idx].append(request)
 
-        # A non-FFN Replica has one full-stage child; no local DP lane exists.
+        # Keep each request on one Replica-local attention-DP owner.  PD-AF
+        # DECODE_ATTN remains a full-stage role and is handled separately.
         request_mapping = []
         for replica_idx, requests in enumerate(replica_requests):
             if not requests:
                 continue
             replica_id = replica_ids[replica_idx]
-            request_mapping.extend((replica_id, None, request) for request in requests)
+            for local_idx, request in enumerate(requests):
+                dp_id = local_idx % self._replica_dp_size
+                request_mapping.append((replica_id, dp_id, request))
 
         return request_mapping
 

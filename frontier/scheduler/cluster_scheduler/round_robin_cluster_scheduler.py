@@ -493,10 +493,14 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         including requests that may have been processed or completed since
         the last scheduling round.
         """
-        for replica_id in self._replica_load_tracker.keys():
-            scheduler_key = (replica_id, None)
+        for lane in self._replica_load_tracker.keys():
+            if self._cluster_type == ClusterType.DECODE_ATTN:
+                replica_id, replica_local_id = lane, None
+            else:
+                replica_id, replica_local_id = lane
+            scheduler_key = (replica_id, replica_local_id)
             current_pending = self._replica_schedulers[scheduler_key].num_pending_requests
-            self._replica_load_tracker[replica_id] = current_pending
+            self._replica_load_tracker[lane] = current_pending
 
     def _schedule_dynamic_with_af_priority(self) -> List[Tuple[int, int, Request]]:
         """
