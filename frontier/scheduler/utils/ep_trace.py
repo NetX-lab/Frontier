@@ -417,3 +417,52 @@ def log_barrier_trace(
         float(barrier_end_time_s),
         format_identity(trace_identity),
     )
+
+
+def log_conservation_trace(
+    *,
+    cluster_type: ClusterType,
+    batch_id: int,
+    layer_id: int,
+    routing_token_count: int,
+    router_topk: int,
+    total_routed_assignments: int,
+    per_ep_routed_tokens: Dict[int, int],
+    trace_identity: Dict[str, Any],
+    format_identity: Callable[[Dict[str, Any]], str],
+) -> None:
+    """Validate and emit EP routing token conservation."""
+
+    if type(batch_id) is not int or batch_id < 0:
+        raise ValueError("EP conservation batch_id must be non-negative")
+    if type(layer_id) is not int or layer_id < 0:
+        raise ValueError("EP conservation layer_id must be non-negative")
+    for name, value, minimum in (
+        ("routing_token_count", routing_token_count, 0),
+        ("router_topk", router_topk, 1),
+        ("total_routed_assignments", total_routed_assignments, 0),
+    ):
+        if type(value) is not int or value < minimum:
+            raise ValueError(f"EP conservation {name} is invalid: {value!r}")
+    if routing_token_count * router_topk != total_routed_assignments:
+        raise ValueError(
+            "EP conservation total must equal routing_token_count * router_topk"
+        )
+    if not isinstance(per_ep_routed_tokens, dict) or not per_ep_routed_tokens:
+        raise ValueError("EP conservation requires a non-empty per-EP map")
+    normalized: dict[int, int] = {}
+    for ep_id, token_count in per_ep_routed_tokens.items():
+        if type(ep_id) is not int or ep_id < 0 or type(token_count) is not int or token_count < 0:
+            raise ValueError("EP conservation per-EP values must be non-negative ints")
+        normalized[ep_id] = token_count
+    if sum(normalized.values()) != total_routed_assignments:
+        raise ValueError("EP conservation per-EP total does not match routed assignments")
+    cluster_name = getattr(cluster_type, "name", str(cluster_type))
+    logger.info(
+        "[EP-CONSERVATION][%s] batch_id=%d, layer_id=%d, "
+        "routing_token_count=%d, router_topk=%d, total_routed_assignments=%d, "
+        "per_ep_routed_tokens=%s, %s",
+        cluster_name, batch_id, layer_id, routing_token_count, router_topk,
+        total_routed_assignments, dict(sorted(normalized.items())),
+        format_identity(trace_identity),
+    )
