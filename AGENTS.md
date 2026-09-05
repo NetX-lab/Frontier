@@ -2,6 +2,12 @@
 
 ## Release Status: `pre-release-v0.3`
 
+## Modification History
+
+| Date       | Summary of Changes |
+| ---------- | ------------------ |
+| 2026-09-05 | Added the authoritative vLLM parallel-semantics and Frontier lane-mapping contract. |
+
 - Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
 - The public co-location, PDD, and PD-AF examples explicitly select `--cc_backend_config_type analytical` for one-click smoke runs using the built-in analytical model.
 - Direct CLI/config construction defaults to `astra_sim_analytical`; pass `--cc_backend_config_type analytical` to match the public examples.
@@ -33,6 +39,7 @@ This AGENTS.md release guide is intended to be the **authoritative entry point**
 - [Quick Start: Run a Simulation](#quick-start-run-a-simulation)
 - [Examples](#examples)
 - [Configuration Model](#configuration-model)
+- [vLLM Parallel Semantics and Frontier Mapping](#vllm-parallel-semantics-and-frontier-mapping)
 - [System Architecture](#system-architecture)
 - [Metrics & Outputs](#metrics--outputs)
 - [Canonical TTFT Contract for Frontier vs vLLM V1 Online Alignment](#canonical-ttft-contract-for-frontier-vs-vllm-v1-online-alignment)
@@ -527,6 +534,38 @@ Frontier assigns parallel fields by workload ownership:
   `moe_expert_parallel_size` fields fully represent these semantics. The
   architecture profile selects each operator's semantic TP domain, and the
   role mapping selects the physical communication domain.
+
+### vLLM Parallel Semantics and Frontier Mapping
+
+Treat vLLM's parallel domains as workload ownership and collective domains,
+not as a request to create one simulator scheduler per physical rank.
+
+- A vLLM `TP=N, DP=M` serving pod has `M` independent EngineCore/Scheduler
+  request owners. Each request belongs to exactly one DP owner. Within one DP
+  owner, the `N` TP ranks execute the same request and batch work together.
+- For the supported MoE mapping, `EP` spans the ranks in the TP x DP domain.
+  A topology such as `TP=4, DP=2, EP=8` therefore uses one complete serving
+  pod, two request-owner DP lanes, and one shared EP collective with eight
+  participants. Do not model it as two independent `EP=4` Replicas.
+- One Frontier `Replica` represents one complete GPU pod. Frontier keeps TP
+  implicit in the logical operator/stage execution abstraction and represents
+  request ownership with `(replica_id, dp_id)` lanes for co-location, PDD
+  `PREFILL`, and unified PDD `DECODE` roles when `attn_dp > 1`.
+- Frontier does not create per-TP-rank schedulers or per-EP-rank schedulers.
+  `moe_expert_parallel_size` supplies EP placement and collective cardinality;
+  it does not define request ownership.
+- PD-AF `DECODE_ATTN` is a deliberate exception: its role contract requires
+  `attn_dp=1` and uses the full-stage identity `replica_local_id=None` so
+  A->F/F->A transfer provenance and cohort validation remain Replica-scoped.
+  `DECODE_FFN` uses explicit EP-local lanes keyed by `(replica_id, ep_id)`.
+- Scheduler, transfer, event, and metrics code must preserve the same identity
+  contract. Utilization meters use `attn_dp` local scopes for DP-lane roles,
+  `moe_expert_parallel_size` local scopes for `DECODE_FFN` EP lanes, and
+  full-stage meters for `replica_local_id=None` events.
+- When validating or repairing a mapping, first identify the vLLM request
+  owner, then the Frontier lane, then the collective participant cardinality.
+  A validator-only relaxation is incomplete when scheduler ownership or
+  transfer identity still disagrees with the vLLM contract.
 
 ### Profiling Contract Authority
 
