@@ -4611,7 +4611,7 @@ class BaseClusterScheduler(ABC):
             raise ValueError(f"Missing {routing_attr} for MoE PREFILL")
         return True
 
-    def _uses_shared_prefill_layer_protocol(self, batch: Batch, layer_id: int) -> bool:
+    def _uses_shared_prefill_layer_path(self, batch: Batch, layer_id: int) -> bool:
         """Return whether a shared-domain MoE model needs layer stepping.
 
         Mixed models use the same per-layer event loop for both protocols.  The
@@ -4637,6 +4637,11 @@ class BaseClusterScheduler(ABC):
             if getattr(self._predictor, routing_attr, None) is None:
                 raise ValueError(f"Missing {routing_attr} for MoE PREFILL")
         return True
+
+    def _uses_shared_prefill_layer_protocol(self, batch: Batch, layer_id: int) -> bool:
+        """Compatibility alias for the pre-refactor execution-path name."""
+
+        return self._uses_shared_prefill_layer_path(batch, layer_id)
 
     def _on_decode_ep_wave_ready(
         self,
@@ -4938,7 +4943,7 @@ class BaseClusterScheduler(ABC):
             raise ValueError(f"Missing {routing_attr} for MoE DECODE")
         return True
 
-    def _uses_shared_decode_layer_protocol(self, batch: Batch, layer_id: int) -> bool:
+    def _uses_shared_decode_layer_path(self, batch: Batch, layer_id: int) -> bool:
         """Return whether a shared-domain DECODE model needs layer stepping."""
         if self._cluster_type not in (ClusterType.DECODE, ClusterType.MONOLITHIC):
             return False
@@ -4958,6 +4963,11 @@ class BaseClusterScheduler(ABC):
                 raise ValueError(f"Missing {routing_attr} for MoE DECODE")
         return True
 
+    def _uses_shared_decode_layer_protocol(self, batch: Batch, layer_id: int) -> bool:
+        """Compatibility alias for the pre-refactor execution-path name."""
+
+        return self._uses_shared_decode_layer_path(batch, layer_id)
+
     def on_prefill_sync(self, time: float, replica_id: int, stage_id: int, batch: Batch,
                        replica_local_id: int | None, sync_stage: str, layer_id: int, stage_execution_time: float):
         del stage_execution_time
@@ -4971,7 +4981,7 @@ class BaseClusterScheduler(ABC):
                 "PREFILL synchronization entry must start at pre_moe; "
                 "post_moe completion is handled by PrefillSyncCollectiveEvent"
             )
-        if not self._uses_shared_prefill_layer_protocol(batch, layer_id):
+        if not self._uses_shared_prefill_layer_path(batch, layer_id):
             raise RuntimeError(
                 "Legacy PREFILL DP synchronization is removed; "
                 "the current layer must use the canonical per-layer protocol"
@@ -5727,7 +5737,7 @@ class BaseClusterScheduler(ABC):
                 "DECODE synchronization entry must start at pre_moe; "
                 "post_moe completion is handled by DecodeSyncCollectiveEvent"
             )
-        if not self._uses_shared_decode_layer_protocol(batch, layer_id):
+        if not self._uses_shared_decode_layer_path(batch, layer_id):
             raise RuntimeError(
                 "Legacy DECODE DP synchronization is removed; "
                 "the current layer must use the canonical per-layer protocol"
