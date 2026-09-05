@@ -6,7 +6,7 @@ from typing import Any, List, Optional
 from collections import defaultdict, deque
 
 from frontier.types import ClusterType
-from frontier.entities import Batch
+from frontier.entities import Batch, Request
 
 
 class LaneIdentityScope(Enum):
@@ -606,3 +606,183 @@ def validate_decode_ffn_receipt(
         expected_lane_contract,
         target_replica_id,
     )
+def validate_decode_attn_wave_binding(
+    scheduler,
+    batch: Batch,
+    *,
+    lane: tuple[int, int],
+    afd_stage_idx: int,
+    requests: List[Request],
+    active_requests: List[Request],
+    context: str,
+) -> None:
+    """Validate one batch against its lane-local active cohort."""
+
+    def require_non_negative_int(value, field_name: str) -> int:
+        if type(value) is not int or value < 0:
+            raise ValueError(
+                f"{field_name} must be an exact non-negative int, got {value!r}"
+            )
+        return value
+
+    wave_id = require_non_negative_int(
+        getattr(batch, "decode_attn_cohort_id", None),
+        f"DECODE_ATTN {context} decode_attn_cohort_id",
+    )
+    replica_schedulers = getattr(scheduler, "_replica_schedulers", None)
+    if type(replica_schedulers) is not dict:
+        raise RuntimeError(
+            "DECODE_ATTN replica scheduler topology must be an exact dict"
+        )
+    if lane not in replica_schedulers:
+        raise ValueError(
+            f"DECODE_ATTN {context} lane is absent from the replica scheduler "
+            f"topology: lane={lane}"
+        )
+    replica_scheduler = replica_schedulers[lane]
+    wave_states = getattr(
+        replica_scheduler,
+        "_decode_attn_active_cohort_states",
+        None,
+    )
+    if type(wave_states) is not dict:
+        raise RuntimeError(
+            "DECODE_ATTN active cohort states must be an exact dict"
+        )
+    if wave_id not in wave_states:
+        raise ValueError(
+            f"DECODE_ATTN {context} references an inactive or unknown cohort: "
+            f"cohort_id={wave_id}, lane={lane}"
+        )
+    wave_state = wave_states[wave_id]
+    if type(wave_state) is not dict:
+        raise RuntimeError(
+            "DECODE_ATTN active cohort state must be an exact dict: "
+            f"cohort_id={wave_id}, lane={lane}"
+        )
+
+    def require_wave_id_set(
+        field_name: str,
+        *,
+        require_nonempty: bool,
+    ) -> set[int]:
+        request_ids = wave_state.get(field_name)
+        if type(request_ids) is not set:
+            raise RuntimeError(
+                f"DECODE_ATTN cohort {field_name} must be an exact set, "
+                f"got {request_ids!r}"
+            )
+        if require_nonempty and not request_ids:
+            raise RuntimeError(
+                f"DECODE_ATTN cohort {field_name} must not be empty"
+            )
+        for request_id in request_ids:
+            if type(request_id) is not int or request_id < 0:
+                raise RuntimeError(
+                    f"DECODE_ATTN cohort {field_name} must contain exact "
+                    f"non-negative ints, got {request_id!r}"
+                )
+        return request_ids
+
+    all_request_ids = require_wave_id_set(
+        "all_request_ids",
+        require_nonempty=True,
+    )
+    pending_request_ids = require_wave_id_set(
+        "pending_request_ids",
+        require_nonempty=False,
+    )
+    if not pending_request_ids.issubset(all_request_ids):
+        raise RuntimeError(
+            "DECODE_ATTN cohort pending_request_ids must be a subset of "
+            "all_request_ids"
+        )
+
+    batch_wave_request_ids = getattr(
+        batch,
+        "decode_attn_cohort_request_ids",
+        None,
+    )
+    if type(batch_wave_request_ids) is not tuple:
+        raise ValueError(
+            f"DECODE_ATTN {context} decode_attn_cohort_request_ids must be an "
+            f"exact tuple, got {batch_wave_request_ids!r}"
+        )
+    normalized_batch_wave_request_ids = [
+        require_non_negative_int(
+            request_id,
+            f"DECODE_ATTN {context} cohort request ID",
+        )
+        for request_id in batch_wave_request_ids
+    ]
+    if len(set(normalized_batch_wave_request_ids)) != len(
+        normalized_batch_wave_request_ids
+    ):
+        raise ValueError(
+            f"DECODE_ATTN {context} cohort request IDs must not contain "
+            "duplicates"
+        )
+    if set(normalized_batch_wave_request_ids) != all_request_ids:
+        raise ValueError(
+            f"DECODE_ATTN {context} cohort request IDs do not match active "
+            "cohort all_request_ids: "
+            f"batch={normalized_batch_wave_request_ids}, "
+            f"active={sorted(all_request_ids)}"
+        )
+
+    batch_request_ids = [
+        require_non_negative_int(
+            getattr(request, "id", None),
+            f"DECODE_ATTN {context} request ID",
+        )
+        for request in requests
+    ]
+    if len(set(batch_request_ids)) != len(batch_request_ids):
+        raise ValueError(
+            f"DECODE_ATTN {context} request IDs must not contain duplicates"
+        )
+    requests_outside_wave = sorted(
+        set(batch_request_ids) - all_request_ids
+    )
+    if requests_outside_wave:
+        raise ValueError(
+            f"DECODE_ATTN {context} contains requests outside the active "
+            f"cohort: request_ids={requests_outside_wave}, "
+            f"cohort_id={wave_id}"
+        )
+
+    active_request_ids = {
+        require_non_negative_int(
+            getattr(request, "id", None),
+            f"DECODE_ATTN {context} active request ID",
+        )
+        for request in active_requests
+    }
+    requests_outside_pending = sorted(
+        active_request_ids - pending_request_ids
+    )
+    if requests_outside_pending:
+        raise ValueError(
+            f"DECODE_ATTN {context} requests are not pending in the active "
+            f"cohort: request_ids={requests_outside_pending}, "
+            f"cohort_id={wave_id}"
+        )
+
+    active_stage_indices = wave_state.get("active_stage_indices")
+    if type(active_stage_indices) is not set:
+        raise RuntimeError(
+            "DECODE_ATTN cohort active_stage_indices must be an exact set, "
+            f"got {active_stage_indices!r}"
+        )
+    for active_stage_idx in active_stage_indices:
+        if type(active_stage_idx) is not int or active_stage_idx < 0:
+            raise RuntimeError(
+                "DECODE_ATTN cohort active_stage_indices must contain exact "
+                f"non-negative ints, got {active_stage_idx!r}"
+            )
+    if afd_stage_idx not in active_stage_indices:
+        raise ValueError(
+            f"DECODE_ATTN {context} afd_stage_idx is not active in the "
+            f"cohort: afd_stage_idx={afd_stage_idx}, "
+            f"active_stage_indices={sorted(active_stage_indices)}"
+        )
