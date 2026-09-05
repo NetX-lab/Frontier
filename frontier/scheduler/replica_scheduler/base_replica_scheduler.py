@@ -424,7 +424,23 @@ class BaseReplicaScheduler(ABC):
             num_tokens,
             is_moe=self._replica_is_moe,
         )
-        batch.set_global_id(self._batch_creation_counter)
+        lane_batch_counter = self._batch_creation_counter
+        cluster_scheduler = getattr(self, "_cluster_scheduler", None)
+        if (
+            cluster_scheduler is not None
+            and hasattr(cluster_scheduler, "make_attention_dp_batch_global_id")
+            and self._cluster_type
+            in (ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE)
+            and getattr(self, "_replica_local_id", None) is not None
+        ):
+            global_id = cluster_scheduler.make_attention_dp_batch_global_id(
+                self._replica_id,
+                self._replica_local_id,
+                lane_batch_counter,
+            )
+        else:
+            global_id = lane_batch_counter
+        batch.set_global_id(global_id)
         self._batch_creation_counter += 1
         if self._should_assign_decode_sync_global_id(batch):
             batch.decode_sync_global_id = self._allocate_decode_sync_global_id()

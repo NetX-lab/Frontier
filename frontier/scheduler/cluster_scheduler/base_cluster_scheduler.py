@@ -1614,6 +1614,41 @@ class BaseClusterScheduler(ABC):
                 f"replica_id={replica_id}, stage_id={stage_id}"
             ) from exc
 
+    def make_attention_dp_batch_global_id(
+        self,
+        replica_id: int,
+        replica_local_id: int | None,
+        lane_batch_counter: int,
+    ) -> int:
+        """Return a batch ID unique within one Replica's attention-DP lanes.
+
+        Each child scheduler owns a local counter. Shared MoE waiting rooms are
+        scoped by physical Replica, so the lane counter is packed with the
+        attention-DP lane ID to prevent two lanes from claiming the same room.
+        The default single-lane path keeps its historical counter unchanged.
+        """
+
+        if type(replica_id) is not int or replica_id < 0:
+            raise ValueError("replica_id must be an exact non-negative int")
+        if type(lane_batch_counter) is not int or lane_batch_counter < 0:
+            raise ValueError(
+                "lane_batch_counter must be an exact non-negative int, "
+                f"got {lane_batch_counter!r}"
+            )
+        lane_count = int(getattr(self, "_replica_dp_size", 1) or 1)
+        if lane_count <= 0:
+            raise ValueError(f"attention-DP lane count must be positive, got {lane_count}")
+        if replica_local_id is None:
+            lane_id = 0
+        elif type(replica_local_id) is int and 0 <= replica_local_id < lane_count:
+            lane_id = replica_local_id
+        else:
+            raise ValueError(
+                "replica_local_id must be None or an exact lane ID in the "
+                f"attention-DP domain [0, {lane_count}), got {replica_local_id!r}"
+            )
+        return lane_batch_counter * lane_count + lane_id
+
     def release_stage_admission_for_batch(
         self,
         batch: Batch,
@@ -1748,14 +1783,10 @@ class BaseClusterScheduler(ABC):
         """Encode a MONOLITHIC MoE decode-sync id with lane scope."""
         del replica_id
 
-        ep_participant_count = getattr(self, "_replica_ep_size", None)
-        if ep_participant_count is None and hasattr(self, "_config"):
-            ep_participant_count = getattr(
-                self._config.replica_config,
-                "moe_expert_parallel_size",
-                1,
-            )
-        ep_participant_count = max(1, int(ep_participant_count or 1))
+        lane_count = getattr(self, "_replica_dp_size", None)
+        if lane_count is None and hasattr(self, "_config"):
+            lane_count = getattr(self._config.replica_config, "attn_dp", 1)
+        lane_count = max(1, int(lane_count or 1))
 
         lane_id = int(replica_local_id or 0)
         if lane_id < 0:
@@ -1763,11 +1794,11 @@ class BaseClusterScheduler(ABC):
                 "replica_local_id must be non-negative, "
                 f"got {replica_local_id!r}"
             )
-        if lane_id >= ep_participant_count:
+        if lane_id >= lane_count:
             raise ValueError(
-                "MONOLITHIC decode sync lane id must be within the EP participant "
+                "MONOLITHIC decode sync lane id must be within the attention-DP "
                 f"domain, got replica_local_id={lane_id}, "
-                f"ep_participant_count={ep_participant_count}"
+                f"lane_count={lane_count}"
             )
 
         lane_counter = int(lane_decode_sync_counter or 0)
@@ -1776,7 +1807,7 @@ class BaseClusterScheduler(ABC):
                 "lane_decode_sync_counter must be non-negative, "
                 f"got {lane_decode_sync_counter!r}"
             )
-        return lane_counter * ep_participant_count + lane_id
+        return lane_counter * lane_count + lane_id
 
     def _get_decode_target_cluster(self) -> ClusterType:
         """

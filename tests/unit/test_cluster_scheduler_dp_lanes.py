@@ -10,7 +10,26 @@ from frontier.scheduler.cluster_scheduler.random_cluster_scheduler import (
 from frontier.scheduler.cluster_scheduler.sticky_round_robin_cluster_scheduler import (
     StickyRoundRobinClusterScheduler,
 )
+from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
+    BaseClusterScheduler,
+)
+from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
+    BaseReplicaScheduler,
+)
 from frontier.types import ClusterType
+
+
+class _BareClusterScheduler(BaseClusterScheduler):
+    def schedule(self):
+        return []
+
+
+class _BareReplicaScheduler(BaseReplicaScheduler):
+    def _get_next_batch(self, *args, **kwargs):
+        return None
+
+    def on_batch_end(self, *args, **kwargs):
+        return None
 
 
 def _request(*, session_id: int | None = None) -> Request:
@@ -69,3 +88,40 @@ def test_sticky_round_robin_orders_all_attention_dp_lanes() -> None:
     )
 
     assert scheduler._get_ordered_targets() == [(7, 0), (7, 1)]
+
+
+def test_shared_batch_global_ids_are_unique_per_replica_dp_lane() -> None:
+    scheduler = _BareClusterScheduler.__new__(_BareClusterScheduler)
+    scheduler._replica_dp_size = 2
+
+    assert scheduler.make_attention_dp_batch_global_id(7, 0, 0) == 0
+    assert scheduler.make_attention_dp_batch_global_id(7, 1, 0) == 1
+    assert scheduler.make_attention_dp_batch_global_id(7, 0, 1) == 2
+
+
+def test_decode_sync_global_ids_use_attention_dp_cardinality() -> None:
+    scheduler = _BareClusterScheduler.__new__(_BareClusterScheduler)
+    scheduler._replica_dp_size = 8
+    scheduler._replica_ep_size = 4
+
+    assert scheduler.make_decode_sync_global_id(7, 7, 0) == 7
+
+
+def test_replica_child_batch_creation_uses_lane_scoped_global_ids() -> None:
+    cluster_scheduler = _BareClusterScheduler.__new__(_BareClusterScheduler)
+    cluster_scheduler._replica_dp_size = 2
+    children = []
+    for dp_id in (0, 1):
+        child = _BareReplicaScheduler.__new__(_BareReplicaScheduler)
+        child._cluster_scheduler = cluster_scheduler
+        child._cluster_type = ClusterType.MONOLITHIC
+        child._replica_id = 7
+        child._replica_local_id = dp_id
+        child._replica_is_moe = True
+        child._batch_creation_counter = 0
+        child._decode_sync_batch_creation_counter = 0
+        children.append(child)
+
+    batches = [child._create_batch([_request()], [6]) for child in children]
+
+    assert [batch.global_id for batch in batches] == [0, 1]

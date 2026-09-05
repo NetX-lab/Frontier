@@ -36,3 +36,10 @@
 - Expectation: every shared-domain request selects one explicit `(replica_id, dp_id)` owner; PD-AF `DECODE_ATTN` keeps its intentional full-stage `(replica_id, None)` identity.
 - Method: routed LOR, Random, and Sticky Round Robin through Replica-local DP lanes, normalized RoundRobin load tracking, and updated the affected identity-contract tests.
 - Result: `python -m pytest tests/unit/test_cluster_scheduler_dp_lanes.py tests/unit/test_replica_identity_contract.py tests/unit/test_moe_routing_conservation.py -q -p no:cacheprovider` -> `30 passed`.
+
+### Sub-step 3: DP-scoped batch and decode-sync identity
+
+- Motivation: independent DP child counters could reuse the same batch global ID in shared MoE waiting rooms, and decode-sync ID validation incorrectly used MoE EP cardinality.
+- Expectation: batch IDs remain unique within each physical Replica's attention-DP lanes, default single-lane IDs remain stable, and decode-sync IDs accept the full configured attention-DP domain.
+- Method: added Replica-local batch ID packing through the cluster scheduler, reused the lane cardinality for decode-sync IDs, and added direct identity/boundary tests.
+- Result: `python -m pytest tests/unit/test_cluster_scheduler_dp_lanes.py tests/unit/test_shared_ep_layer_protocol_guard.py tests/unit/test_pd_moe_lifecycle_reproducer.py tests/unit/test_pd_decode_moe_layer_accounting.py -q -p no:cacheprovider` -> `40 passed`.
