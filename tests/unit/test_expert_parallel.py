@@ -7,11 +7,13 @@ from frontier.entities import EPBatchGroup, Request
 from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.scheduler.utils.expert_parallel import (
     materialize_wave_workload,
+    prepare_combine_timing,
     summarize_alltoall_payload,
     validate_barrier_arrival,
     validate_token_conservation,
 )
 from frontier.types import ClusterType
+from frontier.model_architectures import ExpertParallelCollective
 
 
 def _routing_details():
@@ -118,3 +120,24 @@ def test_summarize_alltoall_payload_uses_largest_lane():
     batches = {0: _dispatch_batch(0), 1: _dispatch_batch(1)}
     payload = summarize_alltoall_payload(batches, hidden_size=16)
     assert payload == (64, {0: 1, 1: 2}, 2, 16)
+
+
+def test_prepare_combine_timing_returns_collective_and_post_compute_times():
+    batches = {0: _dispatch_batch(0), 1: _dispatch_batch(1)}
+    batches[0].post_combine_time = 0.2
+    batches[1].post_combine_time = 0.5
+    timing = prepare_combine_timing(
+        prospective_batches=batches,
+        prospective_arrival_times={0: 1.0, 1: 1.5},
+        expected_ep_size=2,
+        collective_kind=ExpertParallelCollective.ALLTOALL,
+        cluster_type=ClusterType.DECODE_FFN,
+        hidden_size=16,
+        predict_alltoall=lambda **_: 4.0,
+        predict_allgather=lambda **_: 9.0,
+    )
+    assert timing.sync_time == pytest.approx(1.5)
+    assert timing.exec_time_ms == pytest.approx(4.0)
+    assert timing.combine_end_time == pytest.approx(1.504)
+    assert timing.final_event_time == pytest.approx(2.004)
+    assert timing.data_size_bytes == 64
