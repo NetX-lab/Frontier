@@ -17,6 +17,7 @@ from frontier.scheduler.replica_scheduler.base_replica_scheduler import (
     BaseReplicaScheduler,
 )
 from frontier.metrics.metrics_store import MetricsStore
+from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.types import ClusterType
 
 
@@ -126,6 +127,7 @@ def test_replica_child_batch_creation_uses_lane_scoped_global_ids() -> None:
     batches = [child._create_batch([_request()], [6]) for child in children]
 
     assert [batch.global_id for batch in batches] == [0, 1]
+    assert [batch._forward_cohort_id for batch in batches] == [0, 0]
 
 
 def test_metrics_distinguish_attention_dp_and_ep_lane_scopes() -> None:
@@ -141,3 +143,39 @@ def test_metrics_distinguish_attention_dp_and_ep_lane_scopes() -> None:
         ClusterType.DECODE_ATTN,
         None,
     ) == "FULL_STAGE_WORLD"
+
+
+def test_stage_release_wakes_only_queued_sibling_lanes() -> None:
+    scheduler = _BareClusterScheduler.__new__(_BareClusterScheduler)
+    scheduler._cluster_type = ClusterType.MONOLITHIC
+
+    def lane(*, busy: bool, empty: bool):
+        stage = SimpleNamespace(
+            is_busy=busy,
+            is_empty=lambda: empty,
+        )
+        return SimpleNamespace(
+            get_replica_stage_scheduler=lambda _stage_id: stage,
+        )
+
+    scheduler._replica_schedulers = {
+        (7, 0): lane(busy=False, empty=False),  # current owner: excluded
+        (7, 1): lane(busy=False, empty=False),  # queued sibling: wakes
+        (7, 2): lane(busy=True, empty=False),   # busy sibling: skip
+        (7, 3): lane(busy=False, empty=True),   # empty sibling: skip
+        (8, 0): lane(busy=False, empty=False),  # different Replica: skip
+    }
+
+    events = scheduler.get_waiting_replica_stage_schedule_events(
+        time=2.5,
+        replica_id=7,
+        stage_id=4,
+        exclude_replica_local_id=0,
+    )
+
+    assert len(events) == 1
+    assert isinstance(events[0], ReplicaStageScheduleEvent)
+    assert events[0].time == 2.5
+    assert events[0]._replica_id == 7
+    assert events[0]._stage_id == 4
+    assert events[0]._replica_local_id == 1

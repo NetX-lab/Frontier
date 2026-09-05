@@ -220,7 +220,9 @@ def build_collective_sim_layout(
                 "moe_tensor_parallel_size", mapping.moe_tensor_parallel_size
             ),
             cp=resolved_pp,
-            dp=_validate_positive("cluster_num_replicas", mapping.cluster_num_replicas),
+            # The backend models one complete Replica pod. Outer cluster
+            # replicas are scheduler capacity and never MoE collective ranks.
+            dp=1,
             ep=_validate_positive(
                 "moe_expert_parallel_size", mapping.moe_expert_parallel_size
             ),

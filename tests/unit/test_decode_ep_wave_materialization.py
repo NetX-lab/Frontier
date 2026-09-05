@@ -8,6 +8,7 @@ import pytest
 
 from frontier.entities import Batch, Request
 from frontier.events.dense_layer_complete_event import DenseLayerCompleteEvent
+from frontier.events.decode_sync_event import DecodeSyncEvent
 from frontier.events.decode_sync_collective_event import DecodeSyncCollectiveEvent
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
@@ -141,11 +142,27 @@ class _LanePredictor:
                     "combine_ms": 3.0,
                     "post_combine_ms": 2.0,
                 },
+                5: {
+                    "pre_dispatch_ms": 2.0,
+                    "dispatch_ms": 1.0,
+                    "routed_compute_ms": 3.0,
+                    "combine_ms": 3.0,
+                    "post_combine_ms": 2.0,
+                },
+                7: {
+                    "pre_dispatch_ms": 2.0,
+                    "dispatch_ms": 1.0,
+                    "routed_compute_ms": 3.0,
+                    "combine_ms": 3.0,
+                    "post_combine_ms": 2.0,
+                },
             }[sum(per_expert.values())]
         )
 
 
-def _scheduler() -> tuple[RoundRobinClusterScheduler, _LanePredictor, Batch]:
+def _scheduler(
+    *, lane_capacity: int = 1
+) -> tuple[RoundRobinClusterScheduler, _LanePredictor, Batch]:
     predictor = _LanePredictor()
     scheduler = object.__new__(RoundRobinClusterScheduler)
     scheduler._cluster_type = ClusterType.DECODE
@@ -176,7 +193,12 @@ def _scheduler() -> tuple[RoundRobinClusterScheduler, _LanePredictor, Batch]:
     batch = Batch(0, [request], [4], is_moe=True)
     batch.set_global_id(7)
     batch.time = 0.0
-    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=2)
+    context = StageExecutionContext(
+        replica_id=0,
+        stage_id=0,
+        ep_size=2,
+        full_stage_capacity=lane_capacity,
+    )
     ticket = context.enqueue_full_stage(
         operation_id=("stage_batch", batch.id, batch.schedule_epoch)
     )
@@ -277,6 +299,159 @@ def test_decode_dense_layer_bypasses_ep_materializer(monkeypatch) -> None:
     assert events[0].time == pytest.approx(0.013)
     assert predictor.calls == [(1, {})]
     assert batch._stage_admission_ticket.scope == FULL_STAGE_WORLD
+
+
+def test_decode_placeholder_stays_replaceable_until_idle_event_is_consumed():
+    scheduler, _predictor, batch_zero = _scheduler(lane_capacity=2)
+    scheduler._replica_dp_size = 2
+    context = scheduler._stage_execution_contexts[(0, 0)]
+    batch_zero._forward_cohort_id = 17
+    batch_zero._stage_owner_replica_local_id = 0
+
+    batch_one = Batch(
+        0,
+        [Request(arrived_at=0.0, num_prefill_tokens=0, num_decode_tokens=3)],
+        [3],
+        is_moe=True,
+    )
+    batch_one.requests[0]._is_prefill_complete = True
+    batch_one._forward_cohort_id = 17
+    batch_one.set_global_id(35)
+    batch_one._stage_owner_replica_local_id = 1
+    ticket = context.enqueue_full_stage(operation_id=("stage_batch", batch_one.id, 0))
+    assert context.try_acquire(ticket) is True
+    batch_one._stage_admission_ticket = ticket
+
+    empty_lane = lambda: SimpleNamespace(
+        get_replica_stage_scheduler=lambda _stage_id: SimpleNamespace(
+            is_busy=False,
+            is_empty=lambda: True,
+        )
+    )
+    scheduler._replica_schedulers = {(0, 1): empty_lane()}
+    first_events = scheduler.on_decode_sync(
+        0.011,
+        0,
+        0,
+        batch_zero,
+        0,
+        "pre_moe",
+        2,
+        0.0,
+    )
+
+    assert len(first_events) == 1
+    assert isinstance(first_events[0], DecodeSyncEvent)
+    room = scheduler._decode_sync_waiting_room[0][0][17][2]["pre_moe"]
+    assert room["batches"][0] is batch_zero
+    assert room["batches"][1].is_idle
+
+    second_events = scheduler.on_decode_sync(
+        0.012,
+        0,
+        0,
+        batch_one,
+        1,
+        "pre_moe",
+        2,
+        0.0,
+    )
+
+    assert len(second_events) == 1
+    assert isinstance(second_events[0], DecodeSyncCollectiveEvent)
+    assert scheduler._decode_sync_waiting_room[0][0][17][2]["pre_moe"] == {}
+    assert batch_zero._decode_ep_wave_lane_times_ms == (4.0, 7.0)
+    assert batch_one._decode_ep_wave_lane_times_ms == (4.0, 7.0)
+    assert first_events[0].handle_event(
+        SimpleNamespace(get_cluster_scheduler=lambda _cluster_type: scheduler),
+        SimpleNamespace(),
+    ) == []
+
+    context.release(batch_zero._stage_admission_ticket)
+    batch_zero.__dict__.pop("_stage_admission_ticket", None)
+    batch_one.__dict__.pop("_stage_admission_ticket", None)
+
+    late_batch = Batch(
+        0,
+        [Request(arrived_at=0.013, num_prefill_tokens=0, num_decode_tokens=4)],
+        [4],
+        is_moe=True,
+    )
+    late_batch.requests[0]._is_prefill_complete = True
+    late_batch._forward_cohort_id = 17
+    late_batch._stage_owner_replica_local_id = 1
+    late_ticket = context.enqueue_full_stage(
+        operation_id=("stage_batch", late_batch.id, late_batch.schedule_epoch)
+    )
+    assert context.try_acquire(late_ticket) is True
+    late_batch._stage_admission_ticket = late_ticket
+    scheduler._replica_schedulers[(0, 0)] = empty_lane()
+    late_events = scheduler.on_decode_sync(
+        0.013,
+        0,
+        0,
+        late_batch,
+        1,
+        "pre_moe",
+        2,
+        0.0,
+    )
+    assert len(late_events) == 1
+    assert isinstance(late_events[0], DecodeSyncEvent)
+    assert late_batch._forward_cohort_id != 17
+    fresh_cohort_id = late_batch._forward_cohort_id
+    late_room = scheduler._decode_sync_waiting_room[0][0][fresh_cohort_id][2][
+        "pre_moe"
+    ]
+    assert late_room["batches"][1] is late_batch
+    assert late_room["batches"][0].is_idle
+    late_collective_events = late_events[0].handle_event(
+        SimpleNamespace(get_cluster_scheduler=lambda _cluster_type: scheduler),
+        SimpleNamespace(),
+    )
+    assert len(late_collective_events) == 1
+    assert isinstance(late_collective_events[0], DecodeSyncCollectiveEvent)
+    assert scheduler._decode_sync_waiting_room[0][0][fresh_cohort_id][2][
+        "post_moe"
+    ]["batches"][1] is late_batch
+
+
+def test_decode_dense_layer_emits_one_completion_per_attention_dp_owner():
+    scheduler, predictor, batch_zero = _scheduler(lane_capacity=2)
+    scheduler._replica_dp_size = 2
+    context = scheduler._stage_execution_contexts[(0, 0)]
+    batch_zero._forward_cohort_id = 19
+    batch_zero._stage_owner_replica_local_id = 0
+
+    batch_one = Batch(
+        0,
+        [Request(arrived_at=0.0, num_prefill_tokens=0, num_decode_tokens=3)],
+        [3],
+        is_moe=True,
+    )
+    batch_one.requests[0]._is_prefill_complete = True
+    batch_one._forward_cohort_id = 19
+    batch_one.set_global_id(39)
+    batch_one._stage_owner_replica_local_id = 1
+    ticket = context.enqueue_full_stage(operation_id=("stage_batch", batch_one.id, 0))
+    assert context.try_acquire(ticket) is True
+    batch_one._stage_admission_ticket = ticket
+
+    events = scheduler._on_decode_ep_wave_ready(
+        time=0.01,
+        replica_id=0,
+        stage_id=0,
+        batch=batch_zero,
+        cohort_batches={0: batch_zero, 1: batch_one},
+        layer_id=1,
+    )
+
+    assert len(events) == 2
+    assert all(isinstance(event, DenseLayerCompleteEvent) for event in events)
+    assert {event._batch for event in events} == {batch_zero, batch_one}
+    assert predictor.calls == [(1, {}), (1, {})]
+    assert batch_zero._stage_admission_ticket.scope == FULL_STAGE_WORLD
+    assert batch_one._stage_admission_ticket.scope == FULL_STAGE_WORLD
 
 
 def test_decode_ep_collective_communication_is_added_once() -> None:

@@ -198,7 +198,9 @@ def test_decode_collective_has_no_legacy_aggregate_helpers() -> None:
         "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"
     ).read_text(encoding="utf-8")
 
-    assert "def _create_virtual_global_batch" not in source
+    # The predictor-only aggregate helper is part of the canonical shared-DP
+    # EP wave path; legacy scalar DP synchronization remains removed below.
+    assert "def _create_virtual_global_batch" in source
     assert "def _get_decode_sync_participant_count" not in source
     assert "predict_dp_gather_time" not in source
     assert "predict_dp_scatter_time" not in source

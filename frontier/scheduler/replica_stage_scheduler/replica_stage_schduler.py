@@ -216,6 +216,12 @@ class ReplicaStageScheduler:
         )
         live_batch._id = batch.id
         live_batch.set_global_id(batch.global_id)
+        if hasattr(batch, "_forward_cohort_id"):
+            live_batch._forward_cohort_id = batch._forward_cohort_id
+        if hasattr(batch, "_forward_cohort_provisional_id"):
+            live_batch._forward_cohort_provisional_id = (
+                batch._forward_cohort_provisional_id
+            )
         live_batch.decode_attn_original_replica_id = (
             batch.decode_attn_original_replica_id
         )
@@ -228,6 +234,10 @@ class ReplicaStageScheduler:
         live_batch._scheduled = batch.scheduled
         live_batch._scheduled_at = batch._scheduled_at
         live_batch._schedule_epoch = batch.schedule_epoch
+        if hasattr(batch, "_stage_owner_replica_local_id"):
+            live_batch._stage_owner_replica_local_id = (
+                batch._stage_owner_replica_local_id
+            )
         live_batch._request_execution_signatures = [
             batch.request_execution_signatures[index] for index in live_indices
         ]

@@ -53,6 +53,14 @@ def test_runtime_collective_layout_is_local_to_one_replica_pod(
     assert materialized.runtime_attn_tensor_parallel_size == 4
     assert materialized.runtime_moe_tensor_parallel_size == 1
     assert materialized.runtime_moe_expert_parallel_size == 8
+    if backend_config_type is CollectiveSimCCBackendConfig:
+        assert (
+            materialized.parallel_tp
+            * materialized.parallel_cp
+            * materialized.parallel_dp
+            * materialized.parallel_ep
+            == replica_config.world_size
+        )
 
 
 @pytest.mark.parametrize(

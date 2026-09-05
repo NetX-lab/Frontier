@@ -9,6 +9,7 @@ from frontier.entities import Batch, EPBatchGroup, Request
 from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.events.batch_stage_end_event import BatchStageEndEvent
 from frontier.events.cluster_batch_end_event import ClusterBatchEndEvent
+from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     FULL_STAGE_WORLD,
     EP_WAVE,
@@ -27,6 +28,25 @@ from frontier.scheduler.replica_stage_scheduler.replica_stage_schduler import (
     ReplicaStageScheduler,
 )
 from frontier.types import ClusterType
+
+
+def test_runtime_live_batch_preserves_forward_cohort_identity() -> None:
+    scheduler = object.__new__(ReplicaStageScheduler)
+    first_request = Request(arrived_at=0.0, num_prefill_tokens=2, num_decode_tokens=0)
+    second_request = Request(arrived_at=0.0, num_prefill_tokens=2, num_decode_tokens=0)
+    batch = Batch(0, [first_request, second_request], [2, 2], is_moe=True)
+    batch.set_global_id(7)
+    batch._forward_cohort_id = 12
+    batch._forward_cohort_provisional_id = 4
+    batch._stage_owner_replica_local_id = 1
+    batch._request_execution_matches_snapshot = lambda index: index == 0
+
+    live_batch = scheduler._materialize_runtime_live_batch(batch)
+
+    assert live_batch is not None
+    assert live_batch._forward_cohort_id == 12
+    assert live_batch._forward_cohort_provisional_id == 4
+    assert live_batch._stage_owner_replica_local_id == 1
 
 
 def test_ep_wave_owns_stage_before_dense_can_start() -> None:
@@ -81,6 +101,50 @@ def test_release_requires_the_active_operation_ticket() -> None:
         context.release(wrong)
 
     context.release(wave)
+
+
+def test_cancel_rejects_every_active_owner_when_full_stage_capacity_is_shared() -> None:
+    context = StageExecutionContext(
+        replica_id=0,
+        stage_id=0,
+        ep_size=1,
+        full_stage_capacity=2,
+    )
+    first = context.enqueue_full_stage(operation_id=("lane", 0))
+    second = context.enqueue_full_stage(operation_id=("lane", 1))
+    assert context.try_acquire(first) is True
+    assert context.try_acquire(second) is True
+
+    with pytest.raises(ValueError, match="active stage operation"):
+        context.cancel(second)
+
+
+def test_shared_full_stage_owners_transition_independently() -> None:
+    context = StageExecutionContext(
+        replica_id=0,
+        stage_id=0,
+        ep_size=1,
+        full_stage_capacity=2,
+    )
+    first = context.enqueue_full_stage(operation_id=("lane", 0, "layer", 0))
+    second = context.enqueue_full_stage(operation_id=("lane", 1, "layer", 0))
+    assert context.try_acquire(first) is True
+    assert context.try_acquire(second) is True
+
+    first_next = context.transition_active_scope(
+        first,
+        operation_id=("lane", 0, "layer", 1),
+        scope=FULL_STAGE_WORLD,
+    )
+    second_next = context.transition_active_scope(
+        second,
+        operation_id=("lane", 1, "layer", 1),
+        scope=FULL_STAGE_WORLD,
+    )
+
+    assert context.is_active(first_next)
+    assert context.is_active(second_next)
+    assert context.active_scope == FULL_STAGE_WORLD
 
 
 def test_stage_contexts_are_isolated_by_stage_identity() -> None:
@@ -293,7 +357,8 @@ def test_stale_stage_end_releases_the_captured_active_ticket() -> None:
     cluster_scheduler = object.__new__(_ProbeClusterScheduler)
     cluster_scheduler._stage_execution_contexts = {(0, 0): context}
     cluster_scheduler.get_replica_stage_scheduler = lambda *_args: SimpleNamespace(
-        on_stage_end=lambda: stage_end_calls.append(True)
+        on_stage_end=lambda: stage_end_calls.append(True),
+        is_empty=lambda: True,
     )
 
     batch = Batch(
@@ -334,6 +399,83 @@ def test_stale_stage_end_releases_the_captured_active_ticket() -> None:
     assert stage_end_calls == [True]
     assert context.is_idle
     assert not hasattr(batch, "_stage_admission_ticket")
+
+
+def test_stale_active_stage_end_wakes_queued_sibling_lane() -> None:
+    """A stale owner release must not strand a queued DP sibling."""
+
+    class _ProbeClusterScheduler(BaseClusterScheduler):
+        def schedule(self):
+            return []
+
+    context = StageExecutionContext(replica_id=0, stage_id=0, ep_size=1)
+    active_ticket = context.enqueue_full_stage(operation_id=("stage_batch", 75, 0))
+    sibling_ticket = context.enqueue_full_stage(operation_id=("stage_batch", 76, 0))
+    assert context.try_acquire(active_ticket)
+
+    owner_stage_end_calls = []
+    owner_stage = SimpleNamespace(
+        on_stage_end=lambda: owner_stage_end_calls.append(True),
+        is_busy=True,
+        is_empty=lambda: False,
+    )
+    sibling_stage = SimpleNamespace(
+        is_busy=False,
+        is_empty=lambda: False,
+    )
+    cluster_scheduler = object.__new__(_ProbeClusterScheduler)
+    cluster_scheduler._cluster_type = ClusterType.PREFILL
+    cluster_scheduler._stage_execution_contexts = {(0, 0): context}
+    cluster_scheduler._replica_schedulers = {
+        (0, 0): SimpleNamespace(get_replica_stage_scheduler=lambda _stage_id: owner_stage),
+        (0, 1): SimpleNamespace(get_replica_stage_scheduler=lambda _stage_id: sibling_stage),
+    }
+    stage_lookup_local_ids = []
+
+    def _get_owner_stage(_replica_id, replica_local_id, _stage_id):
+        stage_lookup_local_ids.append(replica_local_id)
+        return owner_stage
+
+    cluster_scheduler.get_replica_stage_scheduler = _get_owner_stage
+
+    batch = Batch(
+        0,
+        [Request(arrived_at=0.0, num_prefill_tokens=1, num_decode_tokens=0)],
+        [1],
+        is_moe=False,
+    )
+    batch.set_global_id(75)
+    batch._stage_owner_replica_local_id = 0
+    batch._stage_admission_ticket = active_ticket
+    batch_stage = SimpleNamespace(id=3)
+    event = BatchStageEndEvent(
+        time=1.0,
+        replica_id=0,
+        stage_id=0,
+        is_last_stage=True,
+        batch=batch,
+        batch_stage=batch_stage,
+        cluster_type=ClusterType.PREFILL,
+        # The event carries a stale/mismatched local identity. The batch owner
+        # must remain authoritative for release and sibling exclusion.
+        replica_local_id=1,
+    )
+    batch._schedule_epoch += 1
+    scheduler = SimpleNamespace(
+        get_cluster_scheduler=lambda *_args: cluster_scheduler
+    )
+    metrics_store = SimpleNamespace()
+
+    events = event.handle_event(scheduler, metrics_store)
+
+    assert owner_stage_end_calls == [True]
+    assert stage_lookup_local_ids == [0]
+    assert len(events) == 2
+    assert all(isinstance(event, ReplicaStageScheduleEvent) for event in events)
+    assert [event._replica_local_id for event in events] == [0, 1]
+    assert all(event._replica_id == 0 for event in events)
+    assert context.is_idle
+    assert context.queued_tickets == (sibling_ticket,)
 
 
 def test_normal_stage_end_releases_the_active_parent_ticket() -> None:

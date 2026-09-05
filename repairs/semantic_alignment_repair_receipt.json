@@ -3,11 +3,13 @@
   "analysis_state": "COMPLETE",
   "status": "PASS",
   "correction_state": "complete",
-  "next_action": "Publish the reviewed branch and continue release validation.",
+  "next_action": "Run final local validation, commit the reviewed sub-step, push the branch, and refresh PR #28.",
   "authorization": {
     "receipt": "task_memory/semantic-alignment-repair-approval.md",
     "code_change_marker": "SEMANTIC_ALIGNMENT_REPAIR_START: legacy Replica-local DP lanes with logical TP and shared EP cardinality",
     "follow_up_code_change_marker": "SEMANTIC_ALIGNMENT_REPAIR_START: isolate CC backend collectives to one Replica pod",
+    "stale_completion_code_change_marker": "SEMANTIC_ALIGNMENT_REPAIR_START: wake queued sibling lanes after stale owner release",
+    "latest_code_change_marker": "SEMANTIC_ALIGNMENT_REPAIR_START: fail fast on missing admission tickets and wake stale owner queues",
     "scope": "co-location -> pd-disagg -> pd-af-disagg",
     "groundtruth_rerun": false
   },
@@ -28,6 +30,9 @@
     "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py",
     "frontier/scheduler/cluster_scheduler/sticky_round_robin_cluster_scheduler.py",
     "frontier/scheduler/replica_scheduler/base_replica_scheduler.py",
+    "frontier/scheduler/replica_stage_scheduler/replica_stage_schduler.py",
+    "frontier/scheduler/replica_stage_scheduler/stage_execution_context.py",
+    "frontier/events/batch_stage_end_event.py",
     "repairs/semantic_alignment_repair_receipt.json",
     "tests/unit/test_cc_backend_replica_local_layout.py",
     "tests/unit/test_canonical_parallel_names.py",
@@ -37,6 +42,11 @@
     "tests/unit/test_parallel_semantics.py",
     "tests/unit/test_pdaf_config_contract.py",
     "tests/unit/test_replica_identity_contract.py",
+    "tests/unit/test_stage_execution_context.py",
+    "tests/unit/test_decode_ep_wave_materialization.py",
+    "tests/unit/test_prefill_ep_wave_materialization.py",
+    "tests/unit/test_pd_decode_moe_layer_accounting.py",
+    "tests/unit/test_pdaf_prefill_model_time.py",
     "task_memory/semantic-alignment-repair-approval.md",
     "task_memory/task_2026-09-05_semantic_alignment_repair/design.md",
     "task_memory/task_2026-09-05_semantic_alignment_repair/future.md",
@@ -92,12 +102,88 @@
       },
       "backend_replica_local_layout": {
         "focused_unit_tests": "12 passed",
-        "merged_semantic_targeted_units": "232 passed, 115 warnings",
+        "merged_semantic_targeted_units": "718 passed, 19 skipped, 115 warnings",
+        "owner_focused_units": "37 passed",
         "runtime_num_replicas_input": 3,
         "runtime_attn_dp_input": 2,
         "materialized_world": 8,
         "attention_dims": "TP4 x CP1 x DP2 x EP1",
         "moe_dims": "TP1 x CP1 x DP1 x EP8"
+      },
+      "stage_owner_completion": {
+        "stale_active_owner_release": "batch._stage_owner_replica_local_id",
+        "queued_sibling_wakeup": "returned ReplicaStageScheduleEvent",
+        "regression": "mismatched event identity still releases batch owner",
+        "status": "PASS"
+      },
+      "admission_ticket_contract": {
+        "promotion_restore_missing_ticket": "raises ValueError in production scheduler",
+        "standalone_layer_probe_without_stage_context": "keeps explicit compatibility path",
+        "regression": "missing live batch admission ticket is surfaced instead of silently continuing",
+        "status": "PASS"
+      },
+      "final_fresh_architecture_smoke": {
+        "co_location_artifact_root": "/data/ycfeng/tmp/frontier_semantic_repair_final_coloc_20260905/",
+        "pdd_artifact_root": "/data/ycfeng/tmp/frontier_semantic_repair_final_pdd_20260905/",
+        "pd_af_artifact_root": "/data/ycfeng/tmp/frontier_semantic_repair_final_pdaf_20260905/",
+        "co_location": {
+          "exit_code": 0,
+          "completed_requests": 1,
+          "request_e2e_ms": 1035.9999999999968,
+          "tokens": 10,
+          "tokens_per_second": 9.65250965250968
+        },
+        "pd_disagg": {
+          "exit_code": 0,
+          "completed_requests": 1,
+          "request_e2e_ms": 60.52097151999969,
+          "tokens": 10,
+          "tokens_per_second": 165.23198073076887
+        },
+        "pd_af_disagg": {
+          "exit_code": 0,
+          "completed_requests": 1,
+          "request_e2e_ms": 631.2761049599992,
+          "prefill_e2e_ms": 20.00000000000001,
+          "decode_e2e_ms": 611.2761049599992,
+          "decode_attn_e2e_ms": 480.0,
+          "decode_ffn_e2e_ms": 128.07099050666582,
+          "tokens": 10,
+          "tokens_per_second": 15.84092906642435
+        }
+      },
+      "final_legal_topology_trace": {
+        "artifact_root": "/data/ycfeng/tmp/frontier_semantic_repair_final_tp4_dp2_ep8_20260905/",
+        "trace_root": "/data/ycfeng/tmp/frontier_semantic_repair_final_tp4_dp2_ep8_20260905_trace/",
+        "attn_tensor_parallel_size": 4,
+        "attn_dp": 2,
+        "moe_tensor_parallel_size": 1,
+        "moe_expert_parallel_size": 8,
+        "world_size": 8,
+        "num_replicas": 1,
+        "completed_requests": 2,
+        "request_e2e_ms": [971.9999999999973, 971.9999999999973],
+        "stage_ledger_rows": 4,
+        "stage_ledger_replica_local_ids": [0, 1],
+        "stage_ledger_execution_scopes": ["ATTN_DP_LANE"],
+        "stage_ledger_request_ids": [0, 1],
+        "ep_conservation_entries": 64,
+        "ep_barrier_entries": 128,
+        "ep_wave_end_entries": 64,
+        "ep_expected_ids": [0, 1, 2, 3, 4, 5, 6, 7],
+        "ep_arrived_ids": [0, 1, 2, 3, 4, 5, 6, 7],
+        "residual_scheduler_state": false
+      },
+      "data_provenance": {
+        "groundtruth_rerun": false,
+        "legacy_h800_csv_reused": false,
+        "note": "This semantic repair used fresh Frontier dummy-mode artifacts; no legacy H800 CSV was reused."
+      },
+      "final_targeted_suite": {
+        "command": "PYTHONPATH=$PWD python -m pytest tests/unit/test_cc_backend_replica_local_layout.py tests/unit/test_parallel_semantics.py tests/unit/test_canonical_parallel_names.py tests/unit/test_shared_ep_layer_protocol_guard.py tests/unit/test_moe_predictor_layer_id_semantics.py tests/unit/test_moe_routing_conservation.py tests/unit/test_moe_routing_input_contract.py tests/unit/test_moe_routing_runtime.py tests/unit/test_cluster_scheduler_dp_lanes.py tests/unit/test_replica_identity_contract.py tests/unit/test_stage_execution_context.py tests/unit/test_prefill_ep_wave_materialization.py tests/unit/test_decode_ep_wave_materialization.py tests/unit/test_pd_moe_lifecycle_reproducer.py tests/unit/test_pd_decode_moe_layer_accounting.py tests/unit/test_pd_decode_moe_completion_contract.py tests/unit/test_pdaf_config_contract.py tests/unit/test_pdaf_m2n_metrics.py tests/unit/test_pdaf_ep_stage_accounting.py tests/unit/test_pdaf_cluster_scheduler_invariants.py tests/unit/test_pdaf_prefill_model_time.py tests/unit/test_transfer_metrics_contract.py -q -p no:cacheprovider",
+        "result": "720 passed, 19 skipped, 115 warnings",
+        "compileall": "PASS",
+        "git_diff_check": "PASS"
       }
     }
   }

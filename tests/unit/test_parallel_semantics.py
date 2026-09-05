@@ -88,7 +88,7 @@ def test_collective_sim_attention_dp_uses_replica_local_domain() -> None:
 
     assert attention_layout.dp == 2
     assert attention_layout.tp == 4
-    assert moe_layout.dp == 3
+    assert moe_layout.dp == 1
     assert moe_layout.ep == 8
 
 

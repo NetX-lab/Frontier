@@ -424,7 +424,18 @@ class BaseReplicaScheduler(ABC):
             num_tokens,
             is_moe=self._replica_is_moe,
         )
+        # Preserve the scheduler lane that owns this batch across asynchronous
+        # layer-sync and stage-completion events. ``None`` remains the explicit
+        # full-stage identity for single-lane paths.
+        batch._stage_owner_replica_local_id = self._replica_local_id
         lane_batch_counter = self._batch_creation_counter
+        # ``global_id`` remains lane-scoped for queue ordering and ownership.
+        # The forward cohort is the cross-DP identity used only at the shared
+        # attention/EP synchronization boundary.
+        batch._forward_cohort_id = lane_batch_counter
+        # Keep the child scheduler's monotonic lane hint separate from the
+        # Replica-local cohort identity assigned when a sync room opens.
+        batch._forward_cohort_provisional_id = lane_batch_counter
         cluster_scheduler = getattr(self, "_cluster_scheduler", None)
         if (
             cluster_scheduler is not None

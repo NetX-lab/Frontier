@@ -40,16 +40,31 @@ class StageExecutionContext:
     wave-level combine/cleanup boundary.
     """
 
-    def __init__(self, *, replica_id: int, stage_id: int, ep_size: int) -> None:
+    def __init__(
+        self,
+        *,
+        replica_id: int,
+        stage_id: int,
+        ep_size: int,
+        full_stage_capacity: int = 1,
+    ) -> None:
         self._replica_id = _require_non_negative_int(replica_id, "replica_id")
         self._stage_id = _require_non_negative_int(stage_id, "stage_id")
         self._ep_size = _require_non_negative_int(ep_size, "ep_size")
         if self._ep_size <= 0:
             raise ValueError("ep_size must be an exact positive int")
+        self._full_stage_capacity = _require_non_negative_int(
+            full_stage_capacity,
+            "full_stage_capacity",
+        )
+        if self._full_stage_capacity <= 0:
+            raise ValueError("full_stage_capacity must be an exact positive int")
 
         self._next_admission_seq = 0
         self._ready_fifo: deque[StageAdmissionTicket] = deque()
         self._active_ticket: StageAdmissionTicket | None = None
+        self._active_full_stage_tickets: set[StageAdmissionTicket] = set()
+        self._active_ep_ticket: StageAdmissionTicket | None = None
         self._operation_ids: set[Hashable] = set()
         self._cancelled_tickets: set[StageAdmissionTicket] = set()
 
@@ -64,6 +79,22 @@ class StageExecutionContext:
     @property
     def ep_size(self) -> int:
         return self._ep_size
+
+    @property
+    def full_stage_capacity(self) -> int:
+        return self._full_stage_capacity
+
+    def _refresh_active_ticket_view(self) -> None:
+        """Maintain the legacy single-ticket view for diagnostics and callers."""
+
+        if self._active_ep_ticket is not None:
+            self._active_ticket = self._active_ep_ticket
+            return
+        self._active_ticket = min(
+            self._active_full_stage_tickets,
+            key=lambda ticket: ticket.admission_seq,
+            default=None,
+        )
 
     @property
     def is_idle(self) -> bool:
@@ -96,7 +127,7 @@ class StageExecutionContext:
     def is_active(self, ticket: StageAdmissionTicket) -> bool:
         """Return whether this exact ticket currently owns the stage."""
 
-        return self._active_ticket == ticket
+        return ticket in self._active_full_stage_tickets or ticket == self._active_ep_ticket
 
     def is_queued(self, ticket: StageAdmissionTicket) -> bool:
         """Return whether this exact ticket is waiting in the ready FIFO."""
@@ -212,9 +243,17 @@ class StageExecutionContext:
         """
 
         self._validate_ticket(ticket)
-        if self._active_ticket != ticket:
+        if not self.is_active(ticket):
             raise ValueError(
                 "cannot transition a stage admission ticket that is not active"
+            )
+        if (
+            ticket.scope == FULL_STAGE_WORLD
+            and scope != FULL_STAGE_WORLD
+            and len(self._active_full_stage_tickets) != 1
+        ):
+            raise ValueError(
+                "cannot transition one full-stage lane while other lanes are active"
             )
         if scope == FULL_STAGE_WORLD:
             participants = ()
@@ -235,7 +274,14 @@ class StageExecutionContext:
         self._next_admission_seq += 1
         self._operation_ids.remove(ticket.operation_id)
         self._operation_ids.add(operation_id)
-        self._active_ticket = next_ticket
+        if ticket.scope == FULL_STAGE_WORLD:
+            self._active_full_stage_tickets.remove(ticket)
+        else:
+            self._active_ep_ticket = None
+        self._active_ep_ticket = next_ticket if scope == EP_WAVE else None
+        if scope == FULL_STAGE_WORLD:
+            self._active_full_stage_tickets.add(next_ticket)
+        self._refresh_active_ticket_view()
         return next_ticket
 
     def _validate_ticket(self, ticket: StageAdmissionTicket) -> None:
@@ -257,36 +303,127 @@ class StageExecutionContext:
         """Acquire the FIFO-head ticket if this stage is currently idle."""
 
         self._validate_ticket(ticket)
-        if self._active_ticket is not None:
+        if ticket.scope == EP_WAVE:
+            if self._active_ep_ticket is not None or self._active_full_stage_tickets:
+                return False
+        elif self._active_ep_ticket is not None:
+            return False
+        elif len(self._active_full_stage_tickets) >= self._full_stage_capacity:
             return False
         if not self._ready_fifo or self._ready_fifo[0] != ticket:
             return False
         self._ready_fifo.popleft()
-        self._active_ticket = ticket
+        if ticket.scope == EP_WAVE:
+            self._active_ep_ticket = ticket
+        else:
+            self._active_full_stage_tickets.add(ticket)
+        self._refresh_active_ticket_view()
         return True
 
     def owns(self, ticket: StageAdmissionTicket) -> bool:
         """Return whether this context already owns ``ticket`` for this wave."""
 
         self._validate_ticket(ticket)
-        return self._active_ticket == ticket
+        return self.is_active(ticket)
 
     def release(self, ticket: StageAdmissionTicket) -> None:
         """Release exactly the operation currently owning this stage."""
 
         self._validate_ticket(ticket)
-        if self._active_ticket != ticket:
+        if not self.is_active(ticket):
             raise ValueError(
                 "cannot release a stage admission ticket that is not the active operation"
             )
-        self._active_ticket = None
+        if ticket.scope == EP_WAVE:
+            self._active_ep_ticket = None
+        else:
+            self._active_full_stage_tickets.remove(ticket)
+        self._refresh_active_ticket_view()
         self._operation_ids.remove(ticket.operation_id)
+
+    def replace_full_stage_owners_with_ep_wave(
+        self,
+        owner_tickets: Iterable[StageAdmissionTicket],
+        *,
+        operation_id: Hashable,
+        participant_ep_ids: Iterable[int],
+    ) -> StageAdmissionTicket:
+        """Atomically replace all active attention lanes with one EP wave."""
+
+        owners = tuple(owner_tickets)
+        if not owners:
+            raise ValueError("EP wave promotion requires at least one owner ticket")
+        if self._active_ep_ticket is not None:
+            raise ValueError("cannot promote lanes while an EP wave is active")
+        if any(ticket.scope != FULL_STAGE_WORLD for ticket in owners):
+            raise ValueError("EP wave promotion requires full-stage owner tickets")
+        if any(ticket not in self._active_full_stage_tickets for ticket in owners):
+            raise ValueError("EP wave promotion requires active owner tickets")
+        self._validate_operation_id(operation_id)
+        participants = self._normalize_participants(participant_ep_ids)
+        for ticket in owners:
+            self._active_full_stage_tickets.remove(ticket)
+            self._operation_ids.remove(ticket.operation_id)
+        wave = StageAdmissionTicket(
+            replica_id=self._replica_id,
+            stage_id=self._stage_id,
+            admission_seq=self._next_admission_seq,
+            operation_id=operation_id,
+            scope=EP_WAVE,
+            participant_ep_ids=participants,
+        )
+        self._next_admission_seq += 1
+        self._operation_ids.add(operation_id)
+        self._active_ep_ticket = wave
+        self._refresh_active_ticket_view()
+        return wave
+
+    def replace_ep_wave_with_full_stage_owners(
+        self,
+        wave_ticket: StageAdmissionTicket,
+        *,
+        operation_ids: Iterable[Hashable],
+    ) -> tuple[StageAdmissionTicket, ...]:
+        """Replace one completed EP wave with active lane-local owners."""
+
+        if wave_ticket != self._active_ep_ticket:
+            raise ValueError("EP wave ticket is not the active operation")
+        operation_ids = tuple(operation_ids)
+        if not operation_ids:
+            raise ValueError("lane owner replacement requires at least one operation")
+        if len(operation_ids) > self._full_stage_capacity:
+            raise ValueError(
+                "lane owner replacement exceeds full-stage capacity: "
+                f"capacity={self._full_stage_capacity}, owners={len(operation_ids)}"
+            )
+        if len(set(operation_ids)) != len(operation_ids):
+            raise ValueError("lane owner operation IDs must be unique")
+        for operation_id in operation_ids:
+            self._validate_operation_id(operation_id)
+        self._active_ep_ticket = None
+        self._operation_ids.remove(wave_ticket.operation_id)
+        owners = []
+        for operation_id in operation_ids:
+            owner = StageAdmissionTicket(
+                replica_id=self._replica_id,
+                stage_id=self._stage_id,
+                admission_seq=self._next_admission_seq,
+                operation_id=operation_id,
+                scope=FULL_STAGE_WORLD,
+                participant_ep_ids=(),
+            )
+            self._next_admission_seq += 1
+            self._operation_ids.add(operation_id)
+            self._active_full_stage_tickets.add(owner)
+            owners.append(owner)
+        self._refresh_active_ticket_view()
+        return tuple(owners)
 
     def cancel(self, ticket: StageAdmissionTicket) -> None:
         """Cancel a queued-but-not-acquired operation after atomic preflight failure."""
 
         self._validate_ticket(ticket)
-        if self._active_ticket == ticket:
+        if self.is_active(ticket):
             raise ValueError("cannot cancel the active stage operation")
         try:
             self._ready_fifo.remove(ticket)
