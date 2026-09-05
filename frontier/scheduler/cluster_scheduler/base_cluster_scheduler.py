@@ -32,6 +32,7 @@ from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
     ReplicaSchedulerRegistry,
 )
 from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
+from frontier.scheduler.utils import ep_trace
 from frontier.scheduler.utils.expert_parallel import (
     EPBatchGroupPlan,
     materialize_batch_group,
@@ -326,46 +327,7 @@ class BaseClusterScheduler(ABC):
     ) -> tuple[int, int]:
         """Resolve one logical batch/layer identity for a completed EP wave."""
 
-        if not isinstance(ep_batches, dict) or not ep_batches:
-            raise ValueError("EP trace identity requires a non-empty batch map")
-        if type(batch_global_id) is not int or batch_global_id < 0:
-            raise ValueError(
-                "EP trace identity batch_global_id must be a non-negative int"
-            )
-
-        layer_ids: set[int] = set()
-        source_id_lists: list[tuple[int, ...]] = []
-        for ep_id, ep_batch in ep_batches.items():
-            if type(ep_id) is not int or ep_id < 0:
-                raise ValueError(f"EP trace identity has invalid ep_id={ep_id!r}")
-            layer_id = getattr(ep_batch, "decode_ffn_layer_id", None)
-            if type(layer_id) is not int or layer_id < 0:
-                raise ValueError(
-                    "EP trace identity requires decode_ffn_layer_id on every lane"
-                )
-            layer_ids.add(layer_id)
-            raw_source_ids = getattr(ep_batch, "source_batch_ids", None)
-            if not isinstance(raw_source_ids, (list, tuple)):
-                raise ValueError(
-                    "EP trace identity requires source_batch_ids on every lane"
-                )
-            source_ids = tuple(raw_source_ids)
-            if any(type(source_id) is not int or source_id < 0 for source_id in source_ids):
-                raise ValueError(
-                    "EP trace identity source_batch_ids must be non-negative ints"
-                )
-            source_id_lists.append(source_ids)
-
-        if len(layer_ids) != 1:
-            raise ValueError(
-                f"EP trace identity has inconsistent layer IDs: {sorted(layer_ids)}"
-            )
-        logical_batch_id = batch_global_id
-        if source_id_lists and all(len(ids) == 1 for ids in source_id_lists):
-            source_ids = {ids[0] for ids in source_id_lists}
-            if len(source_ids) == 1:
-                logical_batch_id = next(iter(source_ids))
-        return logical_batch_id, next(iter(layer_ids))
+        return ep_trace.resolve_trace_identity(ep_batches, batch_global_id)
 
     @staticmethod
     def _build_ep_trace_identity(
@@ -379,100 +341,19 @@ class BaseClusterScheduler(ABC):
     ) -> dict[str, Any]:
         """Build the structured identity attached to every EP trace record."""
 
-        if type(replica_id) is not int or replica_id < 0:
-            raise ValueError("EP trace replica_id must be a non-negative int")
-        if type(stage_id) is not int or stage_id < 0:
-            raise ValueError("EP trace stage_id must be a non-negative int")
-        if type(operation_id) is not int or operation_id < 0:
-            raise ValueError("EP trace operation_id must be a non-negative int")
-        if not isinstance(operation_kind, str) or not operation_kind.strip():
-            raise ValueError("EP trace operation_kind must be a non-empty string")
-
-        source_batches = getattr(batch, "source_batches", None)
-        if source_batches is not None:
-            if not isinstance(source_batches, (list, tuple)) or not source_batches:
-                raise ValueError(
-                    "EP trace source_batches must be a non-empty list or tuple"
-                )
-            source_requests = []
-            for source_batch in source_batches:
-                requests_for_source = getattr(source_batch, "requests", None)
-                if not isinstance(requests_for_source, (list, tuple)) or not requests_for_source:
-                    raise ValueError(
-                        "EP trace source batch must carry a non-empty request list"
-                    )
-                source_requests.extend(requests_for_source)
-            requests = source_requests
-        else:
-            requests = getattr(batch, "requests", None)
-        if not isinstance(requests, (list, tuple)) or not requests:
-            raise ValueError("EP trace identity requires a non-empty request list")
-        request_ids = [getattr(request, "id", None) for request in requests]
-        if any(type(request_id) is not int or request_id < 0 for request_id in request_ids):
-            raise ValueError("EP trace request_ids must be non-negative ints")
-        if len(set(request_ids)) != len(request_ids):
-            raise ValueError("EP trace request_ids must be unique")
-
-        raw_epochs = None
-        if source_batches is not None:
-            raw_epochs = [
-                int(runtime_epoch)
-                for source_batch in source_batches
-                for runtime_epoch in getattr(
-                    source_batch,
-                    "request_runtime_epochs",
-                    [],
-                )
-            ]
-        if not isinstance(raw_epochs, (list, tuple)) or len(raw_epochs) != len(request_ids):
-            raw_epochs = getattr(batch, "request_runtime_epochs", None)
-        if not isinstance(raw_epochs, (list, tuple)):
-            raw_epochs = [
-                getattr(request, "runtime_epoch", None) for request in requests
-            ]
-        request_runtime_epochs = list(raw_epochs)
-        if len(request_runtime_epochs) != len(request_ids) or any(
-            type(epoch) is not int or epoch < 0
-            for epoch in request_runtime_epochs
-        ):
-            raise ValueError(
-                "EP trace request_runtime_epochs must align with request_ids"
-            )
-
-        iteration_ids = []
-        for request in requests:
-            token_index = getattr(request, "current_decode_token_index", None)
-            if type(token_index) is not int or token_index < 1:
-                raise ValueError(
-                    "EP trace request current_decode_token_index must be >= 1"
-                )
-            iteration_ids.append(token_index - 1)
-
-        schedule_epoch = getattr(batch, "schedule_epoch", 0)
-        if type(schedule_epoch) is not int or schedule_epoch < 0:
-            raise ValueError("EP trace schedule_epoch must be a non-negative int")
-        if afd_stage_idx is None:
-            afd_stage_idx = getattr(batch, "afd_stage_idx", None)
-        if afd_stage_idx is None:
-            afd_stage_idx = -1
-        if type(afd_stage_idx) is not int or afd_stage_idx < -1:
-            raise ValueError("EP trace afd_stage_idx must be >= -1")
-
-        return {
-            "replica_id": replica_id,
-            "stage_id": stage_id,
-            "request_ids": tuple(request_ids),
-            "request_runtime_epochs": tuple(request_runtime_epochs),
-            "iteration_ids": tuple(iteration_ids),
-            "schedule_epoch": schedule_epoch,
-            "afd_stage_idx": afd_stage_idx,
-            "operation_id": operation_id,
-            "operation_kind": operation_kind.strip(),
-        }
+        return ep_trace.build_trace_identity(
+            batch=batch,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            operation_id=operation_id,
+            operation_kind=operation_kind,
+            afd_stage_idx=afd_stage_idx,
+        )
 
     @staticmethod
     def _format_ep_trace_identity(identity: Dict[str, Any]) -> str:
         """Serialize an already validated identity in a stable log order."""
+
         return format_ep_trace_identity(identity)
 
     @staticmethod
@@ -491,95 +372,22 @@ class BaseClusterScheduler(ABC):
         post_combine_ms: float,
         trace_identity: Dict[str, Any],
     ) -> None:
-        """Emit one source-level record for a materialized EP participant.
+        """Emit one source-level record for a materialized EP participant."""
 
-        This is observability only.  The values are the already-computed lane
-        prediction and the explicit EP collective time; no timing is changed
-        and no synthetic contribution is introduced.
-        """
-
-        if not isinstance(lane_workload, EPLaneWorkload):
-            raise ValueError(
-                "EP workload trace requires an EPLaneWorkload descriptor, got "
-                f"{type(lane_workload).__name__}"
-            )
-        ep_id = lane_workload.ep_id
-        moe_ep_size = lane_workload.moe_expert_parallel_size
-        normalized_tokens = dict(lane_workload.per_expert_tokens)
-        if type(batch_id) is not int or batch_id < 0:
-            raise ValueError(f"EP workload batch_id must be a non-negative int, got {batch_id!r}")
-        if type(layer_id) is not int or layer_id < 0:
-            raise ValueError(f"EP workload layer_id must be a non-negative int, got {layer_id!r}")
-        phase_values = (
-            ("pre_dispatch_ms", pre_dispatch_ms),
-            ("dispatch_ms", dispatch_ms),
-            ("routed_compute_ms", routed_compute_ms),
-            ("combine_ms", combine_ms),
-            ("post_combine_ms", post_combine_ms),
-        )
-        for name, value in (
-            ("lane_compute_ms", lane_compute_ms),
-            ("lane_comm_ms", lane_comm_ms),
-            *phase_values,
-        ):
-            if not isinstance(value, Real) or isinstance(value, bool):
-                raise ValueError(f"EP workload {name} must be a real number")
-            value = float(value)
-            if not math.isfinite(value) or value < 0:
-                raise ValueError(
-                    f"EP workload {name} must be finite and non-negative, got {value!r}"
-                )
-        expected_lane_compute_ms = math.fsum(
-            float(value)
-            for name, value in phase_values
-            if name in {"pre_dispatch_ms", "routed_compute_ms", "post_combine_ms"}
-        )
-        expected_lane_comm_ms = float(dispatch_ms) + float(combine_ms)
-        if not math.isclose(
-            float(lane_compute_ms),
-            expected_lane_compute_ms,
-            rel_tol=1e-12,
-            abs_tol=1e-9,
-        ):
-            raise ValueError(
-                "EP workload lane_compute_ms does not equal "
-                "pre_dispatch_ms + routed_compute_ms + post_combine_ms: "
-                f"lane_compute_ms={lane_compute_ms!r}, "
-                f"expected={expected_lane_compute_ms!r}"
-            )
-        if not math.isclose(
-            float(lane_comm_ms),
-            expected_lane_comm_ms,
-            rel_tol=1e-12,
-            abs_tol=1e-9,
-        ):
-            raise ValueError(
-                "EP workload lane_comm_ms does not equal "
-                "dispatch_ms + combine_ms: "
-                f"lane_comm_ms={lane_comm_ms!r}, expected={expected_lane_comm_ms!r}"
-            )
-
-        cluster_name = getattr(cluster_type, "name", str(cluster_type))
-        logger.info(
-            "[EP-WORKLOAD][%s] batch_id=%d, layer_id=%d, ep_id=%d, "
-            "moe_ep_size=%d, per_expert_tokens=%s, lane_compute_ms=%.6f, "
-            "routed_compute_ms=%.6f, lane_comm_ms=%.6f, "
-            "pre_dispatch_ms=%.6f, dispatch_ms=%.6f, "
-            "combine_ms=%.6f, post_combine_ms=%.6f, %s",
-            cluster_name,
-            batch_id,
-            layer_id,
-            ep_id,
-            moe_ep_size,
-            dict(sorted(normalized_tokens.items())),
-            float(lane_compute_ms),
-            float(routed_compute_ms),
-            float(lane_comm_ms),
-            float(pre_dispatch_ms),
-            float(dispatch_ms),
-            float(combine_ms),
-            float(post_combine_ms),
-            BaseClusterScheduler._format_ep_trace_identity(trace_identity),
+        ep_trace.log_workload_trace(
+            cluster_type=cluster_type,
+            batch_id=batch_id,
+            layer_id=layer_id,
+            lane_workload=lane_workload,
+            lane_compute_ms=lane_compute_ms,
+            routed_compute_ms=routed_compute_ms,
+            lane_comm_ms=lane_comm_ms,
+            pre_dispatch_ms=pre_dispatch_ms,
+            dispatch_ms=dispatch_ms,
+            combine_ms=combine_ms,
+            post_combine_ms=post_combine_ms,
+            trace_identity=trace_identity,
+            format_identity=BaseClusterScheduler._format_ep_trace_identity,
         )
 
     @staticmethod
