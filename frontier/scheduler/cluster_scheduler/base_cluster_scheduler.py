@@ -3922,7 +3922,7 @@ class BaseClusterScheduler(ABC):
         return virtual_batch
 
     @staticmethod
-    def _get_forward_cohort_id(batch: Batch) -> int:
+    def _get_forward_step_id(batch: Batch) -> int:
         """Return the shared forward-step identity for one scheduler batch.
 
         Lane-scoped ``global_id`` values intentionally remain distinct for
@@ -3940,7 +3940,7 @@ class BaseClusterScheduler(ABC):
             )
         return cohort_id
 
-    def _resolve_forward_sync_cohort(
+    def _resolve_forward_step(
         self,
         *,
         sync_kind: str,
@@ -3973,7 +3973,7 @@ class BaseClusterScheduler(ABC):
         if type(layer_id) is not int or layer_id < 0:
             raise ValueError("sync layer_id must be an exact non-negative int")
         provisional_id = getattr(batch, "_forward_cohort_provisional_id", None)
-        current_id = self._get_forward_cohort_id(batch)
+        current_id = self._get_forward_step_id(batch)
         if provisional_id is None:
             provisional_id = current_id
             batch._forward_cohort_provisional_id = provisional_id
@@ -4074,7 +4074,7 @@ class BaseClusterScheduler(ABC):
         batch._forward_cohort_id = cohort_id
         return cohort_id, False
 
-    def _close_forward_sync_cohort(
+    def _close_forward_step(
         self,
         *,
         sync_kind: str,
@@ -4121,7 +4121,7 @@ class BaseClusterScheduler(ABC):
             )
 
     @staticmethod
-    def _cohort_source_batches(cohort_batches: dict[int, Batch] | None, batch: Batch) -> dict[int, Batch]:
+    def _forward_step_source_batches(cohort_batches: dict[int, Batch] | None, batch: Batch) -> dict[int, Batch]:
         """Normalize a direct wave call and preserve lane identity."""
 
         if cohort_batches is None:
@@ -4143,7 +4143,7 @@ class BaseClusterScheduler(ABC):
             normalized[lane_id] = source_batch
         return normalized
 
-    def _promote_cohort_to_ep_wave(
+    def _promote_forward_step_to_ep_wave(
         self,
         *,
         source_batches: dict[int, Batch],
@@ -4220,7 +4220,7 @@ class BaseClusterScheduler(ABC):
                 }
             )
 
-    def _restore_cohort_full_stage_owners(
+    def _restore_forward_step_full_stage_owners(
         self,
         *,
         source_batches: dict[int, Batch],
@@ -4295,10 +4295,10 @@ class BaseClusterScheduler(ABC):
         if not isinstance(time, Real) or not math.isfinite(float(time)):
             raise ValueError("prefill EP wave time must be finite")
         time = float(time)
-        source_batches = self._cohort_source_batches(cohort_batches, batch)
-        cohort_id = self._get_forward_cohort_id(batch)
+        source_batches = self._forward_step_source_batches(cohort_batches, batch)
+        cohort_id = self._get_forward_step_id(batch)
         if any(
-            self._get_forward_cohort_id(source_batch) != cohort_id
+            self._get_forward_step_id(source_batch) != cohort_id
             for source_batch in source_batches.values()
         ):
             raise ValueError("all PREFILL cohort batches must share one forward cohort ID")
@@ -4412,7 +4412,7 @@ class BaseClusterScheduler(ABC):
                 routed_compute_times_ms.append(routed_compute_ms)
                 combine_times_ms.append(combine_ms)
                 post_combine_times_ms.append(post_combine_ms)
-            self._promote_cohort_to_ep_wave(
+            self._promote_forward_step_to_ep_wave(
                 source_batches=source_batches,
                 replica_id=replica_id,
                 stage_id=stage_id,
@@ -4663,10 +4663,10 @@ class BaseClusterScheduler(ABC):
         if not isinstance(time, Real) or not math.isfinite(float(time)):
             raise ValueError("decode EP wave time must be finite")
         time = float(time)
-        source_batches = self._cohort_source_batches(cohort_batches, batch)
-        cohort_id = self._get_forward_cohort_id(batch)
+        source_batches = self._forward_step_source_batches(cohort_batches, batch)
+        cohort_id = self._get_forward_step_id(batch)
         if any(
-            self._get_forward_cohort_id(source_batch) != cohort_id
+            self._get_forward_step_id(source_batch) != cohort_id
             for source_batch in source_batches.values()
         ):
             raise ValueError("all DECODE cohort batches must share one forward cohort ID")
@@ -4780,7 +4780,7 @@ class BaseClusterScheduler(ABC):
                 routed_compute_times_ms.append(routed_compute_ms)
                 combine_times_ms.append(combine_ms)
                 post_combine_times_ms.append(post_combine_ms)
-            self._promote_cohort_to_ep_wave(
+            self._promote_forward_step_to_ep_wave(
                 source_batches=source_batches,
                 replica_id=replica_id,
                 stage_id=stage_id,
@@ -4987,8 +4987,8 @@ class BaseClusterScheduler(ABC):
                 "the current layer must use the canonical per-layer protocol"
             )
         lane_id = 0 if replica_local_id is None else int(replica_local_id)
-        requested_cohort_id = self._get_forward_cohort_id(batch)
-        cohort_id, already_completed = self._resolve_forward_sync_cohort(
+        requested_cohort_id = self._get_forward_step_id(batch)
+        cohort_id, already_completed = self._resolve_forward_step(
             sync_kind="prefill",
             waiting_room=self._prefill_sync_waiting_room,
             replica_id=replica_id,
@@ -5064,7 +5064,7 @@ class BaseClusterScheduler(ABC):
             return []
         sync_time = max(sync_room["arrival_times"].values())
         cohort_batches = dict(sync_room["batches"])
-        self._close_forward_sync_cohort(
+        self._close_forward_step(
             sync_kind="prefill",
             replica_id=replica_id,
             stage_id=stage_id,
@@ -5249,7 +5249,7 @@ class BaseClusterScheduler(ABC):
                 num_layers,
             )
             next_layer_id = layer_id + 1
-            restored_full_stage_owners = self._restore_cohort_full_stage_owners(
+            restored_full_stage_owners = self._restore_forward_step_full_stage_owners(
                 source_batches=participant_batches,
                 replica_id=replica_id,
                 stage_id=stage_id,
@@ -5705,7 +5705,7 @@ class BaseClusterScheduler(ABC):
         raise ValueError(DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR)
 
     def _get_decode_sync_wait_key(self, batch: Batch) -> int:
-        return self._get_forward_cohort_id(batch)
+        return self._get_forward_step_id(batch)
 
     def on_decode_sync(
         self,
@@ -5743,8 +5743,8 @@ class BaseClusterScheduler(ABC):
                 "the current layer must use the canonical per-layer protocol"
             )
         lane_id = 0 if replica_local_id is None else int(replica_local_id)
-        requested_cohort_id = self._get_forward_cohort_id(batch)
-        cohort_id, already_completed = self._resolve_forward_sync_cohort(
+        requested_cohort_id = self._get_forward_step_id(batch)
+        cohort_id, already_completed = self._resolve_forward_step(
             sync_kind="decode",
             waiting_room=self._decode_sync_waiting_room,
             replica_id=replica_id,
@@ -5820,7 +5820,7 @@ class BaseClusterScheduler(ABC):
             return []
         sync_time = max(sync_room["arrival_times"].values())
         cohort_batches = dict(sync_room["batches"])
-        self._close_forward_sync_cohort(
+        self._close_forward_step(
             sync_kind="decode",
             replica_id=replica_id,
             stage_id=stage_id,
@@ -5969,7 +5969,7 @@ class BaseClusterScheduler(ABC):
             num_layers,
         )
         next_layer_id = layer_id + 1
-        restored_full_stage_owners = self._restore_cohort_full_stage_owners(
+        restored_full_stage_owners = self._restore_forward_step_full_stage_owners(
             source_batches=dp_batches,
             replica_id=replica_id,
             stage_id=stage_id,
@@ -10711,6 +10711,15 @@ class BaseClusterScheduler(ABC):
         )
 
         return batch_group
+
+    # Compatibility aliases for private callers that still use the old
+    # cohort terminology. Internal scheduler paths use the forward-step names.
+    _get_forward_cohort_id = _get_forward_step_id
+    _resolve_forward_sync_cohort = _resolve_forward_step
+    _close_forward_sync_cohort = _close_forward_step
+    _cohort_source_batches = _forward_step_source_batches
+    _promote_cohort_to_ep_wave = _promote_forward_step_to_ep_wave
+    _restore_cohort_full_stage_owners = _restore_forward_step_full_stage_owners
 
     @abstractmethod
     def schedule(self) -> List[Tuple[int, Request]]:
