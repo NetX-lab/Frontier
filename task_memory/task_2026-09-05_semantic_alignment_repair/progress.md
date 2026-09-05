@@ -216,3 +216,18 @@
   `20.00000000000001 ms`, decode `611.2761049599992 ms`, and throughput
   `15.84092906642435 tokens/s`.
 - Provenance: no vLLM groundtruth rerun and no legacy H800 CSV reuse.
+
+## Remote Publication
+
+- Commit: pushed `0fe9b0de23aed7517996c000da663840e2eb5a7d` to
+  `origin/feat/semantic-alignment-repair-20260905` after configuring the HTTP
+  proxy with `eval $(curl -s http://deploy.i.shaipower.com/httpproxy)`.
+- Issue: #27 remains OPEN and links PR #28.
+- PR: #28 remains OPEN against `main`; the description now contains the
+  Replica-local design, measured fresh validation, deferred wrapper boundary,
+  and groundtruth/H800 provenance. The final English review comment is posted
+  with state `COMMENTED`; it records that the earlier findings are addressed
+  and that no new runtime blocker was found.
+- Pending: maintainer review. Runtime semantic repair is complete for the
+  approved scope; public wrapper updates and formal Frontier-vLLM parity remain
+  future work.

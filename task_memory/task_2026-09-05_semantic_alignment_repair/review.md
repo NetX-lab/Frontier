@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-05 | Verified remote commit, refreshed PR #28 description, and posted the final English review comment. |
 | 2026-09-05 | Revalidated closed stale-owner and admission-ticket findings on current worktree. |
 | 2026-09-05 | Reconciled final fresh trace evidence with the reviewed repair scope. |
 | 2026-09-05 | Recorded implementation review and final evidence. |
@@ -128,5 +129,23 @@ restoration now fail fast on a missing admission ticket; the full semantic
 suite passed `720`, skipped `19`, with `115` warnings. The fresh `TP4 x DP2 x
 EP8` run exited `0`, completed two requests at `971.9999999999973 ms` each,
 and recorded complete EP8 barrier arrival sets. Status: `PASS` for the
-approved semantic repair scope; `REQUEST CHANGES` remains the PR disposition
-until the deferred wrapper/schema follow-up is handled separately.
+approved semantic repair scope; the final remote review comment was posted as
+`COMMENTED` after commit `0fe9b0de` was pushed. The wrapper/schema follow-up
+remains explicitly deferred.
+
+Target Component/Phase: remote issue and PR publication
+
+Reviewer Agent Identity: primary `/root`
+
+Inspected Artifacts: GitHub issue #27, PR #28, remote head commit
+`0fe9b0de23aed7517996c000da663840e2eb5a7d`, updated PR description, and the
+final English review comment.
+
+Identified Issues/Anomalies: no new runtime blocker. The public wrapper guard,
+PD-AF `DECODE_ATTN` schema boundary, groundtruth non-rerun, legacy H800 CSV
+non-reuse, and pre-existing README failures remain visible as scope notes.
+
+Remediation/Verification Code Actions Taken: pushed the final branch through
+the configured HTTP proxy, refreshed PR #28 with the measured semantic and
+architecture evidence, and posted the resolved-findings review comment. The
+remote PR remains OPEN against `main`; issue #27 remains OPEN and links PR #28.

@@ -3,7 +3,7 @@
   "analysis_state": "COMPLETE",
   "status": "PASS",
   "correction_state": "complete",
-  "next_action": "Run final local validation, commit the reviewed sub-step, push the branch, and refresh PR #28.",
+  "next_action": "Await maintainer review of PR #28; keep the public-wrapper follow-up deferred.",
   "authorization": {
     "receipt": "task_memory/semantic-alignment-repair-approval.md",
     "code_change_marker": "SEMANTIC_ALIGNMENT_REPAIR_START: legacy Replica-local DP lanes with logical TP and shared EP cardinality",
@@ -12,6 +12,16 @@
     "latest_code_change_marker": "SEMANTIC_ALIGNMENT_REPAIR_START: fail fast on missing admission tickets and wake stale owner queues",
     "scope": "co-location -> pd-disagg -> pd-af-disagg",
     "groundtruth_rerun": false
+  },
+  "publication": {
+    "issue": "https://github.com/NetX-lab/Frontier/issues/27",
+    "pull_request": "https://github.com/NetX-lab/Frontier/pull/28",
+    "branch": "feat/semantic-alignment-repair-20260905",
+    "commit": "0fe9b0de23aed7517996c000da663840e2eb5a7d",
+    "http_proxy_configured": true,
+    "description_updated": true,
+    "review_comment_posted": true,
+    "review_state": "COMMENTED"
   },
   "changed_files": [
     "AGENTS.md",
