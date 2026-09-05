@@ -213,8 +213,10 @@ def prepare_batch_group_plan(
     lane_workload = layer_workload.lane(ep_id)
     if tuple(expert_global_ids) != lane_workload.owned_expert_ids:
         raise ValueError("DECODE_FFN expert_global_ids do not match the canonical lane descriptor")
+    # Validate the lane descriptor against its own routed token count. Empty
+    # lanes are valid participants in an EP wave and must remain constructible.
     validate_token_conservation(
-        total_tokens,
+        lane_workload.routed_token_count,
         lane_workload,
         "prepare_batch_group_plan",
     )
