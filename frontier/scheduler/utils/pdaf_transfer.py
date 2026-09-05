@@ -1,11 +1,11 @@
 """Small, state-free helpers shared by PD-AF transfer handlers."""
 
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from collections import defaultdict, deque
 
-from frontier.types import ClusterType
+from frontier.types import ClusterType, ReplicaSchedulerType
 from frontier.entities import Batch, Request
 
 
@@ -786,3 +786,535 @@ def validate_decode_attn_wave_binding(
             f"cohort: afd_stage_idx={afd_stage_idx}, "
             f"active_stage_indices={sorted(active_stage_indices)}"
         )
+
+
+def validate_decode_attn_receipt(
+    scheduler,
+    batch: Batch,
+    transfer_info: "M2NTransferInfo",
+    *,
+    expected_roundtrip_inflight: bool,
+    request_end_deferred: bool = False,
+) -> Dict[str, Any]:
+    """Validate one F-to-A receipt without mutating runtime state."""
+
+    def require_non_negative_int(value, field_name: str) -> int:
+        if type(value) is not int or value < 0:
+            raise ValueError(
+                f"{field_name} must be an exact non-negative int, got {value!r}"
+            )
+        return value
+
+    if type(expected_roundtrip_inflight) is not bool:
+        raise ValueError(
+            "DECODE_ATTN expected roundtrip state must be an exact bool, "
+            f"got {expected_roundtrip_inflight!r}"
+        )
+    if type(request_end_deferred) is not bool:
+        raise ValueError(
+            "DECODE_ATTN request_end_deferred must be an exact bool, "
+            f"got {request_end_deferred!r}"
+        )
+    if request_end_deferred and expected_roundtrip_inflight is not False:
+        raise ValueError(
+            "DECODE_ATTN deferred request end requires the projected "
+            "roundtrip_inflight=False state"
+        )
+
+    scheduler.validate_m2n_arrival_target(transfer_info)
+    if scheduler._cluster_type is not ClusterType.DECODE_ATTN:
+        raise ValueError(
+            "DECODE_ATTN receipt validation requires a DECODE_ATTN scheduler, "
+            f"got {scheduler._cluster_type.name}"
+        )
+    if (
+        transfer_info.source_cluster_type is not ClusterType.DECODE_FFN
+        or transfer_info.target_cluster_type is not ClusterType.DECODE_ATTN
+    ):
+        raise ValueError(
+            "DECODE_ATTN receipt validation requires an exact "
+            "DECODE_FFN -> DECODE_ATTN transfer"
+        )
+    if batch is not transfer_info.batch:
+        raise ValueError(
+            "DECODE_ATTN M2N batch identity mismatch: batch is not "
+            "transfer_info.batch"
+        )
+
+    source_replica_id = require_non_negative_int(
+        getattr(transfer_info, "source_replica_id", None),
+        "DECODE_ATTN receipt source_replica_id",
+    )
+    source_replica_local_id = getattr(transfer_info, "source_replica_local_id", None)
+    if source_replica_local_id is not None:
+        source_replica_local_id = require_non_negative_int(
+            source_replica_local_id,
+            "DECODE_ATTN receipt source_replica_local_id",
+        )
+    transfer_layer_id = require_non_negative_int(
+        getattr(transfer_info, "layer_id", None),
+        "DECODE_ATTN receipt layer_id",
+    )
+    transfer_stage_idx = require_non_negative_int(
+        getattr(transfer_info, "afd_stage_idx", None),
+        "DECODE_ATTN receipt afd_stage_idx",
+    )
+    replica_id = require_non_negative_int(
+        getattr(batch, "decode_attn_original_replica_id", None),
+        "DECODE_ATTN receipt decode_attn_original_replica_id",
+    )
+    replica_local_id = getattr(batch, "decode_attn_original_replica_local_id", None)
+    if replica_local_id is not None:
+        replica_local_id = require_non_negative_int(
+            replica_local_id,
+            "DECODE_ATTN receipt decode_attn_original_replica_local_id",
+        )
+    batch_global_id = require_non_negative_int(
+        getattr(batch, "global_id", None),
+        "DECODE_ATTN receipt batch.global_id",
+    )
+    afd_stage_idx = require_non_negative_int(
+        getattr(batch, "afd_stage_idx", None),
+        "DECODE_ATTN receipt batch.afd_stage_idx",
+    )
+    lane = (replica_id, replica_local_id)
+    source_lane = (source_replica_id, source_replica_local_id)
+    if source_lane != lane:
+        raise ValueError(
+            "DECODE_ATTN receipt source lane does not match the original ATTN "
+            f"lane: source={source_lane}, original={lane}"
+        )
+    if transfer_stage_idx != afd_stage_idx:
+        raise ValueError(
+            "DECODE_ATTN receipt afd_stage_idx does not match the batch stage: "
+            f"transfer={transfer_stage_idx}, batch={afd_stage_idx}"
+        )
+
+    requests = getattr(batch, "requests", None)
+    if type(requests) is not list or not requests:
+        raise ValueError("DECODE_ATTN F-to-A receipt requires a non-empty request list")
+    active_requests = []
+    for request in requests:
+        if type(request) is not Request:
+            raise ValueError(
+                "DECODE_ATTN F-to-A incoming receipt contains a request "
+                "that is not an exact Request: "
+                f"value={request!r}"
+            )
+        completed = getattr(request, "completed", None)
+        if type(completed) is not bool:
+            raise ValueError(
+                "DECODE_ATTN receipt request.completed must be an exact bool, "
+                f"got {completed!r} for request {getattr(request, 'id', '?')}"
+            )
+        roundtrip_inflight = getattr(request, "af_roundtrip_inflight", None)
+        if type(roundtrip_inflight) is not bool:
+            raise ValueError(
+                "DECODE_ATTN receipt request.af_roundtrip_inflight must be an "
+                f"exact bool, got {roundtrip_inflight!r} for request "
+                f"{getattr(request, 'id', '?')}"
+            )
+        roundtrip_matches = (
+            roundtrip_inflight is True
+            if request_end_deferred
+            else roundtrip_inflight is expected_roundtrip_inflight
+        )
+        if not roundtrip_matches:
+            raise ValueError(
+                "DECODE_ATTN receipt request roundtrip state does not match the "
+                f"admission phase: expected={expected_roundtrip_inflight}, "
+                f"actual={roundtrip_inflight}, request="
+                f"{getattr(request, 'id', '?')}"
+            )
+        if not completed:
+            active_requests.append(request)
+    if not active_requests:
+        raise ValueError(
+            "DECODE_ATTN F-to-A receipt requires at least one active request"
+        )
+
+    active_layer_ids = [
+        require_non_negative_int(
+            getattr(request, "completed_layer_count", None),
+            "DECODE_ATTN receipt active request completed_layer_count",
+        )
+        for request in active_requests
+    ]
+    if len(set(active_layer_ids)) != 1:
+        raise ValueError(
+            "DECODE_ATTN receipt active requests must have a consistent layer: "
+            f"layers={active_layer_ids}"
+        )
+    current_layer_id = active_layer_ids[0]
+    if transfer_layer_id != current_layer_id:
+        raise ValueError(
+            "DECODE_ATTN receipt layer_id does not match the active request layer: "
+            f"transfer={transfer_layer_id}, active={current_layer_id}"
+        )
+
+    total_layers = require_non_negative_int(
+        getattr(scheduler._config.replica_config.model_config, "num_layers", None),
+        "DECODE_ATTN model num_layers",
+    )
+    if total_layers == 0:
+        raise ValueError("DECODE_ATTN model num_layers must be positive")
+    if current_layer_id >= total_layers:
+        raise ValueError(
+            "DECODE_ATTN receipt active request layer must be below num_layers: "
+            f"layer={current_layer_id}, num_layers={total_layers}"
+        )
+    next_layer_id = current_layer_id + 1
+    is_last_layer = next_layer_id == total_layers
+
+    active_decode_token_indices = [
+        require_non_negative_int(
+            getattr(request, "current_decode_token_index", None),
+            "DECODE_ATTN receipt active request decode_token_index",
+        )
+        for request in active_requests
+    ]
+    replay_decode_token_index = getattr(
+        batch,
+        "replay_decode_token_index",
+        None,
+    )
+    if replay_decode_token_index is None:
+        if len(set(active_decode_token_indices)) != 1:
+            raise ValueError(
+                "DECODE_ATTN F-to-A receipt requires a batch-level replay decode "
+                "token index for mixed active request positions; got "
+                f"{active_decode_token_indices}"
+            )
+        decode_token_index = active_decode_token_indices[0]
+    else:
+        decode_token_index = require_non_negative_int(
+            replay_decode_token_index,
+            "DECODE_ATTN receipt replay_decode_token_index",
+        )
+        if decode_token_index != active_decode_token_indices[0]:
+            raise ValueError(
+                "DECODE_ATTN receipt replay_decode_token_index does not match the "
+                "active batch head: "
+                f"replay={decode_token_index}, head={active_decode_token_indices[0]}"
+            )
+
+    scheduler_expected_lanes = normalize_lanes(
+        scheduler._get_decode_attn_f2a_expected_lanes(
+            replica_id,
+            afd_stage_idx=afd_stage_idx,
+        ),
+        identity_scope=LaneIdentityScope.FULL_STAGE,
+        field_name="DECODE_ATTN F-to-A scheduler lane topology",
+        require_nonempty=True,
+    )
+    if lane not in scheduler_expected_lanes:
+        raise ValueError(
+            "Unexpected lane observed in DECODE_ATTN F-to-A scheduler topology: "
+            f"lane={lane}, expected_lanes={scheduler_expected_lanes}"
+        )
+    scheduler_expected_lane_set = set(scheduler_expected_lanes)
+
+    replica_scheduler_type = getattr(scheduler, "_replica_scheduler_type", None)
+    if type(replica_scheduler_type) is not ReplicaSchedulerType:
+        raise RuntimeError(
+            "DECODE_ATTN receipt requires an exact replica scheduler type, "
+            f"got {replica_scheduler_type!r}"
+        )
+    cohort_id = getattr(batch, "decode_attn_cohort_id", None)
+    cohort_request_ids = getattr(
+        batch,
+        "decode_attn_cohort_request_ids",
+        None,
+    )
+    wave_scheduler_types = {
+        ReplicaSchedulerType.VLLM_V1,
+        ReplicaSchedulerType.SGLANG,
+        ReplicaSchedulerType.SJ2Q_FASTSERVE_LITE,
+        ReplicaSchedulerType.SJ2Q_PENALTY_ONLY,
+        ReplicaSchedulerType.SJ2Q_BOUNDED_CARRYOVER,
+    }
+    if replica_scheduler_type in wave_scheduler_types:
+        scheduler._validate_decode_attn_wave_binding(
+            batch,
+            lane=lane,
+            afd_stage_idx=afd_stage_idx,
+            requests=requests,
+            active_requests=active_requests,
+            context="receipt",
+        )
+    elif cohort_id is not None or cohort_request_ids is not None:
+        raise ValueError(
+            "DECODE_ATTN receipt from a non-cohort scheduler must not carry "
+            "decode_attn_cohort_id or decode_attn_cohort_request_ids: "
+            f"scheduler_type={replica_scheduler_type}, "
+            f"cohort_id={cohort_id!r}, "
+            f"cohort_request_ids={cohort_request_ids!r}"
+        )
+
+    barrier_round_id = getattr(batch, "decode_attn_barrier_round_id", None)
+    if barrier_round_id is not None:
+        barrier_round_id = require_non_negative_int(
+            barrier_round_id,
+            "DECODE_ATTN receipt barrier_round_id",
+        )
+
+    raw_expected_lanes = getattr(
+        batch,
+        "decode_attn_barrier_expected_lanes",
+        (),
+    )
+    if raw_expected_lanes is None:
+        raw_expected_lanes = ()
+    barrier_expected_lanes = normalize_lanes(
+        raw_expected_lanes,
+        identity_scope=LaneIdentityScope.FULL_STAGE,
+        field_name="DECODE_ATTN receipt expected lane metadata",
+        require_nonempty=False,
+    )
+    if barrier_expected_lanes and lane not in barrier_expected_lanes:
+        raise ValueError(
+            "Unexpected lane observed in DECODE_ATTN receipt expected lane "
+            f"metadata: lane={lane}, expected_lanes={barrier_expected_lanes}"
+        )
+    scheduler_lane_sets_by_replica = {
+        replica_id: scheduler_expected_lane_set,
+    }
+    metadata_lanes_outside_topology = []
+    for expected_lane in barrier_expected_lanes:
+        expected_replica_id = expected_lane[0]
+        expected_replica_lane_set = scheduler_lane_sets_by_replica.get(
+            expected_replica_id
+        )
+        if expected_replica_lane_set is None:
+            expected_replica_lanes = normalize_lanes(
+                scheduler._get_decode_attn_f2a_expected_lanes(
+                    expected_replica_id,
+                    afd_stage_idx=afd_stage_idx,
+                ),
+                identity_scope=LaneIdentityScope.FULL_STAGE,
+                field_name=(
+                    "DECODE_ATTN F-to-A scheduler lane topology for "
+                    f"replica {expected_replica_id}"
+                ),
+                require_nonempty=True,
+            )
+            expected_replica_lane_set = set(expected_replica_lanes)
+            scheduler_lane_sets_by_replica[expected_replica_id] = (
+                expected_replica_lane_set
+            )
+        if expected_lane not in expected_replica_lane_set:
+            metadata_lanes_outside_topology.append(expected_lane)
+    if metadata_lanes_outside_topology:
+        raise ValueError(
+            "DECODE_ATTN receipt expected lanes are outside the scheduler "
+            f"topology: outside={metadata_lanes_outside_topology}, "
+            f"topology_by_replica={scheduler_lane_sets_by_replica}"
+        )
+    filtered_expected_lanes = tuple(
+        expected_lane
+        for expected_lane in barrier_expected_lanes
+        if expected_lane[0] == replica_id
+    )
+
+    if barrier_round_id is None:
+        round_key = (replica_id, next_layer_id, afd_stage_idx)
+    else:
+        round_key = (
+            replica_id,
+            next_layer_id,
+            afd_stage_idx,
+            barrier_round_id,
+        )
+
+    waiting_rooms = getattr(scheduler, "_f2a_waiting_by_round", None)
+    if type(waiting_rooms) is not dict:
+        raise RuntimeError(
+            "DECODE_ATTN scheduler missing exact _f2a_waiting_by_round mapping"
+        )
+
+    room = waiting_rooms.get(round_key)
+    if is_last_layer and room is not None:
+        raise RuntimeError(
+            "DECODE_ATTN final F-to-A receipt must not have an existing "
+            f"waiting room: round_key={round_key}"
+        )
+    existing_expected_lanes: tuple[tuple[int, int], ...] = ()
+    if room is not None:
+        if type(room) is not dict:
+            raise RuntimeError(
+                "DECODE_ATTN F-to-A waiting room must be an exact dict: "
+                f"round_key={round_key}"
+            )
+        if "expected_lanes" not in room:
+            raise RuntimeError(
+                "DECODE_ATTN F-to-A waiting room missing expected lanes: "
+                f"round_key={round_key}"
+            )
+        raw_room_expected_lanes = room["expected_lanes"]
+        if raw_room_expected_lanes is not None:
+            existing_expected_lanes = tuple(
+                normalize_lanes(
+                    raw_room_expected_lanes,
+                    identity_scope=LaneIdentityScope.FULL_STAGE,
+                    field_name="DECODE_ATTN F-to-A waiting room expected lanes",
+                    require_nonempty=True,
+                )
+            )
+            if any(
+                room_replica_id != replica_id
+                for room_replica_id, _ in existing_expected_lanes
+            ):
+                raise RuntimeError(
+                    "DECODE_ATTN F-to-A waiting room expected lanes contain a "
+                    f"different replica: round_key={round_key}, "
+                    f"expected_lanes={existing_expected_lanes}"
+                )
+            room_lanes_outside_topology = [
+                expected_lane
+                for expected_lane in existing_expected_lanes
+                if expected_lane not in scheduler_expected_lane_set
+            ]
+            if room_lanes_outside_topology:
+                raise RuntimeError(
+                    "DECODE_ATTN F-to-A waiting room expected lanes are outside "
+                    f"the scheduler topology: outside={room_lanes_outside_topology}, "
+                    f"expected_lanes={scheduler_expected_lanes}"
+                )
+        if (
+            filtered_expected_lanes
+            and existing_expected_lanes
+            and existing_expected_lanes != filtered_expected_lanes
+        ):
+            raise ValueError(
+                "Mismatched DECODE_ATTN F-to-A expected lanes contract for the "
+                f"same round: round_key={round_key}, "
+                f"existing={existing_expected_lanes}, "
+                f"new={filtered_expected_lanes}"
+            )
+
+    stored_expected_lanes = (
+        filtered_expected_lanes
+        or existing_expected_lanes
+        or None
+    )
+    expected_lanes = list(
+        stored_expected_lanes
+        if stored_expected_lanes is not None
+        else tuple(scheduler_expected_lanes)
+    )
+    if lane not in expected_lanes:
+        raise ValueError(
+            "Unexpected lane observed in DECODE_ATTN F-to-A waiting room: "
+            f"round_key={round_key}, lane={lane}, "
+            f"expected_lanes={expected_lanes}"
+        )
+
+    if room is not None:
+        per_lane_queues = room.get("per_lane_queues")
+        if (
+            type(per_lane_queues) is not defaultdict
+            or per_lane_queues.default_factory is not deque
+        ):
+            raise RuntimeError(
+                "DECODE_ATTN F-to-A waiting room per_lane_queues must be a "
+                f"defaultdict(deque): round_key={round_key}"
+            )
+        room_lanes = normalize_lanes(
+            list(per_lane_queues.keys()),
+            identity_scope=LaneIdentityScope.FULL_STAGE,
+            field_name="DECODE_ATTN F-to-A waiting room queue lanes",
+            require_nonempty=False,
+        )
+        queued_identities_by_lane = {}
+        for room_lane in room_lanes:
+            if room_lane not in expected_lanes:
+                raise RuntimeError(
+                    "DECODE_ATTN F-to-A waiting room contains a queue outside "
+                    f"its expected lanes: lane={room_lane}, "
+                    f"expected_lanes={expected_lanes}"
+                )
+            lane_queue = per_lane_queues.get(room_lane)
+            if type(lane_queue) is not deque:
+                raise RuntimeError(
+                    "DECODE_ATTN F-to-A waiting room lane queue must be a deque: "
+                    f"lane={room_lane}, queue={lane_queue!r}"
+                )
+            queued_identities_by_lane[room_lane] = [
+                scheduler._validate_decode_attn_f2a_queued_batch(
+                    queued_batch,
+                    queue_lane=room_lane,
+                    round_key=round_key,
+                    expected_lanes=expected_lanes,
+                    current_batch=batch,
+                )
+                for queued_batch in lane_queue
+            ]
+
+        current_identity = (batch_global_id, decode_token_index)
+        if barrier_round_id is not None:
+            for queued_identities in queued_identities_by_lane.values():
+                for queued_identity in queued_identities:
+                    if queued_identity != current_identity:
+                        raise RuntimeError(
+                            "DECODE_ATTN F-to-A explicit round mixes batch/token "
+                            f"identities: queued={queued_identity}, "
+                            f"current={current_identity}, round_key={round_key}"
+                        )
+        else:
+            max_queue_depth = max(
+                (
+                    len(queued_identities)
+                    for queued_identities in queued_identities_by_lane.values()
+                ),
+                default=0,
+            )
+            for queue_position in range(max_queue_depth):
+                position_identities = {
+                    queued_identities[queue_position]
+                    for queued_identities in queued_identities_by_lane.values()
+                    if queue_position < len(queued_identities)
+                }
+                if len(position_identities) > 1:
+                    raise RuntimeError(
+                        "DECODE_ATTN F-to-A legacy FIFO position mixes "
+                        f"batch/token identities: position={queue_position}, "
+                        f"identities={sorted(position_identities)}, "
+                        f"round_key={round_key}"
+                    )
+
+            current_lane_depth = len(
+                queued_identities_by_lane.get(lane, ())
+            )
+            matching_position_identities = {
+                queued_identities[current_lane_depth]
+                for room_lane, queued_identities in queued_identities_by_lane.items()
+                if room_lane != lane
+                and current_lane_depth < len(queued_identities)
+            }
+            if (
+                matching_position_identities
+                and matching_position_identities != {current_identity}
+            ):
+                raise RuntimeError(
+                    "DECODE_ATTN F-to-A legacy FIFO arrival identity does not "
+                    f"match position={current_lane_depth}: "
+                    f"queued={sorted(matching_position_identities)}, "
+                    f"current={current_identity}, round_key={round_key}"
+                )
+
+    return {
+        "current_layer_id": current_layer_id,
+        "next_layer_id": next_layer_id,
+        "replica_id": replica_id,
+        "replica_local_id": replica_local_id,
+        "lane": lane,
+        "batch_global_id": batch_global_id,
+        "decode_token_index": decode_token_index,
+        "afd_stage_idx": afd_stage_idx,
+        "barrier_round_id": barrier_round_id,
+        "round_key": round_key,
+        "stored_expected_lanes": stored_expected_lanes,
+        "expected_lanes": expected_lanes,
+        "room": room,
+        "is_last_layer": is_last_layer,
+    }
