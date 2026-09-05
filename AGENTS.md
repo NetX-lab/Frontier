@@ -8,6 +8,7 @@
 | ---------- | ------------------ |
 | 2026-09-05 | Added the authoritative vLLM parallel-semantics and Frontier lane-mapping contract. |
 | 2026-09-05 | Clarified Replica-local collective backend materialization. |
+| 2026-09-05 | Added Python module size and plain ML-system naming guidance for refactors. |
 
 - Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
 - The public co-location, PDD, and PD-AF examples explicitly select `--cc_backend_config_type analytical` for one-click smoke runs using the built-in analytical model.
@@ -742,6 +743,15 @@ See `docs/profiling/README.md` for the public profiling workflow and downstream 
 Practical implication: Frontier intentionally uses a split interface (`param_memory` + `overhead`) to support three modes (`memory_planner`, `memory_planner_profiled`, `explicit`) while keeping compatibility with vLLM-style memory accounting.
 
 ## Development Gates
+
+### Python Module Size and Naming
+
+- Keep each individual Python source file at or below 2,000 lines as a soft maintainability limit.
+- When a Python file exceeds 2,000 lines, record the concrete technical reason, the affected behavior, and why a smaller split would reduce correctness or maintainability.
+- Use solid, plain names that describe the component's ML-system responsibility directly.
+- Prefer established component terms such as `scheduler`, `replica`, `stage`, `expert_parallel`, `transfer`, `attention`, `diagnostics`, and `planner`.
+- Keep module and function names consistent with neighboring code and avoid obscure domain labels or names that imply a broader contract than the implementation provides.
+- When two or more naming choices remain materially plausible after code inspection, use `grill-me` and wait for the user's decision before creating the module or public interface.
 
 Any new feature, refactor, or module adjustment must pass these gates before delivery:
 
