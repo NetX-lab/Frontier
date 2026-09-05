@@ -1678,3 +1678,210 @@ def prepare_decode_attn_idle_lanes(
             (missing_lane, (layer_id, idle_batch))
         )
     return prepared_entries
+def validate_decode_attn_a2f_batch_entry(
+
+scheduler,
+    *,
+    batch: Batch,
+    lane: tuple[int, int],
+    layer_id: int,
+    afd_stage_idx: int,
+    model_is_moe: bool,
+    context: str,
+    allow_idle: bool,
+) -> None:
+    """Validate one A-to-F Batch before any scheduler state is touched."""
+
+    if type(batch) is not Batch:
+        raise ValueError(
+            f"DECODE_ATTN A-to-F {context} must be an exact Batch, "
+            f"got {type(batch).__name__}"
+        )
+    if type(model_is_moe) is not bool:
+        raise RuntimeError(
+            "DECODE_ATTN A-to-F model_config.is_moe must be an exact bool, "
+            f"got {model_is_moe!r}"
+        )
+    normalized_lane = normalize_lanes(
+        [lane],
+        identity_scope=LaneIdentityScope.FULL_STAGE,
+        field_name=f"DECODE_ATTN A-to-F {context} lane",
+        require_nonempty=True,
+    )[0]
+    layer_id = scheduler._validate_decode_attn_a2f_topology_value(
+        layer_id,
+        field_name=f"{context} layer_id",
+    )
+    afd_stage_idx = scheduler._validate_decode_attn_a2f_topology_value(
+        afd_stage_idx,
+        field_name=f"{context} afd_stage_idx",
+    )
+
+    raw_is_idle = getattr(batch, "is_idle", None)
+    raw_is_moe = getattr(batch, "is_moe", None)
+    if type(raw_is_idle) is not bool:
+        raise RuntimeError(
+            f"DECODE_ATTN A-to-F {context} is_idle must be an exact bool, "
+            f"got {raw_is_idle!r}"
+        )
+    if type(raw_is_moe) is not bool:
+        raise RuntimeError(
+            f"DECODE_ATTN A-to-F {context} is_moe must be an exact bool, "
+            f"got {raw_is_moe!r}"
+        )
+    if raw_is_moe is not model_is_moe:
+        raise ValueError(
+            f"DECODE_ATTN A-to-F {context} is_moe does not match model "
+            f"configuration: batch={raw_is_moe}, model={model_is_moe}"
+        )
+    if raw_is_idle and not allow_idle:
+        raise ValueError(
+            f"DECODE_ATTN A-to-F {context} idle Batch is not valid for an "
+            "incoming lane"
+        )
+
+    batch_stage_idx = getattr(batch, "afd_stage_idx", None)
+    if type(batch_stage_idx) is not int or batch_stage_idx != afd_stage_idx:
+        raise ValueError(
+            f"DECODE_ATTN A-to-F {context} afd_stage_idx mismatch: "
+            f"expected={afd_stage_idx}, got={batch_stage_idx!r}"
+        )
+    batch_lane = (
+        getattr(batch, "decode_attn_original_replica_id", None),
+        getattr(batch, "decode_attn_original_replica_local_id", None),
+    )
+    if (
+        type(batch_lane[0]) is not int
+        or batch_lane[0] < 0
+        or (
+            batch_lane[1] is not None
+            and (type(batch_lane[1]) is not int or batch_lane[1] < 0)
+        )
+    ):
+        raise ValueError(
+            f"DECODE_ATTN A-to-F {context} original lane must contain a "
+            f"Replica ID and optional full-stage identity, got {batch_lane!r}"
+        )
+    if batch_lane != normalized_lane:
+        raise ValueError(
+            f"DECODE_ATTN A-to-F {context} original lane mismatch: "
+            f"expected={normalized_lane}, got={batch_lane}"
+        )
+
+    requests = getattr(batch, "requests", None)
+    num_tokens = getattr(batch, "num_tokens", None)
+    if type(requests) is not list:
+        raise RuntimeError(
+            f"DECODE_ATTN A-to-F {context} requests must be an exact list, "
+            f"got {type(requests).__name__}"
+        )
+    if type(num_tokens) is not list or len(num_tokens) != len(requests):
+        raise RuntimeError(
+            f"DECODE_ATTN A-to-F {context} num_tokens must be an exact list "
+            "matching requests"
+        )
+    for token_count in num_tokens:
+        if type(token_count) is not int or token_count < 0:
+            raise RuntimeError(
+                f"DECODE_ATTN A-to-F {context} num_tokens must contain exact "
+                f"non-negative ints, got {token_count!r}"
+            )
+    if raw_is_idle:
+        if requests or num_tokens:
+            raise ValueError(
+                f"DECODE_ATTN A-to-F {context} idle Batch must not contain "
+                "requests or token counts"
+            )
+        active_requests: List[Request] = []
+    else:
+        if not requests:
+            raise ValueError(
+                f"DECODE_ATTN A-to-F {context} non-idle Batch must contain "
+                "requests"
+            )
+        active_requests = []
+        for request in requests:
+            if type(request) is not Request:
+                raise ValueError(
+                    f"DECODE_ATTN A-to-F {context} contains a request that "
+                    f"is not an exact Request: {request!r}"
+                )
+            request_id = getattr(request, "id", None)
+            if type(request_id) is not int or request_id < 0:
+                raise ValueError(
+                    f"DECODE_ATTN A-to-F {context} request ID must be an exact "
+                    f"non-negative int, got {request_id!r}"
+                )
+            completed = getattr(request, "completed", None)
+            if type(completed) is not bool:
+                raise RuntimeError(
+                    f"DECODE_ATTN A-to-F {context} request.completed must be "
+                    f"an exact bool, got {completed!r}"
+                )
+            request_layer_id = getattr(request, "completed_layer_count", None)
+            if type(request_layer_id) is not int or request_layer_id < 0:
+                raise RuntimeError(
+                    f"DECODE_ATTN A-to-F {context} request layer must be an "
+                    f"exact non-negative int, got {request_layer_id!r}"
+                )
+            if not completed:
+                active_requests.append(request)
+                if request_layer_id != layer_id:
+                    raise ValueError(
+                        f"DECODE_ATTN A-to-F {context} request layer mismatch: "
+                        f"expected={layer_id}, got={request_layer_id}, "
+                        f"request_id={request_id}"
+                    )
+        if not active_requests:
+            raise ValueError(
+                f"DECODE_ATTN A-to-F {context} non-idle Batch has no active "
+                "requests"
+            )
+
+    decode_ffn_layer_id = getattr(batch, "decode_ffn_layer_id", None)
+    if decode_ffn_layer_id is not None:
+        if type(decode_ffn_layer_id) is not int or decode_ffn_layer_id < 0:
+            raise ValueError(
+                f"DECODE_ATTN A-to-F {context} decode_ffn_layer_id must be "
+                f"None or an exact non-negative int, got {decode_ffn_layer_id!r}"
+            )
+        if decode_ffn_layer_id != layer_id:
+            raise ValueError(
+                f"DECODE_ATTN A-to-F {context} decode_ffn_layer_id mismatch: "
+                f"expected={layer_id}, got={decode_ffn_layer_id}"
+            )
+
+    cohort_id = getattr(batch, "decode_attn_cohort_id", None)
+    cohort_request_ids = getattr(batch, "decode_attn_cohort_request_ids", None)
+    if cohort_id is None:
+        if cohort_request_ids is not None:
+            raise ValueError(
+                f"DECODE_ATTN A-to-F {context} has cohort request IDs without "
+                "a cohort ID"
+            )
+        return
+    if type(cohort_id) is not int or cohort_id < 0:
+        raise ValueError(
+            f"DECODE_ATTN A-to-F {context} cohort ID must be an exact "
+            f"non-negative int, got {cohort_id!r}"
+        )
+    if type(cohort_request_ids) is not tuple:
+        raise ValueError(
+            f"DECODE_ATTN A-to-F {context} cohort request IDs must be an "
+            f"exact tuple, got {cohort_request_ids!r}"
+        )
+    validate_decode_attn_wave_binding(
+        scheduler,
+        batch,
+        lane=normalized_lane,
+        afd_stage_idx=afd_stage_idx,
+        requests=requests,
+        active_requests=active_requests,
+        context=f"A-to-F {context}",
+    )
+    scheduler._validate_decode_attn_a2f_wave_phase(
+        batch,
+        layer_id=layer_id,
+        afd_stage_idx=afd_stage_idx,
+        context=context,
+    )
