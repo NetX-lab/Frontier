@@ -7054,7 +7054,7 @@ class BaseClusterScheduler(ABC):
                 )
             return value
 
-        cohort_id = require_non_negative_int(
+        wave_id = require_non_negative_int(
             getattr(batch, "decode_attn_cohort_id", None),
             f"DECODE_ATTN {context} decode_attn_cohort_id",
         )
@@ -7069,33 +7069,33 @@ class BaseClusterScheduler(ABC):
                 f"topology: lane={lane}"
             )
         replica_scheduler = replica_schedulers[lane]
-        cohort_states = getattr(
+        wave_states = getattr(
             replica_scheduler,
             "_decode_attn_active_cohort_states",
             None,
         )
-        if type(cohort_states) is not dict:
+        if type(wave_states) is not dict:
             raise RuntimeError(
                 "DECODE_ATTN active cohort states must be an exact dict"
             )
-        if cohort_id not in cohort_states:
+        if wave_id not in wave_states:
             raise ValueError(
                 f"DECODE_ATTN {context} references an inactive or unknown cohort: "
-                f"cohort_id={cohort_id}, lane={lane}"
+                f"cohort_id={wave_id}, lane={lane}"
             )
-        cohort_state = cohort_states[cohort_id]
-        if type(cohort_state) is not dict:
+        wave_state = wave_states[wave_id]
+        if type(wave_state) is not dict:
             raise RuntimeError(
                 "DECODE_ATTN active cohort state must be an exact dict: "
-                f"cohort_id={cohort_id}, lane={lane}"
+                f"cohort_id={wave_id}, lane={lane}"
             )
 
-        def require_cohort_id_set(
+        def require_wave_id_set(
             field_name: str,
             *,
             require_nonempty: bool,
         ) -> set[int]:
-            request_ids = cohort_state.get(field_name)
+            request_ids = wave_state.get(field_name)
             if type(request_ids) is not set:
                 raise RuntimeError(
                     f"DECODE_ATTN cohort {field_name} must be an exact set, "
@@ -7113,11 +7113,11 @@ class BaseClusterScheduler(ABC):
                     )
             return request_ids
 
-        all_request_ids = require_cohort_id_set(
+        all_request_ids = require_wave_id_set(
             "all_request_ids",
             require_nonempty=True,
         )
-        pending_request_ids = require_cohort_id_set(
+        pending_request_ids = require_wave_id_set(
             "pending_request_ids",
             require_nonempty=False,
         )
@@ -7127,35 +7127,35 @@ class BaseClusterScheduler(ABC):
                 "all_request_ids"
             )
 
-        batch_cohort_request_ids = getattr(
+        batch_wave_request_ids = getattr(
             batch,
             "decode_attn_cohort_request_ids",
             None,
         )
-        if type(batch_cohort_request_ids) is not tuple:
+        if type(batch_wave_request_ids) is not tuple:
             raise ValueError(
                 f"DECODE_ATTN {context} decode_attn_cohort_request_ids must be an "
-                f"exact tuple, got {batch_cohort_request_ids!r}"
+                f"exact tuple, got {batch_wave_request_ids!r}"
             )
-        normalized_batch_cohort_request_ids = [
+        normalized_batch_wave_request_ids = [
             require_non_negative_int(
                 request_id,
                 f"DECODE_ATTN {context} cohort request ID",
             )
-            for request_id in batch_cohort_request_ids
+            for request_id in batch_wave_request_ids
         ]
-        if len(set(normalized_batch_cohort_request_ids)) != len(
-            normalized_batch_cohort_request_ids
+        if len(set(normalized_batch_wave_request_ids)) != len(
+            normalized_batch_wave_request_ids
         ):
             raise ValueError(
                 f"DECODE_ATTN {context} cohort request IDs must not contain "
                 "duplicates"
             )
-        if set(normalized_batch_cohort_request_ids) != all_request_ids:
+        if set(normalized_batch_wave_request_ids) != all_request_ids:
             raise ValueError(
                 f"DECODE_ATTN {context} cohort request IDs do not match active "
                 "cohort all_request_ids: "
-                f"batch={normalized_batch_cohort_request_ids}, "
+                f"batch={normalized_batch_wave_request_ids}, "
                 f"active={sorted(all_request_ids)}"
             )
 
@@ -7170,14 +7170,14 @@ class BaseClusterScheduler(ABC):
             raise ValueError(
                 f"DECODE_ATTN {context} request IDs must not contain duplicates"
             )
-        requests_outside_cohort = sorted(
+        requests_outside_wave = sorted(
             set(batch_request_ids) - all_request_ids
         )
-        if requests_outside_cohort:
+        if requests_outside_wave:
             raise ValueError(
                 f"DECODE_ATTN {context} contains requests outside the active "
-                f"cohort: request_ids={requests_outside_cohort}, "
-                f"cohort_id={cohort_id}"
+                f"cohort: request_ids={requests_outside_wave}, "
+                f"cohort_id={wave_id}"
             )
 
         active_request_ids = {
@@ -7194,10 +7194,10 @@ class BaseClusterScheduler(ABC):
             raise ValueError(
                 f"DECODE_ATTN {context} requests are not pending in the active "
                 f"cohort: request_ids={requests_outside_pending}, "
-                f"cohort_id={cohort_id}"
+                f"cohort_id={wave_id}"
             )
 
-        active_stage_indices = cohort_state.get("active_stage_indices")
+        active_stage_indices = wave_state.get("active_stage_indices")
         if type(active_stage_indices) is not set:
             raise RuntimeError(
                 "DECODE_ATTN cohort active_stage_indices must be an exact set, "
