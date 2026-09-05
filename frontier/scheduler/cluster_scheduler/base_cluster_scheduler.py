@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from copy import deepcopy
 import csv
-from enum import Enum
 import logging
 import math
 from pathlib import Path
@@ -41,6 +40,10 @@ from frontier.scheduler.utils.expert_parallel import (
     validate_token_conservation,
 )
 from frontier.scheduler.utils.scheduler_diagnostics import SchedulerDiagnostics
+from frontier.scheduler.utils.pdaf_transfer import (
+    LaneIdentityScope,
+    normalize_lanes,
+)
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -93,11 +96,7 @@ def resolve_ep_collective_kind(
     return profile.expert_parallel_collective
 
 
-class M2NLaneIdentityScope(Enum):
-    """Replica-local identity rule for one M2N lane contract."""
-
-    FULL_STAGE = "full_stage"
-    REPLICA_LOCAL = "replica_local"
+M2NLaneIdentityScope = LaneIdentityScope
 
 
 class BaseClusterScheduler(ABC):
@@ -5803,55 +5802,14 @@ class BaseClusterScheduler(ABC):
         field_name: str,
         require_nonempty: bool,
     ) -> List[tuple[int, int | None]]:
-        """Validate and normalize one exact M2N lane list."""
+        """Compatibility wrapper for M2N lane normalization."""
 
-        if type(identity_scope) is not M2NLaneIdentityScope:
-            raise ValueError(
-                "identity_scope must be an exact M2NLaneIdentityScope, "
-                f"got {identity_scope!r}"
-            )
-        if type(raw_lanes) not in {list, tuple}:
-            raise ValueError(
-                f"{field_name} must be an exact list or tuple, got {raw_lanes!r}"
-            )
-
-        allow_full_stage_identity = (
-            identity_scope is M2NLaneIdentityScope.FULL_STAGE
+        return normalize_lanes(
+            raw_lanes,
+            identity_scope=identity_scope,
+            field_name=field_name,
+            require_nonempty=require_nonempty,
         )
-        normalized_lanes: List[tuple[int, int | None]] = []
-        seen_lanes = set()
-        for raw_lane in raw_lanes:
-            if type(raw_lane) is not tuple or len(raw_lane) != 2:
-                raise ValueError(
-                    f"{field_name} must contain exact 2-tuples, got {raw_lane!r}"
-                )
-            lane_replica_id, lane_replica_local_id = raw_lane
-            if type(lane_replica_id) is not int or lane_replica_id < 0:
-                raise ValueError(
-                    f"{field_name} replica_id must be an exact non-negative int, "
-                    f"got {lane_replica_id!r}"
-                )
-            if lane_replica_local_id is not None and (
-                type(lane_replica_local_id) is not int or lane_replica_local_id < 0
-            ):
-                raise ValueError(
-                    f"{field_name} replica_local_id must be an exact "
-                    f"non-negative int, got {lane_replica_local_id!r}"
-                )
-            if lane_replica_local_id is None and not allow_full_stage_identity:
-                raise ValueError(
-                    f"{field_name} replica_local_id cannot be None in "
-                    f"{identity_scope.value} identity scope"
-                )
-            lane = (lane_replica_id, lane_replica_local_id)
-            if lane in seen_lanes:
-                raise ValueError(f"{field_name} contains duplicate lane {lane!r}")
-            seen_lanes.add(lane)
-            normalized_lanes.append(lane)
-
-        if require_nonempty and not normalized_lanes:
-            raise ValueError(f"{field_name} must not be empty")
-        return normalized_lanes
 
     @staticmethod
     def _normalize_m2n_lane_contract(
