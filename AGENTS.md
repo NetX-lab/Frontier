@@ -7,6 +7,7 @@
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
 | 2026-09-05 | Added the authoritative vLLM parallel-semantics and Frontier lane-mapping contract. |
+| 2026-09-05 | Clarified Replica-local collective backend materialization. |
 
 - Current public branch supports `co-location`, sequential PDD / `pd-disaggregation`, and sequential PD-AF / `pd-af-disaggregation`.
 - The public co-location, PDD, and PD-AF examples explicitly select `--cc_backend_config_type analytical` for one-click smoke runs using the built-in analytical model.
@@ -551,6 +552,11 @@ not as a request to create one simulator scheduler per physical rank.
   implicit in the logical operator/stage execution abstraction and represents
   request ownership with `(replica_id, dp_id)` lanes for co-location, PDD
   `PREFILL`, and unified PDD `DECODE` roles when `attn_dp > 1`.
+- A Cluster's `CCBackend` models the collective rank space of one complete
+  Replica pod. The outer Cluster `num_replicas` value controls scheduler
+  capacity and request ownership; it does not enlarge `ATTN_DP`, `MOE_TP`, or
+  `MOE_EP` participant groups. For `TP=4, DP=2, EP=8`, backend dimensions stay
+  local to `TP4 x DP2` for attention and `TP1 x EP8` for FFN/MoE work.
 - Frontier does not create per-TP-rank schedulers or per-EP-rank schedulers.
   `moe_expert_parallel_size` supplies EP placement and collective cardinality;
   it does not define request ownership.

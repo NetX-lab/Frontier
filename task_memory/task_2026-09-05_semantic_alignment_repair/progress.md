@@ -4,6 +4,7 @@
 | ---------- | ------------------ |
 | 2026-09-05 | Logged implementation, validation, and publication results. |
 | 2026-09-05 | Recorded user-confirmed continuation for the reviewed semantic-alignment fixes. |
+| 2026-09-05 | Isolated collective backend rank spaces to one Replica pod and reran architecture smokes. |
 
 # Progress
 
@@ -50,3 +51,21 @@
 - Expectation: `DECODE_FFN` local IDs remain `EP_WAVE_LANE`, shared-domain non-FFN local IDs become `ATTN_DP_LANE`, and full-stage `None` remains `FULL_STAGE_WORLD`.
 - Method: centralized scope classification in `MetricsStore` and added role-specific assertions.
 - Result: `python -m pytest tests/unit/test_cluster_scheduler_dp_lanes.py tests/unit/test_transfer_metrics_contract.py tests/unit/test_pdaf_m2n_metrics.py -q -p no:cacheprovider` -> `114 passed`.
+
+### Sub-step 5: Replica-local collective backend materialization
+
+- Motivation: runtime inspection showed `runtime_attn_dp * runtime_num_replicas`
+  produced `TP4 x DP6` for three independent pods, and MoE runtime dimensions
+  used outer replicas as a collective DP dimension.
+- Expectation: every Cluster CC backend models one complete Replica pod, with
+  attention `TP4 x DP2` and local MoE `TP1 x EP8`; outer replicas remain
+  scheduler capacity only.
+- Method: materialized physical topology from one `replica_config.world_size`,
+  set backend runtime replica count to `1`, removed outer-replica factors from
+  collective-sim and ASTRA-Sim analytical runtime dimensions, and added direct
+  dual-backend regression tests.
+- Result: `12 passed`; fresh direct dummy smokes all exited `0`:
+  co-location E2E `1036.0 ms`, PDD E2E `60.52097152 ms`, PD-AF E2E
+  `631.27610496 ms`. Post-fix materialization is world `8`, attention
+  `{TP:4, CP:1, DP:2, EP:1}`, and MoE `{TP:1, CP:1, DP:1, EP:8}` for
+  `num_replicas=3, attn_dp=2`.

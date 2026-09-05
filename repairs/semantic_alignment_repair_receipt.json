@@ -7,16 +7,22 @@
   "authorization": {
     "receipt": "task_memory/semantic-alignment-repair-approval.md",
     "code_change_marker": "SEMANTIC_ALIGNMENT_REPAIR_START: legacy Replica-local DP lanes with logical TP and shared EP cardinality",
+    "follow_up_code_change_marker": "SEMANTIC_ALIGNMENT_REPAIR_START: isolate CC backend collectives to one Replica pod",
     "scope": "co-location -> pd-disagg -> pd-af-disagg",
     "groundtruth_rerun": false
   },
   "changed_files": [
     "frontier/config/config.py",
     "frontier/config/parallel_semantics.py",
+    "frontier/cc_backend/backends/collective_sim_cc_backend.py",
+    "frontier/cc_backend/backends/astra_sim_analytical_cc_backend.py",
+    "frontier/cc_backend/cc_backend_config.py",
+    "frontier/entities/cluster.py",
     "frontier/metrics/metrics_store.py",
     "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py",
     "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py",
     "frontier/scheduler/replica_scheduler/base_replica_scheduler.py",
+    "tests/unit/test_cc_backend_replica_local_layout.py",
     "tests/unit/test_parallel_semantics.py",
     "tests/unit/test_pdaf_config_contract.py",
     "task_memory/semantic-alignment-repair-approval.md",
@@ -26,13 +32,17 @@
     "attn_dp": 1,
     "non_decode_ffn_scheduler_lanes": 1,
     "decode_attn_identity": "full-stage None",
-    "metrics_non_decode_ffn_local_scopes": 0
+    "metrics_non_decode_ffn_local_scopes": 0,
+    "cc_backend_attention_layout": "TP4 x DP6 on world 24",
+    "cc_backend_moe_layout": "TP1 x DP3 x EP8 on world 24"
   },
   "after": {
     "attn_dp": "positive integer for shared-domain roles",
     "non_decode_ffn_scheduler_lanes": "one logical scheduler per (replica_id, dp_id)",
     "decode_attn_identity": "full-stage None with attn_dp=1",
-    "metrics_non_decode_ffn_local_scopes": "attn_dp except DECODE_ATTN; DECODE_FFN uses moe_expert_parallel_size"
+    "metrics_non_decode_ffn_local_scopes": "attn_dp except DECODE_ATTN; DECODE_FFN uses moe_expert_parallel_size",
+    "cc_backend_attention_layout": "TP4 x DP2 on world 8",
+    "cc_backend_moe_layout": "TP1 x DP1 x EP8 on world 8"
   },
   "validation": {
     "unit_tests": {
@@ -57,6 +67,15 @@
         "decode_attn_e2e_ms": 480.0,
         "decode_ffn_e2e_ms": 128.07099050666582,
         "tokens": 10
+      },
+      "backend_replica_local_layout": {
+        "focused_unit_tests": "12 passed",
+        "merged_semantic_targeted_units": "232 passed, 115 warnings",
+        "runtime_num_replicas_input": 3,
+        "runtime_attn_dp_input": 2,
+        "materialized_world": 8,
+        "attention_dims": "TP4 x CP1 x DP2 x EP1",
+        "moe_dims": "TP1 x CP1 x DP1 x EP8"
       }
     }
   }

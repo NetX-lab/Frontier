@@ -28,3 +28,13 @@
 `SEMANTIC_ALIGNMENT_REPAIR_START: legacy Replica-local DP lanes with logical TP and shared EP cardinality`
 
 The marker is recorded immediately before the first Frontier source edit.
+
+## Follow-up Code-Change Marker
+
+`SEMANTIC_ALIGNMENT_REPAIR_START: isolate CC backend collectives to one Replica pod`
+
+Independent runtime materialization evidence confirmed that multiplying
+`runtime_attn_dp` by `runtime_num_replicas` creates cross-Replica attention
+collectives. The follow-up scope is limited to collective-sim and
+astra-sim-analytical per-Cluster materialization plus regression coverage;
+outer `num_replicas` remains scheduler capacity and request ownership.

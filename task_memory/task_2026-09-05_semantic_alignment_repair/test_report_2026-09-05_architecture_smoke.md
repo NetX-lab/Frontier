@@ -3,18 +3,23 @@
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
 | 2026-09-05 | Recorded final co-location, PDD, and PD-AF unit and direct smoke validation after semantic repair. |
+| 2026-09-05 | Added fresh backend-layout regression and post-repair architecture smoke evidence. |
 
 ## Test Script Information
 
 - Worktree: `/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/semantic-alignment-repair-20260905`
 - Branch: `feat/semantic-alignment-repair-20260905`
-- Python: `python` from the active environment (`python -m pytest`)
+- Python: system `python` (`Python 3.12.3`); no Conda executable was available in this shell
 - Commands:
+  - `python -m pytest tests/unit/test_cc_backend_replica_local_layout.py tests/unit/test_parallel_semantics.py tests/unit/test_canonical_parallel_names.py -q -p no:cacheprovider`
+  - The merged semantic unit command covered 14 targeted files and returned `232 passed, 115 warnings`.
   - `python -m pytest tests/unit/test_parallel_semantics.py tests/unit/test_canonical_parallel_names.py tests/unit/test_shared_ep_layer_protocol_guard.py tests/unit/test_moe_predictor_layer_id_semantics.py -q -p no:cacheprovider`
   - `python -m pytest tests/unit/test_pd_moe_lifecycle_reproducer.py tests/unit/test_decode_ep_wave_materialization.py tests/unit/test_shared_ep_layer_protocol_guard.py -q -p no:cacheprovider`
   - `python -m pytest tests/unit/test_pdaf_config_contract.py tests/unit/test_pdaf_m2n_metrics.py tests/unit/test_decode_ffn_architecture_metadata_integrity.py tests/unit/test_decode_ep_wave_materialization.py -q -p no:cacheprovider`
   - `python -m pytest tests/unit/test_examples_dummy_run_matrix.py tests/unit/test_examples_documentation_contracts.py -q -p no:cacheprovider`
-  - Direct smoke commands used `NUM_REQUESTS=1`, `PREFILL_TOKENS=8`, `DECODE_TOKENS=2`, `QPS=100`, dummy execution time `1.0ms`, and metrics under `/data/ycfeng/tmp/frontier_repair_*`.
+  - `RUN_ID=semantic_repair_20260905_coloc NUM_REQUESTS=1 PREFILL_TOKENS=8 DECODE_TOKENS=2 QPS=100 METRICS_OUTPUT_DIR=/data/ycfeng/tmp/frontier_semantic_repair_coloc_20260905 DECODE_CUDA_GRAPH_MODE=none bash examples/architecture/co-location/offline/moe_model_basic.sh`
+  - `RUN_ID=semantic_repair_20260905_pdd NUM_REQUESTS=1 PREFILL_TOKENS=8 DECODE_TOKENS=2 QPS=100 METRICS_OUTPUT_DIR=/data/ycfeng/tmp/frontier_semantic_repair_pdd_20260905 bash examples/architecture/pdd/offline/moe_model_basic.sh`
+  - `RUN_ID=semantic_repair_20260905_pdaf NUM_REQUESTS=1 PREFILL_TOKENS=8 DECODE_TOKENS=2 QPS=100 METRICS_OUTPUT_DIR=/data/ycfeng/tmp/frontier_semantic_repair_pdaf_20260905 bash examples/architecture/pd-af-disagg/offline/moe_model_ep.sh`
 
 ## Validation Criteria
 
@@ -40,25 +45,19 @@ The documentation failures are unrelated to runtime behavior and were not change
 
 ## Follow-up Validation
 
-Runtime materialization inspection found a remaining semantic defect in both
-`frontier/cc_backend/backends/collective_sim_cc_backend.py` and
-`frontier/cc_backend/backends/astra_sim_analytical_cc_backend.py`:
+The backend repair removed outer-Replica factors from both runtime backends.
+For `num_replicas=3, attn_dp=2, attn_tp=4, moe_tp=1, moe_ep=8`, fresh
+materialization produced:
 
 ```text
-runtime_num_replicas=3, runtime_attn_dp=2
-materialized attention dims = {TP: 4, CP: 1, DP: 6, EP: 1}
-materialized MoE dims       = {TP: 1, CP: 1, DP: 3, EP: 8}
+world=8
+attention={TP: 4, CP: 1, DP: 2, EP: 1}
+moe={TP: 1, CP: 1, DP: 1, EP: 8}
 ```
 
-The attention `DP=runtime_attn_dp * runtime_num_replicas` expression merges
-outer serving replicas into the attention-DP collective. The requested model
-has no cross-replica communication, so attention-DP must remain `2` per
-Replica. The MoE path also exposes outer replicas as `DP=3`; this is only
-valid when the backend invocation is explicitly cluster-wide. The current
-per-Replica semantic contract therefore needs an implementation decision before
-collective-sim/astra parity can be claimed.
-
-After the scheduler tracker repair landed, all three direct dummy smokes passed:
+The focused backend regression returned `12 passed`; the merged semantic unit
+command returned `232 passed, 115 warnings`. After this repair, all three
+direct dummy smokes passed:
 
 | Surface | Exit | E2E mean | Throughput |
 | --- | ---: | ---: | ---: |
@@ -67,4 +66,4 @@ After the scheduler tracker repair landed, all three direct dummy smokes passed:
 | PD-AF | 0 | `631.27610496 ms` | `15.84092906642435 tokens/s` |
 
 Each run completed one request and wrote both request and system metrics under
-`/data/ycfeng/tmp/frontier_repair_*2`.
+`/data/ycfeng/tmp/frontier_semantic_repair_*_20260905`.
