@@ -8910,18 +8910,18 @@ class BaseClusterScheduler(ABC):
 
     @staticmethod
     def _validate_decode_attn_wave_stages(
-        cohort_state: dict[str, Any],
+        wave_state: dict[str, Any],
         *,
         context: str,
     ) -> tuple[set[int], dict[int, str], dict[int, int]]:
         """Validate the complete stage-local state for one DECODE_ATTN cohort."""
 
-        if type(cohort_state) is not dict:
+        if type(wave_state) is not dict:
             raise RuntimeError(
                 f"DECODE_ATTN {context} active cohort state must be an exact dict"
             )
 
-        active_stage_indices = cohort_state.get("active_stage_indices")
+        active_stage_indices = wave_state.get("active_stage_indices")
         if type(active_stage_indices) is not set or not active_stage_indices:
             raise RuntimeError(
                 f"DECODE_ATTN {context} cohort active_stage_indices must be a "
@@ -8934,7 +8934,7 @@ class BaseClusterScheduler(ABC):
                     f"contain exact non-negative ints, got {stage_idx!r}"
                 )
 
-        stage_phases = cohort_state.get("stage_phases")
+        stage_phases = wave_state.get("stage_phases")
         if type(stage_phases) is not dict:
             raise RuntimeError(
                 f"DECODE_ATTN {context} cohort stage phases must be an exact dict"
@@ -8962,7 +8962,7 @@ class BaseClusterScheduler(ABC):
                 f"active={sorted(active_stage_indices)}"
             )
 
-        stage_layers = cohort_state.get("stage_current_layer_ids")
+        stage_layers = wave_state.get("stage_current_layer_ids")
         if type(stage_layers) is not dict:
             raise RuntimeError(
                 f"DECODE_ATTN {context} cohort stage layers must be an exact dict"
@@ -8998,7 +8998,7 @@ class BaseClusterScheduler(ABC):
     ) -> None:
         """Validate the stage-local phase/layer of an A-to-F cohort."""
 
-        cohort_id = getattr(batch, "decode_attn_cohort_id", None)
+        wave_id = getattr(batch, "decode_attn_cohort_id", None)
         lane = (
             getattr(batch, "decode_attn_original_replica_id", None),
             getattr(batch, "decode_attn_original_replica_local_id", None),
@@ -9009,25 +9009,25 @@ class BaseClusterScheduler(ABC):
                 f"DECODE_ATTN A-to-F {context} cohort lane is absent from the "
                 f"replica scheduler topology: lane={lane}"
             )
-        cohort_states = getattr(
+        wave_states = getattr(
             replica_schedulers[lane],
             "_decode_attn_active_cohort_states",
             None,
         )
-        if type(cohort_states) is not dict:
+        if type(wave_states) is not dict:
             raise RuntimeError(
                 f"DECODE_ATTN A-to-F {context} active cohort states must be an "
                 "exact dict"
             )
-        cohort_state = cohort_states.get(cohort_id)
-        if type(cohort_state) is not dict:
+        wave_state = wave_states.get(wave_id)
+        if type(wave_state) is not dict:
             raise ValueError(
                 f"DECODE_ATTN A-to-F {context} references an inactive or unknown "
-                f"cohort: cohort_id={cohort_id}, lane={lane}"
+                f"cohort: cohort_id={wave_id}, lane={lane}"
             )
         active_stage_indices, stage_phases, stage_layers = (
             self._validate_decode_attn_wave_stages(
-                cohort_state,
+                wave_state,
                 context=f"A-to-F {context}",
             )
         )
@@ -9037,13 +9037,13 @@ class BaseClusterScheduler(ABC):
                 f"stage={afd_stage_idx}, active={sorted(active_stage_indices)}"
             )
 
-        aggregate_phase = cohort_state.get("af_phase")
+        aggregate_phase = wave_state.get("af_phase")
         if type(aggregate_phase) is not str:
             raise RuntimeError(
                 f"DECODE_ATTN A-to-F {context} cohort af_phase must be an exact "
                 f"str, got {aggregate_phase!r}"
             )
-        aggregate_layer = cohort_state.get("current_layer_id")
+        aggregate_layer = wave_state.get("current_layer_id")
         if type(aggregate_layer) is not int or aggregate_layer < 0:
             raise RuntimeError(
                 f"DECODE_ATTN A-to-F {context} cohort current_layer_id must be an "
