@@ -1276,12 +1276,12 @@ class BaseClusterScheduler(ABC):
         # duplicate after an idle-placeholder wave has closed.
         self._prefill_sync_completed_keys: set[tuple[int, int, int, int, int, int, str]] = set()
         self._decode_sync_completed_keys: set[tuple[int, int, int, int, int, int, str]] = set()
-        self._prefill_sync_open_cohorts: dict[tuple[int, int, int, str, int], int] = {}
-        self._decode_sync_open_cohorts: dict[tuple[int, int, int, str, int], int] = {}
-        self._prefill_sync_closed_cohorts: set[tuple[int, int, int, str, int]] = set()
-        self._decode_sync_closed_cohorts: set[tuple[int, int, int, str, int]] = set()
-        self._next_forward_cohort_id_by_replica: dict[int, int] = {}
-        self._forward_cohort_used_ids_by_scope: dict[
+        self._prefill_sync_open_steps: dict[tuple[int, int, int, str, int], int] = {}
+        self._decode_sync_open_steps: dict[tuple[int, int, int, str, int], int] = {}
+        self._prefill_sync_closed_steps: set[tuple[int, int, int, str, int]] = set()
+        self._decode_sync_closed_steps: set[tuple[int, int, int, str, int]] = set()
+        self._next_forward_step_id_by_replica: dict[int, int] = {}
+        self._forward_step_used_ids_by_scope: dict[
             tuple[int, int, int, str], set[int]
         ] = {}
 
@@ -4000,16 +4000,16 @@ class BaseClusterScheduler(ABC):
         if completed_key in completed_keys:
             return current_id, True
 
-        open_attr = f"_{sync_kind}_sync_open_cohorts"
-        closed_attr = f"_{sync_kind}_sync_closed_cohorts"
-        open_cohorts = getattr(self, open_attr, None)
-        if open_cohorts is None:
-            open_cohorts = {}
-            setattr(self, open_attr, open_cohorts)
-        closed_cohorts = getattr(self, closed_attr, None)
-        if closed_cohorts is None:
-            closed_cohorts = set()
-            setattr(self, closed_attr, closed_cohorts)
+        open_attr = f"_{sync_kind}_sync_open_steps"
+        closed_attr = f"_{sync_kind}_sync_closed_steps"
+        open_steps = getattr(self, open_attr, None)
+        if open_steps is None:
+            open_steps = {}
+            setattr(self, open_attr, open_steps)
+        closed_steps = getattr(self, closed_attr, None)
+        if closed_steps is None:
+            closed_steps = set()
+            setattr(self, closed_attr, closed_steps)
 
         binding_key = (
             replica_id,
@@ -4018,7 +4018,7 @@ class BaseClusterScheduler(ABC):
             sync_stage,
             provisional_id,
         )
-        cohort_id = open_cohorts.get(binding_key)
+        cohort_id = open_steps.get(binding_key)
         if cohort_id is not None:
             replica_rooms = waiting_room.get(replica_id)
             stage_rooms = replica_rooms.get(stage_id) if replica_rooms else None
@@ -4040,20 +4040,20 @@ class BaseClusterScheduler(ABC):
                     f"replica={replica_id}, stage={stage_id}, lane={lane_id}, "
                     f"layer={layer_id}, sync_stage={sync_stage}"
                 )
-            open_cohorts.pop(binding_key, None)
+            open_steps.pop(binding_key, None)
 
-        used_ids_by_scope = getattr(self, "_forward_cohort_used_ids_by_scope", None)
+        used_ids_by_scope = getattr(self, "_forward_step_used_ids_by_scope", None)
         if used_ids_by_scope is None:
             used_ids_by_scope = {}
-            self._forward_cohort_used_ids_by_scope = used_ids_by_scope
+            self._forward_step_used_ids_by_scope = used_ids_by_scope
         used_scope = (replica_id, stage_id, layer_id, sync_stage)
         used_ids = used_ids_by_scope.setdefault(used_scope, set())
         closed_key = (*used_scope, provisional_id)
-        if closed_key in closed_cohorts or current_id in used_ids:
-            next_ids = getattr(self, "_next_forward_cohort_id_by_replica", None)
+        if closed_key in closed_steps or current_id in used_ids:
+            next_ids = getattr(self, "_next_forward_step_id_by_replica", None)
             if next_ids is None:
                 next_ids = {}
-                self._next_forward_cohort_id_by_replica = next_ids
+                self._next_forward_step_id_by_replica = next_ids
             candidate = max(
                 int(next_ids.get(replica_id, 0)),
                 int(current_id) + 1,
@@ -4065,12 +4065,12 @@ class BaseClusterScheduler(ABC):
         else:
             cohort_id = current_id
         used_ids.add(cohort_id)
-        next_ids = getattr(self, "_next_forward_cohort_id_by_replica", None)
+        next_ids = getattr(self, "_next_forward_step_id_by_replica", None)
         if next_ids is None:
             next_ids = {}
-            self._next_forward_cohort_id_by_replica = next_ids
+            self._next_forward_step_id_by_replica = next_ids
         next_ids[replica_id] = max(int(next_ids.get(replica_id, 0)), cohort_id + 1)
-        open_cohorts[binding_key] = cohort_id
+        open_steps[binding_key] = cohort_id
         batch._forward_cohort_id = cohort_id
         return cohort_id, False
 
@@ -4090,17 +4090,17 @@ class BaseClusterScheduler(ABC):
 
         if sync_kind not in ("prefill", "decode"):
             raise ValueError(f"unknown synchronization kind: {sync_kind!r}")
-        open_cohorts = getattr(self, f"_{sync_kind}_sync_open_cohorts", None)
-        if open_cohorts is not None:
-            open_cohorts.pop(
+        open_steps = getattr(self, f"_{sync_kind}_sync_open_steps", None)
+        if open_steps is not None:
+            open_steps.pop(
                 (replica_id, stage_id, layer_id, sync_stage, provisional_id),
                 None,
             )
-        closed_cohorts = getattr(self, f"_{sync_kind}_sync_closed_cohorts", None)
-        if closed_cohorts is None:
-            closed_cohorts = set()
-            setattr(self, f"_{sync_kind}_sync_closed_cohorts", closed_cohorts)
-        closed_cohorts.add(
+        closed_steps = getattr(self, f"_{sync_kind}_sync_closed_steps", None)
+        if closed_steps is None:
+            closed_steps = set()
+            setattr(self, f"_{sync_kind}_sync_closed_steps", closed_steps)
+        closed_steps.add(
             (replica_id, stage_id, layer_id, sync_stage, provisional_id)
         )
         completed_keys = getattr(self, f"_{sync_kind}_sync_completed_keys", None)
