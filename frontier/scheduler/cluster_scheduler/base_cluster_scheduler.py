@@ -62,12 +62,6 @@ from frontier.scheduler.utils.pdaf_phase import (
     commit_decode_attn_batch_phases,
     set_decode_attn_batch_phase,
 )
-from frontier.scheduler.utils.pdaf_phase import (
-    prepare_decode_attn_batch_phase,
-    apply_decode_attn_batch_phase,
-    commit_decode_attn_batch_phases,
-    set_decode_attn_batch_phase,
-)
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
