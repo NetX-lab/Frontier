@@ -1,0 +1,63 @@
+{
+  "case": "issue26-ttft-calibration",
+  "analysis_state": "COMPLETE",
+  "status": "PASS",
+  "correction_state": "complete",
+  "next_action": "Publish the reviewed branch and continue release validation.",
+  "authorization": {
+    "receipt": "task_memory/semantic-alignment-repair-approval.md",
+    "code_change_marker": "SEMANTIC_ALIGNMENT_REPAIR_START: legacy Replica-local DP lanes with logical TP and shared EP cardinality",
+    "scope": "co-location -> pd-disagg -> pd-af-disagg",
+    "groundtruth_rerun": false
+  },
+  "changed_files": [
+    "frontier/config/config.py",
+    "frontier/config/parallel_semantics.py",
+    "frontier/metrics/metrics_store.py",
+    "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py",
+    "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py",
+    "frontier/scheduler/replica_scheduler/base_replica_scheduler.py",
+    "tests/unit/test_parallel_semantics.py",
+    "tests/unit/test_pdaf_config_contract.py",
+    "task_memory/semantic-alignment-repair-approval.md",
+    "task_memory/task_2026-09-05_semantic_alignment_repair/test_report_2026-09-05_architecture_smoke.md"
+  ],
+  "before": {
+    "attn_dp": 1,
+    "non_decode_ffn_scheduler_lanes": 1,
+    "decode_attn_identity": "full-stage None",
+    "metrics_non_decode_ffn_local_scopes": 0
+  },
+  "after": {
+    "attn_dp": "positive integer for shared-domain roles",
+    "non_decode_ffn_scheduler_lanes": "one logical scheduler per (replica_id, dp_id)",
+    "decode_attn_identity": "full-stage None with attn_dp=1",
+    "metrics_non_decode_ffn_local_scopes": "attn_dp except DECODE_ATTN; DECODE_FFN uses moe_expert_parallel_size"
+  },
+  "validation": {
+    "unit_tests": {
+      "co_location": "45 passed",
+      "pd_disagg": "27 passed",
+      "pd_af_disagg": "86 passed"
+    },
+    "direct_smoke": {
+      "co_location": {
+        "exit_code": 0,
+        "request_e2e_ms": 1035.9999999999968,
+        "tokens": 10
+      },
+      "pd_disagg": {
+        "exit_code": 0,
+        "request_e2e_ms": 60.52097151999969,
+        "tokens": 10
+      },
+      "pd_af_disagg": {
+        "exit_code": 0,
+        "request_e2e_ms": 631.2761049599992,
+        "decode_attn_e2e_ms": 480.0,
+        "decode_ffn_e2e_ms": 128.07099050666582,
+        "tokens": 10
+      }
+    }
+  }
+}

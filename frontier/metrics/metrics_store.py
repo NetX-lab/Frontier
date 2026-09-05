@@ -1294,18 +1294,18 @@ class MetricsStore:
 
     @staticmethod
     def _get_replica_local_scope_count(cluster_type: ClusterType, replica_config) -> int:
-        """Return the Replica-local scope count used for utilization indexing.
+        """Return the local scheduler-lane count used for utilization indexing.
 
-        Frontier models DECODE_FFN with replica-local EP lanes (the scheduler's
-        second key is an EP identity there), so utilization tensors are sized by
-        ``moe_expert_parallel_size``.  All other roles have one physical
-        attention/full-stage world per serving Replica; cluster capacity is
-        indexed by the outer Replica key, not by a local DP lane.
+        Non-FFN roles expose one logical scheduler per attention-DP lane.  The
+        FFN role exposes one scheduler per MoE EP lane.  Full-stage events keep
+        using the separate ``replica_local_id=None`` meters.
         """
         if cluster_type == ClusterType.DECODE_FFN:
             local_scope_count = int(replica_config.moe_expert_parallel_size)
-        else:
+        elif cluster_type == ClusterType.DECODE_ATTN:
             local_scope_count = 0
+        else:
+            local_scope_count = int(getattr(replica_config, "attn_dp", 1))
 
         if local_scope_count < 0:
             raise ValueError(

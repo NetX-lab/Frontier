@@ -1130,6 +1130,16 @@ class BaseClusterScheduler(ABC):
                 self._config.replica_config.moe_expert_parallel_size
             )
             self._replica_scheduler_count = self._replica_ep_size
+        elif self._cluster_type == ClusterType.DECODE_ATTN:
+            attn_dp = getattr(self._config.replica_config, "attn_dp", None)
+            if type(attn_dp) is not int or attn_dp != 1:
+                raise ValueError(
+                    "DECODE_ATTN requires attn_dp=1, "
+                    f"got {attn_dp!r}"
+                )
+            self._replica_dp_size = 1
+            self._replica_ep_size = None
+            self._replica_scheduler_count = 1
         else:
             attn_dp = getattr(self._config.replica_config, "attn_dp", None)
             if type(attn_dp) is not int or attn_dp <= 0:
@@ -1222,9 +1232,29 @@ class BaseClusterScheduler(ABC):
                         cluster_scheduler=self,
                     )
                 )
+        elif self._cluster_type == ClusterType.DECODE_ATTN:
+            # PD-AF attention keeps the full-stage identity required by A<->F
+            # transfer provenance and cohort validation.
+            for replica_id, replica in self._cluster.replicas.items():
+                full_stage_scheduler = ReplicaSchedulerRegistry.get(
+                    cluster_specific_config.get_type(),
+                    replica_config=self._config.replica_config,
+                    replica_scheduler_config=cluster_specific_config,
+                    request_generator_config=request_generator_config,
+                    replica=replica,
+                    predictor=self._predictor,
+                    cluster_type=self._cluster_type,
+                    replica_local_id=None,
+                    af_pipeline_num_micro_batch=getattr(
+                        self._config, "af_pipeline_num_micro_batch", -1
+                    ),
+                    cluster_scheduler=self,
+                )
+                self._full_stage_replica_schedulers[replica_id] = full_stage_scheduler
+                self._replica_schedulers[(replica_id, None)] = full_stage_scheduler
         else:
-            # Every non-FFN Replica owns one logical full-stage scheduler per
-            # attention-DP lane. Lane zero remains the compatibility full-stage lookup.
+            # Every other non-FFN Replica owns one logical full-stage scheduler
+            # per attention-DP lane. Lane zero remains the compatibility lookup.
             for replica_id, replica in self._cluster.replicas.items():
                 for dp_id in range(self._replica_dp_size):
                     self._replica_schedulers[(replica_id, dp_id)] = ReplicaSchedulerRegistry.get(
