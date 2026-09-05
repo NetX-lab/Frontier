@@ -4315,10 +4315,10 @@ class BaseClusterScheduler(ABC):
         if not non_idle_source_batches:
             raise ValueError("PREFILL cohort EP wave requires a non-idle source batch")
         sample_batch = non_idle_source_batches[0]
-        total_cohort_tokens = sum(
+        total_step_tokens = sum(
             int(source_batch.total_num_tokens) for source_batch in non_idle_source_batches
         )
-        total_cohort_prefill_tokens = sum(
+        total_step_prefill_tokens = sum(
             int(source_batch.num_prefill_tokens) for source_batch in non_idle_source_batches
         )
         aggregate_batch = (
@@ -4326,8 +4326,8 @@ class BaseClusterScheduler(ABC):
             if len(non_idle_source_batches) == 1
             else self._create_virtual_global_batch(
                 sample_batch,
-                total_cohort_tokens,
-                total_cohort_prefill_tokens,
+                total_step_tokens,
+                total_step_prefill_tokens,
             )
         )
         layer_workload = None
@@ -4683,10 +4683,10 @@ class BaseClusterScheduler(ABC):
         if not non_idle_source_batches:
             raise ValueError("DECODE cohort EP wave requires a non-idle source batch")
         sample_batch = non_idle_source_batches[0]
-        total_cohort_tokens = sum(
+        total_step_tokens = sum(
             int(source_batch.total_num_tokens) for source_batch in non_idle_source_batches
         )
-        total_cohort_prefill_tokens = sum(
+        total_step_prefill_tokens = sum(
             int(source_batch.num_prefill_tokens) for source_batch in non_idle_source_batches
         )
         aggregate_batch = (
@@ -4694,8 +4694,8 @@ class BaseClusterScheduler(ABC):
             if len(non_idle_source_batches) == 1
             else self._create_virtual_global_batch(
                 sample_batch,
-                total_cohort_tokens,
-                total_cohort_prefill_tokens,
+                total_step_tokens,
+                total_step_prefill_tokens,
             )
         )
         layer_workload = None
@@ -4987,7 +4987,7 @@ class BaseClusterScheduler(ABC):
                 "the current layer must use the canonical per-layer protocol"
             )
         lane_id = 0 if replica_local_id is None else int(replica_local_id)
-        requested_cohort_id = self._get_forward_step_id(batch)
+        requested_step_id = self._get_forward_step_id(batch)
         cohort_id, already_completed = self._resolve_forward_step(
             sync_kind="prefill",
             waiting_room=self._prefill_sync_waiting_room,
@@ -5003,7 +5003,7 @@ class BaseClusterScheduler(ABC):
         sync_room = self._prefill_sync_waiting_room[replica_id][stage_id][
             cohort_id
         ][layer_id][sync_stage]
-        sync_room.setdefault("provisional_cohort_id", requested_cohort_id)
+        sync_room.setdefault("provisional_cohort_id", requested_step_id)
         existing_batch = sync_room["batches"].get(lane_id)
         if batch.is_idle and existing_batch is not None and not existing_batch.is_idle:
             return []
@@ -5037,7 +5037,7 @@ class BaseClusterScheduler(ABC):
                 )
                 idle_batch.set_global_id(expected_lanes * cohort_id + missing_lane)
                 idle_batch._forward_cohort_id = cohort_id
-                idle_batch._forward_cohort_provisional_id = requested_cohort_id
+                idle_batch._forward_cohort_provisional_id = requested_step_id
                 idle_batch._stage_owner_replica_local_id = missing_lane
                 sync_room["batches"][missing_lane] = idle_batch
                 sync_room["arrival_times"][missing_lane] = float(time)
@@ -5070,7 +5070,7 @@ class BaseClusterScheduler(ABC):
             stage_id=stage_id,
             layer_id=layer_id,
             sync_stage=sync_stage,
-            provisional_id=int(sync_room.get("provisional_cohort_id", requested_cohort_id)),
+            provisional_id=int(sync_room.get("provisional_cohort_id", requested_step_id)),
             cohort_id=cohort_id,
             cohort_batches=cohort_batches,
         )
@@ -5743,7 +5743,7 @@ class BaseClusterScheduler(ABC):
                 "the current layer must use the canonical per-layer protocol"
             )
         lane_id = 0 if replica_local_id is None else int(replica_local_id)
-        requested_cohort_id = self._get_forward_step_id(batch)
+        requested_step_id = self._get_forward_step_id(batch)
         cohort_id, already_completed = self._resolve_forward_step(
             sync_kind="decode",
             waiting_room=self._decode_sync_waiting_room,
@@ -5759,7 +5759,7 @@ class BaseClusterScheduler(ABC):
         ][layer_id][sync_stage]
         if already_completed:
             return []
-        sync_room.setdefault("provisional_cohort_id", requested_cohort_id)
+        sync_room.setdefault("provisional_cohort_id", requested_step_id)
         existing_batch = sync_room["batches"].get(lane_id)
         if batch.is_idle and existing_batch is not None and not existing_batch.is_idle:
             return []
@@ -5793,7 +5793,7 @@ class BaseClusterScheduler(ABC):
                 )
                 idle_batch.set_global_id(expected_lanes * cohort_id + missing_lane)
                 idle_batch._forward_cohort_id = cohort_id
-                idle_batch._forward_cohort_provisional_id = requested_cohort_id
+                idle_batch._forward_cohort_provisional_id = requested_step_id
                 idle_batch._stage_owner_replica_local_id = missing_lane
                 sync_room["batches"][missing_lane] = idle_batch
                 sync_room["arrival_times"][missing_lane] = float(time)
@@ -5826,7 +5826,7 @@ class BaseClusterScheduler(ABC):
             stage_id=stage_id,
             layer_id=layer_id,
             sync_stage=sync_stage,
-            provisional_id=int(sync_room.get("provisional_cohort_id", requested_cohort_id)),
+            provisional_id=int(sync_room.get("provisional_cohort_id", requested_step_id)),
             cohort_id=cohort_id,
             cohort_batches=cohort_batches,
         )
@@ -6573,28 +6573,28 @@ class BaseClusterScheduler(ABC):
                 f"non-negative int, got {rr_cursor!r}"
             )
 
-        raw_room_contract = room["expected_lane_contract"]
-        if type(raw_room_contract) is not tuple:
+        raw_room_lanes = room["expected_lane_contract"]
+        if type(raw_room_lanes) is not tuple:
             raise RuntimeError(
                 "DECODE_FFN waiting-room expected lane contract must be an "
-                f"exact tuple, got {raw_room_contract!r}"
+                f"exact tuple, got {raw_room_lanes!r}"
             )
-        room_contract = tuple(
+        room_lanes = tuple(
             self._normalize_m2n_lanes(
-                raw_room_contract,
+                raw_room_lanes,
                 identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                 field_name="DECODE_FFN waiting-room expected lane contract",
                 require_nonempty=True,
             )
         )
-        canonical_room_contract = tuple(sorted(room_contract))
-        if room_contract != canonical_room_contract:
+        canonical_room_lanes = tuple(sorted(room_lanes))
+        if room_lanes != canonical_room_lanes:
             raise RuntimeError(
                 "DECODE_FFN waiting-room expected lane contract must be "
-                f"canonical, got {room_contract!r}"
+                f"canonical, got {room_lanes!r}"
             )
         if expected_lane_contract is not None:
-            normalized_expected_contract = tuple(
+            normalized_expected_lanes = tuple(
                 sorted(
                     self._normalize_m2n_lanes(
                         expected_lane_contract,
@@ -6604,12 +6604,12 @@ class BaseClusterScheduler(ABC):
                     )
                 )
             )
-            if canonical_room_contract != normalized_expected_contract:
+            if canonical_room_lanes != normalized_expected_lanes:
                 raise ValueError(
                     "Inconsistent DECODE_FFN expected lane contract for waiting "
                     f"room: group_key={group_key}, "
-                    f"existing={canonical_room_contract}, "
-                    f"received={normalized_expected_contract}"
+                    f"existing={canonical_room_lanes}, "
+                    f"received={normalized_expected_lanes}"
                 )
 
         queue_lanes = tuple(
@@ -6628,16 +6628,16 @@ class BaseClusterScheduler(ABC):
                 require_nonempty=False,
             )
         )
-        contract_lane_set = set(canonical_room_contract)
-        if not set(queue_lanes).issubset(contract_lane_set):
+        room_lane_set = set(canonical_room_lanes)
+        if not set(queue_lanes).issubset(room_lane_set):
             raise RuntimeError(
                 "DECODE_FFN waiting-room queue lane is outside the expected "
-                f"contract: queues={queue_lanes}, contract={canonical_room_contract}"
+                f"contract: queues={queue_lanes}, contract={canonical_room_lanes}"
             )
-        if not set(rr_lanes).issubset(contract_lane_set):
+        if not set(rr_lanes).issubset(room_lane_set):
             raise RuntimeError(
                 "DECODE_FFN waiting-room round-robin lane is outside the expected "
-                f"contract: order={rr_lanes}, contract={canonical_room_contract}"
+                f"contract: order={rr_lanes}, contract={canonical_room_lanes}"
             )
 
         nonempty_queue_lanes = set()
@@ -6775,11 +6775,11 @@ class BaseClusterScheduler(ABC):
                 if (
                     normalized_queued_expected_lanes
                     and normalized_queued_expected_lanes
-                    != canonical_room_contract
+                    != canonical_room_lanes
                 ):
                     raise RuntimeError(
                         "DECODE_FFN waiting-room queued batch lane contract "
-                        f"mismatch: room={canonical_room_contract}, "
+                        f"mismatch: room={canonical_room_lanes}, "
                         f"batch={normalized_queued_expected_lanes}"
                     )
 
@@ -6843,7 +6843,7 @@ class BaseClusterScheduler(ABC):
                 "non-empty queue lanes: "
                 f"order={rr_lanes}, nonempty={sorted(nonempty_queue_lanes)}"
             )
-        return canonical_room_contract
+        return canonical_room_lanes
 
     def _validate_decode_ffn_m2n_receipt(
         self,
@@ -8066,7 +8066,7 @@ class BaseClusterScheduler(ABC):
                 "DECODE_FFN _m2n_ready_groups must be an exact deque"
             )
 
-        room_lane_contract = self._validate_decode_ffn_waiting_room(
+        room_lanes = self._validate_decode_ffn_waiting_room(
             group_key=group_key,
             room=room,
         )
@@ -8082,17 +8082,17 @@ class BaseClusterScheduler(ABC):
                     )
                 )
             )
-            if normalized_expected_lane_ids != room_lane_contract:
+            if normalized_expected_lane_ids != room_lanes:
                 raise ValueError(
                     "DECODE_FFN promotion expected lane IDs do not match the "
                     f"waiting-room contract: expected={normalized_expected_lane_ids}, "
-                    f"room={room_lane_contract}"
+                    f"room={room_lanes}"
                 )
-        if expected_lanes > len(room_lane_contract):
+        if expected_lanes > len(room_lanes):
             raise ValueError(
                 "DECODE_FFN expected lane count exceeds the waiting-room lane "
                 f"contract: expected={expected_lanes}, "
-                f"contract={room_lane_contract}"
+                f"contract={room_lanes}"
             )
 
         lanes = list(room["lanes_rr_order"])
@@ -8118,16 +8118,16 @@ class BaseClusterScheduler(ABC):
                     require_nonempty=False,
                 )
             )
-            if not normalized_idle_lanes.issubset(set(room_lane_contract)):
+            if not normalized_idle_lanes.issubset(set(room_lanes)):
                 raise RuntimeError(
                     "DECODE_FFN idle lane inventory is outside the waiting-room "
                     f"contract: idle={sorted(normalized_idle_lanes)}, "
-                    f"contract={room_lane_contract}"
+                    f"contract={room_lanes}"
                 )
             candidate_lane_order = (
                 normalized_expected_lane_ids
                 if normalized_expected_lane_ids is not None
-                else room_lane_contract
+                else room_lanes
             )
             required_idle_lanes = expected_lanes - len(lanes)
             idle_lanes_to_inject = [
@@ -8224,7 +8224,7 @@ class BaseClusterScheduler(ABC):
                 f"got {time!r}"
             )
         time = float(time)
-        room_lane_contract = self._validate_decode_ffn_waiting_room(
+        room_lanes = self._validate_decode_ffn_waiting_room(
             group_key=group_key,
             room=room,
         )
@@ -8243,11 +8243,11 @@ class BaseClusterScheduler(ABC):
                 require_nonempty=False,
             )
         )
-        if not normalized_idle_lanes.issubset(set(room_lane_contract)):
+        if not normalized_idle_lanes.issubset(set(room_lanes)):
             raise RuntimeError(
                 "DECODE_FFN idle lane inventory is outside the waiting-room "
                 f"contract: idle={sorted(normalized_idle_lanes)}, "
-                f"contract={room_lane_contract}"
+                f"contract={room_lanes}"
             )
 
         if expected_lane_ids is not None:
@@ -8258,12 +8258,12 @@ class BaseClusterScheduler(ABC):
                 require_nonempty=False,
             )
             if not set(normalized_expected_lane_ids).issubset(
-                set(room_lane_contract)
+                set(room_lanes)
             ):
                 raise ValueError(
                     "DECODE_FFN idle injection candidate lane is outside the "
                     f"waiting-room contract: candidates={normalized_expected_lane_ids}, "
-                    f"contract={room_lane_contract}"
+                    f"contract={room_lanes}"
                 )
             candidate_lanes = [
                 lane
@@ -8272,7 +8272,7 @@ class BaseClusterScheduler(ABC):
             ]
         else:
             candidate_lanes = [
-                lane for lane in room_lane_contract if lane in normalized_idle_lanes
+                lane for lane in room_lanes if lane in normalized_idle_lanes
             ]
 
         idle_created: List[tuple[int, int]] = []
@@ -8313,7 +8313,7 @@ class BaseClusterScheduler(ABC):
             idle_batch.decode_attn_original_replica_id = missing_lane[0]
             idle_batch.decode_attn_original_replica_local_id = missing_lane[1]
             idle_batch.decode_attn_barrier_round_id = barrier_round_id
-            idle_batch.decode_attn_barrier_expected_lanes = room_lane_contract
+            idle_batch.decode_attn_barrier_expected_lanes = room_lanes
             idle_batch.decode_ffn_layer_id = wire_layer_id
             idle_batch.time = time
 
@@ -8347,7 +8347,7 @@ class BaseClusterScheduler(ABC):
             ),
             "lanes_rr_order": deque(room["lanes_rr_order"]),
             "rr_cursor": room["rr_cursor"],
-            "expected_lane_contract": room_lane_contract,
+            "expected_lane_contract": room_lanes,
         }
         for missing_lane, idle_entry in prepared_idle_entries:
             prospective_room["per_lane_queues"][missing_lane].append(idle_entry)
@@ -9094,7 +9094,7 @@ class BaseClusterScheduler(ABC):
                 f"an exact bool, got {model_is_moe!r}"
             )
 
-        normalized_expected_contract = tuple(
+        normalized_expected_lanes = tuple(
             sorted(
                 self._normalize_m2n_lanes(
                     expected_lane_contract,
@@ -9104,7 +9104,7 @@ class BaseClusterScheduler(ABC):
                 )
             )
         )
-        if expected_lane_contract != normalized_expected_contract:
+        if expected_lane_contract != normalized_expected_lanes:
             raise RuntimeError(
                 "DECODE_ATTN A-to-F expected lane topology must be an exact "
                 f"canonical tuple, got {expected_lane_contract!r}"
@@ -9131,16 +9131,16 @@ class BaseClusterScheduler(ABC):
                 f"expected={sorted(expected_room_fields)}, actual={sorted(room)}"
             )
 
-        raw_room_contract = room["expected_lane_contract"]
-        if type(raw_room_contract) is not tuple:
+        raw_room_lanes = room["expected_lane_contract"]
+        if type(raw_room_lanes) is not tuple:
             raise RuntimeError(
                 "DECODE_ATTN A-to-F waiting-room expected lane contract must "
-                f"be an exact tuple, got {raw_room_contract!r}"
+                f"be an exact tuple, got {raw_room_lanes!r}"
             )
-        room_contract = tuple(
+        room_lanes = tuple(
             sorted(
                 self._normalize_m2n_lanes(
-                    raw_room_contract,
+                    raw_room_lanes,
                     identity_scope=M2NLaneIdentityScope.FULL_STAGE,
                     field_name=(
                         "DECODE_ATTN A-to-F waiting-room expected lane contract"
@@ -9149,15 +9149,15 @@ class BaseClusterScheduler(ABC):
                 )
             )
         )
-        if raw_room_contract != room_contract:
+        if raw_room_lanes != room_lanes:
             raise RuntimeError(
                 "DECODE_ATTN A-to-F waiting-room expected lane contract must "
-                f"be canonical, got {raw_room_contract!r}"
+                f"be canonical, got {raw_room_lanes!r}"
             )
-        if room_contract != normalized_expected_contract:
+        if room_lanes != normalized_expected_lanes:
             raise ValueError(
                 "DECODE_ATTN A-to-F waiting-room lane contract mismatch: "
-                f"room={room_contract}, expected={normalized_expected_contract}"
+                f"room={room_lanes}, expected={normalized_expected_lanes}"
             )
 
         per_lane_queues = room["per_lane_queues"]
@@ -9175,10 +9175,10 @@ class BaseClusterScheduler(ABC):
             field_name="DECODE_ATTN A-to-F waiting-room queue lanes",
             require_nonempty=False,
         )
-        if not set(queue_lanes).issubset(set(room_contract)):
+        if not set(queue_lanes).issubset(set(room_lanes)):
             raise RuntimeError(
                 "DECODE_ATTN A-to-F waiting-room queue lane is outside the "
-                f"expected contract: queues={queue_lanes}, contract={room_contract}"
+                f"expected contract: queues={queue_lanes}, contract={room_lanes}"
             )
 
         seen_batch_identities = set()
@@ -9330,7 +9330,7 @@ class BaseClusterScheduler(ABC):
                             f"{request_layer_id}, request_id={request.id}"
                         )
 
-        return room_contract
+        return room_lanes
 
     @staticmethod
     def _validate_decode_attn_a2f_predictor_result(
