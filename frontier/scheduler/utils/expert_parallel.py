@@ -7,6 +7,8 @@ not depend on waiting rooms or scheduler state.
 
 from __future__ import annotations
 
+import math
+from numbers import Real
 from typing import Any, Callable, NamedTuple, Optional
 
 from frontier.entities import Batch, Request
@@ -263,3 +265,40 @@ def materialize_batch_group(
     result.moe_pre_routing_effective_total_tokens = plan.pre_routing_effective_total_tokens
     result.source_batches = list(plan.source_batches)
     return result
+
+
+def validate_collective_exec_time(
+    *, phase: str, exec_time_ms: Real, sync_time: Real
+) -> tuple[float, float]:
+    """Validate EP collective latency and return its event timestamp."""
+
+    if not isinstance(exec_time_ms, Real) or isinstance(exec_time_ms, bool):
+        raise ValueError(
+            f"EP {phase} collective latency must be an exact int or float, "
+            f"got {exec_time_ms!r}"
+        )
+    if not math.isfinite(float(exec_time_ms)) or exec_time_ms < 0:
+        raise ValueError(
+            f"EP {phase} collective latency must be finite and non-negative, "
+            f"got {exec_time_ms!r}"
+        )
+    if (
+        not isinstance(sync_time, Real)
+        or isinstance(sync_time, bool)
+        or not math.isfinite(float(sync_time))
+    ):
+        raise ValueError(
+            f"EP {phase} collective sync time must be finite, got {sync_time!r}"
+        )
+    exec_time_value = float(exec_time_ms)
+    event_time = float(sync_time) + exec_time_value / 1000.0
+    if not math.isfinite(event_time):
+        raise ValueError(
+            f"EP {phase} collective event time must be finite, got {event_time!r}"
+        )
+    if event_time < float(sync_time):
+        raise ValueError(
+            f"EP {phase} collective event time cannot precede its sync time: "
+            f"sync={sync_time!r}, event={event_time!r}"
+        )
+    return exec_time_value, event_time

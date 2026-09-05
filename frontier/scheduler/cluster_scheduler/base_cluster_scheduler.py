@@ -38,6 +38,7 @@ from frontier.scheduler.utils.expert_parallel import (
     materialize_wave_workload,
     prepare_batch_group_plan,
     validate_token_conservation,
+    validate_collective_exec_time,
 )
 from frontier.scheduler.utils.scheduler_diagnostics import SchedulerDiagnostics
 from frontier.scheduler.utils.pdaf_transfer import (
@@ -2295,44 +2296,11 @@ class BaseClusterScheduler(ABC):
         cannot leave a complete waiting room without a corresponding event.
         """
 
-        if not isinstance(exec_time_ms, Real) or isinstance(exec_time_ms, bool):
-            raise ValueError(
-                f"EP {phase} collective latency must be an exact int or float, "
-                f"got {exec_time_ms!r}"
-            )
-        if not math.isfinite(float(exec_time_ms)):
-            raise ValueError(
-                f"EP {phase} collective latency must be finite, "
-                f"got {exec_time_ms!r}"
-            )
-        if exec_time_ms < 0:
-            raise ValueError(
-                f"EP {phase} collective latency must be non-negative, "
-                f"got {exec_time_ms!r}"
-            )
-        if (
-            not isinstance(sync_time, Real)
-            or isinstance(sync_time, bool)
-            or not math.isfinite(float(sync_time))
-        ):
-            raise ValueError(
-                f"EP {phase} collective sync time must be finite, "
-                f"got {sync_time!r}"
-            )
-
-        exec_time_value = float(exec_time_ms)
-        collective_event_time = float(sync_time) + exec_time_value / 1000.0
-        if not math.isfinite(collective_event_time):
-            raise ValueError(
-                f"EP {phase} collective event time must be finite, "
-                f"got {collective_event_time!r}"
-            )
-        if collective_event_time < float(sync_time):
-            raise ValueError(
-                f"EP {phase} collective event time cannot precede its sync time: "
-                f"sync={sync_time!r}, event={collective_event_time!r}"
-            )
-        return exec_time_value, collective_event_time
+        return validate_collective_exec_time(
+            phase=phase,
+            exec_time_ms=exec_time_ms,
+            sync_time=sync_time,
+        )
 
     def on_ep_alltoall_dispatch_ready(
         self, time: float, replica_id: int, stage_id: int, batch, ep_id: int
