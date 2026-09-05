@@ -417,3 +417,192 @@ def validate_decode_ffn_waiting_room(
             f"order={rr_lanes}, nonempty={sorted(nonempty_queue_lanes)}"
         )
     return canonical_room_lanes
+def validate_decode_ffn_receipt(
+    scheduler,
+    batch: Batch,
+    transfer_info: "M2NTransferInfo",
+) -> tuple[
+    int,
+    int,
+    Optional[int],
+    tuple[int, int],
+    List[tuple[int, int]],
+    int,
+    tuple[int, int] | tuple[int, int, int],
+    tuple[tuple[int, int], ...],
+    int,
+]:
+    """Validate one A-to-F receipt without mutating scheduler or batch state."""
+
+    scheduler.validate_m2n_arrival_target(transfer_info)
+    if scheduler._cluster_type is not ClusterType.DECODE_FFN:
+        raise ValueError(
+            "DECODE_FFN receipt validation requires a DECODE_FFN scheduler, "
+            f"got {scheduler._cluster_type.name}"
+        )
+    if batch is not transfer_info.batch:
+        raise ValueError(
+            "DECODE_FFN M2N batch identity mismatch: batch is not "
+            "transfer_info.batch"
+        )
+
+    layer_id = getattr(transfer_info, "layer_id", None)
+    if type(layer_id) is not int or layer_id < 0:
+        raise ValueError(
+            "DECODE_FFN receipt layer_id must be an exact non-negative int, "
+            f"got {layer_id!r}"
+        )
+
+    afd_stage_idx = getattr(transfer_info, "afd_stage_idx", None)
+    if type(afd_stage_idx) is not int or afd_stage_idx < 0:
+        raise ValueError(
+            "DECODE_FFN receipt afd_stage_idx must be an exact non-negative int, "
+            f"got {afd_stage_idx!r}"
+        )
+
+    barrier_round_id = getattr(batch, "decode_attn_barrier_round_id", None)
+    if barrier_round_id is not None and (
+        type(barrier_round_id) is not int or barrier_round_id < 0
+    ):
+        raise ValueError(
+            "DECODE_FFN receipt barrier_round_id must be None or an exact "
+            f"non-negative int, got {barrier_round_id!r}"
+        )
+
+    source_replica_id = getattr(transfer_info, "source_replica_id", None)
+    if type(source_replica_id) is not int or source_replica_id < 0:
+        raise ValueError(
+            "DECODE_FFN receipt source_replica_id must be an exact "
+            f"non-negative int, got {source_replica_id!r}"
+        )
+    source_replica_local_id = getattr(transfer_info, "source_replica_local_id", None)
+    if source_replica_local_id is not None and (
+        type(source_replica_local_id) is not int or source_replica_local_id < 0
+    ):
+        raise ValueError(
+            "DECODE_FFN receipt source_replica_local_id must be None or an exact "
+            "non-negative int, "
+            f"got {source_replica_local_id!r}"
+        )
+    lane = (source_replica_id, source_replica_local_id)
+
+    raw_expected_lanes = getattr(
+        batch,
+        "decode_attn_barrier_expected_lanes",
+        (),
+    )
+    if raw_expected_lanes is None:
+        raw_expected_lanes = ()
+    barrier_expected_lanes = normalize_lanes(
+        raw_expected_lanes,
+        identity_scope=LaneIdentityScope.FULL_STAGE,
+        field_name="DECODE_FFN receipt expected lane metadata",
+        require_nonempty=False,
+    )
+
+    if barrier_expected_lanes:
+        if lane not in barrier_expected_lanes:
+            raise ValueError(
+                "Unexpected lane observed in DECODE_FFN round-scoped waiting "
+                f"room: lane={lane}, expected_lanes={barrier_expected_lanes}"
+            )
+        expected_lanes = len(barrier_expected_lanes)
+        expected_lane_contract = tuple(sorted(barrier_expected_lanes))
+    else:
+        scheduler_expected_lanes = normalize_lanes(
+            getattr(scheduler, "_ffn_expected_lanes", None),
+            identity_scope=LaneIdentityScope.FULL_STAGE,
+            field_name="DECODE_FFN scheduler lane topology",
+            require_nonempty=True,
+        )
+        if lane not in scheduler_expected_lanes:
+            raise ValueError(
+                "Unexpected lane observed in DECODE_FFN scheduler lane topology: "
+                f"lane={lane}, expected_lanes={scheduler_expected_lanes}"
+            )
+        expected_lanes = getattr(scheduler, "_ffn_group_micro_batches", None)
+        if type(expected_lanes) is not int or expected_lanes <= 0:
+            raise ValueError(
+                "DECODE_FFN _ffn_group_micro_batches must be an exact positive "
+                f"int when expected lane metadata is empty, got {expected_lanes!r}"
+            )
+        expected_lane_contract = tuple(sorted(scheduler_expected_lanes))
+
+    if barrier_round_id is None:
+        group_key = (layer_id, afd_stage_idx)
+    else:
+        group_key = (layer_id, afd_stage_idx, barrier_round_id)
+
+    if not hasattr(scheduler, "_m2n_waiting_by_layer"):
+        raise RuntimeError(
+            "DECODE_FFN scheduler missing _m2n_waiting_by_layer during receipt "
+            "preflight"
+        )
+    if type(scheduler._m2n_waiting_by_layer) is not dict:
+        raise RuntimeError(
+            "DECODE_FFN _m2n_waiting_by_layer must be an exact dict"
+        )
+    room = scheduler._m2n_waiting_by_layer.get(group_key)
+    if room is not None:
+        scheduler._validate_decode_ffn_waiting_room(
+            group_key=group_key,
+            room=room,
+            expected_lane_contract=expected_lane_contract,
+            incoming_batch=batch,
+        )
+
+    lane_to_target_replica = getattr(
+        scheduler,
+        "_ffn_lane_to_target_replica",
+        None,
+    )
+    if type(lane_to_target_replica) is not dict:
+        raise RuntimeError(
+            "DECODE_FFN receipt requires an exact lane-to-target Replica map"
+        )
+    if lane not in lane_to_target_replica:
+        raise ValueError(
+            "DECODE_FFN receipt lane has no target Replica mapping: "
+            f"lane={lane}"
+        )
+    target_replica_id = lane_to_target_replica[lane]
+    if type(target_replica_id) is not int or target_replica_id < 0:
+        raise ValueError(
+            "DECODE_FFN receipt target Replica mapping must be an exact "
+            f"non-negative int, got {target_replica_id!r}"
+        )
+    for field_name in (
+        "target_ffn_replica_id",
+        "target_execution_replica_id",
+    ):
+        existing_target = getattr(transfer_info, field_name, None)
+        if existing_target is None:
+            continue
+        if type(existing_target) is not int or existing_target < 0:
+            raise ValueError(
+                f"DECODE_FFN receipt {field_name} must be None or an exact "
+                f"non-negative int, got {existing_target!r}"
+            )
+        if existing_target != target_replica_id:
+            raise ValueError(
+                f"DECODE_FFN receipt {field_name} does not match the "
+                "lane-to-target Replica mapping: "
+                f"field={existing_target}, mapping={target_replica_id}"
+            )
+    if transfer_info.target_execution_replica_local_id is not None:
+        raise ValueError(
+            "DECODE_FFN A-to-F target execution identity must not carry "
+            "a Replica-local lane"
+        )
+
+    return (
+        layer_id,
+        afd_stage_idx,
+        barrier_round_id,
+        lane,
+        barrier_expected_lanes,
+        expected_lanes,
+        group_key,
+        expected_lane_contract,
+        target_replica_id,
+    )
