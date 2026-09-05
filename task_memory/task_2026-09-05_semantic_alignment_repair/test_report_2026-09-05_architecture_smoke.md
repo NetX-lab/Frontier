@@ -37,3 +37,34 @@
 The PD-AF repair closed two deterministic runtime defects observed during direct smoke. First, `_replica_load_tracker` used integer keys while `_update_load_tracker()` expected `(replica_id, dp_id)` keys. Second, the metrics store indexed DECODE_ATTN full-stage events as DP-local meters, and the scheduler attempted to read a non-existent `decode_attn_original_dp_id` field on returning batches. The final implementation restores the legacy DECODE_ATTN full-stage `None` identity, sizes metrics by the active scheduler lane contract, and completes the A↔F path.
 
 The documentation failures are unrelated to runtime behavior and were not changed in this validation subtask.
+
+## Follow-up Validation
+
+Runtime materialization inspection found a remaining semantic defect in both
+`frontier/cc_backend/backends/collective_sim_cc_backend.py` and
+`frontier/cc_backend/backends/astra_sim_analytical_cc_backend.py`:
+
+```text
+runtime_num_replicas=3, runtime_attn_dp=2
+materialized attention dims = {TP: 4, CP: 1, DP: 6, EP: 1}
+materialized MoE dims       = {TP: 1, CP: 1, DP: 3, EP: 8}
+```
+
+The attention `DP=runtime_attn_dp * runtime_num_replicas` expression merges
+outer serving replicas into the attention-DP collective. The requested model
+has no cross-replica communication, so attention-DP must remain `2` per
+Replica. The MoE path also exposes outer replicas as `DP=3`; this is only
+valid when the backend invocation is explicitly cluster-wide. The current
+per-Replica semantic contract therefore needs an implementation decision before
+collective-sim/astra parity can be claimed.
+
+After the scheduler tracker repair landed, all three direct dummy smokes passed:
+
+| Surface | Exit | E2E mean | Throughput |
+| --- | ---: | ---: | ---: |
+| Co-location | 0 | `1036.0 ms` | `9.65250965250968 tokens/s` |
+| PDD | 0 | `60.52097152 ms` | `165.23198073076887 tokens/s` |
+| PD-AF | 0 | `631.27610496 ms` | `15.84092906642435 tokens/s` |
+
+Each run completed one request and wrote both request and system metrics under
+`/data/ycfeng/tmp/frontier_repair_*2`.

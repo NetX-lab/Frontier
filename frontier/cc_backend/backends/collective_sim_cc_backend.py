@@ -227,7 +227,9 @@ class CollectiveSimCCBackend(BaseCCBackend):
         return {
             "TP": int(cfg.runtime_attn_tensor_parallel_size),
             "CP": int(cfg.runtime_num_pipeline_stages),
-            "DP": int(cfg.runtime_attn_dp) * int(cfg.runtime_num_replicas),
+            # runtime_num_replicas is scheduler capacity, not a collective
+            # participant dimension. This backend models one complete pod.
+            "DP": int(cfg.runtime_attn_dp),
             "EP": 1,
         }
 
@@ -239,7 +241,9 @@ class CollectiveSimCCBackend(BaseCCBackend):
         return {
             "TP": int(cfg.runtime_moe_tensor_parallel_size),
             "CP": int(cfg.runtime_num_pipeline_stages),
-            "DP": int(cfg.runtime_num_replicas),
+            # MoE EP/TP ranks are local to one Replica pod. Outer replicas do
+            # not form a shared DP group for workload execution.
+            "DP": 1,
             "EP": int(cfg.runtime_moe_expert_parallel_size),
         }
 

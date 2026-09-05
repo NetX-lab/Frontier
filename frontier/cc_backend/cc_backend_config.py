@@ -181,7 +181,7 @@ class CollectiveSimCCBackendConfig(BaseCCBackendConfig):
     )
     runtime_num_replicas: Optional[int] = field(
         default=None,
-        metadata={"help": "Frontier runtime cluster replica count for per-call layout mapping."},
+        metadata={"help": "Materialized Replica-pod count for per-call layout mapping; per-Replica backends use 1."},
     )
     runtime_num_pipeline_stages: Optional[int] = field(
         default=None,
@@ -485,7 +485,7 @@ class AstraSimAnalyticalCCBackendConfig(BaseCCBackendConfig):
     runtime_num_replicas: Optional[int] = field(
         default=None,
         metadata={
-            "help": "Frontier runtime cluster replica count for per-call layout mapping.",
+            "help": "Materialized Replica-pod count for per-call layout mapping; per-Replica backends use 1.",
             "include_in_cli": False,
         },
     )

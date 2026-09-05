@@ -197,8 +197,11 @@ class Cluster(BaseEntity):
                 num_pipeline_stages=int(replica_config.num_pipeline_stages),
                 domain="attention",
             )
+        # Each backend instance predicts collectives inside one complete
+        # Replica pod. Outer replicas are independent scheduler capacity and
+        # never participate in the same workload-level collective.
         physical_topology = resolve_collective_sim_physical_topology(
-            cluster_total_devices=num_replicas * int(num_devices),
+            cluster_total_devices=int(num_devices),
             num_devices_per_node=int(replica_config.node_config.num_devices_per_node),
             scenario_profile=getattr(cc_config, "scenario_profile", None),
         )
@@ -217,7 +220,7 @@ class Cluster(BaseEntity):
             parallel_cp=max(1, int(layout.cp)),
             parallel_dp=max(1, int(layout.dp)),
             parallel_ep=max(1, int(layout.ep)),
-            runtime_num_replicas=max(1, num_replicas),
+            runtime_num_replicas=1,
             runtime_num_pipeline_stages=max(1, int(replica_config.num_pipeline_stages)),
             runtime_attn_tensor_parallel_size=max(1, int(replica_config.attn_tensor_parallel_size)),
             runtime_attn_dp=max(1, int(replica_config.attn_dp)),
@@ -259,9 +262,10 @@ class Cluster(BaseEntity):
         num_devices: int,
     ):
         """Materialize cluster-specific runtime dims for astra-sim analytical config."""
-        num_replicas = max(1, int(self._config.num_replicas or 1))
+        # Keep ASTRA-Sim analytical rank space Replica-local for the same
+        # serving-pod contract as collective-sim.
         physical_topology = resolve_collective_sim_physical_topology(
-            cluster_total_devices=num_replicas * int(num_devices),
+            cluster_total_devices=int(num_devices),
             num_devices_per_node=int(replica_config.node_config.num_devices_per_node),
             scenario_profile=None,
         )
@@ -270,7 +274,7 @@ class Cluster(BaseEntity):
             cc_config,
             cluster_servers=int(physical_topology.servers),
             cluster_gpus_per_server=int(physical_topology.gpus_per_server),
-            runtime_num_replicas=max(1, num_replicas),
+            runtime_num_replicas=1,
             runtime_num_pipeline_stages=max(1, int(replica_config.num_pipeline_stages)),
             runtime_attn_tensor_parallel_size=max(
                 1, int(replica_config.attn_tensor_parallel_size)
