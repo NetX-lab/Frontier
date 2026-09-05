@@ -55,6 +55,7 @@ from frontier.scheduler.utils.pdaf_transfer import (
 from frontier.scheduler.utils.pdaf_validation import (
     validate_decode_attn_a2f_waiting_room,
 )
+from frontier.scheduler.utils.pdaf_entries import build_decode_ffn_idle_entries
 from frontier.scheduler.utils.pdaf_phase import (
     prepare_decode_attn_batch_phase,
     apply_decode_attn_batch_phase,
@@ -6275,63 +6276,35 @@ class BaseClusterScheduler(ABC):
             ]
 
         idle_created: List[tuple[int, int]] = []
-        prepared_idle_entries = []
         afd_stage_idx = group_key[1]
         barrier_round_id = group_key[2] if len(group_key) >= 3 else None
         wire_layer_id = group_key[0]
+        candidate_lanes = [
+            lane for lane in candidate_lanes
+            if not room["per_lane_queues"].get(lane)
+        ]
 
-        for missing_lane in candidate_lanes:
-            if room["per_lane_queues"].get(missing_lane):
-                continue
-
-            replica_config = getattr(self._config, "replica_config", None)
-            if replica_config is None:
-                raise RuntimeError(
-                    "DECODE_FFN idle injection requires replica_config"
-                )
-            model_config = getattr(replica_config, "model_config", None)
-            if model_config is None:
-                raise RuntimeError(
-                    "DECODE_FFN idle injection requires model_config"
-                )
-            is_moe = getattr(model_config, "is_moe", None)
-            if type(is_moe) is not bool:
-                raise RuntimeError(
-                    "DECODE_FFN idle injection model_config.is_moe must be an "
-                    f"exact bool, got {is_moe!r}"
-                )
-
-            idle_batch = Batch(
-                replica_id=missing_lane[0],
-                requests=[],
-                num_tokens=[],
-                is_idle=True,
-                is_moe=is_moe,
+        replica_config = getattr(self._config, "replica_config", None)
+        if replica_config is None:
+            raise RuntimeError("DECODE_FFN idle injection requires replica_config")
+        model_config = getattr(replica_config, "model_config", None)
+        if model_config is None:
+            raise RuntimeError("DECODE_FFN idle injection requires model_config")
+        is_moe = getattr(model_config, "is_moe", None)
+        if type(is_moe) is not bool:
+            raise RuntimeError(
+                "DECODE_FFN idle injection model_config.is_moe must be an "
+                f"exact bool, got {is_moe!r}"
             )
-            idle_batch.afd_stage_idx = afd_stage_idx
-            idle_batch.decode_attn_original_replica_id = missing_lane[0]
-            idle_batch.decode_attn_original_replica_local_id = missing_lane[1]
-            idle_batch.decode_attn_barrier_round_id = barrier_round_id
-            idle_batch.decode_attn_barrier_expected_lanes = room_lanes
-            idle_batch.decode_ffn_layer_id = wire_layer_id
-            idle_batch.time = time
-
-            from frontier.entities.m2n_transfer_info import M2NTransferInfo
-            idle_transfer = M2NTransferInfo(
-                batch=idle_batch,
-                source_cluster_type=ClusterType.DECODE_ATTN,
-                target_cluster_type=ClusterType.DECODE_FFN,
-                source_replica_id=missing_lane[0],
-                source_replica_local_id=missing_lane[1],
-                activation_size_bytes=0,
-                transfer_time_ms=0.0,
-                transfer_start_time=time,
-                layer_id=wire_layer_id,
-                afd_stage_idx=afd_stage_idx,
-            )
-            prepared_idle_entries.append(
-                (missing_lane, (idle_batch, idle_transfer))
-            )
+        prepared_idle_entries = build_decode_ffn_idle_entries(
+            time=time,
+            lanes=candidate_lanes,
+            layer_id=wire_layer_id,
+            afd_stage_idx=afd_stage_idx,
+            barrier_round_id=barrier_round_id,
+            expected_lanes=room_lanes,
+            is_moe=is_moe,
+        )
 
         if not prepared_idle_entries:
             return []
