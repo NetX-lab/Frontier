@@ -1633,26 +1633,6 @@ class BaseClusterScheduler(ABC):
             combine_end_time=combine_end_time,
         )
 
-    def _legacy_on_ep_alltoall_combine_collective_schedule(
-        self,
-        time: float,
-        replica_id: int,
-        stage_id: int,
-        batch_global_id: int,
-        metrics_store,
-        combine_end_time: float,
-    ):
-        """Finish EP combine synchronization through the scheduling utility."""
-        from frontier.scheduler.utils.ep_combine_schedule import schedule_combine_completion
-        return schedule_combine_completion(
-            self,
-            time=time,
-            replica_id=replica_id,
-            stage_id=stage_id,
-            batch_global_id=batch_global_id,
-            metrics_store=metrics_store,
-            combine_end_time=combine_end_time,
-        )
     def _create_m2n_transfer_events_for_aggregated_batch(
         self,
         batch,
