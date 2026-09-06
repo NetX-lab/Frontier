@@ -54,6 +54,7 @@ from frontier.scheduler.utils.pdaf_return import (
 )
 from frontier.scheduler.utils.batch_builders import build_ep_lane_batch, build_virtual_global_batch
 from frontier.scheduler.utils.pdaf_wave_validation import validate_wave_stages, validate_a2f_wave_phase
+from frontier.scheduler.utils.forward_step_admission import promote_to_ep_wave, restore_full_stage_owners
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
     format_ep_trace_identity,
@@ -133,8 +134,6 @@ from frontier.scheduler.utils.stage_contexts import build_stage_execution_contex
 from frontier.scheduler.utils.prefix_cache import validate_prefix_cache_config
 from frontier.scheduler.utils.dense_metrics import first_dense_layer_id, predict_dense_reference
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
-    EP_WAVE,
-    FULL_STAGE_WORLD,
     StageAdmissionTicket,
     StageExecutionContext,
 )
@@ -1415,70 +1414,15 @@ class BaseClusterScheduler(ABC):
     ) -> None:
         """Atomically replace active lane owners with one Replica-local EP wave."""
 
-        live_batches = [batch for batch in source_batches.values() if not batch.is_idle]
-        tickets = []
-        for source_batch in live_batches:
-            ticket = getattr(source_batch, "_stage_admission_ticket", None)
-            if ticket is None:
-                if getattr(self, "_stage_execution_contexts", None) is None:
-                    # Standalone layer probes intentionally omit the outer DES
-                    # admission registry and cannot claim stage ownership.
-                    return
-                raise ValueError(
-                    "cohort EP promotion requires a stage admission ticket for "
-                    "every live batch"
-                )
-            if ticket not in tickets:
-                tickets.append(ticket)
-        if not tickets:
-            return
-        context = self.get_stage_execution_context(replica_id, stage_id)
-        if len(tickets) == 1 and tickets[0].scope == EP_WAVE:
-            wave_ticket = tickets[0]
-        elif len(tickets) == 1:
-            owner_batch = next(
-                source_batch
-                for source_batch in live_batches
-                if getattr(source_batch, "_stage_admission_ticket", None) == tickets[0]
-            )
-            self.transition_stage_admission_for_layer(
-                owner_batch,
-                stage_id=stage_id,
-                layer_id=layer_id,
-                operation_kind="ffn",
-                scope=EP_WAVE,
-                participant_ep_ids=participant_ep_ids,
-            )
-            wave_ticket = owner_batch._stage_admission_ticket
-        else:
-            if any(ticket.scope != FULL_STAGE_WORLD for ticket in tickets):
-                raise ValueError("cohort EP promotion requires full-stage owner tickets")
-            wave_ticket = context.replace_full_stage_owners_with_ep_wave(
-                tickets,
-                operation_id=(
-                    "shared_ep_wave",
-                    int(replica_id),
-                    int(stage_id),
-                    int(cohort_id),
-                    int(layer_id),
-                ),
-                participant_ep_ids=participant_ep_ids,
-            )
-        for source_batch in live_batches:
-            source_batch._stage_admission_ticket = wave_ticket
-            history = getattr(source_batch, "_stage_admission_scope_history", None)
-            if history is None:
-                history = []
-                source_batch._stage_admission_scope_history = history
-            history.append(
-                {
-                    "stage_id": int(stage_id),
-                    "layer_id": int(layer_id),
-                    "scope": EP_WAVE,
-                    "admission_seq": int(wave_ticket.admission_seq),
-                    "participant_ep_ids": tuple(wave_ticket.participant_ep_ids),
-                }
-            )
+        return promote_to_ep_wave(
+            self,
+            source_batches=source_batches,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            layer_id=layer_id,
+            step_id=cohort_id,
+            participant_ep_ids=participant_ep_ids,
+        )
 
     def _restore_forward_step_full_stage_owners(
         self,
@@ -1492,48 +1436,14 @@ class BaseClusterScheduler(ABC):
     ) -> bool:
         """Restore one active full-stage ticket per request-owner lane."""
 
-        live_batches = [batch for batch in source_batches.values() if not batch.is_idle]
-        if not live_batches:
-            return False
-        tickets = []
-        for batch in live_batches:
-            ticket = getattr(batch, "_stage_admission_ticket", None)
-            if ticket is None:
-                if getattr(self, "_stage_execution_contexts", None) is None:
-                    # Standalone layer probes intentionally omit the outer DES
-                    # admission registry and cannot restore stage ownership.
-                    return False
-                raise ValueError(
-                    "cohort full-stage restoration requires a stage admission "
-                    "ticket for every live batch"
-                )
-            tickets.append(ticket)
-        wave_tickets = []
-        for ticket in tickets:
-            if ticket not in wave_tickets:
-                wave_tickets.append(ticket)
-        if len(wave_tickets) != 1 or wave_tickets[0].scope != EP_WAVE:
-            return False
-        context = self.get_stage_execution_context(replica_id, stage_id)
-        operation_ids = [
-            (
-                "shared_layer",
-                int(batch.id),
-                int(batch.schedule_epoch),
-                int(stage_id),
-                int(layer_id),
-                operation_kind,
-                FULL_STAGE_WORLD,
-            )
-            for batch in live_batches
-        ]
-        owners = context.replace_ep_wave_with_full_stage_owners(
-            wave_tickets[0],
-            operation_ids=operation_ids,
+        return restore_full_stage_owners(
+            self,
+            source_batches=source_batches,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            layer_id=layer_id,
+            operation_kind=operation_kind,
         )
-        for source_batch, owner in zip(live_batches, owners):
-            source_batch._stage_admission_ticket = owner
-        return True
     def _prepare_moe_ep_wave_plan(
         self,
         *,
