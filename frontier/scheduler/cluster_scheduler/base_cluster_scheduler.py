@@ -1198,14 +1198,6 @@ class BaseClusterScheduler(ABC):
     def _debug_batch_collection_state(cls, batches: Any) -> Dict[str, Any]:
         return SchedulerDiagnostics.batch_collection(batches)
 
-    @staticmethod
-    def _debug_lane_tuple(lane: Any) -> List[Any]:
-        return SchedulerDiagnostics.lane_tuple(lane)
-
-    @classmethod
-    def _debug_batch_transfer_pairs_state(cls, pairs: Any) -> Dict[str, Any]:
-        return SchedulerDiagnostics.transfer_pairs(pairs)
-
     @classmethod
     def _debug_m2n_waiting_groups_state(
         cls,
@@ -1214,16 +1206,6 @@ class BaseClusterScheduler(ABC):
         ],
     ) -> List[Dict[str, Any]]:
         return SchedulerDiagnostics.waiting_groups(waiting_by_layer)
-
-    @classmethod
-    def _debug_m2n_ready_groups_state(cls, ready_groups: Any) -> List[Dict[str, Any]]:
-        return SchedulerDiagnostics.ready_groups(ready_groups)
-
-    @classmethod
-    def _debug_raw_batch_waiting_map_state(
-        cls, raw_batch_waiting_map: Dict[Any, Batch]
-    ) -> Dict[str, Any]:
-        return SchedulerDiagnostics.raw_waiting_map(raw_batch_waiting_map)
 
     def get_debug_state(self) -> Dict[str, Any]:
         return SchedulerDiagnostics.collect(self)
