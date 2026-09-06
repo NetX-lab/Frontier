@@ -70,6 +70,7 @@ from frontier.scheduler.utils.pdaf_validation import (
     validate_decode_attn_a2f_waiting_room,
 )
 from frontier.scheduler.utils.pdaf_entries import build_decode_ffn_idle_entries
+from frontier.scheduler.utils.pdaf_release import prepare_a2f_release_plan
 from frontier.scheduler.utils.pdaf_phase import (
     prepare_decode_attn_batch_phase,
     apply_decode_attn_batch_phase,
@@ -5929,23 +5930,14 @@ class BaseClusterScheduler(ABC):
             expected_lane_contract=expected_lane_contract,
         )
 
-        prepared_idle_lanes = [
-            expected_lane
-            for expected_lane in expected_lane_contract
-            if not prospective_per_lane_queues.get(expected_lane)
-            and expected_lane in normalized_idle_expected_lanes
-        ]
-        barrier_is_ready = all(
-            prospective_per_lane_queues.get(expected_lane)
-            or expected_lane in prepared_idle_lanes
-            for expected_lane in expected_lane_contract
+        release_plan = prepare_a2f_release_plan(
+            prospective_per_lane_queues,
+            expected_lane_contract,
+            normalized_idle_expected_lanes,
         )
-        ready_lanes = sum(
-            1
-            for expected_lane in expected_lane_contract
-            if prospective_per_lane_queues.get(expected_lane)
-            or expected_lane in prepared_idle_lanes
-        )
+        prepared_idle_lanes = list(release_plan.idle_lanes)
+        barrier_is_ready = release_plan.barrier_ready
+        ready_lanes = release_plan.ready_lane_count
 
         prepared_transfers = []
         if barrier_is_ready:
@@ -5990,20 +5982,13 @@ class BaseClusterScheduler(ABC):
             expected_lane_contract=expected_lane_contract,
         )
 
-        picked: List[tuple[tuple[int, int], int, Batch]] = []
-        prospective_after_release = defaultdict(
-            deque,
-            {
-                ready_lane: deque(lane_queue)
-                for ready_lane, lane_queue in prospective_per_lane_queues.items()
-            },
+        release_plan = prepare_a2f_release_plan(
+            prospective_per_lane_queues,
+            expected_lane_contract,
+            set(),
         )
-        if barrier_is_ready:
-            for ready_lane in expected_lane_contract:
-                ready_layer_id, ready_batch = prospective_after_release[
-                    ready_lane
-                ].popleft()
-                picked.append((ready_lane, ready_layer_id, ready_batch))
+        picked = list(release_plan.picked)
+        prospective_after_release = release_plan.queues_after_release
 
         non_idle_expected_lanes = tuple(
             ready_lane

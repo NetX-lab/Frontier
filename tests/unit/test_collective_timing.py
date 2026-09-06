@@ -10,6 +10,7 @@ from frontier.scheduler.utils.collective_timing import (
     validate_decode_layer_advance,
 )
 from frontier.scheduler.utils.request_selection import collect_active_requests
+from frontier.scheduler.utils.pdaf_release import prepare_a2f_release_plan
 
 
 def test_select_active_batch_prefers_first_non_idle_batch():
@@ -75,3 +76,13 @@ def test_collect_active_requests_deduplicates_and_skips_idle_or_completed():
     idle = SimpleNamespace(is_idle=True, requests=[first])
     active = SimpleNamespace(is_idle=False, requests=[first, duplicate, done])
     assert collect_active_requests([idle, active]) == [first]
+
+
+def test_a2f_release_plan_marks_idle_lane_without_mutating_input():
+    active = SimpleNamespace(is_idle=False)
+    queues = {(0, None): [(3, active)]}
+    plan = prepare_a2f_release_plan(queues, ((0, None), (1, None)), {(1, None)})
+    assert plan.barrier_ready is True
+    assert plan.idle_lanes == ((1, None),)
+    assert len(plan.picked) == 1
+    assert queues == {(0, None): [(3, active)]}
