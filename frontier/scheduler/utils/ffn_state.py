@@ -6,6 +6,25 @@ from typing import Any, Dict, List, Tuple
 from frontier.scheduler.utils.m2n_state import M2NTransferState
 
 
+def map_source_replica_to_target(
+    source_replica_ordinal: int,
+    target_replica_ids: List[int] | Tuple[int, ...],
+) -> int:
+    """Map a source Replica ordinal to a stable target Replica id."""
+    if type(source_replica_ordinal) is not int or source_replica_ordinal < 0:
+        raise ValueError(
+            "source_replica_ordinal must be an exact non-negative int, "
+            f"got {source_replica_ordinal!r}"
+        )
+    if type(target_replica_ids) not in {list, tuple} or not target_replica_ids:
+        raise ValueError("target_replica_ids must be a non-empty list or tuple")
+    if any(type(replica_id) is not int or replica_id < 0 for replica_id in target_replica_ids):
+        raise ValueError("target_replica_ids must contain exact non-negative ints")
+    if len(set(target_replica_ids)) != len(target_replica_ids):
+        raise ValueError("target_replica_ids must not contain duplicates")
+    return target_replica_ids[source_replica_ordinal % len(target_replica_ids)]
+
+
 def initialize_decode_ffn_state(scheduler: Any, logger) -> None:
     """Initialize M2N grouping and EP waiting-room state for DECODE_FFN."""
     scheduler._m2n_state = M2NTransferState()

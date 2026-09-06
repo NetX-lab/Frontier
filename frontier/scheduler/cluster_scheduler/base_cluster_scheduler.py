@@ -131,6 +131,7 @@ from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
 )
 from frontier.scheduler.utils.layer_path import uses_shared_layer_path
 from frontier.scheduler.utils.replica_config import resolve_replica_scheduler_config
+from frontier.scheduler.utils.ffn_state import map_source_replica_to_target
 from frontier.scheduler.utils.stage_contexts import build_stage_execution_contexts
 from frontier.scheduler.utils.prefix_cache import validate_prefix_cache_config
 from frontier.scheduler.utils.dense_metrics import (
@@ -294,8 +295,6 @@ class BaseClusterScheduler(ABC):
         ep_batches: Dict[int, Any],
         batch_global_id: int,
     ) -> tuple[int, int]:
-        """Resolve one logical batch/layer identity for a completed EP wave."""
-
         return ep_trace.resolve_trace_identity(ep_batches, batch_global_id)
 
     @staticmethod
@@ -308,8 +307,6 @@ class BaseClusterScheduler(ABC):
         operation_kind: str,
         afd_stage_idx: int | None = None,
     ) -> dict[str, Any]:
-        """Build the structured identity attached to every EP trace record."""
-
         return ep_trace.build_trace_identity(
             batch=batch,
             replica_id=replica_id,
@@ -321,125 +318,27 @@ class BaseClusterScheduler(ABC):
 
     @staticmethod
     def _format_ep_trace_identity(identity: Dict[str, Any]) -> str:
-        """Serialize an already validated identity in a stable log order."""
-
         return format_ep_trace_identity(identity)
 
     @staticmethod
-    def _log_ep_workload_trace(
-        *,
-        cluster_type: ClusterType,
-        batch_id: int,
-        layer_id: int,
-        lane_workload: EPLaneWorkload,
-        lane_compute_ms: float,
-        routed_compute_ms: float,
-        lane_comm_ms: float,
-        pre_dispatch_ms: float,
-        dispatch_ms: float,
-        combine_ms: float,
-        post_combine_ms: float,
-        trace_identity: Dict[str, Any],
-    ) -> None:
-        """Emit one source-level record for a materialized EP participant."""
-        ep_trace.log_workload_trace(
-            cluster_type=cluster_type,
-            batch_id=batch_id,
-            layer_id=layer_id,
-            lane_workload=lane_workload,
-            lane_compute_ms=lane_compute_ms,
-            routed_compute_ms=routed_compute_ms,
-            lane_comm_ms=lane_comm_ms,
-            pre_dispatch_ms=pre_dispatch_ms,
-            dispatch_ms=dispatch_ms,
-            combine_ms=combine_ms,
-            post_combine_ms=post_combine_ms,
-            trace_identity=trace_identity,
-            format_identity=format_ep_trace_identity,
-        )
+    def _log_ep_workload_trace(**kwargs) -> None:
+        kwargs["format_identity"] = format_ep_trace_identity
+        ep_trace.log_workload_trace(**kwargs)
 
     @staticmethod
-    def _log_ep_wave_end_trace(
-        *,
-        cluster_type: ClusterType,
-        batch_id: int,
-        layer_id: int,
-        wave_start_time_s: float,
-        combine_barrier_end_time_s: float,
-        post_combine_time_ms: float,
-        wave_end_time_s: float,
-        trace_identity: Dict[str, Any],
-    ) -> None:
-        """Emit the final post-combine end of one EP wave."""
-        ep_trace.log_wave_end_trace(
-            cluster_type=cluster_type,
-            batch_id=batch_id,
-            layer_id=layer_id,
-            wave_start_time_s=wave_start_time_s,
-            combine_barrier_end_time_s=combine_barrier_end_time_s,
-            post_combine_time_ms=post_combine_time_ms,
-            wave_end_time_s=wave_end_time_s,
-            trace_identity=trace_identity,
-            format_identity=format_ep_trace_identity,
-        )
+    def _log_ep_wave_end_trace(**kwargs) -> None:
+        kwargs["format_identity"] = format_ep_trace_identity
+        ep_trace.log_wave_end_trace(**kwargs)
 
     @staticmethod
-    def _log_ep_barrier_trace(
-        *,
-        cluster_type: ClusterType,
-        batch_id: int,
-        layer_id: int,
-        phase: str,
-        expected_ep_ids: Tuple[int, ...],
-        arrived_ep_ids: Tuple[int, ...],
-        max_lane_time_ms: float,
-        collective_time_ms: float,
-        barrier_time_ms: float,
-        barrier_start_time_s: float,
-        barrier_end_time_s: float,
-        trace_identity: Dict[str, Any],
-    ) -> None:
-        """Emit the completed per-layer EP barrier without changing timing."""
-        ep_trace.log_barrier_trace(
-            cluster_type=cluster_type,
-            batch_id=batch_id,
-            layer_id=layer_id,
-            phase=phase,
-            expected_ep_ids=expected_ep_ids,
-            arrived_ep_ids=arrived_ep_ids,
-            max_lane_time_ms=max_lane_time_ms,
-            collective_time_ms=collective_time_ms,
-            barrier_time_ms=barrier_time_ms,
-            barrier_start_time_s=barrier_start_time_s,
-            barrier_end_time_s=barrier_end_time_s,
-            trace_identity=trace_identity,
-            format_identity=format_ep_trace_identity,
-        )
+    def _log_ep_barrier_trace(**kwargs) -> None:
+        kwargs["format_identity"] = format_ep_trace_identity
+        ep_trace.log_barrier_trace(**kwargs)
 
     @staticmethod
-    def _log_ep_conservation_trace(
-        *,
-        cluster_type: ClusterType,
-        batch_id: int,
-        layer_id: int,
-        routing_token_count: int,
-        router_topk: int,
-        total_routed_assignments: int,
-        per_ep_routed_tokens: Dict[int, int],
-        trace_identity: Dict[str, Any],
-    ) -> None:
-        """Emit exact routing-to-EP token conservation for one layer wave."""
-        ep_trace.log_conservation_trace(
-            cluster_type=cluster_type,
-            batch_id=batch_id,
-            layer_id=layer_id,
-            routing_token_count=routing_token_count,
-            router_topk=router_topk,
-            total_routed_assignments=total_routed_assignments,
-            per_ep_routed_tokens=per_ep_routed_tokens,
-            trace_identity=trace_identity,
-            format_identity=format_ep_trace_identity,
-        )
+    def _log_ep_conservation_trace(**kwargs) -> None:
+        kwargs["format_identity"] = format_ep_trace_identity
+        ep_trace.log_conservation_trace(**kwargs)
 
     @staticmethod
     def _get_shared_ep_phase_times_ms(
@@ -450,7 +349,6 @@ class BaseClusterScheduler(ABC):
         layer_id: int,
         ep_id: int,
     ) -> tuple[float, float, float, float, float]:
-        """Read shared EP phase timings through the EP utility."""
         return get_ep_phase_times_ms(
             execution_time,
             cluster_type=cluster_type,
@@ -464,36 +362,7 @@ class BaseClusterScheduler(ABC):
         source_replica_ordinal: int,
         target_ffn_replica_ids: List[int] | Tuple[int, ...],
     ) -> int:
-        """Map one Attention-Replica ordinal to a sticky FFN Replica.
-
-        The mapping is intentionally based on the source Replica ordinal, not
-        on a retired attention-DP lane.  A target list may be larger than the
-        source population; those extra FFN Replicas remain valid and idle.
-        """
-        if type(source_replica_ordinal) is not int or source_replica_ordinal < 0:
-            raise ValueError(
-                "source_replica_ordinal must be an exact non-negative int, "
-                f"got {source_replica_ordinal!r}"
-            )
-        if type(target_ffn_replica_ids) not in {list, tuple}:
-            raise ValueError(
-                "target_ffn_replica_ids must be an exact list or tuple, "
-                f"got {target_ffn_replica_ids!r}"
-            )
-        if not target_ffn_replica_ids:
-            raise ValueError("target_ffn_replica_ids must not be empty")
-        if any(
-            type(replica_id) is not int or replica_id < 0
-            for replica_id in target_ffn_replica_ids
-        ):
-            raise ValueError(
-                "target_ffn_replica_ids must contain exact non-negative ints"
-            )
-        if len(set(target_ffn_replica_ids)) != len(target_ffn_replica_ids):
-            raise ValueError("target_ffn_replica_ids must not contain duplicates")
-        return target_ffn_replica_ids[
-            source_replica_ordinal % len(target_ffn_replica_ids)
-        ]
+        return map_source_replica_to_target(source_replica_ordinal, target_ffn_replica_ids)
 
     def _validate_prefix_cache_cluster_config(self, replica_scheduler_config) -> None:
         """Compatibility wrapper for prefix-cache configuration validation."""
