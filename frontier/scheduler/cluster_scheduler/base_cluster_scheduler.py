@@ -78,6 +78,10 @@ from frontier.scheduler.utils.attention_transfer_state import (
     AttentionTransferState,
     initialize_attention_transfer_state,
 )
+from frontier.scheduler.utils.periodic_scheduling import (
+    configure_periodic_scheduling,
+    build_initial_periodic_events,
+)
 from frontier.scheduler.utils.kv_arrival import (
     handle_decode_arrival,
     handle_decode_attn_arrival,
@@ -591,21 +595,7 @@ class BaseClusterScheduler(ABC):
         # Current architecture uses EP-based synchronization instead
 
         # Initialize periodic scheduling if enabled for this cluster type
-        self._is_periodic_scheduling_enabled = self._cluster_type in config.periodic_scheduling_clusters
-        self._periodic_scheduling_interval_ms = config.periodic_scheduling_interval_ms
-
-        # Validate periodic scheduling configuration
-        if self._is_periodic_scheduling_enabled:
-            if self._cluster_type not in [ClusterType.DECODE_ATTN]:
-                raise NotImplementedError(
-                    f"Periodic scheduling is not implemented for cluster type {self._cluster_type.name}. "
-                    f"Currently only DECODE_ATTN is supported."
-                )
-
-            # from frontier.logger import get_cluster_logger
-            # logger = get_cluster_logger(__name__, self._cluster_type.name)
-            logger.info(f"Periodic scheduling enabled for {self._cluster_type.name} cluster "
-                       f"with interval {self._periodic_scheduling_interval_ms}ms")
+        configure_periodic_scheduling(self, config, logger)
 
         self._batch_group_creation_counter = 0
 
@@ -639,28 +629,9 @@ class BaseClusterScheduler(ABC):
         self._request_queue.append(request)
 
     def initialize_periodic_scheduling(self, start_time: float = 0.0) -> List:
-        """
-        Initialize periodic scheduling for this cluster if enabled.
-
-        Args:
-            start_time: Time to start the first periodic scheduling event
-
-        Returns:
-            List containing the initial PeriodicScheduleEvent if periodic scheduling is enabled
-        """
-        if not self._is_periodic_scheduling_enabled:
-            return []
-
-        from frontier.events.periodic_schedule_event import PeriodicScheduleEvent
         from frontier.logger import get_cluster_logger
-
         logger = get_cluster_logger(__name__, self._cluster_type.name)
-        first_schedule_time = start_time + self._periodic_scheduling_interval_ms / 1000.0
-
-        logger.info(f"Initializing periodic scheduling for {self._cluster_type.name} cluster: "
-                   f"first event at {first_schedule_time:.3f}s, interval={self._periodic_scheduling_interval_ms}ms")
-
-        return [PeriodicScheduleEvent(first_schedule_time, self._cluster_type, self._periodic_scheduling_interval_ms)]
+        return build_initial_periodic_events(self, start_time, logger)
 
     def get_replica(self, replica_id: int) -> Replica:
         return self._cluster.replicas[replica_id]
