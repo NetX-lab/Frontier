@@ -54,6 +54,119 @@ class EPCombineTimingPlan(NamedTuple):
     payload_description: str
 
 
+class EPWavePhaseTimes(NamedTuple):
+    """Immutable per-lane and aggregate phase timings for a shared EP wave."""
+
+    lane_compute_times_ms: tuple[float, ...]
+    pre_dispatch_times_ms: tuple[float, ...]
+    dispatch_times_ms: tuple[float, ...]
+    routed_compute_times_ms: tuple[float, ...]
+    combine_times_ms: tuple[float, ...]
+    post_combine_times_ms: tuple[float, ...]
+
+
+class EPWaveTiming(NamedTuple):
+    """Immutable barrier timestamps for one shared EP wave."""
+
+    dispatch_barrier_time_ms: float
+    dispatch_barrier_end_time_s: float
+    combine_barrier_time_ms: float
+    combine_barrier_end_time_s: float
+    post_combine_barrier_time_ms: float
+    wave_end_time_s: float
+
+
+def predict_ep_wave_phase_times(
+    *,
+    layer_workload: Any,
+    source_batch: Any,
+    stage_id: int,
+    layer_id: int,
+    cluster_type: Any,
+    predictor: Any,
+    lane_builder: Callable[..., Any],
+    phase_getter: Callable[..., tuple[float, float, float, float, float]],
+    workload_logger: Callable[..., None],
+    trace_identity: Any,
+    batch_id: int,
+) -> EPWavePhaseTimes:
+    """Predict each EP lane and emit workload traces in participant order."""
+    values = [[] for _ in range(6)]
+    for ep_id in layer_workload.participant_ep_ids:
+        lane_batch = lane_builder(
+            source_batch=source_batch,
+            layer_id=layer_id,
+            ep_id=ep_id,
+            layer_workload=layer_workload,
+        )
+        execution_time = predictor.predict_stage_execution_time(
+            lane_batch, stage_id, cluster_type=cluster_type, num_layers=1,
+            layer_id=layer_id, include_attention=False,
+        )
+        phases = phase_getter(
+            execution_time, cluster_type=cluster_type, batch_id=int(batch_id),
+            layer_id=layer_id, ep_id=int(ep_id),
+        )
+        pre, dispatch, routed, combine, post = phases
+        lane_compute = pre + routed + post
+        lane_comm = dispatch + combine
+        workload_logger(
+            cluster_type=cluster_type, batch_id=int(batch_id), layer_id=layer_id,
+            lane_workload=lane_batch.lane_workload, lane_compute_ms=lane_compute,
+            routed_compute_ms=routed, lane_comm_ms=lane_comm,
+            pre_dispatch_ms=pre, dispatch_ms=dispatch, combine_ms=combine,
+            post_combine_ms=post, trace_identity=trace_identity,
+        )
+        for target, value in zip(values, (lane_compute, pre, dispatch, routed, combine, post)):
+            target.append(value)
+    if not values[0]:
+        raise ValueError("EP wave produced no participant timing")
+    return EPWavePhaseTimes(*(tuple(value) for value in values))
+
+
+def calculate_ep_wave_timing(
+    *,
+    start_time_s: float,
+    phases: EPWavePhaseTimes,
+    barrier_logger: Callable[..., None],
+    wave_logger: Callable[..., None],
+    cluster_type: Any,
+    batch_id: int,
+    layer_id: int,
+    participant_ep_ids: tuple[int, ...],
+    trace_identity: Any,
+) -> EPWaveTiming:
+    """Calculate and trace dispatch/combine/post-combine barriers."""
+    max_pre = max(phases.pre_dispatch_times_ms)
+    max_dispatch = max(phases.dispatch_times_ms)
+    dispatch_duration = max_pre + max_dispatch
+    dispatch_end = start_time_s + dispatch_duration * 1e-3
+    barrier_logger(cluster_type=cluster_type, batch_id=int(batch_id), layer_id=layer_id,
+                   phase="dispatch", expected_ep_ids=participant_ep_ids,
+                   arrived_ep_ids=participant_ep_ids, max_lane_time_ms=max_pre,
+                   collective_time_ms=max_dispatch, barrier_time_ms=dispatch_duration,
+                   barrier_start_time_s=start_time_s, barrier_end_time_s=dispatch_end,
+                   trace_identity=trace_identity)
+    max_routed = max(phases.routed_compute_times_ms)
+    max_combine = max(phases.combine_times_ms)
+    combine_duration = max_routed + max_combine
+    combine_end = dispatch_end + combine_duration * 1e-3
+    barrier_logger(cluster_type=cluster_type, batch_id=int(batch_id), layer_id=layer_id,
+                   phase="combine", expected_ep_ids=participant_ep_ids,
+                   arrived_ep_ids=participant_ep_ids, max_lane_time_ms=max_routed,
+                   collective_time_ms=max_combine, barrier_time_ms=combine_duration,
+                   barrier_start_time_s=dispatch_end, barrier_end_time_s=combine_end,
+                   trace_identity=trace_identity)
+    post = max(phases.post_combine_times_ms)
+    wave_end = combine_end + post * 1e-3
+    wave_logger(cluster_type=cluster_type, batch_id=int(batch_id), layer_id=layer_id,
+                wave_start_time_s=start_time_s, combine_barrier_end_time_s=combine_end,
+                post_combine_time_ms=post, wave_end_time_s=wave_end,
+                trace_identity=trace_identity)
+    return EPWaveTiming(dispatch_duration, dispatch_end, combine_duration,
+                        combine_end, post, wave_end)
+
+
 def validate_completion_time(time: float, combine_end_time: float) -> tuple[float, float]:
     """Validate final and combine timestamps before a waiting-room lookup."""
 
