@@ -54,6 +54,38 @@ class EPCombineTimingPlan(NamedTuple):
     payload_description: str
 
 
+def resolve_ep_execution_time(ep_batches: dict[int, Any]) -> float:
+    """Resolve synchronized FFN time while preserving zero-work lane semantics."""
+
+    positive_execution_times: list[float] = []
+    for ep_id, ep_batch in ep_batches.items():
+        execution_time = getattr(ep_batch, "execution_time", None)
+        if (
+            not isinstance(execution_time, Real)
+            or isinstance(execution_time, bool)
+            or not math.isfinite(float(execution_time))
+            or float(execution_time) < 0.0
+        ):
+            raise ValueError(
+                f"Invalid execution_time for EP batch: ep_id={ep_id}, "
+                f"execution_time={execution_time!r}"
+            )
+        lane_workload = resolve_ep_lane_workload(ep_batch, required=True)
+        assert lane_workload is not None
+        execution_time_value = float(execution_time)
+        if execution_time_value == 0.0:
+            if lane_workload.routed_token_count != 0:
+                raise ValueError(
+                    "EP batch has zero execution_time with routed tokens: "
+                    f"ep_id={ep_id}, routed_tokens={lane_workload.routed_token_count}"
+                )
+            continue
+        positive_execution_times.append(execution_time_value)
+    if not positive_execution_times:
+        raise ValueError("EP combine has no positive execution_time lane with routed tokens")
+    return max(positive_execution_times)
+
+
 def validate_token_conservation(
     input_tokens: int, lane_workload: EPLaneWorkload, context: str
 ) -> None:
