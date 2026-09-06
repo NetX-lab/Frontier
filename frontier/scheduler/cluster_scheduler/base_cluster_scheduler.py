@@ -3473,6 +3473,28 @@ class BaseClusterScheduler(ABC):
         *,
         expected_lane_ids: Optional[List[tuple[int, int]]] = None,
     ) -> List[tuple[int, int]]:
+        """Inject idle FFN lanes through the dedicated utility."""
+
+        from frontier.scheduler.utils.m2n_idle import inject_ffn_idle_lanes
+
+        return inject_ffn_idle_lanes(
+            self,
+            time,
+            group_key,
+            room,
+            logger,
+            expected_lane_ids=expected_lane_ids,
+        )
+
+    def _legacy_inject_ffn_idle_lanes_for_barrier(
+        self,
+        time: float,
+        group_key,
+        room: dict,
+        logger,
+        *,
+        expected_lane_ids: Optional[List[tuple[int, int]]] = None,
+    ) -> List[tuple[int, int]]:
         """Inject idle sentinel batches for missing FFN lanes to unblock the barrier."""
         if self._cluster_type is not ClusterType.DECODE_FFN:
             raise ValueError(
