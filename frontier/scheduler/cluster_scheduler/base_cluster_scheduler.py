@@ -46,6 +46,7 @@ from frontier.scheduler.utils.expert_parallel import (
 from frontier.scheduler.utils.ep_wave_schedule import schedule_layer_wave
 from frontier.scheduler.utils.ep_wave import prepare_moe_wave_from_inputs
 from frontier.scheduler.utils.layer_workload import materialize_layer_workload
+from frontier.scheduler.utils.layer_admission import transition_layer_admission
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
     format_ep_trace_identity,
@@ -820,69 +821,16 @@ class BaseClusterScheduler(ABC):
         scope: str,
         participant_ep_ids: tuple[int, ...] = (),
     ) -> None:
-        """Switch a shared batch's active parent scope at a layer boundary.
+        """Switch a shared batch's active parent scope at a layer boundary."""
 
-        Shared co-location/PDD execution keeps the outer batch admitted to one
-        pipeline stage, but its layer operation alternates between full-stage
-        attention/dense work and a complete local EP wave.  The active ticket is
-        replaced atomically so the stage never becomes idle between those
-        dependent operations.
-
-        Direct unit probes may call the pure layer helpers without constructing a
-        cluster scheduler.  Such probes have neither a context registry nor a
-        ticket; production schedulers always have both, and missing state there
-        is an explicit error rather than a fallback.
-        """
-
-        if type(stage_id) is not int or stage_id < 0:
-            raise ValueError("stage_id must be an exact non-negative int")
-        if type(layer_id) is not int or layer_id < 0:
-            raise ValueError("layer_id must be an exact non-negative int")
-        if operation_kind not in ("attention", "ffn"):
-            raise ValueError(
-                "operation_kind must be 'attention' or 'ffn', "
-                f"got {operation_kind!r}"
-            )
-        ticket = getattr(batch, "_stage_admission_ticket", None)
-        contexts = getattr(self, "_stage_execution_contexts", None)
-        if ticket is None and contexts is None:
-            # Standalone materializer tests intentionally omit the outer DES
-            # scheduler.  They do not claim stage ownership and therefore have
-            # no scope to transition.
-            return
-        if ticket is None:
-            raise ValueError(
-                "shared layer operation is missing its stage admission ticket"
-            )
-        context = self.get_stage_execution_context(ticket.replica_id, stage_id)
-        operation_id = (
-            "shared_layer",
-            int(batch.id),
-            int(batch.schedule_epoch),
-            int(stage_id),
-            int(layer_id),
-            operation_kind,
-            scope,
-        )
-        next_ticket = context.transition_active_scope(
-            ticket,
-            operation_id=operation_id,
+        return transition_layer_admission(
+            self,
+            batch,
+            stage_id=stage_id,
+            layer_id=layer_id,
+            operation_kind=operation_kind,
             scope=scope,
             participant_ep_ids=participant_ep_ids,
-        )
-        batch._stage_admission_ticket = next_ticket
-        history = getattr(batch, "_stage_admission_scope_history", None)
-        if history is None:
-            history = []
-            batch._stage_admission_scope_history = history
-        history.append(
-            {
-                "stage_id": int(stage_id),
-                "layer_id": int(layer_id),
-                "scope": scope,
-                "admission_seq": int(next_ticket.admission_seq),
-                "participant_ep_ids": tuple(next_ticket.participant_ep_ids),
-            }
         )
 
     def make_decode_sync_global_id(
