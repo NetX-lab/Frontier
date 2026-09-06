@@ -2668,60 +2668,9 @@ class BaseClusterScheduler(ABC):
         batch: Batch,
         terminal_delay_s: float,
     ) -> None:
-        """Record terminal MTP tail work as post-first-token batch service."""
-        delay_value = float(terminal_delay_s)
-        if delay_value < 0.0:
-            raise ValueError(
-                f"terminal MTP completion delay must be >= 0, got={delay_value}"
-            )
-        if delay_value == 0.0:
-            return
+        from frontier.scheduler.utils.mtp_metrics import record_terminal_completion_delay
 
-        metadata = getattr(batch, "spec_decode_metadata", None)
-        if metadata is None:
-            raise ValueError(
-                "terminal MTP completion delay requires spec_decode_metadata"
-            )
-        terminal_rows = getattr(
-            metadata,
-            "terminal_overshoot_verify_tokens_per_request",
-            None,
-        )
-        if terminal_rows is None:
-            raise ValueError(
-                "terminal MTP completion delay requires terminal overshoot rows"
-            )
-        if len(terminal_rows) != len(batch.requests):
-            raise ValueError(
-                "terminal overshoot row count mismatch: "
-                f"rows={len(terminal_rows)}, requests={len(batch.requests)}"
-            )
-
-        has_terminal_rows = any(len(rows) > 0 for rows in terminal_rows)
-        if not has_terminal_rows:
-            raise ValueError(
-                "positive terminal MTP completion delay has no active request rows"
-            )
-        request_ids_with_terminal_rows = [
-            int(request.id)
-            for request, rows in zip(batch.requests, terminal_rows)
-            if len(rows) > 0
-        ]
-        if not request_ids_with_terminal_rows:
-            raise ValueError(
-                "positive terminal MTP completion delay has no request-local "
-                "terminal rows"
-            )
-
-        # Terminal overshoot rows are generated only for requests that have
-        # logically completed but still appear in the target-embedded MTP trace.
-        # Do not smear that post-response trace work onto unrelated active
-        # batchmates; vLLM clean request metrics do not extend those active
-        # requests' response latency with another request's terminal rows.
-        batch.add_spec_terminal_completion_delay(
-            request_ids_with_terminal_rows,
-            delay_value,
-        )
+        record_terminal_completion_delay(batch, terminal_delay_s)
 
     def _should_trigger_kv_transfer(self, batch: Batch) -> bool:
         """KV cache transfer is not available in the co-location-only release."""
