@@ -76,7 +76,10 @@ from frontier.scheduler.utils.kv_arrival import (
     handle_decode_arrival,
     handle_decode_attn_arrival,
 )
-from frontier.scheduler.utils.m2n_arrival import route_m2n_arrival
+from frontier.scheduler.utils.m2n_arrival import (
+    route_m2n_arrival,
+    handle_decode_attn_arrival,
+)
 from frontier.scheduler.utils.sync_entry import enter_decode_sync, enter_prefill_sync
 from frontier.scheduler.utils.pdaf_phase import (
     prepare_decode_attn_batch_phase,
@@ -3699,6 +3702,27 @@ class BaseClusterScheduler(ABC):
         )
 
     def _handle_m2n_arrival_decode_attn(
+        self,
+        time: float,
+        micro_batch: Batch,
+        transfer_info,
+        logger,
+        *,
+        expected_roundtrip_inflight: bool = False,
+        request_end_deferred: bool = False,
+    ) -> List:
+        """Route DECODE_ATTN M2N completion through the arrival utility."""
+        return handle_decode_attn_arrival(
+            self,
+            time,
+            micro_batch,
+            transfer_info,
+            logger,
+            expected_roundtrip_inflight=expected_roundtrip_inflight,
+            request_end_deferred=request_end_deferred,
+        )
+
+    def _legacy_handle_m2n_arrival_decode_attn(
         self,
         time: float,
         micro_batch: Batch,

@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from frontier.entities import Batch
 from frontier.types import ClusterType
 
 
@@ -67,3 +68,77 @@ def route_m2n_arrival(
     raise RuntimeError(
         f"Validated M2N arrival has no handler for cluster {scheduler._cluster_type.name}"
     )
+
+
+def handle_decode_attn_arrival(
+    scheduler: Any,
+    time: float,
+    micro_batch: Any,
+    transfer_info: Any,
+    logger: Any,
+    *,
+    expected_roundtrip_inflight: bool = False,
+    request_end_deferred: bool = False,
+) -> list:
+    """Advance one DECODE_ATTN batch after an FFN return transfer."""
+
+    from frontier.events.cluster_schedule_event import ClusterScheduleEvent
+    from frontier.events.global_batch_end_event import GlobalBatchEndEvent
+
+    receipt = scheduler._validate_decode_attn_m2n_receipt(
+        micro_batch,
+        transfer_info,
+        expected_roundtrip_inflight=expected_roundtrip_inflight,
+        request_end_deferred=request_end_deferred,
+    )
+    logger.info(
+        f"[AF-ARRIVAL] M2N returned micro batch {micro_batch.id} at "
+        "decode-attn; advancing request states"
+    )
+    next_events = []
+    total_layers = scheduler._config.replica_config.model_config.num_layers
+    micro_batch.mb_on_step_layer_count_increment()
+    is_last_layer = receipt["is_last_layer"]
+    logger.info(
+        f"[AF-ARRIVAL][AFTER] mb={micro_batch.id} "
+        f"inflight_layers={getattr(micro_batch, 'af_inflight_layer_count', None)} "
+        f"/ total_layers={total_layers}; is_mb_last_layer={is_last_layer}"
+    )
+    replica_id = receipt["replica_id"]
+    replica_local_id = receipt["replica_local_id"]
+    ready_for_reschedule = False
+    if not is_last_layer:
+        ready_for_reschedule = scheduler._enqueue_decode_attn_return_round(
+            micro_batch,
+            receipt=receipt,
+            logger=logger,
+        )
+    else:
+        global_end_time = scheduler.resolve_decode_attn_boundary_first_mixed_global_end_time(
+            time,
+            micro_batch,
+        )
+        current_exec_sigs = [
+            Batch._get_request_execution_signature(request)
+            for request in micro_batch.requests
+        ]
+        current_mut_sigs = [
+            Batch._get_request_mutation_signature(request)
+            for request in micro_batch.requests
+        ]
+        next_events.append(
+            GlobalBatchEndEvent(
+                global_end_time,
+                replica_id,
+                replica_local_id,
+                micro_batch,
+                scheduler._cluster_type,
+                request_execution_signatures=current_exec_sigs,
+                request_mutation_signatures=current_mut_sigs,
+            )
+        )
+    if scheduler._is_periodic_scheduling_enabled:
+        return next_events
+    if next_events or ready_for_reschedule:
+        return next_events + [ClusterScheduleEvent(time, scheduler._cluster_type)]
+    return next_events
