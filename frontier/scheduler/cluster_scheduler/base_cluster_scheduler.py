@@ -3491,9 +3491,6 @@ class BaseClusterScheduler(ABC):
 
     def _promote_incomplete_m2n_groups_with_idle_lanes(self, logger) -> int:
         """Promote any incomplete FFN grouping barriers by injecting idle lanes."""
-        from frontier.events.cluster_schedule_event import ClusterScheduleEvent
-        import time as _time_mod
-
         promoted_count = 0
         for group_key, room in list(self._m2n_waiting_by_layer.items()):
             if self._try_promote_decode_ffn_group(
@@ -3512,50 +3509,6 @@ class BaseClusterScheduler(ABC):
     ) -> tuple[List[tuple[Any, Any]], Optional[tuple[int, List[int]]]]:
         """Build DP-padding replacements through the transfer utility."""
         return prepare_dp_padding(picked)
-
-    def _apply_dp_padding_on_promotion(
-        self,
-        picked: List[tuple],
-        logger,
-    ) -> None:
-        """Apply DP padding (Layer 2 of three-layer padding) to promoted batches.
-
-        StepFun-vLLM three-layer padding order (gpu_model_runner.py):
-          Layer 1: Stage count padding — dummy stages with 1 token
-          Layer 2: DP padding — per-stage max across DP ranks  ← THIS METHOD
-          Layer 3: CUDA Graph padding — nearest capture size
-
-        DP padding must happen at the cluster scheduler level because it
-        requires cross-DP-lane visibility: the replica scheduler only sees
-        its own lane's token distribution.  Once all DP lanes arrive at the
-        (layer_id, afd_stage_idx) barrier, this method computes the per-stage
-        max and updates each batch's AFDStageMetadata accordingly.
-
-        Reference: StepFun-vLLM gpu_model_runner.py:1240-1244
-            dp_size = self.vllm_config.parallel_config.data_parallel_size
-            dp_rank = self.vllm_config.parallel_config.data_parallel_rank
-            num_stage_tokens_across_dp = DPMetadata.num_stage_tokens_across_dp(
-                afd_tokens_lens, dp_size, dp_rank)
-            afd_tokens_lens = torch.max(num_stage_tokens_across_dp, dim=1)[0]
-
-        Args:
-            picked: List of (batch, transfer_info) tuples from all DP lanes
-            logger: Logger instance
-        """
-        padding_plan, padding_summary = self._prepare_dp_padding_on_promotion(
-            picked
-        )
-        if padding_summary is None:
-            return
-        for batch, padded_metadata in padding_plan:
-            batch.afd_stage_metadata = padded_metadata
-
-        padded_lane_count, dp_stage_max_tokens = padding_summary
-        logger.info(
-            f"[FFN-DP-PADDING] Applied DP padding across {padded_lane_count} lanes: "
-            f"dp_stage_max_tokens={dp_stage_max_tokens} "
-            f"padded_total={sum(dp_stage_max_tokens)}"
-        )
 
     def _handle_m2n_arrival_decode_attn(
         self,
