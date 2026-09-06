@@ -67,6 +67,7 @@ from frontier.scheduler.utils.pdaf_validation import (
 )
 from frontier.scheduler.utils.pdaf_entries import build_decode_ffn_idle_entries
 from frontier.scheduler.utils.pdaf_a2f import prepare_a2f_admission
+from frontier.scheduler.utils.pdaf_dense_a2f import release_dense_a2f
 from frontier.scheduler.utils.ep_combine import prepare_ep_combine_completion
 from frontier.scheduler.utils.ep_dispatch import handle_dispatch_ready, prepare_dispatch_advance
 from frontier.scheduler.utils.m2n_grouping import prepare_ffn_group_promotion
@@ -3814,60 +3815,15 @@ class BaseClusterScheduler(ABC):
         logger,
     ) -> List:
         """Stream dense A→F traffic without the MoE all-lane barrier."""
-        from frontier.events.m2n_transfer_start_event import M2NTransferStartEvent
-        from frontier.events.replica_schedule_event import ReplicaScheduleEvent
-
-        lane = (replica_id, replica_local_id)
-        barrier_round_id = self._peek_decode_attn_barrier_round_id()
-        activation_size, transfer_time = (
-            self._validate_decode_attn_a2f_predictor_result(
-                self._m2n_transfer_predictor.get_transfer_info(
-                    source_cluster_type=ClusterType.DECODE_ATTN,
-                    target_cluster_type=ClusterType.DECODE_FFN,
-                    batch=batch,
-                    replica_config=self._config.replica_config,
-                )
-            )
-        )
-
-        transfer_event = M2NTransferStartEvent(
-            time=time,
-            source_replica_id=replica_id,
-            source_replica_local_id=replica_local_id,
-            source_cluster_type=ClusterType.DECODE_ATTN,
-            target_cluster_type=ClusterType.DECODE_FFN,
-            batch=batch,
-            activation_size_bytes=activation_size,
-            transfer_time_ms=transfer_time,
-            layer_id=layer_id,
-            afd_stage_idx=batch.afd_stage_idx,
-            source_execution_replica_id=replica_id,
-            source_execution_replica_local_id=replica_local_id,
-        )
-        schedule_event = ReplicaScheduleEvent(
+        return release_dense_a2f(
+            self,
             time,
-            replica_id,
-            self._cluster_type,
-            replica_local_id,
-        )
-        prepared_phase_update = self._set_decode_attn_batch_cohort_phase(
             batch,
-            phase="ffn_inflight",
             replica_id=replica_id,
             replica_local_id=replica_local_id,
             layer_id=layer_id,
-            prepare_only=True,
+            logger=logger,
         )
-
-        self._commit_decode_attn_batch_phases([prepared_phase_update])
-        batch.decode_attn_barrier_round_id = barrier_round_id
-        batch.decode_attn_barrier_expected_lanes = (lane,)
-        self._decode_attn_barrier_round_counter = barrier_round_id + 1
-        logger.info(
-            f"[A2F-DENSE-STREAM] layer={layer_id} afd_stage_idx={batch.afd_stage_idx} "
-            f"lane={lane} batch_id={batch.id} round={batch.decode_attn_barrier_round_id}"
-        )
-        return [transfer_event, schedule_event]
 
     def on_decode_attn_a2f_ready(
         self,
