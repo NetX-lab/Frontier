@@ -52,7 +52,11 @@ from frontier.scheduler.utils.pdaf_return import (
     release_ready_return_round,
     enqueue_return_round,
 )
-from frontier.scheduler.utils.batch_builders import build_ep_lane_batch, build_virtual_global_batch
+from frontier.scheduler.utils.batch_builders import (
+    build_ep_lane_batch,
+    build_virtual_global_batch,
+    create_ep_batch_group,
+)
 from frontier.scheduler.utils.pdaf_wave_validation import validate_wave_stages, validate_a2f_wave_phase
 from frontier.scheduler.utils.forward_step_admission import promote_to_ep_wave, restore_full_stage_owners
 from frontier.scheduler.utils.stage_wakeup import build_stage_wakeup_events
@@ -423,7 +427,17 @@ class BaseClusterScheduler(ABC):
             self._replica_scheduler_count = attn_dp
         self._available_clusters = available_clusters or set()
         self._request_generator_config = request_generator_config
-        self._stage_execution_contexts = self._build_stage_execution_contexts()
+        replica_config = getattr(self._config, "replica_config", None)
+        self._stage_execution_contexts = build_stage_execution_contexts(
+            cluster=self._cluster,
+            cluster_type=self._cluster_type,
+            replica_config=replica_config,
+            replica_dp_size=getattr(
+                self,
+                "_replica_dp_size",
+                getattr(replica_config, "attn_dp", 1) or 1,
+            ),
+        )
 
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name)
@@ -472,22 +486,6 @@ class BaseClusterScheduler(ABC):
         # Current architecture uses EP-based synchronization instead
 
         self._batch_group_creation_counter = 0
-
-    def _build_stage_execution_contexts(self) -> dict[tuple[int, int], StageExecutionContext]:
-        """Compatibility wrapper for stage admission context construction."""
-
-        replica_config = getattr(self._config, "replica_config", None)
-        return build_stage_execution_contexts(
-            cluster=self._cluster,
-            cluster_type=self._cluster_type,
-            replica_config=replica_config,
-            replica_dp_size=getattr(
-                self,
-                "_replica_dp_size",
-                getattr(replica_config, "attn_dp", 1) or 1,
-            ),
-        )
-
 
     def sort_requests(self) -> None:
         self._request_queue.sort(key=lambda request: request._arrived_at)
@@ -711,27 +709,11 @@ class BaseClusterScheduler(ABC):
         return lane_counter * lane_count + lane_id
 
     def _get_decode_target_cluster(self) -> ClusterType:
-        """
-        Determine the target decode cluster based on system architecture.
-
-        This method is called by PREFILL cluster to determine where to send
-        KV cache after prefill completion.
-
-        Returns:
-            ClusterType.DECODE for PD-disaggregation mode
-            ClusterType.DECODE_ATTN for PD+AF-disaggregation mode
-        """
-        from frontier.logger import get_cluster_logger
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-
-        # Check if DECODE cluster exists (PD-disaggregation mode)
-        if ClusterType.DECODE in self._available_clusters:
-            logger.debug(f"[ROUTE] PREFILL → DECODE (PD-disaggregation mode)")
-            return ClusterType.DECODE
-
-        # Default to DECODE_ATTN for PD+AF-disaggregation mode
-        logger.debug(f"[ROUTE] PREFILL → DECODE_ATTN (PD+AF-disaggregation mode)")
-        return ClusterType.DECODE_ATTN
+        return (
+            ClusterType.DECODE
+            if ClusterType.DECODE in self._available_clusters
+            else ClusterType.DECODE_ATTN
+        )
 
     @staticmethod
     def _debug_request_id(request: Request) -> int:
@@ -2230,17 +2212,16 @@ class BaseClusterScheduler(ABC):
 
     def get_af_queue_size(self) -> int:
         """Get the size of the A→F request queue."""
-        if hasattr(self, '_af_batch_queue'):
-            return len(self._af_batch_queue)
-        return 0
+        return len(getattr(self, "_af_batch_queue", ()))
 
     def clear_af_queue(self) -> List:
         """Clear and return all batches from A→F request queue."""
-        if hasattr(self, '_af_batch_queue'):
-            batches = self._af_batch_queue[:]
-            self._af_batch_queue.clear()
-            return batches
-        return []
+        queue = getattr(self, "_af_batch_queue", None)
+        if queue is None:
+            return []
+        batches = list(queue)
+        queue.clear()
+        return batches
 
     def _create_batch_group(
         self,
@@ -2252,19 +2233,17 @@ class BaseClusterScheduler(ABC):
         source_batch_ids: List[int],
         lane_workload: EPLaneWorkload,
     ) -> EPBatchGroup:
-        batch_group = EPBatchGroup(
-            requests,
-            num_tokens,
-            replica_id,
-            ep_id,
-            time,
-            source_batch_ids,
-            lane_workload,
-            self._cluster_type,
+        return create_ep_batch_group(
+            requests=requests,
+            num_tokens=num_tokens,
+            replica_id=replica_id,
+            ep_id=ep_id,
+            time=time,
+            source_batch_ids=source_batch_ids,
+            lane_workload=lane_workload,
+            cluster_type=self._cluster_type,
             is_moe=self._config.replica_config.model_config.is_moe,
         )
-
-        return batch_group
 
     # Compatibility aliases for private callers that still use the old
     # cohort terminology. Internal scheduler paths use the forward-step names.

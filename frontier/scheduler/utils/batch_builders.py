@@ -8,6 +8,32 @@ from frontier.entities import Batch, EPBatchGroup, Request
 from frontier.entities.batch import DecodeCudaGraphMetadata
 
 
+def create_ep_batch_group(
+    *,
+    requests: list[Request],
+    num_tokens: list[int],
+    replica_id: int,
+    ep_id: int,
+    time: float,
+    source_batch_ids: list[int],
+    lane_workload: Any,
+    cluster_type: Any,
+    is_moe: bool,
+) -> EPBatchGroup:
+    """Create one EP batch entity from already validated lane inputs."""
+    return EPBatchGroup(
+        requests,
+        num_tokens,
+        replica_id,
+        ep_id,
+        time,
+        source_batch_ids,
+        lane_workload,
+        cluster_type,
+        is_moe=is_moe,
+    )
+
+
 def build_ep_lane_batch(
     *,
     source_batch: Batch,
