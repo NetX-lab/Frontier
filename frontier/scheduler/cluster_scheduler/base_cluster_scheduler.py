@@ -71,6 +71,7 @@ from frontier.scheduler.utils.pdaf_a2f import prepare_a2f_admission
 from frontier.scheduler.utils.ep_combine import prepare_ep_combine_completion
 from frontier.scheduler.utils.m2n_grouping import prepare_ffn_group_promotion
 from frontier.scheduler.utils.m2n_state import M2NTransferState
+from frontier.scheduler.utils.attention_transfer_state import AttentionTransferState
 from frontier.scheduler.utils.pdaf_phase import (
     prepare_decode_attn_batch_phase,
     apply_decode_attn_batch_phase,
@@ -160,6 +161,45 @@ M2NLaneIdentityScope = LaneIdentityScope
 
 
 class BaseClusterScheduler(ABC):
+    def _get_attention_transfer_state(self) -> AttentionTransferState:
+        state = getattr(self, "_attention_transfer_state", None)
+        if state is None:
+            state = AttentionTransferState()
+            self._attention_transfer_state = state
+        return state
+
+    @property
+    def _a2f_waiting_by_layer(self):
+        return self._get_attention_transfer_state().a2f_waiting_by_layer
+
+    @_a2f_waiting_by_layer.setter
+    def _a2f_waiting_by_layer(self, value):
+        self._get_attention_transfer_state().a2f_waiting_by_layer = value
+
+    @property
+    def _f2a_waiting_by_round(self):
+        return self._get_attention_transfer_state().f2a_waiting_by_round
+
+    @_f2a_waiting_by_round.setter
+    def _f2a_waiting_by_round(self, value):
+        self._get_attention_transfer_state().f2a_waiting_by_round = value
+
+    @property
+    def _decode_attn_idle_expected_lanes(self):
+        return self._get_attention_transfer_state().idle_expected_lanes
+
+    @_decode_attn_idle_expected_lanes.setter
+    def _decode_attn_idle_expected_lanes(self, value):
+        self._get_attention_transfer_state().idle_expected_lanes = value
+
+    @property
+    def _decode_attn_barrier_round_counter(self):
+        return self._get_attention_transfer_state().barrier_round_counter
+
+    @_decode_attn_barrier_round_counter.setter
+    def _decode_attn_barrier_round_counter(self, value):
+        self._get_attention_transfer_state().barrier_round_counter = value
+
     def _get_m2n_state(self) -> M2NTransferState:
         state = getattr(self, "_m2n_state", None)
         if state is None:
@@ -564,21 +604,19 @@ class BaseClusterScheduler(ABC):
 
         # Initialize specialized queues for PD+AF disaggregation
         if self._cluster_type == ClusterType.DECODE_ATTN:
+            self._attention_transfer_state = AttentionTransferState()
             # Queue for receiving requests from decode-ffn cluster (A→F communication)
             self._af_batch_queue = []
             # A→F waiting room is scoped to one concrete decode-attn wave.
             # key=(wire_layer_id, afd_stage_idx) -> {per_lane_queues}
-            self._a2f_waiting_by_layer: Dict[tuple[int, int], dict] = {}
             self._a2f_expected_lanes = [
                 (replica_id, None)
                 for replica_id in list(self._cluster.replicas.keys())
             ]
             self._a2f_group_micro_batches = len(self._a2f_expected_lanes)
             # F→A waiting room keeps per-lane FIFO semantics scoped by next_layer
-            self._f2a_waiting_by_round: Dict[tuple, dict] = {}
             self._f2a_expected_lanes = list(self._a2f_expected_lanes)
             self._f2a_group_micro_batches = len(self._f2a_expected_lanes)
-            self._decode_attn_barrier_round_counter = 0
         elif self._cluster_type == ClusterType.DECODE_FFN:
             # Per-key waiting rooms for grouping distinct lanes (attn→ffn arrivals)
             # key=(layer_id, afd_stage_idx[, barrier_round_id])
