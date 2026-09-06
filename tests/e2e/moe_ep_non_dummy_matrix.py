@@ -48,6 +48,7 @@ from frontier.operators.families import (
     resolve_moe_operator_tp_key,
 )
 from frontier.types import ClusterType
+from tests.scratch_root import resolve_scratch_root
 
 
 ARCHITECTURE_CASE_COUNTS = {
@@ -7894,14 +7895,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.matrix_kind == "optimization":
         manifest_name = "moe_ep_non_dummy_optimization_matrix_manifest.jsonl"
         results_name = "moe_ep_non_dummy_optimization_matrix_results.jsonl"
-        default_output_root = Path(
-            "/data/ycfeng/tmp/frontier_non_dummy_optimization_matrix"
+        default_output_root = (
+            resolve_scratch_root() / "frontier_non_dummy_optimization_matrix"
         )
         cases = build_optimization_matrix(repo_root)
     else:
         manifest_name = "moe_ep_non_dummy_matrix_manifest.jsonl"
         results_name = "moe_ep_non_dummy_matrix_results.jsonl"
-        default_output_root = Path("/data/ycfeng/tmp/frontier_non_dummy_matrix")
+        default_output_root = resolve_scratch_root() / "frontier_non_dummy_matrix"
         cases = build_matrix(repo_root)
     manifest_path = task_dir / manifest_name
     pair_manifest_path = (
