@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from copy import deepcopy
-import csv
 import logging
 import math
-from pathlib import Path
 from numbers import Real
 
 from typing import Any, Dict, List, Tuple, Optional, TYPE_CHECKING
@@ -111,9 +109,7 @@ from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
 )
 from frontier.types import (
     ClusterType,
-    ClusterSchedulerType,
     ReplicaSchedulerType,
-    RequestGeneratorType,
 )
 
 
