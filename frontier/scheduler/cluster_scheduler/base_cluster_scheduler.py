@@ -102,6 +102,7 @@ from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
 from frontier.scheduler.utils.layer_path import uses_shared_layer_path
 from frontier.scheduler.utils.replica_config import resolve_replica_scheduler_config
 from frontier.scheduler.utils.stage_contexts import build_stage_execution_contexts
+from frontier.scheduler.utils.prefix_cache import validate_prefix_cache_config
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -396,82 +397,15 @@ class BaseClusterScheduler(ABC):
         ]
 
     def _validate_prefix_cache_cluster_config(self, replica_scheduler_config) -> None:
-        prefix_enabled = bool(
-            getattr(replica_scheduler_config, "enable_prefix_caching", False)
+        """Compatibility wrapper for prefix-cache configuration validation."""
+
+        validate_prefix_cache_config(
+            replica_scheduler_config=replica_scheduler_config,
+            cluster_type=self._cluster_type,
+            num_replicas=self._num_replicas,
+            cluster_scheduler_config=self._config.cluster_scheduler_config,
+            request_generator_config=getattr(self, "_request_generator_config", None),
         )
-        if not prefix_enabled:
-            return
-
-        scheduler_type = replica_scheduler_config.get_type()
-        if scheduler_type not in {
-            ReplicaSchedulerType.VLLM_V1,
-            ReplicaSchedulerType.SGLANG,
-            ReplicaSchedulerType.SJ2Q_FASTSERVE_LITE,
-            ReplicaSchedulerType.SJ2Q_PENALTY_ONLY,
-            ReplicaSchedulerType.SJ2Q_BOUNDED_CARRYOVER,
-        }:
-            raise ValueError(
-                "Prefix caching only supports vllm_v1, sj2q_fastserve_lite, sj2q_penalty_only, sj2q_bounded_carryover, or sglang replica schedulers. "
-                f"Got {scheduler_type}."
-            )
-
-        if self._cluster_type not in (ClusterType.MONOLITHIC, ClusterType.PREFILL):
-            return
-
-        cluster_scheduler_type = self._config.cluster_scheduler_config.get_type()
-        if self._num_replicas > 1 and cluster_scheduler_type not in {
-            ClusterSchedulerType.STICKY_ROUND_ROBIN,
-            ClusterSchedulerType.STICKY_LOR,
-        }:
-            raise ValueError(
-                "Multi-replica prefix caching requires a sticky cluster scheduler. "
-                f"Got {cluster_scheduler_type}."
-            )
-
-        request_generator_config = getattr(self, "_request_generator_config", None)
-        if request_generator_config is None:
-            return
-
-        request_generator_type = request_generator_config.get_type()
-        if request_generator_type != RequestGeneratorType.TRACE_REPLAY:
-            raise ValueError(
-                "Prefix caching requires a trace request source with session_id "
-                "and block_hash_ids metadata before scheduling. "
-                f"Got {request_generator_type}."
-            )
-
-        trace_file = Path(request_generator_config.trace_file)
-        if not trace_file.exists():
-            raise ValueError(
-                "Prefix caching trace request source requires an existing trace file "
-                f"with session_id and block_hash_ids columns. Got {trace_file}."
-            )
-
-        with trace_file.open("r", encoding="utf-8", newline="") as file:
-            reader = csv.DictReader(file)
-            header = reader.fieldnames
-            required_columns = {"session_id", "block_hash_ids"}
-            missing_columns = sorted(required_columns - set(header or []))
-            if missing_columns:
-                raise ValueError(
-                    "Prefix caching trace request source requires session_id and "
-                    "block_hash_ids columns before scheduling. "
-                    f"Missing columns: {missing_columns}."
-                )
-
-            for row_number, row in enumerate(reader, start=2):
-                missing_values = sorted(
-                    column
-                    for column in required_columns
-                    if row.get(column) is None or not row[column].strip()
-                )
-                if missing_values:
-                    raise ValueError(
-                        "Prefix caching trace request source requires non-empty "
-                        "session_id and block_hash_ids values before scheduling. "
-                        f"Trace file: {trace_file}; row {row_number}; "
-                        f"missing values: {missing_values}."
-                    )
 
     def _get_cluster_specific_replica_scheduler_config(self, config: ClusterConfig, cluster_type: ClusterType):
         """Compatibility wrapper for cluster-local scheduler config resolution."""
