@@ -95,6 +95,7 @@ from frontier.scheduler.utils.execution_time_metrics import (
 )
 from frontier.scheduler.utils.afd_metadata import aggregate_afd_metadata
 from frontier.scheduler.utils.request_selection import collect_active_requests
+from frontier.scheduler.utils.layer_path import uses_shared_layer_path
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -3030,54 +3031,40 @@ class BaseClusterScheduler(ABC):
         ]
 
     def _uses_shared_prefill_ep_wave(self, batch: Batch, layer_id: int) -> bool:
-        """Return whether the canonical shared-domain PREFILL path is active."""
-
-        if self._cluster_type not in (ClusterType.PREFILL, ClusterType.MONOLITHIC):
-            return False
-        replica_config = getattr(self._config, "replica_config", None)
-        model_config = getattr(replica_config, "model_config", None)
-        if model_config is None or not getattr(model_config, "is_moe", False):
-            return False
-        if not isinstance(layer_id, int) or layer_id < 0:
-            raise ValueError("PREFILL layer_id must be an exact non-negative int")
-        if not model_config.is_moe_layer(layer_id):
-            return False
+        """Return whether the canonical shared-domain PREFILL EP path is active."""
+        model_config = getattr(getattr(self._config, "replica_config", None), "model_config", None)
         routing_attr = (
             "_prefill_routing_details"
             if self._cluster_type == ClusterType.PREFILL
             else "_monolithic_routing_details"
         )
-        routing_details = getattr(self._predictor, routing_attr, None)
-        if routing_details is None:
-            raise ValueError(f"Missing {routing_attr} for MoE PREFILL")
-        return True
+        return uses_shared_layer_path(
+            cluster_type=self._cluster_type,
+            allowed_clusters=(ClusterType.PREFILL, ClusterType.MONOLITHIC),
+            model_config=model_config,
+            predictor=self._predictor,
+            layer_id=layer_id,
+            routing_attribute=routing_attr,
+            require_moe_layer=True,
+        )
 
     def _uses_shared_prefill_layer_path(self, batch: Batch, layer_id: int) -> bool:
-        """Return whether a shared-domain MoE model needs layer stepping.
-
-        Mixed models use the same per-layer event loop for both protocols.  The
-        dense branch is still a full-stage operation and bypasses routing and EP
-        materialization inside ``_on_prefill_ep_wave_ready``; this predicate is
-        deliberately broader than ``_uses_shared_prefill_ep_wave`` so dense
-        layers cannot fall into the legacy aggregate MoE path.
-        """
-        if self._cluster_type not in (ClusterType.PREFILL, ClusterType.MONOLITHIC):
-            return False
-        replica_config = getattr(self._config, "replica_config", None)
-        model_config = getattr(replica_config, "model_config", None)
-        if model_config is None or not getattr(model_config, "is_moe", False):
-            return False
-        if not isinstance(layer_id, int) or layer_id < 0:
-            raise ValueError("PREFILL layer_id must be an exact non-negative int")
-        if model_config.is_moe_layer(layer_id):
-            routing_attr = (
-                "_prefill_routing_details"
-                if self._cluster_type == ClusterType.PREFILL
-                else "_monolithic_routing_details"
-            )
-            if getattr(self._predictor, routing_attr, None) is None:
-                raise ValueError(f"Missing {routing_attr} for MoE PREFILL")
-        return True
+        """Return whether a shared-domain PREFILL model needs layer stepping."""
+        model_config = getattr(getattr(self._config, "replica_config", None), "model_config", None)
+        routing_attr = (
+            "_prefill_routing_details"
+            if self._cluster_type == ClusterType.PREFILL
+            else "_monolithic_routing_details"
+        )
+        return uses_shared_layer_path(
+            cluster_type=self._cluster_type,
+            allowed_clusters=(ClusterType.PREFILL, ClusterType.MONOLITHIC),
+            model_config=model_config,
+            predictor=self._predictor,
+            layer_id=layer_id,
+            routing_attribute=routing_attr,
+            require_moe_layer=False,
+        )
 
     def _uses_shared_prefill_layer_protocol(self, batch: Batch, layer_id: int) -> bool:
         """Compatibility alias for the pre-refactor execution-path name."""
@@ -3289,47 +3276,40 @@ class BaseClusterScheduler(ABC):
         ]
 
     def _uses_shared_decode_ep_wave(self, batch: Batch, layer_id: int) -> bool:
-        """Return whether canonical PDD unified-DECODE EP waves are active."""
-
-        if self._cluster_type not in (ClusterType.DECODE, ClusterType.MONOLITHIC):
-            return False
-        replica_config = getattr(self._config, "replica_config", None)
-        model_config = getattr(replica_config, "model_config", None)
-        if model_config is None or not getattr(model_config, "is_moe", False):
-            return False
-        if not isinstance(layer_id, int) or layer_id < 0:
-            raise ValueError("DECODE layer_id must be an exact non-negative int")
-        if not model_config.is_moe_layer(layer_id):
-            return False
+        """Return whether the canonical unified-DECODE EP path is active."""
+        model_config = getattr(getattr(self._config, "replica_config", None), "model_config", None)
         routing_attr = (
             "_decode_routing_details"
             if self._cluster_type == ClusterType.DECODE
             else "_monolithic_routing_details"
         )
-        routing_details = getattr(self._predictor, routing_attr, None)
-        if routing_details is None:
-            raise ValueError(f"Missing {routing_attr} for MoE DECODE")
-        return True
+        return uses_shared_layer_path(
+            cluster_type=self._cluster_type,
+            allowed_clusters=(ClusterType.DECODE, ClusterType.MONOLITHIC),
+            model_config=model_config,
+            predictor=self._predictor,
+            layer_id=layer_id,
+            routing_attribute=routing_attr,
+            require_moe_layer=True,
+        )
 
     def _uses_shared_decode_layer_path(self, batch: Batch, layer_id: int) -> bool:
         """Return whether a shared-domain DECODE model needs layer stepping."""
-        if self._cluster_type not in (ClusterType.DECODE, ClusterType.MONOLITHIC):
-            return False
-        replica_config = getattr(self._config, "replica_config", None)
-        model_config = getattr(replica_config, "model_config", None)
-        if model_config is None or not getattr(model_config, "is_moe", False):
-            return False
-        if not isinstance(layer_id, int) or layer_id < 0:
-            raise ValueError("DECODE layer_id must be an exact non-negative int")
-        if model_config.is_moe_layer(layer_id):
-            routing_attr = (
-                "_decode_routing_details"
-                if self._cluster_type == ClusterType.DECODE
-                else "_monolithic_routing_details"
-            )
-            if getattr(self._predictor, routing_attr, None) is None:
-                raise ValueError(f"Missing {routing_attr} for MoE DECODE")
-        return True
+        model_config = getattr(getattr(self._config, "replica_config", None), "model_config", None)
+        routing_attr = (
+            "_decode_routing_details"
+            if self._cluster_type == ClusterType.DECODE
+            else "_monolithic_routing_details"
+        )
+        return uses_shared_layer_path(
+            cluster_type=self._cluster_type,
+            allowed_clusters=(ClusterType.DECODE, ClusterType.MONOLITHIC),
+            model_config=model_config,
+            predictor=self._predictor,
+            layer_id=layer_id,
+            routing_attribute=routing_attr,
+            require_moe_layer=False,
+        )
 
     def _uses_shared_decode_layer_protocol(self, batch: Batch, layer_id: int) -> bool:
         """Compatibility alias for the pre-refactor execution-path name."""
