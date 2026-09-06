@@ -70,6 +70,7 @@ from frontier.scheduler.utils.pdaf_entries import build_decode_ffn_idle_entries
 from frontier.scheduler.utils.pdaf_a2f import prepare_a2f_admission
 from frontier.scheduler.utils.ep_combine import prepare_ep_combine_completion
 from frontier.scheduler.utils.m2n_grouping import prepare_ffn_group_promotion
+from frontier.scheduler.utils.m2n_state import M2NTransferState
 from frontier.scheduler.utils.pdaf_phase import (
     prepare_decode_attn_batch_phase,
     apply_decode_attn_batch_phase,
@@ -159,6 +160,37 @@ M2NLaneIdentityScope = LaneIdentityScope
 
 
 class BaseClusterScheduler(ABC):
+    def _get_m2n_state(self) -> M2NTransferState:
+        state = getattr(self, "_m2n_state", None)
+        if state is None:
+            state = M2NTransferState()
+            self._m2n_state = state
+        return state
+
+    @property
+    def _m2n_waiting_by_layer(self):
+        return self._get_m2n_state().waiting_by_layer
+
+    @_m2n_waiting_by_layer.setter
+    def _m2n_waiting_by_layer(self, value):
+        self._get_m2n_state().waiting_by_layer = value
+
+    @property
+    def _m2n_ready_groups(self):
+        return self._get_m2n_state().ready_groups
+
+    @_m2n_ready_groups.setter
+    def _m2n_ready_groups(self, value):
+        self._get_m2n_state().ready_groups = value
+
+    @property
+    def _raw_batch_waiting_for_m2n_back(self):
+        return self._get_m2n_state().raw_batches
+
+    @_raw_batch_waiting_for_m2n_back.setter
+    def _raw_batch_waiting_for_m2n_back(self, value):
+        self._get_m2n_state().raw_batches = value
+
     @staticmethod
     def get_pipeline_stage_layer_bounds(
         stage_id: int,
@@ -552,10 +584,7 @@ class BaseClusterScheduler(ABC):
             # key=(layer_id, afd_stage_idx[, barrier_round_id])
             # -> {per_lane_queues, lanes_rr_order, rr_cursor,
             #     expected_lane_contract}
-            self._m2n_waiting_by_layer: Dict[
-                tuple[int, int] | tuple[int, int, int], dict
-            ] = {}
-            self._m2n_ready_groups = deque()  # Deque[List[(batch, transfer_info)]]
+            self._m2n_state = M2NTransferState()
             attn_num_replicas = getattr(self._config, "decode_attn_cluster_num_replicas", None)
             if attn_num_replicas is None:
                 raise ValueError(
@@ -708,7 +737,7 @@ class BaseClusterScheduler(ABC):
         # Current architecture uses EP-based synchronization instead
 
         # Store raw batches by id for O(1) retrieval during F→A return path
-        self._raw_batch_waiting_for_m2n_back = {}
+        self._get_m2n_state().raw_batches = {}
 
         # Initialize periodic scheduling if enabled for this cluster type
         self._is_periodic_scheduling_enabled = self._cluster_type in config.periodic_scheduling_clusters
