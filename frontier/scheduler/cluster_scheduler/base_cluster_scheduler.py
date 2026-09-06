@@ -133,7 +133,10 @@ from frontier.scheduler.utils.layer_path import uses_shared_layer_path
 from frontier.scheduler.utils.replica_config import resolve_replica_scheduler_config
 from frontier.scheduler.utils.stage_contexts import build_stage_execution_contexts
 from frontier.scheduler.utils.prefix_cache import validate_prefix_cache_config
-from frontier.scheduler.utils.dense_metrics import first_dense_layer_id, predict_dense_reference
+from frontier.scheduler.utils.dense_metrics import (
+    complete_dense_layer,
+    build_prefill_metrics_execution_time,
+)
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     StageAdmissionTicket,
     StageExecutionContext,
@@ -339,7 +342,6 @@ class BaseClusterScheduler(ABC):
         trace_identity: Dict[str, Any],
     ) -> None:
         """Emit one source-level record for a materialized EP participant."""
-
         ep_trace.log_workload_trace(
             cluster_type=cluster_type,
             batch_id=batch_id,
@@ -353,7 +355,7 @@ class BaseClusterScheduler(ABC):
             combine_ms=combine_ms,
             post_combine_ms=post_combine_ms,
             trace_identity=trace_identity,
-            format_identity=BaseClusterScheduler._format_ep_trace_identity,
+            format_identity=format_ep_trace_identity,
         )
 
     @staticmethod
@@ -378,7 +380,7 @@ class BaseClusterScheduler(ABC):
             post_combine_time_ms=post_combine_time_ms,
             wave_end_time_s=wave_end_time_s,
             trace_identity=trace_identity,
-            format_identity=BaseClusterScheduler._format_ep_trace_identity,
+            format_identity=format_ep_trace_identity,
         )
 
     @staticmethod
@@ -411,7 +413,7 @@ class BaseClusterScheduler(ABC):
             barrier_start_time_s=barrier_start_time_s,
             barrier_end_time_s=barrier_end_time_s,
             trace_identity=trace_identity,
-            format_identity=BaseClusterScheduler._format_ep_trace_identity,
+            format_identity=format_ep_trace_identity,
         )
 
     @staticmethod
@@ -436,7 +438,7 @@ class BaseClusterScheduler(ABC):
             total_routed_assignments=total_routed_assignments,
             per_ep_routed_tokens=per_ep_routed_tokens,
             trace_identity=trace_identity,
-            format_identity=BaseClusterScheduler._format_ep_trace_identity,
+            format_identity=format_ep_trace_identity,
         )
 
     @staticmethod
@@ -1586,41 +1588,17 @@ class BaseClusterScheduler(ABC):
         phase: str,
         metrics_store,
     ) -> List:
-        """Advance a dense layer without emitting or waiting on an EP collective.
-
-        The existing layer-transition code is shared with the post-MoE path so
-        request counters, per-layer attention scheduling, and final stage
-        accounting stay identical.  A single local entry is used only as an
-        internal handoff to that transition helper; no collective event is
-        created and no EP participant is admitted.
-        """
-        if phase == "prefill":
-            batch_global_id = int(batch.global_id)
-            return self.on_prefill_sync_collective(
-                time,
-                replica_id,
-                stage_id,
-                batch_global_id,
-                "post_moe",
-                layer_id,
-                metrics_store,
-                direct_batch=batch,
-            )
-
-        if phase == "decode":
-            batch_global_id = self._get_decode_sync_wait_key(batch)
-            return self.on_decode_sync_collective(
-                time,
-                replica_id,
-                stage_id,
-                batch_global_id,
-                "post_moe",
-                layer_id,
-                metrics_store,
-                direct_batch=batch,
-            )
-
-        raise ValueError(f"Unsupported dense layer completion phase: {phase!r}")
+        """Advance a dense layer through the existing phase-specific handler."""
+        return complete_dense_layer(
+            self,
+            time=time,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            batch=batch,
+            layer_id=layer_id,
+            phase=phase,
+            metrics_store=metrics_store,
+        )
 
     def on_prefill_sync_collective(
         self,
@@ -1657,48 +1635,11 @@ class BaseClusterScheduler(ABC):
         original_start_time,
     ):
         """Build corrected prefill metrics payload and attach mixed-layer trace hints."""
-        corrected_execution_time = self._create_corrected_execution_time_for_metrics(
-            original_execution_time,
-            actual_execution_time_ms,
-            original_start_time,
-        )
-
-        dense_reference_execution_time = self._get_prefill_dense_reference_execution_time(
-            sample_batch,
-            stage_id,
-        )
-        if dense_reference_execution_time is None:
-            return corrected_execution_time
-
-        corrected_execution_time._trace_dense_mlp_layer_up_proj_execution_time = (
-            dense_reference_execution_time._mlp_layer_up_proj_execution_time
-        )
-        corrected_execution_time._trace_dense_mlp_layer_act_execution_time = (
-            dense_reference_execution_time._mlp_layer_act_execution_time
-        )
-        corrected_execution_time._trace_dense_mlp_layer_down_proj_execution_time = (
-            dense_reference_execution_time._mlp_layer_down_proj_execution_time
-        )
-        corrected_execution_time._trace_dense_layer_id = (
-            self._get_first_dense_layer_id_for_mixed_moe()
-        )
-        return corrected_execution_time
-
-    def _get_first_dense_layer_id_for_mixed_moe(self) -> Optional[int]:
-        """Return first dense FFN layer id for mixed-layer MoE models, else None."""
         model_config = getattr(getattr(self._config, "replica_config", None), "model_config", None)
-        return first_dense_layer_id(model_config)
-
-    def _get_prefill_dense_reference_execution_time(
-        self,
-        sample_batch: Batch,
-        stage_id: int,
-    ) -> Optional[ExecutionTime]:
-        """Predict one dense layer execution for mixed-layer MoE trace completion."""
-        model_config = getattr(getattr(self._config, "replica_config", None), "model_config", None)
-        return predict_dense_reference(
+        return build_prefill_metrics_execution_time(
+            original_execution_time=original_execution_time,
+            sample_batch=sample_batch,
             predictor=self._predictor,
-            batch=sample_batch,
             stage_id=stage_id,
             cluster_type=self._cluster_type,
             model_config=model_config,

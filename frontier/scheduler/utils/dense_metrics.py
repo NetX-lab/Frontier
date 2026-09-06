@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from frontier.scheduler.utils.execution_time_metrics import (
+    build_single_layer_metrics_execution_time,
+)
+
 
 def first_dense_layer_id(model_config: Any) -> Optional[int]:
     """Return the first dense FFN layer in a mixed-MoE model."""
@@ -59,3 +63,76 @@ def predict_dense_reference(
             "mlp_up_proj/mlp_act/mlp_down_proj components"
         )
     return execution_time
+
+
+def complete_dense_layer(
+    scheduler: Any,
+    *,
+    time: float,
+    replica_id: int,
+    stage_id: int,
+    batch: Any,
+    layer_id: int,
+    phase: str,
+    metrics_store: Any,
+) -> list:
+    """Advance a dense layer through the scheduler's existing phase handler."""
+    if phase == "prefill":
+        return scheduler.on_prefill_sync_collective(
+            time,
+            replica_id,
+            stage_id,
+            int(batch.global_id),
+            "post_moe",
+            layer_id,
+            metrics_store,
+            direct_batch=batch,
+        )
+    if phase == "decode":
+        return scheduler.on_decode_sync_collective(
+            time,
+            replica_id,
+            stage_id,
+            scheduler._get_decode_sync_wait_key(batch),
+            "post_moe",
+            layer_id,
+            metrics_store,
+            direct_batch=batch,
+        )
+    raise ValueError(f"Unsupported dense layer completion phase: {phase!r}")
+
+
+def build_prefill_metrics_execution_time(
+    *,
+    original_execution_time: Any,
+    sample_batch: Any,
+    predictor: Any,
+    stage_id: int,
+    cluster_type: Any,
+    model_config: Any,
+) -> Any:
+    """Build prefill metrics payload and annotate mixed-MoE dense timing."""
+    corrected = build_single_layer_metrics_execution_time(original_execution_time)
+    dense_layer_id = first_dense_layer_id(model_config)
+    if dense_layer_id is None:
+        return corrected
+    dense_reference = predict_dense_reference(
+        predictor=predictor,
+        batch=sample_batch,
+        stage_id=stage_id,
+        cluster_type=cluster_type,
+        model_config=model_config,
+    )
+    if dense_reference is None:
+        return corrected
+    corrected._trace_dense_mlp_layer_up_proj_execution_time = (
+        dense_reference._mlp_layer_up_proj_execution_time
+    )
+    corrected._trace_dense_mlp_layer_act_execution_time = (
+        dense_reference._mlp_layer_act_execution_time
+    )
+    corrected._trace_dense_mlp_layer_down_proj_execution_time = (
+        dense_reference._mlp_layer_down_proj_execution_time
+    )
+    corrected._trace_dense_layer_id = dense_layer_id
+    return corrected
