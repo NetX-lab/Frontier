@@ -2848,17 +2848,8 @@ class BaseClusterScheduler(ABC):
             participant_ep_ids=participant_ep_ids,
             trace_identity=trace_identity,
         )
-        dispatch_barrier_time_ms = timing.dispatch_barrier_time_ms
-        dispatch_barrier_end_time_s = timing.dispatch_barrier_end_time_s
-        combine_barrier_time_ms = timing.combine_barrier_time_ms
-        combine_barrier_end_time_s = timing.combine_barrier_end_time_s
-        post_combine_barrier_time_ms = timing.post_combine_barrier_time_ms
         barrier_end_time_s = timing.wave_end_time_s
-        wave_time_ms = (
-            dispatch_barrier_time_ms
-            + combine_barrier_time_ms
-            + post_combine_barrier_time_ms
-        )
+        wave_time_ms = timing.dispatch_barrier_time_ms + timing.combine_barrier_time_ms + timing.post_combine_barrier_time_ms
         for source_batch in non_idle_source_batches:
             component_ledger = getattr(
                 source_batch,
@@ -2981,11 +2972,6 @@ class BaseClusterScheduler(ABC):
         aggregate_batch = wave_inputs.aggregate_batch
         layer_workload = None
         lane_compute_times_ms: list[float] = []
-        pre_dispatch_times_ms: list[float] = []
-        dispatch_times_ms: list[float] = []
-        routed_compute_times_ms: list[float] = []
-        combine_times_ms: list[float] = []
-        post_combine_times_ms: list[float] = []
         if model_config.is_moe_layer(layer_id):
             layer_workload = self._materialize_layer_ep_workload_for_batch(
                 batch=aggregate_batch,
@@ -3093,11 +3079,6 @@ class BaseClusterScheduler(ABC):
             participant_ep_ids=participant_ep_ids,
             trace_identity=trace_identity,
         )
-        dispatch_barrier_time_ms = timing.dispatch_barrier_time_ms
-        dispatch_barrier_end_time_s = timing.dispatch_barrier_end_time_s
-        combine_barrier_time_ms = timing.combine_barrier_time_ms
-        combine_barrier_end_time_s = timing.combine_barrier_end_time_s
-        post_combine_barrier_time_ms = timing.post_combine_barrier_time_ms
         barrier_end_time_s = timing.wave_end_time_s
         for source_batch in non_idle_source_batches:
             source_batch._decode_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
