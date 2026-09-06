@@ -74,7 +74,10 @@ from frontier.scheduler.utils.ep_dispatch import handle_dispatch_ready, prepare_
 from frontier.scheduler.utils.ep_combine_schedule import schedule_combine_completion
 from frontier.scheduler.utils.m2n_grouping import prepare_ffn_group_promotion
 from frontier.scheduler.utils.m2n_state import M2NTransferState
-from frontier.scheduler.utils.attention_transfer_state import AttentionTransferState
+from frontier.scheduler.utils.attention_transfer_state import (
+    AttentionTransferState,
+    initialize_attention_transfer_state,
+)
 from frontier.scheduler.utils.kv_arrival import (
     handle_decode_arrival,
     handle_decode_attn_arrival,
@@ -570,19 +573,7 @@ class BaseClusterScheduler(ABC):
 
         # Initialize specialized queues for PD+AF disaggregation
         if self._cluster_type == ClusterType.DECODE_ATTN:
-            self._attention_transfer_state = AttentionTransferState()
-            # Queue for receiving requests from decode-ffn cluster (A→F communication)
-            self._af_batch_queue = []
-            # A→F waiting room is scoped to one concrete decode-attn wave.
-            # key=(wire_layer_id, afd_stage_idx) -> {per_lane_queues}
-            self._a2f_expected_lanes = [
-                (replica_id, None)
-                for replica_id in list(self._cluster.replicas.keys())
-            ]
-            self._a2f_group_micro_batches = len(self._a2f_expected_lanes)
-            # F→A waiting room keeps per-lane FIFO semantics scoped by next_layer
-            self._f2a_expected_lanes = list(self._a2f_expected_lanes)
-            self._f2a_group_micro_batches = len(self._f2a_expected_lanes)
+            initialize_attention_transfer_state(self)
         elif self._cluster_type == ClusterType.DECODE_FFN:
             from frontier.scheduler.utils.ffn_state import initialize_decode_ffn_state
 
