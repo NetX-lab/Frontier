@@ -69,6 +69,7 @@ from frontier.scheduler.utils.pdaf_validation import (
 from frontier.scheduler.utils.pdaf_entries import build_decode_ffn_idle_entries
 from frontier.scheduler.utils.pdaf_a2f import prepare_a2f_admission
 from frontier.scheduler.utils.ep_combine import prepare_ep_combine_completion
+from frontier.scheduler.utils.m2n_grouping import prepare_ffn_group_promotion
 from frontier.scheduler.utils.pdaf_phase import (
     prepare_decode_attn_batch_phase,
     apply_decode_attn_batch_phase,
@@ -3934,89 +3935,30 @@ class BaseClusterScheduler(ABC):
                 "DECODE_FFN _m2n_ready_groups must be an exact deque"
             )
 
-        room_lanes = self._validate_decode_ffn_waiting_room(
+        raw_idle_lanes = getattr(self, "_ffn_idle_lanes", set())
+        if type(raw_idle_lanes) is not set:
+            raise RuntimeError("DECODE_FFN _ffn_idle_lanes must be an exact set")
+        plan = prepare_ffn_group_promotion(
             group_key=group_key,
             room=room,
+            expected_lanes=expected_lanes,
+            expected_lane_ids=expected_lane_ids,
+            allow_idle_injection=allow_idle_injection,
+            idle_lanes=raw_idle_lanes,
+            validate_room=self._validate_decode_ffn_waiting_room,
+            normalize_lanes=lambda raw_lanes, **kwargs: self._normalize_m2n_lanes(
+                raw_lanes,
+                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
+                field_name=kwargs["field_name"],
+                require_nonempty=kwargs["require_nonempty"],
+            ),
         )
-        normalized_expected_lane_ids = None
-        if expected_lane_ids is not None:
-            normalized_expected_lane_ids = tuple(
-                sorted(
-                    self._normalize_m2n_lanes(
-                        expected_lane_ids,
-                        identity_scope=M2NLaneIdentityScope.FULL_STAGE,
-                        field_name="DECODE_FFN promotion expected lane IDs",
-                        require_nonempty=True,
-                    )
-                )
-            )
-            if normalized_expected_lane_ids != room_lanes:
-                raise ValueError(
-                    "DECODE_FFN promotion expected lane IDs do not match the "
-                    f"waiting-room contract: expected={normalized_expected_lane_ids}, "
-                    f"room={room_lanes}"
-                )
-        if expected_lanes > len(room_lanes):
-            raise ValueError(
-                "DECODE_FFN expected lane count exceeds the waiting-room lane "
-                f"contract: expected={expected_lanes}, "
-                f"contract={room_lanes}"
-            )
-
-        lanes = list(room["lanes_rr_order"])
-        if len(lanes) > expected_lanes:
-            raise ValueError(
-                f"DECODE_FFN grouping lanes exceed expected count: "
-                f"lanes={len(lanes)} expected={expected_lanes}"
-            )
-
-        idle_lanes_to_inject: List[tuple[int, int]] = []
-        if len(lanes) < expected_lanes and allow_idle_injection:
-            raw_idle_lanes = getattr(self, "_ffn_idle_lanes", None)
-            if type(raw_idle_lanes) is not set:
-                raise RuntimeError(
-                    "DECODE_FFN _ffn_idle_lanes must be an exact set when idle "
-                    "injection is enabled"
-                )
-            normalized_idle_lanes = set(
-                self._normalize_m2n_lanes(
-                    tuple(raw_idle_lanes),
-                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
-                    field_name="DECODE_FFN idle lane inventory",
-                    require_nonempty=False,
-                )
-            )
-            if not normalized_idle_lanes.issubset(set(room_lanes)):
-                raise RuntimeError(
-                    "DECODE_FFN idle lane inventory is outside the waiting-room "
-                    f"contract: idle={sorted(normalized_idle_lanes)}, "
-                    f"contract={room_lanes}"
-                )
-            candidate_lane_order = (
-                normalized_expected_lane_ids
-                if normalized_expected_lane_ids is not None
-                else room_lanes
-            )
-            required_idle_lanes = expected_lanes - len(lanes)
-            idle_lanes_to_inject = [
-                lane
-                for lane in candidate_lane_order
-                if lane in normalized_idle_lanes
-                and not room["per_lane_queues"].get(lane)
-            ][:required_idle_lanes]
-
-        prospective_lanes = lanes + idle_lanes_to_inject
-        if len(prospective_lanes) < expected_lanes:
+        if plan is None:
             return False
-        if len(prospective_lanes) > expected_lanes:
-            raise RuntimeError(
-                "DECODE_FFN prospective promotion lanes exceed the expected "
-                f"count: lanes={prospective_lanes}, expected={expected_lanes}"
-            )
-
-        picked_before_idle_injection = [
-            room["per_lane_queues"][lane][0] for lane in lanes
-        ]
+        room_lanes = plan.room_lanes
+        lanes = list(plan.lanes)
+        idle_lanes_to_inject = list(plan.idle_lanes_to_inject)
+        picked_before_idle_injection = list(plan.picked_before_idle_injection)
         padding_plan, padding_summary = self._prepare_dp_padding_on_promotion(
             picked_before_idle_injection
         )
