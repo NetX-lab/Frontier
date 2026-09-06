@@ -208,8 +208,7 @@ def schedule_decode_attn_a2f_ready(
             layer_id=layer_id,
             logger=logger,
         )
-        if idle_expected_lanes is not None:
-            idle_expected_lanes.discard(lane)
+        idle_expected_lanes.discard(lane)
         return events
 
     waiting_rooms = attention_state.a2f_waiting_by_layer
