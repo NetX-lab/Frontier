@@ -103,11 +103,11 @@ from frontier.scheduler.utils.attention_transfer_state import (
 )
 from frontier.scheduler.utils.kv_arrival import (
     handle_decode_arrival,
-    handle_decode_attn_arrival,
+    handle_decode_attn_arrival as handle_kv_decode_attn_arrival,
 )
 from frontier.scheduler.utils.m2n_arrival import (
     route_m2n_arrival,
-    handle_decode_attn_arrival,
+    handle_decode_attn_arrival as handle_m2n_decode_attn_arrival,
     handle_decode_ffn_arrival,
 )
 from frontier.scheduler.utils.sync_entry import enter_decode_sync, enter_prefill_sync
@@ -1354,7 +1354,7 @@ class BaseClusterScheduler(ABC):
         logger,
     ) -> List:
         """Handle KV cache arrival at a decode-attention cluster."""
-        return handle_decode_attn_arrival(self, time, batch, transfer_info, logger)
+        return handle_kv_decode_attn_arrival(self, time, batch, transfer_info, logger)
 
     def _handle_decode_arrival(
         self,
@@ -1657,7 +1657,7 @@ class BaseClusterScheduler(ABC):
         request_end_deferred: bool = False,
     ) -> List:
         """Route DECODE_ATTN M2N completion through the arrival utility."""
-        return handle_decode_attn_arrival(
+        return handle_m2n_decode_attn_arrival(
             self,
             time,
             micro_batch,
