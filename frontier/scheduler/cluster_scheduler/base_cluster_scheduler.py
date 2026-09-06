@@ -3138,105 +3138,18 @@ class BaseClusterScheduler(ABC):
         expected_lanes: int | None = None,
         expected_lane_ids: Optional[List[tuple[int, int]]] = None,
     ) -> bool:
-        if type(allow_idle_injection) is not bool:
-            raise ValueError(
-                "DECODE_FFN allow_idle_injection must be an exact bool, "
-                f"got {allow_idle_injection!r}"
-            )
-        if expected_lanes is None:
-            expected_lanes = getattr(self, "_ffn_group_micro_batches", None)
-        if type(expected_lanes) is not int or expected_lanes <= 0:
-            raise ValueError(
-                "DECODE_FFN expected_lanes must be an exact positive int, "
-                f"got {expected_lanes!r}"
-            )
-        if type(getattr(self, "_m2n_waiting_by_layer", None)) is not dict:
-            raise RuntimeError(
-                "DECODE_FFN _m2n_waiting_by_layer must be an exact dict"
-            )
-        if self._m2n_waiting_by_layer.get(group_key) is not room:
-            raise RuntimeError(
-                "DECODE_FFN promotion room is not the registered waiting-room "
-                f"owner for group_key={group_key!r}"
-            )
-        if type(getattr(self, "_m2n_ready_groups", None)) is not deque:
-            raise RuntimeError(
-                "DECODE_FFN _m2n_ready_groups must be an exact deque"
-            )
+        from frontier.scheduler.utils.m2n_promotion import promote_decode_ffn_group
 
-        raw_idle_lanes = getattr(self, "_ffn_idle_lanes", set())
-        if type(raw_idle_lanes) is not set:
-            raise RuntimeError("DECODE_FFN _ffn_idle_lanes must be an exact set")
-        plan = prepare_ffn_group_promotion(
-            group_key=group_key,
-            room=room,
+        return promote_decode_ffn_group(
+            self,
+            time,
+            group_key,
+            room,
+            logger,
+            allow_idle_injection=allow_idle_injection,
             expected_lanes=expected_lanes,
             expected_lane_ids=expected_lane_ids,
-            allow_idle_injection=allow_idle_injection,
-            idle_lanes=raw_idle_lanes,
-            validate_room=self._validate_decode_ffn_waiting_room,
-            normalize_lanes=lambda raw_lanes, **kwargs: self._normalize_m2n_lanes(
-                raw_lanes,
-                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
-                field_name=kwargs["field_name"],
-                require_nonempty=kwargs["require_nonempty"],
-            ),
         )
-        if plan is None:
-            return False
-        room_lanes = plan.room_lanes
-        lanes = list(plan.lanes)
-        idle_lanes_to_inject = list(plan.idle_lanes_to_inject)
-        picked_before_idle_injection = list(plan.picked_before_idle_injection)
-        padding_plan, padding_summary = self._prepare_dp_padding_on_promotion(
-            picked_before_idle_injection
-        )
-
-        if idle_lanes_to_inject:
-            injected_lanes = self._inject_ffn_idle_lanes_for_barrier(
-                time,
-                group_key,
-                room,
-                logger,
-                expected_lane_ids=idle_lanes_to_inject,
-            )
-            if injected_lanes != idle_lanes_to_inject:
-                raise RuntimeError(
-                    "DECODE_FFN idle lane injection did not match its prepared "
-                    f"plan: prepared={idle_lanes_to_inject}, actual={injected_lanes}"
-                )
-
-        lanes = list(room["lanes_rr_order"])
-        picked = [room["per_lane_queues"][lane][0] for lane in lanes]
-        if len(picked) != expected_lanes:
-            raise RuntimeError(
-                "DECODE_FFN promotion head count changed after preparation: "
-                f"picked={len(picked)}, expected={expected_lanes}"
-            )
-
-        for batch, padded_metadata in padding_plan:
-            batch.afd_stage_metadata = padded_metadata
-        for lane in lanes:
-            room["per_lane_queues"][lane].popleft()
-
-        ready = [(batch, info) for batch, info in picked if not batch.is_idle]
-        if ready:
-            self._m2n_ready_groups.append(ready)
-
-        room["lanes_rr_order"] = deque(
-            [ln for ln in room["lanes_rr_order"] if room["per_lane_queues"][ln]]
-        )
-        if not room["lanes_rr_order"]:
-            self._m2n_waiting_by_layer.pop(group_key, None)
-
-        if padding_summary is not None:
-            padded_lane_count, dp_stage_max_tokens = padding_summary
-            logger.info(
-                f"[FFN-DP-PADDING] Applied DP padding across {padded_lane_count} "
-                f"lanes: dp_stage_max_tokens={dp_stage_max_tokens} "
-                f"padded_total={sum(dp_stage_max_tokens)}"
-            )
-        return True
 
     def _inject_ffn_idle_lanes_for_barrier(
         self,
