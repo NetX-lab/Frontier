@@ -6,6 +6,63 @@ from frontier.entities import Batch
 from frontier.types import ClusterType
 
 
+def handle_decode_ffn_arrival(
+    scheduler: Any, time: float, batch: Batch, transfer_info: Any, logger: Any
+) -> list:
+    """Queue one DECODE_ATTN-to-FFN transfer and trigger promotion."""
+
+    from collections import defaultdict, deque
+    from frontier.events.cluster_schedule_event import ClusterScheduleEvent
+
+    (
+        layer_id,
+        afd_stage_idx,
+        barrier_round_id,
+        lane,
+        barrier_expected_lanes,
+        expected_lanes,
+        group_key,
+        expected_lane_contract,
+        target_replica_id,
+    ) = scheduler._validate_decode_ffn_m2n_receipt(batch, transfer_info)
+    transfer_info.target_ffn_replica_id = target_replica_id
+    transfer_info.target_execution_replica_id = target_replica_id
+    transfer_info.target_execution_replica_local_id = None
+    for request in batch.requests:
+        request.on_arrival(time, scheduler._cluster_type)
+    batch.decode_ffn_m2n_arrival_time = time
+    room = scheduler._m2n_waiting_by_layer.get(group_key)
+    if room is None:
+        room = {
+            "per_lane_queues": defaultdict(deque),
+            "lanes_rr_order": deque(),
+            "rr_cursor": 0,
+            "expected_lane_contract": expected_lane_contract,
+        }
+        scheduler._m2n_waiting_by_layer[group_key] = room
+    if lane not in room["per_lane_queues"]:
+        room["per_lane_queues"][lane] = deque()
+    was_empty = len(room["per_lane_queues"][lane]) == 0
+    room["per_lane_queues"][lane].append((batch, transfer_info))
+    if was_empty:
+        room["lanes_rr_order"].append(lane)
+    logger.info(
+        f"[FFN-M2N-ARRIVAL] wire_layer={layer_id} afd_stage_idx={afd_stage_idx} "
+        f"barrier_round_id={barrier_round_id} lane={lane} "
+        f"enqueued; ready_lanes={len(room['lanes_rr_order'])}/{expected_lanes}"
+    )
+    promoted = scheduler._try_promote_decode_ffn_group(
+        time,
+        group_key,
+        room,
+        logger,
+        allow_idle_injection=(not batch.is_idle) and not bool(barrier_expected_lanes),
+        expected_lanes=expected_lanes,
+        expected_lane_ids=barrier_expected_lanes or None,
+    )
+    return [ClusterScheduleEvent(time, scheduler._cluster_type)] if promoted else []
+
+
 def route_m2n_arrival(
     scheduler: Any,
     time: float,

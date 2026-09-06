@@ -92,6 +92,7 @@ from frontier.scheduler.utils.kv_arrival import (
 from frontier.scheduler.utils.m2n_arrival import (
     route_m2n_arrival,
     handle_decode_attn_arrival,
+    handle_decode_ffn_arrival,
 )
 from frontier.scheduler.utils.sync_entry import enter_decode_sync, enter_prefill_sync
 from frontier.scheduler.utils.pdaf_phase import (
@@ -2217,72 +2218,9 @@ class BaseClusterScheduler(ABC):
         transfer_info: "M2NTransferInfo",
         logger
     ) -> List:
-        """Handle M2N transfer arrival at decode-ffn cluster (EP=1 path).
+        """Queue one DECODE_ATTN-to-FFN transfer and trigger promotion."""
 
-        When activation data arrives from decode-attn cluster:
-        1. Record per-request arrival time at DECODE_FFN
-        2. Add to per-(wire-layer, stage-slot) grouping barrier
-        3. When all expected lanes arrive, promote group and trigger scheduling
-        """
-        from frontier.events.cluster_schedule_event import ClusterScheduleEvent
-
-        (
-            layer_id,
-            afd_stage_idx,
-            barrier_round_id,
-            lane,
-            barrier_expected_lanes,
-            expected_lanes,
-            group_key,
-            expected_lane_contract,
-            target_replica_id,
-        ) = self._validate_decode_ffn_m2n_receipt(batch, transfer_info)
-
-        transfer_info.target_ffn_replica_id = target_replica_id
-        transfer_info.target_execution_replica_id = target_replica_id
-        transfer_info.target_execution_replica_local_id = None
-
-        for request in batch.requests:
-            request.on_arrival(time, self._cluster_type)
-
-        batch.decode_ffn_m2n_arrival_time = time
-
-        room = self._m2n_waiting_by_layer.get(group_key)
-        if room is None:
-            room = {
-                'per_lane_queues': defaultdict(deque),
-                'lanes_rr_order': deque(),
-                'rr_cursor': 0,
-                'expected_lane_contract': expected_lane_contract,
-            }
-            self._m2n_waiting_by_layer[group_key] = room
-
-        if lane not in room['per_lane_queues']:
-            room['per_lane_queues'][lane] = deque()
-        was_empty = (len(room['per_lane_queues'][lane]) == 0)
-        room['per_lane_queues'][lane].append((batch, transfer_info))
-        if was_empty:
-            room['lanes_rr_order'].append(lane)
-
-        logger.info(
-            f"[FFN-M2N-ARRIVAL] wire_layer={layer_id} afd_stage_idx={afd_stage_idx} "
-            f"barrier_round_id={barrier_round_id} lane={lane} "
-            f"enqueued; ready_lanes={len(room['lanes_rr_order'])}/{expected_lanes}"
-        )
-
-        promoted = self._try_promote_decode_ffn_group(
-            time,
-            group_key,
-            room,
-            logger,
-            allow_idle_injection=(not batch.is_idle) and not bool(barrier_expected_lanes),
-            expected_lanes=expected_lanes,
-            expected_lane_ids=barrier_expected_lanes or None,
-        )
-
-        if promoted:
-            return [ClusterScheduleEvent(time, self._cluster_type)]
-        return []
+        return handle_decode_ffn_arrival(self, time, batch, transfer_info, logger)
 
     def _try_promote_decode_ffn_group(
         self,
