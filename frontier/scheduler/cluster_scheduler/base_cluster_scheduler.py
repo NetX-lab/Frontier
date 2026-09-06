@@ -81,6 +81,13 @@ from frontier.scheduler.utils.pdaf_attention import (
     get_a2f_expected_lanes,
     get_f2a_expected_lanes,
 )
+from frontier.scheduler.utils.collective_timing import (
+    attention_delay_seconds,
+    prepare_decode_final_timing,
+    prepare_prefill_final_timing,
+    select_active_batch,
+    validate_decode_layer_advance,
+)
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -3741,9 +3748,7 @@ class BaseClusterScheduler(ABC):
             # post_moe is a synchronization boundary. Model execution for this layer has
             # already been accounted in pre_moe; only layer transition / pipeline handoff
             # remains after this collective.
-            sample_batch = next(
-                (b for b in participant_batches.values() if not b.is_idle), None
-            )
+            sample_batch = select_active_batch(participant_batches)
             if sample_batch is None:
                 logger.warning(
                     f"[PREFILL_SYNC][COLLECTIVE] post_moe has no non-idle batch for "
@@ -3792,10 +3797,8 @@ class BaseClusterScheduler(ABC):
                     layer_id=next_layer_id,
                     include_ffn=False,
                 )
-                attention_time_ms = (
-                    next_layer_execution_time.get_single_layer_attention_scope_time()
-                )
-                attention_time = attention_time_ms * 1e-3
+                attention_time_ms = next_layer_execution_time.get_single_layer_attention_scope_time()
+                attention_time = attention_delay_seconds(next_layer_execution_time)
                 total_time_to_next_sync = attention_time
 
                 for replica_local_id, batch in participant_batches.items():
@@ -3879,18 +3882,6 @@ class BaseClusterScheduler(ABC):
                             f"batch_global_id={batch_global_id}, batch_id={batch.id}"
                         )
                     original_start_time = batch._prefill_stage_start_time
-                    elapsed_stage_wall_time = time - original_start_time
-                    if elapsed_stage_wall_time < 0:
-                        raise ValueError(
-                            "Prefill sync completion time is earlier than the recorded "
-                            "stage start time: "
-                            f"replica={replica_id}, replica_local_id={replica_local_id}, "
-                            f"stage={stage_id}, "
-                            f"layer={layer_id}, batch_global_id={batch_global_id}, "
-                            f"time={time}, original_start_time={original_start_time}, "
-                            f"elapsed_stage_wall_time={elapsed_stage_wall_time}"
-                        )
-
                     component_ledger = getattr(
                         batch,
                         "_prefill_model_execution_components_ms_by_stage",
@@ -3908,28 +3899,18 @@ class BaseClusterScheduler(ABC):
                             f"stage={stage_id}, layer={layer_id}, "
                             f"batch_global_id={batch_global_id}, batch_id={batch.id}"
                         )
-                    explicit_model_execution_time = (
-                        math.fsum(component_ledger[stage_id]) * 1e-3
+                    final_timing = prepare_prefill_final_timing(
+                        execution_time,
+                        component_ledger[stage_id],
+                        time,
+                        original_start_time,
                     )
-
-                    stage_cpu_overhead = execution_time.total_time - execution_time.model_time
-                    if stage_cpu_overhead < 0:
-                        raise ValueError(
-                            "Prefill stage CPU overhead cannot be negative: "
-                            f"replica={replica_id}, replica_local_id={replica_local_id}, "
-                            f"stage={stage_id}, "
-                            f"layer={layer_id}, batch_global_id={batch_global_id}, "
-                            f"total_time={execution_time.total_time}, "
-                            f"model_time={execution_time.model_time}, "
-                            f"stage_cpu_overhead={stage_cpu_overhead}"
-                        )
-
                     actual_model_execution_time = (
-                        explicit_model_execution_time + pipeline_time
+                        final_timing.explicit_model_time + final_timing.pipeline_time
                     )
-                    total_final_time = pipeline_time + stage_cpu_overhead
-                    completion_time = time + total_final_time
-                    actual_execution_time = completion_time - original_start_time
+                    total_final_time = final_timing.total_time
+                    completion_time = final_timing.completion_time
+                    actual_execution_time = final_timing.actual_execution_time
 
                     # Create batch stage for metrics
                     batch_stage, _ = stage_scheduler.predict_and_create_stage(batch, skip_get_execution_time=True)
@@ -4432,8 +4413,9 @@ class BaseClusterScheduler(ABC):
         )
 
         events = []
-        non_idle_batches = [batch for batch in dp_batches.values() if not batch.is_idle]
-        sample_batch = non_idle_batches[0] if non_idle_batches else next(iter(dp_batches.values()))
+        sample_batch = select_active_batch(dp_batches)
+        if sample_batch is None:
+            sample_batch = next(iter(dp_batches.values()))
         canonical_ep_wave = hasattr(sample_batch, "_decode_ep_wave_lane_times_ms")
         if direct_batch is None and not canonical_ep_wave:
             raise RuntimeError(
@@ -4468,19 +4450,7 @@ class BaseClusterScheduler(ABC):
                 active_request_ids.add(request.id)
                 active_unique_requests.append(request)
 
-        for request in active_unique_requests:
-            if request.completed_layer_count >= total_layers:
-                raise ValueError(
-                    "Decode post_moe layer counter cannot advance: "
-                    f"request_id={request.id}, "
-                    f"completed_layer_count={request.completed_layer_count}, "
-                    f"total_layers={total_layers}, "
-                    "current_decode_token_index="
-                    f"{request.current_decode_token_index}, "
-                    "spec_last_committed_tokens="
-                    f"{getattr(request, '_spec_last_committed_tokens', None)}; "
-                    "possible missing prior decode-step reset"
-                )
+        validate_decode_layer_advance(active_unique_requests, total_layers)
 
         for request in active_unique_requests:
             request.mb_on_step_layer_count_increment(num_layers_completed=1)
@@ -4513,10 +4483,7 @@ class BaseClusterScheduler(ABC):
                 layer_id=next_layer_id,
                 include_ffn=False,
             )
-            attention_time = (
-                next_layer_execution_time.get_single_layer_attention_scope_time()
-                * 1e-3
-            )
+            attention_time = attention_delay_seconds(next_layer_execution_time)
 
             for participant_id, batch in dp_batches.items():
                 if batch.is_idle:
@@ -4566,30 +4533,9 @@ class BaseClusterScheduler(ABC):
             include_ffn=False,
         )
         is_last_stage = stage_scheduler.is_last_stage
-        pipeline_time = full_stage_execution_time.pipeline_time * 1e-3
-        cpu_overhead_time = max(
-            full_stage_execution_time.total_time
-            - full_stage_execution_time.model_time,
-            0.0,
-        )
-        decode_draft_proposer_time = (
-            full_stage_execution_time.decode_draft_proposer_time * 1e-3
-        )
-        mtp_terminal_overshoot_time = (
-            float(
-                getattr(
-                    full_stage_execution_time,
-                    "mtp_terminal_overshoot_time",
-                    0.0,
-                )
-            )
-            * 1e-3
-        )
-        total_final_time = (
-            pipeline_time
-            + cpu_overhead_time
-            + decode_draft_proposer_time
-        )
+        final_timing = prepare_decode_final_timing(full_stage_execution_time)
+        mtp_terminal_overshoot_time = final_timing.mtp_terminal_overshoot_time
+        total_final_time = final_timing.total_time
         for participant_id, batch in dp_batches.items():
             if batch.is_idle:
                 logger.info(
