@@ -558,55 +558,9 @@ class BaseClusterScheduler(ABC):
                 f"{self._replica_scheduler_count}"
             )
 
-        # Initialize replica schedulers based on cluster type
-        # DECODE_FFN: Use EP (Expert Parallel) concept instead of DP
-        # Other clusters: one full-model child scheduler per Replica.
-        self._replica_schedulers = {}
-        self._full_stage_replica_schedulers = {}
+        from frontier.scheduler.utils.replica_state import initialize_replica_schedulers
 
-        # Get cluster-specific replica scheduler configuration
-        cluster_specific_config = self._get_cluster_specific_replica_scheduler_config(
-            self._config, self._cluster_type
-        )
-        self._replica_scheduler_type = cluster_specific_config.get_type()
-        if type(self._replica_scheduler_type) is not ReplicaSchedulerType:
-            raise TypeError(
-                "Cluster replica scheduler type must be an exact "
-                f"ReplicaSchedulerType, got {self._replica_scheduler_type!r}"
-            )
-        self._validate_prefix_cache_cluster_config(cluster_specific_config)
-
-        # Validate scheduler type for DECODE_FFN cluster
-        # DECODE_FFN requires "orca" scheduler for EP-based workload grouping
-        if self._cluster_type == ClusterType.DECODE_FFN:
-            scheduler_type = cluster_specific_config.get_type()
-            if scheduler_type != ReplicaSchedulerType.ORCA:
-                raise ValueError(
-                    f"DECODE_FFN cluster requires 'orca' scheduler, got '{scheduler_type}'. "
-                    f"Reason: DECODE_FFN uses EP-based workload grouping which is only implemented in OrcaReplicaScheduler."
-                )
-
-        if self._cluster_type == ClusterType.DECODE_FFN:
-            self._replica_ep_size = self._config.replica_config.moe_expert_parallel_size
-
-        self._replica_schedulers, self._full_stage_replica_schedulers = (
-            build_replica_scheduler_maps(
-                cluster=self._cluster,
-                cluster_type=self._cluster_type,
-                scheduler_type=cluster_specific_config.get_type(),
-                replica_config=self._config.replica_config,
-                scheduler_config=cluster_specific_config,
-                request_generator_config=request_generator_config,
-                predictor=self._predictor,
-                af_pipeline_num_micro_batch=getattr(
-                    self._config, "af_pipeline_num_micro_batch", -1
-                ),
-                cluster_scheduler=self,
-                dp_size=getattr(self, "_replica_dp_size", None),
-                ep_size=getattr(self, "_replica_ep_size", None),
-                registry=ReplicaSchedulerRegistry,
-            )
-        )
+        initialize_replica_schedulers(self, request_generator_config, logger)
         self._request_queue = []
         # Sync completion is tracked per concrete batch event.  A cohort ID is
         # a reusable lane-local hint, so it cannot by itself identify a
