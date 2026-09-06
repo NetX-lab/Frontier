@@ -50,12 +50,16 @@ def resolve_replica_scheduler_config(config: Any, cluster_type: ClusterType) -> 
         return copy.deepcopy(base_config)
 
     type_field = f"{prefix}_replica_scheduler_config_type"
-    override_type_name = getattr(config, type_field, None)
+    override_type_name = (
+        getattr(config, type_field, None)
+        if hasattr(config, type_field)
+        else None
+    )
     if override_type_name is None:
         cluster_config = copy.deepcopy(base_config)
     else:
         try:
-            override_type = _SCHEDULER_TYPES[str(override_type_name).lower()]
+            override_type = _SCHEDULER_TYPES[override_type_name.lower()]
         except KeyError as exc:
             raise ValueError(
                 f"Invalid scheduler type '{override_type_name}' for {cluster_type.name}. "
@@ -73,7 +77,8 @@ def resolve_replica_scheduler_config(config: Any, cluster_type: ClusterType) -> 
 
     for field_name in _OVERRIDE_FIELDS:
         config_name = f"{prefix}_replica_scheduler_config_{field_name}"
-        value = getattr(config, config_name, None)
-        if value is not None and hasattr(cluster_config, field_name):
-            setattr(cluster_config, field_name, value)
+        if hasattr(config, config_name):
+            value = getattr(config, config_name)
+            if value is not None and hasattr(cluster_config, field_name):
+                setattr(cluster_config, field_name, value)
     return cluster_config
