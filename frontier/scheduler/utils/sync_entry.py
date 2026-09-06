@@ -51,8 +51,8 @@ def enter_prefill_sync(
     sync_room["batches"][lane_id] = batch
     sync_room["arrival_times"][lane_id] = float(time)
 
-    expected_lanes = int(getattr(scheduler, "_replica_dp_size", 1) or 1)
-    if expected_lanes <= 0:
+    expected_lanes = scheduler._replica_dp_size
+    if type(expected_lanes) is not int or expected_lanes <= 0:
         raise ValueError(f"PREFILL attention-DP lane count must be positive, got {expected_lanes}")
     if len(sync_room["batches"]) < expected_lanes and not batch.is_idle:
         idle_events = []
@@ -174,8 +174,8 @@ def enter_decode_sync(
     sync_room["batches"][lane_id] = batch
     sync_room["arrival_times"][lane_id] = float(time)
 
-    expected_lanes = int(getattr(scheduler, "_replica_dp_size", 1) or 1)
-    if expected_lanes <= 0:
+    expected_lanes = scheduler._replica_dp_size
+    if type(expected_lanes) is not int or expected_lanes <= 0:
         raise ValueError(f"DECODE attention-DP lane count must be positive, got {expected_lanes}")
     if len(sync_room["batches"]) < expected_lanes and not batch.is_idle:
         idle_events = []
