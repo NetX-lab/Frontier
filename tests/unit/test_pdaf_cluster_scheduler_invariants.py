@@ -151,7 +151,6 @@ def test_decode_ffn_arrival_hook_failure_propagates_before_scheduler_progress() 
     scheduler._cluster_type = ClusterType.DECODE_FFN
     scheduler._m2n_waiting_by_layer = {}
     scheduler._m2n_ready_groups = deque()
-    scheduler._is_periodic_scheduling_enabled = False
 
     waiting_state_before = dict(scheduler._m2n_waiting_by_layer)
     ready_state_before = tuple(scheduler._m2n_ready_groups)
@@ -256,7 +255,6 @@ def test_decode_ffn_rejects_malformed_receipt_before_lifecycle_side_effects(
     scheduler._cluster_type = ClusterType.DECODE_FFN
     scheduler._m2n_waiting_by_layer = {}
     scheduler._m2n_ready_groups = deque()
-    scheduler._is_periodic_scheduling_enabled = False
     logger = Mock()
 
     with pytest.raises((TypeError, ValueError), match=error_match):
@@ -291,7 +289,6 @@ def test_decode_ffn_accepts_exact_receipt_metadata() -> None:
     scheduler._cluster_type = ClusterType.DECODE_FFN
     scheduler._m2n_waiting_by_layer = {}
     scheduler._m2n_ready_groups = deque()
-    scheduler._is_periodic_scheduling_enabled = False
     scheduler._ffn_lane_to_target_replica = {(0, None): 9}
     logger = Mock()
 
@@ -342,7 +339,6 @@ def test_decode_ffn_direct_arrival_rejects_mismatched_batch_identity_before_side
     scheduler._cluster_type = ClusterType.DECODE_FFN
     scheduler._m2n_waiting_by_layer = {}
     scheduler._m2n_ready_groups = deque()
-    scheduler._is_periodic_scheduling_enabled = False
 
     with pytest.raises(ValueError, match="batch.*transfer_info.batch|identity"):
         try:
@@ -376,7 +372,6 @@ def test_decode_ffn_private_handler_rejects_wrong_direction_before_side_effects(
     scheduler._cluster_type = ClusterType.DECODE_FFN
     scheduler._m2n_waiting_by_layer = {}
     scheduler._m2n_ready_groups = deque()
-    scheduler._is_periodic_scheduling_enabled = False
     logger = Mock()
 
     with pytest.raises(ValueError, match="target scheduler mismatch|DECODE_FFN"):
@@ -666,7 +661,6 @@ def test_m2n_transfer_end_rejects_malformed_decode_ffn_receipt_before_side_effec
     target_scheduler._cluster_type = ClusterType.DECODE_FFN
     target_scheduler._m2n_waiting_by_layer = {}
     target_scheduler._m2n_ready_groups = deque()
-    target_scheduler._is_periodic_scheduling_enabled = False
     global_scheduler = SimpleNamespace(
         get_cluster_scheduler=Mock(return_value=target_scheduler)
     )
@@ -709,7 +703,6 @@ def test_decode_ffn_empty_metadata_rejects_unconfigured_lane_before_side_effects
     scheduler._ffn_group_micro_batches = 1
     scheduler._m2n_waiting_by_layer = {}
     scheduler._m2n_ready_groups = deque()
-    scheduler._is_periodic_scheduling_enabled = False
     logger = Mock()
 
     with pytest.raises(ValueError, match="Unexpected lane.*DECODE_FFN"):
@@ -745,7 +738,6 @@ def test_decode_ffn_empty_metadata_accepts_configured_lane() -> None:
     scheduler._ffn_group_micro_batches = 1
     scheduler._m2n_waiting_by_layer = {}
     scheduler._m2n_ready_groups = deque()
-    scheduler._is_periodic_scheduling_enabled = False
 
     events = scheduler._handle_m2n_arrival_decode_ffn(
         1.25,
@@ -816,7 +808,6 @@ def test_decode_ffn_rejects_inconsistent_room_lane_contract_before_side_effects(
     scheduler._ffn_group_micro_batches = 3
     scheduler._m2n_waiting_by_layer = {}
     scheduler._m2n_ready_groups = deque()
-    scheduler._is_periodic_scheduling_enabled = False
     logger = Mock()
 
     first_events = scheduler._handle_m2n_arrival_decode_ffn(
@@ -898,7 +889,6 @@ def test_decode_ffn_accepts_consistent_room_lane_contract() -> None:
     scheduler._ffn_group_micro_batches = 2
     scheduler._m2n_waiting_by_layer = {}
     scheduler._m2n_ready_groups = deque()
-    scheduler._is_periodic_scheduling_enabled = False
     lane_contract = ((0, None), (1, None))
 
     first_request = SimpleNamespace(id=34, on_arrival=Mock())
@@ -975,7 +965,6 @@ def test_decode_ffn_rejects_existing_room_without_lane_contract_before_side_effe
     scheduler._ffn_group_micro_batches = 1
     scheduler._m2n_waiting_by_layer = {group_key: corrupt_room}
     scheduler._m2n_ready_groups = deque()
-    scheduler._is_periodic_scheduling_enabled = False
 
     with pytest.raises(
         (RuntimeError, ValueError),
@@ -1032,7 +1021,6 @@ def test_decode_ffn_rejects_corrupt_existing_queue_before_lifecycle_mutation() -
     scheduler._cluster_type = ClusterType.DECODE_FFN
     scheduler._m2n_waiting_by_layer = {group_key: room}
     scheduler._m2n_ready_groups = deque()
-    scheduler._is_periodic_scheduling_enabled = False
     waiting_room_before = scheduler._m2n_waiting_by_layer[group_key]
     queue_before = tuple(room["per_lane_queues"][(0, None)])
     lanes_before = tuple(room["lanes_rr_order"])
@@ -1106,7 +1094,6 @@ def test_decode_ffn_rejects_stale_existing_queue_entry_before_barrier_mix() -> N
     scheduler._cluster_type = ClusterType.DECODE_FFN
     scheduler._m2n_waiting_by_layer = {group_key: room}
     scheduler._m2n_ready_groups = deque()
-    scheduler._is_periodic_scheduling_enabled = False
     queue_before = tuple(room["per_lane_queues"][(0, None)])
     lanes_before = tuple(room["lanes_rr_order"])
 
@@ -1147,7 +1134,6 @@ def _a2f_waiting_room_scheduler(room: dict) -> _ConcreteClusterScheduler:
     scheduler._m2n_transfer_predictor = SimpleNamespace(
         get_transfer_info=Mock(return_value=(128, 0.5)),
     )
-    scheduler._is_periodic_scheduling_enabled = False
     return scheduler
 
 
@@ -2147,7 +2133,6 @@ def _decode_attn_return_fixture(
     scheduler._replica_scheduler_count = 1
     scheduler._f2a_waiting_by_round = {}
     scheduler._af_batch_queue = []
-    scheduler._is_periodic_scheduling_enabled = False
     scheduler._cluster = SimpleNamespace(replicas={0: SimpleNamespace()})
     scheduler._replica_scheduler_type = ReplicaSchedulerType.VLLM_V1
     scheduler._replica_schedulers = {(0, None): replica_scheduler}

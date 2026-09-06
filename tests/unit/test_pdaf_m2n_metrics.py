@@ -164,7 +164,7 @@ def _materialized_ep_ffn_batch(
 
 
 def test_decode_ffn_schedule_records_m2n_waiting_time() -> None:
-    """The actual replica drain time includes barrier and periodic delay."""
+    """The actual replica drain time includes barrier and transfer queue delay."""
 
     scheduler = _decode_ffn_scheduler()
 
