@@ -3197,27 +3197,6 @@ class BaseClusterScheduler(ABC):
             request_end_deferred=request_end_deferred,
         )
 
-    def _is_dense_decode_ffn_workflow(self) -> bool:
-        """Return whether PD-AF decode-FFN has no MoE/EP lane barrier semantics."""
-        replica_config = getattr(self._config, "replica_config", None)
-        model_config = getattr(replica_config, "model_config", None)
-        return not bool(getattr(model_config, "is_moe", False))
-
-    def _partition_decode_attn_lanes_for_dense_ffn(
-        self,
-        lanes: tuple[tuple[int, int], ...],
-    ) -> List[tuple[tuple[int, int], ...]]:
-        """Split a dense A→F barrier cohort into FFN-replica-sized subgroups."""
-        if not lanes:
-            return []
-        ffn_replicas = int(getattr(self._config, "decode_ffn_cluster_num_replicas", 1) or 1)
-        partition_count = max(1, min(ffn_replicas, len(lanes)))
-        chunk_size = (len(lanes) + partition_count - 1) // partition_count
-        return [
-            tuple(lanes[start : start + chunk_size])
-            for start in range(0, len(lanes), chunk_size)
-        ]
-
     def resolve_decode_attn_boundary_first_mixed_global_end_time(
         self,
         time: float,
@@ -3583,11 +3562,6 @@ class BaseClusterScheduler(ABC):
                 "DECODE_ATTN A-to-F barrier round counter must be an exact "
                 f"non-negative int, got {next_round_id!r}"
             )
-        return next_round_id
-
-    def _next_decode_attn_barrier_round_id(self) -> int:
-        next_round_id = self._peek_decode_attn_barrier_round_id()
-        self._decode_attn_barrier_round_counter = next_round_id + 1
         return next_round_id
 
     def _get_decode_attn_a2f_active_local_attn_lanes(
