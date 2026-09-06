@@ -80,10 +80,7 @@ def _write_reference_lifecycle(
         "schema_version": "frontier.pdaf.reference-first-real-decode/v1",
         "producer": {
             "branch_kind": "reference",
-            "reference_repo_root": (
-                "/data/ycfeng/stepfun-performance-optimization/Frontier/"
-                "worktrees/ref-afd-readonly"
-            ),
+            "reference_repo_root": str(harness.REFERENCE_REPO_ROOT),
             "reference_git_head": (
                 "dcb1cc8ee160a9c3c5412293d93b64042960aa4d"
             ),

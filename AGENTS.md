@@ -6,7 +6,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
-| 2026-09-06 | Added the `FRONTIER_TMP_ROOT` override for the heavyweight test-harness scratch root. |
+| 2026-09-06 | Added the `FRONTIER_TMP_ROOT` and `FRONTIER_PDAF_REFERENCE_REPO_ROOT` overrides for developer-specific test-harness paths. |
 | 2026-09-05 | Added the authoritative vLLM parallel-semantics and Frontier lane-mapping contract. |
 | 2026-09-05 | Clarified Replica-local collective backend materialization. |
 
@@ -775,6 +775,10 @@ export FRONTIER_TMP_ROOT=/path/to/large/scratch
 ```
 
 `FRONTIER_WALLTIME_TMPDIR` (sweep-specific child temp directory) must still resolve to a descendant of that root.
+
+### Pinned Reference checkout for PD-AF parity
+
+The PD-AF parity harness (`tests/e2e/pd_af_parity/`) and `tests/integration/test_pdaf_reference_lifecycle_observer.py` compare the current branch against a pinned, read-only Reference checkout whose git HEAD and source hashes are asserted at runtime. Its location is resolved by `tests/e2e/pd_af_parity/reference_repo_root.py`, with the historical default `/data/ycfeng/stepfun-performance-optimization/Frontier/worktrees/ref-afd-readonly`. If your checkout lives elsewhere, point `FRONTIER_PDAF_REFERENCE_REPO_ROOT` at it (absolute path). Only the location is configurable; the pinned identity checks are unchanged, so the tests still require a checkout at the pinned commit.
 
 ## Contributing
 

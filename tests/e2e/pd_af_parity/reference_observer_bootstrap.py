@@ -15,11 +15,14 @@ from pathlib import Path
 from types import ModuleType
 from typing import Sequence
 
-
-REFERENCE_REPO_ROOT = Path(
-    "/data/ycfeng/stepfun-performance-optimization/Frontier/"
-    "worktrees/ref-afd-readonly"
+from tests.e2e.pd_af_parity.reference_repo_root import (
+    REFERENCE_REPO_ROOT_ENV,
+    resolve_reference_repo_root,
 )
+
+
+# Resolved once at import so callers and tests can treat it as a stable pin.
+REFERENCE_REPO_ROOT = resolve_reference_repo_root()
 REFERENCE_GIT_HEAD = "dcb1cc8ee160a9c3c5412293d93b64042960aa4d"
 REFERENCE_SOURCE_IDENTITIES = {
     "request_source_sha256": (
@@ -95,7 +98,8 @@ def _require_reference_root(value: str | Path) -> Path:
     if root != expected:
         raise ReferenceObserverBootstrapError(
             "reference_repo_root must equal the pinned Reference repo root: "
-            f"expected={expected}, actual={root}"
+            f"expected={expected}, actual={root} "
+            f"(set {REFERENCE_REPO_ROOT_ENV} to relocate the pinned checkout)"
         )
     return root
 
