@@ -5,6 +5,7 @@ import pytest
 
 from frontier.entities import Batch
 from frontier.scheduler.utils.m2n_events import build_aggregated_batch_transfer_events
+from frontier.scheduler.utils.m2n_arrival import handle_decode_ffn_arrival
 from frontier.scheduler.utils.m2n_promotion import promote_decode_ffn_group
 from frontier.scheduler.utils.ep_combine import prepare_ep_combine_completion
 from frontier.scheduler.utils.expert_parallel import EPLaneWorkload
@@ -178,6 +179,36 @@ def test_ffn_promotion_requires_idle_lane_state_when_injection_is_enabled() -> N
             room,
             logger=SimpleNamespace(info=lambda *_: None),
             allow_idle_injection=True,
+        )
+
+
+def test_m2n_arrival_rejects_present_null_waiting_room() -> None:
+    group_key = (4, 2)
+    scheduler = SimpleNamespace(
+        _cluster_type=ClusterType.DECODE_FFN,
+        _m2n_waiting_by_layer={group_key: None},
+        _validate_decode_ffn_m2n_receipt=lambda _batch, _info: (
+            4,
+            2,
+            None,
+            (0, 0),
+            ((0, 0),),
+            1,
+            group_key,
+            ((0, 0),),
+            0,
+        ),
+    )
+    batch = SimpleNamespace(requests=[], is_idle=False)
+    transfer_info = SimpleNamespace()
+
+    with pytest.raises(RuntimeError, match="waiting room must be an exact dict"):
+        handle_decode_ffn_arrival(
+            scheduler,
+            time=0.0,
+            batch=batch,
+            transfer_info=transfer_info,
+            logger=SimpleNamespace(info=lambda *_args: None),
         )
 
 

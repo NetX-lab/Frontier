@@ -31,15 +31,26 @@ def handle_decode_ffn_arrival(
     for request in batch.requests:
         request.on_arrival(time, scheduler._cluster_type)
     batch.decode_ffn_m2n_arrival_time = time
-    room = scheduler._m2n_waiting_by_layer.get(group_key)
-    if room is None:
+    waiting_rooms = scheduler._m2n_waiting_by_layer
+    if type(waiting_rooms) is not dict:
+        raise RuntimeError(
+            "DECODE_FFN _m2n_waiting_by_layer must be an exact dict"
+        )
+    room_exists = group_key in waiting_rooms
+    room = waiting_rooms[group_key] if room_exists else None
+    if room_exists and type(room) is not dict:
+        raise RuntimeError(
+            "DECODE_FFN M2N waiting room must be an exact dict when present: "
+            f"group_key={group_key!r}, room={room!r}"
+        )
+    if not room_exists:
         room = {
             "per_lane_queues": defaultdict(deque),
             "lanes_rr_order": deque(),
             "rr_cursor": 0,
             "expected_lane_contract": expected_lane_contract,
         }
-        scheduler._m2n_waiting_by_layer[group_key] = room
+        waiting_rooms[group_key] = room
     if lane not in room["per_lane_queues"]:
         room["per_lane_queues"][lane] = deque()
     was_empty = len(room["per_lane_queues"][lane]) == 0
