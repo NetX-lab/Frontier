@@ -43,23 +43,25 @@ def log_combine_completion(
         getattr(ep_batch, "_ep_dispatch_collective_end_time_s", None)
         for ep_batch in ep_batches.values()
     }
-    if len(dispatch_end_times) != 1 or None in dispatch_end_times:
+    dispatch_end_time = next(iter(dispatch_end_times), None)
+    if len(dispatch_end_times) != 1 or dispatch_end_time is None:
         raise ValueError(
             "EP combine collective requires one dispatch collective end time "
             f"for every lane: values={sorted(dispatch_end_times, key=repr)}"
         )
-    dispatch_end_time_s = float(next(iter(dispatch_end_times)))
+    dispatch_end_time_s = float(dispatch_end_time)
     dispatch_start_times = {
         getattr(ep_batch, "_ep_dispatch_collective_start_time_s", None)
         for ep_batch in ep_batches.values()
     }
-    if len(dispatch_start_times) != 1 or None in dispatch_start_times:
+    dispatch_start_time = next(iter(dispatch_start_times), None)
+    if len(dispatch_start_times) != 1 or dispatch_start_time is None:
         raise ValueError(
             "EP combine collective requires one dispatch collective arrival "
             "time for every lane: "
             f"values={sorted(dispatch_start_times, key=repr)}"
         )
-    dispatch_start_time_s = float(next(iter(dispatch_start_times)))
+    dispatch_start_time_s = float(dispatch_start_time)
     if dispatch_end_time_s < dispatch_start_time_s:
         raise ValueError("EP dispatch collective end cannot precede dispatch arrival")
     if trace_sync_s < dispatch_end_time_s:
