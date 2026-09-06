@@ -483,6 +483,21 @@ class BaseClusterScheduler(ABC):
 
         self._batch_group_creation_counter = 0
 
+    def _build_stage_execution_contexts(self) -> dict[tuple[int, int], StageExecutionContext]:
+        """Build stage admission contexts through the shared topology utility."""
+
+        replica_config = getattr(self._config, "replica_config", None)
+        return build_stage_execution_contexts(
+            cluster=self._cluster,
+            cluster_type=self._cluster_type,
+            replica_config=replica_config,
+            replica_dp_size=getattr(
+                self,
+                "_replica_dp_size",
+                getattr(replica_config, "attn_dp", 1) or 1,
+            ),
+        )
+
     def sort_requests(self) -> None:
         self._request_queue.sort(key=lambda request: request._arrived_at)
 
