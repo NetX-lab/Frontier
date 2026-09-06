@@ -68,7 +68,7 @@ from frontier.scheduler.utils.pdaf_validation import (
 from frontier.scheduler.utils.pdaf_entries import build_decode_ffn_idle_entries
 from frontier.scheduler.utils.pdaf_a2f import prepare_a2f_admission
 from frontier.scheduler.utils.ep_combine import prepare_ep_combine_completion
-from frontier.scheduler.utils.ep_dispatch import prepare_dispatch_advance
+from frontier.scheduler.utils.ep_dispatch import handle_dispatch_ready, prepare_dispatch_advance
 from frontier.scheduler.utils.m2n_grouping import prepare_ffn_group_promotion
 from frontier.scheduler.utils.m2n_state import M2NTransferState
 from frontier.scheduler.utils.attention_transfer_state import AttentionTransferState
@@ -1415,6 +1415,12 @@ class BaseClusterScheduler(ABC):
         self, time: float, replica_id: int, stage_id: int, batch, ep_id: int
     ):
         """Handle EP dispatch readiness before expert compute begins."""
+        return handle_dispatch_ready(self, time, replica_id, stage_id, batch, ep_id)
+
+    def _legacy_on_ep_alltoall_dispatch_ready(
+        self, time: float, replica_id: int, stage_id: int, batch, ep_id: int
+    ):
+        """Handle EP dispatch readiness before expert compute begins."""
         from frontier.events.ep_alltoall_dispatch_collective_event import (
             EPAllToAllDispatchCollectiveEvent,
         )
@@ -1616,6 +1622,21 @@ class BaseClusterScheduler(ABC):
         return events
 
     def on_ep_alltoall_combine_ready(self, time: float, replica_id: int, stage_id: int, batch, ep_id: int):
+        """Route EP combine readiness through the EP collective handler utility."""
+        from frontier.scheduler.utils.ep_combine_ready import handle_combine_ready
+
+        return handle_combine_ready(
+            self,
+            time=time,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            batch=batch,
+            ep_id=ep_id,
+        )
+
+    def _handle_ep_alltoall_combine_ready(
+        self, time: float, replica_id: int, stage_id: int, batch, ep_id: int
+    ):
         """
         Handle EP AllToAll combine readiness in decode-ffn cluster.
 
