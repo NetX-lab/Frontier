@@ -633,63 +633,14 @@ class BaseClusterScheduler(ABC):
             from frontier.scheduler.utils.ffn_state import initialize_decode_ffn_state
 
             initialize_decode_ffn_state(self, logger)
-        elif self._cluster_type in [ClusterType.PREFILL, ClusterType.MONOLITHIC]:
-            # Prefill sync waiting room: replica_id -> stage_id -> batch_global_id -> layer_id -> sync_stage -> {replica_local_id: {batch, time}}
-            # Used by disaggregated PREFILL and monolithic MoE prefill layer-by-layer paths.
-            # MONOLITHIC MoE decode now also reuses the decode sync waiting-room path.
-            model_is_moe = (
-                self._config.replica_config.model_config is not None
-                and self._config.replica_config.model_config.is_moe
-            )
-            if model_is_moe:
-                self._prefill_sync_waiting_room = defaultdict(
-                    lambda: defaultdict(
-                        lambda: defaultdict(
-                            lambda: defaultdict(
-                                lambda: defaultdict(lambda: {"batches": {}, "arrival_times": {}})
-                            )
-                        )
-                    )
-                )
-                if self._cluster_type == ClusterType.MONOLITHIC:
-                    self._decode_sync_waiting_room = defaultdict(
-                        lambda: defaultdict(
-                            lambda: defaultdict(
-                                lambda: defaultdict(
-                                    lambda: defaultdict(lambda: {"batches": {}, "arrival_times": {}})
-                                )
-                            )
-                        )
-                    )
-                else:
-                    self._decode_sync_waiting_room = None
-            else:
-                # Dense model: no sync waiting room needed
-                self._prefill_sync_waiting_room = None
-                self._decode_sync_waiting_room = None
-        elif self._cluster_type == ClusterType.DECODE:
-            # Decode sync waiting room: replica_id -> stage_id -> batch_global_id -> layer_id -> sync_stage -> {replica_local_id: {batch, time}}
-            # Similar to PREFILL, used for DP synchronization in unified DECODE cluster with MoE
-            # Only initialize for MoE models (dense models don't need sync)
-            # Use model_config.is_moe for MoE detection - NOT parallelism settings
-            self._prefill_sync_waiting_room = None
-            model_is_moe = (
-                self._config.replica_config.model_config is not None
-                and self._config.replica_config.model_config.is_moe
-            )
-            if model_is_moe:
-                self._decode_sync_waiting_room = defaultdict(
-                    lambda: defaultdict(
-                        lambda: defaultdict(
-                            lambda: defaultdict(
-                                lambda: defaultdict(lambda: {"batches": {}, "arrival_times": {}})
-                            )
-                        )
-                    )
-                )
-            else:
-                # Dense model: no sync waiting room needed
-                self._decode_sync_waiting_room = None
+        elif self._cluster_type in (
+            ClusterType.PREFILL,
+            ClusterType.MONOLITHIC,
+            ClusterType.DECODE,
+        ):
+            from frontier.scheduler.utils.sync_state import initialize_sync_waiting_rooms
+
+            initialize_sync_waiting_rooms(self)
 
         # Phase 2.5: Removed deprecated _moe_waiting_room (old MoE synchronization)
         # Current architecture uses EP-based synchronization instead
