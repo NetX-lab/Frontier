@@ -6513,17 +6513,33 @@ class BaseClusterScheduler(ABC):
         self._decode_attn_barrier_round_counter = next_round_id + 1
         return next_round_id
 
-    def _get_decode_attn_a2f_active_local_attn_lanes(self, **kwargs):
-        return get_a2f_active_local_attn_lanes(self, **kwargs)
+    def _get_decode_attn_a2f_active_local_attn_lanes(
+        self, *, cohort_id: int, request_ids: tuple[int, ...],
+        afd_stage_idx: int, layer_id: int,
+    ) -> List[tuple[int, int]]:
+        return get_a2f_active_local_attn_lanes(
+            self, cohort_id=cohort_id, request_ids=request_ids,
+            afd_stage_idx=afd_stage_idx, layer_id=layer_id,
+        )
 
-    def _get_decode_attn_stage_slot_active_lanes(self, afd_stage_idx, **kwargs):
-        return get_stage_slot_active_lanes(self, afd_stage_idx, **kwargs)
+    def _get_decode_attn_stage_slot_active_lanes(
+        self, afd_stage_idx: int, *, replica_id: int | None = None,
+        phase: str | None = None, layer_id: int | None = None,
+    ) -> List[tuple[int, int]]:
+        return get_stage_slot_active_lanes(
+            self, afd_stage_idx, replica_id=replica_id,
+            phase=phase, layer_id=layer_id,
+        )
 
-    def _get_decode_attn_a2f_expected_lanes(self, afd_stage_idx=None, **kwargs):
-        return get_a2f_expected_lanes(self, afd_stage_idx, **kwargs)
+    def _get_decode_attn_a2f_expected_lanes(
+        self, afd_stage_idx: int | None = None, *, layer_id: int | None = None,
+    ) -> List[tuple[int, int]]:
+        return get_a2f_expected_lanes(self, afd_stage_idx, layer_id=layer_id)
 
-    def _get_decode_attn_f2a_expected_lanes(self, replica_id, **kwargs):
-        return get_f2a_expected_lanes(self, replica_id, **kwargs)
+    def _get_decode_attn_f2a_expected_lanes(
+        self, replica_id: int, *, afd_stage_idx: int | None = None,
+    ) -> List[tuple[int, int]]:
+        return get_f2a_expected_lanes(self, replica_id, afd_stage_idx=afd_stage_idx)
 
     def _get_decode_attn_a2f_active_local_attn_lanes_legacy(
         self,
