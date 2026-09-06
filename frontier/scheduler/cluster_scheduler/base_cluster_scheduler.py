@@ -70,6 +70,7 @@ from frontier.scheduler.utils.pdaf_a2f import prepare_a2f_admission
 from frontier.scheduler.utils.pdaf_dense_a2f import release_dense_a2f
 from frontier.scheduler.utils.ep_combine import prepare_ep_combine_completion
 from frontier.scheduler.utils.ep_dispatch import handle_dispatch_ready, prepare_dispatch_advance
+from frontier.scheduler.utils.ep_combine_schedule import schedule_combine_completion
 from frontier.scheduler.utils.m2n_grouping import prepare_ffn_group_promotion
 from frontier.scheduler.utils.m2n_state import M2NTransferState
 from frontier.scheduler.utils.attention_transfer_state import AttentionTransferState
@@ -1621,249 +1622,37 @@ class BaseClusterScheduler(ABC):
         metrics_store,
         combine_end_time: float,
     ):
-        """
-        Handle EP AllToAll combine collective synchronization in decode-ffn cluster.
-
-        This method aggregates results from all EP replicas and creates M2N transfer
-        events to send the aggregated batch back to decode-attn cluster.
-
-        Args:
-            time: Synchronized time when all EP replicas have reached this point
-            replica_id: ID of the replica
-            stage_id: Pipeline stage ID
-            batch_global_id: Global ID of the batch
-            metrics_store: Metrics store for recording performance data
-        """
-        from frontier.logger import get_cluster_logger
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-
-        logger.info(
-            f"[DEBUG] on_ep_alltoall_combine_collective_schedule called: time={time:.3f}s, "
-            f"replica_id={replica_id}, stage_id={stage_id}, batch_global_id={batch_global_id}"
-        )
-
-        time, combine_end_time = validate_completion_time(time, combine_end_time)
-
-        ep_wait_room = self._ep_allgather_waiting_room[replica_id][stage_id][
-            batch_global_id
-        ]
-        ep_batches = ep_wait_room["batches"]
-
-        ep_trace.log_combine_completion(
+        """Route EP combine completion through the scheduling utility."""
+        return schedule_combine_completion(
+            self,
             time=time,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            batch_global_id=batch_global_id,
+            metrics_store=metrics_store,
             combine_end_time=combine_end_time,
-            ep_batches=ep_batches,
-            arrival_times=ep_wait_room.get("arrival_times"),
+        )
+
+    def _legacy_on_ep_alltoall_combine_collective_schedule(
+        self,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        batch_global_id: int,
+        metrics_store,
+        combine_end_time: float,
+    ):
+        """Finish EP combine synchronization through the scheduling utility."""
+        from frontier.scheduler.utils.ep_combine_schedule import schedule_combine_completion
+        return schedule_combine_completion(
+            self,
+            time=time,
             replica_id=replica_id,
             stage_id=stage_id,
             batch_global_id=batch_global_id,
-            cluster_type=self._cluster_type,
-            cluster_logger=logger,
-            formatter=self._format_ep_trace_identity,
+            metrics_store=metrics_store,
+            combine_end_time=combine_end_time,
         )
-
-        logger.info(f"[DEBUG] Retrieved {len(ep_batches)} EP batches from waiting room: "
-                   f"ep_ids={list(ep_batches.keys())}")
-
-        completion_plan = prepare_ep_combine_completion(
-            ep_batches=ep_batches,
-            raw_batch_lookup=self._raw_batch_waiting_for_m2n_back.get,
-            cluster_name=self._cluster_type.name,
-            replica_id=replica_id,
-            stage_id=stage_id,
-            batch_global_id=batch_global_id,
-            token_validator=lambda input_tokens, lane_workload, context: self._validate_token_conservation(
-                input_tokens=input_tokens,
-                lane_workload=lane_workload,
-                context=context,
-            ),
-        )
-        canonical_ep_id = completion_plan.canonical_ep_id
-        raw_batch_ids = list(completion_plan.source_batch_ids)
-        ffn_execution_time = completion_plan.ffn_execution_time
-        logger.info(
-            f"[FFN-EXEC-TIME] Using EP execution time: "
-            f"{ffn_execution_time:.6f}s"
-        )
-        raw_batches = list(completion_plan.raw_batches)
-
-        stage_schedulers = {
-            ep_id: self.get_replica_stage_scheduler(
-                replica_id, ep_id, stage_id
-            )
-            for ep_id in ep_batches.keys()
-        }
-        replica_schedulers = {
-            ep_id: self.get_replica_scheduler(replica_id, ep_id)
-            for ep_id in ep_batches.keys()
-        }
-        activation_bytes_by_ep_id = dict(completion_plan.activation_bytes_by_ep_id)
-
-        prepared_raw_commits = []
-        m2n_events = []
-        active_requests_by_batch = dict(completion_plan.active_requests_by_batch)
-        for batch_id, raw_batch in raw_batches:
-            active_requests = list(active_requests_by_batch[batch_id])
-
-            prepared_events = (
-                self._create_m2n_transfer_events_for_aggregated_batch(
-                    raw_batch,
-                    time,
-                    source_replica_id=replica_id,
-                    source_replica_local_id=canonical_ep_id,
-                )
-            )
-            m2n_events.extend(prepared_events)
-            prepared_raw_commits.append(
-                (batch_id, raw_batch, active_requests)
-            )
-
-        from frontier.events.replica_stage_schedule_event import (
-            ReplicaStageScheduleEvent,
-        )
-
-        schedule_events = [
-            ReplicaStageScheduleEvent(
-                time,
-                replica_id,
-                stage_id,
-                self._cluster_type,
-                ep_id,
-            )
-            for ep_id, stage_scheduler in stage_schedulers.items()
-            if not callable(getattr(stage_scheduler, "is_empty", None))
-            or not bool(stage_scheduler.is_empty())
-        ]
-
-        # DECODE_FFN owns one additional lane-free scheduler for dense FFN
-        # operations.  The EP path bypasses ``BatchStageEndEvent`` and thus
-        # cannot rely on that event to wake a queued full-stage batch.  Once
-        # the EP parent ticket is released below, emit the corresponding
-        # schedule event when dense work is waiting; the stage admission FIFO
-        # still decides whether it may start at this timestamp.
-        full_stage_scheduler = self.get_full_stage_replica_scheduler(replica_id)
-        full_stage_is_empty = getattr(full_stage_scheduler, "is_empty", None)
-        if not callable(full_stage_is_empty):
-            raise ValueError(
-                "DECODE_FFN full-stage Replica scheduler must expose is_empty()"
-            )
-        if not bool(full_stage_is_empty()):
-            schedule_events.append(
-                ReplicaStageScheduleEvent(
-                    time,
-                    replica_id,
-                    stage_id,
-                    self._cluster_type,
-                    None,
-                )
-            )
-
-        self._ep_allgather_waiting_room[replica_id][stage_id].pop(
-            batch_global_id
-        )
-
-        # EP execution bypasses BatchStageEndEvent, so release every stage lane
-        # only after the complete cohort and all return events are prepared.
-        logger.info(
-            "[CRITICAL_FIX] Releasing stage scheduler busy state for all EP replicas"
-        )
-        for ep_id, stage_scheduler in stage_schedulers.items():
-            stage_scheduler.on_stage_end()
-            logger.info(
-                f"[CRITICAL_FIX] Released busy state for replica {replica_id}, "
-                f"ep_id {ep_id}, stage {stage_id}"
-            )
-
-        logger.info(
-            "[CRITICAL_FIX] Decrementing _num_running_batches for all EP "
-            "replica schedulers"
-        )
-        for ep_id, replica_scheduler in replica_schedulers.items():
-            replica_scheduler.decrement_num_running_batches()
-            logger.info(
-                f"[CRITICAL_FIX] Decremented _num_running_batches for replica "
-                f"{replica_id}, ep_id {ep_id}, "
-                f"new count={replica_scheduler.num_running_batches}"
-            )
-
-        for ep_id, replica_scheduler in replica_schedulers.items():
-            activation_bytes = activation_bytes_by_ep_id[ep_id]
-            if activation_bytes:
-                replica_scheduler.release_activation_memory_bytes(
-                    activation_bytes
-                )
-                metrics_store.on_replica_schedule(
-                    time,
-                    replica_id,
-                    replica_scheduler.memory_usage_percent,
-                    self._cluster_type,
-                    replica_local_id=ep_id,
-                )
-
-        for ep_id, ep_batch in ep_batches.items():
-            metrics_store.flush_frontier_stage_batch_ledger_row(
-                time=time,
-                batch_id=ep_batch.id,
-                replica_id=replica_id,
-                stage_id=stage_id,
-                cluster_type=self._cluster_type,
-                replica_local_id=ep_id,
-                completion_source="ep_alltoall_combine_collective",
-            )
-
-        # Record batch-level DECODE_FFN metrics exactly once per raw batch.
-        # EP lanes are synchronized here, so we emit metrics from the canonical lane.
-        metrics_lane_id = canonical_ep_id
-        memory_usage_percent = max(
-            replica_scheduler.memory_usage_percent
-            for replica_scheduler in replica_schedulers.values()
-        )
-
-        for batch_id, raw_batch, active_requests in prepared_raw_commits:
-            self._raw_batch_waiting_for_m2n_back.pop(batch_id)
-
-            # ISSUE-007 DIAGNOSTIC: Log batch attributes before F→A transfer
-            logger.info(
-                f"[ISSUE-007][F2A][CREATE] batch_id={raw_batch.id}, "
-                f"decode_attn_original_replica_id={getattr(raw_batch, 'decode_attn_original_replica_id', 'MISSING')}, "
-                f"decode_attn_original_replica_local_id={getattr(raw_batch, 'decode_attn_original_replica_local_id', 'MISSING')}"
-            )
-
-            # Record DECODE_FFN execution time for each request using the synchronized
-            # stage execution time from EP batches.
-            for request in active_requests:
-                request.on_batch_stage_end(
-                    time, ffn_execution_time, ffn_execution_time, self._cluster_type
-                )
-            logger.info(
-                f"[FFN-EXEC-TIME] Recorded execution time for batch {batch_id}: "
-                f"execution_time={ffn_execution_time:.6f}s, "
-                f"num_requests={len(raw_batch.requests)}"
-            )
-
-            metrics_store.on_batch_end(
-                time,
-                raw_batch,
-                replica_id,
-                memory_usage_percent,
-                self._cluster_type,
-                metrics_lane_id,
-            )
-
-            raw_batch.time = time
-
-        # Parent ownership is released only after combine, transfer creation,
-        # request accounting, and activation cleanup have all completed.
-        canonical_ep_batch = ep_batches[canonical_ep_id]
-        self.release_stage_admission_for_batch(
-            canonical_ep_batch,
-            stage_id=stage_id,
-        )
-        logger.info(f"[DEBUG] Created {len(m2n_events)} M2N transfer events: "
-                    f"{[event.event_type.name if event and hasattr(event, 'event_type') and event.event_type else 'Unknown' for event in m2n_events]}")
-
-        return m2n_events + schedule_events
-
     def _create_m2n_transfer_events_for_aggregated_batch(
         self,
         batch,
