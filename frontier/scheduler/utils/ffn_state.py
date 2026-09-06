@@ -1,9 +1,9 @@
 """DECODE_FFN cluster scheduler state initialization."""
 
-from collections import defaultdict
 from typing import Any, Dict, List, Tuple
 
 from frontier.scheduler.utils.m2n_state import M2NTransferState
+from frontier.scheduler.utils.ep_waiting_state import EPWaitingState
 
 
 def map_source_replica_to_target(
@@ -28,6 +28,7 @@ def map_source_replica_to_target(
 def initialize_decode_ffn_state(scheduler: Any, logger) -> None:
     """Initialize M2N grouping and EP waiting-room state for DECODE_FFN."""
     scheduler._m2n_state = M2NTransferState()
+    scheduler._ep_waiting_state = EPWaitingState()
     attn_num_replicas = getattr(
         scheduler._config, "decode_attn_cluster_num_replicas", None
     )
@@ -102,14 +103,4 @@ def initialize_decode_ffn_state(scheduler: Any, logger) -> None:
         "[FFN-GROUPING] Initialized with "
         f"{source_replica_count} full-stage source Replicas for strict "
         "(layer_id, afd_stage_idx) grouping"
-    )
-    scheduler._ep_allgather_waiting_room = defaultdict(
-        lambda: defaultdict(
-            lambda: defaultdict(lambda: {"batches": {}, "arrival_times": {}})
-        )
-    )
-    scheduler._ep_alltoall_dispatch_waiting_room = defaultdict(
-        lambda: defaultdict(
-            lambda: defaultdict(lambda: {"batches": {}, "arrival_times": {}})
-        )
     )

@@ -9,6 +9,7 @@ class AttentionTransferState:
     def __init__(self) -> None:
         self.a2f_waiting_by_layer = {}
         self.f2a_waiting_by_round = {}
+        self.batch_queue = []
         self.idle_expected_lanes = set()
         self.barrier_round_counter = 0
 
@@ -17,7 +18,6 @@ def initialize_attention_transfer_state(scheduler: Any) -> None:
     """Initialize DECODE_ATTN transfer queues and lane metadata."""
 
     scheduler._attention_transfer_state = AttentionTransferState()
-    scheduler._af_batch_queue = []
     expected_lanes = [
         (replica_id, None)
         for replica_id in list(scheduler._cluster.replicas.keys())

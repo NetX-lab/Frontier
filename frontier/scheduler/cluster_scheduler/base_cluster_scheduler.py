@@ -96,11 +96,7 @@ from frontier.scheduler.utils.ep_combine import prepare_ep_combine_completion
 from frontier.scheduler.utils.ep_dispatch import handle_dispatch_ready, prepare_dispatch_advance
 from frontier.scheduler.utils.ep_combine_schedule import schedule_combine_completion
 from frontier.scheduler.utils.m2n_grouping import prepare_ffn_group_promotion
-from frontier.scheduler.utils.m2n_state import M2NTransferState
-from frontier.scheduler.utils.attention_transfer_state import (
-    AttentionTransferState,
-    initialize_attention_transfer_state,
-)
+from frontier.scheduler.utils.attention_transfer_state import initialize_attention_transfer_state
 from frontier.scheduler.utils.kv_arrival import (
     handle_decode_arrival,
     handle_decode_attn_arrival as handle_kv_decode_attn_arrival,
@@ -144,6 +140,7 @@ from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
 from frontier.scheduler.utils.layer_path import uses_shared_layer_path
 from frontier.scheduler.utils.replica_config import resolve_replica_scheduler_config
 from frontier.scheduler.utils.ffn_state import map_source_replica_to_target
+from frontier.scheduler.utils.scheduler_state_views import SchedulerStateViews
 from frontier.scheduler.utils.stage_contexts import (
     build_stage_execution_contexts,
     pipeline_layer_bounds,
@@ -205,76 +202,7 @@ def resolve_ep_collective_kind(
 M2NLaneIdentityScope = LaneIdentityScope
 
 
-class BaseClusterScheduler(ABC):
-    def _get_attention_transfer_state(self) -> AttentionTransferState:
-        state = getattr(self, "_attention_transfer_state", None)
-        if state is None:
-            state = AttentionTransferState()
-            self._attention_transfer_state = state
-        return state
-
-    @property
-    def _a2f_waiting_by_layer(self):
-        return self._get_attention_transfer_state().a2f_waiting_by_layer
-
-    @_a2f_waiting_by_layer.setter
-    def _a2f_waiting_by_layer(self, value):
-        self._get_attention_transfer_state().a2f_waiting_by_layer = value
-
-    @property
-    def _f2a_waiting_by_round(self):
-        return self._get_attention_transfer_state().f2a_waiting_by_round
-
-    @_f2a_waiting_by_round.setter
-    def _f2a_waiting_by_round(self, value):
-        self._get_attention_transfer_state().f2a_waiting_by_round = value
-
-    @property
-    def _decode_attn_idle_expected_lanes(self):
-        return self._get_attention_transfer_state().idle_expected_lanes
-
-    @_decode_attn_idle_expected_lanes.setter
-    def _decode_attn_idle_expected_lanes(self, value):
-        self._get_attention_transfer_state().idle_expected_lanes = value
-
-    @property
-    def _decode_attn_barrier_round_counter(self):
-        return self._get_attention_transfer_state().barrier_round_counter
-
-    @_decode_attn_barrier_round_counter.setter
-    def _decode_attn_barrier_round_counter(self, value):
-        self._get_attention_transfer_state().barrier_round_counter = value
-
-    def _get_m2n_state(self) -> M2NTransferState:
-        state = getattr(self, "_m2n_state", None)
-        if state is None:
-            state = M2NTransferState()
-            self._m2n_state = state
-        return state
-
-    @property
-    def _m2n_waiting_by_layer(self):
-        return self._get_m2n_state().waiting_by_layer
-
-    @_m2n_waiting_by_layer.setter
-    def _m2n_waiting_by_layer(self, value):
-        self._get_m2n_state().waiting_by_layer = value
-
-    @property
-    def _m2n_ready_groups(self):
-        return self._get_m2n_state().ready_groups
-
-    @_m2n_ready_groups.setter
-    def _m2n_ready_groups(self, value):
-        self._get_m2n_state().ready_groups = value
-
-    @property
-    def _raw_batch_waiting_for_m2n_back(self):
-        return self._get_m2n_state().raw_batches
-
-    @_raw_batch_waiting_for_m2n_back.setter
-    def _raw_batch_waiting_for_m2n_back(self, value):
-        self._get_m2n_state().raw_batches = value
+class BaseClusterScheduler(SchedulerStateViews, ABC):
 
     @staticmethod
     def get_pipeline_stage_layer_bounds(
