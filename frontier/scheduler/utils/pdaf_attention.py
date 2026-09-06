@@ -2,7 +2,7 @@
 
 from typing import Any, List
 
-from frontier.scheduler.utils.pdaf_transfer import LaneIdentityScope
+from frontier.scheduler.utils.pdaf_transfer import LaneIdentityScope, TransferLane
 from frontier.types import ClusterType
 
 
@@ -13,7 +13,7 @@ def get_a2f_active_local_attn_lanes(
     request_ids: tuple[int, ...],
     afd_stage_idx: int,
     layer_id: int,
-) -> List[tuple[int, int]]:
+) -> List[TransferLane]:
     """Return active local-attention lanes for one A-to-F wave."""
     if type(cohort_id) is not int or cohort_id < 0:
         raise ValueError("DECODE_ATTN A-to-F cohort_id must be an exact non-negative int")
@@ -82,7 +82,7 @@ def get_stage_slot_active_lanes(
     replica_id: int | None = None,
     phase: str | None = None,
     layer_id: int | None = None,
-) -> List[tuple[int, int]]:
+) -> List[TransferLane]:
     """Return lanes with an active stage slot, including legacy state fallback."""
     if type(scheduler._cluster_type) is not ClusterType:
         raise RuntimeError("DECODE_ATTN cluster type must be a ClusterType")
@@ -162,7 +162,7 @@ def get_a2f_expected_lanes(scheduler: Any, afd_stage_idx: int | None = None, *, 
     return [] if configured is None else scheduler._normalize_m2n_lanes(configured, identity_scope=LaneIdentityScope.FULL_STAGE, field_name="DECODE_ATTN A-to-F scheduler lane topology", require_nonempty=False)
 
 
-def get_f2a_expected_lanes(scheduler: Any, replica_id: int, *, afd_stage_idx: int | None = None) -> List[tuple[int, int]]:
+def get_f2a_expected_lanes(scheduler: Any, replica_id: int, *, afd_stage_idx: int | None = None) -> List[TransferLane]:
     """Resolve F-to-A lanes with inventory validation and idle-lane filtering."""
     if scheduler._cluster_type != ClusterType.DECODE_ATTN:
         raise ValueError("_get_decode_attn_f2a_expected_lanes is only valid for DECODE_ATTN cluster")
