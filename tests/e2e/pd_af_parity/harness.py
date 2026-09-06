@@ -348,10 +348,6 @@ _EVENT_SCHEMAS = {
     "ClusterScheduleEvent": _event_schema(
         ["replica_dp_set", "replica_ep_set", "request_mapping"]
     ),
-    "PeriodicScheduleEvent": _event_schema(
-        ["scheduling_interval_ms", "replica_dp_set", "request_mapping"],
-        ["replica_ep_set"],
-    ),
     "ReplicaScheduleEvent": _event_schema(
         ["replica_id", "dp_id"], ["request_ids"]
     ),

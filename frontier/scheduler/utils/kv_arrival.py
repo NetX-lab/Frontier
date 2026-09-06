@@ -36,14 +36,6 @@ def handle_decode_attn_arrival(scheduler: Any, time: float, batch: Any, transfer
             request.completed_layer_count,
         )
 
-    if scheduler._is_periodic_scheduling_enabled:
-        logger.info(
-            "Requests cached for periodic scheduling (interval=%sms), current queue size: %s",
-            scheduler._periodic_scheduling_interval_ms,
-            len(scheduler._request_queue),
-        )
-        return []
-
     from frontier.config.global_vars import get_simulation_mode
     from frontier.events.cluster_schedule_event import ClusterScheduleEvent
 
@@ -93,14 +85,6 @@ def handle_decode_arrival(scheduler: Any, time: float, batch: Any, transfer_info
             request.current_decode_token_index,
             request.completed_layer_count,
         )
-
-    if scheduler._is_periodic_scheduling_enabled:
-        logger.info(
-            "Requests cached for periodic scheduling (interval=%sms), current queue size: %s",
-            scheduler._periodic_scheduling_interval_ms,
-            len(scheduler._request_queue),
-        )
-        return []
 
     from frontier.config.global_vars import get_simulation_mode
     from frontier.events.cluster_schedule_event import ClusterScheduleEvent

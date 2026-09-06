@@ -2481,21 +2481,6 @@ class ClusterConfig:
         },
     )
 
-    # === Periodic scheduling configuration ===
-    # default_factory=lambda: [ClusterType.DECODE_ATTN],
-    periodic_scheduling_clusters: List[ClusterType] = field(
-        default_factory=lambda: [],
-        metadata={
-            "help": "List of cluster types that use periodic scheduling instead of event-driven scheduling. "
-            "Currently only DECODE_ATTN is supported.",
-        },
-    )
-    periodic_scheduling_interval_ms: float = field(
-        default=10.0,
-        metadata={
-            "help": "Scheduling interval in milliseconds for clusters using periodic scheduling.",
-        },
-    )
     # === co-location/Monolithic mode fields ===
     num_replicas: Optional[int] = field(
         default=1,
@@ -4229,11 +4214,6 @@ class ClusterConfig:
                 continue
             if self._field_is_set_to_non_default(field_def):
                 return True
-        if any(
-            cluster_type != ClusterType.MONOLITHIC
-            for cluster_type in self.periodic_scheduling_clusters
-        ):
-            return True
         return False
 
     def _create_replica_config_from_fields(self, cluster_prefix: str) -> ReplicaConfig:

@@ -78,10 +78,6 @@ from frontier.scheduler.utils.attention_transfer_state import (
     AttentionTransferState,
     initialize_attention_transfer_state,
 )
-from frontier.scheduler.utils.periodic_scheduling import (
-    configure_periodic_scheduling,
-    build_initial_periodic_events,
-)
 from frontier.scheduler.utils.kv_arrival import (
     handle_decode_arrival,
     handle_decode_attn_arrival,
@@ -594,9 +590,6 @@ class BaseClusterScheduler(ABC):
         # Phase 2.5: Removed deprecated _moe_waiting_room (old MoE synchronization)
         # Current architecture uses EP-based synchronization instead
 
-        # Initialize periodic scheduling if enabled for this cluster type
-        configure_periodic_scheduling(self, config, logger)
-
         self._batch_group_creation_counter = 0
 
     def _build_stage_execution_contexts(self) -> dict[tuple[int, int], StageExecutionContext]:
@@ -627,11 +620,6 @@ class BaseClusterScheduler(ABC):
 
     def add_request(self, request: Request) -> None:
         self._request_queue.append(request)
-
-    def initialize_periodic_scheduling(self, start_time: float = 0.0) -> List:
-        from frontier.logger import get_cluster_logger
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-        return build_initial_periodic_events(self, start_time, logger)
 
     def get_replica(self, replica_id: int) -> Replica:
         return self._cluster.replicas[replica_id]
@@ -2698,8 +2686,6 @@ class BaseClusterScheduler(ABC):
             expected_lane_ids=barrier_expected_lanes or None,
         )
 
-        if self._is_periodic_scheduling_enabled:
-            return []
         if promoted:
             return [ClusterScheduleEvent(time, self._cluster_type)]
         return []

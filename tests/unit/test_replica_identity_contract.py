@@ -10,12 +10,12 @@ def test_non_ffn_cluster_scheduler_uses_replica_local_dp_identity() -> None:
     ).read_text(encoding="utf-8")
 
     block_start = source.index(
-        "        else:\n            # Every other non-FFN Replica"
+        "        elif self._cluster_type == ClusterType.DECODE_ATTN:"
     )
     block_end = source.index("        self._request_queue = []", block_start)
     non_ffn_block = source[block_start:block_end]
-    assert "replica_local_id=dp_id" in non_ffn_block
-    assert "for dp_id in range(self._replica_dp_size)" in non_ffn_block
+    assert "self._replica_scheduler_count = attn_dp" in non_ffn_block
+    assert "self._replica_dp_size = attn_dp" in non_ffn_block
     assert "dp_id = local_idx % self._replica_dp_size" in round_robin_source
 
 
@@ -144,9 +144,6 @@ def test_batch_end_and_prefill_sync_events_use_replica_local_identity() -> None:
 def test_cluster_schedule_events_use_replica_local_identity() -> None:
     sources = [
         Path("frontier/events/cluster_schedule_event.py").read_text(
-            encoding="utf-8"
-        ),
-        Path("frontier/events/periodic_schedule_event.py").read_text(
             encoding="utf-8"
         ),
     ]

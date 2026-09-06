@@ -391,22 +391,6 @@ class Simulator:
         # cannot silently drift from the generated workload.
         self._metric_store.register_total_requests(len(requests))
 
-        # Initialize periodic scheduling events first
-        periodic_events = self._global_scheduler.initialize_periodic_scheduling(
-            start_time=0.0
-        )
-        for event in periodic_events:
-            target_cluster = event.get_target_cluster()
-            if target_cluster in self._cluster_simulators:
-                self._cluster_simulators[target_cluster].add_event(event)
-                logger.info(
-                    f"Added periodic scheduling event to {target_cluster.name} cluster"
-                )
-            else:
-                logger.warning(
-                    f"Target cluster {target_cluster} not found for periodic scheduling event"
-                )
-
         if (
             self._config.simulation_mode == "offline"
             and self._config.is_disaggregated_mode()
@@ -1319,17 +1303,6 @@ class Simulator:
         # Registration errors must propagate so request completion accounting
         # cannot silently drift from the generated workload.
         self._metric_store.register_total_requests(len(requests))
-
-        # Initialize periodic scheduling events first
-        with self._profiler.profile("initialize_periodic_scheduling"):
-            periodic_events = self._global_scheduler.initialize_periodic_scheduling(
-                start_time=0.0
-            )
-        for event in periodic_events:
-            self._add_event(event)
-            logger.info(
-                f"Added periodic scheduling event for {event.get_target_cluster().name} cluster"
-            )
 
         if (
             self._config.simulation_mode == "offline"

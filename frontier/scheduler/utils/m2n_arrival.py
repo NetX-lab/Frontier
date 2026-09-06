@@ -137,8 +137,6 @@ def handle_decode_attn_arrival(
                 request_mutation_signatures=current_mut_sigs,
             )
         )
-    if scheduler._is_periodic_scheduling_enabled:
-        return next_events
     if next_events or ready_for_reschedule:
         return next_events + [ClusterScheduleEvent(time, scheduler._cluster_type)]
     return next_events
