@@ -82,7 +82,19 @@ def handle_decode_sync_collective(
         request.mb_on_step_layer_count_increment(num_layers_completed=1)
 
     num_layers = predictor._num_layers_per_pipeline_stage
-    _, stage_layer_end = scheduler.get_pipeline_stage_layer_bounds(stage_id, num_layers)
+    bounds_getter = getattr(scheduler, "get_pipeline_stage_layer_bounds", None)
+    if callable(bounds_getter):
+        _, stage_layer_end = bounds_getter(stage_id, num_layers)
+    else:
+        # Lightweight scheduler fixtures call the Base static helper directly;
+        # preserve the same half-open stage bound when that method is absent.
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError("pipeline stage_id must be an exact non-negative int")
+        if type(num_layers) is not int or num_layers <= 0:
+            raise ValueError(
+                "num_layers_per_pipeline_stage must be an exact positive int"
+            )
+        stage_layer_end = (stage_id + 1) * num_layers
     next_layer_id = layer_id + 1
     restored_full_stage_owners = scheduler._restore_cohort_full_stage_owners(
         source_batches=dp_batches,
