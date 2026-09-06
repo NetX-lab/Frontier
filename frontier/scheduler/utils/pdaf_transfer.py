@@ -3,12 +3,18 @@
 import math
 from enum import Enum
 from numbers import Real
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeAlias
 
 from collections import defaultdict, deque
 
 from frontier.types import ClusterType, ReplicaSchedulerType
 from frontier.entities import Batch, Request
+
+if TYPE_CHECKING:
+    from frontier.entities.m2n_transfer_info import M2NTransferInfo
+
+
+TransferLane: TypeAlias = tuple[int, int | None]
 
 
 class LaneIdentityScope(Enum):
@@ -104,9 +110,9 @@ def validate_decode_ffn_waiting_room(
     *,
     group_key: tuple[int, int] | tuple[int, int, int],
     room: dict,
-    expected_lane_contract: Optional[tuple[tuple[int, int], ...]] = None,
+    expected_lane_contract: Optional[tuple[TransferLane, ...]] = None,
     incoming_batch: Optional[Batch] = None,
-) -> tuple[tuple[int, int], ...]:
+) -> tuple[TransferLane, ...]:
     """Validate one DECODE_FFN waiting room without mutating runtime state."""
 
     from frontier.entities.m2n_transfer_info import M2NTransferInfo
@@ -455,11 +461,11 @@ def validate_decode_ffn_receipt(
     int,
     int,
     Optional[int],
-    tuple[int, int],
-    List[tuple[int, int]],
+    TransferLane,
+    List[TransferLane],
     int,
     tuple[int, int] | tuple[int, int, int],
-    tuple[tuple[int, int], ...],
+    tuple[TransferLane, ...],
     int,
 ]:
     """Validate one A-to-F receipt without mutating scheduler or batch state."""
@@ -563,7 +569,11 @@ def validate_decode_ffn_receipt(
     else:
         group_key = (layer_id, afd_stage_idx, barrier_round_id)
 
-    if not hasattr(scheduler, "_m2n_waiting_by_layer"):
+    # SchedulerStateViews exposes _m2n_waiting_by_layer through a lazy
+    # property. Inspect the owner slot directly so a missing initialization
+    # cannot be turned into an empty waiting room by hasattr/getattr.
+    scheduler_state = vars(scheduler)
+    if "_m2n_state" not in scheduler_state and "_m2n_waiting_by_layer" not in scheduler_state:
         raise RuntimeError(
             "DECODE_FFN scheduler missing _m2n_waiting_by_layer during receipt "
             "preflight"
@@ -640,7 +650,7 @@ def validate_decode_attn_wave_binding(
     scheduler,
     batch: Batch,
     *,
-    lane: tuple[int, int],
+    lane: TransferLane,
     afd_stage_idx: int,
     requests: List[Request],
     active_requests: List[Request],
@@ -822,9 +832,9 @@ def validate_decode_attn_queued_batch(
     scheduler,
     queued_batch: Batch,
     *,
-    queue_lane: tuple[int, int],
+    queue_lane: TransferLane,
     round_key: tuple,
-    expected_lanes: List[tuple[int, int]],
+    expected_lanes: List[TransferLane],
     current_batch: Batch,
 ) -> tuple[int, int]:
     """Validate an existing F-to-A queue entry without mutating it."""
@@ -1375,7 +1385,7 @@ def validate_decode_attn_receipt(
             "DECODE_ATTN final F-to-A receipt must not have an existing "
             f"waiting room: round_key={round_key}"
         )
-    existing_expected_lanes: tuple[tuple[int, int], ...] = ()
+    existing_expected_lanes: tuple[TransferLane, ...] = ()
     if room is not None:
         if type(room) is not dict:
             raise RuntimeError(
@@ -1673,9 +1683,9 @@ def prepare_decode_attn_idle_lanes(
     *,
     time: float,
     group_key: tuple[int, int],
-    idle_lanes: List[tuple[int, int]],
+    idle_lanes: List[TransferLane],
     is_moe: bool,
-) -> List[tuple[tuple[int, int], tuple[int, Batch]]]:
+) -> List[tuple[TransferLane, tuple[int, Batch]]]:
     """Build A-to-F idle entries without mutating the waiting room."""
 
     normalized_idle_lanes = normalize_lanes(
@@ -1713,7 +1723,7 @@ def validate_decode_attn_a2f_batch_entry(
 scheduler,
     *,
     batch: Batch,
-    lane: tuple[int, int],
+    lane: TransferLane,
     layer_id: int,
     afd_stage_idx: int,
     model_is_moe: bool,

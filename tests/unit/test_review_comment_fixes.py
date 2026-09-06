@@ -6,6 +6,9 @@ import pytest
 from frontier.entities import Batch
 from frontier.scheduler.utils.m2n_events import build_aggregated_batch_transfer_events
 from frontier.scheduler.utils.m2n_promotion import promote_decode_ffn_group
+from frontier.scheduler.utils.ep_combine import prepare_ep_combine_completion
+from frontier.scheduler.utils.expert_parallel import EPLaneWorkload
+from frontier.scheduler.utils.pdaf_attention import get_stage_slot_active_lanes
 from frontier.scheduler.utils.prefill_collective import handle_prefill_sync_collective
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
@@ -176,3 +179,66 @@ def test_ffn_promotion_requires_idle_lane_state_when_injection_is_enabled() -> N
             logger=SimpleNamespace(info=lambda *_: None),
             allow_idle_injection=True,
         )
+
+
+def _combine_lane(*, activation_bytes: int | None = 8) -> SimpleNamespace:
+    lane = EPLaneWorkload(
+        ep_id=0,
+        moe_expert_parallel_size=1,
+        total_expert_num=1,
+        owned_expert_ids=(0,),
+        local_token_counts=(1,),
+        routed_token_count=1,
+        router_topk=1,
+    )
+    values = {
+        "source_batch_ids": [4],
+        "execution_time": 1.0,
+        "total_num_tokens": 1,
+        "lane_workload": lane,
+    }
+    if activation_bytes is not None:
+        values["activation_bytes"] = activation_bytes
+    return SimpleNamespace(**values)
+
+
+def test_ep_combine_rejects_mismatched_request_epoch_metadata() -> None:
+    raw_batch = SimpleNamespace(
+        requests=[SimpleNamespace(runtime_epoch=0)],
+        request_runtime_epochs=[],
+    )
+    with pytest.raises(ValueError, match="request metadata lengths"):
+        prepare_ep_combine_completion(
+            ep_batches={0: _combine_lane()},
+            raw_batch_lookup=lambda _batch_id: raw_batch,
+            cluster_name="DECODE_FFN",
+            replica_id=0,
+            stage_id=0,
+            batch_global_id=4,
+        )
+
+
+def test_ep_combine_rejects_missing_activation_bytes() -> None:
+    raw_batch = SimpleNamespace(
+        requests=[SimpleNamespace(runtime_epoch=0)],
+        request_runtime_epochs=[0],
+    )
+    with pytest.raises(ValueError, match="activation_bytes"):
+        prepare_ep_combine_completion(
+            ep_batches={0: _combine_lane(activation_bytes=None)},
+            raw_batch_lookup=lambda _batch_id: raw_batch,
+            cluster_name="DECODE_FFN",
+            replica_id=0,
+            stage_id=0,
+            batch_global_id=4,
+        )
+
+
+def test_decode_attn_stage_slot_lookup_requires_scheduler_topology() -> None:
+    scheduler = SimpleNamespace(
+        _cluster_type=ClusterType.DECODE_ATTN,
+        _normalize_m2n_lanes=lambda lanes, **_: list(lanes),
+    )
+    with pytest.raises(RuntimeError, match="replica scheduler topology"):
+        get_stage_slot_active_lanes(scheduler, 0)
+    assert "_replica_schedulers" not in scheduler.__dict__

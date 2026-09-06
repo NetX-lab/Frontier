@@ -92,7 +92,7 @@ def get_stage_slot_active_lanes(
         raise ValueError("DECODE_ATTN active stage slot must be an exact non-negative int, got %r" % (afd_stage_idx,))
     if replica_id is not None and (type(replica_id) is not int or replica_id < 0):
         raise ValueError("DECODE_ATTN active stage replica_id must be an exact non-negative int, got %r" % (replica_id,))
-    replica_schedulers = getattr(scheduler, "_replica_schedulers", {})
+    replica_schedulers = getattr(scheduler, "_replica_schedulers", None)
     if type(replica_schedulers) is not dict:
         raise RuntimeError("DECODE_ATTN replica scheduler topology must be an exact dict")
     scheduler_lanes = scheduler._normalize_m2n_lanes(
@@ -170,6 +170,9 @@ def get_f2a_expected_lanes(scheduler: Any, replica_id: int, *, afd_stage_idx: in
         raise ValueError("DECODE_ATTN F-to-A replica_id must be an exact non-negative int, got %r" % (replica_id,))
     if afd_stage_idx is not None and (type(afd_stage_idx) is not int or afd_stage_idx < 0):
         raise ValueError("DECODE_ATTN F-to-A afd_stage_idx must be an exact non-negative int, got %r" % (afd_stage_idx,))
+    replica_schedulers = getattr(scheduler, "_replica_schedulers", None)
+    if type(replica_schedulers) is not dict:
+        raise RuntimeError("DECODE_ATTN replica scheduler topology must be an exact dict")
     replicas = getattr(getattr(scheduler, "_cluster", None), "replicas", None)
     if type(replicas) is not dict:
         raise RuntimeError("DECODE_ATTN replica inventory must be an exact dict")

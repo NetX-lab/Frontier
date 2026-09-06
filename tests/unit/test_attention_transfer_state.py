@@ -24,6 +24,7 @@ def test_f2a_expected_lanes_accept_uninitialized_idle_inventory():
     scheduler._attention_transfer_state = AttentionTransferState()
     scheduler._cluster_type = ClusterType.DECODE_ATTN
     scheduler._cluster = SimpleNamespace(replicas={0: object()})
+    scheduler._replica_schedulers = {(0, None): object()}
     scheduler._replica_scheduler_count = 1
 
     assert get_f2a_expected_lanes(scheduler, replica_id=0) == [(0, None)]
