@@ -56,13 +56,16 @@ def enter_prefill_sync(
         raise ValueError(f"PREFILL attention-DP lane count must be positive, got {expected_lanes}")
     if len(sync_room["batches"]) < expected_lanes and not batch.is_idle:
         idle_events = []
-        replica_schedulers = getattr(scheduler, "_replica_schedulers", {})
+        replica_schedulers = scheduler._replica_schedulers
         for missing_lane in range(expected_lanes):
             if missing_lane in sync_room["batches"]:
                 continue
             sibling = replica_schedulers.get((replica_id, missing_lane))
             if sibling is None:
-                continue
+                raise RuntimeError(
+                    "Missing Replica scheduler for expected attention-DP lane: "
+                    f"replica_id={replica_id}, replica_local_id={missing_lane}"
+                )
             sibling_stage = sibling.get_replica_stage_scheduler(stage_id)
             if sibling_stage.is_busy or not sibling_stage.is_empty():
                 continue
@@ -176,13 +179,16 @@ def enter_decode_sync(
         raise ValueError(f"DECODE attention-DP lane count must be positive, got {expected_lanes}")
     if len(sync_room["batches"]) < expected_lanes and not batch.is_idle:
         idle_events = []
-        replica_schedulers = getattr(scheduler, "_replica_schedulers", {})
+        replica_schedulers = scheduler._replica_schedulers
         for missing_lane in range(expected_lanes):
             if missing_lane in sync_room["batches"]:
                 continue
             sibling = replica_schedulers.get((replica_id, missing_lane))
             if sibling is None:
-                continue
+                raise RuntimeError(
+                    "Missing Replica scheduler for expected attention-DP lane: "
+                    f"replica_id={replica_id}, replica_local_id={missing_lane}"
+                )
             sibling_stage = sibling.get_replica_stage_scheduler(stage_id)
             if sibling_stage.is_busy or not sibling_stage.is_empty():
                 continue

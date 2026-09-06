@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from frontier.entities import Batch
 from frontier.scheduler.utils.m2n_events import build_aggregated_batch_transfer_events
 from frontier.scheduler.utils.m2n_promotion import promote_decode_ffn_group
 from frontier.scheduler.utils.prefill_collective import handle_prefill_sync_collective
@@ -10,6 +11,7 @@ from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
     scheduler_is_empty,
 )
+from frontier.scheduler.utils.sync_entry import enter_decode_sync, enter_prefill_sync
 from frontier.types import ClusterType
 
 
@@ -88,6 +90,64 @@ def test_diagnostics_do_not_materialize_unused_state() -> None:
     assert state["raw_batch_waiting_map"] == {"status": "not_applicable"}
     assert "_attention_transfer_state" not in scheduler.__dict__
     assert "_m2n_state" not in scheduler.__dict__
+
+
+def test_prefill_sync_fails_when_expected_lane_scheduler_is_missing() -> None:
+    batch = Batch(replica_id=0, requests=[], num_tokens=[], is_idle=False, is_moe=True)
+    batch.set_global_id(7)
+    scheduler = SimpleNamespace(
+        _cluster_type=ClusterType.PREFILL,
+        _prefill_sync_waiting_room={
+            0: {0: {7: {0: {"pre_moe": {"batches": {}, "arrival_times": {}}}}}}
+        },
+        _replica_dp_size=2,
+        _replica_schedulers={},
+        _uses_shared_prefill_layer_path=lambda *_args: True,
+        _get_forward_step_id=lambda current_batch: current_batch.global_id,
+        _resolve_forward_step=lambda **_kwargs: (7, False),
+    )
+
+    with pytest.raises(RuntimeError, match="Missing Replica scheduler"):
+        enter_prefill_sync(
+            scheduler,
+            time=0.0,
+            replica_id=0,
+            stage_id=0,
+            batch=batch,
+            replica_local_id=0,
+            sync_stage="pre_moe",
+            layer_id=0,
+            stage_execution_time=0.0,
+        )
+
+
+def test_decode_sync_fails_when_expected_lane_scheduler_is_missing() -> None:
+    batch = Batch(replica_id=0, requests=[], num_tokens=[], is_idle=False, is_moe=True)
+    batch.set_global_id(7)
+    scheduler = SimpleNamespace(
+        _cluster_type=ClusterType.DECODE,
+        _decode_sync_waiting_room={
+            0: {0: {7: {0: {"pre_moe": {"batches": {}, "arrival_times": {}}}}}}
+        },
+        _replica_dp_size=2,
+        _replica_schedulers={},
+        _uses_shared_decode_layer_path=lambda *_args: True,
+        _get_forward_step_id=lambda current_batch: current_batch.global_id,
+        _resolve_forward_step=lambda **_kwargs: (7, False),
+    )
+
+    with pytest.raises(RuntimeError, match="Missing Replica scheduler"):
+        enter_decode_sync(
+            scheduler,
+            time=0.0,
+            replica_id=0,
+            stage_id=0,
+            batch=batch,
+            replica_local_id=0,
+            sync_stage="pre_moe",
+            layer_id=0,
+            stage_execution_time=0.0,
+        )
 
 
 def test_ffn_promotion_requires_idle_lane_state_when_injection_is_enabled() -> None:
