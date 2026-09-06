@@ -64,6 +64,7 @@ from frontier.scheduler.utils.pdaf_transfer import (
     prepare_dp_padding,
     prepare_decode_attn_idle_lanes,
     validate_decode_attn_a2f_batch_entry,
+    validate_a2f_predictor_result,
 )
 from frontier.scheduler.utils.pdaf_validation import (
     validate_decode_attn_a2f_waiting_room,
@@ -5615,31 +5616,8 @@ class BaseClusterScheduler(ABC):
     def _validate_decode_attn_a2f_predictor_result(
         predictor_result: Any,
     ) -> tuple[int, int | float]:
-        """Validate one A-to-F predictor result without coercing its values."""
-
-        if type(predictor_result) is not tuple or len(predictor_result) != 2:
-            raise RuntimeError(
-                "DECODE_ATTN A-to-F predictor transfer result must be an exact "
-                f"(activation_size, transfer_time) tuple, got {predictor_result!r}"
-            )
-        activation_size, transfer_time = predictor_result
-        if type(activation_size) is not int or activation_size < 0:
-            raise ValueError(
-                "DECODE_ATTN A-to-F predictor activation_size must be an exact "
-                f"non-negative int, got {activation_size!r}"
-            )
-        if not isinstance(transfer_time, Real) or isinstance(transfer_time, bool):
-            raise ValueError(
-                "DECODE_ATTN A-to-F predictor transfer_time must be an exact int "
-                f"or float, got {transfer_time!r}"
-            )
-        transfer_time = float(transfer_time)
-        if not math.isfinite(transfer_time) or transfer_time < 0:
-            raise ValueError(
-                "DECODE_ATTN A-to-F predictor transfer_time must be finite and "
-                f"non-negative, got {transfer_time!r}"
-            )
-        return activation_size, transfer_time
+        """Validate an A-to-F predictor result through the transfer utility."""
+        return validate_a2f_predictor_result(predictor_result)
 
     def _prepare_decode_attn_idle_lanes_for_barrier(
         self,

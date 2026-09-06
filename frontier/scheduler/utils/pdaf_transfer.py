@@ -1,6 +1,8 @@
 """Small, state-free helpers shared by PD-AF transfer handlers."""
 
+import math
 from enum import Enum
+from numbers import Real
 from typing import Any, Dict, List, Optional
 
 from collections import defaultdict, deque
@@ -14,6 +16,34 @@ class LaneIdentityScope(Enum):
 
     FULL_STAGE = "full_stage"
     REPLICA_LOCAL = "replica_local"
+
+
+def validate_a2f_predictor_result(predictor_result: Any) -> tuple[int, int | float]:
+    """Validate one A-to-F transfer predictor result without coercing size."""
+
+    if type(predictor_result) is not tuple or len(predictor_result) != 2:
+        raise RuntimeError(
+            "DECODE_ATTN A-to-F predictor transfer result must be an exact "
+            f"(activation_size, transfer_time) tuple, got {predictor_result!r}"
+        )
+    activation_size, transfer_time = predictor_result
+    if type(activation_size) is not int or activation_size < 0:
+        raise ValueError(
+            "DECODE_ATTN A-to-F predictor activation_size must be an exact "
+            f"non-negative int, got {activation_size!r}"
+        )
+    if not isinstance(transfer_time, Real) or isinstance(transfer_time, bool):
+        raise ValueError(
+            "DECODE_ATTN A-to-F predictor transfer_time must be an exact int "
+            f"or float, got {transfer_time!r}"
+        )
+    transfer_time = float(transfer_time)
+    if not math.isfinite(transfer_time) or transfer_time < 0:
+        raise ValueError(
+            "DECODE_ATTN A-to-F predictor transfer_time must be finite and "
+            f"non-negative, got {transfer_time!r}"
+        )
+    return activation_size, transfer_time
 
 
 def normalize_lanes(
