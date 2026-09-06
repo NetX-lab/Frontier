@@ -124,6 +124,75 @@ def predict_ep_wave_phase_times(
     return EPWavePhaseTimes(*(tuple(value) for value in values))
 
 
+def get_ep_phase_times_ms(
+    execution_time: Any,
+    *,
+    cluster_type: Any,
+    batch_id: int,
+    layer_id: int,
+    ep_id: int,
+) -> tuple[float, float, float, float, float]:
+    """Read and validate one lane's five-phase MoE decomposition."""
+
+    getter_names = (
+        "get_single_layer_moe_pre_dispatch_time",
+        "get_single_layer_moe_dispatch_time",
+        "get_single_layer_moe_post_dispatch_compute_time",
+        "get_single_layer_moe_combine_time",
+        "get_single_layer_moe_post_combine_time",
+    )
+    phase_times: list[float] = []
+    for getter_name in getter_names:
+        getter = getattr(execution_time, getter_name, None)
+        if not callable(getter):
+            raise ValueError(
+                "Shared EP predictor result is missing phase accessor "
+                f"{getter_name}: cluster={cluster_type}, batch={batch_id}, "
+                f"layer={layer_id}, ep_id={ep_id}"
+            )
+        phase_time = getter()
+        if (
+            not isinstance(phase_time, Real)
+            or isinstance(phase_time, bool)
+            or not math.isfinite(float(phase_time))
+            or float(phase_time) < 0
+        ):
+            raise ValueError(
+                "Shared EP phase time must be finite and non-negative: "
+                f"accessor={getter_name}, value={phase_time!r}, "
+                f"cluster={cluster_type}, batch={batch_id}, "
+                f"layer={layer_id}, ep_id={ep_id}"
+            )
+        phase_times.append(float(phase_time))
+    post_attention_getter = getattr(
+        execution_time,
+        "get_single_layer_post_attention_time",
+        None,
+    )
+    if not callable(post_attention_getter):
+        raise ValueError("Shared EP predictor result is missing post-attention timing")
+    post_attention_time_ms = float(post_attention_getter())
+    decomposed_time_ms = math.fsum(phase_times)
+    if (
+        not math.isfinite(post_attention_time_ms)
+        or post_attention_time_ms < 0
+        or not math.isclose(
+            decomposed_time_ms,
+            post_attention_time_ms,
+            rel_tol=1e-12,
+            abs_tol=1e-9,
+        )
+    ):
+        raise ValueError(
+            "Shared EP phase decomposition does not conserve post-attention "
+            f"time: phases={tuple(phase_times)!r}, "
+            f"post_attention_ms={post_attention_time_ms!r}, "
+            f"cluster={cluster_type}, batch={batch_id}, "
+            f"layer={layer_id}, ep_id={ep_id}"
+        )
+    return tuple(phase_times)
+
+
 def calculate_ep_wave_timing(
     *,
     start_time_s: float,

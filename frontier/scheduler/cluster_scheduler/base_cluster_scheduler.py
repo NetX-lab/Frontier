@@ -48,6 +48,7 @@ from frontier.scheduler.utils.expert_parallel import (
     resolve_source_batch_ids,
     predict_ep_wave_phase_times,
     calculate_ep_wave_timing,
+    get_ep_phase_times_ms,
 )
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
@@ -175,7 +176,6 @@ class BaseClusterScheduler(ABC):
         first_layer_id = stage_id * num_layers_per_pipeline_stage
         return first_layer_id, first_layer_id + num_layers_per_pipeline_stage
 
-    @staticmethod
     @staticmethod
     def _aggregate_decode_ffn_afd_metadata(
         source_batches: List[Batch] | Tuple[Batch, ...],
@@ -345,68 +345,14 @@ class BaseClusterScheduler(ABC):
         layer_id: int,
         ep_id: int,
     ) -> tuple[float, float, float, float, float]:
-        """Read and validate one lane's exact five-phase MoE decomposition."""
-
-        getter_names = (
-            "get_single_layer_moe_pre_dispatch_time",
-            "get_single_layer_moe_dispatch_time",
-            "get_single_layer_moe_post_dispatch_compute_time",
-            "get_single_layer_moe_combine_time",
-            "get_single_layer_moe_post_combine_time",
-        )
-        phase_times: list[float] = []
-        for getter_name in getter_names:
-            getter = getattr(execution_time, getter_name, None)
-            if not callable(getter):
-                raise ValueError(
-                    "Shared EP predictor result is missing phase accessor "
-                    f"{getter_name}: cluster={cluster_type}, batch={batch_id}, "
-                    f"layer={layer_id}, ep_id={ep_id}"
-                )
-            phase_time = getter()
-            if (
-                not isinstance(phase_time, Real)
-                or isinstance(phase_time, bool)
-                or not math.isfinite(float(phase_time))
-                or float(phase_time) < 0
-            ):
-                raise ValueError(
-                    "Shared EP phase time must be finite and non-negative: "
-                    f"accessor={getter_name}, value={phase_time!r}, "
-                    f"cluster={cluster_type}, batch={batch_id}, "
-                    f"layer={layer_id}, ep_id={ep_id}"
-                )
-            phase_times.append(float(phase_time))
-
-        post_attention_getter = getattr(
+        """Read shared EP phase timings through the EP utility."""
+        return get_ep_phase_times_ms(
             execution_time,
-            "get_single_layer_post_attention_time",
-            None,
+            cluster_type=cluster_type,
+            batch_id=batch_id,
+            layer_id=layer_id,
+            ep_id=ep_id,
         )
-        if not callable(post_attention_getter):
-            raise ValueError(
-                "Shared EP predictor result is missing post-attention timing"
-            )
-        post_attention_time_ms = float(post_attention_getter())
-        decomposed_time_ms = math.fsum(phase_times)
-        if (
-            not math.isfinite(post_attention_time_ms)
-            or post_attention_time_ms < 0
-            or not math.isclose(
-                decomposed_time_ms,
-                post_attention_time_ms,
-                rel_tol=1e-12,
-                abs_tol=1e-9,
-            )
-        ):
-            raise ValueError(
-                "Shared EP phase decomposition does not conserve post-attention "
-                f"time: phases={tuple(phase_times)!r}, "
-                f"post_attention_ms={post_attention_time_ms!r}, "
-                f"cluster={cluster_type}, batch={batch_id}, "
-                f"layer={layer_id}, ep_id={ep_id}"
-            )
-        return tuple(phase_times)
 
     @staticmethod
     def _map_source_attn_replica_to_ffn_replica(
