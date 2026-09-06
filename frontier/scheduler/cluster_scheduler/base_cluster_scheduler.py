@@ -1258,152 +1258,26 @@ class BaseClusterScheduler(ABC):
             stage_id=stage_id,
             batch=batch,
             ep_id=ep_id,
+            resolve_collective_kind=resolve_ep_collective_kind,
+            prepare_timing=prepare_combine_timing,
         )
 
     def _handle_ep_alltoall_combine_ready(
         self, time: float, replica_id: int, stage_id: int, batch, ep_id: int
     ):
-        """
-        Handle EP AllToAll combine readiness in decode-ffn cluster.
+        """Compatibility adapter for direct private handler callers."""
+        from frontier.scheduler.utils.ep_combine_ready import handle_combine_ready
 
-        This method is called when an EP replica completes its expert computation
-        and is ready for AllToAll combine synchronization to aggregate results.
-
-        Args:
-            time: Current simulation time
-            replica_id: ID of the replica
-            stage_id: Pipeline stage ID
-            batch: The batch that completed expert computation
-            ep_id: Expert parallel replica ID
-        """
-        from frontier.events.ep_alltoall_combine_collective_event import (
-            EPAllToAllCombineCollectiveEvent,
-        )
-        from frontier.logger import get_cluster_logger
-
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-
-        if (
-            not isinstance(time, Real)
-            or isinstance(time, bool)
-            or not math.isfinite(float(time))
-        ):
-            raise ValueError(
-                f"EP combine arrival time must be a finite int or float, got {time!r}"
-            )
-        time = float(time)
-
-        (
-            batch_global_id,
-            ep_wait_room,
-            expected_ep_ids,
-            is_complete,
-        ) = self._validate_ep_barrier_arrival(
-            phase="combine",
-            waiting_rooms=self._ep_allgather_waiting_room,
+        return handle_combine_ready(
+            self,
+            time=time,
             replica_id=replica_id,
             stage_id=stage_id,
             batch=batch,
             ep_id=ep_id,
+            resolve_collective_kind=resolve_ep_collective_kind,
+            prepare_timing=prepare_combine_timing,
         )
-
-        existing_batches = {} if ep_wait_room is None else ep_wait_room["batches"]
-        existing_arrival_times = (
-            {} if ep_wait_room is None else ep_wait_room["arrival_times"]
-        )
-        prospective_batches = dict(existing_batches)
-        prospective_arrival_times = dict(existing_arrival_times)
-        prospective_batches[ep_id] = batch
-        prospective_arrival_times[ep_id] = time
-
-        expected_ep_size = len(expected_ep_ids)
-
-        if not is_complete:
-            if ep_wait_room is None:
-                ep_wait_room = self._ep_allgather_waiting_room[replica_id][stage_id][
-                    batch_global_id
-                ]
-            ep_wait_room["batches"][ep_id] = batch
-            ep_wait_room["arrival_times"][ep_id] = time
-
-        # DIAGNOSTIC: Log EP combine ready with global_id after validation has
-        # established that this arrival can be committed safely.
-        logger.info(
-            f"[EP-WAIT-ROOM][ENTER] time={time:.3f}s, batch_id={batch.id}, global_id={batch_global_id}, "
-            f"replica={replica_id}, stage={stage_id}, ep_id={ep_id}"
-        )
-
-        # DIAGNOSTIC: Log wait room status with all waiting batches
-        arrived_ep_ids = list(prospective_batches.keys())
-        arrived_batch_ids = [prospective_batches[eid].id for eid in arrived_ep_ids]
-        logger.info(
-            f"[EP-WAIT-ROOM][STATUS] global_id={batch_global_id}, "
-            f"arrived={len(prospective_batches)}/{expected_ep_size}, "
-            f"ep_ids={arrived_ep_ids}, batch_ids={arrived_batch_ids}"
-        )
-
-        # Check if all EP replicas in this replica have arrived
-        if is_complete:
-            # Synchronize to the maximum time across all EP replicas
-            logger.info(
-                "[DEBUG] All EP replicas arrived! Creating EPAllToAllCombineCollectiveEvent"
-            )
-
-            model_config = self._config.replica_config.model_config
-            # Validate every lane descriptor before resolving the model profile.
-            self._get_step3_ep_alltoall_payload_bytes(prospective_batches)
-            ep_collective_kind = resolve_ep_collective_kind(
-                model_config,
-                self._cluster_type,
-                expected_ep_size,
-            )
-            timing = prepare_combine_timing(
-                prospective_batches=prospective_batches,
-                prospective_arrival_times=prospective_arrival_times,
-                expected_ep_size=expected_ep_size,
-                collective_kind=ep_collective_kind,
-                cluster_type=self._cluster_type,
-                hidden_size=int(model_config.embedding_dim),
-                predict_alltoall=self._predictor.predict_alltoall_time,
-                predict_allgather=self._predictor.predict_allgather_time,
-                collective_time_validator=self._validate_ep_collective_exec_time,
-            )
-            data_size_bytes = timing.data_size_bytes
-            payload_description = timing.payload_description
-            ep_collective_sync_time = timing.sync_time
-            ep_collective_exec_time_ms = timing.exec_time_ms
-            combine_end_time = timing.combine_end_time
-            post_combine_time_s = timing.post_combine_time_s
-            final_event_time = timing.final_event_time
-
-            if ep_wait_room is None:
-                ep_wait_room = self._ep_allgather_waiting_room[replica_id][stage_id][
-                    batch_global_id
-                ]
-            ep_wait_room["batches"][ep_id] = batch
-            ep_wait_room["arrival_times"][ep_id] = time
-
-            logger.info(
-                f"[DEBUG] Creating EPAllToAllCombineCollectiveEvent at time={final_event_time:.3f}s, "
-                f"combine_end_time={combine_end_time:.3f}s, "
-                f"sync_time={ep_collective_sync_time:.3f}s, exec_time={ep_collective_exec_time_ms:.3f}ms, "
-                f"post_combine_time={post_combine_time_s:.6f}s, "
-                f"data_size={data_size_bytes} bytes ({payload_description})"
-            )
-
-            return [
-                EPAllToAllCombineCollectiveEvent(
-                    final_event_time,
-                    replica_id,
-                    stage_id,
-                    batch_global_id,
-                    combine_end_time=combine_end_time,
-                )
-            ]
-        else:
-            logger.info(f"[DEBUG] Waiting for more EP replicas: {len(ep_wait_room['batches'])}/{expected_ep_size}")
-
-        return []
 
     @staticmethod
     def _resolve_ep_execution_time(ep_batches: Dict[int, EPBatchGroup]) -> float:
