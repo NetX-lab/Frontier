@@ -1,8 +1,10 @@
+from collections import defaultdict
 from types import SimpleNamespace
 
 import pytest
 
 from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
+from frontier.scheduler.utils.sync_entry import enter_decode_sync
 
 
 def make_batch(batch_id, *, step_id=None, provisional_id=None, idle=False):
@@ -80,6 +82,62 @@ def test_completed_event_is_suppressed_for_same_batch():
     )
 
     assert result == (4, True)
+
+
+def test_closed_step_suppresses_late_idle_placeholder():
+    state = ForwardSyncState()
+    real = make_batch(11, step_id=4, provisional_id=4)
+    state.close_step(
+        sync_kind="decode",
+        replica_id=0,
+        stage_id=1,
+        layer_id=2,
+        sync_stage="pre_moe",
+        provisional_id=4,
+        step_id=4,
+        source_batches={0: real},
+    )
+    late_idle = make_batch(12, step_id=4, provisional_id=4, idle=True)
+
+    result = state.resolve_step(
+        sync_kind="decode",
+        replica_id=0,
+        stage_id=1,
+        batch=late_idle,
+        lane_id=1,
+        layer_id=2,
+        sync_stage="pre_moe",
+        room_lookup=room_lookup({}),
+    )
+
+    assert result == (4, True)
+    assert state.open_steps("decode") == {}
+
+
+def test_decode_duplicate_check_does_not_materialize_waiting_room():
+    waiting_room = defaultdict(dict)
+    batch = make_batch(11, step_id=4, provisional_id=4)
+    scheduler = SimpleNamespace(
+        _decode_sync_waiting_room=waiting_room,
+        _uses_shared_decode_layer_path=lambda *_args: True,
+        _get_forward_step_id=lambda current_batch: current_batch.global_id,
+        _resolve_forward_step=lambda **_kwargs: (4, True),
+    )
+
+    result = enter_decode_sync(
+        scheduler,
+        time=0.0,
+        replica_id=0,
+        stage_id=1,
+        batch=batch,
+        replica_local_id=0,
+        sync_stage="pre_moe",
+        layer_id=2,
+        stage_execution_time=0.0,
+    )
+
+    assert result == []
+    assert dict(waiting_room) == {}
 
 
 def test_idle_placeholder_can_be_replaced_in_open_step():

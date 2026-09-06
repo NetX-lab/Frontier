@@ -151,6 +151,11 @@ class ForwardSyncState:
         used_scope = (replica_id, stage_id, layer_id, sync_stage)
         used_ids = self._used_ids_by_scope.setdefault(used_scope, set())
         closed_key = (*used_scope, provisional_id)
+        if (
+            getattr(batch, "is_idle", False)
+            and closed_key in self.closed_steps(sync_kind)
+        ):
+            return current_id, True
         if closed_key in self.closed_steps(sync_kind) or current_id in used_ids:
             candidate = max(
                 int(self._next_step_id_by_replica.get(replica_id, 0)),

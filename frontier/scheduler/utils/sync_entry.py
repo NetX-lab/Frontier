@@ -164,9 +164,9 @@ def enter_decode_sync(
         layer_id=layer_id,
         sync_stage=sync_stage,
     )
-    sync_room = scheduler._decode_sync_waiting_room[replica_id][stage_id][step_id][layer_id][sync_stage]
     if already_completed:
         return []
+    sync_room = scheduler._decode_sync_waiting_room[replica_id][stage_id][step_id][layer_id][sync_stage]
     sync_room.setdefault("provisional_cohort_id", requested_step_id)
     existing_batch = sync_room["batches"].get(lane_id)
     if batch.is_idle and existing_batch is not None and not existing_batch.is_idle:
