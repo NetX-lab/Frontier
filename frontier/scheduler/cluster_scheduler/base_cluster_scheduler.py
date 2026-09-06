@@ -101,6 +101,7 @@ from frontier.scheduler.utils.layer_path import uses_shared_layer_path
 from frontier.scheduler.utils.replica_config import resolve_replica_scheduler_config
 from frontier.scheduler.utils.stage_contexts import build_stage_execution_contexts
 from frontier.scheduler.utils.prefix_cache import validate_prefix_cache_config
+from frontier.scheduler.utils.dense_metrics import first_dense_layer_id, predict_dense_reference
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -3164,33 +3165,8 @@ class BaseClusterScheduler(ABC):
 
     def _get_first_dense_layer_id_for_mixed_moe(self) -> Optional[int]:
         """Return first dense FFN layer id for mixed-layer MoE models, else None."""
-        config = getattr(self, "_config", None)
-        replica_config = getattr(config, "replica_config", None)
-        model_config = getattr(replica_config, "model_config", None)
-        if model_config is None:
-            return None
-
-        if not getattr(model_config, "is_moe", False):
-            return None
-
-        if not hasattr(model_config, "get_moe_layer_ids") or not hasattr(
-            model_config, "num_layers"
-        ):
-            return None
-
-        moe_layer_ids = set(model_config.get_moe_layer_ids())
-        if len(moe_layer_ids) == 0:
-            return None
-
-        num_layers = int(model_config.num_layers)
-        if len(moe_layer_ids) >= num_layers:
-            return None
-
-        for layer_id in range(num_layers):
-            if layer_id not in moe_layer_ids:
-                return layer_id
-
-        return None
+        model_config = getattr(getattr(self._config, "replica_config", None), "model_config", None)
+        return first_dense_layer_id(model_config)
 
     def _get_prefill_dense_reference_execution_time(
         self,
@@ -3198,34 +3174,14 @@ class BaseClusterScheduler(ABC):
         stage_id: int,
     ) -> Optional[ExecutionTime]:
         """Predict one dense layer execution for mixed-layer MoE trace completion."""
-        dense_layer_id = self._get_first_dense_layer_id_for_mixed_moe()
-        if dense_layer_id is None:
-            return None
-
-        dense_execution_time = self._predictor.predict_stage_execution_time(
-            sample_batch,
-            stage_id,
+        model_config = getattr(getattr(self._config, "replica_config", None), "model_config", None)
+        return predict_dense_reference(
+            predictor=self._predictor,
+            batch=sample_batch,
+            stage_id=stage_id,
             cluster_type=self._cluster_type,
-            num_layers=1,
-            layer_id=dense_layer_id,
+            model_config=model_config,
         )
-        if dense_execution_time._is_moe:
-            raise ValueError(
-                f"Expected dense execution for layer_id={dense_layer_id}, "
-                f"but predictor returned is_moe=True"
-            )
-
-        if (
-            dense_execution_time._mlp_layer_up_proj_execution_time <= 0.0
-            or dense_execution_time._mlp_layer_act_execution_time <= 0.0
-            or dense_execution_time._mlp_layer_down_proj_execution_time <= 0.0
-        ):
-            raise ValueError(
-                "Dense reference execution_time must provide positive mlp_up_proj/mlp_act/"
-                "mlp_down_proj components"
-            )
-
-        return dense_execution_time
 
     def _create_corrected_execution_time_for_metrics(
         self,
