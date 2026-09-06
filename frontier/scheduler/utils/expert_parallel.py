@@ -495,8 +495,8 @@ def prepare_combine_timing(
     collective_kind: Any,
     cluster_type: Any,
     hidden_size: int,
-    predict_alltoall: Callable[..., Real],
-    predict_allgather: Callable[..., Real],
+    predict_alltoall: Callable[..., float],
+    predict_allgather: Callable[..., float],
     collective_time_validator: Callable[..., tuple[float, float]] = validate_collective_exec_time,
 ) -> EPCombineTimingPlan:
     """Prepare pure EP combine timing inputs without mutating scheduler state."""
