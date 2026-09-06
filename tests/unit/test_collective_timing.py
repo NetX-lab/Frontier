@@ -9,6 +9,7 @@ from frontier.scheduler.utils.collective_timing import (
     select_active_batch,
     validate_decode_layer_advance,
 )
+from frontier.scheduler.utils.request_selection import collect_active_requests
 
 
 def test_select_active_batch_prefers_first_non_idle_batch():
@@ -65,3 +66,12 @@ def test_decode_layer_advance_rejects_completed_request():
     )
     with pytest.raises(ValueError, match="layer counter"):
         validate_decode_layer_advance([request], 8)
+
+
+def test_collect_active_requests_deduplicates_and_skips_idle_or_completed():
+    first = SimpleNamespace(id=1, completed=False)
+    duplicate = SimpleNamespace(id=1, completed=False)
+    done = SimpleNamespace(id=2, completed=True)
+    idle = SimpleNamespace(is_idle=True, requests=[first])
+    active = SimpleNamespace(is_idle=False, requests=[first, duplicate, done])
+    assert collect_active_requests([idle, active]) == [first]

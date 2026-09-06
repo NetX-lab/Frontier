@@ -92,6 +92,7 @@ from frontier.scheduler.utils.execution_time_metrics import (
     build_single_layer_metrics_execution_time,
 )
 from frontier.scheduler.utils.afd_metadata import aggregate_afd_metadata
+from frontier.scheduler.utils.request_selection import collect_active_requests
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -4220,16 +4221,7 @@ class BaseClusterScheduler(ABC):
             )
 
         total_layers = self._config.replica_config.model_config.num_layers
-        active_unique_requests = []
-        active_request_ids = set()
-        for batch in dp_batches.values():
-            if batch.is_idle:
-                continue
-            for request in batch.requests:
-                if request.completed or request.id in active_request_ids:
-                    continue
-                active_request_ids.add(request.id)
-                active_unique_requests.append(request)
+        active_unique_requests = collect_active_requests(dp_batches.values())
 
         validate_decode_layer_advance(active_unique_requests, total_layers)
 
