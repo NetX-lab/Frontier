@@ -52,6 +52,7 @@ from frontier.scheduler.utils.pdaf_return import (
     release_ready_return_round,
     enqueue_return_round,
 )
+from frontier.scheduler.utils.batch_builders import build_ep_lane_batch, build_virtual_global_batch
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
     format_ep_trace_identity,
@@ -1270,40 +1271,14 @@ class BaseClusterScheduler(ABC):
     ) -> EPBatchGroup:
         """Build an EP lane batch for predictor evaluation without request mutation."""
 
-        lane_workload = layer_workload.lane(ep_id)
-        logic_num_tokens = list(lane_workload.local_token_counts)
-        logic_requests = [
-            Request(0.0, 0, num_tokens) for num_tokens in logic_num_tokens
-        ]
-        lane_batch = self._create_batch_group(
-            logic_requests,
-            logic_num_tokens,
-            source_batch.replica_id,
-            ep_id,
-            getattr(source_batch, "time", 0.0) or 0.0,
-            [source_batch.id],
-            lane_workload,
+        return build_ep_lane_batch(
+            source_batch=source_batch,
+            layer_id=layer_id,
+            ep_id=ep_id,
+            layer_workload=layer_workload,
+            create_batch_group=self._create_batch_group,
+            cluster_type=self._cluster_type,
         )
-        lane_batch.set_global_id(source_batch.global_id)
-        lane_batch.source_batches = [source_batch]
-        lane_batch.decode_ffn_layer_id = layer_id
-        lane_batch.afd_stage_idx = getattr(source_batch, "afd_stage_idx", None)
-        effective_tokens_getter = getattr(
-            source_batch,
-            "get_effective_total_tokens_for_compute",
-            None,
-        )
-        effective_tokens = (
-            int(effective_tokens_getter(self._cluster_type))
-            if callable(effective_tokens_getter)
-            else int(source_batch.total_num_tokens)
-        )
-        if effective_tokens <= 0:
-            raise ValueError(
-                "Prefill EP lane requires positive pre-routing effective tokens"
-            )
-        lane_batch.moe_pre_routing_effective_total_tokens = effective_tokens
-        return lane_batch
 
     def _create_virtual_global_batch(
         self,
@@ -1313,39 +1288,11 @@ class BaseClusterScheduler(ABC):
     ) -> Batch:
         """Create a predictor-only batch for one cross-DP token domain."""
 
-        import copy
-        from dataclasses import replace
-        from frontier.entities.batch import DecodeCudaGraphMetadata
-
-        if type(total_global_tokens) is not int or total_global_tokens < 0:
-            raise ValueError("total_global_tokens must be a non-negative int")
-        if (
-            type(total_global_prefill_tokens) is not int
-            or total_global_prefill_tokens < 0
-            or total_global_prefill_tokens > total_global_tokens
-        ):
-            raise ValueError(
-                "total_global_prefill_tokens must be within the aggregate token range"
-            )
-        virtual_batch = copy.copy(sample_batch)
-        virtual_batch._num_tokens = [total_global_tokens]
-        virtual_batch._total_num_tokens = total_global_tokens
-        virtual_batch._num_prefill_tokens = total_global_prefill_tokens
-        metadata = getattr(virtual_batch, "decode_cuda_graph_metadata", None)
-        if metadata is not None and total_global_tokens != sample_batch.total_num_tokens:
-            if not isinstance(metadata, DecodeCudaGraphMetadata):
-                raise TypeError(
-                    "decode_cuda_graph_metadata must be DecodeCudaGraphMetadata"
-                )
-            total_decode_tokens = total_global_tokens - total_global_prefill_tokens
-            virtual_batch.decode_cuda_graph_metadata = replace(
-                metadata,
-                original_total_tokens=total_global_tokens,
-                padded_total_tokens=total_global_tokens,
-                original_decode_batch_size=total_decode_tokens,
-                padded_decode_batch_size=total_decode_tokens,
-            )
-        return virtual_batch
+        return build_virtual_global_batch(
+            sample_batch,
+            total_global_tokens,
+            total_global_prefill_tokens,
+        )
 
     @staticmethod
     def _get_forward_step_id(batch: Batch) -> int:
