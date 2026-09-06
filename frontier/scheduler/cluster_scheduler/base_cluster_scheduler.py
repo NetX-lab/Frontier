@@ -43,7 +43,6 @@ from frontier.scheduler.utils.expert_parallel import (
     resolve_source_batch_ids,
     get_ep_phase_times_ms,
 )
-from frontier.scheduler.utils.ep_wave_inputs import prepare_ep_wave_inputs
 from frontier.scheduler.utils.ep_wave_schedule import schedule_layer_wave
 from frontier.scheduler.utils.ep_wave import prepare_moe_wave_from_inputs
 from frontier.scheduler.utils.scheduler_diagnostics import (
