@@ -55,6 +55,7 @@ from frontier.scheduler.utils.pdaf_return import (
 from frontier.scheduler.utils.batch_builders import build_ep_lane_batch, build_virtual_global_batch
 from frontier.scheduler.utils.pdaf_wave_validation import validate_wave_stages, validate_a2f_wave_phase
 from frontier.scheduler.utils.forward_step_admission import promote_to_ep_wave, restore_full_stage_owners
+from frontier.scheduler.utils.stage_wakeup import build_stage_wakeup_events
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
     format_ep_trace_identity,
@@ -686,52 +687,15 @@ class BaseClusterScheduler(ABC):
         stage_id: int,
         exclude_replica_local_id: int | None,
     ) -> list:
-        """Wake queued sibling lanes after a shared stage owner releases.
+        """Wake queued sibling lanes after a shared stage owner releases."""
 
-        Attention-DP child schedulers intentionally share one Replica/stage
-        admission context in the current DES model. A schedule event that
-        observes the context busy cannot retry after returning, so the release
-        boundary explicitly wakes every sibling lane that still owns queued
-        work. EP child lanes share one pre-attached wave ticket and remain
-        eligible for the same wakeup; already-empty lanes are skipped.
-        """
-
-        if not isinstance(time, Real) or not math.isfinite(float(time)):
-            raise ValueError(f"stage wakeup time must be finite, got {time!r}")
-        if type(replica_id) is not int or replica_id < 0:
-            raise ValueError("replica_id must be an exact non-negative int")
-        if type(stage_id) is not int or stage_id < 0:
-            raise ValueError("stage_id must be an exact non-negative int")
-
-        from frontier.events.replica_stage_schedule_event import (
-            ReplicaStageScheduleEvent,
+        return build_stage_wakeup_events(
+            self,
+            time=time,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            exclude_replica_local_id=exclude_replica_local_id,
         )
-
-        events = []
-        replica_schedulers = getattr(self, "_replica_schedulers", {})
-        if not isinstance(replica_schedulers, dict):
-            raise RuntimeError("Replica scheduler registry was not initialized")
-        for (candidate_replica_id, candidate_local_id), replica_scheduler in sorted(
-            replica_schedulers.items(), key=lambda item: str(item[0])
-        ):
-            if candidate_replica_id != replica_id:
-                continue
-            if candidate_local_id == exclude_replica_local_id:
-                continue
-            stage_scheduler = replica_scheduler.get_replica_stage_scheduler(stage_id)
-            if stage_scheduler.is_busy or stage_scheduler.is_empty():
-                continue
-            events.append(
-                ReplicaStageScheduleEvent(
-                    float(time),
-                    replica_id,
-                    stage_id,
-                    self._cluster_type,
-                    candidate_local_id,
-                )
-            )
-
-        return events
 
     def make_attention_dp_batch_global_id(
         self,
