@@ -53,6 +53,7 @@ from frontier.scheduler.utils.pdaf_return import (
     enqueue_return_round,
 )
 from frontier.scheduler.utils.batch_builders import build_ep_lane_batch, build_virtual_global_batch
+from frontier.scheduler.utils.pdaf_wave_validation import validate_wave_stages, validate_a2f_wave_phase
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
     format_ep_trace_identity,
@@ -2314,79 +2315,9 @@ class BaseClusterScheduler(ABC):
         *,
         context: str,
     ) -> tuple[set[int], dict[int, str], dict[int, int]]:
-        """Validate the complete stage-local state for one DECODE_ATTN cohort."""
+        """Validate the complete stage-local state for one DECODE_ATTN wave."""
 
-        if type(wave_state) is not dict:
-            raise RuntimeError(
-                f"DECODE_ATTN {context} active cohort state must be an exact dict"
-            )
-
-        active_stage_indices = wave_state.get("active_stage_indices")
-        if type(active_stage_indices) is not set or not active_stage_indices:
-            raise RuntimeError(
-                f"DECODE_ATTN {context} cohort active_stage_indices must be a "
-                "non-empty exact set"
-            )
-        for stage_idx in active_stage_indices:
-            if type(stage_idx) is not int or stage_idx < 0:
-                raise RuntimeError(
-                    f"DECODE_ATTN {context} cohort active stage indices must "
-                    f"contain exact non-negative ints, got {stage_idx!r}"
-                )
-
-        stage_phases = wave_state.get("stage_phases")
-        if type(stage_phases) is not dict:
-            raise RuntimeError(
-                f"DECODE_ATTN {context} cohort stage phases must be an exact dict"
-            )
-        for stage_idx, stage_phase in stage_phases.items():
-            if type(stage_idx) is not int or stage_idx < 0:
-                raise RuntimeError(
-                    f"DECODE_ATTN {context} cohort stage phase indices must "
-                    f"contain exact non-negative ints, got {stage_idx!r}"
-                )
-            if type(stage_phase) is not str or stage_phase not in {
-                "local_attn",
-                "ffn_inflight",
-            }:
-                raise RuntimeError(
-                    f"DECODE_ATTN {context} cohort stage phase must be "
-                    "local_attn or ffn_inflight, "
-                    f"got {stage_phase!r}"
-                )
-        if set(stage_phases) != active_stage_indices:
-            raise RuntimeError(
-                f"DECODE_ATTN {context} cohort stage phase key set must exactly "
-                "match active stages: "
-                f"phase_keys={sorted(stage_phases)}, "
-                f"active={sorted(active_stage_indices)}"
-            )
-
-        stage_layers = wave_state.get("stage_current_layer_ids")
-        if type(stage_layers) is not dict:
-            raise RuntimeError(
-                f"DECODE_ATTN {context} cohort stage layers must be an exact dict"
-            )
-        for stage_idx, stage_layer in stage_layers.items():
-            if type(stage_idx) is not int or stage_idx < 0:
-                raise RuntimeError(
-                    f"DECODE_ATTN {context} cohort stage layer indices must "
-                    f"contain exact non-negative ints, got {stage_idx!r}"
-                )
-            if type(stage_layer) is not int or stage_layer < 0:
-                raise RuntimeError(
-                    f"DECODE_ATTN {context} cohort stage layer must be an exact "
-                    f"non-negative int, got {stage_layer!r}"
-                )
-        if set(stage_layers) != active_stage_indices:
-            raise RuntimeError(
-                f"DECODE_ATTN {context} cohort stage layer key set must exactly "
-                "match active stages: "
-                f"layer_keys={sorted(stage_layers)}, "
-                f"active={sorted(active_stage_indices)}"
-            )
-
-        return active_stage_indices, stage_phases, stage_layers
+        return validate_wave_stages(wave_state, context=context)
 
     def _validate_decode_attn_a2f_wave_phase(
         self,
@@ -2396,71 +2327,15 @@ class BaseClusterScheduler(ABC):
         afd_stage_idx: int,
         context: str,
     ) -> None:
-        """Validate the stage-local phase/layer of an A-to-F cohort."""
+        """Validate the stage-local phase/layer of an A-to-F wave."""
 
-        wave_id = getattr(batch, "decode_attn_cohort_id", None)
-        lane = (
-            getattr(batch, "decode_attn_original_replica_id", None),
-            getattr(batch, "decode_attn_original_replica_local_id", None),
+        return validate_a2f_wave_phase(
+            self,
+            batch,
+            layer_id=layer_id,
+            afd_stage_idx=afd_stage_idx,
+            context=context,
         )
-        replica_schedulers = getattr(self, "_replica_schedulers", None)
-        if type(replica_schedulers) is not dict or lane not in replica_schedulers:
-            raise ValueError(
-                f"DECODE_ATTN A-to-F {context} cohort lane is absent from the "
-                f"replica scheduler topology: lane={lane}"
-            )
-        wave_states = getattr(
-            replica_schedulers[lane],
-            "_decode_attn_active_cohort_states",
-            None,
-        )
-        if type(wave_states) is not dict:
-            raise RuntimeError(
-                f"DECODE_ATTN A-to-F {context} active cohort states must be an "
-                "exact dict"
-            )
-        wave_state = wave_states.get(wave_id)
-        if type(wave_state) is not dict:
-            raise ValueError(
-                f"DECODE_ATTN A-to-F {context} references an inactive or unknown "
-                f"cohort: cohort_id={wave_id}, lane={lane}"
-            )
-        active_stage_indices, stage_phases, stage_layers = (
-            self._validate_decode_attn_wave_stages(
-                wave_state,
-                context=f"A-to-F {context}",
-            )
-        )
-        if afd_stage_idx not in active_stage_indices:
-            raise ValueError(
-                f"DECODE_ATTN A-to-F {context} stage is not active in the cohort: "
-                f"stage={afd_stage_idx}, active={sorted(active_stage_indices)}"
-            )
-
-        aggregate_phase = wave_state.get("af_phase")
-        if type(aggregate_phase) is not str:
-            raise RuntimeError(
-                f"DECODE_ATTN A-to-F {context} cohort af_phase must be an exact "
-                f"str, got {aggregate_phase!r}"
-            )
-        aggregate_layer = wave_state.get("current_layer_id")
-        if type(aggregate_layer) is not int or aggregate_layer < 0:
-            raise RuntimeError(
-                f"DECODE_ATTN A-to-F {context} cohort current_layer_id must be an "
-                f"exact non-negative int, got {aggregate_layer!r}"
-            )
-        stage_phase = stage_phases[afd_stage_idx]
-        stage_layer = stage_layers[afd_stage_idx]
-        if stage_phase != "local_attn":
-            raise ValueError(
-                f"DECODE_ATTN A-to-F {context} cohort stage is not in local_attn "
-                f"phase: stage={afd_stage_idx}, phase={stage_phase!r}"
-            )
-        if stage_layer != layer_id:
-            raise ValueError(
-                f"DECODE_ATTN A-to-F {context} cohort layer mismatch: "
-                f"expected={layer_id}, got={stage_layer}"
-            )
 
     def _validate_decode_attn_a2f_waiting_room(
         self,
