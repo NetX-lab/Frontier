@@ -46,6 +46,8 @@ from frontier.scheduler.utils.expert_parallel import (
     resolve_ep_execution_time,
     validate_completion_time,
     resolve_source_batch_ids,
+    predict_ep_wave_phase_times,
+    calculate_ep_wave_timing,
 )
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
@@ -2995,11 +2997,6 @@ class BaseClusterScheduler(ABC):
         )
         layer_workload = None
         lane_compute_times_ms: list[float] = []
-        pre_dispatch_times_ms: list[float] = []
-        dispatch_times_ms: list[float] = []
-        routed_compute_times_ms: list[float] = []
-        combine_times_ms: list[float] = []
-        post_combine_times_ms: list[float] = []
         if model_config.is_moe_layer(layer_id):
             layer_workload = self._materialize_layer_ep_workload_for_batch(
                 batch=aggregate_batch,
@@ -3023,58 +3020,20 @@ class BaseClusterScheduler(ABC):
                 per_ep_routed_tokens=dict(layer_workload.per_ep_routed_tokens),
                 trace_identity=trace_identity,
             )
-            for ep_id in layer_workload.participant_ep_ids:
-                lane_batch = self._build_prefill_ep_lane_batch(
-                    source_batch=aggregate_batch,
-                    layer_id=layer_id,
-                    ep_id=ep_id,
-                    layer_workload=layer_workload,
-                )
-                execution_time = predictor.predict_stage_execution_time(
-                    lane_batch,
-                    stage_id,
-                    cluster_type=self._cluster_type,
-                    num_layers=1,
-                    layer_id=layer_id,
-                    include_attention=False,
-                )
-                (
-                    pre_dispatch_ms,
-                    dispatch_ms,
-                    routed_compute_ms,
-                    combine_ms,
-                    post_combine_ms,
-                ) = self._get_shared_ep_phase_times_ms(
-                    execution_time,
-                    cluster_type=self._cluster_type,
-                    batch_id=int(cohort_id),
-                    layer_id=layer_id,
-                    ep_id=int(ep_id),
-                )
-                lane_compute_ms = (
-                    pre_dispatch_ms + routed_compute_ms + post_combine_ms
-                )
-                lane_comm_ms = dispatch_ms + combine_ms
-                self._log_ep_workload_trace(
-                    cluster_type=self._cluster_type,
-                    batch_id=int(cohort_id),
-                    layer_id=layer_id,
-                    lane_workload=lane_batch.lane_workload,
-                    lane_compute_ms=lane_compute_ms,
-                    routed_compute_ms=routed_compute_ms,
-                    lane_comm_ms=lane_comm_ms,
-                    pre_dispatch_ms=pre_dispatch_ms,
-                    dispatch_ms=dispatch_ms,
-                    combine_ms=combine_ms,
-                    post_combine_ms=post_combine_ms,
-                    trace_identity=trace_identity,
-                )
-                lane_compute_times_ms.append(lane_compute_ms)
-                pre_dispatch_times_ms.append(pre_dispatch_ms)
-                dispatch_times_ms.append(dispatch_ms)
-                routed_compute_times_ms.append(routed_compute_ms)
-                combine_times_ms.append(combine_ms)
-                post_combine_times_ms.append(post_combine_ms)
+            phase_times = predict_ep_wave_phase_times(
+                layer_workload=layer_workload,
+                source_batch=aggregate_batch,
+                stage_id=stage_id,
+                layer_id=layer_id,
+                cluster_type=self._cluster_type,
+                predictor=predictor,
+                lane_builder=self._build_prefill_ep_lane_batch,
+                phase_getter=self._get_shared_ep_phase_times_ms,
+                workload_logger=self._log_ep_workload_trace,
+                trace_identity=trace_identity,
+                batch_id=int(cohort_id),
+            )
+            lane_compute_times_ms = list(phase_times.lane_compute_times_ms)
             self._promote_forward_step_to_ep_wave(
                 source_batches=source_batches,
                 replica_id=replica_id,
@@ -3148,59 +3107,24 @@ class BaseClusterScheduler(ABC):
 
         if not lane_compute_times_ms:
             raise ValueError("Prefill layer wave produced no participant timing")
-        max_pre_dispatch_ms = max(pre_dispatch_times_ms)
-        max_dispatch_ms = max(dispatch_times_ms)
-        dispatch_barrier_time_ms = max_pre_dispatch_ms + max_dispatch_ms
-        dispatch_barrier_end_time_s = time + dispatch_barrier_time_ms * 1e-3
         participant_ep_ids = tuple(layer_workload.participant_ep_ids)
-        self._log_ep_barrier_trace(
+        timing = calculate_ep_wave_timing(
+            start_time_s=time,
+            phases=phase_times,
+            barrier_logger=self._log_ep_barrier_trace,
+            wave_logger=self._log_ep_wave_end_trace,
             cluster_type=self._cluster_type,
             batch_id=int(cohort_id),
             layer_id=layer_id,
-            phase="dispatch",
-            expected_ep_ids=participant_ep_ids,
-            arrived_ep_ids=participant_ep_ids,
-            max_lane_time_ms=max_pre_dispatch_ms,
-            collective_time_ms=max_dispatch_ms,
-            barrier_time_ms=dispatch_barrier_time_ms,
-            barrier_start_time_s=time,
-            barrier_end_time_s=dispatch_barrier_end_time_s,
+            participant_ep_ids=participant_ep_ids,
             trace_identity=trace_identity,
         )
-        max_routed_compute_ms = max(routed_compute_times_ms)
-        max_combine_ms = max(combine_times_ms)
-        combine_barrier_time_ms = max_routed_compute_ms + max_combine_ms
-        combine_barrier_end_time_s = (
-            dispatch_barrier_end_time_s + combine_barrier_time_ms * 1e-3
-        )
-        self._log_ep_barrier_trace(
-            cluster_type=self._cluster_type,
-            batch_id=int(cohort_id),
-            layer_id=layer_id,
-            phase="combine",
-            expected_ep_ids=participant_ep_ids,
-            arrived_ep_ids=participant_ep_ids,
-            max_lane_time_ms=max_routed_compute_ms,
-            collective_time_ms=max_combine_ms,
-            barrier_time_ms=combine_barrier_time_ms,
-            barrier_start_time_s=dispatch_barrier_end_time_s,
-            barrier_end_time_s=combine_barrier_end_time_s,
-            trace_identity=trace_identity,
-        )
-        post_combine_barrier_time_ms = max(post_combine_times_ms)
-        barrier_end_time_s = (
-            combine_barrier_end_time_s + post_combine_barrier_time_ms * 1e-3
-        )
-        self._log_ep_wave_end_trace(
-            cluster_type=self._cluster_type,
-            batch_id=int(cohort_id),
-            layer_id=layer_id,
-            wave_start_time_s=time,
-            combine_barrier_end_time_s=combine_barrier_end_time_s,
-            post_combine_time_ms=post_combine_barrier_time_ms,
-            wave_end_time_s=barrier_end_time_s,
-            trace_identity=trace_identity,
-        )
+        dispatch_barrier_time_ms = timing.dispatch_barrier_time_ms
+        dispatch_barrier_end_time_s = timing.dispatch_barrier_end_time_s
+        combine_barrier_time_ms = timing.combine_barrier_time_ms
+        combine_barrier_end_time_s = timing.combine_barrier_end_time_s
+        post_combine_barrier_time_ms = timing.post_combine_barrier_time_ms
+        barrier_end_time_s = timing.wave_end_time_s
         wave_time_ms = (
             dispatch_barrier_time_ms
             + combine_barrier_time_ms
@@ -3391,58 +3315,20 @@ class BaseClusterScheduler(ABC):
                 per_ep_routed_tokens=dict(layer_workload.per_ep_routed_tokens),
                 trace_identity=trace_identity,
             )
-            for ep_id in layer_workload.participant_ep_ids:
-                lane_batch = self._build_prefill_ep_lane_batch(
-                    source_batch=aggregate_batch,
-                    layer_id=layer_id,
-                    ep_id=ep_id,
-                    layer_workload=layer_workload,
-                )
-                execution_time = predictor.predict_stage_execution_time(
-                    lane_batch,
-                    stage_id,
-                    cluster_type=self._cluster_type,
-                    num_layers=1,
-                    layer_id=layer_id,
-                    include_attention=False,
-                )
-                (
-                    pre_dispatch_ms,
-                    dispatch_ms,
-                    routed_compute_ms,
-                    combine_ms,
-                    post_combine_ms,
-                ) = self._get_shared_ep_phase_times_ms(
-                    execution_time,
-                    cluster_type=self._cluster_type,
-                    batch_id=int(cohort_id),
-                    layer_id=layer_id,
-                    ep_id=int(ep_id),
-                )
-                lane_compute_ms = (
-                    pre_dispatch_ms + routed_compute_ms + post_combine_ms
-                )
-                lane_comm_ms = dispatch_ms + combine_ms
-                self._log_ep_workload_trace(
-                    cluster_type=self._cluster_type,
-                    batch_id=int(cohort_id),
-                    layer_id=layer_id,
-                    lane_workload=lane_batch.lane_workload,
-                    lane_compute_ms=lane_compute_ms,
-                    routed_compute_ms=routed_compute_ms,
-                    lane_comm_ms=lane_comm_ms,
-                    pre_dispatch_ms=pre_dispatch_ms,
-                    dispatch_ms=dispatch_ms,
-                    combine_ms=combine_ms,
-                    post_combine_ms=post_combine_ms,
-                    trace_identity=trace_identity,
-                )
-                lane_compute_times_ms.append(lane_compute_ms)
-                pre_dispatch_times_ms.append(pre_dispatch_ms)
-                dispatch_times_ms.append(dispatch_ms)
-                routed_compute_times_ms.append(routed_compute_ms)
-                combine_times_ms.append(combine_ms)
-                post_combine_times_ms.append(post_combine_ms)
+            phase_times = predict_ep_wave_phase_times(
+                layer_workload=layer_workload,
+                source_batch=aggregate_batch,
+                stage_id=stage_id,
+                layer_id=layer_id,
+                cluster_type=self._cluster_type,
+                predictor=predictor,
+                lane_builder=self._build_prefill_ep_lane_batch,
+                phase_getter=self._get_shared_ep_phase_times_ms,
+                workload_logger=self._log_ep_workload_trace,
+                trace_identity=trace_identity,
+                batch_id=int(cohort_id),
+            )
+            lane_compute_times_ms = list(phase_times.lane_compute_times_ms)
             self._promote_forward_step_to_ep_wave(
                 source_batches=source_batches,
                 replica_id=replica_id,
@@ -3501,59 +3387,24 @@ class BaseClusterScheduler(ABC):
 
         if not lane_compute_times_ms:
             raise ValueError("Decode layer wave produced no participant timing")
-        max_pre_dispatch_ms = max(pre_dispatch_times_ms)
-        max_dispatch_ms = max(dispatch_times_ms)
-        dispatch_barrier_time_ms = max_pre_dispatch_ms + max_dispatch_ms
-        dispatch_barrier_end_time_s = time + dispatch_barrier_time_ms * 1e-3
         participant_ep_ids = tuple(layer_workload.participant_ep_ids)
-        self._log_ep_barrier_trace(
+        timing = calculate_ep_wave_timing(
+            start_time_s=time,
+            phases=phase_times,
+            barrier_logger=self._log_ep_barrier_trace,
+            wave_logger=self._log_ep_wave_end_trace,
             cluster_type=self._cluster_type,
             batch_id=int(cohort_id),
             layer_id=layer_id,
-            phase="dispatch",
-            expected_ep_ids=participant_ep_ids,
-            arrived_ep_ids=participant_ep_ids,
-            max_lane_time_ms=max_pre_dispatch_ms,
-            collective_time_ms=max_dispatch_ms,
-            barrier_time_ms=dispatch_barrier_time_ms,
-            barrier_start_time_s=time,
-            barrier_end_time_s=dispatch_barrier_end_time_s,
+            participant_ep_ids=participant_ep_ids,
             trace_identity=trace_identity,
         )
-        max_routed_compute_ms = max(routed_compute_times_ms)
-        max_combine_ms = max(combine_times_ms)
-        combine_barrier_time_ms = max_routed_compute_ms + max_combine_ms
-        combine_barrier_end_time_s = (
-            dispatch_barrier_end_time_s + combine_barrier_time_ms * 1e-3
-        )
-        self._log_ep_barrier_trace(
-            cluster_type=self._cluster_type,
-            batch_id=int(cohort_id),
-            layer_id=layer_id,
-            phase="combine",
-            expected_ep_ids=participant_ep_ids,
-            arrived_ep_ids=participant_ep_ids,
-            max_lane_time_ms=max_routed_compute_ms,
-            collective_time_ms=max_combine_ms,
-            barrier_time_ms=combine_barrier_time_ms,
-            barrier_start_time_s=dispatch_barrier_end_time_s,
-            barrier_end_time_s=combine_barrier_end_time_s,
-            trace_identity=trace_identity,
-        )
-        post_combine_barrier_time_ms = max(post_combine_times_ms)
-        barrier_end_time_s = (
-            combine_barrier_end_time_s + post_combine_barrier_time_ms * 1e-3
-        )
-        self._log_ep_wave_end_trace(
-            cluster_type=self._cluster_type,
-            batch_id=int(cohort_id),
-            layer_id=layer_id,
-            wave_start_time_s=time,
-            combine_barrier_end_time_s=combine_barrier_end_time_s,
-            post_combine_time_ms=post_combine_barrier_time_ms,
-            wave_end_time_s=barrier_end_time_s,
-            trace_identity=trace_identity,
-        )
+        dispatch_barrier_time_ms = timing.dispatch_barrier_time_ms
+        dispatch_barrier_end_time_s = timing.dispatch_barrier_end_time_s
+        combine_barrier_time_ms = timing.combine_barrier_time_ms
+        combine_barrier_end_time_s = timing.combine_barrier_end_time_s
+        post_combine_barrier_time_ms = timing.post_combine_barrier_time_ms
+        barrier_end_time_s = timing.wave_end_time_s
         for source_batch in non_idle_source_batches:
             source_batch._decode_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
 
