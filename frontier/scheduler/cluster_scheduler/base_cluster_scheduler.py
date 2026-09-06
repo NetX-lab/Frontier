@@ -2715,10 +2715,14 @@ class BaseClusterScheduler(ABC):
             batch=batch,
             step_id_getter=self._get_forward_step_id,
             aggregate_batch_builder=self._create_virtual_global_batch,
-            replica_local_id=replica_local_id,
         )
         source_batches = wave_inputs.source_batches
         cohort_id = wave_inputs.step_id
+        for lane_id, source_batch in source_batches.items():
+            if not hasattr(source_batch, "_stage_owner_replica_local_id"):
+                source_batch._stage_owner_replica_local_id = (
+                    replica_local_id if replica_local_id is not None else lane_id
+                )
         model_config = self._config.replica_config.model_config
         predictor = self._predictor
         non_idle_source_batches = list(wave_inputs.non_idle_batches)
@@ -2961,10 +2965,14 @@ class BaseClusterScheduler(ABC):
             batch=batch,
             step_id_getter=self._get_forward_step_id,
             aggregate_batch_builder=self._create_virtual_global_batch,
-            replica_local_id=replica_local_id,
         )
         source_batches = wave_inputs.source_batches
         cohort_id = wave_inputs.step_id
+        for lane_id, source_batch in source_batches.items():
+            if not hasattr(source_batch, "_stage_owner_replica_local_id"):
+                source_batch._stage_owner_replica_local_id = (
+                    replica_local_id if replica_local_id is not None else lane_id
+                )
         model_config = self._config.replica_config.model_config
         predictor = self._predictor
         non_idle_source_batches = list(wave_inputs.non_idle_batches)

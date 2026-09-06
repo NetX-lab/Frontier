@@ -25,7 +25,6 @@ def prepare_ep_wave_inputs(
     batch: Batch,
     step_id_getter: Callable[[Batch], int],
     aggregate_batch_builder: Callable[[Batch, int, int], Batch],
-    replica_local_id: int | None = None,
 ) -> EPWaveInputs:
     """Validate lane ownership and build the aggregate predictor input."""
 
@@ -46,11 +45,6 @@ def prepare_ep_wave_inputs(
     for lane_id, source_batch in normalized.items():
         if int(step_id_getter(source_batch)) != step_id:
             raise ValueError("all EP wave source batches must share one forward step ID")
-        if not hasattr(source_batch, "_stage_owner_replica_local_id"):
-            source_batch._stage_owner_replica_local_id = (
-                replica_local_id if replica_local_id is not None else lane_id
-            )
-
     non_idle = tuple(source_batch for source_batch in normalized.values() if not source_batch.is_idle)
     if not non_idle:
         raise ValueError("EP wave requires a non-idle source batch")
