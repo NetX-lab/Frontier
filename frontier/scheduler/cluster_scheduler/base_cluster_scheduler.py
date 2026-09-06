@@ -75,6 +75,12 @@ from frontier.scheduler.utils.pdaf_phase import (
     commit_decode_attn_batch_phases,
     set_decode_attn_batch_phase,
 )
+from frontier.scheduler.utils.pdaf_attention import (
+    get_a2f_active_local_attn_lanes,
+    get_stage_slot_active_lanes,
+    get_a2f_expected_lanes,
+    get_f2a_expected_lanes,
+)
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -6507,7 +6513,19 @@ class BaseClusterScheduler(ABC):
         self._decode_attn_barrier_round_counter = next_round_id + 1
         return next_round_id
 
-    def _get_decode_attn_a2f_active_local_attn_lanes(
+    def _get_decode_attn_a2f_active_local_attn_lanes(self, **kwargs):
+        return get_a2f_active_local_attn_lanes(self, **kwargs)
+
+    def _get_decode_attn_stage_slot_active_lanes(self, afd_stage_idx, **kwargs):
+        return get_stage_slot_active_lanes(self, afd_stage_idx, **kwargs)
+
+    def _get_decode_attn_a2f_expected_lanes(self, afd_stage_idx=None, **kwargs):
+        return get_a2f_expected_lanes(self, afd_stage_idx, **kwargs)
+
+    def _get_decode_attn_f2a_expected_lanes(self, replica_id, **kwargs):
+        return get_f2a_expected_lanes(self, replica_id, **kwargs)
+
+    def _get_decode_attn_a2f_active_local_attn_lanes_legacy(
         self,
         *,
         cohort_id: int,
@@ -6616,7 +6634,7 @@ class BaseClusterScheduler(ABC):
 
         return active_lanes
 
-    def _get_decode_attn_a2f_expected_lanes(
+    def _get_decode_attn_a2f_expected_lanes_legacy(
         self,
         afd_stage_idx: int | None = None,
         *,
@@ -6695,7 +6713,7 @@ class BaseClusterScheduler(ABC):
 
         return []
 
-    def _get_decode_attn_stage_slot_active_lanes(
+    def _get_decode_attn_stage_slot_active_lanes_legacy(
         self,
         afd_stage_idx: int,
         *,
@@ -6799,7 +6817,7 @@ class BaseClusterScheduler(ABC):
 
         return active_lanes
 
-    def _get_decode_attn_f2a_expected_lanes(
+    def _get_decode_attn_f2a_expected_lanes_legacy(
         self,
         replica_id: int,
         *,
