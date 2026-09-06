@@ -76,6 +76,7 @@ from frontier.scheduler.utils.kv_arrival import (
     handle_decode_arrival,
     handle_decode_attn_arrival,
 )
+from frontier.scheduler.utils.m2n_arrival import route_m2n_arrival
 from frontier.scheduler.utils.pdaf_phase import (
     prepare_decode_attn_batch_phase,
     apply_decode_attn_batch_phase,
@@ -3531,55 +3532,13 @@ class BaseClusterScheduler(ABC):
         target admission succeeds.  Direct scheduler callers retain the
         historical default, where the end hook has already been applied.
         """
-        from frontier.logger import get_cluster_logger
-
-        if type(expected_roundtrip_inflight) is not bool:
-            raise ValueError(
-                "M2N arrival expected_roundtrip_inflight must be an exact bool, "
-                f"got {expected_roundtrip_inflight!r}"
-            )
-        if type(request_end_deferred) is not bool:
-            raise ValueError(
-                "M2N arrival request_end_deferred must be an exact bool, "
-                f"got {request_end_deferred!r}"
-            )
-        if request_end_deferred and expected_roundtrip_inflight is not False:
-            raise ValueError(
-                "M2N arrival with deferred request end must validate the "
-                "projected roundtrip_inflight=False state"
-            )
-
-        if self._cluster_type is ClusterType.DECODE_ATTN:
-            self._validate_decode_attn_m2n_receipt(
-                batch,
-                transfer_info,
-                expected_roundtrip_inflight=expected_roundtrip_inflight,
-                request_end_deferred=request_end_deferred,
-            )
-        else:
-            self.preflight_m2n_arrival(batch, transfer_info)
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-
-        request_ids = [req.id for req in batch.requests]
-        pipeline_stage = "attn→ffn" if transfer_info.is_attn_to_ffn else "ffn→attn"
-        logger.info(f"{self._cluster_type.name} cluster received M2N data at {time:.3f}s: "
-                   f"requests {request_ids} from {pipeline_stage} transfer, "
-                   f"batch_id={batch.id}, transfer_size={transfer_info.activation_size_bytes} bytes, "
-                   f"source_cluster={transfer_info.source_cluster_type.name}")
-
-        if self._cluster_type == ClusterType.DECODE_FFN:
-            return self._handle_m2n_arrival_decode_ffn(time, batch, transfer_info, logger)
-        if self._cluster_type == ClusterType.DECODE_ATTN:
-            return self._handle_m2n_arrival_decode_attn(
-                time,
-                batch,
-                transfer_info,
-                logger,
-                expected_roundtrip_inflight=expected_roundtrip_inflight,
-                request_end_deferred=request_end_deferred,
-            )
-        raise RuntimeError(
-            f"Validated M2N arrival has no handler for cluster {self._cluster_type.name}"
+        return route_m2n_arrival(
+            self,
+            time,
+            batch,
+            transfer_info,
+            expected_roundtrip_inflight=expected_roundtrip_inflight,
+            request_end_deferred=request_end_deferred,
         )
 
     def validate_m2n_arrival_target(self, transfer_info: "M2NTransferInfo") -> None:
