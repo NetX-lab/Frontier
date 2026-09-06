@@ -44,6 +44,7 @@ from frontier.scheduler.utils.expert_parallel import (
     get_ep_phase_times_ms,
 )
 from frontier.scheduler.utils.ep_wave_inputs import prepare_ep_wave_inputs
+from frontier.scheduler.utils.ep_wave_schedule import schedule_layer_wave
 from frontier.scheduler.utils.ep_wave import prepare_moe_wave_from_inputs
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
@@ -1771,165 +1772,19 @@ class BaseClusterScheduler(ABC):
         replica_local_id: int | None = None,
         cohort_batches: dict[int, Batch] | None = None,
     ) -> List:
-        """Run one layer's FFN wave and schedule its slowest-lane barrier."""
+        """Schedule one PREFILL layer wave through the shared utility."""
 
-        from frontier.events.prefill_sync_collective_event import (
-            PrefillSyncCollectiveEvent,
-        )
-
-        if not isinstance(time, Real) or not math.isfinite(float(time)):
-            raise ValueError("prefill EP wave time must be finite")
-        time = float(time)
-        wave_inputs = prepare_ep_wave_inputs(
-            source_batches=self._forward_step_source_batches(cohort_batches, batch),
+        return schedule_layer_wave(
+            self,
+            mode="prefill",
+            time=time,
+            replica_id=replica_id,
+            stage_id=stage_id,
             batch=batch,
-            step_id_getter=self._get_forward_step_id,
-            aggregate_batch_builder=self._create_virtual_global_batch,
+            layer_id=layer_id,
+            replica_local_id=replica_local_id,
+            cohort_batches=cohort_batches,
         )
-        source_batches = wave_inputs.source_batches
-        cohort_id = wave_inputs.step_id
-        for lane_id, source_batch in source_batches.items():
-            if not hasattr(source_batch, "_stage_owner_replica_local_id"):
-                source_batch._stage_owner_replica_local_id = (
-                    replica_local_id if replica_local_id is not None else lane_id
-                )
-        model_config = self._config.replica_config.model_config
-        predictor = self._predictor
-        non_idle_source_batches = list(wave_inputs.non_idle_batches)
-        layer_workload = None
-        lane_compute_times_ms: list[float] = []
-        if model_config.is_moe_layer(layer_id):
-            plan = self._prepare_moe_ep_wave_plan(
-                wave_inputs=wave_inputs,
-                time=time,
-                replica_id=replica_id,
-                stage_id=stage_id,
-                layer_id=layer_id,
-            )
-            layer_workload = plan.layer_workload
-            phase_times = plan.phase_times
-            trace_identity = plan.trace_identity
-            lane_compute_times_ms = list(phase_times.lane_compute_times_ms)
-            self._promote_forward_step_to_ep_wave(
-                source_batches=source_batches,
-                replica_id=replica_id,
-                stage_id=stage_id,
-                layer_id=layer_id,
-                cohort_id=cohort_id,
-                participant_ep_ids=tuple(layer_workload.participant_ep_ids),
-            )
-        else:
-            from frontier.events.dense_layer_complete_event import (
-                DenseLayerCompleteEvent,
-            )
-
-            dense_events = []
-            for source_batch in non_idle_source_batches:
-                execution_time = predictor.predict_stage_execution_time(
-                    source_batch,
-                    stage_id,
-                    cluster_type=self._cluster_type,
-                    num_layers=1,
-                    layer_id=layer_id,
-                )
-                post_attention_getter = getattr(
-                    execution_time,
-                    "get_single_layer_post_attention_time",
-                    None,
-                )
-                if not callable(post_attention_getter):
-                    raise ValueError(
-                        "Prefill dense predictor result is missing post-attention timing"
-                    )
-                dense_time_ms = float(post_attention_getter())
-                if not math.isfinite(dense_time_ms) or dense_time_ms < 0:
-                    raise ValueError(
-                        "Prefill dense post-attention time must be finite and non-negative"
-                    )
-                self.transition_stage_admission_for_layer(
-                    source_batch,
-                    stage_id=stage_id,
-                    layer_id=layer_id,
-                    operation_kind="ffn",
-                    scope=FULL_STAGE_WORLD,
-                )
-                component_ledger = getattr(
-                    source_batch,
-                    "_prefill_model_execution_components_ms_by_stage",
-                    None,
-                )
-                if (
-                    not isinstance(component_ledger, dict)
-                    or stage_id not in component_ledger
-                    or not isinstance(component_ledger[stage_id], list)
-                ):
-                    raise ValueError(
-                        "missing PREFILL model-execution component ledger for dense layer: "
-                        f"replica={replica_id}, stage={stage_id}, layer={layer_id}, batch={source_batch.id}"
-                    )
-                component_ledger[stage_id].append(dense_time_ms)
-                dense_events.append(
-                    DenseLayerCompleteEvent(
-                        time + dense_time_ms * 1e-3,
-                        replica_id,
-                        stage_id,
-                        source_batch,
-                        layer_id,
-                        "prefill",
-                        self._cluster_type,
-                    )
-                )
-            return dense_events
-
-        if not lane_compute_times_ms:
-            raise ValueError("Prefill layer wave produced no participant timing")
-        timing = plan.timing
-        barrier_end_time_s = timing.wave_end_time_s
-        wave_time_ms = timing.dispatch_barrier_time_ms + timing.combine_barrier_time_ms + timing.post_combine_barrier_time_ms
-        for source_batch in non_idle_source_batches:
-            component_ledger = getattr(
-                source_batch,
-                "_prefill_model_execution_components_ms_by_stage",
-                None,
-            )
-            if (
-                not isinstance(component_ledger, dict)
-                or stage_id not in component_ledger
-                or not isinstance(component_ledger[stage_id], list)
-            ):
-                raise ValueError(
-                    "missing PREFILL model-execution component ledger for EP wave: "
-                    f"replica={replica_id}, stage={stage_id}, layer={layer_id}, "
-                    f"batch={source_batch.id}"
-                )
-            component_ledger[stage_id].append(wave_time_ms)
-            source_batch._prefill_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
-            source_batch._prefill_ep_wave_workload = layer_workload
-
-        sync_room = self._prefill_sync_waiting_room[replica_id][stage_id][
-            cohort_id
-        ][layer_id]["post_moe"]
-        if sync_room["batches"]:
-            raise ValueError(
-                "PREFILL EP wave post_moe room already contains a batch: "
-                f"replica={replica_id}, stage={stage_id}, layer={layer_id}, "
-                f"forward_cohort_id={cohort_id}"
-            )
-        sync_room["batches"].update(source_batches)
-        sync_room["arrival_times"].update(
-            {lane_id: barrier_end_time_s for lane_id in source_batches}
-        )
-        return [
-            PrefillSyncCollectiveEvent(
-                barrier_end_time_s,
-                replica_id,
-                stage_id,
-                cohort_id,
-                "post_moe",
-                layer_id,
-                cluster_type=self._cluster_type,
-            )
-        ]
 
     def _uses_shared_prefill_ep_wave(self, batch: Batch, layer_id: int) -> bool:
         """Return whether the canonical shared-domain PREFILL EP path is active."""
@@ -1983,133 +1838,19 @@ class BaseClusterScheduler(ABC):
         replica_local_id: int | None = None,
         cohort_batches: dict[int, Batch] | None = None,
     ) -> List:
-        """Run one unified-DECODE layer's local EP wave and barrier."""
+        """Schedule one DECODE layer wave through the shared utility."""
 
-        from frontier.events.decode_sync_collective_event import (
-            DecodeSyncCollectiveEvent,
-        )
-
-        if not isinstance(time, Real) or not math.isfinite(float(time)):
-            raise ValueError("decode EP wave time must be finite")
-        time = float(time)
-        wave_inputs = prepare_ep_wave_inputs(
-            source_batches=self._forward_step_source_batches(cohort_batches, batch),
+        return schedule_layer_wave(
+            self,
+            mode="decode",
+            time=time,
+            replica_id=replica_id,
+            stage_id=stage_id,
             batch=batch,
-            step_id_getter=self._get_forward_step_id,
-            aggregate_batch_builder=self._create_virtual_global_batch,
+            layer_id=layer_id,
+            replica_local_id=replica_local_id,
+            cohort_batches=cohort_batches,
         )
-        source_batches = wave_inputs.source_batches
-        cohort_id = wave_inputs.step_id
-        for lane_id, source_batch in source_batches.items():
-            if not hasattr(source_batch, "_stage_owner_replica_local_id"):
-                source_batch._stage_owner_replica_local_id = (
-                    replica_local_id if replica_local_id is not None else lane_id
-                )
-        model_config = self._config.replica_config.model_config
-        predictor = self._predictor
-        non_idle_source_batches = list(wave_inputs.non_idle_batches)
-        layer_workload = None
-        lane_compute_times_ms: list[float] = []
-        if model_config.is_moe_layer(layer_id):
-            plan = self._prepare_moe_ep_wave_plan(
-                wave_inputs=wave_inputs,
-                time=time,
-                replica_id=replica_id,
-                stage_id=stage_id,
-                layer_id=layer_id,
-            )
-            layer_workload = plan.layer_workload
-            phase_times = plan.phase_times
-            trace_identity = plan.trace_identity
-            lane_compute_times_ms = list(phase_times.lane_compute_times_ms)
-            self._promote_forward_step_to_ep_wave(
-                source_batches=source_batches,
-                replica_id=replica_id,
-                stage_id=stage_id,
-                layer_id=layer_id,
-                cohort_id=cohort_id,
-                participant_ep_ids=tuple(layer_workload.participant_ep_ids),
-            )
-        else:
-            from frontier.events.dense_layer_complete_event import (
-                DenseLayerCompleteEvent,
-            )
-
-            dense_events = []
-            for source_batch in non_idle_source_batches:
-                execution_time = predictor.predict_stage_execution_time(
-                    source_batch,
-                    stage_id,
-                    cluster_type=self._cluster_type,
-                    num_layers=1,
-                    layer_id=layer_id,
-                )
-                post_attention_getter = getattr(
-                    execution_time,
-                    "get_single_layer_post_attention_time",
-                    None,
-                )
-                if not callable(post_attention_getter):
-                    raise ValueError(
-                        "Decode dense predictor result is missing post-attention timing"
-                    )
-                dense_time_ms = float(post_attention_getter())
-                if not math.isfinite(dense_time_ms) or dense_time_ms < 0:
-                    raise ValueError(
-                        "Decode dense post-attention time must be finite and non-negative"
-                    )
-                self.transition_stage_admission_for_layer(
-                    source_batch,
-                    stage_id=stage_id,
-                    layer_id=layer_id,
-                    operation_kind="ffn",
-                    scope=FULL_STAGE_WORLD,
-                )
-                dense_events.append(
-                    DenseLayerCompleteEvent(
-                        time + dense_time_ms * 1e-3,
-                        replica_id,
-                        stage_id,
-                        source_batch,
-                        layer_id,
-                        "decode",
-                        self._cluster_type,
-                    )
-                )
-            return dense_events
-
-        if not lane_compute_times_ms:
-            raise ValueError("Decode layer wave produced no participant timing")
-        timing = plan.timing
-        barrier_end_time_s = timing.wave_end_time_s
-        for source_batch in non_idle_source_batches:
-            source_batch._decode_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
-
-        batch_global_id = cohort_id
-        sync_room = self._decode_sync_waiting_room[replica_id][stage_id][
-            batch_global_id
-        ][layer_id]["post_moe"]
-        if sync_room["batches"]:
-            raise ValueError(
-                "DECODE EP wave post_moe room already contains a batch: "
-                f"replica={replica_id}, stage={stage_id}, layer={layer_id}, "
-                f"forward_cohort_id={batch_global_id}"
-            )
-        sync_room["batches"].update(source_batches)
-        sync_room["arrival_times"].update(
-            {lane_id: barrier_end_time_s for lane_id in source_batches}
-        )
-        return [
-            DecodeSyncCollectiveEvent(
-                barrier_end_time_s,
-                replica_id,
-                stage_id,
-                batch_global_id,
-                "post_moe",
-                layer_id,
-                cluster_type=self._cluster_type,
-            )
-        ]
 
     def _uses_shared_decode_ep_wave(self, batch: Batch, layer_id: int) -> bool:
         """Return whether the canonical unified-DECODE EP path is active."""
