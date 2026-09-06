@@ -293,7 +293,7 @@ _EVENT_INT_FIELDS = {
     "new_events_generated",
     "decode_step",
 }
-_EVENT_FLOAT_MS_FIELDS = {"transfer_time_ms", "scheduling_interval_ms"}
+_EVENT_FLOAT_MS_FIELDS = {"transfer_time_ms"}
 _EVENT_FLOAT_SECOND_FIELDS = {
     "stage_execution_time",
     "batch_stage_execution_time",
