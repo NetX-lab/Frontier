@@ -88,6 +88,7 @@ from frontier.scheduler.utils.collective_timing import (
     validate_decode_layer_advance,
 )
 from frontier.scheduler.utils.prefill_collective import handle_prefill_sync_collective
+from frontier.scheduler.utils.decode_collective import handle_decode_sync_collective
 from frontier.scheduler.utils.execution_time_metrics import (
     build_single_layer_metrics_execution_time,
 )
