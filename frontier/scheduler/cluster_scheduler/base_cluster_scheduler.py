@@ -47,6 +47,7 @@ from frontier.scheduler.utils.ep_wave_schedule import schedule_layer_wave
 from frontier.scheduler.utils.ep_wave import prepare_moe_wave_from_inputs
 from frontier.scheduler.utils.layer_workload import materialize_layer_workload
 from frontier.scheduler.utils.layer_admission import transition_layer_admission
+from frontier.scheduler.utils.m2n_events import build_aggregated_batch_transfer_events
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
     format_ep_trace_identity,
@@ -1207,57 +1208,15 @@ class BaseClusterScheduler(ABC):
         source_replica_id: int,
         source_replica_local_id: int | None,
     ):
-        """Create M2N transfer events for aggregated batch to return to decode-attn cluster."""
-        from frontier.events.m2n_transfer_start_event import M2NTransferStartEvent
-        from frontier.types import ClusterType
-        from frontier.logger import get_cluster_logger
+        """Create M2N transfer events for an aggregated return batch."""
 
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-
-        logger.info(f"[DEBUG] _create_m2n_transfer_events_for_aggregated_batch called: "
-                   f"batch_id={batch.id}, time={current_time:.3f}s, "
-                   f"num_requests={len(batch.requests)}")
-
-        activation_size, transfer_time = self._m2n_transfer_predictor.get_transfer_info(
-            source_cluster_type=ClusterType.DECODE_FFN,
-            target_cluster_type=ClusterType.DECODE_ATTN,
-            batch=batch,
-            replica_config=self._config.replica_config
+        return build_aggregated_batch_transfer_events(
+            self,
+            batch,
+            current_time,
+            source_replica_id=source_replica_id,
+            source_replica_local_id=source_replica_local_id,
         )
-
-        layer_id = self._get_current_layer_id_from_batch(batch)
-
-        m2n_event = M2NTransferStartEvent(
-            time=current_time,
-            source_replica_id=batch.decode_attn_original_replica_id,
-            source_replica_local_id=batch.decode_attn_original_replica_local_id,
-            source_cluster_type=ClusterType.DECODE_FFN,
-            target_cluster_type=ClusterType.DECODE_ATTN,
-            batch=batch,
-            activation_size_bytes=activation_size,
-            transfer_time_ms=transfer_time,
-            layer_id=layer_id,
-            afd_stage_idx=batch.afd_stage_idx,
-            source_execution_replica_id=source_replica_id,
-            source_execution_replica_local_id=source_replica_local_id,
-            target_execution_replica_id=batch.decode_attn_original_replica_id,
-            target_execution_replica_local_id=(
-                batch.decode_attn_original_replica_local_id
-            ),
-        )
-
-        try:
-            req_ids = [r.id for r in batch.requests]
-            logger.info(
-                f"[M2N][F2A][CREATE] batch_id={batch.id} reqs={req_ids} "
-                f"batch_global_id={getattr(batch, 'global_id', '?')} "
-                f"decode_attn_orig=(replica={getattr(batch, 'decode_attn_original_replica_id', '?')},dp={getattr(batch, 'decode_attn_original_replica_local_id', '?')}) "
-                f"target={ClusterType.DECODE_ATTN.name} size={activation_size}B t_ms={transfer_time:.3f}"
-            )
-        except Exception:
-            logger.info(f"[M2N][F2A][CREATE] batch_id={batch.id} (details unavailable)")
-
-        return [m2n_event]
 
     def _get_current_layer_id_from_batch(self, batch: Batch) -> int:
         if not batch.requests:
