@@ -69,6 +69,7 @@ from frontier.scheduler.utils.pdaf_validation import (
 from frontier.scheduler.utils.pdaf_entries import build_decode_ffn_idle_entries
 from frontier.scheduler.utils.pdaf_a2f import prepare_a2f_admission
 from frontier.scheduler.utils.ep_combine import prepare_ep_combine_completion
+from frontier.scheduler.utils.ep_dispatch import prepare_dispatch_advance
 from frontier.scheduler.utils.m2n_grouping import prepare_ffn_group_promotion
 from frontier.scheduler.utils.m2n_state import M2NTransferState
 from frontier.scheduler.utils.attention_transfer_state import AttentionTransferState
@@ -1598,39 +1599,22 @@ class BaseClusterScheduler(ABC):
             stage_id
         ][batch_global_id]
         ep_batches = dispatch_wait_room["batches"]
-        if not ep_batches:
-            raise ValueError(
-                f"EP dispatch collective reached with empty ep_batches: "
-                f"global_id={batch_global_id}"
+        prepared_lanes = prepare_dispatch_advance(ep_batches=ep_batches, time=time)
+        events = [
+            EPAllToAllCombineReadyEvent(
+                lane.ready_time, replica_id, stage_id, lane.batch, lane.ep_id
             )
-
-        prepared_lanes = []
-        for lane_ep_id, ep_batch in ep_batches.items():
-            expert_compute_time = getattr(ep_batch, "expert_compute_time", None)
-            if expert_compute_time is None:
-                raise ValueError(
-                    f"Missing expert_compute_time for EP batch {ep_batch.id} "
-                    f"(global_id={batch_global_id}, ep_id={lane_ep_id})"
-                )
-            ready_time = time + expert_compute_time
-            prepared_lanes.append(
-                (
-                    ep_batch,
-                    ready_time,
-                    EPAllToAllCombineReadyEvent(
-                        ready_time, replica_id, stage_id, ep_batch, lane_ep_id
-                    ),
-                )
-            )
+            for lane in prepared_lanes
+        ]
 
         self._ep_alltoall_dispatch_waiting_room[replica_id][stage_id].pop(
             batch_global_id
         )
-        for ep_batch, ready_time, _ in prepared_lanes:
-            ep_batch._ep_dispatch_collective_end_time_s = float(time)
-            ep_batch.time = ready_time
+        for lane in prepared_lanes:
+            lane.batch._ep_dispatch_collective_end_time_s = float(time)
+            lane.batch.time = lane.ready_time
 
-        return [event for _, _, event in prepared_lanes]
+        return events
 
     def on_ep_alltoall_combine_ready(self, time: float, replica_id: int, stage_id: int, batch, ep_id: int):
         """
