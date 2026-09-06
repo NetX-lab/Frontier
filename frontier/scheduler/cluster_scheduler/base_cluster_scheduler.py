@@ -100,6 +100,7 @@ from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
 )
 from frontier.scheduler.utils.layer_path import uses_shared_layer_path
 from frontier.scheduler.utils.replica_config import resolve_replica_scheduler_config
+from frontier.scheduler.utils.stage_contexts import build_stage_execution_contexts
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -794,75 +795,19 @@ class BaseClusterScheduler(ABC):
         self._batch_group_creation_counter = 0
 
     def _build_stage_execution_contexts(self) -> dict[tuple[int, int], StageExecutionContext]:
-        """Create one parent admission context for every physical Replica stage."""
+        """Compatibility wrapper for stage admission context construction."""
 
-        replica_config = getattr(
-            getattr(self, "_config", None),
-            "replica_config",
-            None,
-        )
-        model_config = getattr(replica_config, "model_config", None)
-        if replica_config is None or model_config is None:
-            raise ValueError(
-                "Stage execution contexts require replica_config.model_config"
-            )
-        model_is_moe = bool(getattr(model_config, "is_moe", False))
-        # Shared full-model roles (co-location, PDD PREFILL/DECODE) execute
-        # routed-expert work inline, while PD-AF DECODE_FFN uses explicit EP
-        # children.  All of those MoE operation paths must validate the same
-        # Replica-local participant domain.  DECODE_ATTN has no routed-expert
-        # operation and therefore keeps the dense/full-stage singleton scope.
-        has_local_ep_domain = model_is_moe and self._cluster_type in (
-            ClusterType.MONOLITHIC,
-            ClusterType.PREFILL,
-            ClusterType.DECODE,
-            ClusterType.DECODE_FFN,
-        )
-        configured_ep_size = getattr(replica_config, "moe_expert_parallel_size", None)
-        if model_is_moe and has_local_ep_domain:
-            if type(configured_ep_size) is not int or configured_ep_size <= 0:
-                raise ValueError(
-                    "MoE stage execution contexts require an exact positive "
-                    "moe_expert_parallel_size"
-                )
-            ep_size = configured_ep_size
-        else:
-            ep_size = 1
-        shared_full_stage_capacity = int(
-            getattr(
+        replica_config = getattr(self._config, "replica_config", None)
+        return build_stage_execution_contexts(
+            cluster=self._cluster,
+            cluster_type=self._cluster_type,
+            replica_config=replica_config,
+            replica_dp_size=getattr(
                 self,
                 "_replica_dp_size",
                 getattr(replica_config, "attn_dp", 1) or 1,
-            )
-            or 1
+            ),
         )
-
-        contexts: dict[tuple[int, int], StageExecutionContext] = {}
-        for replica_id, replica in self._cluster.replicas.items():
-            if type(replica_id) is not int or replica_id < 0:
-                raise ValueError(
-                    "Cluster Replica IDs must be exact non-negative ints"
-                )
-            num_stages = getattr(replica, "num_pipeline_stages", None)
-            if num_stages is None:
-                num_stages = getattr(replica_config, "num_pipeline_stages", None)
-            if type(num_stages) is not int or num_stages <= 0:
-                raise ValueError(
-                    "Replica num_pipeline_stages must be an exact positive int"
-                )
-            for stage_id in range(num_stages):
-                contexts[(replica_id, stage_id)] = StageExecutionContext(
-                    replica_id=replica_id,
-                    stage_id=stage_id,
-                    ep_size=ep_size,
-                    full_stage_capacity=(
-                        shared_full_stage_capacity
-                        if self._cluster_type
-                        in (ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE)
-                        else 1
-                    ),
-                )
-        return contexts
 
 
     def sort_requests(self) -> None:
