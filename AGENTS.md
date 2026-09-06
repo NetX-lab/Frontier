@@ -6,6 +6,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-06 | Added the `FRONTIER_TMP_ROOT` and `FRONTIER_PDAF_REFERENCE_REPO_ROOT` overrides for developer-specific test-harness paths. |
 | 2026-09-05 | Added the authoritative vLLM parallel-semantics and Frontier lane-mapping contract. |
 | 2026-09-05 | Clarified Replica-local collective backend materialization. |
 
@@ -764,6 +765,20 @@ Start with:
 - `pytest tests/unit/test_pdd_public_surface_docs.py tests/unit/test_examples_pdd_scripts.py -q`
 - `bash tests/debug/e2e-level/monolith_mode/scripts/test_dense_tp2_pp2_dummy.sh`
 - `bash tests/debug/e2e-level/monolith_mode/scripts/test_moe_tp2_ep2_pp2_dummy.sh`
+
+### Scratch root for heavyweight harnesses
+
+The wall-time scaling sweep (`tests/performance/sim_walltime_scaling/sweep.py`), the MoE-EP baseline replay (`tests/e2e/moe_ep_baseline_replay.py`), and the MoE-EP non-dummy matrix (`tests/e2e/moe_ep_non_dummy_matrix.py`) write large intermediate outputs under one shared scratch root, resolved by `tests/scratch_root.py`. The historical default is `/data/ycfeng/tmp`. On any other machine, set `FRONTIER_TMP_ROOT` to an absolute, writable directory before running those harnesses or their unit tests:
+
+```bash
+export FRONTIER_TMP_ROOT=/path/to/large/scratch
+```
+
+`FRONTIER_WALLTIME_TMPDIR` (sweep-specific child temp directory) must still resolve to a descendant of that root.
+
+### Pinned Reference checkout for PD-AF parity
+
+The PD-AF parity harness (`tests/e2e/pd_af_parity/`) and `tests/integration/test_pdaf_reference_lifecycle_observer.py` compare the current branch against a pinned, read-only Reference checkout whose git HEAD and source hashes are asserted at runtime. Its location is resolved by `tests/e2e/pd_af_parity/reference_repo_root.py`, with the historical default `/data/ycfeng/stepfun-performance-optimization/Frontier/worktrees/ref-afd-readonly`. If your checkout lives elsewhere, point `FRONTIER_PDAF_REFERENCE_REPO_ROOT` at it (absolute path). Only the location is configurable; the pinned identity checks are unchanged, so the tests still require a checkout at the pinned commit.
 
 ## Contributing
 

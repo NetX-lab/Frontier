@@ -16,6 +16,7 @@ from typing import Any
 import pytest
 
 import tests.e2e.moe_ep_non_dummy_matrix as matrix_module
+from tests.scratch_root import resolve_scratch_root
 import frontier.scheduler.cluster_scheduler.base_cluster_scheduler as cluster_scheduler_module
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import BaseClusterScheduler
 from frontier.types import ClusterType
@@ -2981,8 +2982,8 @@ def test_preflight_cli_writes_independent_ledger_and_fails_closed(
     ):
         assert list(selected_cases) == cases
         assert repo_root == REPO_ROOT
-        assert output_root == Path(
-            "/data/ycfeng/tmp/frontier_non_dummy_optimization_matrix"
+        assert output_root == (
+            resolve_scratch_root() / "frontier_non_dummy_optimization_matrix"
         )
         assert matrix_kind == "optimization"
         return expected_rows

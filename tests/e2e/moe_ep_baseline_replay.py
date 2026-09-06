@@ -29,10 +29,10 @@ from tests.e2e.moe_ep_non_dummy_matrix import (
     _write_jsonl,
     validate_profile_inputs,
 )
+from tests.scratch_root import SCRATCH_ROOT_ENV, resolve_scratch_root
 
 
 EXPECTED_BASELINE_COMMIT = "5cb8dda2ed6aafeaa02a480685d34014ae43e4f9"
-TMP_ROOT = Path("/data/ycfeng/tmp")
 EXPECTED_ARCHITECTURE_COUNTS = Counter(
     {
         "co-location": 50,
@@ -56,10 +56,20 @@ def translate_routing_selector(distribution: str) -> tuple[str, str]:
     return mode, normalized
 
 
+def tmp_root() -> Path:
+    """Return the scratch root that bounds every replay write path."""
+
+    return resolve_scratch_root()
+
+
 def _require_tmp_path(path: Path, *, label: str) -> Path:
     resolved = path.resolve()
-    if not resolved.is_relative_to(TMP_ROOT.resolve()):
-        raise ValueError(f"{label} must be under {TMP_ROOT}: {resolved}")
+    scratch_root = tmp_root()
+    if not resolved.is_relative_to(scratch_root.resolve()):
+        raise ValueError(
+            f"{label} must be under {scratch_root}: {resolved} "
+            f"(set {SCRATCH_ROOT_ENV} to relocate the scratch root)"
+        )
     return resolved
 
 
@@ -190,14 +200,15 @@ def build_baseline_shell_command(
         case.routing_distribution
     )
 
+    scratch_root = tmp_root()
     env = dict(os.environ)
     env.update(
         {
             "PYTHONPATH": str(baseline_repo_root),
             "PYTHONDONTWRITEBYTECODE": "1",
-            "TMPDIR": str(TMP_ROOT),
-            "TEMP": str(TMP_ROOT),
-            "TMP": str(TMP_ROOT),
+            "TMPDIR": str(scratch_root),
+            "TEMP": str(scratch_root),
+            "TMP": str(scratch_root),
             "PYTHON_BIN": str(python_executable),
             "WANDB_DISABLED": "true",
             "VIDUR_DISABLE_WANDB": "1",
@@ -772,12 +783,12 @@ def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--data-cwd",
         type=Path,
-        default=TMP_ROOT / "frontier_baseline_replay_data",
+        default=tmp_root() / "frontier_baseline_replay_data",
     )
     parser.add_argument(
         "--output-root",
         type=Path,
-        default=TMP_ROOT / "frontier_baseline_replay_observable_v1",
+        default=tmp_root() / "frontier_baseline_replay_observable_v1",
     )
     parser.add_argument(
         "--results-path",
