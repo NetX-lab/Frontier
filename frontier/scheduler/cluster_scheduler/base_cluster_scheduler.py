@@ -68,6 +68,7 @@ from frontier.scheduler.utils.pdaf_validation import (
 )
 from frontier.scheduler.utils.pdaf_entries import build_decode_ffn_idle_entries
 from frontier.scheduler.utils.pdaf_a2f import prepare_a2f_admission
+from frontier.scheduler.utils.ep_combine import prepare_ep_combine_completion
 from frontier.scheduler.utils.pdaf_phase import (
     prepare_decode_attn_batch_phase,
     apply_decode_attn_batch_phase,
@@ -1757,46 +1758,27 @@ class BaseClusterScheduler(ABC):
         logger.info(f"[DEBUG] Retrieved {len(ep_batches)} EP batches from waiting room: "
                    f"ep_ids={list(ep_batches.keys())}")
 
-        # Validate each materialized physical lane before combining the wave.
-        # The descriptor owns the local routed-token domain; the entity's
-        # compatibility map remains an observability projection only.
-        for ep_id, ep_batch in ep_batches.items():
-            lane_workload = resolve_ep_lane_workload(ep_batch, required=True)
-            assert lane_workload is not None
-            expected_tokens = int(ep_batch.total_num_tokens)
-            self._validate_token_conservation(
-                input_tokens=expected_tokens,
+        completion_plan = prepare_ep_combine_completion(
+            ep_batches=ep_batches,
+            raw_batch_lookup=self._raw_batch_waiting_for_m2n_back.get,
+            cluster_name=self._cluster_type.name,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            batch_global_id=batch_global_id,
+            token_validator=lambda input_tokens, lane_workload, context: self._validate_token_conservation(
+                input_tokens=input_tokens,
                 lane_workload=lane_workload,
-                context=(
-                    f"EP AllToAll combine collective - EP batch (cluster={self._cluster_type.name}, "
-                    f"replica={replica_id}, stage={stage_id}, ep_id={ep_id}, batch_global_id={batch_global_id})"
-                ),
-            )
-            logger.info(
-                f"[TOKEN_CONSERVATION] Validated EP batch {ep_id}: "
-                f"{expected_tokens} tokens across {lane_workload.local_expert_width} experts"
-            )
-
-        # Instead of aggregating the batch, pick raw batches from
-        # _raw_batch_waiting_for_m2n_back using a canonical EP lane.
-        canonical_ep_id = min(ep_batches.keys())
-        raw_batch_ids = resolve_source_batch_ids(ep_batches)
-
-        ffn_execution_time = self._resolve_ep_execution_time(ep_batches)
+                context=context,
+            ),
+        )
+        canonical_ep_id = completion_plan.canonical_ep_id
+        raw_batch_ids = list(completion_plan.source_batch_ids)
+        ffn_execution_time = completion_plan.ffn_execution_time
         logger.info(
             f"[FFN-EXEC-TIME] Using EP execution time: "
             f"{ffn_execution_time:.6f}s"
         )
-
-        raw_batches = []
-        for batch_id in raw_batch_ids:
-            raw_batch = self._raw_batch_waiting_for_m2n_back.get(batch_id)
-            if raw_batch is None:
-                raise ValueError(
-                    f"Missing raw batch for id={batch_id} in "
-                    "_raw_batch_waiting_for_m2n_back"
-                )
-            raw_batches.append((batch_id, raw_batch))
+        raw_batches = list(completion_plan.raw_batches)
 
         stage_schedulers = {
             ep_id: self.get_replica_stage_scheduler(
@@ -1808,26 +1790,13 @@ class BaseClusterScheduler(ABC):
             ep_id: self.get_replica_scheduler(replica_id, ep_id)
             for ep_id in ep_batches.keys()
         }
-        activation_bytes_by_ep_id = {}
-        for ep_id, ep_batch in ep_batches.items():
-            activation_bytes = getattr(ep_batch, "activation_bytes", 0)
-            activation_bytes_by_ep_id[ep_id] = (
-                int(activation_bytes) if activation_bytes else 0
-            )
+        activation_bytes_by_ep_id = dict(completion_plan.activation_bytes_by_ep_id)
 
         prepared_raw_commits = []
         m2n_events = []
+        active_requests_by_batch = dict(completion_plan.active_requests_by_batch)
         for batch_id, raw_batch in raw_batches:
-            active_requests = []
-            for request, runtime_epoch in zip(
-                raw_batch.requests,
-                raw_batch.request_runtime_epochs,
-            ):
-                if int(getattr(request, "runtime_epoch", 0)) != int(
-                    runtime_epoch
-                ):
-                    continue
-                active_requests.append(request)
+            active_requests = list(active_requests_by_batch[batch_id])
 
             prepared_events = (
                 self._create_m2n_transfer_events_for_aggregated_batch(
