@@ -31,7 +31,7 @@ def enter_prefill_sync(
         )
     lane_id = 0 if replica_local_id is None else int(replica_local_id)
     requested_step_id = scheduler._get_forward_step_id(batch)
-    step_id, already_completed = scheduler._resolve_forward_step(
+    step_id = scheduler._resolve_forward_step(
         sync_kind="prefill",
         waiting_room=scheduler._prefill_sync_waiting_room,
         replica_id=replica_id,
@@ -41,7 +41,7 @@ def enter_prefill_sync(
         layer_id=layer_id,
         sync_stage=sync_stage,
     )
-    if already_completed:
+    if step_id is None:
         return []
     sync_room = scheduler._prefill_sync_waiting_room[replica_id][stage_id][step_id][layer_id][sync_stage]
     sync_room.setdefault("provisional_cohort_id", requested_step_id)
@@ -111,8 +111,6 @@ def enter_prefill_sync(
         layer_id=layer_id,
         sync_stage=sync_stage,
         provisional_id=int(sync_room.get("provisional_cohort_id", requested_step_id)),
-        cohort_id=step_id,
-        cohort_batches=step_batches,
     )
     sync_room.pop("batches", None)
     sync_room.pop("arrival_times", None)
@@ -154,7 +152,7 @@ def enter_decode_sync(
         )
     lane_id = 0 if replica_local_id is None else int(replica_local_id)
     requested_step_id = scheduler._get_forward_step_id(batch)
-    step_id, already_completed = scheduler._resolve_forward_step(
+    step_id = scheduler._resolve_forward_step(
         sync_kind="decode",
         waiting_room=scheduler._decode_sync_waiting_room,
         replica_id=replica_id,
@@ -164,7 +162,7 @@ def enter_decode_sync(
         layer_id=layer_id,
         sync_stage=sync_stage,
     )
-    if already_completed:
+    if step_id is None:
         return []
     sync_room = scheduler._decode_sync_waiting_room[replica_id][stage_id][step_id][layer_id][sync_stage]
     sync_room.setdefault("provisional_cohort_id", requested_step_id)
@@ -233,8 +231,6 @@ def enter_decode_sync(
         layer_id=layer_id,
         sync_stage=sync_stage,
         provisional_id=int(sync_room.get("provisional_cohort_id", requested_step_id)),
-        cohort_id=step_id,
-        cohort_batches=step_batches,
     )
     sync_room.pop("batches", None)
     sync_room.pop("arrival_times", None)

@@ -1,4 +1,4 @@
-"""Forward-step identity and duplicate suppression for cluster schedulers."""
+"""Forward-step identity and lifecycle management for cluster schedulers."""
 
 from collections.abc import Callable, Mapping
 
@@ -29,10 +29,6 @@ class ForwardSyncState:
     """Own forward-step identity bookkeeping shared by PREFILL and DECODE."""
 
     def __init__(self) -> None:
-        self._completed_keys_by_kind: dict[str, set[tuple]] = {
-            "prefill": set(),
-            "decode": set(),
-        }
         self._open_steps_by_kind: dict[str, dict[tuple, int]] = {
             "prefill": {},
             "decode": {},
@@ -61,10 +57,6 @@ class ForwardSyncState:
         if sync_kind not in ("prefill", "decode"):
             raise ValueError(f"unknown synchronization kind: {sync_kind!r}")
 
-    def completed_keys(self, sync_kind: str) -> set[tuple]:
-        self._validate_kind(sync_kind)
-        return self._completed_keys_by_kind[sync_kind]
-
     def open_steps(self, sync_kind: str) -> dict[tuple, int]:
         self._validate_kind(sync_kind)
         return self._open_steps_by_kind[sync_kind]
@@ -84,7 +76,7 @@ class ForwardSyncState:
         layer_id: int,
         sync_stage: str,
         room_lookup: Callable[[int], Mapping | None],
-    ) -> tuple[int, bool]:
+    ) -> int | None:
         self._validate_kind(sync_kind)
         for value, field_name in (
             (replica_id, "replica_id"),
@@ -108,18 +100,6 @@ class ForwardSyncState:
                 f"got {provisional_id!r}"
             )
 
-        completed_key = (
-            replica_id,
-            stage_id,
-            current_id,
-            lane_id,
-            int(batch.id),
-            layer_id,
-            sync_stage,
-        )
-        if completed_key in self.completed_keys(sync_kind):
-            return current_id, True
-
         binding_key = (
             replica_id,
             stage_id,
@@ -140,7 +120,7 @@ class ForwardSyncState:
                 ):
                     if current_id != open_step_id:
                         batch._forward_cohort_id = open_step_id
-                    return open_step_id, False
+                    return open_step_id
                 raise ValueError(
                     "one attention-DP lane cannot occupy two open sync cohorts: "
                     f"replica={replica_id}, stage={stage_id}, lane={lane_id}, "
@@ -155,7 +135,7 @@ class ForwardSyncState:
             getattr(batch, "is_idle", False)
             and closed_key in self.closed_steps(sync_kind)
         ):
-            return current_id, True
+            return None
         if closed_key in self.closed_steps(sync_kind) or current_id in used_ids:
             candidate = max(
                 int(self._next_step_id_by_replica.get(replica_id, 0)),
@@ -174,7 +154,7 @@ class ForwardSyncState:
         )
         open_steps[binding_key] = resolved_id
         batch._forward_cohort_id = resolved_id
-        return resolved_id, False
+        return resolved_id
 
     def close_step(
         self,
@@ -185,8 +165,6 @@ class ForwardSyncState:
         layer_id: int,
         sync_stage: str,
         provisional_id: int,
-        step_id: int,
-        source_batches: Mapping[int, object],
     ) -> None:
         self._validate_kind(sync_kind)
         open_steps = self.open_steps(sync_kind)
@@ -197,16 +175,3 @@ class ForwardSyncState:
         self.closed_steps(sync_kind).add(
             (replica_id, stage_id, layer_id, sync_stage, provisional_id)
         )
-        completed_keys = self.completed_keys(sync_kind)
-        for lane_id, source_batch in source_batches.items():
-            completed_keys.add(
-                (
-                    replica_id,
-                    stage_id,
-                    step_id,
-                    int(lane_id),
-                    int(source_batch.id),
-                    layer_id,
-                    sync_stage,
-                )
-            )

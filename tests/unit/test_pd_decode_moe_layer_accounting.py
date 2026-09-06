@@ -78,8 +78,8 @@ class _DecodeSyncScheduler:
     transition_stage_admission_for_layer = (
         BaseClusterScheduler.transition_stage_admission_for_layer
     )
-    _restore_cohort_full_stage_owners = (
-        BaseClusterScheduler._restore_cohort_full_stage_owners
+    _restore_forward_step_full_stage_owners = (
+        BaseClusterScheduler._restore_forward_step_full_stage_owners
     )
 
     def __init__(

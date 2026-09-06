@@ -1,10 +1,8 @@
-from collections import defaultdict
 from types import SimpleNamespace
 
 import pytest
 
 from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
-from frontier.scheduler.utils.sync_entry import enter_decode_sync
 
 
 def make_batch(batch_id, *, step_id=None, provisional_id=None, idle=False):
@@ -51,12 +49,12 @@ def test_sibling_lanes_join_one_open_step():
         room_lookup=room_lookup(rooms),
     )
 
-    assert first_result == (7, False)
-    assert second_result == (7, False)
+    assert first_result == 7
+    assert second_result == 7
     assert second._forward_cohort_id == 7
 
 
-def test_completed_event_is_suppressed_for_same_batch():
+def test_replayed_event_gets_a_fresh_step_after_step_close():
     state = ForwardSyncState()
     batch = make_batch(11, step_id=4, provisional_id=4)
     state.close_step(
@@ -66,8 +64,6 @@ def test_completed_event_is_suppressed_for_same_batch():
         layer_id=2,
         sync_stage="pre_moe",
         provisional_id=4,
-        step_id=4,
-        source_batches={0: batch},
     )
 
     result = state.resolve_step(
@@ -81,7 +77,8 @@ def test_completed_event_is_suppressed_for_same_batch():
         room_lookup=room_lookup({}),
     )
 
-    assert result == (4, True)
+    assert result == 5
+    assert batch._forward_cohort_id == 5
 
 
 def test_closed_step_suppresses_late_idle_placeholder():
@@ -94,8 +91,6 @@ def test_closed_step_suppresses_late_idle_placeholder():
         layer_id=2,
         sync_stage="pre_moe",
         provisional_id=4,
-        step_id=4,
-        source_batches={0: real},
     )
     late_idle = make_batch(12, step_id=4, provisional_id=4, idle=True)
 
@@ -110,34 +105,8 @@ def test_closed_step_suppresses_late_idle_placeholder():
         room_lookup=room_lookup({}),
     )
 
-    assert result == (4, True)
+    assert result is None
     assert state.open_steps("decode") == {}
-
-
-def test_decode_duplicate_check_does_not_materialize_waiting_room():
-    waiting_room = defaultdict(dict)
-    batch = make_batch(11, step_id=4, provisional_id=4)
-    scheduler = SimpleNamespace(
-        _decode_sync_waiting_room=waiting_room,
-        _uses_shared_decode_layer_path=lambda *_args: True,
-        _get_forward_step_id=lambda current_batch: current_batch.global_id,
-        _resolve_forward_step=lambda **_kwargs: (4, True),
-    )
-
-    result = enter_decode_sync(
-        scheduler,
-        time=0.0,
-        replica_id=0,
-        stage_id=1,
-        batch=batch,
-        replica_local_id=0,
-        sync_stage="pre_moe",
-        layer_id=2,
-        stage_execution_time=0.0,
-    )
-
-    assert result == []
-    assert dict(waiting_room) == {}
 
 
 def test_idle_placeholder_can_be_replaced_in_open_step():
@@ -157,7 +126,7 @@ def test_idle_placeholder_can_be_replaced_in_open_step():
         room_lookup=room_lookup(rooms),
     )
 
-    assert result == (9, False)
+    assert result == 9
 
 
 def test_closed_hint_gets_fresh_step_id():
@@ -170,12 +139,10 @@ def test_closed_hint_gets_fresh_step_id():
         layer_id=1,
         sync_stage="pre_moe",
         provisional_id=5,
-        step_id=5,
-        source_batches={0: first},
     )
     late = make_batch(31, step_id=5, provisional_id=5)
 
-    step_id, duplicate = state.resolve_step(
+    step_id = state.resolve_step(
         sync_kind="prefill",
         replica_id=0,
         stage_id=0,
@@ -186,7 +153,7 @@ def test_closed_hint_gets_fresh_step_id():
         room_lookup=room_lookup({}),
     )
 
-    assert (step_id, duplicate) == (6, False)
+    assert step_id == 6
     assert late._forward_cohort_id == 6
 
 
@@ -211,11 +178,9 @@ def test_prefill_and_decode_keep_separate_completion_maps():
         layer_id=0,
         sync_stage="pre_moe",
         provisional_id=2,
-        step_id=2,
-        source_batches={0: prefill},
     )
 
-    step_id, duplicate = state.resolve_step(
+    step_id = state.resolve_step(
         sync_kind="decode",
         replica_id=0,
         stage_id=0,
@@ -226,7 +191,7 @@ def test_prefill_and_decode_keep_separate_completion_maps():
         room_lookup=room_lookup({}),
     )
 
-    assert (step_id, duplicate) == (3, False)
+    assert step_id == 3
 
 
 def test_conflicting_live_lane_fails_fast():

@@ -94,7 +94,7 @@ def handle_prefill_sync_collective(
         num_layers,
     )
     next_layer_id = layer_id + 1
-    restored_full_stage_owners = scheduler._restore_cohort_full_stage_owners(
+    restored_full_stage_owners = scheduler._restore_forward_step_full_stage_owners(
         source_batches=participant_batches,
         replica_id=replica_id,
         stage_id=stage_id,

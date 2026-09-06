@@ -80,7 +80,7 @@ def enqueue_return_round(
     )
     enqueued_batches = 0
     for ready_batch in released_batches:
-        scheduler._set_decode_attn_batch_cohort_phase(
+        scheduler._set_decode_attn_batch_phase(
             ready_batch,
             phase="local_attn",
             replica_id=int(ready_batch.decode_attn_original_replica_id),

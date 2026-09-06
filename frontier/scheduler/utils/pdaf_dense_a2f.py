@@ -52,7 +52,7 @@ def release_dense_a2f(
         scheduler._cluster_type,
         replica_local_id,
     )
-    phase_update = scheduler._set_decode_attn_batch_cohort_phase(
+    phase_update = scheduler._set_decode_attn_batch_phase(
         batch,
         phase="ffn_inflight",
         replica_id=replica_id,

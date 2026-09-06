@@ -96,7 +96,7 @@ def handle_decode_sync_collective(
             )
         stage_layer_end = (stage_id + 1) * num_layers
     next_layer_id = layer_id + 1
-    restored_full_stage_owners = scheduler._restore_cohort_full_stage_owners(
+    restored_full_stage_owners = scheduler._restore_forward_step_full_stage_owners(
         source_batches=dp_batches,
         replica_id=replica_id,
         stage_id=stage_id,

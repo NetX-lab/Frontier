@@ -221,7 +221,7 @@ def test_cohort_materialization_rejects_live_batch_without_admission_ticket(
             "operation_kind": "ffn",
         }
         expected_message = "cohort full-stage restoration requires"
-        method = scheduler._restore_cohort_full_stage_owners
+        method = scheduler._restore_forward_step_full_stage_owners
     else:
         operation_args = {
             "source_batches": source_batches,
@@ -232,7 +232,7 @@ def test_cohort_materialization_rejects_live_batch_without_admission_ticket(
             "participant_ep_ids": (0, 1),
         }
         expected_message = "cohort EP promotion requires"
-        method = scheduler._promote_cohort_to_ep_wave
+        method = scheduler._promote_forward_step_to_ep_wave
 
     with pytest.raises(ValueError, match=expected_message):
         method(**operation_args)

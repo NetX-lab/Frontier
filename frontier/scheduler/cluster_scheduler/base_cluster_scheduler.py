@@ -289,7 +289,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
     def _map_source_attn_replica_to_ffn_replica(
         source_replica_ordinal: int,
         target_ffn_replica_ids: List[int] | Tuple[int, ...],
-    ) -> int:
+    ) -> int | None:
         return map_source_replica_to_target(source_replica_ordinal, target_ffn_replica_ids)
 
     def _validate_prefix_cache_cluster_config(self, replica_scheduler_config) -> None:
@@ -882,8 +882,6 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
 
     def _bind_forward_sync_state_views(self) -> None:
         state = self._forward_sync_state
-        self._prefill_sync_completed_keys = state.completed_keys("prefill")
-        self._decode_sync_completed_keys = state.completed_keys("decode")
         self._prefill_sync_open_steps = state.open_steps("prefill")
         self._decode_sync_open_steps = state.open_steps("decode")
         self._prefill_sync_closed_steps = state.closed_steps("prefill")
@@ -902,7 +900,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         lane_id: int,
         layer_id: int,
         sync_stage: str,
-    ) -> tuple[int, bool]:
+    ) -> int:
         """Resolve one lane through the forward-sync state owner."""
 
         state = self._get_forward_sync_state()
@@ -934,8 +932,6 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         layer_id: int,
         sync_stage: str,
         provisional_id: int,
-        cohort_id: int,
-        cohort_batches: dict[int, Batch],
     ) -> None:
         """Close one room through the forward-sync state owner."""
 
@@ -946,8 +942,6 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             layer_id=layer_id,
             sync_stage=sync_stage,
             provisional_id=provisional_id,
-            step_id=cohort_id,
-            source_batches=cohort_batches,
         )
 
     @staticmethod
@@ -1069,11 +1063,6 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             require_moe_layer=False,
         )
 
-    def _uses_shared_prefill_layer_protocol(self, batch: Batch, layer_id: int) -> bool:
-        """Compatibility alias for the pre-refactor execution-path name."""
-
-        return self._uses_shared_prefill_layer_path(batch, layer_id)
-
     def _on_decode_ep_wave_ready(self, *, time: float, replica_id: int, stage_id: int, batch: Batch, layer_id: int, replica_local_id: int | None = None, cohort_batches: dict[int, Batch] | None = None) -> List:
         """Schedule one DECODE layer wave through the shared utility."""
 
@@ -1124,11 +1113,6 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             routing_attribute=routing_attr,
             require_moe_layer=False,
         )
-
-    def _uses_shared_decode_layer_protocol(self, batch: Batch, layer_id: int) -> bool:
-        """Compatibility alias for the pre-refactor execution-path name."""
-
-        return self._uses_shared_decode_layer_path(batch, layer_id)
 
     def on_prefill_sync(self, time: float, replica_id: int, stage_id: int, batch: Batch,
                        replica_local_id: int | None, sync_stage: str, layer_id: int, stage_execution_time: float):
@@ -1389,23 +1373,6 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         """Compatibility wrapper for M2N lane normalization."""
 
         return normalize_lanes(
-            raw_lanes,
-            identity_scope=identity_scope,
-            field_name=field_name,
-            require_nonempty=require_nonempty,
-        )
-
-    @staticmethod
-    def _normalize_m2n_lane_contract(
-        raw_lanes,
-        *,
-        identity_scope: M2NLaneIdentityScope,
-        field_name: str,
-        require_nonempty: bool,
-    ) -> List[tuple[int, int | None]]:
-        """Compatibility alias for the pre-refactor lane normalizer name."""
-
-        return BaseClusterScheduler._normalize_m2n_lanes(
             raw_lanes,
             identity_scope=identity_scope,
             field_name=field_name,
@@ -1811,7 +1778,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         commit_decode_attn_batch_phases(
             self,
             prepared_updates,
-            apply_fn=self._apply_decode_attn_batch_cohort_phase,
+            apply_fn=self._apply_decode_attn_batch_phase,
         )
 
     def _set_decode_attn_batch_phase(
@@ -1833,11 +1800,11 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             replica_local_id=replica_local_id,
             layer_id=layer_id,
             prepare_only=prepare_only,
-            prepare_fn=lambda _scheduler, phase_batch, **kwargs: self._prepare_decode_attn_batch_cohort_phase(
+            prepare_fn=lambda _scheduler, phase_batch, **kwargs: self._prepare_decode_attn_batch_phase(
                 phase_batch,
                 **kwargs,
             ),
-            apply_fn=self._apply_decode_attn_batch_cohort_phase,
+            apply_fn=self._apply_decode_attn_batch_phase,
         )
 
     def _peek_decode_attn_barrier_round_id(self) -> int:
@@ -1921,15 +1888,6 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             cluster_type=self._cluster_type,
             is_moe=self._config.replica_config.model_config.is_moe,
         )
-
-    # Compatibility aliases for private callers that still use the old
-    # cohort terminology. Internal scheduler paths use the forward-step names.
-    _promote_cohort_to_ep_wave = _promote_forward_step_to_ep_wave
-    _restore_cohort_full_stage_owners = _restore_forward_step_full_stage_owners
-    _validate_decode_attn_cohort_stage_maps = _validate_decode_attn_wave_stages
-    _prepare_decode_attn_batch_cohort_phase = _prepare_decode_attn_batch_phase
-    _apply_decode_attn_batch_cohort_phase = _apply_decode_attn_batch_phase
-    _set_decode_attn_batch_cohort_phase = _set_decode_attn_batch_phase
 
     @abstractmethod
     def schedule(self) -> List[Tuple[int, Request]]:

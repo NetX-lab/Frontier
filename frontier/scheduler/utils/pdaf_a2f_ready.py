@@ -298,7 +298,7 @@ def schedule_decode_attn_a2f_ready(
                 )
             )
             prepared_phase_updates.append(
-                scheduler._set_decode_attn_batch_cohort_phase(
+                scheduler._set_decode_attn_batch_phase(
                     ready_batch,
                     phase="ffn_inflight",
                     replica_id=source_replica_id,

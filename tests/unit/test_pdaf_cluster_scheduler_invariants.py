@@ -1396,7 +1396,7 @@ def test_decode_attn_a2f_dense_cohort_setter_failure_is_atomic() -> None:
     )
     with patch.object(
         scheduler,
-        "_set_decode_attn_batch_cohort_phase",
+        "_set_decode_attn_batch_phase",
         side_effect=RuntimeError("cohort setter boom"),
     ):
         with pytest.raises(RuntimeError, match="cohort setter boom"):
@@ -1419,7 +1419,7 @@ def test_decode_attn_a2f_dense_cohort_apply_failure_is_atomic() -> None:
     )
     with patch.object(
         scheduler,
-        "_apply_decode_attn_batch_cohort_phase",
+        "_apply_decode_attn_batch_phase",
         side_effect=RuntimeError("cohort apply boom"),
     ):
         with pytest.raises(RuntimeError, match="cohort apply boom"):
@@ -1546,7 +1546,7 @@ def test_decode_attn_a2f_moe_cohort_apply_failure_is_atomic() -> None:
     before_cohort_states = deepcopy(cohort_states_by_lane)
     with patch.object(
         scheduler,
-        "_apply_decode_attn_batch_cohort_phase",
+        "_apply_decode_attn_batch_phase",
         side_effect=RuntimeError("cohort apply boom"),
     ):
         with pytest.raises(RuntimeError, match="cohort apply boom"):
@@ -5223,7 +5223,7 @@ def test_decode_attn_cluster_phase_prepare_rejects_incomplete_stage_maps_without
     state_before = deepcopy(cohort_state)
 
     with pytest.raises(RuntimeError, match="stage phase|stage layer|key set|active"):
-        scheduler._set_decode_attn_batch_cohort_phase(
+        scheduler._set_decode_attn_batch_phase(
             batch,
             phase="ffn_inflight",
             replica_id=0,
@@ -5258,7 +5258,7 @@ def test_decode_attn_cluster_phase_update_preserves_untouched_stage_visibility()
         afd_stage_idx=0,
     )
 
-    scheduler._set_decode_attn_batch_cohort_phase(
+    scheduler._set_decode_attn_batch_phase(
         batch,
         phase="ffn_inflight",
         replica_id=0,

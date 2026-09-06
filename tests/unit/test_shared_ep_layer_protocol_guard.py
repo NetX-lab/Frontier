@@ -167,7 +167,7 @@ def test_monolithic_prefill_guard_only_admits_moe_layers() -> None:
 
     assert scheduler._uses_shared_prefill_ep_wave(None, 2) is True
     assert scheduler._uses_shared_prefill_ep_wave(None, 1) is False
-    assert scheduler._uses_shared_prefill_layer_protocol(None, 1) is True
+    assert scheduler._uses_shared_prefill_layer_path(None, 1) is True
 
 
 def test_monolithic_decode_guard_only_admits_moe_layers() -> None:
@@ -175,7 +175,7 @@ def test_monolithic_decode_guard_only_admits_moe_layers() -> None:
 
     assert scheduler._uses_shared_decode_ep_wave(None, 2) is True
     assert scheduler._uses_shared_decode_ep_wave(None, 1) is False
-    assert scheduler._uses_shared_decode_layer_protocol(None, 1) is True
+    assert scheduler._uses_shared_decode_layer_path(None, 1) is True
 
 
 def test_monolithic_prefill_dense_layer_uses_full_stage_protocol_without_ep_materialization(
