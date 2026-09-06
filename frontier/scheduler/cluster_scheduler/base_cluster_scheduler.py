@@ -590,9 +590,6 @@ class BaseClusterScheduler(ABC):
         # Phase 2.5: Removed deprecated _moe_waiting_room (old MoE synchronization)
         # Current architecture uses EP-based synchronization instead
 
-        # Store raw batches by id for O(1) retrieval during F→A return path
-        self._get_m2n_state().raw_batches = {}
-
         # Initialize periodic scheduling if enabled for this cluster type
         self._is_periodic_scheduling_enabled = self._cluster_type in config.periodic_scheduling_clusters
         self._periodic_scheduling_interval_ms = config.periodic_scheduling_interval_ms
