@@ -28,9 +28,6 @@ from frontier.moe_ep_workload import (
     resolve_ep_lane_workload,
     resolve_routing_details,
 )
-from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
-    ReplicaSchedulerRegistry,
-)
 from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
 from frontier.scheduler.utils import ep_trace
 from frontier.scheduler.utils.expert_parallel import (
@@ -50,6 +47,7 @@ from frontier.scheduler.utils.expert_parallel import (
     calculate_ep_wave_timing,
     get_ep_phase_times_ms,
 )
+from frontier.scheduler.utils.ep_wave_inputs import prepare_ep_wave_inputs
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
     format_ep_trace_identity,
@@ -96,6 +94,10 @@ from frontier.scheduler.utils.execution_time_metrics import (
 )
 from frontier.scheduler.utils.afd_metadata import aggregate_afd_metadata
 from frontier.scheduler.utils.request_selection import collect_active_requests
+from frontier.scheduler.utils.replica_schedulers import build_replica_scheduler_maps
+from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
+    ReplicaSchedulerRegistry,
+)
 from frontier.scheduler.utils.layer_path import uses_shared_layer_path
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
@@ -664,79 +666,26 @@ class BaseClusterScheduler(ABC):
                 )
 
         if self._cluster_type == ClusterType.DECODE_FFN:
-            # MoE routed-expert work owns explicit local EP children.
             self._replica_ep_size = self._config.replica_config.moe_expert_parallel_size
-            for replica_id, replica in self._cluster.replicas.items():
-                for ep_id in range(self._replica_ep_size):
-                    scheduler_key = (replica_id, ep_id)
-                    self._replica_schedulers[scheduler_key] = ReplicaSchedulerRegistry.get(
-                        cluster_specific_config.get_type(),
-                        replica_config=self._config.replica_config,
-                        replica_scheduler_config=cluster_specific_config,
-                        request_generator_config=request_generator_config,
-                        replica=replica,
-                        predictor=self._predictor,
-                        cluster_type=self._cluster_type,
-                        replica_local_id=ep_id,
-                        af_pipeline_num_micro_batch=getattr(self._config, 'af_pipeline_num_micro_batch', -1),
-                        cluster_scheduler=self,
-                    )
-                # Dense FFN work owns the complete stage world and therefore
-                # uses a separate child scheduler keyed by no EP lane.
-                self._full_stage_replica_schedulers[replica_id] = (
-                    ReplicaSchedulerRegistry.get(
-                        cluster_specific_config.get_type(),
-                        replica_config=self._config.replica_config,
-                        replica_scheduler_config=cluster_specific_config,
-                        request_generator_config=request_generator_config,
-                        replica=replica,
-                        predictor=self._predictor,
-                        cluster_type=self._cluster_type,
-                        replica_local_id=None,
-                        af_pipeline_num_micro_batch=getattr(
-                            self._config, "af_pipeline_num_micro_batch", -1
-                        ),
-                        cluster_scheduler=self,
-                    )
-                )
-        elif self._cluster_type == ClusterType.DECODE_ATTN:
-            # PD-AF attention keeps the full-stage identity required by A<->F
-            # transfer provenance and cohort validation.
-            for replica_id, replica in self._cluster.replicas.items():
-                full_stage_scheduler = ReplicaSchedulerRegistry.get(
-                    cluster_specific_config.get_type(),
-                    replica_config=self._config.replica_config,
-                    replica_scheduler_config=cluster_specific_config,
-                    request_generator_config=request_generator_config,
-                    replica=replica,
-                    predictor=self._predictor,
-                    cluster_type=self._cluster_type,
-                    replica_local_id=None,
-                    af_pipeline_num_micro_batch=getattr(
-                        self._config, "af_pipeline_num_micro_batch", -1
-                    ),
-                    cluster_scheduler=self,
-                )
-                self._full_stage_replica_schedulers[replica_id] = full_stage_scheduler
-                self._replica_schedulers[(replica_id, None)] = full_stage_scheduler
-        else:
-            # Every other non-FFN Replica owns one logical full-stage scheduler
-            # per attention-DP lane. Lane zero remains the compatibility lookup.
-            for replica_id, replica in self._cluster.replicas.items():
-                for dp_id in range(self._replica_dp_size):
-                    self._replica_schedulers[(replica_id, dp_id)] = ReplicaSchedulerRegistry.get(
-                        cluster_specific_config.get_type(),
-                        replica_config=self._config.replica_config,
-                        replica_scheduler_config=cluster_specific_config,
-                        request_generator_config=request_generator_config,
-                        replica=replica,
-                        predictor=self._predictor,
-                        cluster_type=self._cluster_type,
-                        replica_local_id=dp_id,
-                        af_pipeline_num_micro_batch=getattr(self._config, "af_pipeline_num_micro_batch", -1),
-                        cluster_scheduler=self,
-                    )
-                self._full_stage_replica_schedulers[replica_id] = self._replica_schedulers[(replica_id, 0)]
+
+        self._replica_schedulers, self._full_stage_replica_schedulers = (
+            build_replica_scheduler_maps(
+                cluster=self._cluster,
+                cluster_type=self._cluster_type,
+                scheduler_type=cluster_specific_config.get_type(),
+                replica_config=self._config.replica_config,
+                scheduler_config=cluster_specific_config,
+                request_generator_config=request_generator_config,
+                predictor=self._predictor,
+                af_pipeline_num_micro_batch=getattr(
+                    self._config, "af_pipeline_num_micro_batch", -1
+                ),
+                cluster_scheduler=self,
+                dp_size=getattr(self, "_replica_dp_size", None),
+                ep_size=getattr(self, "_replica_ep_size", None),
+                registry=ReplicaSchedulerRegistry,
+            )
+        )
         self._request_queue = []
         # Sync completion is tracked per concrete batch event.  A cohort ID is
         # a reusable lane-local hint, so it cannot by itself identify a
@@ -2761,41 +2710,20 @@ class BaseClusterScheduler(ABC):
         if not isinstance(time, Real) or not math.isfinite(float(time)):
             raise ValueError("prefill EP wave time must be finite")
         time = float(time)
-        source_batches = self._forward_step_source_batches(cohort_batches, batch)
-        cohort_id = self._get_forward_step_id(batch)
-        if any(
-            self._get_forward_step_id(source_batch) != cohort_id
-            for source_batch in source_batches.values()
-        ):
-            raise ValueError("all PREFILL cohort batches must share one forward cohort ID")
-        for lane_id, source_batch in source_batches.items():
-            if not hasattr(source_batch, "_stage_owner_replica_local_id"):
-                source_batch._stage_owner_replica_local_id = (
-                    replica_local_id if replica_local_id is not None else lane_id
-                )
+        wave_inputs = prepare_ep_wave_inputs(
+            source_batches=self._forward_step_source_batches(cohort_batches, batch),
+            batch=batch,
+            step_id_getter=self._get_forward_step_id,
+            aggregate_batch_builder=self._create_virtual_global_batch,
+            replica_local_id=replica_local_id,
+        )
+        source_batches = wave_inputs.source_batches
+        cohort_id = wave_inputs.step_id
         model_config = self._config.replica_config.model_config
         predictor = self._predictor
-        non_idle_source_batches = [
-            source_batch for source_batch in source_batches.values() if not source_batch.is_idle
-        ]
-        if not non_idle_source_batches:
-            raise ValueError("PREFILL cohort EP wave requires a non-idle source batch")
-        sample_batch = non_idle_source_batches[0]
-        total_step_tokens = sum(
-            int(source_batch.total_num_tokens) for source_batch in non_idle_source_batches
-        )
-        total_step_prefill_tokens = sum(
-            int(source_batch.num_prefill_tokens) for source_batch in non_idle_source_batches
-        )
-        aggregate_batch = (
-            sample_batch
-            if len(non_idle_source_batches) == 1
-            else self._create_virtual_global_batch(
-                sample_batch,
-                total_step_tokens,
-                total_step_prefill_tokens,
-            )
-        )
+        non_idle_source_batches = list(wave_inputs.non_idle_batches)
+        sample_batch = wave_inputs.sample_batch
+        aggregate_batch = wave_inputs.aggregate_batch
         layer_workload = None
         lane_compute_times_ms: list[float] = []
         if model_config.is_moe_layer(layer_id):
@@ -3037,41 +2965,20 @@ class BaseClusterScheduler(ABC):
         if not isinstance(time, Real) or not math.isfinite(float(time)):
             raise ValueError("decode EP wave time must be finite")
         time = float(time)
-        source_batches = self._forward_step_source_batches(cohort_batches, batch)
-        cohort_id = self._get_forward_step_id(batch)
-        if any(
-            self._get_forward_step_id(source_batch) != cohort_id
-            for source_batch in source_batches.values()
-        ):
-            raise ValueError("all DECODE cohort batches must share one forward cohort ID")
-        for lane_id, source_batch in source_batches.items():
-            if not hasattr(source_batch, "_stage_owner_replica_local_id"):
-                source_batch._stage_owner_replica_local_id = (
-                    replica_local_id if replica_local_id is not None else lane_id
-                )
+        wave_inputs = prepare_ep_wave_inputs(
+            source_batches=self._forward_step_source_batches(cohort_batches, batch),
+            batch=batch,
+            step_id_getter=self._get_forward_step_id,
+            aggregate_batch_builder=self._create_virtual_global_batch,
+            replica_local_id=replica_local_id,
+        )
+        source_batches = wave_inputs.source_batches
+        cohort_id = wave_inputs.step_id
         model_config = self._config.replica_config.model_config
         predictor = self._predictor
-        non_idle_source_batches = [
-            source_batch for source_batch in source_batches.values() if not source_batch.is_idle
-        ]
-        if not non_idle_source_batches:
-            raise ValueError("DECODE cohort EP wave requires a non-idle source batch")
-        sample_batch = non_idle_source_batches[0]
-        total_step_tokens = sum(
-            int(source_batch.total_num_tokens) for source_batch in non_idle_source_batches
-        )
-        total_step_prefill_tokens = sum(
-            int(source_batch.num_prefill_tokens) for source_batch in non_idle_source_batches
-        )
-        aggregate_batch = (
-            sample_batch
-            if len(non_idle_source_batches) == 1
-            else self._create_virtual_global_batch(
-                sample_batch,
-                total_step_tokens,
-                total_step_prefill_tokens,
-            )
-        )
+        non_idle_source_batches = list(wave_inputs.non_idle_batches)
+        sample_batch = wave_inputs.sample_batch
+        aggregate_batch = wave_inputs.aggregate_batch
         layer_workload = None
         lane_compute_times_ms: list[float] = []
         pre_dispatch_times_ms: list[float] = []
