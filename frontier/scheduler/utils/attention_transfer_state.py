@@ -9,7 +9,7 @@ class AttentionTransferState:
     def __init__(self) -> None:
         self.a2f_waiting_by_layer = {}
         self.f2a_waiting_by_round = {}
-        self.idle_expected_lanes = None
+        self.idle_expected_lanes = set()
         self.barrier_round_counter = 0
 
 
