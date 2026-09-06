@@ -92,6 +92,7 @@ def _scheduler(cluster_type: ClusterType):
         _decode_routing_details={0: {2: {0: 1.0}}},
         _monolithic_routing_details={0: {2: {0: 1.0}}},
     )
+    scheduler._replica_dp_size = 1
     return scheduler
 
 

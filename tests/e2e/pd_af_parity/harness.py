@@ -293,7 +293,7 @@ _EVENT_INT_FIELDS = {
     "new_events_generated",
     "decode_step",
 }
-_EVENT_FLOAT_MS_FIELDS = {"transfer_time_ms", "scheduling_interval_ms"}
+_EVENT_FLOAT_MS_FIELDS = {"transfer_time_ms"}
 _EVENT_FLOAT_SECOND_FIELDS = {
     "stage_execution_time",
     "batch_stage_execution_time",
@@ -347,10 +347,6 @@ _EVENT_SCHEMAS = {
     "GlobalScheduleEvent": _event_schema(["cluster_set", "request_mapping"]),
     "ClusterScheduleEvent": _event_schema(
         ["replica_dp_set", "replica_ep_set", "request_mapping"]
-    ),
-    "PeriodicScheduleEvent": _event_schema(
-        ["scheduling_interval_ms", "replica_dp_set", "request_mapping"],
-        ["replica_ep_set"],
     ),
     "ReplicaScheduleEvent": _event_schema(
         ["replica_id", "dp_id"], ["request_ids"]
