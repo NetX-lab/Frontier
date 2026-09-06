@@ -67,7 +67,7 @@ from frontier.scheduler.utils.pdaf_validation import (
     validate_decode_attn_a2f_waiting_room,
 )
 from frontier.scheduler.utils.pdaf_entries import build_decode_ffn_idle_entries
-from frontier.scheduler.utils.pdaf_release import prepare_a2f_release_plan
+from frontier.scheduler.utils.pdaf_a2f import prepare_a2f_admission
 from frontier.scheduler.utils.pdaf_phase import (
     prepare_decode_attn_batch_phase,
     apply_decode_attn_batch_phase,
@@ -4954,7 +4954,6 @@ class BaseClusterScheduler(ABC):
             )
         room_exists = group_key in waiting_rooms
         room = waiting_rooms[group_key] if room_exists else None
-
         if room_exists:
             self._validate_decode_attn_a2f_waiting_room(
                 group_key=group_key,
@@ -4962,104 +4961,43 @@ class BaseClusterScheduler(ABC):
                 expected_lane_contract=expected_lane_contract,
                 incoming_batch=batch,
             )
-            prospective_per_lane_queues = defaultdict(
-                deque,
-                {
-                    room_lane: deque(lane_queue)
-                    for room_lane, lane_queue in room["per_lane_queues"].items()
-                },
-            )
-        else:
-            prospective_per_lane_queues = defaultdict(deque)
-
-        prospective_room = {
-            "per_lane_queues": prospective_per_lane_queues,
-            "expected_lane_contract": expected_lane_contract,
-        }
-        prospective_per_lane_queues[lane].append((layer_id, batch))
-        self._validate_decode_attn_a2f_waiting_room(
-            group_key=group_key,
-            room=prospective_room,
-            expected_lane_contract=expected_lane_contract,
-        )
-
-        release_plan = prepare_a2f_release_plan(
-            prospective_per_lane_queues,
-            expected_lane_contract,
-            normalized_idle_expected_lanes,
-        )
-        prepared_idle_lanes = list(release_plan.idle_lanes)
-        barrier_is_ready = release_plan.barrier_ready
-        ready_lanes = release_plan.ready_lane_count
-
-        prepared_transfers = []
-        if barrier_is_ready:
-            for ready_lane in expected_lane_contract:
-                lane_queue = prospective_per_lane_queues.get(ready_lane)
-                if not lane_queue:
-                    continue
-                ready_layer_id, ready_batch = lane_queue[0]
-                if ready_batch.is_idle:
-                    continue
-                activation_size, transfer_time = (
-                    self._validate_decode_attn_a2f_predictor_result(
-                        self._m2n_transfer_predictor.get_transfer_info(
-                            source_cluster_type=ClusterType.DECODE_ATTN,
-                            target_cluster_type=ClusterType.DECODE_FFN,
-                            batch=ready_batch,
-                            replica_config=replica_config,
-                        )
-                    )
-                )
-                prepared_transfers.append(
-                    (
-                        ready_lane,
-                        ready_layer_id,
-                        ready_batch,
-                        activation_size,
-                        transfer_time,
-                    )
-                )
-
-        prepared_idle_entries = self._prepare_decode_attn_idle_lanes_for_barrier(
+        existing_queues = {} if room is None else room["per_lane_queues"]
+        plan = prepare_a2f_admission(
+            existing_queues=existing_queues,
+            expected_lanes=expected_lane_contract,
+            idle_lanes=normalized_idle_expected_lanes,
+            incoming_lane=lane,
+            incoming_layer_id=layer_id,
+            incoming_batch=batch,
+            is_moe=model_is_moe,
             time=time,
             group_key=group_key,
-            idle_lanes=prepared_idle_lanes,
-            is_moe=model_is_moe,
+            validate_room=lambda **kwargs: self._validate_decode_attn_a2f_waiting_room(
+                **kwargs
+            ),
+            build_idle_entries=lambda **kwargs: self._prepare_decode_attn_idle_lanes_for_barrier(
+                **kwargs
+            ),
+            get_transfer_info=lambda ready_batch: self._m2n_transfer_predictor.get_transfer_info(
+                source_cluster_type=ClusterType.DECODE_ATTN,
+                target_cluster_type=ClusterType.DECODE_FFN,
+                batch=ready_batch,
+                replica_config=replica_config,
+            ),
+            validate_transfer_result=self._validate_decode_attn_a2f_predictor_result,
         )
-        for idle_lane, idle_entry in prepared_idle_entries:
-            prospective_per_lane_queues[idle_lane].append(idle_entry)
-        self._validate_decode_attn_a2f_waiting_room(
-            group_key=group_key,
-            room=prospective_room,
-            expected_lane_contract=expected_lane_contract,
-        )
-
-        release_plan = prepare_a2f_release_plan(
-            prospective_per_lane_queues,
-            expected_lane_contract,
-            set(),
-        )
-        picked = list(release_plan.picked)
-        prospective_after_release = release_plan.queues_after_release
-
-        non_idle_expected_lanes = tuple(
-            ready_lane
-            for ready_lane, _, ready_batch in picked
-            if not ready_batch.is_idle
-        )
-        barrier_round_id = (
-            self._peek_decode_attn_barrier_round_id() if barrier_is_ready else None
-        )
+        prospective_per_lane_queues = plan.queues
+        prepared_idle_lanes = list(plan.prepared_idle_lanes)
+        prepared_idle_entries = list(plan.prepared_idle_entries)
+        barrier_is_ready = plan.barrier_ready
+        ready_lanes = plan.ready_lane_count
+        picked = list(plan.picked)
+        prospective_after_release = plan.queues_after_release
+        non_idle_expected_lanes = plan.non_idle_lanes
+        barrier_round_id = self._peek_decode_attn_barrier_round_id() if barrier_is_ready else None
         transfer_plan_by_batch = {
             id(ready_batch): (activation_size, transfer_time)
-            for (
-                _,
-                _,
-                ready_batch,
-                activation_size,
-                transfer_time,
-            ) in prepared_transfers
+            for _, _, ready_batch, activation_size, transfer_time in plan.transfer_descriptors
         }
 
         events = []
