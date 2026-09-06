@@ -17,6 +17,8 @@ from frontier.scheduler.utils.scheduler_diagnostics import (
 )
 from frontier.scheduler.utils.scheduler_state_views import SchedulerStateViews
 from frontier.scheduler.utils.sync_entry import enter_decode_sync, enter_prefill_sync
+from frontier.scheduler.utils.forward_sync_state import source_batches_by_lane
+from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import BaseClusterScheduler
 from frontier.types import ClusterType
 
 
@@ -24,6 +26,11 @@ class _ExplodingRequest:
     @property
     def id(self):
         raise RuntimeError("request id is malformed")
+
+
+class _ConcreteClusterScheduler(BaseClusterScheduler):
+    def schedule(self):
+        raise NotImplementedError
 
 
 def test_m2n_event_logging_surfaces_malformed_request_metadata() -> None:
@@ -80,6 +87,47 @@ def test_prefill_collective_surfaces_malformed_participant_mapping() -> None:
             0,
             metrics_store=None,
         )
+
+
+def test_prefill_collective_rejects_all_idle_participants() -> None:
+    scheduler = SimpleNamespace(_cluster_type=ClusterType.PREFILL)
+    idle_batch = Batch(replica_id=0, requests=[], num_tokens=[], is_idle=True, is_moe=True)
+    idle_batch.set_global_id(1)
+
+    with pytest.raises(RuntimeError, match="requires a non-idle participant batch"):
+        handle_prefill_sync_collective(
+            scheduler,
+            0.0,
+            0,
+            0,
+            1,
+            "post_moe",
+            0,
+            metrics_store=None,
+            direct_batch=idle_batch,
+        )
+
+
+def test_collective_rejects_invalid_stage_before_removing_waiting_room() -> None:
+    room = {"batches": {0: object()}, "arrival_times": {0: 0.0}}
+    scheduler = SimpleNamespace(
+        _cluster_type=ClusterType.PREFILL,
+        _prefill_sync_waiting_room={0: {0: {1: {0: {"post_moe": room}}}}},
+    )
+
+    with pytest.raises(ValueError, match="accepts only post_moe"):
+        handle_prefill_sync_collective(
+            scheduler,
+            0.0,
+            0,
+            0,
+            1,
+            "pre_moe",
+            0,
+            metrics_store=None,
+        )
+
+    assert scheduler._prefill_sync_waiting_room[0][0][1][0]["post_moe"] is room
 
 
 def test_diagnostics_do_not_materialize_unused_state() -> None:
@@ -179,6 +227,22 @@ def test_sync_entry_consumes_stale_idle_without_materializing_room() -> None:
         stage_execution_time=0.0,
     ) == []
     assert dict(waiting_room) == {}
+
+
+def test_missing_forward_sync_owner_fails_fast() -> None:
+    scheduler = object.__new__(_ConcreteClusterScheduler)
+
+    with pytest.raises(RuntimeError, match="missing initialized ForwardSyncState"):
+        scheduler._get_forward_sync_state()
+
+
+@pytest.mark.parametrize("lane_id", [1.5, "1", -1])
+def test_forward_wave_rejects_invalid_stage_owner_lane(lane_id) -> None:
+    batch = Batch(replica_id=0, requests=[], num_tokens=[], is_idle=False, is_moe=True)
+    batch._stage_owner_replica_local_id = lane_id
+
+    with pytest.raises(ValueError, match="stage owner lane ID"):
+        source_batches_by_lane(None, batch)
 
 
 def test_ffn_promotion_requires_idle_lane_state_when_injection_is_enabled() -> None:

@@ -9,7 +9,13 @@ def source_batches_by_lane(cohort_batches, batch):
     """Normalize a direct wave call to a non-empty lane-to-batch mapping."""
     if cohort_batches is None:
         lane_id = getattr(batch, "_stage_owner_replica_local_id", None)
-        return {int(0 if lane_id is None else lane_id): batch}
+        if lane_id is None:
+            lane_id = 0
+        elif type(lane_id) is not int or lane_id < 0:
+            raise ValueError(
+                "stage owner lane ID must be an exact non-negative int or None"
+            )
+        return {lane_id: batch}
     if not isinstance(cohort_batches, dict) or not cohort_batches:
         raise ValueError("cohort_batches must be a non-empty lane mapping")
     normalized = {}

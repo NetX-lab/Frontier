@@ -17,6 +17,7 @@ from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEve
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
+from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
 from frontier.types import ClusterType
 
 
@@ -93,6 +94,7 @@ def _scheduler(cluster_type: ClusterType):
         _monolithic_routing_details={0: {2: {0: 1.0}}},
     )
     scheduler._replica_dp_size = 1
+    scheduler._forward_sync_state = ForwardSyncState()
     return scheduler
 
 

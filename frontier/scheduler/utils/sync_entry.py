@@ -29,7 +29,14 @@ def enter_prefill_sync(
         raise RuntimeError(
             "Legacy PREFILL DP synchronization is removed; the current layer must use the canonical per-layer protocol"
         )
-    lane_id = 0 if replica_local_id is None else int(replica_local_id)
+    if replica_local_id is None:
+        lane_id = 0
+    elif type(replica_local_id) is not int or replica_local_id < 0:
+        raise ValueError(
+            "PREFILL replica_local_id must be an exact non-negative int or None"
+        )
+    else:
+        lane_id = replica_local_id
     requested_step_id = scheduler._get_forward_step_id(batch)
     step_id = scheduler._resolve_forward_step(
         sync_kind="prefill",
@@ -104,13 +111,19 @@ def enter_prefill_sync(
         return []
     sync_time = max(sync_room["arrival_times"].values())
     step_batches = dict(sync_room["batches"])
+    provisional_id = sync_room.get("provisional_cohort_id", requested_step_id)
+    if type(provisional_id) is not int or provisional_id < 0:
+        raise RuntimeError(
+            "PREFILL synchronization room has an invalid provisional step id: "
+            f"{provisional_id!r}"
+        )
     scheduler._close_forward_step(
         sync_kind="prefill",
         replica_id=replica_id,
         stage_id=stage_id,
         layer_id=layer_id,
         sync_stage=sync_stage,
-        provisional_id=int(sync_room.get("provisional_cohort_id", requested_step_id)),
+        provisional_id=provisional_id,
     )
     sync_room.pop("batches", None)
     sync_room.pop("arrival_times", None)
@@ -150,7 +163,14 @@ def enter_decode_sync(
         raise RuntimeError(
             "Legacy DECODE DP synchronization is removed; the current layer must use the canonical per-layer protocol"
         )
-    lane_id = 0 if replica_local_id is None else int(replica_local_id)
+    if replica_local_id is None:
+        lane_id = 0
+    elif type(replica_local_id) is not int or replica_local_id < 0:
+        raise ValueError(
+            "DECODE replica_local_id must be an exact non-negative int or None"
+        )
+    else:
+        lane_id = replica_local_id
     requested_step_id = scheduler._get_forward_step_id(batch)
     step_id = scheduler._resolve_forward_step(
         sync_kind="decode",
@@ -224,13 +244,19 @@ def enter_decode_sync(
         return []
     sync_time = max(sync_room["arrival_times"].values())
     step_batches = dict(sync_room["batches"])
+    provisional_id = sync_room.get("provisional_cohort_id", requested_step_id)
+    if type(provisional_id) is not int or provisional_id < 0:
+        raise RuntimeError(
+            "DECODE synchronization room has an invalid provisional step id: "
+            f"{provisional_id!r}"
+        )
     scheduler._close_forward_step(
         sync_kind="decode",
         replica_id=replica_id,
         stage_id=stage_id,
         layer_id=layer_id,
         sync_stage=sync_stage,
-        provisional_id=int(sync_room.get("provisional_cohort_id", requested_step_id)),
+        provisional_id=provisional_id,
     )
     sync_room.pop("batches", None)
     sync_room.pop("arrival_times", None)

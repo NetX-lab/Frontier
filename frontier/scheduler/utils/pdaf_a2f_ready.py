@@ -135,6 +135,25 @@ def schedule_decode_attn_a2f_ready(
         allow_idle=False,
     )
 
+    lane = (replica_id, replica_local_id)
+
+    if not model_is_moe:
+        events = scheduler._release_dense_decode_ffn_a2f_without_lane_barrier(
+            time,
+            batch,
+            replica_id=replica_id,
+            replica_local_id=replica_local_id,
+            layer_id=layer_id,
+            logger=logger,
+        )
+        attention_state.idle_expected_lanes.discard(lane)
+        return events
+
+    idle_expected_lanes = attention_state.idle_expected_lanes
+    if type(idle_expected_lanes) is not set:
+        raise RuntimeError(
+            "DECODE_ATTN A-to-F idle lane inventory must be an exact set"
+        )
     cohort_id = getattr(batch, "decode_attn_cohort_id", None)
     cohort_request_ids = getattr(batch, "decode_attn_cohort_request_ids", None)
     if cohort_id is not None and cohort_request_ids is not None:
@@ -172,7 +191,6 @@ def schedule_decode_attn_a2f_ready(
         )
 
     group_key = (layer_id, afd_stage_idx)
-    lane = (replica_id, replica_local_id)
     if lane not in expected_lane_contract:
         raise ValueError(
             "Unexpected lane observed in DECODE_ATTN A→F waiting room: "
@@ -180,11 +198,6 @@ def schedule_decode_attn_a2f_ready(
             f"expected_lanes={expected_lane_contract}"
         )
 
-    idle_expected_lanes = attention_state.idle_expected_lanes
-    if type(idle_expected_lanes) is not set:
-        raise RuntimeError(
-            "DECODE_ATTN A-to-F idle lane inventory must be an exact set"
-        )
     normalized_idle_expected_lanes = set(
         scheduler._normalize_m2n_lanes(
             tuple(idle_expected_lanes),
@@ -193,20 +206,6 @@ def schedule_decode_attn_a2f_ready(
             require_nonempty=False,
         )
     )
-
-    scheduler._peek_decode_attn_barrier_round_id()
-
-    if not model_is_moe:
-        events = scheduler._release_dense_decode_ffn_a2f_without_lane_barrier(
-            time,
-            batch,
-            replica_id=replica_id,
-            replica_local_id=replica_local_id,
-            layer_id=layer_id,
-            logger=logger,
-        )
-        idle_expected_lanes.discard(lane)
-        return events
 
     waiting_rooms = attention_state.a2f_waiting_by_layer
     if type(waiting_rooms) is not dict:
@@ -329,8 +328,7 @@ def schedule_decode_attn_a2f_ready(
         waiting_rooms[group_key] = committed_room
     else:
         waiting_rooms.pop(group_key, None)
-    if idle_expected_lanes is not None:
-        idle_expected_lanes.discard(lane)
+    idle_expected_lanes.discard(lane)
 
     if barrier_is_ready:
         for ready_lane, ready_layer_id, ready_batch in picked:

@@ -34,12 +34,13 @@ def handle_prefill_sync_collective(
     from frontier.events.prefill_sync_event import PrefillSyncEvent
 
     logger = get_cluster_logger(__name__, scheduler._cluster_type.name)
+    if sync_stage != "post_moe":
+        raise ValueError(
+            "PREFILL collective completion accepts only post_moe for the "
+            "canonical per-layer EP protocol"
+        )
 
     if direct_batch is not None:
-        if sync_stage != "post_moe":
-            raise ValueError(
-                "Direct dense PREFILL completion is valid only for post_moe transition"
-            )
         sync_wait_room = {
             "batches": {None: direct_batch},
             "arrival_times": {None: time},
@@ -67,20 +68,14 @@ def handle_prefill_sync_collective(
         f"participant_batches_type={type(participant_batches).__name__}"
     )
 
-    if sync_stage != "post_moe":
-        raise ValueError(
-            "PREFILL collective completion accepts only post_moe for the "
-            "canonical per-layer EP protocol"
-        )
-
     events = []
     sample_batch = select_active_batch(participant_batches)
     if sample_batch is None:
-        logger.warning(
-            f"[PREFILL_SYNC][COLLECTIVE] post_moe has no non-idle batch for "
-            f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
+        raise RuntimeError(
+            "PREFILL collective completion requires a non-idle participant batch: "
+            f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, "
+            f"layer={layer_id}"
         )
-        return events
 
     execution_time = scheduler._predictor.predict_stage_execution_time(
         sample_batch,

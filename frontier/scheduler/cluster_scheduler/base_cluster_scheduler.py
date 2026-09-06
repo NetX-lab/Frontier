@@ -348,17 +348,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             self._replica_scheduler_count = attn_dp
         self._available_clusters = available_clusters or set()
         self._request_generator_config = request_generator_config
-        replica_config = getattr(self._config, "replica_config", None)
-        self._stage_execution_contexts = build_stage_execution_contexts(
-            cluster=self._cluster,
-            cluster_type=self._cluster_type,
-            replica_config=replica_config,
-            replica_dp_size=getattr(
-                self,
-                "_replica_dp_size",
-                getattr(replica_config, "attn_dp", 1) or 1,
-            ),
-        )
+        self._stage_execution_contexts = self._build_stage_execution_contexts()
 
         from frontier.logger import get_cluster_logger
         logger = get_cluster_logger(__name__, self._cluster_type.name)
@@ -385,7 +375,6 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         # advance monotonically per replica; an idle event with an older hint
         # is treated as a stale placeholder after its step closes.
         self._forward_sync_state = ForwardSyncState()
-        self._bind_forward_sync_state_views()
 
         # Initialize specialized queues for PD+AF disaggregation
         if self._cluster_type == ClusterType.DECODE_ATTN:
@@ -871,17 +860,11 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
 
     def _get_forward_sync_state(self) -> ForwardSyncState:
         state = getattr(self, "_forward_sync_state", None)
-        if state is None:
-            state = ForwardSyncState()
-            self._forward_sync_state = state
-            self._bind_forward_sync_state_views()
+        if type(state) is not ForwardSyncState:
+            raise RuntimeError(
+                "BaseClusterScheduler missing initialized ForwardSyncState"
+            )
         return state
-
-    def _bind_forward_sync_state_views(self) -> None:
-        state = self._forward_sync_state
-        self._prefill_sync_open_steps = state.open_steps("prefill")
-        self._decode_sync_open_steps = state.open_steps("decode")
-        self._next_forward_step_id_by_replica = state._next_step_id_by_replica
 
     def _resolve_forward_step(
         self,

@@ -16,6 +16,7 @@ from frontier.events.prefill_sync_collective_event import PrefillSyncCollectiveE
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
+from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -145,6 +146,7 @@ def _scheduler(
         )
     )
     scheduler._predictor = predictor
+    scheduler._forward_sync_state = ForwardSyncState()
     predictor._prefill_routing_details = {
         0: {
             4: {0: 0.0, 1: 0.0, 2: 0.25, 3: 0.75},

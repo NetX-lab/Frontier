@@ -34,11 +34,13 @@ def handle_decode_sync_collective(
     from frontier.events.decode_sync_event import DecodeSyncEvent
 
     logger = get_cluster_logger(__name__, scheduler._cluster_type.name)
+    if sync_stage != "post_moe":
+        raise ValueError(
+            "DECODE collective completion accepts only post_moe; the canonical "
+            "EP_WAVE enters this method at post_moe"
+        )
+
     if direct_batch is not None:
-        if sync_stage != "post_moe":
-            raise ValueError(
-                "Direct dense DECODE completion is valid only for post_moe transition"
-            )
         dp_batches = {None: direct_batch}
     else:
         replica_rooms = scheduler._decode_sync_waiting_room.get(replica_id)
@@ -59,19 +61,19 @@ def handle_decode_sync_collective(
         time, replica_id, stage_id, layer_id, sync_stage, batch_global_id,
         list(dp_batches),
     )
-    sample_batch = select_active_batch(dp_batches) or next(iter(dp_batches.values()))
+    sample_batch = select_active_batch(dp_batches)
+    if sample_batch is None:
+        raise RuntimeError(
+            "DECODE collective completion requires a non-idle participant batch: "
+            f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, "
+            f"layer={layer_id}"
+        )
     canonical_ep_wave = hasattr(sample_batch, "_decode_ep_wave_lane_times_ms")
     if direct_batch is None and not canonical_ep_wave:
         raise RuntimeError(
             "Legacy DECODE aggregate synchronization is removed; collective "
             "completion requires a canonical EP_WAVE or dense full-stage handoff"
         )
-    if sync_stage == "pre_moe":
-        raise ValueError(
-            "DECODE collective completion cannot start at pre_moe; the canonical "
-            "EP_WAVE enters this method at post_moe"
-        )
-
     stage_identity = getattr(sample_batch, "_stage_owner_replica_local_id", None)
     stage_scheduler = scheduler.get_replica_stage_scheduler(replica_id, stage_identity, stage_id)
     predictor = stage_scheduler._execution_time_predictor
@@ -166,10 +168,13 @@ def handle_decode_sync_collective(
         batch_stage, _ = stage_scheduler.predict_and_create_stage(
             batch, skip_get_execution_time=True
         )
-        original_start = getattr(
-            batch, "_decode_stage_start_time",
-            time - full_execution.total_time,
-        )
+        original_start = getattr(batch, "_decode_stage_start_time", None)
+        if original_start is None:
+            raise RuntimeError(
+                "DECODE collective completion requires _decode_stage_start_time: "
+                f"batch={batch.id}, replica={replica_id}, stage={stage_id}, "
+                f"layer={layer_id}"
+            )
         batch_stage.on_schedule(original_start)
         actual_execution = time + final_timing.total_time - original_start
         batch_stage.override_execution_time(actual_execution)
