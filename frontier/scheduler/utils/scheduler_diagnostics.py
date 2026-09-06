@@ -3,10 +3,33 @@
 from typing import Any, Dict, List
 
 
+def _materialized_state(scheduler: Any, state_name: str) -> Any:
+    """Read a state owner without invoking compatibility-property getters."""
+    return vars(scheduler).get(state_name)
+
+
+def _materialized_attention_queue(scheduler: Any) -> Any:
+    """Return the A-to-F queue only when its owner or direct field exists."""
+    direct_queue = vars(scheduler).get("_af_batch_queue")
+    if direct_queue is not None:
+        return direct_queue
+    state = _materialized_state(scheduler, "_attention_transfer_state")
+    return () if state is None else state.batch_queue
+
+
+def _materialized_m2n_raw_batches(scheduler: Any) -> Any:
+    """Return the raw M2N inventory without creating its state owner."""
+    direct_batches = vars(scheduler).get("_raw_batch_waiting_for_m2n_back")
+    if direct_batches is not None:
+        return direct_batches
+    state = _materialized_state(scheduler, "_m2n_state")
+    return None if state is None else state.raw_batches
+
+
 def scheduler_is_empty(scheduler: Any) -> bool:
     """Return whether queues and all child Replica schedulers are empty."""
     request_queue = len(scheduler._request_queue)
-    af_queue = len(getattr(scheduler, "_af_batch_queue", ()))
+    af_queue = len(_materialized_attention_queue(scheduler))
     schedulers = list(scheduler._replica_schedulers.items())
     schedulers.extend(
         ((replica_id, None), child)
@@ -219,34 +242,35 @@ class SchedulerDiagnostics:
     @classmethod
     def collect(cls, scheduler: Any) -> Dict[str, Any]:
         """Return the existing cluster diagnostic schema with fail-fast checks."""
-        required_attrs = (
-            "_cluster_type",
-            "_request_queue",
-            "_replica_schedulers",
-            "_raw_batch_waiting_for_m2n_back",
-        )
+        required_attrs = ("_cluster_type", "_request_queue", "_replica_schedulers")
         for attr_name in required_attrs:
-            if not hasattr(scheduler, attr_name):
+            if attr_name not in vars(scheduler):
                 raise RuntimeError(f"Cluster scheduler missing required debug field {attr_name}")
 
         cluster_type = scheduler._cluster_type
         if getattr(cluster_type, "name", None) == "DECODE_ATTN":
-            if not hasattr(scheduler, "_af_batch_queue"):
+            attention_state = _materialized_state(scheduler, "_attention_transfer_state")
+            if attention_state is None and "_af_batch_queue" not in vars(scheduler):
                 raise RuntimeError("DECODE_ATTN scheduler missing _af_batch_queue")
-            af_queue = cls.batch_collection(scheduler._af_batch_queue)
+            af_queue = cls.batch_collection(_materialized_attention_queue(scheduler))
         else:
             af_queue = {"status": "not_applicable"}
 
         if getattr(cluster_type, "name", None) == "DECODE_FFN":
-            if not hasattr(scheduler, "_m2n_waiting_by_layer"):
+            m2n_state = _materialized_state(scheduler, "_m2n_state")
+            if m2n_state is None:
                 raise RuntimeError("DECODE_FFN scheduler missing _m2n_waiting_by_layer")
-            if not hasattr(scheduler, "_m2n_ready_groups"):
-                raise RuntimeError("DECODE_FFN scheduler missing _m2n_ready_groups")
-            m2n_waiting_groups = cls.waiting_groups(scheduler._m2n_waiting_by_layer)
-            m2n_ready_groups = cls.ready_groups(scheduler._m2n_ready_groups)
+            m2n_waiting_groups = cls.waiting_groups(m2n_state.waiting_by_layer)
+            m2n_ready_groups = cls.ready_groups(m2n_state.ready_groups)
         else:
             m2n_waiting_groups = {"status": "not_applicable"}
             m2n_ready_groups = {"status": "not_applicable"}
+
+        raw_batches = _materialized_m2n_raw_batches(scheduler)
+        if raw_batches is None and getattr(cluster_type, "name", None) == "DECODE_FFN":
+            raise RuntimeError(
+                "DECODE_FFN scheduler missing _raw_batch_waiting_for_m2n_back"
+            )
 
         replica_states = {}
         scheduler_items = list(scheduler._replica_schedulers.items())
@@ -270,8 +294,10 @@ class SchedulerDiagnostics:
             "af_queue": af_queue,
             "m2n_waiting_groups": m2n_waiting_groups,
             "m2n_ready_groups": m2n_ready_groups,
-            "raw_batch_waiting_map": cls.raw_waiting_map(
-                scheduler._raw_batch_waiting_for_m2n_back
+            "raw_batch_waiting_map": (
+                cls.raw_waiting_map(raw_batches)
+                if raw_batches is not None
+                else {"status": "not_applicable"}
             ),
             "replica_schedulers": replica_states,
         }

@@ -43,9 +43,16 @@ def promote_decode_ffn_group(
     if type(ready_groups) is not deque:
         raise RuntimeError("DECODE_FFN _m2n_ready_groups must be an exact deque")
 
-    idle_lanes = getattr(scheduler, "_ffn_idle_lanes", set())
-    if type(idle_lanes) is not set:
-        raise RuntimeError("DECODE_FFN _ffn_idle_lanes must be an exact set")
+    incomplete_group = len(room.get("lanes_rr_order", ())) < expected_lanes
+    if allow_idle_injection and incomplete_group:
+        idle_lanes = getattr(scheduler, "_ffn_idle_lanes", None)
+        if type(idle_lanes) is not set:
+            raise RuntimeError(
+                "DECODE_FFN _ffn_idle_lanes must be an exact set when idle "
+                "injection is enabled"
+            )
+    else:
+        idle_lanes = set()
     plan = prepare_ffn_group_promotion(
         group_key=group_key,
         room=room,

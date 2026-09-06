@@ -56,10 +56,7 @@ def handle_prefill_sync_collective(
         sync_wait_room = scheduler._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id].pop(sync_stage)
         participant_batches = sync_wait_room["batches"]
 
-    try:
-        participant_keys = list(participant_batches.keys())
-    except Exception:
-        participant_keys = []
+    participant_keys = list(participant_batches.keys())
     logger.info(
         f"[PREFILL_SYNC][COLLECTIVE] ENTER: t={time:.6f}s, replica={replica_id}, stage={stage_id}, "
         f"layer={layer_id}, sync_stage={sync_stage}, batch_global_id={batch_global_id}, "

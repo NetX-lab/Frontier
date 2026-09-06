@@ -56,14 +56,11 @@ def build_aggregated_batch_transfer_events(
         target_execution_replica_id=batch.decode_attn_original_replica_id,
         target_execution_replica_local_id=batch.decode_attn_original_replica_local_id,
     )
-    try:
-        req_ids = [request.id for request in batch.requests]
-        logger.info(
-            f"[M2N][F2A][CREATE] batch_id={batch.id} reqs={req_ids} "
-            f"batch_global_id={getattr(batch, 'global_id', '?')} "
-            f"decode_attn_orig=(replica={getattr(batch, 'decode_attn_original_replica_id', '?')},dp={getattr(batch, 'decode_attn_original_replica_local_id', '?')}) "
-            f"target={ClusterType.DECODE_ATTN.name} size={activation_size}B t_ms={transfer_time:.3f}"
-        )
-    except Exception:
-        logger.info(f"[M2N][F2A][CREATE] batch_id={batch.id} (details unavailable)")
+    req_ids = [request.id for request in batch.requests]
+    logger.info(
+        f"[M2N][F2A][CREATE] batch_id={batch.id} reqs={req_ids} "
+        f"batch_global_id={getattr(batch, 'global_id', '?')} "
+        f"decode_attn_orig=(replica={getattr(batch, 'decode_attn_original_replica_id', '?')},dp={getattr(batch, 'decode_attn_original_replica_local_id', '?')}) "
+        f"target={ClusterType.DECODE_ATTN.name} size={activation_size}B t_ms={transfer_time:.3f}"
+    )
     return [event]
