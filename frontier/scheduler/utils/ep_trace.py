@@ -21,6 +21,74 @@ from frontier.types import ClusterType
 logger = logging.getLogger("frontier.scheduler.cluster_scheduler.base_cluster_scheduler")
 
 
+def log_combine_completion(
+    *, ep_batches, arrival_times, time, combine_end_time, replica_id, stage_id,
+    batch_global_id, cluster_type, cluster_logger, formatter,
+) -> None:
+    """Validate lane timestamps and log one completed dispatch/combine wave."""
+
+    if not ep_batches:
+        raise ValueError("EP all-to-all collective reached with empty ep_batches")
+    if not isinstance(arrival_times, dict) or set(arrival_times) != set(ep_batches):
+        raise ValueError("EP combine collective requires one arrival time for every lane")
+    trace_batch_id, trace_layer_id = resolve_trace_identity(ep_batches, batch_global_id)
+    trace_sync_s = max(arrival_times.values())
+    if combine_end_time < trace_sync_s:
+        raise ValueError("EP combine end time cannot precede the slowest lane")
+    trace_identity = build_trace_identity(
+        batch=next(iter(ep_batches.values())), replica_id=replica_id,
+        stage_id=stage_id, operation_id=trace_batch_id, operation_kind="ep_ffn",
+    )
+    dispatch_end_times = {
+        getattr(ep_batch, "_ep_dispatch_collective_end_time_s", None)
+        for ep_batch in ep_batches.values()
+    }
+    if len(dispatch_end_times) != 1 or None in dispatch_end_times:
+        raise ValueError(
+            "EP combine collective requires one dispatch collective end time "
+            f"for every lane: values={sorted(dispatch_end_times, key=repr)}"
+        )
+    dispatch_end_time_s = float(next(iter(dispatch_end_times)))
+    dispatch_start_times = {
+        getattr(ep_batch, "_ep_dispatch_collective_start_time_s", None)
+        for ep_batch in ep_batches.values()
+    }
+    if len(dispatch_start_times) != 1 or None in dispatch_start_times:
+        raise ValueError(
+            "EP combine collective requires one dispatch collective arrival "
+            "time for every lane: "
+            f"values={sorted(dispatch_start_times, key=repr)}"
+        )
+    dispatch_start_time_s = float(next(iter(dispatch_start_times)))
+    if dispatch_end_time_s < dispatch_start_time_s:
+        raise ValueError("EP dispatch collective end cannot precede dispatch arrival")
+    if trace_sync_s < dispatch_end_time_s:
+        raise ValueError("EP combine lane arrival cannot precede dispatch collective end")
+    log_barrier_trace(
+        cluster_type=cluster_type, batch_id=trace_batch_id, layer_id=trace_layer_id,
+        phase="combine", expected_ep_ids=tuple(sorted(ep_batches)),
+        arrived_ep_ids=tuple(sorted(ep_batches)),
+        max_lane_time_ms=(trace_sync_s - dispatch_end_time_s) * 1000.0,
+        collective_time_ms=(combine_end_time - trace_sync_s) * 1000.0,
+        barrier_time_ms=(combine_end_time - dispatch_end_time_s) * 1000.0,
+        barrier_start_time_s=dispatch_end_time_s, barrier_end_time_s=combine_end_time,
+        trace_identity=trace_identity, format_identity=formatter,
+    )
+    log_wave_end_trace(
+        cluster_type=cluster_type, batch_id=trace_batch_id, layer_id=trace_layer_id,
+        wave_start_time_s=dispatch_start_time_s,
+        combine_barrier_end_time_s=combine_end_time,
+        post_combine_time_ms=(time - combine_end_time) * 1000.0,
+        wave_end_time_s=time, trace_identity=trace_identity, format_identity=formatter,
+    )
+    cluster_logger.info(
+        "[EP-POST-COMBINE] batch_global_id=%s combine_end_time=%.12f "
+        "final_completion_time=%.12f post_combine_duration_ms=%.6f %s",
+        batch_global_id, combine_end_time, time, (time - combine_end_time) * 1000.0,
+        formatter(trace_identity),
+    )
+
+
 def resolve_trace_identity(
     ep_batches: Dict[int, Any],
     batch_global_id: int,

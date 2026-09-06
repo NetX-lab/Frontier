@@ -54,6 +54,49 @@ class EPCombineTimingPlan(NamedTuple):
     payload_description: str
 
 
+def validate_completion_time(time: float, combine_end_time: float) -> tuple[float, float]:
+    """Validate final and combine timestamps before a waiting-room lookup."""
+
+    if not isinstance(time, Real) or isinstance(time, bool) or not math.isfinite(float(time)):
+        raise ValueError("EP combine completion time must be finite")
+    time = float(time)
+    if (
+        not isinstance(combine_end_time, Real)
+        or isinstance(combine_end_time, bool)
+        or not math.isfinite(float(combine_end_time))
+    ):
+        raise ValueError("EP combine end time must be finite")
+    combine_end_time = float(combine_end_time)
+    if combine_end_time > time:
+        raise ValueError(
+            "EP combine end time cannot be later than final completion time: "
+            f"combine_end_time={combine_end_time!r}, time={time!r}"
+        )
+    return time, combine_end_time
+
+
+def resolve_source_batch_ids(ep_batches: dict[int, Any]) -> list[int]:
+    """Require every EP lane to reference the canonical lane's source batches."""
+
+    canonical_ep_id = min(ep_batches)
+    source_ids = list(ep_batches[canonical_ep_id].source_batch_ids)
+    for ep_id, ep_batch in ep_batches.items():
+        lane_source_ids = list(ep_batch.source_batch_ids)
+        if not lane_source_ids:
+            raise ValueError(f"EP combine has empty source_batch_ids for ep_id={ep_id}")
+        if len(set(lane_source_ids)) != len(lane_source_ids):
+            raise ValueError(
+                f"EP combine has duplicate source_batch_ids for ep_id={ep_id}: "
+                f"{lane_source_ids}"
+            )
+        if lane_source_ids != source_ids:
+            raise ValueError(
+                f"source_batch_ids mismatch: ep_id={ep_id} has "
+                f"{lane_source_ids}, expected {source_ids}"
+            )
+    return source_ids
+
+
 def resolve_ep_execution_time(ep_batches: dict[int, Any]) -> float:
     """Resolve synchronized FFN time while preserving zero-work lane semantics."""
 

@@ -44,6 +44,8 @@ from frontier.scheduler.utils.expert_parallel import (
     summarize_alltoall_payload,
     prepare_combine_timing,
     resolve_ep_execution_time,
+    validate_completion_time,
+    resolve_source_batch_ids,
 )
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
@@ -2201,120 +2203,24 @@ class BaseClusterScheduler(ABC):
             f"replica_id={replica_id}, stage_id={stage_id}, batch_global_id={batch_global_id}"
         )
 
-        if (
-            not isinstance(time, Real)
-            or isinstance(time, bool)
-            or not math.isfinite(float(time))
-        ):
-            raise ValueError("EP combine completion time must be finite")
-        time = float(time)
-        if (
-            not isinstance(combine_end_time, Real)
-            or isinstance(combine_end_time, bool)
-            or not math.isfinite(float(combine_end_time))
-        ):
-            raise ValueError("EP combine end time must be finite")
-        combine_end_time = float(combine_end_time)
-        if combine_end_time > time:
-            raise ValueError(
-                "EP combine end time cannot be later than final completion time: "
-                f"combine_end_time={combine_end_time!r}, time={time!r}"
-            )
+        time, combine_end_time = validate_completion_time(time, combine_end_time)
 
         ep_wait_room = self._ep_allgather_waiting_room[replica_id][stage_id][
             batch_global_id
         ]
         ep_batches = ep_wait_room["batches"]
 
-        if not ep_batches:
-            raise ValueError(
-                "EP all-to-all collective reached with empty ep_batches"
-            )
-
-        arrival_times = ep_wait_room.get("arrival_times")
-        if not isinstance(arrival_times, dict) or set(arrival_times) != set(ep_batches):
-            raise ValueError(
-                "EP combine collective requires one arrival time for every lane"
-            )
-        trace_batch_id, trace_layer_id = self._resolve_ep_trace_identity(
-            ep_batches,
-            batch_global_id,
-        )
-        trace_sync_s = max(arrival_times.values())
-        if not isinstance(time, Real) or isinstance(time, bool) or not math.isfinite(float(time)):
-            raise ValueError("EP combine collective time must be finite")
-        if combine_end_time < trace_sync_s:
-            raise ValueError(
-                "EP combine end time cannot precede the slowest lane"
-            )
-        trace_identity = self._build_ep_trace_identity(
-            batch=next(iter(ep_batches.values())),
+        ep_trace.log_combine_completion(
+            time=time,
+            combine_end_time=combine_end_time,
+            ep_batches=ep_batches,
+            arrival_times=ep_wait_room.get("arrival_times"),
             replica_id=replica_id,
             stage_id=stage_id,
-            operation_id=trace_batch_id,
-            operation_kind="ep_ffn",
-        )
-        dispatch_end_times = {
-            getattr(ep_batch, "_ep_dispatch_collective_end_time_s", None)
-            for ep_batch in ep_batches.values()
-        }
-        if len(dispatch_end_times) != 1 or None in dispatch_end_times:
-            raise ValueError(
-                "EP combine collective requires one dispatch collective end time "
-                f"for every lane: values={sorted(dispatch_end_times, key=repr)}"
-            )
-        dispatch_end_time_s = float(next(iter(dispatch_end_times)))
-        dispatch_start_times = {
-            getattr(ep_batch, "_ep_dispatch_collective_start_time_s", None)
-            for ep_batch in ep_batches.values()
-        }
-        if len(dispatch_start_times) != 1 or None in dispatch_start_times:
-            raise ValueError(
-                "EP combine collective requires one dispatch collective arrival "
-                "time for every lane: "
-                f"values={sorted(dispatch_start_times, key=repr)}"
-            )
-        dispatch_start_time_s = float(next(iter(dispatch_start_times)))
-        if dispatch_end_time_s < dispatch_start_time_s:
-            raise ValueError(
-                "EP dispatch collective end cannot precede dispatch arrival"
-            )
-        if trace_sync_s < dispatch_end_time_s:
-            raise ValueError(
-                "EP combine lane arrival cannot precede dispatch collective end"
-            )
-        self._log_ep_barrier_trace(
+            batch_global_id=batch_global_id,
             cluster_type=self._cluster_type,
-            batch_id=trace_batch_id,
-            layer_id=trace_layer_id,
-            phase="combine",
-            expected_ep_ids=tuple(sorted(ep_batches)),
-            arrived_ep_ids=tuple(sorted(ep_batches)),
-            max_lane_time_ms=(trace_sync_s - dispatch_end_time_s) * 1000.0,
-            collective_time_ms=(combine_end_time - trace_sync_s) * 1000.0,
-            barrier_time_ms=(combine_end_time - dispatch_end_time_s) * 1000.0,
-            barrier_start_time_s=dispatch_end_time_s,
-            barrier_end_time_s=combine_end_time,
-            trace_identity=trace_identity,
-        )
-        self._log_ep_wave_end_trace(
-            cluster_type=self._cluster_type,
-            batch_id=trace_batch_id,
-            layer_id=trace_layer_id,
-            wave_start_time_s=dispatch_start_time_s,
-            combine_barrier_end_time_s=combine_end_time,
-            post_combine_time_ms=(time - combine_end_time) * 1000.0,
-            wave_end_time_s=time,
-            trace_identity=trace_identity,
-        )
-        logger.info(
-            "[EP-POST-COMBINE] batch_global_id=%s combine_end_time=%.12f "
-            "final_completion_time=%.12f post_combine_duration_ms=%.6f %s",
-            batch_global_id,
-            combine_end_time,
-            time,
-            (time - combine_end_time) * 1000.0,
-            self._format_ep_trace_identity(trace_identity),
+            cluster_logger=logger,
+            formatter=self._format_ep_trace_identity,
         )
 
         logger.info(f"[DEBUG] Retrieved {len(ep_batches)} EP batches from waiting room: "
@@ -2343,23 +2249,7 @@ class BaseClusterScheduler(ABC):
         # Instead of aggregating the batch, pick raw batches from
         # _raw_batch_waiting_for_m2n_back using a canonical EP lane.
         canonical_ep_id = min(ep_batches.keys())
-        raw_batch_ids = list(ep_batches[canonical_ep_id].source_batch_ids)
-        for ep_id, ep_batch in ep_batches.items():
-            lane_raw_batch_ids = list(ep_batch.source_batch_ids)
-            if not lane_raw_batch_ids:
-                raise ValueError(
-                    f"EP combine has empty source_batch_ids for ep_id={ep_id}"
-                )
-            if len(set(lane_raw_batch_ids)) != len(lane_raw_batch_ids):
-                raise ValueError(
-                    "EP combine has duplicate source_batch_ids for "
-                    f"ep_id={ep_id}: {lane_raw_batch_ids}"
-                )
-            if lane_raw_batch_ids != raw_batch_ids:
-                raise ValueError(
-                    f"source_batch_ids mismatch: ep_id={ep_id} has "
-                    f"{lane_raw_batch_ids}, expected {raw_batch_ids}"
-                )
+        raw_batch_ids = resolve_source_batch_ids(ep_batches)
 
         ffn_execution_time = self._resolve_ep_execution_time(ep_batches)
         logger.info(
