@@ -118,7 +118,7 @@ def inject_ffn_idle_lanes(
         "expected_lane_contract": room_lanes,
     }
     for missing_lane, idle_entry in prepared_entries:
-        prospective_room["per_lane_queues"].setdefault(missing_lane, []).append(idle_entry)
+        prospective_room["per_lane_queues"][missing_lane].append(idle_entry)
         prospective_room["lanes_rr_order"].append(missing_lane)
     scheduler._validate_decode_ffn_waiting_room(
         group_key=group_key,
