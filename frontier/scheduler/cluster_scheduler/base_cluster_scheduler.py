@@ -99,6 +99,7 @@ from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
     ReplicaSchedulerRegistry,
 )
 from frontier.scheduler.utils.layer_path import uses_shared_layer_path
+from frontier.scheduler.utils.replica_config import resolve_replica_scheduler_config
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -471,109 +472,9 @@ class BaseClusterScheduler(ABC):
                     )
 
     def _get_cluster_specific_replica_scheduler_config(self, config: ClusterConfig, cluster_type: ClusterType):
-        """
-        Get cluster-specific replica scheduler configuration.
-        Priority: cluster-specific config -> global replica_scheduler_config -> default
-        
-        For scheduler type override:
-        1. If cluster-specific type is specified (e.g., prefill_replica_scheduler_config_type),
-           create a new config instance of that type and copy compatible parameters.
-        2. Otherwise, use the global replica_scheduler_config.
-        
-        Args:
-            config: ClusterConfig object
-            cluster_type: Type of the cluster
-            
-        Returns:
-            BaseReplicaSchedulerConfig: Configuration for the replica scheduler
-        """
-        from frontier.config import BaseReplicaSchedulerConfig
-        from frontier.types import ReplicaSchedulerType
-        
-        # Get the base configuration
-        base_config = config.replica_scheduler_config
-        
-        # Map cluster type to prefix
-        prefix_map = {
-            ClusterType.PREFILL: "prefill",
-            ClusterType.DECODE: "decode", 
-            ClusterType.DECODE_ATTN: "decode_attn",
-            ClusterType.DECODE_FFN: "decode_ffn",
-        }
-        
-        prefix = prefix_map.get(cluster_type)
-        if not prefix:
-            # If cluster type not in map, use global config
-            import copy
-            return copy.deepcopy(base_config)
-        
-        # Check for cluster-specific scheduler type override
-        type_field_name = f"{prefix}_replica_scheduler_config_type"
-        override_type_str = getattr(config, type_field_name, None) if hasattr(config, type_field_name) else None
-        
-        if override_type_str is not None:
-            # Map string type to ReplicaSchedulerType enum
-            type_mapping = {
-                "vllm": ReplicaSchedulerType.VLLM,
-                "vllm_v1": ReplicaSchedulerType.VLLM_V1,
-                "sj2q_fastserve_lite": ReplicaSchedulerType.SJ2Q_FASTSERVE_LITE,
-                "sj2q_penalty_only": ReplicaSchedulerType.SJ2Q_PENALTY_ONLY,
-                "sj2q_bounded_carryover": ReplicaSchedulerType.SJ2Q_BOUNDED_CARRYOVER,
-                "sglang": ReplicaSchedulerType.SGLANG,
-                "orca": ReplicaSchedulerType.ORCA,
-                "sarathi": ReplicaSchedulerType.SARATHI,
-                "lightllm": ReplicaSchedulerType.LIGHTLLM,
-                "faster_transformer": ReplicaSchedulerType.FASTER_TRANSFORMER,
-            }
-            override_type = type_mapping.get(override_type_str.lower())
-            if override_type is None:
-                raise ValueError(
-                    f"Invalid scheduler type '{override_type_str}' for {cluster_type.name}. "
-                    f"Valid options: {list(type_mapping.keys())}"
-                )
-            
-            # Create new config instance of the overridden type
-            cluster_config = BaseReplicaSchedulerConfig.create_from_type(override_type)
+        """Compatibility wrapper for cluster-local scheduler config resolution."""
 
-            # Copy all overlapping dataclass fields from the base config.
-            # This keeps new scheduler fields (e.g., runtime profiling gates)
-            # in sync without requiring manual updates here.
-            from dataclasses import fields, is_dataclass
-
-            if is_dataclass(base_config) and is_dataclass(cluster_config):
-                base_field_names = {field.name for field in fields(base_config)}
-                cluster_field_names = {field.name for field in fields(cluster_config)}
-                for field_name in sorted(base_field_names & cluster_field_names):
-                    setattr(cluster_config, field_name, getattr(base_config, field_name))
-            else:
-                # Fail fast: this path should always be dataclass-based.
-                raise TypeError(
-                    "Replica scheduler configs must be dataclasses for field-copy behavior"
-                )
-        else:
-            # No type override, use a copy of the base config
-            import copy
-            cluster_config = copy.deepcopy(base_config)
-        
-        # Override individual parameters if specified (cluster-specific values take precedence)
-        param_fields = [
-            "batch_size_cap",
-            "max_tokens_in_batch",
-            "enable_chunked_prefill",
-            "long_prefill_token_threshold",
-            "num_blocks",
-            "block_size",
-            "watermark_blocks_fraction",
-        ]
-        
-        for param in param_fields:
-            field_name = f"{prefix}_replica_scheduler_config_{param}"
-            if hasattr(config, field_name):
-                value = getattr(config, field_name)
-                if value is not None and hasattr(cluster_config, param):
-                    setattr(cluster_config, param, value)
-        
-        return cluster_config
+        return resolve_replica_scheduler_config(config, cluster_type)
 
     def __init__(
         self,
