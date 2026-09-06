@@ -41,11 +41,10 @@ from frontier.scheduler.utils.expert_parallel import (
     resolve_ep_execution_time,
     validate_completion_time,
     resolve_source_batch_ids,
-    predict_ep_wave_phase_times,
-    calculate_ep_wave_timing,
     get_ep_phase_times_ms,
 )
 from frontier.scheduler.utils.ep_wave_inputs import prepare_ep_wave_inputs
+from frontier.scheduler.utils.ep_wave import prepare_moe_wave_from_inputs
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
     format_ep_trace_identity,
@@ -2496,6 +2495,35 @@ class BaseClusterScheduler(ABC):
         for source_batch, owner in zip(live_batches, owners):
             source_batch._stage_admission_ticket = owner
         return True
+    def _prepare_moe_ep_wave_plan(
+        self,
+        *,
+        wave_inputs,
+        time: float,
+        replica_id: int,
+        stage_id: int,
+        layer_id: int,
+    ):
+        """Prepare shared MoE workload and timing through the utility layer."""
+
+        return prepare_moe_wave_from_inputs(
+            wave_inputs=wave_inputs,
+            time=time,
+            materialize_workload=self._materialize_layer_ep_workload_for_batch,
+            trace_identity_builder=self._build_ep_trace_identity,
+            conservation_logger=self._log_ep_conservation_trace,
+            predictor=self._predictor,
+            lane_builder=self._build_prefill_ep_lane_batch,
+            phase_getter=self._get_shared_ep_phase_times_ms,
+            workload_logger=self._log_ep_workload_trace,
+            barrier_logger=self._log_ep_barrier_trace,
+            wave_logger=self._log_ep_wave_end_trace,
+            cluster_type=self._cluster_type,
+            replica_id=replica_id,
+            stage_id=stage_id,
+            layer_id=layer_id,
+        )
+
     def _on_prefill_ep_wave_ready(
         self,
         *,
@@ -2532,46 +2560,19 @@ class BaseClusterScheduler(ABC):
         model_config = self._config.replica_config.model_config
         predictor = self._predictor
         non_idle_source_batches = list(wave_inputs.non_idle_batches)
-        sample_batch = wave_inputs.sample_batch
-        aggregate_batch = wave_inputs.aggregate_batch
         layer_workload = None
         lane_compute_times_ms: list[float] = []
         if model_config.is_moe_layer(layer_id):
-            layer_workload = self._materialize_layer_ep_workload_for_batch(
-                batch=aggregate_batch,
-                target_replica_id=replica_id,
-                global_layer_id=layer_id,
-            )
-            trace_identity = self._build_ep_trace_identity(
-                batch=sample_batch,
+            plan = self._prepare_moe_ep_wave_plan(
+                wave_inputs=wave_inputs,
+                time=time,
                 replica_id=replica_id,
                 stage_id=stage_id,
-                operation_id=int(cohort_id),
-                operation_kind="ep_ffn",
-            )
-            self._log_ep_conservation_trace(
-                cluster_type=self._cluster_type,
-                batch_id=int(cohort_id),
                 layer_id=layer_id,
-                routing_token_count=int(layer_workload.routing_token_count),
-                router_topk=int(layer_workload.router_topk),
-                total_routed_assignments=int(layer_workload.total_routed_assignments),
-                per_ep_routed_tokens=dict(layer_workload.per_ep_routed_tokens),
-                trace_identity=trace_identity,
             )
-            phase_times = predict_ep_wave_phase_times(
-                layer_workload=layer_workload,
-                source_batch=aggregate_batch,
-                stage_id=stage_id,
-                layer_id=layer_id,
-                cluster_type=self._cluster_type,
-                predictor=predictor,
-                lane_builder=self._build_prefill_ep_lane_batch,
-                phase_getter=self._get_shared_ep_phase_times_ms,
-                workload_logger=self._log_ep_workload_trace,
-                trace_identity=trace_identity,
-                batch_id=int(cohort_id),
-            )
+            layer_workload = plan.layer_workload
+            phase_times = plan.phase_times
+            trace_identity = plan.trace_identity
             lane_compute_times_ms = list(phase_times.lane_compute_times_ms)
             self._promote_forward_step_to_ep_wave(
                 source_batches=source_batches,
@@ -2646,18 +2647,7 @@ class BaseClusterScheduler(ABC):
 
         if not lane_compute_times_ms:
             raise ValueError("Prefill layer wave produced no participant timing")
-        participant_ep_ids = tuple(layer_workload.participant_ep_ids)
-        timing = calculate_ep_wave_timing(
-            start_time_s=time,
-            phases=phase_times,
-            barrier_logger=self._log_ep_barrier_trace,
-            wave_logger=self._log_ep_wave_end_trace,
-            cluster_type=self._cluster_type,
-            batch_id=int(cohort_id),
-            layer_id=layer_id,
-            participant_ep_ids=participant_ep_ids,
-            trace_identity=trace_identity,
-        )
+        timing = plan.timing
         barrier_end_time_s = timing.wave_end_time_s
         wave_time_ms = timing.dispatch_barrier_time_ms + timing.combine_barrier_time_ms + timing.post_combine_barrier_time_ms
         for source_batch in non_idle_source_batches:
@@ -2782,46 +2772,19 @@ class BaseClusterScheduler(ABC):
         model_config = self._config.replica_config.model_config
         predictor = self._predictor
         non_idle_source_batches = list(wave_inputs.non_idle_batches)
-        sample_batch = wave_inputs.sample_batch
-        aggregate_batch = wave_inputs.aggregate_batch
         layer_workload = None
         lane_compute_times_ms: list[float] = []
         if model_config.is_moe_layer(layer_id):
-            layer_workload = self._materialize_layer_ep_workload_for_batch(
-                batch=aggregate_batch,
-                target_replica_id=replica_id,
-                global_layer_id=layer_id,
-            )
-            trace_identity = self._build_ep_trace_identity(
-                batch=sample_batch,
+            plan = self._prepare_moe_ep_wave_plan(
+                wave_inputs=wave_inputs,
+                time=time,
                 replica_id=replica_id,
                 stage_id=stage_id,
-                operation_id=int(cohort_id),
-                operation_kind="ep_ffn",
-            )
-            self._log_ep_conservation_trace(
-                cluster_type=self._cluster_type,
-                batch_id=int(cohort_id),
                 layer_id=layer_id,
-                routing_token_count=int(layer_workload.routing_token_count),
-                router_topk=int(layer_workload.router_topk),
-                total_routed_assignments=int(layer_workload.total_routed_assignments),
-                per_ep_routed_tokens=dict(layer_workload.per_ep_routed_tokens),
-                trace_identity=trace_identity,
             )
-            phase_times = predict_ep_wave_phase_times(
-                layer_workload=layer_workload,
-                source_batch=aggregate_batch,
-                stage_id=stage_id,
-                layer_id=layer_id,
-                cluster_type=self._cluster_type,
-                predictor=predictor,
-                lane_builder=self._build_prefill_ep_lane_batch,
-                phase_getter=self._get_shared_ep_phase_times_ms,
-                workload_logger=self._log_ep_workload_trace,
-                trace_identity=trace_identity,
-                batch_id=int(cohort_id),
-            )
+            layer_workload = plan.layer_workload
+            phase_times = plan.phase_times
+            trace_identity = plan.trace_identity
             lane_compute_times_ms = list(phase_times.lane_compute_times_ms)
             self._promote_forward_step_to_ep_wave(
                 source_batches=source_batches,
@@ -2881,18 +2844,7 @@ class BaseClusterScheduler(ABC):
 
         if not lane_compute_times_ms:
             raise ValueError("Decode layer wave produced no participant timing")
-        participant_ep_ids = tuple(layer_workload.participant_ep_ids)
-        timing = calculate_ep_wave_timing(
-            start_time_s=time,
-            phases=phase_times,
-            barrier_logger=self._log_ep_barrier_trace,
-            wave_logger=self._log_ep_wave_end_trace,
-            cluster_type=self._cluster_type,
-            batch_id=int(cohort_id),
-            layer_id=layer_id,
-            participant_ep_ids=participant_ep_ids,
-            trace_identity=trace_identity,
-        )
+        timing = plan.timing
         barrier_end_time_s = timing.wave_end_time_s
         for source_batch in non_idle_source_batches:
             source_batch._decode_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
