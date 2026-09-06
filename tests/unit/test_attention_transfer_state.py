@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )

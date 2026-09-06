@@ -204,4 +204,6 @@ def get_f2a_expected_lanes(scheduler: Any, replica_id: int, *, afd_stage_idx: in
     if type(count) is not int or count <= 0:
         raise RuntimeError("DECODE_ATTN replica scheduler count must be an exact positive int, got %r" % (count,))
     lane = (replica_id, None)
+    # A validated full-stage receipt can carry topology for a known Replica
+    # even when a legacy fixture omits its child scheduler entry.
     return [] if lane in idle else [lane]

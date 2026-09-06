@@ -15,6 +15,7 @@ from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
     scheduler_is_empty,
 )
+from frontier.scheduler.utils.scheduler_state_views import SchedulerStateViews
 from frontier.scheduler.utils.sync_entry import enter_decode_sync, enter_prefill_sync
 from frontier.types import ClusterType
 
@@ -210,6 +211,56 @@ def test_m2n_arrival_rejects_present_null_waiting_room() -> None:
             transfer_info=transfer_info,
             logger=SimpleNamespace(info=lambda *_args: None),
         )
+
+
+def test_m2n_arrival_does_not_materialize_missing_waiting_state() -> None:
+    class SchedulerFixture(SchedulerStateViews):
+        pass
+
+    group_key = (4, 2)
+    scheduler = SchedulerFixture()
+    scheduler._cluster_type = ClusterType.DECODE_FFN
+    scheduler._validate_decode_ffn_m2n_receipt = lambda _batch, _info: (
+        4,
+        2,
+        None,
+        (0, 0),
+        ((0, 0),),
+        1,
+        group_key,
+        ((0, 0),),
+        0,
+    )
+    batch = SimpleNamespace(requests=[], is_idle=False)
+    transfer_info = SimpleNamespace()
+
+    with pytest.raises(RuntimeError, match="missing _m2n_waiting_by_layer"):
+        handle_decode_ffn_arrival(
+            scheduler,
+            time=0.0,
+            batch=batch,
+            transfer_info=transfer_info,
+            logger=SimpleNamespace(info=lambda *_args: None),
+        )
+    assert "_m2n_state" not in vars(scheduler)
+
+
+def test_a2f_admission_does_not_materialize_missing_attention_state() -> None:
+    from frontier.scheduler.utils.pdaf_a2f_ready import schedule_decode_attn_a2f_ready
+
+    scheduler = SimpleNamespace(_cluster_type=ClusterType.DECODE_ATTN)
+
+    with pytest.raises(RuntimeError, match="attention transfer state"):
+        schedule_decode_attn_a2f_ready(
+            scheduler,
+            time=0.0,
+            batch=None,
+            replica_id=0,
+            replica_local_id=None,
+            layer_id=0,
+            logger=SimpleNamespace(),
+        )
+    assert "_attention_transfer_state" not in vars(scheduler)
 
 
 def _combine_lane(*, activation_bytes: int | None = 8) -> SimpleNamespace:

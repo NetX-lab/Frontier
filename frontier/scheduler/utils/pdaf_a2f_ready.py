@@ -13,6 +13,7 @@ from frontier.entities import Batch
 from frontier.types import ClusterType
 from frontier.scheduler.utils.pdaf_transfer import LaneIdentityScope
 from frontier.scheduler.utils.pdaf_a2f import prepare_a2f_admission
+from frontier.scheduler.utils.attention_transfer_state import AttentionTransferState
 
 M2NLaneIdentityScope = LaneIdentityScope
 
@@ -34,6 +35,11 @@ def schedule_decode_attn_a2f_ready(
     if scheduler._cluster_type != ClusterType.DECODE_ATTN:
         raise ValueError(
             "on_decode_attn_a2f_ready is only valid for DECODE_ATTN cluster"
+        )
+    attention_state = vars(scheduler).get("_attention_transfer_state")
+    if type(attention_state) is not AttentionTransferState:
+        raise RuntimeError(
+            "DECODE_ATTN scheduler missing initialized attention transfer state"
         )
     if type(batch) is not Batch:
         raise ValueError(
@@ -177,22 +183,19 @@ def schedule_decode_attn_a2f_ready(
             f"expected_lanes={expected_lane_contract}"
         )
 
-    idle_expected_lanes = getattr(scheduler, "_decode_attn_idle_expected_lanes", None)
-    if idle_expected_lanes is not None:
-        if type(idle_expected_lanes) is not set:
-            raise RuntimeError(
-                "DECODE_ATTN A-to-F idle lane inventory must be an exact set"
-            )
-        normalized_idle_expected_lanes = set(
-            scheduler._normalize_m2n_lanes(
-                tuple(idle_expected_lanes),
-                identity_scope=M2NLaneIdentityScope.FULL_STAGE,
-                field_name="DECODE_ATTN A-to-F idle lane topology",
-                require_nonempty=False,
-            )
+    idle_expected_lanes = attention_state.idle_expected_lanes
+    if type(idle_expected_lanes) is not set:
+        raise RuntimeError(
+            "DECODE_ATTN A-to-F idle lane inventory must be an exact set"
         )
-    else:
-        normalized_idle_expected_lanes = set()
+    normalized_idle_expected_lanes = set(
+        scheduler._normalize_m2n_lanes(
+            tuple(idle_expected_lanes),
+            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
+            field_name="DECODE_ATTN A-to-F idle lane topology",
+            require_nonempty=False,
+        )
+    )
 
     scheduler._peek_decode_attn_barrier_round_id()
 
@@ -209,7 +212,7 @@ def schedule_decode_attn_a2f_ready(
             idle_expected_lanes.discard(lane)
         return events
 
-    waiting_rooms = getattr(scheduler, "_a2f_waiting_by_layer", None)
+    waiting_rooms = attention_state.a2f_waiting_by_layer
     if type(waiting_rooms) is not dict:
         raise RuntimeError(
             "DECODE_ATTN A-to-F waiting-room inventory must be an exact dict"

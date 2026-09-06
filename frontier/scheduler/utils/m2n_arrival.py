@@ -31,6 +31,14 @@ def handle_decode_ffn_arrival(
     for request in batch.requests:
         request.on_arrival(time, scheduler._cluster_type)
     batch.decode_ffn_m2n_arrival_time = time
+    scheduler_state = vars(scheduler)
+    if (
+        "_m2n_state" not in scheduler_state
+        and "_m2n_waiting_by_layer" not in scheduler_state
+    ):
+        raise RuntimeError(
+            "DECODE_FFN scheduler missing _m2n_waiting_by_layer during arrival"
+        )
     waiting_rooms = scheduler._m2n_waiting_by_layer
     if type(waiting_rooms) is not dict:
         raise RuntimeError(
