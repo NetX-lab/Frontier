@@ -4,6 +4,22 @@ from __future__ import annotations
 
 from typing import Any
 
+
+def pipeline_layer_bounds(stage_id: int, layers_per_stage: int) -> tuple[int, int]:
+    """Return the global half-open layer range owned by one PP stage."""
+    if type(stage_id) is not int or stage_id < 0:
+        raise ValueError(
+            "pipeline stage_id must be an exact non-negative int, "
+            f"got {stage_id!r}"
+        )
+    if type(layers_per_stage) is not int or layers_per_stage <= 0:
+        raise ValueError(
+            "num_layers_per_pipeline_stage must be an exact positive int, "
+            f"got {layers_per_stage!r}"
+        )
+    first_layer_id = stage_id * layers_per_stage
+    return first_layer_id, first_layer_id + layers_per_stage
+
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import StageExecutionContext
 from frontier.types import ClusterType
 

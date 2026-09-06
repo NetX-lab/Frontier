@@ -2,6 +2,34 @@
 
 from typing import Any
 
+
+def release_batch_admission(scheduler: Any, batch: Any, stage_id: int | None = None) -> None:
+    """Release a batch's parent stage owner at its completion boundary."""
+    ticket = getattr(batch, "_stage_admission_ticket", None)
+    if ticket is None:
+        return
+    stage_id = getattr(batch, "afd_stage_idx", None) if stage_id is None else stage_id
+    if type(stage_id) is not int or stage_id < 0:
+        raise ValueError("stage_id is required to release a stage admission ticket")
+    scheduler.get_stage_execution_context(int(ticket.replica_id), stage_id).release(ticket)
+    batch.__dict__.pop("_stage_admission_ticket", None)
+
+
+def discard_admission_ticket(scheduler: Any, ticket: Any, stage_id: int) -> None:
+    """Release or cancel a ticket held by a stale stage event."""
+    if type(stage_id) is not int or stage_id < 0:
+        raise ValueError("stage_id is required to discard a stage admission ticket")
+    context = scheduler.get_stage_execution_context(int(ticket.replica_id), stage_id)
+    if context.is_active(ticket):
+        context.release(ticket)
+    elif context.is_queued(ticket):
+        context.cancel(ticket)
+    elif not context.is_cancelled(ticket):
+        raise ValueError(
+            "stale stage event carries an unknown stage admission ticket: "
+            f"{ticket.operation_id!r}"
+        )
+
 def transition_layer_admission(
     scheduler: Any,
     batch: Any,

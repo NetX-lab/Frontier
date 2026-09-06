@@ -3,6 +3,27 @@
 from typing import Any, Dict, List
 
 
+def scheduler_is_empty(scheduler: Any) -> bool:
+    """Return whether queues and all child Replica schedulers are empty."""
+    request_queue = len(scheduler._request_queue)
+    af_queue = len(getattr(scheduler, "_af_batch_queue", ()))
+    schedulers = list(scheduler._replica_schedulers.items())
+    schedulers.extend(
+        ((replica_id, None), child)
+        for replica_id, child in getattr(scheduler, "_full_stage_replica_schedulers", {}).items()
+    )
+    replica_states = [(key, child.is_empty()) for key, child in schedulers]
+    from frontier.logger import get_cluster_logger
+    get_cluster_logger(__name__, scheduler._cluster_type.name).info(
+        "[IDLE-CHECK][%s] request_queue=%s, af_batch_queue=%s, replica_empty=%s",
+        scheduler._cluster_type.name,
+        request_queue,
+        af_queue,
+        [(str(key), empty) for key, empty in replica_states],
+    )
+    return request_queue == 0 and af_queue == 0 and all(empty for _, empty in replica_states)
+
+
 def format_ep_trace_identity(identity: Dict[str, Any]) -> str:
     """Serialize a validated EP trace identity in stable field order."""
 

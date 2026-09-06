@@ -3,6 +3,16 @@
 from typing import Any
 
 
+def current_layer_id(batch: Any) -> int:
+    """Return the first incomplete request layer represented by a batch."""
+    if not batch.requests:
+        raise ValueError("_get_current_layer_id_from_batch: batch.requests is empty")
+    for request in batch.requests:
+        if not request.completed:
+            return request.completed_layer_count
+    return batch.requests[0].completed_layer_count
+
+
 def build_aggregated_batch_transfer_events(
     scheduler: Any,
     batch: Any,

@@ -2,6 +2,28 @@
 
 from collections.abc import Callable, Mapping
 
+from frontier.entities import Batch
+
+
+def source_batches_by_lane(cohort_batches, batch):
+    """Normalize a direct wave call to a non-empty lane-to-batch mapping."""
+    if cohort_batches is None:
+        lane_id = getattr(batch, "_stage_owner_replica_local_id", None)
+        return {int(0 if lane_id is None else lane_id): batch}
+    if not isinstance(cohort_batches, dict) or not cohort_batches:
+        raise ValueError("cohort_batches must be a non-empty lane mapping")
+    normalized = {}
+    for lane_id, source_batch in cohort_batches.items():
+        if type(lane_id) is not int or lane_id < 0:
+            raise ValueError(f"cohort lane ID must be non-negative int, got {lane_id!r}")
+        if not isinstance(source_batch, Batch):
+            raise TypeError(
+                "cohort_batches values must be Batch instances, "
+                f"got {type(source_batch).__name__}"
+            )
+        normalized[lane_id] = source_batch
+    return normalized
+
 
 class ForwardSyncState:
     """Own forward-step identity bookkeeping shared by PREFILL and DECODE."""

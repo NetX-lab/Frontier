@@ -26,7 +26,7 @@ from frontier.moe_ep_workload import (
     resolve_ep_lane_workload,
     resolve_routing_details,
 )
-from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
+from frontier.scheduler.utils.forward_sync_state import ForwardSyncState, source_batches_by_lane
 from frontier.scheduler.utils import ep_trace
 from frontier.scheduler.utils.expert_parallel import (
     EPBatchGroupPlan,
@@ -46,8 +46,15 @@ from frontier.scheduler.utils.expert_parallel import (
 from frontier.scheduler.utils.ep_wave_schedule import schedule_layer_wave
 from frontier.scheduler.utils.ep_wave import prepare_moe_wave_from_inputs
 from frontier.scheduler.utils.layer_workload import materialize_layer_workload
-from frontier.scheduler.utils.layer_admission import transition_layer_admission
-from frontier.scheduler.utils.m2n_events import build_aggregated_batch_transfer_events
+from frontier.scheduler.utils.layer_admission import (
+    transition_layer_admission,
+    release_batch_admission,
+    discard_admission_ticket,
+)
+from frontier.scheduler.utils.m2n_events import (
+    build_aggregated_batch_transfer_events,
+    current_layer_id,
+)
 from frontier.scheduler.utils.pdaf_return import (
     release_ready_return_round,
     enqueue_return_round,
@@ -63,6 +70,7 @@ from frontier.scheduler.utils.stage_wakeup import build_stage_wakeup_events
 from frontier.scheduler.utils.scheduler_diagnostics import (
     SchedulerDiagnostics,
     format_ep_trace_identity,
+    scheduler_is_empty,
 )
 from frontier.scheduler.utils.pdaf_transfer import (
     LaneIdentityScope,
@@ -136,7 +144,10 @@ from frontier.scheduler.replica_scheduler.replica_scheduler_registry import (
 from frontier.scheduler.utils.layer_path import uses_shared_layer_path
 from frontier.scheduler.utils.replica_config import resolve_replica_scheduler_config
 from frontier.scheduler.utils.ffn_state import map_source_replica_to_target
-from frontier.scheduler.utils.stage_contexts import build_stage_execution_contexts
+from frontier.scheduler.utils.stage_contexts import (
+    build_stage_execution_contexts,
+    pipeline_layer_bounds,
+)
 from frontier.scheduler.utils.batch_ids import attention_batch_id, decode_sync_id
 from frontier.scheduler.utils.prefix_cache import validate_prefix_cache_config
 from frontier.scheduler.utils.dense_metrics import (
@@ -270,23 +281,7 @@ class BaseClusterScheduler(ABC):
         stage_id: int,
         num_layers_per_pipeline_stage: int,
     ) -> tuple[int, int]:
-        """Return the global half-open layer range owned by one PP stage."""
-
-        if type(stage_id) is not int or stage_id < 0:
-            raise ValueError(
-                "pipeline stage_id must be an exact non-negative int, "
-                f"got {stage_id!r}"
-            )
-        if (
-            type(num_layers_per_pipeline_stage) is not int
-            or num_layers_per_pipeline_stage <= 0
-        ):
-            raise ValueError(
-                "num_layers_per_pipeline_stage must be an exact positive int, "
-                f"got {num_layers_per_pipeline_stage!r}"
-            )
-        first_layer_id = stage_id * num_layers_per_pipeline_stage
-        return first_layer_id, first_layer_id + num_layers_per_pipeline_stage
+        return pipeline_layer_bounds(stage_id, num_layers_per_pipeline_stage)
 
     @staticmethod
     def _aggregate_decode_ffn_afd_metadata(
@@ -583,22 +578,7 @@ class BaseClusterScheduler(ABC):
         stage_id: int | None = None,
     ) -> None:
         """Release a batch's parent stage owner at its true completion boundary."""
-
-        ticket = getattr(batch, "_stage_admission_ticket", None)
-        if ticket is None:
-            return
-        if stage_id is None:
-            stage_id = getattr(batch, "afd_stage_idx", None)
-        if type(stage_id) is not int or stage_id < 0:
-            raise ValueError(
-                "stage_id is required to release a stage admission ticket"
-            )
-        context = self.get_stage_execution_context(
-            int(ticket.replica_id),
-            stage_id,
-        )
-        context.release(ticket)
-        batch.__dict__.pop("_stage_admission_ticket", None)
+        release_batch_admission(self, batch, stage_id)
 
     def discard_stage_admission_ticket(
         self,
@@ -607,24 +587,7 @@ class BaseClusterScheduler(ABC):
         stage_id: int,
     ) -> None:
         """Clean up one ticket captured by a stale stage event."""
-
-        if type(stage_id) is not int or stage_id < 0:
-            raise ValueError(
-                "stage_id is required to discard a stage admission ticket"
-            )
-        context = self.get_stage_execution_context(
-            int(ticket.replica_id),
-            stage_id,
-        )
-        if context.is_active(ticket):
-            context.release(ticket)
-        elif context.is_queued(ticket):
-            context.cancel(ticket)
-        elif not context.is_cancelled(ticket):
-            raise ValueError(
-                "stale stage event carries an unknown stage admission ticket: "
-                f"{ticket.operation_id!r}"
-            )
+        discard_admission_ticket(self, ticket, stage_id)
 
     def transition_stage_admission_for_layer(
         self,
@@ -671,22 +634,6 @@ class BaseClusterScheduler(ABC):
             else ClusterType.DECODE_ATTN
         )
 
-    @staticmethod
-    def _debug_request_id(request: Request) -> int:
-        return SchedulerDiagnostics.request_id(request)
-
-    @classmethod
-    def _debug_request_collection_state(cls, requests: Any) -> Dict[str, Any]:
-        return SchedulerDiagnostics.request_collection(requests)
-
-    @staticmethod
-    def _debug_batch_id(batch: Batch) -> int:
-        return SchedulerDiagnostics.batch_id(batch)
-
-    @classmethod
-    def _debug_batch_collection_state(cls, batches: Any) -> Dict[str, Any]:
-        return SchedulerDiagnostics.batch_collection(batches)
-
     @classmethod
     def _debug_m2n_waiting_groups_state(
         cls,
@@ -700,39 +647,10 @@ class BaseClusterScheduler(ABC):
         return SchedulerDiagnostics.collect(self)
 
     def is_empty(self) -> bool:
-        from frontier.logger import get_cluster_logger
-        logger = get_cluster_logger(__name__, self._cluster_type.name)
-        rq_len = len(self._request_queue)
-        # Optional AF queue (only exists for decode-attn)
-        af_q_len = len(self._af_batch_queue) if hasattr(self, '_af_batch_queue') else 0
-
-        replica_states = []
-        all_empty = True
-        scheduler_items = list(self._replica_schedulers.items())
-        scheduler_items.extend(
-            ((replica_id, None), replica_scheduler)
-            for replica_id, replica_scheduler in getattr(
-                self, "_full_stage_replica_schedulers", {}
-            ).items()
-        )
-        for key, replica_scheduler in scheduler_items:
-            rs_empty = replica_scheduler.is_empty()
-            replica_states.append((key, rs_empty))
-            all_empty = all_empty and rs_empty
-
-        logger.info(f"[IDLE-CHECK][{self._cluster_type.name}] request_queue={rq_len}, af_batch_queue={af_q_len}, replica_empty={[(str(k), v) for k, v in replica_states]}")
-
-        # Return True only if request queue, AF queue (if exists), and all replicas are empty
-        return rq_len == 0 and af_q_len == 0 and all_empty
+        return scheduler_is_empty(self)
 
     @staticmethod
-    def _validate_token_conservation(
-        input_tokens: int,
-        lane_workload: EPLaneWorkload,
-        context: str,
-    ) -> None:
-        """Compatibility wrapper for EP lane token validation."""
-
+    def _validate_token_conservation(input_tokens: int, lane_workload: EPLaneWorkload, context: str) -> None:
         validate_token_conservation(input_tokens, lane_workload, context)
 
 
@@ -845,48 +763,21 @@ class BaseClusterScheduler(ABC):
         hidden_size = int(self._config.replica_config.model_config.embedding_dim)
         return summarize_alltoall_payload(ep_batches, hidden_size)
 
-    def _validate_ep_barrier_arrival(
-        self,
-        *,
-        phase: str,
-        waiting_rooms,
-        replica_id: int,
-        stage_id: int,
-        batch,
-        ep_id: int,
-    ) -> tuple[int, Optional[dict], frozenset[int], bool]:
-        """Validate one EP barrier participant without mutating room state."""
-
+    def _validate_ep_barrier_arrival(self, **kwargs) -> tuple[int, Optional[dict], frozenset[int], bool]:
         return validate_barrier_arrival(
-            phase=phase,
-            waiting_rooms=waiting_rooms,
+            phase=kwargs["phase"],
+            waiting_rooms=kwargs["waiting_rooms"],
             get_replica=self.get_replica,
             default_ep_size=self._config.replica_config.moe_expert_parallel_size,
-            replica_id=replica_id,
-            stage_id=stage_id,
-            batch=batch,
-            ep_id=ep_id,
+            replica_id=kwargs["replica_id"],
+            stage_id=kwargs["stage_id"],
+            batch=kwargs["batch"],
+            ep_id=kwargs["ep_id"],
         )
 
     @staticmethod
-    def _validate_ep_collective_exec_time(
-        *,
-        phase: str,
-        exec_time_ms,
-        sync_time,
-    ) -> tuple[float, float]:
-        """Validate a collective latency and derive its event time.
-
-        The predictor result is part of the DES state transition.  It must be
-        validated before the final lane is committed so that predictor errors
-        cannot leave a complete waiting room without a corresponding event.
-        """
-
-        return validate_collective_exec_time(
-            phase=phase,
-            exec_time_ms=exec_time_ms,
-            sync_time=sync_time,
-        )
+    def _validate_ep_collective_exec_time(**kwargs) -> tuple[float, float]:
+        return validate_collective_exec_time(**kwargs)
 
     def on_ep_alltoall_dispatch_ready(
         self, time: float, replica_id: int, stage_id: int, batch, ep_id: int
@@ -925,23 +816,6 @@ class BaseClusterScheduler(ABC):
 
     def on_ep_alltoall_combine_ready(self, time: float, replica_id: int, stage_id: int, batch, ep_id: int):
         """Route EP combine readiness through the EP collective handler utility."""
-        from frontier.scheduler.utils.ep_combine_ready import handle_combine_ready
-
-        return handle_combine_ready(
-            self,
-            time=time,
-            replica_id=replica_id,
-            stage_id=stage_id,
-            batch=batch,
-            ep_id=ep_id,
-            resolve_collective_kind=resolve_ep_collective_kind,
-            prepare_timing=prepare_combine_timing,
-        )
-
-    def _handle_ep_alltoall_combine_ready(
-        self, time: float, replica_id: int, stage_id: int, batch, ep_id: int
-    ):
-        """Compatibility adapter for direct private handler callers."""
         from frontier.scheduler.utils.ep_combine_ready import handle_combine_ready
 
         return handle_combine_ready(
@@ -998,26 +872,8 @@ class BaseClusterScheduler(ABC):
         )
 
     def _get_current_layer_id_from_batch(self, batch: Batch) -> int:
-        if not batch.requests:
-            raise ValueError(
-                "_get_current_layer_id_from_batch: batch.requests is empty"
-            )
-        for request in batch.requests:
-            if not request.completed:
-                return request.completed_layer_count
-        return batch.requests[0].completed_layer_count
+        return current_layer_id(batch)
 
-    # Phase 2.5: Removed deprecated on_moe_collective_schedule() method
-    # Old MoE synchronization architecture is no longer supported
-    # Current architecture uses EP-based synchronization (EPAllToAllCombineReadyEvent/EPAllToAllCombineCollectiveEvent)
-
-    """
-    Layer 0: attn (include tp allreduce) → sync → moe_comm → moe_comp → sync → moe_comm
-    Layer 1: attn → sync → moe_comm → moe_comp → sync → moe_comm
-    ...
-    Layer N-1: attn → sync → moe_comm → moe_comp → sync → moe_comm
-    Pipeline: pipeline_time
-    """
     def _materialize_layer_ep_workload_for_batch(
         self,
         *,
@@ -1153,26 +1009,7 @@ class BaseClusterScheduler(ABC):
 
     @staticmethod
     def _forward_step_source_batches(cohort_batches: dict[int, Batch] | None, batch: Batch) -> dict[int, Batch]:
-        """Normalize a direct wave call and preserve lane identity."""
-
-        if cohort_batches is None:
-            lane_id = getattr(batch, "_stage_owner_replica_local_id", None)
-            if lane_id is None:
-                lane_id = 0
-            return {int(lane_id): batch}
-        if not isinstance(cohort_batches, dict) or not cohort_batches:
-            raise ValueError("cohort_batches must be a non-empty lane mapping")
-        normalized: dict[int, Batch] = {}
-        for lane_id, source_batch in cohort_batches.items():
-            if type(lane_id) is not int or lane_id < 0:
-                raise ValueError(f"cohort lane ID must be non-negative int, got {lane_id!r}")
-            if not isinstance(source_batch, Batch):
-                raise TypeError(
-                    "cohort_batches values must be Batch instances, "
-                    f"got {type(source_batch).__name__}"
-                )
-            normalized[lane_id] = source_batch
-        return normalized
+        return source_batches_by_lane(cohort_batches, batch)
 
 
     def _promote_forward_step_to_ep_wave(
@@ -1217,15 +1054,7 @@ class BaseClusterScheduler(ABC):
             layer_id=layer_id,
             operation_kind=operation_kind,
         )
-    def _prepare_moe_ep_wave_plan(
-        self,
-        *,
-        wave_inputs,
-        time: float,
-        replica_id: int,
-        stage_id: int,
-        layer_id: int,
-    ):
+    def _prepare_moe_ep_wave_plan(self, *, wave_inputs, time: float, replica_id: int, stage_id: int, layer_id: int):
         """Prepare shared MoE workload and timing through the utility layer."""
 
         return prepare_moe_wave_from_inputs(
@@ -1246,17 +1075,7 @@ class BaseClusterScheduler(ABC):
             layer_id=layer_id,
         )
 
-    def _on_prefill_ep_wave_ready(
-        self,
-        *,
-        time: float,
-        replica_id: int,
-        stage_id: int,
-        batch: Batch,
-        layer_id: int,
-        replica_local_id: int | None = None,
-        cohort_batches: dict[int, Batch] | None = None,
-    ) -> List:
+    def _on_prefill_ep_wave_ready(self, *, time: float, replica_id: int, stage_id: int, batch: Batch, layer_id: int, replica_local_id: int | None = None, cohort_batches: dict[int, Batch] | None = None) -> List:
         """Schedule one PREFILL layer wave through the shared utility."""
 
         return schedule_layer_wave(
@@ -1312,17 +1131,7 @@ class BaseClusterScheduler(ABC):
 
         return self._uses_shared_prefill_layer_path(batch, layer_id)
 
-    def _on_decode_ep_wave_ready(
-        self,
-        *,
-        time: float,
-        replica_id: int,
-        stage_id: int,
-        batch: Batch,
-        layer_id: int,
-        replica_local_id: int | None = None,
-        cohort_batches: dict[int, Batch] | None = None,
-    ) -> List:
+    def _on_decode_ep_wave_ready(self, *, time: float, replica_id: int, stage_id: int, batch: Batch, layer_id: int, replica_local_id: int | None = None, cohort_batches: dict[int, Batch] | None = None) -> List:
         """Schedule one DECODE layer wave through the shared utility."""
 
         return schedule_layer_wave(
@@ -1407,18 +1216,7 @@ class BaseClusterScheduler(ABC):
             metrics_store=metrics_store,
         )
 
-    def on_prefill_sync_collective(
-        self,
-        time: float,
-        replica_id: int,
-        stage_id: int,
-        batch_global_id: int,
-        sync_stage: str,
-        layer_id: int,
-        metrics_store,
-        *,
-        direct_batch: Optional[Batch] = None,
-    ):
+    def on_prefill_sync_collective(self, time: float, replica_id: int, stage_id: int, batch_global_id: int, sync_stage: str, layer_id: int, metrics_store, *, direct_batch: Optional[Batch] = None):
         """Delegate PREFILL collective completion to the utility handler."""
         return handle_prefill_sync_collective(
             self,
@@ -1514,18 +1312,7 @@ class BaseClusterScheduler(ABC):
             stage_execution_time,
         )
 
-    def on_decode_sync_collective(
-        self,
-        time: float,
-        replica_id: int,
-        stage_id: int,
-        batch_global_id: int,
-        sync_stage: str,
-        layer_id: int,
-        metrics_store,
-        *,
-        direct_batch: Optional[Batch] = None,
-    ):
+    def on_decode_sync_collective(self, time: float, replica_id: int, stage_id: int, batch_global_id: int, sync_stage: str, layer_id: int, metrics_store, *, direct_batch: Optional[Batch] = None):
         """Delegate DECODE collective completion to the utility handler."""
 
         return handle_decode_sync_collective(
@@ -2179,16 +1966,7 @@ class BaseClusterScheduler(ABC):
         queue.clear()
         return batches
 
-    def _create_batch_group(
-        self,
-        requests: List[Request],
-        num_tokens: List[int],
-        replica_id: int,
-        ep_id: int,
-        time: float,
-        source_batch_ids: List[int],
-        lane_workload: EPLaneWorkload,
-    ) -> EPBatchGroup:
+    def _create_batch_group(self, requests: List[Request], num_tokens: List[int], replica_id: int, ep_id: int, time: float, source_batch_ids: List[int], lane_workload: EPLaneWorkload) -> EPBatchGroup:
         return create_ep_batch_group(
             requests=requests,
             num_tokens=num_tokens,
@@ -2203,18 +1981,11 @@ class BaseClusterScheduler(ABC):
 
     # Compatibility aliases for private callers that still use the old
     # cohort terminology. Internal scheduler paths use the forward-step names.
-    _get_forward_cohort_id = _get_forward_step_id
-    _resolve_forward_sync_cohort = _resolve_forward_step
-    _close_forward_sync_cohort = _close_forward_step
-    _cohort_source_batches = _forward_step_source_batches
     _promote_cohort_to_ep_wave = _promote_forward_step_to_ep_wave
     _restore_cohort_full_stage_owners = _restore_forward_step_full_stage_owners
-    _validate_decode_attn_f2a_cohort_binding = _validate_decode_attn_wave_binding
     _validate_decode_attn_cohort_stage_maps = _validate_decode_attn_wave_stages
-    _validate_decode_attn_a2f_cohort_phase = _validate_decode_attn_a2f_wave_phase
     _prepare_decode_attn_batch_cohort_phase = _prepare_decode_attn_batch_phase
     _apply_decode_attn_batch_cohort_phase = _apply_decode_attn_batch_phase
-    _commit_decode_attn_batch_cohort_phases = _commit_decode_attn_batch_phases
     _set_decode_attn_batch_cohort_phase = _set_decode_attn_batch_phase
 
     @abstractmethod
