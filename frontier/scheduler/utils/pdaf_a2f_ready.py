@@ -15,9 +15,6 @@ from frontier.scheduler.utils.pdaf_transfer import LaneIdentityScope
 from frontier.scheduler.utils.pdaf_a2f import prepare_a2f_admission
 from frontier.scheduler.utils.attention_transfer_state import AttentionTransferState
 
-M2NLaneIdentityScope = LaneIdentityScope
-
-
 def schedule_decode_attn_a2f_ready(
     scheduler: Any,
     time: float,
@@ -151,7 +148,7 @@ def schedule_decode_attn_a2f_ready(
             sorted(
                 scheduler._normalize_m2n_lanes(
                     active_local_attn_lanes,
-                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
+                    identity_scope=LaneIdentityScope.FULL_STAGE,
                     field_name=(
                         "DECODE_ATTN A-to-F active cohort local_attn topology"
                     ),
@@ -167,7 +164,7 @@ def schedule_decode_attn_a2f_ready(
                         afd_stage_idx,
                         layer_id=layer_id,
                     ),
-                    identity_scope=M2NLaneIdentityScope.FULL_STAGE,
+                    identity_scope=LaneIdentityScope.FULL_STAGE,
                     field_name="DECODE_ATTN A-to-F expected lane topology",
                     require_nonempty=True,
                 )
@@ -191,7 +188,7 @@ def schedule_decode_attn_a2f_ready(
     normalized_idle_expected_lanes = set(
         scheduler._normalize_m2n_lanes(
             tuple(idle_expected_lanes),
-            identity_scope=M2NLaneIdentityScope.FULL_STAGE,
+            identity_scope=LaneIdentityScope.FULL_STAGE,
             field_name="DECODE_ATTN A-to-F idle lane topology",
             require_nonempty=False,
         )

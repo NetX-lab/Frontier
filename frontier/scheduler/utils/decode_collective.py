@@ -41,15 +41,17 @@ def handle_decode_sync_collective(
             )
         dp_batches = {None: direct_batch}
     else:
-        rooms = scheduler._decode_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id]
-        if sync_stage not in rooms:
-            logger.debug(
-                "[DECODE_SYNC][COLLECTIVE_SKIP] sync_stage=%s already processed for "
-                "replica=%s, stage=%s, batch_global_id=%s, layer=%s",
-                sync_stage, replica_id, stage_id, batch_global_id, layer_id,
+        replica_rooms = scheduler._decode_sync_waiting_room.get(replica_id)
+        stage_rooms = replica_rooms.get(stage_id) if replica_rooms is not None else None
+        step_rooms = stage_rooms.get(batch_global_id) if stage_rooms is not None else None
+        layer_rooms = step_rooms.get(layer_id) if step_rooms is not None else None
+        if layer_rooms is None or sync_stage not in layer_rooms:
+            raise RuntimeError(
+                "DECODE collective event has no matching waiting room: "
+                f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, "
+                f"layer={layer_id}, sync_stage={sync_stage}"
             )
-            return []
-        dp_batches = rooms.pop(sync_stage)["batches"]
+        dp_batches = layer_rooms.pop(sync_stage)["batches"]
 
     logger.info(
         "[DECODE_SYNC][COLLECTIVE] ENTER: t=%.6fs, replica=%s, stage=%s, "

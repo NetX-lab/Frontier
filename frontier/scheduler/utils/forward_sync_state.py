@@ -33,11 +33,6 @@ class ForwardSyncState:
             "prefill": {},
             "decode": {},
         }
-        self._closed_steps_by_kind: dict[str, set[tuple]] = {
-            "prefill": set(),
-            "decode": set(),
-        }
-        self._used_ids_by_scope: dict[tuple[int, int, int, str], set[int]] = {}
         self._next_step_id_by_replica: dict[int, int] = {}
 
     @staticmethod
@@ -60,10 +55,6 @@ class ForwardSyncState:
     def open_steps(self, sync_kind: str) -> dict[tuple, int]:
         self._validate_kind(sync_kind)
         return self._open_steps_by_kind[sync_kind]
-
-    def closed_steps(self, sync_kind: str) -> set[tuple]:
-        self._validate_kind(sync_kind)
-        return self._closed_steps_by_kind[sync_kind]
 
     def resolve_step(
         self,
@@ -111,49 +102,35 @@ class ForwardSyncState:
         open_step_id = open_steps.get(binding_key)
         if open_step_id is not None:
             room = room_lookup(open_step_id)
-            if room is not None:
-                existing_batch = room.get("batches", {}).get(lane_id)
-                if (
-                    existing_batch is None
-                    or existing_batch is batch
-                    or (existing_batch.is_idle and not batch.is_idle)
-                ):
-                    if current_id != open_step_id:
-                        batch._forward_cohort_id = open_step_id
-                    return open_step_id
-                raise ValueError(
-                    "one attention-DP lane cannot occupy two open sync cohorts: "
-                    f"replica={replica_id}, stage={stage_id}, lane={lane_id}, "
-                    f"layer={layer_id}, sync_stage={sync_stage}"
+            if room is None:
+                raise RuntimeError(
+                    "Forward-step state references a missing waiting room: "
+                    f"kind={sync_kind}, replica={replica_id}, stage={stage_id}, "
+                    f"layer={layer_id}, sync_stage={sync_stage}, step={open_step_id}"
                 )
-            open_steps.pop(binding_key, None)
+            existing_batch = room.get("batches", {}).get(lane_id)
+            if (
+                existing_batch is None
+                or (existing_batch is batch and batch.is_idle)
+                or (existing_batch.is_idle and not batch.is_idle)
+                or (batch.is_idle and not existing_batch.is_idle)
+            ):
+                if current_id != open_step_id:
+                    batch._forward_cohort_id = open_step_id
+                return open_step_id
+            raise ValueError(
+                "one attention-DP lane cannot occupy two open sync cohorts: "
+                f"replica={replica_id}, stage={stage_id}, lane={lane_id}, "
+                f"layer={layer_id}, sync_stage={sync_stage}"
+                )
 
-        used_scope = (replica_id, stage_id, layer_id, sync_stage)
-        used_ids = self._used_ids_by_scope.setdefault(used_scope, set())
-        closed_key = (*used_scope, provisional_id)
-        if (
-            getattr(batch, "is_idle", False)
-            and closed_key in self.closed_steps(sync_kind)
-        ):
+        next_id = int(self._next_step_id_by_replica.get(replica_id, 0))
+        if getattr(batch, "is_idle", False) and current_id < next_id:
             return None
-        if closed_key in self.closed_steps(sync_kind) or current_id in used_ids:
-            candidate = max(
-                int(self._next_step_id_by_replica.get(replica_id, 0)),
-                current_id + 1,
-            )
-            while candidate in used_ids:
-                candidate += 1
-            resolved_id = candidate
-            self._next_step_id_by_replica[replica_id] = candidate + 1
-        else:
-            resolved_id = current_id
-        used_ids.add(resolved_id)
-        self._next_step_id_by_replica[replica_id] = max(
-            int(self._next_step_id_by_replica.get(replica_id, 0)),
-            resolved_id + 1,
-        )
+        resolved_id = max(current_id, next_id)
         open_steps[binding_key] = resolved_id
         batch._forward_cohort_id = resolved_id
+        self._next_step_id_by_replica[replica_id] = resolved_id + 1
         return resolved_id
 
     def close_step(
@@ -167,11 +144,17 @@ class ForwardSyncState:
         provisional_id: int,
     ) -> None:
         self._validate_kind(sync_kind)
+        if type(provisional_id) is not int or provisional_id < 0:
+            raise ValueError(
+                "forward cohort provisional ID must be an exact non-negative int, "
+                f"got {provisional_id!r}"
+            )
         open_steps = self.open_steps(sync_kind)
         open_steps.pop(
             (replica_id, stage_id, layer_id, sync_stage, provisional_id),
             None,
         )
-        self.closed_steps(sync_kind).add(
-            (replica_id, stage_id, layer_id, sync_stage, provisional_id)
+        self._next_step_id_by_replica[replica_id] = max(
+            int(self._next_step_id_by_replica.get(replica_id, 0)),
+            provisional_id + 1,
         )

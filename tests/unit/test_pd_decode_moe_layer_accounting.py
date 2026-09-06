@@ -410,7 +410,7 @@ def test_terminal_collective_skips_completed_request_in_mixed_batch() -> None:
     assert completed_request.completed_layer_count == 7
 
 
-def test_replayed_terminal_collective_does_not_increment_again() -> None:
+def test_replayed_terminal_collective_fails_fast() -> None:
     request = _request(completed_layer_count=3)
     batch = _batch([request])
     scheduler = _DecodeSyncScheduler(
@@ -436,20 +436,20 @@ def test_replayed_terminal_collective_does_not_increment_again() -> None:
         layer_id=3,
         metrics_store=metrics_store,
     )
-    replay_events = BaseClusterScheduler.on_decode_sync_collective(
-        scheduler,
-        time=1.0,
-        replica_id=1,
-        stage_id=0,
-        batch_global_id=41,
-        sync_stage="post_moe",
-        layer_id=3,
-        metrics_store=metrics_store,
-    )
-
     assert len(first_events) == 1
-    assert replay_events == []
     assert request.completed_layer_count == 4
+
+    with pytest.raises(RuntimeError, match="no matching waiting room"):
+        BaseClusterScheduler.on_decode_sync_collective(
+            scheduler,
+            time=1.0,
+            replica_id=1,
+            stage_id=0,
+            batch_global_id=41,
+            sync_stage="post_moe",
+            layer_id=3,
+            metrics_store=metrics_store,
+        )
 
 
 @pytest.mark.parametrize("completed_layer_count", [8, 9])

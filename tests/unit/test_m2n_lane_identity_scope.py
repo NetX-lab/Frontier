@@ -6,16 +6,14 @@ import inspect
 
 import pytest
 
-import frontier.scheduler.cluster_scheduler.base_cluster_scheduler as scheduler_module
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )
+from frontier.scheduler.utils.pdaf_transfer import LaneIdentityScope
 
 
 def _identity_scope(name: str):
-    scope_type = getattr(scheduler_module, "M2NLaneIdentityScope", None)
-    assert scope_type is not None
-    return getattr(scope_type, name)
+    return getattr(LaneIdentityScope, name)
 
 
 def test_m2n_full_stage_scope_is_independent_of_field_name() -> None:

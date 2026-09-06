@@ -46,14 +46,17 @@ def handle_prefill_sync_collective(
         }
         participant_batches = sync_wait_room["batches"]
     else:
-        if sync_stage not in scheduler._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id]:
-            logger.debug(
-                f"[PREFILL_SYNC][COLLECTIVE_SKIP] sync_stage={sync_stage} already processed for "
-                f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, layer={layer_id}"
+        replica_rooms = scheduler._prefill_sync_waiting_room.get(replica_id)
+        stage_rooms = replica_rooms.get(stage_id) if replica_rooms is not None else None
+        step_rooms = stage_rooms.get(batch_global_id) if stage_rooms is not None else None
+        layer_rooms = step_rooms.get(layer_id) if step_rooms is not None else None
+        if layer_rooms is None or sync_stage not in layer_rooms:
+            raise RuntimeError(
+                "PREFILL collective event has no matching waiting room: "
+                f"replica={replica_id}, stage={stage_id}, batch_global_id={batch_global_id}, "
+                f"layer={layer_id}, sync_stage={sync_stage}"
             )
-            return []
-
-        sync_wait_room = scheduler._prefill_sync_waiting_room[replica_id][stage_id][batch_global_id][layer_id].pop(sync_stage)
+        sync_wait_room = layer_rooms.pop(sync_stage)
         participant_batches = sync_wait_room["batches"]
 
     participant_keys = list(participant_batches.keys())

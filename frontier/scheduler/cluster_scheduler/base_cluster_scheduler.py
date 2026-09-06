@@ -199,9 +199,6 @@ def resolve_ep_collective_kind(
     return profile.expert_parallel_collective
 
 
-M2NLaneIdentityScope = LaneIdentityScope
-
-
 class BaseClusterScheduler(SchedulerStateViews, ABC):
 
     @staticmethod
@@ -289,7 +286,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
     def _map_source_attn_replica_to_ffn_replica(
         source_replica_ordinal: int,
         target_ffn_replica_ids: List[int] | Tuple[int, ...],
-    ) -> int | None:
+    ) -> int:
         return map_source_replica_to_target(source_replica_ordinal, target_ffn_replica_ids)
 
     def _validate_prefix_cache_cluster_config(self, replica_scheduler_config) -> None:
@@ -384,9 +381,9 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
 
         initialize_replica_schedulers(self, request_generator_config, logger)
         self._request_queue = []
-        # Sync completion is tracked per concrete batch event.  A cohort ID is
-        # a reusable lane-local hint, so it cannot by itself identify a
-        # duplicate after an idle-placeholder wave has closed.
+        # Forward-step identity is shared by PREFILL and DECODE. Resolved IDs
+        # advance monotonically per replica; an idle event with an older hint
+        # is treated as a stale placeholder after its step closes.
         self._forward_sync_state = ForwardSyncState()
         self._bind_forward_sync_state_views()
 
@@ -884,10 +881,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         state = self._forward_sync_state
         self._prefill_sync_open_steps = state.open_steps("prefill")
         self._decode_sync_open_steps = state.open_steps("decode")
-        self._prefill_sync_closed_steps = state.closed_steps("prefill")
-        self._decode_sync_closed_steps = state.closed_steps("decode")
         self._next_forward_step_id_by_replica = state._next_step_id_by_replica
-        self._forward_step_used_ids_by_scope = state._used_ids_by_scope
 
     def _resolve_forward_step(
         self,
@@ -900,7 +894,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         lane_id: int,
         layer_id: int,
         sync_stage: str,
-    ) -> int:
+    ) -> int | None:
         """Resolve one lane through the forward-sync state owner."""
 
         state = self._get_forward_sync_state()
@@ -1366,7 +1360,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
     def _normalize_m2n_lanes(
         raw_lanes,
         *,
-        identity_scope: M2NLaneIdentityScope,
+        identity_scope: LaneIdentityScope,
         field_name: str,
         require_nonempty: bool,
     ) -> List[tuple[int, int | None]]:
