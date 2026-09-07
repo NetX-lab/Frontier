@@ -20,10 +20,13 @@ exec > >(tee "$PROBE_ROOT/environment.log") 2>&1
 
 date -u +%Y-%m-%dT%H:%M:%SZ
 hostname
-git -c safe.directory="$REPO_ROOT" -C "$REPO_ROOT" rev-parse HEAD
 nvidia-smi --query-gpu=index,name,uuid,memory.total,driver_version --format=csv
 nvidia-smi topo -m
 nvidia-smi nvlink -s
+git --version
+export GIT_CONFIG_GLOBAL="$TMPDIR/$(basename "$PROBE_ROOT").gitconfig"
+git config --global --add safe.directory "$REPO_ROOT"
+git -C "$REPO_ROOT" rev-parse HEAD
 
 PY=/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/bin/python
 COMPILED=/local/ycfeng/anaconda3/envs/vidur_te/lib/python3.10/site-packages/vllm
