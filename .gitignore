@@ -167,8 +167,9 @@ cache
 *.pkl
 settings.json
 
-# Task memory is local-only; do not vendor it.
+# Task memory and repair receipts are local-only; do not vendor them.
 task_memory/
+repairs/
 
 # Local linked worktrees used for isolated feature implementation.
 .worktrees/
