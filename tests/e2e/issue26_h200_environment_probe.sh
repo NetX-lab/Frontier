@@ -20,6 +20,8 @@ exec > >(tee "$PROBE_ROOT/environment.log") 2>&1
 
 date -u +%Y-%m-%dT%H:%M:%SZ
 hostname
+type -a nvidia-smi
+ls -l "$(command -v nvidia-smi)"
 nvidia-smi --query-gpu=index,name,uuid,memory.total,driver_version --format=csv
 nvidia-smi topo -m
 nvidia-smi nvlink -s
@@ -43,7 +45,9 @@ test -f "$COMPILED/_C.abi3.so"
 "$CUDA_HOME/bin/nvcc" --version
 "$PY" - <<'PY'
 import sys
+import json
 import flashinfer
+import pynvml
 import torch
 import vllm
 
@@ -53,6 +57,36 @@ print("torch", torch.__version__)
 print("torch_cuda", torch.version.cuda)
 print("flashinfer", flashinfer.__version__)
 print("vllm_source", vllm.__file__)
+pynvml.nvmlInit()
+print("nvml_driver", pynvml.nvmlSystemGetDriverVersion())
+handles = [pynvml.nvmlDeviceGetHandleByIndex(i) for i in range(8)]
+for index, handle in enumerate(handles):
+    links = []
+    for link in range(pynvml.NVML_NVLINK_MAX_LINKS):
+        try:
+            active = pynvml.nvmlDeviceGetNvLinkState(handle, link)
+        except pynvml.NVMLError_InvalidArgument:
+            break
+        if active:
+            links.append({
+                "link": link,
+                "version": pynvml.nvmlDeviceGetNvLinkVersion(handle, link),
+                "remote_type": pynvml.nvmlDeviceGetNvLinkRemoteDeviceType(handle, link),
+                "remote_pci": str(pynvml.nvmlDeviceGetNvLinkRemotePciInfo(handle, link).busId),
+            })
+    print("nvml_topology", json.dumps({
+        "index": index,
+        "uuid": str(pynvml.nvmlDeviceGetUUID(handle)),
+        "memory_bytes": pynvml.nvmlDeviceGetMemoryInfo(handle).total,
+        "active_links": links,
+        "peer_nvlink_status": [
+            None if peer == index else pynvml.nvmlDeviceGetP2PStatus(
+                handle, other, pynvml.NVML_P2P_CAPS_INDEX_NVLINK)
+            for peer, other in enumerate(handles)
+        ],
+    }))
+    assert links, (index, "No active NVLink reported by NVML")
+pynvml.nvmlShutdown()
 assert torch.cuda.device_count() == 8, "Expected one eight-GPU serving pod"
 for index in range(8):
     name = torch.cuda.get_device_name(index)
