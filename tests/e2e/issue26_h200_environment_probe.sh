@@ -20,7 +20,7 @@ exec > >(tee "$PROBE_ROOT/environment.log") 2>&1
 
 date -u +%Y-%m-%dT%H:%M:%SZ
 hostname
-git -C "$REPO_ROOT" rev-parse HEAD
+git -c safe.directory="$REPO_ROOT" -C "$REPO_ROOT" rev-parse HEAD
 nvidia-smi --query-gpu=index,name,uuid,memory.total,driver_version --format=csv
 nvidia-smi topo -m
 nvidia-smi nvlink -s
