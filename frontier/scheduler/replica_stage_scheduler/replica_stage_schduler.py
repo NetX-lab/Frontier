@@ -344,6 +344,16 @@ class ReplicaStageScheduler:
                 )
                 self._last_stale_drop_count += 1
                 continue
+            if (
+                self._is_moe
+                and self._cluster_type in (ClusterType.MONOLITHIC, ClusterType.PREFILL, ClusterType.DECODE)
+                and not isinstance(live_batch, (EPBatchGroup, DenseFFNBatchGroup))
+            ):
+                # Online lanes can have different local batch histories. The
+                # parent stage assigns their common identity at actual admission.
+                live_batch._forward_cohort_provisional_id = (
+                    self._stage_execution_context.bind_forward_group(admission_ticket)
+                )
             self._is_busy = True
             return live_batch
         return None

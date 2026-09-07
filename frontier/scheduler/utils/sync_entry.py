@@ -5,6 +5,15 @@ from typing import Any
 from frontier.entities import Batch
 
 
+def _can_supply_idle_lane(scheduler, sibling_stage, replica_id, stage_id):
+    """Allow queued next-forward work to wait while the active group advances."""
+    if sibling_stage.is_busy:
+        return False
+    if sibling_stage.is_empty():
+        return True
+    return scheduler.get_stage_execution_context(replica_id, stage_id).forward_group_sealed
+
+
 def enter_prefill_sync(
     scheduler: Any,
     time: float,
@@ -75,7 +84,7 @@ def enter_prefill_sync(
                     f"replica_id={replica_id}, replica_local_id={missing_lane}"
                 )
             sibling_stage = sibling.get_replica_stage_scheduler(stage_id)
-            if sibling_stage.is_busy or not sibling_stage.is_empty():
+            if not _can_supply_idle_lane(scheduler, sibling_stage, replica_id, stage_id):
                 continue
             idle_batch = Batch(
                 replica_id=replica_id,
@@ -210,7 +219,7 @@ def enter_decode_sync(
                     f"replica_id={replica_id}, replica_local_id={missing_lane}"
                 )
             sibling_stage = sibling.get_replica_stage_scheduler(stage_id)
-            if sibling_stage.is_busy or not sibling_stage.is_empty():
+            if not _can_supply_idle_lane(scheduler, sibling_stage, replica_id, stage_id):
                 continue
             idle_batch = Batch(
                 replica_id=replica_id,
