@@ -260,6 +260,29 @@ def test_pdaf_combine_completion_waits_for_post_combine_work() -> None:
     assert events[0].time == pytest.approx(1.1045)
 
 
+def test_ep_combine_rejects_child_without_is_empty_accessor() -> None:
+    batches = {
+        0: _combine_batch(0, source_batch_ids=[10]),
+        1: _combine_batch(1, source_batch_ids=[10]),
+    }
+    raw = _raw_batch(10)
+    scheduler, _room, stage_schedulers, _ = _combine_scheduler(
+        batches,
+        raw_batches={10: raw},
+    )
+    stage_schedulers[0] = SimpleNamespace()
+
+    with pytest.raises(ValueError, match="EP stage scheduler must expose is_empty"):
+        scheduler.on_ep_alltoall_combine_collective_schedule(
+            time=5.0,
+            replica_id=0,
+            stage_id=0,
+            batch_global_id=10,
+            metrics_store=Mock(),
+            combine_end_time=5.0,
+        )
+
+
 def test_ep_combine_allows_dispatch_end_before_combine_arrival() -> None:
     batches = {
         0: _combine_batch(0, source_batch_ids=[10]),

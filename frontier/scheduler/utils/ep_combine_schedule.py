@@ -94,14 +94,19 @@ def schedule_combine_completion(
         )
         prepared_raw_commits.append((batch_id, raw_batch, active_requests))
 
-    schedule_events = [
-        ReplicaStageScheduleEvent(
-            time, replica_id, stage_id, scheduler._cluster_type, ep_id
-        )
-        for ep_id, stage_scheduler in stage_schedulers.items()
-        if not callable(getattr(stage_scheduler, "is_empty", None))
-        or not bool(stage_scheduler.is_empty())
-    ]
+    schedule_events = []
+    for ep_id, stage_scheduler in stage_schedulers.items():
+        stage_is_empty = getattr(stage_scheduler, "is_empty", None)
+        if not callable(stage_is_empty):
+            raise ValueError(
+                "DECODE_FFN EP stage scheduler must expose is_empty()"
+            )
+        if not bool(stage_is_empty()):
+            schedule_events.append(
+                ReplicaStageScheduleEvent(
+                    time, replica_id, stage_id, scheduler._cluster_type, ep_id
+                )
+            )
     full_stage_scheduler = scheduler.get_full_stage_replica_scheduler(replica_id)
     full_stage_is_empty = getattr(full_stage_scheduler, "is_empty", None)
     if not callable(full_stage_is_empty):

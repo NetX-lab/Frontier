@@ -85,7 +85,6 @@ def handle_combine_ready(
         "EPAllToAllCombineCollectiveEvent"
     )
     model_config = scheduler._config.replica_config.model_config
-    scheduler._get_step3_ep_alltoall_payload_bytes(prospective_batches)
     ep_collective_kind = resolve_collective_kind(
         model_config,
         scheduler._cluster_type,
