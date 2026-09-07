@@ -29,6 +29,10 @@ PY=/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/bin/python
 COMPILED=/local/ycfeng/anaconda3/envs/vidur_te/lib/python3.10/site-packages/vllm
 export CUDA_HOME=/usr/local/cuda-12.8
 export PATH="$CUDA_HOME/bin:$(dirname "$PY"):$PATH"
+RUNTIME_ROOT="$(dirname "$(dirname "$PY")")"
+export LIBRARY_PATH="$CUDA_HOME/lib64:$RUNTIME_ROOT/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"
+export LD_LIBRARY_PATH="/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$CUDA_HOME/lib64:$RUNTIME_ROOT/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export LD_PRELOAD=/usr/local/nvidia/lib64/libcuda.so.1
 export PYTHONPATH=/data/ycfeng/tmp/vLLM-BS
 export VLLM_FRONTIER_COMPILED_PACKAGE="$COMPILED"
 test -x "$PY"
