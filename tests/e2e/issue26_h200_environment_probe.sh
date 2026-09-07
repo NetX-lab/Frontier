@@ -22,9 +22,11 @@ date -u +%Y-%m-%dT%H:%M:%SZ
 hostname
 type -a nvidia-smi
 ls -l "$(command -v nvidia-smi)"
-nvidia-smi --query-gpu=index,name,uuid,memory.total,driver_version --format=csv
-nvidia-smi topo -m
-nvidia-smi nvlink -s
+NVIDIA_SMI=/usr/local/nvidia/bin/nvidia-smi
+test -s "$NVIDIA_SMI"
+"$NVIDIA_SMI" --query-gpu=index,name,uuid,memory.total,driver_version --format=csv
+"$NVIDIA_SMI" topo -m
+"$NVIDIA_SMI" nvlink -s
 git --version
 export GIT_CONFIG_GLOBAL="$TMPDIR/$(basename "$PROBE_ROOT").gitconfig"
 git config --global --add safe.directory "$REPO_ROOT"
