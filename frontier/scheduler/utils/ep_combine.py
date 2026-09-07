@@ -39,8 +39,14 @@ def prepare_ep_combine_completion(
         lane_workload = resolve_ep_lane_workload(ep_batch, required=True)
         if lane_workload is None:
             raise ValueError(f"Missing EP lane workload for ep_id={ep_id}")
+        total_num_tokens = getattr(ep_batch, "total_num_tokens", None)
+        if type(total_num_tokens) is not int or total_num_tokens < 0:
+            raise ValueError(
+                "EP combine total_num_tokens must be an exact non-negative int: "
+                f"ep_id={ep_id}, value={total_num_tokens!r}"
+            )
         token_validator(
-            int(ep_batch.total_num_tokens),
+            total_num_tokens,
             lane_workload,
             context=(
                 f"EP AllToAll combine collective - EP batch "
@@ -64,6 +70,20 @@ def prepare_ep_combine_completion(
                 f"batch_id={batch_id}, requests={len(raw_batch.requests)}, "
                 f"request_runtime_epochs={len(raw_batch.request_runtime_epochs)}"
             )
+        if any(
+            type(request.runtime_epoch) is not int
+            or request.runtime_epoch < 0
+            or type(runtime_epoch) is not int
+            or runtime_epoch < 0
+            for request, runtime_epoch in zip(
+                raw_batch.requests,
+                raw_batch.request_runtime_epochs,
+            )
+        ):
+            raise ValueError(
+                "EP combine request runtime epochs must be exact non-negative ints: "
+                f"batch_id={batch_id}"
+            )
         raw_batches.append((batch_id, raw_batch))
 
     active_requests_by_batch = []
@@ -74,7 +94,7 @@ def prepare_ep_combine_completion(
                 raw_batch.requests,
                 raw_batch.request_runtime_epochs,
             )
-            if int(request.runtime_epoch) == int(runtime_epoch)
+            if request.runtime_epoch == runtime_epoch
         )
         active_requests_by_batch.append((batch_id, active_requests))
 

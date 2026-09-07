@@ -189,7 +189,7 @@ def build_trace_identity(
     raw_epochs = None
     if source_batches is not None:
         raw_epochs = [
-            int(runtime_epoch)
+            runtime_epoch
             for source_batch in source_batches
             for runtime_epoch in getattr(source_batch, "request_runtime_epochs", [])
         ]

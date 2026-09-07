@@ -84,6 +84,23 @@ def test_build_trace_identity_rejects_duplicate_request_ids() -> None:
         )
 
 
+def test_build_trace_identity_rejects_coercible_source_epoch() -> None:
+    source = SimpleNamespace(
+        requests=[_request(7, epoch=2, token_index=4)],
+        request_runtime_epochs=["2"],
+    )
+    batch = SimpleNamespace(source_batches=[source], schedule_epoch=5, afd_stage_idx=1)
+
+    with pytest.raises(ValueError, match="request_runtime_epochs must align"):
+        ep_trace.build_trace_identity(
+            batch=batch,
+            replica_id=2,
+            stage_id=1,
+            operation_id=9,
+            operation_kind="ep_ffn",
+        )
+
+
 def test_workload_trace_accepts_formatter_callback(caplog) -> None:
     from frontier.moe_ep_workload import EPLaneWorkload
     from frontier.types import ClusterType
