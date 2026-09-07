@@ -13,6 +13,7 @@ from frontier.events.decode_sync_collective_event import DecodeSyncCollectiveEve
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
+from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     EP_WAVE,
     FULL_STAGE_WORLD,
@@ -177,6 +178,7 @@ def _scheduler(
         )
     )
     scheduler._predictor = predictor
+    scheduler._forward_sync_state = ForwardSyncState()
     scheduler._decode_sync_waiting_room = defaultdict(
         lambda: defaultdict(
             lambda: defaultdict(

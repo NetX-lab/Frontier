@@ -142,27 +142,6 @@ class BaseGlobalScheduler(ABC):
     def add_request(self, request: Request, cluster_type: ClusterType) -> None:
         self._request_queue.append((request, cluster_type))
 
-    def initialize_periodic_scheduling(self, start_time: float = 0.0) -> List["BaseEvent"]:
-        """
-        Initialize periodic scheduling for all clusters that have it enabled.
-
-        Args:
-            start_time: Time to start the first periodic scheduling events
-
-        Returns:
-            List of initial PeriodicScheduleEvent objects for clusters with periodic scheduling enabled
-        """
-        periodic_events = []
-
-        for cluster_type, cluster_scheduler in self._cluster_schedulers.items():
-            events = cluster_scheduler.initialize_periodic_scheduling(start_time)
-            periodic_events.extend(events)
-
-        if periodic_events:
-            logger.info(f"Initialized periodic scheduling for {len(periodic_events)} clusters")
-
-        return periodic_events
-
     def schedule(self) -> Dict[ClusterType, List[Tuple[int, Request]]]:
         """
         Schedules requests for each cluster and returns a mapping of cluster type to replica schedule events.

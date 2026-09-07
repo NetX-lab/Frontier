@@ -78,8 +78,8 @@ class _DecodeSyncScheduler:
     transition_stage_admission_for_layer = (
         BaseClusterScheduler.transition_stage_admission_for_layer
     )
-    _restore_cohort_full_stage_owners = (
-        BaseClusterScheduler._restore_cohort_full_stage_owners
+    _restore_forward_step_full_stage_owners = (
+        BaseClusterScheduler._restore_forward_step_full_stage_owners
     )
 
     def __init__(
@@ -225,6 +225,7 @@ def _batch(requests: list[Request], *, is_idle: bool = False) -> Batch:
     # completion path no longer accepts the retired aggregate/DP scalar input.
     batch._decode_ep_wave_lane_times_ms = (0.0,)
     batch._decode_ep_wave_post_moe_comm_time_s = 0.0
+    batch._decode_stage_start_time = 0.0
     return batch
 
 
@@ -292,6 +293,44 @@ def test_pp2_terminal_collectives_account_all_94_layers() -> None:
         for event in first_stage_events + second_stage_events
     )
     assert request.completed_layer_count == 94
+
+
+def test_terminal_collective_requires_decode_stage_start_time() -> None:
+    request = _request(completed_layer_count=0)
+    batch = _batch([request])
+    del batch._decode_stage_start_time
+    scheduler = _DecodeSyncScheduler(
+        total_layers=2,
+        num_layers_per_pipeline_stage=2,
+        pipeline_parallel_size=1,
+    )
+
+    with pytest.raises(RuntimeError, match="requires _decode_stage_start_time"):
+        _run_terminal_collective(
+            scheduler,
+            _MetricsStore(),
+            stage_id=0,
+            layer_id=1,
+            batches={0: batch},
+        )
+
+
+def test_terminal_collective_rejects_all_idle_participants() -> None:
+    scheduler = _DecodeSyncScheduler(
+        total_layers=2,
+        num_layers_per_pipeline_stage=2,
+        pipeline_parallel_size=1,
+    )
+    idle_batch = _batch([], is_idle=True)
+
+    with pytest.raises(RuntimeError, match="requires a non-idle participant batch"):
+        _run_terminal_collective(
+            scheduler,
+            _MetricsStore(),
+            stage_id=0,
+            layer_id=1,
+            batches={0: idle_batch},
+        )
 
 
 @pytest.mark.parametrize("pipeline_parallel_size", [1, 2])
@@ -410,7 +449,7 @@ def test_terminal_collective_skips_completed_request_in_mixed_batch() -> None:
     assert completed_request.completed_layer_count == 7
 
 
-def test_replayed_terminal_collective_does_not_increment_again() -> None:
+def test_replayed_terminal_collective_fails_fast() -> None:
     request = _request(completed_layer_count=3)
     batch = _batch([request])
     scheduler = _DecodeSyncScheduler(
@@ -436,20 +475,20 @@ def test_replayed_terminal_collective_does_not_increment_again() -> None:
         layer_id=3,
         metrics_store=metrics_store,
     )
-    replay_events = BaseClusterScheduler.on_decode_sync_collective(
-        scheduler,
-        time=1.0,
-        replica_id=1,
-        stage_id=0,
-        batch_global_id=41,
-        sync_stage="post_moe",
-        layer_id=3,
-        metrics_store=metrics_store,
-    )
-
     assert len(first_events) == 1
-    assert replay_events == []
     assert request.completed_layer_count == 4
+
+    with pytest.raises(RuntimeError, match="no matching waiting room"):
+        BaseClusterScheduler.on_decode_sync_collective(
+            scheduler,
+            time=1.0,
+            replica_id=1,
+            stage_id=0,
+            batch_global_id=41,
+            sync_stage="post_moe",
+            layer_id=3,
+            metrics_store=metrics_store,
+        )
 
 
 @pytest.mark.parametrize("completed_layer_count", [8, 9])

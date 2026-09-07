@@ -17,6 +17,7 @@ from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEve
 from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
     RoundRobinClusterScheduler,
 )
+from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
 from frontier.types import ClusterType
 
 
@@ -92,6 +93,8 @@ def _scheduler(cluster_type: ClusterType):
         _decode_routing_details={0: {2: {0: 1.0}}},
         _monolithic_routing_details={0: {2: {0: 1.0}}},
     )
+    scheduler._replica_dp_size = 1
+    scheduler._forward_sync_state = ForwardSyncState()
     return scheduler
 
 
@@ -166,7 +169,7 @@ def test_monolithic_prefill_guard_only_admits_moe_layers() -> None:
 
     assert scheduler._uses_shared_prefill_ep_wave(None, 2) is True
     assert scheduler._uses_shared_prefill_ep_wave(None, 1) is False
-    assert scheduler._uses_shared_prefill_layer_protocol(None, 1) is True
+    assert scheduler._uses_shared_prefill_layer_path(None, 1) is True
 
 
 def test_monolithic_decode_guard_only_admits_moe_layers() -> None:
@@ -174,7 +177,7 @@ def test_monolithic_decode_guard_only_admits_moe_layers() -> None:
 
     assert scheduler._uses_shared_decode_ep_wave(None, 2) is True
     assert scheduler._uses_shared_decode_ep_wave(None, 1) is False
-    assert scheduler._uses_shared_decode_layer_protocol(None, 1) is True
+    assert scheduler._uses_shared_decode_layer_path(None, 1) is True
 
 
 def test_monolithic_prefill_dense_layer_uses_full_stage_protocol_without_ep_materialization(

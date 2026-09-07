@@ -149,6 +149,9 @@ def test_decode_ffn_scheduler_uses_replica_local_ep_capacity_name() -> None:
     source = Path(
         "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"
     ).read_text(encoding="utf-8")
+    replica_state_source = Path(
+        "frontier/scheduler/utils/replica_schedulers.py"
+    ).read_text(encoding="utf-8")
     round_robin_source = Path(
         "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py"
     ).read_text(encoding="utf-8")
@@ -157,7 +160,7 @@ def test_decode_ffn_scheduler_uses_replica_local_ep_capacity_name() -> None:
     assert "self._replica_dp_size" in source
     assert "_replica_dp_size" in round_robin_source
     assert "Use ep_id as dp_id for compatibility" not in source
-    assert "replica_local_id=ep_id" in source
+    assert "replica_local_id=ep_id" in replica_state_source
 
 
 def test_cluster_scheduler_child_map_uses_replica_local_identity() -> None:
@@ -197,6 +200,9 @@ def test_decode_collective_has_no_legacy_aggregate_helpers() -> None:
     source = Path(
         "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"
     ).read_text(encoding="utf-8")
+    collective_source = Path(
+        "frontier/scheduler/utils/decode_collective.py"
+    ).read_text(encoding="utf-8")
 
     # The predictor-only aggregate helper is part of the canonical shared-DP
     # EP wave path; legacy scalar DP synchronization remains removed below.
@@ -204,4 +210,4 @@ def test_decode_collective_has_no_legacy_aggregate_helpers() -> None:
     assert "def _get_decode_sync_participant_count" not in source
     assert "predict_dp_gather_time" not in source
     assert "predict_dp_scatter_time" not in source
-    assert "Legacy DECODE aggregate synchronization is removed" in source
+    assert "Legacy DECODE aggregate synchronization is removed" in collective_source

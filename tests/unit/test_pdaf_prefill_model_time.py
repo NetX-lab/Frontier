@@ -9,12 +9,43 @@ from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEve
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
     BaseClusterScheduler,
 )
+import frontier.scheduler.cluster_scheduler.base_cluster_scheduler as base_cluster_scheduler_module
 from frontier.types import ClusterType
 
 
 class _ConcreteClusterScheduler(BaseClusterScheduler):
     def schedule(self):
         raise NotImplementedError
+
+
+def test_prefill_sync_entry_delegates_to_collective_utility(monkeypatch) -> None:
+    scheduler = object.__new__(_ConcreteClusterScheduler)
+    sentinel = object()
+
+    def fake_handler(_scheduler, *args, **kwargs):
+        assert args[:4] == (0.5, 0, 0, 9)
+        assert kwargs == {"direct_batch": None}
+        return sentinel
+
+    monkeypatch.setattr(
+        base_cluster_scheduler_module,
+        "handle_prefill_sync_collective",
+        fake_handler,
+        raising=False,
+    )
+
+    result = scheduler.on_prefill_sync_collective(
+        time=0.5,
+        replica_id=0,
+        stage_id=0,
+        batch_global_id=9,
+        sync_stage="post_moe",
+        layer_id=3,
+        metrics_store=object(),
+        direct_batch=None,
+    )
+
+    assert result is sentinel
 
 
 def test_prefill_final_sync_records_elapsed_model_time_not_full_stage_prediction() -> None:

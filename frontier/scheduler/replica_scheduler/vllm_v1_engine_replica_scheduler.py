@@ -413,7 +413,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         return cohort_id
 
     @staticmethod
-    def _validate_decode_attn_cohort_stage_maps(
+    def _validate_decode_attn_wave_stages(
         cohort_state: Dict[str, object],
     ) -> tuple[set[int], Dict[int, str], Dict[int, int]]:
         if type(cohort_state) is not dict:
@@ -531,7 +531,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 continue
 
             active_indices, stage_phases, stage_layers = (
-                self._validate_decode_attn_cohort_stage_maps(state)
+                self._validate_decode_attn_wave_stages(state)
             )
             for stage_idx in active_indices:
                 stage_layer = stage_layers[stage_idx]
@@ -581,7 +581,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             return
 
         active_stage_indices, stage_phases, stage_layers = (
-            self._validate_decode_attn_cohort_stage_maps(cohort_state)
+            self._validate_decode_attn_wave_stages(cohort_state)
         )
         normalized_stage_idx = int(stage_idx)
         if normalized_stage_idx not in active_stage_indices:

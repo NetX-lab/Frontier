@@ -77,9 +77,7 @@ def test_init_parallel_events_routes_online_arrivals_to_prefill() -> None:
     prefill_simulator = _RecordingClusterSimulator()
     decode_simulator = _RecordingClusterSimulator()
     metrics_store = SimpleNamespace(register_total_requests=Mock())
-    global_scheduler = SimpleNamespace(
-        initialize_periodic_scheduling=Mock(return_value=[])
-    )
+    global_scheduler = SimpleNamespace()
 
     simulator = object.__new__(Simulator)
     simulator._request_generator = SimpleNamespace(
@@ -99,9 +97,6 @@ def test_init_parallel_events_routes_online_arrivals_to_prefill() -> None:
     simulator._init_parallel_events()
 
     metrics_store.register_total_requests.assert_called_once_with(2)
-    global_scheduler.initialize_periodic_scheduling.assert_called_once_with(
-        start_time=0.0
-    )
     assert decode_simulator.events == []
     assert len(prefill_simulator.events) == 2
     assert all(

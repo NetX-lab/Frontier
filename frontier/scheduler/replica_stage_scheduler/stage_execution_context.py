@@ -67,6 +67,24 @@ class StageExecutionContext:
         self._active_ep_ticket: StageAdmissionTicket | None = None
         self._operation_ids: set[Hashable] = set()
         self._cancelled_tickets: set[StageAdmissionTicket] = set()
+        self._next_forward_group_id = 0
+        self._forward_group_id: int | None = None
+        self._forward_group_sealed = False
+
+    def bind_forward_group(self, ticket: StageAdmissionTicket) -> int:
+        """Bind an admitted attention lane to this stage's shared forward."""
+        self._validate_ticket(ticket)
+        if ticket not in self._active_full_stage_tickets:
+            raise ValueError("forward group binding requires an active full-stage owner")
+        if self._forward_group_id is None:
+            self._forward_group_id = self._next_forward_group_id
+            self._next_forward_group_id += 1
+        return self._forward_group_id
+
+    @property
+    def forward_group_sealed(self) -> bool:
+        """Whether new attention lanes must wait for the next stage forward."""
+        return self._forward_group_sealed
 
     @property
     def replica_id(self) -> int:
@@ -281,6 +299,8 @@ class StageExecutionContext:
         self._active_ep_ticket = next_ticket if scope == EP_WAVE else None
         if scope == FULL_STAGE_WORLD:
             self._active_full_stage_tickets.add(next_ticket)
+        if self._forward_group_id is not None:
+            self._forward_group_sealed = True
         self._refresh_active_ticket_view()
         return next_ticket
 
@@ -309,6 +329,8 @@ class StageExecutionContext:
         elif self._active_ep_ticket is not None:
             return False
         elif len(self._active_full_stage_tickets) >= self._full_stage_capacity:
+            return False
+        elif self._forward_group_sealed:
             return False
         if not self._ready_fifo or self._ready_fifo[0] != ticket:
             return False
@@ -340,6 +362,9 @@ class StageExecutionContext:
             self._active_full_stage_tickets.remove(ticket)
         self._refresh_active_ticket_view()
         self._operation_ids.remove(ticket.operation_id)
+        if self.is_idle:
+            self._forward_group_id = None
+            self._forward_group_sealed = False
 
     def replace_full_stage_owners_with_ep_wave(
         self,
@@ -375,6 +400,8 @@ class StageExecutionContext:
         self._next_admission_seq += 1
         self._operation_ids.add(operation_id)
         self._active_ep_ticket = wave
+        if self._forward_group_id is not None:
+            self._forward_group_sealed = True
         self._refresh_active_ticket_view()
         return wave
 

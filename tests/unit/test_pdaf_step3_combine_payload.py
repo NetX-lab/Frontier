@@ -213,3 +213,18 @@ def test_generic_alltoall_combine_uses_max_lane_payload_independent_of_arrival_o
     ]
     assert predictor.allgather_calls == []
     assert set(scheduler._ep_allgather_waiting_room[5][6][88]["batches"]) == {0, 1}
+
+
+def test_step3_combine_rejects_non_exact_token_count() -> None:
+    scheduler, _predictor = _build_scheduler(architecture_profile="step3_text")
+    first_batch = _batch(
+        batch_id=30, global_id=99, total_num_tokens=1, replica_id=5, ep_id=0
+    )
+    second_batch = _batch(
+        batch_id=31, global_id=99, total_num_tokens=1, replica_id=5, ep_id=1
+    )
+    first_batch.total_num_tokens = "1"
+
+    scheduler.on_ep_alltoall_combine_ready(2.0, 5, 6, first_batch, 0)
+    with pytest.raises(ValueError, match="total_num_tokens must be an exact"):
+        scheduler.on_ep_alltoall_combine_ready(2.1, 5, 6, second_batch, 1)
