@@ -37,7 +37,6 @@ def enter_prefill_sync(
         )
     else:
         lane_id = replica_local_id
-    requested_step_id = scheduler._get_forward_step_id(batch)
     step_id = scheduler._resolve_forward_step(
         sync_kind="prefill",
         waiting_room=scheduler._prefill_sync_waiting_room,
@@ -51,7 +50,9 @@ def enter_prefill_sync(
     if step_id is None:
         return []
     sync_room = scheduler._prefill_sync_waiting_room[replica_id][stage_id][step_id][layer_id][sync_stage]
-    sync_room.setdefault("provisional_cohort_id", requested_step_id)
+    # resolve_step retains this binding identity while step_id advances per layer.
+    provisional_id = batch._forward_cohort_provisional_id
+    sync_room.setdefault("provisional_cohort_id", provisional_id)
     existing_batch = sync_room["batches"].get(lane_id)
     if batch.is_idle and existing_batch is not None and not existing_batch.is_idle:
         return []
@@ -85,7 +86,7 @@ def enter_prefill_sync(
             )
             idle_batch.set_global_id(expected_lanes * step_id + missing_lane)
             idle_batch._forward_cohort_id = step_id
-            idle_batch._forward_cohort_provisional_id = requested_step_id
+            idle_batch._forward_cohort_provisional_id = provisional_id
             idle_batch._stage_owner_replica_local_id = missing_lane
             sync_room["batches"][missing_lane] = idle_batch
             sync_room["arrival_times"][missing_lane] = float(time)
@@ -111,7 +112,7 @@ def enter_prefill_sync(
         return []
     sync_time = max(sync_room["arrival_times"].values())
     step_batches = dict(sync_room["batches"])
-    provisional_id = sync_room.get("provisional_cohort_id", requested_step_id)
+    provisional_id = sync_room["provisional_cohort_id"]
     if type(provisional_id) is not int or provisional_id < 0:
         raise RuntimeError(
             "PREFILL synchronization room has an invalid provisional step id: "
@@ -171,7 +172,6 @@ def enter_decode_sync(
         )
     else:
         lane_id = replica_local_id
-    requested_step_id = scheduler._get_forward_step_id(batch)
     step_id = scheduler._resolve_forward_step(
         sync_kind="decode",
         waiting_room=scheduler._decode_sync_waiting_room,
@@ -185,7 +185,9 @@ def enter_decode_sync(
     if step_id is None:
         return []
     sync_room = scheduler._decode_sync_waiting_room[replica_id][stage_id][step_id][layer_id][sync_stage]
-    sync_room.setdefault("provisional_cohort_id", requested_step_id)
+    # resolve_step retains this binding identity while step_id advances per layer.
+    provisional_id = batch._forward_cohort_provisional_id
+    sync_room.setdefault("provisional_cohort_id", provisional_id)
     existing_batch = sync_room["batches"].get(lane_id)
     if batch.is_idle and existing_batch is not None and not existing_batch.is_idle:
         return []
@@ -219,7 +221,7 @@ def enter_decode_sync(
             )
             idle_batch.set_global_id(expected_lanes * step_id + missing_lane)
             idle_batch._forward_cohort_id = step_id
-            idle_batch._forward_cohort_provisional_id = requested_step_id
+            idle_batch._forward_cohort_provisional_id = provisional_id
             idle_batch._stage_owner_replica_local_id = missing_lane
             sync_room["batches"][missing_lane] = idle_batch
             sync_room["arrival_times"][missing_lane] = float(time)
@@ -244,7 +246,7 @@ def enter_decode_sync(
         return []
     sync_time = max(sync_room["arrival_times"].values())
     step_batches = dict(sync_room["batches"])
-    provisional_id = sync_room.get("provisional_cohort_id", requested_step_id)
+    provisional_id = sync_room["provisional_cohort_id"]
     if type(provisional_id) is not int or provisional_id < 0:
         raise RuntimeError(
             "DECODE synchronization room has an invalid provisional step id: "

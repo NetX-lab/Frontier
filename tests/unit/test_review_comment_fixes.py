@@ -148,6 +148,7 @@ def test_diagnostics_do_not_materialize_unused_state() -> None:
 def test_prefill_sync_fails_when_expected_lane_scheduler_is_missing() -> None:
     batch = Batch(replica_id=0, requests=[], num_tokens=[], is_idle=False, is_moe=True)
     batch.set_global_id(7)
+    batch._forward_cohort_provisional_id = 7
     scheduler = SimpleNamespace(
         _cluster_type=ClusterType.PREFILL,
         _prefill_sync_waiting_room={
@@ -177,6 +178,7 @@ def test_prefill_sync_fails_when_expected_lane_scheduler_is_missing() -> None:
 def test_decode_sync_fails_when_expected_lane_scheduler_is_missing() -> None:
     batch = Batch(replica_id=0, requests=[], num_tokens=[], is_idle=False, is_moe=True)
     batch.set_global_id(7)
+    batch._forward_cohort_provisional_id = 7
     scheduler = SimpleNamespace(
         _cluster_type=ClusterType.DECODE,
         _decode_sync_waiting_room={

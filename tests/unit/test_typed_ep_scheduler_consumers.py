@@ -179,3 +179,33 @@ def test_ep_collective_rejects_lane_entity_width_mismatch_before_lookup(
     scheduler._profile_getter.assert_not_called()
     waiting_rooms = getattr(scheduler, waiting_room_attr)
     assert set(waiting_rooms[0][0][77]["batches"]) == {0}
+
+
+def test_combine_validates_payload_once_and_reuses_it_for_timing(monkeypatch):
+    from frontier.model_architectures import ExpertParallelCollective
+    from frontier.scheduler.utils import expert_parallel
+    from frontier.scheduler.cluster_scheduler import base_cluster_scheduler
+
+    scheduler = _dispatch_scheduler()
+    summarize = Mock(wraps=expert_parallel.summarize_alltoall_payload)
+    monkeypatch.setattr(base_cluster_scheduler, "summarize_alltoall_payload", summarize)
+    monkeypatch.setattr(expert_parallel, "summarize_alltoall_payload", summarize)
+
+    def resolve(*_args):
+        summarize.assert_called_once()
+        return ExpertParallelCollective.ALLTOALL
+
+    monkeypatch.setattr(base_cluster_scheduler, "resolve_ep_collective_kind", resolve)
+    first, second = _dispatch_lane(ep_id=0), _dispatch_lane(ep_id=1)
+    first.post_combine_time, second.post_combine_time = 0.2, 0.5
+    assert scheduler.on_ep_alltoall_combine_ready(1.0, 0, 0, first, 0) == []
+    events = scheduler.on_ep_alltoall_combine_ready(2.0, 0, 0, second, 1)
+
+    summarize.assert_called_once()
+    scheduler._predictor.predict_alltoall_time.assert_called_once_with(
+        data_size_bytes=32, num_devices=2,
+        cluster_type=ClusterType.DECODE_FFN, comm_domain="EP",
+    )
+    scheduler._predictor.predict_allgather_time.assert_not_called()
+    assert len(events) == 1
+    assert events[0].time == pytest.approx(2.507)

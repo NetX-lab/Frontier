@@ -84,6 +84,10 @@ def handle_combine_ready(
         "[DEBUG] All EP replicas arrived! Creating "
         "EPAllToAllCombineCollectiveEvent"
     )
+    # Validate every typed lane before architecture lookup or predictor calls.
+    alltoall_payload = scheduler._get_step3_ep_alltoall_payload_bytes(
+        prospective_batches
+    )
     model_config = scheduler._config.replica_config.model_config
     ep_collective_kind = resolve_collective_kind(
         model_config,
@@ -96,7 +100,7 @@ def handle_combine_ready(
         expected_ep_size=expected_ep_size,
         collective_kind=ep_collective_kind,
         cluster_type=scheduler._cluster_type,
-        hidden_size=int(model_config.embedding_dim),
+        alltoall_payload=alltoall_payload,
         predict_alltoall=scheduler._predictor.predict_alltoall_time,
         predict_allgather=scheduler._predictor.predict_allgather_time,
         collective_time_validator=scheduler._validate_ep_collective_exec_time,

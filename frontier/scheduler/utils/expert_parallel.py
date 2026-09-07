@@ -719,24 +719,21 @@ def prepare_combine_timing(
     expected_ep_size: int,
     collective_kind: Any,
     cluster_type: Any,
-    hidden_size: int,
+    alltoall_payload: tuple[int, dict[int, int], int, int],
     predict_alltoall: Callable[..., float],
     predict_allgather: Callable[..., float],
     collective_time_validator: Callable[..., tuple[float, float]] = validate_collective_exec_time,
 ) -> EPCombineTimingPlan:
-    """Prepare pure EP combine timing inputs without mutating scheduler state."""
+    """Calculate combine timing using the payload validated before profile lookup."""
 
     if not prospective_batches:
         raise ValueError("EP combine timing requires at least one lane")
     if not prospective_arrival_times or set(prospective_arrival_times) != set(prospective_batches):
         raise ValueError("EP combine timing requires one arrival time for every lane")
-    hidden_size = int(hidden_size)
+    data_size_bytes, local_tokens_by_ep_id, max_local_tokens, hidden_size = alltoall_payload
     from frontier.model_architectures import ExpertParallelCollective
 
     if collective_kind is ExpertParallelCollective.ALLTOALL:
-        data_size_bytes, local_tokens_by_ep_id, max_local_tokens, _ = summarize_alltoall_payload(
-            prospective_batches, hidden_size
-        )
         payload_description = (
             f"max_local_tokens={max_local_tokens}, hidden_size={hidden_size}, "
             f"local_tokens_by_ep_id={local_tokens_by_ep_id}"

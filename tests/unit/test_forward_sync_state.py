@@ -5,6 +5,61 @@ import pytest
 from frontier.scheduler.utils.forward_sync_state import ForwardSyncState
 
 
+@pytest.mark.parametrize("sync_kind", ["prefill", "decode"])
+def test_single_active_lane_completes_successive_layers(sync_kind):
+    from collections import defaultdict
+
+    from frontier.entities import Batch, Request
+    from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
+        RoundRobinClusterScheduler,
+    )
+    from frontier.types import ClusterType
+
+    scheduler = object.__new__(RoundRobinClusterScheduler)
+    scheduler._cluster_type = getattr(ClusterType, sync_kind.upper())
+    scheduler._forward_sync_state = ForwardSyncState()
+    scheduler._replica_dp_size = 2
+    rooms = defaultdict(lambda: defaultdict(lambda: defaultdict(
+        lambda: defaultdict(lambda: defaultdict(
+            lambda: {"batches": {}, "arrival_times": {}}
+        ))
+    )))
+    setattr(scheduler, f"_{sync_kind}_sync_waiting_room", rooms)
+    setattr(scheduler, f"_uses_shared_{sync_kind}_layer_path", lambda *_: True)
+    scheduler._replica_schedulers = {
+        (0, 1): SimpleNamespace(get_replica_stage_scheduler=lambda _: SimpleNamespace(
+            is_busy=False, is_empty=lambda: True
+        ))
+    }
+    completed = []
+
+    def wave_ready(**kwargs):
+        completed.append(kwargs["layer_id"])
+        assert kwargs["cohort_batches"][0] is batch
+        assert kwargs["cohort_batches"][1].is_idle
+        return []
+
+    setattr(scheduler, f"_on_{sync_kind}_ep_wave_ready", wave_ready)
+    global_scheduler = SimpleNamespace(get_cluster_scheduler=lambda _: scheduler)
+    batch = Batch(0, [Request(0.0, 16, 4)], [16], is_moe=True)
+    batch.set_global_id(0)
+    sync = getattr(scheduler, f"on_{sync_kind}_sync")
+    stale_events = []
+    for layer_id in range(4):
+        events = sync(float(layer_id), 0, 0, batch, 0, "pre_moe", layer_id, 0.0)
+        assert len(events) == 1
+        assert events[0].handle_event(global_scheduler, None) == []
+        assert completed == list(range(layer_id + 1))
+        assert scheduler._forward_sync_state.open_steps(sync_kind) == {}
+        assert batch._forward_cohort_id == layer_id
+        assert batch._forward_cohort_provisional_id == 0
+        stale_events.extend(events)
+        for stale in stale_events:
+            assert stale.handle_event(global_scheduler, None) == []
+        assert completed == list(range(layer_id + 1))
+        assert scheduler._forward_sync_state.open_steps(sync_kind) == {}
+
+
 def make_batch(batch_id, *, step_id=None, provisional_id=None, idle=False):
     batch = SimpleNamespace(
         id=batch_id,

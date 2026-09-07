@@ -132,7 +132,7 @@ def test_prepare_combine_timing_returns_collective_and_post_compute_times():
         expected_ep_size=2,
         collective_kind=ExpertParallelCollective.ALLTOALL,
         cluster_type=ClusterType.DECODE_FFN,
-        hidden_size=16,
+        alltoall_payload=summarize_alltoall_payload(batches, hidden_size=16),
         predict_alltoall=lambda **_: 4.0,
         predict_allgather=lambda **_: 9.0,
     )
