@@ -2,7 +2,7 @@
 # Inspect the exact H200 worker and image before collecting calibration data.
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CASE_ROOT="$REPO_ROOT/task_memory/task_2026-09-07_issue26_ttft_h200"
 PROBE_ROOT="${1:?Provide a fresh output directory under the active task directory.}"
 case "$PROBE_ROOT" in
