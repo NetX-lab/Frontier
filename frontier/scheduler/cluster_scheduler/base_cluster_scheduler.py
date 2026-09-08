@@ -900,7 +900,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             return layer_rooms.get(sync_stage) if layer_rooms else None
 
         return state.resolve_step(
-            sync_kind=sync_kind,
+            sync_kind="forward" if self._cluster_type == ClusterType.MONOLITHIC else sync_kind,
             replica_id=replica_id,
             stage_id=stage_id,
             batch=batch,
@@ -923,7 +923,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         """Close one room through the forward-sync state owner."""
 
         self._get_forward_sync_state().close_step(
-            sync_kind=sync_kind,
+            sync_kind="forward" if self._cluster_type == ClusterType.MONOLITHIC else sync_kind,
             replica_id=replica_id,
             stage_id=stage_id,
             layer_id=layer_id,

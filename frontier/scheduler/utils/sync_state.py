@@ -28,7 +28,7 @@ def initialize_sync_waiting_rooms(scheduler: Any) -> None:
         if model_is_moe:
             scheduler._prefill_sync_waiting_room = _new_sync_waiting_room()
             scheduler._decode_sync_waiting_room = (
-                _new_sync_waiting_room()
+                scheduler._prefill_sync_waiting_room
                 if cluster_type is ClusterType.MONOLITHIC
                 else None
             )

@@ -38,6 +38,7 @@ class ForwardSyncState:
         self._open_steps_by_kind: dict[str, dict[tuple, int]] = {
             "prefill": {},
             "decode": {},
+            "forward": {},
         }
         self._next_step_id_by_replica: dict[int, int] = {}
 
@@ -55,7 +56,7 @@ class ForwardSyncState:
 
     @staticmethod
     def _validate_kind(sync_kind: str) -> None:
-        if sync_kind not in ("prefill", "decode"):
+        if sync_kind not in ("prefill", "decode", "forward"):
             raise ValueError(f"unknown synchronization kind: {sync_kind!r}")
 
     def open_steps(self, sync_kind: str) -> dict[tuple, int]:

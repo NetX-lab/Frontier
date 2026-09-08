@@ -9,6 +9,13 @@ from typing import Any
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     FULL_STAGE_WORLD,
 )
+from frontier.types import ClusterType
+
+
+def _source_mode(scheduler, batch, mode):
+    if scheduler._cluster_type == ClusterType.MONOLITHIC:
+        return "prefill" if batch.num_prefill_tokens else "decode"
+    return mode
 
 
 def schedule_layer_wave(
@@ -85,6 +92,7 @@ def schedule_layer_wave(
         )
         dense_events = []
         for source_batch in non_idle_source_batches:
+            source_mode = _source_mode(scheduler, source_batch, mode)
             execution_time = predictor.predict_stage_execution_time(
                 source_batch,
                 stage_id,
@@ -116,7 +124,7 @@ def schedule_layer_wave(
                 "_prefill_model_execution_components_ms_by_stage",
                 None,
             )
-            if mode == "prefill":
+            if source_mode == "prefill":
                 if (
                     not isinstance(component_ledger, dict)
                     or stage_id not in component_ledger
@@ -128,6 +136,8 @@ def schedule_layer_wave(
                         f"batch={source_batch.id}"
                     )
                 component_ledger[stage_id].append(dense_time_ms)
+            elif scheduler._cluster_type == ClusterType.MONOLITHIC:
+                source_batch._decode_model_execution_components_ms_by_stage[stage_id].append(dense_time_ms)
             dense_events.append(
                 event_cls(
                     time + dense_time_ms * 1e-3,
@@ -135,7 +145,7 @@ def schedule_layer_wave(
                     stage_id,
                     source_batch,
                     layer_id,
-                    mode,
+                    source_mode,
                     scheduler._cluster_type,
                 )
             )
@@ -145,13 +155,13 @@ def schedule_layer_wave(
         raise ValueError(f"{mode_name} layer wave produced no participant timing")
     timing = plan.timing
     barrier_end_time_s = timing.wave_end_time_s
-    if mode == "prefill":
-        wave_time_ms = (
-            timing.dispatch_barrier_time_ms
-            + timing.combine_barrier_time_ms
-            + timing.post_combine_barrier_time_ms
-        )
-        for source_batch in non_idle_source_batches:
+    wave_time_ms = (
+        timing.dispatch_barrier_time_ms
+        + timing.combine_barrier_time_ms
+        + timing.post_combine_barrier_time_ms
+    )
+    for source_batch in non_idle_source_batches:
+        if _source_mode(scheduler, source_batch, mode) == "prefill":
             component_ledger = getattr(
                 source_batch,
                 "_prefill_model_execution_components_ms_by_stage",
@@ -170,9 +180,10 @@ def schedule_layer_wave(
             component_ledger[stage_id].append(wave_time_ms)
             source_batch._prefill_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
             source_batch._prefill_ep_wave_workload = layer_workload
-    else:
-        for source_batch in non_idle_source_batches:
+        else:
             source_batch._decode_ep_wave_lane_times_ms = tuple(lane_compute_times_ms)
+            if scheduler._cluster_type == ClusterType.MONOLITHIC:
+                source_batch._decode_model_execution_components_ms_by_stage[stage_id].append(wave_time_ms)
 
     waiting_room = (
         scheduler._prefill_sync_waiting_room

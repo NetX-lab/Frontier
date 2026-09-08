@@ -537,6 +537,10 @@ class ReplicaStageScheduleEvent(BaseEvent):
                         raise ValueError(f"Invalid attention_time_ms: {attention_time_ms}")
 
                     decode_cluster_name = self._cluster_type.name
+                    if self._cluster_type == ClusterType.MONOLITHIC:
+                        batch._decode_model_execution_components_ms_by_stage = {
+                            self._stage_id: [attention_time_ms]
+                        }
                     debug_logger.info(
                         f"[EXEC_TIME_OK_{decode_cluster_name}] batch_id={batch.id}, "
                         f"attention_time_ms={attention_time_ms:.6f}, "

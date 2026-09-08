@@ -3,6 +3,7 @@
 from typing import Any, Optional
 
 from frontier.entities import Batch
+from frontier.types import ClusterType
 from frontier.logger import get_cluster_logger
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import (
     FULL_STAGE_WORLD,
@@ -11,6 +12,7 @@ from frontier.scheduler.utils.collective_timing import (
     attention_delay_seconds,
     prepare_prefill_final_timing,
     select_active_batch,
+    validate_decode_layer_advance,
 )
 
 
@@ -25,6 +27,7 @@ def handle_prefill_sync_collective(
     metrics_store: Any,
     *,
     direct_batch: Optional[Batch] = None,
+    owners_restored: bool = False,
 ):
     """Handle completion of a canonical layer-local PREFILL EP wave."""
 
@@ -38,6 +41,13 @@ def handle_prefill_sync_collective(
         raise ValueError(
             "PREFILL collective completion accepts only post_moe for the "
             "canonical per-layer EP protocol"
+        )
+
+    if scheduler._cluster_type == ClusterType.MONOLITHIC and direct_batch is None:
+        from frontier.scheduler.utils.forward_collective import complete_forward_collective
+
+        return complete_forward_collective(
+            scheduler, time, replica_id, stage_id, batch_global_id, layer_id, metrics_store
         )
 
     if direct_batch is not None:
@@ -86,13 +96,21 @@ def handle_prefill_sync_collective(
         include_ffn=False,
     )
 
+    if scheduler._cluster_type == ClusterType.MONOLITHIC:
+        decode_requests = [r for r in sample_batch.requests if r.is_prefill_complete]
+        validate_decode_layer_advance(
+            decode_requests, scheduler._config.replica_config.model_config.num_layers
+        )
+        for request in decode_requests:
+            request.mb_on_step_layer_count_increment(num_layers_completed=1)
+
     num_layers = scheduler._predictor._num_layers_per_pipeline_stage
     _, stage_layer_end = scheduler.get_pipeline_stage_layer_bounds(
         stage_id,
         num_layers,
     )
     next_layer_id = layer_id + 1
-    restored_full_stage_owners = scheduler._restore_forward_step_full_stage_owners(
+    restored_full_stage_owners = owners_restored or scheduler._restore_forward_step_full_stage_owners(
         source_batches=participant_batches,
         replica_id=replica_id,
         stage_id=stage_id,

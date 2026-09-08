@@ -48,6 +48,12 @@ def prepare_ep_wave_inputs(
     non_idle = tuple(source_batch for source_batch in normalized.values() if not source_batch.is_idle)
     if not non_idle:
         raise ValueError("EP wave requires a non-idle source batch")
+    owned_requests = set()
+    for source_batch in non_idle:
+        request_ids = set(source_batch.request_ids)
+        if owned_requests.intersection(request_ids):
+            raise ValueError("a request cannot belong to two EP source lanes")
+        owned_requests.update(request_ids)
     sample_batch = non_idle[0]
     total_tokens = sum(int(source_batch.total_num_tokens) for source_batch in non_idle)
     total_prefill_tokens = sum(int(source_batch.num_prefill_tokens) for source_batch in non_idle)

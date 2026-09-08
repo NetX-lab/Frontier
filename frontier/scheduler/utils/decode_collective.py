@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any, Optional
 
 from frontier.entities import Batch
+from frontier.types import ClusterType
 from frontier.scheduler.replica_stage_scheduler.stage_execution_context import FULL_STAGE_WORLD
 from frontier.scheduler.utils.collective_timing import (
     attention_delay_seconds,
@@ -26,6 +28,7 @@ def handle_decode_sync_collective(
     metrics_store: Any,
     *,
     direct_batch: Optional[Batch] = None,
+    owners_restored: bool = False,
 ):
     """Complete one DECODE layer and schedule the next stage transition."""
 
@@ -38,6 +41,13 @@ def handle_decode_sync_collective(
         raise ValueError(
             "DECODE collective completion accepts only post_moe; the canonical "
             "EP_WAVE enters this method at post_moe"
+        )
+
+    if scheduler._cluster_type == ClusterType.MONOLITHIC and direct_batch is None:
+        from frontier.scheduler.utils.forward_collective import complete_forward_collective
+
+        return complete_forward_collective(
+            scheduler, time, replica_id, stage_id, batch_global_id, layer_id, metrics_store
         )
 
     if direct_batch is not None:
@@ -100,7 +110,7 @@ def handle_decode_sync_collective(
             )
         stage_layer_end = (stage_id + 1) * num_layers
     next_layer_id = layer_id + 1
-    restored_full_stage_owners = scheduler._restore_forward_step_full_stage_owners(
+    restored_full_stage_owners = owners_restored or scheduler._restore_forward_step_full_stage_owners(
         source_batches=dp_batches,
         replica_id=replica_id,
         stage_id=stage_id,
@@ -124,6 +134,10 @@ def handle_decode_sync_collective(
                     batch.id, replica_id, participant_id, layer_id,
                 )
                 continue
+            if scheduler._cluster_type == ClusterType.MONOLITHIC:
+                batch._decode_model_execution_components_ms_by_stage[stage_id].append(
+                    next_execution.get_single_layer_attention_scope_time()
+                )
             transition_identity = getattr(batch, "_stage_owner_replica_local_id", None)
             if not restored_full_stage_owners:
                 scheduler.transition_stage_admission_for_layer(
@@ -178,7 +192,16 @@ def handle_decode_sync_collective(
         batch_stage.on_schedule(original_start)
         actual_execution = time + final_timing.total_time - original_start
         batch_stage.override_execution_time(actual_execution)
-        batch_stage.override_model_execution_time(full_execution.model_time)
+        if scheduler._cluster_type == ClusterType.MONOLITHIC:
+            components = batch._decode_model_execution_components_ms_by_stage[stage_id]
+            model_time = (
+                math.fsum(components) * 1e-3
+                + final_timing.pipeline_time
+                + final_timing.draft_proposer_time
+            )
+        else:
+            model_time = full_execution.model_time
+        batch_stage.override_model_execution_time(model_time)
         corrected = scheduler._create_corrected_execution_time_for_metrics(
             full_execution, actual_execution, original_start
         )
