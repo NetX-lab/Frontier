@@ -6,6 +6,7 @@ case "$DIAGNOSTIC_SELECTION" in
   operators_and_routing) MODES=(operators routing) ;;
   batch) MODES=(batch) ;;
   rca) MODES=(batch operators kernels) ;;
+  communication) MODES=(operators) ;;
   *) echo "Unsupported diagnostic selection: $DIAGNOSTIC_SELECTION" >&2; exit 1 ;;
 esac
 source "$(dirname "$0")/issue26_h200_environment_probe.sh" "${1:?Provide a fresh output directory.}"
@@ -24,10 +25,14 @@ unset VLLM_FRONTIER_RUNTIME_META_ENABLED VLLM_FRONTIER_PREFILL_ENDPOINT_LOG_PATH
 unset VLLM_FRONTIER_SCHED_DECISION_LOG_PATH VLLM_FRONTIER_DP_ROUTE_LOG_PATH
 export VLLM_ALL2ALL_BACKEND=naive
 unset VLLM_FRONTIER_PROFILE_REQUEST_PREFIX VLLM_FRONTIER_PROFILE_BATCH_LIMIT
-if [[ "$DIAGNOSTIC_SELECTION" == rca ]]; then
+unset VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES
+if [[ "$DIAGNOSTIC_SELECTION" == rca || "$DIAGNOSTIC_SELECTION" == communication ]]; then
   export VLLM_MOE_UNIFORM_ROUTING=1
   export VLLM_FRONTIER_PROFILE_REQUEST_PREFIX=cmpl-pf4096_dc1024:
   export VLLM_FRONTIER_PROFILE_BATCH_LIMIT=3
+fi
+if [[ "$DIAGNOSTIC_SELECTION" == communication ]]; then
+  export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=expert_parallel_allreduce,attn_post_proj_tp_allreduce,tensor_parallel_allreduce
 fi
 export PYTHONPATH=/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908
 git config --global --add safe.directory /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908
