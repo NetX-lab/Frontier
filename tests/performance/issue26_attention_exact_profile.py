@@ -39,6 +39,8 @@ def main():
     inputs = AttentionInput(batch_size=1, prefill_chunk_size=args.tokens,
                             kv_cache_size=0, is_prefill=True)
     rows = [wrapper.profile(inputs) for _ in range(args.repeats)]
+    for row in rows:
+        row["attention_backend"] = row["attention_backend"].value
     (args.output / "samples.json").write_text(json.dumps({
         "arguments": {key: str(value) if isinstance(value, Path) else value
                       for key, value in vars(args).items()},
