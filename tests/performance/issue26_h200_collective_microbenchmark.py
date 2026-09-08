@@ -36,6 +36,8 @@ def describe(args):
         "warmup_calls": args.warmup,
         "calls_per_sample": args.calls,
         "samples": args.repeats,
+        "tp_message_bytes": args.tp_message_bytes,
+        "capture_tp_kernels": args.capture_tp_kernels,
     }
 
 
@@ -140,15 +142,33 @@ def run(args):
                 "naive_combine": lambda: ep.combine(partial),
                 "naive_combine_post_tp": lambda: tp.all_reduce(ep.combine(partial)),
             }
+            primitive_metadata = {}
+            if args.tp_message_bytes:
+                operations = {}
+                for requested_bytes in args.tp_message_bytes:
+                    rows = requested_bytes // (args.hidden_size * 2) if dp.rank_in_group == 0 else local_tokens
+                    tensor = torch.full((rows, args.hidden_size), rank + 1,
+                                        device=device, dtype=torch.bfloat16)
+                    eligible = custom is not None and custom.should_custom_ar(tensor)
+                    for method in ("runtime", "pynccl"):
+                        name = f"tp_{method}_{requested_bytes}_bytes"
+                        collective = tp.all_reduce if method == "runtime" else communicator.pynccl_comm.all_reduce
+                        operations[name] = lambda tensor=tensor, collective=collective: collective(tensor)
+                        primitive_metadata[name] = {
+                            "requested_dp0_bytes": requested_bytes,
+                            "local_bytes": tensor.numel() * tensor.element_size(),
+                            "local_shape": list(tensor.shape),
+                            "selected": "custom_all_reduce" if method == "runtime" and eligible else "pynccl_all_reduce",
+                        }
             if custom_eligible:
                 # All members of a TP group take the same branch. Other TP
                 # groups still participate in the common case sequence below.
                 implementation["tp_runtime_selected"] = "custom_all_reduce"
             else:
                 implementation["tp_runtime_selected"] = "pynccl_all_reduce"
-            result = operations["tp_runtime_local"]()
+            result = tp.all_reduce(tp_input)
             torch.testing.assert_close(result, torch.full_like(result, sum(r + 1 for r in tp.ranks)))
-            dispatched, dispatched_router = operations["naive_dispatch"]()
+            dispatched, dispatched_router = ep.dispatch(hidden, router)
             start = 0
             for source, count in enumerate(args.dp_tokens):
                 torch.testing.assert_close(dispatched[start:start + count],
@@ -156,14 +176,30 @@ def run(args):
                 torch.testing.assert_close(dispatched_router[start:start + count],
                                            torch.full_like(dispatched_router[start:start + count], source + 1))
                 start += count
-            result = operations["naive_combine"]()
+            result = ep.combine(partial)
             torch.testing.assert_close(result, torch.full_like(result, sum(r + 1 for r in dp.ranks)))
-            result = operations["naive_combine_post_tp"]()
+            result = tp.all_reduce(ep.combine(partial))
             expected = sum(range(1, contract["world_size"] + 1))
             torch.testing.assert_close(result, torch.full_like(result, expected))
-            rows = [measure(name, operation, args, torch, dist,
-                            get_world_group().cpu_group)
-                    for name, operation in operations.items()]
+            rows = []
+            for name, operation in operations.items():
+                if name in primitive_metadata:
+                    result = operation()
+                    torch.testing.assert_close(result, torch.full_like(result, sum(r + 1 for r in tp.ranks)))
+                row = measure(name, operation, args, torch, dist, get_world_group().cpu_group)
+                row.update(primitive_metadata.get(name, {}))
+                rows.append(row)
+            if args.capture_tp_kernels:
+                args.output.mkdir(parents=True, exist_ok=True)
+                dist.barrier(group=get_world_group().cpu_group)
+                with torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU,
+                                                        torch.profiler.ProfilerActivity.CUDA]) as trace:
+                    for name, operation in operations.items():
+                        if name.startswith("tp_runtime_"):
+                            with torch.profiler.record_function(name):
+                                result = operation()
+                    torch.cuda.synchronize()
+                trace.export_chrome_trace(str(args.output / f"rank_{rank}_kernel_signature.json"))
         version = subprocess.check_output(
             ["git", "-C", str(Path(vllm.__file__).resolve().parent.parent), "rev-parse", "HEAD"],
             text=True).strip()
@@ -195,10 +231,16 @@ def main():
     parser.add_argument("--warmup", type=int, default=20)
     parser.add_argument("--calls", type=int, default=48)
     parser.add_argument("--repeats", type=int, default=7)
+    parser.add_argument("--tp-message-bytes", type=int, nargs="+", default=[])
+    parser.add_argument("--capture-tp-kernels", action="store_true")
     args = parser.parse_args()
     if min(args.tp_size, *args.dp_tokens, args.hidden_size, args.experts,
            args.warmup, args.calls, args.repeats) < 1:
         parser.error("Dimensions and measurement counts must be positive")
+    if any(size < 1 or size % (args.hidden_size * 2) for size in args.tp_message_bytes):
+        parser.error("TP message bytes must be positive and divisible by a BF16 hidden row")
+    if args.capture_tp_kernels and not args.tp_message_bytes:
+        parser.error("--capture-tp-kernels requires --tp-message-bytes")
     if args.describe:
         print(json.dumps(describe(args), indent=2))
     elif args.output is None:
