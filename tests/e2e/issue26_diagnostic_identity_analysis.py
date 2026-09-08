@@ -47,6 +47,19 @@ def analyze(run, output, mode):
         selected = {key for key, row in batches.items() if set(row["request_ids"]) & formal.keys()}
         assert len(selected) >= 3
         first = min(selected)
+        if mode == "batch":
+            prefill_batches = [
+                {**batches[key], "source_path": str(path)}
+                for key in sorted(selected)
+                if any(request in formal and tokens > 1 for request, tokens in zip(
+                    batches[key]["request_ids"], batches[key]["request_num_tokens"]))
+            ]
+            results.append({"identity": worker, "batches": len(batches),
+                            "formal_batches": len(selected),
+                            "first_formal_batch": first,
+                            "first_formal_batch_record": batches[first],
+                            "formal_prefill_batches": prefill_batches})
+            continue
         seen_batches, scopes, phases = set(), Counter(), Counter()
         last_batch, seen_keys, count = -1, set(), 0
         detail = path.with_name(path.name.replace("server.batch.", f"server.{mode}."))
@@ -101,6 +114,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--run", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--mode", choices=["ops", "routing"], required=True)
+    parser.add_argument("--mode", choices=["ops", "routing", "batch"], required=True)
     args = parser.parse_args()
     analyze(args.run, args.output, args.mode)
