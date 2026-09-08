@@ -39,7 +39,7 @@ class ClusterScheduleEvent(BaseEvent):
         logger.info(f"Cluster scheduling started at {self.time:.3f}s: "
                    f"{self._cluster_type.name} cluster with {queue_size} requests in queue")
 
-        self._request_mapping = cluster_scheduler.schedule()
+        self._request_mapping = cluster_scheduler.schedule_at(self.time)
 
         # DEBUG: Log request mapping
         mapping_summary = {}

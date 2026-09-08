@@ -46,6 +46,7 @@ from frontier.spec_decode import (
     method_uses_lookahead_slots,
 )
 from frontier.types import ClusterType
+from frontier.scheduler.request_load import RequestLoad
 
 
 _REQUEST_PROGRESS_PRESERVING_PREEMPTION_CLUSTER_TYPES = frozenset(
@@ -2101,10 +2102,13 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             )
         return reclaimed_requests
 
-    def _get_num_waiting_reqs_for_decision_log(self) -> int:
+    def get_request_load(self) -> RequestLoad:
+        """Expose the same request populations as vLLM scheduler load reports."""
         if self._cluster_type in (ClusterType.DECODE, ClusterType.DECODE_ATTN):
-            return len(self._waiting_requests)
-        return len(self._request_queue) + len(self._preempted_requests)
+            waiting = len(self._waiting_requests)
+        else:
+            waiting = len(self._request_queue) + len(self._preempted_requests)
+        return RequestLoad(waiting, len(self._running_requests))
 
     def _apply_long_prefill_token_threshold(
         self, request: Request, num_new_tokens: int
@@ -2135,6 +2139,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             available_blocks = int(self._config.num_blocks - self._num_allocated_blocks)
 
         cluster_name = self._cluster_type.name if self._cluster_type else "MONOLITHIC"
+        request_load = self.get_request_load()
         payload: Dict[str, Any] = {
             "event": event,
             "source": "frontier",
@@ -2146,8 +2151,8 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             "token_budget": int(token_budget),
             "available_blocks": int(available_blocks),
             "num_tokens": int(num_tokens),
-            "num_running_reqs": len(self._running_requests),
-            "num_waiting_reqs": self._get_num_waiting_reqs_for_decision_log(),
+            "num_running_reqs": request_load.running,
+            "num_waiting_reqs": request_load.waiting,
             "max_num_running_reqs": int(self._max_num_running_reqs),
             "max_num_scheduled_tokens": int(self._max_num_scheduled_tokens),
             "batch_request_ids": [str(req_id) for req_id in (batch_request_ids or [])],

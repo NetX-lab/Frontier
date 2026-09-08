@@ -8,6 +8,15 @@ import os
 from typing import List, Optional, Dict, Tuple, TYPE_CHECKING
 
 from frontier.config.base_poly_config import BasePolyConfig
+from frontier.config.cluster_scheduler_config import (
+    BaseClusterSchedulerConfig,
+    RandomClusterSchedulerConfig,
+    RoundRobinClusterSchedulerConfig,
+    LORClusterSchedulerConfig,
+    StickyRoundRobinClusterSchedulerConfig,
+    StickyLORClusterSchedulerConfig,
+    VllmLoadBalancingClusterSchedulerConfig,
+)
 from frontier.config.device_sku_config import BaseDeviceSKUConfig
 from frontier.config.flat_dataclass import create_flat_dataclass
 from frontier.config.kv_cache_transfer_config import (
@@ -2095,46 +2104,6 @@ class ReplicaConfig:
                 "pd-disaggregation decode path. decode_attn/decode_ffn are not "
                 f"supported, cluster_prefix={self.cluster_prefix!r}."
             )
-
-
-@dataclass
-class BaseClusterSchedulerConfig(BasePolyConfig):
-    pass
-
-
-@dataclass
-class RandomClusterSchedulerConfig(BaseClusterSchedulerConfig):
-    @staticmethod
-    def get_type():
-        return ClusterSchedulerType.RANDOM
-
-
-@dataclass
-class RoundRobinClusterSchedulerConfig(BaseClusterSchedulerConfig):
-    @staticmethod
-    def get_type():
-        return ClusterSchedulerType.ROUND_ROBIN
-
-
-@dataclass
-class LORClusterSchedulerConfig(BaseClusterSchedulerConfig):
-    @staticmethod
-    def get_type():
-        return ClusterSchedulerType.LOR
-
-
-@dataclass
-class StickyRoundRobinClusterSchedulerConfig(BaseClusterSchedulerConfig):
-    @staticmethod
-    def get_type():
-        return ClusterSchedulerType.STICKY_ROUND_ROBIN
-
-
-@dataclass
-class StickyLORClusterSchedulerConfig(BaseClusterSchedulerConfig):
-    @staticmethod
-    def get_type():
-        return ClusterSchedulerType.STICKY_LOR
 
 
 @dataclass

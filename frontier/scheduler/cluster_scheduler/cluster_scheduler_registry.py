@@ -13,6 +13,9 @@ from frontier.scheduler.cluster_scheduler.sticky_round_robin_cluster_scheduler i
 )
 from frontier.types.cluster_scheduler_type import ClusterSchedulerType
 from frontier.utils.base_registry import BaseRegistry
+from frontier.scheduler.cluster_scheduler.vllm_load_balancing_cluster_scheduler import (
+    VllmLoadBalancingClusterScheduler,
+)
 
 
 class ClusterSchedulerRegistry(BaseRegistry):
@@ -29,3 +32,6 @@ ClusterSchedulerRegistry.register(
     StickyRoundRobinClusterScheduler,
 )
 ClusterSchedulerRegistry.register(ClusterSchedulerType.STICKY_LOR, StickyLORClusterScheduler)
+ClusterSchedulerRegistry.register(
+    ClusterSchedulerType.VLLM_LOAD_BALANCING, VllmLoadBalancingClusterScheduler
+)

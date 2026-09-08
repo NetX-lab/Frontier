@@ -21,6 +21,7 @@ from frontier.spec_decode import (
 from frontier.types import ClusterType, ReplicaSchedulerType
 
 if TYPE_CHECKING:
+    from frontier.scheduler.request_load import RequestLoad
     from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
         BaseClusterScheduler,
     )
@@ -477,6 +478,12 @@ class BaseReplicaScheduler(ABC):
     @property
     def num_pending_requests(self) -> int:
         return len(self._request_queue)
+
+    def get_request_load(self) -> "RequestLoad":
+        """Return waiting/running populations for a supported load balancer."""
+        raise NotImplementedError(
+            f"{type(self).__name__} does not expose waiting/running load"
+        )
 
     def peek_waiting_requests(self) -> List[Request]:
         return list(self._request_queue)

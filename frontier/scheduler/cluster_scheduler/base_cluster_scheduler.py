@@ -415,6 +415,16 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
     def sort_requests(self) -> None:
         self._request_queue.sort(key=lambda request: request._arrived_at)
 
+    def schedule_at(self, time: float) -> List[Tuple[int, Optional[int], Request]]:
+        """Route arrivals at DES time; existing policies do not depend on time."""
+        return self.schedule()
+
+    def on_replica_batch_end(
+        self, time: float, replica_id: int, replica_local_id: Optional[int], batch: Batch
+    ) -> None:
+        """Observe post-step load for policies with engine feedback."""
+        return None
+
     def _schedule_batch_mode(self) -> List[Tuple[int, int, Request]]:
         """
         Default batch processing logic for clusters.

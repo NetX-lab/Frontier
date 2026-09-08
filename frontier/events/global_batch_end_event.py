@@ -178,6 +178,9 @@ class GlobalBatchEndEvent(BaseEvent):
             thinking_round_start_times=self._thinking_round_start_times,
         )
         replica_scheduler.on_batch_end(self._batch)  # decrement running batches
+        cluster_scheduler.on_replica_batch_end(
+            self.time, self._replica_id, self._replica_local_id, self._batch
+        )
 
         thinking_requeue_events: List[BaseEvent] = []
         for index, request in pre_batch_request_entries:
