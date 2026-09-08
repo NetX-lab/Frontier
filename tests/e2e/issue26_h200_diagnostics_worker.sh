@@ -5,6 +5,7 @@ DIAGNOSTIC_SELECTION="${2:-operators_and_routing}"
 case "$DIAGNOSTIC_SELECTION" in
   operators_and_routing) MODES=(operators routing) ;;
   batch) MODES=(batch) ;;
+  rca) MODES=(batch operators kernels) ;;
   *) echo "Unsupported diagnostic selection: $DIAGNOSTIC_SELECTION" >&2; exit 1 ;;
 esac
 source "$(dirname "$0")/issue26_h200_environment_probe.sh" "${1:?Provide a fresh output directory.}"
@@ -20,12 +21,18 @@ export TRITON_CACHE_DIR="$TMPDIR/$(basename "$PROBE_ROOT")/triton-cache"
 unset VLLM_FRONTIER_BATCH_LOG_PATH VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH
 unset VLLM_FRONTIER_SCHED_LOG_PATH VLLM_FRONTIER_MOE_ROUTING_LOG_PATH
 unset VLLM_FRONTIER_RUNTIME_META_ENABLED VLLM_FRONTIER_PREFILL_ENDPOINT_LOG_PATH
-unset VLLM_FRONTIER_SCHED_DECISION_LOG_PATH
+unset VLLM_FRONTIER_SCHED_DECISION_LOG_PATH VLLM_FRONTIER_DP_ROUTE_LOG_PATH
 export VLLM_ALL2ALL_BACKEND=naive
+unset VLLM_FRONTIER_PROFILE_REQUEST_PREFIX VLLM_FRONTIER_PROFILE_BATCH_LIMIT
+if [[ "$DIAGNOSTIC_SELECTION" == rca ]]; then
+  export VLLM_MOE_UNIFORM_ROUTING=1
+  export VLLM_FRONTIER_PROFILE_REQUEST_PREFIX=cmpl-pf4096_dc1024:
+  export VLLM_FRONTIER_PROFILE_BATCH_LIMIT=3
+fi
 export PYTHONPATH=/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908
 git config --global --add safe.directory /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908
 git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
-test "$(git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 rev-parse HEAD)" = 361d941c97fcec52e544f74b7ab91c54192de9c9
+test "$(git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 rev-parse HEAD)" = 8453dd342c6aa2721aaf4b410998aab2f38bc2ec
 test -z "$(git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 status --porcelain)"
 git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 diff > "$PROBE_ROOT/vllm_uncommitted.patch"
 SERVER_PID=""
@@ -41,10 +48,18 @@ for MODE in "${MODES[@]}"; do
   mkdir "$RUN"
   unset VLLM_FRONTIER_REQUEST_METRICS_LOG_PATH
   export VLLM_FRONTIER_BATCH_LOG_PATH="$RUN/server.batch.jsonl"
-  if [[ "$MODE" == operators ]]; then
+  unset VLLM_FRONTIER_DP_ROUTE_LOG_PATH VLLM_FRONTIER_SCHED_LOG_PATH
+  unset VLLM_FRONTIER_SCHED_DECISION_LOG_PATH
+  if [[ "$MODE" == operators || "$MODE" == kernels ]]; then
     export VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH="$RUN/server.ops.jsonl"
     export VLLM_FRONTIER_OP_TIMING_MODE=cuda_event VLLM_FRONTIER_OP_AGG_MODE=per_scope
     export VLLM_FRONTIER_CUDA_EVENT_SCOPE_MODE=default VLLM_FRONTIER_RUNTIME_META_ENABLED=0
+    if [[ "$DIAGNOSTIC_SELECTION" == rca ]]; then
+      export VLLM_FRONTIER_RUNTIME_META_ENABLED=1
+    fi
+    if [[ "$MODE" == kernels ]]; then
+      export VLLM_FRONTIER_OP_TIMING_MODE=record_function
+    fi
     unset VLLM_FRONTIER_MOE_ROUTING_LOG_PATH
   elif [[ "$MODE" == routing ]]; then
     unset VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH VLLM_FRONTIER_RUNTIME_META_ENABLED
@@ -54,7 +69,25 @@ for MODE in "${MODES[@]}"; do
     unset VLLM_FRONTIER_MOE_ROUTING_LOG_PATH
     export VLLM_FRONTIER_SCHED_LOG_PATH="$RUN/server.scheduler.log"
     export VLLM_FRONTIER_SCHED_DECISION_LOG_PATH="$RUN/server.decisions.jsonl"
+    if [[ "$DIAGNOSTIC_SELECTION" == rca ]]; then
+      export VLLM_FRONTIER_DP_ROUTE_LOG_PATH="$RUN/server.dp_route.jsonl"
+    fi
   fi
+  "$PY" - "$RUN/mode_manifest.json" "$MODE" <<'PYMETA'
+import json
+import os
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+Path(sys.argv[1]).write_text(json.dumps({
+    "mode": sys.argv[2], "created_utc": datetime.now(timezone.utc).isoformat(),
+    "python": sys.version, "warmup_rounds": 3, "formal_requests": 100,
+    "environment": {key: value for key, value in os.environ.items()
+                    if key.startswith("VLLM_") or key == "PYTHONPATH"},
+    "limits": "Instrumented diagnostics; not clean TTFT evidence.",
+}, indent=2) + "\n")
+PYMETA
   "$PY" -m vllm.entrypoints.cli.main serve /data/ycfeng/tmp/issue26-qwen3-dummy \
     --tensor-parallel-size 4 --data-parallel-size 2 --enable-expert-parallel \
     --dtype bfloat16 --load-format dummy --max-model-len 16384 \
