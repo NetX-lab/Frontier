@@ -1,7 +1,8 @@
-"""Capture actual first-stage prediction branches without fitting or a full run."""
+"""Capture first-stage prediction branches, with estimator fitting opt-in only."""
 
 import argparse
 from collections import Counter
+from functools import wraps
 import json
 import linecache
 from pathlib import Path
@@ -16,20 +17,36 @@ class FirstStageReached(Exception):
     """Stop the diagnostic before the first stage-completion handler."""
 
 
+def configure_fit_policy(allow_fit):
+    """Enforce the process-local fit policy and record completed fit calls."""
+    policy = {"allowed": allow_fit, "successful_calls_in_process": 0}
+    original_fit = RandomForestRegressor.fit
+
+    @wraps(original_fit)
+    def audited_fit(estimator, *args, **kwargs):
+        if not allow_fit:
+            raise RuntimeError("This audit requires existing caches; estimator fitting is forbidden.")
+        result = original_fit(estimator, *args, **kwargs)
+        policy["successful_calls_in_process"] += 1
+        return result
+
+    RandomForestRegressor.fit = audited_fit
+    return policy
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--allow-fit", action="store_true",
+                        help="Allow RF fitting for an explicitly prepared fresh-cache run.")
     args = parser.parse_args()
     settings = json.loads(args.config.read_text())
     args.output.mkdir(parents=True, exist_ok=False)
     settings["metrics_config_output_dir"] = str(args.output / "metrics")
     queries, frames, endpoint = [], {}, {}
 
-    def reject_fit(*_args, **_kwargs):
-        raise RuntimeError("This audit requires existing caches; estimator fitting is forbidden.")
-
-    RandomForestRegressor.fit = reject_fit
+    fit_policy = configure_fit_policy(args.allow_fit)
 
     def record(frame, event, result):
         filename = frame.f_code.co_filename
@@ -125,7 +142,11 @@ def main():
         "python": sys.version,
         "config_source": str(args.config.resolve()),
         "settings": settings,
-        "estimator_fitting": "forbidden; existing caches reused for attribution only",
+        "estimator_fitting": (
+            "allowed; inspect actual fit calls and configured cache provenance"
+            if args.allow_fit else "forbidden; existing caches reused for attribution only"
+        ),
+        "rf_fit_policy": fit_policy,
         "stop_boundary": endpoint,
         "queries": unique,
         "total_query_calls": len(queries),
