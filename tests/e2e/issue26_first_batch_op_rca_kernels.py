@@ -1,6 +1,7 @@
 """Audit partial profiler coverage and retain complete first-batch kernel evidence."""
 
 import argparse
+from collections import defaultdict
 import json
 from pathlib import Path
 import re
@@ -26,7 +27,7 @@ def main():
         assert first["request_ids"] == ["cmpl-pf4096_dc1024:0-0"]
         assert first["request_num_tokens"] == [4096]
         first_batches[(first["dp_rank"], first["tp_rank"])] = first
-    summaries, coverage = [], []
+    summaries, coverage, families = [], [], []
     for path in sorted((args.run / "frontier_profiler_traces").glob("*.json")):
         match = re.fullmatch(r"frontier_batch_(\d+)_(\d+)_(\d+)\.json", path.name)
         batch, pid, _ = map(int, match.groups())
@@ -53,10 +54,18 @@ def main():
         write_json(args.output / f"first_dp{dp}_tp{tp}_summary.json", summary)
         (args.output / f"first_dp{dp}_tp{tp}_kernels.jsonl").write_text(
             "".join(json.dumps(row) + "\n" for row in rows))
+        grouped = defaultdict(lambda: {"count": 0, "duration_ms": 0.0})
+        for row in rows:
+            key = (row["scope"], row["name"])
+            grouped[key]["count"] += 1
+            grouped[key]["duration_ms"] += row["duration_ms"]
+        families.append(dict(dp_rank=dp, tp_rank=tp, batch_id=batch, kernels=[
+            dict(scope=scope, name=name, **value) for (scope, name), value in grouped.items()]))
         summaries.append({key: value for key, value in summary.items() if key != "idle_intervals"})
     assert {row["tp_rank"] for row in summaries} == set(range(4))
     write_json(args.output / "first_batch_rank_summary.json", summaries)
     write_json(args.output / "all_dp0_collector_coverage.json", coverage)
+    write_json(args.output / "first_batch_kernel_families.json", families)
     print(json.dumps({"first_batch_coverage": "PASS", "full_run": "NOT_ESTABLISHED",
                       "coverage": [{"batch": row["batch_id"], "tp": row["tp_rank"],
                                     "missing": len(row["missing_device_correlations"])}
