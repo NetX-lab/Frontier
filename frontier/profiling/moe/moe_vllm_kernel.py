@@ -28,6 +28,7 @@ FP8_QUANT_AVAILABLE = False
 
 try:
     import vllm
+    from vllm import _custom_ops as ops
     VLLM_VERSION = vllm.__version__
 
     # Import vLLM 0.10.x functions
@@ -272,13 +273,14 @@ def _run_fused_moe_iteration(
     w2: torch.Tensor,
     intermediate_cache1: torch.Tensor,
     intermediate_cache2: torch.Tensor,
+    activated: torch.Tensor,
+    output: torch.Tensor,
     topk_weights: torch.Tensor,
     sorted_token_ids: torch.Tensor,
     expert_ids: torch.Tensor,
     num_tokens_post_padded: torch.Tensor,
     top_k: int,
     config: Dict,
-    expert_hidden_dim_per_partition: int,
     block_dims: Optional[Tuple[int, int]],
     A_scale: Optional[torch.Tensor] = None,
     w1_scale: Optional[torch.Tensor] = None,
@@ -305,8 +307,10 @@ def _run_fused_moe_iteration(
         block_shape=block_shape,
     )
 
-    intermediate_cache1_flat = intermediate_cache1.view(-1, intermediate_cache1.shape[-1])
-    intermediate_cache2_input = intermediate_cache1_flat[:, :expert_hidden_dim_per_partition].contiguous()
+    torch.ops._C.silu_and_mul(
+        activated, intermediate_cache1.view(-1, intermediate_cache1.shape[-1])
+    )
+    intermediate_cache2_input = activated
 
     intermediate_A_scale = None
     if use_fp8:
@@ -333,6 +337,7 @@ def _run_fused_moe_iteration(
         per_channel_quant=per_channel_quant,
         block_shape=block_shape,
     )
+    ops.moe_sum(intermediate_cache2, output)
 
 
 def _collect_cuda_event_stats(step_fn, active_steps: int) -> Dict:
@@ -525,20 +530,24 @@ def profile_fused_moe_kernel(
     )
 
     output_dtype = base_dtype
-    intermediate_cache1 = torch.empty(
-        num_tokens,
-        top_k,
-        w1.shape[1],
+    # Match vLLM's shared W1/W2 output workspace and separate activation buffer.
+    workspace = torch.empty(
+        num_tokens * top_k * max(w1.shape[1], hidden_dim),
         device=device,
         dtype=output_dtype,
     )
-    intermediate_cache2 = torch.empty(
-        num_tokens,
-        top_k,
-        hidden_dim,
+    intermediate_cache1 = workspace[:num_tokens * top_k * w1.shape[1]].view(
+        num_tokens, top_k, w1.shape[1]
+    )
+    intermediate_cache2 = workspace[:num_tokens * top_k * hidden_dim].view(
+        num_tokens, top_k, hidden_dim
+    )
+    activated = torch.empty(
+        num_tokens * top_k, expert_hidden_dim_per_partition,
         device=device,
         dtype=output_dtype,
     )
+    output = torch.empty(num_tokens, hidden_dim, device=device, dtype=output_dtype)
 
     def _step() -> None:
         _run_fused_moe_iteration(
@@ -547,13 +556,14 @@ def profile_fused_moe_kernel(
             w2=w2,
             intermediate_cache1=intermediate_cache1,
             intermediate_cache2=intermediate_cache2,
+            activated=activated,
+            output=output,
             topk_weights=topk_weights,
             sorted_token_ids=sorted_token_ids,
             expert_ids=expert_ids,
             num_tokens_post_padded=num_tokens_post_padded,
             top_k=top_k,
             config=config,
-            expert_hidden_dim_per_partition=expert_hidden_dim_per_partition,
             block_dims=block_dims,
             A_scale=A_scale,
             w1_scale=w1_scale,
