@@ -38,7 +38,7 @@ case "$DIAGNOSTIC_SELECTION" in
   compute_moe)
     export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=moe_gating,moe_shuffling,moe_grouped_gemm,moe_sum ;;
   compute_detail)
-    export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=input_layernorm,post_attention_layernorm,embedding_compute,final_layernorm,moe_grouped_gemm_w1,moe_activation,moe_grouped_gemm_w2 ;;
+    export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=input_layernorm,post_attention_layernorm,embedding_compute,final_layernorm,attn_output_init,moe_grouped_gemm_w1,moe_activation,moe_grouped_gemm_w2 ;;
 esac
 if [[ "$DIAGNOSTIC_SELECTION" == compute_* ]]; then
   export VLLM_FRONTIER_PROFILE_BATCH_LIMIT=1
