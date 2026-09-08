@@ -9,6 +9,12 @@ SUPPORTED_MOE_GATING_ROUTING_RUNTIME_PATHS = {
     STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH,
     UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH,
 }
+DEFAULT_MOE_GATING_ROUTING_RUNTIME_PATHS = {
+    "balanced": STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH,
+    "skewed": STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH,
+    "zipf": STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH,
+    "random": UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH,
+}
 
 
 def validate_moe_gating_routing_runtime_path(requested_runtime_path: str) -> str:
@@ -23,17 +29,18 @@ def validate_moe_gating_routing_runtime_path(requested_runtime_path: str) -> str
 
 def resolve_moe_gating_routing_runtime_path(
     moe_routing_distribution_type: str,
+    requested_runtime_path: str = "",
 ) -> str:
-    """Map the canonical routing distribution to profiling runtime metadata."""
+    """Resolve an explicit runtime or the distribution's existing default."""
     normalized_distribution = str(moe_routing_distribution_type).strip().lower()
-    if normalized_distribution in {"balanced", "skewed", "zipf"}:
-        return STANDARD_MOE_GATING_ROUTING_RUNTIME_PATH
-    if normalized_distribution == "random":
-        return UNIFORM_MOE_GATING_ROUTING_RUNTIME_PATH
-    raise ValueError(
-        f"Unsupported moe_routing_distribution_type={moe_routing_distribution_type!r}. "
-        "Expected 'balanced', 'random', 'skewed', or 'zipf'."
-    )
+    if normalized_distribution not in DEFAULT_MOE_GATING_ROUTING_RUNTIME_PATHS:
+        raise ValueError(
+            f"Unsupported moe_routing_distribution_type={moe_routing_distribution_type!r}. "
+            "Expected 'balanced', 'random', 'skewed', or 'zipf'."
+        )
+    if requested_runtime_path:
+        return validate_moe_gating_routing_runtime_path(requested_runtime_path)
+    return DEFAULT_MOE_GATING_ROUTING_RUNTIME_PATHS[normalized_distribution]
 
 
 def filter_moe_gating_routing_topk_rows(

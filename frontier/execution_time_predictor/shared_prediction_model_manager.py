@@ -69,6 +69,7 @@ from frontier.moe_gating_runtime import (
 from frontier.moe_routing_runtime import (
     filter_moe_gating_routing_topk_rows,
     resolve_moe_gating_routing_runtime_path,
+    validate_moe_gating_routing_runtime_path,
 )
 from frontier.operators.families import (
     FFN_FAMILY,
@@ -1233,7 +1234,8 @@ class ExecutionTimePredictionModelManager:
             }
         )
         requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
-            getattr(replica_config, "moe_routing_distribution_type", "balanced")
+            getattr(replica_config, "moe_routing_distribution_type", "balanced"),
+            getattr(replica_config, "moe_gating_routing_runtime_path", ""),
         )
 
         missing_requirements: List[str] = []
@@ -1322,6 +1324,14 @@ class ExecutionTimePredictionModelManager:
             f"_family{self._measurement_family_name(active_measurement_type)}"
         )
 
+        requested_routing_runtime_path = None
+        if is_moe_model:
+            requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
+                getattr(replica_config, "moe_routing_distribution_type", "balanced"),
+                getattr(replica_config, "moe_gating_routing_runtime_path", ""),
+            )
+            ffn_signature += f"_routing{requested_routing_runtime_path}"
+
         if ffn_signature in trained_model_signatures:
             logger.info(f"Skipping FFN models training for {cluster_type} - already trained with signature {ffn_signature}")
             return models
@@ -1377,9 +1387,6 @@ class ExecutionTimePredictionModelManager:
                 base_moe_model_names,
                 cluster_type,
                 **_layer_contract_kwargs(primary_contract),
-            )
-            requested_routing_runtime_path = resolve_moe_gating_routing_runtime_path(
-                getattr(replica_config, "moe_routing_distribution_type", "balanced")
             )
 
             moe_df_cache: Dict[
@@ -2758,6 +2765,12 @@ class ExecutionTimePredictionModelManager:
                 f"(target={target_col})."
             )
 
+        routing_runtime_path = None
+        if get_moe_gating_base_model_name(model_name) == "moe_gating_routing_topk":
+            runtime_paths = df["routing_runtime_path"].dropna().unique()
+            if len(runtime_paths) != 1 or df["routing_runtime_path"].isna().any():
+                raise ValueError("Routing-topk training requires one routing_runtime_path")
+            routing_runtime_path = validate_moe_gating_routing_runtime_path(runtime_paths[0])
         profiling_precision = self._get_profiling_precision_from_df(df)
         measurement_type = self._validate_active_measurement_type(df)
         hash_args = (
@@ -2795,6 +2808,7 @@ class ExecutionTimePredictionModelManager:
                     feature_cols=feature_cols,
                     target_col=target_col,
                 )
+            self._model_routing_runtime_identity(cached_model, routing_runtime_path)
             self._store_model_precision(
                 model_name,
                 profiling_precision,
@@ -2898,6 +2912,7 @@ class ExecutionTimePredictionModelManager:
                 _build_exact_feature_lookup(df, feature_cols, target_col),
             )
 
+        self._model_routing_runtime_identity(best_estimator, routing_runtime_path)
         self._store_model_in_cache(model_name, model_hash, best_estimator)
         self._store_model_precision(
             model_name,
@@ -4094,9 +4109,26 @@ class ExecutionTimePredictionModelManager:
             setattr(model, "_frontier_layer_cache_identity", identity)
         return identity
 
+    @staticmethod
+    def _model_routing_runtime_identity(
+        model: BaseEstimator, requested_runtime_path: Optional[str] = None,
+    ) -> Optional[str]:
+        """Retain measured routing implementation independently of layer shape."""
+        attached = getattr(model, "_frontier_routing_runtime_path", None)
+        if attached is not None:
+            attached = validate_moe_gating_routing_runtime_path(attached)
+        if requested_runtime_path is not None:
+            requested_runtime_path = validate_moe_gating_routing_runtime_path(
+                requested_runtime_path
+            )
+            if attached is not None and attached != requested_runtime_path:
+                raise ValueError("Model routing runtime conflicts with requested runtime")
+            setattr(model, "_frontier_routing_runtime_path", requested_runtime_path)
+        return requested_runtime_path or attached
+
     def _contract_model_registry(
         self, family_name: str
-    ) -> Dict[Tuple[str, Optional[str]], BaseEstimator]:
+    ) -> Dict[Tuple[str, Optional[str], Optional[str]], BaseEstimator]:
         registry_attr = {
             "eager": "_trained_models_eager_by_contract",
             "kernel_only": "_trained_models_kernel_only_by_contract",
@@ -4111,7 +4143,7 @@ class ExecutionTimePredictionModelManager:
 
     def _contract_precision_registry(
         self, family_name: str
-    ) -> Dict[str, Dict[Tuple[str, Optional[str]], BaseEstimator]]:
+    ) -> Dict[str, Dict[Tuple[str, Optional[str], Optional[str]], BaseEstimator]]:
         registry_attr = {
             "eager": "_models_by_precision_eager_by_contract",
             "kernel_only": "_models_by_precision_kernel_only_by_contract",
@@ -4181,14 +4213,15 @@ class ExecutionTimePredictionModelManager:
         precision_key = precision.upper()
         family_name = self._measurement_family_name(self._active_measurement_type)
         identity = self._model_contract_identity(model, layer_contract)
-        if identity is None:
+        runtime_path = self._model_routing_runtime_identity(model)
+        if identity is None and runtime_path is None:
             self._legacy_model_registry(family_name)[model_name] = model
             self._legacy_precision_registry(family_name).setdefault(
                 precision_key, {}
             )[model_name] = model
             return
 
-        model_key = (model_name, identity)
+        model_key = (model_name, identity, runtime_path)
         self._contract_model_registry(family_name)[model_key] = model
         self._contract_precision_registry(family_name).setdefault(
             precision_key, {}
@@ -4201,58 +4234,45 @@ class ExecutionTimePredictionModelManager:
         *,
         precision_key: Optional[str] = None,
         requested_identity: Optional[str] = None,
+        requested_runtime_path: Optional[str] = None,
     ) -> Optional[BaseEstimator]:
-        if precision_key is not None:
-            precision_key = precision_key.upper()
-            source = self._contract_precision_registry(family_name).get(
-                precision_key, {}
+        if requested_runtime_path is not None:
+            requested_runtime_path = validate_moe_gating_routing_runtime_path(
+                requested_runtime_path
             )
-        else:
-            source = self._contract_model_registry(family_name)
-
-        typed_candidates = {
-            identity: candidate
-            for (candidate_name, identity), candidate in source.items()
-            if candidate_name == model_name
+        source = (
+            self._contract_precision_registry(family_name).get(precision_key.upper(), {})
+            if precision_key is not None
+            else self._contract_model_registry(family_name)
+        )
+        candidates = {
+            (identity, runtime_path): model
+            for (name, identity, runtime_path), model in source.items()
+            if name == model_name
         }
         legacy = (
             self._legacy_precision_bucket(family_name, precision_key).get(model_name)
             if precision_key is not None
             else self._legacy_model_registry(family_name).get(model_name)
         )
-        legacy_identity = (
-            getattr(legacy, "_frontier_layer_cache_identity", None)
-            if legacy is not None
-            else None
-        )
-
-        if requested_identity is not None:
-            model = typed_candidates.get(requested_identity)
-            if model is not None:
-                return model
-            if legacy is not None and legacy_identity == requested_identity:
-                return legacy
-            return None
-
-        if len(typed_candidates) > 1:
-            identities = sorted(
-                "<legacy>" if identity is None else identity
-                for identity in typed_candidates
+        if legacy is not None:
+            legacy_key = (
+                getattr(legacy, "_frontier_layer_cache_identity", None),
+                self._model_routing_runtime_identity(legacy),
             )
+            candidates.setdefault(legacy_key, legacy)
+        selected = {
+            key: model for key, model in candidates.items()
+            if (requested_identity is None or key[0] == requested_identity)
+            and (requested_runtime_path is None or key[1] == requested_runtime_path)
+        }
+        if len(selected) > 1:
             raise ValueError(
-                f"Model '{model_name}' has multiple layer contracts; provide "
-                f"layer_contract. Available identities: {identities}"
+                f"Model '{model_name}' has multiple layer contracts or routing runtimes; "
+                "provide layer_contract and routing_runtime_path. "
+                f"Available identities: {list(selected)}"
             )
-        if len(typed_candidates) == 1:
-            typed_identity = next(iter(typed_candidates))
-            if legacy is not None and legacy_identity != typed_identity:
-                raise ValueError(
-                    f"Model '{model_name}' has multiple layer contracts; provide "
-                    f"layer_contract. Available identities: "
-                    f"[{typed_identity!r}, {legacy_identity or '<legacy>'!r}]"
-                )
-            return next(iter(typed_candidates.values()))
-        return legacy
+        return next(iter(selected.values()), None)
 
     def _resolve_cluster_model_contract(
         self,
@@ -4320,7 +4340,7 @@ class ExecutionTimePredictionModelManager:
         names = set(self._legacy_model_registry(family_name))
         names.update(
             model_name
-            for model_name, _identity in self._contract_model_registry(family_name)
+            for model_name, _identity, _runtime in self._contract_model_registry(family_name)
         )
         models: Dict[str, BaseEstimator] = {}
         for model_name in sorted(names):
@@ -4328,15 +4348,29 @@ class ExecutionTimePredictionModelManager:
                 continue
             contract = self._resolve_cluster_model_contract(cluster_type, model_name)
             identity = _serialize_selected_layer_cache_identity(contract)
+            runtime_path = None
+            cluster_config = (getattr(self, "_cluster_configs", None) or {}).get(
+                cluster_type
+            )
+            if (
+                cluster_config is not None
+                and get_moe_gating_base_model_name(model_name) == "moe_gating_routing_topk"
+            ):
+                replica_config = cluster_config.replica_config
+                runtime_path = resolve_moe_gating_routing_runtime_path(
+                    getattr(replica_config, "moe_routing_distribution_type", "balanced"),
+                    getattr(replica_config, "moe_gating_routing_runtime_path", ""),
+                )
             model = self._get_family_model(
                 family_name,
                 model_name,
                 requested_identity=identity,
+                requested_runtime_path=runtime_path,
             )
-            if identity is not None and model is None:
+            if (identity is not None or runtime_path is not None) and model is None:
                 raise ValueError(
                     f"No trained model for {model_name!r} matches the typed contract "
-                    f"requested by cluster {cluster_type!r}: {identity}"
+                    f"requested by cluster {cluster_type!r}: {identity}, runtime={runtime_path}"
                 )
             if model is not None:
                 models[model_name] = model
@@ -4347,8 +4381,9 @@ class ExecutionTimePredictionModelManager:
         model_name: str,
         precision: Optional[str] = None,
         layer_contract: Optional[ResolvedLayerContract] = None,
+        routing_runtime_path: Optional[str] = None,
     ) -> Optional[BaseEstimator]:
-        """Get a model by name, precision, and optional typed contract."""
+        """Get a model by name, precision, layer contract, and routing runtime."""
 
         if self._all_dummy_mode:
             return None
@@ -4360,6 +4395,7 @@ class ExecutionTimePredictionModelManager:
                 model_name,
                 precision_key=precision_key,
                 requested_identity=requested_identity,
+                requested_runtime_path=routing_runtime_path,
             )
             if model is not None:
                 return model

@@ -269,7 +269,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
     def _get_requested_moe_gating_routing_runtime_path(self) -> str:
         return resolve_moe_gating_routing_runtime_path(
-            getattr(self, "_moe_routing_distribution_type", "balanced")
+            getattr(self, "_moe_routing_distribution_type", "balanced"),
+            getattr(getattr(self, "_replica_config", None), "moe_gating_routing_runtime_path", ""),
         )
 
     @staticmethod
@@ -712,12 +713,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "moe_routing_seed must be an exact non-negative int, "
                 f"got {self._moe_routing_seed}."
             )
-        self._moe_gating_routing_runtime_path = (
-            resolve_moe_gating_routing_runtime_path(
-                self._moe_routing_distribution_type
-            )
-        )
-
         super().__init__(
             predictor_config,
             replica_config,

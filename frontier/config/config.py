@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 # - _create_astra_sim_analytical_cc_backend_config()
 
 from frontier.config.model_config import BaseModelConfig
+from frontier.moe_routing_runtime import validate_moe_gating_routing_runtime_path
 from frontier.config.node_sku_config import BaseNodeSKUConfig
 from frontier.config.parallel_semantics import (
     FrontierParallelismMapping,
@@ -1942,6 +1943,14 @@ class ReplicaConfig:
             "token-to-expert load skew without changing router_topk/model semantics."
         },
     )
+    moe_gating_routing_runtime_path: str = field(
+        default="",
+        metadata={
+            "help": "Optional MoE routing implementation used for timing prediction: "
+            "standard_fused_topk or uniform_topk. Empty retains the distribution's "
+            "default runtime; expert-load distribution is configured separately."
+        },
+    )
     device: str = field(
         default="a100",
         metadata={"help": "Device."},
@@ -2016,6 +2025,11 @@ class ReplicaConfig:
                 "moe_routing_distribution_type must be one of "
                 f"{sorted(valid_moe_routing_distribution_types)}, "
                 f"got {self.moe_routing_distribution_type!r}"
+            )
+
+        if self.moe_gating_routing_runtime_path:
+            self.moe_gating_routing_runtime_path = validate_moe_gating_routing_runtime_path(
+                self.moe_gating_routing_runtime_path
             )
 
         # Validate pipeline parallelism configuration early
@@ -4283,6 +4297,7 @@ class ClusterConfig:
                 "decode_attn_steady_state_measurement_report_path"
             ),
             moe_routing_distribution_type=moe_routing_distribution_type,
+            moe_gating_routing_runtime_path=get_field_value("moe_gating_routing_runtime_path"),
             device=get_field_value("device"),
             network_device=get_field_value("network_device"),
             cluster_prefix=cluster_prefix,
@@ -5031,6 +5046,7 @@ class ClusterConfig:
             router_topk=original_config.router_topk,
             moe_routing_seed=original_config.moe_routing_seed,
             moe_routing_distribution_type=original_config.moe_routing_distribution_type,
+            moe_gating_routing_runtime_path=original_config.moe_gating_routing_runtime_path,
             moe_routing_trace_path=original_config.moe_routing_trace_path,
             decode_attn_initial_lane_trace_path=(
                 original_config.decode_attn_initial_lane_trace_path
