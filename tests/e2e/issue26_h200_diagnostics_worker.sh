@@ -54,9 +54,6 @@ for MODE in "${MODES[@]}"; do
     export VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH="$RUN/server.ops.jsonl"
     export VLLM_FRONTIER_OP_TIMING_MODE=cuda_event VLLM_FRONTIER_OP_AGG_MODE=per_scope
     export VLLM_FRONTIER_CUDA_EVENT_SCOPE_MODE=default VLLM_FRONTIER_RUNTIME_META_ENABLED=0
-    if [[ "$DIAGNOSTIC_SELECTION" == rca ]]; then
-      export VLLM_FRONTIER_RUNTIME_META_ENABLED=1
-    fi
     if [[ "$MODE" == kernels ]]; then
       export VLLM_FRONTIER_OP_TIMING_MODE=record_function
     fi
