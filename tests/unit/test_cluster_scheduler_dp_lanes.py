@@ -1,5 +1,10 @@
 from types import SimpleNamespace
 
+import pytest
+
+from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
+    RoundRobinClusterScheduler,
+)
 from frontier.entities import Request
 from frontier.scheduler.cluster_scheduler.lor_cluster_scheduler import (
     LORClusterScheduler,
@@ -66,6 +71,41 @@ def test_lor_assigns_requests_to_replica_local_dp_lanes() -> None:
         (7, 0),
         (7, 1),
     ]
+
+
+@pytest.mark.parametrize("chunks", [(1,) * 8, (0, 2, 0, 3, 3), (8,)])
+@pytest.mark.parametrize("offset", [0, 5])
+@pytest.mark.parametrize(
+    "replica_ids, cycle",
+    [
+        ([7], [(7, 0), (7, 1)]),
+        ([7, 9], [(7, 0), (9, 0), (7, 1), (9, 1)]),
+    ],
+)
+def test_round_robin_preserves_lane_rotation_across_schedule_calls(
+    chunks, offset, replica_ids, cycle
+) -> None:
+    scheduler = _lane_scheduler(RoundRobinClusterScheduler, [])
+    scheduler._num_replicas = len(replica_ids)
+    scheduler._cluster.replicas = dict.fromkeys(replica_ids)
+    scheduler._request_counter = offset
+    requests = [_request() for _ in range(sum(chunks))]
+    owners = {}
+    cursor = 0
+    for size in chunks:
+        scheduler._request_queue = requests[cursor:cursor + size]
+        mapping = scheduler._schedule_batch_mode()
+        # Preserve the existing per-Replica grouped return order.
+        assert [row[0] for row in mapping] == sorted(row[0] for row in mapping)
+        for replica_id, dp_id, request in mapping:
+            assert request.id not in owners
+            owners[request.id] = (replica_id, dp_id)
+        cursor += size
+
+    assert [owners[request.id] for request in requests] == [
+        cycle[(offset + index) % len(cycle)] for index in range(len(requests))
+    ]
+    assert scheduler._request_counter == offset + len(requests)
 
 
 def test_random_assigns_requests_to_replica_local_dp_lanes(monkeypatch) -> None:

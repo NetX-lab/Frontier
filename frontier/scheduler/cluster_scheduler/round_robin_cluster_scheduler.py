@@ -369,8 +369,10 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         request_idx = 0
         while self._request_queue:
             request = self._request_queue.pop(0)
-            replica_idx = (self._request_counter + request_idx) % self._num_replicas
-            replica_requests[replica_idx].append(request)
+            ordinal = self._request_counter + request_idx
+            replica_idx = ordinal % self._num_replicas
+            dp_id = (ordinal // self._num_replicas) % self._replica_dp_size
+            replica_requests[replica_idx].append((dp_id, request))
             request_idx += 1
 
         self._request_counter += request_idx
@@ -382,8 +384,7 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
                 continue
 
             replica_id = replica_ids[replica_idx]
-            for local_idx, request in enumerate(requests):
-                dp_id = local_idx % self._replica_dp_size
+            for dp_id, request in requests:
                 request_mapping.append((replica_id, dp_id, request))
 
         return request_mapping
