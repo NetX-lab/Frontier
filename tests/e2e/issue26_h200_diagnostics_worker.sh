@@ -7,6 +7,7 @@ case "$DIAGNOSTIC_SELECTION" in
   batch) MODES=(batch) ;;
   rca) MODES=(batch operators kernels) ;;
   communication) MODES=(operators) ;;
+  compute_attention|compute_moe|compute_detail) MODES=(operators) ;;
   *) echo "Unsupported diagnostic selection: $DIAGNOSTIC_SELECTION" >&2; exit 1 ;;
 esac
 source "$(dirname "$0")/issue26_h200_environment_probe.sh" "${1:?Provide a fresh output directory.}"
@@ -26,10 +27,21 @@ unset VLLM_FRONTIER_SCHED_DECISION_LOG_PATH VLLM_FRONTIER_DP_ROUTE_LOG_PATH
 export VLLM_ALL2ALL_BACKEND=naive
 unset VLLM_FRONTIER_PROFILE_REQUEST_PREFIX VLLM_FRONTIER_PROFILE_BATCH_LIMIT
 unset VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES
-if [[ "$DIAGNOSTIC_SELECTION" == rca || "$DIAGNOSTIC_SELECTION" == communication ]]; then
+if [[ "$DIAGNOSTIC_SELECTION" == rca || "$DIAGNOSTIC_SELECTION" == communication || "$DIAGNOSTIC_SELECTION" == compute_* ]]; then
   export VLLM_MOE_UNIFORM_ROUTING=1
   export VLLM_FRONTIER_PROFILE_REQUEST_PREFIX=cmpl-pf4096_dc1024:
   export VLLM_FRONTIER_PROFILE_BATCH_LIMIT=3
+fi
+case "$DIAGNOSTIC_SELECTION" in
+  compute_attention)
+    export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=attn_pre_proj,attn_rope,attn_kv_cache_save,attn_prefill,row_parallel_gemm ;;
+  compute_moe)
+    export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=moe_gating,moe_shuffling,moe_grouped_gemm,moe_sum ;;
+  compute_detail)
+    export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=input_layernorm,post_attention_layernorm,embedding_compute,final_layernorm,moe_grouped_gemm_w1,moe_activation,moe_grouped_gemm_w2 ;;
+esac
+if [[ "$DIAGNOSTIC_SELECTION" == compute_* ]]; then
+  export VLLM_FRONTIER_PROFILE_BATCH_LIMIT=1
 fi
 if [[ "$DIAGNOSTIC_SELECTION" == communication ]]; then
   export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=expert_parallel_allreduce,attn_post_proj_tp_allreduce,tensor_parallel_allreduce
@@ -37,7 +49,7 @@ fi
 export PYTHONPATH=/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908
 git config --global --add safe.directory /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908
 git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
-test "$(git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 rev-parse HEAD)" = 8453dd342c6aa2721aaf4b410998aab2f38bc2ec
+test "$(git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 rev-parse HEAD)" = "${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-8453dd342c6aa2721aaf4b410998aab2f38bc2ec}"
 test -z "$(git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 status --porcelain)"
 git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 diff > "$PROBE_ROOT/vllm_uncommitted.patch"
 SERVER_PID=""
