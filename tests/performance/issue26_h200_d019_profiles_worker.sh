@@ -2,7 +2,7 @@
 # Validate the corrected MoE path, then measure exact inputs and collectives serially.
 set -euo pipefail
 PHASE="${2:-all}"
-case "$PHASE" in all|attention_communication) ;; *) exit 1 ;; esac
+case "$PHASE" in all|attention_communication|timing_context|linear_context) ;; *) exit 1 ;; esac
 source "$(dirname "$0")/../e2e/issue26_h200_environment_probe.sh" "${1:?Provide a fresh output directory.}"
 source /data/ycfeng/tmp/issue26-h200-network/company-proxy.sh
 export HTTP_PROXY="$http_proxy" HTTPS_PROXY="$https_proxy" ALL_PROXY="$all_proxy"
@@ -31,11 +31,23 @@ for REPEAT in 1 2 3; do
     --max_tokens 4096 --num_tokens_list 4096 > "$PROBE_ROOT/linear-$REPEAT.log" 2>&1
 done
 fi
+if [[ "$PHASE" == timing_context || "$PHASE" == linear_context ]]; then
+if [[ "$PHASE" == timing_context ]]; then
+"$PY" -m torch.distributed.run --standalone --nproc-per-node=8 \
+  tests/performance/issue26_h200_collective_microbenchmark.py \
+  --output "$PROBE_ROOT/communication" \
+  --tp-message-bytes 8388608 12582912 16777216 25165824 33554432 \
+  --capture-tp-kernels > "$PROBE_ROOT/communication.log" 2>&1
+fi
+"$PY" tests/performance/issue26_linear_timing_context.py \
+  --output "$PROBE_ROOT/timing-context" > "$PROBE_ROOT/timing-context.log" 2>&1
+else
 "$PY" tests/performance/issue26_attention_exact_profile.py --output "$PROBE_ROOT/attention" \
   --model qwen3-a3b-30b-moe --tokens 4096 --tp 4 --blocks 310809 \
   --max-model-len 16384 --repeats 3 > "$PROBE_ROOT/attention.log" 2>&1
 "$PY" -m torch.distributed.run --standalone --nproc-per-node=8 \
   tests/performance/issue26_h200_collective_microbenchmark.py \
   --output "$PROBE_ROOT/communication" > "$PROBE_ROOT/communication.log" 2>&1
+fi
 set +x
 echo D019_PROFILES_EXECUTION_COMPLETE
