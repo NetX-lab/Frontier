@@ -1,6 +1,7 @@
 """Observe a bounded prefix of real Frontier DP routing and load feedback."""
 
 import argparse
+from collections import Counter
 import json
 from pathlib import Path
 import sys
@@ -10,6 +11,7 @@ from frontier.scheduler.cluster_scheduler.vllm_load_balancing_cluster_scheduler 
     VllmLoadBalancingClusterScheduler,
 )
 from frontier.scheduler.utils.vllm_dp_load_balancer import VllmDPLoadBalancer
+from frontier.scheduler.replica_scheduler.base_replica_scheduler import BaseReplicaScheduler
 
 
 class ObservationComplete(Exception):
@@ -32,6 +34,20 @@ def main():
     select = VllmDPLoadBalancer.select
     report = VllmDPLoadBalancer.report
     schedule = VllmLoadBalancingClusterScheduler.schedule_at
+    admit = BaseReplicaScheduler.on_schedule
+    model_tokens = Counter()
+
+    def observe_admit(scheduler, time=0.0):
+        batches = admit(scheduler, time)
+        for batch in batches:
+            members = [{"request_id": str(request.id), "tokens": tokens,
+                        "prior_scheduled_tokens": model_tokens[str(request.id)]}
+                       for request, tokens in zip(batch.requests, batch.num_tokens)]
+            events.append({"event": "admission", "time_s": time,
+                           "lane": scheduler._replica_local_id,
+                           "batch_id": batch.id, "members": members})
+            model_tokens.update({row["request_id"]: row["tokens"] for row in members})
+        return batches
 
     def observe_select(router, time):
         router._advance(time)
@@ -70,7 +86,8 @@ def main():
         sys.argv = [command[2], *command[3:]]
         with (patch.object(VllmDPLoadBalancer, "select", observe_select),
               patch.object(VllmDPLoadBalancer, "report", observe_report),
-              patch.object(VllmLoadBalancingClusterScheduler, "schedule_at", observe_schedule)):
+              patch.object(VllmLoadBalancingClusterScheduler, "schedule_at", observe_schedule),
+              patch.object(BaseReplicaScheduler, "on_schedule", observe_admit)):
             run_frontier()
     except ObservationComplete:
         result["status"] = "PASS"
