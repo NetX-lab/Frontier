@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Collect operator and routing evidence separately for the frozen H200 case.
 set -euo pipefail
+DIAGNOSTIC_SELECTION="${2:-operators_and_routing}"
+case "$DIAGNOSTIC_SELECTION" in
+  operators_and_routing) MODES=(operators routing) ;;
+  batch) MODES=(batch) ;;
+  *) echo "Unsupported diagnostic selection: $DIAGNOSTIC_SELECTION" >&2; exit 1 ;;
+esac
 source "$(dirname "$0")/issue26_h200_environment_probe.sh" "${1:?Provide a fresh output directory.}"
 source /data/ycfeng/tmp/issue26-h200-network/company-proxy.sh
 export HTTP_PROXY="$http_proxy" HTTPS_PROXY="$https_proxy" ALL_PROXY="$all_proxy"
@@ -30,7 +36,7 @@ cleanup() {
   fi
 }
 trap cleanup EXIT
-for MODE in operators routing; do
+for MODE in "${MODES[@]}"; do
   RUN="$PROBE_ROOT/$MODE"
   mkdir "$RUN"
   unset VLLM_FRONTIER_REQUEST_METRICS_LOG_PATH
@@ -40,9 +46,14 @@ for MODE in operators routing; do
     export VLLM_FRONTIER_OP_TIMING_MODE=cuda_event VLLM_FRONTIER_OP_AGG_MODE=per_scope
     export VLLM_FRONTIER_CUDA_EVENT_SCOPE_MODE=default VLLM_FRONTIER_RUNTIME_META_ENABLED=0
     unset VLLM_FRONTIER_MOE_ROUTING_LOG_PATH
-  else
+  elif [[ "$MODE" == routing ]]; then
     unset VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH VLLM_FRONTIER_RUNTIME_META_ENABLED
     export VLLM_FRONTIER_MOE_ROUTING_LOG_PATH="$RUN/server.routing.jsonl"
+  else
+    unset VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH VLLM_FRONTIER_RUNTIME_META_ENABLED
+    unset VLLM_FRONTIER_MOE_ROUTING_LOG_PATH
+    export VLLM_FRONTIER_SCHED_LOG_PATH="$RUN/server.scheduler.log"
+    export VLLM_FRONTIER_SCHED_DECISION_LOG_PATH="$RUN/server.decisions.jsonl"
   fi
   "$PY" -m vllm.entrypoints.cli.main serve /data/ycfeng/tmp/issue26-qwen3-dummy \
     --tensor-parallel-size 4 --data-parallel-size 2 --enable-expert-parallel \
@@ -80,4 +91,4 @@ PY
   cleanup
   SERVER_PID=""
 done
-echo OPERATOR_AND_ROUTING_EXECUTION_COMPLETE
+echo "DIAGNOSTIC_EXECUTION_COMPLETE selection=$DIAGNOSTIC_SELECTION"

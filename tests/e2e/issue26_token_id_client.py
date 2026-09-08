@@ -41,6 +41,7 @@ async def send_request(
 
     wall_start_ns = time.time_ns()
     monotonic_start_ns = time.perf_counter_ns()
+    dispatch_monotonic_s = time.monotonic()
     payload = {
         "model": model,
         "prompt": prompt_token_ids,
@@ -91,6 +92,9 @@ async def send_request(
         "request_id": request_id,
         "response_id": response_id,
         "request_arrival_wall_time_ns": wall_start_ns,
+        "planned_arrival_monotonic_s": scheduled_at,
+        "dispatch_monotonic_s": dispatch_monotonic_s,
+        "dispatch_lag_ms": (dispatch_monotonic_s - scheduled_at) * 1000.0,
         "client_first_token_time_ns": wall_start_ns + (first_token_ns - monotonic_start_ns),
         "client_completion_time_ns": wall_start_ns + (completed_ns - monotonic_start_ns),
         "client_ttft_ms": (first_token_ns - monotonic_start_ns) / 1e6,
