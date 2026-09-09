@@ -46,12 +46,13 @@ fi
 if [[ "$DIAGNOSTIC_SELECTION" == communication ]]; then
   export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=expert_parallel_allreduce,attn_post_proj_tp_allreduce,tensor_parallel_allreduce
 fi
-export PYTHONPATH=/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908
-git config --global --add safe.directory /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908
-git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
-test "$(git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 rev-parse HEAD)" = "${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-8453dd342c6aa2721aaf4b410998aab2f38bc2ec}"
-test -z "$(git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 status --porcelain)"
-git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-20260908 diff > "$PROBE_ROOT/vllm_uncommitted.patch"
+VLLM_SOURCE_ROOT="${ISSUE26_DIAGNOSTIC_VLLM_ROOT:-/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908}"
+export PYTHONPATH="$VLLM_SOURCE_ROOT"
+git config --global --add safe.directory "$VLLM_SOURCE_ROOT"
+git -C "$VLLM_SOURCE_ROOT" rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
+test "$(git -C "$VLLM_SOURCE_ROOT" rev-parse HEAD)" = "${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-8453dd342c6aa2721aaf4b410998aab2f38bc2ec}"
+test -z "$(git -C "$VLLM_SOURCE_ROOT" status --porcelain)"
+git -C "$VLLM_SOURCE_ROOT" diff > "$PROBE_ROOT/vllm_uncommitted.patch"
 SERVER_PID=""
 cleanup() {
   if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
