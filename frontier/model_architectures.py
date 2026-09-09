@@ -422,6 +422,7 @@ class ModelArchitectureProfile:
     share_expert_tensor_parallel_allreduce_op: str | None = None
     always_supports_share_expert: bool = False
     counts_share_expert_param_memory: bool = False
+    sequence_mixer_family_ids: tuple[str, ...] = ("dense_attention",)
     structural_requirements: tuple[StructuralRequirement, ...] = ()
     match: ArchitectureMatcher = field(default=lambda _config: False, repr=False, compare=False)
     layer_contracts: tuple[LayerContractSpec, ...] = field(
@@ -433,6 +434,20 @@ class ModelArchitectureProfile:
             raise ValueError("model architecture profile_id must be non-empty")
         if not self.display_name:
             raise ValueError("model architecture display_name must be non-empty")
+        if not self.sequence_mixer_family_ids or any(
+            not family_id for family_id in self.sequence_mixer_family_ids
+        ):
+            raise ValueError(
+                "model architecture sequence_mixer_family_ids must contain "
+                "non-empty identifiers"
+            )
+        if len(set(self.sequence_mixer_family_ids)) != len(
+            self.sequence_mixer_family_ids
+        ):
+            raise ValueError(
+                "model architecture sequence_mixer_family_ids contains duplicates: "
+                f"{self.sequence_mixer_family_ids}"
+            )
         if self.attention_shape_log_kind is not None and not self.attention_shape_log_kind:
             raise ValueError(
                 "model architecture attention_shape_log_kind must be non-empty "
@@ -590,6 +605,35 @@ class ModelArchitectureProfile:
                     activation_predicate=_shared_layer_contract_active,
                 ),
             ),
+        )
+
+    @classmethod
+    def qwen3_5_moe(
+        cls,
+        profile_id: str = "qwen3_5_moe",
+        match: ArchitectureMatcher | None = None,
+    ) -> "ModelArchitectureProfile":
+        """Qwen3.5 hybrid GDN/full-attention decoder contract."""
+
+        return cls(
+            profile_id=profile_id,
+            display_name="Qwen3.5 MoE Hybrid GDN",
+            linear_attention=LinearAttentionProfile(
+                # ``linear_attention`` here is the historical Frontier name
+                # for model projection profiling, not the GDN mixer itself.
+                sharded_impl=LinearAttentionImplementation.GENERIC,
+                sharded_ops=(
+                    "attn_pre_proj",
+                    "attn_rope",
+                    "attn_post_proj",
+                ),
+            ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
+            sequence_mixer_family_ids=("gated_delta_net", "dense_attention"),
+            structural_requirements=(
+                _requires_qwen3_5_hybrid_gdn_contract(),
+            ),
+            match=match or _matches_qwen3_5_moe,
         )
 
     def validate_structural_requirements(self, config: Any) -> None:
@@ -1005,6 +1049,38 @@ def _matches_step3_text(config: Any) -> bool:
     return _normalized_attr(config, "model_type") == "step3_text"
 
 
+def _matches_qwen3_5_moe(config: Any) -> bool:
+    return _normalized_attr(config, "model_type") == "qwen3_5_moe_text"
+
+
+def _requires_qwen3_5_hybrid_gdn_contract() -> StructuralRequirement:
+    def predicate(config: Any) -> bool:
+        get_gdn_config = getattr(config, "get_gdn_config", None)
+        get_num_gdn_layers = getattr(config, "get_num_gdn_layers", None)
+        get_num_full_attention_layers = getattr(
+            config, "get_num_full_attention_layers", None
+        )
+        return (
+            bool(getattr(config, "is_moe", False))
+            and callable(get_gdn_config)
+            and get_gdn_config() is not None
+            and callable(get_num_gdn_layers)
+            and int(get_num_gdn_layers()) > 0
+            and callable(get_num_full_attention_layers)
+            and int(get_num_full_attention_layers()) > 0
+        )
+
+    return StructuralRequirement(
+        name="requires_qwen3_5_hybrid_gdn_contract",
+        predicate=predicate,
+        message=lambda profile, config: (
+            f"{profile.display_name} profile {profile.profile_id} requires an "
+            "MoE model with complete GDN dimensions and both gated-delta-net "
+            f"and full-attention layers. Model: {_model_identifier(config)}"
+        ),
+    )
+
+
 class ModelArchitectureRegistry:
     """Ordered plugin registry for model architecture profiles."""
 
@@ -1050,6 +1126,7 @@ MODEL_ARCHITECTURE_REGISTRY = ModelArchitectureRegistry()
 for _profile in (
     ModelArchitectureProfile.step3_text(),
     ModelArchitectureProfile.step2_mini(),
+    ModelArchitectureProfile.qwen3_5_moe(),
     ModelArchitectureProfile.generic(),
 ):
     MODEL_ARCHITECTURE_REGISTRY.register(_profile)

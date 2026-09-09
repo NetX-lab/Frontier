@@ -37,17 +37,27 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
 
     def get_kv_cache_size(self, batch: "Batch", replica_config: "ReplicaConfig") -> int:
         total_tokens = sum(req.num_prefill_tokens for req in batch.requests)
-        return self._calculate_kv_cache_size_for_tokens(total_tokens, replica_config)
+        return self._calculate_kv_cache_size_for_tokens(
+            total_tokens,
+            replica_config,
+            num_requests=len(batch.requests),
+        )
 
     def get_kv_cache_size_for_request(
         self, request: "Request", replica_config: "ReplicaConfig"
     ) -> int:
         return self._calculate_kv_cache_size_for_tokens(
-            request.num_prefill_tokens, replica_config
+            request.num_prefill_tokens,
+            replica_config,
+            num_requests=1,
         )
 
     def _calculate_kv_cache_size_for_tokens(
-        self, num_tokens: int, replica_config: "ReplicaConfig"
+        self,
+        num_tokens: int,
+        replica_config: "ReplicaConfig",
+        *,
+        num_requests: int = 1,
     ) -> int:
         model_config = replica_config.model_config
         family = bind_attention_family(model_config).family
@@ -56,6 +66,16 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
             if self._config.override_num_layers is not None
             else model_config.num_layers
         )
+        get_num_gdn_layers = getattr(model_config, "get_num_gdn_layers", None)
+        num_gdn_layers = (
+            int(get_num_gdn_layers()) if callable(get_num_gdn_layers) else 0
+        )
+        if num_gdn_layers and self._config.override_num_layers is not None:
+            raise ValueError(
+                "override_num_layers is ambiguous for a hybrid GDN model; "
+                "use the model-owned full-attention/GDN schedule"
+            )
+        num_full_attention_layers = int(num_layers) - num_gdn_layers
         # Runtime KV layout is family-aware: dense uses (num_kv_heads, head_dim, kv_factor=2);
         # latent MLA collapses to (1, kv_lora_rank + qk_rope_head_dim, kv_factor=1). Overrides,
         # when set, replace the head count / head size but the family still owns kv_factor.
@@ -75,14 +95,32 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
             runtime_head_size=head_dim,
         )
         dtype_size = self._get_kv_cache_dtype_size_bytes()
-        return int(
+        dense_kv_bytes = int(
             num_tokens
-            * num_layers
+            * num_full_attention_layers
             * layout.runtime_num_kv_heads_per_worker
             * layout.runtime_head_size
             * layout.kv_factor
             * dtype_size
         )
+        gdn_state_bytes = 0
+        if num_gdn_layers:
+            if num_requests <= 0:
+                raise ValueError(
+                    f"num_requests must be positive for GDN transfer, got={num_requests}"
+                )
+            gdn_config = model_config.get_gdn_config()
+            if gdn_config is None:
+                raise ValueError("GDN layer count is non-zero but dimensions are absent")
+            # Transfer accounting covers the whole model state across TP shards,
+            # so use TP=1 for the total logical state size.
+            state_bytes_per_layer = gdn_config.get_state_layout(
+                tensor_parallel_size=1,
+            ).total_bytes
+            gdn_state_bytes = (
+                int(num_requests) * num_gdn_layers * state_bytes_per_layer
+            )
+        return dense_kv_bytes + gdn_state_bytes
 
     def _get_kv_cache_dtype_size_bytes(self) -> float:
         quant_manager = get_quantization_manager()

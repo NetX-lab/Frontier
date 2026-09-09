@@ -199,7 +199,12 @@ class QuantizationManager:
             quant_config = model_config.quantization_config
             if quant_config is not None and quant_config.quant_method is not None:
                 quant_precision = PrecisionType.from_string(quant_config.quant_method)
-                for op_name in self.MODEL_CONFIG_QUANT_OPS:
+                quantized_operations = (
+                    quant_config.quantized_operations
+                    if quant_config.quantized_operations is not None
+                    else sorted(self.MODEL_CONFIG_QUANT_OPS)
+                )
+                for op_name in quantized_operations:
                     if not self._is_operation_supported(op_name):
                         registry_path = self.DEFAULT_CONFIG_DIR / self.REGISTRY_FILE
                         raise ValueError(

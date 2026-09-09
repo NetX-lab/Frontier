@@ -63,7 +63,8 @@ def _supports_share_expert(config: ModelConfig) -> bool:
 def _uses_gemma_rms_norm(config: ModelConfig) -> bool:
     return (
         getattr(config, "norm", None) == "rms_norm"
-        and getattr(config, "model_type", None) == "qwen3_next"
+        and getattr(config, "model_type", None)
+        in {"qwen3_next", "qwen3_5_moe_text"}
     )
 
 

@@ -25,8 +25,8 @@ def test_qwen3_next_param_counter_excludes_shared_expert_from_system_metrics_mem
 
     assert counter._get_share_expert_params_per_layer(tensor_parallel_size=1) == 0
     assert counter.get_num_mlp_parameters_per_device() == 3_223_322_624
-    assert counter.get_num_parameters_per_device() == 3_261_071_360
-    assert 2 * counter.get_num_parameters_per_device() == 6_522_142_720
+    assert counter.get_num_parameters_per_device() == 3_290_759_552
+    assert 2 * counter.get_num_parameters_per_device() == 6_581_519_104
 
 
 @pytest.mark.parametrize(

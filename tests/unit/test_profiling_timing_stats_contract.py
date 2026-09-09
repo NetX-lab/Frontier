@@ -28,6 +28,15 @@ def test_cuda_event_timer_stats_include_sample_count() -> None:
     assert stats["attn_prefill"]["max"] == 2.75
 
 
+def test_timer_stats_can_summarize_distributed_materialized_samples() -> None:
+    stats = TimerStatsStore.get_stats_from_times(
+        {"gdn_core_decode": [0.25, 0.5, 0.75]}
+    )
+
+    assert stats["gdn_core_decode"]["count"] == 3
+    assert stats["gdn_core_decode"]["median"] == 0.5
+
+
 def test_record_function_tracer_stats_include_sample_count(tmp_path: Path) -> None:
     trace_path = tmp_path / "trace.json"
     trace_path.write_text(

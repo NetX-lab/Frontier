@@ -57,6 +57,10 @@ except ImportError:
     ray = None
 
 from frontier.profiling.common.model_config import ModelConfig
+from frontier.profiling.common.accelerator import (
+    get_available_gpu_ids,
+    set_process_visible_device,
+)
 from frontier.profiling.utils import (
     EXPORTABLE_PROFILE_METHOD_CHOICES,
     ProfileMethod,
@@ -93,7 +97,7 @@ def _get_moe_wrapper_class():
 def _worker_init(gpu_id: int) -> None:
     """Initialize worker process with specific GPU binding."""
     import torch
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+    set_process_visible_device(gpu_id, torch_module=torch)
     torch.cuda.set_device(0)  # Device 0 within this process's visible devices
 
 
@@ -856,7 +860,9 @@ def profile_model(
             else:
                 # Single-GPU sequential mode
                 import torch
-                os.environ["CUDA_VISIBLE_DEVICES"] = str(available_gpus[0])
+                set_process_visible_device(
+                    available_gpus[0], torch_module=torch
+                )
                 torch.cuda.set_device(0)
 
                 wrapper_kwargs = {
@@ -916,59 +922,8 @@ def profile_model(
 
 
 def _get_available_gpus(num_gpus: int) -> List[int]:
-    """
-    Get list of available GPU IDs based on CUDA_VISIBLE_DEVICES and num_gpus.
-
-    Returns:
-        List of GPU IDs to use for profiling
-    """
-    # Check CUDA_VISIBLE_DEVICES
-    cuda_visible = os.environ.get("CUDA_VISIBLE_DEVICES", "")
-    if cuda_visible:
-        # Parse CUDA_VISIBLE_DEVICES
-        available = [int(x.strip()) for x in cuda_visible.split(",") if x.strip()]
-    else:
-        try:
-            import subprocess
-
-            result = subprocess.run(
-                ["nvidia-smi", "--query-gpu=index", "--format=csv,noheader"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            if result.returncode == 0:
-                available = [
-                    int(x.strip()) for x in result.stdout.strip().split("\n") if x.strip()
-                ]
-            else:
-                raise RuntimeError(
-                    "Unable to discover GPUs with nvidia-smi. Set "
-                    "CUDA_VISIBLE_DEVICES explicitly or fix nvidia-smi before "
-                    "running MoE profiling. "
-                    f"nvidia-smi stderr: {result.stderr.strip()}"
-                )
-        except FileNotFoundError as exc:
-            raise RuntimeError(
-                "Unable to discover GPUs with nvidia-smi because nvidia-smi was "
-                "not found. Set CUDA_VISIBLE_DEVICES explicitly or fix nvidia-smi "
-                "before running MoE profiling."
-            ) from exc
-
-        if not available:
-            raise RuntimeError(
-                "Unable to discover GPUs with nvidia-smi because it returned no "
-                "GPU indices. Set CUDA_VISIBLE_DEVICES explicitly or fix nvidia-smi "
-                "before running MoE profiling."
-            )
-
-    if len(available) < num_gpus:
-        raise RuntimeError(
-            f"Requested {num_gpus} GPUs but only found {len(available)} visible GPUs "
-            f"(CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES', '')})."
-        )
-
-    return available[:num_gpus]
+    """Discover GPUs without initializing torch in the parent process."""
+    return get_available_gpu_ids(num_gpus)
 
 
 def main():

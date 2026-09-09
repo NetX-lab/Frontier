@@ -8,6 +8,11 @@ from frontier.attention.model_binding import bind_attention_family
 from frontier.attention.ops import AttentionMemoryLayout
 from frontier.config.base_fixed_config import BaseFixedConfig
 from frontier.config.precision_type import PrecisionType
+from frontier.gdn import (
+    GatedDeltaNetConfig,
+    SequenceMixerType,
+    build_sequence_mixer_schedule,
+)
 from frontier.logger import init_logger
 from frontier.model_architectures import (
     MODEL_ARCHITECTURE_REGISTRY,
@@ -27,7 +32,7 @@ class QuantizationConfig:
     """Configuration for model quantization, aligned with stepfun-vllm Fp8Config semantics.
 
     Attributes:
-        quant_method: Quantization method (None for no quantization, "fp8" for FP8)
+        quant_method: Canonical quantization precision (for example, "fp8" or "fp4")
         activation_scheme: Activation quantization scheme ("dynamic" or "static")
         is_checkpoint_fp8_serialized: Whether checkpoint has pre-quantized FP8 weights
         weight_block_size: Block dimensions for block-wise quantization, e.g., (128, 128)
@@ -38,6 +43,7 @@ class QuantizationConfig:
     is_checkpoint_fp8_serialized: bool = False
     weight_block_size: Optional[Tuple[int, int]] = None
     ignored_layers: List[str] = field(default_factory=list)
+    quantized_operations: Optional[List[str]] = None
 
     @staticmethod
     def _normalize_quant_method(quant_method: Optional[str]) -> Optional[str]:
@@ -54,11 +60,25 @@ class QuantizationConfig:
         self.quant_method = self._normalize_quant_method(self.quant_method)
 
         # Validate quant_method
-        valid_quant_methods = {None, "fp8"}
+        valid_quant_methods = {None, "fp8", "fp4"}
         if self.quant_method not in valid_quant_methods:
             raise ValueError(
                 f"Invalid quant_method '{self.quant_method}'. "
                 f"Must be one of: {valid_quant_methods}"
+            )
+
+        if self.quantized_operations is not None:
+            if not all(
+                isinstance(operation, str) and operation.strip()
+                for operation in self.quantized_operations
+            ):
+                raise ValueError(
+                    "quantized_operations must contain non-empty operation names"
+                )
+            self.quantized_operations = list(
+                dict.fromkeys(
+                    operation.strip() for operation in self.quantized_operations
+                )
             )
 
         # Validate activation_scheme
@@ -115,6 +135,10 @@ class QuantizationConfig:
         if self.ignored_layers:
             sorted_ignored = sorted(self.ignored_layers)
             parts.append(f"ignored={','.join(sorted_ignored)}")
+        if self.quantized_operations is not None:
+            parts.append(
+                f"operations={','.join(sorted(self.quantized_operations))}"
+            )
 
         signature_str = "|".join(parts)
         return signature_str
@@ -140,12 +164,42 @@ class QuantizationConfig:
                     f"got {weight_block_size}"
                 )
 
+        quant_method = cls._normalize_quant_method(
+            config_dict.get("quant_method")
+        )
+        activation_scheme = config_dict.get("activation_scheme")
+        if quant_method == "quark":
+            global_quant_config = config_dict.get("global_quant_config") or {}
+            weight_config = global_quant_config.get("weight") or {}
+            input_config = global_quant_config.get("input_tensors") or {}
+            if (
+                str(weight_config.get("dtype", "")).lower() == "fp4"
+                and str(input_config.get("dtype", "")).lower() == "fp4"
+            ):
+                quant_method = "fp4"
+                if activation_scheme is None:
+                    activation_scheme = (
+                        "dynamic" if input_config.get("is_dynamic") else "static"
+                    )
+
+        quantized_operations = config_dict.get(
+            "frontier_quantized_operations",
+            config_dict.get("quantized_operations"),
+        )
+
         return cls(
-            quant_method=cls._normalize_quant_method(config_dict.get("quant_method")),
-            activation_scheme=config_dict.get("activation_scheme"),
+            quant_method=quant_method,
+            activation_scheme=activation_scheme,
             is_checkpoint_fp8_serialized=bool(config_dict.get("is_checkpoint_fp8_serialized", False)),
             weight_block_size=weight_block_size,
-            ignored_layers=list(config_dict.get("ignored_layers", [])),
+            ignored_layers=list(
+                config_dict.get("ignored_layers", config_dict.get("exclude", []))
+            ),
+            quantized_operations=(
+                list(quantized_operations)
+                if quantized_operations is not None
+                else None
+            ),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -156,6 +210,7 @@ class QuantizationConfig:
             "is_checkpoint_fp8_serialized": self.is_checkpoint_fp8_serialized,
             "weight_block_size": list(self.weight_block_size) if self.weight_block_size else None,
             "ignored_layers": self.ignored_layers,
+            "quantized_operations": self.quantized_operations,
         }
 
 
@@ -181,6 +236,7 @@ FUSED_ADD_NORM_MODEL_TYPE_ALLOWLIST = {
     "qwen2",
     "qwen2_moe",
     "qwen3_moe",
+    "qwen3_5_moe_text",
     "step2_mini",
     "step3_text",
 }
@@ -190,6 +246,7 @@ NON_FUSED_ADD_NORM_MODEL_TYPE_ALLOWLIST = {
 QK_NORM_MODEL_TYPE_ALLOWLIST = {
     "qwen3_moe",
     "qwen3_next",
+    "qwen3_5_moe_text",
 }
 
 
@@ -199,11 +256,14 @@ def _infer_attn_output_gate_from_hf_config(cfg: Dict[str, Any]) -> bool:
         return bool(explicit_value)
 
     model_type = str(cfg.get("model_type", "")).lower()
-    if model_type == "qwen3_next":
+    if model_type in {"qwen3_next", "qwen3_5_moe_text"}:
         return True
 
     architectures = [str(value).lower() for value in cfg.get("architectures", [])]
-    return any("qwen3next" in architecture for architecture in architectures)
+    return any(
+        "qwen3next" in architecture or "qwen3_5" in architecture
+        for architecture in architectures
+    )
 
 
 def _infer_use_qk_norm_from_hf_config(cfg: Dict[str, Any]) -> bool:
@@ -216,7 +276,10 @@ def _infer_use_qk_norm_from_hf_config(cfg: Dict[str, Any]) -> bool:
         return True
 
     architectures = [str(value).lower() for value in cfg.get("architectures", [])]
-    return any("qwen3next" in architecture for architecture in architectures)
+    return any(
+        "qwen3next" in architecture or "qwen3_5" in architecture
+        for architecture in architectures
+    )
 
 
 def _infer_share_expert_dim_from_hf_config(
@@ -290,6 +353,18 @@ class BaseModelConfig(BaseFixedConfig):
     qk_head_dim: Optional[int] = None
     v_head_dim: Optional[int] = None
 
+    # Hybrid sequence-mixer topology. Hugging Face Qwen3.5 configs may provide
+    # an explicit layer_types list; full_attention_interval is the canonical
+    # fallback used by older configs.
+    layer_types: Optional[Tuple[str, ...]] = None
+    full_attention_interval: Optional[int] = None
+    linear_conv_kernel_dim: Optional[int] = None
+    linear_key_head_dim: Optional[int] = None
+    linear_value_head_dim: Optional[int] = None
+    linear_num_key_heads: Optional[int] = None
+    linear_num_value_heads: Optional[int] = None
+    gdn_output_gate_type: str = "silu"
+
     # Default model precision from model config (e.g., torch_dtype in HF config)
     torch_dtype: str = "float16"
 
@@ -309,6 +384,9 @@ class BaseModelConfig(BaseFixedConfig):
     _moe_layer_ids_cache: Optional[List[int]] = field(
         default=None, compare=False, hash=False, repr=False
     )
+    _sequence_mixer_types_cache: Optional[Tuple[SequenceMixerType, ...]] = field(
+        default=None, compare=False, hash=False, repr=False
+    )
 
     def __post_init__(self):
         """Validate model configuration after initialization."""
@@ -316,6 +394,51 @@ class BaseModelConfig(BaseFixedConfig):
             self.model_type = str(self.model_type).lower()
         if self.model_architecture_profile is not None:
             self.model_architecture_profile = str(self.model_architecture_profile).lower()
+
+        if self.layer_types is not None:
+            self.layer_types = tuple(str(value) for value in self.layer_types)
+        if self.full_attention_interval is not None:
+            self.full_attention_interval = int(self.full_attention_interval)
+
+        gdn_shape_values = (
+            self.linear_conv_kernel_dim,
+            self.linear_key_head_dim,
+            self.linear_value_head_dim,
+            self.linear_num_key_heads,
+            self.linear_num_value_heads,
+        )
+        has_any_gdn_shape = any(value is not None for value in gdn_shape_values)
+        has_complete_gdn_shape = all(value is not None for value in gdn_shape_values)
+        if has_any_gdn_shape and not has_complete_gdn_shape:
+            missing_fields = [
+                field_name
+                for field_name, value in zip(
+                    (
+                        "linear_conv_kernel_dim",
+                        "linear_key_head_dim",
+                        "linear_value_head_dim",
+                        "linear_num_key_heads",
+                        "linear_num_value_heads",
+                    ),
+                    gdn_shape_values,
+                )
+                if value is None
+            ]
+            raise ValueError(
+                "GDN model configuration is incomplete; missing fields: "
+                f"{missing_fields}"
+            )
+        if has_complete_gdn_shape:
+            # Constructing the immutable value object performs dimension and
+            # output-gate validation once at config admission.
+            self.get_gdn_config()
+
+        self._sequence_mixer_types_cache = build_sequence_mixer_schedule(
+            num_layers=self.num_layers,
+            layer_types=self.layer_types,
+            full_attention_interval=self.full_attention_interval,
+            has_gated_delta_net=has_complete_gdn_shape,
+        )
 
         # Validate model_arch
         if self.model_arch not in ModelArch.VALID_ARCHS:
@@ -426,6 +549,93 @@ class BaseModelConfig(BaseFixedConfig):
     def get_attention_family(self):
         """Return the bound attention family for runtime cache semantics."""
         return bind_attention_family(self).family
+
+    def get_gdn_config(self) -> Optional[GatedDeltaNetConfig]:
+        """Return the validated GDN shape contract, when configured."""
+
+        values = (
+            self.linear_conv_kernel_dim,
+            self.linear_key_head_dim,
+            self.linear_value_head_dim,
+            self.linear_num_key_heads,
+            self.linear_num_value_heads,
+        )
+        if all(value is None for value in values):
+            return None
+        if any(value is None for value in values):
+            raise ValueError("GDN shape configuration is incomplete")
+        return GatedDeltaNetConfig(
+            conv_kernel_size=int(self.linear_conv_kernel_dim),
+            key_head_dim=int(self.linear_key_head_dim),
+            value_head_dim=int(self.linear_value_head_dim),
+            num_key_heads=int(self.linear_num_key_heads),
+            num_value_heads=int(self.linear_num_value_heads),
+            output_gate_type=self.gdn_output_gate_type,
+        )
+
+    def get_sequence_mixer_types(self) -> Tuple[SequenceMixerType, ...]:
+        """Return the immutable, model-owned decoder layer schedule."""
+
+        if self._sequence_mixer_types_cache is None:
+            self._sequence_mixer_types_cache = build_sequence_mixer_schedule(
+                num_layers=self.num_layers,
+                layer_types=self.layer_types,
+                full_attention_interval=self.full_attention_interval,
+                has_gated_delta_net=self.get_gdn_config() is not None,
+            )
+        return self._sequence_mixer_types_cache
+
+    def get_sequence_mixer_type(self, layer_id: int) -> SequenceMixerType:
+        if type(layer_id) is not int or not 0 <= layer_id < self.num_layers:
+            raise ValueError(
+                f"layer_id {layer_id!r} out of range for num_layers={self.num_layers}"
+            )
+        return self.get_sequence_mixer_types()[layer_id]
+
+    def get_sequence_mixer_layer_ids(
+        self,
+        mixer_type: SequenceMixerType,
+        *,
+        start_layer_id: int = 0,
+        end_layer_id: Optional[int] = None,
+    ) -> List[int]:
+        """Return matching global layer IDs in a validated half-open range."""
+
+        normalized_type = SequenceMixerType.from_config_value(mixer_type)
+        end = self.num_layers if end_layer_id is None else end_layer_id
+        if (
+            type(start_layer_id) is not int
+            or type(end) is not int
+            or start_layer_id < 0
+            or end < start_layer_id
+            or end > self.num_layers
+        ):
+            raise ValueError(
+                "Invalid sequence-mixer layer range: "
+                f"[{start_layer_id!r}, {end!r}) for num_layers={self.num_layers}"
+            )
+        schedule = self.get_sequence_mixer_types()
+        return [
+            layer_id
+            for layer_id in range(start_layer_id, end)
+            if schedule[layer_id] is normalized_type
+        ]
+
+    def get_num_gdn_layers(self) -> int:
+        return len(
+            self.get_sequence_mixer_layer_ids(SequenceMixerType.GATED_DELTA_NET)
+        )
+
+    def get_num_full_attention_layers(self) -> int:
+        return len(
+            self.get_sequence_mixer_layer_ids(SequenceMixerType.FULL_ATTENTION)
+        )
+
+    def is_gdn_layer(self, layer_id: int) -> bool:
+        return (
+            self.get_sequence_mixer_type(layer_id)
+            is SequenceMixerType.GATED_DELTA_NET
+        )
 
     def uses_mla(self) -> bool:
         """Return whether this model uses vLLM-style MLA cache semantics."""
@@ -617,6 +827,12 @@ class BaseModelConfig(BaseFixedConfig):
 
         rope_theta = cfg.get("rope_theta")
         rope_scaling = cfg.get("rope_scaling")
+        partial_rotary_factor = float(cfg.get("partial_rotary_factor", 1.0))
+        if not 0.0 < partial_rotary_factor <= 1.0:
+            raise ValueError(
+                "partial_rotary_factor must be in (0, 1], got "
+                f"{partial_rotary_factor} in {file_path}"
+            )
 
         # Parse model architecture (for op_name isolation)
         model_arch = cfg.get("model_arch")
@@ -683,6 +899,19 @@ class BaseModelConfig(BaseFixedConfig):
         if v_head_dim is not None:
             v_head_dim = int(v_head_dim)
 
+        layer_types = cfg.get("layer_types")
+        if layer_types is not None:
+            if not isinstance(layer_types, (list, tuple)):
+                raise ValueError(
+                    f"layer_types must be a list in {file_path}, got "
+                    f"{type(layer_types).__name__}"
+                )
+            layer_types = tuple(str(value) for value in layer_types)
+
+        def optional_int(field_name: str) -> Optional[int]:
+            value = cfg.get(field_name)
+            return None if value is None else int(value)
+
         # Parse quantization configuration
         quant_config_dict = cfg.get("quantization_config")
         quantization_config = QuantizationConfig.from_dict(quant_config_dict)
@@ -706,6 +935,7 @@ class BaseModelConfig(BaseFixedConfig):
             vocab_size=vocab_size,
             rope_theta=rope_theta,
             rope_scaling=rope_scaling,
+            partial_rotary_factor=partial_rotary_factor,
             model_type=model_type_lower or None,
             model_architecture_profile=cfg.get("model_architecture_profile"),
             model_arch=model_arch,
@@ -721,6 +951,14 @@ class BaseModelConfig(BaseFixedConfig):
             qk_rope_head_dim=qk_rope_head_dim,
             qk_head_dim=qk_head_dim,
             v_head_dim=v_head_dim,
+            layer_types=layer_types,
+            full_attention_interval=optional_int("full_attention_interval"),
+            linear_conv_kernel_dim=optional_int("linear_conv_kernel_dim"),
+            linear_key_head_dim=optional_int("linear_key_head_dim"),
+            linear_value_head_dim=optional_int("linear_value_head_dim"),
+            linear_num_key_heads=optional_int("linear_num_key_heads"),
+            linear_num_value_heads=optional_int("linear_num_value_heads"),
+            gdn_output_gate_type=str(cfg.get("output_gate_type", "silu")),
             torch_dtype=torch_dtype,
             quantization_config=quantization_config,
             fused_add_norm_capability=fused_add_norm_capability,

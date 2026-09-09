@@ -77,6 +77,7 @@ from frontier.execution_time_predictor.attention_tp_policy import (
 from frontier.execution_time_predictor.attention_dataset_contract import (
     enforce_mixed_attention_input_contract,
 )
+from frontier.gdn.predictor import ProfiledGDNPredictor
 from frontier.logger import init_logger
 from frontier.moe_gating_runtime import get_moe_gating_base_model_name
 from frontier.model_architectures import ModelArchitectureProfile, ResolvedLayerContract
@@ -427,6 +428,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         self._attention_tp_warning_cache: Set[str] = set()
 
         self._initialize_file_paths(training_file_paths)
+        self._gdn_profile_predictors: Dict[
+            tuple[str, MeasurementType], ProfiledGDNPredictor
+        ] = {}
         self._pp_stage_boundary_lookup: Dict[Tuple[int, int, int, int, int, int], float] = {}
         self._pp_stage_boundary_profile_rows: List[
             Tuple[Tuple[int, int, int, int, int, int], float]
@@ -799,6 +803,28 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         self._attention_input_file = self._attention_input_file_eager
         self._moe_input_file = self._moe_input_file_eager
 
+        def resolve_gdn_path(path_template: str) -> str:
+            return (
+                str(path_template)
+                .replace("{DEVICE}", self._replica_config.device)
+                .replace("{MODEL}", self._model_config.get_name())
+                .replace("{NETWORK_DEVICE}", self._replica_config.network_device)
+            )
+
+        self._gdn_input_file_eager = (
+            training_file_paths.get("gdn_input_file", "")
+            if training_file_paths
+            else ""
+        ) or resolve_gdn_path(getattr(self._config, "gdn_input_file", ""))
+        self._gdn_input_file_kernel_only = (
+            training_file_paths.get("gdn_kernel_only_input_file", "")
+            if training_file_paths
+            else ""
+        ) or resolve_gdn_path(
+            getattr(self._config, "gdn_kernel_only_input_file", "")
+        )
+        self._gdn_input_file = self._gdn_input_file_eager
+
     def _get_input_files(
         self, measurement_type: MeasurementType = MeasurementType.CUDA_EVENT
     ) -> Tuple[str, str, str, str, str, str]:
@@ -950,12 +976,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             self._moe_input_file = self._moe_input_file_eager
             self._models = self._models_eager
             self._predictions = self._predictions_eager
+            self._gdn_input_file = getattr(self, "_gdn_input_file_eager", "")
         elif measurement_type == MeasurementType.KERNEL_ONLY:
             self._compute_input_file = self._compute_input_file_kernel_only
             self._attention_input_file = self._attention_input_file_kernel_only
             self._moe_input_file = self._moe_input_file_kernel_only
             self._models = self._models_kernel_only
             self._predictions = self._predictions_kernel_only
+            self._gdn_input_file = getattr(
+                self,
+                "_gdn_input_file_kernel_only",
+                "",
+            )
         else:
             raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
 
@@ -6939,10 +6971,13 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             "active_measurement_type": self._active_measurement_type.value,
             "compute_input_file": self._compute_input_file,
             "attention_input_file": self._attention_input_file,
+            "gdn_input_file": self._gdn_input_file,
             "compute_input_file_eager": self._compute_input_file_eager,
             "attention_input_file_eager": self._attention_input_file_eager,
+            "gdn_input_file_eager": self._gdn_input_file_eager,
             "compute_input_file_kernel_only": self._compute_input_file_kernel_only,
             "attention_input_file_kernel_only": self._attention_input_file_kernel_only,
+            "gdn_input_file_kernel_only": self._gdn_input_file_kernel_only,
             "all_reduce_input_file": self._all_reduce_input_file,
             "send_recv_input_file": self._send_recv_input_file,
             "cpu_overhead_input_file": self._cpu_overhead_input_file,
@@ -7331,6 +7366,197 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
         return AttentionTime(operator_times=operator_times)
 
+    def _model_has_gdn_layers(self) -> bool:
+        getter = getattr(self._model_config, "get_num_gdn_layers", None)
+        return callable(getter) and int(getter()) > 0
+
+    def _is_gdn_layer(self, layer_id: int) -> bool:
+        if type(layer_id) is not int:
+            raise ValueError(f"layer_id must be an exact integer, got {layer_id!r}")
+        predicate = getattr(self._model_config, "is_gdn_layer", None)
+        if not callable(predicate):
+            return False
+        return bool(predicate(layer_id))
+
+    def _get_profiled_gdn_predictor(self) -> ProfiledGDNPredictor:
+        if not self._model_has_gdn_layers():
+            raise ValueError("GDN predictor requested for a model without GDN layers")
+        measurement_type = getattr(
+            self,
+            "_active_measurement_type",
+            MeasurementType.CUDA_EVENT,
+        )
+        path = str(getattr(self, "_gdn_input_file", ""))
+        if not path:
+            raise ValueError(
+                f"No GDN profiling file configured for {measurement_type.value}"
+            )
+        cache_key = (path, measurement_type)
+        predictor = self._gdn_profile_predictors.get(cache_key)
+        if predictor is None:
+            predictor = ProfiledGDNPredictor.from_csv(
+                path,
+                model_config=self._model_config,
+                device=self._replica_config.device,
+                tensor_parallel_size=self._replica_config.attn_tensor_parallel_size,
+                measurement_type=measurement_type,
+            )
+            self._gdn_profile_predictors[cache_key] = predictor
+        return predictor
+
+    def _predict_gdn_attention_layer_time(
+        self,
+        batch: Batch,
+        layer_id: int,
+        cluster_type: ClusterType,
+    ) -> AttentionTime:
+        norm_time = self._get_attn_norm_layer_act_execution_time(batch)
+        attention_time = self._get_profiled_gdn_predictor().predict_attention_time(
+            batch,
+            norm_time_ms=norm_time,
+        )
+        cluster_name = cluster_type.name
+        for op_name, predicted_time_ms in attention_time.operator_times.op_times.items():
+            logger.info(
+                "[OP-TRACE][%s][GDN][%s] batch_id=%s, layer_id=%s, "
+                "predicted_time_ms=%.6f",
+                cluster_name,
+                op_name,
+                batch.id,
+                layer_id,
+                predicted_time_ms,
+            )
+        logger.info(
+            "[OP-TRACE][%s][GDN][TOTAL] batch_id=%s, layer_id=%s, "
+            "total_attention_time_ms=%.6f",
+            cluster_name,
+            batch.id,
+            layer_id,
+            attention_time.total_time(),
+        )
+        return attention_time
+
+    def _resolve_stage_layer_ids(
+        self,
+        *,
+        stage_id: int,
+        num_layers: int,
+        layer_id: int,
+    ) -> tuple[int, ...]:
+        if type(stage_id) is not int or stage_id < 0:
+            raise ValueError(f"stage_id must be a non-negative integer, got {stage_id!r}")
+        if type(num_layers) is not int or num_layers <= 0:
+            raise ValueError(f"num_layers must be a positive integer, got {num_layers!r}")
+        if type(layer_id) is not int or layer_id < 0:
+            raise ValueError(f"layer_id must be a non-negative integer, got {layer_id!r}")
+        if num_layers == 1:
+            layer_ids = (layer_id,)
+        elif layer_id != 0:
+            layer_ids = tuple(range(layer_id, layer_id + num_layers))
+        else:
+            first_layer_id = stage_id * self._num_layers_per_pipeline_stage
+            layer_ids = tuple(range(first_layer_id, first_layer_id + num_layers))
+        if layer_ids[-1] >= int(self._model_config.num_layers):
+            raise ValueError(
+                "Stage layer range exceeds model depth: "
+                f"layer_ids={layer_ids[0]}..{layer_ids[-1]}, "
+                f"num_layers={self._model_config.num_layers}"
+            )
+        return layer_ids
+
+    @staticmethod
+    def _average_attention_times(
+        attention_times: List[AttentionTime],
+    ) -> AttentionTime:
+        if not attention_times:
+            raise ValueError("Cannot average an empty attention-time collection")
+        count = float(len(attention_times))
+        numeric_fields = (
+            "attention_prefill_execution_time",
+            "attention_decode_execution_time",
+            "attention_layer_pre_proj_execution_time",
+            "attention_layer_post_proj_execution_time",
+            "attention_rope_execution_time",
+            "attention_kv_cache_save_execution_time",
+            "attn_mla_kv_cache_save_time",
+            "attn_mla_prefill_kv_up_proj_time",
+            "attn_mla_prefill_time",
+            "attn_mla_decode_q_latent_proj_time",
+            "attn_mla_decode_time",
+            "attn_mla_v_up_proj_time",
+            "attn_norm_time",
+            "attn_inter_norm_time",
+            "attn_wq_proj_time",
+        )
+        averaged = {
+            field_name: sum(
+                float(getattr(attention_time, field_name))
+                for attention_time in attention_times
+            )
+            / count
+            for field_name in numeric_fields
+        }
+
+        # Structured maps can be averaged only when every layer exposes the
+        # same physical family. A hybrid full-attention/GDN stage deliberately
+        # falls back to its exact averaged legacy carriers to avoid subtracting
+        # one family's projection field from another family's timing.
+        operator_maps = [
+            attention_time.operator_times for attention_time in attention_times
+        ]
+        operator_times = None
+        if all(mapping is not None for mapping in operator_maps):
+            key_sets = [set(mapping.op_times) for mapping in operator_maps]
+            if all(keys == key_sets[0] for keys in key_sets[1:]):
+                operator_times = AttentionOperatorTimes(
+                    {
+                        op_name: sum(
+                            float(mapping.op_times[op_name])
+                            for mapping in operator_maps
+                        )
+                        / count
+                        for op_name in sorted(key_sets[0])
+                    }
+                )
+        return AttentionTime(operator_times=operator_times, **averaged)
+
+    def _predict_stage_attention_time(
+        self,
+        *,
+        batch: Batch,
+        stage_id: int,
+        num_layers: int,
+        layer_id: int,
+        cluster_type: ClusterType,
+    ) -> AttentionTime:
+        if not self._model_has_gdn_layers():
+            return self.predict_attention_layer_time(
+                batch=batch,
+                layer_id=layer_id,
+                cluster_type=cluster_type,
+            )
+        layer_ids = self._resolve_stage_layer_ids(
+            stage_id=stage_id,
+            num_layers=num_layers,
+            layer_id=layer_id,
+        )
+        if len(layer_ids) == 1:
+            return self.predict_attention_layer_time(
+                batch=batch,
+                layer_id=layer_ids[0],
+                cluster_type=cluster_type,
+            )
+        return self._average_attention_times(
+            [
+                self.predict_attention_layer_time(
+                    batch=batch,
+                    layer_id=current_layer_id,
+                    cluster_type=cluster_type,
+                )
+                for current_layer_id in layer_ids
+            ]
+        )
+
     def predict_attention_layer_time(
         self, batch: Batch, layer_id: int, cluster_type: ClusterType
     ) -> AttentionTime:
@@ -7381,6 +7607,13 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         if not self._supports_operation("attention"):
             raise NotImplementedError(
                 f"Attention operations not supported for cluster type {cluster_type}"
+            )
+
+        if self._is_gdn_layer(layer_id):
+            return self._predict_gdn_attention_layer_time(
+                batch=batch,
+                layer_id=layer_id,
+                cluster_type=cluster_type,
             )
 
         if attention_family.family_id == LATENT_MLA_ATTENTION_FAMILY.family_id:
@@ -7993,8 +8226,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         # IMPORTANT: attention must come from predict_attention_layer_time()
         # so the main execution path consumes speculative verify routing and
         # proposer-overhead logic implemented there.
-        attention_time = self.predict_attention_layer_time(
+        attention_time = self._predict_stage_attention_time(
             batch=batch,
+            stage_id=stage_id,
+            num_layers=num_layers,
             layer_id=layer_id,
             cluster_type=cluster_type,
         )

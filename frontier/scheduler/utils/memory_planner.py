@@ -16,10 +16,14 @@ class MemoryPlanner:
         replica_config: ReplicaConfig,
         replica: Replica,
         cluster_type: ClusterType = None,
+        max_num_seqs: int | None = None,
     ) -> None:
         self._replica_config = replica_config
         self._replica = replica
         self._cluster_type = cluster_type
+        if max_num_seqs is not None and int(max_num_seqs) <= 0:
+            raise ValueError(f"max_num_seqs must be positive, got={max_num_seqs!r}")
+        self._max_num_seqs = None if max_num_seqs is None else int(max_num_seqs)
 
         self._param_counter = ParamCounter(
             replica_config=replica_config,
@@ -90,6 +94,61 @@ class MemoryPlanner:
             * self._replica.max_request_tokens
         )
 
+    def _model_has_gdn_layers(self) -> bool:
+        getter = getattr(self._replica_config.model_config, "get_num_gdn_layers", None)
+        return callable(getter) and int(getter()) > 0
+
+    def _get_max_local_sequence_mixer_layer_count(self, *, gdn: bool) -> int:
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            return 0
+        model_config = self._replica_config.model_config
+        if not self._model_has_gdn_layers():
+            return 0 if gdn else int(self._replica.num_layers)
+        layers_per_stage = int(self._replica.num_layers_per_pipeline_stage)
+        num_pipeline_stages = int(self._replica.num_pipeline_stages)
+        is_gdn_layer = model_config.is_gdn_layer
+        counts = []
+        for stage_id in range(num_pipeline_stages):
+            first_layer_id = stage_id * layers_per_stage
+            gdn_count = sum(
+                bool(is_gdn_layer(layer_id))
+                for layer_id in range(first_layer_id, first_layer_id + layers_per_stage)
+            )
+            counts.append(gdn_count if gdn else layers_per_stage - gdn_count)
+        return max(counts, default=0)
+
+    def _get_num_full_attention_layers_per_device(self) -> int:
+        return self._get_max_local_sequence_mixer_layer_count(gdn=False)
+
+    def _get_num_gdn_layers_per_device(self) -> int:
+        return self._get_max_local_sequence_mixer_layer_count(gdn=True)
+
+    def _get_gdn_state_memory_per_device_per_request(self) -> int:
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            return 0
+        getter = getattr(self._replica_config.model_config, "get_gdn_config", None)
+        gdn_config = getter() if callable(getter) else None
+        if gdn_config is None:
+            return 0
+        state_layout = gdn_config.get_state_layout(
+            tensor_parallel_size=self._replica_config.attn_tensor_parallel_size,
+        )
+        return int(state_layout.total_bytes) * self._get_num_gdn_layers_per_device()
+
+    def get_gdn_state_memory_per_device_per_request_bytes(self) -> int:
+        return self._get_gdn_state_memory_per_device_per_request()
+
+    def _get_gdn_state_reservation_bytes(self) -> int:
+        state_per_request = self._get_gdn_state_memory_per_device_per_request()
+        if state_per_request == 0:
+            return 0
+        max_num_seqs = getattr(self, "_max_num_seqs", None)
+        if max_num_seqs is None:
+            raise ValueError(
+                "MemoryPlanner requires max_num_seqs to reserve fixed GDN state"
+            )
+        return state_per_request * int(max_num_seqs)
+
     def _get_kv_cache_elements_per_token_per_worker(self) -> int:
         if self._cluster_type == ClusterType.DECODE_FFN:
             return 0
@@ -116,7 +175,7 @@ class MemoryPlanner:
         )
 
     def _get_parameter_memory_per_device(self) -> int:
-        return 2 * self._param_counter.get_num_parameters_per_device()
+        return self._param_counter.get_parameter_memory_per_device_bytes()
 
     def get_parameter_memory_per_device_bytes(self) -> int:
         """Return parameter memory per device in bytes."""
@@ -127,10 +186,11 @@ class MemoryPlanner:
         if self._cluster_type == ClusterType.DECODE_FFN:
             return 0
 
-        return (
+        dense_kv_bytes = (
             self._get_kv_cache_memory_per_layer_per_request()
-            * self._replica.num_layers
+            * self._get_num_full_attention_layers_per_device()
         )
+        return dense_kv_bytes + self._get_gdn_state_memory_per_device_per_request()
 
     def get_num_blocks(
         self,
@@ -150,7 +210,9 @@ class MemoryPlanner:
         plus an optional calibrated overhead term.
         """
         page_size = self._get_kv_cache_memory_per_layer_per_block(block_size)
-        if page_size == 0:
+        num_full_attention_layers = self._get_num_full_attention_layers_per_device()
+        gdn_state_reservation_bytes = self._get_gdn_state_reservation_bytes()
+        if page_size == 0 and gdn_state_reservation_bytes == 0:
             return 0
 
         requested_memory = self._get_requested_memory_bytes(gpu_memory_utilization)
@@ -175,7 +237,10 @@ class MemoryPlanner:
             )
 
         available_kv_cache_memory = (
-            requested_memory - parameter_memory_per_device - overhead_bytes
+            requested_memory
+            - parameter_memory_per_device
+            - overhead_bytes
+            - gdn_state_reservation_bytes
         )
         if available_kv_cache_memory <= 0:
             self._raise_memory_oom(
@@ -185,6 +250,7 @@ class MemoryPlanner:
                     "requested_memory_bytes": requested_memory,
                     "parameter_memory_per_device_bytes": parameter_memory_per_device,
                     "non_kv_cache_overhead_bytes": overhead_bytes,
+                    "gdn_state_reservation_bytes": gdn_state_reservation_bytes,
                     "available_kv_cache_memory_bytes": available_kv_cache_memory,
                     "block_size": int(block_size),
                     "page_size_bytes": int(page_size),
@@ -192,8 +258,11 @@ class MemoryPlanner:
                 },
             )
 
+        if page_size == 0 or num_full_attention_layers == 0:
+            return 0
+
         num_blocks = int(
-            available_kv_cache_memory // page_size // self._replica.num_layers
+            available_kv_cache_memory // page_size // num_full_attention_layers
         )
         num_blocks = max(num_blocks, 0)
 
@@ -207,7 +276,9 @@ class MemoryPlanner:
                     "available_kv_cache_memory_bytes": available_kv_cache_memory,
                     "non_kv_cache_overhead_bytes": overhead_bytes,
                     "page_size_bytes": int(page_size),
-                    "num_layers": int(self._replica.num_layers),
+                    "num_full_attention_layers": num_full_attention_layers,
+                    "num_gdn_layers": self._get_num_gdn_layers_per_device(),
+                    "gdn_state_reservation_bytes": gdn_state_reservation_bytes,
                 },
             )
 
@@ -269,6 +340,9 @@ class MemoryPlanner:
                     "parameter_memory_per_device_bytes": parameter_memory_per_device,
                     "memory_for_kv_cache_bytes": memory_for_kv_cache,
                     "kv_cache_per_request_bytes": kv_cache_memory_per_device_per_request,
+                    "gdn_state_per_request_bytes": (
+                        self._get_gdn_state_memory_per_device_per_request()
+                    ),
                     "non_kv_cache_overhead_bytes": overhead_bytes,
                 },
             )

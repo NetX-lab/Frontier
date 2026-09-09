@@ -64,6 +64,10 @@ except ImportError:
     ray = None
 
 from frontier.profiling.common.model_config import ModelConfig
+from frontier.profiling.common.accelerator import (
+    get_available_gpu_ids,
+    set_process_visible_device,
+)
 from frontier.profiling.linear_op.ray_setup_hook import (
     disable_ray_datasets_serializers,
 )
@@ -91,56 +95,8 @@ def _ensure_torch_available():
 
 
 def _get_available_gpus(num_gpus: int) -> List[int]:
-    """
-    Get list of available GPU IDs based on CUDA_VISIBLE_DEVICES and num_gpus.
-
-    Returns:
-        List of GPU IDs to use for profiling
-    """
-    cuda_visible = os.environ.get("CUDA_VISIBLE_DEVICES", "")
-    if cuda_visible:
-        available = [int(x.strip()) for x in cuda_visible.split(",") if x.strip()]
-    else:
-        try:
-            import subprocess
-            result = subprocess.run(
-                ["nvidia-smi", "--query-gpu=index", "--format=csv,noheader"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            if result.returncode == 0:
-                available = [
-                    int(x.strip()) for x in result.stdout.strip().split("\n") if x.strip()
-                ]
-            else:
-                raise RuntimeError(
-                    "Unable to discover GPUs with nvidia-smi. Set "
-                    "CUDA_VISIBLE_DEVICES explicitly or fix nvidia-smi before "
-                    "running linear-op profiling. "
-                    f"nvidia-smi stderr: {result.stderr.strip()}"
-                )
-        except FileNotFoundError as exc:
-            raise RuntimeError(
-                "Unable to discover GPUs with nvidia-smi because nvidia-smi was "
-                "not found. Set CUDA_VISIBLE_DEVICES explicitly or fix nvidia-smi "
-                "before running linear-op profiling."
-            ) from exc
-
-        if not available:
-            raise RuntimeError(
-                "Unable to discover GPUs with nvidia-smi because it returned no "
-                "GPU indices. Set CUDA_VISIBLE_DEVICES explicitly or fix nvidia-smi "
-                "before running linear-op profiling."
-            )
-
-    if len(available) < num_gpus:
-        raise RuntimeError(
-            f"Requested {num_gpus} GPUs but only found {len(available)} visible GPUs "
-            f"(CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES', '')})."
-        )
-
-    return available[:num_gpus]
+    """Discover GPUs without initializing torch in the parent process."""
+    return get_available_gpu_ids(num_gpus)
 
 
 # Global variable to track CUDA initialization in worker process
@@ -787,8 +743,10 @@ def profile_model(
                     executor.shutdown(wait=True, cancel_futures=True)
         else:
             # Single-GPU sequential mode
-            os.environ["CUDA_VISIBLE_DEVICES"] = str(available_gpus[0])
             torch_module = _ensure_torch_available()
+            set_process_visible_device(
+                available_gpus[0], torch_module=torch_module
+            )
             torch_module.cuda.set_device(0)
 
             wrapper = LinearOpWrapper(

@@ -63,6 +63,10 @@ from frontier.attention.profiling_mapping import (
 from frontier.attention.string_coercion import coerce_truthy_bool
 from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
 from frontier.profiling.attention.backends import AttentionBackend
+from frontier.profiling.common.accelerator import (
+    get_available_gpu_ids,
+    set_process_visible_device,
+)
 from frontier.profiling.common.parallel_config import ParallelConfig
 
 from frontier.profiling.attention.attention_input import AttentionInput
@@ -95,64 +99,8 @@ def _ensure_torch_available():
 
 
 def _get_available_gpus(num_gpus: int) -> List[int]:
-    """
-    Get list of available GPU IDs based on CUDA_VISIBLE_DEVICES and num_gpus.
-
-    IMPORTANT: This function avoids calling torch.cuda.device_count() in the main
-    process to prevent early CUDA initialization, which can interfere with
-    multi-GPU multiprocessing.
-
-    Returns:
-        List of GPU IDs to use for profiling
-    """
-    # Check CUDA_VISIBLE_DEVICES
-    cuda_visible = os.environ.get("CUDA_VISIBLE_DEVICES", "")
-    if cuda_visible:
-        # Parse CUDA_VISIBLE_DEVICES
-        available = [int(x.strip()) for x in cuda_visible.split(",") if x.strip()]
-    else:
-        # Avoid calling torch.cuda.device_count() in main process.
-        # Require nvidia-smi evidence instead of guessing GPU indices.
-        try:
-            import subprocess
-            result = subprocess.run(
-                ["nvidia-smi", "--query-gpu=index", "--format=csv,noheader"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            if result.returncode == 0:
-                available = [
-                    int(x.strip()) for x in result.stdout.strip().split("\n") if x.strip()
-                ]
-            else:
-                raise RuntimeError(
-                    "Unable to discover GPUs with nvidia-smi. Set "
-                    "CUDA_VISIBLE_DEVICES explicitly or fix nvidia-smi before "
-                    "running attention profiling. "
-                    f"nvidia-smi stderr: {result.stderr.strip()}"
-                )
-        except FileNotFoundError as exc:
-            raise RuntimeError(
-                "Unable to discover GPUs with nvidia-smi because nvidia-smi was "
-                "not found. Set CUDA_VISIBLE_DEVICES explicitly or fix nvidia-smi "
-                "before running attention profiling."
-            ) from exc
-
-        if not available:
-            raise RuntimeError(
-                "Unable to discover GPUs with nvidia-smi because it returned no "
-                "GPU indices. Set CUDA_VISIBLE_DEVICES explicitly or fix nvidia-smi "
-                "before running attention profiling."
-            )
-
-    if len(available) < num_gpus:
-        raise RuntimeError(
-            f"Requested {num_gpus} GPUs but only found {len(available)} visible GPUs "
-            f"(CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES', '')})."
-        )
-
-    return available[:num_gpus]
+    """Discover GPUs without initializing torch in the parent process."""
+    return get_available_gpu_ids(num_gpus)
 
 
 # Global variable to track if CUDA has been initialized in this process
@@ -1306,8 +1254,10 @@ def profile_model(
                 executor.shutdown(wait=True, cancel_futures=True)
     else:
         # Single-GPU sequential mode
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(available_gpus[0])
         torch_module = _ensure_torch_available()
+        set_process_visible_device(
+            available_gpus[0], torch_module=torch_module
+        )
         torch_module.cuda.set_device(0)
 
         wrapper = AttentionWrapper(
@@ -1513,8 +1463,10 @@ def profile_mixed_prefill(
                 executor.shutdown(wait=True, cancel_futures=True)
     else:
         # Single-GPU sequential mode
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(available_gpus[0])
         torch_module = _ensure_torch_available()
+        set_process_visible_device(
+            available_gpus[0], torch_module=torch_module
+        )
         torch_module.cuda.set_device(0)
 
         wrapper = AttentionWrapper(
@@ -1684,8 +1636,10 @@ def profile_true_mixed_batches(
             for executor in executors:
                 executor.shutdown(wait=True, cancel_futures=True)
     else:
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(available_gpus[0])
         torch_module = _ensure_torch_available()
+        set_process_visible_device(
+            available_gpus[0], torch_module=torch_module
+        )
         torch_module.cuda.set_device(0)
         wrapper = AttentionWrapper(
             model_config=model_config,
@@ -1743,6 +1697,10 @@ def main():
         else:
             print(f"\n=== Single-GPU Mode ===")
             print(f"Using GPU: {available_gpus[0]}")
+            torch_module = _ensure_torch_available()
+            set_process_visible_device(
+                available_gpus[0], torch_module=torch_module
+            )
     else:
         if not RAY_AVAILABLE:
             raise RuntimeError("Ray is not available. Use --disable_ray flag.")

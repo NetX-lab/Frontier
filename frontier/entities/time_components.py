@@ -10,6 +10,8 @@ from functools import cache
 from typing import Mapping
 
 from frontier.attention.families import iter_execution_enabled_families
+from frontier.gdn.family import GATED_DELTA_NET_FAMILY
+from frontier.operators.sglang_family import SGLANG_RUNTIME_FAMILY, runtime_operator_attrs
 from frontier.operators.families import (
     COMM_FAMILY,
     FFN_FAMILY,
@@ -22,10 +24,10 @@ from frontier.operators.families import (
 def _attention_operator_execution_time_attrs() -> dict[str, str]:
     return {
         operator.name: operator.execution_time_attr
-        for family in iter_execution_enabled_families()
+        for family in (*iter_execution_enabled_families(), GATED_DELTA_NET_FAMILY)
         for operator in family.e2e_trace_ops()
         if operator.execution_time_attr is not None
-    }
+    } | runtime_operator_attrs("attention")
 
 
 def _mlp_operator_execution_time_attrs() -> dict[str, str]:
@@ -59,7 +61,7 @@ def _moe_operator_execution_time_attrs() -> dict[str, str]:
             "share_expert_act_time",
             "share_expert_down_proj_time",
         }
-    }
+    } | runtime_operator_attrs("moe")
 
 
 def _communication_operator_execution_time_attrs() -> dict[str, str]:
@@ -67,7 +69,7 @@ def _communication_operator_execution_time_attrs() -> dict[str, str]:
         operator.name: operator.execution_time_attr
         for operator in COMM_FAMILY.e2e_trace_ops()
         if operator.execution_time_attr is not None
-    }
+    } | runtime_operator_attrs("communication")
 
 
 @cache
@@ -75,11 +77,13 @@ def _canonical_operator_execution_time_attr_items() -> tuple[tuple[str, str], ..
     operator_attrs: dict[str, str] = {}
     for family in (
         *tuple(iter_execution_enabled_families()),
+        GATED_DELTA_NET_FAMILY,
         MEMORY_FAMILY,
         FFN_FAMILY,
         MOE_FAMILY,
         SHARE_EXPERT_FAMILY,
         COMM_FAMILY,
+        SGLANG_RUNTIME_FAMILY,
     ):
         for operator in family.e2e_trace_ops():
             if operator.execution_time_attr is None:
@@ -281,10 +285,12 @@ class AttentionOperatorTimes:
     def legacy_covered_time(self, attention_time: "AttentionTime") -> float:
         covered_time_ms = 0.0
         attention_operator_attrs = _attention_operator_execution_time_attrs()
+        covered_attrs = set()
         for op_name in self.op_times:
             attr_name = attention_operator_attrs.get(op_name)
-            if attr_name is not None:
+            if attr_name is not None and attr_name not in covered_attrs:
                 covered_time_ms += float(getattr(attention_time, attr_name))
+                covered_attrs.add(attr_name)
         return covered_time_ms
 
 
@@ -376,9 +382,15 @@ class MoEOperatorTimes:
     def legacy_covered_time(self, moe_time: "MoETime") -> float:
         covered_time_ms = 0.0
         moe_operator_attrs = _moe_operator_execution_time_attrs()
+        covered_attrs = set()
         for op_name in self.op_times:
             attr_name = moe_operator_attrs[op_name]
+            # Several physical runtime scopes can share an aggregate legacy
+            # carrier. Subtract the carrier once, then add each scope once.
+            if attr_name in covered_attrs:
+                continue
             covered_time_ms += float(getattr(moe_time, attr_name))
+            covered_attrs.add(attr_name)
         return covered_time_ms
 
 

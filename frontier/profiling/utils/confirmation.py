@@ -403,8 +403,27 @@ def build_moe_config_sections(
     else:
         exec_mode = f"Ray, {args.num_gpus} GPUs"
 
-    # Format precision with dtype
+    # Format the base activation precision with dtype. Quantized checkpoints can
+    # select only a subset of operations, so do not describe every MoE operation
+    # as running at this precision.
     precision_display = f"{precision_str} ({torch_dtype})"
+    quant_config = getattr(model_config, "quantization_config", None)
+    quant_method = getattr(quant_config, "quant_method", None)
+    quantized_operations = getattr(quant_config, "quantized_operations", None)
+    grouped_gemm_is_quantized = bool(quant_method) and (
+        quantized_operations is None
+        or "moe_grouped_gemm" in quantized_operations
+    )
+    grouped_gemm_precision = (
+        str(quant_method).upper()
+        if grouped_gemm_is_quantized
+        else precision_str
+    )
+    quantization_display = (
+        model_config.get_quant_signature()
+        if quant_method
+        else "Disabled"
+    )
 
     # Build operations by parallelism section
     tp_sizes = args.num_tensor_parallel_workers
@@ -412,11 +431,11 @@ def build_moe_config_sections(
     num_experts = model_config.num_experts
 
     ops_content = (
-        f"Operations (all at precision {precision_str}):\n"
-        f"    - moe_gating_linear          : replicated (TP=1)\n"
-        f"    - moe_gating_routing_topk    : replicated (TP=1)\n"
-        f"    - moe_shuffling              : replicated (TP=1)\n"
-        f"    - moe_grouped_gemm           : TP-sharded (TP=moe_tp)\n"
+        f"Operations:\n"
+        f"    - moe_gating_linear          : {precision_str}, replicated (TP=1)\n"
+        f"    - moe_gating_routing_topk    : {precision_str}, replicated (TP=1)\n"
+        f"    - moe_shuffling              : {precision_str}, replicated (TP=1)\n"
+        f"    - moe_grouped_gemm           : {grouped_gemm_precision}, TP-sharded (TP=moe_tp)\n"
         f"\n"
         f"  Per-EP Expert Distribution:"
     )
@@ -457,8 +476,9 @@ def build_moe_config_sections(
             ("Is MoE", _format_value(model_config.is_moe)),
         ]),
         ("Precision & Quantization", [
-            ("Precision (dtype)", precision_display),
-            ("FP8 Quantization", _format_value(args.use_fp8)),
+            ("Base Precision (dtype)", precision_display),
+            ("Grouped GEMM Precision", grouped_gemm_precision),
+            ("Quantization", quantization_display),
             ("Per-Channel Quant", _format_value(getattr(args, 'per_channel_quant', False))),
             ("Block Shape", _format_value(args.block_shape)),
         ]),
