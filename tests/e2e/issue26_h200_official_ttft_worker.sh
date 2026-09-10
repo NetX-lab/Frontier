@@ -18,11 +18,14 @@ unset VLLM_FRONTIER_SCHED_LOG_PATH VLLM_FRONTIER_MOE_ROUTING_LOG_PATH
 unset VLLM_FRONTIER_RUNTIME_META_ENABLED VLLM_FRONTIER_PREFILL_ENDPOINT_LOG_PATH
 unset VLLM_FRONTIER_SCHED_DECISION_LOG_PATH
 export VLLM_ALL2ALL_BACKEND=naive
-git config --global --add safe.directory /data/ycfeng/tmp/vLLM-BS
-git -C /data/ycfeng/tmp/vLLM-BS rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
-test "$(git -C /data/ycfeng/tmp/vLLM-BS rev-parse HEAD)" = 46f7b179fd3bf42b9616dc4670cba419afdb2085
-test -z "$(git -C /data/ycfeng/tmp/vLLM-BS status --porcelain)"
-git -C /data/ycfeng/tmp/vLLM-BS diff > "$PROBE_ROOT/vllm_uncommitted.patch"
+SOURCE="${ISSUE26_DIAGNOSTIC_VLLM_SOURCE:-/data/ycfeng/tmp/vLLM-BS}"
+COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-46f7b179fd3bf42b9616dc4670cba419afdb2085}"
+export PYTHONPATH="$SOURCE"
+git config --global --add safe.directory "$SOURCE"
+git -C "$SOURCE" rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
+test "$(git -C "$SOURCE" rev-parse HEAD)" = "$COMMIT"
+test -z "$(git -C "$SOURCE" status --porcelain)"
+git -C "$SOURCE" diff > "$PROBE_ROOT/vllm_uncommitted.patch"
 SERVER_PID=""
 cleanup() {
   if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
