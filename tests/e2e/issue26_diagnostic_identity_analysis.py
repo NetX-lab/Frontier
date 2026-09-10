@@ -17,6 +17,11 @@ def identity(row):
     return tuple(row[key] for key in ("dp_rank", "tp_rank", "pp_rank"))
 
 
+def canonical_request_id(value):
+    """Normalize batch logger IDs to the client request identity namespace."""
+    return value[5:] if value.startswith("cmpl-") else value
+
+
 def analyze(run, output, mode):
     clients = list(rows(run / "client.jsonl"))
     expected = {f"pf4096_dc1024:{i}" for i in range(100)}
@@ -39,6 +44,8 @@ def analyze(run, output, mode):
             assert row["batch_num_decode_tokens"] == row["request_num_tokens"].count(1)
             batches[row["batch_id"]] = row
             for request, tokens in zip(row["request_ids"], row["request_num_tokens"]):
+                if canonical_request_id(request).startswith("warmup:"):
+                    continue
                 if request in formal and tokens > 1:
                     assert tokens == 4096
                     prefill_workers.setdefault(formal[request], Counter())[worker] += 1
