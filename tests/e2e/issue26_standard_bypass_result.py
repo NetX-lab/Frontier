@@ -10,7 +10,8 @@ def rows(path):
         return [json.loads(line) for line in stream]
 
 
-def validate(root):
+def validate(root, source="/data/ycfeng/tmp/issue26-vllm-post-moe-bypass-20260910",
+             compare_reference=True):
     result = {"client_checks": {}}
     for mode in ("clean/runtime/clean", "batch/runtime/batch"):
         clients = rows(root / mode / "client.jsonl")
@@ -62,16 +63,19 @@ def validate(root):
     manifest = json.loads((run/"mode_manifest.json").read_text())
     env = manifest["environment"]
     assert env["VLLM_MOE_UNIFORM_ROUTING"] == "1"
-    assert env["PYTHONPATH"] == "/data/ycfeng/tmp/issue26-vllm-post-moe-bypass-20260910"
+    assert env["PYTHONPATH"] == source
     assert not env.get("VLLM_FRONTIER_MOE_BOUNDARY_LOG_PATH")
     assert not env.get("VLLM_FRONTIER_DIAG_MOE_AR_MODE")
     assert not env.get("VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH")
+    assert env.get("VLLM_FRONTIER_CUDA_PROFILER_CAPTURE", "0") == "0"
+    assert env.get("VLLM_FRONTIER_TORCH_PROFILER_CAPTURE", "0") == "0"
     assert manifest["warmup_rounds"] == 3 and manifest["formal_requests"] == 100
-    reference = json.loads((root.parent/"h800-standard-replay-176000-repro-01/reproduction_summary.json").read_text())["new"]
-    result["normal_reference"] = reference
-    result["delta"] = {key: {"ms": result["new"][key]-reference[key], "percent": (result["new"][key]/reference[key]-1)*100} for key in ("median_ms", "p90_ms", "rank_max_ms", "spread_ms")}
+    if compare_reference:
+        reference = json.loads((root.parent/"h800-standard-replay-176000-repro-01/reproduction_summary.json").read_text())["new"]
+        result["normal_reference"] = reference
+        result["delta"] = {key: {"ms": result["new"][key]-reference[key], "percent": (result["new"][key]/reference[key]-1)*100} for key in ("median_ms", "p90_ms", "rank_max_ms", "spread_ms")}
     result["status"] = "PASS_STANDARD_IDENTITY_AND_DRAIN"
-    result["limit"] = "Timing-only ablation; different-node single-run delta, not pure collective duration or repeated-run evidence. P90 is over four ranks."
+    result["limit"] = "One standard arm; P90 is over four ranks. An ablation delta requires an explicit paired reference and does not measure pure collective duration."
     return result
 
 
@@ -79,8 +83,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--run", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--source", default="/data/ycfeng/tmp/issue26-vllm-post-moe-bypass-20260910")
+    parser.add_argument("--no-historical-reference", action="store_false", dest="compare_reference")
     args = parser.parse_args()
-    result = validate(args.run)
+    result = validate(args.run, args.source, args.compare_reference)
     with args.output.open("x") as stream:
         json.dump(result, stream, indent=2)
         stream.write("\n")
