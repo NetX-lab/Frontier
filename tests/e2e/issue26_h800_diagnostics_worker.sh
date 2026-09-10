@@ -46,12 +46,12 @@ fi
 if [[ "$DIAGNOSTIC_SELECTION" == communication ]]; then
   export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=expert_parallel_allreduce,attn_post_proj_tp_allreduce,tensor_parallel_allreduce
 fi
-export PYTHONPATH=/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab
-git config --global --add safe.directory /data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab
-git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
-test "$(git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab rev-parse HEAD)" = "${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-0d633a946e6600c77a251bef8b5553ec7f43f7e7}"
-test -z "$(git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab status --porcelain)"
-git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab diff > "$PROBE_ROOT/vllm_uncommitted.patch"
+export PYTHONPATH="${ISSUE26_DIAGNOSTIC_VLLM_SOURCE:-/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab}"
+git config --global --add safe.directory "$PYTHONPATH"
+git -C "$PYTHONPATH" rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
+test "$(git -C "$PYTHONPATH" rev-parse HEAD)" = "${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-0d633a946e6600c77a251bef8b5553ec7f43f7e7}"
+test -z "$(git -C "$PYTHONPATH" status --porcelain)"
+git -C "$PYTHONPATH" diff > "$PROBE_ROOT/vllm_uncommitted.patch"
 SERVER_PID=""
 cleanup() {
   if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then

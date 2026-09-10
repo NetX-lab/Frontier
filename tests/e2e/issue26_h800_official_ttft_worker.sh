@@ -18,12 +18,12 @@ unset VLLM_FRONTIER_SCHED_LOG_PATH VLLM_FRONTIER_MOE_ROUTING_LOG_PATH
 unset VLLM_FRONTIER_RUNTIME_META_ENABLED VLLM_FRONTIER_PREFILL_ENDPOINT_LOG_PATH
 unset VLLM_FRONTIER_SCHED_DECISION_LOG_PATH
 export VLLM_ALL2ALL_BACKEND=naive
-export PYTHONPATH=/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab
-git config --global --add safe.directory /data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab
-git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
-test "$(git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab rev-parse HEAD)" = 0d633a946e6600c77a251bef8b5553ec7f43f7e7
-test -z "$(git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab status --porcelain)"
-git -C /data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab diff > "$PROBE_ROOT/vllm_uncommitted.patch"
+export PYTHONPATH="${ISSUE26_DIAGNOSTIC_VLLM_SOURCE:-/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab}"
+git config --global --add safe.directory "$PYTHONPATH"
+git -C "$PYTHONPATH" rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
+test "$(git -C "$PYTHONPATH" rev-parse HEAD)" = "${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-0d633a946e6600c77a251bef8b5553ec7f43f7e7}"
+test -z "$(git -C "$PYTHONPATH" status --porcelain)"
+git -C "$PYTHONPATH" diff > "$PROBE_ROOT/vllm_uncommitted.patch"
 SERVER_PID=""
 cleanup() {
   if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
