@@ -4,7 +4,7 @@ set -euo pipefail
 
 OUT_ROOT="${1:?Provide a fresh persistent output directory.}"
 SOURCE="${ISSUE26_DIAGNOSTIC_VLLM_SOURCE:-/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab}"
-COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-ab6cb0f97}"
+COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-f35033e05a5fa5632ac4a4952981cb8c14e9f346}"
 
 export VLLM_MOE_UNIFORM_ROUTING=1
 export ISSUE26_DIAGNOSTIC_VLLM_SOURCE="$SOURCE"
