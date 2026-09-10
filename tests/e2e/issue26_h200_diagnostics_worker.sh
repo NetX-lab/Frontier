@@ -7,7 +7,7 @@ case "$DIAGNOSTIC_SELECTION" in
   batch) MODES=(batch) ;;
   rca) MODES=(batch operators kernels) ;;
   communication) MODES=(operators) ;;
-  compute_attention|compute_moe|compute_detail) MODES=(operators) ;;
+  compute_attention|compute_moe|compute_detail|compute_moe_full) MODES=(operators) ;;
   *) echo "Unsupported diagnostic selection: $DIAGNOSTIC_SELECTION" >&2; exit 1 ;;
 esac
 source "$(dirname "$0")/issue26_h200_environment_probe.sh" "${1:?Provide a fresh output directory.}"
@@ -37,6 +37,8 @@ case "$DIAGNOSTIC_SELECTION" in
     export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=attn_pre_proj,attn_rope,attn_kv_cache_save,attn_prefill,row_parallel_gemm ;;
   compute_moe)
     export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=moe_gating,moe_shuffling,moe_grouped_gemm,moe_sum ;;
+  compute_moe_full)
+    export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=moe_gating,moe_shuffling,moe_grouped_gemm,moe_grouped_gemm_w1,moe_activation,moe_grouped_gemm_w2,moe_sum ;;
   compute_detail)
     export VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES=input_layernorm,post_attention_layernorm,embedding_compute,final_layernorm,attn_output_init,moe_grouped_gemm_w1,moe_activation,moe_grouped_gemm_w2 ;;
 esac
@@ -76,7 +78,11 @@ for MODE in "${MODES[@]}"; do
     if [[ "$MODE" == kernels ]]; then
       export VLLM_FRONTIER_OP_TIMING_MODE=record_function
     fi
-    unset VLLM_FRONTIER_MOE_ROUTING_LOG_PATH
+    if [[ "${ISSUE26_KEEP_MOE_ROUTING:-0}" == 1 ]]; then
+      export VLLM_FRONTIER_MOE_ROUTING_LOG_PATH="$RUN/server.routing.jsonl"
+    else
+      unset VLLM_FRONTIER_MOE_ROUTING_LOG_PATH
+    fi
   elif [[ "$MODE" == routing ]]; then
     unset VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH VLLM_FRONTIER_RUNTIME_META_ENABLED
     export VLLM_FRONTIER_MOE_ROUTING_LOG_PATH="$RUN/server.routing.jsonl"
