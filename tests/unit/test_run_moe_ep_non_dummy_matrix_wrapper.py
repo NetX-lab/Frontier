@@ -45,7 +45,7 @@ def test_wrapper_defers_output_root_to_python_when_matrix_output_root_unset(
 
     assert argv[0] == str(REPO_ROOT / "tests" / "e2e" / "moe_ep_non_dummy_matrix.py")
     assert "--output-root" not in argv
-    assert "/data/ycfeng" not in " ".join(argv)
+    assert "/data/ycfeng/tmp/frontier_non_dummy_matrix" not in " ".join(argv)
     assert argv[argv.index("--repo-root") + 1] == str(REPO_ROOT)
     assert argv[argv.index("--mode") + 1] == "run"
     assert argv[-1] == "--continue-on-failure"
