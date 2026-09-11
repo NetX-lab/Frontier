@@ -11,7 +11,9 @@ from frontier.config.parallel_semantics import (
     resolve_shared_expert_tensor_parallel_mode,
     resolve_shared_expert_tensor_parallel_size,
 )
+from frontier.gdn.family import GATED_DELTA_NET_FAMILY
 from frontier.operators.registry import OperatorRegistry
+from frontier.operators.sglang_family import SGLANG_RUNTIME_FAMILY
 from frontier.operators.spec import (
     CommOperatorSpec,
     CommPayloadContext,
@@ -635,12 +637,14 @@ for _family in (
     DENSE_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
+    GATED_DELTA_NET_FAMILY,
     MEMORY_FAMILY,
     FFN_FAMILY,
     MOE_FAMILY,
     SHARE_EXPERT_FAMILY,
     COMM_FAMILY,
     KV_TRANSFER_FAMILY,
+    SGLANG_RUNTIME_FAMILY,
 ):
     OPERATOR_REGISTRY.register(_family)
 

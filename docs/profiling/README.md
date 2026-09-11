@@ -1,5 +1,12 @@
 # Profiling User Guide
 
+## Modification History
+
+| Date | Summary of Changes |
+|------|--------------------|
+| 2026-08-31 | Added the AMD MI355X ROCm profiling workflow. |
+| 2026-08-14 | Updated MoE smoke documentation to use the canonical routing-distribution selector. |
+
 ## Scope
 
 This guide covers the user-facing profiling workflow for `pre-release-v0.3`.
@@ -30,6 +37,9 @@ export PYTHONPATH=$PWD
 ```
 
 If you already have `torch`, `vllm`, `flashinfer`, and CUDA tools installed in another environment, you can use that environment instead. Run commands from the repository root and set `PYTHONPATH=$PWD`.
+
+For AMD Instinct MI355X profiling with ROCm, use the pinned container and
+platform-specific commands in [ROCm MI355X Profiling](ROCM_MI355X.md).
 
 Dry-run commands do not launch GPU kernels. They check command construction, path routing, and argument parsing.
 

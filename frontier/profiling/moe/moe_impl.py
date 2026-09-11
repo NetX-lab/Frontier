@@ -24,15 +24,38 @@ from frontier.profiling.common.parallel_utils.tensor_parallel_layers import (
     RowParallelLinear,
 )
 from frontier.profiling.common.utils import raise_if_fp8_requested
+
 try:
-    from vllm.model_executor.layers.fused_moe.fused_moe import (
-        fused_topk,
-        get_config_dtype_str,
-        try_get_optimal_moe_config,
-    )
-    from vllm.model_executor.layers.fused_moe.moe_align_block_size import (
-        moe_align_block_size,
-    )
+    try:
+        # Current vLLM exports routing from the package root.
+        from vllm.model_executor.layers.fused_moe import fused_topk
+    except ImportError:
+        # vLLM 0.10.x kept routing in the implementation module.
+        from vllm.model_executor.layers.fused_moe.fused_moe import fused_topk
+
+    try:
+        # Current vLLM's package-level name is a module, while the callable
+        # remains in fused_moe.py.
+        from vllm.model_executor.layers.fused_moe.fused_moe import (
+            moe_align_block_size,
+        )
+    except ImportError:
+        from vllm.model_executor.layers.fused_moe.moe_align_block_size import (
+            moe_align_block_size,
+        )
+
+    try:
+        from vllm.model_executor.layers.fused_moe.fused_moe import (
+            get_config_dtype_str,
+            try_get_optimal_moe_config,
+        )
+    except ImportError:
+        from vllm.model_executor.layers.fused_moe.config import (
+            _get_config_dtype_str as get_config_dtype_str,
+        )
+        from vllm.model_executor.layers.fused_moe.fused_moe import (
+            try_get_optimal_moe_config,
+        )
 
     HAS_VLLM = True
     _VLLM_IMPORT_ERROR = None
@@ -130,12 +153,19 @@ class MoEGatingNetwork(nn.Module):
         if self.use_vllm_fused_topk and HAS_VLLM_REPLICATED_LINEAR:
             # Align gating linear kernel family with vLLM runtime contract.
             # disable_tp=True avoids requiring TP group initialization in profiling jobs.
-            self.gate = ReplicatedLinear(
-                hidden_dim,
-                num_experts,
-                bias=False,
-                disable_tp=True,
-            )
+            try:
+                self.gate = ReplicatedLinear(
+                    hidden_dim,
+                    num_experts,
+                    bias=False,
+                    disable_tp=True,
+                )
+            except (AssertionError, RuntimeError):
+                # Current vLLM still resolves the TP rank while constructing
+                # ReplicatedLinear, even with disable_tp=True. Standalone
+                # Frontier profilers intentionally do not initialize a vLLM
+                # distributed group, so use the equivalent torch GEMM module.
+                self.gate = nn.Linear(hidden_dim, num_experts, bias=False)
         else:
             # Fall back to native torch linear only when vLLM kernel alignment is disabled.
             self.gate = nn.Linear(hidden_dim, num_experts, bias=False)

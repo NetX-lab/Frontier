@@ -10,3 +10,4 @@ class DeviceSKUType(BaseIntEnum):
     H800 = 6
     H20 = 7
     RTX_PRO_6000 = 8
+    MI355X = 9

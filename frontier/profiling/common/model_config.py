@@ -14,6 +14,11 @@ from frontier.config.model_config import (
     _infer_share_expert_dim_from_hf_config,
     _infer_use_qk_norm_from_hf_config,
 )
+from frontier.gdn import (
+    GatedDeltaNetConfig,
+    SequenceMixerType,
+    build_sequence_mixer_schedule,
+)
 from frontier.model_architectures import get_model_architecture_profile
 from frontier.profiling.common.parallel_config import ParallelConfig
 from frontier.types import ActivationType, NormType
@@ -65,6 +70,14 @@ class ModelConfig:
         qk_rope_head_dim: Optional[int] = None,
         qk_head_dim: Optional[int] = None,
         v_head_dim: Optional[int] = None,
+        layer_types: Optional[tuple[str, ...] | list[str]] = None,
+        full_attention_interval: Optional[int] = None,
+        linear_conv_kernel_dim: Optional[int] = None,
+        linear_key_head_dim: Optional[int] = None,
+        linear_value_head_dim: Optional[int] = None,
+        linear_num_key_heads: Optional[int] = None,
+        linear_num_value_heads: Optional[int] = None,
+        gdn_output_gate_type: str = "silu",
         # Quantization config for metadata tracking
         quantization_config: Optional[QuantizationConfig] = None,
         # Whether lm_head shares weights with embed_tokens (HF standard field)
@@ -144,6 +157,42 @@ class ModelConfig:
         self.qk_rope_head_dim = qk_rope_head_dim
         self.qk_head_dim = qk_head_dim
         self.v_head_dim = v_head_dim
+        self.layer_types = (
+            tuple(str(value) for value in layer_types)
+            if layer_types is not None
+            else None
+        )
+        self.full_attention_interval = (
+            int(full_attention_interval)
+            if full_attention_interval is not None
+            else None
+        )
+        self.linear_conv_kernel_dim = linear_conv_kernel_dim
+        self.linear_key_head_dim = linear_key_head_dim
+        self.linear_value_head_dim = linear_value_head_dim
+        self.linear_num_key_heads = linear_num_key_heads
+        self.linear_num_value_heads = linear_num_value_heads
+        self.gdn_output_gate_type = str(gdn_output_gate_type)
+
+        gdn_shape_values = (
+            self.linear_conv_kernel_dim,
+            self.linear_key_head_dim,
+            self.linear_value_head_dim,
+            self.linear_num_key_heads,
+            self.linear_num_value_heads,
+        )
+        has_any_gdn_shape = any(value is not None for value in gdn_shape_values)
+        has_complete_gdn_shape = all(value is not None for value in gdn_shape_values)
+        if has_any_gdn_shape and not has_complete_gdn_shape:
+            raise ValueError("GDN profiling model configuration is incomplete")
+        if has_complete_gdn_shape:
+            self.get_gdn_config()
+        self._sequence_mixer_types = build_sequence_mixer_schedule(
+            num_layers=self.num_layers,
+            layer_types=self.layer_types,
+            full_attention_interval=self.full_attention_interval,
+            has_gated_delta_net=has_complete_gdn_shape,
+        )
 
         # Quantization config for metadata tracking
         if quantization_config is not None and not isinstance(
@@ -241,6 +290,76 @@ class ModelConfig:
         """Return the bound attention family for profiling runtime semantics."""
         return bind_attention_family(self).family
 
+    def get_gdn_config(self) -> Optional[GatedDeltaNetConfig]:
+        values = (
+            self.linear_conv_kernel_dim,
+            self.linear_key_head_dim,
+            self.linear_value_head_dim,
+            self.linear_num_key_heads,
+            self.linear_num_value_heads,
+        )
+        if all(value is None for value in values):
+            return None
+        if any(value is None for value in values):
+            raise ValueError("GDN profiling shape configuration is incomplete")
+        return GatedDeltaNetConfig(
+            conv_kernel_size=int(self.linear_conv_kernel_dim),
+            key_head_dim=int(self.linear_key_head_dim),
+            value_head_dim=int(self.linear_value_head_dim),
+            num_key_heads=int(self.linear_num_key_heads),
+            num_value_heads=int(self.linear_num_value_heads),
+            output_gate_type=self.gdn_output_gate_type,
+        )
+
+    def get_sequence_mixer_types(self) -> tuple[SequenceMixerType, ...]:
+        return self._sequence_mixer_types
+
+    def get_sequence_mixer_type(self, layer_id: int) -> SequenceMixerType:
+        if type(layer_id) is not int or not 0 <= layer_id < self.num_layers:
+            raise ValueError(
+                f"layer_id {layer_id!r} out of range for num_layers={self.num_layers}"
+            )
+        return self._sequence_mixer_types[layer_id]
+
+    def get_sequence_mixer_layer_ids(
+        self,
+        mixer_type: SequenceMixerType,
+        *,
+        start_layer_id: int = 0,
+        end_layer_id: Optional[int] = None,
+    ) -> List[int]:
+        normalized_type = SequenceMixerType.from_config_value(mixer_type)
+        end = self.num_layers if end_layer_id is None else end_layer_id
+        if (
+            type(start_layer_id) is not int
+            or type(end) is not int
+            or start_layer_id < 0
+            or end < start_layer_id
+            or end > self.num_layers
+        ):
+            raise ValueError(
+                "Invalid sequence-mixer layer range: "
+                f"[{start_layer_id!r}, {end!r}) for num_layers={self.num_layers}"
+            )
+        return [
+            layer_id
+            for layer_id in range(start_layer_id, end)
+            if self._sequence_mixer_types[layer_id] is normalized_type
+        ]
+
+    def get_num_gdn_layers(self) -> int:
+        return len(
+            self.get_sequence_mixer_layer_ids(SequenceMixerType.GATED_DELTA_NET)
+        )
+
+    def get_num_full_attention_layers(self) -> int:
+        return len(
+            self.get_sequence_mixer_layer_ids(SequenceMixerType.FULL_ATTENTION)
+        )
+
+    def is_gdn_layer(self, layer_id: int) -> bool:
+        return self.get_sequence_mixer_type(layer_id) is SequenceMixerType.GATED_DELTA_NET
+
     def get_runtime_num_kv_heads(self) -> int:
         """Return runtime KV heads for cache allocation."""
         family = self.get_attention_family()
@@ -306,6 +425,7 @@ class ModelConfig:
         unsupported_fields = [
             '_model_name',
             '_moe_layer_ids_cache',
+            '_sequence_mixer_types_cache',
             'norm_expert_weight',  # Expert normalization field not used in profiling
             'torch_dtype',
         ]
@@ -377,9 +497,19 @@ class ModelConfig:
                 'qk_rope_head_dim',
                 'qk_head_dim',
                 'v_head_dim',
+                'layer_types',
+                'full_attention_interval',
+                'linear_conv_kernel_dim',
+                'linear_key_head_dim',
+                'linear_value_head_dim',
+                'linear_num_key_heads',
+                'linear_num_value_heads',
             ]:
                 if field_name in json_cfg:
                     model_config_dict[field_name] = json_cfg[field_name]
+            model_config_dict['gdn_output_gate_type'] = json_cfg.get(
+                'output_gate_type', model_config_dict.get('gdn_output_gate_type', 'silu')
+            )
             if (
                 'use_mla' not in model_config_dict
                 and str(json_cfg.get('model_type', '')).lower()
@@ -568,6 +698,14 @@ class ModelConfig:
             "qk_rope_head_dim": self.qk_rope_head_dim,
             "qk_head_dim": self.qk_head_dim,
             "v_head_dim": self.v_head_dim,
+            "layer_types": list(self.layer_types) if self.layer_types is not None else None,
+            "full_attention_interval": self.full_attention_interval,
+            "linear_conv_kernel_dim": self.linear_conv_kernel_dim,
+            "linear_key_head_dim": self.linear_key_head_dim,
+            "linear_value_head_dim": self.linear_value_head_dim,
+            "linear_num_key_heads": self.linear_num_key_heads,
+            "linear_num_value_heads": self.linear_num_value_heads,
+            "gdn_output_gate_type": self.gdn_output_gate_type,
             # Quantization config
             "quantization_config": asdict(self.quantization_config) if self.quantization_config else None,
             # LM head weight sharing

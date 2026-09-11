@@ -100,3 +100,13 @@ class H20DgxNodeSKUConfig(BaseNodeSKUConfig):
     @staticmethod
     def get_type():
         return NodeSKUType.H20_DGX
+
+
+@dataclass
+class MI355XUBBNodeSKUConfig(BaseNodeSKUConfig):
+    device_sku_type: DeviceSKUType = DeviceSKUType.MI355X
+    num_devices_per_node: int = 8
+
+    @staticmethod
+    def get_type():
+        return NodeSKUType.MI355X_UBB

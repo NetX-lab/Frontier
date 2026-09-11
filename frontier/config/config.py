@@ -2138,6 +2138,10 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
         default="./data/profiling/compute/{DEVICE}/{MODEL}/attention.csv",
         metadata={"help": "Path to the attention input file."},
     )
+    gdn_input_file: str = field(
+        default="./data/profiling/compute/{DEVICE}/{MODEL}/gdn.csv",
+        metadata={"help": "Path to the eager GDN profiling input file."},
+    )
     all_reduce_input_file: str = field(
         default="./data/profiling/network/{NETWORK_DEVICE}/all_reduce.csv",
         metadata={"help": "Path to the all reduce input file."},
@@ -2183,6 +2187,10 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
     atten_kernel_only_input_file: str = field(
         default="./data/profiling/compute/{DEVICE}/{MODEL}/attention_kernel_only.csv",
         metadata={"help": "Path to the kernel-only attention input file."},
+    )
+    gdn_kernel_only_input_file: str = field(
+        default="./data/profiling/compute/{DEVICE}/{MODEL}/gdn_kernel_only.csv",
+        metadata={"help": "Path to the kernel-only GDN profiling input file."},
     )
     moe_kernel_only_input_file: str = field(
         default="./data/profiling/compute/{DEVICE}/{MODEL}/moe_kernel_only.csv",

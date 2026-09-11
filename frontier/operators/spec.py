@@ -19,6 +19,7 @@ class OperatorRole(Enum):
     CACHE_WRITE = "cache_write"
     PREFILL_KERNEL = "prefill_kernel"
     DECODE_KERNEL = "decode_kernel"
+    MIXED_KERNEL = "mixed_kernel"
     PROJECTION = "projection"
     ACTIVATION = "activation"
     NORMALIZATION = "normalization"

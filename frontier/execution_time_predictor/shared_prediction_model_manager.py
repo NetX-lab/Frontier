@@ -4510,10 +4510,27 @@ class ExecutionTimePredictionModelManager:
         linear_op_file = execution_time_predictor_config.linear_op_input_file
         if not linear_op_file and execution_time_predictor_config.mlp_input_file:
             linear_op_file = execution_time_predictor_config.mlp_input_file
+        get_num_gdn_layers = getattr(
+            replica_config.model_config,
+            "get_num_gdn_layers",
+            None,
+        )
+        has_gdn_layers = (
+            callable(get_num_gdn_layers) and int(get_num_gdn_layers()) > 0
+        )
 
         return {
             'compute_input_file': _resolve(linear_op_file),
             'attention_input_file': _resolve(execution_time_predictor_config.atten_input_file),
+            **(
+                {
+                    'gdn_input_file': _resolve(
+                        execution_time_predictor_config.gdn_input_file
+                    )
+                }
+                if has_gdn_layers
+                else {}
+            ),
             'moe_input_file': _resolve(execution_time_predictor_config.moe_input_file),
             'all_reduce_input_file': _resolve(execution_time_predictor_config.all_reduce_input_file),
             'send_recv_input_file': _resolve(execution_time_predictor_config.send_recv_input_file),
@@ -4533,6 +4550,15 @@ class ExecutionTimePredictionModelManager:
             ),
             'compute_kernel_only_input_file': _resolve(execution_time_predictor_config.linear_op_kernel_only_input_file),
             'attention_kernel_only_input_file': _resolve(execution_time_predictor_config.atten_kernel_only_input_file),
+            **(
+                {
+                    'gdn_kernel_only_input_file': _resolve(
+                        execution_time_predictor_config.gdn_kernel_only_input_file
+                    )
+                }
+                if has_gdn_layers
+                else {}
+            ),
             'moe_kernel_only_input_file': _resolve(execution_time_predictor_config.moe_kernel_only_input_file),
         }
 

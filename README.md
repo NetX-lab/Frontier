@@ -152,6 +152,9 @@ conda activate frontier-profiling
 
 Do not blindly install profiling dependencies into an existing environment unless you have confirmed version compatibility.
 
+AMD Instinct MI355X (`gfx950`) profiling is supported through the pinned ROCm
+workflow in [docs/profiling/ROCM_MI355X.md](docs/profiling/ROCM_MI355X.md).
+
 Production Docker users can start from the public image:
 
 ```bash

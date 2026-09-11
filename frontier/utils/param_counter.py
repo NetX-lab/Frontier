@@ -373,6 +373,98 @@ class ParamCounter:
         )
         return num_parameters
 
+    def get_num_gdn_params_per_layer(self) -> int:
+        """Return the local Qwen GDN parameter count for one layer.
+
+        The projection and convolution outputs are column-sharded, the output
+        projection input is row-sharded, and the per-head recurrent parameters
+        follow the value-head shard. RMSNormGated owns one replicated head-width
+        vector, matching vLLM's module construction.
+        """
+
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            return 0
+        getter = getattr(self._model_config, "get_gdn_config", None)
+        gdn_config = getter() if callable(getter) else None
+        if gdn_config is None:
+            return 0
+        tp_size = self._get_attn_tp_size()
+        sharded_dimensions = (
+            gdn_config.conv_dim,
+            gdn_config.key_dim,
+            gdn_config.value_dim,
+            gdn_config.num_key_heads,
+            gdn_config.num_value_heads,
+        )
+        if any(int(dimension) % tp_size != 0 for dimension in sharded_dimensions):
+            raise ValueError(
+                "GDN dimensions must be divisible by attention TP size, "
+                f"tp={tp_size}, dimensions={sharded_dimensions}"
+            )
+
+        hidden_size = int(self._model_config.embedding_dim)
+        local_conv_dim = int(gdn_config.conv_dim) // tp_size
+        local_key_dim = int(gdn_config.key_dim) // tp_size
+        local_value_dim = int(gdn_config.value_dim) // tp_size
+        local_value_heads = int(gdn_config.num_value_heads) // tp_size
+        return (
+            local_conv_dim * int(gdn_config.conv_kernel_size)
+            + hidden_size * (2 * local_key_dim + 2 * local_value_dim)
+            + hidden_size * (2 * local_value_heads)
+            + hidden_size * local_value_dim
+            + int(gdn_config.value_head_dim)
+            + 2 * local_value_heads
+        )
+
+    def get_gdn_parameter_memory_bytes_per_layer(self) -> int:
+        """Return exact BF16/FP32 bytes for one local vLLM Qwen GDN layer."""
+
+        num_parameters = self.get_num_gdn_params_per_layer()
+        if num_parameters == 0:
+            return 0
+        gdn_config = self._model_config.get_gdn_config()
+        local_value_heads = int(gdn_config.num_value_heads) // self._get_attn_tp_size()
+        # A_log is explicitly FP32; all other synthetic/checkpoint GDN weights,
+        # including dt_bias, use the BF16 model dtype in the pinned runtime.
+        return 2 * (num_parameters - local_value_heads) + 4 * local_value_heads
+
+    def _get_pipeline_stage_layer_ids(self, stage_id: int) -> range:
+        first_layer_id = int(stage_id) * self._num_layers_per_pipeline_stage
+        return range(first_layer_id, first_layer_id + self._num_layers_per_pipeline_stage)
+
+    def _get_attention_stage_totals(self) -> tuple[tuple[int, int], ...]:
+        """Return ``(parameter_elements, parameter_bytes)`` for every PP stage."""
+
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            return ((0, 0),)
+        num_pipeline_stages = int(self._replica_config.num_pipeline_stages)
+        full_attention_params = self.get_num_attention_params_per_layer()
+        gdn_params = self.get_num_gdn_params_per_layer()
+        full_attention_bytes = 2 * full_attention_params
+        gdn_bytes = self.get_gdn_parameter_memory_bytes_per_layer()
+        is_gdn_layer = getattr(self._model_config, "is_gdn_layer", None)
+        totals = []
+        for stage_id in range(num_pipeline_stages):
+            element_total = 0
+            byte_total = 0
+            for layer_id in self._get_pipeline_stage_layer_ids(stage_id):
+                if callable(is_gdn_layer) and bool(is_gdn_layer(layer_id)):
+                    element_total += gdn_params
+                    byte_total += gdn_bytes
+                else:
+                    element_total += full_attention_params
+                    byte_total += full_attention_bytes
+            totals.append((element_total, byte_total))
+        return tuple(totals)
+
+    def get_num_attention_parameters_per_device(self) -> int:
+        """Return the largest resident attention/GDN shard across PP stages."""
+
+        return max(elements for elements, _ in self._get_attention_stage_totals())
+
+    def get_attention_parameter_memory_per_device_bytes(self) -> int:
+        return max(memory_bytes for _, memory_bytes in self._get_attention_stage_totals())
+
     def get_num_mlp_params_per_layer(self) -> int:
         # For DECODE_ATTN cluster, there are no MLP parameters.
         if self._cluster_type == ClusterType.DECODE_ATTN:
@@ -395,20 +487,27 @@ class ParamCounter:
 
     def get_num_parameters_per_device(self) -> int:
         if not getattr(self._model_config, "is_moe", False):
-            num_parameters_per_layer = self.get_num_parameters_per_layer()
             return (
-                num_parameters_per_layer * self._num_layers_per_pipeline_stage
+                self.get_num_attention_parameters_per_device()
+                + self.get_num_mlp_parameters_per_device()
                 + self.get_num_mtp_parameters_per_device()
             )
 
-        num_attention_parameters = (
-            self.get_num_attention_params_per_layer() * self._num_layers_per_pipeline_stage
-        )
+        num_attention_parameters = self.get_num_attention_parameters_per_device()
         num_mlp_parameters = self.get_num_mlp_parameters_per_device()
         return (
             num_attention_parameters
             + num_mlp_parameters
             + self.get_num_mtp_parameters_per_device()
+        )
+
+    def get_parameter_memory_per_device_bytes(self) -> int:
+        """Return resident parameter bytes with GDN's FP32 A_log accounted."""
+
+        return (
+            self.get_attention_parameter_memory_per_device_bytes()
+            + 2 * self.get_num_mlp_parameters_per_device()
+            + 2 * self.get_num_mtp_parameters_per_device()
         )
 
     def get_num_mlp_parameters_per_device(self) -> int:

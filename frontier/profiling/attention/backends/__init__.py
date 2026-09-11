@@ -8,6 +8,7 @@ class AttentionBackend(Enum):
     """Attention backend types for profiling."""
 
     FLASHINFER = "FLASHINFER"
+    VLLM_ROCM = "VLLM_ROCM"
     NO_OP = "NO_OP"
 
 
@@ -50,6 +51,12 @@ def get_attention_wrapper():
         )
 
         return FlashinferAttentionWrapper.get_instance()
+    elif ATTENTION_BACKEND == AttentionBackend.VLLM_ROCM:
+        from frontier.profiling.attention.backends.vllm_rocm_attention_wrapper import (
+            VllmRocmAttentionWrapper,
+        )
+
+        return VllmRocmAttentionWrapper.get_instance()
     elif ATTENTION_BACKEND == AttentionBackend.NO_OP:
         from frontier.profiling.attention.backends.no_op_attention_wrapper import (
             NoOpAttentionWrapper,
@@ -79,6 +86,12 @@ def __getattr__(name: str):
         )
 
         return NoOpAttentionWrapper
+    if name == "VllmRocmAttentionWrapper":
+        from frontier.profiling.attention.backends.vllm_rocm_attention_wrapper import (
+            VllmRocmAttentionWrapper,
+        )
+
+        return VllmRocmAttentionWrapper
     raise AttributeError(name)
 
 
@@ -86,6 +99,7 @@ __all__ = [
     "AttentionBackend",
     "BaseAttentionWrapper",
     "FlashinferAttentionWrapper",
+    "VllmRocmAttentionWrapper",
     "NoOpAttentionWrapper",
     "set_attention_backend",
     "get_attention_wrapper",

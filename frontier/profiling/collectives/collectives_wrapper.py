@@ -21,6 +21,7 @@ class CollectiveWrapper:
         collective: str,
         devices_per_node: int,
         max_devices_per_node: int,
+        dtype: torch.dtype = torch.float16,
     ) -> None:
         self._rank = rank
         self._num_workers = num_workers
@@ -31,7 +32,11 @@ class CollectiveWrapper:
         self._max_devices_per_node = max_devices_per_node
 
         self._graphed_collective = GraphedCollective(
-            num_workers, size, collective=collective, disable_graph=DISABLE_GRAPH
+            num_workers,
+            size,
+            collective=collective,
+            disable_graph=DISABLE_GRAPH,
+            dtype=dtype,
         )
 
         self.timer_stats_store = TimerStatsStore(profile_method="kineto")
@@ -61,7 +66,7 @@ class CollectiveWrapper:
             "time_stats": self.timer_stats_store.get_stats(),
             "rank": self._rank,
             "num_workers": self._num_workers,
-            "size": self._size * 2,  # bytes
+            "size": self._size * self._graphed_collective.element_size,
             "collective": self._collective,
             "devices_per_node": self._devices_per_node,
             "max_devices_per_node": self._max_devices_per_node,

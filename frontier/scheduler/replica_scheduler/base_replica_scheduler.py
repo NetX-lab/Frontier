@@ -62,6 +62,7 @@ class BaseReplicaScheduler(ABC):
             replica_config=self._replica_config,
             replica=replica,
             cluster_type=self._cluster_type,
+            max_num_seqs=self._config.batch_size_cap,
         )
 
         num_blocks_mode = getattr(self._config, "num_blocks_mode", "memory_planner")

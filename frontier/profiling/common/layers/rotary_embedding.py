@@ -23,12 +23,14 @@
 """Rotary Positional Embeddings for profiling."""
 import math
 import os
+import inspect
 from typing import Any, Dict, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
+from frontier.profiling.common.vllm_compat import vllm_config_context
 
 
 _VLLM_GET_ROPE = None
@@ -95,6 +97,57 @@ def _load_vllm_get_rope():
 
     _VLLM_GET_ROPE = vllm_get_rope
     return _VLLM_GET_ROPE
+
+
+def _call_vllm_get_rope(
+    vllm_get_rope,
+    *,
+    head_size: int,
+    rotary_dim: int,
+    max_position: int,
+    base: Union[int, float],
+    is_neox_style: bool,
+    rope_scaling: Optional[Dict[str, Any]],
+    dtype: torch.dtype,
+):
+    """Call either the vLLM 0.10 or current RoPE factory contract."""
+    parameters = inspect.signature(vllm_get_rope).parameters
+    if "rope_parameters" in parameters:
+        rope_parameters = dict(rope_scaling or {})
+        rope_parameters.setdefault("rope_type", "default")
+        rope_parameters["rope_theta"] = base
+        if rotary_dim != head_size:
+            rope_parameters["rope_dim"] = rotary_dim
+
+        def create_rope():
+            return vllm_get_rope(
+                head_size=head_size,
+                max_position=max_position,
+                is_neox_style=is_neox_style,
+                rope_parameters=rope_parameters,
+                dtype=dtype,
+            )
+
+        # Current vLLM custom ops select their implementation when constructed
+        # and require a VllmConfig context even in standalone profiling tools.
+        if getattr(vllm_get_rope, "__module__", "").startswith("vllm."):
+            with vllm_config_context():
+                return create_rope()
+        return create_rope()
+    if "rotary_dim" in parameters:
+        return vllm_get_rope(
+            head_size=head_size,
+            rotary_dim=rotary_dim,
+            max_position=max_position,
+            base=base,
+            is_neox_style=is_neox_style,
+            rope_scaling=rope_scaling,
+            dtype=dtype,
+        )
+    raise TypeError(
+        "Unsupported vLLM get_rope signature; expected rope_parameters or "
+        "rotary_dim keyword support."
+    )
 
 
 def _load_vllm_custom_ops():
@@ -576,7 +629,8 @@ def get_rope(
     if not _should_prefer_torch_rope_fallback():
         vllm_get_rope = _load_vllm_get_rope()
         if vllm_get_rope is not None:
-            return vllm_get_rope(
+            return _call_vllm_get_rope(
+                vllm_get_rope,
                 head_size=head_size,
                 rotary_dim=rotary_dim,
                 max_position=max_position,

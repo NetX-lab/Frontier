@@ -2164,6 +2164,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         include_ffn: bool = True,
         include_attention: bool = True,
         layer_id: int = 0,
+        attention_time_override: Optional[AttentionTime] = None,
     ) -> "ExecutionTime":
         """
         Calculate execution time for a pipeline stage.
@@ -2208,14 +2209,22 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             include_moe=include_moe,
         )
 
-        attention_time = (
-            self.predict_attention_layer_time(
-                batch=batch,
-                layer_id=layer_id,
-                cluster_type=self._cluster_type,
+        if attention_time_override is not None and not include_attention:
+            raise ValueError(
+                "attention_time_override requires include_attention=True"
             )
-            if include_attention
-            else AttentionTime()
+        attention_time = (
+            attention_time_override
+            if attention_time_override is not None
+            else (
+                self.predict_attention_layer_time(
+                    batch=batch,
+                    layer_id=layer_id,
+                    cluster_type=self._cluster_type,
+                )
+                if include_attention
+                else AttentionTime()
+            )
         )
 
         communication_operator_times: dict[str, float] = {}
@@ -3306,6 +3315,16 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 layer_id,
             )
 
+        attention_time_override = None
+        if include_attention and num_layers > 1 and self._model_has_gdn_layers():
+            attention_time_override = self._predict_stage_attention_time(
+                batch=batch,
+                stage_id=stage_id,
+                num_layers=num_layers,
+                layer_id=layer_id,
+                cluster_type=cluster_type,
+            )
+
         base_execution_time = self._get_execution_time_internal(
             batch,
             stage_id,
@@ -3314,6 +3333,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             include_ffn=include_ffn,
             include_attention=include_attention,
             layer_id=layer_id,
+            attention_time_override=attention_time_override,
         )
 
         # Communication OP-TRACE: log per-layer allreduce times for op-level comparison

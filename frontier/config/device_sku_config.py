@@ -94,3 +94,14 @@ class RtxPro6000DeviceSKUConfig(BaseDeviceSKUConfig):
     @staticmethod
     def get_type():
         return DeviceSKUType.RTX_PRO_6000
+
+
+@dataclass
+class MI355XDeviceSKUConfig(BaseDeviceSKUConfig):
+    # AMD Instinct MI355X dense FP16/BF16 matrix throughput and HBM3E capacity.
+    fp16_tflops: int = 2516
+    total_memory_gb: int = 288
+
+    @staticmethod
+    def get_type():
+        return DeviceSKUType.MI355X

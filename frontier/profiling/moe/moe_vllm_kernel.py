@@ -10,8 +10,9 @@ Design rationale:
 - vLLM's fused_moe_kernel uses optimized grouped GEMM with real parallelism
 - Only used when --enable_load_imbalance is specified for accurate profiling
 
-Supported vLLM versions:
-- vLLM 0.10.x: Current supported version with extended invoke_fused_moe_kernel API
+Supported vLLM APIs:
+- vLLM 0.10.x low-level fused kernel entry point
+- Current vLLM functional ``fused_experts`` entry point
 
 Note: vLLM 0.3.x support has been removed. Please use vLLM >= 0.10.0.
 """
@@ -19,27 +20,39 @@ Note: vLLM 0.3.x support has been removed. Please use vLLM >= 0.10.0.
 import torch
 import triton
 import triton.language as tl
-from typing import Dict, List, Optional, Tuple
+from types import SimpleNamespace
+from typing import Any, Dict, List, Optional, Tuple
 
 VLLM_AVAILABLE = False
 VLLM_VERSION = None
 VLLM_API_VERSION = None
 FP8_QUANT_AVAILABLE = False
+_functional_fused_experts = None
+_FUNCTIONAL_MXFP4_STATES: Dict[Tuple[Any, ...], Dict[str, Any]] = {}
 
 try:
     import vllm
     VLLM_VERSION = vllm.__version__
 
-    # Import vLLM 0.10.x functions
-    from vllm.model_executor.layers.fused_moe.fused_moe import (
-        fused_moe_kernel,
-        invoke_fused_moe_kernel,
-        moe_align_block_size,
-        try_get_optimal_moe_config,
-        get_config_dtype_str,
-    )
+    try:
+        # vLLM 0.10.x low-level API.
+        from vllm.model_executor.layers.fused_moe.fused_moe import (
+            fused_moe_kernel,
+            invoke_fused_moe_kernel,
+            moe_align_block_size,
+            try_get_optimal_moe_config,
+            get_config_dtype_str,
+        )
 
-    VLLM_API_VERSION = "0.10.x"
+        VLLM_API_VERSION = "0.10.x"
+    except ImportError:
+        # Current vLLM intentionally exposes the complete fused operation
+        # rather than the two private kernel invocations Frontier used before.
+        from vllm.model_executor.layers.fused_moe import (
+            fused_experts as _functional_fused_experts,
+        )
+
+        VLLM_API_VERSION = "functional_fused_experts"
     VLLM_AVAILABLE = True
     print(f"vLLM {VLLM_VERSION} loaded successfully (API: {VLLM_API_VERSION})")
 
@@ -335,6 +348,131 @@ def _run_fused_moe_iteration(
     )
 
 
+def _run_functional_fused_experts_iteration(
+    A: torch.Tensor,
+    w1: torch.Tensor,
+    w2: torch.Tensor,
+    topk_weights: torch.Tensor,
+    topk_ids: torch.Tensor,
+    global_num_experts: int,
+    expert_map: Optional[torch.Tensor],
+) -> None:
+    """Run the complete fused expert op exposed by current vLLM."""
+    if _functional_fused_experts is None:  # pragma: no cover - import invariant
+        raise RuntimeError("Current vLLM fused_experts API is unavailable.")
+    _functional_fused_experts(
+        hidden_states=A,
+        w1=w1,
+        w2=w2,
+        topk_weights=topk_weights,
+        topk_ids=topk_ids,
+        global_num_experts=global_num_experts,
+        expert_map=expert_map,
+    )
+
+
+def _get_functional_mxfp4_state(
+    *,
+    num_experts: int,
+    hidden_dim: int,
+    expert_hidden_dim: int,
+    top_k: int,
+    dtype: torch.dtype,
+) -> Dict[str, Any]:
+    """Build and cache current-vLLM's online MXFP4 AITER expert kernel."""
+    cache_key = (
+        torch.cuda.current_device(),
+        num_experts,
+        hidden_dim,
+        expert_hidden_dim,
+        top_k,
+        dtype,
+    )
+    cached = _FUNCTIONAL_MXFP4_STATES.get(cache_key)
+    if cached is not None:
+        return cached
+
+    # The packed expert tensors are large (tens of GiB for some EP layouts).
+    # Frontier profiles one layout at a time, so retaining states for prior
+    # shapes can exhaust HBM while sweeping EP sizes.
+    if _FUNCTIONAL_MXFP4_STATES:
+        _FUNCTIONAL_MXFP4_STATES.clear()
+        torch.cuda.empty_cache()
+
+    from vllm.config.quantization import QuantizationConfigArgs
+    from vllm.model_executor.layers.fused_moe import FusedMoEFactory
+    from vllm.model_executor.layers.quantization.online.base import (
+        OnlineQuantizationConfig,
+    )
+    from vllm.v1.worker.workspace import (
+        init_workspace_manager,
+        is_workspace_manager_initialized,
+    )
+
+    from frontier.profiling.common.vllm_compat import vllm_config_context
+
+    quantization_args = QuantizationConfigArgs(moe="mxfp4")
+    standalone_model_config = SimpleNamespace(
+        dtype=dtype,
+        hf_config=SimpleNamespace(model_type="qwen3_5_moe_text"),
+        quantization_config=quantization_args,
+    )
+    with vllm_config_context(model_config=standalone_model_config):
+        if not is_workspace_manager_initialized():
+            init_workspace_manager(torch.device("cuda"))
+        quantization_config = OnlineQuantizationConfig(quantization_args)
+        runner = FusedMoEFactory(
+            num_experts=num_experts,
+            top_k=top_k,
+            hidden_size=hidden_dim,
+            intermediate_size=expert_hidden_dim,
+            params_dtype=dtype,
+            quant_config=quantization_config,
+            tp_size=1,
+            dp_size=1,
+            pcp_size=1,
+            prefix=(
+                f"frontier_mxfp4_e{num_experts}_h{hidden_dim}_"
+                f"i{expert_hidden_dim}_k{top_k}"
+            ),
+        )
+        layer = runner.routed_experts
+        layer.w13_weight = torch.nn.Parameter(
+            torch.empty(
+                layer.w13_weight.shape,
+                device="cuda",
+                dtype=dtype,
+            ).normal_(mean=0.0, std=0.02),
+            requires_grad=False,
+        )
+        layer.w2_weight = torch.nn.Parameter(
+            torch.empty(
+                layer.w2_weight.shape,
+                device="cuda",
+                dtype=dtype,
+            ).normal_(mean=0.0, std=0.02),
+            requires_grad=False,
+        )
+        quant_method = layer.quant_method
+        quant_method.process_weights_after_loading(layer)
+
+    backend = str(getattr(quant_method, "mxfp4_backend", "unknown"))
+    if getattr(torch.version, "hip", None) and "AITER" not in backend.upper():
+        raise RuntimeError(
+            "MXFP4 profiling on ROCm did not select an AITER backend. Set "
+            "VLLM_ROCM_USE_AITER=1 and VLLM_ROCM_USE_AITER_MOE=1 before "
+            f"starting Frontier. Selected backend: {backend}."
+        )
+
+    state = {
+        "backend": backend,
+        "layer": layer,
+        "quant_method": quant_method,
+    }
+    _FUNCTIONAL_MXFP4_STATES[cache_key] = state
+    return state
+
+
 def _collect_cuda_event_stats(step_fn, active_steps: int) -> Dict:
     times = []
     for _ in range(active_steps):
@@ -396,6 +534,7 @@ def profile_fused_moe_kernel(
     warmup_steps: int = 2,
     active_steps: int = 20,
     use_fp8: bool = False,
+    use_mxfp4: bool = False,
     per_channel_quant: bool = False,
     block_shape: Optional[List[int]] = None,
     profile_method: str = "cuda_event",
@@ -423,6 +562,7 @@ def profile_fused_moe_kernel(
         warmup_steps: Number of warmup iterations.
         active_steps: Number of active profiling iterations.
         use_fp8: Whether to use FP8 W8A8 quantization.
+        use_mxfp4: Whether to use current vLLM's online MXFP4 AITER path.
         per_channel_quant: Whether to use per-channel quantization (only for FP8).
         block_shape: Block dimensions for block-wise quantization.
         profile_method: Profiling method (``cuda_event`` or ``record_function``).
@@ -440,6 +580,13 @@ def profile_fused_moe_kernel(
         raise RuntimeError(
             "vLLM is not available. Cannot use fused_moe_kernel for load imbalance profiling. "
             "Please install vLLM or disable --enable_load_imbalance."
+        )
+
+    if use_fp8 and use_mxfp4:
+        raise ValueError("use_fp8 and use_mxfp4 are mutually exclusive.")
+    if use_mxfp4 and VLLM_API_VERSION != "functional_fused_experts":
+        raise NotImplementedError(
+            "MXFP4 profiling requires current vLLM's modular fused MoE API."
         )
 
     if profile_method not in {"cuda_event", "record_function"}:
@@ -473,26 +620,105 @@ def profile_fused_moe_kernel(
     base_dtype = torch.bfloat16 if use_fp8 else dtype
     A = torch.randn(num_tokens, hidden_dim, dtype=base_dtype, device=device)
 
-    w1 = torch.randn(
-        num_experts,
-        2 * expert_hidden_dim_per_partition,
-        hidden_dim,
-        dtype=base_dtype,
-        device=device,
-    )
-    w2 = torch.randn(
-        num_experts,
-        hidden_dim,
-        expert_hidden_dim_per_partition,
-        dtype=base_dtype,
-        device=device,
-    )
+    w1 = None
+    w2 = None
+    if not use_mxfp4:
+        w1 = torch.randn(
+            num_experts,
+            2 * expert_hidden_dim_per_partition,
+            hidden_dim,
+            dtype=base_dtype,
+            device=device,
+        )
+        w2 = torch.randn(
+            num_experts,
+            hidden_dim,
+            expert_hidden_dim_per_partition,
+            dtype=base_dtype,
+            device=device,
+        )
 
     w1_scale = None
     w2_scale = None
     A_scale = None
 
+    if VLLM_API_VERSION == "functional_fused_experts":
+        if use_fp8:
+            raise NotImplementedError(
+                "FP8 profiling with current vLLM requires its quantization "
+                "descriptor API; use BF16 or the vLLM 0.10 profiling "
+                "environment until that adapter is configured."
+            )
+
+        functional_topk_weights = topk_weights.to(
+            device=device,
+            dtype=torch.float32,
+        ).contiguous()
+        functional_topk_ids = topk_ids.to(
+            device=device,
+            dtype=torch.int32,
+        ).contiguous()
+
+        if use_mxfp4:
+            mxfp4_state = _get_functional_mxfp4_state(
+                num_experts=num_experts,
+                hidden_dim=hidden_dim,
+                expert_hidden_dim=expert_hidden_dim_per_partition,
+                top_k=top_k,
+                dtype=base_dtype,
+            )
+            mxfp4_layer = mxfp4_state["layer"]
+            mxfp4_method = mxfp4_state["quant_method"]
+
+            def _step() -> None:
+                mxfp4_method.moe_kernel.apply(
+                    A,
+                    mxfp4_layer.w13_weight,
+                    mxfp4_layer.w2_weight,
+                    functional_topk_weights,
+                    functional_topk_ids,
+                    activation=mxfp4_layer.activation,
+                    global_num_experts=align_num_experts,
+                    expert_map=expert_map,
+                    apply_router_weight_on_input=False,
+                    shared_experts=None,
+                    shared_experts_input=None,
+                )
+        else:
+            assert w1 is not None and w2 is not None
+
+            def _step() -> None:
+                _run_functional_fused_experts_iteration(
+                    A=A,
+                    w1=w1,
+                    w2=w2,
+                    topk_weights=functional_topk_weights,
+                    topk_ids=functional_topk_ids,
+                    global_num_experts=align_num_experts,
+                    expert_map=expert_map,
+                )
+
+        from frontier.profiling.common.vllm_compat import vllm_config_context
+
+        with vllm_config_context():
+            for _ in range(warmup_steps):
+                _step()
+            torch.cuda.synchronize()
+
+            if profile_method == "record_function":
+                return _collect_record_function_stats(
+                    step_fn=_step,
+                    active_steps=active_steps,
+                    output_dir=output_dir,
+                    operation_name="moe_grouped_gemm",
+                )
+            return _collect_cuda_event_stats(
+                step_fn=_step,
+                active_steps=active_steps,
+            )
+
     block_dims = _validate_block_shape(block_shape)
+    assert w1 is not None and w2 is not None
     if use_fp8:
         w1, w1_scale = quantize_weights_to_fp8(
             w1,

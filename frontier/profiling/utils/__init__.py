@@ -490,6 +490,7 @@ def get_collectives_inputs(
     max_collective_size: int,
     collective: str,
     total_gpus_available: int,
+    precision: str = "FP16",
 ):
     num_workers = []
 
@@ -497,7 +498,7 @@ def get_collectives_inputs(
         for _num_nodes in range(1, num_nodes + 1):
             num_workers.append(num_workers_per_node * _num_nodes)
 
-    num_workers = list(set(num_workers))
+    num_workers = sorted(set(num_workers))
     collectives_sizes = get_collectives_sizes_to_profile(max_collective_size)
 
     collectives_inputs = []
@@ -506,7 +507,11 @@ def get_collectives_inputs(
         num_workers, num_workers_per_node_combinations, collectives_sizes
     ):
         collectives_input = CollectivesInput(
-            num_workers, num_workers_per_node, collective_size, collective
+            num_workers,
+            num_workers_per_node,
+            collective_size,
+            collective,
+            precision,
         )
         if not collectives_input.is_valid(total_gpus_available, num_nodes):
             continue
