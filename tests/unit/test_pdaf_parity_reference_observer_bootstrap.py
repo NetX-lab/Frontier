@@ -495,6 +495,88 @@ def test_reference_observer_bootstrap_runs_main_and_writes_sidecar(
     assert _GlobalBatchEndEvent.handle_event.__name__ == "handle_event"
 
 
+def test_reference_bootstrap_excludes_candidate_repo_paths_during_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observed_sys_path: list[str] = []
+
+    def fake_import(_root: Path) -> object:
+        observed_sys_path.extend(sys.path)
+
+        def fake_main() -> None:
+            request = _Request()
+            batch = _Batch(request)
+            scheduler = _Scheduler()
+            resolved = scheduler.resolve_decode_attn_boundary_first_mixed_global_end_time(
+                2.0,
+                batch,
+            )
+            _GlobalBatchEndEvent(resolved, batch).handle_event()
+
+        return SimpleNamespace(
+            base_cluster_scheduler_class=_Scheduler,
+            global_batch_end_event_class=_GlobalBatchEndEvent,
+            main=fake_main,
+        )
+
+    monkeypatch.setattr(
+        reference_observer_bootstrap,
+        "_require_fresh_frontier_import",
+        lambda: None,
+    )
+    monkeypatch.setattr(
+        reference_observer_bootstrap,
+        "_import_reference_runtime",
+        fake_import,
+    )
+
+    reference_observer_bootstrap.run_reference_with_observer(
+        reference_observer_bootstrap.REFERENCE_REPO_ROOT,
+        tmp_path / "lifecycle.json",
+        _safe_simulator_argv(tmp_path),
+        (0,),
+    )
+
+    candidate_root = BOOTSTRAP_MODULE.parents[3].resolve()
+    observed_paths = {
+        Path(entry or os.getcwd()).resolve()
+        for entry in observed_sys_path
+    }
+    assert candidate_root not in observed_paths
+    assert observed_sys_path[0] == str(
+        reference_observer_bootstrap.REFERENCE_REPO_ROOT
+    )
+
+
+def test_reference_bootstrap_removes_new_frontier_modules_after_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    imported_name = "frontier.synthetic_followup_module"
+
+    def fake_main() -> None:
+        sys.modules[imported_name] = ModuleType(imported_name)
+        request = _Request()
+        batch = _Batch(request)
+        resolved = _Scheduler().resolve_decode_attn_boundary_first_mixed_global_end_time(
+            2.0,
+            batch,
+        )
+        _GlobalBatchEndEvent(resolved, batch).handle_event()
+
+    _patch_runtime(monkeypatch, fake_main)
+
+    reference_observer_bootstrap.run_reference_with_observer(
+        reference_observer_bootstrap.REFERENCE_REPO_ROOT,
+        tmp_path / "lifecycle.json",
+        _safe_simulator_argv(tmp_path),
+        (0,),
+    )
+
+    assert imported_name not in sys.modules
+
+
 def _patch_runtime(
     monkeypatch: pytest.MonkeyPatch,
     main: object,
