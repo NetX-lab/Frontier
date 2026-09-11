@@ -774,11 +774,11 @@ The wall-time scaling sweep (`tests/performance/sim_walltime_scaling/sweep.py`),
 export FRONTIER_TMP_ROOT=/path/to/large/scratch
 ```
 
-`FRONTIER_WALLTIME_TMPDIR` (sweep-specific child temp directory) must still resolve to a descendant of that root.
+`FRONTIER_WALLTIME_TMPDIR` (sweep-specific child temp directory) must still resolve to a descendant of that root. The shell wrapper `tests/e2e/run_moe_ep_non_dummy_matrix.sh` forwards `--output-root` only when `MATRIX_OUTPUT_ROOT` is set, so `FRONTIER_TMP_ROOT` alone controls its default output location.
 
 ### Pinned Reference checkout for PD-AF parity
 
-The PD-AF parity harness (`tests/e2e/pd_af_parity/`) and `tests/integration/test_pdaf_reference_lifecycle_observer.py` compare the current branch against a pinned, read-only Reference checkout whose git HEAD and source hashes are asserted at runtime. Its location is resolved by `tests/e2e/pd_af_parity/reference_repo_root.py`, with the historical default `/data/ycfeng/stepfun-performance-optimization/Frontier/worktrees/ref-afd-readonly`. If your checkout lives elsewhere, point `FRONTIER_PDAF_REFERENCE_REPO_ROOT` at it (absolute path). Only the location is configurable; the pinned identity checks are unchanged, so the tests still require a checkout at the pinned commit.
+The PD-AF parity harness (`tests/e2e/pd_af_parity/`) and `tests/integration/test_pdaf_reference_lifecycle_observer.py` compare the current branch against a pinned, read-only Reference checkout whose git HEAD and source hashes are asserted at runtime. Its location is resolved by `tests/e2e/pd_af_parity/reference_repo_root.py`, with the historical default `/data/ycfeng/stepfun-performance-optimization/Frontier/worktrees/ref-afd-readonly`. If your checkout lives elsewhere, point `FRONTIER_PDAF_REFERENCE_REPO_ROOT` at it (absolute path). The value is canonicalized (symlinks and `..` resolved) so the sidecar, the integration driver, and the harness compare the same string. Only the location is configurable; the pinned identity checks are unchanged, so the tests still require a checkout at the pinned commit. `reference_observer_bootstrap.py` carries its own copy of the resolver because it runs under a Reference-only `PYTHONPATH`.
 
 ## Contributing
 

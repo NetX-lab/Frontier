@@ -15,14 +15,35 @@ from pathlib import Path
 from types import ModuleType
 from typing import Sequence
 
-from tests.e2e.pd_af_parity.reference_repo_root import (
-    REFERENCE_REPO_ROOT_ENV,
-    resolve_reference_repo_root,
+
+# This bootstrap runs as a script under a Reference-only PYTHONPATH, so it must
+# stay stdlib-only and must not import the current repository's ``tests``
+# package. The two definitions below intentionally mirror
+# ``tests.e2e.pd_af_parity.reference_repo_root``; a unit test keeps them in sync.
+REFERENCE_REPO_ROOT_ENV = "FRONTIER_PDAF_REFERENCE_REPO_ROOT"
+FALLBACK_REFERENCE_REPO_ROOT = Path(
+    "/data/ycfeng/stepfun-performance-optimization/Frontier/"
+    "worktrees/ref-afd-readonly"
 )
 
 
+def _resolve_pinned_reference_repo_root() -> Path:
+    """Return the canonical pinned Reference root from the environment."""
+
+    configured_value = os.environ.get(REFERENCE_REPO_ROOT_ENV)
+    if configured_value is None:
+        return FALLBACK_REFERENCE_REPO_ROOT.resolve(strict=False)
+    reference_repo_root = Path(configured_value)
+    if not configured_value or not reference_repo_root.is_absolute():
+        raise ValueError(
+            f"{REFERENCE_REPO_ROOT_ENV} must be an absolute path, "
+            f"got {configured_value!r}"
+        )
+    return reference_repo_root.resolve(strict=False)
+
+
 # Resolved once at import so callers and tests can treat it as a stable pin.
-REFERENCE_REPO_ROOT = resolve_reference_repo_root()
+REFERENCE_REPO_ROOT = _resolve_pinned_reference_repo_root()
 REFERENCE_GIT_HEAD = "dcb1cc8ee160a9c3c5412293d93b64042960aa4d"
 REFERENCE_SOURCE_IDENTITIES = {
     "request_source_sha256": (
