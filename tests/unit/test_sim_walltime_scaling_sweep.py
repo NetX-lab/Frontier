@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -21,6 +22,15 @@ from tests.performance.sim_walltime_scaling.run_case import (
 
 
 SWEEP_MODULE = "tests.performance.sim_walltime_scaling.sweep"
+
+
+@pytest.fixture(autouse=True)
+def scratch_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Relocate the scratch root so child temp files never touch a developer path."""
+
+    root = tmp_path / "scratch-root"
+    monkeypatch.setenv("FRONTIER_TMP_ROOT", str(root))
+    return root
 
 
 def _load_sweep() -> Any:
@@ -593,6 +603,7 @@ def test_execute_child_records_only_bounded_output_tails() -> None:
 def test_execute_child_uses_explicit_default_temp_root_and_ignores_tmpdir(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    scratch_root: Path,
 ) -> None:
     sweep = _load_sweep()
     real_temporary_file = sweep.tempfile.TemporaryFile
@@ -612,15 +623,26 @@ def test_execute_child_uses_explicit_default_temp_root_and_ignores_tmpdir(
     outcome = sweep._execute_child([sys.executable, "-c", "pass"], 5.0)
 
     assert outcome.returncode == 0
-    assert observed_dirs == [Path("/data/ycfeng/tmp")] * 2
+    assert scratch_root.is_dir()
+    assert observed_dirs == [scratch_root.resolve()] * 2
 
 
-def test_execute_child_creates_and_uses_task_specific_temp_root_override(
-    tmp_path: Path,
+def test_execute_child_falls_back_to_historical_scratch_root_when_unset(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     sweep = _load_sweep()
-    configured_root = tmp_path / "explicit" / "walltime-temp"
+    monkeypatch.delenv("FRONTIER_TMP_ROOT", raising=False)
+    monkeypatch.delenv("FRONTIER_WALLTIME_TMPDIR", raising=False)
+
+    assert sweep._default_temp_root() == Path("/data/ycfeng/tmp")
+
+
+def test_execute_child_creates_and_uses_task_specific_temp_root_override(
+    monkeypatch: pytest.MonkeyPatch,
+    scratch_root: Path,
+) -> None:
+    sweep = _load_sweep()
+    configured_root = scratch_root / "explicit" / "walltime-temp"
     real_temporary_file = sweep.tempfile.TemporaryFile
     observed_dirs: list[Path | None] = []
 
@@ -654,11 +676,12 @@ def test_execute_child_rejects_non_absolute_temp_root(
 
 
 def test_execute_child_rejects_temp_root_that_is_not_a_directory(
-    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    scratch_root: Path,
 ) -> None:
     sweep = _load_sweep()
-    configured_file = tmp_path / "not-a-directory"
+    scratch_root.mkdir(parents=True)
+    configured_file = scratch_root / "not-a-directory"
     configured_file.write_text("occupied")
     monkeypatch.setenv("FRONTIER_WALLTIME_TMPDIR", str(configured_file))
 
@@ -668,24 +691,26 @@ def test_execute_child_rejects_temp_root_that_is_not_a_directory(
 
 def test_temp_root_override_rejects_absolute_path_outside_default_root(
     monkeypatch: pytest.MonkeyPatch,
+    scratch_root: Path,
 ) -> None:
     sweep = _load_sweep()
     monkeypatch.setenv("FRONTIER_WALLTIME_TMPDIR", "/tmp")
 
-    with pytest.raises(ValueError, match="/data/ycfeng/tmp"):
+    with pytest.raises(ValueError, match=re.escape(str(scratch_root.resolve()))):
         sweep._resolve_temp_root()
 
 
 def test_temp_root_override_rejects_symlink_escape_from_default_root(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    scratch_root: Path,
 ) -> None:
     sweep = _load_sweep()
     escape_link = tmp_path / "escape-to-system-tmp"
     escape_link.symlink_to("/tmp", target_is_directory=True)
     monkeypatch.setenv("FRONTIER_WALLTIME_TMPDIR", str(escape_link))
 
-    with pytest.raises(ValueError, match="/data/ycfeng/tmp"):
+    with pytest.raises(ValueError, match=re.escape(str(scratch_root.resolve()))):
         sweep._resolve_temp_root()
 
 

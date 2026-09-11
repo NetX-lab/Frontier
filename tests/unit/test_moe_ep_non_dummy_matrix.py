@@ -16,6 +16,7 @@ from typing import Any
 import pytest
 
 import tests.e2e.moe_ep_non_dummy_matrix as matrix_module
+from tests.scratch_root import resolve_scratch_root
 import frontier.scheduler.cluster_scheduler.base_cluster_scheduler as cluster_scheduler_module
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import BaseClusterScheduler
 from frontier.types import ClusterType
@@ -2981,8 +2982,8 @@ def test_preflight_cli_writes_independent_ledger_and_fails_closed(
     ):
         assert list(selected_cases) == cases
         assert repo_root == REPO_ROOT
-        assert output_root == Path(
-            "/data/ycfeng/tmp/frontier_non_dummy_optimization_matrix"
+        assert output_root == (
+            resolve_scratch_root() / "frontier_non_dummy_optimization_matrix"
         )
         assert matrix_kind == "optimization"
         return expected_rows
@@ -5711,3 +5712,51 @@ def test_find_metrics_dir_rejects_stale_metrics(tmp_path: Path) -> None:
 
     with pytest.raises(FileNotFoundError, match="fresh"):
         _find_metrics_dir(tmp_path, case, started_at_ns=metrics_path.stat().st_mtime_ns + 1)
+
+
+def test_python_entry_point_defaults_output_root_from_frontier_tmp_root(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Omitting --output-root, as run_moe_ep_non_dummy_matrix.sh now does, lands under FRONTIER_TMP_ROOT."""
+
+    scratch = tmp_path / "scratch"
+    monkeypatch.setenv("FRONTIER_TMP_ROOT", str(scratch))
+    cases = matrix_module.build_matrix(REPO_ROOT)[:1]
+    observed: dict[str, Path] = {}
+
+    def fake_preflight_cases(selected_cases, repo_root, output_root, *, matrix_kind):
+        observed["output_root"] = output_root
+        assert matrix_kind == "regression"
+        return [
+            {
+                "case_id": case.case_id,
+                "status": "READY",
+                "blockers": [],
+                "preflight_only": True,
+            }
+            for case in selected_cases
+        ]
+
+    def fail_if_run(*_args, **_kwargs):
+        raise AssertionError("preflight must not launch simulator cases")
+
+    monkeypatch.setattr(matrix_module, "build_matrix", lambda _repo_root: cases)
+    monkeypatch.setattr(matrix_module, "preflight_cases", fake_preflight_cases)
+    monkeypatch.setattr(matrix_module, "run_cases", fail_if_run)
+
+    exit_code = matrix_module.main(
+        [
+            "--mode",
+            "preflight",
+            "--repo-root",
+            str(REPO_ROOT),
+            "--task-dir",
+            str(tmp_path / "task"),
+            "--preflight-path",
+            str(tmp_path / "preflight.jsonl"),
+        ]
+    )
+
+    assert exit_code == 0
+    assert observed["output_root"] == scratch / "frontier_non_dummy_matrix"

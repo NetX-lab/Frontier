@@ -32,13 +32,13 @@ from tests.performance.sim_walltime_scaling.run_case import (
     _runner_sha256,
     write_json_atomic,
 )
+from tests.scratch_root import SCRATCH_ROOT_ENV, resolve_scratch_root
 
 
 DEFAULT_SCALES = (32, 64, 128, 256, 512, 1024, 4096)
 DEFAULT_TIMEOUT_S = 14_400.0
 OUTPUT_TAIL_BYTES = 20_000
 TERMINATION_GRACE_S = 5.0
-DEFAULT_TEMP_ROOT = Path("/data/ycfeng/tmp")
 TEMP_ROOT_ENV = "FRONTIER_WALLTIME_TMPDIR"
 RUN_CASE_PATH = Path(__file__).with_name("run_case.py").resolve()
 DENSE_MASTER_WRAPPER = (
@@ -310,25 +310,33 @@ def _process_group_exists(process_group_id: int) -> bool:
     return True
 
 
+def _default_temp_root() -> Path:
+    """Return the scratch root that bounds every wall-time temp directory."""
+
+    return resolve_scratch_root()
+
+
 def _resolve_temp_root() -> Path:
+    default_temp_root = _default_temp_root()
     configured_value = os.environ.get(TEMP_ROOT_ENV)
     temp_root = (
         Path(configured_value)
         if configured_value is not None
-        else DEFAULT_TEMP_ROOT
+        else default_temp_root
     )
     if not temp_root.is_absolute():
         raise ValueError(
             f"{TEMP_ROOT_ENV} must be an absolute path, got {configured_value!r}"
         )
-    resolved_default_root = DEFAULT_TEMP_ROOT.resolve(strict=False)
+    resolved_default_root = default_temp_root.resolve(strict=False)
     resolved_temp_root = temp_root.resolve(strict=False)
     try:
         resolved_temp_root.relative_to(resolved_default_root)
     except ValueError as exc:
         raise ValueError(
             f"{TEMP_ROOT_ENV} must resolve to {resolved_default_root} or one of "
-            f"its descendants, got {resolved_temp_root}"
+            f"its descendants, got {resolved_temp_root} "
+            f"(set {SCRATCH_ROOT_ENV} to relocate the scratch root)"
         ) from exc
     temp_root = resolved_temp_root
     try:

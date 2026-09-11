@@ -14,12 +14,10 @@ from typing import Mapping
 import pytest
 
 from tests.e2e.pd_af_parity import harness
+from tests.e2e.pd_af_parity.reference_repo_root import resolve_reference_repo_root
 
 
-REFERENCE_REPO_ROOT = Path(
-    "/data/ycfeng/stepfun-performance-optimization/Frontier/"
-    "worktrees/ref-afd-readonly"
-)
+REFERENCE_REPO_ROOT = resolve_reference_repo_root()
 REFERENCE_GIT_HEAD = "dcb1cc8ee160a9c3c5412293d93b64042960aa4d"
 PARITY_DIR = Path(__file__).parents[1] / "e2e" / "pd_af_parity"
 OBSERVER_SOURCE = PARITY_DIR / "reference_lifecycle_observer.py"

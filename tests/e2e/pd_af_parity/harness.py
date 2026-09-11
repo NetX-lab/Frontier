@@ -15,6 +15,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
+from tests.e2e.pd_af_parity.reference_repo_root import resolve_reference_repo_root
+
 
 class ParityInputError(ValueError):
     """Raised when a parity input artifact is missing, ambiguous, or malformed."""
@@ -187,10 +189,8 @@ REFERENCE_FIRST_REAL_DECODE_LIFECYCLE_FILENAME = (
 REFERENCE_FIRST_REAL_DECODE_SCHEMA_VERSION = (
     "frontier.pdaf.reference-first-real-decode/v1"
 )
-REFERENCE_REPO_ROOT = Path(
-    "/data/ycfeng/stepfun-performance-optimization/Frontier/"
-    "worktrees/ref-afd-readonly"
-)
+# Resolved once at import so callers and tests can treat it as a stable pin.
+REFERENCE_REPO_ROOT = resolve_reference_repo_root()
 REFERENCE_GIT_HEAD = "dcb1cc8ee160a9c3c5412293d93b64042960aa4d"
 REFERENCE_REQUEST_SOURCE_SHA256 = (
     "4cff6da775a1b04ba4c252ccc679a3f2919ed5bfc98f1c039dff1519b9bc42b0"

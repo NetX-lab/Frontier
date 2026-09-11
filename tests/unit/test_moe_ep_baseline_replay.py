@@ -19,6 +19,15 @@ from tests.e2e.moe_ep_non_dummy_matrix import build_matrix, write_manifest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+@pytest.fixture(autouse=True)
+def _scratch_root_under_tmp_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Point the replay scratch root at pytest's tmp_path for every test."""
+
+    monkeypatch.setenv(baseline.SCRATCH_ROOT_ENV, str(tmp_path))
+
+
 def test_baseline_replay_harness_exists_under_e2e_tests() -> None:
     assert (REPO_ROOT / "tests/e2e/moe_ep_baseline_replay.py").is_file()
 
@@ -80,9 +89,9 @@ def test_baseline_command_uses_old_selector_and_baseline_only_pythonpath(
 
     assert env["PYTHONPATH"] == str(baseline_root.resolve())
     assert env["PYTHONDONTWRITEBYTECODE"] == "1"
-    assert env["TMPDIR"] == str(baseline.TMP_ROOT)
-    assert env["TEMP"] == str(baseline.TMP_ROOT)
-    assert env["TMP"] == str(baseline.TMP_ROOT)
+    assert env["TMPDIR"] == str(tmp_path)
+    assert env["TEMP"] == str(tmp_path)
+    assert env["TMP"] == str(tmp_path)
     assert env["ENABLE_DUMMY_MODE"] == "false"
     assert env["MOE_ROUTING_MODE"] == "uniform_random"
     assert env["MOE_ROUTING_DISTRIBUTION_TYPE"] == "random"
