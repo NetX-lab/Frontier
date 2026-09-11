@@ -12,9 +12,15 @@ if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
   exit 2
 fi
 
-exec "$PYTHON_BIN" "$REPO_ROOT/tests/e2e/moe_ep_non_dummy_matrix.py" \
-  --repo-root "$REPO_ROOT" \
-  --task-dir "$REPO_ROOT/task_memory/task_2026-08-12_moe_ep_rank_stragger_analysis" \
-  --output-root "${MATRIX_OUTPUT_ROOT:-/data/ycfeng/tmp/frontier_non_dummy_matrix}" \
-  --mode "${MATRIX_MODE:-run}" \
-  "$@"
+ARGS=(
+  --repo-root "$REPO_ROOT"
+  --task-dir "$REPO_ROOT/task_memory/task_2026-08-12_moe_ep_rank_stragger_analysis"
+)
+# Only forward --output-root when the caller set MATRIX_OUTPUT_ROOT explicitly.
+# Otherwise the Python entry point derives its default from FRONTIER_TMP_ROOT.
+if [ -n "${MATRIX_OUTPUT_ROOT:-}" ]; then
+  ARGS+=(--output-root "$MATRIX_OUTPUT_ROOT")
+fi
+ARGS+=(--mode "${MATRIX_MODE:-run}")
+
+exec "$PYTHON_BIN" "$REPO_ROOT/tests/e2e/moe_ep_non_dummy_matrix.py" "${ARGS[@]}" "$@"
