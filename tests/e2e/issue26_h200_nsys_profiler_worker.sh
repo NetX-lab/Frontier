@@ -23,6 +23,15 @@ git config --global --add safe.directory "$SOURCE"
 test "$(git -C "$SOURCE" rev-parse HEAD)" = "$COMMIT"
 test -z "$(git -C "$SOURCE" status --porcelain)"
 export PYTHONPATH="$REPO_ROOT/tests/e2e:$SOURCE"
+if [[ -n "${ISSUE26_OPTIONAL_PYTHONPATH:-}" ]]; then
+  export PYTHONPATH="$ISSUE26_OPTIONAL_PYTHONPATH:$PYTHONPATH"
+fi
+if [[ -n "${ISSUE26_EXTRA_LD_LIBRARY_PATH:-}" ]]; then
+  export LD_LIBRARY_PATH="$ISSUE26_EXTRA_LD_LIBRARY_PATH:${LD_LIBRARY_PATH:-}"
+fi
+if [[ -n "${ISSUE26_LD_PRELOAD:-}" ]]; then
+  export LD_PRELOAD="$ISSUE26_LD_PRELOAD"
+fi
 export ISSUE26_NSYS_CONTROL_DIR="$RUN_ROOT/nsys-control"
 export VLLM_MOE_UNIFORM_ROUTING=1
 export VLLM_V1_ALLOW_NO_CHUNKED_PREFILL=1 VLLM_ATTENTION_BACKEND=FLASHINFER
