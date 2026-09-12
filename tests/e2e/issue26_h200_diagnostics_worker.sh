@@ -121,7 +121,10 @@ Path(sys.argv[1]).write_text(json.dumps({
     "python": sys.version, "warmup_rounds": int(os.environ["ISSUE26_WARMUPS"]), "formal_requests": 100,
     "all2all_backend": os.environ["VLLM_ALL2ALL_BACKEND"],
     "environment": {key: value for key, value in os.environ.items()
-                    if key.startswith("VLLM_") or key == "PYTHONPATH"},
+                    if key.startswith("VLLM_") or key in {
+                        "PYTHONPATH", "LD_PRELOAD", "LD_LIBRARY_PATH",
+                        "EP_NCCL_ROOT_DIR", "NVSHMEM_DIR",
+                    }},
     "limits": "Instrumented diagnostics; not clean TTFT evidence.",
 }, indent=2) + "\n")
 PYMETA
