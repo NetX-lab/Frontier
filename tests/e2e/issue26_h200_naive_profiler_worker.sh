@@ -105,4 +105,8 @@ PY
 test "$(wc -l < "$RUN_ROOT/runtime/client.jsonl")" -eq "$(((${ISSUE26_WARMUPS:-10}) + 1) * 100)"
 find "$RUN_ROOT/torch-profiler" -type f -name '*.json.gz' -print > "$RUN_ROOT/trace_files.txt"
 test -s "$RUN_ROOT/trace_files.txt"
+TRACE_COUNT="$(wc -l < "$RUN_ROOT/trace_files.txt")"
+test "$TRACE_COUNT" -ge 4
+printf '{"trace_count":%s,"gpu_trace_minimum":4}\n' "$TRACE_COUNT" \
+  > "$RUN_ROOT/trace_manifest.json"
 echo NAIVE_KINETO_PROFILER_EXECUTION_COMPLETE
