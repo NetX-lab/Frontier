@@ -72,13 +72,17 @@ def analyze(run: Path, output: Path, warmups: int) -> dict[str, Any]:
     expected_server_request_id = f"{first_formal_response_id}-0"
 
     paths = sorted(run.glob("server.boundary.dp*.tp*.pp*.jsonl"))
-    if len(paths) != len(TP_RANKS):
-        raise AssertionError(
-            f"expected four DP0 boundary files, found {len(paths)}: {paths}")
+    if not paths:
+        raise AssertionError("no PPLX boundary files were produced")
 
     rank_rows: dict[int, dict[str, Any]] = {}
     for path in paths:
         rows = read_jsonl(path)
+        # The source opens one per-rank file during worker initialization. DP1
+        # therefore normally leaves an empty file because the selected formal
+        # batch belongs to DP0. Any non-empty non-DP0 file is unexpected.
+        if not rows:
+            continue
         if len(rows) != 1:
             raise AssertionError(f"{path} must contain exactly one row")
         row = rows[0]
