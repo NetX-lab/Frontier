@@ -4,7 +4,7 @@ set -euo pipefail
 
 RUN_ROOT="${1:?Provide a fresh output directory under the active task directory.}"
 SOURCE="${ISSUE26_DIAGNOSTIC_VLLM_SOURCE:-/data/ycfeng/tmp/vLLM-BS}"
-COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-e063e5ddf553ba4ac12e0344c62530b65083e8b}"
+COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-0f34fb271fd66d7dd84201ebdd4722781f829390}"
 WORKERS="$(cd "$(dirname "$0")" && pwd)"
 
 source "$WORKERS/issue26_h200_environment_probe.sh" "$RUN_ROOT/preflight"
