@@ -5,7 +5,13 @@ set -euo pipefail
 RUN_ROOT="${1:?Provide a fresh output directory under the active task directory.}"
 SOURCE="${ISSUE26_DIAGNOSTIC_VLLM_SOURCE:-/data/ycfeng/tmp/vLLM-BS}"
 COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-0f34fb271fd66d7dd84201ebdd4722781f829390}"
+BACKEND="${ISSUE26_NSYS_BACKEND:-naive}"
 WORKERS="$(cd "$(dirname "$0")" && pwd)"
+
+case "$BACKEND" in
+  naive|pplx) ;;
+  *) echo "Unsupported ISSUE26_NSYS_BACKEND: $BACKEND" >&2; exit 1 ;;
+esac
 
 source "$WORKERS/issue26_h200_environment_probe.sh" "$RUN_ROOT/preflight"
 source /data/ycfeng/tmp/issue26-h200-network/company-proxy.sh
@@ -20,7 +26,7 @@ export PYTHONPATH="$REPO_ROOT/tests/e2e:$SOURCE"
 export ISSUE26_NSYS_CONTROL_DIR="$RUN_ROOT/nsys-control"
 export VLLM_MOE_UNIFORM_ROUTING=1
 export VLLM_V1_ALLOW_NO_CHUNKED_PREFILL=1 VLLM_ATTENTION_BACKEND=FLASHINFER
-export VLLM_ALL2ALL_BACKEND=naive
+export VLLM_ALL2ALL_BACKEND="$BACKEND"
 export VLLM_FRONTIER_INSTRUMENTATION=0
 export ISSUE26_NSYS_CAPTURE_STRICT=1
 unset VLLM_FRONTIER_BATCH_LOG_PATH VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH
@@ -64,7 +70,7 @@ cat > "$RUN_ROOT/profile_manifest.json" <<EOF
   "gpu": "H200",
   "cluster": "step_main",
   "num_gpu_blocks_override": 310809,
-  "backend": "naive",
+  "backend": "$BACKEND",
   "workload": "4096-prefill/1024-output",
   "warmup_replays": 10,
   "formal_requests": 100,
