@@ -8,6 +8,17 @@ export NO_PROXY="$no_proxy,127.0.0.1,localhost,::1" no_proxy="$no_proxy,127.0.0.
 export VLLM_V1_ALLOW_NO_CHUNKED_PREFILL=1 VLLM_ATTENTION_BACKEND=FLASHINFER
 export VLLM_FRONTIER_INSTRUMENTATION=0 WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+WARMUPS="${ISSUE26_WARMUPS:-10}"
+export ISSUE26_WARMUPS="$WARMUPS"
+ALL2ALL_BACKEND="${ISSUE26_ALL2ALL_BACKEND:-naive}"
+if (( WARMUPS < 10 )); then
+  echo "ISSUE26_WARMUPS must be at least 10" >&2
+  exit 1
+fi
+case "$ALL2ALL_BACKEND" in
+  naive|pplx|deepep_high_throughput|deepep_low_latency) ;;
+  *) echo "Unsupported ISSUE26_ALL2ALL_BACKEND=$ALL2ALL_BACKEND" >&2; exit 1 ;;
+esac
 RUN_CACHE_ROOT="$TMPDIR/$(basename "$(dirname "$PROBE_ROOT")")"
 export VLLM_CACHE_ROOT="$RUN_CACHE_ROOT/vllm-cache"
 export CUDA_CACHE_PATH="$RUN_CACHE_ROOT/cuda-cache"
@@ -17,7 +28,7 @@ unset VLLM_FRONTIER_BATCH_LOG_PATH VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH
 unset VLLM_FRONTIER_SCHED_LOG_PATH VLLM_FRONTIER_MOE_ROUTING_LOG_PATH
 unset VLLM_FRONTIER_RUNTIME_META_ENABLED VLLM_FRONTIER_PREFILL_ENDPOINT_LOG_PATH
 unset VLLM_FRONTIER_SCHED_DECISION_LOG_PATH
-export VLLM_ALL2ALL_BACKEND=naive
+export VLLM_ALL2ALL_BACKEND="$ALL2ALL_BACKEND"
 SOURCE="${ISSUE26_DIAGNOSTIC_VLLM_SOURCE:-/data/ycfeng/tmp/vLLM-BS}"
 COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-46f7b179fd3bf42b9616dc4670cba419afdb2085}"
 export PYTHONPATH="$SOURCE"
@@ -69,7 +80,7 @@ PY
   "$PY" "$REPO_ROOT/tests/e2e/issue26_token_id_client.py" \
     --base-url http://127.0.0.1:8000 --model Qwen3-30B-A3B-Instruct-2507 \
     --row pf4096_dc1024 --prefill-tokens 4096 --decode-tokens 1024 \
-    --requests 100 --warmups 3 --qps 2 --seed 20260908 \
+    --requests 100 --warmups "$WARMUPS" --qps 2 --seed 20260908 \
     --output "$RUN/client.jsonl" > "$RUN/client.log" 2>&1
   cleanup
   SERVER_PID=""

@@ -116,8 +116,8 @@ async def run(args: argparse.Namespace) -> None:
 
     if args.qps <= 0 or not math.isfinite(args.qps):
         raise ValueError("qps must be finite and positive")
-    if args.requests <= 0 or args.warmups < 3:
-        raise ValueError("requests must be positive and warmups must be at least three")
+    if args.requests <= 0 or args.warmups < 10:
+        raise ValueError("requests must be positive and warmups must be at least ten")
 
     url = args.base_url.rstrip("/") + "/v1/completions"
     semaphore = asyncio.Semaphore(args.concurrency)
@@ -182,7 +182,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--prefill-tokens", type=int, required=True)
     parser.add_argument("--decode-tokens", type=int, required=True)
     parser.add_argument("--requests", type=int, default=100)
-    parser.add_argument("--warmups", type=int, default=3)
+    parser.add_argument("--warmups", type=int, default=10)
     parser.add_argument("--qps", type=float, default=2.0)
     parser.add_argument("--seed", type=int, default=20260908)
     parser.add_argument("--concurrency", type=int, default=128)

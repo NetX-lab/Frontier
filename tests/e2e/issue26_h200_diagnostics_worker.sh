@@ -17,6 +17,17 @@ export NO_PROXY="$no_proxy,127.0.0.1,localhost,::1" no_proxy="$no_proxy,127.0.0.
 export VLLM_V1_ALLOW_NO_CHUNKED_PREFILL=1 VLLM_ATTENTION_BACKEND=FLASHINFER
 export VLLM_FRONTIER_INSTRUMENTATION=1 VLLM_FRONTIER_TRACE_SKIP_WARMUP=1 WANDB_DISABLED=true VIDUR_DISABLE_WANDB=1
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+WARMUPS="${ISSUE26_WARMUPS:-10}"
+export ISSUE26_WARMUPS="$WARMUPS"
+ALL2ALL_BACKEND="${ISSUE26_ALL2ALL_BACKEND:-naive}"
+if (( WARMUPS < 10 )); then
+  echo "ISSUE26_WARMUPS must be at least 10" >&2
+  exit 1
+fi
+case "$ALL2ALL_BACKEND" in
+  naive|pplx|deepep_high_throughput|deepep_low_latency) ;;
+  *) echo "Unsupported ISSUE26_ALL2ALL_BACKEND=$ALL2ALL_BACKEND" >&2; exit 1 ;;
+esac
 export VLLM_CACHE_ROOT="$TMPDIR/$(basename "$PROBE_ROOT")/vllm-cache"
 export CUDA_CACHE_PATH="$TMPDIR/$(basename "$PROBE_ROOT")/cuda-cache"
 export TRITON_CACHE_DIR="$TMPDIR/$(basename "$PROBE_ROOT")/triton-cache"
@@ -24,7 +35,7 @@ unset VLLM_FRONTIER_BATCH_LOG_PATH VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH
 unset VLLM_FRONTIER_SCHED_LOG_PATH VLLM_FRONTIER_MOE_ROUTING_LOG_PATH
 unset VLLM_FRONTIER_RUNTIME_META_ENABLED VLLM_FRONTIER_PREFILL_ENDPOINT_LOG_PATH
 unset VLLM_FRONTIER_SCHED_DECISION_LOG_PATH VLLM_FRONTIER_DP_ROUTE_LOG_PATH
-export VLLM_ALL2ALL_BACKEND=naive
+export VLLM_ALL2ALL_BACKEND="$ALL2ALL_BACKEND"
 unset VLLM_FRONTIER_PROFILE_REQUEST_PREFIX VLLM_FRONTIER_PROFILE_BATCH_LIMIT
 unset VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES
 if [[ "$DIAGNOSTIC_SELECTION" == rca || "$DIAGNOSTIC_SELECTION" == communication || "$DIAGNOSTIC_SELECTION" == compute_* ]]; then
@@ -104,7 +115,8 @@ from pathlib import Path
 
 Path(sys.argv[1]).write_text(json.dumps({
     "mode": sys.argv[2], "created_utc": datetime.now(timezone.utc).isoformat(),
-    "python": sys.version, "warmup_rounds": 3, "formal_requests": 100,
+    "python": sys.version, "warmup_rounds": int(os.environ["ISSUE26_WARMUPS"]), "formal_requests": 100,
+    "all2all_backend": os.environ["VLLM_ALL2ALL_BACKEND"],
     "environment": {key: value for key, value in os.environ.items()
                     if key.startswith("VLLM_") or key == "PYTHONPATH"},
     "limits": "Instrumented diagnostics; not clean TTFT evidence.",
@@ -141,7 +153,7 @@ PY
   "$PY" "$REPO_ROOT/tests/e2e/issue26_token_id_client.py" \
     --base-url http://127.0.0.1:8000 --model Qwen3-30B-A3B-Instruct-2507 \
     --row pf4096_dc1024 --prefill-tokens 4096 --decode-tokens 1024 \
-    --requests 100 --warmups 3 --qps 2 --seed 20260908 \
+    --requests 100 --warmups "$WARMUPS" --qps 2 --seed 20260908 \
     --output "$RUN/client.jsonl" > "$RUN/client.log" 2>&1
   cleanup
   SERVER_PID=""

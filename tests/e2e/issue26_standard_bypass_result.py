@@ -11,20 +11,21 @@ def rows(path):
 
 
 def validate(root, source="/data/ycfeng/tmp/issue26-vllm-post-moe-bypass-20260910",
-             compare_reference=True):
+             compare_reference=True, warmups=10):
     result = {"client_checks": {}}
     for mode in ("clean/runtime/clean", "batch/runtime/batch"):
         clients = rows(root / mode / "client.jsonl")
-        expected = {f"warmup:pf4096_dc1024:r{r}:{i}" for r in range(3) for i in range(100)}
+        expected = {f"warmup:pf4096_dc1024:r{r}:{i}" for r in range(warmups) for i in range(100)}
         expected |= {f"pf4096_dc1024:{i}" for i in range(100)}
-        assert len(clients) == 400 and {r["request_id"] for r in clients} == expected
+        assert len(clients) == (warmups + 1) * 100 and {r["request_id"] for r in clients} == expected
         assert all(r["prompt_tokens"] == 4096 and r["completion_tokens_observed"] == 1024 for r in clients)
         logs = rows(root / mode / "client.log")
         phases = [r for r in logs if "replay" in r]
-        assert len(phases) == 4
+        assert len(phases) == warmups + 1
         for index, phase in enumerate(phases):
             assert phase["replay"] == index and phase["completed_requests"] == 100
-            prefix = f"warmup:pf4096_dc1024:r{index}:" if index < 3 else "pf4096_dc1024:"
+            prefix = (f"warmup:pf4096_dc1024:r{index}:"
+                      if index < warmups else "pf4096_dc1024:")
             group = [r for r in clients if r["request_id"].startswith(prefix)]
             assert len(group) == 100
             assert min(r["dispatch_monotonic_s"] for r in group) >= phase["phase_start_monotonic_s"]
@@ -34,7 +35,7 @@ def validate(root, source="/data/ycfeng/tmp/issue26-vllm-post-moe-bypass-2026091
                 assert max(r["client_completion_time_ns"] for r in prior) <= min(r["request_arrival_wall_time_ns"] for r in group)
             prior = group
         assert logs[-1] == {"formal_requests": 100, "formal_unique_ids": 100}
-        result["client_checks"][mode] = {"client_rows": 400, "warmup_rows": 300, "formal_rows": 100, "drain": "PASS", "phase_seconds": [p["phase_end_monotonic_s"]-p["phase_start_monotonic_s"] for p in phases]}
+        result["client_checks"][mode] = {"client_rows": len(clients), "warmup_rows": warmups * 100, "formal_rows": 100, "drain": "PASS", "phase_seconds": [p["phase_end_monotonic_s"]-p["phase_start_monotonic_s"] for p in phases]}
     run = root / "batch/runtime/batch"
     formal = [r for r in clients if r["request_id"] == "pf4096_dc1024:0"]
     assert len(formal) == 1
@@ -69,7 +70,7 @@ def validate(root, source="/data/ycfeng/tmp/issue26-vllm-post-moe-bypass-2026091
     assert not env.get("VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH")
     assert env.get("VLLM_FRONTIER_CUDA_PROFILER_CAPTURE", "0") == "0"
     assert env.get("VLLM_FRONTIER_TORCH_PROFILER_CAPTURE", "0") == "0"
-    assert manifest["warmup_rounds"] == 3 and manifest["formal_requests"] == 100
+    assert manifest["warmup_rounds"] == warmups and manifest["formal_requests"] == 100
     if compare_reference:
         reference = json.loads((root.parent/"h800-standard-replay-176000-repro-01/reproduction_summary.json").read_text())["new"]
         result["normal_reference"] = reference
@@ -85,8 +86,11 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--source", default="/data/ycfeng/tmp/issue26-vllm-post-moe-bypass-20260910")
     parser.add_argument("--no-historical-reference", action="store_false", dest="compare_reference")
+    parser.add_argument("--warmups", type=int, default=10)
     args = parser.parse_args()
-    result = validate(args.run, args.source, args.compare_reference)
+    if args.warmups < 10:
+        raise ValueError("--warmups must be at least 10")
+    result = validate(args.run, args.source, args.compare_reference, args.warmups)
     with args.output.open("x") as stream:
         json.dump(result, stream, indent=2)
         stream.write("\n")

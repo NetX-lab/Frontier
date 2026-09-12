@@ -12,24 +12,24 @@ def read_jsonl(path):
     return [json.loads(line) for line in path.read_text().splitlines() if line]
 
 
-def analyze(run, output):
+def analyze(run, output, warmups):
     client = read_jsonl(run / "client.jsonl")
     server = read_jsonl(run / "server.request_metrics.jsonl")
     formal_ids = {f"pf4096_dc1024:{i}" for i in range(100)}
     expected = formal_ids | {
         f"warmup:pf4096_dc1024:r{replay}:{i}"
-        for replay in range(3) for i in range(100)
+        for replay in range(warmups) for i in range(100)
     }
-    assert len(client) == 400 and {r["request_id"] for r in client} == expected
-    assert len(server) == 400
+    assert len(client) == (warmups + 1) * 100 and {r["request_id"] for r in client} == expected
+    assert len(server) == (warmups + 1) * 100
     by_server = {r["request_id"]: r for r in server}
     assert len(by_server) == 400
     assert {r["response_id"] + "-0" for r in client} == set(by_server)
     phases = [r for r in read_jsonl(run / "client.log") if "replay" in r]
-    assert [r["replay"] for r in phases] == [0, 1, 2, 3]
+    assert [r["replay"] for r in phases] == list(range(warmups + 1))
     assert all(r["completed_requests"] == 100 for r in phases)
     assert all(phases[i]["phase_end_monotonic_s"] <=
-               phases[i + 1]["phase_start_monotonic_s"] for i in range(3))
+               phases[i + 1]["phase_start_monotonic_s"] for i in range(warmups))
     joined = []
     for row in client:
         actual = by_server[row["response_id"] + "-0"]
@@ -60,7 +60,7 @@ def analyze(run, output):
         writer.writerow(["arrived_at", "num_prefill_tokens", "num_decode_tokens"])
         writer.writerows((row["arrived_at"], 4096, 1024) for row in joined)
     report = {"status": "PASS", "eligible_formal_requests": 100,
-              "warmup_requests_excluded": 300, "source_directory": str(run),
+              "warmup_requests_excluded": warmups * 100, "source_directory": str(run),
               "server_ttft_mean_ms": statistics.mean(r["server_ttft_ms"] for r in joined),
               "client_ttft_mean_ms": statistics.mean(r["client_ttft_ms"] for r in joined),
               "queue_arrival_span_s": joined[-1]["arrived_at"],
@@ -76,5 +76,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--run", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--warmups", type=int, default=10)
     arguments = parser.parse_args()
-    analyze(arguments.run, arguments.output)
+    if arguments.warmups < 10:
+        raise ValueError("--warmups must be at least 10")
+    analyze(arguments.run, arguments.output, arguments.warmups)

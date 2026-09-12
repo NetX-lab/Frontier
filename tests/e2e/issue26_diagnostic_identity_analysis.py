@@ -22,11 +22,11 @@ def canonical_request_id(value):
     return value[5:] if value.startswith("cmpl-") else value
 
 
-def analyze(run, output, mode):
+def analyze(run, output, mode, warmups):
     clients = list(rows(run / "client.jsonl"))
     expected = {f"pf4096_dc1024:{i}" for i in range(100)}
-    expected |= {f"warmup:pf4096_dc1024:r{r}:{i}" for r in range(3) for i in range(100)}
-    assert len(clients) == 400 and {r["request_id"] for r in clients} == expected
+    expected |= {f"warmup:pf4096_dc1024:r{r}:{i}" for r in range(warmups) for i in range(100)}
+    assert len(clients) == (warmups + 1) * 100 and {r["request_id"] for r in clients} == expected
     assert all(r["prompt_tokens"] == 4096 and r["completion_tokens_observed"] == 1024 for r in clients)
     formal = {r["response_id"] + "-0": r["request_id"] for r in clients if not r["request_id"].startswith("warmup:")}
     workers, prefill_workers, results = set(), {}, []
@@ -122,5 +122,8 @@ if __name__ == "__main__":
     parser.add_argument("--run", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--mode", choices=["ops", "routing", "batch"], required=True)
+    parser.add_argument("--warmups", type=int, default=10)
     args = parser.parse_args()
-    analyze(args.run, args.output, args.mode)
+    if args.warmups < 10:
+        raise ValueError("--warmups must be at least 10")
+    analyze(args.run, args.output, args.mode, args.warmups)
