@@ -76,11 +76,13 @@ def analyze(run: Path, output: Path, warmups: int) -> dict[str, Any]:
         raise AssertionError("no PPLX boundary files were produced")
 
     rank_rows: dict[int, dict[str, Any]] = {}
+    selected_dp_ranks: set[int] = set()
     for path in paths:
         rows = read_jsonl(path)
-        # The source opens one per-rank file during worker initialization. DP1
-        # therefore normally leaves an empty file because the selected formal
-        # batch belongs to DP0. Any non-empty non-DP0 file is unexpected.
+        # The source opens one per-rank file during worker initialization. The
+        # vLLM DP load balancer may assign the first formal request to either
+        # DP lane, so empty files are expected and the selected lane is
+        # determined from the validated request row below.
         if not rows:
             continue
         if len(rows) != 1:
@@ -88,11 +90,8 @@ def analyze(run: Path, output: Path, warmups: int) -> dict[str, Any]:
         row = rows[0]
         identity = (int(row["dp_rank"]), int(row["tp_rank"]),
                     int(row["pp_rank"]))
-        if identity[0] != 0 or identity[1] not in TP_RANKS or identity[2] != 0:
+        if identity[1] not in TP_RANKS or identity[2] != 0:
             raise AssertionError(f"unexpected boundary worker {identity}")
-        if identity[1] in rank_rows:
-            raise AssertionError(f"duplicate TP rank {identity[1]}")
-        rank_rows[identity[1]] = row
 
         request_ids = row.get("request_ids")
         request_tokens = row.get("request_num_tokens")
@@ -117,6 +116,19 @@ def analyze(run: Path, output: Path, warmups: int) -> dict[str, Any]:
         if not all(predicates.values()):
             raise AssertionError(f"{identity} first-formal predicates failed: {predicates}")
         row["validated_predicates"] = predicates
+        selected_dp_ranks.add(identity[0])
+        if identity[1] in rank_rows:
+            raise AssertionError(f"duplicate TP rank {identity[1]}")
+        rank_rows[identity[1]] = row
+
+    # Preserve the four-rank shared-forward gate: a valid boundary must come
+    # from exactly one DP lane, while the lane itself is selected by the
+    # formal request assignment observed in the artifact.
+    if len(selected_dp_ranks) != 1:
+        raise AssertionError(
+            f"first formal request spans multiple DP lanes: "
+            f"{sorted(selected_dp_ranks)}")
+    selected_dp_rank = next(iter(selected_dp_ranks))
 
     if set(rank_rows) != set(TP_RANKS):
         raise AssertionError(f"missing TP ranks: {sorted(set(TP_RANKS) - set(rank_rows))}")
@@ -139,7 +151,7 @@ def analyze(run: Path, output: Path, warmups: int) -> dict[str, Any]:
         "formal_requests": len(formal),
         "client_rows": len(clients),
         "workers": [
-            {"dp_rank": 0, "tp_rank": tp, "pp_rank": 0,
+            {"dp_rank": selected_dp_rank, "tp_rank": tp, "pp_rank": 0,
              "cuda_event_elapsed_ms": durations[tp],
              "batch_dp_token_counts": rank_rows[tp].get("batch_dp_token_counts"),
              "source_commit": rank_rows[tp].get("source_commit")}
@@ -152,11 +164,12 @@ def analyze(run: Path, output: Path, warmups: int) -> dict[str, Any]:
             "batch_size": 1,
             "prefill_tokens": 4096,
             "decode_tokens": 0,
-            "dp_rank": 0,
+            "dp_rank": selected_dp_rank,
             "tp_ranks": list(TP_RANKS),
             "pp_rank": 0,
         },
         "duration_ms_by_tp": {str(tp): durations[tp] for tp in TP_RANKS},
+        "selected_dp_rank": selected_dp_rank,
         "median_ms": median_ms,
         "p90_ms": p90(ordered),
         "rank_max_ms": rank_max_ms,
