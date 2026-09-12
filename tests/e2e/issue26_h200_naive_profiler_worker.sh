@@ -59,8 +59,11 @@ EOF
 SERVER_PID=""
 cleanup() {
   if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
-    kill "$SERVER_PID"
-    wait "$SERVER_PID" || [[ "$?" -eq 143 ]]
+    # The server may exit non-zero after /stop_profile closes its distributed
+    # process group.  That teardown code is outside the profiling result and
+    # must not prevent trace artifact validation below.
+    kill "$SERVER_PID" 2>/dev/null || true
+    wait "$SERVER_PID" 2>/dev/null || true
   fi
 }
 trap cleanup EXIT
