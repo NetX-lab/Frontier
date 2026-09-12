@@ -4,7 +4,7 @@ set -euo pipefail
 
 RUN_ROOT="${1:?Provide a fresh output directory under the active task directory.}"
 SOURCE="${ISSUE26_DIAGNOSTIC_VLLM_SOURCE:-/data/ycfeng/tmp/vLLM-BS}"
-COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-46f7b179fd3bf42b9616dc4670cba419afdb2085}"
+COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-e063e5ddf553ba4ac12e0344c62530b65083e8b}"
 WORKERS="$(cd "$(dirname "$0")" && pwd)"
 
 source "$WORKERS/issue26_h200_environment_probe.sh" "$RUN_ROOT/preflight"
@@ -22,6 +22,7 @@ export VLLM_MOE_UNIFORM_ROUTING=1
 export VLLM_V1_ALLOW_NO_CHUNKED_PREFILL=1 VLLM_ATTENTION_BACKEND=FLASHINFER
 export VLLM_ALL2ALL_BACKEND=naive
 export VLLM_FRONTIER_INSTRUMENTATION=0
+export ISSUE26_NSYS_CAPTURE_STRICT=1
 unset VLLM_FRONTIER_BATCH_LOG_PATH VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH
 unset VLLM_FRONTIER_SCHED_LOG_PATH VLLM_FRONTIER_MOE_ROUTING_LOG_PATH
 unset VLLM_FRONTIER_RUNTIME_META_ENABLED VLLM_FRONTIER_PREFILL_ENDPOINT_LOG_PATH
@@ -69,7 +70,7 @@ cat > "$RUN_ROOT/profile_manifest.json" <<EOF
   "formal_requests": 100,
   "profiler": "Nsight Systems CUDA/CUPTI",
   "operator_instrumentation": false,
-  "capture_control": "cudaProfilerStart after warmup drain; cudaProfilerStop on first formal first token",
+  "capture_control": "cudaProfilerStart before first formal model forward; cudaProfilerStop immediately after that forward returns",
   "nsys_runtime_tarball": "$NSYS_TARBALL",
   "nsys_runtime_sha256": "$NSYS_SHA256",
   "nsys_host_runtime_tarball": "$NSYS_HOST_TARBALL",
