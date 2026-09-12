@@ -32,6 +32,9 @@ export VLLM_ALL2ALL_BACKEND="$ALL2ALL_BACKEND"
 SOURCE="${ISSUE26_DIAGNOSTIC_VLLM_SOURCE:-/data/ycfeng/tmp/vLLM-BS}"
 COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-46f7b179fd3bf42b9616dc4670cba419afdb2085}"
 export PYTHONPATH="$SOURCE"
+if [[ -n "${ISSUE26_OPTIONAL_PYTHONPATH:-}" ]]; then
+  export PYTHONPATH="$ISSUE26_OPTIONAL_PYTHONPATH:$PYTHONPATH"
+fi
 git config --global --add safe.directory "$SOURCE"
 git -C "$SOURCE" rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
 test "$(git -C "$SOURCE" rev-parse HEAD)" = "$COMMIT"

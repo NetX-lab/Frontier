@@ -62,6 +62,9 @@ fi
 SOURCE="${ISSUE26_DIAGNOSTIC_VLLM_SOURCE:-/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908}"
 COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-8453dd342c6aa2721aaf4b410998aab2f38bc2ec}"
 export PYTHONPATH="$SOURCE"
+if [[ -n "${ISSUE26_OPTIONAL_PYTHONPATH:-}" ]]; then
+  export PYTHONPATH="$ISSUE26_OPTIONAL_PYTHONPATH:$PYTHONPATH"
+fi
 git config --global --add safe.directory "$SOURCE"
 git -C "$SOURCE" rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
 test "$(git -C "$SOURCE" rev-parse HEAD)" = "$COMMIT"
