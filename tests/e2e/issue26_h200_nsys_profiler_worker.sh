@@ -36,18 +36,26 @@ mkdir -p "$RUN_ROOT/runtime" "$RUN_ROOT/nsys" "$ISSUE26_NSYS_CONTROL_DIR"
 
 NSYS_TARBALL=/data/ycfeng/tmp/issue26-nsys-runtime-20260913-01.tgz
 NSYS_SHA256=576c7a2b38d6db2d2ec69256b88346ae5adca6baf922665c8f7dc76ac335e1b4
+NSYS_HOST_TARBALL=/data/ycfeng/tmp/issue26-nsys-host-runtime-20260913-01.tgz
+NSYS_HOST_SHA256=b858b6448f5aef90a1ed32ee51cb2896ea19ef5716fee7c32b527b3fa7fcfe92
 test -s "$NSYS_TARBALL"
 test "$(sha256sum "$NSYS_TARBALL" | awk '{print $1}')" = "$NSYS_SHA256"
+test -s "$NSYS_HOST_TARBALL"
+test "$(sha256sum "$NSYS_HOST_TARBALL" | awk '{print $1}')" = "$NSYS_HOST_SHA256"
 NSYS_ROOT="$TMPDIR/issue26-nsys-runtime-20260913-01"
 mkdir -p "$NSYS_ROOT"
 if [[ ! -x "$NSYS_ROOT/target-linux-x64/nsys" ]]; then
   tar -xzf "$NSYS_TARBALL" -C "$NSYS_ROOT"
 fi
+if [[ ! -x "$NSYS_ROOT/host-linux-x64/QdstrmImporter" ]]; then
+  tar -xzf "$NSYS_HOST_TARBALL" -C "$NSYS_ROOT"
+fi
 NSYS="$NSYS_ROOT/target-linux-x64/nsys"
 test -x "$NSYS"
+test -x "$NSYS_ROOT/host-linux-x64/QdstrmImporter"
 TARGET_LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}"
 export PATH="$NSYS_ROOT/target-linux-x64:$PATH"
-export LD_LIBRARY_PATH="$NSYS_ROOT/target-linux-x64:${LD_LIBRARY_PATH:-}"
+export LD_LIBRARY_PATH="$NSYS_ROOT/host-linux-x64:$NSYS_ROOT/target-linux-x64:${LD_LIBRARY_PATH:-}"
 "$NSYS" --version > "$RUN_ROOT/nsys/version.txt"
 
 cat > "$RUN_ROOT/profile_manifest.json" <<EOF
@@ -64,6 +72,8 @@ cat > "$RUN_ROOT/profile_manifest.json" <<EOF
   "capture_control": "cudaProfilerStart after warmup drain; cudaProfilerStop on first formal first token",
   "nsys_runtime_tarball": "$NSYS_TARBALL",
   "nsys_runtime_sha256": "$NSYS_SHA256",
+  "nsys_host_runtime_tarball": "$NSYS_HOST_TARBALL",
+  "nsys_host_runtime_sha256": "$NSYS_HOST_SHA256",
   "limits": "Low-perturbation diagnostic decomposition; clean batch span remains the acceptance metric."
 }
 EOF
