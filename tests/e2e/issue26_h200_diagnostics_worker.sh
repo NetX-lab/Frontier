@@ -65,6 +65,12 @@ export PYTHONPATH="$SOURCE"
 if [[ -n "${ISSUE26_OPTIONAL_PYTHONPATH:-}" ]]; then
   export PYTHONPATH="$ISSUE26_OPTIONAL_PYTHONPATH:$PYTHONPATH"
 fi
+if [[ -n "${ISSUE26_EXTRA_LD_LIBRARY_PATH:-}" ]]; then
+  export LD_LIBRARY_PATH="$ISSUE26_EXTRA_LD_LIBRARY_PATH:${LD_LIBRARY_PATH:-}"
+fi
+if [[ -n "${ISSUE26_LD_PRELOAD:-}" ]]; then
+  export LD_PRELOAD="$ISSUE26_LD_PRELOAD"
+fi
 git config --global --add safe.directory "$SOURCE"
 git -C "$SOURCE" rev-parse HEAD > "$PROBE_ROOT/vllm_commit.txt"
 test "$(git -C "$SOURCE" rev-parse HEAD)" = "$COMMIT"
