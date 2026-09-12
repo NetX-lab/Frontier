@@ -189,7 +189,16 @@ async def run(args: argparse.Namespace) -> None:
             })
             print(json.dumps(phase_records[-1]), flush=True)
 
-        await post_profile(session, args.base_url, "/start_profile")
+        if args.nsys_control_dir is None:
+            await post_profile(session, args.base_url, "/start_profile")
+        else:
+            control_dir = Path(args.nsys_control_dir)
+            control_dir.mkdir(parents=True, exist_ok=True)
+            (control_dir / "start").write_text(
+                json.dumps({"event": "formal_start", "time_ns": time.time_ns()})
+                + "\n",
+                encoding="utf-8",
+            )
         profile_start = time.time_ns()
 
         async def stop_on_first_token(request_id: str, token_ns: int) -> None:
@@ -198,8 +207,21 @@ async def run(args: argparse.Namespace) -> None:
                 if profile_stop_started:
                     return
                 profile_stop_started = True
-                profile_stop_task = asyncio.create_task(
-                    post_profile(session, args.base_url, "/stop_profile"))
+                if args.nsys_control_dir is None:
+                    profile_stop_task = asyncio.create_task(
+                        post_profile(session, args.base_url, "/stop_profile"))
+                else:
+                    control_dir = Path(args.nsys_control_dir)
+                    control_dir.mkdir(parents=True, exist_ok=True)
+                    (control_dir / "stop").write_text(
+                        json.dumps({
+                            "event": "first_formal_first_token",
+                            "request_id": request_id,
+                            "time_ns": time.time_ns(),
+                        })
+                        + "\n",
+                        encoding="utf-8",
+                    )
                 phase_records.append({
                     "event": "first_formal_first_token",
                     "request_id": request_id,
@@ -227,10 +249,10 @@ async def run(args: argparse.Namespace) -> None:
             first_token_hook=stop_on_first_token if index == 0 else None,
         )) for index, offset in enumerate(offsets)]
         await asyncio.gather(*jobs)
-        if profile_stop_task is None:
-            await post_profile(session, args.base_url, "/stop_profile")
-        else:
+        if profile_stop_task is not None:
             await profile_stop_task
+        elif args.nsys_control_dir is None:
+            await post_profile(session, args.base_url, "/stop_profile")
         phase_records.append({
             "phase": "formal",
             "completed_requests": len(jobs),
@@ -273,6 +295,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--qps", type=float, default=2.0)
     parser.add_argument("--seed", type=int, default=20260908)
     parser.add_argument("--concurrency", type=int, default=128)
+    parser.add_argument(
+        "--nsys-control-dir",
+        help="Use filesystem markers to control an external Nsight Systems capture.",
+    )
     parser.add_argument("--output", required=True)
     return parser.parse_args()
 
