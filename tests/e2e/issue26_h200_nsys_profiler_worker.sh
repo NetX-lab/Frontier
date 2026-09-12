@@ -149,8 +149,9 @@ else:
     raise TimeoutError("vLLM health endpoint did not become ready within 900 seconds")
 PY
 
+BASE_URL="http://127.0.0.1:8000"
 "$PY" "$WORKERS/issue26_naive_profiler_client.py" \
-  --base-url http://127.0.0.1:8000 \
+  "--base-url=$BASE_URL" \
   --model Qwen3-30B-A3B-Instruct-2507 \
   --row pf4096_dc1024 --prefill-tokens 4096 --decode-tokens 1024 \
   --requests 100 --warmups "${ISSUE26_WARMUPS:-10}" --qps 2 --seed 20260908 \
