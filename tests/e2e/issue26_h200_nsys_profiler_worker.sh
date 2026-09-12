@@ -146,7 +146,7 @@ printf '%s\n' "$REP" > "$RUN_ROOT/nsys_report_path.txt"
 
 for REPORT in cuda_gpu_trace cuda_gpu_kern_sum cuda_gpu_mem_time_sum cuda_api_sum; do
   "$NSYS" stats --report "$REPORT" --format csv --output "$RUN_ROOT/nsys/stats" \
-    --force-overwrite "$REP" > "$RUN_ROOT/nsys/stats_${REPORT}.log" 2>&1 || true
+    --force-overwrite=true "$REP" > "$RUN_ROOT/nsys/stats_${REPORT}.log" 2>&1 || true
 done
 
 echo NSYS_PROFILER_EXECUTION_COMPLETE
