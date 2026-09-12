@@ -106,7 +106,8 @@ PY
   --output "$RUN_ROOT/runtime/client.jsonl" \
   > "$RUN_ROOT/runtime/client.log" 2>&1
 
-test "$(wc -l < "$RUN_ROOT/runtime/client.jsonl")" -eq "$(((${ISSUE26_WARMUPS:-10}) + 1) * 100)"
+EXPECTED_ROWS=$(((${ISSUE26_WARMUPS:-10} + 1) * 100))
+test "$(wc -l < "$RUN_ROOT/runtime/client.jsonl")" -eq "$EXPECTED_ROWS"
 find "$RUN_ROOT/torch-profiler" -type f -name '*.json.gz' -print > "$RUN_ROOT/trace_files.txt"
 test -s "$RUN_ROOT/trace_files.txt"
 TRACE_COUNT="$(wc -l < "$RUN_ROOT/trace_files.txt")"
