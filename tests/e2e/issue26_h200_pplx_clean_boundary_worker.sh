@@ -26,7 +26,7 @@ if (( VLLM_MOE_DP_CHUNK_SIZE < 4096 )); then
 fi
 
 SOURCE="${ISSUE26_DIAGNOSTIC_VLLM_SOURCE:-/data/ycfeng/tmp/issue26-vllm-pplx-boundary-20260913-wt}"
-COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-cf1ef5de9c0c45aedec4cf9d22c8eb56caf8bf0b}"
+COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-448f2b65e7679ae7490114ad382b6ba79becb3c3}"
 
 RUN="$PROBE_ROOT/runtime"
 mkdir "$RUN"
