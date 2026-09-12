@@ -10,7 +10,8 @@ WORKERS="$(cd "$(dirname "$0")" && pwd)"
 source "$WORKERS/issue26_h200_environment_probe.sh" "$RUN_ROOT/preflight"
 source /data/ycfeng/tmp/issue26-h200-network/company-proxy.sh
 export HTTP_PROXY="$http_proxy" HTTPS_PROXY="$https_proxy" ALL_PROXY="$all_proxy"
-export NO_PROXY="$no_proxy,127.0.0.1,localhost,::1" no_proxy="$NO_PROXY"
+export NO_PROXY="${no_proxy:-${NO_PROXY:-}},127.0.0.1,localhost,::1"
+export no_proxy="$NO_PROXY"
 
 git config --global --add safe.directory "$SOURCE"
 test "$(git -C "$SOURCE" rev-parse HEAD)" = "$COMMIT"
