@@ -25,7 +25,7 @@ from typing import Any, Iterable
 COMMUNICATION_RE = re.compile(
     r"(?:nccl|all.?reduce|all.?to.?all|alltoall|broadcast|reduce.?scatter|"
     r"allgather|cross.?device.?reduce|\bsend\b|\brecv\b|\bscatter\b|"
-    r"\bgather\b|collective)", re.IGNORECASE)
+    r"\bgather\b)", re.IGNORECASE)
 MEMORY_RE = re.compile(
     r"(?:memcpy|memset|copy_|copykernel|\bcast\b|\bconvert\b|"
     r"\btranspose\b|index_select)", re.IGNORECASE)
