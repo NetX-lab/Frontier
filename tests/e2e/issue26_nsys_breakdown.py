@@ -30,7 +30,7 @@ MEMORY_KERNEL_RE = re.compile(
 COMMUNICATION_RE = re.compile(
     r"(?:nccl|all.?reduce|all.?to.?all|alltoall|broadcast|reduce.?scatter|"
     r"allgather|cross.?device.?reduce|\bsend\b|\brecv\b|\bscatter\b|"
-    r"\bgather\b|collective)",
+    r"\bgather\b)",
     re.IGNORECASE,
 )
 DEVICE_ID_RE = re.compile(r"\((\d+)\)\s*$")
