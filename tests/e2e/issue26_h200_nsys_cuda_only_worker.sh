@@ -113,6 +113,7 @@ trap cleanup EXIT
   --cpuctxsw=none \
   --cuda-memory-usage=false \
   --cuda-event-trace=false \
+  --flush-on-cudaprofilerstop=false \
   --cuda-trace-scope=process-tree \
   --trace-fork-before-exec=false \
   --show-output=false \
