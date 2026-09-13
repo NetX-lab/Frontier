@@ -211,8 +211,7 @@ trap cleanup EXIT
   --trace-fork-before-exec=false \
   --show-output=false \
   --wait=all \
-  --env-var="LD_LIBRARY_PATH=$TARGET_LD_LIBRARY_PATH" \
-  --env-var="PYTHONPATH=$PYTHONPATH" \
+  --env-var="LD_LIBRARY_PATH=$TARGET_LD_LIBRARY_PATH,PYTHONPATH=$PYTHONPATH" \
   --output="$RUN_ROOT/nsys/first_formal" \
   --force-overwrite=true \
   -- "$PY" -m vllm.entrypoints.cli.main serve /data/ycfeng/tmp/issue26-qwen3-dummy \
