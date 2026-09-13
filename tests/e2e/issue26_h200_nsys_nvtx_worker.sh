@@ -131,6 +131,69 @@ export CUDA_CACHE_PATH="$TMPDIR/$(basename "$RUN_ROOT")/cuda-cache"
 export TRITON_CACHE_DIR="$TMPDIR/$(basename "$RUN_ROOT")/triton-cache"
 mkdir -p "$RUN_ROOT/runtime" "$RUN_ROOT/nsys" "$ISSUE26_NSYS_CONTROL_DIR"
 
+# NVTX capture can miss a range emitted only by a forked vLLM worker when the
+# Nsight trigger is attached to the root target process.  Keep the vLLM shim
+# for boundary diagnostics, and add a separate process-tree range driven by
+# the existing client markers.  The watcher emits no CUDA work.
+cat > "$RUN_ROOT/nvtx-watcher.py" <<'PY'
+from __future__ import annotations
+
+import json
+import sys
+import time
+from pathlib import Path
+
+import torch
+
+
+def main() -> None:
+    control_dir = Path(sys.argv[1])
+    status_path = Path(sys.argv[2])
+    start_path = control_dir / "start"
+    stop_path = control_dir / "stop"
+    deadline = time.monotonic() + 1800.0
+    while not start_path.exists():
+        if time.monotonic() >= deadline:
+            raise TimeoutError("formal start marker was not observed")
+        time.sleep(0.001)
+    torch.cuda.nvtx.range_push("issue26_root_formal_forward")
+    while not stop_path.exists():
+        if time.monotonic() >= deadline:
+            raise TimeoutError("formal stop marker was not observed")
+        time.sleep(0.001)
+    torch.cuda.nvtx.range_pop()
+    status_path.write_text(json.dumps({
+        "status": "PASS",
+        "range": "issue26_root_formal_forward",
+    }) + "\n", encoding="utf-8")
+
+
+if __name__ == "__main__":
+    main()
+PY
+cat > "$RUN_ROOT/nsys-target.sh" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+"$PY" "$RUN_ROOT/nvtx-watcher.py" "$ISSUE26_NSYS_CONTROL_DIR" "$RUN_ROOT/nvtx-watcher-status.json" &
+WATCHER_PID=\$!
+cleanup_watcher() {
+  if kill -0 "\$WATCHER_PID" 2>/dev/null; then
+    kill "\$WATCHER_PID" 2>/dev/null || true
+    wait "\$WATCHER_PID" 2>/dev/null || true
+  fi
+}
+trap cleanup_watcher EXIT
+exec "$PY" -m vllm.entrypoints.cli.main serve /data/ycfeng/tmp/issue26-qwen3-dummy \\
+  --tensor-parallel-size 4 --data-parallel-size 2 --enable-expert-parallel \\
+  --dtype bfloat16 --load-format dummy --max-model-len 16384 \\
+  --max-num-batched-tokens 16384 --max-num-seqs 1024 \\
+  --gpu-memory-utilization 0.9 --block-size 16 --num-gpu-blocks-override 310809 \\
+  --seed 0 --no-enable-chunked-prefill --no-enable-prefix-caching \\
+  --enforce-eager --served-model-name Qwen3-30B-A3B-Instruct-2507 \\
+  --skip-tokenizer-init
+EOF
+chmod +x "$RUN_ROOT/nsys-target.sh"
+
 # sitecustomize must precede vLLM and the client helper on PYTHONPATH.
 export PYTHONPATH="$NVTX_SHIM_ROOT:$REPO_ROOT/tests/e2e:$SOURCE"
 if [[ -n "${ISSUE26_OPTIONAL_PYTHONPATH:-}" ]]; then
@@ -179,8 +242,9 @@ cat > "$RUN_ROOT/profile_manifest.json" <<EOF
   "profiler": "Nsight Systems CUDA/NVTX (NVTX-only range trigger)",
   "operator_instrumentation": false,
   "capture_control": "NVTX range_push before first formal model forward; range_pop immediately after that forward returns",
-  "nvtx_capture_range": "issue26_formal_forward",
+  "nvtx_capture_range": "issue26_root_formal_forward",
   "nvtx_shim": "run-root sitecustomize; vLLM checkout unchanged",
+  "nvtx_watcher": "target-process-tree watcher driven by existing formal start/stop markers; no CUDA work",
   "nsys_runtime_tarball": "$NSYS_TARBALL",
   "nsys_runtime_sha256": "$NSYS_SHA256",
   "nsys_host_runtime_tarball": "$NSYS_HOST_TARBALL",
@@ -200,7 +264,7 @@ trap cleanup EXIT
 
 "$NSYS" profile \
   --capture-range=nvtx \
-  --nvtx-capture=issue26_formal_forward \
+  --nvtx-capture=issue26_root_formal_forward \
   --capture-range-end=stop \
   --trace=cuda,nvtx \
   --sample=none \
@@ -213,14 +277,7 @@ trap cleanup EXIT
   --wait=all \
   --output="$RUN_ROOT/nsys/first_formal" \
   --force-overwrite=true \
-  -- "$PY" -m vllm.entrypoints.cli.main serve /data/ycfeng/tmp/issue26-qwen3-dummy \
-    --tensor-parallel-size 4 --data-parallel-size 2 --enable-expert-parallel \
-    --dtype bfloat16 --load-format dummy --max-model-len 16384 \
-    --max-num-batched-tokens 16384 --max-num-seqs 1024 \
-    --gpu-memory-utilization 0.9 --block-size 16 --num-gpu-blocks-override 310809 \
-    --seed 0 --no-enable-chunked-prefill --no-enable-prefix-caching \
-    --enforce-eager --served-model-name Qwen3-30B-A3B-Instruct-2507 \
-    --skip-tokenizer-init > "$RUN_ROOT/runtime/server.log" 2>&1 &
+  -- bash "$RUN_ROOT/nsys-target.sh" > "$RUN_ROOT/runtime/server.log" 2>&1 &
 SERVER_PID=$!
 
 "$PY" - "$SERVER_PID" <<'PY'
@@ -269,6 +326,7 @@ EXPECTED_ROWS=$(((${ISSUE26_WARMUPS:-10} + 1) * 100))
 test "$(wc -l < "$RUN_ROOT/runtime/client.jsonl")" -eq "$EXPECTED_ROWS"
 test -s "$ISSUE26_NSYS_CONTROL_DIR/start"
 test -s "$ISSUE26_NSYS_CONTROL_DIR/stop"
+test -s "$RUN_ROOT/nvtx-watcher-status.json"
 
 cleanup
 SERVER_PID=""
@@ -278,7 +336,7 @@ test -n "$REP"
 printf '%s\n' "$REP" > "$RUN_ROOT/nsys_report_path.txt"
 
 for REPORT in nvtx_sum cuda_gpu_trace cuda_gpu_kern_sum cuda_gpu_mem_time_sum cuda_api_sum; do
-  "$NSYS" stats --report "$REPORT" --filter-nvtx=issue26_formal_forward \
+  "$NSYS" stats --report "$REPORT" --filter-nvtx=issue26_root_formal_forward \
     --format csv --output "$RUN_ROOT/nsys/stats" --force-overwrite=true "$REP" \
     > "$RUN_ROOT/nsys/stats_${REPORT}.log" 2>&1 || true
 done
