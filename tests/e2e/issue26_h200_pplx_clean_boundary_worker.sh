@@ -3,7 +3,10 @@
 set -euo pipefail
 RUN_ROOT="${1:?Provide a fresh output directory under the active task directory.}"
 WORKERS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$WORKERS/issue26_h200_environment_probe.sh" "$RUN_ROOT"
+# Keep the launch script in RUN_ROOT while placing probe artifacts in a fresh
+# child directory.  The probe intentionally rejects an already-existing root.
+PROBE_ROOT="$RUN_ROOT/preflight"
+source "$WORKERS/issue26_h200_environment_probe.sh" "$PROBE_ROOT"
 source /data/ycfeng/tmp/issue26-h200-network/company-proxy.sh
 export HTTP_PROXY="$http_proxy" HTTPS_PROXY="$https_proxy" ALL_PROXY="$all_proxy"
 export NO_PROXY="$no_proxy,127.0.0.1,localhost,::1" no_proxy="$no_proxy,127.0.0.1,localhost,::1"
@@ -28,7 +31,7 @@ fi
 SOURCE="${ISSUE26_DIAGNOSTIC_VLLM_SOURCE:-/data/ycfeng/tmp/issue26-vllm-pplx-boundary-20260913-wt}"
 COMMIT="${ISSUE26_DIAGNOSTIC_VLLM_COMMIT:-448f2b65e7679ae7490114ad382b6ba79becb3c3}"
 
-RUN="$PROBE_ROOT/runtime"
+RUN="$RUN_ROOT/runtime"
 mkdir "$RUN"
 RUN_CACHE_ROOT="$TMPDIR/$(basename "$PROBE_ROOT")"
 export VLLM_CACHE_ROOT="$RUN_CACHE_ROOT/vllm-cache"
