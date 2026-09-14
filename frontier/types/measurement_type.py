@@ -3,6 +3,7 @@ from enum import Enum
 
 class MeasurementType(str, Enum):
     CUDA_EVENT = "CUDA_EVENT"
+    DEVICE_EVENT = "DEVICE_EVENT"
     KERNEL_ONLY = "KERNEL_ONLY"
 
     @classmethod

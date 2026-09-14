@@ -424,16 +424,21 @@ class ExecutionTimePredictionModelManager:
 
         self._active_measurement_type = MeasurementType.CUDA_EVENT
         self._trained_models_eager = {}
+        self._trained_models_device_event = {}
         self._trained_models_kernel_only = {}
         self._models_by_precision_eager = {}
+        self._models_by_precision_device_event = {}
         self._models_by_precision_kernel_only = {}
         self._model_profiling_precision_eager = {}
+        self._model_profiling_precision_device_event = {}
         self._model_profiling_precision_kernel_only = {}
         # Typed FFN models are keyed by their selected semantic domain.  Keep
         # the historical bare registries for untyped/legacy models only.
         self._trained_models_eager_by_contract = {}
+        self._trained_models_device_event_by_contract = {}
         self._trained_models_kernel_only_by_contract = {}
         self._models_by_precision_eager_by_contract = {}
+        self._models_by_precision_device_event_by_contract = {}
         self._models_by_precision_kernel_only_by_contract = {}
 
         if self._all_dummy_mode:
@@ -532,9 +537,33 @@ class ExecutionTimePredictionModelManager:
     def _measurement_family_name(measurement_type: MeasurementType) -> str:
         if measurement_type == MeasurementType.CUDA_EVENT:
             return "eager"
+        if measurement_type == MeasurementType.DEVICE_EVENT:
+            return "device_event"
         if measurement_type == MeasurementType.KERNEL_ONLY:
             return "kernel_only"
         raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
+
+    @staticmethod
+    def _event_measurement_type_for_replica(replica_config) -> MeasurementType:
+        """Select an event family from the configured device metadata only."""
+
+        device_config = getattr(replica_config, "device_config", None)
+        platform = getattr(device_config, "gpu_platform", None)
+        if platform is None:
+            try:
+                from frontier.config.device_sku_config import BaseDeviceSKUConfig
+
+                device_config = BaseDeviceSKUConfig.create_from_type_string(
+                    str(replica_config.device)
+                )
+                platform = device_config.gpu_platform
+            except (AttributeError, ValueError):
+                platform = "cuda"
+        return (
+            MeasurementType.DEVICE_EVENT
+            if str(platform).strip().lower() == "rocm"
+            else MeasurementType.CUDA_EVENT
+        )
 
     def _set_active_measurement_type(self, measurement_type: MeasurementType) -> None:
         self._active_measurement_type = measurement_type
@@ -563,21 +592,26 @@ class ExecutionTimePredictionModelManager:
         raise ValueError(f"Unsupported cluster_type={cluster_type!r}")
 
     def _get_measurement_types_for_cluster(
-        self, cluster_type: ClusterType
+        self, cluster_type: ClusterType, replica_config=None
     ) -> List[MeasurementType]:
+        event_measurement = (
+            self._event_measurement_type_for_replica(replica_config)
+            if replica_config is not None
+            else MeasurementType.CUDA_EVENT
+        )
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
             if cluster_type == ClusterType.PREFILL:
-                return [MeasurementType.CUDA_EVENT]
+                return [event_measurement]
             if cluster_type == ClusterType.DECODE_ATTN:
-                return [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY]
+                return [event_measurement, MeasurementType.KERNEL_ONLY]
             if cluster_type in (ClusterType.DECODE, ClusterType.DECODE_FFN):
                 return [MeasurementType.KERNEL_ONLY]
             if cluster_type == ClusterType.MONOLITHIC:
-                return [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY]
+                return [event_measurement, MeasurementType.KERNEL_ONLY]
             raise ValueError(f"Unsupported cluster_type={cluster_type!r}")
 
         if cluster_type == ClusterType.PREFILL:
-            return [MeasurementType.CUDA_EVENT]
+            return [event_measurement]
         if cluster_type in (
             ClusterType.DECODE,
             ClusterType.DECODE_ATTN,
@@ -585,16 +619,27 @@ class ExecutionTimePredictionModelManager:
         ):
             if self._is_kernel_only_measurement_enabled_for_cluster(cluster_type):
                 return [MeasurementType.KERNEL_ONLY]
-            return [MeasurementType.CUDA_EVENT]
+            return [event_measurement]
         if cluster_type == ClusterType.MONOLITHIC:
             if self._is_kernel_only_measurement_enabled_for_cluster(cluster_type):
-                return [MeasurementType.CUDA_EVENT, MeasurementType.KERNEL_ONLY]
-            return [MeasurementType.CUDA_EVENT]
+                return [event_measurement, MeasurementType.KERNEL_ONLY]
+            return [event_measurement]
         raise ValueError(f"Unsupported cluster_type={cluster_type!r}")
 
     def _resolve_measurement_input_files_for_config(
         self, replica_config, execution_time_predictor_config, measurement_type: MeasurementType
     ) -> Tuple[str, str, str, str, str, str]:
+        def _device_event_path(field_name: str, fallback: str) -> str:
+            configured = getattr(
+                execution_time_predictor_config,
+                f"{field_name}_device_event_input_file",
+                None,
+            )
+            if configured:
+                return configured
+            root, extension = os.path.splitext(fallback)
+            return f"{root}_device_event{extension}"
+
         linear_op_file = execution_time_predictor_config.linear_op_input_file
         if not linear_op_file and execution_time_predictor_config.mlp_input_file:
             linear_op_file = execution_time_predictor_config.mlp_input_file
@@ -605,6 +650,14 @@ class ExecutionTimePredictionModelManager:
             compute_file = linear_op_file
             attention_file = execution_time_predictor_config.atten_input_file
             moe_file = execution_time_predictor_config.moe_input_file
+        elif measurement_type == MeasurementType.DEVICE_EVENT:
+            compute_file = _device_event_path("linear_op", linear_op_file)
+            attention_file = _device_event_path(
+                "atten", execution_time_predictor_config.atten_input_file
+            )
+            moe_file = _device_event_path(
+                "moe", execution_time_predictor_config.moe_input_file
+            )
         elif measurement_type == MeasurementType.KERNEL_ONLY:
             compute_file = execution_time_predictor_config.linear_op_kernel_only_input_file
             attention_file = execution_time_predictor_config.atten_kernel_only_input_file
@@ -728,7 +781,9 @@ class ExecutionTimePredictionModelManager:
             logger.info(f"Block Size: {replica_scheduler_config.block_size}")
             logger.info(f"Is MoE Model: {is_moe_model}")
 
-            for measurement_type in self._get_measurement_types_for_cluster(cluster_type):
+            for measurement_type in self._get_measurement_types_for_cluster(
+                cluster_type, replica_config
+            ):
                 self._set_active_measurement_type(measurement_type)
                 family_name = self._measurement_family_name(measurement_type)
                 input_files = self._resolve_measurement_input_files_for_config(
@@ -2119,7 +2174,7 @@ class ExecutionTimePredictionModelManager:
         prefill_df = standard_df[~standard_df["is_decode"]].copy()
         decode_df = standard_df[standard_df["is_decode"]].copy()
         standard_prefill_df = pd.DataFrame()
-        if measurement_type == MeasurementType.CUDA_EVENT:
+        if measurement_type in (MeasurementType.CUDA_EVENT, MeasurementType.DEVICE_EVENT):
             if "prefill_chunk_size" not in prefill_df.columns:
                 raise ValueError(
                     "Missing required column 'prefill_chunk_size' in attention profiling data."
@@ -2217,7 +2272,7 @@ class ExecutionTimePredictionModelManager:
         # attn_prefill_mixed uses 12 features and requires on-demand prediction at runtime
         # Check if profiling data contains mixed-batch features
         mixed_batch_model_signature = f"attn_prefill_mixed_{attention_signature}"
-        if measurement_type == MeasurementType.CUDA_EVENT and mixed_batch_model_signature not in trained_model_signatures:
+        if measurement_type in (MeasurementType.CUDA_EVENT, MeasurementType.DEVICE_EVENT) and mixed_batch_model_signature not in trained_model_signatures:
             # Check for mixed-batch specific columns in the dataframe
             required_mixed_features = self.ATTN_PREFILL_MIXED_FEATURES
             has_mixed_batch_data = all(feat in prefill_df.columns for feat in required_mixed_features)
@@ -2249,7 +2304,7 @@ class ExecutionTimePredictionModelManager:
                 logger.info(f"Skipping attn_prefill_mixed for {cluster_type} - missing features: {missing_features}")
 
         decode_in_mixed_signature = f"attn_decode_in_mixed_{attention_signature}"
-        if measurement_type == MeasurementType.CUDA_EVENT and decode_in_mixed_signature not in trained_model_signatures:
+        if measurement_type in (MeasurementType.CUDA_EVENT, MeasurementType.DEVICE_EVENT) and decode_in_mixed_signature not in trained_model_signatures:
             required_decode_mixed_features = self.ATTN_DECODE_IN_MIXED_FEATURES
             has_decode_mixed_data = all(
                 feat in true_mixed_df.columns for feat in required_decode_mixed_features
@@ -4099,6 +4154,7 @@ class ExecutionTimePredictionModelManager:
     ) -> Dict[Tuple[str, Optional[str]], BaseEstimator]:
         registry_attr = {
             "eager": "_trained_models_eager_by_contract",
+            "device_event": "_trained_models_device_event_by_contract",
             "kernel_only": "_trained_models_kernel_only_by_contract",
         }.get(family_name)
         if registry_attr is None:
@@ -4114,6 +4170,7 @@ class ExecutionTimePredictionModelManager:
     ) -> Dict[str, Dict[Tuple[str, Optional[str]], BaseEstimator]]:
         registry_attr = {
             "eager": "_models_by_precision_eager_by_contract",
+            "device_event": "_models_by_precision_device_event_by_contract",
             "kernel_only": "_models_by_precision_kernel_only_by_contract",
         }.get(family_name)
         if registry_attr is None:
@@ -4127,6 +4184,7 @@ class ExecutionTimePredictionModelManager:
     def _legacy_model_registry(self, family_name: str) -> Dict[str, BaseEstimator]:
         registry_attr = {
             "eager": "_trained_models_eager",
+            "device_event": "_trained_models_device_event",
             "kernel_only": "_trained_models_kernel_only",
         }.get(family_name)
         if registry_attr is None:
@@ -4142,6 +4200,7 @@ class ExecutionTimePredictionModelManager:
     ) -> Dict[str, Dict[str, BaseEstimator]]:
         registry_attr = {
             "eager": "_models_by_precision_eager",
+            "device_event": "_models_by_precision_device_event",
             "kernel_only": "_models_by_precision_kernel_only",
         }.get(family_name)
         if registry_attr is None:
@@ -4354,7 +4413,7 @@ class ExecutionTimePredictionModelManager:
             return None
         requested_identity = _serialize_selected_layer_cache_identity(layer_contract)
         precision_key = precision.upper() if precision else None
-        for family_name in ("eager", "kernel_only"):
+        for family_name in ("eager", "device_event", "kernel_only"):
             model = self._get_family_model(
                 family_name,
                 model_name,
@@ -4372,11 +4431,19 @@ class ExecutionTimePredictionModelManager:
                 }
                 | {
                     str(value).upper()
+                    for value in self._contract_precision_registry("device_event")
+                }
+                | {
+                    str(value).upper()
                     for value in self._contract_precision_registry("kernel_only")
                 }
                 | {
                     str(value).upper()
                     for value in self._legacy_precision_registry("eager")
+                }
+                | {
+                    str(value).upper()
+                    for value in self._legacy_precision_registry("device_event")
                 }
                 | {
                     str(value).upper()
@@ -4437,35 +4504,56 @@ class ExecutionTimePredictionModelManager:
         if self._all_dummy_mode:
             logger.debug("Returning empty models dict for dummy mode")
             return {"eager": {}, "kernel_only": {}}
-        return {
+        models = {
             "eager": self._models_view_for_family("eager"),
             "kernel_only": self._models_view_for_family("kernel_only"),
         }
+        device_event_models = self._models_view_for_family("device_event")
+        if device_event_models:
+            models["device_event"] = device_event_models
+        return models
+
+    def _event_family_for_cluster(self, cluster_type: ClusterType) -> str:
+        cluster_config = (getattr(self, "_cluster_configs", None) or {}).get(
+            cluster_type
+        )
+        replica_config = getattr(cluster_config, "replica_config", None)
+        measurement_type = self._event_measurement_type_for_replica(replica_config)
+        return self._measurement_family_name(measurement_type)
 
     def get_models_for_cluster(self, cluster_type: ClusterType) -> Dict[str, Dict[str, BaseEstimator]]:
         """Return a cluster-specific view of trained models grouped by measurement family."""
         if self._all_dummy_mode:
             return {"eager": {}, "kernel_only": {}}
 
+        event_family = self._event_family_for_cluster(cluster_type)
+
+        def _event_models() -> Dict[str, BaseEstimator]:
+            return self._models_view_for_family(event_family, cluster_type)
+
+        event_key = "eager" if event_family == "eager" else event_family
+
         if cluster_type == ClusterType.PREFILL:
-            return {
-                "eager": self._models_view_for_family("eager", cluster_type),
+            models = {
+                event_key: _event_models(),
                 "kernel_only": {},
             }
+            return models
         if cluster_type in [ClusterType.DECODE, ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN]:
             if (
                 global_vars.get_sys_arch() == "pd-af-disaggregation"
                 and cluster_type == ClusterType.DECODE_ATTN
             ):
-                return {
-                    "eager": self._models_view_for_family("eager", cluster_type),
+                models = {
+                    event_key: _event_models(),
                     "kernel_only": self._models_view_for_family(
                         "kernel_only", cluster_type
                     ),
                 }
+                return models
             if not self._is_kernel_only_measurement_enabled_for_cluster(cluster_type):
                 return {
-                    "eager": self._models_view_for_family("eager", cluster_type),
+                    event_key: _event_models(),
                     "kernel_only": {},
                 }
             return {
@@ -4481,7 +4569,7 @@ class ExecutionTimePredictionModelManager:
                     "kernel_only", cluster_type
                 )
             return {
-                "eager": self._models_view_for_family("eager", cluster_type),
+                event_key: _event_models(),
                 "kernel_only": kernel_only_models,
             }
         raise ValueError(f"Unsupported cluster_type={cluster_type!r}")

@@ -28,6 +28,7 @@ class ProfileMethod(enum.Enum):
     CUDA = "cuda"
     KERNEL_ONLY = "kernel_only"
     CUDA_EVENT = "cuda_event"
+    DEVICE_EVENT = "device_event"
     KINETO = "kineto"
     PERF_COUNTER = "perf_counter"
     RECORD_FUNCTION = "record_function"
@@ -36,6 +37,7 @@ class ProfileMethod(enum.Enum):
 EXPORTABLE_PROFILE_METHOD_CHOICES = [
     ProfileMethod.CUDA.value,
     ProfileMethod.CUDA_EVENT.value,
+    ProfileMethod.DEVICE_EVENT.value,
     ProfileMethod.KERNEL_ONLY.value,
     ProfileMethod.RECORD_FUNCTION.value,
 ]
@@ -54,6 +56,8 @@ def normalize_profile_method(profile_method: str) -> str:
         ProfileMethod.RECORD_FUNCTION.value,
     }:
         return ProfileMethod.RECORD_FUNCTION.value
+    if normalized == ProfileMethod.DEVICE_EVENT.value:
+        return ProfileMethod.DEVICE_EVENT.value
     return normalized
 
 
@@ -63,11 +67,29 @@ def profile_method_to_measurement_type(profile_method: str) -> MeasurementType:
         return MeasurementType.CUDA_EVENT
     if normalized == ProfileMethod.RECORD_FUNCTION.value:
         return MeasurementType.KERNEL_ONLY
+    if normalized == ProfileMethod.DEVICE_EVENT.value:
+        return MeasurementType.DEVICE_EVENT
     raise ValueError(
-        "Only cuda_event and record_function profiling methods can be exported to predictor-training CSVs "
-        "(aliases: cuda and kernel_only). "
+        "Only cuda_event, device_event, and record_function profiling methods can be exported "
+        "to predictor-training CSVs (aliases: cuda and kernel_only). "
         f"Got profile_method={profile_method!r}."
     )
+
+
+def validate_profile_method_platform(
+    profile_method: str,
+    gpu_platform: str,
+) -> None:
+    """Reject event methods that do not match the selected GPU platform."""
+
+    method = normalize_profile_method(profile_method)
+    platform = str(gpu_platform).strip().lower()
+    if method == ProfileMethod.CUDA_EVENT.value and platform == "rocm":
+        raise ValueError("ROCm profiling requires profile_method=device_event")
+    if method == ProfileMethod.DEVICE_EVENT.value and platform == "cuda":
+        raise ValueError("CUDA profiling requires profile_method=cuda_event")
+    if platform not in {"cuda", "rocm", "cpu"}:
+        raise ValueError(f"Unsupported gpu_platform={gpu_platform!r}")
 
 
 def build_profiling_output_path(
@@ -120,6 +142,8 @@ def build_profile_method_output_path(
     output_op_name = str(op_name).strip()
     if measurement_type.value == "KERNEL_ONLY":
         output_op_name = f"{output_op_name}_kernel_only"
+    elif measurement_type.value == "DEVICE_EVENT":
+        output_op_name = f"{output_op_name}_device_event"
 
     return build_profiling_output_path(
         output_root=output_root,
