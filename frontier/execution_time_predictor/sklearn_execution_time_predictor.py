@@ -130,7 +130,7 @@ from frontier.spec_decode.mtp_runtime import load_mtp_structural_model_config
 from frontier.execution_time_predictor.profiling_metadata import (
     validate_model_architecture_profile,
 )
-from frontier.entities import ExecutionTime
+from frontier.entities import ExecutionTime, StageExecutionTime
 from frontier.types import ClusterType, MeasurementType
 
 
@@ -7938,7 +7938,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "include_moe must be None for an attention-only stage probe"
             )
         if self._enable_dummy_mode:
-            return self._get_dummy_execution_time(batch, stage_id)
+            dummy_execution_time = self._get_dummy_execution_time(batch, stage_id)
+            return StageExecutionTime.from_execution_time(
+                dummy_execution_time,
+                num_layers=num_layers,
+                first_layer_id=layer_id,
+            )
 
         logger.debug(
             f"[EXEC_TIME_PREDICT] Predicting stage execution time: stage_id={stage_id}, "
@@ -8255,61 +8260,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             ),
         )
 
-        # If num_layers is 1, return as-is
-        if num_layers == 1:
-            return base_execution_time
-
-        logger.debug(
-            "Aggregating dense execution time with num_layers_per_pipeline_stage=%s",
-            num_layers,
-        )
-
-        # Keep component fields at single-layer granularity and let ExecutionTime
-        # apply layer aggregation via num_layers_per_pipeline_stage.
-        return ExecutionTime(
-            num_layers_per_pipeline_stage=num_layers,
-            attention_rope_execution_time=base_execution_time._attention_rope_execution_time,
-            attention_kv_cache_save_execution_time=base_execution_time._attention_kv_cache_save_execution_time,
-            attention_decode_execution_time=base_execution_time._attention_decode_execution_time,
-            attention_prefill_execution_time=base_execution_time._attention_prefill_execution_time,
-            attention_layer_pre_proj_execution_time=base_execution_time._attention_layer_pre_proj_execution_time,
-            attention_layer_post_proj_execution_time=base_execution_time._attention_layer_post_proj_execution_time,
-            attn_norm_time=base_execution_time._attn_norm_time,
-            mlp_norm_time=base_execution_time._mlp_norm_time,
-            add_time=base_execution_time._add_time,
-            tensor_parallel_communication_time=base_execution_time._tensor_parallel_communication_time,
-            attn_tensor_parallel_allreduce_time=(
-                base_execution_time._attn_tensor_parallel_allreduce_time
-                if base_execution_time._has_attn_tensor_parallel_allreduce_time
-                else None
-            ),
-            moe_tensor_parallel_allreduce_time=(
-                base_execution_time._moe_tensor_parallel_allreduce_time
-                if base_execution_time._has_moe_tensor_parallel_allreduce_time
-                else None
-            ),
-            pipeline_parallel_communication_time=base_execution_time._pipeline_parallel_communication_time,
-            expert_parallel_communication_time=base_execution_time._expert_parallel_communication_time,
-            moe_gating_time=0.0,
-            moe_shuffling_time=0.0,
-            schedule_time=base_execution_time._schedule_time,
-            sampler_e2e_time=base_execution_time._sampler_e2e_time,
-            prepare_inputs_e2e_time=base_execution_time._prepare_inputs_e2e_time,
-            process_model_outputs_time=base_execution_time._process_model_outputs_time,
-            ray_comm_time=base_execution_time._ray_comm_time,
-            is_moe=False,
-            pp_producer_send_path_runtime_time=base_execution_time._pp_producer_send_path_runtime_time,
-            pp_receiver_head_runtime_time=base_execution_time._pp_receiver_head_runtime_time,
-            pp_prefill_consumer_active_runtime_time=base_execution_time._pp_prefill_consumer_active_runtime_time,
-            pp_stage_boundary_handoff_time=base_execution_time._pp_stage_boundary_handoff_time,
-            mlp_layer_up_proj_execution_time=base_execution_time._mlp_layer_up_proj_execution_time,
-            mlp_layer_down_proj_execution_time=base_execution_time._mlp_layer_down_proj_execution_time,
-            mlp_layer_act_execution_time=base_execution_time._mlp_layer_act_execution_time,
-            decode_draft_proposer_time=base_execution_time._decode_draft_proposer_time,
-            mtp_terminal_overshoot_time=base_execution_time._mtp_terminal_overshoot_time,
-            attention_operator_times=base_execution_time.attention_operator_times,
-            communication_operator_times=(
-                base_execution_time.communication_operator_times
-            ),
-            mlp_operator_times=base_execution_time.mlp_operator_times,
+        return StageExecutionTime.from_execution_time(
+            base_execution_time,
+            num_layers=num_layers,
+            first_layer_id=layer_id,
         )

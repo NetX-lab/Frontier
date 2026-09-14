@@ -95,10 +95,47 @@ class ExecutionTime(BaseEntity):
         mlp_operator_times: MLPOperatorTimes | None = None,
         moe_operator_times: MoEOperatorTimes | None = None,
         op_times: Mapping[str, float] | None = None,
+        global_layer_id: int | None = None,
+        attention_family_id: str | None = None,
+        attention_variant_id: str | None = None,
     ) -> None:
         self._id = ExecutionTime.generate_id()
 
+        if type(num_layers_per_pipeline_stage) is not int or num_layers_per_pipeline_stage <= 0:
+            raise ValueError(
+                "num_layers_per_pipeline_stage must be a positive int, "
+                f"got {num_layers_per_pipeline_stage!r}"
+            )
+        if global_layer_id is not None and (
+            type(global_layer_id) is not int or global_layer_id < 0
+        ):
+            raise ValueError(
+                "global_layer_id must be a non-negative int when provided, "
+                f"got {global_layer_id!r}"
+            )
+        identity_values = (global_layer_id, attention_family_id, attention_variant_id)
+        if any(value is not None for value in identity_values) and not (
+            type(global_layer_id) is int
+            and global_layer_id >= 0
+            and isinstance(attention_family_id, str)
+            and bool(attention_family_id.strip())
+            and isinstance(attention_variant_id, str)
+            and bool(attention_variant_id.strip())
+        ):
+            raise ValueError(
+                "global_layer_id, attention_family_id, and attention_variant_id "
+                "must all be provided and non-empty when layer attention identity "
+                "is provided"
+            )
         self._num_layers_per_pipeline_stage = num_layers_per_pipeline_stage
+        self._global_layer_id = global_layer_id
+        self._attention_family_id = attention_family_id
+        self._attention_variant_id = attention_variant_id
+        # Existing direct callers historically constructed an aggregate object
+        # by passing num_layers_per_pipeline_stage > 1. Keep that compatibility
+        # mode while all identity-bearing results use one real layer. Stage
+        # aggregation is implemented by StageExecutionTime.
+        self._legacy_aggregate = global_layer_id is None
         self._is_moe = is_moe
         if is_moe and mlp_operator_times is not None:
             raise ValueError("mlp_operator_times are only valid for dense MLP components")
@@ -501,8 +538,14 @@ class ExecutionTime(BaseEntity):
     def _scaled_time_attr_value(self, attr_name: str, legacy_value: float) -> float:
         return (
             self._time_attr_value(attr_name, legacy_value)
-            * self._num_layers_per_pipeline_stage
+            * self._aggregation_factor
         )
+
+    @property
+    def _aggregation_factor(self) -> int:
+        """Return the compatibility aggregation factor for scalar views."""
+
+        return self._num_layers_per_pipeline_stage if self._legacy_aggregate else 1
 
     def _get_expert_parallel_communication_time(self) -> float:
         return self._time_attr_value(
@@ -734,7 +777,7 @@ class ExecutionTime(BaseEntity):
         For single-layer granularity (num_layers=1): returns single-layer time
         For multi-layer aggregation (num_layers>1): returns aggregated time
         """
-        return self._attention_time.total_time() * self._num_layers_per_pipeline_stage
+        return self._attention_time.total_time() * self._aggregation_factor
 
     @property
     def moe_comm_time(self) -> float:
@@ -748,7 +791,7 @@ class ExecutionTime(BaseEntity):
         return (
             self._get_expert_parallel_communication_time()
             + self._get_moe_shuffling_time()
-        ) * self._num_layers_per_pipeline_stage
+        ) * self._aggregation_factor
 
     @property
     def moe_comp_time(self) -> float:
@@ -760,7 +803,7 @@ class ExecutionTime(BaseEntity):
         return (
             self._get_moe_grouped_gemm_time()
             + self._get_moe_gating_time()
-        ) * self._num_layers_per_pipeline_stage
+        ) * self._aggregation_factor
 
     @property
     def pipeline_time(self) -> float:
@@ -1040,8 +1083,45 @@ class ExecutionTime(BaseEntity):
 
     @property
     def num_layers(self) -> int:
-        """Number of layers in this pipeline stage."""
-        return self._num_layers_per_pipeline_stage
+        """Number of real layers represented by this result."""
+        return 1 if not self._legacy_aggregate else self._num_layers_per_pipeline_stage
+
+    @property
+    def global_layer_id(self) -> int | None:
+        """Resolved global decoder-layer identity, when available."""
+        return self._global_layer_id
+
+    @property
+    def attention_family_id(self) -> str | None:
+        """Resolved attention family identity, when available."""
+        return self._attention_family_id
+
+    @property
+    def attention_variant_id(self) -> str | None:
+        """Resolved attention variant identity, when available."""
+        return self._attention_variant_id
+
+    def as_single_layer(
+        self,
+        *,
+        global_layer_id: int,
+        attention_family_id: str = "dense_attention",
+        attention_variant_id: str = "unknown",
+    ) -> "ExecutionTime":
+        """Copy this timing payload as one real layer with explicit identity.
+
+        The copy does not allocate a new simulator entity ID. Layer timing
+        records are internal stage data and must not perturb unrelated entity
+        ID sequences.
+        """
+
+        layer = deepcopy(self)
+        layer._num_layers_per_pipeline_stage = 1
+        layer._legacy_aggregate = False
+        layer._global_layer_id = global_layer_id
+        layer._attention_family_id = attention_family_id
+        layer._attention_variant_id = attention_variant_id
+        return layer
 
     # MLP Component Properties
     @property
@@ -1077,7 +1157,7 @@ class ExecutionTime(BaseEntity):
     @property
     def mlp_all_reduce_time(self) -> float:
         """TP allreduce time for MLP (aggregated across all layers)."""
-        return self._get_moe_tp_allreduce_time() * self._num_layers_per_pipeline_stage
+        return self._get_moe_tp_allreduce_time() * self._aggregation_factor
 
     @property
     def mlp_norm_time(self) -> float:
@@ -1114,7 +1194,7 @@ class ExecutionTime(BaseEntity):
     @property
     def attention_all_reduce_time(self) -> float:
         """TP allreduce time for attention (aggregated across all layers)."""
-        return self._get_attn_tp_allreduce_time() * self._num_layers_per_pipeline_stage
+        return self._get_attn_tp_allreduce_time() * self._aggregation_factor
 
     @property
     def moe_tensor_parallel_allgather_time(self) -> float:
@@ -1317,7 +1397,7 @@ class ExecutionTime(BaseEntity):
             "add_ffn_residual_time",
             self._residual_time.add_ffn_residual_time,
         )
-        return single_layer_add_time * self._num_layers_per_pipeline_stage
+        return single_layer_add_time * self._aggregation_factor
 
     @property
     def add_attn_residual_time(self) -> float:
@@ -1451,7 +1531,7 @@ class ExecutionTime(BaseEntity):
         single_layer_block_time = self._get_block_execution_time()
 
         # Aggregate across all layers
-        total_computation_time = single_layer_block_time * self._num_layers_per_pipeline_stage
+        total_computation_time = single_layer_block_time * self._aggregation_factor
 
         # Add pipeline parallel communication (not scaled by layers)
         pipeline_stage_execution_time = (

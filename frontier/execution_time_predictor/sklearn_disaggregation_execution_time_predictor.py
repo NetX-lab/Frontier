@@ -21,7 +21,7 @@ from frontier.config import global_vars
 from frontier.config.parallel_semantics import (
     resolve_shared_expert_tensor_parallel_size,
 )
-from frontier.entities import Batch, EPBatchGroup, ExecutionTime
+from frontier.entities import Batch, EPBatchGroup, ExecutionTime, StageExecutionTime
 from frontier.entities.time_components import (
     AttentionTime,
     CommunicationOperatorTimes,
@@ -1366,6 +1366,37 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         )
 
     def predict_stage_execution_time(
+        self,
+        batch: Batch,
+        stage_id: int,
+        cluster_type: ClusterType,
+        num_layers: int = 1,
+        layer_id: int = 0,
+        include_moe: bool | None = None,
+        include_ffn: bool = True,
+        include_attention: bool = True,
+    ) -> StageExecutionTime:
+        """Return ordered per-layer timings with stage-owned work separated."""
+
+        legacy_result = self._predict_stage_execution_time_legacy(
+            batch=batch,
+            stage_id=stage_id,
+            cluster_type=cluster_type,
+            num_layers=num_layers,
+            layer_id=layer_id,
+            include_moe=include_moe,
+            include_ffn=include_ffn,
+            include_attention=include_attention,
+        )
+        if isinstance(legacy_result, StageExecutionTime):
+            return legacy_result
+        return StageExecutionTime.from_execution_time(
+            legacy_result,
+            num_layers=num_layers,
+            first_layer_id=layer_id,
+        )
+
+    def _predict_stage_execution_time_legacy(
         self,
         batch: Batch,
         stage_id: int,
