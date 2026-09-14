@@ -902,6 +902,20 @@ def test_monolithic_predictor_exposes_global_per_replica_layer_routing_details()
     }
 
 
+def test_monolithic_shared_routing_details_use_actual_replica_ids() -> None:
+    predictor = object.__new__(_DummySklearnMoEPredictor)
+    predictor._global_routing_allocations = {
+        0: {0: 0.5, 1: 0.5},
+    }
+    predictor._replica_config = SimpleNamespace(cluster_num_replicas=2)
+    predictor._actual_replica_ids = [11, 17]
+
+    details = predictor._build_shared_routing_details()
+
+    assert set(details) == {11, 17}
+    assert details[11] == details[17]
+
+
 def test_monolithic_routing_allocations_use_global_expert_ids() -> None:
     predictor = object.__new__(_DummySklearnMoEPredictor)
     predictor._model_config = SimpleNamespace(num_layers=2)
