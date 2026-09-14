@@ -23,7 +23,7 @@ from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.common.utils import raise_if_fp8_requested
 from frontier.profiling.linear_op.profiling_plan import memory_operator_enabled
 from frontier.model_architectures import (
-    LinearAttentionImplementation,
+    AttentionLinearOpImplementation,
     get_model_architecture_profile,
 )
 
@@ -699,23 +699,23 @@ def build_linear_op_attention_module(
 ) -> torch.nn.Module:
     """Build the linear-op profiling attention module from architecture profile."""
 
-    linear_attention = get_model_architecture_profile(config).linear_attention
+    attention_linear_ops = get_model_architecture_profile(config).attention_linear_ops
 
     if attn_sharded_enabled:
-        if linear_attention.sharded_impl is LinearAttentionImplementation.STEP3_TEXT:
+        if attention_linear_ops.sharded_impl is AttentionLinearOpImplementation.STEP3_TEXT:
             return Step3TextCausalSelfAttention(config, world_size)
-        if linear_attention.sharded_impl is LinearAttentionImplementation.STEP2_MINI:
+        if attention_linear_ops.sharded_impl is AttentionLinearOpImplementation.STEP2_MINI:
             return Step2MiniCausalSelfAttention(config, world_size)
-        if linear_attention.sharded_impl is LinearAttentionImplementation.GENERIC:
+        if attention_linear_ops.sharded_impl is AttentionLinearOpImplementation.GENERIC:
             return CausalSelfAttention(config, world_size)
         raise ValueError(
             "Unknown linear attention implementation: "
-            f"{linear_attention.sharded_impl}"
+            f"{attention_linear_ops.sharded_impl}"
         )
 
     if (
-        linear_attention.sharded_impl is LinearAttentionImplementation.STEP3_TEXT
-        and linear_attention.has_replicated_pre_projection(enabled_ops)
+        attention_linear_ops.sharded_impl is AttentionLinearOpImplementation.STEP3_TEXT
+        and attention_linear_ops.has_replicated_pre_projection(enabled_ops)
     ):
         return Step3TextReplicatedPreProj(config, world_size, enabled_ops or set())
 

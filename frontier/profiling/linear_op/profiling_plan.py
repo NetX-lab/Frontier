@@ -248,16 +248,16 @@ def _typed_operator_contracts(
 
     normalized_attn_tp = _normalize_tp_domain(attn_tp, name="attn_tp")
     attention_family_id = bind_attention_family(model_config).family_id
-    replicated_attention_ops = set(profile.linear_attention.replicated_ops)
-    sharded_attention_ops = set(profile.linear_attention.sharded_ops)
+    replicated_attention_ops = set(profile.attention_linear_ops.replicated_ops)
+    sharded_attention_ops = set(profile.attention_linear_ops.sharded_ops)
     overlap = replicated_attention_ops.intersection(sharded_attention_ops)
     if overlap:
         raise ValueError(
             f"attention operators appear in both TP domains: {sorted(overlap)}"
         )
     for operator_name in [
-        *profile.linear_attention.replicated_ops,
-        *profile.linear_attention.sharded_ops,
+        *profile.attention_linear_ops.replicated_ops,
+        *profile.attention_linear_ops.sharded_ops,
     ]:
         if operator_name not in producer_names:
             continue
@@ -427,7 +427,7 @@ def build_profiling_plan(
     attn_enabled = attn_sharded_enabled or replicated_enabled
     ffn_enabled = ffn_sharded_enabled or replicated_enabled
 
-    linear_attention = architecture_profile.linear_attention
+    attention_linear_ops = architecture_profile.attention_linear_ops
     memory_ops = _memory_profiling_names(model_config)
 
     # MEMORY_FAMILY declaration order keeps the pre-attention normalization
@@ -437,7 +437,7 @@ def build_profiling_plan(
     memory_post_attention_ops = memory_ops[1:]
     replicated_ops: List[str] = []
     replicated_ops.extend(memory_pre_attention_ops)
-    replicated_ops.extend(linear_attention.replicated_ops)
+    replicated_ops.extend(attention_linear_ops.replicated_ops)
     replicated_ops.extend(memory_post_attention_ops)
     target_embedded_same_tp_ops: List[str] = []
     if include_target_embedded_mtp:
@@ -461,7 +461,7 @@ def build_profiling_plan(
         enabled_ops.extend(target_embedded_same_tp_ops)
 
     if attn_sharded_enabled:
-        enabled_ops.extend(linear_attention.sharded_ops)
+        enabled_ops.extend(attention_linear_ops.sharded_ops)
         if include_target_embedded_mtp:
             enabled_ops.extend(TARGET_EMBEDDED_MTP_OPS)
 
@@ -473,7 +473,7 @@ def build_profiling_plan(
 
     all_ops: List[str] = []
     all_ops.extend(replicated_ops)
-    all_ops.extend(linear_attention.sharded_ops)
+    all_ops.extend(attention_linear_ops.sharded_ops)
     if include_target_embedded_mtp:
         all_ops.extend(TARGET_EMBEDDED_MTP_OPS)
     if not is_moe:

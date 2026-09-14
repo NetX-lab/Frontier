@@ -17,8 +17,8 @@ from frontier.config.model_config import BaseModelConfig, MoEModelConfig, ModelA
 from frontier.config.utils import dataclass_to_dict
 from frontier.model_architectures import (
     ExpertParallelCollective,
-    LinearAttentionImplementation,
-    LinearAttentionProfile,
+    AttentionLinearOpImplementation,
+    AttentionLinearOpProfile,
     MODEL_ARCHITECTURE_REGISTRY,
     ModelArchitectureProfile,
     ModelArchitectureRegistry,
@@ -217,8 +217,8 @@ def test_explicit_profile_id_reuses_step3_contract_for_new_model_name() -> None:
     profile = get_model_architecture_profile(cfg)
 
     assert profile.profile_id == "step3_text"
-    assert profile.linear_attention.sharded_impl is LinearAttentionImplementation.STEP3_TEXT
-    assert profile.linear_attention.replicated_ops == (
+    assert profile.attention_linear_ops.sharded_impl is AttentionLinearOpImplementation.STEP3_TEXT
+    assert profile.attention_linear_ops.replicated_ops == (
         "attn_pre_proj_qkv",
         "attn_pre_proj_q_norm",
     )
@@ -278,7 +278,7 @@ def test_local_registry_can_plugin_custom_profile_without_global_model_branch() 
     profile = registry.resolve(_profiling_config(model_type="unit_plugin_model"))
 
     assert profile.profile_id == "unit_step3_plugin"
-    assert profile.linear_attention.sharded_ops == (
+    assert profile.attention_linear_ops.sharded_ops == (
         "attn_pre_proj",
         "attn_rope",
         "attn_post_proj",
@@ -318,8 +318,8 @@ def test_registry_rejects_non_alltoall_collective_policy() -> None:
     invalid_profile = ModelArchitectureProfile(
         profile_id="unit_invalid_ep_collective",
         display_name="Invalid EP Collective",
-        linear_attention=LinearAttentionProfile(
-            sharded_impl=LinearAttentionImplementation.GENERIC,
+        attention_linear_ops=AttentionLinearOpProfile(
+            sharded_impl=AttentionLinearOpImplementation.GENERIC,
             sharded_ops=(
                 "attn_pre_proj",
                 "attn_rope",
@@ -1107,8 +1107,8 @@ def test_mla_attention_shape_profile_requires_latent_mla_attention_family() -> N
     profile = ModelArchitectureProfile(
         profile_id="unit_mla_profile",
         display_name="Unit MLA Profile",
-        linear_attention=LinearAttentionProfile(
-            sharded_impl=LinearAttentionImplementation.GENERIC,
+        attention_linear_ops=AttentionLinearOpProfile(
+            sharded_impl=AttentionLinearOpImplementation.GENERIC,
             sharded_ops=(
                 "attn_pre_proj",
                 "attn_rope",
@@ -1152,8 +1152,8 @@ def test_structural_requirement_wraps_predicate_value_error_with_profile_context
     profile = ModelArchitectureProfile(
         profile_id="unit_wrapped_error_profile",
         display_name="Unit Wrapped Error Profile",
-        linear_attention=LinearAttentionProfile(
-            sharded_impl=LinearAttentionImplementation.GENERIC,
+        attention_linear_ops=AttentionLinearOpProfile(
+            sharded_impl=AttentionLinearOpImplementation.GENERIC,
             sharded_ops=(
                 "attn_pre_proj",
                 "attn_rope",

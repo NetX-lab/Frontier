@@ -16,7 +16,7 @@ from frontier.types import ClusterType
 logger = logging.getLogger(__name__)
 
 
-class LinearAttentionImplementation(Enum):
+class AttentionLinearOpImplementation(Enum):
     """Linear-op profiling attention implementation selected by architecture."""
 
     GENERIC = "generic"
@@ -342,10 +342,10 @@ def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
 
 
 @dataclass(frozen=True)
-class LinearAttentionProfile:
+class AttentionLinearOpProfile:
     """Declarative linear-op profiling contract for attention-related ops."""
 
-    sharded_impl: LinearAttentionImplementation
+    sharded_impl: AttentionLinearOpImplementation
     sharded_ops: tuple[str, ...]
     replicated_ops: tuple[str, ...] = ()
 
@@ -410,7 +410,7 @@ class ModelArchitectureProfile:
 
     profile_id: str
     display_name: str
-    linear_attention: LinearAttentionProfile
+    attention_linear_ops: AttentionLinearOpProfile
     expert_parallel_collective: ExpertParallelCollective
     target_embedded_mtp: bool = False
     predictor_attention_extra_ops: tuple[str, ...] = ()
@@ -439,11 +439,11 @@ class ModelArchitectureProfile:
                 "when provided"
             )
         unknown_predictor_ops = set(self.predictor_attention_extra_ops).difference(
-            self.linear_attention.sharded_ops
+            self.attention_linear_ops.sharded_ops
         )
         if unknown_predictor_ops:
             raise ValueError(
-                "predictor_attention_extra_ops must be declared in linear_attention.sharded_ops, "
+                "predictor_attention_extra_ops must be declared in attention_linear_ops.sharded_ops, "
                 f"got unknown ops: {sorted(unknown_predictor_ops)}"
             )
         if not self.layer_contracts:
@@ -483,8 +483,8 @@ class ModelArchitectureProfile:
         return cls(
             profile_id=profile_id,
             display_name="Generic Transformer",
-            linear_attention=LinearAttentionProfile(
-                sharded_impl=LinearAttentionImplementation.GENERIC,
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.GENERIC,
                 sharded_ops=(
                     "attn_pre_proj",
                     "attn_rope",
@@ -504,8 +504,8 @@ class ModelArchitectureProfile:
         return cls(
             profile_id=profile_id,
             display_name="Step2Mini",
-            linear_attention=LinearAttentionProfile(
-                sharded_impl=LinearAttentionImplementation.STEP2_MINI,
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.STEP2_MINI,
                 sharded_ops=(
                     "attn_pre_proj",
                     "attn_rope",
@@ -535,8 +535,8 @@ class ModelArchitectureProfile:
         return cls(
             profile_id=profile_id,
             display_name="Step3Text MFA",
-            linear_attention=LinearAttentionProfile(
-                sharded_impl=LinearAttentionImplementation.STEP3_TEXT,
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.STEP3_TEXT,
                 sharded_ops=(
                     "attn_pre_proj",
                     "attn_rope",
