@@ -49,6 +49,8 @@ class GDNProfileInput:
 
     query_lens: tuple[int, ...]
     context_lens: tuple[int, ...]
+    logical_phase: str | None = None
+    physical_batch_size: int | None = None
 
     def __post_init__(self) -> None:
         if not self.query_lens:
@@ -61,16 +63,35 @@ class GDNProfileInput:
             raise ValueError(
                 f"context_lens must be non-negative ints: {self.context_lens}"
             )
-        seen_prefill = False
-        for query_len in self.query_lens:
-            if query_len == 1:
-                if seen_prefill:
-                    raise ValueError(
-                        "GDN mixed batches must be decode-first: all query_len=1 "
-                        "sequences must precede multi-token prefills"
-                    )
-            else:
-                seen_prefill = True
+        phase = self.logical_phase
+        if phase is not None:
+            phase = str(phase).strip().lower()
+            if phase not in {"prefill", "decode", "mixed"}:
+                raise ValueError(
+                    "logical_phase must be prefill, decode, or mixed, "
+                    f"got {self.logical_phase!r}"
+                )
+            object.__setattr__(self, "logical_phase", phase)
+        else:
+            seen_prefill = False
+            for query_len in self.query_lens:
+                if query_len == 1:
+                    if seen_prefill:
+                        raise ValueError(
+                            "GDN mixed batches must be decode-first: all query_len=1 "
+                            "sequences must precede multi-token prefills"
+                        )
+                else:
+                    seen_prefill = True
+        physical_batch_size = self.physical_batch_size
+        if physical_batch_size is None:
+            physical_batch_size = len(self.query_lens)
+        if type(physical_batch_size) is not int or physical_batch_size < len(self.query_lens):
+            raise ValueError(
+                "physical_batch_size must be an int >= logical batch size, "
+                f"got {physical_batch_size!r} for batch_size={len(self.query_lens)}"
+            )
+        object.__setattr__(self, "physical_batch_size", physical_batch_size)
 
     @property
     def batch_size(self) -> int:
@@ -82,6 +103,10 @@ class GDNProfileInput:
 
     @property
     def num_decode_tokens(self) -> int:
+        if self.logical_phase == "prefill":
+            return 0
+        if self.logical_phase == "decode":
+            return self.num_tokens
         return sum(query_len == 1 for query_len in self.query_lens)
 
     @property
@@ -106,15 +131,40 @@ class GDNProfileInput:
 
     @property
     def phase(self) -> str:
-        if self.num_decode_tokens == self.num_tokens:
+        if self.logical_phase is not None:
+            return self.logical_phase
+        inferred_decode_tokens = sum(query_len == 1 for query_len in self.query_lens)
+        if inferred_decode_tokens == self.num_tokens:
             return "decode"
-        if self.num_decode_tokens == 0:
+        if inferred_decode_tokens == 0:
             return "prefill"
         return "mixed"
 
     @property
     def has_initial_state(self) -> bool:
         return self.num_stateful_requests > 0
+
+    @property
+    def prefill_mask(self) -> tuple[bool, ...]:
+        """Identify requests whose current logical work is prefill."""
+
+        if self.phase == "prefill":
+            return (True,) * self.batch_size
+        if self.phase == "decode":
+            return (False,) * self.batch_size
+        return tuple(query_len > 1 for query_len in self.query_lens)
+
+    @property
+    def state_init_mode(self) -> str:
+        """Record state provenance without changing the timed workload."""
+
+        return "primed_prefix" if self.has_initial_state else "zero"
+
+    @property
+    def state_block_ids(self) -> tuple[int, ...]:
+        """Return vLLM state pages, reserving page zero as the null page."""
+
+        return tuple(range(1, self.physical_batch_size + 1))
 
     def require_supported_phase(self) -> None:
         """Reject same-batch prefill/decode GDN execution."""
@@ -128,13 +178,14 @@ class GDNProfileInput:
     def prefill(
         cls, *, seq_len: int, batch_size: int = 1, context_len: int = 0
     ) -> "GDNProfileInput":
-        if int(seq_len) <= 1:
-            raise ValueError("GDN prefill seq_len must be greater than one")
+        if int(seq_len) <= 0:
+            raise ValueError("GDN prefill seq_len must be positive")
         if int(batch_size) <= 0:
             raise ValueError("GDN prefill batch_size must be positive")
         return cls(
             query_lens=(int(seq_len),) * int(batch_size),
             context_lens=(int(context_len),) * int(batch_size),
+            logical_phase="prefill",
         )
 
     @classmethod
@@ -146,6 +197,7 @@ class GDNProfileInput:
         return cls(
             query_lens=(1,) * int(batch_size),
             context_lens=(int(context_len),) * int(batch_size),
+            logical_phase="decode",
         )
 
     @classmethod
