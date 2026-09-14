@@ -1390,6 +1390,11 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         )
         if isinstance(legacy_result, StageExecutionTime):
             return legacy_result
+        # Production legacy paths return ExecutionTime. Preserve the
+        # historical pass-through behavior for lightweight test doubles
+        # supplied by admission-focused unit tests.
+        if not isinstance(legacy_result, ExecutionTime):
+            return legacy_result
         return StageExecutionTime.from_execution_time(
             legacy_result,
             num_layers=num_layers,

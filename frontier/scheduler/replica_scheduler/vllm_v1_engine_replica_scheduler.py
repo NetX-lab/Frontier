@@ -26,6 +26,7 @@ import time
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from frontier.config import global_vars
+from frontier.attention.gdn.guards import validate_gdn_runtime_support
 from frontier.entities.batch import (
     Batch,
     DecodeCudaGraphMetadata,
@@ -3046,6 +3047,14 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         """
         logger = get_cluster_logger(
             __name__, self._cluster_type.name if self._cluster_type else None
+        )
+
+        # GDN state cannot be dropped and restored by the simulator. Reject
+        # before touching request counters, allocations, or queue membership.
+        replica_config = getattr(self, "_replica_config", None)
+        validate_gdn_runtime_support(
+            getattr(replica_config, "model_config", None),
+            preemption_requires_state_drop=True,
         )
 
         # Capture state before modification

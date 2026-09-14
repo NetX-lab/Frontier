@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from frontier.attention.memory import get_attention_runtime_kv_layout
+from frontier.attention.gdn.guards import validate_gdn_runtime_support
 from frontier.attention.model_binding import bind_attention_family
 from frontier.config import get_quantization_manager
 from frontier.kv_cache_transfer.base_kv_cache_transfer_predictor import BaseKVCacheTransferPredictor
@@ -50,6 +51,7 @@ class AnalyticalKVCacheTransferPredictor(BaseKVCacheTransferPredictor):
         self, num_tokens: int, replica_config: "ReplicaConfig"
     ) -> int:
         model_config = replica_config.model_config
+        validate_gdn_runtime_support(model_config, pd_enabled=True)
         family = bind_attention_family(model_config).family
         num_layers = (
             self._config.override_num_layers

@@ -110,11 +110,14 @@ class GatedDeltaNetConfig:
         self,
         *,
         tensor_parallel_size: int,
-        num_speculative_tokens: int = 0,
         conv_bytes_per_element: int = 2,
         recurrent_bytes_per_element: int = 4,
     ):
-        """Return the fixed state layout for one tensor-parallel worker."""
+        """Return the fixed state layout for one tensor-parallel worker.
+
+        Speculative-token sizing is intentionally outside this initial public
+        contract. GDN speculative execution is rejected at configuration time.
+        """
 
         from frontier.attention.gdn.memory import GatedDeltaNetStateLayout
 
@@ -122,12 +125,6 @@ class GatedDeltaNetConfig:
         if tp_size <= 0:
             raise ValueError(
                 f"tensor_parallel_size must be positive, got {tensor_parallel_size}"
-            )
-        speculative_tokens = int(num_speculative_tokens)
-        if speculative_tokens < 0:
-            raise ValueError(
-                "num_speculative_tokens must be non-negative, got "
-                f"{num_speculative_tokens}"
             )
         for field_name, value in (
             ("num_key_heads", self.num_key_heads),
@@ -140,7 +137,7 @@ class GatedDeltaNetConfig:
                     f"{field_name}={value}, tp={tp_size}"
                 )
         return GatedDeltaNetStateLayout(
-            conv_state_shape=(self.conv_kernel_size - 1 + speculative_tokens, self.conv_dim // tp_size),
+            conv_state_shape=(self.conv_kernel_size - 1, self.conv_dim // tp_size),
             recurrent_state_shape=(
                 self.num_value_heads // tp_size,
                 self.value_head_dim,

@@ -3479,6 +3479,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 include_ffn=include_ffn,
                 include_moe=include_moe_for_layer,
             )
+            # Production dummy helpers return ExecutionTime. Preserve the
+            # historical pass-through behavior for lightweight test doubles
+            # that intentionally return a sentinel before stage wrapping.
+            if not isinstance(dummy_execution_time, ExecutionTime):
+                return dummy_execution_time
             return StageExecutionTime.from_execution_time(
                 dummy_execution_time,
                 num_layers=num_layers,

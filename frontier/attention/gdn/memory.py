@@ -61,8 +61,17 @@ class GatedDeltaNetStateLayout:
         return self.conv_state_elements + self.recurrent_state_elements
 
     @property
+    def conv_state_bytes(self) -> int:
+        """Bytes occupied by the convolution history for one worker."""
+
+        return self.conv_state_elements * self.conv_bytes_per_element
+
+    @property
+    def recurrent_state_bytes(self) -> int:
+        """Bytes occupied by the recurrent state for one worker."""
+
+        return self.recurrent_state_elements * self.recurrent_bytes_per_element
+
+    @property
     def total_bytes(self) -> int:
-        return (
-            self.conv_state_elements * self.conv_bytes_per_element
-            + self.recurrent_state_elements * self.recurrent_bytes_per_element
-        )
+        return self.conv_state_bytes + self.recurrent_state_bytes
