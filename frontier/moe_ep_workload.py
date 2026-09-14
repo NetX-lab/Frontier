@@ -16,10 +16,66 @@ from numbers import Real
 from types import MappingProxyType
 from typing import TypeAlias
 
+import numpy as np
+
 
 ExpertTokenMap: TypeAlias = Mapping[int, int]
 ExpertOwnership: TypeAlias = Mapping[int, int]
 RoutingDetails: TypeAlias = Mapping[int, Mapping[int, Mapping[int, Real]]]
+
+
+def generate_moe_routing_ratios(
+    *,
+    total_expert_num: int,
+    distribution_type: str,
+    seed: int,
+    layer_id: int,
+) -> dict[int, float]:
+    """Generate one deterministic normalized expert-routing distribution.
+
+    The helper preserves the existing predictor contract: each layer seeds
+    ``numpy.random.default_rng`` with ``seed + layer_id`` and expert IDs are
+    emitted in ascending order. It only creates the ratio source; token
+    integerization and EP ownership remain in ``materialize_layer_ep_workload``.
+    """
+
+    if type(total_expert_num) is not int or total_expert_num <= 0:
+        raise ValueError("total_expert_num must be a positive int")
+    if type(seed) is not int or seed < 0:
+        raise ValueError("seed must be a non-negative int")
+    if type(layer_id) is not int or layer_id < 0:
+        raise ValueError("layer_id must be a non-negative int")
+
+    normalized_distribution = str(distribution_type).strip().lower()
+    rng = np.random.default_rng(seed + layer_id)
+    if normalized_distribution == "balanced":
+        weights = np.ones(total_expert_num, dtype=float)
+    elif normalized_distribution == "random":
+        weights = rng.uniform(0.1, 1.0, total_expert_num)
+    elif normalized_distribution == "skewed":
+        ranks = np.arange(1, total_expert_num + 1, dtype=float)
+        weights = 1.0 / np.power(ranks, 0.35)
+    elif normalized_distribution == "zipf":
+        ranks = np.arange(1, total_expert_num + 1, dtype=float)
+        weights = 1.0 / ranks
+    else:
+        raise ValueError(
+            "Unsupported MoE routing distribution type="
+            f"{distribution_type!r}"
+        )
+
+    total_weight = float(np.sum(weights))
+    if not np.isfinite(total_weight) or total_weight <= 0.0:
+        raise ValueError(
+            "MoE routing distribution produced an invalid weight sum: "
+            f"distribution={distribution_type!r}, layer_id={layer_id}, "
+            f"sum={total_weight!r}"
+        )
+    expert_ratios = weights / total_weight
+    return {
+        expert_id: float(expert_ratios[expert_id])
+        for expert_id in range(total_expert_num)
+    }
 
 
 def _require_int(value: object, name: str, *, minimum: int | None = None) -> int:
@@ -779,6 +835,7 @@ __all__ = [
     "LayerEPWorkload",
     "RoutingDetails",
     "build_contiguous_expert_ownership",
+    "generate_moe_routing_ratios",
     "materialize_layer_ep_workload",
     "resolve_ep_lane_workload",
     "resolve_routing_details",

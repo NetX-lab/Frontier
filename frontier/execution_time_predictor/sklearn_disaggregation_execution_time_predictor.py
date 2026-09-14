@@ -1,7 +1,6 @@
 from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 from enum import Enum
 from dataclasses import dataclass
-import numpy as np
 from frontier.logger import init_logger
 from frontier.model_architectures import (
     ModelArchitectureProfile,
@@ -36,7 +35,11 @@ from frontier.types import ClusterType
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )
-from frontier.moe_ep_workload import EPLaneWorkload, resolve_ep_lane_workload
+from frontier.moe_ep_workload import (
+    EPLaneWorkload,
+    generate_moe_routing_ratios,
+    resolve_ep_lane_workload,
+)
 
 if TYPE_CHECKING:
     from frontier.cc_backend import BaseCCBackend
@@ -503,38 +506,15 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         Returns:
             List of allocation ratios for each expert (sum should be 1.0)
         """
-        # Replica IDs select the shared routing lookup only; they must not
-        # create different per-layer distributions across architectures.
-        rng = np.random.default_rng(self._distribution_seed + layer_id)
-
-        if self._workload_distribution_type == WorkloadDistributionType.BALANCED:
-            # Balanced distribution: each expert gets equal allocation
-            allocation_ratios = [1.0 / total_expert_num] * total_expert_num
-
-        elif self._workload_distribution_type == WorkloadDistributionType.RANDOM:
-            # Random distribution: generate random weights and normalize
-            random_weights = rng.uniform(0.1, 1.0, total_expert_num)
-            total_weight = np.sum(random_weights)
-            allocation_ratios = (random_weights / total_weight).tolist()
-
-        elif self._workload_distribution_type == WorkloadDistributionType.SKEWED:
-            # Moderate deterministic power-law skew for realistic hot-expert stress.
-            ranks = np.arange(1, total_expert_num + 1)
-            skew_weights = 1.0 / np.power(ranks, 0.35)
-            total_weight = np.sum(skew_weights)
-            allocation_ratios = (skew_weights / total_weight).tolist()
-
-        elif self._workload_distribution_type == WorkloadDistributionType.ZIPF:
-            # Zipf distribution: some experts get more load than others
-            ranks = np.arange(1, total_expert_num + 1)
-            zipf_weights = 1.0 / ranks  # Zipf-like distribution
-            total_weight = np.sum(zipf_weights)
-            allocation_ratios = (zipf_weights / total_weight).tolist()
-
-        else:
-            raise ValueError(
-                f"Unsupported workload distribution type: {self._workload_distribution_type}"
-            )
+        del expert_parallel_size, replica_id
+        allocation_ratios = list(
+            generate_moe_routing_ratios(
+                total_expert_num=total_expert_num,
+                distribution_type=self._workload_distribution_type.value,
+                seed=self._distribution_seed,
+                layer_id=layer_id,
+            ).values()
+        )
 
         # Ensure the allocation ratios sum to 1.0 (handle floating point precision)
         total_allocation = sum(allocation_ratios)

@@ -45,6 +45,7 @@ from frontier.moe_ep_workload import (
     EPLaneWorkload,
     LayerEPWorkload,
     build_contiguous_expert_ownership,
+    generate_moe_routing_ratios,
     materialize_layer_ep_workload,
     resolve_ep_lane_workload,
     resolve_routing_details,
@@ -795,35 +796,12 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         distribution_type = self._moe_routing_distribution_type
         allocations: Dict[int, Dict[int, float]] = {}
         for layer_id in range(num_layers):
-            layer_seed = self._moe_routing_seed + layer_id
-            rng = np.random.default_rng(layer_seed)
-            if distribution_type == "balanced":
-                weights = np.ones(total_experts, dtype=float)
-            elif distribution_type == "random":
-                weights = rng.uniform(0.1, 1.0, total_experts)
-            elif distribution_type == "skewed":
-                ranks = np.arange(1, total_experts + 1, dtype=float)
-                weights = 1.0 / np.power(ranks, 0.35)
-            elif distribution_type == "zipf":
-                ranks = np.arange(1, total_experts + 1, dtype=float)
-                weights = 1.0 / ranks
-            else:
-                raise ValueError(
-                    "Unsupported moe_routing_distribution_type="
-                    f"{distribution_type!r}"
-                )
-            total_weight = float(np.sum(weights))
-            if not np.isfinite(total_weight) or total_weight <= 0.0:
-                raise ValueError(
-                    "MoE routing distribution produced an invalid weight sum: "
-                    f"distribution={distribution_type!r}, layer_id={layer_id}, "
-                    f"sum={total_weight!r}"
-                )
-            expert_ratios = weights / total_weight
-            allocations[layer_id] = {
-                expert_id: float(expert_ratios[expert_id])
-                for expert_id in range(total_experts)
-            }
+            allocations[layer_id] = generate_moe_routing_ratios(
+                total_expert_num=total_experts,
+                distribution_type=distribution_type,
+                seed=self._moe_routing_seed,
+                layer_id=layer_id,
+            )
 
         return allocations
 
