@@ -272,6 +272,20 @@ def get_enabled_predictor_feature_columns(
             operator.name: imported_predictor_feature_columns
             for operator in family.predictor_ops()
         }
+    elif family.memory_layout is AttentionMemoryLayout.FIXED_STATE:
+        # GDN recurrent work is driven by the physical batch and query shape;
+        # history length is deliberately absent because state size is fixed.
+        gdn_feature_columns = (
+            "batch_size",
+            "batch_num_tokens",
+            "max_query_len",
+            "query_len_cv",
+            "num_stateful_requests",
+        )
+        feature_columns = {
+            operator.name: gdn_feature_columns
+            for operator in family.predictor_ops()
+        }
     else:
         raise ValueError(
             f"Unsupported attention predictor memory layout: "
@@ -313,6 +327,18 @@ def get_enabled_shared_predictor_feature_columns(
         imported_predictor_feature_columns = get_imported_mla_predictor_feature_columns()
         feature_columns = {
             operator.name: imported_predictor_feature_columns
+            for operator in family.predictor_ops()
+        }
+    elif family.memory_layout is AttentionMemoryLayout.FIXED_STATE:
+        gdn_feature_columns = (
+            "batch_size",
+            "batch_num_tokens",
+            "max_query_len",
+            "query_len_cv",
+            "num_stateful_requests",
+        )
+        feature_columns = {
+            operator.name: gdn_feature_columns
             for operator in family.predictor_ops()
         }
     else:

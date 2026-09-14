@@ -25,6 +25,7 @@ class AttentionMemoryLayout(Enum):
     DENSE_KV = "dense_kv"
     LATENT_MLA = "latent_mla"
     FROZEN_DSA = "frozen_dsa"
+    FIXED_STATE = "fixed_state"
 
 
 @dataclass(frozen=True)
