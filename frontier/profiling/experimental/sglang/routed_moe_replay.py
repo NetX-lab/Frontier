@@ -243,17 +243,19 @@ def profile_routed_graph(*args: Any, **kwargs: Any):
 
     from .graph_replay import MEASUREMENT_TYPE
     from .moe import make_moe_experts_primitive, make_moe_sorting_primitive
-    import torch
-    import torch.distributed as dist
-
     query = args[0] if args else kwargs.pop("query")
     count = args[1] if len(args) > 1 else kwargs.pop("count")
     repetitions = args[2] if len(args) > 2 else kwargs.pop("repetitions")
     model = args[3] if len(args) > 3 else kwargs.pop("model")
     group = args[4] if len(args) > 4 else kwargs.pop("group")
     trace = kwargs.pop("trace", False)
-    component = query["component"] if isinstance(query, Mapping) else query.component
+    from .graph_replay import validate_plan
+
     physical_size = query["physical_size"] if isinstance(query, Mapping) else query.physical_size
+    validate_plan((physical_size,), (count,), repetitions, "validation")
+
+    import torch
+    component = query["component"] if isinstance(query, Mapping) else query.component
     counts = query["physical_expert_counts"] if isinstance(query, Mapping) else query.expert_counts
     builder = {"moe_sorting": make_moe_sorting_primitive,
                "moe_experts_quant_gemm_combine": make_moe_experts_primitive}.get(component)

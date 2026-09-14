@@ -940,6 +940,7 @@ class ExecutionTimePredictionModelManager:
             device=replica_config.device,
             tensor_parallel_size=replica_config.attn_tensor_parallel_size,
             measurement_type=measurement_type,
+            dataset_path=gdn_file,
         )
         existing = self._gdn_predictors.get(cluster_type)
         if existing is not None and existing.identity != predictor.identity:

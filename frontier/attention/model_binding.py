@@ -199,6 +199,38 @@ def bind_attention_family(config: Any) -> AttentionFamilyBinding:
     )
 
 
+def resolve_runtime_attention_family(config: Any):
+    """Resolve the family needed by model-wide runtime cache/layout helpers.
+
+    ``bind_attention_family`` intentionally rejects a hybrid model because a
+    whole-model prediction cannot choose between GDN and full attention.  A
+    runtime KV-cache layout is different: only full-attention layers allocate
+    KV pages, so hybrid models may use their unique full-attention family for
+    model-wide head/layout metadata.  Per-layer execution must continue to use
+    ``bind_layer_attention``.
+    """
+
+    if not _has_hybrid_attention_schedule(config):
+        return bind_attention_family(config).family
+
+    specs = resolve_layer_attention_specs(config)
+    full_families = tuple(
+        spec.family_id for spec in specs if bool(spec.is_full_attention)
+    )
+    if not full_families:
+        raise ValueError(
+            "Hybrid runtime attention metadata requires at least one "
+            "full-attention layer"
+        )
+    family_ids = tuple(dict.fromkeys(full_families))
+    if len(family_ids) != 1:
+        raise ValueError(
+            "Hybrid runtime cache/layout metadata requires one full-attention "
+            f"family, got {family_ids}"
+        )
+    return get_attention_family(family_ids[0])
+
+
 def _has_hybrid_attention_schedule(config: Any) -> bool:
     """Return whether the supported profile contains any GDN layer."""
 

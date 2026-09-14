@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 import pickle
@@ -17,6 +18,16 @@ from frontier.types import MeasurementType
 
 
 logger = init_logger(__name__)
+
+
+def _dataset_fingerprint(path: str | Path) -> str:
+    """Return the content identity used by the training manifest."""
+
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _coerce_measurement_type(value: str | MeasurementType) -> MeasurementType:
@@ -58,6 +69,7 @@ class GDNPredictor:
         runtime_stack_signature: str | None = None,
         model_architecture_profile: str | None = None,
         quant_signature: str | None = None,
+        dataset_path: str | Path | None = None,
     ) -> "GDNPredictor":
         directory = Path(directory)
         manifest_path = directory / "gdn_manifest.json"
@@ -75,6 +87,7 @@ class GDNPredictor:
             runtime_stack_signature=runtime_stack_signature,
             model_architecture_profile=model_architecture_profile,
             quant_signature=quant_signature,
+            dataset_path=dataset_path,
         )
         tasks = manifest.get("tasks")
         if not isinstance(tasks, list) or not tasks:
@@ -108,6 +121,7 @@ class GDNPredictor:
         runtime_stack_signature: str | None,
         model_architecture_profile: str | None,
         quant_signature: str | None,
+        dataset_path: str | Path | None,
     ) -> None:
         expected: dict[str, Any] = {}
         if model_config is not None:
@@ -144,6 +158,8 @@ class GDNPredictor:
             expected["model_architecture_profile"] = model_architecture_profile
         if quant_signature is not None:
             expected["quant_signature"] = quant_signature
+        if dataset_path is not None:
+            expected["dataset_fingerprint"] = _dataset_fingerprint(dataset_path)
         mismatches = {
             key: (identity.get(key), value)
             for key, value in expected.items()

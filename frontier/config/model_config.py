@@ -4,7 +4,7 @@ import hashlib
 import json
 import os
 
-from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.model_binding import resolve_runtime_attention_family
 from frontier.attention.gdn import (
     GatedDeltaNetConfig,
     LayerAttentionSpec,
@@ -500,8 +500,13 @@ class BaseModelConfig(BaseFixedConfig):
         return self.embedding_dim // self.num_q_heads
 
     def get_attention_family(self):
-        """Return the bound attention family for runtime cache semantics."""
-        return bind_attention_family(self).family
+        """Return the family used by model-wide runtime cache semantics.
+
+        Homogeneous models use the ordinary family binder.  Hybrid models use
+        their unique full-attention family for KV/head metadata; execution
+        prediction still resolves each layer through ``bind_layer_attention``.
+        """
+        return resolve_runtime_attention_family(self)
 
     def get_gdn_config(self) -> Optional[GatedDeltaNetConfig]:
         """Return the validated GDN shape contract for the Qwen3.5 profile."""

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Mapping, Sequence
 
-from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.model_binding import resolve_runtime_attention_family
 from frontier.operators.families import (
     FFN_FAMILY,
     MEMORY_FAMILY,
@@ -247,7 +247,7 @@ def _typed_operator_contracts(
                 )
 
     normalized_attn_tp = _normalize_tp_domain(attn_tp, name="attn_tp")
-    attention_family_id = bind_attention_family(model_config).family_id
+    attention_family_id = resolve_runtime_attention_family(model_config).family_id
     replicated_attention_ops = set(profile.attention_linear_ops.replicated_ops)
     sharded_attention_ops = set(profile.attention_linear_ops.sharded_ops)
     overlap = replicated_attention_ops.intersection(sharded_attention_ops)

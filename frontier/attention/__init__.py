@@ -14,6 +14,7 @@ from frontier.attention.model_binding import (
     AttentionFamilyBinding,
     bind_layer_attention,
     bind_attention_family,
+    resolve_runtime_attention_family,
 )
 from frontier.attention.gdn import LayerAttentionSpec
 from frontier.attention.memory import (
@@ -48,4 +49,5 @@ __all__ = [
     "get_attention_trace_op_times",
     "iter_attention_families",
     "iter_execution_enabled_families",
+    "resolve_runtime_attention_family",
 ]

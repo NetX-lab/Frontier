@@ -34,7 +34,10 @@ from frontier.attention.families import (
     get_attention_family,
     LATENT_MLA_ATTENTION_FAMILY,
 )
-from frontier.attention.model_binding import bind_attention_family, bind_layer_attention
+from frontier.attention.model_binding import (
+    bind_layer_attention,
+    resolve_runtime_attention_family,
+)
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.ops import AttentionPhase
 from frontier.attention.string_coercion import coerce_truthy_bool, coerce_truthy_int
@@ -368,7 +371,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
 
     def _get_attention_family(self):
-        return bind_attention_family(self._model_config).family
+        return resolve_runtime_attention_family(self._model_config)
 
     def _is_mla_attention_family(self) -> bool:
         return (
@@ -2913,6 +2916,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         raise ValueError(f"Unsupported linear op for TP mapping: {op_name}")
 
     def _get_attention_model_names(self) -> List[str]:
+        # Metadata/training consumers need the full-attention operator schema
+        # for hybrid models; actual execution selects a family per layer below.
         return list(get_enabled_predictor_metric_names(self._get_attention_family()))
 
     @staticmethod

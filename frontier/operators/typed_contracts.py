@@ -132,9 +132,9 @@ def validate_typed_operator_metadata(
             if callable(getter):
                 architecture_profile = getter()
         if architecture_family_id is None:
-            from frontier.attention.model_binding import bind_attention_family
+            from frontier.attention.model_binding import resolve_runtime_attention_family
 
-            architecture_family_id = bind_attention_family(model_config).family_id
+            architecture_family_id = resolve_runtime_attention_family(model_config).family_id
         if mtp_method is None:
             spec_config = getattr(model_config, "speculative_decoding_config", None)
             mtp_method = getattr(spec_config, "method", None)

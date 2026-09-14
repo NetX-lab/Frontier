@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 from pathlib import Path
 import pickle
@@ -33,6 +34,16 @@ GDN_TASKS = (
 
 def _task_name(operator_name: str, phase: str) -> str:
     return f"{operator_name}_{phase}"
+
+
+def _dataset_fingerprint(path: str | os.PathLike[str]) -> str:
+    """Identify the exact CSV bytes used to train the GDN artifacts."""
+
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 class GDNTrainer(BaseTrainer):
@@ -165,6 +176,7 @@ class GDNTrainer(BaseTrainer):
             "tensor_parallel_size": int(frame.iloc[0]["num_tensor_parallel_workers"]),
             "measurement_type": self.expected_measurement_type.value,
             "runtime_stack_signature": stack_values[0],
+            "dataset_fingerprint": _dataset_fingerprint(self.dataset_path),
             "gdn_runtime_backend": str(frame.iloc[0]["gdn_runtime_backend"]),
             "gdn_rank_aggregation": str(frame.iloc[0]["gdn_rank_aggregation"]),
             "gdn_prefill_backend": str(frame.iloc[0]["gdn_prefill_backend"]),

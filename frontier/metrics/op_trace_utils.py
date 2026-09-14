@@ -531,6 +531,20 @@ def compute_op_trace_meta(
                 "input": [tokens, q_heads_per_tp, v_head_dim],
                 "output": [tokens, hidden_size_per_tp],
             }
+        elif op_name in (
+            "gdn_input_projections",
+            "gdn_core_prefill",
+            "gdn_core_decode",
+            "gdn_output_projection",
+        ):
+            # GDN uses a fixed recurrent state rather than a dense KV cache.
+            # The trace contract records the visible token/hidden payload at
+            # this seam; detailed recurrent-state shapes belong to the native
+            # profiler and are not inferred by the simulator.
+            tensor_shape = {
+                "input": [tokens, hidden_size],
+                "output": [tokens, hidden_size],
+            }
         elif op_name == "attn_post_proj":
             _, _, _, hidden_size_per_tp = _get_attention_meta()
             tensor_shape = {

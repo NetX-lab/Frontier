@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
-from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.model_binding import resolve_runtime_attention_family
 from frontier.attention.gdn import (
     GatedDeltaNetConfig,
     LayerAttentionSpec,
@@ -276,8 +276,8 @@ class ModelConfig:
         return self.embedding_dim // self.num_q_heads
 
     def get_attention_family(self):
-        """Return the bound attention family for profiling runtime semantics."""
-        return bind_attention_family(self).family
+        """Return the family used by model-wide profiling cache semantics."""
+        return resolve_runtime_attention_family(self)
 
     def get_gdn_config(self) -> Optional[GatedDeltaNetConfig]:
         if not any(spec.is_gdn for spec in self.get_layer_attention_specs()):

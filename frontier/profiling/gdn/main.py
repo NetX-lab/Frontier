@@ -11,7 +11,10 @@ from frontier.attention.profiling_mapping import validate_attention_profiling_da
 from frontier.attention.families import GATED_DELTA_NET_ATTENTION_FAMILY
 from frontier.profiling.common.model_config import ModelConfig
 from frontier.profiling.gdn.inputs import GDNProfileInput
-from frontier.profiling.utils import build_profile_method_output_path
+from frontier.profiling.utils import (
+    build_profiling_output_path,
+    profile_method_to_measurement_type,
+)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -111,13 +114,18 @@ def main() -> None:
         GATED_DELTA_NET_ATTENTION_FAMILY,
         measurement_type=dataframe["measurement_type"].iloc[0],
     )
-    output_path = build_profile_method_output_path(
+    measurement_type = profile_method_to_measurement_type(args.profile_method)
+    if measurement_type.value != "DEVICE_EVENT":
+        raise ValueError(
+            "The standard GDN producer writes DEVICE_EVENT rows to canonical gdn.csv; "
+            f"got measurement_type={measurement_type.value!r}"
+        )
+    output_path = build_profiling_output_path(
         output_root=args.output_dir,
         profiling_type="compute",
         hardware=args.device,
         model_name=args.model,
         op_name="gdn",
-        profile_method=args.profile_method,
     )
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     dataframe.to_csv(output_path, index=False)

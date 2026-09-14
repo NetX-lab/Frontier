@@ -8,13 +8,11 @@ SGLang, AITER, and CUDA/ROCm dependencies are imported inside GPU functions.
 
 from __future__ import annotations
 
-from contextlib import nullcontext
-from dataclasses import asdict
 import json
 import math
 import os
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping
+from typing import Any, Iterable, Mapping
 
 from .attention import ATTENTION_PRIMITIVES, make_attention_primitive
 from .dense import DENSE_PRIMITIVES, dense_primitive_spec, make_dense_primitive
@@ -204,6 +202,44 @@ def write_rank_artifact(
     return path
 
 
+def _make_replay_call(
+    fn: Any,
+    reference: Any,
+    mutable: Iterable[Any],
+    backend: str,
+    attention_spec: Any = None,
+    attention_workload: Any = None,
+    moe_spec: Any = None,
+) -> tuple[Any, ...]:
+    """Normalize every primitive builder to the replay orchestration contract.
+
+    Native builders intentionally return shape metadata alongside their callable,
+    reference, and mutable tensors.  Replay needs reset/check callbacks in fixed
+    positions, so those builder-specific tuples are converted at this boundary.
+    """
+
+    import torch
+
+    mutable = tuple(mutable or ())
+    originals = tuple(value.clone() for value in mutable)
+
+    def reset() -> None:
+        for value, original in zip(mutable, originals):
+            value.copy_(original)
+
+    def check(output: Any) -> None:
+        values = output if isinstance(output, tuple) else (output,)
+        refs = reference if isinstance(reference, tuple) else (reference,)
+        if len(values) != len(refs):
+            raise ValueError("Unexpected primitive output structure")
+        for actual, expected in zip(values, refs):
+            torch.testing.assert_close(actual, expected, atol=0.03, rtol=0.03)
+            if not bool(torch.isfinite(actual).all()):
+                raise ValueError("Nonfinite primitive output")
+
+    return fn, reset, check, backend, attention_spec, attention_workload, moe_spec
+
+
 def make_primitive(
     name: str,
     size: int,
@@ -217,34 +253,43 @@ def make_primitive(
     """Construct one selected native callable; imports happen at call time."""
 
     import torch
-    from sglang.kernels.ops.elementwise.elementwise import fused_gate_sigmoid_mul_add, fused_sigmoid_mul
-    from sglang.srt.layers.layernorm import GemmaRMSNorm, _has_rocm_triton_gemma_rms_norm, _use_aiter
-    from sglang.srt.layers.linear import RowParallelLinear
 
     hidden, dtype = model.embedding_dim, torch.bfloat16
 
     def random(shape, scale=1.0):
         return (torch.randn(shape, device="cuda", dtype=dtype) * scale).contiguous()
 
-    x = random((size, hidden))
     mutable = []
     backend = "sglang_triton_gemma"
     attention_spec = attention_workload = moe_spec = None
     if name in ATTENTION_PRIMITIVES:
         if logical_size is None or physical_context_lens is None:
             raise ValueError("Attention primitive requires logical/context workload")
-        return make_attention_primitive(
+        fn, reference, mutable, backend, spec, workload = make_attention_primitive(
             name, size, logical_size, tuple(physical_context_lens), model, group, rank, random
         )
+        return _make_replay_call(fn, reference, mutable, backend, spec, workload)
     if name in GDN_PRIMITIVES:
         if logical_size is None:
             raise ValueError("GDN primitive requires logical_size")
-        return make_gdn_core_primitive(size, logical_size, model, group, random)
+        fn, reference, mutable, backend, spec = make_gdn_core_primitive(
+            size, logical_size, model, group, random
+        )
+        return _make_replay_call(fn, reference, mutable, backend, spec)
     if name in MOE_ROUTING_PRIMITIVES:
-        return make_moe_routing_primitive(name, size, model, random)
+        fn, reference, mutable, backend, spec = make_moe_routing_primitive(
+            name, size, model, random
+        )
+        return _make_replay_call(fn, reference, mutable, backend, spec)
     if name in DENSE_PRIMITIVES:
-        return make_dense_primitive(name, size, model, group, rank, random)
+        fn, reference, backend = make_dense_primitive(name, size, model, group, rank, random)
+        return _make_replay_call(fn, reference, (), backend)
     if name in {"gemma_norm", "gemma_residual_norm"}:
+        from sglang.srt.layers.layernorm import (
+            GemmaRMSNorm, _has_rocm_triton_gemma_rms_norm, _use_aiter,
+        )
+
+        x = random((size, hidden))
         if not (_use_aiter and _has_rocm_triton_gemma_rms_norm):
             raise ValueError("Expected the AITER-enabled SGLang Triton Gemma norm path")
         norm = GemmaRMSNorm(hidden, model.rms_norm_eps).to(device="cuda", dtype=dtype)
@@ -257,6 +302,9 @@ def make_primitive(
         reference = (expected, total.to(dtype)) if residual is not None else expected
         fn = lambda: norm(x, residual)
     elif name == "shared_gate":
+        from sglang.kernels.ops.elementwise.elementwise import fused_gate_sigmoid_mul_add
+
+        x = random((size, hidden))
         weight, shared, final = random((hidden,), hidden ** -0.5), random(x.shape), random(x.shape)
         reference = (final.float() + torch.sigmoid(x.float() @ weight.float())[:, None] * shared.float()).to(dtype)
         mutable = [final]
@@ -267,6 +315,9 @@ def make_primitive(
 
         backend = "sglang_triton"
     elif name == "attention_post":
+        from sglang.kernels.ops.elementwise.elementwise import fused_sigmoid_mul
+        from sglang.srt.layers.linear import RowParallelLinear
+
         heads, head_dim = model.num_q_heads // group.world_size, model.get_head_dim()
         width = heads * head_dim
         x = random((size, width))
@@ -287,6 +338,7 @@ def make_primitive(
 
         backend = f"sglang_triton+{type(linear.quant_method).__name__}"
     elif name == "tp_allreduce":
+        x = random((size, hidden))
         x.fill_(rank + 1)
         reference = torch.full_like(x, group.world_size * (group.world_size + 1) / 2)
         backend = group._resolve_outplace_all_reduce_method(x)
@@ -300,23 +352,9 @@ def make_primitive(
     else:
         raise ValueError(f"Unknown primitive {name}")
 
-    originals = [value.clone() for value in mutable]
-
-    def reset():
-        for value, original in zip(mutable, originals):
-            value.copy_(original)
-
-    def check(output):
-        values = output if isinstance(output, tuple) else (output,)
-        refs = reference if isinstance(reference, tuple) else (reference,)
-        if len(values) != len(refs):
-            raise ValueError("Unexpected primitive output structure")
-        for actual, expected in zip(values, refs):
-            torch.testing.assert_close(actual, expected, atol=0.03, rtol=0.03)
-            if not bool(torch.isfinite(actual).all()):
-                raise ValueError("Nonfinite primitive output")
-
-    return fn, reset, check, backend, attention_spec, attention_workload, moe_spec
+    return _make_replay_call(
+        fn, reference, mutable, backend, attention_spec, attention_workload, moe_spec
+    )
 
 
 def profile_graph(*args, trace: bool = False, **kwargs):
@@ -327,10 +365,11 @@ def profile_graph(*args, trace: bool = False, **kwargs):
     unverified until an MI355X host is available.
     """
 
+    name, size, count, repetitions, model, group, rank = args[:7]
+    validate_plan((size,), (count,), repetitions, "validation")
+
     import torch
     import torch.distributed as dist
-
-    name, size, count, repetitions, model, group, rank = args[:7]
     calls = [make_primitive(name, size, model, group, rank, **kwargs) for _ in range(count)]
     methods = {call[3] for call in calls}
     if len(methods) != 1:
@@ -348,6 +387,10 @@ def profile_graph(*args, trace: bool = False, **kwargs):
             reset()
             fn()
     barrier()
+    # Builder callables may update recurrent/cache tensors during eager
+    # discovery. Capture must start from the same baseline used by replay.
+    for _, reset, *_ in calls:
+        reset()
     graph = torch.cuda.CUDAGraph()
     outputs = []
     with group.graph_capture() as context:
@@ -378,6 +421,8 @@ def profile_graph(*args, trace: bool = False, **kwargs):
     probe_outputs = []
     if trace:
         probe = torch.cuda.CUDAGraph()
+        for _, reset, *_ in (calls[0], calls[-1]):
+            reset()
         with group.graph_capture() as context:
             with torch.cuda.graph(probe, stream=context.stream):
                 for fn, *_ in (calls[0], calls[-1]):
@@ -387,6 +432,8 @@ def profile_graph(*args, trace: bool = False, **kwargs):
     def trace_replay():
         if probe is None:
             raise RuntimeError("trace replay requested without a trace probe")
+        for _, reset, *_ in (calls[0], calls[-1]):
+            reset()
         with torch.profiler.record_function(f"primitive:{name}:b{size}:n{count}"):
             probe.replay()
             torch.cuda.synchronize()
