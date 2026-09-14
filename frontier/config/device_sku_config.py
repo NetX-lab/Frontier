@@ -11,6 +11,7 @@ logger = init_logger(__name__)
 class BaseDeviceSKUConfig(BaseFixedConfig):
     fp16_tflops: int
     total_memory_gb: int
+    gpu_platform: str = "cuda"
 
 
 @dataclass
@@ -94,3 +95,16 @@ class RtxPro6000DeviceSKUConfig(BaseDeviceSKUConfig):
     @staticmethod
     def get_type():
         return DeviceSKUType.RTX_PRO_6000
+
+
+@dataclass
+class MI355XDeviceSKUConfig(BaseDeviceSKUConfig):
+    """AMD Instinct MI355X device metadata."""
+
+    fp16_tflops: int = 2516
+    total_memory_gb: int = 288
+    gpu_platform: str = "rocm"
+
+    @staticmethod
+    def get_type():
+        return DeviceSKUType.MI355X
