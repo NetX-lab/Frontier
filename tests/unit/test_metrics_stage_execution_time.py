@@ -70,8 +70,8 @@ def _store() -> tuple[MetricsStore, dict[OperationMetrics, _Series]]:
     )
     store._trace_store = None
     store._cluster_configs = {ClusterType.MONOLITHIC: SimpleNamespace(num_replicas=1)}
-    store._replica_busy_time = {ClusterType.MONOLITHIC: [[[_Series()]]]} 
-    store._replica_mfu = {ClusterType.MONOLITHIC: [[[_Series()]]]} 
+    store._replica_busy_time = {ClusterType.MONOLITHIC: [[[_Series()]]]}
+    store._replica_mfu = {ClusterType.MONOLITHIC: [[[_Series()]]]}
     store._replica_full_stage_busy_time = {ClusterType.MONOLITHIC: [[_Series()]]}
     store._replica_full_stage_mfu = {ClusterType.MONOLITHIC: [[_Series()]]}
     store._mfu_calculator = {
