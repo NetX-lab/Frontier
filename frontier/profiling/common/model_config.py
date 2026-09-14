@@ -3,7 +3,10 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
-from frontier.attention.model_binding import resolve_runtime_attention_family
+from frontier.attention.model_binding import (
+    bind_attention_family,
+    resolve_runtime_attention_family,
+)
 from frontier.attention.gdn import (
     GatedDeltaNetConfig,
     LayerAttentionSpec,
@@ -277,7 +280,13 @@ class ModelConfig:
 
     def get_attention_family(self):
         """Return the family used by model-wide profiling cache semantics."""
-        return resolve_runtime_attention_family(self)
+        # Preserve the homogeneous profiling seam: callers and tests may
+        # replace ``bind_attention_family`` at this module boundary.  Hybrid
+        # Qwen3.5 configs need the runtime resolver because the homogeneous
+        # binder intentionally rejects a whole-model GDN/full-attention mix.
+        if any(spec.is_gdn for spec in self.get_layer_attention_specs()):
+            return resolve_runtime_attention_family(self)
+        return bind_attention_family(self).family
 
     def get_gdn_config(self) -> Optional[GatedDeltaNetConfig]:
         if not any(spec.is_gdn for spec in self.get_layer_attention_specs()):
