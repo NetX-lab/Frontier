@@ -691,11 +691,13 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         cluster_type: ClusterType = None,
         training_file_paths: Dict[str, str] = None,
         cc_backend: Optional["BaseCCBackend"] = None,
+        actual_replica_ids: Optional[list] = None,
     ) -> None:
         self._is_moe = True
         self._router_topk = replica_config.router_topk
         self._moe_tp_size = replica_config.moe_tensor_parallel_size
         self._moe_ep_size = replica_config.moe_expert_parallel_size
+        self._actual_replica_ids = actual_replica_ids
 
         # Initialize the canonical distribution selector before parent init so
         # profiling paths choose matching gating-runtime metadata.
@@ -822,8 +824,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         rather than ``ClusterConfig``.  The canonical cluster capacity is
         injected as ``_cluster_num_replicas`` (or the explicit
         ``ReplicaConfig.cluster_num_replicas`` field) before this method is
-        called.  A missing capacity is an invalid topology, not a condition to
-        infer from an attention-DP field.
+        called.  When the simulator supplies ``_actual_replica_ids``, those
+        process-global IDs are used as the outer map keys; otherwise local
+        ``range(replica_count)`` keys preserve direct predictor-test behavior.
+        A missing capacity is an invalid topology, not a condition to infer
+        from an attention-DP field.
         """
         allocations = getattr(self, "_global_routing_allocations", None)
         if type(allocations) is not dict:
@@ -842,8 +847,32 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 f"routing details; got {replica_count!r}"
             )
 
+        actual_replica_ids = getattr(self, "_actual_replica_ids", None)
+        if actual_replica_ids is None:
+            replica_ids = list(range(replica_count))
+        else:
+            if not isinstance(actual_replica_ids, (list, tuple)):
+                raise ValueError(
+                    "actual_replica_ids must be a list or tuple when provided"
+                )
+            replica_ids = list(actual_replica_ids)
+            if len(replica_ids) != replica_count:
+                raise ValueError(
+                    "actual_replica_ids length must match cluster replica count; "
+                    f"got {len(replica_ids)} for {replica_count} replicas"
+                )
+            if any(
+                type(replica_id) is not int or replica_id < 0
+                for replica_id in replica_ids
+            ):
+                raise ValueError(
+                    "actual_replica_ids must contain exact non-negative integers"
+                )
+            if len(set(replica_ids)) != len(replica_ids):
+                raise ValueError("actual_replica_ids must be unique")
+
         shared_details: Dict[int, Dict[int, Dict[int, float]]] = {}
-        for replica_id in range(replica_count):
+        for replica_id in replica_ids:
             per_layer: Dict[int, Dict[int, float]] = {}
             for layer_id, expert_ratios in allocations.items():
                 if type(layer_id) is not int or layer_id < 0:

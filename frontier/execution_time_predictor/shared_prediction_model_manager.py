@@ -630,6 +630,10 @@ class ExecutionTimePredictionModelManager:
     def _resolve_measurement_input_files_for_config(
         self, replica_config, execution_time_predictor_config, measurement_type: MeasurementType
     ) -> Tuple[str, str, str, str, str, str]:
+        linear_op_file = execution_time_predictor_config.linear_op_input_file
+        if not linear_op_file and execution_time_predictor_config.mlp_input_file:
+            linear_op_file = execution_time_predictor_config.mlp_input_file
+
         def _device_event_path(field_name: str, fallback: str) -> str:
             configured = getattr(
                 execution_time_predictor_config,
@@ -640,10 +644,6 @@ class ExecutionTimePredictionModelManager:
                 return configured
             root, extension = os.path.splitext(fallback)
             return f"{root}_device_event{extension}"
-
-        linear_op_file = execution_time_predictor_config.linear_op_input_file
-        if not linear_op_file and execution_time_predictor_config.mlp_input_file:
-            linear_op_file = execution_time_predictor_config.mlp_input_file
 
         cpu_overhead_file = execution_time_predictor_config.cpu_overhead_input_file
 
@@ -4675,10 +4675,36 @@ class ExecutionTimePredictionModelManager:
         if not linear_op_file and execution_time_predictor_config.mlp_input_file:
             linear_op_file = execution_time_predictor_config.mlp_input_file
 
+        def _device_event_path(field_name: str, fallback: str) -> str:
+            configured = getattr(
+                execution_time_predictor_config,
+                f"{field_name}_device_event_input_file",
+                None,
+            )
+            if configured:
+                return configured
+            if not fallback:
+                return fallback
+            root, extension = os.path.splitext(fallback)
+            return f"{root}_device_event{extension}"
+
+        device_event_linear_op_file = _device_event_path(
+            "linear_op", linear_op_file
+        )
+        device_event_attention_file = _device_event_path(
+            "atten", execution_time_predictor_config.atten_input_file
+        )
+        device_event_moe_file = _device_event_path(
+            "moe", execution_time_predictor_config.moe_input_file
+        )
+
         return {
             'compute_input_file': _resolve(linear_op_file),
             'attention_input_file': _resolve(execution_time_predictor_config.atten_input_file),
             'moe_input_file': _resolve(execution_time_predictor_config.moe_input_file),
+            'compute_device_event_input_file': _resolve(device_event_linear_op_file),
+            'attention_device_event_input_file': _resolve(device_event_attention_file),
+            'moe_device_event_input_file': _resolve(device_event_moe_file),
             'all_reduce_input_file': _resolve(execution_time_predictor_config.all_reduce_input_file),
             'send_recv_input_file': _resolve(execution_time_predictor_config.send_recv_input_file),
             'cpu_overhead_input_file': _resolve(execution_time_predictor_config.cpu_overhead_input_file),

@@ -64,6 +64,12 @@ class Simulator:
         self._clusters: Dict[ClusterType, Cluster] = {}
 
         cluster_configs = self._config.get_clusters()
+        for cluster_config in cluster_configs.values():
+            replica_config = getattr(cluster_config, "replica_config", None)
+            if replica_config is not None:
+                replica_config.cluster_num_replicas = int(
+                    cluster_config.num_replicas
+                )
         model_configs = {
             cluster_config.replica_config.model_config.get_name(): cluster_config.replica_config.model_config
             for cluster_config in cluster_configs.values()
@@ -179,11 +185,32 @@ class Simulator:
                     cc_backend=cc_backend,
                 )
         else:
-            # For monolithic mode, create single predictor without model manager
+            # Preserve the historical independent-training path for ordinary
+            # monolithic models.  Hybrid GDN models need the shared manager so
+            # the artifact-backed GDN predictor and typed standard models are
+            # loaded through the same production construction path as PDD.
             cluster_config = cluster_configs[ClusterType.MONOLITHIC]
             # Get CC Backend from the monolithic cluster
             cluster = self._clusters[ClusterType.MONOLITHIC]
             cc_backend = cluster.cc_backend
+            model_config = cluster_config.replica_config.model_config
+            get_num_gdn_layers = getattr(model_config, "get_num_gdn_layers", None)
+            is_hybrid_gdn = callable(get_num_gdn_layers) and int(get_num_gdn_layers()) > 0
+            if is_hybrid_gdn:
+                self._execution_time_prediction_model_manager = (
+                    ExecutionTimePredictionModelManager(
+                        {ClusterType.MONOLITHIC: cluster_config},
+                        self._config.metrics_config,
+                    )
+                )
+                training_file_paths = (
+                    self._execution_time_prediction_model_manager.get_training_file_paths(
+                        ClusterType.MONOLITHIC
+                    )
+                )
+            else:
+                self._execution_time_prediction_model_manager = None
+                training_file_paths = None
 
             self._predictors[ClusterType.MONOLITHIC] = (
                 ExecutionTimePredictorRegistry.get(
@@ -193,8 +220,10 @@ class Simulator:
                     replica_scheduler_config=cluster_config.replica_scheduler_config,
                     metrics_config=self._config.metrics_config,
                     cluster_config=self._config.cluster_config,
-                    model_manager=None,
+                    model_manager=self._execution_time_prediction_model_manager,
                     cluster_type=ClusterType.MONOLITHIC,
+                    training_file_paths=training_file_paths,
+                    actual_replica_ids=list(cluster.replicas.keys()),
                     cc_backend=cc_backend,
                 )
             )

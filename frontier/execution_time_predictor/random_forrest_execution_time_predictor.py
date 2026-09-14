@@ -85,9 +85,16 @@ class RandomForrestExecutionTimePredictor:
             "cc_backend": cc_backend,
         }
 
-        # Only pass cluster_config and actual_replica_ids for disaggregated mode
-        if global_vars.is_disaggregated_mode():
-            kwargs["cluster_config"] = cluster_config
+        # Disaggregated predictors have always consumed actual IDs. The
+        # monolithic MoE predictor uses them as well because Replica IDs are
+        # process-global rather than guaranteed to start at zero.
+        is_moe_model = (
+            replica_config.model_config is not None
+            and replica_config.model_config.is_moe
+        )
+        if global_vars.is_disaggregated_mode() or is_moe_model:
+            if global_vars.is_disaggregated_mode():
+                kwargs["cluster_config"] = cluster_config
             kwargs["actual_replica_ids"] = actual_replica_ids
 
         return _RandomForrestExecutionTimePredictor(**kwargs)

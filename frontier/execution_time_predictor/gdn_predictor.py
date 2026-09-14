@@ -233,6 +233,10 @@ class GDNPredictor:
     ) -> AttentionTime:
         features = GDNBatchFeatures.from_batch(batch)
         operator_times = self.predict_operator_times(features)
+        # Structured attention consumers enumerate the complete family schema.
+        # The inactive phase contributes no work and must remain explicitly zero.
+        operator_times.setdefault("gdn_core_prefill", 0.0)
+        operator_times.setdefault("gdn_core_decode", 0.0)
         core_name = "gdn_core_prefill" if features.phase == "prefill" else "gdn_core_decode"
         return AttentionTime(
             attention_prefill_execution_time=(
