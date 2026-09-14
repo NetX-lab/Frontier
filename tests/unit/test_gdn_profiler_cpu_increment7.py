@@ -8,7 +8,10 @@ import pytest
 from frontier.profiling.gdn.inputs import GDNProfileInput
 from frontier.profiling.gdn.main import build_profile_inputs
 from frontier.profiling.gdn.vllm_wrapper import VllmQwen35GDNWrapper
-from frontier.profiling.utils import validate_profile_method_platform
+from frontier.profiling.utils import (
+    build_profiling_output_path,
+    validate_profile_method_platform,
+)
 
 
 def test_one_token_continuation_keeps_explicit_prefill_phase() -> None:
@@ -64,6 +67,23 @@ def test_rocm_standard_producer_requires_device_event() -> None:
     validate_profile_method_platform("device_event", "rocm")
     with pytest.raises(ValueError, match="ROCm profiling requires"):
         validate_profile_method_platform("cuda_event", "rocm")
+
+
+def test_standard_gdn_output_uses_canonical_gdn_csv() -> None:
+    path = build_profiling_output_path(
+        output_root="data/profiling",
+        profiling_type="compute",
+        hardware="mi355x",
+        model_name="Qwen3.8-2.4T-A95B-Quark-MXFP4",
+        op_name="gdn",
+    )
+    assert path.name == "gdn.csv"
+    source = __import__("pathlib").Path("frontier/profiling/gdn/main.py").read_text(
+        encoding="utf-8"
+    )
+    assert "build_profiling_output_path" in source
+    assert 'op_name="gdn"' in source
+    assert "gdn_device_event" not in source
 
 
 def test_cpu_import_does_not_construct_gpu_runtime() -> None:

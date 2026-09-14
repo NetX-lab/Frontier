@@ -114,6 +114,8 @@ def test_explicit_route_json_and_visibility_plans(tmp_path):
     assert plan["local_rank"] == 0
     with pytest.raises(ValueError):
         graph.validate_replay_plan({**plan, "repetitions": 1})
+    with pytest.raises(ValueError, match="At least five repetitions"):
+        graph.validate_plan((8,), (2,), 4, "validation")
 
 
 def _event(name: str, ts: float, dur: float) -> dict[str, object]:

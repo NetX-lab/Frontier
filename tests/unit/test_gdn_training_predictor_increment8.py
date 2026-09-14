@@ -1,6 +1,7 @@
 """CPU Increment 8 contracts for GDN training and artifact-backed prediction."""
 
 from pathlib import Path
+import shutil
 from types import SimpleNamespace
 
 import pytest
@@ -178,3 +179,37 @@ def test_model_manager_loads_gdn_artifacts_without_fitting(tmp_path: Path) -> No
         MeasurementType.DEVICE_EVENT,
     )
     assert manager.get_gdn_predictor("fixture").runtime_stack_signature == "synthetic_cpu_v1"
+
+
+def test_model_manager_rejects_artifacts_for_changed_gdn_csv(tmp_path: Path) -> None:
+    output = _train(tmp_path)
+    source = tmp_path / "gdn.csv"
+    shutil.copyfile(FIXTURE, source)
+    source.write_text(source.read_text() + "\n", encoding="utf-8")
+
+    class ModelConfig:
+        def get_num_gdn_layers(self):
+            return 1
+
+        def get_name(self):
+            return "fixture"
+
+        def get_model_architecture_profile(self):
+            return SimpleNamespace(profile_id="qwen3_5_moe")
+
+        def get_quant_signature(self):
+            return "none"
+
+    replica = SimpleNamespace(
+        model_config=ModelConfig(),
+        device="cpu",
+        attn_tensor_parallel_size=1,
+    )
+    predictor_config = SimpleNamespace(gdn_input_file=str(source))
+    manager = object.__new__(ExecutionTimePredictionModelManager)
+    manager._cache_dir = str(output)
+    manager._gdn_predictors = {}
+    with pytest.raises(ValueError, match="identity mismatch"):
+        manager._load_gdn_predictor_for_cluster(
+            "fixture", replica, predictor_config, MeasurementType.DEVICE_EVENT
+        )
