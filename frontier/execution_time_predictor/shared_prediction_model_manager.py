@@ -418,6 +418,7 @@ class ExecutionTimePredictionModelManager:
         self._cache_dir = metrics_config.cache_dir
         os.makedirs(self._cache_dir, exist_ok=True)
         self._attention_tp_warning_cache: Set[str] = set()
+        self._gdn_predictors: Dict[ClusterType, Any] = {}
 
         # Check if all clusters are in dummy mode
         self._all_dummy_mode = self._check_all_dummy_mode()
@@ -785,6 +786,12 @@ class ExecutionTimePredictionModelManager:
                 cluster_type, replica_config
             ):
                 self._set_active_measurement_type(measurement_type)
+                self._load_gdn_predictor_for_cluster(
+                    cluster_type,
+                    replica_config,
+                    execution_time_predictor_config,
+                    measurement_type,
+                )
                 family_name = self._measurement_family_name(measurement_type)
                 input_files = self._resolve_measurement_input_files_for_config(
                     replica_config, execution_time_predictor_config, measurement_type
@@ -801,7 +808,20 @@ class ExecutionTimePredictionModelManager:
 
                 family_models: Dict[str, BaseEstimator] = {}
 
-                if cluster_type in [ClusterType.PREFILL, ClusterType.DECODE_ATTN, ClusterType.DECODE, ClusterType.MONOLITHIC]:
+                has_gdn = bool(
+                    callable(getattr(model_config, "get_num_gdn_layers", None))
+                    and model_config.get_num_gdn_layers() > 0
+                )
+                if (
+                    cluster_type
+                    in [
+                        ClusterType.PREFILL,
+                        ClusterType.DECODE_ATTN,
+                        ClusterType.DECODE,
+                        ClusterType.MONOLITHIC,
+                    ]
+                    and not has_gdn
+                ):
                     attention_models = self._train_attn_models_for_cluster(
                         cluster_type,
                         replica_config,
@@ -885,6 +905,60 @@ class ExecutionTimePredictionModelManager:
             "Trained %d family-scoped models in total across all clusters", len(combined_models)
         )
         return combined_models
+
+    def _load_gdn_predictor_for_cluster(
+        self,
+        cluster_type: ClusterType,
+        replica_config: Any,
+        execution_time_predictor_config: Any,
+        measurement_type: MeasurementType,
+    ) -> None:
+        """Load pre-trained GDN artifacts for a hybrid model cluster.
+
+        GDN fitting remains an explicit ``frontier.training.cli gdn`` action;
+        simulator initialization only loads the resulting manifest/artifacts.
+        """
+
+        model_config = getattr(replica_config, "model_config", None)
+        get_num_gdn_layers = getattr(model_config, "get_num_gdn_layers", None)
+        if not callable(get_num_gdn_layers) or int(get_num_gdn_layers()) <= 0:
+            return
+        from frontier.execution_time_predictor.gdn_predictor import GDNPredictor
+
+        gdn_file = str(
+            getattr(
+                execution_time_predictor_config,
+                "gdn_input_file",
+                "./data/profiling/compute/{DEVICE}/{MODEL}/gdn.csv",
+            )
+        ).replace("{DEVICE}", str(replica_config.device))
+        model_name = model_config.get_name()
+        gdn_file = gdn_file.replace("{MODEL}", model_name)
+        if not os.path.isfile(gdn_file):
+            raise FileNotFoundError(
+                "Hybrid GDN configuration requires a standard gdn.csv input; "
+                f"file does not exist: {gdn_file}"
+            )
+        predictor = GDNPredictor.from_directory(
+            self._cache_dir,
+            model_config=model_config,
+            device=replica_config.device,
+            tensor_parallel_size=replica_config.attn_tensor_parallel_size,
+            measurement_type=measurement_type,
+        )
+        existing = self._gdn_predictors.get(cluster_type)
+        if existing is not None and existing.identity != predictor.identity:
+            raise ValueError(
+                "Hybrid GDN cluster requests incompatible model identities: "
+                f"cluster={cluster_type}, existing={existing.identity}, "
+                f"new={predictor.identity}"
+            )
+        self._gdn_predictors[cluster_type] = predictor
+
+    def get_gdn_predictor(self, cluster_type: ClusterType) -> Any | None:
+        """Return the loaded GDN predictor for one cluster, if configured."""
+
+        return self._gdn_predictors.get(cluster_type)
 
     def _get_ffn_tp_key(self, cluster_type: ClusterType, replica_config, is_moe_model: bool) -> int:
         if cluster_type == ClusterType.DECODE_FFN:

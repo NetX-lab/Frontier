@@ -423,6 +423,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         self._cluster_type = cluster_type
         self._model_manager = model_manager
+        self._gdn_predictor = (
+            model_manager.get_gdn_predictor(cluster_type)
+            if model_manager is not None
+            and hasattr(model_manager, "get_gdn_predictor")
+            else None
+        )
         self._cc_backend = cc_backend  # CC Backend for communication predictions
         self._attention_tp_warning_cache: Set[str] = set()
 
@@ -7362,6 +7368,24 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             # )
 
         self._log_architecture_attention_shape(batch)
+
+        # Hybrid GDN layers use the standalone artifact-backed predictor. Keep
+        # this branch before whole-model family binding, which is intentionally
+        # homogeneous-only and rejects a hybrid model without a layer ID.
+        if (
+            self._gdn_predictor is not None
+            and callable(getattr(self._model_config, "is_gdn_layer", None))
+            and self._model_config.is_gdn_layer(layer_id)
+        ):
+            norm_time = (
+                self._get_attn_norm_layer_act_execution_time(batch)
+                if self._supports_operation("input_layernorm")
+                else 0.0
+            )
+            return self._gdn_predictor.predict_attention_time(
+                batch,
+                norm_time_ms=norm_time,
+            )
 
         attention_family = self._get_attention_family()
         attention_family.require_enabled_for_execution()

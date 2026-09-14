@@ -2152,6 +2152,10 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
         default="./data/profiling/compute/{DEVICE}/{MODEL}/attention.csv",
         metadata={"help": "Path to the attention input file."},
     )
+    gdn_input_file: str = field(
+        default="./data/profiling/compute/{DEVICE}/{MODEL}/gdn.csv",
+        metadata={"help": "Path to the standard GDN profiling input file."},
+    )
     all_reduce_input_file: str = field(
         default="./data/profiling/network/{NETWORK_DEVICE}/all_reduce.csv",
         metadata={"help": "Path to the all reduce input file."},

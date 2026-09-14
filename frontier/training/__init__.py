@@ -14,6 +14,7 @@ from frontier.training.base_trainer import BaseTrainer
 from frontier.training.moe_trainer import MoETrainer
 from frontier.training.linear_op_trainer import LinearOpTrainer
 from frontier.training.attention_trainer import AttentionTrainer
+from frontier.training.gdn_trainer import GDNTrainer
 
 # Backward compatibility aliases
 from frontier.training.linear_op_trainer import MLPTrainer
@@ -23,7 +24,7 @@ __all__ = [
     "MoETrainer",
     "LinearOpTrainer",
     "AttentionTrainer",
+    "GDNTrainer",
     # Backward compatibility
     "MLPTrainer",
 ]
-

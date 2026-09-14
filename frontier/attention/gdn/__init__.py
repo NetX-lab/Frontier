@@ -21,6 +21,7 @@ from frontier.attention.gdn.state import (
     GatedDeltaNetStateSlot,
     GatedDeltaNetStateSlotManager,
 )
+from frontier.attention.gdn.features import GDNBatchFeatures, GDN_FEATURE_COLUMNS
 
 __all__ = [
     "GatedDeltaNetConfig",
@@ -34,4 +35,6 @@ __all__ = [
     "model_has_gdn",
     "resolve_layer_attention_specs",
     "validate_gdn_runtime_support",
+    "GDNBatchFeatures",
+    "GDN_FEATURE_COLUMNS",
 ]
