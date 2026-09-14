@@ -808,10 +808,6 @@ class ExecutionTimePredictionModelManager:
 
                 family_models: Dict[str, BaseEstimator] = {}
 
-                has_gdn = bool(
-                    callable(getattr(model_config, "get_num_gdn_layers", None))
-                    and model_config.get_num_gdn_layers() > 0
-                )
                 if (
                     cluster_type
                     in [
@@ -820,7 +816,6 @@ class ExecutionTimePredictionModelManager:
                         ClusterType.DECODE,
                         ClusterType.MONOLITHIC,
                     ]
-                    and not has_gdn
                 ):
                     attention_models = self._train_attn_models_for_cluster(
                         cluster_type,
@@ -2417,6 +2412,12 @@ class ExecutionTimePredictionModelManager:
     def _is_mla_family(model_config) -> bool:
         """Return True when the model binds to the latent-MLA attention family."""
         if model_config is None:
+            return False
+        # Qwen3.5 hybrid models have no whole-model attention family. Their
+        # full-attention layers use the dense family through the per-layer
+        # binding seam; they must not enter the MLA-only training path.
+        get_num_gdn_layers = getattr(model_config, "get_num_gdn_layers", None)
+        if callable(get_num_gdn_layers) and int(get_num_gdn_layers()) > 0:
             return False
         return (
             bind_attention_family(model_config).family.family_id

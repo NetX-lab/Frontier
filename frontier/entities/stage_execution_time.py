@@ -208,6 +208,20 @@ class StageExecutionTime:
         if num_layers == 1 and source.global_layer_id is not None:
             return cls((source,), stage_execution_time=source)
 
+        # A resolved source identity is authoritative for callers that already
+        # selected a concrete layer family.  Homogeneous legacy callers still
+        # receive the historical dense/unknown defaults.
+        resolved_attention_family_id = (
+            source.attention_family_id
+            if source.attention_family_id is not None
+            else attention_family_id
+        )
+        resolved_attention_variant_id = (
+            source.attention_variant_id
+            if source.attention_variant_id is not None
+            else attention_variant_id
+        )
+
         layers: list[ExecutionTime] = []
         for offset in range(num_layers):
             global_layer_id = (
@@ -220,8 +234,8 @@ class StageExecutionTime:
                     global_layer_id=(
                         0 if global_layer_id is None else global_layer_id
                     ),
-                    attention_family_id=attention_family_id,
-                    attention_variant_id=attention_variant_id,
+                    attention_family_id=resolved_attention_family_id,
+                    attention_variant_id=resolved_attention_variant_id,
                 )
             )
             if global_layer_id is None:

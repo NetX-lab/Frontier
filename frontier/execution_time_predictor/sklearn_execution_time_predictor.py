@@ -31,9 +31,10 @@ from sklearn.model_selection import GridSearchCV
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    get_attention_family,
     LATENT_MLA_ATTENTION_FAMILY,
 )
-from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.model_binding import bind_attention_family, bind_layer_attention
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.ops import AttentionPhase
 from frontier.attention.string_coercion import coerce_truthy_bool, coerce_truthy_int
@@ -7373,7 +7374,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         # this branch before whole-model family binding, which is intentionally
         # homogeneous-only and rejects a hybrid model without a layer ID.
         if (
-            self._gdn_predictor is not None
+            getattr(self, "_gdn_predictor", None) is not None
             and callable(getattr(self._model_config, "is_gdn_layer", None))
             and self._model_config.is_gdn_layer(layer_id)
         ):
@@ -7387,7 +7388,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 norm_time_ms=norm_time,
             )
 
-        attention_family = self._get_attention_family()
+        layer_binding_getter = getattr(self._model_config, "get_layer_attention_spec", None)
+        if callable(layer_binding_getter):
+            layer_spec = bind_layer_attention(self._model_config, layer_id)
+            attention_family = get_attention_family(layer_spec.family_id)
+        else:
+            attention_family = self._get_attention_family()
         attention_family.require_enabled_for_execution()
 
         if self._enable_dummy_mode:

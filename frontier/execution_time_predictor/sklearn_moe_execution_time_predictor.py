@@ -9,6 +9,7 @@ import pandas as pd
 from sklearn.base import BaseEstimator
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.model_binding import bind_layer_attention
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_metric_name_by_role,
@@ -2602,6 +2603,15 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             self._get_mlp_norm_layer_act_execution_time(batch) if include_ffn else 0.0
         )
 
+        layer_identity: dict[str, object] = {}
+        if callable(getattr(self._model_config, "get_layer_attention_spec", None)):
+            layer_spec = bind_layer_attention(self._model_config, int(layer_id))
+            layer_identity = {
+                "global_layer_id": int(layer_spec.global_layer_id),
+                "attention_family_id": layer_spec.family_id,
+                "attention_variant_id": layer_spec.variant_id,
+            }
+
         return ExecutionTime(
             num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
             attention_rope_execution_time=attention_time.attention_rope_execution_time,
@@ -2655,6 +2665,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             communication_operator_times=CommunicationOperatorTimes(
                 communication_operator_times
             ),
+            **layer_identity,
             moe_operator_times=(
                 _build_moe_operator_times(
                     mlp_norm_time=mlp_norm_time,
