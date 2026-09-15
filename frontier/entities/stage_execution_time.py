@@ -168,6 +168,7 @@ class StageExecutionTime:
         # the aggregate model time after its first computation so repeated
         # event-path reads do not rescan every layer.
         self._model_time_ms_cache: float | None = None
+        self._model_time_ms_cache_versions: tuple[int, ...] | None = None
 
         layer_ids = self.global_layer_ids
         if any(layer_id is not None for layer_id in layer_ids) and any(
@@ -411,7 +412,13 @@ class StageExecutionTime:
 
     @property
     def model_time_ms(self) -> float:
-        if self._model_time_ms_cache is not None:
+        cache_versions = tuple(
+            layer.mutation_version for layer in self._layer_execution_times
+        ) + (self._stage_execution_time.mutation_version,)
+        if (
+            self._model_time_ms_cache is not None
+            and self._model_time_ms_cache_versions == cache_versions
+        ):
             return self._model_time_ms_cache
         block_time_ms = self._sum_values(
             layer.get_single_layer_block_time()
@@ -424,6 +431,7 @@ class StageExecutionTime:
             + self._owner_value("mtp_terminal_overshoot_time")
         )
         self._model_time_ms_cache = value
+        self._model_time_ms_cache_versions = cache_versions
         return value
 
     @property

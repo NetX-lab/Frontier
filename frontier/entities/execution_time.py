@@ -132,6 +132,10 @@ class ExecutionTime(BaseEntity):
         self._attention_family_id = attention_family_id
         self._attention_variant_id = attention_variant_id
         self._shared_components = False
+        # StageExecutionTime uses this private generation to validate its
+        # aggregate cache.  Component setters and mutation helpers increment
+        # it after changing the timing payload; construction starts at zero.
+        self._mutation_version = 0
         # Existing direct callers historically constructed an aggregate object
         # by passing num_layers_per_pipeline_stage > 1. Keep that compatibility
         # mode while all identity-bearing results use one real layer. Stage
@@ -484,6 +488,17 @@ class ExecutionTime(BaseEntity):
     def _refresh_op_time_attr_values(self) -> None:
         self._op_time_attr_values = execution_op_time_values_by_attr(self._op_times)
 
+    def _mark_mutated(self) -> None:
+        """Advance the payload generation after a timing mutation."""
+
+        self._mutation_version += 1
+
+    @property
+    def mutation_version(self) -> int:
+        """Return the generation used by stage aggregate cache validation."""
+
+        return self._mutation_version
+
     def _merged_replacement_operator_time_source(
         self,
         old_operator_times,
@@ -513,6 +528,7 @@ class ExecutionTime(BaseEntity):
         )
         self._op_times = normalize_execution_op_times(updated_op_times)
         self._refresh_op_time_attr_values()
+        self._mark_mutated()
 
     def _replace_operator_time_values(self, op_times: Mapping[str, float]) -> None:
         self._ensure_owned_components()
@@ -534,6 +550,7 @@ class ExecutionTime(BaseEntity):
         self._communication_time.operator_times = (
             build_communication_operator_times_from_op_times(self._op_times)
         )
+        self._mark_mutated()
 
     def _time_attr_value(self, attr_name: str, legacy_value: float) -> float:
         return self._op_time_attr_values.get(attr_name, legacy_value)
@@ -637,6 +654,7 @@ class ExecutionTime(BaseEntity):
         self._attention_time.operator_times = deepcopy(operator_times)
         self._op_times = updated_op_times
         self._refresh_op_time_attr_values()
+        self._mark_mutated()
 
     @property
     def moe_or_mlp_time_component(self) -> Union[MLPTime, MoETime]:
@@ -663,6 +681,7 @@ class ExecutionTime(BaseEntity):
         self._moe_or_mlp_time.operator_times = deepcopy(operator_times)
         self._op_times = updated_op_times
         self._refresh_op_time_attr_values()
+        self._mark_mutated()
 
     @property
     def moe_operator_times(self) -> MoEOperatorTimes | None:
@@ -684,6 +703,7 @@ class ExecutionTime(BaseEntity):
         self._moe_or_mlp_time.operator_times = deepcopy(operator_times)
         self._op_times = updated_op_times
         self._refresh_op_time_attr_values()
+        self._mark_mutated()
 
     @property
     def communication_time_component(self) -> CommunicationTime:
@@ -709,6 +729,7 @@ class ExecutionTime(BaseEntity):
         self._communication_time.operator_times = deepcopy(operator_times)
         self._op_times = updated_op_times
         self._refresh_op_time_attr_values()
+        self._mark_mutated()
 
     @property
     def overhead_time_component(self) -> OverheadTime:
@@ -727,6 +748,7 @@ class ExecutionTime(BaseEntity):
             self._replace_operator_time_values({"moe_grouped_gemm": time})
             self._moe_or_mlp_time.moe_grouped_gemm_time = time
         self._moe_grouped_gemm_time = time
+        self._mark_mutated()
 
     def override_moe_times(self, grouped_gemm_time: float, expert_parallel_comm_time: float,
                           gating_time: float, shuffling_time: float,
@@ -773,6 +795,7 @@ class ExecutionTime(BaseEntity):
         self._moe_gating_linear_time = gating_linear_time
         self._moe_gating_routing_topk_time = gating_routing_topk_time
         self._moe_shuffling_time = shuffling_time
+        self._mark_mutated()
 
     # ========================================================================
     # Refactored Properties: Delegate to Time Components (Single-Layer Granularity)

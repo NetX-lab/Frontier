@@ -144,6 +144,19 @@ def test_stage_model_time_reuses_immutable_layer_aggregate(monkeypatch) -> None:
     assert calls == 1
 
 
+def test_stage_model_time_refreshes_after_layer_mutation() -> None:
+    first = _layer(layer_id=0)
+    second = _layer(layer_id=1)
+    stage = StageExecutionTime((first, second), stage_execution_time=first)
+
+    before = stage.model_time_ms
+    first._replace_operator_time_values({"attn_prefill": 7.0})
+
+    assert stage.model_time_ms == pytest.approx(
+        before + (7.0 - 4.0)
+    )
+
+
 def test_stage_keeps_distinct_moe_layer_records() -> None:
     first = _layer(
         layer_id=1,
