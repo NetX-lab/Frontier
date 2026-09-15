@@ -6,6 +6,7 @@ import pytest
 
 from frontier.attention.model_binding import (
     AttentionFamilyBinding,
+    bind_layer_attention,
     bind_attention_family,
 )
 from frontier.config.model_config import BaseModelConfig
@@ -88,6 +89,23 @@ def _mla_kwargs() -> dict[str, int]:
         "qk_head_dim": 192,
         "v_head_dim": 128,
     }
+
+
+def test_homogeneous_mla_layer_binding_matches_public_family_binding() -> None:
+    config = _base_model_config(
+        num_q_heads=128,
+        num_kv_heads=128,
+        model_type="deepseek_v2",
+        use_mla=True,
+        **_mla_kwargs(),
+    )
+
+    whole_model = bind_attention_family(config)
+    layer = bind_layer_attention(config, 1)
+
+    assert whole_model.family_id == "latent_mla_attention"
+    assert layer.family_id == whole_model.family_id
+    assert layer.variant_id == whole_model.variant_id
 
 
 @pytest.mark.parametrize(

@@ -1,8 +1,10 @@
 import json
 import math
 import os
+from collections import OrderedDict
 from copy import deepcopy
-from typing import Any, Dict, List, Mapping, Optional, TYPE_CHECKING, Union
+from dataclasses import replace
+from typing import Any, Dict, List, Mapping, MutableMapping, Optional, TYPE_CHECKING, Union
 
 import numpy as np
 import pandas as pd
@@ -252,6 +254,11 @@ def _validate_moe_columns(moe_df: pd.DataFrame) -> None:
 
 
 class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
+    # Attention numeric reuse is intentionally bounded.  The cache contains
+    # only one-layer scalar records and is never allowed to grow with the
+    # number of requests or stages seen by a long-lived predictor.
+    _ATTENTION_QUERY_CACHE_CAPACITY = 64
+
     @staticmethod
     def _emit_routing_details_snapshot(
         cluster_type: ClusterType,
@@ -698,6 +705,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         self._moe_tp_size = replica_config.moe_tensor_parallel_size
         self._moe_ep_size = replica_config.moe_expert_parallel_size
         self._actual_replica_ids = actual_replica_ids
+        self._attention_query_cache_capacity = self._ATTENTION_QUERY_CACHE_CAPACITY
+        self._attention_query_cache = OrderedDict()
+        self._attention_query_cache_hits = 0
+        self._attention_query_cache_misses = 0
 
         # Initialize the canonical distribution selector before parent init so
         # profiling paths choose matching gating-runtime metadata.
@@ -2334,8 +2345,15 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         batch: Batch,
         layer_id: int,
         cluster_type: ClusterType,
+        cache: MutableMapping[tuple[Any, ...], AttentionTime] | None = None,
     ) -> AttentionTime:
-        """Reuse only immutable attention numerics; preserve layer ownership."""
+        """Reuse scalar attention numerics while preserving layer ownership.
+
+        ``cache`` is supplied by a top-level stage prediction to scope reuse
+        to that stage.  Direct callers retain a small LRU cache for backwards
+        compatibility; both paths return an isolated ``AttentionTime`` so a
+        consumer cannot mutate the cached value.
+        """
 
         key = self._attention_query_cache_key(
             batch=batch,
@@ -2348,20 +2366,67 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 layer_id=layer_id,
                 cluster_type=cluster_type,
             )
-        cache = getattr(self, "_attention_query_cache", None)
+
+        if not hasattr(self, "_attention_query_cache_hits"):
+            self._attention_query_cache_hits = 0
+        if not hasattr(self, "_attention_query_cache_misses"):
+            self._attention_query_cache_misses = 0
+
         if cache is None:
-            cache = {}
-            self._attention_query_cache = cache
+            cache = getattr(self, "_attention_query_cache", None)
+            if cache is None:
+                cache = OrderedDict()
+                self._attention_query_cache = cache
+            capacity = int(
+                getattr(
+                    self,
+                    "_attention_query_cache_capacity",
+                    self._ATTENTION_QUERY_CACHE_CAPACITY,
+                )
+            )
+        else:
+            # A stage-local cache is deliberately bounded as well.  This is a
+            # guard against malformed model metadata producing an unexpectedly
+            # large layer list.
+            capacity = self._ATTENTION_QUERY_CACHE_CAPACITY
+
         cached = cache.get(key)
         if cached is not None:
-            return deepcopy(cached)
+            if hasattr(cache, "move_to_end"):
+                cache.move_to_end(key)
+            self._attention_query_cache_hits = int(
+                getattr(self, "_attention_query_cache_hits", 0)
+            ) + 1
+            return self._clone_attention_time(cached)
+
+        self._attention_query_cache_misses = int(
+            getattr(self, "_attention_query_cache_misses", 0)
+        ) + 1
         result = self.predict_attention_layer_time(
             batch=batch,
             layer_id=layer_id,
             cluster_type=cluster_type,
         )
-        cache[key] = deepcopy(result)
+        cache[key] = self._clone_attention_time(result)
+        if hasattr(cache, "move_to_end"):
+            cache.move_to_end(key)
+        while len(cache) > max(1, capacity):
+            cache.popitem(last=False)
         return result
+
+    @staticmethod
+    def _clone_attention_time(value: AttentionTime) -> AttentionTime:
+        """Clone scalar attention timings without recursive object copying."""
+
+        if not isinstance(value, AttentionTime):
+            raise TypeError(
+                "attention query cache requires an AttentionTime result, "
+                f"got {type(value).__name__}"
+            )
+        operator_times = value.operator_times
+        if operator_times is not None:
+            operator_times = type(operator_times)(dict(operator_times.op_times))
+        return replace(value, operator_times=operator_times)
 
     # This is now a private method used internally for MoE-specific logic
     def _get_execution_time_internal(
@@ -2374,6 +2439,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         include_ffn: bool = True,
         include_attention: bool = True,
         layer_id: int = 0,
+        attention_query_cache: MutableMapping[tuple[Any, ...], AttentionTime] | None = None,
     ) -> "ExecutionTime":
         """
         Calculate execution time for a pipeline stage.
@@ -2423,6 +2489,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 batch=batch,
                 layer_id=layer_id,
                 cluster_type=self._cluster_type,
+                cache=attention_query_cache,
             )
             if include_attention
             else AttentionTime()
@@ -3398,6 +3465,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         include_moe: bool | None = None,
         include_ffn: bool = True,
         include_attention: bool = True,
+        _attention_query_cache: MutableMapping[tuple[Any, ...], AttentionTime] | None = None,
     ) -> StageExecutionTime:
         """
         Predict execution time for MoE models using per-layer component semantics.
@@ -3438,6 +3506,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         # may be numerically equal, but MoE routing and EP workloads are
         # layer-specific and must remain attached to distinct records.
         if num_layers > 1:
+            stage_attention_cache = (
+                _attention_query_cache
+                if _attention_query_cache is not None
+                else OrderedDict()
+            )
             recursive_include_moe = include_moe
             if recursive_include_moe is None and not callable(
                 getattr(self._model_config, "is_moe_layer", None)
@@ -3453,6 +3526,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                     include_moe=recursive_include_moe,
                     include_ffn=include_ffn,
                     include_attention=include_attention,
+                    _attention_query_cache=stage_attention_cache,
                 )
                 for offset in range(num_layers)
             ]
@@ -3574,6 +3648,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             include_ffn=include_ffn,
             include_attention=include_attention,
             layer_id=layer_id,
+            attention_query_cache=_attention_query_cache,
         )
 
         # Communication OP-TRACE: log per-layer allreduce times for op-level comparison

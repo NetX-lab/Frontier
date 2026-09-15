@@ -251,6 +251,32 @@ def bind_layer_attention(config: Any, global_layer_id: int) -> LayerAttentionSpe
         raise ValueError(
             f"global_layer_id must be an int, got {global_layer_id!r}"
         )
+    # Homogeneous model families have one authoritative whole-model binding.
+    # Reusing it here keeps MLA/MFA/DSA classification identical between the
+    # public predictor and model-wide cache/layout helpers.  The resolver is
+    # reserved for an actual hybrid schedule where each layer may differ.
+    if not _has_hybrid_attention_schedule(config):
+        binding = bind_attention_family(config)
+        return LayerAttentionSpec(
+            global_layer_id=global_layer_id,
+            family_id=binding.family_id,
+            variant_id=binding.variant_id,
+        )
+
+    # Prefer the model-owned immutable cache when available.  This avoids
+    # rebuilding a full schedule for every per-layer prediction while keeping
+    # the fallback usable for lightweight config doubles.
+    get_spec = getattr(config, "get_layer_attention_spec", None)
+    if callable(get_spec):
+        try:
+            spec = get_spec(global_layer_id)
+        except (AttributeError, TypeError):
+            spec = None
+        else:
+            if isinstance(spec, LayerAttentionSpec):
+                get_attention_family(spec.family_id)
+                return spec
+
     specs = resolve_layer_attention_specs(config)
     if global_layer_id < 0 or global_layer_id >= len(specs):
         raise ValueError(

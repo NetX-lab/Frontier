@@ -135,3 +135,22 @@ def test_attention_query_cache_misses_for_context_phase_tp_and_family_changes() 
     )
 
     assert calls == [0, 0, 0, 0, 7]
+
+
+def test_attention_query_cache_has_bounded_lru_lifetime() -> None:
+    calls: list[int] = []
+    predictor = _build_predictor(calls)
+    predictor._attention_query_cache_capacity = 2
+    batch = _Batch()
+
+    for token_count in (12, 13, 14, 15):
+        batch.total_num_tokens = token_count
+        predictor._predict_attention_layer_time_with_query_cache(
+            batch=batch,
+            layer_id=0,
+            cluster_type=ClusterType.MONOLITHIC,
+        )
+
+    assert len(predictor._attention_query_cache) == 2
+    assert predictor._attention_query_cache_misses == 4
+    assert predictor._attention_query_cache_hits == 0
