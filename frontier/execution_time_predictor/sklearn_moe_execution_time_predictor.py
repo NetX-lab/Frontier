@@ -938,6 +938,21 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         self, batch: Batch, cluster_type: ClusterType, layer_id: int
     ) -> LayerEPWorkload:
         """Materialize one exact Replica-local EP workload for a MoE layer."""
+        # Some lightweight predictor subclasses intentionally bypass
+        # ``__init__`` to exercise this production helper directly.  Keep the
+        # bounded cache contract in that path as well; a missing cache is an
+        # uninitialized optional optimization, not a routing error.
+        workload_cache = getattr(self, "_layer_workload_cache", None)
+        if workload_cache is None:
+            workload_cache = OrderedDict()
+            self._layer_workload_cache = workload_cache
+        cache_capacity = int(
+            getattr(
+                self,
+                "_layer_workload_cache_capacity",
+                self._LAYER_WORKLOAD_CACHE_CAPACITY,
+            )
+        )
         cluster_replica_config = self._get_moe_replica_config_for_cluster(cluster_type)
         routing_details = self._get_routing_details_for_cluster(cluster_type)
         target_replica_id = int(batch.replica_id)
@@ -955,9 +970,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             total_expert_num,
             moe_ep_size,
         )
-        cached_workload = self._layer_workload_cache.get(cache_key)
+        cached_workload = workload_cache.get(cache_key)
         if cached_workload is not None:
-            self._layer_workload_cache.move_to_end(cache_key)
+            workload_cache.move_to_end(cache_key)
             return cached_workload
         workload = materialize_layer_ep_workload(
             routing_ratios=resolve_routing_details(
@@ -976,10 +991,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 moe_ep_size,
             ),
         )
-        self._layer_workload_cache[cache_key] = workload
-        self._layer_workload_cache.move_to_end(cache_key)
-        while len(self._layer_workload_cache) > self._layer_workload_cache_capacity:
-            self._layer_workload_cache.popitem(last=False)
+        workload_cache[cache_key] = workload
+        workload_cache.move_to_end(cache_key)
+        while len(workload_cache) > cache_capacity:
+            workload_cache.popitem(last=False)
         return workload
 
     def _resolve_layer_lane_workload(
