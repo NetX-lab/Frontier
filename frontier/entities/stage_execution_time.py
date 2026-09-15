@@ -186,6 +186,7 @@ class StageExecutionTime:
         attention_family_id: str = "dense_attention",
         attention_variant_id: str = "unknown",
         layer_id_step: int = 1,
+        copy_components: bool = True,
     ) -> "StageExecutionTime":
         """Expand one per-layer source payload into an ordered stage result.
 
@@ -200,6 +201,8 @@ class StageExecutionTime:
             raise ValueError("num_layers must be a positive int")
         if type(layer_id_step) is not int or layer_id_step <= 0:
             raise ValueError("layer_id_step must be a positive int")
+        if type(copy_components) is not bool:
+            raise TypeError("copy_components must be a bool")
         if first_layer_id is not None and (
             type(first_layer_id) is not int or first_layer_id < 0
         ):
@@ -236,6 +239,7 @@ class StageExecutionTime:
                     ),
                     attention_family_id=resolved_attention_family_id,
                     attention_variant_id=resolved_attention_variant_id,
+                    copy_components=copy_components,
                 )
             )
             if global_layer_id is None:

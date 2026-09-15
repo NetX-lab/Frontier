@@ -197,6 +197,31 @@ def test_stage_expansion_isolates_mutable_component_and_operator_maps() -> None:
     assert second.attention_operator_times.op_times["attn_prefill"] == pytest.approx(4.0)
 
 
+def test_fast_stage_expansion_detaches_before_mutation() -> None:
+    source = _layer(
+        layer_id=0,
+        op_times={"attn_prefill": 4.0, "mlp_up_proj": 2.0},
+    )
+    stage = StageExecutionTime.from_execution_time(
+        source,
+        num_layers=2,
+        first_layer_id=0,
+        copy_components=False,
+    )
+    first, second = stage.layer_execution_times
+
+    # The fast path shares the immutable prediction payload while retaining
+    # distinct layer identities. A mutating compatibility operation must
+    # detach the first layer before changing its operator values.
+    assert first._attention_time is second._attention_time
+    assert first.global_layer_id == 0
+    assert second.global_layer_id == 1
+    first._replace_operator_time_values({"attn_prefill": 7.0})
+    assert first.attention_operator_times.op_times["attn_prefill"] == pytest.approx(7.0)
+    assert second.attention_operator_times.op_times["attn_prefill"] == pytest.approx(4.0)
+    assert first._attention_time is not second._attention_time
+
+
 def test_stage_owner_terminal_work_and_diagnostic_overhead_are_once_only() -> None:
     owner = _layer(
         layer_id=0,

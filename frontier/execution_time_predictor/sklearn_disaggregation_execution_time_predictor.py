@@ -1379,6 +1379,7 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             legacy_result,
             num_layers=num_layers,
             first_layer_id=layer_id,
+            copy_components=False,
         )
 
     def _predict_stage_execution_time_legacy(

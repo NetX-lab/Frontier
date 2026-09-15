@@ -131,6 +131,7 @@ class ExecutionTime(BaseEntity):
         self._global_layer_id = global_layer_id
         self._attention_family_id = attention_family_id
         self._attention_variant_id = attention_variant_id
+        self._shared_components = False
         # Existing direct callers historically constructed an aggregate object
         # by passing num_layers_per_pipeline_stage > 1. Keep that compatibility
         # mode while all identity-bearing results use one real layer. Stage
@@ -505,6 +506,7 @@ class ExecutionTime(BaseEntity):
         return normalize_execution_op_times(updated_op_times)
 
     def _replace_operator_time_source(self, old_operator_times, new_operator_times) -> None:
+        self._ensure_owned_components()
         updated_op_times = self._merged_replacement_operator_time_source(
             old_operator_times,
             new_operator_times,
@@ -513,6 +515,7 @@ class ExecutionTime(BaseEntity):
         self._refresh_op_time_attr_values()
 
     def _replace_operator_time_values(self, op_times: Mapping[str, float]) -> None:
+        self._ensure_owned_components()
         updated_op_times = dict(self._op_times)
         updated_op_times.update(normalize_execution_op_times(op_times))
         self._op_times = normalize_execution_op_times(updated_op_times)
@@ -625,6 +628,7 @@ class ExecutionTime(BaseEntity):
         self,
         operator_times: AttentionOperatorTimes | None,
     ) -> None:
+        self._ensure_owned_components()
         old_operator_times = self._attention_time.operator_times
         updated_op_times = self._merged_replacement_operator_time_source(
             old_operator_times,
@@ -648,6 +652,7 @@ class ExecutionTime(BaseEntity):
 
     @mlp_operator_times.setter
     def mlp_operator_times(self, operator_times: MLPOperatorTimes | None) -> None:
+        self._ensure_owned_components()
         if not isinstance(self._moe_or_mlp_time, MLPTime):
             raise ValueError("mlp_operator_times are only valid for dense MLP components")
         old_operator_times = self._moe_or_mlp_time.operator_times
@@ -668,6 +673,7 @@ class ExecutionTime(BaseEntity):
 
     @moe_operator_times.setter
     def moe_operator_times(self, operator_times: MoEOperatorTimes | None) -> None:
+        self._ensure_owned_components()
         if not isinstance(self._moe_or_mlp_time, MoETime):
             raise ValueError("moe_operator_times are only valid for MoE components")
         old_operator_times = self._moe_or_mlp_time.operator_times
@@ -694,6 +700,7 @@ class ExecutionTime(BaseEntity):
         self,
         operator_times: CommunicationOperatorTimes | None,
     ) -> None:
+        self._ensure_owned_components()
         old_operator_times = self._communication_time.operator_times
         updated_op_times = self._merged_replacement_operator_time_source(
             old_operator_times,
@@ -715,6 +722,7 @@ class ExecutionTime(BaseEntity):
 
     def override_moe_grouped_gemm_time(self, time: float) -> None:
         """Override MoE grouped GEMM time (updates both component and flat field)."""
+        self._ensure_owned_components()
         if isinstance(self._moe_or_mlp_time, MoETime):
             self._replace_operator_time_values({"moe_grouped_gemm": time})
             self._moe_or_mlp_time.moe_grouped_gemm_time = time
@@ -733,6 +741,7 @@ class ExecutionTime(BaseEntity):
             gating_linear_time: Total gating linear time across all layers (new)
             gating_routing_topk_time: Total gating routing topk time across all layers (new)
         """
+        self._ensure_owned_components()
         # Handle backward compatibility: if new fields are not provided, split gating_time equally
         if gating_linear_time == 0.0 and gating_routing_topk_time == 0.0 and gating_time > 0.0:
             effective_gating_linear_time = gating_time * 0.5
@@ -1107,6 +1116,7 @@ class ExecutionTime(BaseEntity):
         global_layer_id: int,
         attention_family_id: str = "dense_attention",
         attention_variant_id: str = "unknown",
+        copy_components: bool = True,
     ) -> "ExecutionTime":
         """Copy this timing payload as one real layer with explicit identity.
 
@@ -1115,12 +1125,31 @@ class ExecutionTime(BaseEntity):
         ID sequences.
         """
 
+        if type(copy_components) is not bool:
+            raise TypeError("copy_components must be a bool")
+
         # ``ExecutionTime`` contains only scalar timing fields plus a small
         # set of mutable dataclass/operator-map components.  Copying the
         # whole object recursively for every expanded layer is unnecessarily
         # expensive on the simulator hot path.  Keep the object identity and
-        # scalar payload while cloning each mutable component and its map.
+        # scalar payload while cloning each mutable component and its map when
+        # callers require an isolated record.  Stage expansion may explicitly
+        # share the read-only payload; mutating methods detach it first.
         layer = copy(self)
+        if copy_components:
+            layer._clone_mutable_components()
+        else:
+            layer._shared_components = True
+        layer._num_layers_per_pipeline_stage = 1
+        layer._legacy_aggregate = False
+        layer._global_layer_id = global_layer_id
+        layer._attention_family_id = attention_family_id
+        layer._attention_variant_id = attention_variant_id
+        return layer
+
+    def _clone_mutable_components(self) -> None:
+        """Clone component objects and operator maps in place."""
+
         for component_name in (
             "_attention_time",
             "_moe_or_mlp_time",
@@ -1137,15 +1166,16 @@ class ExecutionTime(BaseEntity):
                 operator_times_copy = copy(operator_times)
                 operator_times_copy.op_times = dict(operator_times.op_times)
                 component_copy.operator_times = operator_times_copy
-            setattr(layer, component_name, component_copy)
-        layer._op_times = dict(self._op_times)
-        layer._op_time_attr_values = dict(self._op_time_attr_values)
-        layer._num_layers_per_pipeline_stage = 1
-        layer._legacy_aggregate = False
-        layer._global_layer_id = global_layer_id
-        layer._attention_family_id = attention_family_id
-        layer._attention_variant_id = attention_variant_id
-        return layer
+            setattr(self, component_name, component_copy)
+        self._op_times = dict(self._op_times)
+        self._op_time_attr_values = dict(self._op_time_attr_values)
+        self._shared_components = False
+
+    def _ensure_owned_components(self) -> None:
+        """Detach a fast-path layer before an operation that mutates state."""
+
+        if self._shared_components:
+            self._clone_mutable_components()
 
     # MLP Component Properties
     @property
