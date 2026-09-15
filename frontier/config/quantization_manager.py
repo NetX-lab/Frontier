@@ -72,6 +72,14 @@ class QuantizationManager:
         "mlp_down_proj",
         "moe_grouped_gemm",
     }
+    _GDN_OPERATION_NAMES = frozenset(
+        {
+            "gdn_core_prefill",
+            "gdn_core_decode",
+            "gdn_input_projections",
+            "gdn_output_projection",
+        }
+    )
 
     def __new__(cls) -> "QuantizationManager":
         with cls._instance_lock:
@@ -100,6 +108,7 @@ class QuantizationManager:
             self._warned_approximations: Set[tuple] = set()
             self._config: Dict[str, Any] = {}
             self._precision_mismatches: Set[PrecisionMismatchInfo] = set()
+            self._active_gdn_operations = False
 
             self._load_registry()
             self._initialized = True
@@ -166,6 +175,7 @@ class QuantizationManager:
             self._operation_profiling_precision = {}
             self._cluster_overrides = {}
             self._precision_mismatches = set()
+            self._active_gdn_operations = False
             self._warned_mismatches = set()
             self._warned_approximations = set()
             self._config = {}
@@ -177,6 +187,15 @@ class QuantizationManager:
         if model_config is None:
             raise ValueError("Model config is required for quantization setup.")
         with self._lock:
+            # The registry contains every execution family so lookups remain
+            # valid for model-specific profiling, but emitted metadata must
+            # describe the configured model.  In particular, dense runs must
+            # not gain hybrid-only GDN rows merely because the shared registry
+            # knows about the GDN family.
+            get_num_gdn_layers = getattr(model_config, "get_num_gdn_layers", None)
+            self._active_gdn_operations = bool(
+                get_num_gdn_layers() if get_num_gdn_layers is not None else 0
+            )
             self._config_path = "model_config"
             self._default_precision = model_config.get_default_precision()
             self._profiling_precision = self._default_precision
@@ -463,6 +482,8 @@ class QuantizationManager:
         metadata = []
         compute_ops = self._supported_operations.get("compute_operations", [])
         for op_name in sorted(compute_ops):
+            if op_name in self._GDN_OPERATION_NAMES and not self._active_gdn_operations:
+                continue
             precision = self.get_precision(op_name)
             data_source = self._operation_data_sources.get(op_name, "profiling")
             approx_factor = self._operation_approximation_factors.get(op_name)

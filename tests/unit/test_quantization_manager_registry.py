@@ -1,4 +1,5 @@
 import pytest
+from types import SimpleNamespace
 
 import frontier.attention as attention_package
 import frontier.config.quantization_manager as quantization_manager_module
@@ -99,6 +100,45 @@ def test_default_quantization_registry_derives_all_enabled_attention_family_ops(
         for op_name in expected_attention_ops:
             assert manager.is_compute_operation(op_name)
             assert manager.get_precision(op_name).name == "FP16"
+    finally:
+        QuantizationManager.reset()
+
+
+def test_precision_metadata_excludes_inactive_gdn_operations_for_dense_model() -> None:
+    """Dense simulations must not gain hybrid-only metadata rows."""
+
+    QuantizationManager.reset()
+    try:
+        manager = QuantizationManager()
+        dense_model = SimpleNamespace(
+            get_default_precision=lambda: quantization_manager_module.PrecisionType.FP16,
+            get_name=lambda: "dense-fixture",
+            torch_dtype="float16",
+            quantization_config=None,
+            get_quant_signature=lambda: "none",
+        )
+        manager.configure_from_model_config(dense_model)
+        names = {row["operation"] for row in manager.get_operation_precision_metadata()}
+        assert not {"gdn_core_prefill", "gdn_core_decode", "gdn_input_projections", "gdn_output_projection"} & names
+    finally:
+        QuantizationManager.reset()
+
+
+def test_precision_metadata_includes_gdn_operations_for_hybrid_model() -> None:
+    QuantizationManager.reset()
+    try:
+        manager = QuantizationManager()
+        hybrid_model = SimpleNamespace(
+            get_default_precision=lambda: quantization_manager_module.PrecisionType.FP16,
+            get_name=lambda: "hybrid-fixture",
+            torch_dtype="float16",
+            quantization_config=None,
+            get_quant_signature=lambda: "none",
+            get_num_gdn_layers=lambda: 1,
+        )
+        manager.configure_from_model_config(hybrid_model)
+        names = {row["operation"] for row in manager.get_operation_precision_metadata()}
+        assert {"gdn_core_prefill", "gdn_core_decode", "gdn_input_projections", "gdn_output_projection"} <= names
     finally:
         QuantizationManager.reset()
 
