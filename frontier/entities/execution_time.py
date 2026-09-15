@@ -1170,6 +1170,38 @@ class ExecutionTime(BaseEntity):
         layer._attention_variant_id = attention_variant_id
         return layer
 
+    def _adopt_single_layer_identity(
+        self,
+        *,
+        global_layer_id: int,
+        attention_family_id: str,
+        attention_variant_id: str,
+    ) -> None:
+        """Transfer a freshly-created payload into an identity-bearing layer.
+
+        ``StageExecutionTime.from_execution_time(..., copy_components=False)``
+        uses this only when the caller explicitly transfers ownership of a
+        single-layer payload. The operation avoids copying immutable timing
+        components while retaining the same identity validation as
+        ``as_single_layer``.
+        """
+
+        if self.global_layer_id is not None:
+            raise ValueError("cannot adopt identity for an existing layer")
+        if type(global_layer_id) is not int or global_layer_id < 0:
+            raise ValueError("global_layer_id must be a non-negative int")
+        if not isinstance(attention_family_id, str) or not attention_family_id.strip():
+            raise ValueError("attention_family_id must be a non-empty string")
+        if not isinstance(attention_variant_id, str) or not attention_variant_id.strip():
+            raise ValueError("attention_variant_id must be a non-empty string")
+        if self.num_layers != 1:
+            raise ValueError("only a single-layer payload can adopt layer identity")
+        self._num_layers_per_pipeline_stage = 1
+        self._legacy_aggregate = False
+        self._global_layer_id = global_layer_id
+        self._attention_family_id = attention_family_id
+        self._attention_variant_id = attention_variant_id
+
     def _clone_mutable_components(self) -> None:
         """Clone component objects and operator maps in place."""
 

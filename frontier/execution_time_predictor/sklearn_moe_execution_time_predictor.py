@@ -3792,4 +3792,5 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             base_execution_time,
             num_layers=num_layers,
             first_layer_id=layer_id,
+            copy_components=False,
         )

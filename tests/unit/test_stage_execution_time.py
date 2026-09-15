@@ -253,6 +253,21 @@ def test_fast_stage_expansion_detaches_before_mutation() -> None:
     assert first._attention_time is not second._attention_time
 
 
+def test_single_layer_fast_path_adopts_source_identity() -> None:
+    source = ExecutionTime(**_execution_kwargs())
+
+    stage = StageExecutionTime.from_execution_time(
+        source,
+        num_layers=1,
+        first_layer_id=7,
+        copy_components=False,
+    )
+
+    assert stage.layer_execution_times == (source,)
+    assert source.global_layer_id == 7
+    assert source.num_layers == 1
+
+
 def test_stage_owner_terminal_work_and_diagnostic_overhead_are_once_only() -> None:
     owner = _layer(
         layer_id=0,

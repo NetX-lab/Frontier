@@ -8045,6 +8045,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 dummy_execution_time,
                 num_layers=num_layers,
                 first_layer_id=layer_id,
+                copy_components=False,
             )
 
         logger.debug(
@@ -8366,4 +8367,5 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             base_execution_time,
             num_layers=num_layers,
             first_layer_id=layer_id,
+            copy_components=False,
         )

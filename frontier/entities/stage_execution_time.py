@@ -220,9 +220,6 @@ class StageExecutionTime:
         ):
             raise ValueError("first_layer_id must be a non-negative int or None")
 
-        if num_layers == 1 and source.global_layer_id is not None:
-            return cls((source,), stage_execution_time=source)
-
         # A resolved source identity is authoritative for callers that already
         # selected a concrete layer family.  Homogeneous legacy callers still
         # receive the historical dense/unknown defaults.
@@ -236,6 +233,21 @@ class StageExecutionTime:
             if source.attention_variant_id is not None
             else attention_variant_id
         )
+
+        if num_layers == 1 and source.global_layer_id is not None:
+            return cls((source,), stage_execution_time=source)
+
+        # A false copy_components value explicitly transfers ownership of a
+        # freshly-created single-layer payload. Adopt its layer identity in
+        # place so the hot path avoids an otherwise redundant shallow copy.
+        if num_layers == 1 and not copy_components and source.num_layers == 1:
+            if first_layer_id is not None:
+                source._adopt_single_layer_identity(
+                    global_layer_id=first_layer_id,
+                    attention_family_id=resolved_attention_family_id,
+                    attention_variant_id=resolved_attention_variant_id,
+                )
+            return cls((source,), stage_execution_time=source)
 
         layers: list[ExecutionTime] = []
         for offset in range(num_layers):
