@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from types import SimpleNamespace
 import inspect
 from unittest.mock import MagicMock
@@ -122,6 +123,60 @@ def _layer_batch(
     if lane_workload is not None:
         values["lane_workload"] = lane_workload
     return SimpleNamespace(**values)
+
+
+def test_predictor_reuses_immutable_layer_workload_for_same_semantics() -> None:
+    predictor = _Predictor.__new__(_Predictor)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._replica_config = SimpleNamespace(
+        total_expert_num=4,
+        moe_expert_parallel_size=2,
+        router_topk=1,
+    )
+    predictor._monolithic_routing_details = {
+        0: {3: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
+    }
+    predictor._layer_workload_cache_capacity = 2
+    predictor._layer_workload_cache = OrderedDict()
+    batch = SimpleNamespace(replica_id=0, total_num_tokens=4)
+
+    first = predictor._materialize_layer_ep_workload(
+        batch, ClusterType.MONOLITHIC, 3
+    )
+    second = predictor._materialize_layer_ep_workload(
+        batch, ClusterType.MONOLITHIC, 3
+    )
+
+    assert first is second
+    assert len(predictor._layer_workload_cache) == 1
+
+
+def test_predictor_layer_workload_cache_is_bounded() -> None:
+    predictor = _Predictor.__new__(_Predictor)
+    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor._replica_config = SimpleNamespace(
+        total_expert_num=4,
+        moe_expert_parallel_size=2,
+        router_topk=1,
+    )
+    predictor._monolithic_routing_details = {
+        0: {3: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
+    }
+    predictor._layer_workload_cache_capacity = 2
+    predictor._layer_workload_cache = OrderedDict()
+
+    batches = [SimpleNamespace(replica_id=0, total_num_tokens=tokens) for tokens in (4, 5, 6)]
+    first = predictor._materialize_layer_ep_workload(
+        batches[0], ClusterType.MONOLITHIC, 3
+    )
+    predictor._materialize_layer_ep_workload(batches[1], ClusterType.MONOLITHIC, 3)
+    predictor._materialize_layer_ep_workload(batches[2], ClusterType.MONOLITHIC, 3)
+
+    assert len(predictor._layer_workload_cache) == 2
+    refreshed = predictor._materialize_layer_ep_workload(
+        batches[0], ClusterType.MONOLITHIC, 3
+    )
+    assert refreshed is not first
 
 
 def test_regular_batch_uses_typed_lane_for_on_demand_shuffling() -> None:

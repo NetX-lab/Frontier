@@ -258,6 +258,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
     # only one-layer scalar records and is never allowed to grow with the
     # number of requests or stages seen by a long-lived predictor.
     _ATTENTION_QUERY_CACHE_CAPACITY = 64
+    # Layer routing is deterministic for a predictor and the resulting
+    # workload is immutable. Keep a bounded cache because the same
+    # replica/layer/token shape is revisited across EP waves, while a
+    # long-lived predictor must not retain an unbounded request history.
+    _LAYER_WORKLOAD_CACHE_CAPACITY = 256
 
     @staticmethod
     def _emit_routing_details_snapshot(
@@ -709,6 +714,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         self._attention_query_cache = OrderedDict()
         self._attention_query_cache_hits = 0
         self._attention_query_cache_misses = 0
+        self._layer_workload_cache_capacity = self._LAYER_WORKLOAD_CACHE_CAPACITY
+        self._layer_workload_cache = OrderedDict()
 
         # Initialize the canonical distribution selector before parent init so
         # profiling paths choose matching gating-runtime metadata.
@@ -935,8 +942,23 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         routing_details = self._get_routing_details_for_cluster(cluster_type)
         target_replica_id = int(batch.replica_id)
         global_layer_id = int(layer_id)
+        routing_token_count = int(batch.total_num_tokens)
+        router_topk = int(cluster_replica_config.router_topk)
         total_expert_num = int(cluster_replica_config.total_expert_num)
         moe_ep_size = int(cluster_replica_config.moe_expert_parallel_size)
+        cache_key = (
+            cluster_type,
+            target_replica_id,
+            global_layer_id,
+            routing_token_count,
+            router_topk,
+            total_expert_num,
+            moe_ep_size,
+        )
+        cached_workload = self._layer_workload_cache.get(cache_key)
+        if cached_workload is not None:
+            self._layer_workload_cache.move_to_end(cache_key)
+            return cached_workload
         workload = materialize_layer_ep_workload(
             routing_ratios=resolve_routing_details(
                 routing_details,
@@ -945,8 +967,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             ),
             target_replica_id=target_replica_id,
             global_layer_id=global_layer_id,
-            routing_token_count=int(batch.total_num_tokens),
-            router_topk=int(cluster_replica_config.router_topk),
+            routing_token_count=routing_token_count,
+            router_topk=router_topk,
             total_expert_num=total_expert_num,
             moe_expert_parallel_size=moe_ep_size,
             expert_to_ep=build_contiguous_expert_ownership(
@@ -954,6 +976,10 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 moe_ep_size,
             ),
         )
+        self._layer_workload_cache[cache_key] = workload
+        self._layer_workload_cache.move_to_end(cache_key)
+        while len(self._layer_workload_cache) > self._layer_workload_cache_capacity:
+            self._layer_workload_cache.popitem(last=False)
         return workload
 
     def _resolve_layer_lane_workload(

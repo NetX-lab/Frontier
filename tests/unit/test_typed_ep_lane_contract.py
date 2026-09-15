@@ -79,6 +79,16 @@ def test_lane_descriptor_is_immutable() -> None:
         lane.ep_id = 1  # type: ignore[misc]
 
 
+def test_layer_workload_reuses_validated_lane_descriptor() -> None:
+    workload = _materialize(total_experts=4, ep_size=2)
+
+    first = workload.lane(0)
+    second = workload.lane(0)
+
+    assert first is second
+    assert first.local_token_counts == second.local_token_counts
+
+
 def test_lane_descriptor_rejects_out_of_owner_ids() -> None:
     with pytest.raises(ValueError, match="owned_expert_ids"):
         EPLaneWorkload(

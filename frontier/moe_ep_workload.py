@@ -9,7 +9,7 @@ request accounting.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import inspect
 from math import floor, isfinite
 from numbers import Real
@@ -144,6 +144,11 @@ class LayerEPWorkload:
     per_ep_routed_tokens: Mapping[int, int]
     participant_ep_ids: tuple[int, ...]
     expert_to_ep: ExpertOwnership
+    _lane_descriptors: tuple["EPLaneWorkload", ...] = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
 
     def __post_init__(self) -> None:
         target_replica_id = _require_int(
@@ -334,6 +339,20 @@ class LayerEPWorkload:
         )
         object.__setattr__(self, "expert_to_ep", _freeze_map(ownership))
         object.__setattr__(self, "participant_ep_ids", participant_ep_ids)
+        object.__setattr__(
+            self,
+            "_lane_descriptors",
+            tuple(
+                _build_lane_descriptor(
+                    ep_id=ep_id,
+                    moe_expert_parallel_size=moe_expert_parallel_size,
+                    total_expert_num=total_expert_num,
+                    per_expert_tokens=per_ep_tokens[ep_id],
+                    router_topk=router_topk,
+                )
+                for ep_id in participant_ep_ids
+            ),
+        )
 
     def lane(self, ep_id: int) -> "EPLaneWorkload":
         """Return the canonical physical workload for one materialized lane."""
@@ -344,15 +363,7 @@ class LayerEPWorkload:
             raise ValueError(
                 f"ep_id={ep_id} is not present in the materialized EP workload"
             )
-        total_expert_num = len(self.global_per_expert_tokens)
-        moe_expert_parallel_size = len(self.participant_ep_ids)
-        return _build_lane_descriptor(
-            ep_id=ep_id,
-            moe_expert_parallel_size=moe_expert_parallel_size,
-            total_expert_num=total_expert_num,
-            per_expert_tokens=self.per_ep_per_expert_tokens[ep_id],
-            router_topk=self.router_topk,
-        )
+        return self._lane_descriptors[ep_id]
 
 
 @dataclass(frozen=True)
