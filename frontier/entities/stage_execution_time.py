@@ -268,7 +268,25 @@ class StageExecutionTime:
             )
             if global_layer_id is None:
                 layers[-1]._global_layer_id = None
-        return cls(tuple(layers), stage_execution_time=source)
+        stage = cls(tuple(layers), stage_execution_time=source)
+
+        # Expansion repeats one immutable single-layer payload for each
+        # identity-bearing record.  Compute the repeated block contribution
+        # once while the source is still available instead of rescanning every
+        # layer on the first scheduler ``model_time_ms`` read.  The version
+        # tuple keeps the normal mutation invalidation contract intact.
+        if layers:
+            repeated_block_time_ms = layers[0].get_single_layer_block_time()
+            stage._model_time_ms_cache = (
+                repeated_block_time_ms * len(layers)
+                + stage._owner_value("pipeline_parallel_communication_time")
+                + stage._owner_value("decode_draft_proposer_time")
+                + stage._owner_value("mtp_terminal_overshoot_time")
+            )
+            stage._model_time_ms_cache_versions = tuple(
+                layer.mutation_version for layer in stage._layer_execution_times
+            ) + (stage._stage_execution_time.mutation_version,)
+        return stage
 
     @property
     def layer_execution_times(self) -> tuple[ExecutionTime, ...]:
