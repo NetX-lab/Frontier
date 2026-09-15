@@ -126,6 +126,24 @@ def test_stage_sums_ordered_layers_and_charges_stage_work_once() -> None:
     )
 
 
+def test_stage_model_time_reuses_immutable_layer_aggregate(monkeypatch) -> None:
+    first = _layer(layer_id=0)
+    second = _layer(layer_id=1)
+    calls = 0
+    original = first.get_single_layer_block_time
+
+    def counted_block_time() -> float:
+        nonlocal calls
+        calls += 1
+        return original()
+
+    monkeypatch.setattr(first, "get_single_layer_block_time", counted_block_time)
+    stage = StageExecutionTime((first, second), stage_execution_time=first)
+
+    assert stage.model_time_ms == pytest.approx(stage.model_time_ms)
+    assert calls == 1
+
+
 def test_stage_keeps_distinct_moe_layer_records() -> None:
     first = _layer(
         layer_id=1,

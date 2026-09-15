@@ -163,6 +163,11 @@ class StageExecutionTime:
         )
         if not isinstance(self._stage_execution_time, ExecutionTime):
             raise TypeError("stage_execution_time must be an ExecutionTime object")
+        # Stage timing payloads are assembled once and then consumed by the
+        # scheduler, metrics, and trace adapters as read-only records.  Keep
+        # the aggregate model time after its first computation so repeated
+        # event-path reads do not rescan every layer.
+        self._model_time_ms_cache: float | None = None
 
         layer_ids = self.global_layer_ids
         if any(layer_id is not None for layer_id in layer_ids) and any(
@@ -406,16 +411,20 @@ class StageExecutionTime:
 
     @property
     def model_time_ms(self) -> float:
+        if self._model_time_ms_cache is not None:
+            return self._model_time_ms_cache
         block_time_ms = self._sum_values(
             layer.get_single_layer_block_time()
             for layer in self._layer_execution_times
         )
-        return (
+        value = (
             block_time_ms
             + self._owner_value("pipeline_parallel_communication_time")
             + self._owner_value("decode_draft_proposer_time")
             + self._owner_value("mtp_terminal_overshoot_time")
         )
+        self._model_time_ms_cache = value
+        return value
 
     @property
     def model_time(self) -> float:
