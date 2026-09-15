@@ -26,7 +26,8 @@ import time
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from frontier.config import global_vars
-from frontier.attention.gdn.guards import validate_gdn_runtime_support
+from frontier.attention.gdn.guards import model_has_gdn, validate_gdn_runtime_support
+from frontier.attention.gdn.state import GatedDeltaNetStateSlotManager
 from frontier.entities.batch import (
     Batch,
     DecodeCudaGraphMetadata,
@@ -127,6 +128,24 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # GDN state is request-owned for the lifetime of a monolithic
+        # admission.  Keep ownership at the scheduler boundary so waiting
+        # continuations retain their slot while unadmitted requests consume
+        # no state capacity.
+        self._gdn_state_slot_manager = None
+        if self._cluster_type == ClusterType.MONOLITHIC and model_has_gdn(
+            self._replica_config.model_config
+        ):
+            validate_gdn_runtime_support(
+                self._replica_config.model_config,
+                num_pipeline_stages=self._replica_config.num_pipeline_stages,
+                moe_expert_parallel_size=self._replica_config.moe_expert_parallel_size,
+                attn_dp=self._replica_config.attn_dp,
+            )
+            self._gdn_state_slot_manager = GatedDeltaNetStateSlotManager(
+                self._get_memory_planner_max_num_seqs(self._config)
+            )
 
         # vLLM v1 specific state - running requests tracking
         self._running_requests: List[Request] = []
@@ -1402,8 +1421,12 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             self._kv_cache_manager.free(request)
             self._allocation_map.pop(request.id, None)
             self._sync_prefix_cache_allocation_state()
+            if self._gdn_state_slot_manager is not None:
+                self._gdn_state_slot_manager.release(request.id)
             return
         self.free(request.id)
+        if self._gdn_state_slot_manager is not None:
+            self._gdn_state_slot_manager.release(request.id)
 
     def _free_request_resources_by_id(self, request_id: int) -> None:
         request = self._find_request_by_id(request_id)
@@ -1411,6 +1434,11 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             self._free_request_resources(request)
             return
         self.free(request_id)
+        # Completion/cancellation callbacks may arrive after the request has
+        # left every scheduler queue.  Release an orphaned ownership token as
+        # part of the same idempotent cleanup boundary so a slot cannot leak.
+        if self._gdn_state_slot_manager is not None:
+            self._gdn_state_slot_manager.release(request_id)
 
     def _prepare_prefix_cache_admission(
         self, request: Request
@@ -2820,6 +2848,14 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         Returns:
             bool: True if allocation is possible
         """
+        gdn_slot_manager = self._gdn_state_slot_manager
+        if (
+            gdn_slot_manager is not None
+            and request.id not in self._allocation_map
+            and not gdn_slot_manager.has_slot(request.id)
+            and len(gdn_slot_manager.active_request_ids) >= gdn_slot_manager.capacity
+        ):
+            return False
         if self._is_prefix_caching_enabled():
             assert self._kv_cache_manager is not None
             return self._kv_cache_manager.can_allocate_slots(
@@ -2945,6 +2981,16 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 request, reserved_tokens
             )
             self.allocate(request.id, num_required_blocks)
+            gdn_slot_manager = self._gdn_state_slot_manager
+            if gdn_slot_manager is not None:
+                try:
+                    gdn_slot_manager.allocate(request.id)
+                except Exception:
+                    # KV and state ownership must commit atomically from the
+                    # scheduler's perspective.  Roll back the KV allocation
+                    # before exposing the slot failure to admission.
+                    self.free(request.id)
+                    raise
             logger.debug(
                 f"[VLLMv1Engine] Allocated {num_required_blocks} blocks for request {request.id} "
                 f"(scheduled_tokens={num_new_tokens}, reserved_tokens={reserved_tokens})"
@@ -2952,6 +2998,13 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             return None
 
         # Running request - check if additional blocks needed
+        gdn_slot_manager = self._gdn_state_slot_manager
+        if gdn_slot_manager is not None:
+            if not gdn_slot_manager.has_slot(request.id):
+                raise RuntimeError(
+                    f"GDN state slot missing for admitted request {request.id}"
+                )
+            gdn_slot_manager.resume(request.id)
         num_tokens_reserved = self._allocation_map[request.id] * self._config.block_size
         kv_accounted_tokens = self._get_kv_accounted_processed_tokens(request)
         num_tokens_required = max(
