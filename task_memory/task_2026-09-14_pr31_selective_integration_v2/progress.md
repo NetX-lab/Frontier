@@ -4,6 +4,7 @@
 | ---------- | ------------------ |
 | 2026-09-15 | Prepared the 25 local task documents, including two independent reviews, for explicitly requested publication to PR #33. |
 | 2026-09-15 | Fixed stage aggregate cache invalidation after timing payload mutation; the focused stage/metrics/operator suite passed 52 tests. |
+| 2026-09-15 | Added a semantics-preserving single-layer StageExecutionTime constructor fast path; stage/metrics/cache focused tests passed 23 tests. Performance remeasurement is pending. |
 | 2026-09-15 | Final verification rerun including the direct actual-ID contract: 220 focused tests passed; compileall, diff check, clean status, and trailer inspection passed. |
 | 2026-09-15 | Added a direct actual-replica-ID routing contract test and committed it as `7b6a3eb1` with a parsed `powderluv` co-author trailer. |
 | 2026-09-15 | Completed the post-routing-fix full CPU unit regression: 3276 passed, 19 unchanged baseline failures, 25 skipped, 576 warnings; no candidate-only failure. |

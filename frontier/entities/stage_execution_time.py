@@ -170,6 +170,12 @@ class StageExecutionTime:
         self._model_time_ms_cache: float | None = None
         self._model_time_ms_cache_versions: tuple[int, ...] | None = None
 
+        # Single-layer stages are the hot path for disaggregated scheduling.
+        # Their one identity is already validated by ExecutionTime, so the
+        # cross-layer completeness and uniqueness scan below adds no value.
+        if len(self._layer_execution_times) == 1:
+            return
+
         layer_ids = self.global_layer_ids
         if any(layer_id is not None for layer_id in layer_ids) and any(
             layer_id is None for layer_id in layer_ids
