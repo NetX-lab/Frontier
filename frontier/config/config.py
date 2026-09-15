@@ -2082,6 +2082,20 @@ class ReplicaConfig:
                 f"supported, cluster_prefix={self.cluster_prefix!r}."
             )
 
+        from frontier.attention.gdn.guards import validate_gdn_runtime_support
+
+        validate_gdn_runtime_support(
+            self.model_config,
+            speculative_enabled=bool(self.speculative_decoding_config.enabled),
+            num_pipeline_stages=self.num_pipeline_stages,
+            moe_expert_parallel_size=self.moe_expert_parallel_size,
+            attn_dp=self.attn_dp,
+            cross_node=(
+                int(getattr(self, "world_size", 1))
+                > int(getattr(self.node_config, "num_devices_per_node", 1))
+            ),
+        )
+
 
 @dataclass
 class BaseClusterSchedulerConfig(BasePolyConfig):
@@ -2137,6 +2151,10 @@ class BaseExecutionTimePredictorConfig(BasePolyConfig):
     atten_input_file: str = field(
         default="./data/profiling/compute/{DEVICE}/{MODEL}/attention.csv",
         metadata={"help": "Path to the attention input file."},
+    )
+    gdn_input_file: str = field(
+        default="./data/profiling/compute/{DEVICE}/{MODEL}/gdn.csv",
+        metadata={"help": "Path to the standard GDN profiling input file."},
     )
     all_reduce_input_file: str = field(
         default="./data/profiling/network/{NETWORK_DEVICE}/all_reduce.csv",
@@ -5302,6 +5320,7 @@ class SimulationConfig(ABC):
         self._validate_sequential_checkpoint_observer_config()
         global_vars.set_global_vars(self.simulation_mode, self.sys_arch)
         self._validate_cuda_graph_config()
+        self._validate_gdn_runtime_guards()
         global_vars.set_cuda_graph_config(
             self.use_cuda_graph,
             self.cudagraph_capture_sizes,
@@ -5339,6 +5358,49 @@ class SimulationConfig(ABC):
         )
         self._normalize_metrics_output_dir()
         self.write_config_to_file()
+
+    def _validate_gdn_runtime_guards(self) -> None:
+        """Reject unsupported GDN features after all cluster replicas exist."""
+
+        from frontier.attention.gdn.guards import validate_gdn_runtime_support
+
+        prefix_cache_enabled = bool(
+            getattr(
+                self.cluster_config.replica_scheduler_config,
+                "enable_prefix_caching",
+                False,
+            )
+        )
+        pd_enabled = self.sys_arch in {"pd-disaggregation", "pd-af-disaggregation"}
+        replica_configs = []
+        for attr_name in (
+            "replica_config",
+            "prefill_replica_config",
+            "decode_replica_config",
+            "decode_attn_replica_config",
+            "decode_ffn_replica_config",
+        ):
+            replica_config = getattr(self.cluster_config, attr_name, None)
+            if replica_config is not None and all(
+                replica_config is not existing for existing in replica_configs
+            ):
+                replica_configs.append(replica_config)
+        for replica_config in replica_configs:
+            validate_gdn_runtime_support(
+                replica_config.model_config,
+                prefix_cache_enabled=prefix_cache_enabled,
+                pd_enabled=pd_enabled,
+                speculative_enabled=bool(
+                    getattr(
+                        getattr(replica_config, "speculative_decoding_config", None),
+                        "enabled",
+                        False,
+                    )
+                ),
+                num_pipeline_stages=replica_config.num_pipeline_stages,
+                moe_expert_parallel_size=replica_config.moe_expert_parallel_size,
+                attn_dp=replica_config.attn_dp,
+            )
 
     def _validate_pdaf_trace_replay_contract(self) -> None:
         """Reject deferred StepFun trace replay inputs at the PD-AF boundary."""

@@ -31,9 +31,13 @@ from sklearn.model_selection import GridSearchCV
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    get_attention_family,
     LATENT_MLA_ATTENTION_FAMILY,
 )
-from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.model_binding import (
+    bind_layer_attention,
+    resolve_runtime_attention_family,
+)
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.ops import AttentionPhase
 from frontier.attention.string_coercion import coerce_truthy_bool, coerce_truthy_int
@@ -130,7 +134,7 @@ from frontier.spec_decode.mtp_runtime import load_mtp_structural_model_config
 from frontier.execution_time_predictor.profiling_metadata import (
     validate_model_architecture_profile,
 )
-from frontier.entities import ExecutionTime
+from frontier.entities import ExecutionTime, StageExecutionTime
 from frontier.types import ClusterType, MeasurementType
 
 
@@ -367,7 +371,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
 
     def _get_attention_family(self):
-        return bind_attention_family(self._model_config).family
+        return resolve_runtime_attention_family(self._model_config)
 
     def _is_mla_attention_family(self) -> bool:
         return (
@@ -423,6 +427,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         self._cluster_type = cluster_type
         self._model_manager = model_manager
+        self._gdn_predictor = (
+            model_manager.get_gdn_predictor(cluster_type)
+            if model_manager is not None
+            and hasattr(model_manager, "get_gdn_predictor")
+            else None
+        )
         self._cc_backend = cc_backend  # CC Backend for communication predictions
         self._attention_tp_warning_cache: Set[str] = set()
 
@@ -538,8 +548,10 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         super()._initialize_normal_mode()
 
         self._models_eager: Dict[str, BaseEstimator] = {}
+        self._models_device_event: Dict[str, BaseEstimator] = {}
         self._models_kernel_only: Dict[str, BaseEstimator] = {}
         self._predictions_eager: Dict[str, Any] = {}
+        self._predictions_device_event: Dict[str, Any] = {}
         self._predictions_kernel_only: Dict[str, Any] = {}
         self._models = {}
         self._predictions = {}
@@ -557,24 +569,33 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                     else model_manager.get_models_for_cluster(cluster_type)
                 )
                 self._models_eager = dict(models_by_family.get("eager", {}))
+                self._models_device_event = dict(
+                    models_by_family.get("device_event", {})
+                )
                 self._models_kernel_only = dict(models_by_family.get("kernel_only", {}))
             else:
-                logger.info(
-                    "Training execution time prediction models independently with eager/kernel-only families"
-                )
-                should_load_eager = self._should_enable_measurement_family(
-                    MeasurementType.CUDA_EVENT
+                logger.info("Training execution time prediction models independently")
+                event_measurement_type = self._event_measurement_type_for_replica()
+                should_load_event = self._should_enable_measurement_family(
+                    event_measurement_type
                 )
                 should_load_kernel_only = self._should_enable_measurement_family(
                     MeasurementType.KERNEL_ONLY
                 )
-                if should_load_eager:
-                    self._models_eager = self._train_models_for_family(MeasurementType.CUDA_EVENT)
+                if should_load_event:
+                    event_models = self._train_models_for_family(event_measurement_type)
+                    if event_measurement_type == MeasurementType.DEVICE_EVENT:
+                        self._models_device_event = event_models
+                    else:
+                        self._models_eager = event_models
                 if should_load_kernel_only:
                     self._models_kernel_only = self._train_models_for_family(MeasurementType.KERNEL_ONLY)
 
             self._predictions_eager = self._predict_from_models_for_family(
                 MeasurementType.CUDA_EVENT, self._models_eager
+            )
+            self._predictions_device_event = self._predict_from_models_for_family(
+                MeasurementType.DEVICE_EVENT, self._models_device_event
             )
             self._predictions_kernel_only = self._predict_from_models_for_family(
                 MeasurementType.KERNEL_ONLY, self._models_kernel_only
@@ -728,6 +749,18 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "attention_input_file", ""
             )
             self._moe_input_file_eager = training_file_paths.get("moe_input_file", "")
+            self._compute_input_file_device_event = training_file_paths.get(
+                "compute_device_event_input_file",
+                training_file_paths.get("compute_input_file_device_event", ""),
+            )
+            self._attention_input_file_device_event = training_file_paths.get(
+                "attention_device_event_input_file",
+                training_file_paths.get("attention_input_file_device_event", ""),
+            )
+            self._moe_input_file_device_event = training_file_paths.get(
+                "moe_device_event_input_file",
+                training_file_paths.get("moe_input_file_device_event", ""),
+            )
             self._compute_input_file_kernel_only = training_file_paths.get(
                 "compute_kernel_only_input_file", ""
             )
@@ -760,6 +793,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
         else:
             eager_files = self._get_input_files(MeasurementType.CUDA_EVENT)
+            device_event_files = self._get_input_files(MeasurementType.DEVICE_EVENT)
             kernel_only_files = self._get_input_files(MeasurementType.KERNEL_ONLY)
             self._compute_input_file_eager = eager_files[0]
             self._attention_input_file_eager = eager_files[1]
@@ -767,6 +801,9 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             self._compute_input_file_kernel_only = kernel_only_files[0]
             self._attention_input_file_kernel_only = kernel_only_files[1]
             self._moe_input_file_kernel_only = kernel_only_files[2]
+            self._compute_input_file_device_event = device_event_files[0]
+            self._attention_input_file_device_event = device_event_files[1]
+            self._moe_input_file_device_event = device_event_files[2]
             self._all_reduce_input_file = eager_files[3]
             self._send_recv_input_file = eager_files[4]
             self._cpu_overhead_input_file = eager_files[5]
@@ -795,6 +832,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 .replace("{NETWORK_DEVICE}", self._replica_config.network_device)
             )
 
+        # Older callers may provide only the historical eager/kernel-only keys.
+        # Derive the device-event paths from the predictor configuration in that
+        # case so ROCm predictors still have an explicit input family.
+        if not getattr(self, "_compute_input_file_device_event", ""):
+            device_event_files = self._get_input_files(MeasurementType.DEVICE_EVENT)
+            self._compute_input_file_device_event = device_event_files[0]
+            self._attention_input_file_device_event = device_event_files[1]
+            self._moe_input_file_device_event = device_event_files[2]
+
         self._compute_input_file = self._compute_input_file_eager
         self._attention_input_file = self._attention_input_file_eager
         self._moe_input_file = self._moe_input_file_eager
@@ -802,12 +848,28 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _get_input_files(
         self, measurement_type: MeasurementType = MeasurementType.CUDA_EVENT
     ) -> Tuple[str, str, str, str, str, str]:
+        def _device_event_path(field_name: str, fallback: str) -> str:
+            configured = getattr(
+                self._config, f"{field_name}_device_event_input_file", None
+            )
+            if configured:
+                return configured
+            root, extension = os.path.splitext(fallback)
+            return f"{root}_device_event{extension}"
+
         if measurement_type == MeasurementType.CUDA_EVENT:
             compute_file = self._config.linear_op_input_file
             if not compute_file and self._config.mlp_input_file:
                 compute_file = self._config.mlp_input_file
             attention_file = self._config.atten_input_file
             moe_file = self._config.moe_input_file
+        elif measurement_type == MeasurementType.DEVICE_EVENT:
+            linear_file = self._config.linear_op_input_file
+            if not linear_file and self._config.mlp_input_file:
+                linear_file = self._config.mlp_input_file
+            compute_file = _device_event_path("linear_op", linear_file)
+            attention_file = _device_event_path("atten", self._config.atten_input_file)
+            moe_file = _device_event_path("moe", self._config.moe_input_file)
         elif measurement_type == MeasurementType.KERNEL_ONLY:
             compute_file = self._config.linear_op_kernel_only_input_file
             attention_file = self._config.atten_kernel_only_input_file
@@ -837,9 +899,42 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _measurement_family_name(measurement_type: MeasurementType) -> str:
         if measurement_type == MeasurementType.CUDA_EVENT:
             return "eager"
+        if measurement_type == MeasurementType.DEVICE_EVENT:
+            return "device_event"
         if measurement_type == MeasurementType.KERNEL_ONLY:
             return "kernel_only"
         raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
+
+    @staticmethod
+    def _is_event_measurement_type(measurement_type: MeasurementType) -> bool:
+        return measurement_type in (
+            MeasurementType.CUDA_EVENT,
+            MeasurementType.DEVICE_EVENT,
+        )
+
+    def _event_measurement_type_for_replica(
+        self, replica_config: Optional[ReplicaConfig] = None
+    ) -> MeasurementType:
+        """Select the standard event family from the replica's device platform."""
+
+        replica_config = replica_config or getattr(self, "_replica_config", None)
+        device_config = getattr(replica_config, "device_config", None)
+        platform = getattr(device_config, "gpu_platform", None)
+        if platform is None:
+            try:
+                from frontier.config.device_sku_config import BaseDeviceSKUConfig
+
+                device_config = BaseDeviceSKUConfig.create_from_type_string(
+                    str(replica_config.device)
+                )
+                platform = device_config.gpu_platform
+            except (AttributeError, ValueError):
+                platform = "cuda"
+        return (
+            MeasurementType.DEVICE_EVENT
+            if str(platform).strip().lower() == "rocm"
+            else MeasurementType.CUDA_EVENT
+        )
 
     def _is_kernel_only_measurement_enabled_for_cluster(self) -> bool:
         decode_cuda_graph_mode = str(global_vars.get_decode_cuda_graph_mode()).lower()
@@ -856,6 +951,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         raise ValueError(f"Unsupported cluster_type={self._cluster_type!r}")
 
     def _get_default_measurement_type_for_cluster(self) -> MeasurementType:
+        event_measurement_type = self._event_measurement_type_for_replica()
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
             if self._cluster_type in (
                 ClusterType.DECODE,
@@ -863,33 +959,31 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 ClusterType.DECODE_FFN,
             ):
                 return MeasurementType.KERNEL_ONLY
-            return MeasurementType.CUDA_EVENT
+            return event_measurement_type
 
         if self._should_enable_measurement_family(MeasurementType.KERNEL_ONLY) and not (
-            self._should_enable_measurement_family(MeasurementType.CUDA_EVENT)
+            self._should_enable_measurement_family(event_measurement_type)
         ):
             if self._is_kernel_only_measurement_enabled_for_cluster():
                 return MeasurementType.KERNEL_ONLY
-            return MeasurementType.CUDA_EVENT
-        return MeasurementType.CUDA_EVENT
+            return event_measurement_type
+        return event_measurement_type
 
     def _should_enable_measurement_family(
         self, measurement_type: MeasurementType
     ) -> bool:
+        event_measurement_type = self._event_measurement_type_for_replica()
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
             if self._cluster_type == ClusterType.DECODE_ATTN:
-                return measurement_type in (
-                    MeasurementType.CUDA_EVENT,
-                    MeasurementType.KERNEL_ONLY,
-                )
+                return measurement_type in (event_measurement_type, MeasurementType.KERNEL_ONLY)
             if self._cluster_type in (ClusterType.DECODE, ClusterType.DECODE_FFN):
                 return measurement_type == MeasurementType.KERNEL_ONLY
-            return measurement_type == MeasurementType.CUDA_EVENT
+            return measurement_type == event_measurement_type
 
         decode_graph_mode = str(global_vars.get_decode_cuda_graph_mode()).strip().lower()
         use_cuda_graph = bool(global_vars.get_use_cuda_graph())
 
-        if measurement_type == MeasurementType.CUDA_EVENT:
+        if measurement_type == event_measurement_type:
             if self._cluster_type == ClusterType.DECODE:
                 return decode_graph_mode == "none"
             if self._cluster_type in (
@@ -912,10 +1006,11 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
 
     def _select_measurement_type_for_batch(self, batch: Batch) -> MeasurementType:
+        event_measurement_type = self._event_measurement_type_for_replica()
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
             if self._cluster_type == ClusterType.DECODE_ATTN:
                 if getattr(batch, "num_prefill_tokens", 0) > 0:
-                    return MeasurementType.CUDA_EVENT
+                    return event_measurement_type
                 return MeasurementType.KERNEL_ONLY
             if self._cluster_type in (
                 ClusterType.PREFILL,
@@ -933,14 +1028,14 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             return self._get_default_measurement_type_for_cluster()
 
         if getattr(batch, "num_prefill_tokens", 0) > 0:
-            return MeasurementType.CUDA_EVENT
+            return event_measurement_type
 
         if getattr(batch, "num_decode_tokens", 0) > 0:
             runtime_mode = self._get_decode_cuda_graph_runtime_mode(batch)
             if runtime_mode != "NONE":
                 return MeasurementType.KERNEL_ONLY
 
-        return MeasurementType.CUDA_EVENT
+        return event_measurement_type
 
     def _activate_measurement_type(self, measurement_type: MeasurementType) -> None:
         self._active_measurement_type = measurement_type
@@ -950,6 +1045,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             self._moe_input_file = self._moe_input_file_eager
             self._models = self._models_eager
             self._predictions = self._predictions_eager
+        elif measurement_type == MeasurementType.DEVICE_EVENT:
+            self._compute_input_file = self._compute_input_file_device_event
+            self._attention_input_file = self._attention_input_file_device_event
+            self._moe_input_file = self._moe_input_file_device_event
+            self._models = self._models_device_event
+            self._predictions = self._predictions_device_event
         elif measurement_type == MeasurementType.KERNEL_ONLY:
             self._compute_input_file = self._compute_input_file_kernel_only
             self._attention_input_file = self._attention_input_file_kernel_only
@@ -1154,11 +1255,15 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _require_predictions_for_measurement_type(
         self, measurement_type: MeasurementType, batch: Batch
     ) -> None:
-        predictions = (
-            self._predictions_eager
-            if measurement_type == MeasurementType.CUDA_EVENT
-            else self._predictions_kernel_only
-        )
+        predictions_by_type = {
+            MeasurementType.CUDA_EVENT: self._predictions_eager,
+            MeasurementType.DEVICE_EVENT: self._predictions_device_event,
+            MeasurementType.KERNEL_ONLY: self._predictions_kernel_only,
+        }
+        try:
+            predictions = predictions_by_type[measurement_type]
+        except KeyError as exc:
+            raise ValueError(f"Unsupported measurement_type={measurement_type!r}") from exc
         if predictions:
             return
         raise ValueError(
@@ -2906,6 +3011,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         raise ValueError(f"Unsupported linear op for TP mapping: {op_name}")
 
     def _get_attention_model_names(self) -> List[str]:
+        # Metadata/training consumers need the full-attention operator schema
+        # for hybrid models; actual execution selects a family per layer below.
         return list(get_enabled_predictor_metric_names(self._get_attention_family()))
 
     @staticmethod
@@ -3495,7 +3602,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             AttentionOperatorRole.DECODE_KERNEL,
         )
 
-        if measurement_type == MeasurementType.CUDA_EVENT:
+        if self._is_event_measurement_type(measurement_type):
             if "prefill_chunk_size" not in prefill_df.columns:
                 raise ValueError(
                     "Missing required column 'prefill_chunk_size' in attention profiling data."
@@ -4006,7 +4113,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         measurement_type = getattr(self, "_active_measurement_type", MeasurementType.CUDA_EVENT)
 
         # Cluster-specific needs with measurement-aware family split.
-        need_prefill = measurement_type == MeasurementType.CUDA_EVENT and self._cluster_type in [
+        need_prefill = self._is_event_measurement_type(measurement_type) and self._cluster_type in [
             ClusterType.PREFILL,
             ClusterType.DECODE,
             ClusterType.MONOLITHIC,
@@ -4018,7 +4125,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         ] and (
             measurement_type == MeasurementType.KERNEL_ONLY
             or (
-                measurement_type == MeasurementType.CUDA_EVENT
+                self._is_event_measurement_type(measurement_type)
                 and self._cluster_type
                 in [
                     ClusterType.DECODE_ATTN,
@@ -7363,7 +7470,30 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         self._log_architecture_attention_shape(batch)
 
-        attention_family = self._get_attention_family()
+        # Hybrid GDN layers use the standalone artifact-backed predictor. Keep
+        # this branch before whole-model family binding, which is intentionally
+        # homogeneous-only and rejects a hybrid model without a layer ID.
+        if (
+            getattr(self, "_gdn_predictor", None) is not None
+            and callable(getattr(self._model_config, "is_gdn_layer", None))
+            and self._model_config.is_gdn_layer(layer_id)
+        ):
+            norm_time = (
+                self._get_attn_norm_layer_act_execution_time(batch)
+                if self._supports_operation("input_layernorm")
+                else 0.0
+            )
+            return self._gdn_predictor.predict_attention_time(
+                batch,
+                norm_time_ms=norm_time,
+            )
+
+        layer_binding_getter = getattr(self._model_config, "get_layer_attention_spec", None)
+        if callable(layer_binding_getter):
+            layer_spec = bind_layer_attention(self._model_config, layer_id)
+            attention_family = get_attention_family(layer_spec.family_id)
+        else:
+            attention_family = self._get_attention_family()
         attention_family.require_enabled_for_execution()
 
         if self._enable_dummy_mode:
@@ -7938,7 +8068,12 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 "include_moe must be None for an attention-only stage probe"
             )
         if self._enable_dummy_mode:
-            return self._get_dummy_execution_time(batch, stage_id)
+            dummy_execution_time = self._get_dummy_execution_time(batch, stage_id)
+            return StageExecutionTime.from_execution_time(
+                dummy_execution_time,
+                num_layers=num_layers,
+                first_layer_id=layer_id,
+            )
 
         logger.debug(
             f"[EXEC_TIME_PREDICT] Predicting stage execution time: stage_id={stage_id}, "
@@ -8255,61 +8390,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             ),
         )
 
-        # If num_layers is 1, return as-is
-        if num_layers == 1:
-            return base_execution_time
-
-        logger.debug(
-            "Aggregating dense execution time with num_layers_per_pipeline_stage=%s",
-            num_layers,
-        )
-
-        # Keep component fields at single-layer granularity and let ExecutionTime
-        # apply layer aggregation via num_layers_per_pipeline_stage.
-        return ExecutionTime(
-            num_layers_per_pipeline_stage=num_layers,
-            attention_rope_execution_time=base_execution_time._attention_rope_execution_time,
-            attention_kv_cache_save_execution_time=base_execution_time._attention_kv_cache_save_execution_time,
-            attention_decode_execution_time=base_execution_time._attention_decode_execution_time,
-            attention_prefill_execution_time=base_execution_time._attention_prefill_execution_time,
-            attention_layer_pre_proj_execution_time=base_execution_time._attention_layer_pre_proj_execution_time,
-            attention_layer_post_proj_execution_time=base_execution_time._attention_layer_post_proj_execution_time,
-            attn_norm_time=base_execution_time._attn_norm_time,
-            mlp_norm_time=base_execution_time._mlp_norm_time,
-            add_time=base_execution_time._add_time,
-            tensor_parallel_communication_time=base_execution_time._tensor_parallel_communication_time,
-            attn_tensor_parallel_allreduce_time=(
-                base_execution_time._attn_tensor_parallel_allreduce_time
-                if base_execution_time._has_attn_tensor_parallel_allreduce_time
-                else None
-            ),
-            moe_tensor_parallel_allreduce_time=(
-                base_execution_time._moe_tensor_parallel_allreduce_time
-                if base_execution_time._has_moe_tensor_parallel_allreduce_time
-                else None
-            ),
-            pipeline_parallel_communication_time=base_execution_time._pipeline_parallel_communication_time,
-            expert_parallel_communication_time=base_execution_time._expert_parallel_communication_time,
-            moe_gating_time=0.0,
-            moe_shuffling_time=0.0,
-            schedule_time=base_execution_time._schedule_time,
-            sampler_e2e_time=base_execution_time._sampler_e2e_time,
-            prepare_inputs_e2e_time=base_execution_time._prepare_inputs_e2e_time,
-            process_model_outputs_time=base_execution_time._process_model_outputs_time,
-            ray_comm_time=base_execution_time._ray_comm_time,
-            is_moe=False,
-            pp_producer_send_path_runtime_time=base_execution_time._pp_producer_send_path_runtime_time,
-            pp_receiver_head_runtime_time=base_execution_time._pp_receiver_head_runtime_time,
-            pp_prefill_consumer_active_runtime_time=base_execution_time._pp_prefill_consumer_active_runtime_time,
-            pp_stage_boundary_handoff_time=base_execution_time._pp_stage_boundary_handoff_time,
-            mlp_layer_up_proj_execution_time=base_execution_time._mlp_layer_up_proj_execution_time,
-            mlp_layer_down_proj_execution_time=base_execution_time._mlp_layer_down_proj_execution_time,
-            mlp_layer_act_execution_time=base_execution_time._mlp_layer_act_execution_time,
-            decode_draft_proposer_time=base_execution_time._decode_draft_proposer_time,
-            mtp_terminal_overshoot_time=base_execution_time._mtp_terminal_overshoot_time,
-            attention_operator_times=base_execution_time.attention_operator_times,
-            communication_operator_times=(
-                base_execution_time.communication_operator_times
-            ),
-            mlp_operator_times=base_execution_time.mlp_operator_times,
+        return StageExecutionTime.from_execution_time(
+            base_execution_time,
+            num_layers=num_layers,
+            first_layer_id=layer_id,
         )

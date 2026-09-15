@@ -8,8 +8,24 @@ import torch
 from frontier.logger import init_logger
 from frontier.profiling.collectives.collectives_input import CollectivesInput
 from frontier.profiling.collectives.collectives_wrapper import CollectiveWrapper
+from frontier.profiling.common.accelerator import set_process_visible_device
 
 logger = init_logger(__name__)
+
+
+def _precision_to_dtype(precision: str) -> torch.dtype:
+    supported = {
+        "FP16": torch.float16,
+        "BF16": torch.bfloat16,
+        "FP32": torch.float32,
+    }
+    try:
+        return supported[precision.upper()]
+    except KeyError as exc:
+        raise ValueError(
+            f"Collective profiling does not support precision {precision!r}; "
+            f"choose one of {sorted(supported)}."
+        ) from exc
 
 
 @ray.remote(num_gpus=1)
@@ -17,14 +33,15 @@ class BenchmarkRunner:
     def __init__(self, gpu_id: int, max_gpus_per_node: int, head_ip: str) -> None:
         self._gpu_id = gpu_id
         self._max_devices_per_node = max_gpus_per_node
-        self._set_cuda_visible_devices()
+        self._accelerator_visibility = self._set_accelerator_visible_device()
         self._last_num_workers_per_node = None
         self._last_num_workers = None
         self._head_ip = head_ip
 
-    def _set_cuda_visible_devices(self) -> None:
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(
-            self._gpu_id % self._max_devices_per_node
+    def _set_accelerator_visible_device(self) -> str:
+        visibility = set_process_visible_device(
+            self._gpu_id % self._max_devices_per_node,
+            torch_module=torch,
         )
         # set additional nccl env vars
         # This env var set by Ray causes exceptions with graph building.
@@ -33,6 +50,7 @@ class BenchmarkRunner:
         os.environ["NCCL_GRAPH_MIXING_SUPPORT"] = "0"
         os.environ["KINETO_LOG_LEVEL"] = "5"
         os.environ["NCCL_IGNORE_DISABLED_P2P"] = "1"
+        return visibility
 
     def run_collective(
         self,
@@ -71,6 +89,7 @@ class BenchmarkRunner:
             collectives_input.collective,
             collectives_input.num_workers_per_node,
             self._max_devices_per_node,
+            dtype=_precision_to_dtype(collectives_input.precision),
         )
         stats = wrapper.profile()
         del wrapper
@@ -83,7 +102,7 @@ class BenchmarkRunner:
         logger.info(
             f"Initializing gpu id: {self._gpu_id}, Rank: {rank}, num_workers: {num_workers}, comm_id: {comm_id}, "
             f"devices_per_node: {devices_per_node}, max_devices_per_node: {self._max_devices_per_node}, "
-            f"ip_addr: {ray.util.get_node_ip_address()}, CUDA_VISIBLE_DEVICES: {os.environ['CUDA_VISIBLE_DEVICES']}"
+            f"ip_addr: {ray.util.get_node_ip_address()}, visibility: {self._accelerator_visibility}"
         )
 
         torch.distributed.init_process_group(

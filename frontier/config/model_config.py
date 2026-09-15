@@ -4,7 +4,13 @@ import hashlib
 import json
 import os
 
-from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.model_binding import resolve_runtime_attention_family
+from frontier.attention.gdn import (
+    GatedDeltaNetConfig,
+    LayerAttentionSpec,
+    SequenceMixerType,
+    resolve_layer_attention_specs,
+)
 from frontier.attention.ops import AttentionMemoryLayout
 from frontier.config.base_fixed_config import BaseFixedConfig
 from frontier.config.precision_type import PrecisionType
@@ -27,7 +33,7 @@ class QuantizationConfig:
     """Configuration for model quantization, aligned with stepfun-vllm Fp8Config semantics.
 
     Attributes:
-        quant_method: Quantization method (None for no quantization, "fp8" for FP8)
+        quant_method: Canonical quantization precision (for example, "fp8" or "fp4")
         activation_scheme: Activation quantization scheme ("dynamic" or "static")
         is_checkpoint_fp8_serialized: Whether checkpoint has pre-quantized FP8 weights
         weight_block_size: Block dimensions for block-wise quantization, e.g., (128, 128)
@@ -38,6 +44,7 @@ class QuantizationConfig:
     is_checkpoint_fp8_serialized: bool = False
     weight_block_size: Optional[Tuple[int, int]] = None
     ignored_layers: List[str] = field(default_factory=list)
+    quantized_operations: Optional[List[str]] = None
 
     @staticmethod
     def _normalize_quant_method(quant_method: Optional[str]) -> Optional[str]:
@@ -54,11 +61,23 @@ class QuantizationConfig:
         self.quant_method = self._normalize_quant_method(self.quant_method)
 
         # Validate quant_method
-        valid_quant_methods = {None, "fp8"}
+        valid_quant_methods = {None, "fp8", "fp4"}
         if self.quant_method not in valid_quant_methods:
             raise ValueError(
                 f"Invalid quant_method '{self.quant_method}'. "
                 f"Must be one of: {valid_quant_methods}"
+            )
+
+        if self.quantized_operations is not None:
+            if not all(
+                isinstance(operation, str) and operation.strip()
+                for operation in self.quantized_operations
+            ):
+                raise ValueError(
+                    "quantized_operations must contain non-empty operation names"
+                )
+            self.quantized_operations = list(
+                dict.fromkeys(operation.strip() for operation in self.quantized_operations)
             )
 
         # Validate activation_scheme
@@ -115,6 +134,10 @@ class QuantizationConfig:
         if self.ignored_layers:
             sorted_ignored = sorted(self.ignored_layers)
             parts.append(f"ignored={','.join(sorted_ignored)}")
+        if self.quantized_operations is not None:
+            parts.append(
+                f"operations={','.join(sorted(self.quantized_operations))}"
+            )
 
         signature_str = "|".join(parts)
         return signature_str
@@ -140,12 +163,39 @@ class QuantizationConfig:
                     f"got {weight_block_size}"
                 )
 
+        quant_method = cls._normalize_quant_method(config_dict.get("quant_method"))
+        activation_scheme = config_dict.get("activation_scheme")
+        if quant_method == "quark":
+            global_quant_config = config_dict.get("global_quant_config") or {}
+            weight_config = global_quant_config.get("weight") or {}
+            input_config = global_quant_config.get("input_tensors") or {}
+            if (
+                str(weight_config.get("dtype", "")).lower() == "fp4"
+                and str(input_config.get("dtype", "")).lower() == "fp4"
+            ):
+                quant_method = "fp4"
+                if activation_scheme is None:
+                    activation_scheme = (
+                        "dynamic" if input_config.get("is_dynamic") else "static"
+                    )
+        quantized_operations = config_dict.get(
+            "frontier_quantized_operations",
+            config_dict.get("quantized_operations"),
+        )
+
         return cls(
-            quant_method=cls._normalize_quant_method(config_dict.get("quant_method")),
-            activation_scheme=config_dict.get("activation_scheme"),
+            quant_method=quant_method,
+            activation_scheme=activation_scheme,
             is_checkpoint_fp8_serialized=bool(config_dict.get("is_checkpoint_fp8_serialized", False)),
             weight_block_size=weight_block_size,
-            ignored_layers=list(config_dict.get("ignored_layers", [])),
+            ignored_layers=list(
+                config_dict.get("ignored_layers", config_dict.get("exclude", []))
+            ),
+            quantized_operations=(
+                list(quantized_operations)
+                if quantized_operations is not None
+                else None
+            ),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -156,6 +206,7 @@ class QuantizationConfig:
             "is_checkpoint_fp8_serialized": self.is_checkpoint_fp8_serialized,
             "weight_block_size": list(self.weight_block_size) if self.weight_block_size else None,
             "ignored_layers": self.ignored_layers,
+            "quantized_operations": self.quantized_operations,
         }
 
 
@@ -264,6 +315,7 @@ class BaseModelConfig(BaseFixedConfig):
     # Model type from config.json (normalized to lowercase when provided)
     model_type: Optional[str] = None
     model_architecture_profile: Optional[str] = None
+    architectures: Optional[Tuple[str, ...]] = None
 
     # Architecture-specific structural fields used by registered profiles.
     model_arch: str = ModelArch.GENERIC
@@ -290,6 +342,17 @@ class BaseModelConfig(BaseFixedConfig):
     qk_head_dim: Optional[int] = None
     v_head_dim: Optional[int] = None
 
+    # Qwen3.5 hybrid sequence-mixer topology.  These fields are interpreted
+    # only by the explicitly registered qwen3_5_moe profile.
+    layer_types: Optional[Tuple[str, ...]] = None
+    full_attention_interval: Optional[int] = None
+    linear_conv_kernel_dim: Optional[int] = None
+    linear_key_head_dim: Optional[int] = None
+    linear_value_head_dim: Optional[int] = None
+    linear_num_key_heads: Optional[int] = None
+    linear_num_value_heads: Optional[int] = None
+    gdn_output_gate_type: str = "silu"
+
     # Default model precision from model config (e.g., torch_dtype in HF config)
     torch_dtype: str = "float16"
 
@@ -309,6 +372,9 @@ class BaseModelConfig(BaseFixedConfig):
     _moe_layer_ids_cache: Optional[List[int]] = field(
         default=None, compare=False, hash=False, repr=False
     )
+    _layer_attention_specs_cache: Optional[Tuple[LayerAttentionSpec, ...]] = field(
+        default=None, compare=False, hash=False, repr=False
+    )
 
     def __post_init__(self):
         """Validate model configuration after initialization."""
@@ -316,6 +382,16 @@ class BaseModelConfig(BaseFixedConfig):
             self.model_type = str(self.model_type).lower()
         if self.model_architecture_profile is not None:
             self.model_architecture_profile = str(self.model_architecture_profile).lower()
+        if self.architectures is not None:
+            self.architectures = tuple(str(value) for value in self.architectures)
+        if self.layer_types is not None:
+            self.layer_types = tuple(str(value) for value in self.layer_types)
+        if self.full_attention_interval is not None:
+            self.full_attention_interval = int(self.full_attention_interval)
+        # Resolve lazily so legacy construction-time validation order remains
+        # unchanged (for example, invalid head topology is reported by the
+        # binder when it is explicitly requested).
+        self._layer_attention_specs_cache = None
 
         # Validate model_arch
         if self.model_arch not in ModelArch.VALID_ARCHS:
@@ -424,8 +500,69 @@ class BaseModelConfig(BaseFixedConfig):
         return self.embedding_dim // self.num_q_heads
 
     def get_attention_family(self):
-        """Return the bound attention family for runtime cache semantics."""
-        return bind_attention_family(self).family
+        """Return the family used by model-wide runtime cache semantics.
+
+        Homogeneous models use the ordinary family binder.  Hybrid models use
+        their unique full-attention family for KV/head metadata; execution
+        prediction still resolves each layer through ``bind_layer_attention``.
+        """
+        return resolve_runtime_attention_family(self)
+
+    def get_gdn_config(self) -> Optional[GatedDeltaNetConfig]:
+        """Return the validated GDN shape contract for the Qwen3.5 profile."""
+
+        if not any(spec.is_gdn for spec in self.get_layer_attention_specs()):
+            return None
+        values = tuple(
+            getattr(self, field_name, None)
+            for field_name in (
+                "linear_conv_kernel_dim",
+                "linear_key_head_dim",
+                "linear_value_head_dim",
+                "linear_num_key_heads",
+                "linear_num_value_heads",
+            )
+        )
+        if any(value is None for value in values):
+            raise ValueError("GDN shape configuration is incomplete")
+        return GatedDeltaNetConfig(
+            conv_kernel_size=int(values[0]),
+            key_head_dim=int(values[1]),
+            value_head_dim=int(values[2]),
+            num_key_heads=int(values[3]),
+            num_value_heads=int(values[4]),
+            output_gate_type=self.gdn_output_gate_type,
+        )
+
+    def get_layer_attention_specs(self) -> Tuple[LayerAttentionSpec, ...]:
+        """Return the immutable, ordered per-layer attention identities."""
+
+        if self._layer_attention_specs_cache is None:
+            self._layer_attention_specs_cache = resolve_layer_attention_specs(self)
+        return self._layer_attention_specs_cache
+
+    def get_layer_attention_spec(self, global_layer_id: int) -> LayerAttentionSpec:
+        if type(global_layer_id) is not int:
+            raise ValueError(
+                f"global_layer_id must be an int, got {global_layer_id!r}"
+            )
+        specs = self.get_layer_attention_specs()
+        if global_layer_id < 0 or global_layer_id >= len(specs):
+            raise ValueError(
+                f"global_layer_id {global_layer_id} out of range [0, {len(specs)})"
+            )
+        return specs[global_layer_id]
+
+    def get_num_gdn_layers(self) -> int:
+        return sum(spec.is_gdn for spec in self.get_layer_attention_specs())
+
+    def get_num_full_attention_layers(self) -> int:
+        return sum(
+            spec.is_full_attention for spec in self.get_layer_attention_specs()
+        )
+
+    def is_gdn_layer(self, global_layer_id: int) -> bool:
+        return self.get_layer_attention_spec(global_layer_id).is_gdn
 
     def uses_mla(self) -> bool:
         """Return whether this model uses vLLM-style MLA cache semantics."""
@@ -617,6 +754,12 @@ class BaseModelConfig(BaseFixedConfig):
 
         rope_theta = cfg.get("rope_theta")
         rope_scaling = cfg.get("rope_scaling")
+        partial_rotary_factor = float(cfg.get("partial_rotary_factor", 1.0))
+        if not 0.0 < partial_rotary_factor <= 1.0:
+            raise ValueError(
+                "partial_rotary_factor must be in (0, 1], got "
+                f"{partial_rotary_factor} in {file_path}"
+            )
 
         # Parse model architecture (for op_name isolation)
         model_arch = cfg.get("model_arch")
@@ -683,6 +826,19 @@ class BaseModelConfig(BaseFixedConfig):
         if v_head_dim is not None:
             v_head_dim = int(v_head_dim)
 
+        layer_types = cfg.get("layer_types")
+        if layer_types is not None:
+            if not isinstance(layer_types, (list, tuple)):
+                raise ValueError(
+                    f"layer_types must be a list in {file_path}, got "
+                    f"{type(layer_types).__name__}"
+                )
+            layer_types = tuple(str(value) for value in layer_types)
+
+        def optional_int(field_name: str) -> Optional[int]:
+            value = cfg.get(field_name)
+            return None if value is None else int(value)
+
         # Parse quantization configuration
         quant_config_dict = cfg.get("quantization_config")
         quantization_config = QuantizationConfig.from_dict(quant_config_dict)
@@ -706,8 +862,10 @@ class BaseModelConfig(BaseFixedConfig):
             vocab_size=vocab_size,
             rope_theta=rope_theta,
             rope_scaling=rope_scaling,
+            partial_rotary_factor=partial_rotary_factor,
             model_type=model_type_lower or None,
             model_architecture_profile=cfg.get("model_architecture_profile"),
+            architectures=tuple(str(value) for value in cfg.get("architectures", ())),
             model_arch=model_arch,
             share_expert_dim=share_expert_dim,
             share_q_dim=share_q_dim,
@@ -721,6 +879,14 @@ class BaseModelConfig(BaseFixedConfig):
             qk_rope_head_dim=qk_rope_head_dim,
             qk_head_dim=qk_head_dim,
             v_head_dim=v_head_dim,
+            layer_types=layer_types,
+            full_attention_interval=optional_int("full_attention_interval"),
+            linear_conv_kernel_dim=optional_int("linear_conv_kernel_dim"),
+            linear_key_head_dim=optional_int("linear_key_head_dim"),
+            linear_value_head_dim=optional_int("linear_value_head_dim"),
+            linear_num_key_heads=optional_int("linear_num_key_heads"),
+            linear_num_value_heads=optional_int("linear_num_value_heads"),
+            gdn_output_gate_type=str(cfg.get("output_gate_type", "silu")),
             torch_dtype=torch_dtype,
             quantization_config=quantization_config,
             fused_add_norm_capability=fused_add_norm_capability,

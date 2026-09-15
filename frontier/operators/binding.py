@@ -155,14 +155,14 @@ def _resolve_architecture_linear_tp_mode(
     if architecture_profile is None:
         raise ValueError(f"Unsupported operator query: {operator_name!r}")
 
-    linear_attention = getattr(architecture_profile, "linear_attention", None)
-    if linear_attention is None:
+    attention_linear_ops = getattr(architecture_profile, "attention_linear_ops", None)
+    if attention_linear_ops is None:
         raise TypeError(
-            "architecture_profile must expose a linear_attention declaration"
+            "architecture_profile must expose a attention_linear_ops declaration"
         )
 
-    replicated_ops = tuple(linear_attention.replicated_ops)
-    sharded_ops = tuple(linear_attention.sharded_ops)
+    replicated_ops = tuple(attention_linear_ops.replicated_ops)
+    sharded_ops = tuple(attention_linear_ops.sharded_ops)
     if operator_name in replicated_ops and operator_name in sharded_ops:
         raise ValueError(
             f"Architecture profile {architecture_profile.profile_id!r} declares "

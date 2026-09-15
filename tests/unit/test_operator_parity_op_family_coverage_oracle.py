@@ -463,9 +463,9 @@ def test_observed_mapping_includes_registry_comm_operator_names(monkeypatch) -> 
     assert mapping["unit_registry_comm_profile_op"] == FAMILY_COMM
 
 
-def test_observed_mapping_includes_architecture_linear_attention_ops(monkeypatch) -> None:
+def test_observed_mapping_includes_architecture_attention_linear_ops_ops(monkeypatch) -> None:
     fake_profile = SimpleNamespace(
-        linear_attention=SimpleNamespace(
+        attention_linear_ops=SimpleNamespace(
             sharded_ops=("unit_arch_sharded_attention_op",),
             replicated_ops=("unit_arch_replicated_attention_op",),
         ),

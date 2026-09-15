@@ -1,0 +1,7 @@
+{
+  "device_sku": "mi355x",
+  "gpu_platform": "rocm",
+  "fp16_tflops": 2516,
+  "total_memory_gb": 288,
+  "source": "PR #31 supplemental device description"
+}

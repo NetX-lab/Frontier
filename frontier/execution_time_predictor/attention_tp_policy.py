@@ -30,8 +30,8 @@ def get_attention_linear_tp_policy_ops() -> frozenset[str]:
 
     operator_names = set()
     for profile in MODEL_ARCHITECTURE_REGISTRY.iter_profiles():
-        operator_names.update(profile.linear_attention.sharded_ops)
-        operator_names.update(profile.linear_attention.replicated_ops)
+        operator_names.update(profile.attention_linear_ops.sharded_ops)
+        operator_names.update(profile.attention_linear_ops.replicated_ops)
     return frozenset(operator_names)
 
 

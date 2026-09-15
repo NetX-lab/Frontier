@@ -8,11 +8,12 @@ import plotly.express as px
 
 from frontier.config import SimulationConfig, ClusterConfig, get_quantization_manager
 from frontier.config.config import DISAGGREGATED_ARCHITECTURE_RELEASE_ERROR
-from frontier.entities import Batch, BatchStage, ExecutionTime, Request
+from frontier.entities import Batch, BatchStage, ExecutionTime, Request, StageExecutionTime
 from frontier.logger import get_cluster_logger, init_logger
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
+    get_attention_family,
 )
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.trace_mapping import get_attention_trace_op_times
@@ -562,8 +563,11 @@ class MetricsStore:
             if duration_ms <= 0:
                 return  # Skip zero-duration ops
 
-            if extra_meta is None and op_type in ("COMPUTE", "COMM"):
-                extra_meta = compute_op_trace_meta(op_name, op_type, trace_context)
+            if op_type in ("COMPUTE", "COMM"):
+                trace_meta = compute_op_trace_meta(op_name, op_type, trace_context)
+                if extra_meta:
+                    trace_meta.update(extra_meta)
+                extra_meta = trace_meta
 
             if op_type in ("COMPUTE", "COMM") and not extra_meta:
                 raise ValueError(
@@ -684,7 +688,13 @@ class MetricsStore:
         # =====================================================================
         moe_tp_enabled = False
         ep_enabled = False
-        if execution_time._is_moe:
+        if isinstance(execution_time, StageExecutionTime):
+            stage_has_moe = any(
+                layer._is_moe for layer in execution_time.layer_execution_times
+            )
+        else:
+            stage_has_moe = execution_time._is_moe
+        if stage_has_moe:
             cluster_config = self._cluster_configs.get(cluster_type)
             if cluster_config is None:
                 raise ValueError(f"Cluster config not found for {cluster_type}")
@@ -692,7 +702,19 @@ class MetricsStore:
             # COMM_SKIP: EP communication only needed when ep_size > 1 (experts distributed across devices)
             ep_enabled = cluster_config.replica_config.moe_expert_parallel_size > 1
 
-        if should_expand_layers and num_layers > 1:
+        if isinstance(execution_time, StageExecutionTime):
+            self._emit_stage_layer_traces(
+                emit,
+                execution_time,
+                cluster_type,
+                moe_tp_enabled=moe_tp_enabled,
+                ep_enabled=ep_enabled,
+                skip_ffn_attn_norm_residual=skip_ffn_attn_norm_residual,
+                skip_add_attn_residual=skip_add_attn_residual,
+                use_profile_ep_alltoall=use_profile_ep_alltoall,
+                use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
+            )
+        elif should_expand_layers and num_layers > 1:
             # Per-layer expansion mode: emit individual layer traces
             self._emit_per_layer_traces(
                 emit,
@@ -984,6 +1006,149 @@ class MetricsStore:
             include_add_attn_residual=False,
         ):
             emit("COMPUTE", op_name, duration_ms)
+
+    def _emit_stage_layer_traces(
+        self,
+        emit,
+        execution_time: StageExecutionTime,
+        cluster_type: ClusterType,
+        moe_tp_enabled: bool,
+        ep_enabled: bool,
+        skip_ffn_attn_norm_residual: bool = False,
+        skip_add_attn_residual: bool = False,
+        use_profile_ep_alltoall: bool = False,
+        use_ep_alltoall_dispatch_combine: bool = True,
+    ) -> None:
+        """Emit one trace sequence for each authoritative stage layer.
+
+        ``StageExecutionTime`` keeps layer payloads separate because a stage can
+        contain multiple attention families. The legacy aggregate helpers use
+        homogeneous scalar views and therefore cannot safely consume this type.
+        Stage-owned overhead remains emitted by ``_emit_op_level_traces`` once.
+        """
+
+        for layer_idx, layer in enumerate(execution_time.layer_execution_times):
+            family_id = layer.attention_family_id or DENSE_ATTENTION_FAMILY.family_id
+            attention_family = get_attention_family(family_id)
+            layer_meta = {
+                "layer_idx": layer_idx,
+                "global_layer_id": layer.global_layer_id,
+                "attention_family_id": family_id,
+                "attention_variant_id": layer.attention_variant_id,
+            }
+
+            def emit_layer(op_type: str, op_name: str, duration_ms: float) -> None:
+                emit(op_type, op_name, duration_ms, layer_idx, layer_meta)
+
+            for op_name, duration_ms in _iter_memory_execution_times(
+                layer,
+                include_post_attention_layernorm=False,
+                include_add_attn_residual=False,
+                include_add_ffn_residual=False,
+            ):
+                emit_layer("COMPUTE", op_name, duration_ms)
+
+            # GDN owns its input/output projections inside the attention family;
+            # dense and MLA retain the historical model-level projections.
+            if family_id != "gated_delta_net":
+                emit_layer("COMPUTE", "attn_pre_proj", layer.attention_pre_proj_time)
+                emit_layer("COMPUTE", "attn_rope", layer.attention_rope_execution_time)
+            for operator, duration_ms in get_attention_trace_op_times(
+                layer,
+                attention_family,
+            ):
+                emit_layer("COMPUTE", operator.name, duration_ms)
+            if family_id != "gated_delta_net":
+                emit_layer("COMPUTE", "attn_post_proj", layer.attention_post_proj_time)
+            emit_layer(
+                "COMM",
+                "attn_tensor_parallel_allreduce",
+                layer.attention_all_reduce_time,
+            )
+
+            if not skip_ffn_attn_norm_residual:
+                for op_name, duration_ms in _iter_memory_execution_times(
+                    layer,
+                    include_input_layernorm=False,
+                    include_add_attn_residual=not skip_add_attn_residual,
+                    include_add_ffn_residual=False,
+                ):
+                    emit_layer("COMPUTE", op_name, duration_ms)
+
+            if cluster_type == ClusterType.DECODE_ATTN:
+                continue
+
+            if layer._is_moe:
+                emit_layer(
+                    "COMM",
+                    "moe_tensor_parallel_allgather",
+                    layer.moe_tensor_parallel_allgather_time,
+                )
+                if layer.share_expert_time > 0:
+                    for op_name, duration_ms in _iter_family_execution_times(
+                        SHARE_EXPERT_FAMILY,
+                        layer,
+                    ):
+                        emit_layer("COMPUTE", op_name, duration_ms)
+                    emit_layer(
+                        "COMM",
+                        "share_expert_tensor_parallel_allreduce",
+                        layer.share_expert_tensor_parallel_allreduce_time,
+                    )
+                for op_name, duration_ms in _iter_family_execution_times(
+                    MOE_FAMILY,
+                    layer,
+                ):
+                    emit_layer("COMPUTE", op_name, duration_ms)
+                if ep_enabled:
+                    if use_profile_ep_alltoall:
+                        emit_layer(
+                            "COMM",
+                            "expert_parallel_alltoall",
+                            layer.get_single_layer_moe_dispatch_time(),
+                        )
+                    elif use_ep_alltoall_dispatch_combine:
+                        emit_layer(
+                            "COMM",
+                            "expert_parallel_alltoall_dispatch",
+                            layer.get_single_layer_moe_dispatch_time(),
+                        )
+                    emit_layer(
+                        "COMM",
+                        "expert_parallel_alltoall_combine",
+                        layer.get_single_layer_moe_combine_time(),
+                    )
+                else:
+                    emit_layer(
+                        "COMM",
+                        "expert_parallel_allreduce",
+                        layer.expert_parallel_communication_time,
+                    )
+                if moe_tp_enabled:
+                    emit_layer(
+                        "COMM",
+                        "moe_tensor_parallel_allreduce",
+                        layer.mlp_all_reduce_time,
+                    )
+            else:
+                for op_name, duration_ms in _iter_family_execution_times(
+                    FFN_FAMILY,
+                    layer,
+                ):
+                    emit_layer("COMPUTE", op_name, duration_ms)
+                emit_layer(
+                    "COMM",
+                    "mlp_tensor_parallel_allreduce",
+                    layer.mlp_all_reduce_time,
+                )
+
+            for op_name, duration_ms in _iter_memory_execution_times(
+                layer,
+                include_input_layernorm=False,
+                include_post_attention_layernorm=False,
+                include_add_attn_residual=False,
+            ):
+                emit_layer("COMPUTE", op_name, duration_ms)
 
     def _emit_per_layer_traces(
         self,
@@ -3522,6 +3687,90 @@ class MetricsStore:
             )
         return busy_meters[stage_id], mfu_meters[stage_id]
 
+    def _push_stage_layer_operation_metrics(
+        self,
+        *,
+        stage_execution_time: StageExecutionTime,
+        batch_id: int,
+        cluster_type: ClusterType,
+        moe_tp_enabled: bool,
+        ep_enabled: bool,
+        use_profile_ep_alltoall: bool,
+        use_ep_alltoall_dispatch_combine: bool,
+    ) -> None:
+        """Push operation metrics from each real layer exactly once."""
+
+        for layer in stage_execution_time.layer_execution_times:
+            def push(metric: OperationMetrics, value: float) -> None:
+                self._push_metric(metric, batch_id, value, cluster_type)
+
+            family_id = layer.attention_family_id or DENSE_ATTENTION_FAMILY.family_id
+            attention_family = get_attention_family(family_id)
+            if family_id != "gated_delta_net":
+                push(OperationMetrics.ATTN_PRE_PROJ, layer.attention_pre_proj_time)
+                push(OperationMetrics.ATTN_ROPE, layer.attention_rope_execution_time)
+            for operator, duration_ms in get_attention_trace_op_times(
+                layer,
+                attention_family,
+                skip_zero=False,
+            ):
+                push(OperationMetrics(operator.name), duration_ms)
+            if family_id != "gated_delta_net":
+                push(OperationMetrics.ATTN_POST_PROJ, layer.attention_post_proj_time)
+            push(OperationMetrics.ATTN_TENSOR_PARALLEL_ALLREDUCE, layer.attention_all_reduce_time)
+
+            push(OperationMetrics.INPUT_LAYERNORM, layer.attn_norm_time)
+            push(OperationMetrics.POST_ATTENTION_LAYERNORM, layer.mlp_norm_time)
+            push(OperationMetrics.ADD, layer.add_time)
+            push(OperationMetrics.ADD_ATTN_RESIDUAL, layer.add_attn_residual_time)
+            push(OperationMetrics.ADD_FFN_RESIDUAL, layer.add_ffn_residual_time)
+
+            if layer._is_moe:
+                push(
+                    OperationMetrics.MOE_TENSOR_PARALLEL_ALLGATHER,
+                    layer.moe_tensor_parallel_allgather_time,
+                )
+                if moe_tp_enabled:
+                    push(
+                        OperationMetrics.MOE_TENSOR_PARALLEL_ALLREDUCE,
+                        layer.mlp_all_reduce_time,
+                    )
+                for op_name, metric_value in _iter_family_execution_times(
+                    MOE_FAMILY,
+                    layer,
+                ):
+                    push(OperationMetrics(op_name), metric_value)
+                if ep_enabled and (
+                    use_profile_ep_alltoall or use_ep_alltoall_dispatch_combine
+                ):
+                    push(
+                        OperationMetrics.EXPERT_PARALLEL_ALLTOALL_DISPATCH,
+                        layer.get_single_layer_moe_dispatch_time(),
+                    )
+                    push(
+                        OperationMetrics.EXPERT_PARALLEL_ALLTOALL_COMBINE,
+                        layer.get_single_layer_moe_combine_time(),
+                    )
+                elif ep_enabled:
+                    push(
+                        OperationMetrics.EXPERT_PARALLEL_ALLREDUCE,
+                        layer.expert_parallel_communication_time,
+                    )
+                for op_name, metric_value in _iter_family_execution_times(
+                    SHARE_EXPERT_FAMILY,
+                    layer,
+                ):
+                    push(OperationMetrics(op_name), metric_value)
+                push(
+                    OperationMetrics.SHARE_EXPERT_TENSOR_PARALLEL_ALLREDUCE,
+                    layer.share_expert_tensor_parallel_allreduce_time,
+                )
+            else:
+                push(OperationMetrics.MLP_UP_PROJ, layer.mlp_layer_up_proj_execution_time)
+                push(OperationMetrics.MLP_ACTIVATION, layer.mlp_layer_act_execution_time)
+                push(OperationMetrics.MLP_DOWN_PROJ, layer.mlp_layer_down_proj_execution_time)
+                push(OperationMetrics.MLP_DOWN_PROJ_ALL_REDUCE, layer.mlp_all_reduce_time)
+
     def on_replica_stage_schedule(
         self,
         time: float,
@@ -3620,7 +3869,13 @@ class MetricsStore:
         ep_enabled = False
         use_profile_ep_alltoall = False
         use_ep_alltoall_dispatch_combine = False
-        if execution_time._is_moe:
+        if isinstance(execution_time, StageExecutionTime):
+            stage_has_moe = any(
+                layer._is_moe for layer in execution_time.layer_execution_times
+            )
+        else:
+            stage_has_moe = execution_time._is_moe
+        if stage_has_moe:
             if cluster_config is None:
                 raise ValueError(f"Cluster config not found for {cluster_type}")
             moe_tp_enabled = cluster_config.replica_config.moe_tensor_parallel_size > 1
@@ -3643,9 +3898,21 @@ class MetricsStore:
                     cluster_type=cluster_type,
                     batch_stage=batch_stage,
                 )
-            )
+                )
 
         batch_id = batch_stage._batch_id
+        if isinstance(execution_time, StageExecutionTime):
+            self._push_stage_layer_operation_metrics(
+                stage_execution_time=execution_time,
+                batch_id=batch_id,
+                cluster_type=cluster_type,
+                moe_tp_enabled=moe_tp_enabled,
+                ep_enabled=ep_enabled,
+                use_profile_ep_alltoall=use_profile_ep_alltoall,
+                use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
+            )
+            return
+
         dense_attention_times = _dense_attention_op_times_by_role(
             execution_time,
             skip_zero=False,
@@ -3857,6 +4124,56 @@ class MetricsStore:
         self,
         execution_time: ExecutionTime,
     ) -> dict[str, float]:
+        if isinstance(execution_time, StageExecutionTime):
+            owner_only_names = frozenset(
+                {
+                    "pipeline_parallel_communication_time",
+                    "schedule_time",
+                    "sampler_e2e_time",
+                    "prepare_inputs_e2e_time",
+                    "pp_producer_send_path_runtime_time",
+                    "pp_receiver_head_runtime_time",
+                    "pp_prefill_consumer_active_runtime_time",
+                    "pp_stage_boundary_residual_runtime_time",
+                    "process_model_outputs_time",
+                    "ray_comm_time",
+                    "decode_draft_proposer_time",
+                    "mtp_terminal_overshoot_time",
+                }
+            )
+            component_ledger: dict[str, float] = {}
+            for layer in execution_time.layer_execution_times:
+                layer_ledger = self._build_frontier_stage_batch_component_ledger(layer)
+                family_id = layer.attention_family_id or DENSE_ATTENTION_FAMILY.family_id
+                if family_id == "gated_delta_net":
+                    for name in (
+                        "attention_prefill_execution_time",
+                        "attention_decode_execution_time",
+                        "attention_pre_proj_time",
+                        "attention_post_proj_time",
+                        "attention_kv_cache_save_execution_time",
+                    ):
+                        layer_ledger.pop(name, None)
+                    for operator, duration_ms in get_attention_trace_op_times(
+                        layer,
+                        get_attention_family(family_id),
+                    ):
+                        layer_ledger[operator.name] = _round_ledger_ms(duration_ms)
+                for name, value in layer_ledger.items():
+                    if name in owner_only_names:
+                        continue
+                    component_ledger[name] = component_ledger.get(name, 0.0) + float(value)
+
+            owner_ledger = self._build_frontier_stage_batch_component_ledger(
+                execution_time.stage_execution_time
+            )
+            for name in owner_only_names:
+                component_ledger[name] = float(owner_ledger[name])
+            return {
+                name: _round_ledger_ms(value)
+                for name, value in component_ledger.items()
+            }
+
         dense_attention_times = _dense_attention_op_times_by_role(
             execution_time,
             skip_zero=False,

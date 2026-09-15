@@ -132,9 +132,9 @@ def validate_typed_operator_metadata(
             if callable(getter):
                 architecture_profile = getter()
         if architecture_family_id is None:
-            from frontier.attention.model_binding import bind_attention_family
+            from frontier.attention.model_binding import resolve_runtime_attention_family
 
-            architecture_family_id = bind_attention_family(model_config).family_id
+            architecture_family_id = resolve_runtime_attention_family(model_config).family_id
         if mtp_method is None:
             spec_config = getattr(model_config, "speculative_decoding_config", None)
             mtp_method = getattr(spec_config, "method", None)
@@ -190,16 +190,16 @@ def validate_typed_operator_metadata(
         from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
 
         for registered_profile in MODEL_ARCHITECTURE_REGISTRY.iter_profiles():
-            linear_attention = getattr(registered_profile, "linear_attention", None)
-            if linear_attention is not None:
-                architecture_names.update(linear_attention.sharded_ops)
-                architecture_names.update(linear_attention.replicated_ops)
+            attention_linear_ops = getattr(registered_profile, "attention_linear_ops", None)
+            if attention_linear_ops is not None:
+                architecture_names.update(attention_linear_ops.sharded_ops)
+                architecture_names.update(attention_linear_ops.replicated_ops)
     if architecture_profile is not None:
-        linear_attention = getattr(architecture_profile, "linear_attention", None)
-        if linear_attention is None:
-            raise TypeError("architecture_profile must expose linear_attention")
-        architecture_names.update(linear_attention.sharded_ops)
-        architecture_names.update(linear_attention.replicated_ops)
+        attention_linear_ops = getattr(architecture_profile, "attention_linear_ops", None)
+        if attention_linear_ops is None:
+            raise TypeError("architecture_profile must expose attention_linear_ops")
+        architecture_names.update(attention_linear_ops.sharded_ops)
+        architecture_names.update(attention_linear_ops.replicated_ops)
     if operator_name in architecture_names:
         if architecture_profile is None:
             if operator_name in {"attn_pre_proj", "attn_rope", "attn_post_proj"}:

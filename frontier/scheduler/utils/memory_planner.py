@@ -1,7 +1,8 @@
 from typing import Optional
 
 from frontier.attention.memory import get_attention_runtime_kv_layout
-from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.families import get_attention_family
+from frontier.attention.model_binding import bind_attention_family, bind_layer_attention
 from frontier.config import ReplicaConfig
 from frontier.errors import FrontierMemoryOOMError
 from frontier.entities.replica import Replica
@@ -16,10 +17,14 @@ class MemoryPlanner:
         replica_config: ReplicaConfig,
         replica: Replica,
         cluster_type: ClusterType = None,
+        max_num_seqs: int | None = None,
     ) -> None:
         self._replica_config = replica_config
         self._replica = replica
         self._cluster_type = cluster_type
+        if max_num_seqs is not None and int(max_num_seqs) <= 0:
+            raise ValueError(f"max_num_seqs must be positive, got={max_num_seqs!r}")
+        self._max_num_seqs = None if max_num_seqs is None else int(max_num_seqs)
 
         self._param_counter = ParamCounter(
             replica_config=replica_config,
@@ -94,7 +99,26 @@ class MemoryPlanner:
         if self._cluster_type == ClusterType.DECODE_FFN:
             return 0
 
-        family = bind_attention_family(self._replica_config.model_config).family
+        model_config = self._replica_config.model_config
+        get_specs = getattr(model_config, "get_layer_attention_specs", None)
+        get_gdn_layers = getattr(model_config, "get_num_gdn_layers", None)
+        has_gdn = callable(get_gdn_layers) and int(get_gdn_layers()) > 0
+        if callable(get_specs) and has_gdn:
+            full_layer_id = next(
+                (
+                    int(spec.global_layer_id)
+                    for spec in get_specs()
+                    if bool(getattr(spec, "is_full_attention", False))
+                ),
+                None,
+            )
+            if full_layer_id is None:
+                return 0
+            family = get_attention_family(
+                bind_layer_attention(model_config, full_layer_id).family_id
+            )
+        else:
+            family = bind_attention_family(model_config).family
         layout = get_attention_runtime_kv_layout(
             family,
             runtime_num_kv_heads_per_worker=(
@@ -116,7 +140,7 @@ class MemoryPlanner:
         )
 
     def _get_parameter_memory_per_device(self) -> int:
-        return 2 * self._param_counter.get_num_parameters_per_device()
+        return self._param_counter.get_parameter_memory_per_device_bytes()
 
     def get_parameter_memory_per_device_bytes(self) -> int:
         """Return parameter memory per device in bytes."""
@@ -127,10 +151,58 @@ class MemoryPlanner:
         if self._cluster_type == ClusterType.DECODE_FFN:
             return 0
 
-        return (
+        full_attention_layers = self._get_num_full_attention_layers_per_device()
+        dense_kv_bytes = (
             self._get_kv_cache_memory_per_layer_per_request()
-            * self._replica.num_layers
+            * full_attention_layers
         )
+        return dense_kv_bytes + self._get_gdn_state_memory_per_device_per_request()
+
+    def _get_stage_attention_counts(self) -> tuple[tuple[int, int], ...]:
+        return self._param_counter.get_attention_stage_layer_counts()
+
+    def _get_resident_attention_stage_id(self) -> int:
+        stage_totals = self._param_counter._get_attention_stage_totals()
+        if not stage_totals:
+            return 0
+        return max(range(len(stage_totals)), key=lambda stage_id: stage_totals[stage_id][1])
+
+    def _get_num_full_attention_layers_per_device(self) -> int:
+        _, full_count = self._get_stage_attention_counts()[
+            self._get_resident_attention_stage_id()
+        ]
+        return int(full_count)
+
+    def _get_num_gdn_layers_per_device(self) -> int:
+        gdn_count, _ = self._get_stage_attention_counts()[
+            self._get_resident_attention_stage_id()
+        ]
+        return int(gdn_count)
+
+    def _get_gdn_state_memory_per_device_per_request(self) -> int:
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            return 0
+        getter = getattr(self._replica_config.model_config, "get_gdn_config", None)
+        gdn_config = getter() if callable(getter) else None
+        if gdn_config is None:
+            return 0
+        state_layout = gdn_config.get_state_layout(
+            tensor_parallel_size=self._replica_config.attn_tensor_parallel_size,
+        )
+        return int(state_layout.total_bytes) * self._get_num_gdn_layers_per_device()
+
+    def get_gdn_state_memory_per_device_per_request_bytes(self) -> int:
+        return self._get_gdn_state_memory_per_device_per_request()
+
+    def _get_gdn_state_reservation_bytes(self) -> int:
+        state_per_request = self._get_gdn_state_memory_per_device_per_request()
+        if state_per_request == 0:
+            return 0
+        if self._max_num_seqs is None:
+            raise ValueError(
+                "MemoryPlanner requires max_num_seqs to reserve fixed GDN state"
+            )
+        return state_per_request * self._max_num_seqs
 
     def get_num_blocks(
         self,
@@ -150,7 +222,9 @@ class MemoryPlanner:
         plus an optional calibrated overhead term.
         """
         page_size = self._get_kv_cache_memory_per_layer_per_block(block_size)
-        if page_size == 0:
+        num_full_attention_layers = self._get_num_full_attention_layers_per_device()
+        gdn_state_reservation_bytes = self._get_gdn_state_reservation_bytes()
+        if page_size == 0 and gdn_state_reservation_bytes == 0:
             return 0
 
         requested_memory = self._get_requested_memory_bytes(gpu_memory_utilization)
@@ -175,7 +249,10 @@ class MemoryPlanner:
             )
 
         available_kv_cache_memory = (
-            requested_memory - parameter_memory_per_device - overhead_bytes
+            requested_memory
+            - parameter_memory_per_device
+            - overhead_bytes
+            - gdn_state_reservation_bytes
         )
         if available_kv_cache_memory <= 0:
             self._raise_memory_oom(
@@ -185,6 +262,7 @@ class MemoryPlanner:
                     "requested_memory_bytes": requested_memory,
                     "parameter_memory_per_device_bytes": parameter_memory_per_device,
                     "non_kv_cache_overhead_bytes": overhead_bytes,
+                    "gdn_state_reservation_bytes": gdn_state_reservation_bytes,
                     "available_kv_cache_memory_bytes": available_kv_cache_memory,
                     "block_size": int(block_size),
                     "page_size_bytes": int(page_size),
@@ -192,8 +270,11 @@ class MemoryPlanner:
                 },
             )
 
+        if page_size == 0 or num_full_attention_layers == 0:
+            return 0
+
         num_blocks = int(
-            available_kv_cache_memory // page_size // self._replica.num_layers
+            available_kv_cache_memory // page_size // num_full_attention_layers
         )
         num_blocks = max(num_blocks, 0)
 
@@ -207,7 +288,9 @@ class MemoryPlanner:
                     "available_kv_cache_memory_bytes": available_kv_cache_memory,
                     "non_kv_cache_overhead_bytes": overhead_bytes,
                     "page_size_bytes": int(page_size),
-                    "num_layers": int(self._replica.num_layers),
+                    "num_full_attention_layers": num_full_attention_layers,
+                    "num_gdn_layers": self._get_num_gdn_layers_per_device(),
+                    "gdn_state_reservation_bytes": gdn_state_reservation_bytes,
                 },
             )
 

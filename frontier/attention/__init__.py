@@ -3,6 +3,8 @@
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
     DSA_ATTENTION_FAMILY,
+    GATED_DELTA_NET_ATTENTION_FAMILY,
+    GDN_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
     get_attention_family,
     iter_attention_families,
@@ -10,8 +12,11 @@ from frontier.attention.families import (
 )
 from frontier.attention.model_binding import (
     AttentionFamilyBinding,
+    bind_layer_attention,
     bind_attention_family,
+    resolve_runtime_attention_family,
 )
+from frontier.attention.gdn import LayerAttentionSpec
 from frontier.attention.memory import (
     AttentionRuntimeKVLayout,
     get_attention_runtime_kv_layout,
@@ -33,11 +38,16 @@ __all__ = [
     "AttentionRuntimeMetaContract",
     "DENSE_ATTENTION_FAMILY",
     "DSA_ATTENTION_FAMILY",
+    "GATED_DELTA_NET_ATTENTION_FAMILY",
+    "GDN_ATTENTION_FAMILY",
+    "LayerAttentionSpec",
     "LATENT_MLA_ATTENTION_FAMILY",
     "bind_attention_family",
+    "bind_layer_attention",
     "get_attention_family",
     "get_attention_runtime_kv_layout",
     "get_attention_trace_op_times",
     "iter_attention_families",
     "iter_execution_enabled_families",
+    "resolve_runtime_attention_family",
 ]

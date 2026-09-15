@@ -16,6 +16,7 @@ class GraphedCollective:
         dtype: torch.dtype = torch.float16,
     ) -> None:
         self._size = size
+        self._dtype = dtype
         self._disable_graph = disable_graph
         self._collective_fn = self._get_collective_fn(collective)
 
@@ -101,3 +102,7 @@ class GraphedCollective:
             self._collective_fn()
         else:
             self._graph.replay()
+
+    @property
+    def element_size(self) -> int:
+        return self._buffer.element_size()

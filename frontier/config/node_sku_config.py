@@ -100,3 +100,15 @@ class H20DgxNodeSKUConfig(BaseNodeSKUConfig):
     @staticmethod
     def get_type():
         return NodeSKUType.H20_DGX
+
+
+@dataclass
+class MI355XUBBNodeSKUConfig(BaseNodeSKUConfig):
+    """Eight-GPU MI355X UBB node topology independent of TP width."""
+
+    device_sku_type: DeviceSKUType = DeviceSKUType.MI355X
+    num_devices_per_node: int = 8
+
+    @staticmethod
+    def get_type():
+        return NodeSKUType.MI355X_UBB

@@ -1,6 +1,7 @@
 import json
 import math
 import os
+from copy import deepcopy
 from typing import Any, Dict, List, Mapping, Optional, TYPE_CHECKING, Union
 
 import numpy as np
@@ -8,11 +9,12 @@ import pandas as pd
 from sklearn.base import BaseEstimator
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.model_binding import bind_layer_attention
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.profiling_mapping import (
     get_enabled_predictor_metric_name_by_role,
 )
-from frontier.entities import Batch, EPBatchGroup, ExecutionTime
+from frontier.entities import Batch, EPBatchGroup, ExecutionTime, StageExecutionTime
 from frontier.entities.time_components import (
     AttentionTime,
     CommunicationOperatorTimes,
@@ -44,6 +46,7 @@ from frontier.moe_ep_workload import (
     EPLaneWorkload,
     LayerEPWorkload,
     build_contiguous_expert_ownership,
+    generate_moe_routing_ratios,
     materialize_layer_ep_workload,
     resolve_ep_lane_workload,
     resolve_routing_details,
@@ -688,11 +691,13 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         cluster_type: ClusterType = None,
         training_file_paths: Dict[str, str] = None,
         cc_backend: Optional["BaseCCBackend"] = None,
+        actual_replica_ids: Optional[list] = None,
     ) -> None:
         self._is_moe = True
         self._router_topk = replica_config.router_topk
         self._moe_tp_size = replica_config.moe_tensor_parallel_size
         self._moe_ep_size = replica_config.moe_expert_parallel_size
+        self._actual_replica_ids = actual_replica_ids
 
         # Initialize the canonical distribution selector before parent init so
         # profiling paths choose matching gating-runtime metadata.
@@ -794,35 +799,12 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         distribution_type = self._moe_routing_distribution_type
         allocations: Dict[int, Dict[int, float]] = {}
         for layer_id in range(num_layers):
-            layer_seed = self._moe_routing_seed + layer_id
-            rng = np.random.default_rng(layer_seed)
-            if distribution_type == "balanced":
-                weights = np.ones(total_experts, dtype=float)
-            elif distribution_type == "random":
-                weights = rng.uniform(0.1, 1.0, total_experts)
-            elif distribution_type == "skewed":
-                ranks = np.arange(1, total_experts + 1, dtype=float)
-                weights = 1.0 / np.power(ranks, 0.35)
-            elif distribution_type == "zipf":
-                ranks = np.arange(1, total_experts + 1, dtype=float)
-                weights = 1.0 / ranks
-            else:
-                raise ValueError(
-                    "Unsupported moe_routing_distribution_type="
-                    f"{distribution_type!r}"
-                )
-            total_weight = float(np.sum(weights))
-            if not np.isfinite(total_weight) or total_weight <= 0.0:
-                raise ValueError(
-                    "MoE routing distribution produced an invalid weight sum: "
-                    f"distribution={distribution_type!r}, layer_id={layer_id}, "
-                    f"sum={total_weight!r}"
-                )
-            expert_ratios = weights / total_weight
-            allocations[layer_id] = {
-                expert_id: float(expert_ratios[expert_id])
-                for expert_id in range(total_experts)
-            }
+            allocations[layer_id] = generate_moe_routing_ratios(
+                total_expert_num=total_experts,
+                distribution_type=distribution_type,
+                seed=self._moe_routing_seed,
+                layer_id=layer_id,
+            )
 
         return allocations
 
@@ -842,8 +824,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         rather than ``ClusterConfig``.  The canonical cluster capacity is
         injected as ``_cluster_num_replicas`` (or the explicit
         ``ReplicaConfig.cluster_num_replicas`` field) before this method is
-        called.  A missing capacity is an invalid topology, not a condition to
-        infer from an attention-DP field.
+        called.  When the simulator supplies ``_actual_replica_ids``, those
+        process-global IDs are used as the outer map keys; otherwise local
+        ``range(replica_count)`` keys preserve direct predictor-test behavior.
+        A missing capacity is an invalid topology, not a condition to infer
+        from an attention-DP field.
         """
         allocations = getattr(self, "_global_routing_allocations", None)
         if type(allocations) is not dict:
@@ -862,8 +847,32 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 f"routing details; got {replica_count!r}"
             )
 
+        actual_replica_ids = getattr(self, "_actual_replica_ids", None)
+        if actual_replica_ids is None:
+            replica_ids = list(range(replica_count))
+        else:
+            if not isinstance(actual_replica_ids, (list, tuple)):
+                raise ValueError(
+                    "actual_replica_ids must be a list or tuple when provided"
+                )
+            replica_ids = list(actual_replica_ids)
+            if len(replica_ids) != replica_count:
+                raise ValueError(
+                    "actual_replica_ids length must match cluster replica count; "
+                    f"got {len(replica_ids)} for {replica_count} replicas"
+                )
+            if any(
+                type(replica_id) is not int or replica_id < 0
+                for replica_id in replica_ids
+            ):
+                raise ValueError(
+                    "actual_replica_ids must contain exact non-negative integers"
+                )
+            if len(set(replica_ids)) != len(replica_ids):
+                raise ValueError("actual_replica_ids must be unique")
+
         shared_details: Dict[int, Dict[int, Dict[int, float]]] = {}
-        for replica_id in range(replica_count):
+        for replica_id in replica_ids:
             per_layer: Dict[int, Dict[int, float]] = {}
             for layer_id, expert_ratios in allocations.items():
                 if type(layer_id) is not int or layer_id < 0:
@@ -2153,6 +2162,207 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             )
         return moe_tokens_input, None
 
+    @staticmethod
+    def _freeze_attention_query_value(value: Any) -> Any:
+        """Convert supported query metadata into a stable, hashable value."""
+
+        if isinstance(value, Mapping):
+            return tuple(
+                sorted(
+                    (
+                        str(key),
+                        SklearnMoEExecutionTimePredictor._freeze_attention_query_value(
+                            item
+                        ),
+                    )
+                    for key, item in value.items()
+                )
+            )
+        if isinstance(value, (list, tuple)):
+            return tuple(
+                SklearnMoEExecutionTimePredictor._freeze_attention_query_value(item)
+                for item in value
+            )
+        if isinstance(value, set):
+            return tuple(
+                sorted(
+                    SklearnMoEExecutionTimePredictor._freeze_attention_query_value(item)
+                    for item in value
+                )
+            )
+        enum_value = getattr(value, "value", None)
+        if enum_value is not None and isinstance(enum_value, (str, int, float, bool)):
+            return enum_value
+        if value is None or isinstance(value, (str, int, float, bool)):
+            return value
+        return repr(value)
+
+    @staticmethod
+    def _attention_query_request_signature(request: Any) -> tuple[Any, ...]:
+        """Capture immutable workload values that affect attention lookup."""
+
+        names = (
+            "num_prefill_tokens",
+            "num_decode_tokens",
+            "num_processed_tokens",
+            "num_processed_decode_tokens",
+            "num_prefill_tokens_cached",
+            "is_prefill_complete",
+            "state_init_mode",
+        )
+        values = []
+        for name in names:
+            value = getattr(request, name, None)
+            if callable(value):
+                try:
+                    value = value()
+                except TypeError:
+                    value = None
+            values.append((name, value))
+        return tuple(values)
+
+    def _attention_query_cache_key(
+        self,
+        *,
+        batch: Batch,
+        cluster_type: ClusterType,
+        layer_id: int,
+    ) -> tuple[Any, ...] | None:
+        """Build a query key while deliberately excluding global layer identity.
+
+        The key represents physical attention work.  Layer IDs and mutable batch
+        IDs are excluded so equal queries can reuse numeric attention results;
+        layer-specific MoE routing is still computed after the cache lookup.
+        """
+
+        model_config = getattr(self, "_model_config", None)
+        try:
+            layer_spec_getter = getattr(model_config, "get_layer_attention_spec", None)
+            if callable(layer_spec_getter):
+                layer_spec = layer_spec_getter(layer_id)
+                family_id = getattr(layer_spec, "family_id", None)
+                variant_id = getattr(layer_spec, "variant_id", None)
+            else:
+                family = self._get_attention_family()
+                family_id = getattr(family, "family_id", None)
+                variant_id = getattr(family, "variant_id", None)
+        except (AttributeError, TypeError, ValueError):
+            return None
+        if not family_id:
+            return None
+
+        replica_config = getattr(self, "_replica_config", None)
+        shape_metadata = {
+            name: getattr(model_config, name, None)
+            for name in (
+                "embedding_dim",
+                "num_q_heads",
+                "num_kv_heads",
+                "head_dim",
+                "torch_dtype",
+                "dtype",
+                "kv_cache_dtype",
+                "partial_rotary_factor",
+            )
+        }
+        parallel_metadata = {
+            name: getattr(replica_config, name, None)
+            for name in (
+                "attn_tensor_parallel_size",
+                "attn_dp",
+                "num_pipeline_stages",
+            )
+        }
+
+        effective_tokens = None
+        effective_tokens_getter = getattr(
+            batch, "get_effective_total_tokens_for_compute", None
+        )
+        if callable(effective_tokens_getter):
+            try:
+                effective_tokens = effective_tokens_getter(cluster_type)
+            except (TypeError, ValueError):
+                effective_tokens = None
+        request_signature = tuple(
+            self._attention_query_request_signature(request)
+            for request in getattr(batch, "requests", ())
+        )
+        padding_metadata = {
+            name: getattr(batch, name, None)
+            for name in (
+                "total_num_tokens_rounded",
+                "ffn_compute_total_tokens",
+                "afd_stage_idx",
+            )
+        }
+        state_metadata = {
+            name: getattr(batch, name, None)
+            for name in ("state_init_mode", "num_stateful_requests")
+        }
+        manager = getattr(self, "_model_manager", None)
+        manager_identity = tuple(
+            (name, getattr(manager, name, None))
+            for name in (
+                "runtime_stack_signature",
+                "model_identity",
+                "artifact_identity",
+            )
+        )
+        return self._freeze_attention_query_value(
+            (
+                ("family_id", family_id),
+                ("variant_id", variant_id),
+                ("cluster_type", cluster_type),
+                ("measurement_type", getattr(self, "_active_measurement_type", None)),
+                ("runtime_stack", getattr(self, "_runtime_stack_signature", None)),
+                ("manager", manager_identity),
+                ("shape", shape_metadata),
+                ("parallel", parallel_metadata),
+                ("phase", (getattr(batch, "num_prefill_tokens", None), getattr(batch, "num_decode_tokens", None))),
+                ("batch_size", getattr(batch, "size", None)),
+                ("tokens", getattr(batch, "total_num_tokens", None)),
+                ("effective_tokens", effective_tokens),
+                ("padding", padding_metadata),
+                ("state", state_metadata),
+                ("requests", request_signature),
+            )
+        )
+
+    def _predict_attention_layer_time_with_query_cache(
+        self,
+        *,
+        batch: Batch,
+        layer_id: int,
+        cluster_type: ClusterType,
+    ) -> AttentionTime:
+        """Reuse only immutable attention numerics; preserve layer ownership."""
+
+        key = self._attention_query_cache_key(
+            batch=batch,
+            cluster_type=cluster_type,
+            layer_id=layer_id,
+        )
+        if key is None:
+            return self.predict_attention_layer_time(
+                batch=batch,
+                layer_id=layer_id,
+                cluster_type=cluster_type,
+            )
+        cache = getattr(self, "_attention_query_cache", None)
+        if cache is None:
+            cache = {}
+            self._attention_query_cache = cache
+        cached = cache.get(key)
+        if cached is not None:
+            return deepcopy(cached)
+        result = self.predict_attention_layer_time(
+            batch=batch,
+            layer_id=layer_id,
+            cluster_type=cluster_type,
+        )
+        cache[key] = deepcopy(result)
+        return result
+
     # This is now a private method used internally for MoE-specific logic
     def _get_execution_time_internal(
         self,
@@ -2209,7 +2419,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         )
 
         attention_time = (
-            self.predict_attention_layer_time(
+            self._predict_attention_layer_time_with_query_cache(
                 batch=batch,
                 layer_id=layer_id,
                 cluster_type=self._cluster_type,
@@ -2422,6 +2632,15 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             self._get_mlp_norm_layer_act_execution_time(batch) if include_ffn else 0.0
         )
 
+        layer_identity: dict[str, object] = {}
+        if callable(getattr(self._model_config, "get_layer_attention_spec", None)):
+            layer_spec = bind_layer_attention(self._model_config, int(layer_id))
+            layer_identity = {
+                "global_layer_id": int(layer_spec.global_layer_id),
+                "attention_family_id": layer_spec.family_id,
+                "attention_variant_id": layer_spec.variant_id,
+            }
+
         return ExecutionTime(
             num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
             attention_rope_execution_time=attention_time.attention_rope_execution_time,
@@ -2475,6 +2694,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             communication_operator_times=CommunicationOperatorTimes(
                 communication_operator_times
             ),
+            **layer_identity,
             moe_operator_times=(
                 _build_moe_operator_times(
                     mlp_norm_time=mlp_norm_time,
@@ -3178,7 +3398,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         include_moe: bool | None = None,
         include_ffn: bool = True,
         include_attention: bool = True,
-    ) -> ExecutionTime:
+    ) -> StageExecutionTime:
         """
         Predict execution time for MoE models using per-layer component semantics.
 
@@ -3214,6 +3434,36 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "include_moe=False selects a dense FFN branch"
             )
 
+        # Materialize every requested layer independently.  Attention queries
+        # may be numerically equal, but MoE routing and EP workloads are
+        # layer-specific and must remain attached to distinct records.
+        if num_layers > 1:
+            recursive_include_moe = include_moe
+            if recursive_include_moe is None and not callable(
+                getattr(self._model_config, "is_moe_layer", None)
+            ):
+                recursive_include_moe = bool(getattr(self._model_config, "is_moe", False))
+            per_layer_results = [
+                self.predict_stage_execution_time(
+                    batch=batch,
+                    stage_id=stage_id,
+                    cluster_type=cluster_type,
+                    num_layers=1,
+                    layer_id=layer_id + offset,
+                    include_moe=recursive_include_moe,
+                    include_ffn=include_ffn,
+                    include_attention=include_attention,
+                )
+                for offset in range(num_layers)
+            ]
+            layer_results = tuple(
+                result.layer_execution_times[0] for result in per_layer_results
+            )
+            return StageExecutionTime(
+                layer_results,
+                stage_execution_time=per_layer_results[0].stage_execution_time,
+            )
+
         # Resolve the existing concrete layer/aggregate classification before
         # either dummy timing or profiling-backed measurement work.  An
         # identity-free aggregate uses the model-level MoE capability, while a
@@ -3240,12 +3490,22 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         )
 
         if self._enable_dummy_mode:
-            return self._get_dummy_execution_time(
+            dummy_execution_time = self._get_dummy_execution_time(
                 batch,
                 stage_id,
                 include_attention=include_attention,
                 include_ffn=include_ffn,
                 include_moe=include_moe_for_layer,
+            )
+            # Production dummy helpers return ExecutionTime. Preserve the
+            # historical pass-through behavior for lightweight test doubles
+            # that intentionally return a sentinel before stage wrapping.
+            if not isinstance(dummy_execution_time, ExecutionTime):
+                return dummy_execution_time
+            return StageExecutionTime.from_execution_time(
+                dummy_execution_time,
+                num_layers=num_layers,
+                first_layer_id=layer_id,
             )
 
         logger.debug(
@@ -3452,72 +3712,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             f"{et._mtp_terminal_overshoot_time:.6f}"
         )
 
-        # Fast path: requested layer count matches base predictor stage layer count.
-        if num_layers == self._num_layers_per_pipeline_stage:
-            return base_execution_time
-
-        logger.debug(
-            "[EXEC_TIME_PREDICT_MOE] Create ExecutionTime view with num_layers=%s "
-            "from per-layer components (base_num_layers=%s)",
-            num_layers,
-            self._num_layers_per_pipeline_stage,
-        )
-
-        # Keep all per-layer components unchanged; only update the aggregation layer count.
-        return ExecutionTime(
-            num_layers_per_pipeline_stage=num_layers,
-            attention_rope_execution_time=base_execution_time._attention_rope_execution_time,
-            attention_kv_cache_save_execution_time=base_execution_time._attention_kv_cache_save_execution_time,
-            attention_decode_execution_time=base_execution_time._attention_decode_execution_time,
-            attention_prefill_execution_time=base_execution_time._attention_prefill_execution_time,
-            attention_layer_pre_proj_execution_time=base_execution_time._attention_layer_pre_proj_execution_time,
-            attention_layer_post_proj_execution_time=base_execution_time._attention_layer_post_proj_execution_time,
-            attn_norm_time=base_execution_time._attn_norm_time,
-            mlp_norm_time=base_execution_time._mlp_norm_time,
-            add_time=base_execution_time._add_time,
-            add_attn_residual_time=base_execution_time._add_attn_residual_time,
-            add_ffn_residual_time=base_execution_time._add_ffn_residual_time,
-            tensor_parallel_communication_time=base_execution_time._tensor_parallel_communication_time,
-            attn_tensor_parallel_allreduce_time=(
-                base_execution_time._attn_tensor_parallel_allreduce_time
-                if base_execution_time._has_attn_tensor_parallel_allreduce_time
-                else None
-            ),
-            moe_tensor_parallel_allreduce_time=(
-                base_execution_time._moe_tensor_parallel_allreduce_time
-                if base_execution_time._has_moe_tensor_parallel_allreduce_time
-                else None
-            ),
-            tensor_parallel_allgather_time=base_execution_time._tensor_parallel_allgather_time,
-            share_expert_tensor_parallel_allreduce_time=base_execution_time._share_expert_tensor_parallel_allreduce_time,
-            dp_input_allreduce_time=base_execution_time._dp_input_allreduce_time,
-            dp_output_allreduce_time=base_execution_time._dp_output_allreduce_time,
-            pipeline_parallel_communication_time=base_execution_time._pipeline_parallel_communication_time,
-            expert_parallel_communication_time=base_execution_time._expert_parallel_communication_time,
-            moe_gating_time=base_execution_time._moe_gating_time,
-            moe_gating_linear_time=base_execution_time._moe_gating_linear_time,
-            moe_gating_routing_topk_time=base_execution_time._moe_gating_routing_topk_time,
-            moe_shuffling_time=base_execution_time._moe_shuffling_time,
-            schedule_time=base_execution_time._schedule_time,
-            sampler_e2e_time=base_execution_time._sampler_e2e_time,
-            prepare_inputs_e2e_time=base_execution_time._prepare_inputs_e2e_time,
-            process_model_outputs_time=base_execution_time._process_model_outputs_time,
-            ray_comm_time=base_execution_time._ray_comm_time,
-            pp_producer_send_path_runtime_time=base_execution_time._pp_producer_send_path_runtime_time,
-            pp_receiver_head_runtime_time=base_execution_time._pp_receiver_head_runtime_time,
-            pp_prefill_consumer_active_runtime_time=base_execution_time._pp_prefill_consumer_active_runtime_time,
-            pp_stage_boundary_handoff_time=base_execution_time._pp_stage_boundary_handoff_time,
-            is_moe=base_execution_time._is_moe,
-            mlp_layer_up_proj_execution_time=base_execution_time._mlp_layer_up_proj_execution_time,
-            mlp_layer_down_proj_execution_time=base_execution_time._mlp_layer_down_proj_execution_time,
-            mlp_layer_act_execution_time=base_execution_time._mlp_layer_act_execution_time,
-            moe_grouped_gemm_time=base_execution_time._moe_grouped_gemm_time,
-            share_expert_up_proj_time=base_execution_time._share_expert_up_proj_time,
-            share_expert_down_proj_time=base_execution_time._share_expert_down_proj_time,
-            share_expert_act_time=base_execution_time._share_expert_act_time,
-            decode_draft_proposer_time=base_execution_time._decode_draft_proposer_time,
-            mtp_terminal_overshoot_time=base_execution_time._mtp_terminal_overshoot_time,
-            attention_operator_times=base_execution_time.attention_operator_times,
-            communication_operator_times=base_execution_time.communication_operator_times,
-            moe_operator_times=base_execution_time.moe_operator_times,
+        return StageExecutionTime.from_execution_time(
+            base_execution_time,
+            num_layers=num_layers,
+            first_layer_id=layer_id,
         )

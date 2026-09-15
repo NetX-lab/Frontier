@@ -102,7 +102,7 @@ class LinearOpWrapper:
         architecture_profile = self.model_config.get_model_architecture_profile()
         expected_keys.extend(
             op_name
-            for op_name in architecture_profile.linear_attention.sharded_ops
+            for op_name in architecture_profile.attention_linear_ops.sharded_ops
             if op_name not in expected_keys
         )
         if (

@@ -1,5 +1,12 @@
 # Training User Guide
 
+## Modification History
+
+| Date       | Summary of Changes |
+| ---------- | ------------------ |
+| 2026-09-14 | Documented the standard CPU-safe GDN training and artifact-loading path. |
+| 2026-09-14 | Documented ROCm `DEVICE_EVENT` identity, dataset fingerprints, and experimental SGLang exclusion. |
+
 ## Scope
 
 This guide explains the role of `frontier.training` in the `pre-release-v0.3`
@@ -51,6 +58,7 @@ Available subcommands:
 moe
 linear_op
 attention
+gdn
 ```
 
 `mlp` remains as a deprecated alias for `linear_op`.
@@ -65,12 +73,14 @@ Training uses the same profiling taxonomy as the simulator:
 data/profiling/compute/<device>/<model>/
 ├── linear_op.csv
 ├── attention.csv
-└── moe.csv
+├── moe.csv
+└── gdn.csv
 ```
 
 Use `measurement_type` to match the CSV measurement family:
 
 - `CUDA_EVENT`
+- `DEVICE_EVENT` (standard ROCm/GDN timing)
 - `KERNEL_ONLY`
 
 The public profiling examples default to `cuda_event`, which corresponds to `CUDA_EVENT` for training.
@@ -178,6 +188,90 @@ Keep `--routing_runtime_path` and `--gating_runtime_context` aligned with the
 CSV metadata. A missing match stops training with an error. When
 `typed_operator_contracts` is present, the MoE trainer validates every row
 before applying scalar filters.
+
+### Standard GDN
+
+Standard GDN profiling uses a separate `gdn.csv` input and the `DEVICE_EVENT`
+measurement family. The GDN path is phase-aware and trains six estimators:
+
+```text
+gdn_input_projections_prefill
+gdn_core_prefill_prefill
+gdn_output_projection_prefill
+gdn_input_projections_decode
+gdn_core_decode_decode
+gdn_output_projection_decode
+```
+
+Train the fixture or a collected standard GDN profile with the direct CLI
+dispatch:
+
+```bash
+python -m frontier.training.cli gdn \
+  --dataset_path tests/fixtures/pr31_hybrid/gdn.csv \
+  --output_dir /data/ycfeng/tmp/gdn-models \
+  --measurement_type DEVICE_EVENT \
+  --model_architecture_profile qwen3_5_moe \
+  --quant_signature none \
+  --device cpu \
+  --tensor_parallel_size 1 \
+  --runtime_stack_signature synthetic_cpu_v1
+```
+
+The dataset is filtered by model/profile identity, quantization signature,
+device, TP, measurement family, and runtime stack. The remaining rows must
+describe one runtime contract, including the GDN backend, rank aggregation,
+prefill/decode backends, layout flags, dtypes, and GDN dimensions. `CUDA_EVENT`
+and `DEVICE_EVENT` rows are separate measurement families and are never mixed.
+
+The standard ROCm producer writes this input at
+`data/profiling/compute/<device>/<model>/gdn.csv`. The trainer records the
+CSV's SHA-256 `dataset_fingerprint` in the manifest identity. When the
+simulator's model manager loads an existing artifact, it recomputes the
+fingerprint for the configured `gdn_input_file` and rejects an artifact made
+from changed CSV bytes. This prevents a stale six-task cache from silently
+serving a different dataset.
+
+The standard feature contract contains physical batch features:
+
+```text
+batch_size, batch_num_tokens, max_query_len, query_len_cv,
+num_stateful_requests
+```
+
+Decode prediction does not use context length or request history as a cost
+feature. Same-batch prefill plus decode is rejected because it does not have a
+single phase-qualified estimator. `gdn_layer_e2e` may be present in a raw CSV
+for diagnostics, but it is deliberately ignored by training and prediction;
+runtime cost is the sum of input projections, the phase-specific GDN core, and
+the output projection.
+
+Each successful run writes six `<task>.pkl` estimator files and a
+`gdn_manifest.json`. The manifest records the complete identity, task-to-file
+mapping, feature names, and target columns. The simulator loads these files
+from the configured predictor cache; `GDNPredictor` never fits at runtime.
+Exact profiled feature rows are used first. An out-of-range query emits a
+warning and uses the estimator without clipping or cross-TP scaling.
+
+GDN artifacts are standard training inputs only when they satisfy this schema.
+Graph replay, rank JSON, routed-count, and GDN trace artifacts remain
+experimental outputs and are not discovered by the standard trainer.
+
+### Experimental SGLang artifacts
+
+SGLang primitive replay under `frontier/profiling/experimental/sglang/` uses
+the `HIP_GRAPH_REPLAY` measurement label and emits rank/shape/correctness
+artifacts. The Kineto importer emits `gdn-trace-summary.csv/json` with
+`experimental_trace=true` and `measurement_source=sglang_kineto_trace`.
+These artifacts are diagnostic and remain outside the standard
+`DEVICE_EVENT`/`gdn.csv` training path. Routed replay receives deterministic
+counts from Frontier's shared routing helper or an explicit expert-count JSON;
+it never infers a training row from a live router trace.
+
+The training and loading checks can run on CPU with a synthetic fixture. They
+do not execute vLLM HIP kernels, AITER/MXFP4 paths, RCCL collectives, or
+SGLang graph capture. Those checks remain **SKIP: AMD/MI355X hardware unavailable**
+in the current environment.
 
 ## E2E On-Demand Cache Training
 
