@@ -49,7 +49,8 @@ class GDNProfileInput:
 
     query_lens: tuple[int, ...]
     context_lens: tuple[int, ...]
-    logical_phase: str | None = None
+    logical_phase: str
+    prefill_request_mask: tuple[bool, ...] | None = None
     physical_batch_size: int | None = None
 
     def __post_init__(self) -> None:
@@ -63,26 +64,42 @@ class GDNProfileInput:
             raise ValueError(
                 f"context_lens must be non-negative ints: {self.context_lens}"
             )
-        phase = self.logical_phase
-        if phase is not None:
-            phase = str(phase).strip().lower()
-            if phase not in {"prefill", "decode", "mixed"}:
+        phase = str(self.logical_phase).strip().lower()
+        if phase not in {"prefill", "decode", "mixed"}:
+            raise ValueError(
+                "logical_phase must be prefill, decode, or mixed, "
+                f"got {self.logical_phase!r}"
+            )
+        object.__setattr__(self, "logical_phase", phase)
+
+        mask = self.prefill_request_mask
+        if mask is None:
+            if phase == "prefill":
+                mask = (True,) * len(self.query_lens)
+            elif phase == "decode":
+                mask = (False,) * len(self.query_lens)
+            else:
                 raise ValueError(
-                    "logical_phase must be prefill, decode, or mixed, "
-                    f"got {self.logical_phase!r}"
+                    "mixed GDN inputs require an explicit prefill_request_mask"
                 )
-            object.__setattr__(self, "logical_phase", phase)
         else:
-            seen_prefill = False
-            for query_len in self.query_lens:
-                if query_len == 1:
-                    if seen_prefill:
-                        raise ValueError(
-                            "GDN mixed batches must be decode-first: all query_len=1 "
-                            "sequences must precede multi-token prefills"
-                        )
-                else:
-                    seen_prefill = True
+            mask = tuple(bool(value) for value in mask)
+            if len(mask) != len(self.query_lens):
+                raise ValueError(
+                    "prefill_request_mask must match query_lens length"
+                )
+        if phase == "prefill" and not all(mask):
+            raise ValueError("prefill phase requires every request to be marked prefill")
+        if phase == "decode" and any(mask):
+            raise ValueError("decode phase requires every request to be marked decode")
+        if phase == "mixed" and (all(mask) or not any(mask)):
+            raise ValueError("mixed phase requires both prefill and decode requests")
+        if any(not is_prefill and query_len != 1 for is_prefill, query_len in zip(mask, self.query_lens)):
+            raise ValueError(
+                "decode requests must carry exactly one query token; provide an "
+                "explicit prefill mask for one-token continuations"
+            )
+        object.__setattr__(self, "prefill_request_mask", mask)
         physical_batch_size = self.physical_batch_size
         if physical_batch_size is None:
             physical_batch_size = len(self.query_lens)
@@ -103,11 +120,13 @@ class GDNProfileInput:
 
     @property
     def num_decode_tokens(self) -> int:
-        if self.logical_phase == "prefill":
-            return 0
-        if self.logical_phase == "decode":
-            return self.num_tokens
-        return sum(query_len == 1 for query_len in self.query_lens)
+        return sum(
+            query_len
+            for query_len, is_prefill in zip(
+                self.query_lens, self.prefill_request_mask
+            )
+            if not is_prefill
+        )
 
     @property
     def num_prefill_tokens(self) -> int:
@@ -131,14 +150,7 @@ class GDNProfileInput:
 
     @property
     def phase(self) -> str:
-        if self.logical_phase is not None:
-            return self.logical_phase
-        inferred_decode_tokens = sum(query_len == 1 for query_len in self.query_lens)
-        if inferred_decode_tokens == self.num_tokens:
-            return "decode"
-        if inferred_decode_tokens == 0:
-            return "prefill"
-        return "mixed"
+        return self.logical_phase
 
     @property
     def has_initial_state(self) -> bool:
@@ -148,11 +160,7 @@ class GDNProfileInput:
     def prefill_mask(self) -> tuple[bool, ...]:
         """Identify requests whose current logical work is prefill."""
 
-        if self.phase == "prefill":
-            return (True,) * self.batch_size
-        if self.phase == "decode":
-            return (False,) * self.batch_size
-        return tuple(query_len > 1 for query_len in self.query_lens)
+        return self.prefill_request_mask
 
     @property
     def state_init_mode(self) -> str:
@@ -213,6 +221,8 @@ class GDNProfileInput:
             query_lens=(1,) * int(decode_batch_size) + (int(prefill_seq_len),),
             context_lens=(int(decode_context_len),) * int(decode_batch_size)
             + (int(prefill_context_len),),
+            logical_phase="mixed",
+            prefill_request_mask=(False,) * int(decode_batch_size) + (True,),
         )
 
 

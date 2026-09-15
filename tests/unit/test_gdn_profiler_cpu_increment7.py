@@ -48,6 +48,43 @@ def test_mixed_input_is_rejected_before_gpu_wrapper_work() -> None:
         wrapper.profile(mixed)
 
 
+def test_all_one_token_mixed_input_keeps_explicit_mixed_phase() -> None:
+    mixed = GDNProfileInput(
+        query_lens=(1, 1),
+        context_lens=(128, 0),
+        logical_phase="mixed",
+        prefill_request_mask=(False, True),
+    )
+
+    assert mixed.phase == "mixed"
+    assert mixed.prefill_mask == (False, True)
+    assert mixed.num_decode_tokens == 1
+    assert mixed.num_prefill_tokens == 1
+    with pytest.raises(ValueError, match="mixed execution"):
+        mixed.require_supported_phase()
+
+
+def test_gdn_input_rejects_missing_or_conflicting_phase_metadata() -> None:
+    with pytest.raises(TypeError):
+        GDNProfileInput(query_lens=(1,), context_lens=(0,))  # type: ignore[call-arg]
+
+    with pytest.raises(ValueError, match="decode phase"):
+        GDNProfileInput(
+            query_lens=(1,),
+            context_lens=(128,),
+            logical_phase="decode",
+            prefill_request_mask=(True,),
+        )
+
+    with pytest.raises(ValueError, match="decode requests"):
+        GDNProfileInput(
+            query_lens=(2,),
+            context_lens=(0,),
+            logical_phase="mixed",
+            prefill_request_mask=(False,),
+        )
+
+
 def test_standard_cli_plan_has_cold_continuation_and_decode_modes() -> None:
     args = Namespace(
         prefill_seq_lens=[16],

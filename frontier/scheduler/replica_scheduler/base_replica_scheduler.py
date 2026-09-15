@@ -62,6 +62,11 @@ class BaseReplicaScheduler(ABC):
             replica_config=self._replica_config,
             replica=replica,
             cluster_type=self._cluster_type,
+            # GDN state is resident for every admitted request, including
+            # requests that are waiting between ordinary continuation rounds.
+            # Use the largest scheduler-visible batch cap so automatic planning
+            # reserves enough fixed state before any KV admission occurs.
+            max_num_seqs=self._get_memory_planner_max_num_seqs(replica_scheduler_config),
         )
 
         num_blocks_mode = getattr(self._config, "num_blocks_mode", "memory_planner")
@@ -384,6 +389,26 @@ class BaseReplicaScheduler(ABC):
             )
             for stage_id in range(self._num_stages)
         }
+
+    @staticmethod
+    def _get_memory_planner_max_num_seqs(config: BaseReplicaSchedulerConfig) -> int:
+        """Return the maximum request ownership cap used by automatic planning."""
+
+        values = [int(config.batch_size_cap)]
+        for field_name in (
+            "hidden_phase_batch_size_cap",
+            "final_phase_batch_size_cap",
+        ):
+            override = getattr(config, field_name, None)
+            if override is not None:
+                values.append(int(override))
+        max_num_seqs = max(values)
+        if max_num_seqs <= 0:
+            raise ValueError(
+                "effective scheduler request capacity must be positive, "
+                f"got={max_num_seqs!r}"
+            )
+        return max_num_seqs
 
     def _allocate_decode_sync_global_id(self) -> int:
         lane_decode_sync_counter = int(

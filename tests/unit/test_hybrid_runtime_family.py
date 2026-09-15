@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from frontier.attention.model_binding import bind_attention_family
 from frontier.config.model_config import BaseModelConfig
 from frontier.entities.replica import Replica
@@ -55,6 +57,14 @@ def test_hybrid_runtime_family_uses_full_attention_for_cache_metadata() -> None:
         assert "explicit global layer id" in str(exc)
     else:  # pragma: no cover - this is a guard for the homogeneous-only API.
         raise AssertionError("hybrid whole-model binding must remain rejected")
+
+
+def test_malformed_qwen35_schedule_error_propagates_from_whole_model_binder() -> None:
+    config = _base_hybrid_config()
+    config.full_attention_interval = 0
+
+    with pytest.raises(ValueError, match="full_attention_interval must be positive"):
+        bind_attention_family(config)
 
 
 def test_real_sklearn_predictor_constructor_registers_hybrid_attention_metadata(

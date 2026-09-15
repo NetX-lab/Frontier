@@ -234,15 +234,13 @@ def resolve_runtime_attention_family(config: Any):
 def _has_hybrid_attention_schedule(config: Any) -> bool:
     """Return whether the supported profile contains any GDN layer."""
 
-    try:
-        if not is_qwen3_5_profile_config(config):
-            return False
-        specs = resolve_layer_attention_specs(config)
-    except ValueError:
-        # Preserve the existing binder's useful validation errors for malformed
-        # homogeneous configs; malformed Qwen3.5 configs are validated by the
-        # profile/config constructor before binding.
+    # The profile predicate is the classification boundary.  Once a config
+    # explicitly selects Qwen3.5, schedule/shape errors must propagate so a
+    # malformed supported configuration cannot silently fall through to the
+    # homogeneous dense binder.
+    if not is_qwen3_5_profile_config(config):
         return False
+    specs = resolve_layer_attention_specs(config)
     return any(spec.is_gdn for spec in specs)
 
 
