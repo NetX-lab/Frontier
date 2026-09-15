@@ -143,6 +143,33 @@ def test_precision_metadata_includes_gdn_operations_for_hybrid_model() -> None:
         QuantizationManager.reset()
 
 
+def test_optional_quantized_operations_none_preserves_config_hash_identity() -> None:
+    QuantizationManager.reset()
+    try:
+        manager = QuantizationManager()
+        model = SimpleNamespace(
+            get_default_precision=lambda: quantization_manager_module.PrecisionType.BF16,
+            get_name=lambda: "moe-fixture",
+            torch_dtype="bfloat16",
+            quantization_config=SimpleNamespace(
+                quant_method=None,
+                to_dict=lambda: {
+                    "quant_method": None,
+                    "activation_scheme": None,
+                    "is_checkpoint_fp8_serialized": False,
+                    "weight_block_size": None,
+                    "ignored_layers": [],
+                    "quantized_operations": None,
+                },
+            ),
+            get_quant_signature=lambda: "none",
+        )
+        manager.configure_from_model_config(model)
+        assert "quantized_operations" not in manager._config["quantization_config"]
+    finally:
+        QuantizationManager.reset()
+
+
 def test_attention_package_keeps_trace_mapper_lazy_export_after_config_import() -> None:
     from frontier.attention import get_attention_trace_op_times
 

@@ -241,15 +241,25 @@ class QuantizationManager:
                     self._operation_precisions[op_name] = quant_precision
                     self._operation_precision_sources[op_name] = "quantization_config"
 
+            quantization_config = (
+                model_config.quantization_config.to_dict()
+                if model_config.quantization_config is not None
+                else None
+            )
+            # Keep the persisted config identity compatible for models that
+            # do not opt into the new per-operation selector.  A null optional
+            # field is semantically the historical default and must not turn
+            # every existing MoE artifact into a new fidelity result.
+            if (
+                quantization_config is not None
+                and quantization_config.get("quantized_operations") is None
+            ):
+                quantization_config.pop("quantized_operations")
             self._config = {
                 "source": "model_config",
                 "model_name": model_config.get_name(),
                 "torch_dtype": model_config.torch_dtype,
-                "quantization_config": (
-                    model_config.quantization_config.to_dict()
-                    if model_config.quantization_config is not None
-                    else None
-                ),
+                "quantization_config": quantization_config,
                 "quant_signature": model_config.get_quant_signature(),
             }
 
