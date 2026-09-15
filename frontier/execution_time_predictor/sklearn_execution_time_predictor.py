@@ -74,6 +74,9 @@ from frontier.execution_time_predictor.base_execution_time_predictor import (
 from frontier.execution_time_predictor.shared_prediction_model_manager import (
     ExecutionTimePredictionModelManager,
 )
+from frontier.execution_time_predictor.measurement_input_paths import (
+    resolve_measurement_input_paths,
+)
 from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
 from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
@@ -848,52 +851,21 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     def _get_input_files(
         self, measurement_type: MeasurementType = MeasurementType.CUDA_EVENT
     ) -> Tuple[str, str, str, str, str, str]:
-        def _device_event_path(field_name: str, fallback: str) -> str:
-            configured = getattr(
-                self._config, f"{field_name}_device_event_input_file", None
-            )
-            if configured:
-                return configured
-            root, extension = os.path.splitext(fallback)
-            return f"{root}_device_event{extension}"
-
-        if measurement_type == MeasurementType.CUDA_EVENT:
-            compute_file = self._config.linear_op_input_file
-            if not compute_file and self._config.mlp_input_file:
-                compute_file = self._config.mlp_input_file
-            attention_file = self._config.atten_input_file
-            moe_file = self._config.moe_input_file
-        elif measurement_type == MeasurementType.DEVICE_EVENT:
-            linear_file = self._config.linear_op_input_file
-            if not linear_file and self._config.mlp_input_file:
-                linear_file = self._config.mlp_input_file
-            compute_file = _device_event_path("linear_op", linear_file)
-            attention_file = _device_event_path("atten", self._config.atten_input_file)
-            moe_file = _device_event_path("moe", self._config.moe_input_file)
-        elif measurement_type == MeasurementType.KERNEL_ONLY:
-            compute_file = self._config.linear_op_kernel_only_input_file
-            attention_file = self._config.atten_kernel_only_input_file
-            moe_file = self._config.moe_kernel_only_input_file
-        else:
-            raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
-
-        input_files = [
-            compute_file,
-            attention_file,
-            moe_file,
-            self._config.all_reduce_input_file,
-            self._config.send_recv_input_file,
-            self._config.cpu_overhead_input_file,
-        ]
-        for i in range(len(input_files)):
-            input_files[i] = (
-                input_files[i]
-                .replace("{DEVICE}", self._replica_config.device)
-                .replace("{MODEL}", self._model_config.get_name())
-                .replace("{NETWORK_DEVICE}", self._replica_config.network_device)
-            )
-
-        return tuple(input_files)
+        paths = resolve_measurement_input_paths(
+            self._config,
+            measurement_type,
+            device=self._replica_config.device,
+            model=self._model_config.get_name(),
+            network_device=self._replica_config.network_device,
+        )
+        return (
+            paths.compute,
+            paths.attention,
+            paths.moe,
+            paths.all_reduce,
+            paths.send_recv,
+            paths.cpu_overhead,
+        )
 
     @staticmethod
     def _measurement_family_name(measurement_type: MeasurementType) -> str:

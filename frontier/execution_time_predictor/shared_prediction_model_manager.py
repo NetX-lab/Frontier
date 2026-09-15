@@ -36,6 +36,9 @@ from frontier.execution_time_predictor.attention_tp_policy import (
     resolve_effective_attention_tp_size,
 )
 from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
+from frontier.execution_time_predictor.measurement_input_paths import (
+    resolve_measurement_input_paths,
+)
 from frontier.execution_time_predictor.attention_dataset_contract import (
     enforce_mixed_attention_input_contract,
 )
@@ -630,68 +633,21 @@ class ExecutionTimePredictionModelManager:
     def _resolve_measurement_input_files_for_config(
         self, replica_config, execution_time_predictor_config, measurement_type: MeasurementType
     ) -> Tuple[str, str, str, str, str, str]:
-        linear_op_file = execution_time_predictor_config.linear_op_input_file
-        if not linear_op_file and execution_time_predictor_config.mlp_input_file:
-            linear_op_file = execution_time_predictor_config.mlp_input_file
-
-        def _device_event_path(field_name: str, fallback: str) -> str:
-            configured = getattr(
-                execution_time_predictor_config,
-                f"{field_name}_device_event_input_file",
-                None,
-            )
-            if configured:
-                return configured
-            root, extension = os.path.splitext(fallback)
-            return f"{root}_device_event{extension}"
-
-        cpu_overhead_file = execution_time_predictor_config.cpu_overhead_input_file
-
-        if measurement_type == MeasurementType.CUDA_EVENT:
-            compute_file = linear_op_file
-            attention_file = execution_time_predictor_config.atten_input_file
-            moe_file = execution_time_predictor_config.moe_input_file
-        elif measurement_type == MeasurementType.DEVICE_EVENT:
-            compute_file = _device_event_path("linear_op", linear_op_file)
-            attention_file = _device_event_path(
-                "atten", execution_time_predictor_config.atten_input_file
-            )
-            moe_file = _device_event_path(
-                "moe", execution_time_predictor_config.moe_input_file
-            )
-        elif measurement_type == MeasurementType.KERNEL_ONLY:
-            compute_file = execution_time_predictor_config.linear_op_kernel_only_input_file
-            attention_file = execution_time_predictor_config.atten_kernel_only_input_file
-            moe_file = execution_time_predictor_config.moe_kernel_only_input_file
-            cpu_overhead_file = (
-                getattr(
-                    execution_time_predictor_config,
-                    "cpu_overhead_kernel_only_input_file",
-                    "",
-                )
-                or execution_time_predictor_config.cpu_overhead_input_file
-            )
-        else:
-            raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
-
-        input_files = [
-            compute_file,
-            attention_file,
-            execution_time_predictor_config.all_reduce_input_file,
-            execution_time_predictor_config.send_recv_input_file,
-            cpu_overhead_file,
-            moe_file,
-        ]
-
-        for i in range(len(input_files)):
-            input_files[i] = (
-                input_files[i]
-                .replace("{DEVICE}", replica_config.device)
-                .replace("{MODEL}", replica_config.model_config.get_name())
-                .replace("{NETWORK_DEVICE}", replica_config.network_device)
-            )
-
-        return tuple(input_files)
+        paths = resolve_measurement_input_paths(
+            execution_time_predictor_config,
+            measurement_type,
+            device=replica_config.device,
+            model=replica_config.model_config.get_name(),
+            network_device=replica_config.network_device,
+        )
+        return (
+            paths.compute,
+            paths.attention,
+            paths.all_reduce,
+            paths.send_recv,
+            paths.cpu_overhead,
+            paths.moe,
+        )
 
     def _get_input_files_for_config(self, replica_config, execution_time_predictor_config) -> Tuple[str, str, str, str, str, str]:
         """

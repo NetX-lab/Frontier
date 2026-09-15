@@ -421,3 +421,137 @@ def test_shared_manager_returns_complete_training_file_paths() -> None:
         "attention_kernel_only_input_file": "attention_kernel/a100/meta-llama/Llama-2-7b-hf.csv",
         "moe_kernel_only_input_file": "moe_kernel/a100/meta-llama/Llama-2-7b-hf.csv",
     }
+
+
+@pytest.mark.parametrize(
+    ("measurement_type", "expected_compute", "expected_attention", "expected_moe"),
+    [
+        (
+            MeasurementType.CUDA_EVENT,
+            "compute/{DEVICE}/{MODEL}.csv",
+            "attention/{DEVICE}/{MODEL}.csv",
+            "moe/{DEVICE}/{MODEL}.csv",
+        ),
+        (
+            MeasurementType.DEVICE_EVENT,
+            "compute/{DEVICE}/{MODEL}_device_event.csv",
+            "attention/{DEVICE}/{MODEL}_device_event.csv",
+            "moe/{DEVICE}/{MODEL}_device_event.csv",
+        ),
+        (
+            MeasurementType.KERNEL_ONLY,
+            "compute_kernel/{DEVICE}/{MODEL}.csv",
+            "attention_kernel/{DEVICE}/{MODEL}.csv",
+            "moe_kernel/{DEVICE}/{MODEL}.csv",
+        ),
+    ],
+)
+def test_predictor_and_manager_share_measurement_path_contract(
+    measurement_type: MeasurementType,
+    expected_compute: str,
+    expected_attention: str,
+    expected_moe: str,
+) -> None:
+    manager = _make_manager()
+    cluster_config = manager._cluster_configs[ClusterType.MONOLITHIC]
+    manager._active_measurement_type = measurement_type
+    manager_paths = manager._resolve_measurement_input_files_for_config(
+        cluster_config.replica_config,
+        cluster_config.execution_time_predictor_config,
+        measurement_type,
+    )
+
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+
+    class _PathProbePredictor(SklearnExecutionTimePredictor):
+        def _get_estimator(self):
+            return None
+
+        def _get_grid_search_params(self):
+            return {}
+
+    predictor = object.__new__(_PathProbePredictor)
+    predictor._config = cluster_config.execution_time_predictor_config
+    predictor._replica_config = cluster_config.replica_config
+    predictor._model_config = cluster_config.replica_config.model_config
+    predictor_paths = predictor._get_input_files(measurement_type)
+
+    model = "meta-llama/Llama-2-7b-hf"
+    assert manager_paths[0] == expected_compute.replace("{DEVICE}", "a100").replace(
+        "{MODEL}", model
+    )
+    assert manager_paths[1] == expected_attention.replace(
+        "{DEVICE}", "a100"
+    ).replace("{MODEL}", model)
+    assert manager_paths[5] == expected_moe.replace("{DEVICE}", "a100").replace(
+        "{MODEL}", model
+    )
+    assert predictor_paths[0] == manager_paths[0]
+    assert predictor_paths[1] == manager_paths[1]
+    assert predictor_paths[2] == manager_paths[5]
+
+
+def test_device_event_empty_fallback_stays_empty_across_entry_points() -> None:
+    manager = _make_manager()
+    config = manager._cluster_configs[ClusterType.MONOLITHIC].execution_time_predictor_config
+    config.linear_op_input_file = ""
+    config.mlp_input_file = ""
+    config.atten_input_file = ""
+    config.moe_input_file = ""
+    replica = manager._cluster_configs[ClusterType.MONOLITHIC].replica_config
+
+    manager_paths = manager._resolve_measurement_input_files_for_config(
+        replica, config, MeasurementType.DEVICE_EVENT
+    )
+    from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
+        SklearnExecutionTimePredictor,
+    )
+
+    class _PathProbePredictor(SklearnExecutionTimePredictor):
+        def _get_estimator(self):
+            return None
+
+        def _get_grid_search_params(self):
+            return {}
+
+    predictor = object.__new__(_PathProbePredictor)
+    predictor._config = config
+    predictor._replica_config = replica
+    predictor._model_config = replica.model_config
+    predictor_paths = predictor._get_input_files(MeasurementType.DEVICE_EVENT)
+    assert manager_paths[0] == manager_paths[1] == manager_paths[5] == ""
+    assert predictor_paths[0] == predictor_paths[1] == predictor_paths[2] == ""
+
+
+def test_device_event_path_contract_handles_extensionless_legacy_and_explicit_values() -> None:
+    from frontier.execution_time_predictor.measurement_input_paths import (
+        resolve_measurement_input_paths,
+    )
+
+    config = SimpleNamespace(
+        linear_op_input_file="",
+        mlp_input_file="legacy/linear",
+        atten_input_file="attention/base",
+        moe_input_file="",
+        linear_op_device_event_input_file="explicit/{DEVICE}/linear.events",
+        atten_device_event_input_file="",
+        moe_device_event_input_file="explicit/{MODEL}/moe.events",
+        all_reduce_input_file="net/{NETWORK_DEVICE}/all_reduce.csv",
+        send_recv_input_file="",
+        cpu_overhead_input_file="",
+    )
+    paths = resolve_measurement_input_paths(
+        config,
+        MeasurementType.DEVICE_EVENT,
+        device="mi355x",
+        model="model/name",
+        network_device="xgmi",
+    )
+    assert paths.compute == "explicit/mi355x/linear.events"
+    assert paths.attention == "attention/base_device_event"
+    assert paths.moe == "explicit/model/name/moe.events"
+    assert paths.all_reduce == "net/xgmi/all_reduce.csv"
+    assert paths.send_recv == ""
+    assert paths.cpu_overhead == ""
