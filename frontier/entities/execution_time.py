@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from copy import deepcopy
+from copy import copy, deepcopy
 import math
 from types import MappingProxyType
 from typing import Union
@@ -1115,7 +1115,31 @@ class ExecutionTime(BaseEntity):
         ID sequences.
         """
 
-        layer = deepcopy(self)
+        # ``ExecutionTime`` contains only scalar timing fields plus a small
+        # set of mutable dataclass/operator-map components.  Copying the
+        # whole object recursively for every expanded layer is unnecessarily
+        # expensive on the simulator hot path.  Keep the object identity and
+        # scalar payload while cloning each mutable component and its map.
+        layer = copy(self)
+        for component_name in (
+            "_attention_time",
+            "_moe_or_mlp_time",
+            "_communication_time",
+            "_overhead_time",
+            "_residual_time",
+        ):
+            component = getattr(self, component_name, None)
+            if component is None:
+                continue
+            component_copy = copy(component)
+            operator_times = getattr(component, "operator_times", None)
+            if operator_times is not None:
+                operator_times_copy = copy(operator_times)
+                operator_times_copy.op_times = dict(operator_times.op_times)
+                component_copy.operator_times = operator_times_copy
+            setattr(layer, component_name, component_copy)
+        layer._op_times = dict(self._op_times)
+        layer._op_time_attr_values = dict(self._op_time_attr_values)
         layer._num_layers_per_pipeline_stage = 1
         layer._legacy_aggregate = False
         layer._global_layer_id = global_layer_id

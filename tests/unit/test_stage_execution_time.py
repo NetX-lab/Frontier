@@ -175,6 +175,28 @@ def test_pipeline_operator_is_not_multiplied_by_layer_count() -> None:
     assert stage.op_times["attn_prefill"] == pytest.approx(12.0)
 
 
+def test_stage_expansion_isolates_mutable_component_and_operator_maps() -> None:
+    source = _layer(
+        layer_id=0,
+        op_times={"attn_prefill": 4.0, "mlp_up_proj": 2.0},
+    )
+    stage = StageExecutionTime.from_execution_time(
+        source,
+        num_layers=2,
+        first_layer_id=0,
+    )
+    first, second = stage.layer_execution_times
+
+    assert first.attention_time_component is not second.attention_time_component
+    assert first.attention_operator_times is not second.attention_operator_times
+    assert first.attention_operator_times.op_times is not second.attention_operator_times.op_times
+
+    first.attention_operator_times.op_times["attn_prefill"] = 99.0
+    assert second.attention_operator_times.op_times["attn_prefill"] == pytest.approx(4.0)
+    first._replace_operator_time_values({"attn_prefill": 7.0})
+    assert second.attention_operator_times.op_times["attn_prefill"] == pytest.approx(4.0)
+
+
 def test_stage_owner_terminal_work_and_diagnostic_overhead_are_once_only() -> None:
     owner = _layer(
         layer_id=0,
