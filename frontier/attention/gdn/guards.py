@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from frontier.config.model_config import BaseModelConfig
 
 
-def model_has_gdn(model_config: Any) -> bool:
-    getter = getattr(model_config, "get_num_gdn_layers", None)
-    return callable(getter) and int(getter()) > 0
+def model_has_gdn(model_config: BaseModelConfig) -> bool:
+    return model_config.get_num_gdn_layers() > 0
 
 
 def validate_gdn_runtime_support(
-    model_config: Any,
+    model_config: BaseModelConfig,
     *,
     prefix_cache_enabled: bool = False,
     pd_enabled: bool = False,

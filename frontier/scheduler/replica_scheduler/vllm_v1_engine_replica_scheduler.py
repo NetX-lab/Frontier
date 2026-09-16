@@ -3107,9 +3107,8 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
 
         # GDN state cannot be dropped and restored by the simulator. Reject
         # before touching request counters, allocations, or queue membership.
-        replica_config = getattr(self, "_replica_config", None)
         validate_gdn_runtime_support(
-            getattr(replica_config, "model_config", None),
+            self._replica_config.model_config,
             preemption_requires_state_drop=True,
         )
 

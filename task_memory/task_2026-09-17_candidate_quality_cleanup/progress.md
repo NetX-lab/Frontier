@@ -41,3 +41,10 @@ New unresolved issues: none established.
 - ParamCounter now calls the required per-layer and GDN methods directly; genuine `get_gdn_config() is None` remains supported for homogeneous models.
 - Focused before/after suites: 47 PASS / 47 PASS. Four TP/PP memory snapshots match exactly, covering weight bytes, recurrent state bytes, page size and available block count.
 - Found usable same-interpreter system Torch 2.12.0+cu132. Enabled standard system-site-packages inheritance only in the dedicated venv; no target overlay or different Python package tree was injected. Fresh full frozen-candidate unit run is in progress.
+
+## P1c — completed: GDN batch and scheduler invariants
+
+- Batch/Request expose all required feature properties; GDN feature extraction no longer fabricates missing counts/state or copies the request list. Positive query lengths establish a nonzero mean.
+- Runtime guards consume the required BaseModelConfig method. Preemption reads constructor-owned replica configuration; the incomplete PD-AF preemption fixture now provides a real non-GDN model.
+- Focused verification: 46 PASS, including feature vectors, mixed-batch rejection, admission/continuation/completion/rollback and preemption progress. Transactional exception cleanup remains unchanged.
+- Full frozen-candidate baseline initially finished 3584 PASS / 21 FAIL / 25 SKIP. Three added environment failures came from example shells resolving `/usr/bin/python`, which lacks plotly. Re-running with the dedicated venv on PATH; no production workaround added.

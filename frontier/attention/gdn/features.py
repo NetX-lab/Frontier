@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
-from typing import Any, Mapping
+from typing import Any, Mapping, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from frontier.entities.batch import Batch
 
 from frontier.attention.families import GATED_DELTA_NET_ATTENTION_FAMILY
 from frontier.attention.ops import AttentionPhase
@@ -154,21 +157,18 @@ class GDNBatchFeatures:
         return tuple(self.as_vector(feature_columns))
 
     @classmethod
-    def from_batch(cls, batch: Any) -> "GDNBatchFeatures":
-        requests = tuple(getattr(batch, "requests", ()))
-        raw_query_lengths = getattr(batch, "num_tokens", None)
-        if raw_query_lengths is None:
-            raise ValueError("GDN prediction requires batch.num_tokens")
-        query_lengths = tuple(_positive_int(value, "query_len") for value in raw_query_lengths)
+    def from_batch(cls, batch: Batch) -> "GDNBatchFeatures":
+        requests = batch.requests
+        query_lengths = tuple(_positive_int(value, "query_len") for value in batch.num_tokens)
         if not query_lengths:
             raise ValueError("GDN prediction requires at least one request")
-        if requests and len(requests) != len(query_lengths):
+        if len(requests) != len(query_lengths):
             raise ValueError(
                 "GDN prediction requires one scheduled query length per request"
             )
         batch_size = len(query_lengths)
         batch_num_tokens = _positive_int(
-            getattr(batch, "total_num_tokens", sum(query_lengths)),
+            batch.total_num_tokens,
             "batch_num_tokens",
         )
         if batch_num_tokens != sum(query_lengths):
@@ -177,12 +177,12 @@ class GDNBatchFeatures:
             )
         mean_query_len = sum(query_lengths) / batch_size
         variance = sum((value - mean_query_len) ** 2 for value in query_lengths) / batch_size
-        query_len_cv = math.sqrt(variance) / mean_query_len if mean_query_len else 0.0
+        query_len_cv = math.sqrt(variance) / mean_query_len
         prefill_tokens = _non_negative_int(
-            getattr(batch, "num_prefill_tokens", 0), "num_prefill_tokens"
+            batch.num_prefill_tokens, "num_prefill_tokens"
         )
         decode_tokens = _non_negative_int(
-            getattr(batch, "num_decode_tokens", 0), "num_decode_tokens"
+            batch.num_decode_tokens, "num_decode_tokens"
         )
         if prefill_tokens + decode_tokens != batch_num_tokens:
             raise ValueError(
@@ -194,9 +194,9 @@ class GDNBatchFeatures:
             )
         phase = "prefill" if prefill_tokens else "decode"
         num_stateful_requests = sum(
-            bool(getattr(request, "is_prefill_complete", False))
+            request.is_prefill_complete
             or _non_negative_int(
-                getattr(request, "num_processed_tokens", 0),
+                request.num_processed_tokens,
                 "num_processed_tokens",
             )
             > 0

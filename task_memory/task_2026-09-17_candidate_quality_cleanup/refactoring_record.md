@@ -12,6 +12,7 @@
 | ExecutionTime | Missing-component fallbacks in snapshot cloning | Required constructor state treated as optional | Constructed components cannot be absent | Copy required components and real optional maps | Existing component dataclasses/finalization | Isolation tests and E2E parity |
 | StageExecutionTime | Repeated None filtering | Validation stages duplicated work | Prior check rejects incomplete identities | Check validated IDs directly | Physical-layer identity contract | Identity tests and E2E parity |
 | MemoryPlanner / ParamCounter | Reclassified hybrid topology and probed required methods | Consumers bypassed canonical model contract | Full-layer scanning duplicated runtime-family selection and admitted an unreachable zero-KV fallback | Use model family/per-layer/GDN interfaces directly | BaseModelConfig, runtime family resolver | 47 tests both revisions; four exact memory snapshots |
+| GDNBatchFeatures / runtime guards / preemption | Fabricated absent required fields and model state | Incomplete doubles and generic Any obscured production interfaces | Batch/Request and scheduler constructors already guarantee members | Typed direct access; valid preemption fixture; remove redundant zero-mean branch | Batch, Request, BaseModelConfig | 46 focused tests; full baseline and runtime campaign |
 
 ## Intentionally retained patterns
 
@@ -20,6 +21,7 @@
 | Optional shared manager/training paths | Ordinary monolithic trains independently; hybrid/disaggregated share artifacts | Simulator construction and non-dummy cases |
 | Component copying and optional operator maps | Mutable physical-layer isolation required; unmeasured operator maps can be absent | ExecutionTime finalization tests |
 | Missing GDN config and optional max_num_seqs | Dense models have no recurrent state; only GDN reservation requires capacity | Planner constructor/reservation, dense and GDN memory tests |
+| GDN slot-manager None and rollback catch/rethrow | Non-GDN schedulers do not allocate slots; failed KV allocation must free the reserved slot and propagate the original error | Scheduler constructor, allocation transaction, failure cleanup tests |
 
 ## Large-module analysis
 
