@@ -1123,19 +1123,17 @@ class ExecutionTime(BaseEntity):
             "_attention_time",
             "_moe_or_mlp_time",
             "_communication_time",
-            "_overhead_time",
-            "_residual_time",
         ):
-            component = getattr(self, component_name, None)
-            if component is None:
-                continue
+            component = getattr(self, component_name)
             component_copy = copy(component)
-            operator_times = getattr(component, "operator_times", None)
+            operator_times = component.operator_times
             if operator_times is not None:
                 operator_times_copy = copy(operator_times)
                 operator_times_copy.op_times = dict(operator_times.op_times)
                 component_copy.operator_times = operator_times_copy
             setattr(self, component_name, component_copy)
+        self._overhead_time = copy(self._overhead_time)
+        self._residual_time = copy(self._residual_time)
         self._op_times = dict(self._op_times)
         self._op_time_attr_values = dict(self._op_time_attr_values)
 

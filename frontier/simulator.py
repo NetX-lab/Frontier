@@ -65,11 +65,9 @@ class Simulator:
 
         cluster_configs = self._config.get_clusters()
         for cluster_config in cluster_configs.values():
-            replica_config = getattr(cluster_config, "replica_config", None)
-            if replica_config is not None:
-                replica_config.cluster_num_replicas = int(
-                    cluster_config.num_replicas
-                )
+            cluster_config.replica_config.cluster_num_replicas = int(
+                cluster_config.num_replicas
+            )
         model_configs = {
             cluster_config.replica_config.model_config.get_name(): cluster_config.replica_config.model_config
             for cluster_config in cluster_configs.values()
@@ -151,81 +149,36 @@ class Simulator:
             thinking_round_decode_tokens=self._config.thinking_round_decode_tokens,
         )
 
-        # Initialize shared execution time prediction model manager and predictors for each cluster
+        # Disaggregated and hybrid models share trained artifacts. Ordinary
+        # monolithic models retain independent predictor training.
         self._predictors = {}
-        if self._config.is_disaggregated_mode():
-            # Create shared model manager that trains prediction models once for all clusters
+        if self._config.is_disaggregated_mode() or model_config.get_num_gdn_layers() > 0:
             self._execution_time_prediction_model_manager = (
                 ExecutionTimePredictionModelManager(
                     cluster_configs, self._config.metrics_config
                 )
             )
-
-            # Create individual predictors for each cluster
-            for cluster_type, cluster_config in cluster_configs.items():
-                # Get CC Backend from the cluster for communication predictions
-                cluster = self._clusters[cluster_type]
-                cc_backend = cluster.cc_backend
-
-                self._predictors[cluster_type] = ExecutionTimePredictorRegistry.get(
-                    cluster_config.execution_time_predictor_config.get_type(),
-                    predictor_config=cluster_config.execution_time_predictor_config,
-                    replica_config=cluster_config.replica_config,
-                    replica_scheduler_config=cluster_config.replica_scheduler_config,
-                    metrics_config=self._config.metrics_config,
-                    cluster_config=self._config.cluster_config,
-                    model_manager=self._execution_time_prediction_model_manager,
-                    cluster_type=cluster_type,
-                    training_file_paths=self._execution_time_prediction_model_manager.get_training_file_paths(
-                        cluster_type
-                    ),
-                    actual_replica_ids=list(
-                        self._clusters[cluster_type].replicas.keys()
-                    ),
-                    cc_backend=cc_backend,
-                )
         else:
-            # Preserve the historical independent-training path for ordinary
-            # monolithic models.  Hybrid GDN models need the shared manager so
-            # the artifact-backed GDN predictor and typed standard models are
-            # loaded through the same production construction path as PDD.
-            cluster_config = cluster_configs[ClusterType.MONOLITHIC]
-            # Get CC Backend from the monolithic cluster
-            cluster = self._clusters[ClusterType.MONOLITHIC]
-            cc_backend = cluster.cc_backend
-            model_config = cluster_config.replica_config.model_config
-            get_num_gdn_layers = getattr(model_config, "get_num_gdn_layers", None)
-            is_hybrid_gdn = callable(get_num_gdn_layers) and int(get_num_gdn_layers()) > 0
-            if is_hybrid_gdn:
-                self._execution_time_prediction_model_manager = (
-                    ExecutionTimePredictionModelManager(
-                        {ClusterType.MONOLITHIC: cluster_config},
-                        self._config.metrics_config,
-                    )
-                )
-                training_file_paths = (
-                    self._execution_time_prediction_model_manager.get_training_file_paths(
-                        ClusterType.MONOLITHIC
-                    )
-                )
-            else:
-                self._execution_time_prediction_model_manager = None
-                training_file_paths = None
+            self._execution_time_prediction_model_manager = None
 
-            self._predictors[ClusterType.MONOLITHIC] = (
-                ExecutionTimePredictorRegistry.get(
-                    cluster_config.execution_time_predictor_config.get_type(),
-                    predictor_config=cluster_config.execution_time_predictor_config,
-                    replica_config=cluster_config.replica_config,
-                    replica_scheduler_config=cluster_config.replica_scheduler_config,
-                    metrics_config=self._config.metrics_config,
-                    cluster_config=self._config.cluster_config,
-                    model_manager=self._execution_time_prediction_model_manager,
-                    cluster_type=ClusterType.MONOLITHIC,
-                    training_file_paths=training_file_paths,
-                    actual_replica_ids=list(cluster.replicas.keys()),
-                    cc_backend=cc_backend,
-                )
+        for cluster_type, cluster_config in cluster_configs.items():
+            cluster = self._clusters[cluster_type]
+            model_manager = self._execution_time_prediction_model_manager
+            self._predictors[cluster_type] = ExecutionTimePredictorRegistry.get(
+                cluster_config.execution_time_predictor_config.get_type(),
+                predictor_config=cluster_config.execution_time_predictor_config,
+                replica_config=cluster_config.replica_config,
+                replica_scheduler_config=cluster_config.replica_scheduler_config,
+                metrics_config=self._config.metrics_config,
+                cluster_config=self._config.cluster_config,
+                model_manager=model_manager,
+                cluster_type=cluster_type,
+                training_file_paths=(
+                    model_manager.get_training_file_paths(cluster_type)
+                    if model_manager is not None else None
+                ),
+                actual_replica_ids=list(cluster.replicas),
+                cc_backend=cluster.cc_backend,
             )
 
         kv_cache_transfer_predictor = None

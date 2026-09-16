@@ -133,9 +133,7 @@ class StageExecutionTime:
         layer_ids = self.global_layer_ids
         if any(layer_id is None for layer_id in layer_ids):
             raise ValueError("StageExecutionTime requires complete layer identities")
-        if len([layer_id for layer_id in layer_ids if layer_id is not None]) != len(
-            set(layer_id for layer_id in layer_ids if layer_id is not None)
-        ):
+        if len(layer_ids) != len(set(layer_ids)):
             raise ValueError("StageExecutionTime global_layer_ids must be unique")
 
     @classmethod
