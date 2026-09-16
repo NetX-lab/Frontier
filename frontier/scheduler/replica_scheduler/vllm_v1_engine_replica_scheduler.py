@@ -1421,12 +1421,12 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             self._kv_cache_manager.free(request)
             self._allocation_map.pop(request.id, None)
             self._sync_prefix_cache_allocation_state()
-            gdn_slot_manager = getattr(self, "_gdn_state_slot_manager", None)
+            gdn_slot_manager = self._gdn_state_slot_manager
             if gdn_slot_manager is not None:
                 gdn_slot_manager.release(request.id)
             return
         self.free(request.id)
-        gdn_slot_manager = getattr(self, "_gdn_state_slot_manager", None)
+        gdn_slot_manager = self._gdn_state_slot_manager
         if gdn_slot_manager is not None:
             gdn_slot_manager.release(request.id)
 
@@ -1439,7 +1439,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         # Completion/cancellation callbacks may arrive after the request has
         # left every scheduler queue.  Release an orphaned ownership token as
         # part of the same idempotent cleanup boundary so a slot cannot leak.
-        gdn_slot_manager = getattr(self, "_gdn_state_slot_manager", None)
+        gdn_slot_manager = self._gdn_state_slot_manager
         if gdn_slot_manager is not None:
             gdn_slot_manager.release(request_id)
 
@@ -2851,11 +2851,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
         Returns:
             bool: True if allocation is possible
         """
-        # Keep the optional GDN ownership extension compatible with lightweight
-        # scheduler instances used by existing prefix/PD-AF paths.  A missing
-        # attribute means this scheduler was constructed before the GDN-aware
-        # initializer ran, which is equivalent to no slot manager.
-        gdn_slot_manager = getattr(self, "_gdn_state_slot_manager", None)
+        gdn_slot_manager = self._gdn_state_slot_manager
         if (
             gdn_slot_manager is not None
             and request.id not in self._allocation_map
@@ -2988,7 +2984,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 request, reserved_tokens
             )
             self.allocate(request.id, num_required_blocks)
-            gdn_slot_manager = getattr(self, "_gdn_state_slot_manager", None)
+            gdn_slot_manager = self._gdn_state_slot_manager
             if gdn_slot_manager is not None:
                 try:
                     gdn_slot_manager.allocate(request.id)
@@ -3005,7 +3001,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             return None
 
         # Running request - check if additional blocks needed
-        gdn_slot_manager = getattr(self, "_gdn_state_slot_manager", None)
+        gdn_slot_manager = self._gdn_state_slot_manager
         if gdn_slot_manager is not None:
             if not gdn_slot_manager.has_slot(request.id):
                 raise RuntimeError(

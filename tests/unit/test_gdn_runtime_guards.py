@@ -1,5 +1,6 @@
 """TDD coverage for explicit unsupported GDN runtime boundaries."""
 
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
@@ -57,6 +58,18 @@ def _gdn_model():
 def test_gdn_runtime_guards_fail_before_unsupported_feature(kwargs, message):
     with pytest.raises(ValueError, match=message):
         validate_gdn_runtime_support(_gdn_model(), **kwargs)
+
+
+@pytest.mark.parametrize(
+    "schedule",
+    [
+        {"layer_types": ("linear_attention",) * 8, "full_attention_interval": None},
+        {"layer_types": None, "full_attention_interval": 9},
+    ],
+)
+def test_qwen35_hybrid_constructor_rejects_zero_kv_layer_layout(schedule):
+    with pytest.raises(ValueError, match="both GDN and full-attention layers"):
+        replace(_gdn_model(), **schedule)
 
 
 def test_waiting_is_not_preemption_but_state_drop_is_rejected_before_mutation():

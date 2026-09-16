@@ -57,6 +57,7 @@ def test_chunked_prefill_binds_next_prefix_hash_at_scheduler_frontier() -> None:
         block_hash_ids=[11, 22],
     )
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
+    scheduler._gdn_state_slot_manager = None
     scheduler._kv_cache_manager = manager
     scheduler._config = SimpleNamespace(block_size=16, num_blocks=2)
     scheduler._cluster_type = ClusterType.PREFILL
