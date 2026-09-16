@@ -14,8 +14,8 @@ from frontier.attention import (
 from frontier.attention.gdn.config import (
     GatedDeltaNetConfig,
     LayerAttentionSpec,
-    resolve_layer_attention_specs,
 )
+from frontier.attention.model_binding import resolve_layer_attention_specs
 from frontier.attention.ops import AttentionMemoryLayout
 from frontier.attention.profiling_mapping import (
     get_required_profiling_columns,

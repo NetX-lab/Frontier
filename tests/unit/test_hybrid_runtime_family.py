@@ -61,10 +61,10 @@ def test_hybrid_runtime_family_uses_full_attention_for_cache_metadata() -> None:
 
 def test_malformed_qwen35_schedule_error_propagates_from_whole_model_binder() -> None:
     config = _base_hybrid_config()
-    config.full_attention_interval = 0
+    from dataclasses import replace
 
-    with pytest.raises(ValueError, match="full_attention_interval must be positive"):
-        bind_attention_family(config)
+    with pytest.raises(ValueError, match="complete GDN dimensions"):
+        bind_attention_family(replace(config, full_attention_interval=0))
 
 
 def test_real_sklearn_predictor_constructor_registers_hybrid_attention_metadata(

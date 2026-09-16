@@ -311,3 +311,9 @@ Status: the focused CPU acceptance sub-step is complete. The remaining productio
 
 - W00 focused characterization: 69 passed in 10.01s; fresh paired performance: 18/18 success. Full rows persisted in w00_paired_samples.json; baseline commands/environment in performance_rca.md. Production edits begin only after both checks completed.
 - W00 initialization is complete; per-package hunk adjudication continues through W11. W01 regression construction in progress. Independent profiling-hunk review and W02/W09 test construction run in parallel as allowed by section 4.
+
+## 2026-09-16 — W01 topology sub-step
+
+- General topology resolution moved to authoritative binding responsibility; model configs cache specs and GDN shape together. MLA family/count and enabled-KV classification aligned; invalid layer IDs rejected.
+- Focused suite: 51 passed. See test_report_2026-09-16_w01_topology.md for original failures, initial correction and evidence limits.
+- W01 overall acceptance remains partial pending W03 real stage identity migration and W10 MLA public E2E. W02 starts from normalized config contracts.

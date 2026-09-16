@@ -59,7 +59,14 @@ class LayerAttentionSpec:
 
     @property
     def is_full_attention(self) -> bool:
-        return self.family_id == "dense_attention"
+        from frontier.attention.families import get_attention_family
+        from frontier.attention.ops import AttentionMemoryLayout
+
+        family = get_attention_family(self.family_id)
+        return family.execution_enabled and family.memory_layout in (
+            AttentionMemoryLayout.DENSE_KV,
+            AttentionMemoryLayout.LATENT_MLA,
+        )
 
 
 @dataclass(frozen=True)
@@ -178,24 +185,6 @@ def is_qwen3_5_profile_config(config: Any) -> bool:
     )
 
 
-def _dense_variant(num_q_heads: int, num_kv_heads: int) -> str:
-    if num_q_heads <= 0 or num_kv_heads <= 0:
-        raise ValueError(
-            "Attention head counts must be positive: "
-            f"num_q_heads={num_q_heads}, num_kv_heads={num_kv_heads}"
-        )
-    if num_q_heads == num_kv_heads:
-        return "mha"
-    if num_kv_heads == 1:
-        return "mqa"
-    if num_kv_heads < num_q_heads:
-        return "gqa"
-    raise ValueError(
-        "Unsupported attention head topology: "
-        f"num_q_heads={num_q_heads}, num_kv_heads={num_kv_heads}"
-    )
-
-
 def build_sequence_mixer_schedule(
     *,
     num_layers: int,
@@ -260,7 +249,7 @@ def _gdn_shape_values(config: Any) -> tuple[Any, ...]:
     )
 
 
-def _get_gdn_config(config: Any) -> GatedDeltaNetConfig | None:
+def resolve_gdn_shape(config: Any) -> GatedDeltaNetConfig | None:
     values = _gdn_shape_values(config)
     if all(value is None for value in values):
         return None
@@ -273,52 +262,4 @@ def _get_gdn_config(config: Any) -> GatedDeltaNetConfig | None:
         num_key_heads=int(values[3]),
         num_value_heads=int(values[4]),
         output_gate_type=str(getattr(config, "gdn_output_gate_type", "silu")),
-    )
-
-
-def resolve_layer_attention_specs(config: Any) -> tuple[LayerAttentionSpec, ...]:
-    """Resolve one immutable, ordered attention spec per global layer.
-
-    Only the explicitly registered Qwen3.5 profile activates GDN.  Existing
-    Qwen3-Next configs may retain upstream ``linear_*`` fields while remaining
-    on Frontier's historical homogeneous dense approximation.
-    """
-
-    num_layers = getattr(config, "num_layers", None)
-    if type(num_layers) is not int or num_layers <= 0:
-        raise ValueError("config must declare a positive num_layers")
-    if not is_qwen3_5_profile_config(config):
-        variant = _dense_variant(
-            int(getattr(config, "num_q_heads")),
-            int(getattr(config, "num_kv_heads")),
-        )
-        return tuple(
-            LayerAttentionSpec(layer_id, "dense_attention", variant)
-            for layer_id in range(num_layers)
-        )
-
-    gdn_config = _get_gdn_config(config)
-    shape_values = _gdn_shape_values(config)
-    has_complete_gdn_shape = all(value is not None for value in shape_values)
-    schedule = build_sequence_mixer_schedule(
-        num_layers=num_layers,
-        layer_types=getattr(config, "layer_types", None),
-        full_attention_interval=getattr(config, "full_attention_interval", None),
-        has_gated_delta_net=has_complete_gdn_shape,
-    )
-    if gdn_config is None and SequenceMixerType.GATED_DELTA_NET in schedule:
-        raise ValueError("Qwen3.5 GDN layers require complete GDN shape fields")
-    dense_variant = _dense_variant(
-        int(getattr(config, "num_q_heads")),
-        int(getattr(config, "num_kv_heads")),
-    )
-    return tuple(
-        LayerAttentionSpec(
-            layer_id,
-            "gated_delta_net"
-            if mixer is SequenceMixerType.GATED_DELTA_NET
-            else "dense_attention",
-            "qwen3_5" if mixer is SequenceMixerType.GATED_DELTA_NET else dense_variant,
-        )
-        for layer_id, mixer in enumerate(schedule)
     )

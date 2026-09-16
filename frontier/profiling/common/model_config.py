@@ -6,11 +6,11 @@ from typing import Any, Dict, List, Optional
 from frontier.attention.model_binding import (
     bind_attention_family,
     resolve_runtime_attention_family,
+    resolve_attention_topology,
 )
 from frontier.attention.gdn import (
     GatedDeltaNetConfig,
     LayerAttentionSpec,
-    resolve_layer_attention_specs,
 )
 from frontier.attention.ops import AttentionMemoryLayout
 from frontier.config.model_config import (
@@ -185,6 +185,7 @@ class ModelConfig:
         # Keep resolution lazy to preserve the existing profiling config
         # construction and binder validation order.
         self._layer_attention_specs: tuple[LayerAttentionSpec, ...] | None = None
+        self._gdn_config_cache: GatedDeltaNetConfig | None = None
 
         # Quantization config for metadata tracking
         if quantization_config is not None and not isinstance(
@@ -289,32 +290,13 @@ class ModelConfig:
         return bind_attention_family(self).family
 
     def get_gdn_config(self) -> Optional[GatedDeltaNetConfig]:
-        if not any(spec.is_gdn for spec in self.get_layer_attention_specs()):
-            return None
-        values = tuple(
-            getattr(self, field_name, None)
-            for field_name in (
-                "linear_conv_kernel_dim",
-                "linear_key_head_dim",
-                "linear_value_head_dim",
-                "linear_num_key_heads",
-                "linear_num_value_heads",
-            )
-        )
-        if any(value is None for value in values):
-            raise ValueError("GDN profiling shape configuration is incomplete")
-        return GatedDeltaNetConfig(
-            conv_kernel_size=int(values[0]),
-            key_head_dim=int(values[1]),
-            value_head_dim=int(values[2]),
-            num_key_heads=int(values[3]),
-            num_value_heads=int(values[4]),
-            output_gate_type=self.gdn_output_gate_type,
-        )
+        """Return the shape normalized together with the model-owned schedule."""
+        self.get_layer_attention_specs()
+        return self._gdn_config_cache
 
     def get_layer_attention_specs(self) -> tuple[LayerAttentionSpec, ...]:
         if self._layer_attention_specs is None:
-            self._layer_attention_specs = resolve_layer_attention_specs(self)
+            self._layer_attention_specs, self._gdn_config_cache = resolve_attention_topology(self)
         return self._layer_attention_specs
 
     def get_layer_attention_spec(self, global_layer_id: int) -> LayerAttentionSpec:
@@ -407,6 +389,7 @@ class ModelConfig:
             '_model_name',
             '_moe_layer_ids_cache',
             '_layer_attention_specs_cache',
+            '_gdn_config_cache',
             'norm_expert_weight',  # Expert normalization field not used in profiling
             'torch_dtype',
         ]

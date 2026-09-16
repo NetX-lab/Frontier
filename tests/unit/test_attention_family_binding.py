@@ -106,6 +106,8 @@ def test_homogeneous_mla_layer_binding_matches_public_family_binding() -> None:
     assert whole_model.family_id == "latent_mla_attention"
     assert layer.family_id == whole_model.family_id
     assert layer.variant_id == whole_model.variant_id
+    assert config.get_layer_attention_specs()[1] == layer
+    assert config.get_num_full_attention_layers() == config.num_layers
 
 
 @pytest.mark.parametrize(
@@ -251,3 +253,29 @@ def test_invalid_head_topology_raises_clear_configuration_error() -> None:
 
     with pytest.raises(ValueError, match="Unsupported attention head topology"):
         bind_attention_family(model_config)
+
+
+@pytest.mark.parametrize('model_name', ['llama3.3-70b', 'qwen3-next-80b-a3b-instruct-reduced-l2'])
+def test_real_model_layer_specs_match_runtime_family(model_name):
+    config = BaseModelConfig.create_from_name(model_name)
+    binding = bind_attention_family(config)
+    specs = config.get_layer_attention_specs()
+    assert len(specs) == config.num_layers
+    assert all((spec.family_id, spec.variant_id) == (binding.family_id, binding.variant_id) for spec in specs)
+    assert config.get_num_full_attention_layers() == config.num_layers
+    assert bind_layer_attention(config, config.num_layers - 1) == specs[-1]
+    with pytest.raises(ValueError, match='out of range'):
+        bind_layer_attention(config, config.num_layers)
+
+
+def test_hybrid_binding_reuses_normalized_schedule_and_shape(monkeypatch):
+    from frontier.attention import model_binding
+    config = BaseModelConfig.create_from_name('Qwen3.8-2.4T-A95B-Quark-MXFP4')
+    specs = config.get_layer_attention_specs()
+    shape = config.get_gdn_config()
+    def unexpected_parse(*args, **kwargs):
+        raise AssertionError('Repeated layer access parsed the schedule again')
+    monkeypatch.setattr(model_binding, 'resolve_layer_attention_specs', unexpected_parse)
+    for spec in specs:
+        assert bind_layer_attention(config, spec.global_layer_id) is spec
+    assert config.get_gdn_config() is shape

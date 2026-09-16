@@ -10,7 +10,6 @@ from frontier.attention.gdn.config import (
     SequenceMixerType,
     build_sequence_mixer_schedule,
     is_qwen3_5_profile_config,
-    resolve_layer_attention_specs,
 )
 from frontier.attention.gdn.memory import GatedDeltaNetStateLayout
 from frontier.attention.gdn.guards import (
@@ -33,7 +32,6 @@ __all__ = [
     "build_sequence_mixer_schedule",
     "is_qwen3_5_profile_config",
     "model_has_gdn",
-    "resolve_layer_attention_specs",
     "validate_gdn_runtime_support",
     "GDNBatchFeatures",
     "GDN_FEATURE_COLUMNS",

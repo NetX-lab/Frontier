@@ -4,12 +4,11 @@ import hashlib
 import json
 import os
 
-from frontier.attention.model_binding import resolve_runtime_attention_family
+from frontier.attention.model_binding import resolve_runtime_attention_family, resolve_attention_topology
 from frontier.attention.gdn import (
     GatedDeltaNetConfig,
     LayerAttentionSpec,
     SequenceMixerType,
-    resolve_layer_attention_specs,
 )
 from frontier.attention.ops import AttentionMemoryLayout
 from frontier.config.base_fixed_config import BaseFixedConfig
@@ -376,6 +375,10 @@ class BaseModelConfig(BaseFixedConfig):
         default=None, compare=False, hash=False, repr=False
     )
 
+    _gdn_config_cache: Optional[GatedDeltaNetConfig] = field(
+        default=None, compare=False, hash=False, repr=False
+    )
+
     def __post_init__(self):
         """Validate model configuration after initialization."""
         if self.model_type is not None:
@@ -509,36 +512,15 @@ class BaseModelConfig(BaseFixedConfig):
         return resolve_runtime_attention_family(self)
 
     def get_gdn_config(self) -> Optional[GatedDeltaNetConfig]:
-        """Return the validated GDN shape contract for the Qwen3.5 profile."""
-
-        if not any(spec.is_gdn for spec in self.get_layer_attention_specs()):
-            return None
-        values = tuple(
-            getattr(self, field_name, None)
-            for field_name in (
-                "linear_conv_kernel_dim",
-                "linear_key_head_dim",
-                "linear_value_head_dim",
-                "linear_num_key_heads",
-                "linear_num_value_heads",
-            )
-        )
-        if any(value is None for value in values):
-            raise ValueError("GDN shape configuration is incomplete")
-        return GatedDeltaNetConfig(
-            conv_kernel_size=int(values[0]),
-            key_head_dim=int(values[1]),
-            value_head_dim=int(values[2]),
-            num_key_heads=int(values[3]),
-            num_value_heads=int(values[4]),
-            output_gate_type=self.gdn_output_gate_type,
-        )
+        """Return the shape normalized together with the model-owned schedule."""
+        self.get_layer_attention_specs()
+        return self._gdn_config_cache
 
     def get_layer_attention_specs(self) -> Tuple[LayerAttentionSpec, ...]:
         """Return the immutable, ordered per-layer attention identities."""
 
         if self._layer_attention_specs_cache is None:
-            self._layer_attention_specs_cache = resolve_layer_attention_specs(self)
+            self._layer_attention_specs_cache, self._gdn_config_cache = resolve_attention_topology(self)
         return self._layer_attention_specs_cache
 
     def get_layer_attention_spec(self, global_layer_id: int) -> LayerAttentionSpec:

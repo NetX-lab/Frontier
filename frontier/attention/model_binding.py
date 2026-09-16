@@ -6,7 +6,10 @@ from typing import Any
 from frontier.attention.gdn.config import (
     LayerAttentionSpec,
     is_qwen3_5_profile_config,
-    resolve_layer_attention_specs,
+    GatedDeltaNetConfig,
+    SequenceMixerType,
+    build_sequence_mixer_schedule,
+    resolve_gdn_shape,
 )
 from frontier.attention.families import get_attention_family
 
@@ -136,6 +139,11 @@ def bind_attention_family(config: Any) -> AttentionFamilyBinding:
             "call bind_layer_attention(config, global_layer_id)"
         )
 
+    return _bind_homogeneous_attention_family(config)
+
+
+def _bind_homogeneous_attention_family(config: Any) -> AttentionFamilyBinding:
+    """Classify homogeneous topology without consulting layer resolution."""
     if _has_dsa_marker(config):
         return AttentionFamilyBinding(
             family_id="dsa_attention",
@@ -213,7 +221,7 @@ def resolve_runtime_attention_family(config: Any):
     if not _has_hybrid_attention_schedule(config):
         return bind_attention_family(config).family
 
-    specs = resolve_layer_attention_specs(config)
+    specs = config.get_layer_attention_specs()
     full_families = tuple(
         spec.family_id for spec in specs if bool(spec.is_full_attention)
     )
@@ -240,7 +248,7 @@ def _has_hybrid_attention_schedule(config: Any) -> bool:
     # homogeneous dense binder.
     if not is_qwen3_5_profile_config(config):
         return False
-    specs = resolve_layer_attention_specs(config)
+    specs = config.get_layer_attention_specs()
     return any(spec.is_gdn for spec in specs)
 
 
@@ -251,39 +259,40 @@ def bind_layer_attention(config: Any, global_layer_id: int) -> LayerAttentionSpe
         raise ValueError(
             f"global_layer_id must be an int, got {global_layer_id!r}"
         )
-    # Homogeneous model families have one authoritative whole-model binding.
-    # Reusing it here keeps MLA/MFA/DSA classification identical between the
-    # public predictor and model-wide cache/layout helpers.  The resolver is
-    # reserved for an actual hybrid schedule where each layer may differ.
-    if not _has_hybrid_attention_schedule(config):
-        binding = bind_attention_family(config)
-        return LayerAttentionSpec(
-            global_layer_id=global_layer_id,
-            family_id=binding.family_id,
-            variant_id=binding.variant_id,
-        )
-
-    # Prefer the model-owned immutable cache when available.  This avoids
-    # rebuilding a full schedule for every per-layer prediction while keeping
-    # the fallback usable for lightweight config doubles.
-    get_spec = getattr(config, "get_layer_attention_spec", None)
-    if callable(get_spec):
-        try:
-            spec = get_spec(global_layer_id)
-        except (AttributeError, TypeError):
-            spec = None
-        else:
-            if isinstance(spec, LayerAttentionSpec):
-                get_attention_family(spec.family_id)
-                return spec
-
-    specs = resolve_layer_attention_specs(config)
-    if global_layer_id < 0 or global_layer_id >= len(specs):
-        raise ValueError(
-            f"global_layer_id {global_layer_id} out of range [0, {len(specs)})"
-        )
-    spec = specs[global_layer_id]
-    # Validate the family id at the seam so callers receive a deterministic
-    # configuration error instead of a later registry lookup failure.
+    spec = config.get_layer_attention_spec(global_layer_id)
     get_attention_family(spec.family_id)
     return spec
+
+
+def resolve_attention_topology(
+    config: Any,
+) -> tuple[tuple[LayerAttentionSpec, ...], GatedDeltaNetConfig | None]:
+    """Normalize external topology and GDN shape once at the model boundary."""
+    num_layers = config.num_layers
+    if type(num_layers) is not int or num_layers <= 0:
+        raise ValueError("config must declare a positive num_layers")
+    binding = _bind_homogeneous_attention_family(config)
+    if not is_qwen3_5_profile_config(config):
+        return tuple(
+            LayerAttentionSpec(layer_id, binding.family_id, binding.variant_id)
+            for layer_id in range(num_layers)
+        ), None
+
+    gdn_config = resolve_gdn_shape(config)
+    schedule = build_sequence_mixer_schedule(
+        num_layers=num_layers,
+        layer_types=config.layer_types,
+        full_attention_interval=config.full_attention_interval,
+        has_gated_delta_net=gdn_config is not None,
+    )
+    return tuple(
+        LayerAttentionSpec(layer_id, "gated_delta_net", "qwen3_5")
+        if mixer is SequenceMixerType.GATED_DELTA_NET
+        else LayerAttentionSpec(layer_id, binding.family_id, binding.variant_id)
+        for layer_id, mixer in enumerate(schedule)
+    ), gdn_config
+
+
+def resolve_layer_attention_specs(config: Any) -> tuple[LayerAttentionSpec, ...]:
+    """Resolve external configuration using the authoritative topology rules."""
+    return resolve_attention_topology(config)[0]
