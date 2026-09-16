@@ -2,7 +2,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
-| 2026-09-16 | Recorded D03 decision to retain existing request lifecycle scope. |
+| 2026-09-16 | Recorded explicit D02 scoped residual acceptance; D01 uniform timing and D03 supported lifecycle decisions remain in force. |
 | 2026-09-16 | Recorded authorization to publish local commits and the latest independent completion audit to PR #33 for manual review; merge remains unauthorized. |
 | 2026-09-16 | Recorded the independent v1.1 completion audit and audit-only boundary. |
 | 2026-09-15 | Recorded authorization to commit the current task documents and push them to the existing PR. |
@@ -72,3 +72,19 @@ Retain the existing admission, continuation, completion and failure-cleanup scop
 > 接受已定位的语义修正（推荐）：保留 uniform layer/stage contract，记录 baseline 差异并以独立 oracle 验收。
 
 Accept the two isolated corrections in w03_divergence_decision.md: PD-AF dummy PREFILL must retain physical one-layer values rather than divide them by 32; co-location MoE stage ledger must include all 32 executed layers rather than report the first layer. Preserve the uniform layer/stage contract and record the measured baseline differences. Validate using independent arithmetic oracles; comparator tolerances remain unchanged. This does not authorize blanket acceptance of other discrepancies.
+
+## [Execution clarification] D01 acceptance scope and verified related defects
+
+The user accepted uniform physical-layer/stage ownership, not blanket cross-version numerical equality or a tolerance change. During W10, the same historical dummy `/resident_layers` defect was confirmed in PDD PREFILL and DECODE. The active plan §6 explicitly allows established implementation defects to be fixed directly, and preserving this multiplier would violate the accepted uniform contract. The same correction is therefore applied with independent physical-layer arithmetic. Required W08 reporting repairs also remove repeated layer multipliers and add actual EP lane artifacts. These are implementation outcomes under the authorized plan, not new user quotations or a new D01 waiver.
+
+The 58-case comparator's raw PASS/FAIL results remain visible. Every affected stage/operator and arrival-dependent batch difference is classified in `test_report_2026-09-16_w10_fidelity.md`; common synthetic-profile request/system metrics retain the existing tolerances. Any unrelated or unexplained discrepancy remains a blocker. D02 performance acceptance is still a separate required decision.
+
+## [Decision proposal, superseded by reply below] D02 measured residual — 2026-09-16
+
+The final source `c9f8f904` retains dense run-phase residuals after removal of repeated snapshots and homogeneous block calculations. The agent presented the two concrete options required by active plan §6: accept the measured scoped cost with the current uniform contract, or keep acceptance open and continue a shared layer-view representation investigation. Full evidence and design consequences are in `performance_rca.md`. D02 remains pending; no reply, universal budget or new implementation direction is inferred.
+
+## [Follow-up Decision] D02 scoped performance acceptance — 2026-09-16
+
+> 接受本次测得的残余成本，保留当前 contract，完成本轮交付（推荐）
+
+Accept the measured residual in the final three-pair campaign at `c9f8f904`: small/long dense median run durations14.149→25.225ms and29.309→49.268ms, paired median ratios1.775045x/1.679023x; representative MoE0.978816x. Retain actual per-layer identity, finalized isolation and the uniform layer/stage contract. D02 is resolved for this delivery. This does not establish a universal performance budget, authorize another representation change, imply native hardware verification, or authorize remote publication/merge. Complete the local evidence handoff.

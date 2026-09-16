@@ -2,6 +2,7 @@
 
 | Date | Summary of Changes |
 | --- | --- |
+| 2026-09-16 | Final c9f8f904 rerun: 8 PASS in 35.43 s; 106 artifacts and 7 baseline metric pairs PASS. |
 | 2026-09-16 | Latest-source rerun: 8 PASS in 37.57 s; 106 prior-final artifacts PASS under the established comparator. |
 | 2026-09-16 | Completed eight normal-constructor synthetic CPU cases, seven fixed-baseline controls, and independent operator/lane/capacity oracles. |
 
@@ -122,3 +123,17 @@ python -m pytest tests/integration/test_pr33_nondummy_acceptance.py -q -p no:cac
 All eight new case outputs were compared with the prior final run using the same established comparator and trace-header normalization. **PASS: 106 artifacts**, per-case counts `[10,14,17,10,11,15,18,11]`. Selected artifact names are exactly identical. The comparison includes all CSV/JSONL outputs, system metrics, stage-ledger summaries, and exact acceptance cardinalities. No new numerical/discrete differences occurred. Previous baseline differences remain explicitly documented; this comparison does not change their decision status.
 
 Evidence: `/data/ycfeng/tmp/pr33-w10-nondummy-final-2.log`, `/data/ycfeng/tmp/pr33-w10-final-2-vs-final.json`, and case roots under `/data/ycfeng/tmp/pr33-w10-nondummy-final-2`. No production or test code changed during this rerun.
+
+## Final revision c9f8f904 verification
+
+**Latest-source PASS: 8 tests in 35.43 s** on commit `c9f8f904e3550c11aad3cc5d851d75d648cef6e1`. This revision reuses a homogeneous sum only when the finalized timing payload is shared safely. This run supersedes final-2 as the latest-source evidence; all previous observations are preserved above.
+
+Environment remains `/usr/bin/python` 3.12.3, no conda environment, CPU only; isolated simulator processes use OMP/OpenBLAS threads one and TMPDIR under the case root. The exact executed command was:
+
+```bash
+python -m pytest tests/integration/test_pr33_nondummy_acceptance.py -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/pr33-w10-nondummy-final-3 > /data/ycfeng/tmp/pr33-w10-nondummy-final-3.log 2>&1
+```
+
+Observed: `8 passed in 35.43s`, no skips or collection changes. Compared all **106 artifacts** with final-2 using the established comparator (`rel_tol=1e-12`, `abs_tol=1e-9`) and existing trace-header normalization: **106/106 PASS**, artifact-name sets identical, per-case counts `[10,14,17,10,11,15,18,11]`. Rechecked baseline `0515589ac7f49ac5288a5f55b0ce38b0ede29bb2` request and system metrics for the seven homogeneous cases: **7/7 request PASS, 7/7 system PASS**. The independent physical-layer, lane-count, timing, and capacity assertions all passed. There is no new numerical/discrete difference to classify.
+
+Evidence: `/data/ycfeng/tmp/pr33-w10-nondummy-final-3.log`, `/data/ycfeng/tmp/pr33-w10-final-3-vs-final-2.json`, `/data/ycfeng/tmp/pr33-w10-final-3-baseline-metrics.json`, and isolated output roots below `/data/ycfeng/tmp/pr33-w10-nondummy-final-3`. No production or test edits accompanied this rerun. CPU correctness and comparison work is complete; this agent holds further CPU executions for the parent's exclusive paired window.

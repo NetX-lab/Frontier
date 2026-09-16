@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-16 | Added the current W00–W11 source-bound status index; retained older execution/audit statements as historical evidence. |
 | 2026-09-15 | Added the independent completion-audit checkpoint; corrected scoped CPU-closure wording and classified all R01–R14 against the v1.1 acceptance criteria. |
 | 2026-09-15 | Added exact-HEAD R11/R12, broad CPU, and hardware-boundary review checkpoint; D02/D03 remain pending. |
 | 2026-09-15 | Final verification rerun passed 220 focused tests with clean compile/diff/status evidence. |
@@ -15,6 +16,13 @@
 | 2026-09-14 | Completed the Increment 4 semantic seam review for hybrid GDN/full-attention binding. |
 
 # Review 1 — Attention Assumption Inventory
+
+## Current W00–W11 remediation checkpoint — 2026-09-16
+
+The current authoritative status is [current_status.md](current_status.md), bound to production commit `c9f8f904`. The final source has **3587 CPU PASS / 18 matched baseline FAIL / 25 unchanged SKIP**, **8 synthetic non-dummy PASS**, and **58 dummy cases with raw24PASS/34independently classified corrections**. The final optimization preserves574/574 fidelity artifacts and106/106 non-dummy artifacts. All471 original and675 current production hunks are reviewed. Native acceptance remains19 hardware SKIPs. D01 uniform timing and D03 existing lifecycle decisions are recorded; **D02 measured residual is explicitly accepted for this delivery**. Final18 unprofiled executions are complete: median paired run ratios1.775045x/1.679023x/0.978816x (small dense/long dense/MoE). The local evidence handoff is complete; D01, D02 and D03 are resolved.
+
+Older audit/execution sections, source/runtime counts, remote-head statements and open-item lists are **historical snapshots**. The current remediation checkpoint and archive use the linked index; historical evidence is preserved and is not rebound to the current source.
+
 
 Status: Review 2 completed; scoped selective-integration audit passed, with baseline failures and hardware skips explicitly recorded.
 

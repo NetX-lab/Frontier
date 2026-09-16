@@ -2,24 +2,25 @@
 
 | Date | Summary of Changes |
 | --- | --- |
+| 2026-09-16 | Re-executed the full CPU suite on clean production/test source c9f8f904; 18 failed / 3587 passed / 25 skipped, exact retained errors and skips unchanged, three new tests passed. |
 | 2026-09-16 | Compared clean-main and both candidate full CPU unit runs by exact nodes, observed causes, source, collection, and skips; documented four local predictor fixture repairs and final closure. |
 
 # W10 full CPU unit comparison
 
-Reviewer: `/root/w09_artifact_review`. Full-suite runs were executed by `/root`; this reviewer inspected their logs, independently collected exact nodes in both worktrees, compared failure source and dependencies, replayed the six failed CLI commands, and executed the two assigned predictor test files.
+Reviewer: `/root/w09_artifact_review`. The first two candidate full-suite runs and baseline were executed by `/root`. This reviewer executed the third full-suite run on `c9f8f904`, inspected all logs, independently collected exact nodes in both worktrees, compared failure source and dependencies, replayed the six failed CLI commands, and executed the two assigned predictor test files.
 
-**Final result: 18 failed, 3584 passed, 25 skipped, 576 warnings in 96.78 s; 3627 collected.** All 18 failures match clean-main node IDs and causes. The first candidate's 27 additional failures are resolved in the final run; there are no candidate-only failures or new skipped nodes. This is a baseline-relative CPU unit gate, not an entirely green suite, native GPU evidence, or completion of the other W10 E2E/performance lanes.
+**Latest result on `c9f8f904e3550c11aad3cc5d851d75d648cef6e1`: 18 failed, 3587 passed, 25 skipped, 576 warnings in 95.29 s; 3630 collected.** All 18 failures match clean-main node IDs and causes. The first candidate's 27 additional failures are resolved in the final run; there are no candidate-only failures or new skipped nodes. This is a baseline-relative CPU unit gate, not an entirely green suite, native GPU evidence, or completion of the other W10 E2E/performance lanes.
 
 ## Execution and provenance
 
-Clean-main worktree: `/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/pr33-r12-baseline-20260915`, revision `0515589ac7f49ac5288a5f55b0ce38b0ede29bb2`, no source edits. Candidate worktree: `/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/feature-amd-sglang-gdn`, HEAD `5a1cc2af280e5ae2d51caae55fe016c80bc3e2d2` plus local remediation. Final source snapshot: `/data/ycfeng/tmp/pr33-w10-final-source-2.diff`; the commit alone does not identify that candidate.
+Clean-main worktree: `/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/pr33-r12-baseline-20260915`, revision `0515589ac7f49ac5288a5f55b0ce38b0ede29bb2`, no source edits. Candidate worktree: `/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/feature-amd-sglang-gdn`. Historical second-run source: HEAD `5a1cc2af280e5ae2d51caae55fe016c80bc3e2d2` plus `/data/ycfeng/tmp/pr33-w10-final-source-2.diff`; that historical commit alone does not identify the second candidate. Latest third-run source: **`c9f8f904e3550c11aad3cc5d851d75d648cef6e1`**, with no uncommitted changes under `frontier/` or `tests/` at execution. Pending task-document edits do not change that production/test source binding. This run covers the subsequent homogeneous stage block computation optimization.
 
 Verified shared runtime: `/usr/bin/python`, Python 3.12.3, no conda activation; NumPy 2.4.6, pandas 3.0.3, scikit-learn 1.9, pytest 9.1.1. The baseline's original MKL thread environment was not independently recoverable. Its traceback uses `/data/ycfeng/tmp/pr33-main-unit-baseline` for pytest temporary files, whereas candidate uses the default pytest temporary directory under `/data/ycfeng/tmp`; the baseline therefore had an explicit or equivalent temporary-root setting that is not reconstructed here. These are stated differences, not a claim of byte-identical invocations. Neither difference explains the observed missing assets, unchanged README assertions, or FlashInfer dependency failures.
 
-Exact candidate full-suite command, run from candidate cwd; run 1 used `pr33-w10-final-unit.log`, run 2 used `pr33-w10-final-unit-2.log`:
+Exact candidate full-suite command, run from candidate cwd; run 1 used `pr33-w10-final-unit.log`, run 2 used `pr33-w10-final-unit-2.log`, and the latest run 3 uses the path below:
 
 ```bash
-env PYTHONPATH=. TMPDIR=/data/ycfeng/tmp PYTHONDONTWRITEBYTECODE=1 WANDB_DISABLED=true OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 python -m pytest tests/unit -q -p no:cacheprovider > /data/ycfeng/tmp/pr33-w10-final-unit-2.log 2>&1
+env PYTHONPATH=. TMPDIR=/data/ycfeng/tmp PYTHONDONTWRITEBYTECODE=1 WANDB_DISABLED=true OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 python -m pytest tests/unit -q -p no:cacheprovider > /data/ycfeng/tmp/pr33-w10-final-unit-3.log 2>&1
 ```
 
 The baseline full-suite log is `/data/ycfeng/tmp/pr33-main-unit-baseline.log`. To repeat under the explicitly specified candidate environment, use the command above from the baseline cwd with a fresh baseline log path; that is a reproduction recipe, not an assertion that the historical baseline command is fully known.
@@ -30,7 +31,7 @@ Independent collection command (executed from each corresponding cwd):
 env PYTHONPATH=. TMPDIR=/data/ycfeng/tmp PYTHONDONTWRITEBYTECODE=1 WANDB_DISABLED=true OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 /usr/bin/python -m pytest tests/unit --collect-only -q -p no:cacheprovider
 ```
 
-Collection logs: `/data/ycfeng/tmp/pr33-w10-main-collection.log`, `/data/ycfeng/tmp/pr33-w10-candidate-collection.log`, `/data/ycfeng/tmp/pr33-w10-candidate-collection-2.log`. Complete node sets and raw failure excerpts are stored in `/data/ycfeng/tmp/pr33-w10-unit-comparison.json`.
+Collection logs: `/data/ycfeng/tmp/pr33-w10-main-collection.log`, `/data/ycfeng/tmp/pr33-w10-candidate-collection.log`, `/data/ycfeng/tmp/pr33-w10-candidate-collection-2.log`, `/data/ycfeng/tmp/pr33-w10-candidate-collection-3.log`. The latest interpreter/library environment was recorded independently in `/data/ycfeng/tmp/pr33-w10-environment-3.json`. Complete node sets and raw failure excerpts are stored in `/data/ycfeng/tmp/pr33-w10-unit-comparison.json`.
 
 ## Criteria and observed results
 
@@ -40,9 +41,10 @@ PASS for this baseline-relative gate requires every retained failure to match ex
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Clean main | 3188 | 3144 | 19 | 25 | 576 | 76.86 s |
 | Candidate first run | 3621 | 3551 | 45 | 25 | 576 | 99.82 s |
-| Candidate final run | 3627 | 3584 | 18 | 25 | 576 | 96.78 s |
+| Candidate second run | 3627 | 3584 | 18 | 25 | 576 | 96.78 s |
+| Candidate latest run (`c9f8f904`) | 3630 | 3587 | 18 | 25 | 576 | 95.29 s |
 
-The first run has 18 common failures, 27 candidate-only failures, and one baseline-only failure. The final run retains exactly those 18 common failures. Durations are suite wall times for different test collections; they are not simulator performance ratios.
+The first run has 18 common failures, 27 candidate-only failures, and one baseline-only failure. Both subsequent runs retain exactly those 18 common failures. All 18 latest error excerpts equal the second run after normalizing only the pytest temporary-directory prefix; cause equivalence is therefore checked independently of count equality. Durations are suite wall times for different test collections; they are not simulator performance ratios.
 
 ## Exact retained failures and source match
 
@@ -71,7 +73,7 @@ All 18 failing test-function ASTs are equal between baseline and inspected candi
 
 The three CLI tests capture subprocess stderr and initially expose only `CalledProcessError`. This reviewer extracted their exact argument arrays from both logs and replayed all six commands with `PYTHONPATH=.` in the corresponding cwd. MHA and MQA each returned 1 with `flashinfer-python is not installed in the active Python env`; MLA returned 1 with the same cause plus `expected 0.3.1.post1`. Exact commands, cwd, exit status and stderr are preserved in `/data/ycfeng/tmp/pr33-w10-cli-rca.json` and the comparison JSON. No dependency was installed and no source was altered for this reproduction.
 
-The baseline-only failure is `tests/unit/test_examples_profiling_contracts.py::test_profiling_readme_documents_migration_scope_and_legacy_path`; it passes in both candidate runs after the in-scope profiling documentation update. Unrelated README/debug assets were not repaired to change the totals.
+The baseline-only failure is `tests/unit/test_examples_profiling_contracts.py::test_profiling_readme_documents_migration_scope_and_legacy_path`; it passes in all three candidate runs after the in-scope profiling documentation update. Unrelated README/debug assets were not repaired to change the totals.
 
 ## First-run additional failures and closure
 
@@ -117,7 +119,7 @@ env PYTHONPATH=. TMPDIR=/data/ycfeng/tmp PYTHONDONTWRITEBYTECODE=1 WANDB_DISABLE
 
 ## Collection accounting
 
-The first comparison has **3184 common nodes, 437 added nodes, 4 removed node names**: net +433. The final comparison has **3184 common nodes, 443 added nodes, 4 removed node names**: net +439. Every node is retained in the JSON. The four old names map to explicit contract migrations:
+The first comparison has **3184 common nodes, 437 added nodes, 4 removed node names**: net +433. The second comparison has **3184 common nodes, 443 added nodes, 4 removed node names**: net +439. The latest comparison has **3184 common nodes, 446 added nodes, 4 removed node names**: net +442. Compared with the second run, the latest run adds exactly three tests and removes none. Every node is retained in the JSON. The four old names map to explicit contract migrations:
 
 | Baseline node name | Candidate replacement | Reason |
 | --- | --- | --- |
@@ -126,7 +128,7 @@ The first comparison has **3184 common nodes, 437 added nodes, 4 removed node na
 | `test_dummy_layer_scaling_preserves_named_tp_components[prefill]` | `test_dummy_one_layer_scope_preserves_named_tp_components[prefill]` | Stage now explicitly owns layers; preserved named-TP numeric oracle compares the requested layer with the stage's first layer. |
 | `test_dummy_layer_scaling_preserves_named_tp_components[decode]` | `test_dummy_one_layer_scope_preserves_named_tp_components[decode]` | Same typed stage ownership migration for decode. |
 
-The final run adds six nodes after the first run:
+The second run added six nodes after the first run:
 - `tests/unit/test_attention_query_cache.py::test_direct_gdn_prediction_requires_loaded_artifact_before_dense_lookup[False]`
 - `tests/unit/test_attention_query_cache.py::test_direct_gdn_prediction_requires_loaded_artifact_before_dense_lookup[True]`
 - `tests/unit/test_dense_execution_time_layer_scaling.py::test_disaggregated_dense_stage_reuses_one_snapshot_with_exact_oracle[decode]`
@@ -134,7 +136,13 @@ The final run adds six nodes after the first run:
 - `tests/unit/test_dense_execution_time_layer_scaling.py::test_disaggregated_dense_stage_reuses_one_snapshot_with_exact_oracle[decode_ffn]`
 - `tests/unit/test_dense_execution_time_layer_scaling.py::test_disaggregated_dense_stage_reuses_one_snapshot_with_exact_oracle[prefill]`
 
-Final added nodes by file, including the four replacement names above:
+Latest run adds these three tests; all pass:
+
+- `tests/unit/test_dense_execution_time_layer_scaling.py::test_homogeneous_stage_computes_block_once_and_keeps_range_validation[False]`
+- `tests/unit/test_dense_execution_time_layer_scaling.py::test_homogeneous_stage_computes_block_once_and_keeps_range_validation[True]`
+- `tests/unit/test_dense_execution_time_layer_scaling.py::test_shared_numerical_source_keeps_different_model_owned_attention_identities`
+
+Latest added nodes by file, including the four replacement names above:
 
 | File | Added nodes |
 | --- | ---: |
@@ -142,7 +150,7 @@ Final added nodes by file, including the four replacement names above:
 | `tests/unit/test_attention_query_cache.py` | 12 |
 | `tests/unit/test_collectives_increment11.py` | 6 |
 | `tests/unit/test_collectives_rocm_runner.py` | 3 |
-| `tests/unit/test_dense_execution_time_layer_scaling.py` | 5 |
+| `tests/unit/test_dense_execution_time_layer_scaling.py` | 8 |
 | `tests/unit/test_device_timer_contract.py` | 6 |
 | `tests/unit/test_execution_time_metrics_ownership.py` | 8 |
 | `tests/unit/test_gdn_artifact_boundary.py` | 37 |
@@ -187,7 +195,7 @@ Final added nodes by file, including the four replacement names above:
 
 ## Skip accounting and limits
 
-The exact 25 skipped nodes are identical in baseline, first candidate, and final candidate. This was verified by mapping pytest progress result characters to the collected node order, asserting the character count equals the collection count, and independently asserting all reconstructed failed nodes equal the short-summary failure list. No skip was inferred solely from the total count.
+The exact 25 skipped nodes are identical in baseline and all three candidate runs. This was verified by mapping pytest progress result characters to the collected node order, asserting the character count equals the collection count, and independently asserting all reconstructed failed nodes equal the short-summary failure list. No skip was inferred solely from the total count.
 
 - 3 external profiling dataset-tool tests: `FRONTIER_PROFILING_DATASET_TOOLS` is unset; the helper explicitly skips before invocation.
 - 3 optional live-probe artifact tests: MHA CR-005, MLA FlashInfer and MQA FlashInfer artifacts are absent at their expected paths.
@@ -197,4 +205,4 @@ The complete skip node list is in the JSON; relevant unchanged skip/skipif sourc
 
 ## Status
 
-The full CPU unit baseline-relative criterion is closed: exact retained failures are explained, all 27 additional first-run failures are resolved, collection changes are accounted for, and there are no new skips. The unrelated 18 baseline failures remain visible. Other W10 acceptance lanes and W11 performance/native limitations require their own evidence; this report does not replace them.
+The full CPU unit baseline-relative criterion is closed on source `c9f8f904e3550c11aad3cc5d851d75d648cef6e1`: exact retained failures are explained, all 27 additional first-run failures are resolved, collection changes are accounted for, and there are no new skips. The unrelated 18 baseline failures remain visible. Other W10 acceptance lanes and W11 performance/native limitations require their own evidence; this report does not replace them.

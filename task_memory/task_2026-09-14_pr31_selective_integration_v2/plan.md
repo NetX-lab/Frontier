@@ -2,12 +2,20 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-16 | Added the current W00–W11 source-bound status index; retained older execution/audit statements as historical evidence. |
 | 2026-09-15 | Added direct actual-replica-ID routing coverage in commit `7b6a3eb1` after the production constructor repair. |
 | 2026-09-15 | Added the final CPU routing-identity repair and device-event path-contract verification to the completed acceptance record. |
 | 2026-09-15 | Recorded completion of all planned work units, final Review 2 closure, and PR #33 publication; merge remains user-gated. |
 | 2026-09-14 | Translated plan v2 execution order into local work units without editing the source plan. |
 
 # Execution Plan
+
+## Current W00–W11 remediation checkpoint — 2026-09-16
+
+The current authoritative status is [current_status.md](current_status.md), bound to production commit `c9f8f904`. The final source has **3587 CPU PASS / 18 matched baseline FAIL / 25 unchanged SKIP**, **8 synthetic non-dummy PASS**, and **58 dummy cases with raw24PASS/34independently classified corrections**. The final optimization preserves574/574 fidelity artifacts and106/106 non-dummy artifacts. All471 original and675 current production hunks are reviewed. Native acceptance remains19 hardware SKIPs. D01 uniform timing and D03 existing lifecycle decisions are recorded; **D02 measured residual is explicitly accepted for this delivery**. Final18 unprofiled executions are complete: median paired run ratios1.775045x/1.679023x/0.978816x (small dense/long dense/MoE). The local evidence handoff is complete; D01, D02 and D03 are resolved.
+
+Older audit/execution sections, source/runtime counts, remote-head statements and open-item lists are **historical snapshots**. The current remediation checkpoint and archive use the linked index; historical evidence is preserved and is not rebound to the current source.
+
 
 Source of truth: read-only `/data/ycfeng/stepfun-performance-optimization/Frontier/.draft-plan/frontier_pr31_selective_integration_plan_v2_en.md`, revision v2.
 
@@ -90,4 +98,4 @@ This closes the CPU acceptance sub-step for the scoped implementation. Productio
 
 Specification: `Frontier_PR33_New_Execution_Plan_2026-09-16_EN.md`. Historical completion sections above remain historical. Dependency order: W00 -> W01 -> {W02, W03} -> W04 -> {W05, W06} -> {W07, W08, W09} -> W10 -> W11. W03 owns runtime and required metrics interface migration together. Independent inspections/checks can run concurrently; implementation proceeds locally in bounded commits.
 
-Current status: W00 initialization complete (hunk adjudication ongoing); W01 topology repair verified, public MLA closure pending; W02 complete within the user-selected D03 lifecycle scope; W03 implementation and D01 fidelity decision pending; W04 cache simplification in progress; W05 CPU boundary and W06 path repairs committed, native checks explicitly skipped; W07/W09 independent work in progress; W08/W10/W11 pending. Acceptance and verification are the named plan T01–T20 and D01–D03 without changed tolerances or unsupported feature expansion.
+Current status: W01/W02/W05/W06/W07/W09 scoped repairs are implemented and verified; D01/D03 are recorded. W03/W04/W08 integration is implemented, with final fixture and measured homogeneous-disaggregation allocation cleanup in progress. W10 has8 non-dummy PASS with7 request/system baseline MATCH,19 native capability SKIPs and58 dummy cases executed; raw semantic differences and first full-CPU fixture failures are being adjudicated. W11 hunk reviews are delivered by subsystem; final source reconciliation, paired performance/D02 and archive remain pending. Acceptance remains T01–T20 and D01–D03 without changed tolerances or unsupported feature expansion.

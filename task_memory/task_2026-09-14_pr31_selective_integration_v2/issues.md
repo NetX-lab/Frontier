@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-16 | Added the current W00–W11 source-bound status index; retained older execution/audit statements as historical evidence. |
 | 2026-09-15 | Added the authoritative independent v1.1 audit disposition: no R item is fully complete; R06/R13 are not done and the remaining verification gaps are enumerated. |
 | 2026-09-15 | Recorded exact-HEAD dense residual under D02, missing request cancellation entry under D03, and NVIDIA no-device SKIP. |
 | 2026-09-15 | Completed post-fix full CPU unit regression; 19 baseline failures remain unchanged and no candidate-only failure was found. |
@@ -20,6 +21,13 @@
 | 2026-09-14 | Recorded Increment 9 VLLM_ROCM backend and generic compatibility verification; one stale documentation test remains baseline-only. |
 
 # Issues and Decisions
+
+## Current W00–W11 remediation checkpoint — 2026-09-16
+
+The current authoritative status is [current_status.md](current_status.md), bound to production commit `c9f8f904`. The final source has **3587 CPU PASS / 18 matched baseline FAIL / 25 unchanged SKIP**, **8 synthetic non-dummy PASS**, and **58 dummy cases with raw24PASS/34independently classified corrections**. The final optimization preserves574/574 fidelity artifacts and106/106 non-dummy artifacts. All471 original and675 current production hunks are reviewed. Native acceptance remains19 hardware SKIPs. D01 uniform timing and D03 existing lifecycle decisions are recorded; **D02 measured residual is explicitly accepted for this delivery**. Final18 unprofiled executions are complete: median paired run ratios1.775045x/1.679023x/0.978816x (small dense/long dense/MoE). The local evidence handoff is complete; D01, D02 and D03 are resolved.
+
+Older audit/execution sections, source/runtime counts, remote-head statements and open-item lists are **historical snapshots**. The current remediation checkpoint and archive use the linked index; historical evidence is preserved and is not rebound to the current source.
+
 
 ## 2026-09-15 — Independent audit disposition (handoff filenames retain 2026-09-16)
 

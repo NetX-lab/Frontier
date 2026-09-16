@@ -2,11 +2,19 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-16 | Added the current W00–W11 source-bound status index; retained older execution/audit statements as historical evidence. |
 | 2026-09-15 | Reclassified the checklist against the independent v1.1 completion audit; historical execution claims are retained but no longer treated as current acceptance closure. |
 | 2026-09-15 | Updated item dispositions and bound final evidence to candidate `b8cecf53`. |
 | 2026-09-15 | Created from Frontier_PR33_review_revision_plan_2026-09-15_v1.1 before source changes. |
 
 # PR33 v1.1 Revision Execution Checklist
+
+## Current W00–W11 remediation checkpoint — 2026-09-16
+
+The current authoritative status is [current_status.md](current_status.md), bound to production commit `c9f8f904`. The final source has **3587 CPU PASS / 18 matched baseline FAIL / 25 unchanged SKIP**, **8 synthetic non-dummy PASS**, and **58 dummy cases with raw24PASS/34independently classified corrections**. The final optimization preserves574/574 fidelity artifacts and106/106 non-dummy artifacts. All471 original and675 current production hunks are reviewed. Native acceptance remains19 hardware SKIPs. D01 uniform timing and D03 existing lifecycle decisions are recorded; **D02 measured residual is explicitly accepted for this delivery**. Final18 unprofiled executions are complete: median paired run ratios1.775045x/1.679023x/0.978816x (small dense/long dense/MoE). The local evidence handoff is complete; D01, D02 and D03 are resolved.
+
+Older audit/execution sections, source/runtime counts, remote-head statements and open-item lists are **historical snapshots**. The current remediation checkpoint and archive use the linked index; historical evidence is preserved and is not rebound to the current source.
+
 
 Specification: `Frontier_PR33_review_revision_plan_2026-09-15_v1.1_en.md`.
 

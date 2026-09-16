@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-16 | Added the current W00–W11 source-bound status index; retained older execution/audit statements as historical evidence. |
 | 2026-09-15 | Archived the independent v1.1 completion audit, exact evidence limits, dependency-ordered TODOs, and decision status; no source/test changes were made by the audit. |
 | 2026-09-15 | Bound final R11/R12 and broad CPU evidence to candidate `b8cecf53`; recorded D02 residual cost and D03 cancellation decision gates. |
 | 2026-09-15 | Archived final verification: 220 focused tests passed with clean compileall, diff check, worktree status, and parsed co-author trailer. |
@@ -13,6 +14,50 @@
 | 2026-09-14 | Archived the completed selective PR #31 integration, final Review 2 evidence, baseline comparison, attribution status, and publication boundary. |
 
 # Task Summary
+
+## Current W00–W11 remediation checkpoint — 2026-09-16
+
+The current authoritative status is [current_status.md](current_status.md), bound to production commit `c9f8f904`. The final source has **3587 CPU PASS / 18 matched baseline FAIL / 25 unchanged SKIP**, **8 synthetic non-dummy PASS**, and **58 dummy cases with raw24PASS/34independently classified corrections**. The final optimization preserves574/574 fidelity artifacts and106/106 non-dummy artifacts. All471 original and675 current production hunks are reviewed. Native acceptance remains19 hardware SKIPs. D01 uniform timing and D03 existing lifecycle decisions are recorded; **D02 measured residual is explicitly accepted for this delivery**. Final18 unprofiled executions are complete: median paired run ratios1.775045x/1.679023x/0.978816x (small dense/long dense/MoE). The local evidence handoff is complete; D01, D02 and D03 are resolved.
+
+Older audit/execution sections, source/runtime counts, remote-head statements and open-item lists are **historical snapshots**. The current remediation checkpoint and archive use the linked index; historical evidence is preserved and is not rebound to the current source.
+
+
+## Runtime-first remediation archive — current delivery
+
+### Task Overview
+
+Implemented the user-assigned W00–W11 plan in the existing worktree through production commit `c9f8f904e3550c11aad3cc5d851d75d648cef6e1`, preserving source attribution and the original plans. D01 retains uniform physical-layer/stage semantics and independent arithmetic verification; D03 retains existing request lifecycle scope. Implementation and final functional verification are delivered. **The authorized local delivery is complete; D02 was explicitly accepted for the measured scope.**
+
+### Deliverables Inventory
+
+Paths below are relative to this task directory unless they begin with `frontier/` or `tests/`.
+
+- `current_status.md`, `validation_manifest.json`: one current package index and final source/environment/command/node/artifact evidence.
+- `review_reassessment_2026-09-16.md`, `changed_hunk_review.md`, `hunk_review_predictors.md`, `hunk_review_runtime.md`, `hunk_review_attention_training.md`, `hunk_review_shared_contracts.md`, `w07_sglang_review.md`: all38 original findings, R01–R14/N01–N09,471 original hunks and675 current hunks across106 production files, with ownership/split decisions.
+- `test_report_2026-09-16_w10_cpu.md`, `w10_final_cpu_comparison.json`: exact baseline-relative full CPU failures, collection and skips.
+- `test_report_2026-09-16_w10_fidelity.md`, `w10_fidelity_classification.json`: all58 raw statuses and independent stage/lane/request/batching oracles.
+- `test_report_2026-09-16_w10_nondummy_acceptance.md`, `w10_nondummy_report.md`, `w10_nondummy_final_artifact_comparison.json`, `w10_nondummy_baseline_comparison.json`: eight real synthetic-profile constructor/export cases and seven main controls.
+- `performance_rca.md`, `w04_performance_review.md`, `w00_paired_samples.json`, `w11_intermediate_paired_samples.json`, `w11_final_paired_samples.json`, `w11_profile_counts.json`: initial/intermediate/final pairing, controlled cache/snapshot ablations and D02 proposal.
+- `frontier/entities/execution_time.py`, `frontier/entities/stage_execution_time.py`: one-layer numerical scope, finalized isolated payloads and explicit ordered stage ownership. Existing component maps, family/operator registries and the homogeneous constructor are reused.
+- `frontier/metrics/ep_wave_metrics.py`: focused actual-lane projection at shared phase barriers. The existing stage ledger contract remains intact; new actual-lane records use a separate requested ledger.
+- `tests/integration/test_pr33_nondummy_acceptance.py`, `tests/integration/test_pr33_native_profiling_acceptance.py`, `tests/performance/measure_pr33_paired.py`, `tests/performance/measure_pr33_cache_ablation.py`: reusable final acceptance and controlled measurement entrypoints.
+
+Verified implementation commits: `41777755` topology; `2e8ab0e1` capacity/lifecycle; `b07f653d` campaign/timer; `5df2e65e` canonical paths; `d3178bfd` artifact boundary; `c1e924db`/`a677e535` profiling/replay; `65aaf2c9` slot-owner cleanup; `5a1cc2af` native lanes; `f9099f85` integrated runtime/reporting; `d514f417` non-dummy acceptance; `5738ecb3` controlled performance checks; `c9f8f904` homogeneous aggregation. `10326ce4` preserves the initial freeze. Applicable commits retain `Co-authored-by: powderluv <74956+powderluv@users.noreply.github.com>`.
+
+### Validation Status
+
+- Final CPU: **3587 PASS /18 known baseline FAIL /25 unchanged SKIP**,3630 collected,95.29s. Baseline3144PASS/19FAIL/25SKIP; one baseline documentation assertion now passes. No candidate-only failure or new skip. All retained causes/node identities and fixture migrations are recorded.
+- Synthetic non-dummy: **8 PASS**,35.43s;7/7 request and7/7 system baseline comparisons MATCH;106/106 artifacts unchanged after final optimization. Oracles verify actual layer IDs, physical operation totals, EP lanes and GDN capacity/state behavior.
+- Dummy fidelity: **24 raw PASS /34 raw FAIL**,116 successful simulator processes.12 reporting-only cases preserve request/system values;22 disaggregated MoE cases have the source-proven dummy normalization correction.127 candidate stage rows,130 baseline stage rows,11264 lane rows/4064 waves and176 request-role sums pass independent arithmetic.574/574 artifacts match the preceding candidate/baseline campaign byte for byte.
+- Native: **19 SKIP** on this CPU host;5 timer,4 AMD GDN,10 profiling/replay/collective lanes remain real runnable entrypoints. No CUDA/ROCm/AMD hardware correctness claim.
+- Performance:18 final unprofiled runs, same event/request/token workloads and output flags. Small dense14.149→25.225ms, longer dense29.309→49.268ms, MoE9.730→9.524s; median paired ratios1.775045x/1.679023x/0.978816x. D02 is explicitly accepted; process-wide ratios are not substituted for run-phase cost.
+- Source review:471 original and675 current production hunks reconciled. Final shared-stage optimization independently reviewed with no concrete issue;132 focused tests plus final integrated campaigns pass within the classifications above.
+
+### Open Items / Future Extensions
+
+There is no unresolved current decision. The user explicitly selected **D02 option1**, accepting the measured scoped residual with the existing uniform contract. Further representation optimization was not selected. The concrete alternatives and costs remain in `performance_rca.md`. A new request-cancellation API is deferred under D03. Native GPU execution and production-profile timing/benchmark parity remain unverified and require their corresponding hardware/data. Pre-existing missing assets/dependencies and unrelated documentation assertions remain visible; no unrelated fixes were added. This local remediation was not pushed or merged.
+
+## Historical selective-integration archive
 
 ## Task Overview
 

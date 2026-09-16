@@ -2,12 +2,13 @@
 
 | Date | Summary of Changes |
 | --- | --- |
+| 2026-09-16 | Final c9f8f904 rerun: 8 PASS in 35.43 s; 106 artifacts and 7 baseline metric pairs PASS. |
 | 2026-09-16 | Latest-source rerun: 8 PASS in 37.57 s; 106 prior-final artifacts PASS under the established comparator. |
 | 2026-09-16 | Recorded the final eight-case non-dummy CPU campaign, seven fixed-baseline comparisons, independent numerical oracles, and explicit evidence limits. |
 
 # W10 synthetic non-dummy acceptance test report
 
-**Latest PASS: 8 tests in 37.57 s** after the final predictor/copy/fail-fast changes; the earlier freeze run passed in 36.78 s. **PASS: 7/7 common request and 7/7 common system artifacts** under the existing comparator. This is synthetic-profile correctness, not production-data or native GPU timing parity.
+**Latest PASS: 8 tests in 35.43 s** on `c9f8f904e3550c11aad3cc5d851d75d648cef6e1`; earlier 37.57 s and 36.78 s runs are preserved below. **PASS: 7/7 common request and 7/7 common system artifacts** under the existing comparator. This is synthetic-profile correctness, not production-data or native GPU timing parity.
 
 ## Execution and environment
 
@@ -170,5 +171,59 @@ for i in range(8):
 Path('/data/ycfeng/tmp/pr33-w10-final-2-vs-final.json').write_text(json.dumps(results, indent=2) + '\n')
 print('8/8 cases PASS; all selected artifact names identical; per-case artifact counts:', [len(v) for v in results.values()])
 print('Total artifacts compared:', sum(map(len, results.values())))
+PYCOMPARE
+```
+
+## Final revision c9f8f904 verification
+
+**Latest-source PASS: 8 tests in 35.43 s** on commit `c9f8f904e3550c11aad3cc5d851d75d648cef6e1`. This revision reuses a homogeneous sum only when the finalized timing payload is shared safely. This run supersedes final-2 as the latest-source evidence; all previous observations are preserved above.
+
+Environment remains `/usr/bin/python` 3.12.3, no conda environment, CPU only; isolated simulator processes use OMP/OpenBLAS threads one and TMPDIR under the case root. The exact executed command was:
+
+```bash
+python -m pytest tests/integration/test_pr33_nondummy_acceptance.py -q -p no:cacheprovider --basetemp=/data/ycfeng/tmp/pr33-w10-nondummy-final-3 > /data/ycfeng/tmp/pr33-w10-nondummy-final-3.log 2>&1
+```
+
+Observed: `8 passed in 35.43s`, no skips or collection changes. Compared all **106 artifacts** with final-2 using the established comparator (`rel_tol=1e-12`, `abs_tol=1e-9`) and existing trace-header normalization: **106/106 PASS**, artifact-name sets identical, per-case counts `[10,14,17,10,11,15,18,11]`. Rechecked baseline `0515589ac7f49ac5288a5f55b0ce38b0ede29bb2` request and system metrics for the seven homogeneous cases: **7/7 request PASS, 7/7 system PASS**. The independent physical-layer, lane-count, timing, and capacity assertions all passed. There is no new numerical/discrete difference to classify.
+
+Evidence: `/data/ycfeng/tmp/pr33-w10-nondummy-final-3.log`, `/data/ycfeng/tmp/pr33-w10-final-3-vs-final-2.json`, `/data/ycfeng/tmp/pr33-w10-final-3-baseline-metrics.json`, and isolated output roots below `/data/ycfeng/tmp/pr33-w10-nondummy-final-3`. No production or test edits accompanied this rerun. CPU correctness and comparison work is complete; this agent holds further CPU executions for the parent's exclusive paired window.
+
+Exact final-3 comparison recipe from the candidate worktree:
+
+```bash
+python - <<'PYCOMPARE'
+from pathlib import Path
+import json, os, sys
+from tests.integration.test_pr33_nondummy_acceptance import compare_baseline
+from tests.integration.run_scheduler_refactor_fidelity import compare, load_artifact
+results = {}; baseline_results = {}
+for i in range(8):
+    suffix = Path(f'test_nondummy_simulator_accept{i}/run')
+    prior = Path('/data/ycfeng/tmp/pr33-w10-nondummy-final-2') / suffix
+    current = Path('/data/ycfeng/tmp/pr33-w10-nondummy-final-3') / suffix
+    results[str(i)] = compare_baseline(prior, current)
+    old_metrics = next(prior.rglob('request_metrics.csv')).parent
+    new_metrics = next(current.rglob('request_metrics.csv')).parent
+    selected = lambda p: {x.name for x in p.iterdir() if x.suffix in {'.csv', '.jsonl'} or x.name == 'system_metrics.json'}
+    assert selected(old_metrics) == selected(new_metrics)
+    compare(load_artifact(prior / 'acceptance_evidence.json'), load_artifact(current / 'acceptance_evidence.json'))
+    results[str(i)]['acceptance_evidence.json'] = {'status': 'PASS'}
+    name = 'frontier_stage_batch_ledger_summary.json'
+    compare(load_artifact(old_metrics / name), load_artifact(new_metrics / name))
+    results[str(i)][name] = {'status': 'PASS'}
+    assert all(row['status'] == 'PASS' for row in results[str(i)].values()), results[str(i)]
+    if i < 7:
+        base_name = 'dense-coloc' if i == 0 else 'mla' if i == 3 else f'case{i}'
+        baseline = next((Path('/data/ycfeng/tmp') / f'pr33-w10-baseline-{base_name}').rglob('request_metrics.csv')).parent
+        baseline_results[str(i)] = {}
+        for name in ('request_metrics.csv', 'system_metrics.json'):
+            compare(load_artifact(baseline / name), load_artifact(new_metrics / name))
+            baseline_results[str(i)][name] = {'status': 'PASS'}
+Path('/data/ycfeng/tmp/pr33-w10-final-3-vs-final-2.json').write_text(json.dumps(results, indent=2) + '\n')
+Path('/data/ycfeng/tmp/pr33-w10-final-3-baseline-metrics.json').write_text(json.dumps(baseline_results, indent=2) + '\n')
+print('Python:', sys.executable, sys.version.split()[0], 'Conda:', os.environ.get('CONDA_DEFAULT_ENV', 'none'))
+print('Prior-final comparison: 8/8 cases PASS; artifacts:', sum(map(len, results.values())))
+print('Per-case artifact counts:', [len(v) for v in results.values()])
+print('Baseline comparison: 7/7 request metrics PASS; 7/7 system metrics PASS')
 PYCOMPARE
 ```

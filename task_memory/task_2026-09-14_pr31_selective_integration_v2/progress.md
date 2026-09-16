@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-16 | Added the current W00–W11 source-bound status index; retained older execution/audit statements as historical evidence. |
 | 2026-09-16 | Recorded authorization to push the 15 local commits ahead of remote together with the latest independent completion-audit docs to PR #33 for manual review; no merge or audit TODO implementation. |
 | 2026-09-15 | Completed the independent v1.1 completion audit; recorded R01–R14 statuses, full TODOs, decision gates, and verification gaps without changing source/tests. |
 | 2026-09-16 | Began independent completion audit; preserved prior claims and recorded remote/local revision mismatch. |
@@ -31,6 +32,13 @@
 | 2026-09-14 | Implemented Increment 11 standalone NCCL/RCCL collective runner, dtype-aware byte accounting, local multiprocessing path, and output schema; CPU contracts pass and AMD runtime remains unavailable. |
 
 # Progress
+
+## Current W00–W11 remediation checkpoint — 2026-09-16
+
+The current authoritative status is [current_status.md](current_status.md), bound to production commit `c9f8f904`. The final source has **3587 CPU PASS / 18 matched baseline FAIL / 25 unchanged SKIP**, **8 synthetic non-dummy PASS**, and **58 dummy cases with raw24PASS/34independently classified corrections**. The final optimization preserves574/574 fidelity artifacts and106/106 non-dummy artifacts. All471 original and675 current production hunks are reviewed. Native acceptance remains19 hardware SKIPs. D01 uniform timing and D03 existing lifecycle decisions are recorded; **D02 measured residual is explicitly accepted for this delivery**. Final18 unprofiled executions are complete: median paired run ratios1.775045x/1.679023x/0.978816x (small dense/long dense/MoE). The local evidence handoff is complete; D01, D02 and D03 are resolved.
+
+Older audit/execution sections, source/runtime counts, remote-head statements and open-item lists are **historical snapshots**. The current remediation checkpoint and archive use the linked index; historical evidence is preserved and is not rebound to the current source.
+
 
 ## 2026-09-15 — Independent completion audit (completed; handoff filenames retain 2026-09-16)
 
@@ -353,3 +361,29 @@ Canonical family-derived tasks, complete selected identities, load-time manifest
 ## W07 event/replay verified sub-step — 2026-09-16
 
 Fused MoE DEVICE_EVENT admission/statistics and SGLang multi-block sorting/routed replay correctness fixed through shared mechanisms. Root combined regression: 48 PASS in 3.28s; report test_report_2026-09-16_w07_replay_events.md. Full W07 remaining hunk review/fixes and native capability lanes continue.
+
+## Runtime/reporting integration checkpoint — 2026-09-16
+
+W03/W04/W08 use uniform one-layer payloads, finalized ordered stage identities, first-owner construction, stage-local numerical cache, once-only metrics ownership and actual EP lane phase reporting. Review found and fixed (1) owner construction/MTP offset overflow, (2) ledger completion incorrectly coupled to utilization, (3) routed EP predictions absent from requested outputs, and (4) EP trace quota stealing attention-stage expansion. The independent two-lane oracle preserves actual work13/12ms versus shared15ms wave time and idle barrier gaps. Shared source-batch expansion handles either reporting order.
+
+W10 first final-source full CPU: **45 FAIL / 3551 PASS / 25 SKIP / 99.82s**, 3621 collected. Fresh baseline at0515589: **19 FAIL / 3144 PASS / 25 SKIP / 76.86s**. Exact node comparison identifies18 shared failures,27 candidate-only and1 baseline failure now passing. Candidate-only failures are being repaired by migrating typed-model/manager/metrics fixtures, old layer-count assertions, and isolating leaked quantization state; original numerical expectations stay fixed except the approved uniform ownership projections. This first result is not acceptance closure.
+
+W10 non-dummy8 deployments: **8 PASS / 36.78s**, seven homogeneous baseline controls have matching request/system metrics under the unchanged comparator. Native combined capability campaign: **19 SKIP / 2.63s**, with collected real wrappers and explicit no-GPU reasons. Raw58-case dummy comparison: **24 PASS / 34 FAIL**; the raw failures include added EP ledger and approved uniform-scope differences. Per-artifact/independent arithmetic classification remains required; do not relabel as58PASS.
+
+W11 separate cProfile small dense case exposed1440 component snapshots in36 disaggregation stage calls, although the homogeneous dense predictor had already been fixed. Disaggregation homogeneous payload reuse is now being repaired before final unprofiled pairing. The discarded first shallow copy in ExecutionTime.as_single_layer was removed. Profile output: `/data/ycfeng/tmp/pr33-w11-small-dense.profile`; profiling is not an acceptance wall-time sample. Final CPU/performance gates remain pending.
+
+Additional verified commits: a677e535 (native adapter identity/replay admission),65aaf2c9 (constructor-owned GDN slots),5a1cc2af (10 collected native adapter cases). A git-add command reported ignored task_memory while successfully staging tracked paths; the intended report was confirmed in the commit, and subsequent ignored document staging uses explicit -f. One broad temporary-directory filename probe encountered other users' permission-denied paths; investigation was narrowed to this task's known output root, with no reads or changes to those directories.
+
+## 2026-09-16 — Final committed-source verification and D02 proposal
+
+- Motivation: bind the last homogeneous block optimization to fresh integrated evidence before performance acceptance. Method: commit `c9f8f904`, full CPU, eight synthetic cases,58 dummy controls and native capabilities. Result:3587PASS/18baselineFAIL/25unchangedSKIP;8non-dummyPASS with7+7baseline matches and106unchanged artifacts;24rawPASS/34classified corrections with574byte-identical artifacts;19nativeSKIPs. All subagents ended CPU work before paired timing.
+- Motivation: remove demonstrated repeated work before D02. Method:18 interleaved unprofiled executions then a separate cProfile run. Result: small/long dense ratios1.775045x/1.679023x, MoE0.978816x;36 snapshots and36 block calculations for36 homogeneous stages, preserving1440 physical layer identities. All raw samples retained; no universal budget inferred.
+- Final evidence:675 current hunks/106 production files plus471 original IDs reconciled. Complete source/command/environment/node/output identity manifest and English archive prepared. Reported17:44HKT final diagnostic is not acceptance wall time.
+- D02 question delivered through async user input: accept the measured scoped residual with current contract (recommended), or continue a lightweight layer-view representation investigation before acceptance. Source of the gate is active plan§6. The evidence and alternative consequences are concrete in `performance_rca.md`. No response is assumed; D01/D03 decisions remain unchanged.
+- Remaining action: record D02 answer. New unexplained production issues: none. Native execution and production-profile parity remain explicitly unverified; remote publication/merge are not part of this remediation.
+
+- Final evidence-integrity check iteration: all812 output identities and both hunk counts passed before an overbroad attribution assertion rejected original W00 preparation commit `10326ce4`. That commit adds the original measurement harness/task freeze rather than adapting PR31 production code; the plan requires trailers for extracted/materially adapted implementation. The other13 remediation commits retain the trailer. The check was narrowed to its applicable scope; no history rewrite was performed. `git diff --check` also found one new blank line at `performance_rca.md` EOF, corrected in the same documentation step.
+
+## 2026-09-16 — D02 decision and local delivery closure
+
+User reply: “接受本次测得的残余成本，保留当前 contract，完成本轮交付（推荐）”. Recorded verbatim in requirements. D02 is accepted only for this final measured scope; D01/D03 remain unchanged. Updated current status, performance RCA, manifest, review, summary and checklist. No production/test changes followed the final-source verification, so no redundant test rerun is required. Remaining authorized implementation/check tasks: none. Newly discovered unresolved issues: none. Native/production-profile limitations and18 baseline failures remain explicitly recorded. Finish the local documentation commit; no remote push or merge.
