@@ -76,6 +76,8 @@ from frontier.execution_time_predictor.shared_prediction_model_manager import (
 )
 from frontier.execution_time_predictor.measurement_input_paths import (
     resolve_measurement_input_paths,
+    resolve_training_file_paths,
+    resolve_event_measurement_type,
 )
 from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
 from frontier.execution_time_predictor.attention_tp_policy import (
@@ -745,105 +747,19 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
 
     def _initialize_file_paths(self, training_file_paths: Dict[str, str] = None):
-        """Initialize eager and kernel-only file path attributes."""
-        if training_file_paths:
-            self._compute_input_file_eager = training_file_paths.get("compute_input_file", "")
-            self._attention_input_file_eager = training_file_paths.get(
-                "attention_input_file", ""
-            )
-            self._moe_input_file_eager = training_file_paths.get("moe_input_file", "")
-            self._compute_input_file_device_event = training_file_paths.get(
-                "compute_device_event_input_file",
-                training_file_paths.get("compute_input_file_device_event", ""),
-            )
-            self._attention_input_file_device_event = training_file_paths.get(
-                "attention_device_event_input_file",
-                training_file_paths.get("attention_input_file_device_event", ""),
-            )
-            self._moe_input_file_device_event = training_file_paths.get(
-                "moe_device_event_input_file",
-                training_file_paths.get("moe_input_file_device_event", ""),
-            )
-            self._compute_input_file_kernel_only = training_file_paths.get(
-                "compute_kernel_only_input_file", ""
-            )
-            self._attention_input_file_kernel_only = training_file_paths.get(
-                "attention_kernel_only_input_file", ""
-            )
-            self._moe_input_file_kernel_only = training_file_paths.get(
-                "moe_kernel_only_input_file", ""
-            )
-            self._all_reduce_input_file = training_file_paths.get(
-                "all_reduce_input_file", ""
-            )
-            self._send_recv_input_file = training_file_paths.get(
-                "send_recv_input_file", ""
-            )
-            self._cpu_overhead_input_file = training_file_paths.get(
-                "cpu_overhead_input_file", ""
-            )
-            self._pp_stage_boundary_input_file = training_file_paths.get(
-                "pp_stage_boundary_input_file", ""
-            )
-            self._pp_receiver_head_input_file = training_file_paths.get(
-                "pp_receiver_head_input_file", ""
-            )
-            self._pp_producer_send_path_input_file = training_file_paths.get(
-                "pp_producer_send_path_input_file", ""
-            )
-            self._pp_prefill_consumer_active_input_file = training_file_paths.get(
-                "pp_prefill_consumer_active_input_file", ""
-            )
-        else:
-            eager_files = self._get_input_files(MeasurementType.CUDA_EVENT)
-            device_event_files = self._get_input_files(MeasurementType.DEVICE_EVENT)
-            kernel_only_files = self._get_input_files(MeasurementType.KERNEL_ONLY)
-            self._compute_input_file_eager = eager_files[0]
-            self._attention_input_file_eager = eager_files[1]
-            self._moe_input_file_eager = eager_files[2]
-            self._compute_input_file_kernel_only = kernel_only_files[0]
-            self._attention_input_file_kernel_only = kernel_only_files[1]
-            self._moe_input_file_kernel_only = kernel_only_files[2]
-            self._compute_input_file_device_event = device_event_files[0]
-            self._attention_input_file_device_event = device_event_files[1]
-            self._moe_input_file_device_event = device_event_files[2]
-            self._all_reduce_input_file = eager_files[3]
-            self._send_recv_input_file = eager_files[4]
-            self._cpu_overhead_input_file = eager_files[5]
-            self._pp_stage_boundary_input_file = (
-                self._config.pp_stage_boundary_input_file
-                .replace("{DEVICE}", self._replica_config.device)
-                .replace("{MODEL}", self._model_config.get_name())
-                .replace("{NETWORK_DEVICE}", self._replica_config.network_device)
-            )
-            self._pp_receiver_head_input_file = (
-                self._config.pp_receiver_head_input_file
-                .replace("{DEVICE}", self._replica_config.device)
-                .replace("{MODEL}", self._model_config.get_name())
-                .replace("{NETWORK_DEVICE}", self._replica_config.network_device)
-            )
-            self._pp_producer_send_path_input_file = (
-                self._config.pp_producer_send_path_input_file
-                .replace("{DEVICE}", self._replica_config.device)
-                .replace("{MODEL}", self._model_config.get_name())
-                .replace("{NETWORK_DEVICE}", self._replica_config.network_device)
-            )
-            self._pp_prefill_consumer_active_input_file = (
-                self._config.pp_prefill_consumer_active_input_file
-                .replace("{DEVICE}", self._replica_config.device)
-                .replace("{MODEL}", self._model_config.get_name())
-                .replace("{NETWORK_DEVICE}", self._replica_config.network_device)
-            )
-
-        # Older callers may provide only the historical eager/kernel-only keys.
-        # Derive the device-event paths from the predictor configuration in that
-        # case so ROCm predictors still have an explicit input family.
-        if not getattr(self, "_compute_input_file_device_event", ""):
-            device_event_files = self._get_input_files(MeasurementType.DEVICE_EVENT)
-            self._compute_input_file_device_event = device_event_files[0]
-            self._attention_input_file_device_event = device_event_files[1]
-            self._moe_input_file_device_event = device_event_files[2]
-
+        """Normalize per-field overrides once through the shared path resolver."""
+        paths = resolve_training_file_paths(
+            self._config, device=self._replica_config.device,
+            model=self._model_config.get_name(),
+            network_device=self._replica_config.network_device,
+            overrides=training_file_paths,
+        )
+        for family, suffix in (("eager", ""), ("device_event", "_device_event"), ("kernel_only", "_kernel_only")):
+            for name in ("compute", "attention", "moe"):
+                setattr(self, f"_{name}_input_file_{family}", paths[f"{name}{suffix}_input_file"])
+        for name in ("all_reduce", "send_recv", "cpu_overhead", "pp_stage_boundary",
+                     "pp_receiver_head", "pp_producer_send_path", "pp_prefill_consumer_active"):
+            setattr(self, f"_{name}_input_file", paths[f"{name}_input_file"])
         self._compute_input_file = self._compute_input_file_eager
         self._attention_input_file = self._attention_input_file_eager
         self._moe_input_file = self._moe_input_file_eager
@@ -889,23 +805,8 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
     ) -> MeasurementType:
         """Select the standard event family from the replica's device platform."""
 
-        replica_config = replica_config or getattr(self, "_replica_config", None)
-        device_config = getattr(replica_config, "device_config", None)
-        platform = getattr(device_config, "gpu_platform", None)
-        if platform is None:
-            try:
-                from frontier.config.device_sku_config import BaseDeviceSKUConfig
-
-                device_config = BaseDeviceSKUConfig.create_from_type_string(
-                    str(replica_config.device)
-                )
-                platform = device_config.gpu_platform
-            except (AttributeError, ValueError):
-                platform = "cuda"
-        return (
-            MeasurementType.DEVICE_EVENT
-            if str(platform).strip().lower() == "rocm"
-            else MeasurementType.CUDA_EVENT
+        return resolve_event_measurement_type(
+            self._replica_config if replica_config is None else replica_config,
         )
 
     def _is_kernel_only_measurement_enabled_for_cluster(self) -> bool:

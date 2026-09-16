@@ -333,3 +333,7 @@ Five-case fidelity: three dense PASS, two MoE FAIL. Both differences reproduced 
 ## W05 independent boundary sub-step — 2026-09-16
 
 Implemented full GDN campaign preflight, timer owner lifecycle, active/E2E sample integrity, independently owned native resource cleanup and collectable native acceptance. RED campaign 25 failed/2 passed -> final combined 111 passed/9 hardware skips (5.12s), `/data/ycfeng/tmp/pr33-w05-final2.log`. Report: `test_report_2026-09-16_w05_profiling.md`. Native validation remains SKIP/UNVERIFIED; no GPU result inferred. W03 D01 and W02 D03 remain pending, so this independent commit does not close runtime/fidelity acceptance.
+
+## W06 path boundary sub-step — 2026-09-16
+
+Canonical resolver now owns per-field override/config/derive precedence, full manager dictionary projection, PP fields and historical device-event aliases. Both device selectors reject malformed supplied metadata via one shared resolver. Focused and real hybrid integration: 51 passed in 9.25s (`/data/ycfeng/tmp/pr33-w06-second.log`); report `test_report_2026-09-16_w06_paths.md`. W03 changes in sklearn predictor are staged separately from the completed W06 boundary hunks.

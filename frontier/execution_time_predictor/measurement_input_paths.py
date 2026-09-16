@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from typing import Any
+from collections.abc import Mapping
 
 from frontier.types import MeasurementType
 
@@ -23,7 +24,7 @@ class MeasurementInputPaths:
 
 def _derive_device_event_path(config: Any, field_name: str, fallback: str) -> str:
     configured = getattr(config, f"{field_name}_device_event_input_file", None)
-    if configured:
+    if configured is not None:
         return str(configured)
     if not fallback:
         return ""
@@ -49,6 +50,7 @@ def resolve_measurement_input_paths(
     device: str,
     model: str,
     network_device: str,
+    overrides: Mapping[str, str] | None = None,
 ) -> MeasurementInputPaths:
     """Resolve one canonical set of profiling paths.
 
@@ -76,41 +78,86 @@ def resolve_measurement_input_paths(
         compute = getattr(config, "linear_op_kernel_only_input_file", "")
         attention = getattr(config, "atten_kernel_only_input_file", "")
         moe = getattr(config, "moe_kernel_only_input_file", "")
-        cpu_overhead_file = getattr(
-            config,
-            "cpu_overhead_kernel_only_input_file",
-            "",
-        ) or cpu_overhead_file
+        kernel_cpu = getattr(config, "cpu_overhead_kernel_only_input_file", None)
+        if kernel_cpu is not None:
+            cpu_overhead_file = kernel_cpu
     else:
         raise ValueError(f"Unsupported measurement_type={measurement_type!r}")
 
+    suffix = {
+        MeasurementType.CUDA_EVENT: "",
+        MeasurementType.DEVICE_EVENT: "_device_event",
+        MeasurementType.KERNEL_ONLY: "_kernel_only",
+    }[measurement_type]
+    explicit = overrides if overrides is not None else {}
+
+    def selected(name: str, configured: str) -> str:
+        key = f"{name}{suffix}_input_file"
+        alias = f"{name}_input_file{suffix}"
+        if key in explicit:
+            configured = explicit[key]
+        elif alias in explicit:
+            configured = explicit[alias]
+        return _template_substitute(
+            configured, device=device, model=model, network_device=network_device,
+        )
+
+    def common(name: str) -> str:
+        key = f"{name}_input_file"
+        return _template_substitute(
+            explicit.get(key, getattr(config, key, "")),
+            device=device, model=model, network_device=network_device,
+        )
+
     return MeasurementInputPaths(
-        compute=_template_substitute(
-            compute, device=device, model=model, network_device=network_device
-        ),
-        attention=_template_substitute(
-            attention, device=device, model=model, network_device=network_device
-        ),
-        all_reduce=_template_substitute(
-            getattr(config, "all_reduce_input_file", ""),
-            device=device,
-            model=model,
-            network_device=network_device,
-        ),
-        send_recv=_template_substitute(
-            getattr(config, "send_recv_input_file", ""),
-            device=device,
-            model=model,
-            network_device=network_device,
-        ),
-        cpu_overhead=_template_substitute(
-            cpu_overhead_file,
-            device=device,
-            model=model,
-            network_device=network_device,
-        ),
-        moe=_template_substitute(
-            moe, device=device, model=model, network_device=network_device
-        ),
+        compute=selected("compute", compute),
+        attention=selected("attention", attention),
+        moe=selected("moe", moe),
+        all_reduce=common("all_reduce"),
+        send_recv=common("send_recv"),
+        cpu_overhead=selected("cpu_overhead", cpu_overhead_file),
     )
 
+
+def resolve_training_file_paths(
+    config: Any, *, device: str, model: str, network_device: str,
+    overrides: Mapping[str, str] | None = None,
+) -> dict[str, str]:
+    """Project canonical family paths into the established public dictionary."""
+    resolved = {}
+    for measurement_type, suffix in (
+        (MeasurementType.CUDA_EVENT, ""),
+        (MeasurementType.DEVICE_EVENT, "_device_event"),
+        (MeasurementType.KERNEL_ONLY, "_kernel_only"),
+    ):
+        paths = resolve_measurement_input_paths(
+            config, measurement_type, device=device, model=model,
+            network_device=network_device, overrides=overrides,
+        )
+        for name in ("compute", "attention", "moe"):
+            resolved[f"{name}{suffix}_input_file"] = getattr(paths, name)
+        if measurement_type == MeasurementType.CUDA_EVENT:
+            resolved.update(all_reduce_input_file=paths.all_reduce,
+                            send_recv_input_file=paths.send_recv,
+                            cpu_overhead_input_file=paths.cpu_overhead)
+        elif measurement_type == MeasurementType.KERNEL_ONLY:
+            resolved["cpu_overhead_kernel_only_input_file"] = paths.cpu_overhead
+    for name in ("pp_stage_boundary", "pp_receiver_head", "pp_producer_send_path", "pp_prefill_consumer_active"):
+        key = f"{name}_input_file"
+        value = (overrides or {}).get(key, getattr(config, key, ""))
+        resolved[key] = _template_substitute(value, device=device, model=model, network_device=network_device)
+    return resolved
+
+
+def resolve_event_measurement_type(replica_config: Any) -> MeasurementType:
+    """Resolve a supplied device; malformed metadata never selects a fallback."""
+    from frontier.config.device_sku_config import BaseDeviceSKUConfig
+
+    device_config = getattr(replica_config, "device_config", None)
+    if device_config is None:
+        device_config = BaseDeviceSKUConfig.create_from_type_string(replica_config.device)
+    platform = device_config.gpu_platform
+    families = {"cuda": MeasurementType.CUDA_EVENT, "rocm": MeasurementType.DEVICE_EVENT}
+    if platform not in families:
+        raise ValueError(f"Unsupported configured GPU platform: {platform!r}")
+    return families[platform]

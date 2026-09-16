@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from frontier.config import global_vars
+from frontier.config.device_sku_config import H800DeviceSKUConfig
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
 )
@@ -19,16 +20,18 @@ def _make_predictor(cluster_type: ClusterType, runtime_mode: str = "NONE"):
     )
 
     class DummyPredictor(SklearnExecutionTimePredictor):
+        def __init__(self):
+            self._cluster_type = cluster_type
+            self._replica_config = SimpleNamespace(device_config=H800DeviceSKUConfig())
+            self._get_decode_cuda_graph_runtime_mode = lambda _batch: runtime_mode
+
         def _get_estimator(self):
             return None
 
         def _get_grid_search_params(self):
             return {}
 
-    predictor = object.__new__(DummyPredictor)
-    predictor._cluster_type = cluster_type
-    predictor._get_decode_cuda_graph_runtime_mode = lambda _batch: runtime_mode
-    return predictor
+    return DummyPredictor()
 
 
 @pytest.fixture(autouse=True)
@@ -318,6 +321,8 @@ def _make_manager():
     manager._cluster_configs = {
         ClusterType.PREFILL: cluster_config,
         ClusterType.DECODE: cluster_config,
+        ClusterType.DECODE_ATTN: cluster_config,
+        ClusterType.DECODE_FFN: cluster_config,
         ClusterType.MONOLITHIC: cluster_config,
     }
     return manager
@@ -550,7 +555,7 @@ def test_device_event_path_contract_handles_extensionless_legacy_and_explicit_va
         network_device="xgmi",
     )
     assert paths.compute == "explicit/mi355x/linear.events"
-    assert paths.attention == "attention/base_device_event"
+    assert paths.attention == ""
     assert paths.moe == "explicit/model/name/moe.events"
     assert paths.all_reduce == "net/xgmi/all_reduce.csv"
     assert paths.send_recv == ""

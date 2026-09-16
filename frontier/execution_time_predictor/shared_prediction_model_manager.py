@@ -38,6 +38,8 @@ from frontier.execution_time_predictor.attention_tp_policy import (
 from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
 from frontier.execution_time_predictor.measurement_input_paths import (
     resolve_measurement_input_paths,
+    resolve_training_file_paths,
+    resolve_event_measurement_type,
 )
 from frontier.execution_time_predictor.attention_dataset_contract import (
     enforce_mixed_attention_input_contract,
@@ -551,23 +553,7 @@ class ExecutionTimePredictionModelManager:
     def _event_measurement_type_for_replica(replica_config) -> MeasurementType:
         """Select an event family from the configured device metadata only."""
 
-        device_config = getattr(replica_config, "device_config", None)
-        platform = getattr(device_config, "gpu_platform", None)
-        if platform is None:
-            try:
-                from frontier.config.device_sku_config import BaseDeviceSKUConfig
-
-                device_config = BaseDeviceSKUConfig.create_from_type_string(
-                    str(replica_config.device)
-                )
-                platform = device_config.gpu_platform
-            except (AttributeError, ValueError):
-                platform = "cuda"
-        return (
-            MeasurementType.DEVICE_EVENT
-            if str(platform).strip().lower() == "rocm"
-            else MeasurementType.CUDA_EVENT
-        )
+        return resolve_event_measurement_type(replica_config)
 
     def _set_active_measurement_type(self, measurement_type: MeasurementType) -> None:
         self._active_measurement_type = measurement_type
@@ -4619,68 +4605,12 @@ class ExecutionTimePredictionModelManager:
         replica_config = cluster_config.replica_config
         execution_time_predictor_config = cluster_config.execution_time_predictor_config
 
-        def _resolve(path_template: str) -> str:
-            return (
-                path_template
-                .replace("{DEVICE}", replica_config.device)
-                .replace("{MODEL}", replica_config.model_config.get_name())
-                .replace("{NETWORK_DEVICE}", replica_config.network_device)
-            )
-
-        linear_op_file = execution_time_predictor_config.linear_op_input_file
-        if not linear_op_file and execution_time_predictor_config.mlp_input_file:
-            linear_op_file = execution_time_predictor_config.mlp_input_file
-
-        def _device_event_path(field_name: str, fallback: str) -> str:
-            configured = getattr(
-                execution_time_predictor_config,
-                f"{field_name}_device_event_input_file",
-                None,
-            )
-            if configured:
-                return configured
-            if not fallback:
-                return fallback
-            root, extension = os.path.splitext(fallback)
-            return f"{root}_device_event{extension}"
-
-        device_event_linear_op_file = _device_event_path(
-            "linear_op", linear_op_file
+        return resolve_training_file_paths(
+            execution_time_predictor_config,
+            device=replica_config.device,
+            model=replica_config.model_config.get_name(),
+            network_device=replica_config.network_device,
         )
-        device_event_attention_file = _device_event_path(
-            "atten", execution_time_predictor_config.atten_input_file
-        )
-        device_event_moe_file = _device_event_path(
-            "moe", execution_time_predictor_config.moe_input_file
-        )
-
-        return {
-            'compute_input_file': _resolve(linear_op_file),
-            'attention_input_file': _resolve(execution_time_predictor_config.atten_input_file),
-            'moe_input_file': _resolve(execution_time_predictor_config.moe_input_file),
-            'compute_device_event_input_file': _resolve(device_event_linear_op_file),
-            'attention_device_event_input_file': _resolve(device_event_attention_file),
-            'moe_device_event_input_file': _resolve(device_event_moe_file),
-            'all_reduce_input_file': _resolve(execution_time_predictor_config.all_reduce_input_file),
-            'send_recv_input_file': _resolve(execution_time_predictor_config.send_recv_input_file),
-            'cpu_overhead_input_file': _resolve(execution_time_predictor_config.cpu_overhead_input_file),
-            'cpu_overhead_kernel_only_input_file': _resolve(
-                getattr(
-                    execution_time_predictor_config,
-                    'cpu_overhead_kernel_only_input_file',
-                    execution_time_predictor_config.cpu_overhead_input_file,
-                )
-            ),
-            'pp_stage_boundary_input_file': _resolve(execution_time_predictor_config.pp_stage_boundary_input_file),
-            'pp_receiver_head_input_file': _resolve(execution_time_predictor_config.pp_receiver_head_input_file),
-            'pp_producer_send_path_input_file': _resolve(execution_time_predictor_config.pp_producer_send_path_input_file),
-            'pp_prefill_consumer_active_input_file': _resolve(
-                execution_time_predictor_config.pp_prefill_consumer_active_input_file
-            ),
-            'compute_kernel_only_input_file': _resolve(execution_time_predictor_config.linear_op_kernel_only_input_file),
-            'attention_kernel_only_input_file': _resolve(execution_time_predictor_config.atten_kernel_only_input_file),
-            'moe_kernel_only_input_file': _resolve(execution_time_predictor_config.moe_kernel_only_input_file),
-        }
 
     def get_training_context(self, cluster_type: ClusterType) -> Dict[str, Any]:
         """
