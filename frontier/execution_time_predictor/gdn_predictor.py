@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import hashlib
+from dataclasses import dataclass
 import json
 from pathlib import Path
 import pickle
@@ -11,8 +11,15 @@ from typing import Any, Mapping
 import numpy as np
 import pandas as pd
 
-from frontier.attention.gdn.features import GDNBatchFeatures
+from frontier.attention.gdn.features import (
+    GDN_ARTIFACT_SCHEMA_VERSION,
+    GDNBatchFeatures,
+    GDN_FEATURE_COLUMNS,
+    GDN_TASKS,
+    validate_gdn_artifact_identity,
+)
 from frontier.entities.time_components import AttentionOperatorTimes, AttentionTime
+from frontier.execution_time_predictor.cache_io import dataset_fingerprint
 from frontier.logger import init_logger
 from frontier.types import MeasurementType
 
@@ -20,14 +27,14 @@ from frontier.types import MeasurementType
 logger = init_logger(__name__)
 
 
-def _dataset_fingerprint(path: str | Path) -> str:
-    """Return the content identity used by the training manifest."""
+@dataclass(frozen=True)
+class _TaskModel:
+    """A fitted task whose persisted metadata has passed boundary validation."""
 
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    estimator: Any
+    feature_names: tuple[str, ...]
+    exact_lookup: Mapping[tuple[float, ...], float]
+    feature_bounds: Mapping[str, tuple[float, float]]
 
 
 def _coerce_measurement_type(value: str | MeasurementType) -> MeasurementType:
@@ -47,15 +54,57 @@ class GDNPredictor:
         *,
         identity: Mapping[str, Any],
     ) -> None:
-        if not models:
-            raise ValueError("GDNPredictor requires at least one trained estimator")
-        self._models = dict(models)
-        self.identity = dict(identity)
-        self.measurement_type = _coerce_measurement_type(self.identity.get("measurement_type"))
-        stack = str(self.identity.get("runtime_stack_signature", "")).strip()
-        if not stack:
-            raise ValueError("GDN model identity requires runtime_stack_signature")
-        self.runtime_stack_signature = stack
+        if set(models) != set(GDN_TASKS):
+            raise ValueError("GDNPredictor requires the complete phase-qualified task set")
+        self.identity = validate_gdn_artifact_identity(identity)
+        self.measurement_type = _coerce_measurement_type(self.identity["measurement_type"])
+        self.runtime_stack_signature = self.identity["runtime_stack_signature"]
+        self._models = {
+            key: self._validate_task_model(key, estimator)
+            for key, estimator in models.items()
+        }
+
+    def _validate_task_model(self, key: tuple[str, str], estimator: Any) -> _TaskModel:
+        operator, phase = key
+        task_name = f"{operator}_{phase}"
+        try:
+            artifact_identity = estimator._frontier_gdn_identity
+            artifact_task = estimator._frontier_gdn_task
+            features = tuple(estimator._frontier_gdn_feature_names)
+            target = estimator._frontier_gdn_target_col
+            exact = estimator._frontier_gdn_exact_lookup
+            bounds = estimator._frontier_gdn_feature_bounds
+            fitted_features = tuple(estimator.feature_names_in_)
+        except (AttributeError, TypeError) as exc:
+            raise ValueError(f"GDN artifact has incomplete metadata for {task_name}") from exc
+        if artifact_identity != self.identity:
+            raise ValueError(f"GDN artifact identity mismatch for {task_name}")
+        if (
+            artifact_task != task_name
+            or features != GDN_FEATURE_COLUMNS
+            or fitted_features != features
+            or target != f"time_stats.{operator}.median"
+        ):
+            raise ValueError(f"GDN artifact task/feature/target metadata mismatch for {task_name}")
+        if not isinstance(exact, Mapping) or not isinstance(bounds, Mapping):
+            raise ValueError(f"GDN artifact has invalid lookup metadata for {task_name}")
+        if set(bounds) != set(features):
+            raise ValueError(f"GDN artifact has incomplete feature bounds for {task_name}")
+        try:
+            normalized_bounds = {name: tuple(map(float, bounds[name])) for name in features}
+            normalized_exact = {tuple(map(float, key)): float(value) for key, value in exact.items()}
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"GDN artifact has invalid numeric metadata for {task_name}") from exc
+        if any(
+            len(bound) != 2 or not np.isfinite(bound).all() or bound[0] > bound[1]
+            for bound in normalized_bounds.values()
+        ) or any(
+            len(vector) != len(features) or not np.isfinite(vector).all()
+            or not np.isfinite(value) or value < 0
+            for vector, value in normalized_exact.items()
+        ):
+            raise ValueError(f"GDN artifact has invalid numeric metadata for {task_name}")
+        return _TaskModel(estimator, features, normalized_exact, normalized_bounds)
 
     @classmethod
     def from_directory(
@@ -77,7 +126,11 @@ class GDNPredictor:
             raise FileNotFoundError(f"GDN manifest does not exist: {manifest_path}")
         with manifest_path.open(encoding="utf-8") as handle:
             manifest = json.load(handle)
-        identity = dict(manifest.get("identity") or {})
+        if not isinstance(manifest, dict) or manifest.get("schema_version") != GDN_ARTIFACT_SCHEMA_VERSION:
+            raise ValueError("Unsupported GDN manifest schema_version")
+        if not isinstance(manifest.get("identity"), dict):
+            raise ValueError("GDN manifest requires an identity object")
+        identity = validate_gdn_artifact_identity(manifest["identity"])
         cls._validate_requested_identity(
             identity,
             model_config=model_config,
@@ -94,19 +147,28 @@ class GDNPredictor:
             raise ValueError("GDN manifest must contain a non-empty tasks list")
         models: dict[tuple[str, str], Any] = {}
         for task in tasks:
-            operator = str(task["operator"])
-            phase = str(task["phase"])
-            artifact = directory / str(task["artifact"])
+            if not isinstance(task, dict):
+                raise ValueError("GDN manifest task must be an object")
+            operator, phase = task.get("operator"), task.get("phase")
+            if not isinstance(operator, str) or not isinstance(phase, str):
+                raise ValueError("GDN manifest requires task operator and phase")
+            key = (operator, phase)
+            if key not in GDN_TASKS or key in models:
+                raise ValueError(f"GDN manifest has unknown or duplicate task {key}")
+            if (
+                task.get("task") != f"{operator}_{phase}"
+                or task.get("feature_names") != list(GDN_FEATURE_COLUMNS)
+                or task.get("target_column") != f"time_stats.{operator}.median"
+                or not isinstance(task.get("artifact"), str)
+                or not task["artifact"]
+            ):
+                raise ValueError(f"GDN manifest task metadata mismatch for {key}")
+            artifact = directory / task["artifact"]
             if not artifact.is_file():
                 raise FileNotFoundError(f"GDN estimator artifact does not exist: {artifact}")
             with artifact.open("rb") as handle:
                 estimator = pickle.load(handle)
-            artifact_identity = getattr(estimator, "_frontier_gdn_identity", None)
-            if artifact_identity != identity:
-                raise ValueError(
-                    f"GDN artifact identity mismatch for {task.get('task', artifact.name)}"
-                )
-            models[(operator, phase)] = estimator
+            models[key] = estimator
         predictor = cls(models, identity=identity)
         return predictor
 
@@ -159,7 +221,7 @@ class GDNPredictor:
         if quant_signature is not None:
             expected["quant_signature"] = quant_signature
         if dataset_path is not None:
-            expected["dataset_fingerprint"] = _dataset_fingerprint(dataset_path)
+            expected["dataset_fingerprint"] = dataset_fingerprint(dataset_path)
         mismatches = {
             key: (identity.get(key), value)
             for key, value in expected.items()
@@ -168,7 +230,7 @@ class GDNPredictor:
         if mismatches:
             raise ValueError(f"GDN model identity mismatch: {mismatches}")
 
-    def _get_model(self, operator_name: str, phase: str) -> Any:
+    def _get_model(self, operator_name: str, phase: str) -> _TaskModel:
         try:
             return self._models[(operator_name, phase)]
         except KeyError as exc:
@@ -178,33 +240,28 @@ class GDNPredictor:
             ) from exc
 
     @staticmethod
-    def _predict_one(estimator: Any, features: GDNBatchFeatures) -> float:
-        feature_names = tuple(
-            getattr(estimator, "_frontier_gdn_feature_names", ())
-        )
-        if not feature_names:
-            raise ValueError("GDN estimator is missing feature identity metadata")
-        values = features.feature_values
-        vector = [float(values[name]) for name in feature_names]
-        exact_lookup = getattr(estimator, "_frontier_gdn_exact_lookup", {})
+    def _predict_one(model: _TaskModel, features: GDNBatchFeatures) -> float:
+        feature_names = model.feature_names
+        vector = features.as_vector(feature_names)
         key = tuple(vector)
-        if key in exact_lookup:
-            return float(exact_lookup[key])
-        bounds = getattr(estimator, "_frontier_gdn_feature_bounds", {})
-        out_of_range = {
-            name: (value, bounds[name])
-            for name, value in zip(feature_names, vector)
-            if name in bounds and (value < bounds[name][0] or value > bounds[name][1])
-        }
-        if out_of_range:
-            logger.warning(
-                "GDN numeric prediction is outside profiled feature bounds; "
-                "using estimator extrapolation without clipping: %s",
-                out_of_range,
+        if key in model.exact_lookup:
+            prediction = model.exact_lookup[key]
+        else:
+            bounds = model.feature_bounds
+            out_of_range = {
+                name: (value, bounds[name])
+                for name, value in zip(feature_names, vector)
+                if value < bounds[name][0] or value > bounds[name][1]
+            }
+            if out_of_range:
+                logger.warning(
+                    "GDN numeric prediction is outside profiled feature bounds; "
+                    "using estimator extrapolation without clipping: %s",
+                    out_of_range,
+                )
+            prediction = float(
+                model.estimator.predict(pd.DataFrame([vector], columns=list(feature_names)))[0]
             )
-        prediction = float(
-            estimator.predict(pd.DataFrame([vector], columns=list(feature_names)))[0]
-        )
         if not np.isfinite(prediction) or prediction < 0.0:
             raise ValueError(f"GDN estimator produced invalid timing {prediction!r}")
         return prediction

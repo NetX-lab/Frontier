@@ -6,6 +6,62 @@ from dataclasses import dataclass
 import math
 from typing import Any, Mapping
 
+from frontier.attention.families import GATED_DELTA_NET_ATTENTION_FAMILY
+from frontier.attention.ops import AttentionPhase
+from frontier.types import MeasurementType
+
+
+GDN_TASKS = tuple(
+    (operator.name, phase.value)
+    for phase in (AttentionPhase.PREFILL, AttentionPhase.DECODE)
+    for operator in GATED_DELTA_NET_ATTENTION_FAMILY.predictor_ops()
+    if phase in operator.phases
+)
+GDN_ARTIFACT_SCHEMA_VERSION = 1
+GDN_IDENTITY_COLUMNS = tuple(
+    column
+    for column in GATED_DELTA_NET_ATTENTION_FAMILY.required_profiling_feature_columns
+    if column not in {
+        "batch_size", "batch_num_tokens", "batch_num_prefill_tokens",
+        "batch_num_decode_tokens", "max_query_len", "has_initial_state",
+    }
+)
+_GDN_INTEGER_IDENTITY_FIELDS = frozenset({
+    "tensor_parallel_size", "hidden_size", "conv_kernel_size", "key_head_dim",
+    "value_head_dim", "num_key_heads", "num_value_heads",
+})
+
+
+def validate_gdn_artifact_identity(identity: Mapping[str, Any]) -> dict[str, Any]:
+    """Normalize the complete selected model/runtime identity at the boundary."""
+
+    normalized = dict(identity)
+    required = tuple(
+        "tensor_parallel_size" if column == "num_tensor_parallel_workers" else column
+        for column in GDN_IDENTITY_COLUMNS
+    ) + ("dataset_fingerprint",)
+    for name in required:
+        value = identity.get(name)
+        if value is None or not str(value).strip() or (
+            isinstance(value, float) and not math.isfinite(value)
+        ):
+            raise ValueError(f"GDN identity requires nonempty {name}")
+        if name in _GDN_INTEGER_IDENTITY_FIELDS:
+            try:
+                integer = int(value)
+                valid = integer > 0 and float(value) == integer
+            except (ValueError, TypeError, OverflowError):
+                valid = False
+            if not valid:
+                raise ValueError(f"GDN identity {name} must be a positive integer")
+            normalized[name] = integer
+        else:
+            normalized[name] = str(value).strip()
+    normalized["measurement_type"] = MeasurementType.from_string(
+        normalized["measurement_type"]
+    ).value
+    return normalized
+
 
 GDN_FEATURE_COLUMNS = (
     "batch_size",
@@ -186,4 +242,11 @@ class GDNBatchFeatures:
         )
 
 
-__all__ = ["GDNBatchFeatures", "GDN_FEATURE_COLUMNS"]
+__all__ = [
+    "GDNBatchFeatures",
+    "GDN_FEATURE_COLUMNS",
+    "GDN_TASKS",
+    "GDN_ARTIFACT_SCHEMA_VERSION",
+    "GDN_IDENTITY_COLUMNS",
+    "validate_gdn_artifact_identity",
+]

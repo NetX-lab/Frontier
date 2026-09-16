@@ -29,3 +29,7 @@ A. Retain uniform one-layer runtime and stage-wide reporting semantics from the 
 B. Preserve all historical numeric artifacts through explicitly named boundary adapters: normalize disaggregated dummy payloads according to historical call scope and project historical single-layer ledger outputs. This retains historical artifacts at the cost of documented legacy policies at dummy/reporting boundaries and would require a scope decision against the plan's stage-wide reporting acceptance.
 
 Neither option alters native profiling values, numeric tolerance, golden fixtures, or hardware support. Do not silently choose either while D01 is pending. Continue independent work.
+
+## Decision recorded — 2026-09-16
+
+User selected the recommended semantic corrections: retain the uniform layer/stage contract, preserve observed baseline differences, and validate against an independent oracle. The decision closes D01 for the two isolated differences above. Existing simulator comparison tolerances remain unchanged; other differences remain subject to investigation.

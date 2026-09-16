@@ -2,6 +2,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-16 | Recorded D03 decision to retain existing request lifecycle scope. |
 | 2026-09-16 | Recorded authorization to publish local commits and the latest independent completion audit to PR #33 for manual review; merge remains unauthorized. |
 | 2026-09-16 | Recorded the independent v1.1 completion audit and audit-only boundary. |
 | 2026-09-15 | Recorded authorization to commit the current task documents and push them to the existing PR. |
@@ -59,3 +60,15 @@ force-push, history rewrite, or branch deletion.
 > strictly follow the doc plan to implement and fix bugs and questions in current worktree branch: task_memory/task_2026-09-14_pr31_selective_integration_v2/Frontier_PR33_New_Execution_Plan_2026-09-16_EN.md
 
 The named W00–W11 plan is the active implementation specification and supersedes the historical audit-only boundary. Its in-scope runtime/interface migrations, tests, cleanup, and local commits are authorized. Preserve all D01–D03 decisions and hardware boundaries. Prior publication requests concern already-existing commits/documents; no new publication is inferred for this remediation.
+
+## [Follow-up Decision] D03 supported lifecycle scope — 2026-09-16
+
+> 保留当前 lifecycle 范围（推荐）
+
+Retain the existing admission, continuation, completion and failure-cleanup scope. No request-level cancellation API exists; StageExecutionContext.cancel(ticket) is stage-ticket cancellation only. A new request-cancellation API belongs to a separate task. D03 is resolved; no new API is authorized or required for this task.
+
+## [Follow-up Decision] D01 uniform timing semantics — 2026-09-16
+
+> 接受已定位的语义修正（推荐）：保留 uniform layer/stage contract，记录 baseline 差异并以独立 oracle 验收。
+
+Accept the two isolated corrections in w03_divergence_decision.md: PD-AF dummy PREFILL must retain physical one-layer values rather than divide them by 32; co-location MoE stage ledger must include all 32 executed layers rather than report the first layer. Preserve the uniform layer/stage contract and record the measured baseline differences. Validate using independent arithmetic oracles; comparator tolerances remain unchanged. This does not authorize blanket acceptance of other discrepancies.

@@ -337,3 +337,15 @@ Implemented full GDN campaign preflight, timer owner lifecycle, active/E2E sampl
 ## W06 path boundary sub-step — 2026-09-16
 
 Canonical resolver now owns per-field override/config/derive precedence, full manager dictionary projection, PP fields and historical device-event aliases. Both device selectors reject malformed supplied metadata via one shared resolver. Focused and real hybrid integration: 51 passed in 9.25s (`/data/ycfeng/tmp/pr33-w06-second.log`); report `test_report_2026-09-16_w06_paths.md`. W03 changes in sklearn predictor are staged separately from the completed W06 boundary hunks.
+
+## D03 decision — 2026-09-16
+
+User explicitly selected the existing lifecycle scope. Request-level cancellation is deferred to a separate task; stage-ticket cancellation is not request cancellation. W02 supported-scope acceptance is complete with its recorded real Simulator and rollback evidence. D01 remains pending; independent W04/W07/W09 work continues.
+
+## D01 decision — 2026-09-16
+
+User explicitly accepted the isolated uniform one-layer/stage corrections, with documented baseline differences and independent-oracle acceptance. No boundary adapter or tolerance change is required. Other discrepancies still require diagnosis. D01 and D03 are resolved for the presented cases; W03 migration and full fidelity validation continue.
+
+## W09 artifact boundary sub-step — 2026-09-16
+
+Canonical family-derived tasks, complete selected identities, load-time manifest/artifact metadata checks, runtime-ready task models, numeric guards and shared atomic persistence are implemented. Original 25 RED cases resolved; final 108 PASS in 17.98s including real synthetic constructor E2E and cache regressions. See test_report_2026-09-16_w09_artifacts.md. Root inspected production diffs; native production parity remains unverified.

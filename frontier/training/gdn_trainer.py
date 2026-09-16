@@ -2,18 +2,29 @@
 
 from __future__ import annotations
 
-import json
-import hashlib
 import os
 from pathlib import Path
-import pickle
 from typing import Any, Dict, List
 
+import numpy as np
 import pandas as pd
+from sklearn.model_selection import ParameterGrid
 
 from frontier.attention.families import GATED_DELTA_NET_ATTENTION_FAMILY
-from frontier.attention.gdn.features import GDNBatchFeatures, GDN_FEATURE_COLUMNS
+from frontier.attention.gdn.features import (
+    GDN_ARTIFACT_SCHEMA_VERSION,
+    GDNBatchFeatures,
+    GDN_FEATURE_COLUMNS,
+    GDN_IDENTITY_COLUMNS,
+    GDN_TASKS,
+    validate_gdn_artifact_identity,
+)
 from frontier.attention.profiling_mapping import validate_attention_profiling_dataframe
+from frontier.execution_time_predictor.cache_io import (
+    atomic_json_dump,
+    atomic_pickle_dump,
+    dataset_fingerprint,
+)
 from frontier.logger import init_logger
 from frontier.training.base_trainer import BaseTrainer
 from frontier.types import MeasurementType
@@ -22,28 +33,8 @@ from frontier.types import MeasurementType
 logger = init_logger(__name__)
 
 
-GDN_TASKS = (
-    ("gdn_input_projections", "prefill"),
-    ("gdn_core_prefill", "prefill"),
-    ("gdn_output_projection", "prefill"),
-    ("gdn_input_projections", "decode"),
-    ("gdn_core_decode", "decode"),
-    ("gdn_output_projection", "decode"),
-)
-
-
 def _task_name(operator_name: str, phase: str) -> str:
     return f"{operator_name}_{phase}"
-
-
-def _dataset_fingerprint(path: str | os.PathLike[str]) -> str:
-    """Identify the exact CSV bytes used to train the GDN artifacts."""
-
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 class GDNTrainer(BaseTrainer):
@@ -112,7 +103,6 @@ class GDNTrainer(BaseTrainer):
         validate_attention_profiling_dataframe(
             frame,
             GATED_DELTA_NET_ATTENTION_FAMILY,
-            measurement_type=self.expected_measurement_type,
         )
         frame = frame.copy()
         frame["measurement_type"] = frame["measurement_type"].map(
@@ -124,6 +114,7 @@ class GDNTrainer(BaseTrainer):
             "model_architecture_profile": self.model_architecture_profile,
             "quant_signature": self.quant_signature,
             "num_tensor_parallel_workers": self.tensor_parallel_size,
+            "runtime_stack_signature": self.runtime_stack_signature,
         }
         for column, expected in selectors.items():
             if expected is not None:
@@ -133,70 +124,23 @@ class GDNTrainer(BaseTrainer):
         if frame.empty:
             raise ValueError(f"No GDN rows match requested identity: {selectors}")
 
-        stack_values = tuple(sorted(str(value) for value in frame["runtime_stack_signature"].dropna().unique()))
-        if len(stack_values) != 1:
-            raise ValueError(
-                "GDN profiling rows mix incompatible runtime contracts: "
-                f"runtime_stack_signature={stack_values}"
-            )
-        if self.runtime_stack_signature is not None and stack_values[0] != self.runtime_stack_signature:
-            raise ValueError(
-                "GDN runtime_stack_signature mismatch: "
-                f"expected={self.runtime_stack_signature!r}, actual={stack_values[0]!r}"
-            )
-        runtime_identity_columns = (
-            "gdn_runtime_backend",
-            "gdn_rank_aggregation",
-            "gdn_prefill_backend",
-            "gdn_decode_backend",
-            "gqa_interleaved_layout",
-            "packed_recurrent_decode",
-            "model_dtype",
-            "conv_state_dtype",
-            "recurrent_state_dtype",
-            "hidden_size",
-            "conv_kernel_size",
-            "key_head_dim",
-            "value_head_dim",
-            "num_key_heads",
-            "num_value_heads",
+        validate_attention_profiling_dataframe(
+            frame,
+            GATED_DELTA_NET_ATTENTION_FAMILY,
+            measurement_type=self.expected_measurement_type,
+            identity_columns=GDN_IDENTITY_COLUMNS,
         )
-        for column in runtime_identity_columns:
-            values = tuple(sorted(str(value) for value in frame[column].dropna().unique()))
-            if len(values) != 1:
-                raise ValueError(
-                    "GDN profiling rows mix incompatible runtime contracts: "
-                    f"{column}={values}"
-                )
-        self.identity = {
-            "model_name": self.model_name,
-            "model_architecture_profile": str(frame.iloc[0]["model_architecture_profile"]),
-            "quant_signature": str(frame.iloc[0]["quant_signature"]),
-            "device": str(frame.iloc[0]["device"]),
-            "tensor_parallel_size": int(frame.iloc[0]["num_tensor_parallel_workers"]),
-            "measurement_type": self.expected_measurement_type.value,
-            "runtime_stack_signature": stack_values[0],
-            "dataset_fingerprint": _dataset_fingerprint(self.dataset_path),
-            "gdn_runtime_backend": str(frame.iloc[0]["gdn_runtime_backend"]),
-            "gdn_rank_aggregation": str(frame.iloc[0]["gdn_rank_aggregation"]),
-            "gdn_prefill_backend": str(frame.iloc[0]["gdn_prefill_backend"]),
-            "gdn_decode_backend": str(frame.iloc[0]["gdn_decode_backend"]),
-            **{
-                column: (
-                    int(frame.iloc[0][column])
-                    if column in {
-                        "hidden_size",
-                        "conv_kernel_size",
-                        "key_head_dim",
-                        "value_head_dim",
-                        "num_key_heads",
-                        "num_value_heads",
-                    }
-                    else str(frame.iloc[0][column])
-                )
-                for column in runtime_identity_columns
-            },
+        selected_identity = {
+            ("tensor_parallel_size" if column == "num_tensor_parallel_workers" else column):
+            frame.iloc[0][column]
+            for column in GDN_IDENTITY_COLUMNS
         }
+        selected_identity.update(
+            model_name=self.model_name,
+            dataset_fingerprint=dataset_fingerprint(self.dataset_path),
+        )
+        self.identity = validate_gdn_artifact_identity(selected_identity)
+
         def materialize_features(row: pd.Series) -> pd.Series:
             features = GDNBatchFeatures.from_row(row)
             for name, value in features.feature_values.items():
@@ -216,7 +160,7 @@ class GDNTrainer(BaseTrainer):
 
     def _get_target_col(self, model_name: str) -> str:
         operator_name, phase = model_name.rsplit("_", 1)
-        if phase not in {"prefill", "decode"}:
+        if (operator_name, phase) not in self.TASKS:
             raise ValueError(f"Invalid GDN task name: {model_name}")
         return f"time_stats.{operator_name}.median"
 
@@ -260,12 +204,11 @@ class GDNTrainer(BaseTrainer):
         feature_cols: list[str],
         target_col: str,
     ) -> Any:
-        """Train one task, including the one-row fixture case.
+        """Fit one task using the BaseTrainer estimator and cache contract.
 
-        A one-row CPU fixture has no meaningful cross-validation split. Fit the
-        deterministic estimator directly with its first configured parameter
-        value; normal multi-row datasets continue through ``BaseTrainer``'s
-        cache/grid-search path.
+        One sample cannot support cross-validation. It is supported only when
+        the caller specifies exactly one parameter configuration; choosing
+        among multiple configurations requires at least two samples.
         """
 
         if len(frame) != 1:
@@ -276,15 +219,30 @@ class GDNTrainer(BaseTrainer):
                 target_col=target_col,
             )
         estimator, grid = self._create_estimator_and_params()
-        selected = {
-            name: values[0]
-            for name, values in grid.items()
-            if isinstance(values, (list, tuple)) and values
-        }
-        if selected:
-            estimator.set_params(**selected)
+        candidates = ParameterGrid(grid)
+        if len(candidates) != 1:
+            raise ValueError(
+                "One-row GDN training requires exactly one parameter configuration; "
+                "provide at least two rows for cross-validation"
+            )
+        model_hash = self._get_model_hash(task, frame)
+        cached = self._load_model_from_cache(task, model_hash)
+        if cached is not None:
+            return cached
+        estimator.set_params(**candidates[0])
         estimator.fit(frame[feature_cols], frame[target_col])
+        self._store_model_in_cache(task, model_hash, estimator)
         return estimator
+
+    def _store_model_in_cache(self, model_name: str, model_hash: str, model: Any) -> None:
+        """Use complete-file publication for this trainer's estimator caches."""
+
+        from fasteners import InterProcessReaderWriterLock
+
+        with InterProcessReaderWriterLock(
+            f"{self.output_dir}/{model_hash}_model_lock.file"
+        ).write_lock():
+            atomic_pickle_dump(model, Path(self.output_dir) / f"{model_name}_{model_hash}.pkl")
 
     def train(self) -> Dict[str, Any]:
         frame = self._load_dataset()
@@ -298,6 +256,9 @@ class GDNTrainer(BaseTrainer):
             target_col = f"time_stats.{operator_name}.median"
             if target_col not in task_frame.columns:
                 raise ValueError(f"GDN dataset is missing target {target_col}")
+            targets = task_frame[target_col].to_numpy(dtype=float)
+            if not np.isfinite(targets).all() or (targets < 0).any():
+                raise ValueError(f"GDN dataset has invalid timings for {task}")
             # Each phase-qualified task receives only its physical phase rows;
             # gdn_layer_e2e is intentionally never referenced.
             estimator = self._train_task_estimator(
@@ -314,9 +275,6 @@ class GDNTrainer(BaseTrainer):
                 target_col=target_col,
             )
             artifact_name = f"{task}.pkl"
-            artifact_path = Path(self.output_dir) / artifact_name
-            with artifact_path.open("wb") as handle:
-                pickle.dump(estimator, handle, protocol=pickle.HIGHEST_PROTOCOL)
             models[task] = estimator
             manifest_tasks.append(
                 {
@@ -328,13 +286,15 @@ class GDNTrainer(BaseTrainer):
                     "target_column": target_col,
                 }
             )
+        # Fit and validate every task before exposing any new final artifact.
+        for task in manifest_tasks:
+            atomic_pickle_dump(models[task["task"]], Path(self.output_dir) / task["artifact"])
         manifest = {
-            "schema_version": 1,
+            "schema_version": GDN_ARTIFACT_SCHEMA_VERSION,
             "identity": self.identity,
             "tasks": manifest_tasks,
         }
-        with (Path(self.output_dir) / "gdn_manifest.json").open("w", encoding="utf-8") as handle:
-            json.dump(manifest, handle, indent=2, sort_keys=True)
+        atomic_json_dump(manifest, Path(self.output_dir) / "gdn_manifest.json")
         return models
 
 
