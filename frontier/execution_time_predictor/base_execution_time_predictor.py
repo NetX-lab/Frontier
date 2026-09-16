@@ -54,9 +54,30 @@ class BaseExecutionTimePredictor(ABC):
 
     def _assemble_stage(self, layer_times, *, first_layer_id: int) -> StageExecutionTime:
         """Attach model-owned identities to ordered numerical layer results."""
+        specs = [
+            self._model_config.get_layer_attention_spec(first_layer_id + offset)
+            for offset in range(len(layer_times))
+        ]
+        if (
+            len(layer_times) > 1
+            and all(timing is layer_times[0] for timing in layer_times)
+            and all(
+                spec.family_id == specs[0].family_id
+                and spec.variant_id == specs[0].variant_id
+                for spec in specs
+            )
+        ):
+            source = layer_times[0].as_single_layer(
+                global_layer_id=specs[0].global_layer_id,
+                attention_family_id=specs[0].family_id,
+                attention_variant_id=specs[0].variant_id,
+                copy_components=False,
+            )
+            return StageExecutionTime.from_execution_time(
+                source, num_layers=len(layer_times), first_layer_id=first_layer_id,
+            )
         layers = []
-        for offset, timing in enumerate(layer_times):
-            spec = self._model_config.get_layer_attention_spec(first_layer_id + offset)
+        for timing, spec in zip(layer_times, specs):
             layers.append(timing.as_single_layer(
                 global_layer_id=spec.global_layer_id,
                 attention_family_id=spec.family_id,

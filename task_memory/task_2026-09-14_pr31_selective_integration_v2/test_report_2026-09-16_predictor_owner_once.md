@@ -4,6 +4,7 @@
 | --- | --- |
 | 2026-09-16 | Recorded W03 construction ownership, terminal replay range, and homogeneous snapshot regression repairs. |
 | 2026-09-16 | Added profile-supported homogeneous disaggregation reuse, missing-GDN fail-fast, and final fixture migration evidence. |
+| 2026-09-16 | Reused the existing homogeneous stage constructor to avoid repeated first-read block calculation while preserving model identity and range validation. |
 
 # Predictor construction ownership verification
 
@@ -67,3 +68,18 @@ python -m pytest tests/unit/test_dense_execution_time_layer_scaling.py tests/uni
 Observed results: **27 passed in 2.84 s**, **80 passed in 4.01 s**, and final **104 passed in 14.52 s**, respectively. The five failing fixtures from root's full-suite run were migrated: typed model with physical specs and normal dense constructor; explicit fake-manager GDN accessor; PP send/recv only in the first owner's per-layer map. All existing numerical expected values remain unchanged; only the declared once-only PP ownership expectation changed.
 
 No new unresolved production failure was observed. The mutable-snapshot microbenchmark subsequently completed in the exclusive window on `f9099f85`: one-layer snapshot 17.412628 microseconds, eight mutable-layer stage 137.845563 microseconds, eight finalized-layer stage 5.185594 microseconds (five-sample medians). Exact command and raw evidence are recorded in `w04_performance_review.md`. Final paired wall time remains root-owned; these isolated component measurements do not establish a whole-simulator speedup.
+
+## Homogeneous first-read aggregation follow-up
+
+After the 18-process paired run, root authorized removing a second source-confirmed cost: although homogeneous producers shared one finalized payload, the first `StageExecutionTime.model_time_ms` read still invoked the same block arithmetic for every physical identity. The existing `StageExecutionTime.from_execution_time` already computes that homogeneous total once as `source.get_single_layer_block_time() * num_layers`, plus once-only PP/proposer/terminal values.
+
+`BaseExecutionTimePredictor._assemble_stage` now resolves **every** model-owned physical spec first, retaining the complete range check. Only multiple references to the **same numerical object**, with identical family and variant across all requested specs, use that existing classmethod after binding the source identity. Distinct numerical objects or mixed attention identities retain ordinary per-layer assembly. No new API, cache type, fallback identity or numerical multiplier on `ExecutionTime` was added.
+
+Required work remains O(N): physical identity records, model-range validation and stage identity validation. The avoidable work becomes one block calculation rather than N calculations over the same immutable numerical payload. This does not eliminate required operator-map aggregation for requested reporting.
+
+```bash
+python -m pytest tests/unit/test_dense_execution_time_layer_scaling.py tests/unit/test_stage_execution_time.py tests/unit/test_stage_finalized_contract.py tests/unit/test_attention_query_cache.py tests/unit/test_moe_predictor_layer_id_semantics.py tests/unit/test_sklearn_disaggregation_execution_time_predictor.py tests/unit/test_mtp_terminal_overshoot_ep_replay.py -q --tb=short > /data/ycfeng/tmp/pr33-homogeneous-aggregate-final.log 2>&1
+git diff --check -- frontier/execution_time_predictor/base_execution_time_predictor.py tests/unit/test_dense_execution_time_layer_scaling.py
+```
+
+**PASS: 132 passed in 5.59 s**; diff check produced no errors. The new normal-constructor spies show exactly one block calculation for a five-layer dense/PDD stage, including repeated total reads. A range extending beyond the final model layer still raises `ValueError`; reusing one source across GDN/full-attention identities preserves both model-owned family/variant tuples. Existing mixed-layer, MTP, independent MoE and immutable-stage tests remain green. Source is frozen again for root-owned final timing; this report does not infer a new performance ratio.

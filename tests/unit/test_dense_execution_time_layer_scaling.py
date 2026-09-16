@@ -5,7 +5,7 @@ from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
-from predictor_cache_fixtures import CacheFixtureDisaggregationPredictor, cache_model
+from predictor_cache_fixtures import CacheFixtureDisaggregationPredictor, CacheFixturePredictor, cache_model
 
 from frontier.config import (
     MetricsConfig, RandomForrestExecutionTimePredictorConfig, ReplicaConfig, VllmV1SchedulerConfig,
@@ -189,6 +189,56 @@ def test_homogeneous_stage_snapshots_numerical_components_once(monkeypatch):
     assert len({id(layer) for layer in stage.layer_execution_times}) == 5
     assert len({id(layer._attention_time) for layer in stage.layer_execution_times}) == 1
 
+
+@pytest.mark.parametrize("disaggregated", [False, True])
+def test_homogeneous_stage_computes_block_once_and_keeps_range_validation(
+    monkeypatch, disaggregated,
+):
+    from frontier.entities import Batch, ExecutionTime, Request
+
+    predictor = (
+        CacheFixtureDisaggregationPredictor(model_config=replace(cache_model(), is_moe=False))
+        if disaggregated else _DummySklearnPredictor()
+    )
+    role = ClusterType.PREFILL if disaggregated else ClusterType.MONOLITHIC
+    batch = Batch(
+        replica_id=0,
+        requests=[Request(arrived_at=0.0, num_prefill_tokens=8, num_decode_tokens=1)],
+        num_tokens=[8], is_moe=False,
+    )
+    calls = []
+    original = ExecutionTime.get_single_layer_block_time
+
+    def record_block(timing):
+        calls.append(timing.global_layer_id)
+        return original(timing)
+
+    monkeypatch.setattr(ExecutionTime, "get_single_layer_block_time", record_block)
+    stage = predictor.predict_stage_execution_time(
+        batch, stage_id=0, cluster_type=role, num_layers=5, layer_id=3,
+    )
+    assert stage.global_layer_ids == (3, 4, 5, 6, 7)
+    assert stage.model_time_ms > 0.0
+    assert stage.model_time_ms == stage.model_time_ms
+    assert calls == [3]
+
+    with pytest.raises(ValueError, match="out of range"):
+        predictor.predict_stage_execution_time(
+            batch, stage_id=0, cluster_type=role, num_layers=2,
+            layer_id=predictor._model_config.num_layers - 1,
+        )
+    assert calls == [3]
+
+
+def test_shared_numerical_source_keeps_different_model_owned_attention_identities():
+    predictor = CacheFixturePredictor(hybrid=True)
+    source = predictor._get_dummy_execution_time(_DummyBatch(), 0).finalized_copy()
+    stage = predictor._assemble_stage([source, source], first_layer_id=2)
+    specs = [predictor._model_config.get_layer_attention_spec(layer) for layer in (2, 3)]
+    assert specs[0].family_id != specs[1].family_id
+    assert stage.global_layer_ids == (2, 3)
+    assert stage.attention_family_ids == tuple(spec.family_id for spec in specs)
+    assert stage.attention_variant_ids == tuple(spec.variant_id for spec in specs)
 
 @pytest.mark.parametrize("role", [
     ClusterType.PREFILL, ClusterType.DECODE, ClusterType.DECODE_ATTN,
