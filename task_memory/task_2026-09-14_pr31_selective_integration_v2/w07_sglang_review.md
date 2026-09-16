@@ -211,3 +211,24 @@ Observed results:
 - Logs: `/data/ycfeng/tmp/pr33-w05-preflight-regression/w07-native-collection.log`, `w07-native-cpu-skips.log`, and `w07-native-cpu-skips-final.log`.
 
 On an already authorized worker, use the same test command in the existing native profiling environment. The online MXFP4 fixture requires the already documented `VLLM_ROCM_USE_AITER=1` and `VLLM_ROCM_USE_AITER_MOE=1` selections before Python starts; tests do not set these flags automatically. NCCL/RCCL cases require two visible devices. GPU-worker acquisition and environment setup remain governed by the handbook and parent authorization, outside this test module.
+
+The stronger package-absence collection check also passed: **10 tests collected in 0.78s** with imports of torch/vLLM/Triton/AITER/SGLang rejected by an import finder. This intercept applies only to collection, never substitutes a kernel, and directly verifies that node IDs remain available without GPU packages. Exact reproduction:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp python - <<'PY'
+import importlib.abc
+import sys
+import pytest
+
+class NoGpuPackages(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname.split('.')[0] in {'torch', 'vllm', 'triton', 'aiter', 'sglang'}:
+            raise ModuleNotFoundError(f'GPU package disabled for collection proof: {fullname}', name=fullname)
+        return None
+
+sys.meta_path.insert(0, NoGpuPackages())
+raise SystemExit(pytest.main(['tests/integration/test_pr33_native_profiling_acceptance.py', '--collect-only', '-q', '-p', 'no:cacheprovider']))
+PY
+```
+
+Log: `/data/ycfeng/tmp/pr33-w05-preflight-regression/w07-native-collection-without-gpu-packages.log`.
