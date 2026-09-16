@@ -417,6 +417,11 @@ class ParamCounter:
             )
         return tuple(totals)
 
+    def get_resident_attention_stage_id(self) -> int:
+        """Return the stage selected by resident attention parameter memory."""
+        totals = self._get_attention_stage_totals()
+        return max(range(len(totals)), key=lambda stage_id: totals[stage_id][1])
+
     def get_num_attention_parameters_per_device(self) -> int:
         """Return the largest resident attention/GDN shard across PP stages."""
 

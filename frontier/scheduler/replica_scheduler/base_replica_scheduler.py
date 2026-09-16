@@ -58,6 +58,9 @@ class BaseReplicaScheduler(ABC):
             self._request_generator_config.max_tokens // self._config.block_size
         )
 
+        self._admitted_request_capacity = self._get_memory_planner_max_num_seqs(
+            replica_scheduler_config
+        )
         memory_planner = MemoryPlanner(
             replica_config=self._replica_config,
             replica=replica,
@@ -66,7 +69,7 @@ class BaseReplicaScheduler(ABC):
             # requests that are waiting between ordinary continuation rounds.
             # Use the largest scheduler-visible batch cap so automatic planning
             # reserves enough fixed state before any KV admission occurs.
-            max_num_seqs=self._get_memory_planner_max_num_seqs(replica_scheduler_config),
+            max_num_seqs=self._admitted_request_capacity,
         )
 
         num_blocks_mode = getattr(self._config, "num_blocks_mode", "memory_planner")

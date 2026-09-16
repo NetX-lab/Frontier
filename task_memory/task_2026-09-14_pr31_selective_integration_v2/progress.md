@@ -317,3 +317,9 @@ Status: the focused CPU acceptance sub-step is complete. The remaining productio
 - General topology resolution moved to authoritative binding responsibility; model configs cache specs and GDN shape together. MLA family/count and enabled-KV classification aligned; invalid layer IDs rejected.
 - Focused suite: 51 passed. See test_report_2026-09-16_w01_topology.md for original failures, initial correction and evidence limits.
 - W01 overall acceptance remains partial pending W03 real stage identity migration and W10 MLA public E2E. W02 starts from normalized config contracts.
+
+## 2026-09-16 — W02 verified capacity/lifecycle repair
+
+- Reproduced and fixed waiting-request loss on slot allocation failure; allocation succeeds before queue/counter commit. Shared one admitted capacity between planner and slot owner; exposed resident stage selection via ParamCounter.
+- 26 direct checks and 185 relevant regressions passed. Real synthetic 3-request Simulator verifies automatic blocks, continuation, exhaustion/wait, finish and slot reuse. See W02 test report and independent test notes.
+- D03 choice pending (no request cancellation API exists). W03 timing migration is next.

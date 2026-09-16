@@ -144,7 +144,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 attn_dp=self._replica_config.attn_dp,
             )
             self._gdn_state_slot_manager = GatedDeltaNetStateSlotManager(
-                self._get_memory_planner_max_num_seqs(self._config)
+                self._admitted_request_capacity
             )
 
         # vLLM v1 specific state - running requests tracking
@@ -3757,7 +3757,22 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 # Cannot allocate - stop scheduling new requests
                 break
 
-            # Remove from waiting queues and allocate
+            self._allocate_request(
+                request,
+                num_new_tokens,
+                new_computed_blocks=computed_blocks,
+                prefix_cache_admission=(
+                    replace(
+                        prefix_cache_admission,
+                        num_new_tokens=int(num_new_tokens),
+                    )
+                    if prefix_cache_admission is not None
+                    else None
+                ),
+                scheduler_num_computed_tokens=scheduler_num_computed_tokens,
+            )
+
+            # Commit queue ownership only after KV and state admission succeeds
             waiting_queue.popleft()
             was_preempted = request in self._preempted_requests
             if request in self._preempted_requests:
@@ -3773,20 +3788,6 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
                 self._current_schedule_time, self._cluster_type
             )
 
-            self._allocate_request(
-                request,
-                num_new_tokens,
-                new_computed_blocks=computed_blocks,
-                prefix_cache_admission=(
-                    replace(
-                        prefix_cache_admission,
-                        num_new_tokens=int(num_new_tokens),
-                    )
-                    if prefix_cache_admission is not None
-                    else None
-                ),
-                scheduler_num_computed_tokens=scheduler_num_computed_tokens,
-            )
             if prefix_cached_tokens > 0:
                 request.on_cache_hit(prefix_cached_tokens)
             self._advance_scheduler_num_computed_tokens(request, num_new_tokens)

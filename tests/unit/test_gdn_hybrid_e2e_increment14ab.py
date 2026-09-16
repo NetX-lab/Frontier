@@ -768,7 +768,10 @@ def test_hybrid_gdn_real_simulator_cpu_e2e(tmp_path: Path, monkeypatch) -> None:
     )
 
 
-def test_hybrid_gdn_production_constructor_cpu_e2e(tmp_path: Path, monkeypatch) -> None:
+@pytest.mark.parametrize("num_requests", [1, 3])
+def test_hybrid_gdn_production_constructor_cpu_e2e(
+    tmp_path: Path, monkeypatch, num_requests: int
+) -> None:
     """Exercise the normal co-location manager/predictor construction path."""
 
     model = _qwen35_fixture_config()
@@ -808,10 +811,11 @@ def test_hybrid_gdn_production_constructor_cpu_e2e(tmp_path: Path, monkeypatch) 
         memory_margin_fraction=0.1,
     )
     scheduler = VllmV1SchedulerConfig(
-        num_blocks=100,
+        num_blocks=0,
         block_size=16,
-        batch_size_cap=4,
-        max_tokens_in_batch=64,
+        batch_size_cap=1,
+        max_tokens_in_batch=4,
+        enable_chunked_prefill=True,
     )
     predictor_config = RandomForrestExecutionTimePredictorConfig(
         enable_dummy_mode=False,
@@ -838,12 +842,12 @@ def test_hybrid_gdn_production_constructor_cpu_e2e(tmp_path: Path, monkeypatch) 
         execution_time_predictor_config=predictor_config,
     )
     request_generator = SyntheticRequestGeneratorConfig(
-        num_requests=1,
+        num_requests=num_requests,
         length_generator_config=FixedRequestLengthGeneratorConfig(
             prefill_tokens=16,
             decode_tokens=2,
         ),
-        interval_generator_config=PoissonRequestIntervalGeneratorConfig(qps=1.0),
+        interval_generator_config=PoissonRequestIntervalGeneratorConfig(qps=1_000_000.0),
     )
     output_root = tmp_path / "sim_metrics"
     metrics = MetricsConfig(
@@ -867,7 +871,7 @@ def test_hybrid_gdn_production_constructor_cpu_e2e(tmp_path: Path, monkeypatch) 
         num_requests_to_trace_per_layer=1,
     )
     config = SimulationConfig(
-        simulation_mode="offline",
+        simulation_mode="online" if num_requests > 1 else "offline",
         sys_arch="co-location",
         decode_cuda_graph_mode="none",
         cluster_config=cluster,
@@ -886,9 +890,64 @@ def test_hybrid_gdn_production_constructor_cpu_e2e(tmp_path: Path, monkeypatch) 
     assert set(predictor._monolithic_routing_details) == set(
         simulator._clusters[ClusterType.MONOLITHIC].replicas
     )
-    simulator.run()
+    cluster_scheduler = simulator._global_scheduler.get_cluster_scheduler(ClusterType.MONOLITHIC)
+    replica_id = next(iter(simulator._clusters[ClusterType.MONOLITHIC].replicas))
+    replica_scheduler = cluster_scheduler.get_replica_scheduler(replica_id, 0)
+    slots = replica_scheduler._gdn_state_slot_manager
+    assert slots.capacity == 1
+    assert replica_scheduler._config.num_blocks > 0
+    admissions = []
+    continuations = []
+    finishes = []
+    exhausted_waiters = []
+    original_allocate = replica_scheduler._allocate_request
+    original_batch_end = replica_scheduler.on_batch_end
 
-    final_dir = output_root / model._model_name / "offline_batch" / "hybrid_production_sim"
+    def observe_allocate(request, *args, **kwargs):
+        previous = slots.retain(request.id) if slots.has_slot(request.id) else None
+        result = original_allocate(request, *args, **kwargs)
+        current = slots.retain(request.id)
+        if previous is None:
+            admissions.append((request.id, current.slot_id))
+        else:
+            assert current == previous
+            continuations.append(request.id)
+        return result
+
+    def observe_batch_end(batch):
+        prior_owners = {request_id: slots.retain(request_id) for request_id in slots.active_request_ids}
+        original_batch_end(batch)
+        for request in batch.requests:
+            if request.completed:
+                assert not slots.has_slot(request.id)
+                assert request.id not in replica_scheduler._allocation_map
+                finishes.append(request.id)
+            else:
+                assert slots.retain(request.id) == prior_owners[request.id]
+        waiting = replica_scheduler.peek_waiting_requests()
+        if waiting and len(slots.active_request_ids) == slots.capacity:
+            exhausted_waiters.extend(request.id for request in waiting)
+            assert all(not slots.has_slot(request.id) for request in waiting)
+            assert all(request.id not in replica_scheduler._allocation_map for request in waiting)
+
+    monkeypatch.setattr(replica_scheduler, "_allocate_request", observe_allocate)
+    monkeypatch.setattr(replica_scheduler, "on_batch_end", observe_batch_end)
+    simulator.run()
+    assert len(admissions) == num_requests
+    assert [slot_id for _, slot_id in admissions] == [0] * num_requests
+    assert finishes == [request_id for request_id, _ in admissions]
+    assert set(continuations) == set(finishes)
+    assert slots.active_request_ids == ()
+    assert replica_scheduler._allocation_map == {}
+    assert replica_scheduler.num_allocated_blocks == 0
+    assert replica_scheduler.peek_waiting_requests() == []
+    assert replica_scheduler._running_requests == []
+    assert replica_scheduler._num_running_batches == 0
+    if num_requests > 1:
+        assert set(exhausted_waiters) == set(finishes[1:])
+
+    mode_dir = "online_serving" if num_requests > 1 else "offline_batch"
+    final_dir = output_root / model._model_name / mode_dir / "hybrid_production_sim"
     request_metrics = final_dir / "request_metrics.csv"
     system_metrics = final_dir / "system_metrics.json"
     op_trace = final_dir / "op_traces.jsonl"
@@ -900,11 +959,12 @@ def test_hybrid_gdn_production_constructor_cpu_e2e(tmp_path: Path, monkeypatch) 
 
     with request_metrics.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
-    assert len(rows) == 1
-    assert int(rows[0]["request_num_tokens"]) == 18
+    assert len(rows) == num_requests
+    assert all(int(row["request_num_tokens"]) == 18 for row in rows)
+    assert all(float(row["request_e2e_time"]) > 0 for row in rows)
     summary = json.loads(system_metrics.read_text(encoding="utf-8"))
-    assert summary["simulation_metadata"]["total_requests"] == 1
-    assert summary["simulation_metadata"]["completed_requests"] == 1
+    assert summary["simulation_metadata"]["total_requests"] == num_requests
+    assert summary["simulation_metadata"]["completed_requests"] == num_requests
 
     trace_events = [
         json.loads(line)

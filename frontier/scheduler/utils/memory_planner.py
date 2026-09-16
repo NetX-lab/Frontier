@@ -162,10 +162,7 @@ class MemoryPlanner:
         return self._param_counter.get_attention_stage_layer_counts()
 
     def _get_resident_attention_stage_id(self) -> int:
-        stage_totals = self._param_counter._get_attention_stage_totals()
-        if not stage_totals:
-            return 0
-        return max(range(len(stage_totals)), key=lambda stage_id: stage_totals[stage_id][1])
+        return self._param_counter.get_resident_attention_stage_id()
 
     def _get_num_full_attention_layers_per_device(self) -> int:
         _, full_count = self._get_stage_attention_counts()[
