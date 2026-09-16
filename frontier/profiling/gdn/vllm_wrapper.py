@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import importlib.metadata
 import os
-from contextlib import nullcontext
+import math
+from contextlib import ExitStack, nullcontext
 from typing import Any
 
 from frontier.attention.families import GATED_DELTA_NET_ATTENTION_FAMILY
 from frontier.profiling.common.device_timer import DeviceTimer
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
-from frontier.profiling.gdn.inputs import GDNProfileInput
+from frontier.profiling.gdn.inputs import GDNProfileInput, validate_profile_iterations
 from frontier.profiling.utils import (
     profile_method_to_measurement_type,
     validate_profile_method_platform,
@@ -31,7 +32,7 @@ class VllmQwen35GDNWrapper:
         frontier_model_config: Any,
         model_path: str,
         device_name: str,
-        profile_method: str = "cuda_event",
+        profile_method: str = "device_event",
         max_model_len: int = 4096,
         max_batch_size: int = 128,
         tensor_parallel_size: int = 1,
@@ -43,6 +44,18 @@ class VllmQwen35GDNWrapper:
             raise ValueError("GDN profiler requires a model with GDN dimensions")
         if frontier_model_config.get_num_gdn_layers() <= 0:
             raise ValueError("GDN profiler requires at least one GDN layer")
+
+        validate_profile_method_platform(profile_method, "rocm")
+        if str(frontier_model_config.dtype).removeprefix("torch.") != "bfloat16":
+            raise ValueError("The native GDN producer requires bfloat16 model dtype")
+        if type(max_batch_size) is not int or max_batch_size <= 0:
+            raise ValueError("max_batch_size must be a positive int")
+        if type(max_model_len) is not int or max_model_len <= 0:
+            raise ValueError("max_model_len must be a positive int")
+        frontier_model_config.get_gdn_config().get_state_layout(
+            tensor_parallel_size=tensor_parallel_size,
+        )
+        self.max_model_len = max_model_len
 
         import torch
         import triton
@@ -95,8 +108,6 @@ class VllmQwen35GDNWrapper:
         self.prefix = "model.layers.0.linear_attn"
         self.encoded_layer_name = _encode_layer_name(self.prefix)
         self.use_aiter_dispatch = bool(GDN_AITER_TRITON_AVAILABLE)
-        self._owns_distributed = False
-        self._destroy_model_parallel = destroy_model_parallel
 
         torch.cuda.set_device(self.local_rank)
         vllm_model_config = VllmModelConfig(
@@ -125,87 +136,91 @@ class VllmQwen35GDNWrapper:
         )
         self._set_current_vllm_config = set_current_vllm_config
 
-        with set_current_vllm_config(self.vllm_config):
-            if not torch.distributed.is_initialized():
-                distributed_init_method = (
-                    "env://"
-                    if distributed_world_size > 1
-                    else f"tcp://127.0.0.1:{get_open_port()}"
-                )
-                init_distributed_environment(
-                    world_size=distributed_world_size,
-                    rank=self.rank,
-                    local_rank=self.local_rank,
-                    distributed_init_method=distributed_init_method,
-                )
-                self._owns_distributed = True
-            if not model_parallel_is_initialized():
-                initialize_model_parallel(
-                    tensor_model_parallel_size=self.tensor_parallel_size,
-                    pipeline_model_parallel_size=1,
-                )
-            with set_default_torch_dtype(torch.bfloat16):
-                self.layer = QwenGatedDeltaNetAttention(
-                    vllm_model_config.hf_config,
-                    self.vllm_config,
-                    prefix=self.prefix,
-                    gqa_interleaved_layout=False,
-                    reduce_results=False,
-                ).to(device="cuda")
+        with ExitStack() as cleanup:
+            with set_current_vllm_config(self.vllm_config):
+                if not torch.distributed.is_initialized():
+                    distributed_init_method = (
+                        "env://"
+                        if distributed_world_size > 1
+                        else f"tcp://127.0.0.1:{get_open_port()}"
+                    )
+                    init_distributed_environment(
+                        world_size=distributed_world_size,
+                        rank=self.rank,
+                        local_rank=self.local_rank,
+                        distributed_init_method=distributed_init_method,
+                    )
+                    cleanup.callback(torch.distributed.destroy_process_group)
+                if not model_parallel_is_initialized():
+                    initialize_model_parallel(
+                        tensor_model_parallel_size=self.tensor_parallel_size,
+                        pipeline_model_parallel_size=1,
+                    )
+                    cleanup.callback(destroy_model_parallel)
+                with set_default_torch_dtype(torch.bfloat16):
+                    self.layer = QwenGatedDeltaNetAttention(
+                        vllm_model_config.hf_config,
+                        self.vllm_config,
+                        prefix=self.prefix,
+                        gqa_interleaved_layout=False,
+                        reduce_results=False,
+                    ).to(device="cuda")
 
-        self._initialize_synthetic_weights()
-        self.layer.requires_grad_(False)
-        self.layer.eval()
-        self.kv_cache_spec = self.layer.get_kv_cache_spec(self.vllm_config)
-        if self.kv_cache_spec is None:
-            raise RuntimeError("vLLM Qwen GDN layer did not expose a state-cache spec")
-        self.raw_state_pages = torch.zeros(
-            (self.max_batch_size + 1, 1, 1, self.kv_cache_spec.page_size_bytes),
-            dtype=torch.int8,
-            device="cuda",
-        )
-        self.layer.bind_kv_cache(self.raw_state_pages)
-
-        from vllm.v1.attention.backends.gdn_attn import GDNAttentionMetadataBuilder
-
-        self.metadata_builder = GDNAttentionMetadataBuilder(
-            self.kv_cache_spec,
-            [self.prefix],
-            self.vllm_config,
-            torch.device("cuda"),
-        )
-        self.timer_stats_store = TimerStatsStore(profile_method=self.profile_method)
-        self.runtime_stack_signature = ";".join(
-            (
-                f"vllm={vllm.__version__}",
-                f"torch={torch.__version__}",
-                f"hip={torch.version.hip}",
-                f"triton={triton.__version__}",
-                f"aiter={self._package_version('amd-aiter')}",
+            self._initialize_synthetic_weights()
+            self.layer.requires_grad_(False)
+            self.layer.eval()
+            self.kv_cache_spec = self.layer.get_kv_cache_spec(self.vllm_config)
+            if self.kv_cache_spec is None:
+                raise RuntimeError("vLLM Qwen GDN layer did not expose a state-cache spec")
+            self.raw_state_pages = torch.zeros(
+                (self.max_batch_size + 1, 1, 1, self.kv_cache_spec.page_size_bytes),
+                dtype=torch.int8,
+                device="cuda",
             )
-        )
+            self.layer.bind_kv_cache(self.raw_state_pages)
 
-        actual_shapes = tuple(tuple(shape) for shape in self.layer.get_state_shape())
-        actual_dtypes = tuple(self.layer.get_state_dtype())
-        expected_layout = frontier_model_config.get_gdn_config().get_state_layout(
-            tensor_parallel_size=self.tensor_parallel_size,
-            conv_bytes_per_element=actual_dtypes[0].itemsize,
-            recurrent_bytes_per_element=actual_dtypes[1].itemsize,
-        )
-        expected_shapes = (
-            expected_layout.conv_state_shape,
-            expected_layout.recurrent_state_shape,
-        )
-        if actual_shapes != expected_shapes:
-            raise RuntimeError(
-                f"Frontier/vLLM GDN state-shape mismatch: {expected_shapes} != "
-                f"{actual_shapes}"
+            from vllm.v1.attention.backends.gdn_attn import GDNAttentionMetadataBuilder
+
+            self.metadata_builder = GDNAttentionMetadataBuilder(
+                self.kv_cache_spec,
+                [self.prefix],
+                self.vllm_config,
+                torch.device("cuda"),
             )
-        if int(self.kv_cache_spec.page_size_bytes) != expected_layout.total_bytes:
-            raise RuntimeError(
-                "Frontier/vLLM GDN state-byte mismatch: "
-                f"{expected_layout.total_bytes} != {self.kv_cache_spec.page_size_bytes}"
+            self.timer_stats_store = TimerStatsStore(profile_method=self.profile_method)
+            self.runtime_stack_signature = ";".join(
+                (
+                    f"vllm={vllm.__version__}",
+                    f"torch={torch.__version__}",
+                    f"hip={torch.version.hip}",
+                    f"triton={triton.__version__}",
+                    f"aiter={self._package_version('amd-aiter')}",
+                )
             )
+
+            actual_shapes = tuple(tuple(shape) for shape in self.layer.get_state_shape())
+            actual_dtypes = tuple(self.layer.get_state_dtype())
+            expected_layout = frontier_model_config.get_gdn_config().get_state_layout(
+                tensor_parallel_size=self.tensor_parallel_size,
+                conv_bytes_per_element=actual_dtypes[0].itemsize,
+                recurrent_bytes_per_element=actual_dtypes[1].itemsize,
+            )
+            expected_shapes = (
+                expected_layout.conv_state_shape,
+                expected_layout.recurrent_state_shape,
+            )
+            if actual_shapes != expected_shapes:
+                raise RuntimeError(
+                    f"Frontier/vLLM GDN state-shape mismatch: {expected_shapes} != "
+                    f"{actual_shapes}"
+                )
+            if int(self.kv_cache_spec.page_size_bytes) != expected_layout.total_bytes:
+                raise RuntimeError(
+                    "Frontier/vLLM GDN state-byte mismatch: "
+                    f"{expected_layout.total_bytes} != {self.kv_cache_spec.page_size_bytes}"
+                )
+
+            self._cleanup = cleanup.pop_all()
 
     @staticmethod
     def _package_version(package_name: str) -> str:
@@ -385,7 +400,7 @@ class VllmQwen35GDNWrapper:
         for destination, source in zip(self.layer.kv_cache, snapshot):
             destination.copy_(source)
 
-    def _prepare_initial_state(self, profile_input: GDNProfileInput):
+    def _prepare_initial_state(self, profile_input: GDNProfileInput, prefix_hidden_states=None):
         """Prime carried state outside the timed current-workload region."""
 
         if not profile_input.has_initial_state:
@@ -402,28 +417,90 @@ class VllmQwen35GDNWrapper:
             physical_batch_size=profile_input.physical_batch_size,
         )
         prefix_metadata = self._build_metadata(prefix_input)
-        prefix_hidden_states = self.torch.randn(
-            (prefix_input.num_tokens, self.frontier_model_config.embedding_dim),
-            dtype=self.torch.bfloat16,
-            device="cuda",
-        )
+        if prefix_hidden_states is None:
+            prefix_hidden_states = self.torch.randn(
+                (prefix_input.num_tokens, self.frontier_model_config.embedding_dim),
+                dtype=self.torch.bfloat16,
+                device="cuda",
+            )
         self._reset_state()
         self._run_e2e(prefix_hidden_states, prefix_metadata, timed=False)
         self.torch.cuda.synchronize()
         return self._snapshot_state()
 
-    def _aggregate_time_samples(self, time_samples):
-        """Take the per-iteration slowest rank for TP critical-path timing."""
+    def validate_prefix_continuation(self, profile_input: GDNProfileInput) -> None:
+        """Compare carried-prefix execution with an identical full-prefix reference.
 
+        This acceptance check performs no timed work. It compares both current
+        output and recurrent state using the decomposition's retained tolerance.
+        """
+        profile_input.validate_capacity(
+            max_batch_size=self.max_batch_size, max_model_len=self.max_model_len,
+        )
+        if not all(context > 0 for context in profile_input.context_lens):
+            raise ValueError("Prefix-continuation validation requires positive contexts")
+        torch = self.torch
+        prefix = torch.randn(
+            (sum(profile_input.context_lens), self.frontier_model_config.embedding_dim),
+            dtype=torch.bfloat16, device="cuda",
+        )
+        current = torch.randn(
+            (profile_input.num_tokens, self.frontier_model_config.embedding_dim),
+            dtype=torch.bfloat16, device="cuda",
+        )
+        full_lengths = tuple(context + query for context, query in zip(
+            profile_input.context_lens, profile_input.query_lens,
+        ))
+        full_input = GDNProfileInput(
+            query_lens=full_lengths, context_lens=(0,) * profile_input.batch_size,
+            logical_phase="prefill", physical_batch_size=profile_input.physical_batch_size,
+        )
+        full_hidden = torch.cat([
+            torch.cat((prefix_part, current_part))
+            for prefix_part, current_part in zip(
+                prefix.split(profile_input.context_lens), current.split(profile_input.query_lens),
+            )
+        ])
+        self._reset_state()
+        full_output = self._run_e2e(full_hidden, self._build_metadata(full_input), timed=False)
+        expected = torch.cat([
+            part[context:]
+            for part, context in zip(full_output.split(full_lengths), profile_input.context_lens)
+        ]).clone()
+        expected_state = self._snapshot_state()
+        initial_state = self._prepare_initial_state(profile_input, prefix)
+        metadata = self._build_metadata(profile_input)
+        for decomposed in (False, True):
+            self._restore_state(initial_state)
+            actual = (
+                self._run_decomposed(current, metadata, profile_input.phase, timed=False)
+                if decomposed else self._run_e2e(current, metadata, timed=False)
+            )
+            torch.cuda.synchronize()
+            torch.testing.assert_close(actual, expected, rtol=2e-2, atol=2e-2)
+            for actual_state, reference_state in zip(self.layer.kv_cache, expected_state):
+                torch.testing.assert_close(actual_state, reference_state, rtol=2e-2, atol=2e-2)
+        self._restore_state(initial_state)
+
+    def _aggregate_time_samples(self, time_samples, *, phase, profile_iterations):
+        """Validate every rank before taking per-iteration critical-path maxima."""
+        error = None
+        try:
+            self._validated_time_stats(time_samples, phase=phase, profile_iterations=profile_iterations)
+        except ValueError as exc:
+            error = str(exc)
         if self.tensor_parallel_size == 1:
+            if error:
+                raise ValueError(error)
             return time_samples
         torch = self.torch
         operator_names = sorted(time_samples)
-        sample_counts = {len(time_samples[name]) for name in operator_names}
-        if len(sample_counts) != 1:
-            raise RuntimeError(
-                f"GDN operators have inconsistent sample counts: {sample_counts}"
-            )
+        signature = tuple((name, len(time_samples[name])) for name in operator_names)
+        rank_contracts = [None] * self.tensor_parallel_size
+        torch.distributed.all_gather_object(rank_contracts, (signature, error))
+        if any(rank_error or rank_signature != signature
+               for rank_signature, rank_error in rank_contracts):
+            raise ValueError(f"Inconsistent or invalid GDN rank samples: {rank_contracts}")
         sample_matrix = torch.tensor(
             [time_samples[name] for name in operator_names],
             dtype=torch.float64,
@@ -494,6 +571,33 @@ class VllmQwen35GDNWrapper:
             "count": int(count),
         }
 
+    @staticmethod
+    def _validated_time_stats(time_samples, *, phase: str, profile_iterations: int):
+        """Require complete active measurements; zero-fill only inactive operators."""
+        from frontier.attention.ops import AttentionPhase
+
+        active_phase = AttentionPhase(phase)
+        active_names = {
+            operator.profiling_name()
+            for operator in GATED_DELTA_NET_ATTENTION_FAMILY.operators
+            if active_phase in operator.phases
+        } | {"gdn_layer_e2e"}
+        selected_samples = {}
+        for name in active_names:
+            if name not in time_samples:
+                raise ValueError(f"Missing active GDN measurement: {name}")
+            samples = time_samples[name]
+            if len(samples) != profile_iterations:
+                raise ValueError(f"GDN sample count mismatch for {name}: {len(samples)} != {profile_iterations}")
+            if any(not math.isfinite(value) or value < 0 for value in samples):
+                raise ValueError(f"GDN measurement must be finite and nonnegative: {name}")
+            selected_samples[name] = samples
+        stats = TimerStatsStore.get_stats_from_times(selected_samples)
+        for operator in GATED_DELTA_NET_ATTENTION_FAMILY.operators:
+            if active_phase not in operator.phases:
+                stats[operator.profiling_name()] = VllmQwen35GDNWrapper._zero_stats(profile_iterations)
+        return stats
+
     def profile(
         self,
         profile_input: GDNProfileInput,
@@ -502,8 +606,10 @@ class VllmQwen35GDNWrapper:
         profile_iterations: int = 10,
     ) -> dict[str, Any]:
         profile_input.require_supported_phase()
-        if warmup_iterations < 0 or profile_iterations <= 0:
-            raise ValueError("warmup_iterations must be >= 0 and profile_iterations > 0")
+        validate_profile_iterations(warmup_iterations, profile_iterations)
+        profile_input.validate_capacity(
+            max_batch_size=self.max_batch_size, max_model_len=self.max_model_len,
+        )
         torch = self.torch
         hidden_states = torch.randn(
             (profile_input.num_tokens, self.frontier_model_config.embedding_dim),
@@ -559,13 +665,12 @@ class VllmQwen35GDNWrapper:
             )
         torch.cuda.synchronize()
         time_samples = self.timer_stats_store.get_times()
-        time_samples = self._aggregate_time_samples(time_samples)
-        time_stats = self.timer_stats_store.get_stats_from_times(time_samples)
-        for operator in GATED_DELTA_NET_ATTENTION_FAMILY.operators:
-            time_stats.setdefault(
-                operator.profiling_name(),
-                self._zero_stats(profile_iterations),
-            )
+        time_samples = self._aggregate_time_samples(
+            time_samples, phase=profile_input.phase, profile_iterations=profile_iterations,
+        )
+        time_stats = self._validated_time_stats(
+            time_samples, phase=profile_input.phase, profile_iterations=profile_iterations,
+        )
 
         state_dtypes = self.layer.get_state_dtype()
         gdn_config = self.frontier_model_config.get_gdn_config()
@@ -600,7 +705,7 @@ class VllmQwen35GDNWrapper:
             "packed_recurrent_decode": bool(
                 self.layer.enable_packed_recurrent_decode
             ),
-            "model_dtype": str(self.frontier_model_config.dtype),
+            "model_dtype": str(hidden_states.dtype),
             "conv_state_dtype": str(state_dtypes[0]).removeprefix("torch."),
             "recurrent_state_dtype": str(state_dtypes[1]).removeprefix("torch."),
             "weight_source": "synthetic_bf16",
@@ -626,11 +731,8 @@ class VllmQwen35GDNWrapper:
         }
 
     def close(self) -> None:
-        if self._owns_distributed:
-            self._destroy_model_parallel()
-            if self.torch.distributed.is_initialized():
-                self.torch.distributed.destroy_process_group()
-            self._owns_distributed = False
+        """Release only process-group resources created by this wrapper."""
+        self._cleanup.close()
 
     def __enter__(self) -> "VllmQwen35GDNWrapper":
         return self

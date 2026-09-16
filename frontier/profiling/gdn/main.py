@@ -10,7 +10,7 @@ import pandas as pd
 from frontier.attention.profiling_mapping import validate_attention_profiling_dataframe
 from frontier.attention.families import GATED_DELTA_NET_ATTENTION_FAMILY
 from frontier.profiling.common.model_config import ModelConfig
-from frontier.profiling.gdn.inputs import GDNProfileInput
+from frontier.profiling.gdn.inputs import GDNProfileInput, validate_profile_iterations
 from frontier.profiling.utils import (
     build_profiling_output_path,
     profile_method_to_measurement_type,
@@ -76,6 +76,23 @@ def build_profile_inputs(args: argparse.Namespace) -> list[GDNProfileInput]:
 def main() -> None:
     args = _parse_args()
     model_config = ModelConfig.from_model_name(args.model)
+    measurement_type = profile_method_to_measurement_type(args.profile_method)
+    if measurement_type.value != "DEVICE_EVENT":
+        raise ValueError("The standard GDN producer requires DEVICE_EVENT measurements")
+    validate_profile_iterations(args.warmup_iterations, args.profile_iterations)
+    if str(model_config.dtype).removeprefix("torch.") != "bfloat16":
+        raise ValueError("The native GDN producer requires bfloat16 model dtype")
+    gdn_config = model_config.get_gdn_config()
+    if gdn_config is None or model_config.get_num_gdn_layers() <= 0:
+        raise ValueError("GDN profiler requires an enabled GDN model")
+    gdn_config.get_state_layout(tensor_parallel_size=args.tensor_parallel_size)
+    profile_inputs = build_profile_inputs(args)
+    if not profile_inputs:
+        raise ValueError("GDN profiling campaign must contain workloads")
+    for profile_input in profile_inputs:
+        profile_input.validate_capacity(
+            max_batch_size=args.max_batch_size, max_model_len=args.max_model_len,
+        )
     # Keep vLLM imports behind the actual producer construction.  This module
     # remains importable for CPU-side CLI planning and schema tests.
     from frontier.profiling.gdn.vllm_wrapper import VllmQwen35GDNWrapper
@@ -90,7 +107,7 @@ def main() -> None:
         max_batch_size=args.max_batch_size,
         tensor_parallel_size=args.tensor_parallel_size,
     ) as wrapper:
-        for profile_input in build_profile_inputs(args):
+        for profile_input in profile_inputs:
             rows.append(
                 wrapper.profile(
                     profile_input,
@@ -114,12 +131,6 @@ def main() -> None:
         GATED_DELTA_NET_ATTENTION_FAMILY,
         measurement_type=dataframe["measurement_type"].iloc[0],
     )
-    measurement_type = profile_method_to_measurement_type(args.profile_method)
-    if measurement_type.value != "DEVICE_EVENT":
-        raise ValueError(
-            "The standard GDN producer writes DEVICE_EVENT rows to canonical gdn.csv; "
-            f"got measurement_type={measurement_type.value!r}"
-        )
     output_path = build_profiling_output_path(
         output_root=args.output_dir,
         profiling_type="compute",

@@ -323,3 +323,13 @@ Status: the focused CPU acceptance sub-step is complete. The remaining productio
 - Reproduced and fixed waiting-request loss on slot allocation failure; allocation succeeds before queue/counter commit. Shared one admitted capacity between planner and slot owner; exposed resident stage selection via ParamCounter.
 - 26 direct checks and 185 relevant regressions passed. Real synthetic 3-request Simulator verifies automatic blocks, continuation, exhaustion/wait, finish and slot reuse. See W02 test report and independent test notes.
 - D03 choice pending (no request cancellation API exists). W03 timing migration is next.
+
+## W03 migration checkpoint — 2026-09-16
+
+Status: in-progress, uncommitted. ExecutionTime now computes one physical layer; StageExecutionTime snapshots finalized numerics, requires identities, aggregates public stage views, and rejects ambiguous singleton probes. Producers assemble real model identities without recursive singleton stages or sentinel pass-through. Scheduler supplies PP offsets and PD-AF current layer. Metrics copier preserves stage scope/MLA/maps/entity IDs; trace emitter uses global IDs. Focused real hybrid/stage/metrics validation: 25 passed in 8.84s (`/data/ycfeng/tmp/pr33-w03-runtime3.log`). Existing fixture migration is ongoing; do not claim broad green.
+
+Five-case fidelity: three dense PASS, two MoE FAIL. Both differences reproduced in a second run. Detailed first divergence, source cause, commands, alternatives and pending D01 decision: `w03_divergence_decision.md`. D03 request-cancellation scope also remains pending. No tolerance, golden, remote publication, or commit of incomplete W03 performed.
+
+## W05 independent boundary sub-step — 2026-09-16
+
+Implemented full GDN campaign preflight, timer owner lifecycle, active/E2E sample integrity, independently owned native resource cleanup and collectable native acceptance. RED campaign 25 failed/2 passed -> final combined 111 passed/9 hardware skips (5.12s), `/data/ycfeng/tmp/pr33-w05-final2.log`. Report: `test_report_2026-09-16_w05_profiling.md`. Native validation remains SKIP/UNVERIFIED; no GPU result inferred. W03 D01 and W02 D03 remain pending, so this independent commit does not close runtime/fidelity acceptance.

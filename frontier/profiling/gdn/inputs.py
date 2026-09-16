@@ -182,6 +182,21 @@ class GDNProfileInput:
                 "same-batch GDN prefill/decode mixed execution is unsupported"
             )
 
+    def validate_capacity(self, *, max_batch_size: int, max_model_len: int) -> None:
+        """Validate supported work before native allocation or execution."""
+        self.require_supported_phase()
+        if self.has_initial_state and any(context == 0 for context in self.context_lens):
+            raise ValueError("GDN carried-state profiling requires a positive prefix for every request")
+        if type(max_batch_size) is not int or max_batch_size <= 0:
+            raise ValueError("max_batch_size must be a positive int")
+        if type(max_model_len) is not int or max_model_len <= 0:
+            raise ValueError("max_model_len must be a positive int")
+        if self.physical_batch_size > max_batch_size:
+            raise ValueError("GDN physical batch exceeds max_batch_size")
+        if any(query + context > max_model_len
+               for query, context in zip(self.query_lens, self.context_lens)):
+            raise ValueError("GDN context plus current query exceeds max_model_len")
+
     @classmethod
     def prefill(
         cls, *, seq_len: int, batch_size: int = 1, context_len: int = 0
@@ -253,3 +268,11 @@ def build_profile_inputs(
         )
     )
     return tuple(inputs)
+
+
+def validate_profile_iterations(warmup_iterations: int, profile_iterations: int) -> None:
+    """Validate the common campaign and direct-wrapper iteration contract."""
+    if type(warmup_iterations) is not int or warmup_iterations < 0:
+        raise ValueError("warmup_iterations must be a non-negative int")
+    if type(profile_iterations) is not int or profile_iterations <= 0:
+        raise ValueError("profile_iterations must be a positive int")

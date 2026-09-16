@@ -11,3 +11,7 @@ class Singleton(type):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
+    def get_existing(cls):
+        """Return an existing owner without constructing or changing it."""
+        return cls._instances.get(cls)

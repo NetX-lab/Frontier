@@ -7,7 +7,6 @@ from typing import Any
 
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
 from frontier.profiling.utils import ProfileMethod
-from frontier.profiling.utils.singleton import Singleton
 
 
 class DeviceTimer:
@@ -29,17 +28,12 @@ class DeviceTimer:
         del layer_id
         normalized_name = str(name).replace("OperationMetrics.", "").lower() if name else None
         self.name = f"vidur_{normalized_name}" if normalized_name else None
-        # Existing profiling wrappers initialize the singleton with their
-        # selected method before constructing operation timers. Reuse that
-        # store so KINETO, RECORD_FUNCTION, and PERF_COUNTER behavior remains
-        # unchanged. A standalone DeviceTimer defaults to DEVICE_EVENT.
-        existing_store = Singleton._instances.get(TimerStatsStore)
-        if existing_store is not None:
-            self.timer_stats_store = existing_store
-        else:
+        # The existing campaign store owns both method and enabled state.
+        # An unnamed standalone timer is inert and must not create global state.
+        self.timer_stats_store = TimerStatsStore.get_existing()
+        if self.timer_stats_store is None and normalized_name is not None:
             self.timer_stats_store = TimerStatsStore(
                 profile_method=profile_method or ProfileMethod.DEVICE_EVENT.value,
-                disabled=normalized_name is None,
             )
         self.disabled = normalized_name is None or self.timer_stats_store.disabled
         self.aggregation_fn = aggregation_fn
@@ -49,6 +43,7 @@ class DeviceTimer:
         self.start_time: float | None = None
         self._record_function_context: Any = None
         self.profiler: Any = None
+        self._failed = False
 
         if not self.disabled and self.timer_stats_store.profile_method is ProfileMethod.KINETO:
             torch = self._torch()
@@ -70,6 +65,7 @@ class DeviceTimer:
     def __enter__(self):
         if self.disabled:
             return self
+        self._failed = False
         method = self.timer_stats_store.profile_method
         torch = self._torch()
         if method in {ProfileMethod.CUDA_EVENT, ProfileMethod.DEVICE_EVENT}:
@@ -97,15 +93,18 @@ class DeviceTimer:
         if method in {ProfileMethod.CUDA_EVENT, ProfileMethod.DEVICE_EVENT}:
             self.end_event = torch.cuda.Event(enable_timing=True)
             self.end_event.record()
-            self.timer_stats_store.record_time(self.name, [self.start_event, self.end_event])
+            if args[0] is None:
+                self.timer_stats_store.record_time(self.name, [self.start_event, self.end_event])
         elif method is ProfileMethod.PERF_COUNTER:
             torch.cuda.synchronize()
-            self.timer_stats_store.record_time(
-                self.name, (time.perf_counter() - self.start_time) * 1e3
-            )
+            if args[0] is None:
+                self.timer_stats_store.record_time(
+                    self.name, (time.perf_counter() - self.start_time) * 1e3
+                )
         elif method is ProfileMethod.RECORD_FUNCTION:
             self._record_function_context.__exit__(*args)
         elif method is ProfileMethod.KINETO:
+            self._failed = args[0] is not None
             self.profiler.__exit__(*args)
         else:
             raise ValueError(f"Unsupported DeviceTimer profile method: {method}")
@@ -113,6 +112,8 @@ class DeviceTimer:
     def handle_trace(self, trace: Any) -> None:
         """Record filtered profiler device time for the legacy KINETO mode."""
 
+        if self._failed:
+            return
         events = trace.events()
         if self.filter_str:
             events = [event for event in events if event.name.startswith(self.filter_str)]
