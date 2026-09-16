@@ -2,6 +2,8 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-15 | Archived the independent v1.1 completion audit, exact evidence limits, dependency-ordered TODOs, and decision status; no source/test changes were made by the audit. |
+| 2026-09-15 | Bound final R11/R12 and broad CPU evidence to candidate `b8cecf53`; recorded D02 residual cost and D03 cancellation decision gates. |
 | 2026-09-15 | Archived final verification: 220 focused tests passed with clean compileall, diff check, worktree status, and parsed co-author trailer. |
 | 2026-09-15 | Archived direct actual-replica-ID routing coverage in `7b6a3eb1`; trailer parsing confirms `powderluv` attribution. |
 | 2026-09-15 | Archived the post-routing-fix full CPU unit regression: 3276 passed with the same 19 baseline failures and no candidate-only failure. |
@@ -80,3 +82,29 @@ Environment used for CPU validation: Python 3.12.3, NumPy 2.4.6, pandas 3.0.3, s
 - Run native ROCm/vLLM/AITER/MXFP4/RCCL/SGLang and benchmark/groundtruth checks when an AMD/MI355X worker becomes available.
 - Run a production-data hybrid simulator request/metrics case with complete model-specific standard attention and MoE CSVs when they are available; the synthetic CPU production-constructor E2E now proves manager/predictor construction, while the persistent full-flow case still uses a prepared-predictor seam for unrelated operator timings.
 - Existing baseline failures remain outside this task scope and are recorded in `test_report_2026-09-14_final_review2.md` and `issues.md`.
+
+## v1.1 exact-HEAD validation checkpoint
+
+The current source evidence is bound to candidate `b8cecf53f8b81ea8380238971277ba94c6fe4961`, with clean baseline
+`0515589ac7f49ac5288a5f55b0ce38b0ede29bb2`. The final full unit run is **3309 passed, 19 baseline failures, 25 skipped, 576 warnings**; the corrected concurrent broad groups add **1234 passed and 19 skips** across the required attention, GDN, scheduler/memory, stage/metrics, MoE/parallel, timer/measurement, SGLang, and non-dummy/golden surfaces. The clean 58-case baseline/candidate matrix is **58 passed, 0 failed** at this SHA.
+
+The final paired unprofiled R12 artifact contains 18/18 successful runs. The historical approximately 9.42x `Simulator.run()` regression is not reproduced. The measured repeated stage aggregation overhead was removed in `b8cecf53`; dense `sim_wallclock_s` residuals remain 1.504303x and 1.407252x, and are awaiting D02 user disposition. D03 remains open because no reachable request-level cancellation path exists in the current production call graph. AMD/MI355X and visible NVIDIA runtime checks are explicit SKIPs. See `test_report_2026-09-15_r11_r12_final.md` for raw evidence paths and exact commands.
+
+## Independent v1.1 completion audit — 2026-09-15
+
+The report filenames retain the pre-existing task handoff date `2026-09-16`;
+the audit execution date is September 15, 2026.
+
+The authoritative audit is
+`completion_audit_2026-09-16.md`, with execution evidence in
+`test_report_2026-09-16_completion_audit.md`. Its conclusion is
+**substantially incomplete**: R01–R05, R07–R12, and R14 are PARTIAL; R06 and
+R13 are NOT DONE; no R package is COMPLETE. The 69-test focused CPU command
+passed, and the 58-case dummy/fidelity artifact passed, but those results do
+not replace the missing real MLA, automatic GDN/lifecycle, unified ownership,
+non-dummy/golden, GPU-entry, performance-RCA, and cleanup evidence.
+
+The final source evidence remains bound to `b8cecf53`; the remote PR remains at
+`69d09305`, 15 commits behind the local candidate. This audit changed only task
+documentation. Historical review/test records remain preserved and are not
+reinterpreted as new source runs.

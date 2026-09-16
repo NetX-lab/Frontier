@@ -2,6 +2,10 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-16 | Recorded authorization to push the 15 local commits ahead of remote together with the latest independent completion-audit docs to PR #33 for manual review; no merge or audit TODO implementation. |
+| 2026-09-15 | Completed the independent v1.1 completion audit; recorded R01–R14 statuses, full TODOs, decision gates, and verification gaps without changing source/tests. |
+| 2026-09-16 | Began independent completion audit; preserved prior claims and recorded remote/local revision mismatch. |
+| 2026-09-15 | Added exact-HEAD R11/R12 evidence, concurrent broad CPU results, and explicit D02/D03 pending status. |
 | 2026-09-15 | Prepared the 25 local task documents, including two independent reviews, for explicitly requested publication to PR #33. |
 | 2026-09-15 | Fixed stage aggregate cache invalidation after timing payload mutation; the focused stage/metrics/operator suite passed 52 tests. |
 | 2026-09-15 | Added a semantics-preserving single-layer StageExecutionTime constructor fast path; stage/metrics/cache focused tests passed 23 tests. Performance remeasurement is pending. |
@@ -28,7 +32,24 @@
 
 # Progress
 
-Status: completed for the scoped selective integration; PR #33 is open and the branch remains unmerged pending explicit user authorization.
+## 2026-09-15 — Independent completion audit (completed; handoff filenames retain 2026-09-16)
+
+The current user requests an audit only, ending with an authoritative TODO list and necessary decisions. No remaining implementation is authorized in this audit. Audit plan, frozen state, and findings are in `completion_audit_2026-09-16.md`. Initial HEAD is `b8cecf53`; PR33 remains at `69d09305`, fifteen commits behind the worktree. Previous dirty task records are preserved. An initial documentation patch failed atomically on context and was corrected without production changes.
+
+Status: audit complete but v1.1 closure is not complete. The authoritative audit classifies R01–R05, R07–R12, and R14 as PARTIAL and R06/R13 as NOT DONE. The historical 9.42x result is not reproduced, but current dense residual cost, real-model MLA routing, timing/metrics ownership, real GDN lifecycle, non-dummy/golden, GPU-entry, and cleanup requirements remain open. PR #33 is open and the branch remains unmerged.
+
+The audit report is `completion_audit_2026-09-16.md`; the companion execution evidence is `test_report_2026-09-16_completion_audit.md`. The 69-test focused command passed, while its CPU/no-torch environment does not provide GPU evidence. Documentation-only audit edits do not rerun source validation at `b8cecf53`.
+
+## 2026-09-15 — Exact-HEAD R11/R12 and broad CPU closure checkpoint
+
+- Candidate source SHA is `b8cecf53f8b81ea8380238971277ba94c6fe4961`; pinned clean baseline is `0515589ac7f49ac5288a5f55b0ce38b0ede29bb2`.
+- Full candidate unit command was rerun with a persistent log at `/data/ycfeng/tmp/pr33-unit-candidate-b8cecf53.log`: **3309 passed, 19 failed, 25 skipped, 576 warnings** in 76.98s. The 19 failure node IDs and causes match the baseline inventory; no candidate-only failure was found.
+- Independent broad groups were run concurrently with separate basetemp roots. Corrected results: attention 188 passed; GDN/hybrid 43 passed; scheduler/memory 438 passed and 19 skipped; stage/metrics 33 passed; MoE/parallel 208 passed; timer/measurement 70 passed; SGLang/typed parallel 57 passed; non-dummy/golden 197 passed.
+- The exact 58-case clean baseline/candidate matrix at this SHA remains **58 passed, 0 failed**, using 8 workers and persistent artifacts at `/data/ycfeng/tmp/pr33-r11-fidelity-20260915-b8cecf53`.
+- The final unprofiled interleaved R12 artifact at `/data/ycfeng/tmp/pr33-r12-paired-20260915-final-b8cecf53` contains 18/18 successful runs. Median `sim_wallclock_s` ratios are 1.504303x (small dense), 1.407252x (longer dense), and 1.011424x (representative MoE); `total_proc_s` ratios are 1.038116x, 1.031555x, and 1.011899x. The historical approximately 9.42x run-phase regression does not reproduce.
+- Commit `b8cecf53` removed measured repeated stage block aggregation overhead. Residual dense per-layer identity record allocation/validation remains measured and unresolved under D02; no performance budget or acceptance waiver is assumed.
+- R10 CPU timer contracts pass. NVIDIA checks are `SKIP: no visible NVIDIA device`; AMD/MI355X/ROCm/AITER/RCCL/HIP-graph checks remain `SKIP: AMD/MI355X hardware unavailable`.
+- This checkpoint is retained as historical prior-session evidence. The independent audit found additional unmet R01–R11 and R13 acceptance conditions; D02 remains a genuine decision gate, while D03 is conditional pending a complete cancellation/termination inventory and real lifecycle E2E.
 
 ## 2026-09-14 — Review 2, final CPU validation, and documentation closure
 

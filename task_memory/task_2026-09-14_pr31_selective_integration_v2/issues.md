@@ -2,6 +2,8 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-15 | Added the authoritative independent v1.1 audit disposition: no R item is fully complete; R06/R13 are not done and the remaining verification gaps are enumerated. |
+| 2026-09-15 | Recorded exact-HEAD dense residual under D02, missing request cancellation entry under D03, and NVIDIA no-device SKIP. |
 | 2026-09-15 | Completed post-fix full CPU unit regression; 19 baseline failures remain unchanged and no candidate-only failure was found. |
 | 2026-09-15 | Resolved focused-suite monolithic MoE routing identity drift and updated the device-event training-path contract evidence. |
 | 2026-09-15 | Closed the temporary hybrid probe gap with a persistent real CPU Simulator E2E test; recorded the remaining prepared-predictor/model-manager boundary. |
@@ -19,10 +21,28 @@
 
 # Issues and Decisions
 
+## 2026-09-15 — Independent audit disposition (handoff filenames retain 2026-09-16)
+
+The authoritative audit in `completion_audit_2026-09-16.md` supersedes prior
+scoped-closure wording for current status. No R01–R14 package is COMPLETE:
+R01–R05, R07–R12, and R14 are PARTIAL; R06 and R13 are NOT DONE. The 58-case
+dummy/fidelity matrix and focused CPU tests remain valid evidence for their
+limited scopes, but they do not close real MLA routing, automatic GDN capacity,
+Simulator slot lifecycle, single-layer timing semantics, operator ownership,
+non-dummy/golden acceptance, GPU entry points, or cleanup analysis.
+
+The companion test report is
+`test_report_2026-09-16_completion_audit.md`. The audit changed only task
+documentation; all source evidence remains bound to `b8cecf53`.
+
 ## Open
 
+- **D02 residual simulator cost:** The exact unprofiled R12 artifact at candidate `b8cecf53` measures dense `sim_wallclock_s` median ratios of `1.504303x` (small dense) and `1.407252x` (longer dense), despite `total_proc_s` ratios of `1.038116x` and `1.031555x`. Profiling and controlled cache optimization confirmed repeated stage aggregation as avoidable and reduced it; remaining per-layer identity record allocation/validation is measured but not yet accepted. No universal performance budget exists. User disposition is required before closing this residual.
+- **D03 request cancellation:** The initial call-site inventory found no reachable production `cancel_request`, `abort_request`, or `terminate_request` path. `_free_request_resources_by_id()` covers completion/callback/queue-exit cleanup, and `StageExecutionContext.cancel(ticket)` cancels stage admission tickets only. The final repository inventory and real lifecycle E2E are still incomplete, so D03 is a conditional trigger rather than an immediate approval request.
+- **R11/R12 exact-source boundary:** Final source evidence is bound to candidate `b8cecf53f8b81ea8380238971277ba94c6fe4961`; documentation edits after that SHA do not imply a source rerun.
 - AMD/MI355X hardware is unavailable in the current execution context. All candidate ROCm/DEVICE_EVENT runtime checks must remain explicit SKIP unless a permitted remote run becomes available.
-- The local Python environment inventory still needs a bounded command; the initial combined probe did not produce a complete module table before output collection ended.
+- NVIDIA runtime is also unavailable in this CPU master context: `nvidia-smi -L` returned no device rows and `/dev/nvidia*` does not exist. NVIDIA checks remain `SKIP: no visible NVIDIA device`.
+- The focused audit interpreter is Python `3.13.13` without `torch`; the broader prior-session CPU inventory recorded Python `3.12.3`, Torch `2.5.1+cu124`, and unavailable `vllm`/`sglang`/`aiter`. These are separate environments and must not be conflated.
 - Increment 14A/B's persistent CPU Simulator test uses the real GDN trainer/predictor, Replica, MemoryPlanner, scheduler/events, continuation, metrics, and op traces, with deterministic hooks for unrelated FFN/communication components. The simulator receives a prepared predictor through a test-local registry seam; the fresh model-manager load is covered separately. A production-data hybrid request/metrics E2E still needs model-specific standard attention and MoE CSVs; synthetic CPU evidence must not be presented as AMD timing or benchmark parity.
 - Increment 7's vLLM wrapper is source-derived and CPU-import safe, but its vLLM/HIP execution and DEVICE_EVENT writer are not reverified without MI355X. The carried-state implementation is retained for later AMD execution; CPU tests cover planning and fail-fast semantics only.
 - Increment 9 reuses the existing shared accelerator helper for linear/MoE launcher visibility and adds no backend auto-selection. The candidate has no ROCm runtime evidence; the standard VLLM_ROCM wrapper remains source-retained plus CPU metadata tests.
@@ -82,4 +102,4 @@
 
 - MetricsStore's StageExecutionTime handling, hybrid runtime-family selection, SGLang replay tuple/repetition validation, and GDN dataset fingerprint checks are resolved and covered by the final focused suites.
 - The bounded Python inventory is complete: Python 3.12.3, NumPy 2.4.6, pandas 3.0.3, scikit-learn 1.9.0, Plotly 6.8.0, PyTorch 2.5.1+cu124; `vllm`, `sglang`, and `aiter` are unavailable.
-- No approval is pending for local code/docs or verification. PR #33 is open after the authorized push; merge remains explicitly prohibited until the user gives separate authorization.
+- No merge approval is requested by this audit. PR #33 is open, the local candidate is 15 commits ahead of the remote PR head, and merge remains explicitly prohibited until the user gives separate authorization.

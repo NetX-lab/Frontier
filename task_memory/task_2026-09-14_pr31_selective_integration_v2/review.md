@@ -2,6 +2,8 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-15 | Added the independent completion-audit checkpoint; corrected scoped CPU-closure wording and classified all R01–R14 against the v1.1 acceptance criteria. |
+| 2026-09-15 | Added exact-HEAD R11/R12, broad CPU, and hardware-boundary review checkpoint; D02/D03 remain pending. |
 | 2026-09-15 | Final verification rerun passed 220 focused tests with clean compile/diff/status evidence. |
 | 2026-09-15 | Added and verified a direct actual-replica-ID routing contract test in commit `7b6a3eb1`. |
 | 2026-09-15 | Rechecked the complete CPU unit suite after routing repair: 3276 passed with the same 19 baseline failures and no candidate-only failure. |
@@ -134,3 +136,16 @@ Closure evidence: the original complete focused command passed **219 tests**, an
 Review 2 is **PASS for the scoped selective integration and CPU acceptance path**. The focused-suite routing identity regression and manager path-contract drift were fixed and reverified. The post-fix full-unit run has the same 19 baseline failures and no candidate-only failure. The remaining failures are repository conditions: missing config/debug/analysis assets and stale top-level release documentation contracts. Production hybrid profiling, ROCm device-event execution, SGLang/AITER/HIP graph runtime, RCCL runtime, AMD benchmark comparison, and groundtruth parity remain **SKIP: AMD/MI355X hardware unavailable**.
 
 The initial SGLang graph-replay tuple concern is **closed** by the current exact-HEAD re-review. The implementation already normalizes every native builder at the `make_primitive()` boundary, and the CPU orchestration regression covers the differing raw builder tuple shapes.
+
+## v1.1 exact-HEAD closure checkpoint — 2026-09-15
+
+| Target Component/Phase | Reviewer Agent Identity | Inspected Artifacts | Identified Issues/Anomalies | Remediation/Verification Code Actions Taken |
+| --- | --- | --- | --- | --- |
+| R11 clean fidelity | `/root` | `/data/ycfeng/tmp/pr33-r11-fidelity-20260915-b8cecf53/manifest.json`, `results.json` | Final evidence must bind to the post-cache candidate rather than the earlier `8c976736` run. | Re-ran all 58 clean baseline/candidate cases with `--workers 8`: **58 passed, 0 failed**; no stable beyond-tolerance or discrete difference triggered D01. |
+| R12 wall-clock blocker | `/root` | `/data/ycfeng/tmp/pr33-r12-paired-20260915-final-b8cecf53/`, cProfile artifacts, `frontier/entities/stage_execution_time.py` | Historical 9.42x regression was rejected by the review plan; dense residual remains after causal optimization. | Three interleaved unprofiled repetitions per case completed 18/18. Repeated stage aggregation was cached in `b8cecf53`; MoE is 1.011424x, while dense cases remain 1.504303x and 1.407252x in `sim_wallclock_s`. Residual is open under D02 and has no implied budget. |
+| CPU broad regression | `/root` | Persistent full-unit log and eight concurrent broad-group logs under `/data/ycfeng/tmp` | Broad CPU coverage must execute after the post-cache source change and preserve baseline failure boundaries. | Full unit: 3309 passed, 19 baseline failures, 25 skipped. Corrected concurrent groups: 1234 passed plus 19 skips across attention, GDN, scheduler/memory, stage/metrics, MoE/parallel, timer/measurement, SGLang, and non-dummy/golden lanes. |
+| Hardware boundary | `/root` | `/data/ycfeng/tmp/pr33-r10-nvidia-smi-L-b8cecf53.txt`, Python stack inventory | No device rows are visible on the CPU master. | NVIDIA: `SKIP: no visible NVIDIA device`; AMD/MI355X/ROCm/AITER/RCCL/HIP graph: `SKIP: AMD/MI355X hardware unavailable`. No runtime PASS inferred. |
+
+Review status before the independent audit is retained above as historical evidence. Current authoritative status: **v1.1 is substantially incomplete**. No R item is fully complete; R01–R05, R07–R12, and R14 are PARTIAL, while R06 and R13 are NOT DONE. The 69-test focused CPU command passed, but real MLA routing, full GDN lifecycle, unified operator ownership, non-dummy/golden lanes, GPU entry points, performance causal closure, and R13 cleanup evidence remain open. D02 is a genuine pending decision; D03 remains conditional until the final cancellation inventory and lifecycle E2E are complete.
+
+See `completion_audit_2026-09-16.md` and `test_report_2026-09-16_completion_audit.md`. Original review reports remain unchanged.
