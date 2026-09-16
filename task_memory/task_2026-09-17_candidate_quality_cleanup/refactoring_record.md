@@ -11,6 +11,7 @@
 | Simulator | Duplicate predictor construction and config reflection | Hybrid setup copied existing constructors | Two sites encode identical arguments | One loop and explicit capability method | Predictor registry and model topology | 78 tests; stable artifacts equal |
 | ExecutionTime | Missing-component fallbacks in snapshot cloning | Required constructor state treated as optional | Constructed components cannot be absent | Copy required components and real optional maps | Existing component dataclasses/finalization | Isolation tests and E2E parity |
 | StageExecutionTime | Repeated None filtering | Validation stages duplicated work | Prior check rejects incomplete identities | Check validated IDs directly | Physical-layer identity contract | Identity tests and E2E parity |
+| MemoryPlanner / ParamCounter | Reclassified hybrid topology and probed required methods | Consumers bypassed canonical model contract | Full-layer scanning duplicated runtime-family selection and admitted an unreachable zero-KV fallback | Use model family/per-layer/GDN interfaces directly | BaseModelConfig, runtime family resolver | 47 tests both revisions; four exact memory snapshots |
 
 ## Intentionally retained patterns
 
@@ -18,6 +19,7 @@
 | --- | --- | --- |
 | Optional shared manager/training paths | Ordinary monolithic trains independently; hybrid/disaggregated share artifacts | Simulator construction and non-dummy cases |
 | Component copying and optional operator maps | Mutable physical-layer isolation required; unmeasured operator maps can be absent | ExecutionTime finalization tests |
+| Missing GDN config and optional max_num_seqs | Dense models have no recurrent state; only GDN reservation requires capacity | Planner constructor/reservation, dense and GDN memory tests |
 
 ## Large-module analysis
 

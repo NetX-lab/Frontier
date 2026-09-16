@@ -33,3 +33,11 @@ New unresolved issues: none established.
 - Checked CC backend lazy construction: backend factory reads cluster configuration/runtime topology; manager owns training/cache state, not backend configuration. Shared initialization remains before predictor creation.
 - Verification: frozen candidate eight non-dummy cases passed (65.34 s). Cleaned candidate 78 focused/non-dummy tests passed (71.00 s). Existing comparator found 90/90 stable artifacts equal across eight cases. Bidirectional artifact inventory and acceptance/stage-summary comparison follow the independent Spec review recommendation.
 - Editing command `apply_patch` was absent from PATH; no patch was applied on the first attempt. Resolved by invoking the installed Codex binary in its apply_patch mode, without changing system configuration.
+
+## P1b — completed: canonical memory/model contract
+
+- P1a committed as `48a4093b`; supplemental symmetric metrics inventory and acceptance/stage-summary comparisons also PASS for all eight cases (106 metric files total).
+- Removed planner-local hybrid layer scanning and used `BaseModelConfig.get_attention_family`, the same runtime KV owner as Replica/head metadata. All-GDN Qwen is already rejected by construction, so the removed zero-KV fallback represented no admitted model.
+- ParamCounter now calls the required per-layer and GDN methods directly; genuine `get_gdn_config() is None` remains supported for homogeneous models.
+- Focused before/after suites: 47 PASS / 47 PASS. Four TP/PP memory snapshots match exactly, covering weight bytes, recurrent state bytes, page size and available block count.
+- Found usable same-interpreter system Torch 2.12.0+cu132. Enabled standard system-site-packages inheritance only in the dedicated venv; no target overlay or different Python package tree was injected. Fresh full frozen-candidate unit run is in progress.

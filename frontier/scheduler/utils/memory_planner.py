@@ -1,8 +1,6 @@
 from typing import Optional
 
 from frontier.attention.memory import get_attention_runtime_kv_layout
-from frontier.attention.families import get_attention_family
-from frontier.attention.model_binding import bind_attention_family, bind_layer_attention
 from frontier.config import ReplicaConfig
 from frontier.errors import FrontierMemoryOOMError
 from frontier.entities.replica import Replica
@@ -99,28 +97,8 @@ class MemoryPlanner:
         if self._cluster_type == ClusterType.DECODE_FFN:
             return 0
 
-        model_config = self._replica_config.model_config
-        get_specs = getattr(model_config, "get_layer_attention_specs", None)
-        get_gdn_layers = getattr(model_config, "get_num_gdn_layers", None)
-        has_gdn = callable(get_gdn_layers) and int(get_gdn_layers()) > 0
-        if callable(get_specs) and has_gdn:
-            full_layer_id = next(
-                (
-                    int(spec.global_layer_id)
-                    for spec in get_specs()
-                    if bool(getattr(spec, "is_full_attention", False))
-                ),
-                None,
-            )
-            if full_layer_id is None:
-                return 0
-            family = get_attention_family(
-                bind_layer_attention(model_config, full_layer_id).family_id
-            )
-        else:
-            family = bind_attention_family(model_config).family
         layout = get_attention_runtime_kv_layout(
-            family,
+            self._replica_config.model_config.get_attention_family(),
             runtime_num_kv_heads_per_worker=(
                 self._replica.kv_heads_per_tensor_parallel_worker
             ),
@@ -179,8 +157,7 @@ class MemoryPlanner:
     def _get_gdn_state_memory_per_device_per_request(self) -> int:
         if self._cluster_type == ClusterType.DECODE_FFN:
             return 0
-        getter = getattr(self._replica_config.model_config, "get_gdn_config", None)
-        gdn_config = getter() if callable(getter) else None
+        gdn_config = self._replica_config.model_config.get_gdn_config()
         if gdn_config is None:
             return 0
         state_layout = gdn_config.get_state_layout(

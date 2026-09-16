@@ -385,13 +385,12 @@ class ParamCounter:
 
         if self._cluster_type == ClusterType.DECODE_FFN:
             return ((0, 0),)
-        is_gdn_layer = getattr(self._model_config, "is_gdn_layer", None)
         stage_counts = []
         for stage_id in range(int(self._replica_config.num_pipeline_stages)):
             gdn_count = 0
             full_count = 0
             for layer_id in self._get_pipeline_stage_layer_ids(stage_id):
-                if callable(is_gdn_layer) and bool(is_gdn_layer(layer_id)):
+                if self._model_config.is_gdn_layer(layer_id):
                     gdn_count += 1
                 else:
                     full_count += 1
@@ -437,8 +436,7 @@ class ParamCounter:
 
         if self._cluster_type == ClusterType.DECODE_FFN:
             return 0
-        getter = getattr(self._model_config, "get_gdn_config", None)
-        gdn_config = getter() if callable(getter) else None
+        gdn_config = self._model_config.get_gdn_config()
         if gdn_config is None:
             return 0
         tp_size = self._get_attn_tp_size()
