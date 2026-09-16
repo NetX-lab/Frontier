@@ -61,3 +61,10 @@ New unresolved issues: none established.
 
 - Replaced list front removal and full release-time sorting with the standard heap priority queue. The observable rule remains allocation of the lowest available slot ID.
 - 16 lifecycle/scheduler tests PASS; added one out-of-order release regression. A deterministic 1,000-request trace compared directly against the frozen state manager produces identical allocation/release records.
+
+## P1 full regression follow-up — completed
+
+- Full candidate run returned 3583 PASS / 22 FAIL / 25 SKIP. Four newly exposed failures are incomplete fixtures: the shared routing model omits required `is_moe`; two transfer model doubles omit `get_num_gdn_layers`. The production constructor/accessor contracts were verified before adding those members to the doubles. Expected routing and transfer values remain unchanged.
+- The remaining 18 nodes match the freshly established frozen-candidate/main failures. Detailed log: `/data/ycfeng/tmp/quality-p1-unit.log` (132.10 s).
+- Experimental routing integerization characterization completed 3,456 generated cases with zero admitted histogram mismatches. This is sampled evidence, not a proof for arbitrary ratios; unification remains under investigation.
+- Focused fixture/transfer/GDN checks now PASS: 25 tests in 5.62 s, with unchanged expectations. No production accommodation was reintroduced.

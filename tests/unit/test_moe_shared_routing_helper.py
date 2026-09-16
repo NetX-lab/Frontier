@@ -92,7 +92,7 @@ def test_shared_routing_helper_rejects_invalid_generation_inputs(
 
 def test_standard_and_disaggregation_predictors_share_ratio_source() -> None:
     shared = object.__new__(_DummySharedPredictor)
-    shared._model_config = SimpleNamespace(num_layers=2)
+    shared._model_config = SimpleNamespace(num_layers=2, is_moe=True)
     shared._replica_config = SimpleNamespace(total_expert_num=8)
     shared._cluster_type = None
     shared._moe_ep_size = 2
