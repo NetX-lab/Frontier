@@ -48,3 +48,11 @@ New unresolved issues: none established.
 - Runtime guards consume the required BaseModelConfig method. Preemption reads constructor-owned replica configuration; the incomplete PD-AF preemption fixture now provides a real non-GDN model.
 - Focused verification: 46 PASS, including feature vectors, mixed-batch rejection, admission/continuation/completion/rollback and preemption progress. Transactional exception cleanup remains unchanged.
 - Full frozen-candidate baseline initially finished 3584 PASS / 21 FAIL / 25 SKIP. Three added environment failures came from example shells resolving `/usr/bin/python`, which lacks plotly. Re-running with the dedicated venv on PATH; no production workaround added.
+
+## P1d — completed: MoE routing construction and layer state
+
+- Removed the unreferenced private routing-generator alias (only test caller updated), None-then-dict initialization, repeated validation of internally generated maps and unsupported `_cluster_num_replicas` alternate state.
+- Reused subclass `_get_cluster_replica_config` through normal override dispatch instead of reflective capability discovery. Preserved optional actual replica IDs, standalone local IDs and per-replica map isolation.
+- Removed unused ExecutionTime layer-count attributes: neither production nor tests read them; constructor argument validation remains compatible.
+- Verification: 116 focused/non-dummy PASS; 90 stable artifact comparisons PASS, symmetric 106-file metrics inventory and supplemental summaries match. No expected value changed.
+- Corrected baseline environment: 3587 PASS / 18 FAIL / 25 SKIP. The same 18 failure nodes also fail on pinned main. Source causes are missing legacy debug/analysis assets and outdated release-document expectations. README remains untouched.

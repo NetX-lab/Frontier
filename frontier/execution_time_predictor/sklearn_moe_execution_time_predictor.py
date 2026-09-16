@@ -747,12 +747,9 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         # Pre-compute one global routing source. EP ownership is applied later
         # by the shared per-layer materializer.
-        self._global_routing_allocations: Optional[Dict[int, Dict[int, float]]] = None
         self._monolithic_routing_details = None
         self._global_routing_allocations = self._init_global_routing_allocations()
-        if self._cluster_type == ClusterType.MONOLITHIC and getattr(
-            self._model_config, "is_moe", True
-        ) is not False:
+        if self._cluster_type == ClusterType.MONOLITHIC and self._model_config.is_moe:
             self._monolithic_routing_details = self._build_shared_routing_details()
             self._emit_routing_details_snapshot(
                 ClusterType.MONOLITHIC,
@@ -766,16 +763,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             len(self._global_routing_allocations),
         )
 
-    def _init_routing_allocations(self) -> Dict[int, Dict[int, float]]:
-        """
-        Return the canonical global routing source.
-
-        This private name is retained for existing internal callers, but it
-        delegates to the single generator so local and global maps cannot
-        diverge.
-        """
-        return self._init_global_routing_allocations()
-
     def _init_global_routing_allocations(self) -> Dict[int, Dict[int, float]]:
         """Pre-compute global expert allocation ratios for shared-domain EP sync.
 
@@ -783,10 +770,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         derive per-lane post-MoE arrival skew before the shared-domain all-reduce.
         """
         total_experts = self._replica_config.total_expert_num
-        cluster_type = getattr(self, "_cluster_type", None)
-        if cluster_type == ClusterType.DECODE_ATTN or getattr(
-            self._model_config, "is_moe", None
-        ) is False:
+        if self._cluster_type == ClusterType.DECODE_ATTN or not self._model_config.is_moe:
             return {}
         num_layers = self._model_config.num_layers
 
@@ -833,32 +817,21 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
 
         The current monolithic predictor is constructed from ``ReplicaConfig``
         rather than ``ClusterConfig``.  The canonical cluster capacity is
-        injected as ``_cluster_num_replicas`` (or the explicit
-        ``ReplicaConfig.cluster_num_replicas`` field) before this method is
+        bound to ``ReplicaConfig.cluster_num_replicas`` before this method is
         called.  When the simulator supplies ``_actual_replica_ids``, those
         process-global IDs are used as the outer map keys; otherwise local
-        ``range(replica_count)`` keys preserve direct predictor-test behavior.
+        ``range(replica_count)`` keys support standalone predictor construction.
         A missing capacity is an invalid topology, not a condition to infer
         from an attention-DP field.
         """
-        allocations = getattr(self, "_global_routing_allocations", None)
-        if type(allocations) is not dict:
-            raise ValueError(
-                "_global_routing_allocations must be an exact dict before "
-                "building shared routing details"
-            )
-
-        replica_config = getattr(self, "_replica_config", None)
-        replica_count = getattr(self, "_cluster_num_replicas", None)
-        if replica_count is None:
-            replica_count = getattr(replica_config, "cluster_num_replicas", None)
+        replica_count = self._replica_config.cluster_num_replicas
         if type(replica_count) is not int or replica_count <= 0:
             raise ValueError(
                 "A positive cluster replica count is required to build shared "
                 f"routing details; got {replica_count!r}"
             )
 
-        actual_replica_ids = getattr(self, "_actual_replica_ids", None)
+        actual_replica_ids = self._actual_replica_ids
         if actual_replica_ids is None:
             replica_ids = list(range(replica_count))
         else:
@@ -882,21 +855,13 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             if len(set(replica_ids)) != len(replica_ids):
                 raise ValueError("actual_replica_ids must be unique")
 
-        shared_details: Dict[int, Dict[int, Dict[int, float]]] = {}
-        for replica_id in replica_ids:
-            per_layer: Dict[int, Dict[int, float]] = {}
-            for layer_id, expert_ratios in allocations.items():
-                if type(layer_id) is not int or layer_id < 0:
-                    raise ValueError(
-                        "Global routing layer IDs must be exact non-negative ints"
-                    )
-                if type(expert_ratios) is not dict:
-                    raise ValueError(
-                        "Global routing expert ratios must be exact dicts"
-                    )
-                per_layer[layer_id] = dict(expert_ratios)
-            shared_details[replica_id] = per_layer
-        return shared_details
+        return {
+            replica_id: {
+                layer_id: dict(expert_ratios)
+                for layer_id, expert_ratios in self._global_routing_allocations.items()
+            }
+            for replica_id in replica_ids
+        }
 
 
     def _get_routing_details_for_cluster(self, cluster_type: ClusterType):
@@ -919,12 +884,8 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             )
         return routing_details
 
-    def _get_moe_replica_config_for_cluster(self, cluster_type: ClusterType):
-        if cluster_type == ClusterType.MONOLITHIC:
-            return self._replica_config
-        cluster_getter = getattr(self, "_get_cluster_replica_config", None)
-        if callable(cluster_getter):
-            return cluster_getter(cluster_type)
+    def _get_cluster_replica_config(self, cluster_type: ClusterType) -> ReplicaConfig:
+        """Return the serving replica; disaggregated predictors override by role."""
         return self._replica_config
 
     def _materialize_layer_ep_workload(
@@ -936,7 +897,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         # the key; the frozen workload can be shared across repeated EP waves.
         workload_cache = self._layer_workload_cache
         cache_capacity = self._layer_workload_cache_capacity
-        cluster_replica_config = self._get_moe_replica_config_for_cluster(cluster_type)
+        cluster_replica_config = self._get_cluster_replica_config(cluster_type)
         routing_details = self._get_routing_details_for_cluster(cluster_type)
         target_replica_id = int(batch.replica_id)
         global_layer_id = int(layer_id)

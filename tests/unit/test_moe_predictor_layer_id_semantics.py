@@ -942,7 +942,7 @@ def test_monolithic_routing_allocations_use_global_expert_ids() -> None:
     predictor._moe_routing_seed = 7
     predictor._moe_routing_distribution_type = "random"
 
-    allocations = predictor._init_routing_allocations()
+    allocations = predictor._init_global_routing_allocations()
 
     assert set(allocations) == {0, 1}
     assert set(allocations[0]) == {0, 1, 2, 3}

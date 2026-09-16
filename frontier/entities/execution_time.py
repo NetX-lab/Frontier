@@ -154,7 +154,6 @@ class ExecutionTime(BaseEntity):
                 "must all be provided and non-empty when layer attention identity "
                 "is provided"
             )
-        self._num_layers_per_pipeline_stage = num_layers_per_pipeline_stage
         self._global_layer_id = global_layer_id
         self._attention_family_id = attention_family_id
         self._attention_variant_id = attention_variant_id
@@ -1110,7 +1109,6 @@ class ExecutionTime(BaseEntity):
             layer._finalized = False
         else:
             layer = copy(self.finalized_copy())
-        layer._num_layers_per_pipeline_stage = 1
         layer._global_layer_id = global_layer_id
         layer._attention_family_id = attention_family_id
         layer._attention_variant_id = attention_variant_id
