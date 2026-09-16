@@ -8,7 +8,6 @@ execution order and charges stage-owned work exactly once.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from copy import deepcopy
 from dataclasses import fields
 import math
 from types import MappingProxyType
@@ -90,46 +89,6 @@ _STAGE_ONLY_PUBLIC_NAMES = frozenset(
     }
 )
 
-_PER_LAYER_PRIVATE_NAMES = frozenset(
-    {
-        "_attention_rope_execution_time",
-        "_attention_kv_cache_save_execution_time",
-        "_attention_decode_execution_time",
-        "_attention_prefill_execution_time",
-        "_attention_layer_pre_proj_execution_time",
-        "_attention_layer_post_proj_execution_time",
-        "_attn_mla_kv_cache_save_time",
-        "_attn_mla_prefill_kv_up_proj_time",
-        "_attn_mla_prefill_time",
-        "_attn_mla_decode_q_latent_proj_time",
-        "_attn_mla_decode_time",
-        "_attn_mla_v_up_proj_time",
-        "_attn_norm_time",
-        "_mlp_layer_up_proj_execution_time",
-        "_mlp_layer_down_proj_execution_time",
-        "_mlp_layer_act_execution_time",
-        "_mlp_norm_time",
-        "_add_time",
-        "_add_attn_residual_time",
-        "_add_ffn_residual_time",
-        "_tensor_parallel_communication_time",
-        "_attn_tensor_parallel_allreduce_time",
-        "_moe_tensor_parallel_allreduce_time",
-        "_tensor_parallel_allgather_time",
-        "_share_expert_tensor_parallel_allreduce_time",
-        "_dp_input_allreduce_time",
-        "_dp_output_allreduce_time",
-        "_expert_parallel_communication_time",
-        "_moe_gating_time",
-        "_moe_gating_linear_time",
-        "_moe_gating_routing_topk_time",
-        "_moe_shuffling_time",
-        "_moe_grouped_gemm_time",
-        "_share_expert_up_proj_time",
-        "_share_expert_down_proj_time",
-        "_share_expert_act_time",
-    }
-)
 
 
 class StageExecutionTime:
@@ -143,6 +102,8 @@ class StageExecutionTime:
     authoritative for all layer work.
     """
 
+    stage_owned_fields = _STAGE_ONLY_PUBLIC_NAMES
+
     def __init__(
         self,
         layer_execution_times: Sequence[ExecutionTime],
@@ -155,9 +116,9 @@ class StageExecutionTime:
             raise ValueError("StageExecutionTime requires at least one layer result")
         if any(not isinstance(layer, ExecutionTime) for layer in layer_execution_times):
             raise TypeError("StageExecutionTime layer results must be ExecutionTime objects")
-        self._layer_execution_times = tuple(layer_execution_times)
+        self._layer_execution_times = tuple(layer.finalized_copy() for layer in layer_execution_times)
         self._stage_execution_time = (
-            stage_execution_time
+            stage_execution_time.finalized_copy()
             if stage_execution_time is not None
             else self._layer_execution_times[0]
         )
@@ -168,21 +129,10 @@ class StageExecutionTime:
         # the aggregate model time after its first computation so repeated
         # event-path reads do not rescan every layer.
         self._model_time_ms_cache: float | None = None
-        self._model_time_ms_cache_versions: tuple[int, ...] | None = None
-
-        # Single-layer stages are the hot path for disaggregated scheduling.
-        # Their one identity is already validated by ExecutionTime, so the
-        # cross-layer completeness and uniqueness scan below adds no value.
-        if len(self._layer_execution_times) == 1:
-            return
 
         layer_ids = self.global_layer_ids
-        if any(layer_id is not None for layer_id in layer_ids) and any(
-            layer_id is None for layer_id in layer_ids
-        ):
-            raise ValueError(
-                "StageExecutionTime layer identities must be complete when provided"
-            )
+        if any(layer_id is None for layer_id in layer_ids):
+            raise ValueError("StageExecutionTime requires complete layer identities")
         if len([layer_id for layer_id in layer_ids if layer_id is not None]) != len(
             set(layer_id for layer_id in layer_ids if layer_id is not None)
         ):
@@ -190,102 +140,35 @@ class StageExecutionTime:
 
     @classmethod
     def from_execution_time(
-        cls,
-        source: ExecutionTime,
-        *,
-        num_layers: int,
-        first_layer_id: int | None = 0,
-        attention_family_id: str = "dense_attention",
-        attention_variant_id: str = "unknown",
+        cls, source: ExecutionTime, *, num_layers: int, first_layer_id: int,
         layer_id_step: int = 1,
-        copy_components: bool = True,
     ) -> "StageExecutionTime":
-        """Expand one per-layer source payload into an ordered stage result.
-
-        Predictors use one source payload for equal attention queries.  Each
-        expansion receives a separate copied layer object and identity, while
-        the owner remains a single stage record for once-only work.
-        """
-
+        """Expand a resolved homogeneous numerical layer without fabricating identity."""
         if not isinstance(source, ExecutionTime):
             raise TypeError("source must be an ExecutionTime object")
         if type(num_layers) is not int or num_layers <= 0:
             raise ValueError("num_layers must be a positive int")
         if type(layer_id_step) is not int or layer_id_step <= 0:
             raise ValueError("layer_id_step must be a positive int")
-        if type(copy_components) is not bool:
-            raise TypeError("copy_components must be a bool")
-        if first_layer_id is not None and (
-            type(first_layer_id) is not int or first_layer_id < 0
-        ):
-            raise ValueError("first_layer_id must be a non-negative int or None")
-
-        # A resolved source identity is authoritative for callers that already
-        # selected a concrete layer family.  Homogeneous legacy callers still
-        # receive the historical dense/unknown defaults.
-        resolved_attention_family_id = (
-            source.attention_family_id
-            if source.attention_family_id is not None
-            else attention_family_id
+        if type(first_layer_id) is not int or first_layer_id < 0:
+            raise ValueError("first_layer_id must be a non-negative int")
+        source = source.finalized_copy()
+        layers = tuple(
+            source.as_single_layer(
+                global_layer_id=first_layer_id + offset * layer_id_step,
+                attention_family_id=source.attention_family_id,
+                attention_variant_id=source.attention_variant_id,
+                copy_components=False,
+            )
+            for offset in range(num_layers)
         )
-        resolved_attention_variant_id = (
-            source.attention_variant_id
-            if source.attention_variant_id is not None
-            else attention_variant_id
+        stage = cls(layers, stage_execution_time=source)
+        stage._model_time_ms_cache = (
+            source.get_single_layer_block_time() * num_layers
+            + stage._owner_value("pipeline_parallel_communication_time")
+            + stage._owner_value("decode_draft_proposer_time")
+            + stage._owner_value("mtp_terminal_overshoot_time")
         )
-
-        if num_layers == 1 and source.global_layer_id is not None:
-            return cls((source,), stage_execution_time=source)
-
-        # A false copy_components value explicitly transfers ownership of a
-        # freshly-created single-layer payload. Adopt its layer identity in
-        # place so the hot path avoids an otherwise redundant shallow copy.
-        if num_layers == 1 and not copy_components and source.num_layers == 1:
-            if first_layer_id is not None:
-                source._adopt_single_layer_identity(
-                    global_layer_id=first_layer_id,
-                    attention_family_id=resolved_attention_family_id,
-                    attention_variant_id=resolved_attention_variant_id,
-                )
-            return cls((source,), stage_execution_time=source)
-
-        layers: list[ExecutionTime] = []
-        for offset in range(num_layers):
-            global_layer_id = (
-                None
-                if first_layer_id is None
-                else first_layer_id + offset * layer_id_step
-            )
-            layers.append(
-                source.as_single_layer(
-                    global_layer_id=(
-                        0 if global_layer_id is None else global_layer_id
-                    ),
-                    attention_family_id=resolved_attention_family_id,
-                    attention_variant_id=resolved_attention_variant_id,
-                    copy_components=copy_components,
-                )
-            )
-            if global_layer_id is None:
-                layers[-1]._global_layer_id = None
-        stage = cls(tuple(layers), stage_execution_time=source)
-
-        # Expansion repeats one immutable single-layer payload for each
-        # identity-bearing record.  Compute the repeated block contribution
-        # once while the source is still available instead of rescanning every
-        # layer on the first scheduler ``model_time_ms`` read.  The version
-        # tuple keeps the normal mutation invalidation contract intact.
-        if layers:
-            repeated_block_time_ms = layers[0].get_single_layer_block_time()
-            stage._model_time_ms_cache = (
-                repeated_block_time_ms * len(layers)
-                + stage._owner_value("pipeline_parallel_communication_time")
-                + stage._owner_value("decode_draft_proposer_time")
-                + stage._owner_value("mtp_terminal_overshoot_time")
-            )
-            stage._model_time_ms_cache_versions = tuple(
-                layer.mutation_version for layer in stage._layer_execution_times
-            ) + (stage._stage_execution_time.mutation_version,)
         return stage
 
     @property
@@ -338,15 +221,9 @@ class StageExecutionTime:
 
     @property
     def attention_operator_times(self) -> AttentionOperatorTimes | None:
-        """Return the first layer's operator view for legacy layer probes.
+        """Return an isolated sum of the ordered layers' attention operators."""
 
-        Stage-wide maps are available through ``op_times`` and the private
-        aggregate helpers used by that property.  Keeping this accessor at
-        layer scope preserves existing trace consumers that inspect a single
-        representative layer while the layer records remain authoritative.
-        """
-
-        return self._first_layer().attention_operator_times
+        return self._aggregate_attention_operator_times()
 
     def _aggregate_attention_operator_times(self) -> AttentionOperatorTimes | None:
         values = self._sum_operator_maps(
@@ -356,7 +233,7 @@ class StageExecutionTime:
 
     @property
     def mlp_operator_times(self) -> MLPOperatorTimes | None:
-        return self._first_layer().mlp_operator_times
+        return self._aggregate_mlp_operator_times()
 
     def _aggregate_mlp_operator_times(self) -> MLPOperatorTimes | None:
         values = self._sum_operator_maps(
@@ -366,7 +243,7 @@ class StageExecutionTime:
 
     @property
     def moe_operator_times(self) -> MoEOperatorTimes | None:
-        return self._first_layer().moe_operator_times
+        return self._aggregate_moe_operator_times()
 
     def _aggregate_moe_operator_times(self) -> MoEOperatorTimes | None:
         values = self._sum_operator_maps(
@@ -376,20 +253,7 @@ class StageExecutionTime:
 
     @property
     def communication_operator_times(self) -> CommunicationOperatorTimes | None:
-        first_layer_values = self._sum_operator_maps(
-            (self._first_layer().communication_operator_times,),
-            exclude=frozenset({"pipeline_parallel_send_recv"}),
-        )
-        first_owner = self._stage_execution_time.communication_operator_times
-        if first_owner is not None and "pipeline_parallel_send_recv" in first_owner.op_times:
-            first_layer_values["pipeline_parallel_send_recv"] = float(
-                first_owner.op_times["pipeline_parallel_send_recv"]
-            )
-        return (
-            CommunicationOperatorTimes(first_layer_values)
-            if first_layer_values
-            else None
-        )
+        return self._aggregate_communication_operator_times()
 
     def _aggregate_communication_operator_times(
         self,
@@ -429,13 +293,34 @@ class StageExecutionTime:
     def _owner_value(self, name: str) -> float:
         return float(getattr(self._stage_execution_time, name))
 
+    @staticmethod
+    def _aggregate_components(components):
+        """Project existing component fields without a parallel scalar registry."""
+        components = tuple(components)
+        component_type = type(components[0])
+        if any(type(component) is not component_type for component in components):
+            raise ValueError("Mixed MLP/MoE stages require explicit per-layer component access")
+        values = {}
+        for field in fields(component_type):
+            if field.name == "operator_times":
+                continue
+            entries = [getattr(component, field.name) for component in components]
+            values[field.name] = math.fsum(value for value in entries if value is not None)
+        return component_type(**values)
+
     @property
     def attention_time_component(self) -> AttentionTime:
-        return self._first_layer().attention_time_component
+        component = self._aggregate_components(
+            layer.attention_time_component for layer in self._layer_execution_times
+        )
+        component.operator_times = self.attention_operator_times
+        return component
 
     @property
     def communication_time_component(self) -> CommunicationTime:
-        component = self._first_layer().communication_time_component
+        component = self._aggregate_components(
+            layer.communication_time_component for layer in self._layer_execution_times
+        )
         component.pipeline_parallel_send_recv_time = self._owner_value(
             "pipeline_parallel_communication_time"
         )
@@ -444,17 +329,17 @@ class StageExecutionTime:
 
     @property
     def moe_or_mlp_time_component(self) -> MLPTime | MoETime:
-        return self._first_layer().moe_or_mlp_time_component
+        component = self._aggregate_components(
+            layer.moe_or_mlp_time_component for layer in self._layer_execution_times
+        )
+        component.operator_times = (
+            self.moe_operator_times if isinstance(component, MoETime) else self.mlp_operator_times
+        )
+        return component
 
     @property
     def model_time_ms(self) -> float:
-        cache_versions = tuple(
-            layer.mutation_version for layer in self._layer_execution_times
-        ) + (self._stage_execution_time.mutation_version,)
-        if (
-            self._model_time_ms_cache is not None
-            and self._model_time_ms_cache_versions == cache_versions
-        ):
+        if self._model_time_ms_cache is not None:
             return self._model_time_ms_cache
         block_time_ms = self._sum_values(
             layer.get_single_layer_block_time()
@@ -467,7 +352,6 @@ class StageExecutionTime:
             + self._owner_value("mtp_terminal_overshoot_time")
         )
         self._model_time_ms_cache = value
-        self._model_time_ms_cache_versions = cache_versions
         return value
 
     @property
@@ -496,6 +380,8 @@ class StageExecutionTime:
     # model_time and the aggregate component properties above; the probes keep
     # event paths that process one layer at a time source-compatible.
     def _first_layer(self) -> ExecutionTime:
+        if self.num_layers != 1:
+            raise ValueError("A single-layer probe requires exactly one layer")
         return self._layer_execution_times[0]
 
     def get_single_layer_attention_time(self) -> float:
@@ -540,29 +426,11 @@ class StageExecutionTime:
     def get_single_layer_post_attention_time(self) -> float:
         return self._first_layer().get_single_layer_post_attention_time()
 
-    def __getattr__(self, name: str) -> Any:
-        if name in _PER_LAYER_PUBLIC_NAMES:
-            return self._layer_value(name)
-        if name in _STAGE_ONLY_PUBLIC_NAMES:
-            return self._owner_value(name)
-        if name in _PER_LAYER_PRIVATE_NAMES:
-            # Metrics adapters and legacy trace builders read private fields
-            # as single-layer source values before constructing their own
-            # one-layer payload.  Stage totals are exposed through
-            # ``model_time`` and the aggregate public component properties;
-            # returning a summed private field here would make that adapter
-            # multiply a stage twice.
-            return getattr(self._first_layer(), name)
-        if name == "_is_moe":
-            values = {bool(getattr(layer, name)) for layer in self._layer_execution_times}
-            return values.pop() if len(values) == 1 else None
-        if name == "_num_layers_per_pipeline_stage":
-            return self.num_layers
-        if name.startswith("_"):
-            owner = self._stage_execution_time
-            if hasattr(owner, name):
-                return getattr(owner, name)
-        raise AttributeError(name)
+# Scalar projections are explicit class properties; private names never delegate.
+for _name in _PER_LAYER_PUBLIC_NAMES:
+    setattr(StageExecutionTime, _name, property(lambda self, name=_name: self._layer_value(name)))
+for _name in _STAGE_ONLY_PUBLIC_NAMES:
+    setattr(StageExecutionTime, _name, property(lambda self, name=_name: self._owner_value(name)))
 
 
 __all__ = ["StageExecutionTime"]

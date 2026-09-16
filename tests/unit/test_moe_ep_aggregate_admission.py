@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+
+from predictor_cache_fixtures import (
+    CacheFixturePredictor, CacheFixtureDisaggregationPredictor, cache_model,
+)
+from frontier.entities.execution_time import ExecutionTime
 
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
     SklearnDisaggregationExecutionTimePredictor,
@@ -18,20 +24,32 @@ from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.types import ClusterType
 
 
-class _ModelConfig:
-    is_moe = True
+def _numerical_layer() -> ExecutionTime:
+    return ExecutionTime(
+        num_layers_per_pipeline_stage=1,
+        attention_rope_execution_time=0.0,
+        attention_kv_cache_save_execution_time=0.0,
+        attention_decode_execution_time=0.0,
+        attention_prefill_execution_time=7.0,
+        attention_layer_pre_proj_execution_time=0.0,
+        attention_layer_post_proj_execution_time=0.0,
+        attn_norm_time=0.0, mlp_norm_time=0.0, add_time=0.0,
+        tensor_parallel_communication_time=0.0,
+        pipeline_parallel_communication_time=0.0,
+        expert_parallel_communication_time=0.0,
+        moe_gating_time=0.0, moe_shuffling_time=0.0,
+        schedule_time=0.0, sampler_e2e_time=0.0,
+        prepare_inputs_e2e_time=0.0, process_model_outputs_time=0.0,
+        ray_comm_time=0.0, is_moe=False,
+    )
 
-    def __init__(self, *, is_moe_layer: bool = True) -> None:
-        self._is_moe_layer = is_moe_layer
 
-    def is_moe_layer(self, _layer_id: int) -> bool:
-        return self._is_moe_layer
-
-    def supports_share_expert(self) -> bool:
-        return False
-
-    def get_model_architecture_profile(self) -> ModelArchitectureProfile:
-        return ModelArchitectureProfile.generic()
+def _ModelConfig(*, is_moe_layer: bool = True):
+    """Use a real model topology with a dense prefix when requested."""
+    return replace(
+        cache_model(), num_layers=61, num_experts=4,
+        moe_layers_enum=None if is_moe_layer else "60",
+    )
 
 
 class _ModelConfigWithoutLayerPredicate:
@@ -44,7 +62,7 @@ class _ModelConfigWithoutLayerPredicate:
         return ModelArchitectureProfile.generic()
 
 
-class _MonolithicPredictor(SklearnMoEExecutionTimePredictor):
+class _MonolithicPredictor(CacheFixturePredictor):
     def _get_estimator(self):
         return None
 
@@ -52,7 +70,7 @@ class _MonolithicPredictor(SklearnMoEExecutionTimePredictor):
         return {}
 
 
-class _DisaggregationPredictor(SklearnDisaggregationExecutionTimePredictor):
+class _DisaggregationPredictor(CacheFixtureDisaggregationPredictor):
     def _get_estimator(self):
         return None
 
@@ -118,7 +136,9 @@ def _batch(
 
 
 def _configure_monolithic(*, dummy: bool, ep_size: int = 2) -> _MonolithicPredictor:
-    predictor = _MonolithicPredictor.__new__(_MonolithicPredictor)
+    predictor = _MonolithicPredictor(
+        model_config=_ModelConfig(), total_experts=4, ep_size=ep_size
+    )
     predictor._enable_dummy_mode = dummy
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._moe_ep_size = ep_size
@@ -134,7 +154,10 @@ def _configure_monolithic(*, dummy: bool, ep_size: int = 2) -> _MonolithicPredic
 def _configure_disaggregation(
     *, dummy: bool, cluster_type: ClusterType = ClusterType.DECODE_FFN
 ) -> _DisaggregationPredictor:
-    predictor = _DisaggregationPredictor.__new__(_DisaggregationPredictor)
+    predictor = _DisaggregationPredictor(
+        model_config=_ModelConfig(), total_experts=4, ep_size=2,
+        cluster_type=cluster_type,
+    )
     predictor._enable_dummy_mode = dummy
     predictor._cluster_type = cluster_type
     predictor._moe_ep_size = 2
@@ -303,7 +326,7 @@ def test_disaggregation_routed_ep2_requires_lane_before_mode_work(dummy: bool) -
             (_ for _ in ()).throw(ValueError("downstream lane resolver reached"))
         )
     predictor._get_dummy_execution_time_for_cluster = MagicMock(
-        return_value=SimpleNamespace(num_layers=1)
+        return_value=_numerical_layer()
     )
 
     with pytest.raises(ValueError, match="EPLaneWorkload"):
@@ -322,8 +345,8 @@ def test_disaggregation_routed_ep2_requires_lane_before_mode_work(dummy: bool) -
 
 def test_monolithic_attention_only_does_not_require_lane() -> None:
     predictor = _configure_monolithic(dummy=True)
-    sentinel = object()
-    predictor._get_dummy_execution_time = MagicMock(return_value=sentinel)
+    layer_time = _numerical_layer()
+    predictor._get_dummy_execution_time = MagicMock(return_value=layer_time)
 
     result = predictor.predict_stage_execution_time(
         batch=_batch(),
@@ -335,15 +358,17 @@ def test_monolithic_attention_only_does_not_require_lane() -> None:
         include_moe=None,
     )
 
-    assert result is sentinel
+    assert result.num_layers == 1
+    assert result.attention_prefill_execution_time == pytest.approx(7.0)
+    assert result.layer_execution_times[0].attention_family_id == "dense_attention"
     predictor._get_dummy_execution_time.assert_called_once()
 
 
 def test_monolithic_dense_layer_does_not_require_lane() -> None:
     predictor = _configure_monolithic(dummy=True)
     predictor._model_config = _ModelConfig(is_moe_layer=False)
-    sentinel = object()
-    predictor._get_dummy_execution_time = MagicMock(return_value=sentinel)
+    layer_time = _numerical_layer()
+    predictor._get_dummy_execution_time = MagicMock(return_value=layer_time)
 
     result = predictor.predict_stage_execution_time(
         batch=_batch(),
@@ -355,13 +380,15 @@ def test_monolithic_dense_layer_does_not_require_lane() -> None:
         include_ffn=True,
     )
 
-    assert result is sentinel
+    assert result.num_layers == 1
+    assert result.attention_prefill_execution_time == pytest.approx(7.0)
+    assert result.layer_execution_times[0].attention_family_id == "dense_attention"
 
 
 def test_monolithic_ep1_routed_aggregate_does_not_require_lane() -> None:
     predictor = _configure_monolithic(dummy=True, ep_size=1)
-    sentinel = object()
-    predictor._get_dummy_execution_time = MagicMock(return_value=sentinel)
+    layer_time = _numerical_layer()
+    predictor._get_dummy_execution_time = MagicMock(return_value=layer_time)
 
     result = predictor.predict_stage_execution_time(
         batch=_batch(),
@@ -372,10 +399,12 @@ def test_monolithic_ep1_routed_aggregate_does_not_require_lane() -> None:
         include_ffn=True,
     )
 
-    assert result is sentinel
+    assert result.num_layers == 1
+    assert result.attention_prefill_execution_time == pytest.approx(7.0)
+    assert result.layer_execution_times[0].attention_family_id == "dense_attention"
 
 
-def test_monolithic_multi_layer_default_aggregate_preserves_legacy_path() -> None:
+def test_monolithic_multi_layer_default_aggregate_requires_typed_lane() -> None:
     """An implicit routed aggregate requires its physical EP lane descriptor."""
     predictor = _configure_monolithic(dummy=True, ep_size=2)
     predictor._get_dummy_execution_time = MagicMock(
@@ -462,7 +491,7 @@ def test_concrete_moe_layer_requires_layer_capability_before_mode_work(
             num_pipeline_stages=1,
         )
         predictor._get_dummy_execution_time_for_cluster = MagicMock(
-            return_value=SimpleNamespace(num_layers=1)
+            return_value=_numerical_layer()
         )
         predictor._supports_operation = MagicMock(
             side_effect=AssertionError("operation lookup reached before capability check")
@@ -519,14 +548,14 @@ def test_disaggregation_dense_decode_ffn_keeps_ffn_tp_without_routed_fields() ->
         include_ffn=True,
     )
 
-    assert execution_time._is_moe is False
-    assert execution_time._moe_gating_time == pytest.approx(0.0)
-    assert execution_time._moe_shuffling_time == pytest.approx(0.0)
-    assert execution_time._moe_grouped_gemm_time == pytest.approx(0.0)
-    assert execution_time._expert_parallel_communication_time == pytest.approx(0.0)
-    assert execution_time._moe_tensor_parallel_allreduce_time == pytest.approx(10.0)
-    assert execution_time._tensor_parallel_allgather_time == pytest.approx(0.0)
-    assert execution_time._share_expert_tensor_parallel_allreduce_time == pytest.approx(
+    assert execution_time.layer_execution_times[0]._is_moe is False
+    assert execution_time.moe_gating_time == pytest.approx(0.0)
+    assert execution_time.moe_shuffling_time == pytest.approx(0.0)
+    assert execution_time.moe_grouped_gemm_time == pytest.approx(0.0)
+    assert execution_time.expert_parallel_communication_time == pytest.approx(0.0)
+    assert execution_time.communication_time_component.moe_tensor_parallel_allreduce_time == pytest.approx(10.0)
+    assert execution_time.moe_tensor_parallel_allgather_time == pytest.approx(0.0)
+    assert execution_time.share_expert_tensor_parallel_allreduce_time == pytest.approx(
         0.0
     )
 
@@ -536,8 +565,8 @@ def test_monolithic_valid_lane_including_zero_routed_lane_is_admitted(
     routed_token_count: int,
 ) -> None:
     predictor = _configure_monolithic(dummy=True)
-    sentinel = object()
-    predictor._get_dummy_execution_time = MagicMock(return_value=sentinel)
+    layer_time = _numerical_layer()
+    predictor._get_dummy_execution_time = MagicMock(return_value=layer_time)
 
     result = predictor.predict_stage_execution_time(
         batch=_batch(
@@ -551,7 +580,9 @@ def test_monolithic_valid_lane_including_zero_routed_lane_is_admitted(
         include_ffn=True,
     )
 
-    assert result is sentinel
+    assert result.num_layers == 1
+    assert result.attention_prefill_execution_time == pytest.approx(7.0)
+    assert result.layer_execution_times[0].attention_family_id == "dense_attention"
 
 
 @pytest.mark.parametrize("routed_token_count", (0, 3))
@@ -586,9 +617,9 @@ def test_disaggregation_aggregate_stage_admission_uses_active_role_topk() -> Non
     predictor._get_cluster_replica_config = MagicMock(
         return_value=role_replica_config
     )
-    sentinel = SimpleNamespace(num_layers=1)
+    layer_time = _numerical_layer()
     predictor._get_dummy_execution_time_for_cluster = MagicMock(
-        return_value=sentinel
+        return_value=layer_time
     )
 
     result = predictor.predict_stage_execution_time(
@@ -601,7 +632,9 @@ def test_disaggregation_aggregate_stage_admission_uses_active_role_topk() -> Non
         include_ffn=True,
     )
 
-    assert result is sentinel
+    assert result.num_layers == 1
+    assert result.attention_prefill_execution_time == pytest.approx(7.0)
+    assert result.layer_execution_times[0].attention_family_id == "dense_attention"
     predictor._get_dummy_execution_time_for_cluster.assert_called_once()
 
 
@@ -696,7 +729,7 @@ def test_disaggregation_aggregate_non_dummy_propagates_active_role_topology() ->
         include_ffn=True,
     )
 
-    assert result._is_moe is True
+    assert result.layer_execution_times[0]._is_moe is True
     moe_call.assert_called_once()
     call_kwargs = moe_call.call_args.kwargs
     assert call_kwargs["ep_size"] == 2
@@ -708,10 +741,10 @@ def test_disaggregation_decode_attn_remains_attention_only_without_lane() -> Non
         dummy=True,
         cluster_type=ClusterType.DECODE_ATTN,
     )
-    sentinel = object()
+    layer_time = _numerical_layer()
     predictor._log_architecture_attention_shape = lambda _batch: None
     predictor._get_dummy_execution_time_for_cluster = MagicMock(
-        return_value=SimpleNamespace(num_layers=1)
+        return_value=_numerical_layer()
     )
 
     result = predictor.predict_stage_execution_time(

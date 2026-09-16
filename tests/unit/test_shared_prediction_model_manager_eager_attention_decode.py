@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pandas as pd
@@ -15,19 +16,19 @@ from frontier.execution_time_predictor.shared_prediction_model_manager import (
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
-from frontier.model_architectures import ModelArchitectureProfile
+from frontier.config import BaseModelConfig
+from tests.unit.predictor_cache_fixtures import cache_model, predictor_fixture_config
 from frontier.types import ClusterType, MeasurementType
 
 
-def _dense_model_config() -> SimpleNamespace:
-    return SimpleNamespace(
-        use_mla=False,
+def _dense_model_config() -> BaseModelConfig:
+    return replace(
+        cache_model(),
         num_q_heads=32,
         num_kv_heads=8,
         is_moe=False,
-        supports_share_expert=lambda: False,
-        uses_fused_add_norm=False,
-        get_model_architecture_profile=ModelArchitectureProfile.generic,
+        num_experts=0,
+        num_experts_per_tok=0,
     )
 
 
@@ -955,11 +956,10 @@ def test_sklearn_runtime_dense_attention_support_gates_follow_role_names(
 ) -> None:
     _patch_sklearn_dense_runtime_role_names(monkeypatch)
 
-    predictor = _ConcreteSklearnPredictor.__new__(_ConcreteSklearnPredictor)
+    inputs = predictor_fixture_config(model_config=_dense_model_config())
+    inputs.pop("actual_replica_ids")
+    predictor = _ConcreteSklearnPredictor(**inputs)
     predictor._enable_dummy_mode = False
-    predictor._cluster_type = ClusterType.MONOLITHIC
-    predictor._model_config = _dense_model_config()
-    predictor._replica_config = SimpleNamespace(num_pipeline_stages=1)
     predictor._supports_operation = lambda operation: operation in {
         "attention",
         "runtime_cache",

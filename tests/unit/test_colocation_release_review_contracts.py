@@ -304,6 +304,9 @@ def test_non_dummy_shared_model_manager_registers_profiling_metadata(
             return {}
 
     class _FakeModelManager:
+        def get_gdn_predictor(self, cluster_type: ClusterType) -> None:
+            return None
+
         def get_models(self) -> dict[str, dict[str, object]]:
             return {"eager": {}, "kernel_only": {}}
 

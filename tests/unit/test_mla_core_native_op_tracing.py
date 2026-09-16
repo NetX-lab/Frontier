@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 import pytest
+from dataclasses import replace
+from tempfile import gettempdir
+from types import SimpleNamespace
 
 from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.config import ClusterConfig, MetricsConfig
+from frontier.config.quantization_manager import QuantizationManager
 from frontier.attention.ops import (
     AttentionOperatorRole,
     AttentionOperatorSpec,
@@ -11,6 +16,7 @@ from frontier.attention.ops import (
 
 from frontier.operators.spec import ResourceClass
 from frontier.entities.execution_time import ExecutionTime
+from frontier.entities.stage_execution_time import StageExecutionTime
 from frontier.entities.time_components import AttentionOperatorTimes
 from frontier.metrics.constants import OperationMetrics as MetricsOperationMetrics
 from frontier.metrics.metrics_store import MetricsStore
@@ -18,6 +24,7 @@ from frontier.profiling.common.constants import (
     OperationMetrics as ProfilingOperationMetrics,
 )
 from frontier.types import ClusterType
+from tests.unit.predictor_cache_fixtures import cache_model, predictor_fixture_config
 
 
 MLA_OPS = (
@@ -113,7 +120,9 @@ class _DummyBatchStage:
 
 
 def _build_metrics_store() -> MetricsStore:
-    metrics_store = MetricsStore.__new__(MetricsStore)
+    metrics_store = MetricsStore(
+        SimpleNamespace(metrics_config=MetricsConfig(output_dir=gettempdir())), {}
+    )
     metrics_store._config = _DummyConfig()
     metrics_store._trace_store = None
     metrics_store._cluster_configs = {ClusterType.MONOLITHIC: _DummyClusterConfig()}
@@ -142,9 +151,12 @@ def _build_metrics_store() -> MetricsStore:
 def _build_execution_time(
     num_layers: int = 2,
     dense_kernel_times: tuple[float, float, float] = (0.0, 0.0, 0.0),
-) -> ExecutionTime:
-    return ExecutionTime(
-        num_layers_per_pipeline_stage=num_layers,
+) -> ExecutionTime | StageExecutionTime:
+    layer = ExecutionTime(
+        num_layers_per_pipeline_stage=1,
+        global_layer_id=7,
+        attention_family_id="dense_attention" if any(dense_kernel_times) else "latent_mla_attention",
+        attention_variant_id="gqa" if any(dense_kernel_times) else "mla",
         attention_rope_execution_time=0.5,
         attention_kv_cache_save_execution_time=dense_kernel_times[0],
         attention_decode_execution_time=dense_kernel_times[2],
@@ -172,11 +184,21 @@ def _build_execution_time(
         attn_mla_decode_time=0.15,
         attn_mla_v_up_proj_time=0.16,
     )
+    return _stage_or_layer(layer, num_layers)
 
 
-def _build_structured_mla_execution_time(num_layers: int = 2) -> ExecutionTime:
-    return ExecutionTime(
-        num_layers_per_pipeline_stage=num_layers,
+def _stage_or_layer(layer: ExecutionTime, num_layers: int):
+    if num_layers == 1:
+        return layer
+    return StageExecutionTime.from_execution_time(layer, num_layers=num_layers, first_layer_id=7)
+
+
+def _build_structured_mla_execution_time(num_layers: int = 2) -> ExecutionTime | StageExecutionTime:
+    layer = ExecutionTime(
+        num_layers_per_pipeline_stage=1,
+        global_layer_id=7,
+        attention_family_id="latent_mla_attention",
+        attention_variant_id="mla",
         attention_rope_execution_time=0.0,
         attention_kv_cache_save_execution_time=0.0,
         attention_decode_execution_time=0.0,
@@ -208,6 +230,7 @@ def _build_structured_mla_execution_time(num_layers: int = 2) -> ExecutionTime:
             }
         ),
     )
+    return _stage_or_layer(layer, num_layers)
 
 
 class _DummyTraceStore:
@@ -218,46 +241,53 @@ class _DummyTraceStore:
         self.events.append(event)
 
 
-class _DummyMlaModelConfig:
-    embedding_dim = 16
-    num_q_heads = 4
-    num_kv_heads = 1
-    mlp_hidden_dim = 32
-    num_experts = 0
-    num_experts_per_tok = 0
-    is_moe = False
-    model_type = "generic"
-    use_mla = True
-    kv_lora_rank = 6
-    qk_nope_head_dim = 3
-    qk_rope_head_dim = 2
-    qk_head_dim = 5
-    v_head_dim = 4
-
-    def get_head_dim(self) -> int:
-        return 4
-
-    def uses_mla(self) -> bool:
-        return True
-
-    def get_runtime_num_kv_heads(self) -> int:
-        return 1
-
-    def get_runtime_head_size(self) -> int:
-        return 8
-
-    def get_qk_head_dim(self) -> int:
-        return 5
+def _mla_model_config():
+    return replace(
+        cache_model(), num_layers=16, embedding_dim=16, num_q_heads=4,
+        num_kv_heads=1, mlp_hidden_dim=32, num_experts=0,
+        num_experts_per_tok=0, is_moe=False, use_mla=True,
+        torch_dtype="float16",
+        kv_lora_rank=6, qk_nope_head_dim=3, qk_rope_head_dim=2,
+        qk_head_dim=5, v_head_dim=4,
+    )
 
 
 class _DummyMlaReplicaConfig(_DummyReplicaConfig):
-    model_config = _DummyMlaModelConfig()
+    model_config = _mla_model_config()
     model_name = "dummy-mla-model"
 
 
 class _DummyMlaClusterConfig:
     num_replicas = 1
     replica_config = _DummyMlaReplicaConfig()
+
+
+@pytest.fixture
+def _fp16_quantization():
+    QuantizationManager.reset()
+    QuantizationManager().configure_from_model_config(_mla_model_config())
+    yield
+    QuantizationManager.reset()
+
+
+def _emit_stage_public_traces(execution_time, *, expanded, cluster_type=ClusterType.MONOLITHIC):
+    metrics_store = _build_metrics_store()
+    metrics_store._config.enable_op_level_tracing = True
+    metrics_store._config.enable_per_layer_expansion = expanded
+    metrics_store._config.num_requests_to_trace_per_layer = 1
+    metrics_store._trace_store = _DummyTraceStore()
+    family_id = execution_time.attention_family_ids[0]
+    model = _mla_model_config() if family_id == "latent_mla_attention" else replace(
+        cache_model(), num_layers=16, is_moe=False, num_experts=0, num_experts_per_tok=0,
+    )
+    replica = predictor_fixture_config(model_config=model)["replica_config"]
+    metrics_store._cluster_configs = {cluster_type: ClusterConfig(replica_config=replica)}
+    metrics_store._per_layer_traced_requests_by_cluster = {}
+    metrics_store._emit_op_level_traces(
+        time=0.0, batch_stage=_DummyBatchStage(), replica_id=0,
+        execution_time=execution_time, cluster_type=cluster_type, request_ids=["101"],
+    )
+    return metrics_store._trace_store.events
 
 
 def _collect_emitted_ops():
@@ -304,7 +334,7 @@ def test_execution_time_carries_and_aggregates_mla_attention_ops() -> None:
         + 0.15
         + 0.16
     )
-    assert execution_time.get_single_layer_attention_time() == pytest.approx(
+    assert execution_time.layer_execution_times[0].get_single_layer_attention_time() == pytest.approx(
         single_layer_attention
     )
     assert execution_time.attention_time == pytest.approx(single_layer_attention * 2)
@@ -312,15 +342,9 @@ def test_execution_time_carries_and_aggregates_mla_attention_ops() -> None:
 
 def test_metrics_store_emits_aggregated_mla_attention_ops() -> None:
     execution_time = _build_execution_time(num_layers=2)
-    emitted, emit = _collect_emitted_ops()
 
-    MetricsStore.__new__(MetricsStore)._emit_aggregated_traces(
-        emit,
-        execution_time,
-        moe_tp_enabled=False,
-        ep_enabled=False,
-        cluster_type=ClusterType.MONOLITHIC,
-    )
+    events = _emit_stage_public_traces(execution_time, expanded=False)
+    emitted = [(event.name, event.duration_ms, event.layer_id) for event in events]
 
     durations_by_name = {name: duration for name, duration, _ in emitted}
 
@@ -331,31 +355,31 @@ def test_metrics_store_emits_aggregated_mla_attention_ops() -> None:
     assert durations_by_name["attn_mla_decode_q_latent_proj"] == pytest.approx(0.28)
     assert durations_by_name["attn_mla_decode"] == pytest.approx(0.30)
     assert durations_by_name["attn_mla_v_up_proj"] == pytest.approx(0.32)
+    for event in events:
+        if event.name in MLA_OPS:
+            assert event.layer_id == -1
+            assert event.meta["global_layer_ids"] == [7, 8]
+            assert event.meta["attention_family_id"] == "latent_mla_attention"
 
 
 def test_metrics_store_emits_per_layer_mla_attention_ops() -> None:
     execution_time = _build_execution_time(num_layers=2)
-    emitted, emit = _collect_emitted_ops()
 
-    MetricsStore.__new__(MetricsStore)._emit_per_layer_traces(
-        emit,
-        execution_time,
-        num_layers=2,
-        base_meta={},
-        moe_tp_enabled=False,
-        ep_enabled=False,
-        cluster_type=ClusterType.MONOLITHIC,
-    )
+    events = _emit_stage_public_traces(execution_time, expanded=True)
+    emitted = [(event.name, event.duration_ms, event.layer_id) for event in events]
 
     mla_rows = [row for row in emitted if row[0] in MLA_OPS]
 
     assert [row[0] for row in mla_rows[:6]] == list(MLA_OPS)
     assert [row[0] for row in mla_rows[6:]] == list(MLA_OPS)
-    assert [row[2] for row in mla_rows[:6]] == [0] * 6
-    assert [row[2] for row in mla_rows[6:]] == [1] * 6
+    assert [row[2] for row in mla_rows[:6]] == [7] * 6
+    assert [row[2] for row in mla_rows[6:]] == [8] * 6
     assert [row[1] for row in mla_rows[:6]] == pytest.approx(
         [0.11, 0.12, 0.13, 0.14, 0.15, 0.16]
     )
+    for event in events:
+        if event.name in MLA_OPS:
+            assert event.meta["global_layer_id"] == event.layer_id
 
 
 def test_operation_metrics_record_mla_attention_ops() -> None:
@@ -471,9 +495,7 @@ def test_operation_metrics_dense_attention_uses_shared_mapper(monkeypatch) -> No
 def test_frontier_stage_batch_component_ledger_records_mla_attention_ops() -> None:
     execution_time = _build_execution_time(num_layers=1)
 
-    ledger = MetricsStore.__new__(
-        MetricsStore
-    )._build_frontier_stage_batch_component_ledger(execution_time)
+    ledger = _build_metrics_store()._build_frontier_stage_batch_component_ledger(execution_time)
 
     assert ledger["attn_mla_kv_cache_save_time"] == pytest.approx(0.11)
     assert ledger["attn_mla_prefill_kv_up_proj_time"] == pytest.approx(0.12)
@@ -487,7 +509,7 @@ def test_frontier_stage_batch_ledger_uses_structured_mla_operator_times() -> Non
     execution_time = _build_structured_mla_execution_time(num_layers=2)
     batch_stage = _DummyBatchStage()
 
-    row = MetricsStore.__new__(MetricsStore)._build_frontier_stage_batch_ledger_row(
+    row = _build_metrics_store()._build_frontier_stage_batch_ledger_row(
         batch_stage=batch_stage,
         execution_time=execution_time,
         replica_id=0,
@@ -510,7 +532,7 @@ def test_frontier_stage_batch_ledger_uses_structured_mla_operator_times() -> Non
     assert row["request_num_prefill_tokens"] == [1]
 
 
-def test_op_level_tracing_generates_metadata_for_structured_mla_ops() -> None:
+def test_op_level_tracing_generates_metadata_for_structured_mla_ops(_fp16_quantization) -> None:
     metrics_store = _build_metrics_store()
     metrics_store._config.enable_op_level_tracing = True
     metrics_store._trace_store = _DummyTraceStore()
@@ -592,9 +614,7 @@ def test_frontier_stage_batch_component_ledger_dense_attention_uses_shared_mappe
         _fake_get_attention_trace_op_times,
     )
 
-    ledger = MetricsStore.__new__(
-        MetricsStore
-    )._build_frontier_stage_batch_component_ledger(execution_time)
+    ledger = _build_metrics_store()._build_frontier_stage_batch_component_ledger(execution_time)
 
     assert mapper_calls == [
         ("dense_attention", None, False),
@@ -631,7 +651,7 @@ def test_dense_attention_trace_does_not_emit_mla_ops_without_mla_timings() -> No
     )
     emitted, emit = _collect_emitted_ops()
 
-    MetricsStore.__new__(MetricsStore)._emit_aggregated_traces(
+    _build_metrics_store()._emit_aggregated_traces(
         emit,
         execution_time,
         moe_tp_enabled=False,
@@ -652,7 +672,6 @@ def test_metrics_store_dense_attention_trace_uses_shared_mapper(monkeypatch) -> 
         num_layers=2,
         dense_kernel_times=(0.2, 0.4, 0.3),
     )
-    emitted, emit = _collect_emitted_ops()
     mapper_calls: list[tuple[str, int | None]] = []
 
     def _fake_get_attention_trace_op_times(
@@ -662,7 +681,7 @@ def test_metrics_store_dense_attention_trace_uses_shared_mapper(monkeypatch) -> 
         per_layer_count=None,
         skip_zero=True,
     ):
-        assert mapped_execution_time is execution_time
+        assert mapped_execution_time in execution_time.layer_execution_times
         if family is not DENSE_ATTENTION_FAMILY:
             return ()
         assert skip_zero is True
@@ -673,21 +692,21 @@ def test_metrics_store_dense_attention_trace_uses_shared_mapper(monkeypatch) -> 
                     "role_cache",
                     AttentionOperatorRole.CACHE_WRITE,
                 ),
-                9.2,
+                4.6,
             ),
             (
                 _fake_dense_attention_operator(
                     "role_prefill",
                     AttentionOperatorRole.PREFILL_KERNEL,
                 ),
-                9.4,
+                4.7,
             ),
             (
                 _fake_dense_attention_operator(
                     "role_decode",
                     AttentionOperatorRole.DECODE_KERNEL,
                 ),
-                9.3,
+                4.65,
             ),
         )
 
@@ -696,13 +715,8 @@ def test_metrics_store_dense_attention_trace_uses_shared_mapper(monkeypatch) -> 
         _fake_get_attention_trace_op_times,
     )
 
-    MetricsStore.__new__(MetricsStore)._emit_aggregated_traces(
-        emit,
-        execution_time,
-        moe_tp_enabled=False,
-        ep_enabled=False,
-        cluster_type=ClusterType.DECODE_ATTN,
-    )
+    events = _emit_stage_public_traces(execution_time, expanded=False)
+    emitted = [(event.name, event.duration_ms, event.layer_id) for event in events]
 
     dense_rows = [
         (name, duration_ms)
@@ -710,11 +724,11 @@ def test_metrics_store_dense_attention_trace_uses_shared_mapper(monkeypatch) -> 
         if name in {"attn_prefill", "attn_decode", "attn_kv_cache_save"}
     ]
 
-    assert mapper_calls == [("dense_attention", None)]
+    assert mapper_calls == [("dense_attention", None)] * 2
     assert dense_rows == [
+        ("attn_kv_cache_save", pytest.approx(9.2)),
         ("attn_prefill", pytest.approx(9.4)),
         ("attn_decode", pytest.approx(9.3)),
-        ("attn_kv_cache_save", pytest.approx(9.2)),
     ]
 
 
@@ -725,7 +739,6 @@ def test_metrics_store_per_layer_dense_attention_trace_uses_shared_mapper(
         num_layers=2,
         dense_kernel_times=(0.2, 0.4, 0.3),
     )
-    emitted, emit = _collect_emitted_ops()
     mapper_calls: list[tuple[str, int | None]] = []
 
     def _fake_get_attention_trace_op_times(
@@ -735,7 +748,7 @@ def test_metrics_store_per_layer_dense_attention_trace_uses_shared_mapper(
         per_layer_count=None,
         skip_zero=True,
     ):
-        assert mapped_execution_time is execution_time
+        assert mapped_execution_time in execution_time.layer_execution_times
         if family is not DENSE_ATTENTION_FAMILY:
             return ()
         assert skip_zero is True
@@ -769,15 +782,8 @@ def test_metrics_store_per_layer_dense_attention_trace_uses_shared_mapper(
         _fake_get_attention_trace_op_times,
     )
 
-    MetricsStore.__new__(MetricsStore)._emit_per_layer_traces(
-        emit,
-        execution_time,
-        num_layers=2,
-        base_meta={},
-        moe_tp_enabled=False,
-        ep_enabled=False,
-        cluster_type=ClusterType.DECODE_ATTN,
-    )
+    events = _emit_stage_public_traces(execution_time, expanded=True)
+    emitted = [(event.name, event.duration_ms, event.layer_id) for event in events]
 
     dense_rows = [
         (name, duration_ms, layer_id)
@@ -785,12 +791,12 @@ def test_metrics_store_per_layer_dense_attention_trace_uses_shared_mapper(
         if name in {"attn_prefill", "attn_decode", "attn_kv_cache_save"}
     ]
 
-    assert mapper_calls == [("dense_attention", 2)]
+    assert mapper_calls == [("dense_attention", None)] * 2
     assert dense_rows == [
-        ("attn_prefill", pytest.approx(9.4), 0),
-        ("attn_decode", pytest.approx(9.3), 0),
-        ("attn_kv_cache_save", pytest.approx(9.2), 0),
-        ("attn_prefill", pytest.approx(9.4), 1),
-        ("attn_decode", pytest.approx(9.3), 1),
-        ("attn_kv_cache_save", pytest.approx(9.2), 1),
+        ("attn_kv_cache_save", pytest.approx(9.2), 7),
+        ("attn_prefill", pytest.approx(9.4), 7),
+        ("attn_decode", pytest.approx(9.3), 7),
+        ("attn_kv_cache_save", pytest.approx(9.2), 8),
+        ("attn_prefill", pytest.approx(9.4), 8),
+        ("attn_decode", pytest.approx(9.3), 8),
     ]

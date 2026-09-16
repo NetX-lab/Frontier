@@ -46,6 +46,8 @@ class OperationMetrics(enum.Enum):
     MOE_TENSOR_PARALLEL_ALLREDUCE = "moe_tensor_parallel_allreduce"
     ADD_ATTN_RESIDUAL = "add_attn_residual"
     ADD_FFN_RESIDUAL = "add_ffn_residual"
+    DP_INPUT_ALLREDUCE = "dp_input_allreduce"
+    DP_OUTPUT_ALLREDUCE = "dp_output_allreduce"
 
 
 class CpuOperationMetrics(enum.Enum):

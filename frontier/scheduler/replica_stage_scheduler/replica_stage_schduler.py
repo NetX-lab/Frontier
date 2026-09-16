@@ -397,7 +397,9 @@ class ReplicaStageScheduler:
         # overestimation (e.g., 61^2 = 3721x for a 61-layer model).
         if self._cluster_type in (ClusterType.DECODE_ATTN, ClusterType.DECODE_FFN):
             num_layers = 1
-        layer_id = 0
+        layer_id = self._stage_id * self._execution_time_predictor._num_layers_per_pipeline_stage
+        if self._cluster_type == ClusterType.DECODE_ATTN:
+            layer_id = batch.af_inflight_layer_count
         if self._cluster_type == ClusterType.DECODE_FFN:
             layer_id = getattr(batch, "decode_ffn_layer_id", None)
             if layer_id is None:

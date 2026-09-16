@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
@@ -19,7 +20,6 @@ from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor impo
 from frontier.entities import EPBatchGroup, Request
 from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.metrics.op_trace_utils import map_trace_op_to_precision_op
-from frontier.model_architectures import ModelArchitectureProfile
 from frontier.operators.families import COMM_FAMILY, get_comm_operator
 from frontier.operators.spec import (
     CommOperatorSpec,
@@ -29,6 +29,7 @@ from frontier.operators.spec import (
     ZeroPayloadPolicy,
 )
 from frontier.types import ClusterType
+from tests.unit.predictor_cache_fixtures import cache_model, predictor_fixture_config
 
 
 class _ConcreteSklearnExecutionTimePredictor(SklearnExecutionTimePredictor):
@@ -175,17 +176,23 @@ def _comm_context(
     )
 
 
-def _predictor() -> _ConcreteSklearnExecutionTimePredictor:
-    predictor = object.__new__(_ConcreteSklearnExecutionTimePredictor)
-    predictor._model_config = SimpleNamespace(embedding_dim=8, num_experts_per_tok=2)
-    predictor._replica_config = SimpleNamespace(
-        attn_tensor_parallel_size=4,
-        moe_tensor_parallel_size=3,
-        moe_expert_parallel_size=2,
-        num_pipeline_stages=2,
-        router_topk=2,
+def _predictor_inputs(*, is_moe: bool):
+    model = replace(
+        cache_model(), num_layers=4, embedding_dim=8, mlp_hidden_dim=16,
+        is_moe=is_moe, num_experts=4, num_experts_per_tok=2,
     )
-    predictor._cluster_type = ClusterType.MONOLITHIC
+    inputs = predictor_fixture_config(model_config=model, total_experts=4, ep_size=2)
+    replica = inputs["replica_config"]
+    replica.attn_tensor_parallel_size = 4
+    replica.moe_tensor_parallel_size = 2 if is_moe else 3
+    replica.num_pipeline_stages = 2
+    return inputs
+
+
+def _predictor() -> _ConcreteSklearnExecutionTimePredictor:
+    inputs = _predictor_inputs(is_moe=False)
+    inputs.pop("actual_replica_ids")
+    predictor = _ConcreteSklearnExecutionTimePredictor(**inputs)
     predictor._enable_dummy_mode = False
     predictor._dummy_execution_time = 0.0
     predictor._cc_backend = _SpyCCBackend()
@@ -195,28 +202,9 @@ def _predictor() -> _ConcreteSklearnExecutionTimePredictor:
 
 
 def _moe_predictor() -> _ConcreteSklearnMoEExecutionTimePredictor:
-    predictor = object.__new__(_ConcreteSklearnMoEExecutionTimePredictor)
-    predictor._model_config = SimpleNamespace(
-        embedding_dim=8,
-        num_experts_per_tok=2,
-        is_moe=True,
-        supports_share_expert=lambda: False,
-        get_model_architecture_profile=lambda: ModelArchitectureProfile.generic(),
-    )
-    predictor._replica_config = SimpleNamespace(
-        attn_tensor_parallel_size=4,
-        moe_tensor_parallel_size=2,
-        moe_expert_parallel_size=2,
-        num_pipeline_stages=2,
-        router_topk=2,
-        data_parallel_size=1,
-    )
-    predictor._cluster_type = ClusterType.MONOLITHIC
+    predictor = _ConcreteSklearnMoEExecutionTimePredictor(**_predictor_inputs(is_moe=True))
     predictor._enable_dummy_mode = False
     predictor._dummy_execution_time = 0.0
-    predictor._num_layers_per_pipeline_stage = 1
-    predictor._moe_ep_size = 2
-    predictor._router_topk = 2
     predictor._cc_backend = _SpyCCBackend()
     predictor._supports_operation = lambda _operation: True
     predictor._should_strip_collective_sim_allreduce_launch_overhead = lambda _batch: False
@@ -675,11 +663,18 @@ def test_dense_stage_live_path_records_comm_operator_sequence_and_totals() -> No
     ]
     assert execution_time.communication_time_component.operator_times is not None
     assert execution_time.communication_time_component.operator_times.op_times == {
-        "attn_tensor_parallel_allreduce": pytest.approx(4.08),
-        "mlp_tensor_parallel_allreduce": pytest.approx(4.08),
+        "attn_tensor_parallel_allreduce": pytest.approx(8.16),
+        "mlp_tensor_parallel_allreduce": pytest.approx(8.16),
         "pipeline_parallel_send_recv": pytest.approx(0.04),
     }
-    assert execution_time.communication_time_component.total_time() == pytest.approx(8.2)
+    for layer in execution_time.layer_execution_times:
+        assert layer.communication_operator_times.op_times == {
+            "attn_tensor_parallel_allreduce": pytest.approx(4.08),
+            "mlp_tensor_parallel_allreduce": pytest.approx(4.08),
+            "pipeline_parallel_send_recv": pytest.approx(0.04),
+        }
+        assert layer.communication_time_component.total_time() == pytest.approx(8.2)
+    assert execution_time.communication_time_component.total_time() == pytest.approx(16.36)
     assert execution_time.model_time_ms == pytest.approx(16.36)
     assert execution_time.total_time * 1e3 == pytest.approx(16.36)
 
@@ -828,11 +823,21 @@ def test_moe_stage_num_layers_view_preserves_comm_operator_times() -> None:
     assert execution_time.communication_operator_times is not None
     assert execution_time.communication_operator_times.op_times == {
         "pipeline_parallel_send_recv": pytest.approx(0.04),
-        "attn_tensor_parallel_allreduce": pytest.approx(4.08),
-        "moe_tensor_parallel_allreduce": pytest.approx(2.08),
-        "expert_parallel_alltoall_dispatch": pytest.approx(2.04),
-        "expert_parallel_alltoall_combine": pytest.approx(2.04),
+        "attn_tensor_parallel_allreduce": pytest.approx(8.16),
+        "moe_tensor_parallel_allreduce": pytest.approx(4.16),
+        "expert_parallel_alltoall_dispatch": pytest.approx(4.08),
+        "expert_parallel_alltoall_combine": pytest.approx(4.08),
     }
+    for index, layer in enumerate(execution_time.layer_execution_times):
+        expected = {
+            "attn_tensor_parallel_allreduce": pytest.approx(4.08),
+            "moe_tensor_parallel_allreduce": pytest.approx(2.08),
+            "expert_parallel_alltoall_dispatch": pytest.approx(2.04),
+            "expert_parallel_alltoall_combine": pytest.approx(2.04),
+        }
+        if index == 0:
+            expected["pipeline_parallel_send_recv"] = pytest.approx(0.04)
+        assert layer.communication_operator_times.op_times == expected
     assert {
         "pipeline_parallel_send_recv",
         "attn_tensor_parallel_allreduce",
@@ -897,6 +902,8 @@ def test_moe_stage_preserves_attention_operator_times_for_fast_and_view_paths() 
     for execution_time in (fast_execution_time, view_execution_time):
         assert execution_time.attention_operator_times is not None
         assert execution_time.attention_operator_times.op_times == {
-            "attn_prefill": pytest.approx(0.02),
+            "attn_prefill": pytest.approx(0.02 * execution_time.num_layers),
         }
+        for layer in execution_time.layer_execution_times:
+            assert layer.attention_operator_times.op_times == {"attn_prefill": pytest.approx(0.02)}
         assert "attn_prefill" in execution_time.op_times

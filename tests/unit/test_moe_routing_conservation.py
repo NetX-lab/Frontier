@@ -1,18 +1,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from types import SimpleNamespace
+from predictor_cache_fixtures import (
+    CacheFixturePredictor,
+    CacheFixtureDisaggregationPredictor,
+)
 
-from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
-    SklearnDisaggregationExecutionTimePredictor,
-)
-from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
-    SklearnMoEExecutionTimePredictor,
-)
 from frontier.types import ClusterType
 
 
-class _MoEPredictor(SklearnMoEExecutionTimePredictor):
+class _MoEPredictor(CacheFixturePredictor):
     def _get_estimator(self):
         return None
 
@@ -20,7 +17,7 @@ class _MoEPredictor(SklearnMoEExecutionTimePredictor):
         return {}
 
 
-class _DisaggregationPredictor(SklearnDisaggregationExecutionTimePredictor):
+class _DisaggregationPredictor(CacheFixtureDisaggregationPredictor):
     def _get_estimator(self):
         return None
 
@@ -33,16 +30,8 @@ class _Batch:
     total_num_tokens = 4
 
 
-def _replica_config() -> SimpleNamespace:
-    return SimpleNamespace(
-        total_expert_num=4,
-        moe_expert_parallel_size=2,
-        router_topk=2,
-    )
-
-
 def test_monolithic_predictor_materializes_global_routing_with_shared_tie_break() -> None:
-    predictor = object.__new__(_MoEPredictor)
+    predictor = _MoEPredictor(replica_id=3, total_experts=4, ep_size=2)
     predictor._monolithic_routing_details = {
         3: {
             7: {
@@ -53,7 +42,6 @@ def test_monolithic_predictor_materializes_global_routing_with_shared_tie_break(
             }
         }
     }
-    predictor._replica_config = _replica_config()
 
     result = predictor._materialize_layer_ep_workload(
         batch=_Batch(),
@@ -66,7 +54,7 @@ def test_monolithic_predictor_materializes_global_routing_with_shared_tie_break(
 
 
 def test_disaggregation_predictor_uses_shared_materializer_tie_break() -> None:
-    predictor = object.__new__(_DisaggregationPredictor)
+    predictor = _DisaggregationPredictor(replica_id=3, total_experts=4, ep_size=2)
     predictor._prefill_routing_details = {
         3: {
             7: {
@@ -77,10 +65,6 @@ def test_disaggregation_predictor_uses_shared_materializer_tie_break() -> None:
             }
         }
     }
-    predictor._cluster_config = SimpleNamespace(
-        prefill_replica_config=_replica_config(),
-    )
-    predictor._replica_config = _replica_config()
 
     result = predictor._materialize_layer_ep_workload(
         batch=_Batch(),

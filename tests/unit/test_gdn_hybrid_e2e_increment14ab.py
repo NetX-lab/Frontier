@@ -975,7 +975,7 @@ def test_hybrid_gdn_production_constructor_cpu_e2e(
     dense_events = [
         event
         for event in trace_events
-        if event["name"] in {"attn_pre_proj", "attn_decode"}
+        if event["name"] in {"attn_pre_proj", "attn_prefill", "attn_decode"}
         and event.get("layer_id", -1) >= 0
     ]
     assert gdn_events
@@ -986,5 +986,12 @@ def test_hybrid_gdn_production_constructor_cpu_e2e(
     assert {event["meta"].get("attention_family_id") for event in dense_events} == {
         "dense_attention"
     }
-    assert {event["layer_id"] for event in gdn_events} == {0, 1, 2, 4, 5, 6}
+    expanded_gdn_events = [event for event in gdn_events if event["layer_id"] >= 0]
+    aggregated_gdn_events = [event for event in gdn_events if event["layer_id"] == -1]
+    assert {event["layer_id"] for event in expanded_gdn_events} == {0, 1, 2, 4, 5, 6}
+    # Only the configured first batch expands; later stages retain the same
+    # physical layer membership in the aggregate trace metadata.
+    assert aggregated_gdn_events
+    assert all(event["meta"]["global_layer_ids"] == [0, 1, 2, 4, 5, 6]
+               for event in aggregated_gdn_events)
     assert {event["layer_id"] for event in dense_events} == {3, 7}

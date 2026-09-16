@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
 
+from predictor_cache_fixtures import CacheFixturePredictor, cache_model
+
 from frontier.entities import Batch, Request
+from frontier.entities.batch import SpecDecodeBatchMetadata
+from frontier.entities.time_components import AttentionTime
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
 )
@@ -15,7 +20,7 @@ from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler impor
 from frontier.types import ClusterType
 
 
-class _NonDummyMoEPredictor(SklearnMoEExecutionTimePredictor):
+class _NonDummyMoEPredictor(CacheFixturePredictor):
     def _get_estimator(self):
         return None
 
@@ -68,19 +73,15 @@ def _terminal_source_batch() -> tuple[Batch, VLLMv1EngineReplicaScheduler]:
 
 
 def _predictor() -> _NonDummyMoEPredictor:
-    predictor = _NonDummyMoEPredictor.__new__(_NonDummyMoEPredictor)
+    predictor = _NonDummyMoEPredictor(ep_size=2)
     predictor._enable_dummy_mode = False
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._moe_ep_size = 2
     predictor._moe_tp_size = 1
     predictor._router_topk = 2
     predictor._cc_backend = None
-    predictor._model_config = SimpleNamespace(
-        is_moe=True,
-        is_moe_layer=lambda _layer_id: True,
-        supports_share_expert=lambda: False,
-        embedding_dim=16,
-        mlp_hidden_dim=32,
+    predictor._model_config = replace(
+        cache_model(), embedding_dim=16, mlp_hidden_dim=32,
     )
     predictor._replica_config = SimpleNamespace(
         num_pipeline_stages=2,
@@ -191,3 +192,66 @@ def test_dummy_terminal_mtp_moe_replay_uses_typed_lane_phase_contract() -> None:
     )
 
     assert terminal_time_ms > 0.0
+
+
+@pytest.mark.parametrize("first_layer,num_layers", [(0, 8), (5, 3)])
+def test_terminal_mtp_stage_replays_exact_layer_range_once(
+    monkeypatch, first_layer, num_layers,
+) -> None:
+    """A valid terminal row must not replay beyond the requested physical range."""
+    predictor = CacheFixturePredictor()
+    predictor._enable_dummy_mode = False
+    request = Request(
+        arrived_at=0.0, num_prefill_tokens=8, num_decode_tokens=1,
+        num_processed_tokens=8,
+    )
+    request._is_prefill_complete = True
+    batch = Batch(replica_id=0, requests=[request], num_tokens=[3], is_moe=True)
+    batch.spec_decode_metadata = SpecDecodeBatchMetadata(
+        method="qwen3_moe_mtp", planned_draft_tokens_per_request=[2],
+        verify_tokens_per_request=[3], accepted_draft_tokens_per_request=[0],
+        rejected_draft_tokens_per_request=[2], committed_tokens_per_request=[1],
+        uses_lookahead_slots=True,
+        terminal_overshoot_planned_draft_tokens_per_request=[[0]],
+        terminal_overshoot_verify_tokens_per_request=[[1]],
+        terminal_overshoot_accepted_draft_tokens_per_request=[[0]],
+        terminal_overshoot_rejected_draft_tokens_per_request=[[0]],
+        terminal_overshoot_raw_committed_tokens_per_request=[[1]],
+    )
+    batch.spec_decode_metadata.validate(1)
+    for name in (
+        "_require_predictions_for_measurement_type", "_activate_measurement_type",
+        "_emit_cuda_graph_activation_records",
+    ):
+        monkeypatch.setattr(predictor, name, lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        predictor, "predict_attention_layer_time",
+        lambda *args, **kwargs: AttentionTime(attention_decode_execution_time=2.0),
+    )
+    for name in (
+        "_get_gating_linear_time", "_get_gating_routing_topk_time",
+        "_get_moe_shuffling_time", "_get_grouped_gemm_time",
+        "_get_mlp_norm_layer_act_execution_time", "_get_add_layer_act_execution_time",
+    ):
+        monkeypatch.setattr(predictor, name, lambda *args, **kwargs: 1.0)
+    monkeypatch.setattr(
+        predictor, "_should_include_spec_decode_proposer_overhead", lambda batch: False,
+    )
+    calls = []
+    original = predictor._get_mtp_terminal_overshoot_time
+
+    def replay(source, **kwargs):
+        calls.append((source is batch, kwargs["layer_id"], kwargs["num_layers"]))
+        return original(source, **kwargs)
+
+    monkeypatch.setattr(predictor, "_get_mtp_terminal_overshoot_time", replay)
+    stage = predictor.predict_stage_execution_time(
+        batch, stage_id=0, cluster_type=ClusterType.MONOLITHIC,
+        layer_id=first_layer, num_layers=num_layers,
+    )
+    assert calls == [(True, first_layer, num_layers), (False, first_layer, num_layers)]
+    assert stage.global_layer_ids == tuple(range(first_layer, first_layer + num_layers))
+    terminal_ms = stage.layer_execution_times[0].mtp_terminal_overshoot_time
+    assert terminal_ms == pytest.approx(sum(layer.get_single_layer_block_time() for layer in stage.layer_execution_times))
+    assert terminal_ms > 0.0
+    assert all(layer.mtp_terminal_overshoot_time == 0.0 for layer in stage.layer_execution_times[1:])

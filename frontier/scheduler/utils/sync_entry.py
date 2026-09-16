@@ -24,6 +24,8 @@ def enter_prefill_sync(
     sync_stage: str,
     layer_id: int,
     stage_execution_time: float,
+    *,
+    metrics_store: Any = None,
 ) -> list:
     del stage_execution_time
     if scheduler._prefill_sync_waiting_room is None:
@@ -146,6 +148,7 @@ def enter_prefill_sync(
         layer_id=layer_id,
         replica_local_id=replica_local_id,
         cohort_batches=step_batches,
+        metrics_store=metrics_store,
     )
 
 
@@ -159,6 +162,8 @@ def enter_decode_sync(
     sync_stage: str,
     layer_id: int,
     stage_execution_time: float,
+    *,
+    metrics_store: Any = None,
 ) -> list:
     del stage_execution_time
     if scheduler._decode_sync_waiting_room is None:
@@ -280,4 +285,5 @@ def enter_decode_sync(
         layer_id=layer_id,
         replica_local_id=replica_local_id,
         cohort_batches=step_batches,
+        metrics_store=metrics_store,
     )

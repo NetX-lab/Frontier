@@ -6,6 +6,7 @@ import pytest
 
 from frontier.entities import ExecutionTime, StageExecutionTime
 from frontier.scheduler.utils.execution_time_metrics import (
+    build_metrics_execution_time,
     build_single_layer_metrics_execution_time,
 )
 
@@ -87,7 +88,11 @@ def test_partial_layer_identity_fails_fast(overrides: dict[str, Any]) -> None:
 def test_as_single_layer_does_not_consume_entity_id() -> None:
     source = ExecutionTime(**_execution_kwargs())
     next_id = ExecutionTime.generate_id()
-    layer = source.as_single_layer(global_layer_id=9)
+    layer = source.as_single_layer(
+        global_layer_id=9,
+        attention_family_id="dense_attention",
+        attention_variant_id="standard",
+    )
 
     assert layer.id == source.id
     assert ExecutionTime.generate_id() == next_id + 1
@@ -119,9 +124,9 @@ def test_stage_sums_ordered_layers_and_charges_stage_work_once() -> None:
         )
         * 1e-3
     )
-    # Layer probes remain one-layer probes for event paths that advance a
-    # stage one transformer layer at a time.
-    assert stage.get_single_layer_block_time() == pytest.approx(
+    with pytest.raises(ValueError, match="exactly one layer"):
+        stage.get_single_layer_block_time()
+    assert stage.layer_execution_times[0].get_single_layer_block_time() == pytest.approx(
         first.get_single_layer_block_time()
     )
 
@@ -144,7 +149,7 @@ def test_stage_model_time_reuses_immutable_layer_aggregate(monkeypatch) -> None:
     assert calls == 1
 
 
-def test_stage_model_time_refreshes_after_layer_mutation() -> None:
+def test_stage_model_time_is_isolated_from_source_layer_mutation() -> None:
     first = _layer(layer_id=0)
     second = _layer(layer_id=1)
     stage = StageExecutionTime((first, second), stage_execution_time=first)
@@ -152,9 +157,9 @@ def test_stage_model_time_refreshes_after_layer_mutation() -> None:
     before = stage.model_time_ms
     first._replace_operator_time_values({"attn_prefill": 7.0})
 
-    assert stage.model_time_ms == pytest.approx(
-        before + (7.0 - 4.0)
-    )
+    assert first.attention_prefill_execution_time == pytest.approx(7.0)
+    assert stage.model_time_ms == pytest.approx(before)
+    assert stage.layer_execution_times[0].attention_prefill_execution_time == pytest.approx(4.0)
 
 
 def test_stage_keeps_distinct_moe_layer_records() -> None:
@@ -224,11 +229,13 @@ def test_stage_expansion_isolates_mutable_component_and_operator_maps() -> None:
 
     first.attention_operator_times.op_times["attn_prefill"] = 99.0
     assert second.attention_operator_times.op_times["attn_prefill"] == pytest.approx(4.0)
-    first._replace_operator_time_values({"attn_prefill": 7.0})
+    assert first.attention_operator_times.op_times["attn_prefill"] == pytest.approx(4.0)
+    with pytest.raises(ValueError, match="finalized"):
+        first._replace_operator_time_values({"attn_prefill": 7.0})
     assert second.attention_operator_times.op_times["attn_prefill"] == pytest.approx(4.0)
 
 
-def test_fast_stage_expansion_detaches_before_mutation() -> None:
+def test_fast_stage_expansion_publishes_isolated_finalized_layers() -> None:
     source = _layer(
         layer_id=0,
         op_times={"attn_prefill": 4.0, "mlp_up_proj": 2.0},
@@ -237,34 +244,31 @@ def test_fast_stage_expansion_detaches_before_mutation() -> None:
         source,
         num_layers=2,
         first_layer_id=0,
-        copy_components=False,
     )
     first, second = stage.layer_execution_times
 
-    # The fast path shares the immutable prediction payload while retaining
-    # distinct layer identities. A mutating compatibility operation must
-    # detach the first layer before changing its operator values.
-    assert first._attention_time is second._attention_time
     assert first.global_layer_id == 0
     assert second.global_layer_id == 1
-    first._replace_operator_time_values({"attn_prefill": 7.0})
-    assert first.attention_operator_times.op_times["attn_prefill"] == pytest.approx(7.0)
+    with pytest.raises(ValueError, match="finalized"):
+        first._replace_operator_time_values({"attn_prefill": 7.0})
+    source._replace_operator_time_values({"attn_prefill": 7.0})
+    assert first.attention_operator_times.op_times["attn_prefill"] == pytest.approx(4.0)
     assert second.attention_operator_times.op_times["attn_prefill"] == pytest.approx(4.0)
-    assert first._attention_time is not second._attention_time
+    assert first is not second
 
 
-def test_single_layer_fast_path_adopts_source_identity() -> None:
-    source = ExecutionTime(**_execution_kwargs())
+def test_single_layer_expansion_preserves_source_identity() -> None:
+    source = _layer(layer_id=3)
 
     stage = StageExecutionTime.from_execution_time(
         source,
         num_layers=1,
         first_layer_id=7,
-        copy_components=False,
     )
 
-    assert stage.layer_execution_times == (source,)
-    assert source.global_layer_id == 7
+    assert stage.layer_execution_times[0] is not source
+    assert stage.global_layer_ids == (7,)
+    assert source.global_layer_id == 3
     assert source.num_layers == 1
 
 
@@ -315,7 +319,7 @@ def test_stage_preserves_mixed_attention_family_order() -> None:
     assert stage.attention_variant_ids == ("standard", "qwen3_5")
 
 
-def test_stage_private_fields_remain_single_layer_for_metrics_adapter() -> None:
+def test_metrics_adapter_preserves_explicit_stage_or_layer_scope() -> None:
     owner = _layer(
         layer_id=0,
         attn_tensor_parallel_allreduce_time=3.0,
@@ -328,7 +332,15 @@ def test_stage_private_fields_remain_single_layer_for_metrics_adapter() -> None:
     )
     stage = StageExecutionTime((owner, second), stage_execution_time=owner)
 
-    metrics_execution_time = build_single_layer_metrics_execution_time(stage)
+    metrics_execution_time = build_metrics_execution_time(stage)
+    assert metrics_execution_time.num_layers == 2
+    assert metrics_execution_time.attention_all_reduce_time == pytest.approx(10.0)
+    assert metrics_execution_time.pipeline_parallel_communication_time == pytest.approx(11.0)
+    with pytest.raises(ValueError, match="exactly one stage layer"):
+        build_single_layer_metrics_execution_time(stage)
+    metrics_execution_time = build_single_layer_metrics_execution_time(
+        stage.layer_execution_times[0]
+    )
 
     assert metrics_execution_time.num_layers == 1
     assert metrics_execution_time.attention_all_reduce_time == pytest.approx(3.0)

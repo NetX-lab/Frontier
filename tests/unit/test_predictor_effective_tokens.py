@@ -2,10 +2,15 @@
 Unit tests for compute prediction token selection in execution time predictors.
 """
 
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+
+from predictor_cache_fixtures import (
+    CacheFixturePredictor, cache_model, predictor_fixture_config,
+)
 
 from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.types import ClusterType, MeasurementType
@@ -18,7 +23,12 @@ from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor impo
 
 
 class DummySklearnExecutionTimePredictor(SklearnExecutionTimePredictor):
-    """Minimal concrete class for unit testing abstract predictor methods."""
+    """Initialize a complete dense predictor before injecting numerical hooks."""
+
+    def __init__(self):
+        inputs = predictor_fixture_config(model_config=replace(cache_model(), is_moe=False))
+        inputs.pop("actual_replica_ids")
+        super().__init__(**inputs)
 
     def _get_estimator(self):
         return None
@@ -27,7 +37,7 @@ class DummySklearnExecutionTimePredictor(SklearnExecutionTimePredictor):
         return {}
 
 
-class DummySklearnMoEExecutionTimePredictor(SklearnMoEExecutionTimePredictor):
+class DummySklearnMoEExecutionTimePredictor(CacheFixturePredictor):
     """Minimal concrete class for unit testing abstract MoE predictor methods."""
 
     def _get_estimator(self):
@@ -67,9 +77,7 @@ def _lane_workload(
 
 
 def test_sklearn_execution_time_predictor_uses_effective_tokens():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.DECODE_ATTN
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_pre_proj": {(13,): 1.0}}
@@ -89,12 +97,10 @@ def test_sklearn_execution_time_predictor_uses_effective_tokens():
 
 
 def test_sklearn_execution_time_predictor_uses_non_multiple_token_key_for_post_attn_norm():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
-    predictor._model_config = SimpleNamespace(post_attn_norm=True)
+    predictor._model_config = replace(cache_model(), post_attn_norm=True)
     predictor._predictions = {"post_attention_layernorm": {(1033,): 9.0}}
 
     batch = MagicMock()
@@ -111,12 +117,10 @@ def test_sklearn_execution_time_predictor_uses_non_multiple_token_key_for_post_a
 
 
 def test_sklearn_moe_predictor_uses_effective_tokens_for_gating():
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.DECODE_ATTN
     predictor._supports_operation = MagicMock(return_value=True)
-    predictor._model_config = SimpleNamespace()
+    predictor._model_config = cache_model()
     predictor._predictions = {"moe_gating_linear": {(32,): 2.0}}
 
     batch = MagicMock()
@@ -133,9 +137,7 @@ def test_sklearn_moe_predictor_uses_effective_tokens_for_gating():
 
 
 def test_sklearn_moe_predictor_uses_typed_lane_for_local_ep_routed_tokens():
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.DECODE
     predictor._router_topk = 2
     predictor._moe_ep_size = 4
@@ -163,9 +165,7 @@ def test_sklearn_moe_predictor_uses_typed_lane_for_local_ep_routed_tokens():
 
 
 def test_sklearn_moe_predictor_rejects_malformed_ep_lane_descriptor():
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._router_topk = 2
     lane = SimpleNamespace(lane_workload={})
 
@@ -176,9 +176,7 @@ def test_sklearn_moe_predictor_rejects_malformed_ep_lane_descriptor():
 
 
 def test_sklearn_moe_predictor_rejects_raw_ep_lane_map():
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     lane = SimpleNamespace(lane_workload={0: 0, 1: 0})
 
     with pytest.raises(TypeError, match="EPLaneWorkload"):
@@ -188,9 +186,7 @@ def test_sklearn_moe_predictor_rejects_raw_ep_lane_map():
 
 
 def test_sklearn_moe_predictor_materializes_typed_ep_lane_workload():
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.DECODE
     predictor._router_topk = 2
     predictor._moe_ep_size = 1
@@ -223,9 +219,7 @@ def test_sklearn_moe_predictor_materializes_typed_ep_lane_workload():
 
 
 def test_sklearn_execution_time_predictor_applies_attn_pre_proj_calibration_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_pre_proj": {(16,): 2.0}}
@@ -243,9 +237,7 @@ def test_sklearn_execution_time_predictor_applies_attn_pre_proj_calibration_scal
 
 
 def test_sklearn_execution_time_predictor_applies_prefill_phase_attn_pre_proj_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_pre_proj": {(16,): 2.0}}
@@ -264,9 +256,7 @@ def test_sklearn_execution_time_predictor_applies_prefill_phase_attn_pre_proj_sc
 
 
 def test_sklearn_execution_time_predictor_keeps_global_attn_pre_proj_scale_for_decode_only_batch():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_pre_proj": {(16,): 2.0}}
@@ -285,9 +275,7 @@ def test_sklearn_execution_time_predictor_keeps_global_attn_pre_proj_scale_for_d
 
 
 def test_sklearn_execution_time_predictor_applies_attn_post_proj_calibration_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_post_proj": {(8,): 3.0}}
@@ -305,9 +293,7 @@ def test_sklearn_execution_time_predictor_applies_attn_post_proj_calibration_sca
 
 
 def test_sklearn_execution_time_predictor_applies_prefill_phase_attn_post_proj_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_post_proj": {(8,): 3.0}}
@@ -326,9 +312,7 @@ def test_sklearn_execution_time_predictor_applies_prefill_phase_attn_post_proj_s
 
 
 def test_sklearn_execution_time_predictor_keeps_global_attn_post_proj_scale_for_decode_only_batch():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_post_proj": {(8,): 3.0}}
@@ -347,9 +331,7 @@ def test_sklearn_execution_time_predictor_keeps_global_attn_post_proj_scale_for_
 
 
 def test_sklearn_execution_time_predictor_applies_attn_kv_cache_save_calibration_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_kv_cache_save": {(4,): 3.0}}
@@ -369,9 +351,7 @@ def test_sklearn_execution_time_predictor_applies_attn_kv_cache_save_calibration
 
 
 def test_sklearn_execution_time_predictor_applies_prefill_phase_attn_kv_cache_save_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_kv_cache_save": {(4,): 3.0}}
@@ -392,9 +372,7 @@ def test_sklearn_execution_time_predictor_applies_prefill_phase_attn_kv_cache_sa
 
 
 def test_sklearn_execution_time_predictor_keeps_global_attn_kv_cache_save_scale_for_decode_only_batch():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_kv_cache_save": {(4,): 3.0}}
@@ -415,9 +393,7 @@ def test_sklearn_execution_time_predictor_keeps_global_attn_kv_cache_save_scale_
 
 
 def test_sklearn_execution_time_predictor_applies_mlp_up_proj_calibration_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"mlp_up_proj": {(32,): 5.0}}
@@ -435,9 +411,7 @@ def test_sklearn_execution_time_predictor_applies_mlp_up_proj_calibration_scale(
 
 
 def test_sklearn_execution_time_predictor_applies_prefill_phase_mlp_up_proj_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"mlp_up_proj": {(32,): 5.0}}
@@ -456,9 +430,7 @@ def test_sklearn_execution_time_predictor_applies_prefill_phase_mlp_up_proj_scal
 
 
 def test_sklearn_execution_time_predictor_keeps_global_mlp_up_proj_scale_for_decode_only_batch():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"mlp_up_proj": {(32,): 5.0}}
@@ -477,9 +449,7 @@ def test_sklearn_execution_time_predictor_keeps_global_mlp_up_proj_scale_for_dec
 
 
 def test_sklearn_execution_time_predictor_applies_mixed_attn_decode_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._predictions = {"attn_decode_in_mixed": {"_on_demand_prediction": True}}
     predictor._attn_decode_in_mixed_calibration_scale = 4.5
@@ -504,9 +474,7 @@ def test_sklearn_execution_time_predictor_applies_mixed_attn_decode_scale():
 
 
 def test_sklearn_execution_time_predictor_leaves_mixed_attn_decode_unscaled_by_default():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._predictions = {"attn_decode_in_mixed": {"_on_demand_prediction": True}}
     predictor._attn_decode_in_mixed_calibration_scale = None
@@ -525,9 +493,7 @@ def test_sklearn_execution_time_predictor_leaves_mixed_attn_decode_unscaled_by_d
 
 
 def test_sklearn_execution_time_predictor_applies_mlp_down_proj_calibration_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"mlp_down_proj": {(32,): 5.0}}
@@ -544,9 +510,7 @@ def test_sklearn_execution_time_predictor_applies_mlp_down_proj_calibration_scal
 
 
 def test_sklearn_execution_time_predictor_applies_decode_phase_mlp_down_proj_scale_for_decode_only_batch():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"mlp_down_proj": {(32,): 5.0}}
@@ -565,9 +529,7 @@ def test_sklearn_execution_time_predictor_applies_decode_phase_mlp_down_proj_sca
 
 
 def test_sklearn_execution_time_predictor_keeps_global_mlp_down_proj_scale_for_mixed_batch():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"mlp_down_proj": {(32,): 5.0}}
@@ -585,16 +547,14 @@ def test_sklearn_execution_time_predictor_keeps_global_mlp_down_proj_scale_for_m
     assert result == 2.0
 
 def test_sklearn_moe_predictor_uses_on_demand_moe_shuffling_prediction() -> None:
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"moe_shuffling": {"_on_demand_prediction": True}}
     predictor._router_topk = 8
     predictor._moe_ep_size = 1
     predictor._replica_config = SimpleNamespace(total_expert_num=16)
-    predictor._model_config = SimpleNamespace(embedding_dim=2048, mlp_hidden_dim=768)
+    predictor._model_config = replace(cache_model(), embedding_dim=2048, mlp_hidden_dim=768)
     predictor._moe_shuffling_calibration_scale = 1.0
     predictor._active_measurement_type = MeasurementType.CUDA_EVENT
 
@@ -632,16 +592,14 @@ def test_sklearn_moe_predictor_uses_on_demand_moe_shuffling_prediction() -> None
 
 
 def test_sklearn_moe_predictor_uses_raw_on_demand_shuffling_prediction() -> None:
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"moe_shuffling": {"_on_demand_prediction": True}}
     predictor._router_topk = 8
     predictor._moe_ep_size = 1
     predictor._replica_config = SimpleNamespace(total_expert_num=4)
-    predictor._model_config = SimpleNamespace(embedding_dim=2048, mlp_hidden_dim=768)
+    predictor._model_config = replace(cache_model(), embedding_dim=2048, mlp_hidden_dim=768)
     predictor._moe_shuffling_calibration_scale = 2.0
     predictor._active_measurement_type = MeasurementType.CUDA_EVENT
 
@@ -681,16 +639,14 @@ def test_sklearn_moe_predictor_uses_raw_on_demand_shuffling_prediction() -> None
 def test_on_demand_shuffling_rejects_global_map_without_ep_lane_identity() -> None:
     """A global expert map cannot be treated as one device's profile input."""
 
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.PREFILL
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"moe_shuffling": {"_on_demand_prediction": True}}
     predictor._router_topk = 2
     predictor._moe_ep_size = 2
     predictor._replica_config = SimpleNamespace(total_expert_num=4)
-    predictor._model_config = SimpleNamespace(embedding_dim=2048, mlp_hidden_dim=768)
+    predictor._model_config = replace(cache_model(), embedding_dim=2048, mlp_hidden_dim=768)
     predictor._active_measurement_type = MeasurementType.CUDA_EVENT
 
     batch = MagicMock()
@@ -705,9 +661,7 @@ def test_on_demand_shuffling_rejects_global_map_without_ep_lane_identity() -> No
 
 
 def test_sklearn_moe_predictor_ignores_moe_shuffling_calibration_scale():
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"moe_shuffling": {(32,): 4.0}}
@@ -722,9 +676,7 @@ def test_sklearn_moe_predictor_ignores_moe_shuffling_calibration_scale():
 
 
 def test_sklearn_moe_predictor_ignores_decode_phase_moe_shuffling_scale_for_decode_only_batch():
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"moe_shuffling": {(32,): 4.0}}
@@ -741,9 +693,7 @@ def test_sklearn_moe_predictor_ignores_decode_phase_moe_shuffling_scale_for_deco
 
 
 def test_sklearn_moe_predictor_ignores_moe_shuffling_scales_for_mixed_batch():
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"moe_shuffling": {(32,): 4.0}}
@@ -760,9 +710,7 @@ def test_sklearn_moe_predictor_ignores_moe_shuffling_scales_for_mixed_batch():
 
 
 def test_sklearn_execution_time_predictor_uses_padded_decode_batch_size_for_attn_decode():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_decode": {(8, 1024): 5.0}}
@@ -796,9 +744,7 @@ def test_sklearn_execution_time_predictor_uses_padded_decode_batch_size_for_attn
 
 
 def test_sklearn_execution_time_predictor_applies_attn_decode_calibration_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_decode": {(8, 1024): 5.0}}
@@ -833,9 +779,7 @@ def test_sklearn_execution_time_predictor_applies_attn_decode_calibration_scale(
 
 
 def test_sklearn_execution_time_predictor_applies_late_decode_only_attn_decode_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_decode": {(8, 1024): 5.0}}
@@ -871,9 +815,7 @@ def test_sklearn_execution_time_predictor_applies_late_decode_only_attn_decode_s
 
 
 def test_sklearn_execution_time_predictor_keeps_first_pure_decode_on_global_scale():
-    predictor = DummySklearnExecutionTimePredictor.__new__(
-        DummySklearnExecutionTimePredictor
-    )
+    predictor = DummySklearnExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"attn_decode": {(8, 1024): 5.0}}
@@ -909,9 +851,7 @@ def test_sklearn_execution_time_predictor_keeps_first_pure_decode_on_global_scal
 
 
 def test_sklearn_moe_predictor_ignores_moe_grouped_gemm_calibration_scale() -> None:
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"moe_grouped_gemm": {(16,): 4.0}}
@@ -926,9 +866,7 @@ def test_sklearn_moe_predictor_ignores_moe_grouped_gemm_calibration_scale() -> N
 
 
 def test_sklearn_moe_predictor_ignores_decode_phase_moe_grouped_gemm_scale_for_decode_only_batch() -> None:
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"moe_grouped_gemm": {(16,): 4.0}}
@@ -949,9 +887,7 @@ def test_sklearn_moe_predictor_ignores_decode_phase_moe_grouped_gemm_scale_for_d
 
 
 def test_sklearn_moe_predictor_ignores_moe_grouped_gemm_scales_for_mixed_batch() -> None:
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._supports_operation = MagicMock(return_value=True)
     predictor._predictions = {"moe_grouped_gemm": {(16,): 4.0}}
@@ -972,9 +908,7 @@ def test_sklearn_moe_predictor_ignores_moe_grouped_gemm_scales_for_mixed_batch()
 
 
 def test_sklearn_moe_predictor_rejects_missing_explicit_shuffling_allocation() -> None:
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._cluster_type = ClusterType.DECODE
     with pytest.raises(ValueError, match="EPLaneWorkload descriptor"):
         SklearnMoEExecutionTimePredictor._resolve_shuffling_per_expert_tokens(
@@ -984,19 +918,14 @@ def test_sklearn_moe_predictor_rejects_missing_explicit_shuffling_allocation() -
 
 
 def test_sklearn_moe_predictor_conserves_physical_width_for_padded_decode_batch() -> None:
-    predictor = DummySklearnMoEExecutionTimePredictor.__new__(
-        DummySklearnMoEExecutionTimePredictor
-    )
+    predictor = DummySklearnMoEExecutionTimePredictor()
     predictor._enable_dummy_mode = False
     predictor._cluster_type = ClusterType.DECODE
     predictor._router_topk = 2
     predictor._moe_ep_size = 2
     predictor._moe_tp_size = 1
     predictor._supports_operation = MagicMock(return_value=True)
-    predictor._model_config = SimpleNamespace(
-        post_attn_norm=True,
-        supports_share_expert=lambda: False,
-    )
+    predictor._model_config = replace(cache_model(), post_attn_norm=True)
     predictor._get_gating_linear_time = MagicMock(return_value=1.0)
     predictor._get_gating_routing_topk_time = MagicMock(return_value=2.0)
     predictor._get_moe_shuffling_time = MagicMock(return_value=3.0)

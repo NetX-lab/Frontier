@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pandas as pd
@@ -11,16 +12,19 @@ from frontier.entities.request import Request
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
-from frontier.model_architectures import ModelArchitectureProfile
+from frontier.config import BaseModelConfig
+from tests.unit.predictor_cache_fixtures import cache_model, predictor_fixture_config
 from frontier.types import ClusterType, MeasurementType
 
 
-def _dense_model_config() -> SimpleNamespace:
-    return SimpleNamespace(
-        use_mla=False,
+def _dense_model_config() -> BaseModelConfig:
+    return replace(
+        cache_model(),
         num_q_heads=32,
         num_kv_heads=8,
-        get_model_architecture_profile=ModelArchitectureProfile.generic,
+        is_moe=False,
+        num_experts=0,
+        num_experts_per_tok=0,
     )
 
 
@@ -86,16 +90,15 @@ def _build_predictor(
     *,
     proposer_overhead_ms: float = 0.0,
 ) -> _DummyPredictor:
-    predictor = _DummyPredictor.__new__(_DummyPredictor)
-    predictor._cluster_type = ClusterType.MONOLITHIC
-    predictor._config = SimpleNamespace(kv_cache_prediction_granularity=128)
-    predictor._replica_config = SimpleNamespace(
-        speculative_decoding_config=SpeculativeDecodingConfig(
-            enabled=True,
-            method="eagle",
-            proposer_overhead_ms_by_method={"eagle": proposer_overhead_ms},
-        )
+    inputs = predictor_fixture_config(model_config=_dense_model_config())
+    inputs.pop("actual_replica_ids")
+    inputs["predictor_config"].kv_cache_prediction_granularity = 128
+    inputs["replica_config"].speculative_decoding_config = SpeculativeDecodingConfig(
+        enabled=True,
+        method="eagle",
+        proposer_overhead_ms_by_method={"eagle": proposer_overhead_ms},
     )
+    predictor = _DummyPredictor(**inputs)
     predictor._supports_operation = lambda _operation: True
     predictor._attention_decode_batching_overhead_fraction = 0.0
     predictor._attention_prefill_batching_overhead_fraction = 0.0

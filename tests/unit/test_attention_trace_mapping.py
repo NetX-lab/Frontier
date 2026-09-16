@@ -20,12 +20,15 @@ from frontier.attention.ops import (
 from frontier.operators.spec import ResourceClass
 from frontier.attention.trace_mapping import get_attention_trace_op_times
 from frontier.entities.execution_time import ExecutionTime
+from frontier.entities.stage_execution_time import StageExecutionTime
 from frontier.entities.time_components import AttentionOperatorTimes
 
 
 def _build_execution_time(
     *,
     num_layers: int = 2,
+    operator_times: AttentionOperatorTimes | None = None,
+    family: AttentionFamilySpec = DENSE_ATTENTION_FAMILY,
     dense_kernel_times: tuple[float, float, float] = (0.2, 0.4, 0.3),
     mla_times: tuple[float, float, float, float, float, float] = (
         0.11,
@@ -35,9 +38,13 @@ def _build_execution_time(
         0.15,
         0.16,
     ),
-) -> ExecutionTime:
-    return ExecutionTime(
-        num_layers_per_pipeline_stage=num_layers,
+) -> ExecutionTime | StageExecutionTime:
+    layer = ExecutionTime(
+        num_layers_per_pipeline_stage=1,
+        global_layer_id=4,
+        attention_family_id=family.family_id,
+        attention_variant_id=family.supported_variants[0],
+        attention_operator_times=operator_times,
         attention_rope_execution_time=0.5,
         attention_kv_cache_save_execution_time=dense_kernel_times[0],
         attention_decode_execution_time=dense_kernel_times[2],
@@ -65,6 +72,9 @@ def _build_execution_time(
         attn_mla_decode_time=mla_times[4],
         attn_mla_v_up_proj_time=mla_times[5],
     )
+    if num_layers == 1:
+        return layer
+    return StageExecutionTime.from_execution_time(layer, num_layers=num_layers, first_layer_id=4)
 
 
 def test_dense_trace_mapper_preserves_family_order_and_execution_time_values() -> None:
@@ -129,13 +139,13 @@ def test_trace_mapper_prefers_structured_attention_operator_times() -> None:
     execution_time = _build_execution_time(
         num_layers=3,
         dense_kernel_times=(0.2, 0.4, 0.3),
-    )
-    execution_time.attention_operator_times = AttentionOperatorTimes(
-        {
-            "attn_kv_cache_save": 0.01,
-            "attn_prefill": 0.02,
-            "attn_decode": 0.03,
-        }
+        operator_times=AttentionOperatorTimes(
+            {
+                "attn_kv_cache_save": 0.01,
+                "attn_prefill": 0.02,
+                "attn_decode": 0.03,
+            }
+        ),
     )
 
     op_times = get_attention_trace_op_times(
@@ -152,12 +162,14 @@ def test_trace_mapper_prefers_structured_attention_operator_times() -> None:
 
 
 def test_trace_mapper_rejects_missing_structured_attention_operator_time() -> None:
-    execution_time = _build_execution_time(num_layers=2)
-    execution_time.attention_operator_times = AttentionOperatorTimes(
-        {
-            "attn_kv_cache_save": 0.01,
-            "attn_prefill": 0.02,
-        }
+    execution_time = _build_execution_time(
+        num_layers=2,
+        operator_times=AttentionOperatorTimes(
+            {
+                "attn_kv_cache_save": 0.01,
+                "attn_prefill": 0.02,
+            }
+        ),
     )
 
     with pytest.raises(ValueError, match="missing structured attention operator"):
@@ -183,15 +195,18 @@ def test_attention_total_time_includes_structured_operator_times_once() -> None:
         num_layers=4,
         dense_kernel_times=(0.0, 0.0, 0.0),
         mla_times=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-    )
-    execution_time.attention_operator_times = AttentionOperatorTimes(
-        {
-            "attn_kv_cache_save": 0.11,
-            "attn_prefill": 0.12,
-        }
+        operator_times=AttentionOperatorTimes(
+            {
+                "attn_kv_cache_save": 0.11,
+                "attn_prefill": 0.12,
+            }
+        ),
     )
 
-    assert execution_time.get_single_layer_attention_time() == pytest.approx(
+    layer_attention_time = (
+        execution_time.layer_execution_times[0].get_single_layer_attention_time()
+    )
+    assert layer_attention_time == pytest.approx(
         0.5 + 0.7 + 0.8 + 0.4 + 0.11 + 0.12
     )
     assert execution_time.attention_time == pytest.approx(
@@ -204,16 +219,19 @@ def test_attention_total_time_uses_structured_values_without_legacy_double_count
         num_layers=2,
         dense_kernel_times=(0.2, 0.4, 0.3),
         mla_times=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-    )
-    execution_time.attention_operator_times = AttentionOperatorTimes(
-        {
-            "attn_kv_cache_save": 0.01,
-            "attn_prefill": 0.02,
-            "attn_decode": 0.03,
-        }
+        operator_times=AttentionOperatorTimes(
+            {
+                "attn_kv_cache_save": 0.01,
+                "attn_prefill": 0.02,
+                "attn_decode": 0.03,
+            }
+        ),
     )
 
-    assert execution_time.get_single_layer_attention_time() == pytest.approx(
+    layer_attention_time = (
+        execution_time.layer_execution_times[0].get_single_layer_attention_time()
+    )
+    assert layer_attention_time == pytest.approx(
         0.5 + 0.7 + 0.8 + 0.4 + 0.01 + 0.02 + 0.03
     )
     assert execution_time.attention_kv_cache_save_execution_time == pytest.approx(0.02)
@@ -264,15 +282,18 @@ def test_partial_structured_legacy_coverage_keeps_total_time_but_fails_trace() -
         num_layers=2,
         dense_kernel_times=(0.2, 0.4, 0.3),
         mla_times=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-    )
-    execution_time.attention_operator_times = AttentionOperatorTimes(
-        {
-            "attn_kv_cache_save": 0.01,
-            "attn_prefill": 0.02,
-        }
+        operator_times=AttentionOperatorTimes(
+            {
+                "attn_kv_cache_save": 0.01,
+                "attn_prefill": 0.02,
+            }
+        ),
     )
 
-    assert execution_time.get_single_layer_attention_time() == pytest.approx(
+    layer_attention_time = (
+        execution_time.layer_execution_times[0].get_single_layer_attention_time()
+    )
+    assert layer_attention_time == pytest.approx(
         0.5 + 0.7 + 0.8 + 0.4 + 0.3 + 0.01 + 0.02
     )
     with pytest.raises(ValueError, match="missing structured attention operator"):
@@ -280,7 +301,9 @@ def test_partial_structured_legacy_coverage_keeps_total_time_but_fails_trace() -
 
 
 def test_mla_trace_mapper_preserves_vllm_order_and_execution_time_values() -> None:
-    execution_time = _build_execution_time(num_layers=2)
+    execution_time = _build_execution_time(
+        family=LATENT_MLA_ATTENTION_FAMILY, num_layers=2
+    )
 
     op_times = get_attention_trace_op_times(
         execution_time,
@@ -298,7 +321,9 @@ def test_mla_trace_mapper_preserves_vllm_order_and_execution_time_values() -> No
 
 
 def test_mla_trace_mapper_allows_documented_disjoint_model_projection_scope() -> None:
-    execution_time = _build_execution_time(num_layers=2)
+    execution_time = _build_execution_time(
+        family=LATENT_MLA_ATTENTION_FAMILY, num_layers=2
+    )
 
     op_times = get_attention_trace_op_times(
         execution_time,
@@ -386,11 +411,14 @@ def test_trace_mapper_rejects_unknown_disjoint_projection_attr() -> None:
 
 
 def test_projection_ownership_guard_checks_structured_operator_times() -> None:
-    execution_time = _build_execution_time(num_layers=1, mla_times=(0.0,) * 6)
-    execution_time.attention_operator_times = AttentionOperatorTimes(
-        {
-            "attn_mla_prefill_kv_up_proj": 0.12,
-        }
+    execution_time = _build_execution_time(
+        num_layers=1,
+        mla_times=(0.0,) * 6,
+        operator_times=AttentionOperatorTimes(
+            {
+                "attn_mla_prefill_kv_up_proj": 0.12,
+            }
+        ),
     )
     family = AttentionFamilySpec(
         family_id="custom_structured_mla_without_projection_rule",
@@ -422,7 +450,9 @@ def test_projection_ownership_guard_checks_structured_operator_times() -> None:
 
 
 def test_trace_mapper_supports_per_layer_division_without_changing_total_source() -> None:
-    execution_time = _build_execution_time(num_layers=4)
+    execution_time = _build_execution_time(
+        family=LATENT_MLA_ATTENTION_FAMILY, num_layers=4
+    )
 
     op_times = get_attention_trace_op_times(
         execution_time,
@@ -441,7 +471,10 @@ def test_trace_mapper_supports_per_layer_division_without_changing_total_source(
 
 
 def test_trace_mapper_skips_zero_mla_timings_by_default() -> None:
-    execution_time = _build_execution_time(mla_times=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+    execution_time = _build_execution_time(
+        family=LATENT_MLA_ATTENTION_FAMILY,
+        mla_times=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+    )
 
     op_times = get_attention_trace_op_times(
         execution_time,
@@ -452,7 +485,10 @@ def test_trace_mapper_skips_zero_mla_timings_by_default() -> None:
 
 
 def test_trace_mapper_can_emit_zero_timings_for_diagnostics() -> None:
-    execution_time = _build_execution_time(mla_times=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+    execution_time = _build_execution_time(
+        family=LATENT_MLA_ATTENTION_FAMILY,
+        mla_times=(0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+    )
 
     op_times = get_attention_trace_op_times(
         execution_time,
@@ -473,6 +509,7 @@ def test_trace_mapper_can_emit_zero_timings_for_diagnostics() -> None:
 
 def test_trace_mapper_rejects_negative_timings() -> None:
     execution_time = _build_execution_time(
+        family=LATENT_MLA_ATTENTION_FAMILY,
         mla_times=(0.11, 0.12, -0.13, 0.14, 0.15, 0.16)
     )
 

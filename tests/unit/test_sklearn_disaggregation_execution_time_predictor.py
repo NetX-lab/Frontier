@@ -6,6 +6,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from frontier.config import (
+    BaseModelConfig, MetricsConfig, RandomForrestExecutionTimePredictorConfig,
+    ReplicaConfig, VllmV1SchedulerConfig,
+)
+from frontier.execution_time_predictor.base_execution_time_predictor import BaseExecutionTimePredictor
 from frontier.entities import EPBatchGroup, Request
 from frontier.entities.time_components import AttentionTime
 from frontier.execution_time_predictor.sklearn_disaggregation_execution_time_predictor import (
@@ -18,7 +23,7 @@ from frontier.model_architectures import ModelArchitectureProfile
 from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.operators.families import get_comm_operator
 from frontier.operators.spec import CommPayloadContext
-from frontier.types import ClusterType
+from frontier.types import ActivationType, ClusterType, NormType
 
 
 class _DummyDisaggregationPredictor(SklearnDisaggregationExecutionTimePredictor):
@@ -29,9 +34,16 @@ class _DummyDisaggregationPredictor(SklearnDisaggregationExecutionTimePredictor)
         return {}
 
 
-class _ProfileOnlyStep3ModelConfig:
-    is_moe = True
-    embedding_dim = 128
+class _ProfileOnlyStep3ModelConfig(BaseModelConfig):
+    def __init__(self):
+        super().__init__(
+            num_layers=32, num_q_heads=4, num_kv_heads=2,
+            embedding_dim=128, mlp_hidden_dim=256, max_position_embeddings=4096,
+            use_gated_mlp=True, use_bias=False, use_qkv_bias=False,
+            activation=ActivationType.SILU, norm=NormType.RMS_NORM,
+            post_attn_norm=True, vocab_size=1024, is_moe=True,
+            num_experts=4, num_experts_per_tok=2,
+        )
 
     def get_model_architecture_profile(self) -> ModelArchitectureProfile:
         return ModelArchitectureProfile.step3_text()
@@ -40,16 +52,28 @@ class _ProfileOnlyStep3ModelConfig:
         return True
 
 
-class _Step3NamedGenericProfileModelConfig:
-    is_moe = True
-    model_type = "step3_text"
-    embedding_dim = 128
+class _Step3NamedGenericProfileModelConfig(_ProfileOnlyStep3ModelConfig):
+    def __init__(self):
+        super().__init__()
+        self.model_type = "step3_text"
 
     def get_model_architecture_profile(self) -> ModelArchitectureProfile:
         return ModelArchitectureProfile.generic()
 
-    def supports_share_expert(self) -> bool:
-        return True
+
+class _LayerDisaggregationPredictor(_DummyDisaggregationPredictor):
+    """Initialize the declared base contract for injected numerical hooks."""
+
+    def __init__(self):
+        replica = ReplicaConfig(model_name="meta-llama/Llama-2-7b-hf")
+        replica.model_config = _ProfileOnlyStep3ModelConfig()
+        BaseExecutionTimePredictor.__init__(
+            self,
+            RandomForrestExecutionTimePredictorConfig(enable_dummy_mode=True),
+            replica,
+            VllmV1SchedulerConfig(),
+            MetricsConfig(),
+        )
 
 
 def _lane_workload(
@@ -78,9 +102,10 @@ def _lane_workload(
 
 
 def _dummy_predictor(model_config: object) -> SklearnDisaggregationExecutionTimePredictor:
-    predictor = _DummyDisaggregationPredictor.__new__(_DummyDisaggregationPredictor)
+    predictor = _LayerDisaggregationPredictor()
     predictor._dummy_execution_time = 10.0
     predictor._num_layers_per_pipeline_stage = 1
+    predictor._model_config = model_config
     predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
         model_config=model_config,
         attn_tensor_parallel_size=2,
@@ -456,22 +481,22 @@ def test_public_dummy_attention_only_zeroes_shared_domain_ffn_components(
 
     assert execution_time.get_single_layer_attention_time() > 0.0
     assert execution_time.get_single_layer_post_attention_time() == pytest.approx(0.0)
-    assert execution_time._is_moe is False
-    assert execution_time._mlp_norm_time == pytest.approx(0.0)
-    assert execution_time._add_time == pytest.approx(0.0)
-    assert execution_time._add_attn_residual_time == pytest.approx(0.0)
-    assert execution_time._add_ffn_residual_time == pytest.approx(0.0)
-    assert execution_time._mlp_layer_up_proj_execution_time == pytest.approx(0.0)
-    assert execution_time._mlp_layer_down_proj_execution_time == pytest.approx(0.0)
-    assert execution_time._mlp_layer_act_execution_time == pytest.approx(0.0)
-    assert execution_time._moe_tensor_parallel_allreduce_time == pytest.approx(0.0)
-    assert execution_time._expert_parallel_communication_time == pytest.approx(0.0)
-    assert execution_time._moe_gating_time == pytest.approx(0.0)
-    assert execution_time._moe_shuffling_time == pytest.approx(0.0)
-    assert execution_time._moe_grouped_gemm_time == pytest.approx(0.0)
-    assert execution_time._share_expert_up_proj_time == pytest.approx(0.0)
-    assert execution_time._share_expert_down_proj_time == pytest.approx(0.0)
-    assert execution_time._share_expert_act_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._is_moe is False
+    assert execution_time.layer_execution_times[0]._mlp_norm_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._add_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._add_attn_residual_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._add_ffn_residual_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._mlp_layer_up_proj_execution_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._mlp_layer_down_proj_execution_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._mlp_layer_act_execution_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._moe_tensor_parallel_allreduce_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._expert_parallel_communication_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._moe_gating_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._moe_shuffling_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._moe_grouped_gemm_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._share_expert_up_proj_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._share_expert_down_proj_time == pytest.approx(0.0)
+    assert execution_time.layer_execution_times[0]._share_expert_act_time == pytest.approx(0.0)
     assert execution_time.moe_operator_times is None
 
 
@@ -550,9 +575,7 @@ def test_dummy_shared_domain_uses_separate_attention_and_moe_tp_domains(
     expected_moe_tp_time: float,
 ) -> None:
     model_config = _ProfileOnlyStep3ModelConfig()
-    predictor = _DummyDisaggregationPredictor.__new__(
-        _DummyDisaggregationPredictor
-    )
+    predictor = _LayerDisaggregationPredictor()
     predictor._dummy_execution_time = 10.0
     predictor._num_layers_per_pipeline_stage = 1
     predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
@@ -623,7 +646,7 @@ def test_dummy_shared_domain_post_attention_zeroes_attention_components(
     "cluster_type",
     (ClusterType.PREFILL, ClusterType.DECODE),
 )
-def test_dummy_layer_scaling_preserves_named_tp_components(
+def test_dummy_one_layer_scope_preserves_named_tp_components(
     cluster_type: ClusterType,
 ) -> None:
     predictor = _dummy_predictor(_ProfileOnlyStep3ModelConfig())
@@ -652,10 +675,11 @@ def test_dummy_layer_scaling_preserves_named_tp_components(
         num_layers=1,
         include_moe=True,
     )
-    full_communication_time = full_execution_time.communication_time_component
+    full_first_layer = full_execution_time.layer_execution_times[0]
+    full_communication_time = full_first_layer.communication_time_component
     communication_time = execution_time.communication_time_component
 
-    assert full_execution_time.get_single_layer_attention_time() == pytest.approx(
+    assert full_first_layer.get_single_layer_attention_time() == pytest.approx(
         60.0
     )
     assert full_communication_time.attn_tensor_parallel_allreduce_time == pytest.approx(
@@ -664,23 +688,25 @@ def test_dummy_layer_scaling_preserves_named_tp_components(
     assert full_communication_time.moe_tensor_parallel_allreduce_time == pytest.approx(
         10.0
     )
-    assert full_execution_time.get_single_layer_attention_scope_time() == pytest.approx(
+    assert full_first_layer.get_single_layer_attention_scope_time() == pytest.approx(
         70.0
     )
-    assert execution_time.get_single_layer_attention_time() == pytest.approx(1.875)
+    # D01: six 10 ms physical attention components stay 60 ms, independently
+    # of whether the caller requests one layer or a 32-layer stage.
+    assert execution_time.get_single_layer_attention_time() == pytest.approx(60.0)
     assert communication_time.attn_tensor_parallel_allreduce_time == pytest.approx(
-        0.3125
+        10.0
     )
     assert communication_time.moe_tensor_parallel_allreduce_time == pytest.approx(
-        0.3125
+        10.0
     )
     assert execution_time.get_single_layer_attention_scope_time() == pytest.approx(
-        2.1875
+        70.0
     )
 
 
 def test_dummy_decode_attn_allows_zero_moe_ep_for_attention_only_cluster() -> None:
-    predictor = _DummyDisaggregationPredictor.__new__(_DummyDisaggregationPredictor)
+    predictor = _LayerDisaggregationPredictor()
     predictor._dummy_execution_time = 10.0
     predictor._num_layers_per_pipeline_stage = 1
     predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
@@ -702,7 +728,7 @@ def test_dummy_decode_attn_allows_zero_moe_ep_for_attention_only_cluster() -> No
 
 
 def test_dummy_decode_ffn_rejects_zero_moe_ep_for_moe_cluster() -> None:
-    predictor = _DummyDisaggregationPredictor.__new__(_DummyDisaggregationPredictor)
+    predictor = _LayerDisaggregationPredictor()
     predictor._dummy_execution_time = 10.0
     predictor._num_layers_per_pipeline_stage = 1
     predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
@@ -746,9 +772,7 @@ def test_dummy_moe_clusters_publish_named_ep_phase_times(
 
 def test_common_dummy_moe_predictor_zero_lane_has_no_routed_compute() -> None:
     """Zero-routed lanes keep shared work but cannot fabricate expert compute."""
-    predictor = _DummyDisaggregationPredictor.__new__(
-        _DummyDisaggregationPredictor
-    )
+    predictor = _LayerDisaggregationPredictor()
     predictor._enable_dummy_mode = True
     predictor._dummy_execution_time = 2.0
     predictor._num_layers_per_pipeline_stage = 1
@@ -789,9 +813,7 @@ def test_common_dummy_moe_predictor_zero_lane_has_no_routed_compute() -> None:
 
 def test_common_dummy_moe_predictor_zero_explicit_allocation_has_no_routed_compute() -> None:
     """The explicit allocation API must honor zero routed tokens too."""
-    predictor = _DummyDisaggregationPredictor.__new__(
-        _DummyDisaggregationPredictor
-    )
+    predictor = _LayerDisaggregationPredictor()
     predictor._enable_dummy_mode = True
     predictor._dummy_execution_time = 2.0
     predictor._moe_ep_size = 2
@@ -900,7 +922,7 @@ def test_pdd_predictor_uses_profile_not_step3_named_legacy_identity() -> None:
 
 
 def test_disaggregation_grouped_gemm_delegates_with_lane_batch(monkeypatch) -> None:
-    predictor = _DummyDisaggregationPredictor.__new__(_DummyDisaggregationPredictor)
+    predictor = _LayerDisaggregationPredictor()
     expected = 3.5
 
     def _base_grouped_gemm(_self, allocation, *, batch=None):
@@ -934,17 +956,10 @@ def test_disaggregation_moe_live_paths_use_registered_role_context(
     expected_time: float,
     expected_central_calls: int,
 ) -> None:
-    predictor = _DummyDisaggregationPredictor.__new__(
-        _DummyDisaggregationPredictor
-    )
+    predictor = _LayerDisaggregationPredictor()
     predictor._enable_dummy_mode = False
     predictor._cluster_type = cluster_type
-    model_config = SimpleNamespace(
-        is_moe=True,
-        embedding_dim=128,
-        is_moe_layer=lambda _layer_id: True,
-        get_model_architecture_profile=lambda: ModelArchitectureProfile.generic(),
-    )
+    model_config = _Step3NamedGenericProfileModelConfig()
     replica_config = SimpleNamespace(
         model_config=model_config,
         total_expert_num=4,
@@ -1050,11 +1065,11 @@ def test_disaggregation_moe_live_paths_use_registered_role_context(
         assert context.replica_config is replica_config
         assert context.cluster_type is cluster_type
         assert context.quantization_manager is quantization_manager
-    assert result._moe_tensor_parallel_allreduce_time == pytest.approx(expected_time)
+    assert result.mlp_all_reduce_time == pytest.approx(expected_time)
 
 
 def test_disaggregation_dense_layer_uses_shared_expert_profile_rows() -> None:
-    predictor = _DummyDisaggregationPredictor.__new__(_DummyDisaggregationPredictor)
+    predictor = _LayerDisaggregationPredictor()
     predictor._enable_dummy_mode = False
     predictor._model_config = _ProfileOnlyStep3ModelConfig()
     predictor._supports_operation = lambda operation: operation in {
@@ -1087,16 +1102,14 @@ def test_disaggregation_dense_layer_uses_shared_expert_profile_rows() -> None:
 
 
 def test_pdd_attention_only_prediction_preserves_global_layer_id() -> None:
-    predictor = _DummyDisaggregationPredictor.__new__(
-        _DummyDisaggregationPredictor
-    )
+    predictor = _LayerDisaggregationPredictor()
     predictor._enable_dummy_mode = False
     predictor._cluster_type = ClusterType.PREFILL
     predictor._select_measurement_type_for_batch = lambda _batch: None
     predictor._require_predictions_for_measurement_type = lambda *_args: None
     predictor._activate_measurement_type = lambda *_args: None
     predictor._emit_cuda_graph_activation_records = lambda *_args: None
-    predictor._get_communication_time = lambda *_args: SimpleNamespace(
+    predictor._get_communication_time = lambda *_args, **_kwargs: SimpleNamespace(
         tensor_parallel_time=0.0,
         pipeline_parallel_time=0.0,
     )
@@ -1139,9 +1152,7 @@ def test_pdd_attention_only_prediction_preserves_global_layer_id() -> None:
 def test_pdd_shared_domain_post_attention_prediction_skips_attention_lookup(
     cluster_type: ClusterType,
 ) -> None:
-    predictor = _DummyDisaggregationPredictor.__new__(
-        _DummyDisaggregationPredictor
-    )
+    predictor = _LayerDisaggregationPredictor()
     predictor._enable_dummy_mode = False
     predictor._cluster_type = cluster_type
     predictor._replica_config = SimpleNamespace(
@@ -1158,6 +1169,7 @@ def test_pdd_shared_domain_post_attention_prediction_skips_attention_lookup(
     def _get_communication_time(
         *_args,
         include_attention: bool = True,
+        include_stage_owned: bool = True,
     ) -> SimpleNamespace:
         communication_attention_flags.append(include_attention)
         return SimpleNamespace(
@@ -1179,11 +1191,9 @@ def test_pdd_shared_domain_post_attention_prediction_skips_attention_lookup(
         pp_stage_boundary_handoff_time=0.0,
     )
     predictor._get_pp_stage_boundary_handoff_time = lambda *_args: 0.0
-    model_config = SimpleNamespace(
-        is_moe=True,
-        is_moe_layer=lambda layer_id: layer_id == 2,
-        embedding_dim=128,
-    )
+    model_config = _Step3NamedGenericProfileModelConfig()
+    model_config.is_moe_layer = lambda layer_id: layer_id == 2
+    predictor._model_config = model_config
     predictor._get_cluster_replica_config = lambda _cluster_type: SimpleNamespace(
         model_config=model_config,
         moe_tensor_parallel_size=1,

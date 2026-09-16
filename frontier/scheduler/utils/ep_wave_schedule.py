@@ -22,6 +22,7 @@ def schedule_layer_wave(
     layer_id: int,
     replica_local_id: int | None = None,
     cohort_batches: dict[int, Any] | None = None,
+    metrics_store=None,
 ) -> list:
     """Schedule one PREFILL or DECODE layer through the existing scheduler APIs.
 
@@ -65,7 +66,13 @@ def schedule_layer_wave(
             replica_id=replica_id,
             stage_id=stage_id,
             layer_id=layer_id,
+            capture_lane_timings=(metrics_store is not None and metrics_store.ep_wave_reporting_enabled),
         )
+        if metrics_store is not None and plan.phase_times.lane_records:
+            metrics_store.on_ep_wave_schedule(
+                plan, time=time, replica_id=replica_id, stage_id=stage_id,
+                cluster_type=scheduler._cluster_type,
+            )
         layer_workload = plan.layer_workload
         phase_times = plan.phase_times
         lane_compute_times_ms = list(phase_times.lane_compute_times_ms)

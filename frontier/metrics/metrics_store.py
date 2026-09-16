@@ -78,6 +78,18 @@ OPERATION_STR = "Operation"
 TIME_STR_MS = "Time (ms)"
 
 
+# Legacy CSV names are an output adapter; runtime ownership stays in family specs.
+_ATTENTION_LEDGER_FIELD_BY_OPERATOR = {
+    "attn_kv_cache_save": "attention_kv_cache_save_execution_time",
+    "attn_prefill": "attention_prefill_execution_time",
+    "attn_decode": "attention_decode_execution_time",
+    **{
+        operator.name: operator.execution_time_attr
+        for operator in LATENT_MLA_ATTENTION_FAMILY.e2e_trace_ops()
+    },
+}
+
+
 def _round_ledger_ms(value: float) -> float:
     return round(float(value), 9)
 
@@ -102,6 +114,31 @@ def _iter_family_execution_times(
         for operator in family.e2e_trace_ops()
         if operator.execution_time_attr is not None
     )
+
+
+def _iter_layer_attention_times(execution_time: ExecutionTime, *, skip_zero: bool = True):
+    """Project model and family operators without duplicating owned projections."""
+    family = get_attention_family(execution_time.attention_family_id)
+    family_attrs = {operator.execution_time_attr for operator in family.e2e_trace_ops()}
+    model_ops = (
+        ("attn_pre_proj", "attention_layer_pre_proj_execution_time", "attention_pre_proj_time"),
+        ("attn_rope", "attention_rope_execution_time", "attention_rope_execution_time"),
+        ("attn_post_proj", "attention_layer_post_proj_execution_time", "attention_post_proj_time"),
+    )
+    for name, component_attr, public_attr in model_ops[:2]:
+        if component_attr not in family_attrs:
+            value = float(getattr(execution_time, public_attr))
+            if value or not skip_zero:
+                yield name, value
+    for operator, value in get_attention_trace_op_times(execution_time, family, skip_zero=skip_zero):
+        name = (_DENSE_ATTENTION_PUBLIC_TRACE_NAME_BY_ROLE.get(operator.role, operator.name)
+                if family.dense_compatible else operator.name)
+        yield name, value
+    name, component_attr, public_attr = model_ops[2]
+    if component_attr not in family_attrs:
+        value = float(getattr(execution_time, public_attr))
+        if value or not skip_zero:
+            yield name, value
 
 
 def _iter_memory_execution_times(
@@ -312,6 +349,7 @@ class MetricsStore:
             tuple[str, int, int | None, int, int], dict[str, Any]
         ] = {}
         self._frontier_stage_batch_ledger_rows: list[dict[str, Any]] = []
+        self._frontier_ep_wave_lane_ledger_rows: list[dict[str, Any]] = []
         self._frontier_stage_batch_ledger_summary = (
             self._new_frontier_stage_batch_ledger_summary()
         )
@@ -413,6 +451,8 @@ class MetricsStore:
             },
         }
 
+        self._expanded_trace_batches: set[tuple[ClusterType, int]] = set()
+
         # Per-layer expansion tracking (cluster-aware): request IDs traced per cluster.
         # Limited by num_requests_to_trace_per_layer config for each cluster.
         self._per_layer_traced_requests_by_cluster = {
@@ -433,6 +473,26 @@ class MetricsStore:
     def trace_store(self) -> Optional["TraceStore"]:
         """Get the trace store for op-level tracing."""
         return self._trace_store
+
+    @property
+    def ep_wave_reporting_enabled(self) -> bool:
+        """Retain lane predictions only when a requested projection consumes them."""
+        return bool(
+            self._config.enable_op_level_tracing
+            or (self._config.write_metrics and (
+                self._config.store_operation_metrics
+                or self._config.store_frontier_stage_batch_ledger
+            ))
+        )
+
+    def on_ep_wave_schedule(self, plan, *, time, replica_id, stage_id, cluster_type):
+        """Report actual lane operators at their scheduled phase boundaries."""
+        if not self.ep_wave_reporting_enabled:
+            return
+        from frontier.metrics.ep_wave_metrics import record_ep_wave
+
+        record_ep_wave(self, plan, time=time, replica_id=replica_id,
+                       stage_id=stage_id, cluster_type=cluster_type)
 
     def _write_metrics_ground_truth_record(self, record: dict[str, Any]) -> None:
         if not self._config.enable_metrics_ground_truth_trace:
@@ -498,7 +558,9 @@ class MetricsStore:
         from frontier.metrics.trace_store import TraceEvent
 
         # Determine if we should emit per-layer traces for this batch
-        should_expand_layers = self._should_expand_layers(cluster_type, request_ids)
+        should_expand_layers = self._should_expand_layers(
+            cluster_type, request_ids, batch_ids=(batch_stage._batch_id,)
+        )
 
         trace_context = self._build_op_trace_context(batch_stage, cluster_type)
         parallel_context = build_parallel_context(trace_context)
@@ -703,8 +765,19 @@ class MetricsStore:
             ep_enabled = cluster_config.replica_config.moe_expert_parallel_size > 1
 
         if isinstance(execution_time, StageExecutionTime):
+            # Aggregated output preserves family/variant identity instead of
+            # collapsing a mixed stage into the first layer's family.
+            aggregate_ops = {}
+
+            def collect_stage_op(op_type, op_name, duration_ms, layer_id, metadata):
+                key = (metadata["attention_family_id"], metadata["attention_variant_id"], op_type, op_name)
+                if key not in aggregate_ops:
+                    aggregate_ops[key] = [0.0, []]
+                aggregate_ops[key][0] += duration_ms
+                aggregate_ops[key][1].append(layer_id)
+
             self._emit_stage_layer_traces(
-                emit,
+                emit if should_expand_layers else collect_stage_op,
                 execution_time,
                 cluster_type,
                 moe_tp_enabled=moe_tp_enabled,
@@ -714,6 +787,13 @@ class MetricsStore:
                 use_profile_ep_alltoall=use_profile_ep_alltoall,
                 use_ep_alltoall_dispatch_combine=use_ep_alltoall_dispatch_combine,
             )
+            if not should_expand_layers:
+                for (family_id, variant_id, op_type, op_name), (duration_ms, layer_ids) in aggregate_ops.items():
+                    emit(op_type, op_name, duration_ms, -1, {
+                        "attention_family_id": family_id,
+                        "attention_variant_id": variant_id,
+                        "global_layer_ids": layer_ids,
+                    })
         elif should_expand_layers and num_layers > 1:
             # Per-layer expansion mode: emit individual layer traces
             self._emit_per_layer_traces(
@@ -773,7 +853,8 @@ class MetricsStore:
         emit("OVERHEAD", "ray_comm_time", execution_time.ray_comm_time)
 
     def _should_expand_layers(
-        self, cluster_type: ClusterType, request_ids: List[str] = None
+        self, cluster_type: ClusterType, request_ids: List[str] = None,
+        *, batch_ids: tuple[int, ...] = (),
     ) -> bool:
         """
         Determine if per-layer expansion should be used for this batch.
@@ -791,6 +872,8 @@ class MetricsStore:
 
         if not request_ids:
             return False
+        if any((cluster_type, batch_id) in self._expanded_trace_batches for batch_id in batch_ids):
+            return True
 
         if cluster_type not in self._per_layer_traced_requests_by_cluster:
             self._per_layer_traced_requests_by_cluster[cluster_type] = set()
@@ -807,6 +890,9 @@ class MetricsStore:
                 for rid in request_ids:
                     if len(traced_requests) < max_requests:
                         traced_requests.add(rid)
+                self._expanded_trace_batches.update(
+                    (cluster_type, batch_id) for batch_id in batch_ids
+                )
                 return True
 
         return False
@@ -1028,7 +1114,7 @@ class MetricsStore:
         """
 
         for layer_idx, layer in enumerate(execution_time.layer_execution_times):
-            family_id = layer.attention_family_id or DENSE_ATTENTION_FAMILY.family_id
+            family_id = layer.attention_family_id
             attention_family = get_attention_family(family_id)
             layer_meta = {
                 "layer_idx": layer_idx,
@@ -1038,7 +1124,7 @@ class MetricsStore:
             }
 
             def emit_layer(op_type: str, op_name: str, duration_ms: float) -> None:
-                emit(op_type, op_name, duration_ms, layer_idx, layer_meta)
+                emit(op_type, op_name, duration_ms, layer.global_layer_id, layer_meta)
 
             for op_name, duration_ms in _iter_memory_execution_times(
                 layer,
@@ -1048,18 +1134,8 @@ class MetricsStore:
             ):
                 emit_layer("COMPUTE", op_name, duration_ms)
 
-            # GDN owns its input/output projections inside the attention family;
-            # dense and MLA retain the historical model-level projections.
-            if family_id != "gated_delta_net":
-                emit_layer("COMPUTE", "attn_pre_proj", layer.attention_pre_proj_time)
-                emit_layer("COMPUTE", "attn_rope", layer.attention_rope_execution_time)
-            for operator, duration_ms in get_attention_trace_op_times(
-                layer,
-                attention_family,
-            ):
-                emit_layer("COMPUTE", operator.name, duration_ms)
-            if family_id != "gated_delta_net":
-                emit_layer("COMPUTE", "attn_post_proj", layer.attention_post_proj_time)
+            for op_name, duration_ms in _iter_layer_attention_times(layer):
+                emit_layer("COMPUTE", op_name, duration_ms)
             emit_layer(
                 "COMM",
                 "attn_tensor_parallel_allreduce",
@@ -3704,19 +3780,8 @@ class MetricsStore:
             def push(metric: OperationMetrics, value: float) -> None:
                 self._push_metric(metric, batch_id, value, cluster_type)
 
-            family_id = layer.attention_family_id or DENSE_ATTENTION_FAMILY.family_id
-            attention_family = get_attention_family(family_id)
-            if family_id != "gated_delta_net":
-                push(OperationMetrics.ATTN_PRE_PROJ, layer.attention_pre_proj_time)
-                push(OperationMetrics.ATTN_ROPE, layer.attention_rope_execution_time)
-            for operator, duration_ms in get_attention_trace_op_times(
-                layer,
-                attention_family,
-                skip_zero=False,
-            ):
-                push(OperationMetrics(operator.name), duration_ms)
-            if family_id != "gated_delta_net":
-                push(OperationMetrics.ATTN_POST_PROJ, layer.attention_post_proj_time)
+            for op_name, duration_ms in _iter_layer_attention_times(layer, skip_zero=False):
+                push(OperationMetrics(op_name), duration_ms)
             push(OperationMetrics.ATTN_TENSOR_PARALLEL_ALLREDUCE, layer.attention_all_reduce_time)
 
             push(OperationMetrics.INPUT_LAYERNORM, layer.attn_norm_time)
@@ -3847,19 +3912,17 @@ class MetricsStore:
         if not self._config.write_metrics:
             return
 
-        if not self._config.store_utilization_metrics:
-            return
-
-        replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
-        busy_meter, mfu_meter = self._get_stage_utilization_meters(
-            cluster_type,
-            replica_index,
-            stage_id,
-            replica_local_id,
-        )
-        busy_meter.put(time, 100)
-        mfu = self._mfu_calculator[cluster_type].get_mfu(batch_stage)
-        mfu_meter.put(time, mfu)
+        if self._config.store_utilization_metrics:
+            replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
+            busy_meter, mfu_meter = self._get_stage_utilization_meters(
+                cluster_type,
+                replica_index,
+                stage_id,
+                replica_local_id,
+            )
+            busy_meter.put(time, 100)
+            mfu = self._mfu_calculator[cluster_type].get_mfu(batch_stage)
+            mfu_meter.put(time, mfu)
 
         if not self._config.store_operation_metrics:
             return
@@ -4092,17 +4155,16 @@ class MetricsStore:
         cluster_type: ClusterType,
         replica_local_id: int | None = None,
     ) -> None:
-        if not self._config.store_utilization_metrics:
-            return
-        replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
-        busy_meter, mfu_meter = self._get_stage_utilization_meters(
-            cluster_type,
-            replica_index,
-            stage_id,
-            replica_local_id,
-        )
-        busy_meter.put(time, 0)
-        mfu_meter.put(time, 0)
+        if self._config.store_utilization_metrics:
+            replica_index = self._get_cluster_replica_index(cluster_type, replica_id)
+            busy_meter, mfu_meter = self._get_stage_utilization_meters(
+                cluster_type,
+                replica_index,
+                stage_id,
+                replica_local_id,
+            )
+            busy_meter.put(time, 0)
+            mfu_meter.put(time, 0)
 
         ledger_row = self._pending_frontier_stage_batch_ledger_rows.pop(id(batch_stage), None)
         if ledger_row is not None:
@@ -4125,40 +4187,25 @@ class MetricsStore:
         execution_time: ExecutionTime,
     ) -> dict[str, float]:
         if isinstance(execution_time, StageExecutionTime):
-            owner_only_names = frozenset(
-                {
-                    "pipeline_parallel_communication_time",
-                    "schedule_time",
-                    "sampler_e2e_time",
-                    "prepare_inputs_e2e_time",
-                    "pp_producer_send_path_runtime_time",
-                    "pp_receiver_head_runtime_time",
-                    "pp_prefill_consumer_active_runtime_time",
-                    "pp_stage_boundary_residual_runtime_time",
-                    "process_model_outputs_time",
-                    "ray_comm_time",
-                    "decode_draft_proposer_time",
-                    "mtp_terminal_overshoot_time",
-                }
-            )
+            owner_only_names = execution_time.stage_owned_fields
             component_ledger: dict[str, float] = {}
             for layer in execution_time.layer_execution_times:
                 layer_ledger = self._build_frontier_stage_batch_component_ledger(layer)
-                family_id = layer.attention_family_id or DENSE_ATTENTION_FAMILY.family_id
-                if family_id == "gated_delta_net":
-                    for name in (
-                        "attention_prefill_execution_time",
-                        "attention_decode_execution_time",
-                        "attention_pre_proj_time",
-                        "attention_post_proj_time",
-                        "attention_kv_cache_save_execution_time",
-                    ):
-                        layer_ledger.pop(name, None)
-                    for operator, duration_ms in get_attention_trace_op_times(
-                        layer,
-                        get_attention_family(family_id),
-                    ):
-                        layer_ledger[operator.name] = _round_ledger_ms(duration_ms)
+                family = get_attention_family(layer.attention_family_id)
+                # The historical CSV uses public scalar field names for dense
+                # and MLA operators. Newly registered operators keep their
+                # canonical names; remove reused legacy scalar slots first.
+                component_public_names = {
+                    "attention_layer_pre_proj_execution_time": "attention_pre_proj_time",
+                    "attention_layer_post_proj_execution_time": "attention_post_proj_time",
+                }
+                for operator, duration_ms in get_attention_trace_op_times(layer, family, skip_zero=False):
+                    legacy_name = _ATTENTION_LEDGER_FIELD_BY_OPERATOR.get(operator.name)
+                    if legacy_name is None:
+                        old_name = component_public_names.get(operator.execution_time_attr, operator.execution_time_attr)
+                        layer_ledger.pop(old_name, None)
+                        legacy_name = operator.name
+                    layer_ledger[legacy_name] = _round_ledger_ms(duration_ms)
                 for name, value in layer_ledger.items():
                     if name in owner_only_names:
                         continue
@@ -4167,7 +4214,7 @@ class MetricsStore:
             owner_ledger = self._build_frontier_stage_batch_component_ledger(
                 execution_time.stage_execution_time
             )
-            for name in owner_only_names:
+            for name in owner_only_names & owner_ledger.keys():
                 component_ledger[name] = float(owner_ledger[name])
             return {
                 name: _round_ledger_ms(value)
@@ -4784,6 +4831,12 @@ class MetricsStore:
         return summary
 
     def _write_frontier_stage_batch_ledger(self) -> None:
+        if self._frontier_ep_wave_lane_ledger_rows:
+            os.makedirs(self._config.output_dir, exist_ok=True)
+            path = os.path.join(self._config.output_dir, "frontier_ep_wave_lane_ledger.jsonl")
+            with open(path, "w", encoding="utf-8") as handle:
+                for row in self._frontier_ep_wave_lane_ledger_rows:
+                    handle.write(json.dumps(row, sort_keys=True) + "\n")
         if (
             not self._frontier_stage_batch_ledger_rows
             and self._frontier_stage_batch_ledger_summary["total_rows"] == 0

@@ -41,6 +41,7 @@ def prepare_moe_wave(
     replica_id: int,
     stage_id: int,
     layer_id: int,
+    capture_lane_timings: bool = False,
 ) -> EPWavePlan:
     """Prepare workload, phase timing, and trace data without state mutation."""
 
@@ -69,6 +70,7 @@ def prepare_moe_wave(
         replica_id=replica_id,
         stage_id=stage_id,
         layer_id=layer_id,
+        capture_lane_timings=capture_lane_timings,
     )
 
 
@@ -89,6 +91,7 @@ def prepare_moe_wave_from_inputs(
     replica_id: int,
     stage_id: int,
     layer_id: int,
+    capture_lane_timings: bool = False,
 ) -> EPWavePlan:
     """Build the MoE portion when lane inputs have already been normalized."""
 
@@ -129,6 +132,7 @@ def prepare_moe_wave_from_inputs(
         workload_logger=workload_logger,
         trace_identity=trace_identity,
         batch_id=int(cohort_id),
+        capture_lane_timings=capture_lane_timings,
     )
     timing = calculate_ep_wave_timing(
         start_time_s=float(time),

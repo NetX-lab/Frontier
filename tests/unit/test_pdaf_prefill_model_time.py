@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from frontier.entities import ExecutionTime, StageExecutionTime
 from frontier.events.prefill_sync_event import PrefillSyncEvent
 from frontier.events.replica_stage_schedule_event import ReplicaStageScheduleEvent
 from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
@@ -229,10 +230,35 @@ class _LayerPredictor:
         include_ffn=True,
     ):
         assert cluster_type is ClusterType.PREFILL
-        assert num_layers == 1
+        assert num_layers > 0
         assert layer_id is not None
         assert include_ffn is False
         self.calls.append((num_layers, layer_id))
+        if num_layers > 1:
+            layers = []
+            for physical_layer_id in range(layer_id, layer_id + num_layers):
+                source = self._layer_times[physical_layer_id]
+                layers.append(ExecutionTime(
+                    num_layers_per_pipeline_stage=1,
+                    attention_rope_execution_time=0.0,
+                    attention_kv_cache_save_execution_time=0.0,
+                    attention_decode_execution_time=0.0,
+                    attention_prefill_execution_time=source._attention_ms,
+                    attention_layer_pre_proj_execution_time=0.0,
+                    attention_layer_post_proj_execution_time=0.0,
+                    attn_norm_time=0.0, mlp_norm_time=0.0, add_time=0.0,
+                    tensor_parallel_communication_time=0.0,
+                    pipeline_parallel_communication_time=source.pipeline_time,
+                    expert_parallel_communication_time=0.0,
+                    moe_gating_time=0.0, moe_shuffling_time=0.0,
+                    schedule_time=0.0, sampler_e2e_time=0.0,
+                    prepare_inputs_e2e_time=0.0,
+                    process_model_outputs_time=0.0, ray_comm_time=0.0,
+                    is_moe=False, global_layer_id=physical_layer_id,
+                    attention_family_id="dense_attention",
+                    attention_variant_id="standard",
+                ))
+            return StageExecutionTime(layers)
         return self._layer_times[layer_id]
 
 
@@ -467,6 +493,11 @@ def test_prefill_sync_records_heterogeneous_layer_components_once() -> None:
     batch_stage.override_model_execution_time.assert_called_once_with(
         expected_model_time
     )
+    reported_stage = scheduler._create_prefill_corrected_execution_time_for_metrics.call_args.args[2]
+    assert isinstance(reported_stage, StageExecutionTime)
+    assert reported_stage.global_layer_ids == (0, 1)
+    assert [layer.get_single_layer_attention_scope_time()
+            for layer in reported_stage.layer_execution_times] == [1.25, 3.75]
 
 
 def test_prefill_pp2_stage_one_advances_with_global_layer_ids() -> None:

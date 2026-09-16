@@ -1,9 +1,15 @@
 from __future__ import annotations
 
+from dataclasses import fields, replace
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+from predictor_cache_fixtures import (
+    CacheFixturePredictor, CacheFixtureDisaggregationPredictor, cache_model,
+)
+from frontier.config.model_config import BaseModelConfig
 
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.execution_time_predictor import sklearn_moe_execution_time_predictor
@@ -21,7 +27,10 @@ from frontier.moe_ep_workload import EPLaneWorkload, materialize_layer_ep_worklo
 from frontier.types import ClusterType
 
 
-class _DummySklearnMoEPredictor(SklearnMoEExecutionTimePredictor):
+class _DummySklearnMoEPredictor(CacheFixturePredictor):
+    def __init__(self):
+        super().__init__(model_config=replace(cache_model(), num_layers=61))
+
     def _get_estimator(self):
         return None
 
@@ -29,7 +38,7 @@ class _DummySklearnMoEPredictor(SklearnMoEExecutionTimePredictor):
         return {}
 
 
-class _DummyDisaggregationPredictor(SklearnDisaggregationExecutionTimePredictor):
+class _DummyDisaggregationPredictor(CacheFixtureDisaggregationPredictor):
     def _get_estimator(self):
         return None
 
@@ -38,7 +47,7 @@ class _DummyDisaggregationPredictor(SklearnDisaggregationExecutionTimePredictor)
 
 
 def test_attention_dp_moe_communication_is_zero_when_shared_ep_owns_collective() -> None:
-    predictor = object.__new__(_DummySklearnMoEPredictor)
+    predictor = _DummySklearnMoEPredictor()
     predictor._replica_config = SimpleNamespace(attn_dp=2)
 
     assert predictor.predict_dp_moe_allreduce_times(
@@ -64,22 +73,26 @@ class _DummyBatch:
         return int(self.total_num_tokens)
 
 
-class _DummyModelConfig:
+class _DummyModelConfig(BaseModelConfig):
     def __init__(
         self,
         architecture_profile: ModelArchitectureProfile,
         moe_layer_ids: set[int] | None = None,
     ) -> None:
+        model = replace(
+            cache_model(), num_layers=61, num_experts=4,
+            embedding_dim=7168, num_q_heads=32, num_kv_heads=8,
+            share_expert_dim=(
+                1 if architecture_profile.always_supports_share_expert else None
+            ),
+            share_q_dim=512,
+        )
+        super().__init__(**{
+            field.name: getattr(model, field.name)
+            for field in fields(model) if field.init
+        })
         self._architecture_profile = architecture_profile
         self._moe_layer_ids = moe_layer_ids
-        self.embedding_dim = 7168
-        self.num_q_heads = 32
-        self.num_kv_heads = 8
-        self.share_expert_dim = (
-            1 if architecture_profile.always_supports_share_expert else None
-        )
-        self.share_q_dim = 512
-        self.is_moe = True
 
     def get_model_architecture_profile(self) -> ModelArchitectureProfile:
         return self._architecture_profile
@@ -98,7 +111,7 @@ class _DummyModelConfig:
 
 def _build_base_execution_time() -> ExecutionTime:
     return ExecutionTime(
-        num_layers_per_pipeline_stage=61,
+        num_layers_per_pipeline_stage=1,
         attention_rope_execution_time=1.0,
         attention_kv_cache_save_execution_time=1.0,
         attention_decode_execution_time=0.0,
@@ -141,7 +154,7 @@ def _build_base_execution_time() -> ExecutionTime:
 
 def _build_dense_execution_time() -> ExecutionTime:
     return ExecutionTime(
-        num_layers_per_pipeline_stage=61,
+        num_layers_per_pipeline_stage=1,
         attention_rope_execution_time=1.0,
         attention_kv_cache_save_execution_time=1.0,
         attention_decode_execution_time=0.0,
@@ -183,7 +196,7 @@ def _build_dense_execution_time() -> ExecutionTime:
 
 
 def _build_predictor() -> _DummySklearnMoEPredictor:
-    predictor = _DummySklearnMoEPredictor.__new__(_DummySklearnMoEPredictor)
+    predictor = _DummySklearnMoEPredictor()
     predictor._enable_dummy_mode = False
     predictor._dummy_execution_time = 0.0
     predictor._cluster_type = ClusterType.MONOLITHIC
@@ -272,9 +285,9 @@ def test_predict_stage_execution_time_skips_moe_tokens_for_dense_layer() -> None
     call_kwargs = predictor._get_execution_time_internal.call_args.kwargs
     assert call_kwargs["include_moe"] is False
     assert call_kwargs["moe_tokens_input"] is None
-    assert result._is_moe is False
-    assert result._moe_grouped_gemm_time == pytest.approx(0.0)
-    assert result._mlp_layer_up_proj_execution_time == pytest.approx(1.1)
+    assert result.layer_execution_times[0]._is_moe is False
+    assert result.moe_grouped_gemm_time == pytest.approx(0.0)
+    assert result.mlp_layer_up_proj_execution_time == pytest.approx(1.1)
 
 
 def test_mixed_dense_layer_rejects_post_attention_scope() -> None:
@@ -298,7 +311,7 @@ def test_mixed_dense_layer_rejects_post_attention_scope() -> None:
 def _build_dummy_mixed_layer_predictor(
     model_config: _DummyModelConfig,
 ) -> _DummySklearnMoEPredictor:
-    predictor = _DummySklearnMoEPredictor.__new__(_DummySklearnMoEPredictor)
+    predictor = _DummySklearnMoEPredictor()
     predictor._enable_dummy_mode = True
     predictor._dummy_execution_time = 1.25
     predictor._cluster_type = ClusterType.MONOLITHIC
@@ -333,14 +346,14 @@ def test_dummy_monolithic_mixed_dense_layer_uses_dense_components() -> None:
         layer_id=1,
     )
 
-    assert execution_time._is_moe is False
-    assert execution_time._moe_gating_time == pytest.approx(0.0)
-    assert execution_time._moe_shuffling_time == pytest.approx(0.0)
-    assert execution_time._moe_grouped_gemm_time == pytest.approx(0.0)
-    assert execution_time._expert_parallel_communication_time == pytest.approx(0.0)
-    assert execution_time._mlp_layer_up_proj_execution_time > 0.0
-    assert execution_time._mlp_layer_down_proj_execution_time > 0.0
-    assert execution_time._mlp_layer_act_execution_time > 0.0
+    assert execution_time.layer_execution_times[0]._is_moe is False
+    assert execution_time.moe_gating_time == pytest.approx(0.0)
+    assert execution_time.moe_shuffling_time == pytest.approx(0.0)
+    assert execution_time.moe_grouped_gemm_time == pytest.approx(0.0)
+    assert execution_time.expert_parallel_communication_time == pytest.approx(0.0)
+    assert execution_time.mlp_layer_up_proj_execution_time > 0.0
+    assert execution_time.mlp_layer_down_proj_execution_time > 0.0
+    assert execution_time.mlp_layer_act_execution_time > 0.0
     assert execution_time.moe_operator_times is None
 
 
@@ -365,8 +378,8 @@ def test_dummy_monolithic_mixed_dense_layer_preserves_ffn_tp_allreduce() -> None
         layer_id=1,
     )
 
-    assert execution_time._is_moe is False
-    assert execution_time._moe_tensor_parallel_allreduce_time == pytest.approx(1.25)
+    assert execution_time.layer_execution_times[0]._is_moe is False
+    assert execution_time.communication_time_component.moe_tensor_parallel_allreduce_time == pytest.approx(1.25)
     assert execution_time.mlp_operator_times is not None
     assert execution_time.mlp_operator_times.get_required_time("mlp_up_proj") > 0.0
 
@@ -391,17 +404,17 @@ def test_dummy_monolithic_attention_only_excludes_ffn_components() -> None:
         include_ffn=False,
     )
 
-    assert execution_time._is_moe is False
+    assert execution_time.layer_execution_times[0]._is_moe is False
     assert execution_time.get_single_layer_attention_time() > 0.0
     assert execution_time.get_single_layer_post_attention_time() == pytest.approx(0.0)
-    assert execution_time._mlp_norm_time == pytest.approx(0.0)
-    assert execution_time._add_time == pytest.approx(0.0)
-    assert execution_time._add_attn_residual_time == pytest.approx(0.0)
-    assert execution_time._add_ffn_residual_time == pytest.approx(0.0)
-    assert execution_time._mlp_layer_up_proj_execution_time == pytest.approx(0.0)
-    assert execution_time._mlp_layer_down_proj_execution_time == pytest.approx(0.0)
-    assert execution_time._mlp_layer_act_execution_time == pytest.approx(0.0)
-    assert execution_time._moe_tensor_parallel_allreduce_time == pytest.approx(0.0)
+    assert execution_time.mlp_norm_time == pytest.approx(0.0)
+    assert execution_time.add_time == pytest.approx(0.0)
+    assert execution_time.add_attn_residual_time == pytest.approx(0.0)
+    assert execution_time.add_ffn_residual_time == pytest.approx(0.0)
+    assert execution_time.mlp_layer_up_proj_execution_time == pytest.approx(0.0)
+    assert execution_time.mlp_layer_down_proj_execution_time == pytest.approx(0.0)
+    assert execution_time.mlp_layer_act_execution_time == pytest.approx(0.0)
+    assert execution_time.communication_time_component.moe_tensor_parallel_allreduce_time == pytest.approx(0.0)
     assert execution_time.mlp_operator_times is None
     assert execution_time.moe_operator_times is None
 
@@ -422,16 +435,16 @@ def test_dummy_monolithic_mixed_moe_layer_keeps_moe_components() -> None:
         layer_id=4,
     )
 
-    assert execution_time._is_moe is True
-    assert execution_time._moe_gating_time > 0.0
-    assert execution_time._moe_grouped_gemm_time > 0.0
+    assert execution_time.layer_execution_times[0]._is_moe is True
+    assert execution_time.moe_gating_time > 0.0
+    assert execution_time.moe_grouped_gemm_time > 0.0
     assert execution_time.moe_operator_times is not None
 
 
 def test_mixed_share_expert_dense_layer_uses_shared_expert_profile_rows() -> None:
     """Step3 mixed dense layers use shared-expert rows, not absent MLP rows."""
 
-    predictor = _DummySklearnMoEPredictor.__new__(_DummySklearnMoEPredictor)
+    predictor = _DummySklearnMoEPredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._num_layers_per_pipeline_stage = 1
     predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.step3_text())
@@ -487,7 +500,7 @@ def test_mixed_share_expert_dense_layer_uses_shared_expert_profile_rows() -> Non
 def test_attention_only_probe_does_not_lookup_dense_ffn_profile() -> None:
     """Attention-only probes must not require dense FFN profiling rows."""
 
-    predictor = _DummySklearnMoEPredictor.__new__(_DummySklearnMoEPredictor)
+    predictor = _DummySklearnMoEPredictor()
     predictor._enable_dummy_mode = False
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._num_layers_per_pipeline_stage = 1
@@ -548,7 +561,7 @@ def test_attention_only_probe_does_not_lookup_dense_ffn_profile() -> None:
 def test_common_moe_post_attention_probe_skips_attention_lookup() -> None:
     """Shared co-location DECODE EP lanes must expose a post-attention contract."""
 
-    predictor = _DummySklearnMoEPredictor.__new__(_DummySklearnMoEPredictor)
+    predictor = _DummySklearnMoEPredictor()
     predictor._enable_dummy_mode = False
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._num_layers_per_pipeline_stage = 1
@@ -653,7 +666,11 @@ def test_predict_stage_execution_time_keeps_per_layer_components_and_scales_line
     )
 
     assert exec_1.get_single_layer_attention_time() == pytest.approx(12.0)
-    assert exec_5.get_single_layer_attention_time() == pytest.approx(12.0)
+    assert [layer.global_layer_id for layer in exec_5.layer_execution_times] == [3, 4, 5, 6, 7]
+    assert all(
+        layer.get_single_layer_attention_time() == pytest.approx(12.0)
+        for layer in exec_5.layer_execution_times
+    )
     assert exec_5.model_time_ms == pytest.approx(exec_1.model_time_ms * 5)
 
 
@@ -741,7 +758,7 @@ def test_mixed_dense_layer_trace_is_not_labeled_as_moe(
 
 
 def test_monolithic_decode_shared_domain_lane_moe_times_respects_dummy_mode() -> None:
-    predictor = _DummySklearnMoEPredictor.__new__(_DummySklearnMoEPredictor)
+    predictor = _DummySklearnMoEPredictor()
     predictor._enable_dummy_mode = True
     predictor._dummy_execution_time = 1.25
     predictor._moe_ep_size = 2
@@ -816,7 +833,7 @@ def test_step3_prefill_allgather_uses_per_device_bytes_in_moe_predictor() -> Non
         def adjust_tensor_size(_op_name: str, size_bytes: int, _cluster_type) -> int:
             return size_bytes
 
-    predictor = _DummySklearnMoEPredictor.__new__(_DummySklearnMoEPredictor)
+    predictor = _DummySklearnMoEPredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._replica_config = _DummyReplicaConfigForAllgather()
     predictor._model_config = _DummyModelConfig(ModelArchitectureProfile.step3_text(), moe_layer_ids={0})
@@ -881,12 +898,13 @@ def test_step3_prefill_allgather_uses_per_device_bytes_in_moe_predictor() -> Non
 
 
 def test_monolithic_predictor_exposes_global_per_replica_layer_routing_details() -> None:
-    predictor = object.__new__(_DummySklearnMoEPredictor)
+    predictor = _DummySklearnMoEPredictor()
     predictor._global_routing_allocations = {
         0: {0: 0.1, 1: 0.2, 2: 0.3, 3: 0.4},
         1: {0: 0.4, 1: 0.3, 2: 0.2, 3: 0.1},
     }
     predictor._replica_config = SimpleNamespace(cluster_num_replicas=2)
+    predictor._actual_replica_ids = None
 
     details = predictor._build_shared_routing_details()
 
@@ -903,7 +921,7 @@ def test_monolithic_predictor_exposes_global_per_replica_layer_routing_details()
 
 
 def test_monolithic_shared_routing_details_use_actual_replica_ids() -> None:
-    predictor = object.__new__(_DummySklearnMoEPredictor)
+    predictor = _DummySklearnMoEPredictor()
     predictor._global_routing_allocations = {
         0: {0: 0.5, 1: 0.5},
     }
@@ -917,8 +935,8 @@ def test_monolithic_shared_routing_details_use_actual_replica_ids() -> None:
 
 
 def test_monolithic_routing_allocations_use_global_expert_ids() -> None:
-    predictor = object.__new__(_DummySklearnMoEPredictor)
-    predictor._model_config = SimpleNamespace(num_layers=2)
+    predictor = _DummySklearnMoEPredictor()
+    predictor._model_config = replace(cache_model(), num_layers=2)
     predictor._replica_config = SimpleNamespace(total_expert_num=4)
     predictor._moe_ep_size = 2
     predictor._moe_routing_seed = 7
@@ -934,7 +952,7 @@ def test_monolithic_routing_allocations_use_global_expert_ids() -> None:
 
 
 def test_shared_materializer_rejects_missing_layer_instead_of_using_layer_zero() -> None:
-    predictor = object.__new__(_DummySklearnMoEPredictor)
+    predictor = _DummySklearnMoEPredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._replica_config = SimpleNamespace(
         total_expert_num=2,
@@ -953,8 +971,8 @@ def test_shared_materializer_rejects_missing_layer_instead_of_using_layer_zero()
 
 
 def test_routing_initialization_rejects_non_divisible_ep_topology() -> None:
-    predictor = object.__new__(_DummySklearnMoEPredictor)
-    predictor._model_config = SimpleNamespace(num_layers=2)
+    predictor = _DummySklearnMoEPredictor()
+    predictor._model_config = replace(cache_model(), num_layers=2)
     predictor._replica_config = SimpleNamespace(total_expert_num=5)
     predictor._moe_ep_size = 2
     predictor._moe_routing_seed = 7
@@ -965,8 +983,8 @@ def test_routing_initialization_rejects_non_divisible_ep_topology() -> None:
 
 
 def test_dense_model_skips_global_routing_initialization() -> None:
-    predictor = object.__new__(_DummySklearnMoEPredictor)
-    predictor._model_config = SimpleNamespace(num_layers=2, is_moe=False)
+    predictor = _DummySklearnMoEPredictor()
+    predictor._model_config = replace(cache_model(), num_layers=2, is_moe=False)
     predictor._replica_config = SimpleNamespace(
         total_expert_num=0,
         moe_expert_parallel_size=1,
@@ -979,12 +997,12 @@ def test_dense_model_skips_global_routing_initialization() -> None:
 
 
 def test_disaggregation_dense_model_has_no_routing_details() -> None:
-    predictor = object.__new__(_DummyDisaggregationPredictor)
+    predictor = _DummyDisaggregationPredictor()
     predictor._enable_dummy_mode = True
     predictor._actual_replica_ids = [0]
     predictor._cluster_config = SimpleNamespace(
         prefill_replica_config=SimpleNamespace(
-            model_config=SimpleNamespace(num_layers=2, is_moe=False),
+            model_config=replace(cache_model(), num_layers=2, is_moe=False),
             total_expert_num=0,
             moe_expert_parallel_size=1,
         ),
@@ -998,8 +1016,8 @@ def test_disaggregation_dense_model_has_no_routing_details() -> None:
 def test_global_routing_allocations_use_canonical_distribution_types(
     distribution_type: str,
 ) -> None:
-    predictor = object.__new__(_DummySklearnMoEPredictor)
-    predictor._model_config = SimpleNamespace(num_layers=2)
+    predictor = _DummySklearnMoEPredictor()
+    predictor._model_config = replace(cache_model(), num_layers=2)
     predictor._replica_config = SimpleNamespace(total_expert_num=4)
     predictor._moe_ep_size = 2
     predictor._moe_routing_seed = 11
@@ -1025,15 +1043,15 @@ def test_disaggregation_routing_matches_shared_predictor_rng_contract(
     distribution_type: str,
 ) -> None:
     """All architectures must materialize the same per-layer routing ratios."""
-    shared_predictor = object.__new__(_DummySklearnMoEPredictor)
-    shared_predictor._model_config = SimpleNamespace(num_layers=2, is_moe=True)
+    shared_predictor = _DummySklearnMoEPredictor()
+    shared_predictor._model_config = replace(cache_model(), num_layers=2)
     shared_predictor._replica_config = SimpleNamespace(total_expert_num=8)
     shared_predictor._moe_ep_size = 2
     shared_predictor._moe_routing_seed = 17
     shared_predictor._moe_routing_distribution_type = distribution_type
     expected = shared_predictor._init_global_routing_allocations()
 
-    disaggregation_predictor = object.__new__(_DummyDisaggregationPredictor)
+    disaggregation_predictor = _DummyDisaggregationPredictor()
     disaggregation_predictor._distribution_seed = 17
     disaggregation_predictor._workload_distribution_type = (
         WorkloadDistributionType(distribution_type)

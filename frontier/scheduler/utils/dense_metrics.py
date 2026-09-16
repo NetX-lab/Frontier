@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from frontier.entities.stage_execution_time import StageExecutionTime
+
 from frontier.scheduler.utils.execution_time_metrics import (
+    build_metrics_execution_time,
     build_single_layer_metrics_execution_time,
 )
 
@@ -40,22 +43,23 @@ def predict_dense_reference(
     layer_id = first_dense_layer_id(model_config)
     if layer_id is None:
         return None
-    execution_time = predictor.predict_stage_execution_time(
+    stage_execution_time = predictor.predict_stage_execution_time(
         batch,
         stage_id,
         cluster_type=cluster_type,
         num_layers=1,
         layer_id=layer_id,
     )
+    execution_time = build_single_layer_metrics_execution_time(stage_execution_time)
     if execution_time._is_moe:
         raise ValueError(
             f"Expected dense execution for layer_id={layer_id}, "
             "but predictor returned is_moe=True"
         )
     components = (
-        execution_time._mlp_layer_up_proj_execution_time,
-        execution_time._mlp_layer_act_execution_time,
-        execution_time._mlp_layer_down_proj_execution_time,
+        execution_time.mlp_layer_up_proj_execution_time,
+        execution_time.mlp_layer_act_execution_time,
+        execution_time.mlp_layer_down_proj_execution_time,
     )
     if any(component <= 0.0 for component in components):
         raise ValueError(
@@ -111,28 +115,22 @@ def build_prefill_metrics_execution_time(
     cluster_type: Any,
     model_config: Any,
 ) -> Any:
-    """Build prefill metrics payload and annotate mixed-MoE dense timing."""
-    corrected = build_single_layer_metrics_execution_time(original_execution_time)
-    dense_layer_id = first_dense_layer_id(model_config)
-    if dense_layer_id is None:
+    """Preserve stage scope and include each executed dense FFN's own timing.
+
+    EP wave records own routed MoE timing. Stage records own attention and
+    dense FFNs, whose timings must be predicted at their actual layer IDs.
+    """
+    corrected = build_metrics_execution_time(original_execution_time)
+    if not isinstance(corrected, StageExecutionTime) or first_dense_layer_id(model_config) is None:
         return corrected
-    dense_reference = predict_dense_reference(
-        predictor=predictor,
-        batch=sample_batch,
-        stage_id=stage_id,
-        cluster_type=cluster_type,
-        model_config=model_config,
-    )
-    if dense_reference is None:
-        return corrected
-    corrected._trace_dense_mlp_layer_up_proj_execution_time = (
-        dense_reference._mlp_layer_up_proj_execution_time
-    )
-    corrected._trace_dense_mlp_layer_act_execution_time = (
-        dense_reference._mlp_layer_act_execution_time
-    )
-    corrected._trace_dense_mlp_layer_down_proj_execution_time = (
-        dense_reference._mlp_layer_down_proj_execution_time
-    )
-    corrected._trace_dense_layer_id = dense_layer_id
-    return corrected
+    layers = []
+    for layer in corrected.layer_execution_times:
+        if model_config.is_moe_layer(layer.global_layer_id):
+            layers.append(layer)
+            continue
+        dense_stage = predictor.predict_stage_execution_time(
+            sample_batch, stage_id, cluster_type=cluster_type,
+            num_layers=1, layer_id=layer.global_layer_id,
+        )
+        layers.append(build_single_layer_metrics_execution_time(dense_stage))
+    return StageExecutionTime(layers, stage_execution_time=corrected.stage_execution_time)

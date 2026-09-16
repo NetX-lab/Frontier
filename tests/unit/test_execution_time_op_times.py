@@ -2,7 +2,7 @@ from typing import Any, cast
 
 import pytest  # pyright: ignore[reportMissingImports]
 
-from frontier.entities.execution_time import ExecutionTime
+from frontier.entities import ExecutionTime, StageExecutionTime
 from frontier.entities.time_components import (
     AttentionTime,
     AttentionOperatorTimes,
@@ -202,19 +202,19 @@ def test_execution_time_op_times_drive_dense_views_and_legacy_properties():
         "mlp_tensor_parallel_allreduce",
         "pipeline_parallel_send_recv",
     )
-    assert execution_time.attention_kv_cache_save_execution_time == pytest.approx(2.0)
-    assert execution_time.attention_prefill_execution_time == pytest.approx(4.0)
-    assert execution_time.attention_decode_execution_time == pytest.approx(6.0)
-    assert execution_time.attn_norm_time == pytest.approx(8.0)
-    assert execution_time.mlp_norm_time == pytest.approx(10.0)
-    assert execution_time.mlp_layer_up_proj_execution_time == pytest.approx(12.0)
-    assert execution_time.mlp_layer_act_execution_time == pytest.approx(14.0)
-    assert execution_time.mlp_layer_down_proj_execution_time == pytest.approx(16.0)
-    assert execution_time.add_attn_residual_time == pytest.approx(18.0)
-    assert execution_time.add_ffn_residual_time == pytest.approx(20.0)
+    assert execution_time.attention_kv_cache_save_execution_time == pytest.approx(1.0)
+    assert execution_time.attention_prefill_execution_time == pytest.approx(2.0)
+    assert execution_time.attention_decode_execution_time == pytest.approx(3.0)
+    assert execution_time.attn_norm_time == pytest.approx(4.0)
+    assert execution_time.mlp_norm_time == pytest.approx(5.0)
+    assert execution_time.mlp_layer_up_proj_execution_time == pytest.approx(6.0)
+    assert execution_time.mlp_layer_act_execution_time == pytest.approx(7.0)
+    assert execution_time.mlp_layer_down_proj_execution_time == pytest.approx(8.0)
+    assert execution_time.add_attn_residual_time == pytest.approx(9.0)
+    assert execution_time.add_ffn_residual_time == pytest.approx(10.0)
     assert execution_time.get_single_layer_add_time() == pytest.approx(19.0)
-    assert execution_time.attention_all_reduce_time == pytest.approx(22.0)
-    assert execution_time.mlp_all_reduce_time == pytest.approx(24.0)
+    assert execution_time.attention_all_reduce_time == pytest.approx(11.0)
+    assert execution_time.mlp_all_reduce_time == pytest.approx(12.0)
     assert execution_time.pipeline_parallel_communication_time == pytest.approx(13.0)
 
     with pytest.raises(TypeError):
@@ -228,11 +228,11 @@ def test_execution_time_component_setters_keep_top_level_op_times_in_sync():
         {"attn_prefill": 1.25}
     )
     assert execution_time.op_times["attn_prefill"] == pytest.approx(1.25)
-    assert execution_time.attention_prefill_execution_time == pytest.approx(2.5)
+    assert execution_time.attention_prefill_execution_time == pytest.approx(1.25)
 
     execution_time.attention_operator_times = None
     assert "attn_prefill" not in execution_time.op_times
-    assert execution_time.attention_prefill_execution_time == pytest.approx(200.0)
+    assert execution_time.attention_prefill_execution_time == pytest.approx(100.0)
 
 
 def test_execution_time_moe_setter_keeps_legacy_views_in_sync_with_op_times():
@@ -252,18 +252,18 @@ def test_execution_time_moe_setter_keeps_legacy_views_in_sync_with_op_times():
         }
     )
 
-    assert execution_time.moe_gating_linear_time == pytest.approx(2.0)
-    assert execution_time.moe_gating_routing_topk_time == pytest.approx(4.0)
-    assert execution_time.moe_gating_time == pytest.approx(6.0)
-    assert execution_time.moe_grouped_gemm_time == pytest.approx(6.0)
-    assert execution_time.share_expert_up_proj_time == pytest.approx(8.0)
-    assert execution_time.share_expert_act_time == pytest.approx(10.0)
-    assert execution_time.share_expert_down_proj_time == pytest.approx(12.0)
-    assert execution_time.share_expert_time == pytest.approx(30.0)
+    assert execution_time.moe_gating_linear_time == pytest.approx(1.0)
+    assert execution_time.moe_gating_routing_topk_time == pytest.approx(2.0)
+    assert execution_time.moe_gating_time == pytest.approx(3.0)
+    assert execution_time.moe_grouped_gemm_time == pytest.approx(3.0)
+    assert execution_time.share_expert_up_proj_time == pytest.approx(4.0)
+    assert execution_time.share_expert_act_time == pytest.approx(5.0)
+    assert execution_time.share_expert_down_proj_time == pytest.approx(6.0)
+    assert execution_time.share_expert_time == pytest.approx(15.0)
     assert execution_time.get_single_layer_moe_comp_time() == pytest.approx(6.0)
-    assert execution_time.moe_comp_time == pytest.approx(12.0)
+    assert execution_time.moe_comp_time == pytest.approx(6.0)
     assert execution_time.get_single_layer_moe_comm_time() == pytest.approx(4.0)
-    assert execution_time.moe_comm_time == pytest.approx(8.0)
+    assert execution_time.moe_comm_time == pytest.approx(4.0)
 
 
 def test_execution_time_comm_setter_keeps_legacy_views_in_sync_with_op_times():
@@ -277,8 +277,8 @@ def test_execution_time_comm_setter_keeps_legacy_views_in_sync_with_op_times():
         }
     )
 
-    assert execution_time.attention_all_reduce_time == pytest.approx(2.0)
-    assert execution_time.mlp_all_reduce_time == pytest.approx(4.0)
+    assert execution_time.attention_all_reduce_time == pytest.approx(1.0)
+    assert execution_time.mlp_all_reduce_time == pytest.approx(2.0)
     assert execution_time.pipeline_parallel_communication_time == pytest.approx(3.0)
 
 
@@ -290,9 +290,9 @@ def test_execution_time_comm_setter_updates_expert_parallel_view():
     )
 
     assert execution_time.op_times["expert_parallel_allreduce"] == pytest.approx(9.0)
-    assert execution_time.expert_parallel_communication_time == pytest.approx(18.0)
+    assert execution_time.expert_parallel_communication_time == pytest.approx(9.0)
     assert execution_time.get_single_layer_moe_comm_time() == pytest.approx(9.0)
-    assert execution_time.moe_comm_time == pytest.approx(18.0)
+    assert execution_time.moe_comm_time == pytest.approx(9.0)
 
 
 def test_execution_time_preserves_named_ep_dispatch_and_combine_times():
@@ -467,42 +467,37 @@ def test_metrics_emit_exact_named_ep_phase_times_without_splitting():
             ),
         )
     )
-    aggregated: list[tuple[str, str, float]] = []
+    source = execution_time.as_single_layer(
+        global_layer_id=4,
+        attention_family_id="dense_attention",
+        attention_variant_id="standard",
+    )
+    stage = StageExecutionTime.from_execution_time(source, num_layers=2, first_layer_id=4)
     per_layer: list[tuple[str, str, float, int | None]] = []
 
-    MetricsStore.__new__(MetricsStore)._emit_aggregated_traces(
-        lambda kind, name, duration: aggregated.append((kind, name, duration)),
-        execution_time,
-        moe_tp_enabled=False,
-        ep_enabled=True,
-        cluster_type=ClusterType.MONOLITHIC,
-        use_profile_ep_alltoall=False,
-        use_ep_alltoall_dispatch_combine=True,
-    )
-    MetricsStore.__new__(MetricsStore)._emit_per_layer_traces(
+    class TraceProjection:
+        emit_stage_layers = MetricsStore._emit_stage_layer_traces
+
+    TraceProjection().emit_stage_layers(
         lambda kind, name, duration, layer_idx=None, _meta=None: per_layer.append(
             (kind, name, duration, layer_idx)
         ),
-        execution_time,
-        num_layers=2,
-        base_meta={},
+        stage,
         moe_tp_enabled=False,
         ep_enabled=True,
         cluster_type=ClusterType.MONOLITHIC,
         use_profile_ep_alltoall=False,
         use_ep_alltoall_dispatch_combine=True,
     )
-
-    aggregated_ep = {
-        name: duration
-        for kind, name, duration in aggregated
-        if kind == "COMM" and name.startswith("expert_parallel_alltoall_")
-    }
+    aggregated_ep = {}
+    for kind, name, duration, _layer_id in per_layer:
+        if kind == "COMM" and name.startswith("expert_parallel_alltoall_"):
+            aggregated_ep[name] = aggregated_ep.get(name, 0.0) + duration
     assert aggregated_ep == {
         "expert_parallel_alltoall_dispatch": pytest.approx(2.5),
         "expert_parallel_alltoall_combine": pytest.approx(7.5),
     }
-    for layer_idx in (0, 1):
+    for layer_idx in (4, 5):
         layer_ep = {
             name: duration
             for kind, name, duration, emitted_layer_idx in per_layer
@@ -549,7 +544,7 @@ def test_execution_time_allows_identical_top_level_and_component_op_times():
     )
 
     assert execution_time.op_times["mlp_up_proj"] == pytest.approx(1.0)
-    assert execution_time.mlp_layer_up_proj_execution_time == pytest.approx(2.0)
+    assert execution_time.mlp_layer_up_proj_execution_time == pytest.approx(1.0)
 
 
 def test_execution_time_op_times_drive_moe_and_expert_comm_views():
@@ -570,16 +565,16 @@ def test_execution_time_op_times_drive_moe_and_expert_comm_views():
         )
     )
 
-    assert execution_time.mlp_norm_time == pytest.approx(2.0)
-    assert execution_time.moe_gating_linear_time == pytest.approx(4.0)
-    assert execution_time.moe_gating_routing_topk_time == pytest.approx(6.0)
-    assert execution_time.moe_gating_time == pytest.approx(10.0)
-    assert execution_time.moe_shuffling_time == pytest.approx(8.0)
-    assert execution_time.moe_grouped_gemm_time == pytest.approx(10.0)
-    assert execution_time.share_expert_up_proj_time == pytest.approx(12.0)
-    assert execution_time.share_expert_act_time == pytest.approx(14.0)
-    assert execution_time.share_expert_down_proj_time == pytest.approx(16.0)
-    assert execution_time.expert_parallel_communication_time == pytest.approx(18.0)
+    assert execution_time.mlp_norm_time == pytest.approx(1.0)
+    assert execution_time.moe_gating_linear_time == pytest.approx(2.0)
+    assert execution_time.moe_gating_routing_topk_time == pytest.approx(3.0)
+    assert execution_time.moe_gating_time == pytest.approx(5.0)
+    assert execution_time.moe_shuffling_time == pytest.approx(4.0)
+    assert execution_time.moe_grouped_gemm_time == pytest.approx(5.0)
+    assert execution_time.share_expert_up_proj_time == pytest.approx(6.0)
+    assert execution_time.share_expert_act_time == pytest.approx(7.0)
+    assert execution_time.share_expert_down_proj_time == pytest.approx(8.0)
+    assert execution_time.expert_parallel_communication_time == pytest.approx(9.0)
     assert execution_time.get_single_layer_moe_comm_time() == pytest.approx(13.0)
     assert execution_time.communication_operator_times is not None
     assert execution_time.communication_operator_times.op_times[
@@ -602,7 +597,7 @@ def test_execution_time_moe_grouped_gemm_override_updates_canonical_op_times():
     assert execution_time.moe_operator_times.op_times["moe_grouped_gemm"] == (
         pytest.approx(7.0)
     )
-    assert execution_time.moe_grouped_gemm_time == pytest.approx(14.0)
+    assert execution_time.moe_grouped_gemm_time == pytest.approx(7.0)
 
 
 def test_execution_time_override_moe_times_updates_canonical_op_times():
@@ -641,8 +636,8 @@ def test_execution_time_override_moe_times_updates_canonical_op_times():
     assert execution_time.communication_operator_times.op_times[
         "expert_parallel_allreduce"
     ] == pytest.approx(8.0)
-    assert execution_time.moe_gating_time == pytest.approx(46.0)
-    assert execution_time.expert_parallel_communication_time == pytest.approx(16.0)
+    assert execution_time.moe_gating_time == pytest.approx(23.0)
+    assert execution_time.expert_parallel_communication_time == pytest.approx(8.0)
 
 
 @pytest.mark.parametrize("with_op_times", [False, True])
@@ -844,8 +839,8 @@ def test_execution_time_omitted_split_tp_allreduce_fields_preserve_legacy_fallba
 
     execution_time = ExecutionTime(**kwargs)
 
-    assert execution_time.attention_all_reduce_time == pytest.approx(200.0)
-    assert execution_time.mlp_all_reduce_time == pytest.approx(200.0)
+    assert execution_time.attention_all_reduce_time == pytest.approx(100.0)
+    assert execution_time.mlp_all_reduce_time == pytest.approx(100.0)
     assert execution_time.communication_time_component.total_time() == pytest.approx(100.0)
 
 

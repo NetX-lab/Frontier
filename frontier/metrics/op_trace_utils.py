@@ -641,6 +641,8 @@ def compute_op_trace_meta(
             "share_expert_tensor_parallel_allreduce",
             "expert_parallel_allreduce",
             "pipeline_parallel_send_recv",
+            "dp_input_allreduce",
+            "dp_output_allreduce",
         ):
             tensor_shape = {"data": [tokens, hidden_size]}
             element_count = _elements_from_shape(tensor_shape["data"])

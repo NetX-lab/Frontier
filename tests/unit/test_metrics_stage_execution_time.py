@@ -276,7 +276,9 @@ def test_stage_op_level_traces_include_gdn_metadata_without_duplication() -> Non
         "gdn_core_decode",
         "gdn_output_projection",
     ]
-    assert [event.layer_id for event in gdn_events] == [1, 1, 1, 1]
+    assert [event.layer_id for event in gdn_events] == [-1, -1, -1, -1]
+    assert [event.meta["global_layer_ids"] for event in gdn_events] == [[1]] * 4
+    assert [event.duration_ms for event in gdn_events] == [11.0, 13.0, 17.0, 19.0]
     assert {event.meta["attention_family_id"] for event in gdn_events} == {
         "gated_delta_net"
     }

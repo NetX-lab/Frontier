@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pandas as pd
 import pytest
 
-from frontier.attention.families import DENSE_ATTENTION_FAMILY, DSA_ATTENTION_FAMILY
-from frontier.model_architectures import ModelArchitectureProfile
+from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from predictor_cache_fixtures import cache_model, predictor_fixture_config
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
 )
@@ -16,6 +17,11 @@ from frontier.types import MeasurementType
 
 
 class _ConcreteSklearnExecutionTimePredictor(SklearnExecutionTimePredictor):
+    def __init__(self):
+        inputs = predictor_fixture_config(model_config=replace(cache_model(), is_moe=False))
+        inputs.pop("actual_replica_ids")
+        super().__init__(**inputs)
+
     def _get_estimator(self):
         raise AssertionError("unit test bypasses estimator construction")
 
@@ -23,20 +29,9 @@ class _ConcreteSklearnExecutionTimePredictor(SklearnExecutionTimePredictor):
         raise AssertionError("unit test bypasses grid-search construction")
 
 
-class _GenericModelConfig:
-    def get_model_architecture_profile(self):
-        return ModelArchitectureProfile.generic()
-
-
-class _Step2MiniProfileModelConfig:
-    def get_model_architecture_profile(self):
-        return ModelArchitectureProfile.step2_mini()
-
-
 def _build_predictor(monkeypatch: pytest.MonkeyPatch) -> SklearnExecutionTimePredictor:
-    predictor = object.__new__(_ConcreteSklearnExecutionTimePredictor)
+    predictor = _ConcreteSklearnExecutionTimePredictor()
     predictor._enable_dummy_mode = False
-    predictor._model_config = _GenericModelConfig()
 
     monkeypatch.setattr(
         predictor,
@@ -145,18 +140,14 @@ def test_attention_trace_total_includes_decode(
 
 
 def test_dsa_frozen_fails_fast_in_dummy_mode(monkeypatch: pytest.MonkeyPatch) -> None:
-    predictor = object.__new__(_ConcreteSklearnExecutionTimePredictor)
-    predictor._enable_dummy_mode = True
-    predictor._dummy_execution_time = 1.0
-    predictor._model_config = _Step2MiniProfileModelConfig()
+    predictor = _ConcreteSklearnExecutionTimePredictor()
+    predictor._model_config = replace(predictor._model_config, model_type="deepseek_v3_2")
 
     monkeypatch.setattr(
         predictor,
         "_log_architecture_attention_shape",
         lambda batch: None,
     )
-    monkeypatch.setattr(predictor, "_get_attention_family", lambda: DSA_ATTENTION_FAMILY)
-
     with pytest.raises(NotImplementedError, match="DSA attention is frozen"):
         predictor.predict_attention_layer_time(
             batch=_build_batch(num_prefill_tokens=1, num_decode_tokens=0),

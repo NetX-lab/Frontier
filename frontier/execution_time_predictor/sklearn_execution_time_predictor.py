@@ -31,6 +31,7 @@ from sklearn.model_selection import GridSearchCV
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    GATED_DELTA_NET_ATTENTION_FAMILY,
     get_attention_family,
     LATENT_MLA_ATTENTION_FAMILY,
 )
@@ -435,7 +436,6 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         self._gdn_predictor = (
             model_manager.get_gdn_predictor(cluster_type)
             if model_manager is not None
-            and hasattr(model_manager, "get_gdn_predictor")
             else None
         )
         self._cc_backend = cc_backend  # CC Backend for communication predictions
@@ -7343,14 +7343,16 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
 
         self._log_architecture_attention_shape(batch)
 
-        # Hybrid GDN layers use the standalone artifact-backed predictor. Keep
-        # this branch before whole-model family binding, which is intentionally
-        # homogeneous-only and rejects a hybrid model without a layer ID.
-        if (
-            getattr(self, "_gdn_predictor", None) is not None
-            and callable(getattr(self._model_config, "is_gdn_layer", None))
-            and self._model_config.is_gdn_layer(layer_id)
-        ):
+        layer_spec = bind_layer_attention(self._model_config, layer_id)
+        attention_family = get_attention_family(layer_spec.family_id)
+        attention_family.require_enabled_for_execution()
+
+        if attention_family.family_id == GATED_DELTA_NET_ATTENTION_FAMILY.family_id:
+            if self._gdn_predictor is None:
+                raise ValueError(
+                    "GDN layer prediction requires loaded GDN artifacts; "
+                    f"no GDN predictor is initialized for layer_id={layer_id}"
+                )
             norm_time = (
                 self._get_attn_norm_layer_act_execution_time(batch)
                 if self._supports_operation("input_layernorm")
@@ -7360,14 +7362,6 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
                 batch,
                 norm_time_ms=norm_time,
             )
-
-        layer_binding_getter = getattr(self._model_config, "get_layer_attention_spec", None)
-        if callable(layer_binding_getter):
-            layer_spec = bind_layer_attention(self._model_config, layer_id)
-            attention_family = get_attention_family(layer_spec.family_id)
-        else:
-            attention_family = self._get_attention_family()
-        attention_family.require_enabled_for_execution()
 
         if self._enable_dummy_mode:
             base_time = self._dummy_execution_time
@@ -7894,6 +7888,22 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         )
 
     def predict_stage_execution_time(
+        self, batch: Batch, stage_id: int, cluster_type: ClusterType,
+        num_layers: int = 1, layer_id: int = 0,
+        include_moe: bool | None = None, include_ffn: bool = True,
+        include_attention: bool = True,
+    ) -> StageExecutionTime:
+        """Predict homogeneous layer numerics once and publish ordered identities."""
+        if type(num_layers) is not int or num_layers < 1:
+            raise ValueError("num_layers must be a positive int")
+        timing = self._predict_dense_layer_execution_time(
+            batch, stage_id, cluster_type, num_layers, layer_id,
+            include_moe, include_ffn, include_attention,
+        )
+        timing = timing.finalized_copy()
+        return self._assemble_stage([timing] * num_layers, first_layer_id=layer_id)
+
+    def _predict_dense_layer_execution_time(
         self,
         batch: Batch,
         stage_id: int,
@@ -7905,26 +7915,17 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
         include_attention: bool = True,
     ) -> ExecutionTime:
         """
-        Predict aggregated execution time for one or more transformer layers.
+        Predict homogeneous physical-layer numerics and once-only stage work.
 
-        This is the main entry point for execution time prediction. It composes
-        attention, MLP, communication, overhead, and residual times.
-
-        For dense models:
-        - Single-layer prediction (num_layers=1): Used by PD+AF disaggregation
-        - Multi-layer aggregation (num_layers>1): Used by monolithic systems
-
-        Implementation strategy:
-        - For now, delegate to existing get_execution_time() and scale by num_layers
-        - Future: Use fine-grained predict_attention_layer_time() + predict_mlp_layer_time()
+        The public stage method shares the finalized numerical payload across
+        physical layer identities. ``num_layers`` and ``layer_id`` define the
+        actual stage range used by terminal MTP replay; they do not multiply
+        the returned ExecutionTime components.
 
         Communication skip rules:
         - Pipeline parallel send/recv is skipped when stage_id is the last pipeline stage.
         - Attention tensor parallel all-reduce is skipped when attn_tensor_parallel_size == 1.
 
-        Notes:
-        - layer_id is accepted for API compatibility with MoE per-layer routing flows.
-          Dense execution-time prediction is layer-homogeneous and ignores this value.
         """
         if include_moe is not None and type(include_moe) is not bool:
             raise ValueError("include_moe must be a bool or None")
@@ -7942,12 +7943,7 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             )
         if self._enable_dummy_mode:
             dummy_execution_time = self._get_dummy_execution_time(batch, stage_id)
-            return StageExecutionTime.from_execution_time(
-                dummy_execution_time,
-                num_layers=num_layers,
-                first_layer_id=layer_id,
-                copy_components=False,
-            )
+            return dummy_execution_time
 
         logger.debug(
             f"[EXEC_TIME_PREDICT] Predicting stage execution time: stage_id={stage_id}, "
@@ -8264,9 +8260,4 @@ class SklearnExecutionTimePredictor(BaseExecutionTimePredictor):
             ),
         )
 
-        return StageExecutionTime.from_execution_time(
-            base_execution_time,
-            num_layers=num_layers,
-            first_layer_id=layer_id,
-            copy_components=False,
-        )
+        return base_execution_time
