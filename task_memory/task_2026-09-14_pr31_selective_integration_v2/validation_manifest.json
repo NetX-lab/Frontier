@@ -1,0 +1,28 @@
+{
+  "baseline": "0515589ac7f49ac5288a5f55b0ce38b0ede29bb2",
+  "candidate": "7b59d1fd7ad41f1301625f0b7c54578b5762f486",
+  "main_refs": "refs/heads/main 0515589ac7f49ac5288a5f55b0ce38b0ede29bb2\nrefs/remotes/origin/main 0515589ac7f49ac5288a5f55b0ce38b0ede29bb2\n",
+  "merge_base": "0515589ac7f49ac5288a5f55b0ce38b0ede29bb2",
+  "initial_status": "",
+  "ignored_task_files": "task_memory/task_2026-09-14_pr31_selective_integration_v2/Frontier_PR33_New_Execution_Plan_2026-09-16_EN.md\ntask_memory/task_2026-09-14_pr31_selective_integration_v2/Frontier_PR33_review_revision_plan_2026-09-15_v1.1_en.md\ntask_memory/task_2026-09-14_pr31_selective_integration_v2/test_report_2026-09-15_r11_r12_final.md\n",
+  "root": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/feature-amd-sglang-gdn",
+  "lanes": [
+    {
+      "id": "W00-focused",
+      "status": "PASS",
+      "passed": 69,
+      "duration_s": 10.01,
+      "log": "/data/ycfeng/tmp/pr33-w00-20260916/focused.log",
+      "node_report": "/data/ycfeng/tmp/pr33-w00-20260916/focused.xml",
+      "tier": "CPU contracts"
+    },
+    {
+      "id": "W00-paired",
+      "status": "PASS",
+      "samples": 18,
+      "manifest": "/data/ycfeng/tmp/pr33-w00-20260916/paired/manifest.json",
+      "results": "w00_paired_samples.json",
+      "tier": "dummy simulator performance"
+    }
+  ]
+}

@@ -300,3 +300,14 @@ Status: the focused CPU acceptance sub-step is complete. The remaining productio
 - Ordinary Git status was clean because `.gitignore` excludes `task_memory/`. The publication scope is the 25 Markdown files in this task directory, explicitly staged without modifying the ignore policy or including other task directories.
 - Preserve `review_report_2026-09-15_134541_HKT_7b6a3eb1_root.md` and `review_report_2026-09-15_branch_audit.md` independently. Their findings qualify earlier completion statements; publication does not resolve or supersede those findings.
 - No implementation changes, test runs, simulation runs, or PR merge are part of this documentation step.
+
+## 2026-09-16 — W00 runtime-first remediation started
+
+- Active user request authorizes implementation of the new W00–W11 plan; prior audit-only completion is historical.
+- Initial candidate `7b59d1fd7ad41f1301625f0b7c54578b5762f486`; pinned baseline and local main/origin-main both `0515589ac7f49ac5288a5f55b0ce38b0ede29bb2`. Tracked worktree clean; three ignored task documents explicitly inventoried.
+- Interpreter `/usr/bin/python` 3.12.3; NumPy 2.4.6, pandas 3.0.3, sklearn 1.9.0, pytest 9.1.1, all from Python 3.12 paths. No active conda command.
+- Initialized production-hunk and changed-file inventories plus validation manifest; all uninspected hunks explicitly NOT_YET_REVIEWED.
+- Next: focused CPU characterization and fresh interleaved unprofiled baseline before production edits.
+
+- W00 focused characterization: 69 passed in 10.01s; fresh paired performance: 18/18 success. Full rows persisted in w00_paired_samples.json; baseline commands/environment in performance_rca.md. Production edits begin only after both checks completed.
+- W00 initialization is complete; per-package hunk adjudication continues through W11. W01 regression construction in progress. Independent profiling-hunk review and W02/W09 test construction run in parallel as allowed by section 4.

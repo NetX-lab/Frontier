@@ -53,3 +53,9 @@ latest independent completion-audit documentation through a normal push to
 15 already-existing local commits to become visible on PR #33 for manual review.
 It does not authorize implementation of the audit TODOs, merge, rebase,
 force-push, history rewrite, or branch deletion.
+
+## [Original Request] Runtime-first remediation — 2026-09-16
+
+> strictly follow the doc plan to implement and fix bugs and questions in current worktree branch: task_memory/task_2026-09-14_pr31_selective_integration_v2/Frontier_PR33_New_Execution_Plan_2026-09-16_EN.md
+
+The named W00–W11 plan is the active implementation specification and supersedes the historical audit-only boundary. Its in-scope runtime/interface migrations, tests, cleanup, and local commits are authorized. Preserve all D01–D03 decisions and hardware boundaries. Prior publication requests concern already-existing commits/documents; no new publication is inferred for this remediation.

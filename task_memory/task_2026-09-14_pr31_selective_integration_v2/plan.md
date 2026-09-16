@@ -85,3 +85,9 @@ This closes the CPU acceptance sub-step for the scoped implementation. Productio
 - Run `python -m compileall` or targeted import checks for touched CPU-safe modules.
 - Use separate temporary output/cache roots for baseline and candidate.
 - Never convert a missing AMD environment into a PASS or substitute dummy timing for GPU evidence.
+
+## Active runtime-first execution — 2026-09-16
+
+Specification: `Frontier_PR33_New_Execution_Plan_2026-09-16_EN.md`. Historical completion sections above remain historical. Dependency order: W00 -> W01 -> {W02, W03} -> W04 -> {W05, W06} -> {W07, W08, W09} -> W10 -> W11. W03 owns runtime and required metrics interface migration together. Independent inspections/checks can run concurrently; implementation proceeds locally in bounded commits.
+
+Current status: W00 in-progress; W01–W11 pending. Acceptance and verification are the named plan T01–T20 and D01–D03 without changed tolerances or unsupported feature expansion.
