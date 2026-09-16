@@ -17,11 +17,20 @@ Supported vLLM APIs:
 Note: vLLM 0.3.x support has been removed. Please use vLLM >= 0.10.0.
 """
 
+import math
+
 import torch
 import triton
 import triton.language as tl
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Tuple
+
+from frontier.profiling.common.accelerator import accelerator_platform
+from frontier.profiling.common.timer_stats_store import TimerStatsStore
+from frontier.profiling.utils import (
+    normalize_profile_method,
+    validate_profile_method_platform,
+)
 
 VLLM_AVAILABLE = False
 VLLM_VERSION = None
@@ -555,6 +564,7 @@ def _get_functional_mxfp4_state(
 
 
 def _collect_cuda_event_stats(step_fn, active_steps: int) -> Dict:
+    """Collect device-event samples through PyTorch's CUDA-compatible HIP API."""
     times = []
     for _ in range(active_steps):
         start_event = torch.cuda.Event(enable_timing=True)
@@ -563,16 +573,20 @@ def _collect_cuda_event_stats(step_fn, active_steps: int) -> Dict:
         step_fn()
         end_event.record()
         torch.cuda.synchronize()
-        times.append(start_event.elapsed_time(end_event))
+        elapsed_ms = float(start_event.elapsed_time(end_event))
+        if not math.isfinite(elapsed_ms) or elapsed_ms < 0.0:
+            raise ValueError(f"Invalid device-event timing sample: {elapsed_ms!r}")
+        times.append(elapsed_ms)
 
-    times_tensor = torch.tensor(times)
-    return {
-        "min": float(times_tensor.min()),
-        "max": float(times_tensor.max()),
-        "mean": float(times_tensor.mean()),
-        "median": float(times_tensor.median()),
-        "std": float(times_tensor.std()),
-    }
+    # Use the shared population statistics contract, including std=0 for one
+    # sample and the midpoint median for an even number of samples.
+    summary = TimerStatsStore.get_stats_from_times({"moe_grouped_gemm": times})[
+        "moe_grouped_gemm"
+    ]
+    result = {name: float(value) for name, value in summary.items() if name != "count"}
+    if not all(math.isfinite(value) for value in result.values()):
+        raise ValueError("Non-finite device-event timing statistics")
+    return result
 
 
 def _collect_record_function_stats(
@@ -646,7 +660,8 @@ def profile_fused_moe_kernel(
         use_mxfp4: Whether to use current vLLM's online MXFP4 AITER path.
         per_channel_quant: Whether to use per-channel quantization (only for FP8).
         block_shape: Block dimensions for block-wise quantization.
-        profile_method: Profiling method (``cuda_event`` or ``record_function``).
+        profile_method: Profiling method (``cuda_event``, ``device_event``, or
+            ``record_function``).
         output_dir: Trace output directory for ``record_function`` profiling.
         global_num_experts: Global expert count for alignment when profiling EP-local workloads.
         expert_map: Optional mapping from global expert ids to local expert ids.
@@ -661,6 +676,17 @@ def profile_fused_moe_kernel(
         use_fp8=use_fp8,
         use_mxfp4=use_mxfp4,
     )
+    if type(active_steps) is not int or active_steps <= 0:
+        raise ValueError("active_steps must be a positive integer")
+    if type(warmup_steps) is not int or warmup_steps < 0:
+        raise ValueError("warmup_steps must be a non-negative integer")
+    profile_method = normalize_profile_method(profile_method)
+    if profile_method not in {"cuda_event", "device_event", "record_function"}:
+        raise ValueError(
+            "profile_fused_moe_kernel only supports 'cuda_event', 'device_event', "
+            f"and 'record_function'. Got profile_method={profile_method!r}."
+        )
+    validate_profile_method_platform(profile_method, accelerator_platform(torch))
     if not VLLM_AVAILABLE:
         raise RuntimeError(
             "vLLM is not available. Cannot use fused_moe_kernel for load imbalance profiling. "
@@ -670,12 +696,6 @@ def profile_fused_moe_kernel(
     if use_mxfp4 and VLLM_API_VERSION != "functional_fused_experts":
         raise NotImplementedError(
             "MXFP4 profiling requires current vLLM's modular fused MoE API."
-        )
-
-    if profile_method not in {"cuda_event", "record_function"}:
-        raise ValueError(
-            "profile_fused_moe_kernel only supports 'cuda_event' and 'record_function'. "
-            f"Got profile_method={profile_method!r}."
         )
 
     align_num_experts = int(global_num_experts) if global_num_experts is not None else int(num_experts)

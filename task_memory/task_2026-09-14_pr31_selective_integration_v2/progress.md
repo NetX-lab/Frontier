@@ -349,3 +349,7 @@ User explicitly accepted the isolated uniform one-layer/stage corrections, with 
 ## W09 artifact boundary sub-step — 2026-09-16
 
 Canonical family-derived tasks, complete selected identities, load-time manifest/artifact metadata checks, runtime-ready task models, numeric guards and shared atomic persistence are implemented. Original 25 RED cases resolved; final 108 PASS in 17.98s including real synthetic constructor E2E and cache regressions. See test_report_2026-09-16_w09_artifacts.md. Root inspected production diffs; native production parity remains unverified.
+
+## W07 event/replay verified sub-step — 2026-09-16
+
+Fused MoE DEVICE_EVENT admission/statistics and SGLang multi-block sorting/routed replay correctness fixed through shared mechanisms. Root combined regression: 48 PASS in 3.28s; report test_report_2026-09-16_w07_replay_events.md. Full W07 remaining hunk review/fixes and native capability lanes continue.

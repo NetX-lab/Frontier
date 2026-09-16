@@ -238,64 +238,28 @@ def input_from_frontier_config(
     )
 
 
-def profile_routed_graph(*args: Any, **kwargs: Any):
-    """GPU-only routed graph entrypoint with all heavy imports deferred."""
+def profile_routed_graph(query, count, repetitions, model, group, *, trace: bool = False):
+    """Return the common replay row and optional trace-replay callback.
 
-    from .graph_replay import MEASUREMENT_TYPE
-    from .moe import make_moe_experts_primitive, make_moe_sorting_primitive
-    query = args[0] if args else kwargs.pop("query")
-    count = args[1] if len(args) > 1 else kwargs.pop("count")
-    repetitions = args[2] if len(args) > 2 else kwargs.pop("repetitions")
-    model = args[3] if len(args) > 3 else kwargs.pop("model")
-    group = args[4] if len(args) > 4 else kwargs.pop("group")
-    trace = kwargs.pop("trace", False)
-    from .graph_replay import validate_plan
+    Routed primitives use the same correctness checks, mutable-buffer resets,
+    warmup and representative trace capture as the other isolated primitives.
+    Heavy runtime imports remain behind the validated replay plan.
+    """
+
+    from .graph_replay import profile_graph, validate_plan
+    from .moe import MOE_ROUTED_PRIMITIVES
 
     physical_size = query["physical_size"] if isinstance(query, Mapping) else query.physical_size
     validate_plan((physical_size,), (count,), repetitions, "validation")
 
-    import torch
     component = query["component"] if isinstance(query, Mapping) else query.component
     counts = query["physical_expert_counts"] if isinstance(query, Mapping) else query.expert_counts
-    builder = {"moe_sorting": make_moe_sorting_primitive,
-               "moe_experts_quant_gemm_combine": make_moe_experts_primitive}.get(component)
-    if builder is None:
+    if component not in MOE_ROUTED_PRIMITIVES:
         raise ValueError("Unsupported routed primitive query")
-    calls = [builder(physical_size, counts, model, group, validate=index in {0, count - 1})
-             for index in range(count)]
-    methods = {call[3] for call in calls}
-    if len(methods) != 1:
-        raise ValueError("One graph cannot mix routed primitive implementations")
-    expected = calls[0][1]
-    graph = torch.cuda.CUDAGraph()
-    outputs = []
-    with group.graph_capture() as context:
-        with torch.cuda.graph(graph, stream=context.stream):
-            for fn, *_ in calls:
-                outputs.append(fn())
-    start, end = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
-    samples = []
-    for repetition in range(repetitions + 3):
-        start.record(); graph.replay(); end.record(); end.synchronize()
-        elapsed = start.elapsed_time(end)
-        if not math.isfinite(elapsed) or elapsed <= 0:
-            raise ValueError("Invalid routed graph timing")
-        if repetition >= 3:
-            samples.append(elapsed / count)
-    row = {
-        "primitive": component,
-        "physical_size": physical_size,
-        "physical_expert_counts": list(counts),
-        "invocations_per_graph": count,
-        "rank": group.rank_in_group,
-        "backend": next(iter(methods)),
-        "samples_ms": samples,
-        "measurement_type": MEASUREMENT_TYPE,
-        "experimental": True,
-        "correctness_checked": True,
-        "kernel_trace_kind": "representative_graph" if trace else None,
-    }
-    return row
+    return profile_graph(
+        component, physical_size, count, repetitions, model, group, group.rank_in_group,
+        physical_expert_counts=tuple(counts), trace=trace,
+    )
 
 
 __all__ = [

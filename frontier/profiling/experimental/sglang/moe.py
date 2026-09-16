@@ -200,17 +200,21 @@ def make_moe_sorting_primitive(
         sorted_ids, sorted_weights, sorted_experts, valid, _ = raw()
         torch.testing.assert_close(valid, expected_valid, atol=0, rtol=0)
         blocks = workload["sorted_token_blocks"]
-        active = [expert for expert, count in enumerate(physical_expert_counts) if count]
+        block_owners = [
+            expert
+            for expert, count in enumerate(physical_expert_counts)
+            for _ in range((count + spec["block_size_m"] - 1) // spec["block_size_m"])
+        ]
         torch.testing.assert_close(
             sorted_experts[:blocks],
-            torch.tensor(active, device="cuda", dtype=torch.int32), atol=0, rtol=0)
+            torch.tensor(block_owners, device="cuda", dtype=torch.int32), atol=0, rtol=0)
         encoded = sorted_ids[:blocks * spec["block_size_m"]].view(
             blocks, spec["block_size_m"])
         weights = sorted_weights[:blocks * spec["block_size_m"]].view_as(encoded)
         token_mask = (1 << 24) - 1
         tokens, slots = encoded & token_mask, encoded >> 24
         seen = [0] * spec["num_experts"]
-        for block, expert in enumerate(active):
+        for block, expert in enumerate(block_owners):
             valid_lanes = tokens[block] < size
             if (not bool((slots[block][valid_lanes] < spec["top_k"]).all())
                     or not bool((weights[block][~valid_lanes] == 0).all())):
@@ -222,7 +226,7 @@ def make_moe_sorting_primitive(
             torch.testing.assert_close(
                 weights[block][valid_lanes], topk_weights[lane_tokens, lane_slots],
                 atol=0, rtol=0)
-            seen[expert] = int(valid_lanes.sum().item())
+            seen[expert] += int(valid_lanes.sum().item())
         if tuple(seen) != tuple(physical_expert_counts):
             raise ValueError("AITER sorted route disagrees with expert histogram")
 

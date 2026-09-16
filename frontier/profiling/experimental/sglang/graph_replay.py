@@ -17,7 +17,7 @@ from typing import Any, Iterable, Mapping
 from .attention import ATTENTION_PRIMITIVES, make_attention_primitive
 from .dense import DENSE_PRIMITIVES, dense_primitive_spec, make_dense_primitive
 from .gdn import GDN_PRIMITIVES, gdn_core_spec, make_gdn_core_primitive
-from .moe import MOE_ROUTING_PRIMITIVES, make_moe_routing_primitive
+from .moe import MOE_ROUTED_PRIMITIVES, MOE_ROUTING_PRIMITIVES, make_moe_routing_primitive
 
 PRIMITIVES = (
     "gemma_norm",
@@ -233,7 +233,8 @@ def _make_replay_call(
         if len(values) != len(refs):
             raise ValueError("Unexpected primitive output structure")
         for actual, expected in zip(values, refs):
-            torch.testing.assert_close(actual, expected, atol=0.03, rtol=0.03)
+            tolerance = 0.03 if expected.is_floating_point() or expected.is_complex() else 0.0
+            torch.testing.assert_close(actual, expected, atol=tolerance, rtol=tolerance)
             if not bool(torch.isfinite(actual).all()):
                 raise ValueError("Nonfinite primitive output")
 
@@ -249,6 +250,7 @@ def make_primitive(
     *,
     logical_size: int | None = None,
     physical_context_lens: Iterable[int] | None = None,
+    physical_expert_counts: Iterable[int] | None = None,
 ):
     """Construct one selected native callable; imports happen at call time."""
 
@@ -262,6 +264,17 @@ def make_primitive(
     mutable = []
     backend = "sglang_triton_gemma"
     attention_spec = attention_workload = moe_spec = None
+    if name in MOE_ROUTED_PRIMITIVES:
+        from .moe import make_moe_experts_primitive, make_moe_sorting_primitive
+
+        if physical_expert_counts is None:
+            raise ValueError("Routed primitive requires physical_expert_counts")
+        builder = (make_moe_sorting_primitive if name == "moe_sorting"
+                   else make_moe_experts_primitive)
+        fn, reference, mutable, backend, spec, _ = builder(
+            size, tuple(physical_expert_counts), model, group
+        )
+        return _make_replay_call(fn, reference, mutable, backend, moe_spec=spec)
     if name in ATTENTION_PRIMITIVES:
         if logical_size is None or physical_context_lens is None:
             raise ValueError("Attention primitive requires logical/context workload")
@@ -462,6 +475,9 @@ def profile_graph(*args, trace: bool = False, **kwargs):
     if name in ATTENTION_PRIMITIVES:
         row["logical_size"] = kwargs.get("logical_size")
         row["physical_context_lens"] = list(kwargs.get("physical_context_lens", ()))
+    if name in MOE_ROUTED_PRIMITIVES:
+        row["physical_expert_counts"] = list(kwargs["physical_expert_counts"])
+        row["moe_routed_spec"] = calls[0][6]
     return row, trace_replay
 
 

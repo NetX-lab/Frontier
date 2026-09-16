@@ -16,22 +16,32 @@ from frontier.profiling.experimental.sglang import graph_replay as replay
         ("gdn_core_decode", "make_gdn_core_primitive", ({},)),
         ("attn_rope", "make_attention_primitive", ({}, {})),
         ("moe_routing_topk", "make_moe_routing_primitive", ({},)),
+        ("moe_sorting", "make_moe_sorting_primitive", ({}, {})),
+        ("moe_experts_quant_gemm_combine", "make_moe_experts_primitive", ({}, {})),
     ],
 )
 def test_delegated_builders_complete_capture_replay_and_trace(
     monkeypatch, name, builder_name, metadata
 ):
+    _exercise_replay(monkeypatch, name, builder_name, metadata)
+
+
+def _exercise_replay(monkeypatch, name, builder_name, metadata, *, fault=None):
     torch = pytest.importorskip("torch")
     active_graphs = []
     invocations = []
+    replaying = False
 
     class Graph:
         def __init__(self):
             self.calls = []
 
         def replay(self):
+            nonlocal replaying
+            replaying = True
             for fn in self.calls:
                 fn()
+            replaying = False
 
     @contextmanager
     def capture(graph, **kwargs):
@@ -66,6 +76,8 @@ def test_delegated_builders_complete_capture_replay_and_trace(
         def run():
             invocations.append(name)
             output.add_(1) if stateful else output.fill_(1)
+            if fault == "eager" or (fault == "replay" and replaying):
+                output.add_(1)
             return output
 
         def fn():
@@ -78,24 +90,61 @@ def test_delegated_builders_complete_capture_replay_and_trace(
             return fn, reference, (output,), "test_backend", *metadata
         return fn, reference, "test_backend"
 
-    monkeypatch.setattr(replay, builder_name, builder)
+    routed_primitive = name in {"moe_sorting", "moe_experts_quant_gemm_combine"}
+    if routed_primitive:
+        from frontier.profiling.experimental.sglang import moe
+
+        monkeypatch.setattr(moe, builder_name, builder)
+    else:
+        monkeypatch.setattr(replay, builder_name, builder)
     monkeypatch.setattr(replay, "dense_primitive_spec", lambda *args: {})
     monkeypatch.setattr(replay, "gdn_core_spec", lambda *args: {})
     group = SimpleNamespace(
-        world_size=1, cpu_group=None,
+        world_size=1, cpu_group=None, rank_in_group=0,
         graph_capture=lambda: nullcontext(SimpleNamespace(stream=None)),
     )
-    row, trace_replay = replay.profile_graph(
-        name, 8, 3, 5, SimpleNamespace(embedding_dim=16), group, 0,
-        logical_size=4, physical_context_lens=(32,) * 8, trace=True,
-    )
+    if routed_primitive:
+        from frontier.profiling.experimental.sglang.routed_moe_replay import profile_routed_graph
+
+        row, trace_replay = profile_routed_graph(
+            {"component": name, "physical_size": 8, "physical_expert_counts": (8, 0)},
+            3, 5, SimpleNamespace(embedding_dim=16), group, trace=True,
+        )
+        assert row["physical_expert_counts"] == [8, 0]
+    else:
+        row, trace_replay = replay.profile_graph(
+            name, 8, 3, 5, SimpleNamespace(embedding_dim=16), group, 0,
+            logical_size=4, physical_context_lens=(32,) * 8, trace=True,
+        )
     trace_replay()
     trace_replay()
 
     assert row["backend"] == "test_backend"
     assert row["samples_ms"] == [1.0] * 5
     assert row["correctness_checked"] is True
+    assert row["measurement_type"] == "HIP_GRAPH_REPLAY"
+    assert row["kernel_trace_kind"] == "representative_graph"
+    assert row["kernel_trace_invocations"] == 2
     assert len(invocations) > 3 * 5
+
+
+@pytest.mark.parametrize("fault", ["eager", "replay"])
+def test_routed_replay_rejects_incorrect_outputs(monkeypatch, fault):
+    with pytest.raises(AssertionError):
+        _exercise_replay(
+            monkeypatch, "moe_experts_quant_gemm_combine",
+            "make_moe_experts_primitive", ({}, {}), fault=fault,
+        )
+
+
+def test_replay_requires_exact_integer_metadata():
+    torch = pytest.importorskip("torch")
+    expected = torch.tensor([96, 64], dtype=torch.int32)
+    actual = torch.tensor([97, 64], dtype=torch.int32)
+    call = replay._make_replay_call(lambda: actual, expected, (), "sorting_fixture")
+
+    with pytest.raises(AssertionError):
+        call[2](actual)
 
 
 @pytest.mark.parametrize("count", [-1, 0, 1])
