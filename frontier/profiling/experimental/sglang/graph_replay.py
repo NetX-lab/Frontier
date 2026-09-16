@@ -75,6 +75,8 @@ def local_rank_for_visibility(
 
     if type(rank) is not int or type(world_size) is not int or rank < 0 or world_size < 1:
         raise ValueError("rank and world_size must be non-negative/positive integers")
+    if rank >= world_size:
+        raise ValueError(f"rank {rank} is outside world_size={world_size}")
     visibility = _normalize_visibility(environment)
     selected = next(iter(visibility.values()), "")
     if selected:
@@ -86,8 +88,6 @@ def local_rank_for_visibility(
                 f"rank {rank} is outside the visible device mapping of length {len(tokens)}"
             )
         return rank
-    if rank >= world_size:
-        raise ValueError(f"rank {rank} is outside world_size={world_size}")
     return rank
 
 
@@ -160,9 +160,12 @@ def validate_replay_plan(plan: Mapping[str, Any]) -> None:
         raise ValueError("Experimental replay plan has an unsupported measurement type")
     if plan["experimental"] is not True:
         raise ValueError("Experimental replay plans must be marked experimental")
-    validate_plan(plan["sizes"], plan["invocations"], plan["repetitions"], plan["split"])
-    local_rank_for_visibility(
-        rank=plan["rank"], world_size=plan["world_size"], environment=plan["visibility"]
+    build_replay_plan(
+        primitive=plan["primitive"], sizes=plan["sizes"],
+        invocations=plan["invocations"], repetitions=plan["repetitions"],
+        split=plan["split"], logical_sizes=plan["logical_sizes"],
+        context_lengths=plan["context_lengths"], environment=plan["visibility"],
+        rank=plan["rank"], world_size=plan["world_size"],
     )
     if plan["local_rank"] != plan["rank"]:
         raise ValueError("This one-node replay requires local_rank == rank")

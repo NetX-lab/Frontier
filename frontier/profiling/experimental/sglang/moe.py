@@ -61,7 +61,7 @@ def moe_routed_spec(model, tp):
     local_intermediate = model.routed_mlp_hidden_dim // tp
     if local_intermediate % 256:
         raise ValueError("Qwen3.8 AITER MXFP4 profiling requires 256-aligned local experts")
-    return {
+    spec = {
         "hidden_size": model.embedding_dim,
         "global_intermediate_size": model.routed_mlp_hidden_dim,
         "local_intermediate_size": local_intermediate,
@@ -91,6 +91,8 @@ def moe_routed_spec(model, tp):
         "includes_sorting": False,
         "includes_tp_allreduce": False,
     }
+    validate_moe_routed_spec(spec, tp)
+    return spec
 
 
 def validate_moe_routed_spec(spec, tp):
@@ -113,6 +115,8 @@ def validate_moe_routed_spec(spec, tp):
             or spec["tensor_parallel_size"] != tp
             or spec["global_intermediate_size"] != spec["local_intermediate_size"] * tp
             or spec["top_k"] > spec["num_experts"]
+            or spec["hidden_size"] % 32
+            or spec["local_intermediate_size"] % 256
             or spec["block_size_m"] != 32
             or spec["activation"] != "silu"
             or spec["output_dtype"] != "bfloat16"

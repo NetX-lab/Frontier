@@ -6,26 +6,14 @@ import ray
 import torch
 
 from frontier.logger import init_logger
-from frontier.profiling.collectives.collectives_input import CollectivesInput
+from frontier.profiling.collectives.collectives_input import (
+    CollectivesInput,
+    precision_to_dtype as _precision_to_dtype,
+)
 from frontier.profiling.collectives.collectives_wrapper import CollectiveWrapper
 from frontier.profiling.common.accelerator import set_process_visible_device
 
 logger = init_logger(__name__)
-
-
-def _precision_to_dtype(precision: str) -> torch.dtype:
-    supported = {
-        "FP16": torch.float16,
-        "BF16": torch.bfloat16,
-        "FP32": torch.float32,
-    }
-    try:
-        return supported[precision.upper()]
-    except KeyError as exc:
-        raise ValueError(
-            f"Collective profiling does not support precision {precision!r}; "
-            f"choose one of {sorted(supported)}."
-        ) from exc
 
 
 @ray.remote(num_gpus=1)

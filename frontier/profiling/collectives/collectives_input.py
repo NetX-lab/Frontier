@@ -1,7 +1,24 @@
 from random import randint
 
 
-SUPPORTED_COLLECTIVE_PRECISIONS = ("FP16", "BF16", "FP32")
+_COLLECTIVE_DTYPE_NAMES = {
+    "FP16": "float16", "BF16": "bfloat16", "FP32": "float32",
+}
+SUPPORTED_COLLECTIVE_PRECISIONS = tuple(_COLLECTIVE_DTYPE_NAMES)
+
+
+def precision_to_dtype(precision: str):
+    """Resolve the collective precision contract lazily for either runner."""
+    import torch
+
+    try:
+        name = _COLLECTIVE_DTYPE_NAMES[precision.upper()]
+    except KeyError as exc:
+        raise ValueError(
+            f"Collective profiling does not support precision {precision!r}; "
+            f"choose one of {sorted(SUPPORTED_COLLECTIVE_PRECISIONS)}."
+        ) from exc
+    return getattr(torch, name)
 
 
 class CollectivesInput:

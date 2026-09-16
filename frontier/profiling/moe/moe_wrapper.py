@@ -32,6 +32,7 @@ from frontier.profiling.moe.moe_vllm_kernel import (
     check_fp8_available,
     check_vllm_available,
     validate_moe_quantization_mode,
+    validate_mxfp4_runtime,
 )
 from frontier.profiling.utils import ProfileMethod, normalize_profile_method
 from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
@@ -148,6 +149,8 @@ class MoEWrapper:
                 raise ImportError(
                     "vLLM FP8 quantization utilities are unavailable for moe_grouped_gemm profiling."
                 )
+        if use_mxfp4_from_manager:
+            validate_mxfp4_runtime(model_type=model_config.model_type)
         self.use_fp8 = use_fp8_from_manager
         self.use_mxfp4 = use_mxfp4_from_manager
         self.quantization_mode = quantization_mode
@@ -442,6 +445,7 @@ class MoEWrapper:
             **self.gating_runtime_context_metadata,
             "router_topk": self.router_topk,
             "hidden_dim": self.hidden_dim,
+            "moe_gating_linear_backend": self.gating.linear_backend,
             "num_tensor_parallel_workers": self.num_tensor_parallel_workers,
         }
         self.timer_stats_store.clear_stats()
@@ -603,8 +607,9 @@ class MoEWrapper:
         profiling_global_num_experts = routing_inputs["global_num_experts"]
         profiling_expert_map = routing_inputs["expert_map"]
 
+        native_backend = None
         if self.use_vllm_kernel:
-            time_stats = self._profile_with_vllm_kernel(
+            time_stats, native_backend = self._profile_with_vllm_kernel(
                 num_tokens=num_tokens,
                 topk_weights=topk_weights,
                 topk_ids=topk_ids,
@@ -644,6 +649,8 @@ class MoEWrapper:
             "moe_grouped_gemm_backend": grouped_gemm_backend,
             "moe_quantization_mode": self.quantization_mode,
         }
+        if native_backend is not None:
+            stats["moe_native_backend"] = native_backend
 
         return stats
     
@@ -654,7 +661,7 @@ class MoEWrapper:
         topk_ids: torch.Tensor,
         global_num_experts: Optional[int] = None,
         expert_map: Optional[torch.Tensor] = None,
-    ) -> dict:
+    ) -> tuple[dict, Optional[str]]:
         """Profile using vLLM fused MoE kernel with optional EP-local expert mapping."""
         from frontier.profiling.moe.moe_vllm_kernel import profile_fused_moe_kernel
 
@@ -678,11 +685,10 @@ class MoEWrapper:
             output_dir=self.output_dir,
             global_num_experts=global_num_experts,
             expert_map=expert_map,
+            model_type=self.model_config.model_type,
         )
-
-        return {
-            "moe_grouped_gemm": stats,
-        }
+        native_backend = stats.pop("native_backend") if self.use_mxfp4 else None
+        return {"moe_grouped_gemm": stats}, native_backend
     
     def _profile_with_loop(
         self,

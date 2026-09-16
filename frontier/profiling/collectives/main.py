@@ -20,14 +20,15 @@ except ImportError:
     RAY_AVAILABLE = False
 
 from frontier.logger import init_logger
-from frontier.profiling.collectives.collectives_input import CollectivesInput
+from frontier.profiling.collectives.collectives_input import (
+    CollectivesInput,
+    SUPPORTED_COLLECTIVE_PRECISIONS,
+    precision_to_dtype as _precision_to_dtype,
+)
 from frontier.profiling.common.accelerator import get_available_gpu_ids
 from frontier.profiling.utils import get_collectives_inputs
 
 logger = init_logger(__name__)
-
-SUPPORTED_COLLECTIVE_PRECISIONS = ("FP16", "BF16", "FP32")
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description="GPU collective profiling")
@@ -94,23 +95,6 @@ def parse_args():
     )
     os.makedirs(args.output_dir, exist_ok=True)
     return args
-
-
-def _precision_to_dtype(precision: str):
-    import torch
-
-    supported = {
-        "FP16": torch.float16,
-        "BF16": torch.bfloat16,
-        "FP32": torch.float32,
-    }
-    try:
-        return supported[precision.upper()]
-    except KeyError as exc:
-        raise ValueError(
-            "Collective profiling does not support precision "
-            f"{precision!r}; choose one of {sorted(supported)}."
-        ) from exc
 
 
 def _configure_collective_environment() -> None:

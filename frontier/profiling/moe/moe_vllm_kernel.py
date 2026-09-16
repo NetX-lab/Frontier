@@ -454,6 +454,39 @@ def _run_functional_fused_experts_iteration(
     )
 
 
+def validate_mxfp4_runtime(*, model_type: Optional[str]) -> None:
+    """Admit only the model/platform implemented by the online MXFP4 adapter."""
+    if model_type != "qwen3_5_moe_text":
+        raise ValueError("MXFP4 profiling requires model_type='qwen3_5_moe_text'")
+    if accelerator_platform(torch) != "rocm":
+        raise ValueError("MXFP4/AITER profiling requires ROCm")
+    if VLLM_API_VERSION != "functional_fused_experts":
+        raise NotImplementedError(
+            "MXFP4 profiling requires current vLLM's modular fused MoE API."
+        )
+
+
+def validate_mxfp4_materialized_layout(layer: Any, layout: Dict[str, object]) -> None:
+    """Check packed storage after native quantization, allowing AITER reshapes.
+
+    AITER can shuffle or view packed bytes as native FP4/FP8 dtypes. Those
+    transformations preserve byte counts, so logical tensor shapes alone are
+    not the physical storage contract.
+    """
+    for name, shape_key in (
+        ("w13_weight", "w13_shape"), ("w2_weight", "w2_shape"),
+        ("w13_weight_scale", "w13_scale_shape"),
+        ("w2_weight_scale", "w2_scale_shape"),
+    ):
+        tensor = getattr(layer, name, None)
+        expected_bytes = math.prod(layout[shape_key])
+        if (tensor is None or tensor.element_size() != 1
+                or tensor.numel() != expected_bytes):
+            raise ValueError(
+                f"MXFP4 materialized {name} must contain {expected_bytes} packed bytes"
+            )
+
+
 def _get_functional_mxfp4_state(
     *,
     num_experts: int,
@@ -461,6 +494,7 @@ def _get_functional_mxfp4_state(
     expert_hidden_dim: int,
     top_k: int,
     dtype: torch.dtype,
+    model_type: str,
 ) -> Dict[str, Any]:
     """Build and cache current-vLLM's online MXFP4 AITER expert kernel."""
     cache_key = (
@@ -470,6 +504,7 @@ def _get_functional_mxfp4_state(
         expert_hidden_dim,
         top_k,
         dtype,
+        model_type,
     )
     cached = _FUNCTIONAL_MXFP4_STATES.get(cache_key)
     if cached is not None:
@@ -497,7 +532,7 @@ def _get_functional_mxfp4_state(
     quantization_args = QuantizationConfigArgs(moe="mxfp4")
     standalone_model_config = SimpleNamespace(
         dtype=dtype,
-        hf_config=SimpleNamespace(model_type="qwen3_5_moe_text"),
+        hf_config=SimpleNamespace(model_type=model_type),
         quantization_config=quantization_args,
     )
     with vllm_config_context(model_config=standalone_model_config):
@@ -540,24 +575,23 @@ def _get_functional_mxfp4_state(
         quant_method.process_weights_after_loading(layer)
 
     backend = str(getattr(quant_method, "mxfp4_backend", "unknown"))
-    if getattr(torch.version, "hip", None) and "AITER" not in backend.upper():
+    if not backend.rsplit(".", 1)[-1].startswith("AITER"):
         raise RuntimeError(
             "MXFP4 profiling on ROCm did not select an AITER backend. Set "
             "VLLM_ROCM_USE_AITER=1 and VLLM_ROCM_USE_AITER_MOE=1 before "
             f"starting Frontier. Selected backend: {backend}."
         )
 
+    layout = plan_mxfp4_weight_layout(
+        num_experts=num_experts, hidden_dim=hidden_dim,
+        expert_hidden_dim=expert_hidden_dim, use_gated=True, group_size=32,
+    )
+    validate_mxfp4_materialized_layout(layer, layout)
     state = {
         "backend": backend,
         "layer": layer,
         "quant_method": quant_method,
-        "layout": plan_mxfp4_weight_layout(
-            num_experts=num_experts,
-            hidden_dim=hidden_dim,
-            expert_hidden_dim=expert_hidden_dim,
-            use_gated=True,
-            group_size=32,
-        ),
+        "layout": layout,
     }
     _FUNCTIONAL_MXFP4_STATES[cache_key] = state
     return state
@@ -636,6 +670,7 @@ def profile_fused_moe_kernel(
     output_dir: Optional[str] = None,
     global_num_experts: Optional[int] = None,
     expert_map: Optional[torch.Tensor] = None,
+    model_type: Optional[str] = None,
 ) -> Dict:
     """
     Profile vLLM's fused MoE kernel with given routing decisions.
@@ -665,6 +700,7 @@ def profile_fused_moe_kernel(
         output_dir: Trace output directory for ``record_function`` profiling.
         global_num_experts: Global expert count for alignment when profiling EP-local workloads.
         expert_map: Optional mapping from global expert ids to local expert ids.
+        model_type: Actual model identity required by the pinned MXFP4 adapter.
 
     Returns:
         Dictionary containing timing statistics.
@@ -693,9 +729,13 @@ def profile_fused_moe_kernel(
             "Please install vLLM or disable --enable_load_imbalance."
         )
 
-    if use_mxfp4 and VLLM_API_VERSION != "functional_fused_experts":
+    if use_mxfp4:
+        validate_mxfp4_runtime(model_type=model_type)
+    if use_fp8 and VLLM_API_VERSION == "functional_fused_experts":
         raise NotImplementedError(
-            "MXFP4 profiling requires current vLLM's modular fused MoE API."
+            "FP8 profiling with current vLLM requires its quantization "
+            "descriptor API; use BF16 or the vLLM 0.10 profiling "
+            "environment until that adapter is configured."
         )
 
     align_num_experts = int(global_num_experts) if global_num_experts is not None else int(num_experts)
@@ -713,11 +753,18 @@ def profile_fused_moe_kernel(
 
     device = "cuda"
 
+    if type(tensor_parallel_size) is not int or tensor_parallel_size < 1:
+        raise ValueError("tensor_parallel_size must be a positive integer")
     expert_hidden_dim_per_partition = expert_hidden_dim // tensor_parallel_size
     if expert_hidden_dim % tensor_parallel_size != 0:
         raise ValueError(
             f"expert_hidden_dim ({expert_hidden_dim}) must be divisible by "
             f"tensor_parallel_size ({tensor_parallel_size})"
+        )
+    if use_mxfp4:
+        plan_mxfp4_weight_layout(
+            num_experts=num_experts, hidden_dim=hidden_dim,
+            expert_hidden_dim=expert_hidden_dim_per_partition, use_gated=True,
         )
 
     base_dtype = torch.bfloat16 if quantization_mode in {"fp8", "mxfp4"} else dtype
@@ -746,13 +793,6 @@ def profile_fused_moe_kernel(
     A_scale = None
 
     if VLLM_API_VERSION == "functional_fused_experts":
-        if use_fp8:
-            raise NotImplementedError(
-                "FP8 profiling with current vLLM requires its quantization "
-                "descriptor API; use BF16 or the vLLM 0.10 profiling "
-                "environment until that adapter is configured."
-            )
-
         functional_topk_weights = topk_weights.to(
             device=device,
             dtype=torch.float32,
@@ -763,19 +803,13 @@ def profile_fused_moe_kernel(
         ).contiguous()
 
         if use_mxfp4:
-            # Validate the physical layout before allocating the vLLM state.
-            plan_mxfp4_weight_layout(
-                num_experts=num_experts,
-                hidden_dim=hidden_dim,
-                expert_hidden_dim=expert_hidden_dim_per_partition,
-                use_gated=True,
-            )
             mxfp4_state = _get_functional_mxfp4_state(
                 num_experts=num_experts,
                 hidden_dim=hidden_dim,
                 expert_hidden_dim=expert_hidden_dim_per_partition,
                 top_k=top_k,
                 dtype=base_dtype,
+                model_type=model_type,
             )
             mxfp4_layer = mxfp4_state["layer"]
             mxfp4_method = mxfp4_state["quant_method"]
@@ -816,16 +850,20 @@ def profile_fused_moe_kernel(
             torch.cuda.synchronize()
 
             if profile_method == "record_function":
-                return _collect_record_function_stats(
+                stats = _collect_record_function_stats(
                     step_fn=_step,
                     active_steps=active_steps,
                     output_dir=output_dir,
                     operation_name="moe_grouped_gemm",
                 )
-            return _collect_cuda_event_stats(
-                step_fn=_step,
-                active_steps=active_steps,
-            )
+            else:
+                stats = _collect_cuda_event_stats(
+                    step_fn=_step,
+                    active_steps=active_steps,
+                )
+            if use_mxfp4:
+                stats["native_backend"] = mxfp4_state["backend"]
+            return stats
 
     block_dims = _validate_block_shape(block_shape)
     assert w1 is not None and w2 is not None
