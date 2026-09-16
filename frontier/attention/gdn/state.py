@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from heapq import heappop, heappush
 from typing import Hashable
 
 
@@ -40,7 +41,7 @@ class GatedDeltaNetStateSlotManager:
             raise ValueError(f"request {request_id!r} already owns a GDN state slot")
         if not self._free_slot_ids:
             raise MemoryError("GDN state slots exhausted")
-        slot = GatedDeltaNetStateSlot(request_id, self._free_slot_ids.pop(0))
+        slot = GatedDeltaNetStateSlot(request_id, heappop(self._free_slot_ids))
         self._slots_by_request[request_id] = slot
         return slot
 
@@ -63,6 +64,5 @@ class GatedDeltaNetStateSlotManager:
         slot = self._slots_by_request.pop(request_id, None)
         if slot is None:
             return None
-        self._free_slot_ids.append(slot.slot_id)
-        self._free_slot_ids.sort()
+        heappush(self._free_slot_ids, slot.slot_id)
         return slot

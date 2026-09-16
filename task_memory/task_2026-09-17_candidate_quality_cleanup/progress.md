@@ -56,3 +56,8 @@ New unresolved issues: none established.
 - Removed unused ExecutionTime layer-count attributes: neither production nor tests read them; constructor argument validation remains compatible.
 - Verification: 116 focused/non-dummy PASS; 90 stable artifact comparisons PASS, symmetric 106-file metrics inventory and supplemental summaries match. No expected value changed.
 - Corrected baseline environment: 3587 PASS / 18 FAIL / 25 SKIP. The same 18 failure nodes also fail on pinned main. Source causes are missing legacy debug/analysis assets and outdated release-document expectations. README remains untouched.
+
+## P1e — completed: lowest-free-slot ownership
+
+- Replaced list front removal and full release-time sorting with the standard heap priority queue. The observable rule remains allocation of the lowest available slot ID.
+- 16 lifecycle/scheduler tests PASS; added one out-of-order release regression. A deterministic 1,000-request trace compared directly against the frozen state manager produces identical allocation/release records.

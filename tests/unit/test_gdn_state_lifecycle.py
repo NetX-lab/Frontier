@@ -34,3 +34,12 @@ def test_state_slot_lifecycle_is_idempotent_for_waiting_and_release():
     assert manager.release(7) is None
     with pytest.raises(KeyError, match="no retained GDN state slot"):
         manager.resume(7)
+
+
+def test_state_slot_reuse_preserves_lowest_available_id():
+    manager = GatedDeltaNetStateSlotManager(capacity=5)
+    for request_id in range(4):
+        assert manager.allocate(request_id).slot_id == request_id
+    for request_id in (3, 0, 2):
+        manager.release(request_id)
+    assert [manager.allocate(request_id).slot_id for request_id in (5, 6, 7, 8)] == [0, 2, 3, 4]

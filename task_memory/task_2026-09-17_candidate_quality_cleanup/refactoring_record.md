@@ -15,6 +15,7 @@
 | GDNBatchFeatures / runtime guards / preemption | Fabricated absent required fields and model state | Incomplete doubles and generic Any obscured production interfaces | Batch/Request and scheduler constructors already guarantee members | Typed direct access; valid preemption fixture; remove redundant zero-mean branch | Batch, Request, BaseModelConfig | 46 focused tests; full baseline and runtime campaign |
 | MoE predictor | Alternate capacity state, generated-map revalidation, reflective subclass dispatch, obsolete private alias | Constructor and inheritance contracts were obscured | Internal generation already fixes map types; only replica config is populated in production | Direct initialized state, shared role getter override, one generator | Existing routing generator and disaggregated role getter | 116 tests; 90 stable artifacts and complete file inventories equal |
 | ExecutionTime | Unread legacy stage-size attribute | Former aggregate semantics left bookkeeping behind | No consumer uses it after physical-layer transition | Remove stored state, retain input validation | Physical-layer/stage contract | Timing tests and non-dummy parity |
+| GDN state slot manager | Front removal and sorting on each release | Ordered allocation implemented by repeatedly sorting storage | Required policy is minimum-free-ID selection | Standard heap operations; retain ownership map and lifecycle | Python heapq | 16 tests and exact 1,000-request old/new transcript |
 
 ## Intentionally retained patterns
 
