@@ -634,7 +634,7 @@ class ModelArchitectureProfile:
                 "GDN P-to-D transfer unsupported",
                 "GDN end-to-end pipeline parallelism is limited to PP1",
                 "GDN execution is limited to EP1 and attention-DP1",
-                "same-batch GDN prefill/decode mixed execution unsupported",
+                "GDN mixed-batch timing uses a temporary prefill approximation with a warning",
                 "real SGLang router replay is not automatic",
                 "MXFP4 MoE parameter memory uses a 2-byte approximation",
             ),

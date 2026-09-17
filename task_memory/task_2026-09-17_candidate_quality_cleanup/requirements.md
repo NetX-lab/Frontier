@@ -39,3 +39,17 @@ The original request requires the following, in order:
 - Existing main debt changes only when directly extended or required for a small candidate contract correction. Preserve README.md.
 - Native GPU/AMD evidence requires actual hardware; CPU contracts and synthetic profiles do not establish native or production-data parity.
 - Use existing task document layout instead of skill-specific root planning files. Keep raw logs/caches under `/data/ycfeng/tmp` and selected final evidence here.
+
+## [Original Request] Review remediation follow-up — 2026-09-17
+
+> follow the doc guidence: /data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/feature-amd-sglang-gdn/task_memory/task_2026-09-17_candidate_quality_cleanup/Frontier_PR33_Review_Comments_2026-09-17_d43ae932_EN.md, fix bugs/problems on by one.
+
+Address R01–R10 sequentially with direct regression evidence and individual commits; assess C01–C03 within local authorization. Preserve historical cleanup evidence. Remote PR edits require approval; prepare a local description first. The review explicitly requests corrections to copied README recipes (R09), authorizing those focused edits. Native hardware results must remain distinct from CPU contracts.
+
+## [Original Request] R01 clarification and explicit temporary approximation
+
+> 我并没有理解当前问题和选项的含义。这里提到的phase的含义是什么？当我们采用不同的调度器时，调度策略会不同，为什么会需要进行gdn情况下的策略选择呢，难道不应该根据当前调度器来决定吗？请你给出清晰的例子帮助我理解
+
+> 允许暂时用 prfill batch来处理mixed batch（请你确认），并进行warning提醒。并在docs中补充该limitation（特别针对于co-location模式下会发生）
+
+Decision R01-A: preserve the selected scheduler and real Batch/Request semantics; temporarily predict the entire mixed batch's GDN work with prefill estimators, preserving physical features and state ownership. Emit an explicit approximation warning and document the co-location limitation. This supersedes the review's mixed-rejection requirement and the unselected phase-pure scheduling proposals. No native numerical-equivalence claim is authorized or established. Native producer and training rows retain their pure-phase contracts.

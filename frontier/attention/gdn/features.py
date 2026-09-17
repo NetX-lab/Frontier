@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
+import warnings
 from typing import Any, Mapping, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -189,8 +190,13 @@ class GDNBatchFeatures:
                 "GDN prefill/decode token counts must sum to batch_num_tokens"
             )
         if prefill_tokens and decode_tokens:
-            raise ValueError(
-                "GDN predictor does not support same-batch prefill+decode mixing"
+            warnings.warn(
+                "GDN mixed batch uses a temporary prefill approximation for "
+                "all GDN work, including decode tokens. This can occur in "
+                "co-location mode; native mixed-batch timing is unvalidated. "
+                "Scheduler behavior and request state are unchanged.",
+                RuntimeWarning,
+                stacklevel=2,
             )
         phase = "prefill" if prefill_tokens else "decode"
         num_stateful_requests = sum(

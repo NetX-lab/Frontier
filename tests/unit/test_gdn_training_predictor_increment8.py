@@ -83,16 +83,31 @@ def test_gdn_shared_features_reject_history_as_decode_dimension() -> None:
     assert features.max_query_len == 1
     assert features.query_len_cv == 0.0
     assert features.num_stateful_requests == 2
-    with pytest.raises(ValueError, match=r"prefill\+decode"):
-        GDNBatchFeatures.from_batch(
-            SimpleNamespace(
-                num_tokens=[1, 4],
-                total_num_tokens=5,
-                num_prefill_tokens=4,
-                num_decode_tokens=1,
-                requests=[SimpleNamespace(), SimpleNamespace()],
-            )
-        )
+
+
+@pytest.mark.parametrize("prefill_length", [1, 4])
+def test_mixed_gdn_prediction_uses_prefill_with_warning(tmp_path, prefill_length):
+    predictor = GDNPredictor.from_directory(_train(tmp_path))
+    batch = SimpleNamespace(
+        num_tokens=[1, prefill_length], total_num_tokens=1 + prefill_length,
+        num_prefill_tokens=prefill_length, num_decode_tokens=1,
+        requests=[SimpleNamespace(num_processed_tokens=8, is_prefill_complete=True),
+                  SimpleNamespace(num_processed_tokens=0, is_prefill_complete=False)],
+    )
+    with pytest.warns(RuntimeWarning, match="GDN mixed batch.*prefill approximation"):
+        features = GDNBatchFeatures.from_batch(batch)
+    assert features.phase == "prefill"
+    assert features.as_vector() == pytest.approx([
+        2, 1 + prefill_length, prefill_length,
+        (prefill_length - 1) / (prefill_length + 1), 1,
+    ])
+    with pytest.warns(RuntimeWarning, match="prefill approximation"):
+        result = predictor.predict_attention_time(batch)
+    assert result.operator_times.op_times["gdn_core_prefill"] == pytest.approx(.22)
+    assert result.operator_times.op_times["gdn_core_decode"] == 0
+    assert result.total_time() == pytest.approx(.66)
+    assert batch.num_prefill_tokens == prefill_length
+    assert batch.num_decode_tokens == 1
 
 
 def test_gdn_trainer_writes_six_tasks_and_predictor_loads_them(tmp_path: Path) -> None:

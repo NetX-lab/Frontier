@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-17 | Documented the temporary GDN mixed-batch prefill approximation in co-location. |
 | 2026-09-14 | Documented the standard CPU-safe GDN training and artifact-loading path. |
 | 2026-09-14 | Documented ROCm `DEVICE_EVENT` identity, dataset fingerprints, and experimental SGLang exclusion. |
 
@@ -240,8 +241,28 @@ num_stateful_requests
 ```
 
 Decode prediction does not use context length or request history as a cost
-feature. Same-batch prefill plus decode is rejected because it does not have a
-single phase-qualified estimator. `gdn_layer_e2e` may be present in a raw CSV
+feature. Profiling and training rows must contain a single phase; mixed rows
+remain rejected. During simulation, a batch containing both prefill and decode
+uses the **prefill estimators for the entire batch's GDN work** and emits a
+`RuntimeWarning`. This is a temporary approximation, particularly relevant to
+**co-location**: a scheduler can combine a running request's decode token with
+a newly admitted request's prefill chunk. For example, 31 prefill tokens plus
+one decode token are queried as a two-request, 32-token GDN prefill workload.
+All scheduled query lengths and the true number of stateful requests are
+preserved. The scheduler, request phases, KV allocations and GDN slot ownership
+remain unchanged; only the GDN prediction phase is approximated. Full-attention
+layers retain their normal prediction path and still require matching mixed
+attention profiles, including `attn_decode_in_mixed`. Pure-prefill and pure-decode
+prediction remain unchanged, including a one-token final prefill chunk.
+
+No native mixed-batch timing parity has been established. The approximation can
+affect predicted latency and throughput, and ragged or partly stateful batches
+may lie outside the prefill profiling coverage. GDN core timing is reported
+under `gdn_core_prefill`, with `gdn_core_decode` zero for this approximation.
+The standard Python warning filter limits repeated messages at the same call
+site; a warning does not convert the profile into native mixed-batch evidence.
+
+`gdn_layer_e2e` may be present in a raw CSV
 for diagnostics, but it is deliberately ignored by training and prediction;
 runtime cost is the sum of input projections, the phase-specific GDN core, and
 the output projection.

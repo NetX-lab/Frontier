@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-17 | Clarified native mixed-phase rejection versus the temporary simulator approximation. |
 | 2026-09-14 | Added the standard MI355X profiling path and the experimental SGLang boundary. |
 
 ## Scope
@@ -89,9 +90,12 @@ The output is
 `data/profiling/compute/mi355x/Qwen3.8-2.4T-A95B-Quark-MXFP4/gdn.csv`.
 Each row records the phase (`prefill` or `decode`), physical batch features,
 GDN state/layout identity, runtime backend, rank aggregation, and component
-timings. A one-token continuation remains a prefill input. Same-batch prefill
-and decode is rejected because the standard trainer requires one
-phase-qualified estimator.
+timings. A one-token continuation remains a prefill input. Native profiling and
+training still reject mixed prefill/decode rows. The simulator temporarily
+predicts mixed-batch GDN work with prefill estimators and emits a warning,
+particularly when **co-location** scheduling combines new prefill and running
+decode. This preserves scheduler behavior but does not establish native mixed
+execution or timing accuracy. See the [GDN prediction limitation](../training/README.md#standard-gdn).
 
 ## Validation and training handoff
 

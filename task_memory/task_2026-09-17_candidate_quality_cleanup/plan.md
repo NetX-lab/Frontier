@@ -43,3 +43,14 @@ No unresolved blocker. P4 exposed and corrected a new test-global-state leak wit
 - Reporting-enabled non-dummy: 8 PASS, 90 stable artifacts, 106-file symmetric inventory and 16 nonempty supplemental pairs match. Final fidelity: 58 PASS, 304 artifacts, zero difference in 902,628 finite numeric leaf pairs.
 - Final timing: 18 successful isolated measurements, all nine pairs preserve events/completions. Median paired Simulator.run changes are -13.46% / -2.00% / -1.46% for small dense / longer dense / MoE. Three reporting-disabled dummy samples per side do not establish general/native performance. See `test_report_2026-09-17_p5_timing.md`.
 - Implementation and consequential design decisions remaining: none. English completion archive: `summary.md`. Unrelated legacy failures and native-device verification limits remain explicitly recorded, not silently repaired or declared PASS.
+
+## Review remediation — in progress
+
+Baseline: d43ae93240444bd4eff9bd99f296d2e751370514, clean worktree.
+Dependency: reproduce R01 -> resolve phase-policy decision -> R01 fix -> R02 -> R03 -> R04 -> R05 -> R06 -> R07 -> R08 -> R09 -> R10 -> C01/C02 assessment -> integrated verification -> local C03 handoff. Independent read-only diagnosis may proceed while a decision is pending; implementation remains sequential.
+
+Each correction: reproduce the stated boundary using the real public path -> fix the root cause -> run focused regression -> record evidence -> commit. R01 requires real non-dummy Simulator concurrency; R03 requires overwrite interruption and reader interleaving; R04 requires ragged CSV round trip; R06 requires cross-campaign provenance; R07 must execute shell postflight. Use existing CPU environment and scratch root. Run the existing >=50-case fidelity matrix after runtime changes, classifying intentional GDN policy corrections separately. All R01–R10 and C01–C03 are pending.
+
+### R01-A accepted correction
+
+User explicitly authorizes mixed-to-prefill prediction with a warning and documented co-location limitation. Implement only at GDN runtime feature selection; preserve scheduler behavior and real phase counts. Replace phase-pure integration acceptance with observed mixed dispatch, prefill estimator selection, warning visibility, final-prefill-one-token recognition and ownership release/reuse. Native profiling and training mixed rows remain rejected. Earlier policy question is closed.
