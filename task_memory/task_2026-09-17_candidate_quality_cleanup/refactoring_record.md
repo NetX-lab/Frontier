@@ -24,6 +24,8 @@
 
 ## Intentionally retained patterns
 
+P4 M1: manager reimplemented hybrid-versus-MLA selection and silently defaulted a missing replica to CUDA. It now reuses runtime family binding and requires the production replica input. Verification: 127 before/after PASS, 120 exact measurement selections, four exact family classifications. Dataset-only whole-model None remains supported.
+
 P3 J2: variadic profile_graph arguments and seven-position primitive tuples obscured ownership and re-derived GDN metadata. Explicit parameters and an internal named replay-call record retain the existing execution/reset/check owner and native builder contracts. Verification: 39 before / 40 after PASS; 12 byte-identical snapshots with 1,802 ordered events. Real recurrent/cache snapshots and optional trace-probe state remain.
 
 P3 S7: experimental replay duplicated Hamilton allocation and omitted the runtime normalization step. The existing owner now exposes its pure histogram operation; both callers reuse it without a second registry or irrelevant EP state. Verification: 52 frozen / 60 cleaned PASS; 893 exact replay dictionaries, 67 unchanged infeasible rejections, 2,679 exact workloads; 3,407,872 generated histogram comparisons.

@@ -361,13 +361,14 @@ def test_shared_manager_family_views_enable_kernel_only_only_when_graph_enabled(
 
 def test_shared_manager_pd_af_measurement_types_match_reference_contract() -> None:
     manager = _make_manager()
+    replica = manager._cluster_configs[ClusterType.DECODE_ATTN].replica_config
     global_vars.set_global_vars("offline", "pd-af-disaggregation")
 
-    assert manager._get_measurement_types_for_cluster(ClusterType.DECODE_ATTN) == [
+    assert manager._get_measurement_types_for_cluster(ClusterType.DECODE_ATTN, replica) == [
         MeasurementType.CUDA_EVENT,
         MeasurementType.KERNEL_ONLY,
     ]
-    assert manager._get_measurement_types_for_cluster(ClusterType.DECODE_FFN) == [
+    assert manager._get_measurement_types_for_cluster(ClusterType.DECODE_FFN, replica) == [
         MeasurementType.KERNEL_ONLY
     ]
     models = manager.get_models_for_cluster(ClusterType.DECODE_ATTN)
@@ -381,10 +382,10 @@ def test_shared_manager_pd_af_measurement_types_match_reference_contract() -> No
     global_vars.set_global_vars("offline", "co-location")
     global_vars.set_cuda_graph_config(True, [1, 2, 4], "none")
 
-    assert manager._get_measurement_types_for_cluster(ClusterType.DECODE_ATTN) == [
+    assert manager._get_measurement_types_for_cluster(ClusterType.DECODE_ATTN, replica) == [
         MeasurementType.KERNEL_ONLY
     ]
-    assert manager._get_measurement_types_for_cluster(ClusterType.DECODE_FFN) == [
+    assert manager._get_measurement_types_for_cluster(ClusterType.DECODE_FFN, replica) == [
         MeasurementType.KERNEL_ONLY
     ]
 

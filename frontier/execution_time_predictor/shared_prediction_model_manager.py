@@ -16,7 +16,7 @@ from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
     LATENT_MLA_ATTENTION_FAMILY,
 )
-from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.model_binding import resolve_runtime_attention_family
 from frontier.attention.ops import AttentionOperatorRole
 from frontier.attention.string_coercion import (
     coerce_truthy_bool,
@@ -582,13 +582,9 @@ class ExecutionTimePredictionModelManager:
         raise ValueError(f"Unsupported cluster_type={cluster_type!r}")
 
     def _get_measurement_types_for_cluster(
-        self, cluster_type: ClusterType, replica_config=None
+        self, cluster_type: ClusterType, replica_config
     ) -> List[MeasurementType]:
-        event_measurement = (
-            self._event_measurement_type_for_replica(replica_config)
-            if replica_config is not None
-            else MeasurementType.CUDA_EVENT
-        )
+        event_measurement = self._event_measurement_type_for_replica(replica_config)
         if global_vars.get_sys_arch() == "pd-af-disaggregation":
             if cluster_type == ClusterType.PREFILL:
                 return [event_measurement]
@@ -2356,14 +2352,8 @@ class ExecutionTimePredictionModelManager:
         """Return True when the model binds to the latent-MLA attention family."""
         if model_config is None:
             return False
-        # Qwen3.5 hybrid models have no whole-model attention family. Their
-        # full-attention layers use the dense family through the per-layer
-        # binding seam; they must not enter the MLA-only training path.
-        get_num_gdn_layers = getattr(model_config, "get_num_gdn_layers", None)
-        if callable(get_num_gdn_layers) and int(get_num_gdn_layers()) > 0:
-            return False
         return (
-            bind_attention_family(model_config).family.family_id
+            resolve_runtime_attention_family(model_config).family_id
             == LATENT_MLA_ATTENTION_FAMILY.family_id
         )
 

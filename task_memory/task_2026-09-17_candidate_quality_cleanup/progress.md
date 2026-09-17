@@ -159,3 +159,8 @@ New unresolved issues: none established.
 
 - Source-stable `4dd63482`: 721 PASS / 5 SKIP / 2 FAIL across 45 CPU modules. Both failures are the previously reproduced main/candidate MHA/MQA stage2 CLI nodes. Direct subprocess RCA reports missing flashinfer-python; scripts are unchanged from main. No new failure observed; do not describe this as an all-green/native-GPU suite.
 - Released P3 source freeze. P4 independent scopes: Nash GDN predictor/trainer and valid fixtures; Meitner config guards/typed registry access/default ownership in bounded substeps; main manager registries, GDN paths and family binding. Existing manager measurement/precision identities and dataset-only optionals remain fixed.
+
+## P4 M1 — completed
+
+- Manager MLA classification delegates to runtime family binding; whole-model None remains supported. Measurement selector requires the replica already supplied by production and four formerly incomplete test calls.
+- 127 frozen / 127 cleaned PASS. Exact method comparison across 120 architecture/device/role/graph selections and four model families also PASS. No path precedence or estimator output changed.
