@@ -78,12 +78,12 @@ class GDNTrainer(BaseTrainer):
         self.quant_signature = quant_signature
         self.device = device
         if model_config is not None:
-            profile_getter = getattr(model_config, "get_model_architecture_profile", None)
-            if self.model_architecture_profile is None and callable(profile_getter):
-                self.model_architecture_profile = profile_getter().profile_id
-            quant_getter = getattr(model_config, "get_quant_signature", None)
-            if self.quant_signature is None and callable(quant_getter):
-                self.quant_signature = quant_getter()
+            if self.model_architecture_profile is None:
+                self.model_architecture_profile = (
+                    model_config.get_model_architecture_profile().profile_id
+                )
+            if self.quant_signature is None:
+                self.quant_signature = model_config.get_quant_signature()
         self.tensor_parallel_size = int(tensor_parallel_size)
         if self.tensor_parallel_size <= 0:
             raise ValueError("tensor_parallel_size must be positive")
@@ -93,7 +93,6 @@ class GDNTrainer(BaseTrainer):
             else MeasurementType.from_string(measurement_type)
         )
         self.runtime_stack_signature = runtime_stack_signature
-        self.df: pd.DataFrame | None = None
         self.identity: dict[str, Any] = {}
 
     def _load_dataset(self) -> pd.DataFrame:
@@ -149,7 +148,6 @@ class GDNTrainer(BaseTrainer):
             return row
 
         frame = frame.apply(materialize_features, axis=1)
-        self.df = frame
         return frame
 
     def _get_model_names(self) -> List[str]:

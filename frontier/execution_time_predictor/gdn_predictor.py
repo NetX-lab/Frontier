@@ -187,17 +187,12 @@ class GDNPredictor:
     ) -> None:
         expected: dict[str, Any] = {}
         if model_config is not None:
-            profile_getter = getattr(model_config, "get_model_architecture_profile", None)
-            if callable(profile_getter):
-                expected["model_architecture_profile"] = profile_getter().profile_id
-            quant_getter = getattr(model_config, "get_quant_signature", None)
-            if callable(quant_getter):
-                expected["quant_signature"] = quant_getter()
-            embedding_dim = getattr(model_config, "embedding_dim", None)
-            gdn_getter = getattr(model_config, "get_gdn_config", None)
-            gdn_config = gdn_getter() if callable(gdn_getter) else None
-            if embedding_dim is not None:
-                expected["hidden_size"] = int(embedding_dim)
+            expected["model_architecture_profile"] = (
+                model_config.get_model_architecture_profile().profile_id
+            )
+            expected["quant_signature"] = model_config.get_quant_signature()
+            expected["hidden_size"] = int(model_config.embedding_dim)
+            gdn_config = model_config.get_gdn_config()
             if gdn_config is not None:
                 expected.update(
                     {

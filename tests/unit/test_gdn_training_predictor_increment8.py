@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from frontier.attention.gdn import GatedDeltaNetConfig
 from frontier.attention.gdn.features import GDNBatchFeatures
 from frontier.config.config import BaseExecutionTimePredictorConfig
 from frontier.execution_time_predictor.gdn_predictor import GDNPredictor
@@ -17,6 +18,28 @@ from frontier.types import MeasurementType
 
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "pr31_hybrid" / "gdn.csv"
+
+
+class _FixtureModelConfig:
+    embedding_dim = 256
+
+    def get_num_gdn_layers(self):
+        return 1
+
+    def get_name(self):
+        return "fixture"
+
+    def get_model_architecture_profile(self):
+        return SimpleNamespace(profile_id="qwen3_5_moe")
+
+    def get_quant_signature(self):
+        return "none"
+
+    def get_gdn_config(self):
+        return GatedDeltaNetConfig(
+            conv_kernel_size=4, key_head_dim=32, value_head_dim=32,
+            num_key_heads=2, num_value_heads=4,
+        )
 
 
 def _train(tmp_path: Path, *, measurement_type: str = "DEVICE_EVENT") -> Path:
@@ -148,21 +171,8 @@ def test_gdn_input_path_is_public_but_kernel_only_path_is_absent() -> None:
 def test_model_manager_loads_gdn_artifacts_without_fitting(tmp_path: Path) -> None:
     output = _train(tmp_path)
 
-    class ModelConfig:
-        def get_num_gdn_layers(self):
-            return 1
-
-        def get_name(self):
-            return "fixture"
-
-        def get_model_architecture_profile(self):
-            return SimpleNamespace(profile_id="qwen3_5_moe")
-
-        def get_quant_signature(self):
-            return "none"
-
     replica = SimpleNamespace(
-        model_config=ModelConfig(),
+        model_config=_FixtureModelConfig(),
         device="cpu",
         attn_tensor_parallel_size=1,
     )
@@ -187,21 +197,8 @@ def test_model_manager_rejects_artifacts_for_changed_gdn_csv(tmp_path: Path) -> 
     shutil.copyfile(FIXTURE, source)
     source.write_text(source.read_text() + "\n", encoding="utf-8")
 
-    class ModelConfig:
-        def get_num_gdn_layers(self):
-            return 1
-
-        def get_name(self):
-            return "fixture"
-
-        def get_model_architecture_profile(self):
-            return SimpleNamespace(profile_id="qwen3_5_moe")
-
-        def get_quant_signature(self):
-            return "none"
-
     replica = SimpleNamespace(
-        model_config=ModelConfig(),
+        model_config=_FixtureModelConfig(),
         device="cpu",
         attn_tensor_parallel_size=1,
     )
@@ -213,3 +210,18 @@ def test_model_manager_rejects_artifacts_for_changed_gdn_csv(tmp_path: Path) -> 
         manager._load_gdn_predictor_for_cluster(
             "fixture", replica, predictor_config, MeasurementType.DEVICE_EVENT
         )
+
+
+@pytest.mark.parametrize("has_gdn_shape", [False, True])
+def test_supplied_model_identity_preserves_optional_gdn_shape(
+    tmp_path: Path, monkeypatch, has_gdn_shape: bool,
+) -> None:
+    output = _train(tmp_path)
+    model = _FixtureModelConfig()
+    if not has_gdn_shape:
+        monkeypatch.setattr(model, "get_gdn_config", lambda: None)
+    predictor = GDNPredictor.from_directory(output, model_config=model)
+    assert predictor.identity["hidden_size"] == model.embedding_dim
+    model.embedding_dim += 1
+    with pytest.raises(ValueError, match="hidden_size"):
+        GDNPredictor.from_directory(output, model_config=model)

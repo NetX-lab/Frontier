@@ -174,3 +174,8 @@ New unresolved issues: none established.
 
 - Reused the measurement-path substitution owner for GDN and read constructor-owned model/config members directly. Removed duplicated GDN default; preserved compute-only NETWORK_DEVICE literal behavior.
 - Final focused result independently read after continuation: 101 PASS in 22.19 s. Four direct comparisons use the old expression as the oracle; existing path-precedence and artifact-loading checks pass. No semantic-choice blocker.
+
+## P4 S1 — completed
+
+- Reviewed supplied-model direct getters in GDNPredictor/GDNTrainer and removed GDNTrainer's unread DataFrame state. Dataset-only model=None and absent GDN shape remain supported; profile/quant override precedence and serialized validation stay intact.
+- 51 before / 53 after focused PASS. Eight independent training campaigns produce 48 byte-identical estimator pairs and eight identical manifests; 32 cross-loads preserve 192 exact prediction dictionaries. Main independently compared all 56 files with an explicit count assertion. Report: test_report_2026-09-17_p4_gdn.md.

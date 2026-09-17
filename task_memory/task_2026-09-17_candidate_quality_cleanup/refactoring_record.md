@@ -24,6 +24,8 @@
 
 ## Intentionally retained patterns
 
+P4 S1: supplied-model member reflection weakened existing runtime/profiling ModelConfig contracts, and GDNTrainer retained an unread frame. Direct getters and valid shared fixtures remove that complexity without changing model=None, optional shape or selector precedence. Verification: 51 before / 53 after PASS; 56 byte-identical file pairs, 32 cross-loads, 192 exact predictions.
+
 P4 M3: GDN manager duplicated config defaults and placeholder replacement. Required config/model members now bind through the existing measurement-path helper; its optional network argument preserves the actual compute-only contract. Verification: 101 focused PASS, including four exact original-expression path comparisons.
 
 P4 M2: four registry selectors reconstructed mandatory state lazily for incomplete fixtures. Removed that branch and normally constructed the three affected fixture owners. Reused manager constructor and existing family registries; 181 tests and 12 exact dictionary-identity comparisons PASS. Validated no-default dynamic attribute selection remains; typed/legacy/precision identities are genuinely distinct.
