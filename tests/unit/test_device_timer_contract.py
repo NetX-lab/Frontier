@@ -131,9 +131,9 @@ def test_device_event_mapping_is_strict_and_keeps_cuda_aliases_unchanged() -> No
         raise AssertionError("CUDA events must be rejected on ROCm")
 
 
-def test_shared_manager_keeps_device_event_models_in_a_separate_registry() -> None:
-    manager = ExecutionTimePredictionModelManager.__new__(
-        ExecutionTimePredictionModelManager
+def test_shared_manager_keeps_device_event_models_in_a_separate_registry(tmp_path) -> None:
+    manager = ExecutionTimePredictionModelManager(
+        {}, SimpleNamespace(cache_dir=str(tmp_path))
     )
     manager._active_measurement_type = MeasurementType.DEVICE_EVENT
     model = object()
@@ -141,7 +141,7 @@ def test_shared_manager_keeps_device_event_models_in_a_separate_registry() -> No
     manager._store_model_precision("attn_prefill", "BF16", model)
 
     assert manager._trained_models_device_event["attn_prefill"] is model
-    assert getattr(manager, "_trained_models_eager", {}) == {}
+    assert manager._trained_models_eager == {}
     assert manager._models_by_precision_device_event["BF16"]["attn_prefill"] is model
 
 

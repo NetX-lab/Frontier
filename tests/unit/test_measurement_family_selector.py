@@ -287,7 +287,7 @@ def _make_manager():
         ExecutionTimePredictionModelManager,
     )
 
-    manager = ExecutionTimePredictionModelManager.__new__(ExecutionTimePredictionModelManager)
+    manager = ExecutionTimePredictionModelManager({}, SimpleNamespace(cache_dir="."))
     manager._all_dummy_mode = False
     manager._trained_models_eager = {"attn_prefill": object()}
     manager._trained_models_kernel_only = {"attn_decode": object()}

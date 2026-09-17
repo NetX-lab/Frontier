@@ -164,3 +164,8 @@ New unresolved issues: none established.
 
 - Manager MLA classification delegates to runtime family binding; whole-model None remains supported. Measurement selector requires the replica already supplied by production and four formerly incomplete test calls.
 - 127 frozen / 127 cleaned PASS. The first extra comparison stopped at the expected TRANS rejection; its PASS was recorded prematurely. Corrected value/error comparison now independently PASS: 120 supported selections, 24 unchanged TRANS ValueErrors, four model families. Evidence is `quality-p4-manager-binding-exact-v2.log`; preserve the original failed probe. No production change was needed.
+
+## P4 M2 — completed
+
+- Four family selectors now use constructor-owned dictionaries without lazy None/reinitialization. Three incomplete fixture owners use real empty-cluster construction; test-only manual registry initialization is removed.
+- 181 focused PASS; twelve frozen/current selector comparisons preserve dictionary identity/mutation and create no attributes. The remaining no-default getattr selects a validated registry name, not optional state.

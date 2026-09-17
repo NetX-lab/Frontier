@@ -4167,11 +4167,7 @@ class ExecutionTimePredictionModelManager:
         }.get(family_name)
         if registry_attr is None:
             raise ValueError(f"Unsupported family_name={family_name!r}")
-        registry = getattr(self, registry_attr, None)
-        if registry is None:
-            registry = {}
-            setattr(self, registry_attr, registry)
-        return registry
+        return getattr(self, registry_attr)
 
     def _contract_precision_registry(
         self, family_name: str
@@ -4183,11 +4179,7 @@ class ExecutionTimePredictionModelManager:
         }.get(family_name)
         if registry_attr is None:
             raise ValueError(f"Unsupported family_name={family_name!r}")
-        registry = getattr(self, registry_attr, None)
-        if registry is None:
-            registry = {}
-            setattr(self, registry_attr, registry)
-        return registry
+        return getattr(self, registry_attr)
 
     def _legacy_model_registry(self, family_name: str) -> Dict[str, BaseEstimator]:
         registry_attr = {
@@ -4197,11 +4189,7 @@ class ExecutionTimePredictionModelManager:
         }.get(family_name)
         if registry_attr is None:
             raise ValueError(f"Unsupported family_name={family_name!r}")
-        registry = getattr(self, registry_attr, None)
-        if registry is None:
-            registry = {}
-            setattr(self, registry_attr, registry)
-        return registry
+        return getattr(self, registry_attr)
 
     def _legacy_precision_registry(
         self, family_name: str
@@ -4213,11 +4201,7 @@ class ExecutionTimePredictionModelManager:
         }.get(family_name)
         if registry_attr is None:
             raise ValueError(f"Unsupported family_name={family_name!r}")
-        registry = getattr(self, registry_attr, None)
-        if registry is None:
-            registry = {}
-            setattr(self, registry_attr, registry)
-        return registry
+        return getattr(self, registry_attr)
 
     def _legacy_precision_bucket(
         self, family_name: str, precision_key: str
