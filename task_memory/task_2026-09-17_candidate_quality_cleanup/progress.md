@@ -280,3 +280,7 @@ Requested model dtype is normalized through PrecisionType and compared with arti
 ### R06 completed
 
 Effective TimerStatsStore method/enabled state validated before native imports; exported method comes from the validated owner. Existing singleton and samples are preserved. 4 FAIL / 1 PASS before -> 111 PASS, 9.55 s. Report: test_report_2026-09-17_r06_timer_owner.md.
+
+### R07 completed
+
+All three profiling wrappers use the canonical CPU-safe Python path helper for display and postflight. Native stand-in tests reach actual postflight and reject stale unsuffixed CUDA files. 12 FAIL / 6 PASS before -> 33 PASS, 11.91 s. ROCm taxonomy now shows DEVICE_EVENT suffixes. Report: test_report_2026-09-17_r07_launchers.md.

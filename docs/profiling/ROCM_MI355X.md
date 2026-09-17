@@ -45,9 +45,9 @@ predictor identity. Standard outputs use the canonical taxonomy:
 
 ```text
 data/profiling/compute/<device>/<model>/
-├── linear_op.csv
-├── attention.csv
-├── moe.csv
+├── linear_op_device_event.csv
+├── attention_device_event.csv
+├── moe_device_event.csv
 └── gdn.csv
 ```
 
