@@ -92,6 +92,28 @@ def test_routing_replay_reuses_frontier_distribution_helper():
     assert all(len(row) == 10 and len(set(row)) == 10 for row in assignments)
 
 
+@pytest.mark.parametrize("distribution", ("balanced", "random", "skewed", "zipf"))
+@pytest.mark.parametrize("num_experts,top_k", ((8, 2), (512, 4)))
+def test_frontier_replay_uses_canonical_integer_counts(distribution, num_experts, top_k):
+    from frontier.moe_ep_workload import materialize_expert_token_counts
+    from frontier.profiling.experimental.sglang import routed_moe_replay as replay
+
+    ratios = replay.frontier_routing_ratios(
+        total_expert_num=num_experts, distribution_type=distribution, seed=17, layer_id=3
+    )
+    expected = materialize_expert_token_counts(
+        routing_ratios=ratios, total_routed_assignments=64 * top_k,
+        total_expert_num=num_experts,
+    )
+    result = replay.input_from_frontier_config(
+        physical_size=64, total_expert_num=num_experts, router_topk=top_k,
+        distribution_type=distribution, seed=17, layer_id=3,
+    )
+    assert result.expert_counts == tuple(expected.values())
+    assert sum(result.expert_counts) == 64 * top_k
+    assert all(len(set(row)) == top_k for row in result.assignments)
+
+
 def test_explicit_route_json_and_visibility_plans(tmp_path):
     replay = importlib.import_module(
         "frontier.profiling.experimental.sglang.routed_moe_replay"

@@ -9,11 +9,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
-import math
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from frontier.moe_ep_workload import generate_moe_routing_ratios
+from frontier.moe_ep_workload import (
+    generate_moe_routing_ratios as frontier_routing_ratios,
+    materialize_expert_token_counts,
+)
 
 from .moe import reconstruct_topk_ids as _reconstruct_topk_ids
 
@@ -38,12 +40,6 @@ class RoutedMoEInput:
             "assignments": [list(row) for row in self.assignments],
             "source": self.source,
         }
-
-
-def frontier_routing_ratios(**kwargs: Any) -> dict[int, float]:
-    """Call the shared simulator routing helper without changing its semantics."""
-
-    return generate_moe_routing_ratios(**kwargs)
 
 
 def reconstruct_topk_ids(
@@ -221,17 +217,14 @@ def input_from_frontier_config(
         seed=seed,
         layer_id=layer_id,
     )
-    raw = [ratios[expert] * physical_size * router_topk for expert in range(total_expert_num)]
-    floors = [math.floor(value) for value in raw]
-    remaining = physical_size * router_topk - sum(floors)
-    order = sorted(
-        range(total_expert_num), key=lambda expert: (-(raw[expert] - floors[expert]), expert)
+    counts = materialize_expert_token_counts(
+        routing_ratios=ratios,
+        total_routed_assignments=physical_size * router_topk,
+        total_expert_num=total_expert_num,
     )
-    for expert in order[:remaining]:
-        floors[expert] += 1
     return build_routed_input(
         physical_size,
-        floors,
+        tuple(counts[expert] for expert in range(total_expert_num)),
         num_experts=total_expert_num,
         top_k=router_topk,
         source="frontier_config",

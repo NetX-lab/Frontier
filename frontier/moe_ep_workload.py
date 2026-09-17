@@ -740,6 +740,42 @@ def _validate_routing_ratios(
     return {expert_id: value / ratio_sum for expert_id, value in values.items()}
 
 
+def materialize_expert_token_counts(
+    *,
+    routing_ratios: Mapping[int, Real],
+    total_routed_assignments: int,
+    total_expert_num: int,
+) -> dict[int, int]:
+    """Allocate normalized routes by Hamilton remainder and expert-ID tie order."""
+    total_routed_assignments = _require_int(
+        total_routed_assignments, "total_routed_assignments", minimum=0
+    )
+    total_expert_num = _require_int(total_expert_num, "total_expert_num", minimum=1)
+    normalized_ratios = _validate_routing_ratios(
+        routing_ratios, total_expert_num=total_expert_num
+    )
+    quotas = {
+        expert_id: total_routed_assignments * ratio
+        for expert_id, ratio in normalized_ratios.items()
+    }
+    counts = {
+        expert_id: int(floor(quota))
+        for expert_id, quota in quotas.items()
+    }
+    remainder = total_routed_assignments - sum(counts.values())
+    if remainder < 0 or remainder >= total_expert_num:
+        raise ValueError("Hamilton remainder is outside the valid expert range")
+    ranked_experts = sorted(
+        quotas,
+        key=lambda expert_id: (-(quotas[expert_id] - counts[expert_id]), expert_id),
+    )
+    for expert_id in ranked_experts[:remainder]:
+        counts[expert_id] += 1
+    if sum(counts.values()) != total_routed_assignments:
+        raise ValueError("global expert token conservation failed")
+    return counts
+
+
 def materialize_layer_ep_workload(
     *,
     routing_ratios: Mapping[int, Real],
@@ -780,36 +816,12 @@ def materialize_layer_ep_workload(
         total_expert_num=total_expert_num,
         moe_expert_parallel_size=moe_expert_parallel_size,
     )
-    normalized_ratios = _validate_routing_ratios(
-        routing_ratios,
+    total_routed_assignments = routing_token_count * router_topk
+    global_per_expert_tokens = materialize_expert_token_counts(
+        routing_ratios=routing_ratios,
+        total_routed_assignments=total_routed_assignments,
         total_expert_num=total_expert_num,
     )
-
-    total_routed_assignments = routing_token_count * router_topk
-    quotas = {
-        expert_id: total_routed_assignments * ratio
-        for expert_id, ratio in normalized_ratios.items()
-    }
-    global_per_expert_tokens = {
-        expert_id: int(floor(quota))
-        for expert_id, quota in quotas.items()
-    }
-    remainder = total_routed_assignments - sum(global_per_expert_tokens.values())
-    if remainder < 0 or remainder >= total_expert_num:
-        raise ValueError("Hamilton remainder is outside the valid expert range")
-
-    ranked_experts = sorted(
-        quotas,
-        key=lambda expert_id: (
-            -(quotas[expert_id] - global_per_expert_tokens[expert_id]),
-            expert_id,
-        ),
-    )
-    for expert_id in ranked_experts[:remainder]:
-        global_per_expert_tokens[expert_id] += 1
-
-    if sum(global_per_expert_tokens.values()) != total_routed_assignments:
-        raise ValueError("global expert token conservation failed")
 
     per_ep_per_expert_tokens: dict[int, dict[int, int]] = {
         ep_id: {} for ep_id in range(moe_expert_parallel_size)
@@ -846,6 +858,7 @@ __all__ = [
     "LayerEPWorkload",
     "RoutingDetails",
     "build_contiguous_expert_ownership",
+    "materialize_expert_token_counts",
     "generate_moe_routing_ratios",
     "materialize_layer_ep_workload",
     "resolve_ep_lane_workload",

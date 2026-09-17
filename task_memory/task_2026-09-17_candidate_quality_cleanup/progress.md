@@ -142,3 +142,9 @@ New unresolved issues: none established.
 - Reconciled exact native model-type declarations and queries in the existing architecture registry. Norm/MXFP4 consumers no longer own Qwen classifications; supplied ModelConfig fields are read directly.
 - Preserved exact matching, optional model-type value, norm/platform/API guard order and error strings. Do not broaden admission through profile aliases/normalization. Adding another native type requires one profile declaration.
 - 183 focused PASS; 240 Gemma and 90 MXFP4 gate outcomes exactly match pre-change code. An initial early registry import exposed a native import-cycle regression; function-local import after normal bootstrap fixes that new path, verified in fresh interpreters. Existing registry-first import debt remains out of scope and recorded, not hidden.
+
+## P3 S7 — completed
+
+- Shared the existing Hamilton implementation within moe_ep_workload; replay consumes the histogram contract directly, with no placeholder replica/EP state. Alias retains the existing ratio-generator entry point.
+- Immutable frozen baseline 52 PASS / cleaned 60 PASS. Discarded initial asynchronous local pre-check as baseline because its source window overlapped editing; reran on frozen checkout.
+- Exact frozen/current comparison: 893 full replay dictionaries including assignments, 67 infeasible rejections and 2,679 EP workload values match. Larger histogram-only characterization also found no difference. Runtime's normalization/arithmetic/tie order is unchanged; final fidelity/timing will include its extracted function call.

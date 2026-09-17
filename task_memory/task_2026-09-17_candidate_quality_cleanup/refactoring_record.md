@@ -24,6 +24,8 @@
 
 ## Intentionally retained patterns
 
+P3 S7: experimental replay duplicated Hamilton allocation and omitted the runtime normalization step. The existing owner now exposes its pure histogram operation; both callers reuse it without a second registry or irrelevant EP state. Verification: 52 frozen / 60 cleaned PASS; 893 exact replay dictionaries, 67 unchanged infeasible rejections, 2,679 exact workloads; 3,407,872 generated histogram comparisons.
+
 P3 S6: native norm/MXFP4 consumers repeated model-name classification. Exact type tuples now live in the existing architecture profiles, queried without broader profile resolution. Verification: 183 PASS and 330 exact admission/error-order comparisons. Native API/platform availability and the bootstrap-dependent local registry import are genuine boundaries and retained.
 
 P3 J1: ROCm begin_forward built the admitted single-phase plan twice. Reusing its first `RocmSequencePlan` preserves metadata, slots, timer scopes and lifecycle outputs exactly; 5 before / 5 after tests and byte-identical snapshots. Two metadata fields remain because begin/end and inactive timer handling still use that supported state representation.
