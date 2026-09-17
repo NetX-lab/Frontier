@@ -7,7 +7,10 @@ from unittest.mock import Mock
 import pytest
 
 from frontier.config.config import RandomForrestExecutionTimePredictorConfig, ReplicaConfig
-from frontier.execution_time_predictor.measurement_input_paths import resolve_measurement_input_paths
+from frontier.execution_time_predictor.measurement_input_paths import (
+    substitute_input_path,
+    resolve_measurement_input_paths,
+)
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import SklearnExecutionTimePredictor
 from frontier.execution_time_predictor.shared_prediction_model_manager import ExecutionTimePredictionModelManager
 from frontier.types import ClusterType, MeasurementType
@@ -19,6 +22,12 @@ class _PathProbePredictor(SklearnExecutionTimePredictor):
 
     def _get_grid_search_params(self):
         return {}
+
+
+@pytest.mark.parametrize("path", ("", "gdn.csv", "{DEVICE}/{MODEL}/{DEVICE}/gdn.csv", "{NETWORK_DEVICE}/{DEVICE}/{MODEL}/gdn.csv"))
+def test_compute_only_substitution_preserves_network_placeholder(path):
+    expected = path.replace("{DEVICE}", "mi355x").replace("{MODEL}", "model/name")
+    assert substitute_input_path(path, device="mi355x", model="model/name") == expected
 
 
 @pytest.fixture

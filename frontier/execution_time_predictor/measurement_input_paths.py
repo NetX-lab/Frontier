@@ -32,15 +32,16 @@ def _derive_device_event_path(config: Any, field_name: str, fallback: str) -> st
     return f"{root}_device_event{extension}"
 
 
-def _template_substitute(path: str, *, device: str, model: str, network_device: str) -> str:
+def substitute_input_path(
+    path: str, *, device: str, model: str, network_device: str | None = None,
+) -> str:
+    """Bind compute placeholders and, when supplied, the network placeholder."""
     if not path:
         return ""
-    return (
-        str(path)
-        .replace("{DEVICE}", str(device))
-        .replace("{MODEL}", str(model))
-        .replace("{NETWORK_DEVICE}", str(network_device))
-    )
+    resolved = str(path).replace("{DEVICE}", str(device)).replace("{MODEL}", str(model))
+    if network_device is not None:
+        resolved = resolved.replace("{NETWORK_DEVICE}", str(network_device))
+    return resolved
 
 
 def resolve_measurement_input_paths(
@@ -98,13 +99,13 @@ def resolve_measurement_input_paths(
             configured = explicit[key]
         elif alias in explicit:
             configured = explicit[alias]
-        return _template_substitute(
+        return substitute_input_path(
             configured, device=device, model=model, network_device=network_device,
         )
 
     def common(name: str) -> str:
         key = f"{name}_input_file"
-        return _template_substitute(
+        return substitute_input_path(
             explicit.get(key, getattr(config, key, "")),
             device=device, model=model, network_device=network_device,
         )
@@ -145,7 +146,7 @@ def resolve_training_file_paths(
     for name in ("pp_stage_boundary", "pp_receiver_head", "pp_producer_send_path", "pp_prefill_consumer_active"):
         key = f"{name}_input_file"
         value = (overrides or {}).get(key, getattr(config, key, ""))
-        resolved[key] = _template_substitute(value, device=device, model=model, network_device=network_device)
+        resolved[key] = substitute_input_path(value, device=device, model=model, network_device=network_device)
     return resolved
 
 

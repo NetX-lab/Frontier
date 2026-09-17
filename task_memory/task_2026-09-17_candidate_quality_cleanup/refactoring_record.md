@@ -24,6 +24,8 @@
 
 ## Intentionally retained patterns
 
+P4 M3: GDN manager duplicated config defaults and placeholder replacement. Required config/model members now bind through the existing measurement-path helper; its optional network argument preserves the actual compute-only contract. Verification: 101 focused PASS, including four exact original-expression path comparisons.
+
 P4 M2: four registry selectors reconstructed mandatory state lazily for incomplete fixtures. Removed that branch and normally constructed the three affected fixture owners. Reused manager constructor and existing family registries; 181 tests and 12 exact dictionary-identity comparisons PASS. Validated no-default dynamic attribute selection remains; typed/legacy/precision identities are genuinely distinct.
 
 P4 M1: manager reimplemented hybrid-versus-MLA selection and silently defaulted a missing replica to CUDA. It now reuses runtime family binding and requires the production replica input. Verification: 127 before/after PASS, 120 exact measurement selections, four exact family classifications. Dataset-only whole-model None remains supported.

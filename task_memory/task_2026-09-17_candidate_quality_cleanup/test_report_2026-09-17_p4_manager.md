@@ -31,3 +31,13 @@ Updated only three affected fixture owners to construct a real manager with empt
 Ran the M1 command above plus `tests/unit/test_on_demand_prediction_contract.py tests/unit/test_typed_ep_predictor_contract.py`: **181 PASS**, 19.77 s; `/data/ycfeng/tmp/quality-p4-manager-registries.log`. Existing 127-test M1 run is the pre-change control. Assertions preserve cache loading/training avoidance, typed identities and measurement/precision lookup outputs.
 
 Direct frozen-method/current-method comparison on a normally constructed manager verifies all four selectors x three families return the identical dictionary object both before and after mutation; manager attribute inventory is unchanged. **12 exact identity checks PASS**, no dynamic attributes; `/data/ycfeng/tmp/quality-p4-manager-registry-exact.log`. No new cache, dictionary schema or public model-view behavior.
+
+## M3: canonical GDN input-path binding
+
+The manager now reads its required model/config members and uses the existing measurement-path substitution owner. The sole default path remains on the predictor configuration. Promoting the existing helper to `substitute_input_path` avoids a second implementation; its optional network argument represents a real compute-only caller, not a missing-object fallback. GDN continues to substitute DEVICE/MODEL only, leaving a literal NETWORK_DEVICE untouched.
+
+```bash
+env PATH=/data/ycfeng/tmp/quality-review-env/bin:$PATH PYTHONPATH=. TMPDIR=/data/ycfeng/tmp PYTHONDONTWRITEBYTECODE=1 WANDB_DISABLED=true OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 /data/ycfeng/tmp/quality-review-env/bin/python -m pytest -q -p no:cacheprovider tests/unit/test_measurement_path_precedence.py tests/unit/test_measurement_family_selector.py tests/unit/test_gdn_training_predictor_increment8.py tests/unit/test_gdn_artifact_boundary.py tests/unit/test_gdn_hybrid_e2e_increment14ab.py
+```
+
+Observed **101 PASS**, 22.19 s; `/data/ycfeng/tmp/quality-p4-manager-gdn-path-final.log`. Four new path cases compare directly with the original replacement expression: empty, plain, repeated placeholders and literal network placeholder. Existing tests verify path precedence and GDN load/mismatch behavior. The initial same-scope check passed 101 tests in 20.99 s before the helper's public rename; the final check above verifies that rename too. This is CPU path/artifact evidence, not native profiling.

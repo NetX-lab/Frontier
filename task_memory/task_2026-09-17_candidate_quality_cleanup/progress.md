@@ -169,3 +169,8 @@ New unresolved issues: none established.
 
 - Four family selectors now use constructor-owned dictionaries without lazy None/reinitialization. Three incomplete fixture owners use real empty-cluster construction; test-only manual registry initialization is removed.
 - 181 focused PASS; twelve frozen/current selector comparisons preserve dictionary identity/mutation and create no attributes. The remaining no-default getattr selects a validated registry name, not optional state.
+
+## P4 M3 — completed
+
+- Reused the measurement-path substitution owner for GDN and read constructor-owned model/config members directly. Removed duplicated GDN default; preserved compute-only NETWORK_DEVICE literal behavior.
+- Final focused result independently read after continuation: 101 PASS in 22.19 s. Four direct comparisons use the old expression as the oracle; existing path-precedence and artifact-loading checks pass. No semantic-choice blocker.

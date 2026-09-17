@@ -37,6 +37,7 @@ from frontier.execution_time_predictor.attention_tp_policy import (
 )
 from frontier.execution_time_predictor.cache_io import atomic_pickle_dump
 from frontier.execution_time_predictor.measurement_input_paths import (
+    substitute_input_path,
     resolve_measurement_input_paths,
     resolve_training_file_paths,
     resolve_event_measurement_type,
@@ -852,21 +853,16 @@ class ExecutionTimePredictionModelManager:
         simulator initialization only loads the resulting manifest/artifacts.
         """
 
-        model_config = getattr(replica_config, "model_config", None)
-        get_num_gdn_layers = getattr(model_config, "get_num_gdn_layers", None)
-        if not callable(get_num_gdn_layers) or int(get_num_gdn_layers()) <= 0:
+        model_config = replica_config.model_config
+        if model_config.get_num_gdn_layers() <= 0:
             return
         from frontier.execution_time_predictor.gdn_predictor import GDNPredictor
 
-        gdn_file = str(
-            getattr(
-                execution_time_predictor_config,
-                "gdn_input_file",
-                "./data/profiling/compute/{DEVICE}/{MODEL}/gdn.csv",
-            )
-        ).replace("{DEVICE}", str(replica_config.device))
-        model_name = model_config.get_name()
-        gdn_file = gdn_file.replace("{MODEL}", model_name)
+        gdn_file = substitute_input_path(
+            execution_time_predictor_config.gdn_input_file,
+            device=replica_config.device,
+            model=model_config.get_name(),
+        )
         if not os.path.isfile(gdn_file):
             raise FileNotFoundError(
                 "Hybrid GDN configuration requires a standard gdn.csv input; "
