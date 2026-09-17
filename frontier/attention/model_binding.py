@@ -285,8 +285,9 @@ def resolve_attention_topology(
         full_attention_interval=config.full_attention_interval,
         has_gated_delta_net=gdn_config is not None,
     )
+    gdn_variant, = GATED_DELTA_NET_ATTENTION_FAMILY.supported_variants
     return tuple(
-        LayerAttentionSpec(layer_id, GATED_DELTA_NET_ATTENTION_FAMILY.family_id, "qwen3_5")
+        LayerAttentionSpec(layer_id, GATED_DELTA_NET_ATTENTION_FAMILY.family_id, gdn_variant)
         if mixer is SequenceMixerType.GATED_DELTA_NET
         else LayerAttentionSpec(layer_id, binding.family_id, binding.variant_id)
         for layer_id, mixer in enumerate(schedule)

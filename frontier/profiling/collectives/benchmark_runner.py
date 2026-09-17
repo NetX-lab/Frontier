@@ -1,5 +1,4 @@
 import gc
-import os
 from typing import Optional
 
 import ray
@@ -11,6 +10,7 @@ from frontier.profiling.collectives.collectives_input import (
     precision_to_dtype as _precision_to_dtype,
 )
 from frontier.profiling.collectives.collectives_wrapper import CollectiveWrapper
+from frontier.profiling.collectives.main import _configure_collective_environment
 from frontier.profiling.common.accelerator import set_process_visible_device
 
 logger = init_logger(__name__)
@@ -31,13 +31,7 @@ class BenchmarkRunner:
             self._gpu_id % self._max_devices_per_node,
             torch_module=torch,
         )
-        # set additional nccl env vars
-        # This env var set by Ray causes exceptions with graph building.
-        os.environ.pop("NCCL_ASYNC_ERROR_HANDLING", None)
-        # Required for properly capturing nccl ops
-        os.environ["NCCL_GRAPH_MIXING_SUPPORT"] = "0"
-        os.environ["KINETO_LOG_LEVEL"] = "5"
-        os.environ["NCCL_IGNORE_DISABLED_P2P"] = "1"
+        _configure_collective_environment()
         return visibility
 
     def run_collective(

@@ -130,3 +130,9 @@ New unresolved issues: none established.
 - Reviewed the ROCm sidecar patch against the mixed-batch guard: successful nonempty inputs contain only one phase, so metadata reuses the first sequence plan. Required lifecycle None states and both timer scopes remain.
 - Verified stored snapshots with cmp: exact metadata/slot/output/timer equality, plan builder calls 5 -> 3 across prefill/decode/empty begins. Focused 5 before / 5 after PASS. CPU stand-ins exercise real wrapper construction, not native attention numerics.
 - Main stages only J1 production/test/report files; J2 remains disjoint and starts after this commit.
+
+## P3 small contract reuse — completed
+
+- GDN topology uses the family-owned singleton variant; collective Ray runner reuses the existing environment setup owner with original ordering. No new registry/helper or standard-to-experimental dependency.
+- 39 tests PASS before and after; direct normally constructed BenchmarkRunner setup against frozen candidate preserves all four environment values and device-selection call.
+- S7 investigation expanded to 3,407,872 histogram comparisons across distributions, expert counts 4–256, sizes 1–4096, top-k up to 8 and four seeds. No admitted histogram mismatch. Plan: extract the existing integerization implementation within moe_ep_workload for both consumers, avoiding irrelevant replica/EP placeholder state; compare actual replay counts/assignments and runtime workload tests before commit.
