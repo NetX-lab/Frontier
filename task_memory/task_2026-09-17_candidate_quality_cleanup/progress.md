@@ -268,3 +268,7 @@ Reused resolve_runtime_attention_family in the ROCm producer and restricted acce
 ### R03 completed
 
 Immutable generation-qualified estimator filenames plus the existing atomic manifest replacement remove overwrite/crash/read races without changing manifest schema. Old files remain available. 4 red reproductions -> 53 PASS, 22.46 s, including non-exact predictions for both changed source and changed estimator settings. Report: test_report_2026-09-17_r03_publication.md. R02 native collection separately completed: 4 attention cases collected (8 unrelated deselected), 0.74 s; no native execution.
+
+### R04 completed
+
+Producer emits query_len_cv and num_stateful_requests. CSV rows with explicit lengths derive canonical dispersion and validate supplied values; missing ambiguous ragged dispersion is rejected, while identifiable legacy uniform rows preserve zero CV. One shared calculation preserves runtime/imported exact keys. 3 red failures -> 98 PASS, 16.96 s. Report: test_report_2026-09-17_r04_features.md.

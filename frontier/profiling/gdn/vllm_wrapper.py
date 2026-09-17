@@ -721,6 +721,8 @@ class VllmQwen35GDNWrapper:
             "batch_num_prefill_tokens": profile_input.num_prefill_tokens,
             "batch_num_decode_tokens": profile_input.num_decode_tokens,
             "max_query_len": profile_input.max_query_len,
+            "query_len_cv": profile_input.query_len_cv,
+            "num_stateful_requests": profile_input.num_stateful_requests,
             "has_initial_state": profile_input.has_initial_state,
             "state_init_mode": profile_input.state_init_mode,
             "physical_batch_size": profile_input.physical_batch_size,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import math
 import warnings
 from typing import Any, Mapping, TYPE_CHECKING
@@ -96,6 +97,12 @@ def _non_negative_int(value: Any, field_name: str) -> int:
     return integer
 
 
+def _query_length_cv(lengths: tuple[int, ...]) -> float:
+    mean = sum(lengths) / len(lengths)
+    variance = sum((value - mean) ** 2 for value in lengths) / len(lengths)
+    return math.sqrt(variance) / mean
+
+
 @dataclass(frozen=True)
 class GDNBatchFeatures:
     """Phase-aware physical batch features for one GDN prediction query.
@@ -176,9 +183,7 @@ class GDNBatchFeatures:
             raise ValueError(
                 "GDN batch_num_tokens must equal the sum of scheduled query lengths"
             )
-        mean_query_len = sum(query_lengths) / batch_size
-        variance = sum((value - mean_query_len) ** 2 for value in query_lengths) / batch_size
-        query_len_cv = math.sqrt(variance) / mean_query_len
+        query_len_cv = _query_length_cv(query_lengths)
         prefill_tokens = _non_negative_int(
             batch.num_prefill_tokens, "num_prefill_tokens"
         )
@@ -234,12 +239,31 @@ class GDNBatchFeatures:
                 "GDN training row prefill/decode token counts must sum to total tokens"
             )
         phase = "prefill" if prefill_tokens else "decode"
+        query_len_cv = row.get("query_len_cv")
+        if "query_lens" in row:
+            raw_lengths = row["query_lens"]
+            if isinstance(raw_lengths, str):
+                raw_lengths = json.loads(raw_lengths)
+            lengths = tuple(_positive_int(value, "query_len") for value in raw_lengths)
+            if (len(lengths) != batch_size or sum(lengths) != batch_num_tokens
+                    or max(lengths) != int(row["max_query_len"])):
+                raise ValueError("GDN query_lens must match batch size, tokens and max_query_len")
+            derived_cv = _query_length_cv(lengths)
+            if query_len_cv is not None and not math.isclose(
+                float(query_len_cv), derived_cv, rel_tol=1e-9, abs_tol=1e-12
+            ):
+                raise ValueError("GDN query_len_cv disagrees with query_lens")
+            query_len_cv = derived_cv
+        elif query_len_cv is None:
+            if batch_num_tokens != batch_size * int(row["max_query_len"]):
+                raise ValueError("Ragged GDN rows require query_lens or query_len_cv")
+            query_len_cv = 0.0
         stateful_default = batch_size if bool(row.get("has_initial_state", False)) else 0
         return cls(
             batch_size=batch_size,
             batch_num_tokens=batch_num_tokens,
             max_query_len=_positive_int(row["max_query_len"], "max_query_len"),
-            query_len_cv=float(row.get("query_len_cv", 0.0)),
+            query_len_cv=float(query_len_cv),
             num_stateful_requests=_non_negative_int(
                 row.get("num_stateful_requests", stateful_default),
                 "num_stateful_requests",
