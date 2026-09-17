@@ -264,3 +264,7 @@ Eight existing non-dummy cases: 8 PASS, 79.30 s. Required fidelity: 58 PASS / 0 
 ### R02 completed — CPU contract verified
 
 Reused resolve_runtime_attention_family in the ROCm producer and restricted accepted layouts to DENSE_KV. Whole-model hybrid rejection remains intact. 25 PASS, 3.13 s; native prefill/decode coverage now includes the actual Qwen3.8 config and remains hardware-gated. Report: test_report_2026-09-17_r02_binding.md. No native execution claim.
+
+### R03 completed
+
+Immutable generation-qualified estimator filenames plus the existing atomic manifest replacement remove overwrite/crash/read races without changing manifest schema. Old files remain available. 4 red reproductions -> 53 PASS, 22.46 s, including non-exact predictions for both changed source and changed estimator settings. Report: test_report_2026-09-17_r03_publication.md. R02 native collection separately completed: 4 attention cases collected (8 unrelated deselected), 0.74 s; no native execution.

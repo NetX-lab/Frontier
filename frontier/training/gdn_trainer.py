@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import Any, Dict, List
+from uuid import uuid4
 
 import numpy as np
 import pandas as pd
@@ -246,6 +247,7 @@ class GDNTrainer(BaseTrainer):
         frame = self._load_dataset()
         models: Dict[str, Any] = {}
         manifest_tasks: list[dict[str, Any]] = []
+        generation = uuid4().hex
         for operator_name, phase in self.TASKS:
             task = _task_name(operator_name, phase)
             task_frame = frame[frame["__gdn_phase"] == phase].copy()
@@ -272,7 +274,7 @@ class GDNTrainer(BaseTrainer):
                 feature_cols=list(GDN_FEATURE_COLUMNS),
                 target_col=target_col,
             )
-            artifact_name = f"{task}.pkl"
+            artifact_name = f"{task}.{generation}.pkl"
             models[task] = estimator
             manifest_tasks.append(
                 {
@@ -284,7 +286,8 @@ class GDNTrainer(BaseTrainer):
                     "target_column": target_col,
                 }
             )
-        # Fit and validate every task before exposing any new final artifact.
+        # Keep prior generations immutable so readers retain their manifest snapshot.
+        # Publish the new manifest only after every artifact is complete.
         for task in manifest_tasks:
             atomic_pickle_dump(models[task["task"]], Path(self.output_dir) / task["artifact"])
         manifest = {

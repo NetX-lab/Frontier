@@ -267,8 +267,12 @@ for diagnostics, but it is deliberately ignored by training and prediction;
 runtime cost is the sum of input projections, the phase-specific GDN core, and
 the output projection.
 
-Each successful run writes six `<task>.pkl` estimator files and a
-`gdn_manifest.json`. The manifest records the complete identity, task-to-file
+Each successful run writes six immutable `<task>.<generation>.pkl` estimator
+files, then atomically replaces `gdn_manifest.json` to publish the complete
+set. An interrupted retraining leaves the previous manifest and generation
+usable. Readers retain the files named by their original manifest even when
+a concurrent writer publishes a new generation. Old generations are retained;
+publication does not delete them. The manifest records the complete identity, task-to-file
 mapping, feature names, and target columns. The simulator loads these files
 from the configured predictor cache; `GDNPredictor` never fits at runtime.
 Exact profiled feature rows are used first. An out-of-range query emits a
