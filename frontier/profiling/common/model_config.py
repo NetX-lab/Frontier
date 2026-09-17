@@ -80,7 +80,7 @@ class ModelConfig:
         linear_value_head_dim: Optional[int] = None,
         linear_num_key_heads: Optional[int] = None,
         linear_num_value_heads: Optional[int] = None,
-        gdn_output_gate_type: str = "silu",
+        gdn_output_gate_type: str = GatedDeltaNetConfig.output_gate_type,
         # Quantization config for metadata tracking
         quantization_config: Optional[QuantizationConfig] = None,
         # Whether lm_head shares weights with embed_tokens (HF standard field)

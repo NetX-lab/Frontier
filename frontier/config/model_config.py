@@ -350,7 +350,7 @@ class BaseModelConfig(BaseFixedConfig):
     linear_value_head_dim: Optional[int] = None
     linear_num_key_heads: Optional[int] = None
     linear_num_value_heads: Optional[int] = None
-    gdn_output_gate_type: str = "silu"
+    gdn_output_gate_type: str = GatedDeltaNetConfig.output_gate_type
 
     # Default model precision from model config (e.g., torch_dtype in HF config)
     torch_dtype: str = "float16"
@@ -868,7 +868,9 @@ class BaseModelConfig(BaseFixedConfig):
             linear_value_head_dim=optional_int("linear_value_head_dim"),
             linear_num_key_heads=optional_int("linear_num_key_heads"),
             linear_num_value_heads=optional_int("linear_num_value_heads"),
-            gdn_output_gate_type=str(cfg.get("output_gate_type", "silu")),
+            gdn_output_gate_type=str(
+                cfg.get("output_gate_type", GatedDeltaNetConfig.output_gate_type)
+            ),
             torch_dtype=torch_dtype,
             quantization_config=quantization_config,
             fused_add_norm_capability=fused_add_norm_capability,

@@ -189,3 +189,9 @@ New unresolved issues: none established.
 
 - Removed the remaining missing-self-map recovery in manager cluster-family lookup. Kept absent-cluster behavior rather than imposing a new public error contract.
 - 54 focused PASS in 6.28 s; extracted frozen/current methods yield 24 exact value/error outcomes across all roles, CUDA/ROCm/unknown platforms and absent clusters. Sparse path overrides/aliases and SKU identity resolution remain supported boundaries, not incomplete-constructor recovery.
+
+## P4 A5 — completed; integrated freeze follows
+
+- Four GDN gate defaults now reference the existing GatedDeltaNetConfig declaration; conversions, null rejection and swish normalization remain unchanged. No new policy abstraction.
+- 31 existing baseline + 43 corrected pre-change characterization cases PASS; combined after 74 PASS. Main independently verified complete 259,793-byte snapshots (54 outcomes) with cmp. Initial eight new-test failures incorrectly expected unwrapped gate errors; corrected on unchanged production to assert the existing structural error plus cause. Original failed log is preserved.
+- Source implementation is complete pending broader P4/P5 checks. Inventory review found no unreviewed changed-path gap; final evidence is still pending and must not be inferred from earlier phase runs.

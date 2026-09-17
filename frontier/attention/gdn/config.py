@@ -241,5 +241,7 @@ def resolve_gdn_shape(config: Any) -> GatedDeltaNetConfig | None:
         value_head_dim=int(values[2]),
         num_key_heads=int(values[3]),
         num_value_heads=int(values[4]),
-        output_gate_type=str(getattr(config, "gdn_output_gate_type", "silu")),
+        output_gate_type=str(
+            getattr(config, "gdn_output_gate_type", GatedDeltaNetConfig.output_gate_type)
+        ),
     )
