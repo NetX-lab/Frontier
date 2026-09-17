@@ -1374,13 +1374,13 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
             # Homogeneous dense layers share numerical work. Stage-owned
             # values belong to the first identity in the assembled stage.
             timing = self._predict_disaggregated_layer_execution_time(
-                batch, stage_id, cluster_type, 1, layer_id,
+                batch, stage_id, cluster_type, layer_id,
                 include_moe, include_ffn, include_attention,
             ).finalized_copy()
             return self._assemble_stage([timing] * num_layers, first_layer_id=layer_id)
         layers = [
             self._predict_disaggregated_layer_execution_time(
-                batch, stage_id, cluster_type, 1, layer_id + offset,
+                batch, stage_id, cluster_type, layer_id + offset,
                 include_moe, include_ffn, include_attention,
                 include_stage_owned=offset == 0,
             )
@@ -1393,7 +1393,6 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         batch: Batch,
         stage_id: int,
         cluster_type: ClusterType,
-        num_layers: int = 1,
         layer_id: int = 0,
         include_moe: bool | None = None,
         include_ffn: bool = True,
@@ -1412,8 +1411,9 @@ class SklearnDisaggregationExecutionTimePredictor(SklearnMoEExecutionTimePredict
         The public stage method aggregates physical layers. Only its first
         layer constructs the stage-owned communication and overhead values.
         """
-        if num_layers < 1:
-            raise ValueError(f"num_layers must be >= 1, got {num_layers}")
+        # Existing operator diagnostics take a layer count; this entry always
+        # constructs one physical layer, never an aggregate prediction.
+        num_layers = 1
         if type(include_ffn) is not bool:
             raise ValueError("include_ffn must be a bool")
         if type(include_attention) is not bool:

@@ -74,3 +74,12 @@ New unresolved issues: none established.
 - Consolidated Qwen type/exact-alias recognition in `model_architectures.py` without entering profile/topology resolution. Kept registry, structural and topology precedence/normalization differences.
 - Characterization: 100 tests PASS before (9.88 s) and after (10.78 s). Initial direct re-export triggered a verified import cycle; the existing exported GDN function now delegates with a function-local import. This adapter is required by actual import ordering, not an incomplete fixture.
 - Binding follow-up: 110 PASS; canonical GDN family identity replaces consumer literals, homogeneous runtime binding avoids repeating its already-proven guard, and topology cache regression patches the actual owner lookup.
+
+## Phase-boundary evidence — in-progress
+
+- Running the source-stable 58-case fidelity campaign at `61595325` against frozen `c288a19f`, with two workers. Output: `/data/ycfeng/tmp/quality-p1-fidelity`; no production edits during execution.
+- P2 pre-change reporting baseline: 129 PASS in 7.01 s; `/data/ycfeng/tmp/quality-p2-before.log`. The suite covers timing copies, full-stage scope, mixed layers, operator metadata and EP lane reporting.
+- Corrected the supplemental artifact inspection to require one actual `frontier_stage_batch_ledger_summary.json` and one `acceptance_evidence.json` per case. Both P1a and P1d compare PASS for all 16 pairs, with an explicit count assertion. Earlier prose claiming stage-summary equality is now supported by a nonempty check; the earlier filename probe alone was insufficient.
+- Reviewed finalized-copy paths: repeated calls return the existing immutable snapshot, so they are not repeated deep copies. Stage scalar projections use finite declared property sets, not broad `__getattr__`. Single-layer helpers reject multi-layer stages; keep these supported interfaces.
+- P1 fidelity finished **58 PASS / 0 FAIL** at `61595325`; every requested stable artifact and ledger/request value matches the frozen candidate.
+- Subsequent L2 private-layer cleanup removes an uncalled aggregate degree of freedom from two private interfaces. Real MTP stage width is retained. 105 focused tests PASS in 7.92 s; final E2E will include this small subsequent change.

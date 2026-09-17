@@ -3247,7 +3247,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         cache: dict[tuple[str, str], AttentionTime] = {}
         layers = [
             self._predict_moe_layer_execution_time(
-                batch, stage_id, cluster_type, 1, layer_id + offset,
+                batch, stage_id, cluster_type, layer_id + offset,
                 include_moe, include_ffn, include_attention, cache,
                 include_stage_owned=offset == 0,
                 stage_num_layers=num_layers,
@@ -3261,7 +3261,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         batch: Batch,
         stage_id: int,
         cluster_type: ClusterType,
-        num_layers: int = 1,
         layer_id: int = 0,
         include_moe: bool | None = None,
         include_ffn: bool = True,
@@ -3272,8 +3271,6 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
         stage_num_layers: int = 1,
     ) -> ExecutionTime:
         """Predict one physical layer, retaining its independent MoE routing."""
-        if num_layers < 1:
-            raise ValueError(f"num_layers must be >= 1, got {num_layers}")
         if type(include_ffn) is not bool:
             raise ValueError("include_ffn must be a bool")
         if type(include_attention) is not bool:
@@ -3299,14 +3296,11 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
                 "include_moe=False selects a dense FFN branch"
             )
 
-        # Resolve the existing concrete layer/aggregate classification before
-        # either dummy timing or profiling-backed measurement work.  An
-        # identity-free aggregate uses the model-level MoE capability, while a
-        # concrete layer uses the model-owned layer predicate.
+        # Classify the actual physical layer before dummy or profiled work.
         include_moe_for_layer = self._resolve_moe_layer_classification(
             self._model_config,
             layer_id=layer_id,
-            num_layers=num_layers,
+            num_layers=1,
             include_moe=include_moe,
             include_ffn=include_ffn,
         )
@@ -3340,7 +3334,7 @@ class SklearnMoEExecutionTimePredictor(SklearnExecutionTimePredictor):
             "layer_id=%s, batch_id=%s, batch_size=%s, num_tokens=%s",
             stage_id,
             cluster_type,
-            num_layers,
+            1,
             layer_id,
             batch.id,
             batch.size,

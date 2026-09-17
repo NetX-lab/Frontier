@@ -258,7 +258,7 @@ def test_disaggregated_dense_stage_reuses_one_snapshot_with_exact_oracle(monkeyp
     first_layer, num_layers = 3, 5
     expected = predictor._assemble_stage([
         predictor._predict_disaggregated_layer_execution_time(
-            batch, 0, role, 1, first_layer + offset,
+            batch, 0, role, first_layer + offset,
             include_stage_owned=offset == 0,
         )
         for offset in range(num_layers)
