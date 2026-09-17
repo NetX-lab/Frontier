@@ -429,6 +429,8 @@ class ModelArchitectureProfile:
     layer_contracts: tuple[LayerContractSpec, ...] = field(
         default_factory=_default_layer_contracts
     )
+    gemma_rms_norm_model_types: tuple[str, ...] = ()
+    mxfp4_moe_model_types: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.profile_id:
@@ -506,6 +508,7 @@ class ModelArchitectureProfile:
                 ),
             ),
             expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
+            gemma_rms_norm_model_types=("qwen3_next",),
             match=match or (lambda _config: False),
         )
 
@@ -623,6 +626,8 @@ class ModelArchitectureProfile:
             ),
             expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
             experimental=True,
+            gemma_rms_norm_model_types=("qwen3_5_moe_text",),
+            mxfp4_moe_model_types=("qwen3_5_moe_text",),
             runtime_limitations=(
                 "prefix cache unsupported",
                 "speculative decoding and MTP unsupported",
@@ -1160,6 +1165,20 @@ class ModelArchitectureRegistry:
 
     def iter_profiles(self) -> tuple[ModelArchitectureProfile, ...]:
         return tuple(self._profiles_by_id.values())
+
+    def uses_gemma_rms_norm(self, model_type: str | None) -> bool:
+        """Match declared native norm types exactly, without profile resolution."""
+        return any(
+            model_type in profile.gemma_rms_norm_model_types
+            for profile in self.iter_profiles()
+        )
+
+    def supports_mxfp4_moe(self, model_type: str | None) -> bool:
+        """Match declared native MXFP4 types exactly, without normalization."""
+        return any(
+            model_type in profile.mxfp4_moe_model_types
+            for profile in self.iter_profiles()
+        )
 
     def resolve(self, config: Any) -> ModelArchitectureProfile:
         explicit_profile = getattr(config, "model_architecture_profile", None)

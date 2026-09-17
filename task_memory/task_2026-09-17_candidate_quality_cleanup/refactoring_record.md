@@ -24,6 +24,8 @@
 
 ## Intentionally retained patterns
 
+P3 S6: native norm/MXFP4 consumers repeated model-name classification. Exact type tuples now live in the existing architecture profiles, queried without broader profile resolution. Verification: 183 PASS and 330 exact admission/error-order comparisons. Native API/platform availability and the bootstrap-dependent local registry import are genuine boundaries and retained.
+
 P3 J1: ROCm begin_forward built the admitted single-phase plan twice. Reusing its first `RocmSequencePlan` preserves metadata, slots, timer scopes and lifecycle outputs exactly; 5 before / 5 after tests and byte-identical snapshots. Two metadata fields remain because begin/end and inactive timer handling still use that supported state representation.
 
 P3 S5: profiling ModelConfig duplicated canonical family dispatch to accommodate a monkeypatch and overlaid already-parsed model fields. It now delegates to `resolve_runtime_attention_family` and reuses BaseModelConfig parsing. Verification: 129 PASS; all 22 model snapshot entries exactly equal. Raw model_type and linear-shape overlays remain because explicit-null/string serialization is an actual compatibility concern.

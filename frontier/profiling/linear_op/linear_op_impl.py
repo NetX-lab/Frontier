@@ -24,6 +24,7 @@ from frontier.profiling.common.utils import raise_if_fp8_requested
 from frontier.profiling.linear_op.profiling_plan import memory_operator_enabled
 from frontier.model_architectures import (
     AttentionLinearOpImplementation,
+    MODEL_ARCHITECTURE_REGISTRY,
     get_model_architecture_profile,
 )
 
@@ -62,9 +63,8 @@ def _supports_share_expert(config: ModelConfig) -> bool:
 
 def _uses_gemma_rms_norm(config: ModelConfig) -> bool:
     return (
-        getattr(config, "norm", None) == "rms_norm"
-        and getattr(config, "model_type", None)
-        in {"qwen3_next", "qwen3_5_moe_text"}
+        config.norm == "rms_norm"
+        and MODEL_ARCHITECTURE_REGISTRY.uses_gemma_rms_norm(config.model_type)
     )
 
 

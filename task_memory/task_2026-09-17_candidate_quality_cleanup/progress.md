@@ -136,3 +136,9 @@ New unresolved issues: none established.
 - GDN topology uses the family-owned singleton variant; collective Ray runner reuses the existing environment setup owner with original ordering. No new registry/helper or standard-to-experimental dependency.
 - 39 tests PASS before and after; direct normally constructed BenchmarkRunner setup against frozen candidate preserves all four environment values and device-selection call.
 - S7 investigation expanded to 3,407,872 histogram comparisons across distributions, expert counts 4–256, sizes 1–4096, top-k up to 8 and four seeds. No admitted histogram mismatch. Plan: extract the existing integerization implementation within moe_ep_workload for both consumers, avoiding irrelevant replica/EP placeholder state; compare actual replay counts/assignments and runtime workload tests before commit.
+
+## P3 S6 — completed
+
+- Reconciled exact native model-type declarations and queries in the existing architecture registry. Norm/MXFP4 consumers no longer own Qwen classifications; supplied ModelConfig fields are read directly.
+- Preserved exact matching, optional model-type value, norm/platform/API guard order and error strings. Do not broaden admission through profile aliases/normalization. Adding another native type requires one profile declaration.
+- 183 focused PASS; 240 Gemma and 90 MXFP4 gate outcomes exactly match pre-change code. An initial early registry import exposed a native import-cycle regression; function-local import after normal bootstrap fixes that new path, verified in fresh interpreters. Existing registry-first import debt remains out of scope and recorded, not hidden.

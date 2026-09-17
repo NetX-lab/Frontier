@@ -456,7 +456,10 @@ def _run_functional_fused_experts_iteration(
 
 def validate_mxfp4_runtime(*, model_type: Optional[str]) -> None:
     """Admit only the model/platform implemented by the online MXFP4 adapter."""
-    if model_type != "qwen3_5_moe_text":
+    # Resolve this dependency after the architecture/config bootstrap cycle.
+    from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
+
+    if not MODEL_ARCHITECTURE_REGISTRY.supports_mxfp4_moe(model_type):
         raise ValueError("MXFP4 profiling requires model_type='qwen3_5_moe_text'")
     if accelerator_platform(torch) != "rocm":
         raise ValueError("MXFP4/AITER profiling requires ROCm")
