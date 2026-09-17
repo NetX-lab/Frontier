@@ -2091,8 +2091,7 @@ class ReplicaConfig:
             moe_expert_parallel_size=self.moe_expert_parallel_size,
             attn_dp=self.attn_dp,
             cross_node=(
-                int(getattr(self, "world_size", 1))
-                > int(getattr(self.node_config, "num_devices_per_node", 1))
+                int(self.world_size) > int(self.node_config.num_devices_per_node)
             ),
         )
 
@@ -5391,11 +5390,7 @@ class SimulationConfig(ABC):
                 prefix_cache_enabled=prefix_cache_enabled,
                 pd_enabled=pd_enabled,
                 speculative_enabled=bool(
-                    getattr(
-                        getattr(replica_config, "speculative_decoding_config", None),
-                        "enabled",
-                        False,
-                    )
+                    replica_config.speculative_decoding_config.enabled
                 ),
                 num_pipeline_stages=replica_config.num_pipeline_stages,
                 moe_expert_parallel_size=replica_config.moe_expert_parallel_size,

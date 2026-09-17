@@ -190,10 +190,9 @@ def validate_typed_operator_metadata(
         from frontier.model_architectures import MODEL_ARCHITECTURE_REGISTRY
 
         for registered_profile in MODEL_ARCHITECTURE_REGISTRY.iter_profiles():
-            attention_linear_ops = getattr(registered_profile, "attention_linear_ops", None)
-            if attention_linear_ops is not None:
-                architecture_names.update(attention_linear_ops.sharded_ops)
-                architecture_names.update(attention_linear_ops.replicated_ops)
+            attention_linear_ops = registered_profile.attention_linear_ops
+            architecture_names.update(attention_linear_ops.sharded_ops)
+            architecture_names.update(attention_linear_ops.replicated_ops)
     if architecture_profile is not None:
         attention_linear_ops = getattr(architecture_profile, "attention_linear_ops", None)
         if attention_linear_ops is None:

@@ -179,3 +179,8 @@ New unresolved issues: none established.
 
 - Reviewed supplied-model direct getters in GDNPredictor/GDNTrainer and removed GDNTrainer's unread DataFrame state. Dataset-only model=None and absent GDN shape remain supported; profile/quant override precedence and serialized validation stay intact.
 - 51 before / 53 after focused PASS. Eight independent training campaigns produce 48 byte-identical estimator pairs and eight identical manifests; 32 cross-loads preserve 192 exact prediction dictionaries. Main independently compared all 56 files with an explicit count assertion. Report: test_report_2026-09-17_p4_gdn.md.
+
+## P4 S8 — completed
+
+- Reconciled config/typed-registry sidecar: constructor-owned topology and speculative fields are direct; internal registered profiles expose mandatory attention_linear_ops. External metadata validation, optional roles and scheduler-dependent prefix capability remain unchanged.
+- 135 existing baseline + 30 new pre-change characterization tests PASS; combined post-change 165 PASS. Main independently cmp-verified complete 605,937-byte snapshots: 20 replica cases, nine simulation guard cases, 47 calls and 66 metadata outcomes, including unchanged rejections.

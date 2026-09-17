@@ -24,6 +24,8 @@
 
 ## Intentionally retained patterns
 
+P4 S8: config guards and internal registry enumeration treated constructor-owned fields as optional. Direct topology/speculative/attention-linear access reuses existing dataclass and registry contracts. Verification: 165 PASS and exact full guard/metadata snapshots. Heterogeneous scheduler capability, optional roles and external profile validation remain genuine boundary checks.
+
 P4 S1: supplied-model member reflection weakened existing runtime/profiling ModelConfig contracts, and GDNTrainer retained an unread frame. Direct getters and valid shared fixtures remove that complexity without changing model=None, optional shape or selector precedence. Verification: 51 before / 53 after PASS; 56 byte-identical file pairs, 32 cross-loads, 192 exact predictions.
 
 P4 M3: GDN manager duplicated config defaults and placeholder replacement. Required config/model members now bind through the existing measurement-path helper; its optional network argument preserves the actual compute-only contract. Verification: 101 focused PASS, including four exact original-expression path comparisons.
