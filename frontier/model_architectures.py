@@ -1053,8 +1053,8 @@ def _matches_step3_text(config: Any) -> bool:
     return _normalized_attr(config, "model_type") == "step3_text"
 
 
-def _matches_qwen3_5_moe(config: Any) -> bool:
-    model_type = _normalized_attr(config, "model_type")
+def _has_qwen3_5_identity(config: Any, model_type: str) -> bool:
+    """Match raw identity without resolving profiles or validating topology."""
     if model_type:
         return model_type == "qwen3_5_moe_text"
     architectures = getattr(config, "architectures", None) or ()
@@ -1064,16 +1064,35 @@ def _matches_qwen3_5_moe(config: Any) -> bool:
     )
 
 
+def _matches_qwen3_5_moe(config: Any) -> bool:
+    return _has_qwen3_5_identity(config, _normalized_attr(config, "model_type"))
+
+
+def is_qwen3_5_profile_config(config: Any) -> bool:
+    """Recognize topology identity, rejecting an explicit conflicting profile.
+
+    Topology input normalization also strips whitespace; registry matching
+    deliberately retains its existing lowercase-only normalization.
+    """
+    model_type = _normalized_attr(config, "model_type").strip()
+    profile_id = _normalized_attr(config, "model_architecture_profile").strip()
+    if profile_id == "qwen3_5_moe":
+        if model_type and not _has_qwen3_5_identity(config, model_type):
+            raise ValueError(
+                "qwen3_5_moe profile requires model_type='qwen3_5_moe_text'; "
+                f"got {model_type!r}"
+            )
+        return True
+    return _has_qwen3_5_identity(config, model_type)
+
+
 def _requires_qwen3_5_profile_identity() -> StructuralRequirement:
     def predicate(config: Any) -> bool:
         model_type = _normalized_attr(config, "model_type")
-        if model_type:
-            return model_type == "qwen3_5_moe_text"
-        architectures = getattr(config, "architectures", None) or ()
-        return any(
-            str(value).strip().lower() == "qwen3_5moeforcausallm"
-            for value in architectures
-        ) or _normalized_attr(config, "model_architecture_profile") == "qwen3_5_moe"
+        return _has_qwen3_5_identity(config, model_type) or (
+            not model_type
+            and _normalized_attr(config, "model_architecture_profile") == "qwen3_5_moe"
+        )
 
     return StructuralRequirement(
         name="requires_qwen3_5_profile_identity",

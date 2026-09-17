@@ -68,3 +68,8 @@ New unresolved issues: none established.
 - The remaining 18 nodes match the freshly established frozen-candidate/main failures. Detailed log: `/data/ycfeng/tmp/quality-p1-unit.log` (132.10 s).
 - Experimental routing integerization characterization completed 3,456 generated cases with zero admitted histogram mismatches. This is sampled evidence, not a proof for arbitrary ratios; unification remains under investigation.
 - Focused fixture/transfer/GDN checks now PASS: 25 tests in 5.62 s, with unchanged expectations. No production accommodation was reintroduced.
+
+## P1f — completed: centralized raw architecture identity
+
+- Consolidated Qwen type/exact-alias recognition in `model_architectures.py` without entering profile/topology resolution. Kept registry, structural and topology precedence/normalization differences.
+- Characterization: 100 tests PASS before (9.88 s) and after (10.78 s). Initial direct re-export triggered a verified import cycle; the existing exported GDN function now delegates with a function-local import. This adapter is required by actual import ordering, not an incomplete fixture.

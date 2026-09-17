@@ -19,6 +19,8 @@
 
 ## Intentionally retained patterns
 
+Architecture identity cleanup: duplicated Qwen type/alias recognition in three gates is now owned by `model_architectures.py`; role-specific profile precedence and normalization remain explicit. Verification: 100 tests before/after, including nine identity cases. The GDN exported adapter retains a function-local import because direct re-export was observed to create an initialization cycle.
+
 | Pattern | Supported runtime state / contract | Inspected evidence |
 | --- | --- | --- |
 | Optional shared manager/training paths | Ordinary monolithic trains independently; hybrid/disaggregated share artifacts | Simulator construction and non-dummy cases |

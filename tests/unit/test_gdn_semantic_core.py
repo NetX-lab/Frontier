@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
@@ -25,6 +26,43 @@ from frontier.config.model_config import BaseModelConfig
 from frontier.profiling.common.model_config import ModelConfig as ProfilingModelConfig
 from frontier.profiling.gdn.inputs import GDNProfileInput
 from frontier.types import ActivationType, MeasurementType, NormType
+
+
+@pytest.mark.parametrize(
+    "model_type,profile_id,aliases,expected",
+    [
+        ("qwen3_5_moe_text", None, (), (True, True, True)),
+        (None, None, ("Qwen3_5MoeForCausalLM",), (True, True, True)),
+        (None, "qwen3_5_moe", (), (False, True, True)),
+        ("other", None, ("Qwen3_5MoeForCausalLM",), (False, False, False)),
+        ("other", "qwen3_5_moe", (), (False, False, ValueError)),
+        ("qwen3_5_moe_text", "generic", (), (True, True, True)),
+        (" qwen3_5_moe_text ", None, (), (False, False, True)),
+        (None, " qwen3_5_moe ", (), (False, False, True)),
+        (" ", None, (" Qwen3_5MoeForCausalLM ",), (False, False, True)),
+    ],
+)
+def test_qwen_identity_preserves_registry_and_topology_precedence(
+    model_type, profile_id, aliases, expected
+) -> None:
+    from frontier.attention.gdn.config import is_qwen3_5_profile_config
+    from frontier.model_architectures import (
+        _matches_qwen3_5_moe,
+        _requires_qwen3_5_profile_identity,
+    )
+
+    config = SimpleNamespace(
+        model_type=model_type,
+        model_architecture_profile=profile_id,
+        architectures=aliases,
+    )
+    assert _matches_qwen3_5_moe(config) is expected[0]
+    assert _requires_qwen3_5_profile_identity().predicate(config) is expected[1]
+    if expected[2] is ValueError:
+        with pytest.raises(ValueError, match="requires model_type"):
+            is_qwen3_5_profile_config(config)
+    else:
+        assert is_qwen3_5_profile_config(config) is expected[2]
 
 
 def _runtime_config(**overrides) -> BaseModelConfig:

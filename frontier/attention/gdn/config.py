@@ -156,33 +156,11 @@ class GatedDeltaNetConfig:
 
 
 def is_qwen3_5_profile_config(config: Any) -> bool:
-    """Return whether *config* explicitly selects the supported Qwen3.5 profile.
+    """Delegate identity policy after the lightweight attention package loads."""
+    # Registry initialization imports operator families and model configuration.
+    from frontier.model_architectures import is_qwen3_5_profile_config as resolve_identity
 
-    The model type is authoritative when present.  An architecture alias is
-    accepted only when it is the exact registered Qwen3.5 class and no
-    conflicting model type was supplied.
-    """
-
-    model_type = str(getattr(config, "model_type", None) or "").strip().lower()
-    profile_id = str(
-        getattr(config, "model_architecture_profile", None) or ""
-    ).strip().lower()
-    if model_type:
-        if model_type != "qwen3_5_moe_text":
-            if profile_id == "qwen3_5_moe":
-                raise ValueError(
-                    "qwen3_5_moe profile requires model_type='qwen3_5_moe_text'; "
-                    f"got {model_type!r}"
-                )
-            return False
-        return True
-    if profile_id == "qwen3_5_moe":
-        return True
-    architectures = getattr(config, "architectures", None) or ()
-    return any(
-        str(value).strip().lower() == "qwen3_5moeforcausallm"
-        for value in architectures
-    )
+    return resolve_identity(config)
 
 
 def build_sequence_mixer_schedule(
