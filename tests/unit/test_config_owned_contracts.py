@@ -5,6 +5,7 @@ from unittest.mock import Mock, call
 import pytest
 
 from frontier.attention.gdn import guards
+from frontier.config import global_vars
 from frontier.config.config import (
     ClusterConfig,
     MetricsConfig,
@@ -16,6 +17,13 @@ from frontier.config.config import (
 )
 from frontier.config.model_config import BaseModelConfig
 from frontier.operators.typed_contracts import validate_typed_operator_metadata
+
+
+@pytest.fixture(autouse=True)
+def reset_simulation_globals():
+    global_vars.reset_global_vars()
+    yield
+    global_vars.reset_global_vars()
 
 
 @pytest.mark.parametrize(

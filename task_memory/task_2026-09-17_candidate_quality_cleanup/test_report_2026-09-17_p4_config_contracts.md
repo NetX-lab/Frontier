@@ -178,3 +178,15 @@ The snapshot-only exception capture records the actual admission result; it is n
 2. Wait for main's continuation signal before the GDN default-ownership substep. Omitted/null/swish behavior and validation timing remain unchanged by this patch.
 
 Open defects or semantic decisions in this completed substep: **none**. Pending sidecar implementation in this substep: **none**. No new native/performance claim.
+
+## Integrated follow-up: isolate process-global test state
+
+The first P4 integrated run exposed three subsequent GDN constructor failures because the new dense SimulationConfig cases left IS_MOE=False in the test process. Production correctly rejects a later conflicting MoE model. A two-node command reproduced the order dependency; no production regression was found.
+
+Using the common environment above:
+
+```text
+-m pytest -q -p no:cacheprovider 'tests/unit/test_config_owned_contracts.py::test_simulation_guard_keeps_optional_roles_and_scheduler_capabilities[None-co-location]' tests/unit/test_gdn_hybrid_e2e_increment14ab.py::test_hybrid_gdn_real_simulator_cpu_e2e --tb=short
+```
+
+Before: **1 passed / 1 failed**, 6.71 s; `/data/ycfeng/tmp/quality-p4-state-leak-red.log`, exact error `IS_MOE already initialized to False, cannot change to True`. Added autouse setup/teardown using the existing test reset function only in the new config test module. Then ran both complete modules with the same flags: **36 PASS**, 13.79 s; `/data/ycfeng/tmp/quality-p4-state-leak-green.log`. All guard/error assertions remain unchanged. The original 165-test run did not detect this test-order leak; final broader evidence supersedes that limited isolation claim.

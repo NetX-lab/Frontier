@@ -195,3 +195,10 @@ New unresolved issues: none established.
 - Four GDN gate defaults now reference the existing GatedDeltaNetConfig declaration; conversions, null rejection and swish normalization remain unchanged. No new policy abstraction.
 - 31 existing baseline + 43 corrected pre-change characterization cases PASS; combined after 74 PASS. Main independently verified complete 259,793-byte snapshots (54 outcomes) with cmp. Initial eight new-test failures incorrectly expected unwrapped gate errors; corrected on unchanged production to assert the existing structural error plus cause. Original failed log is preserved.
 - Source implementation is complete pending broader P4/P5 checks. Inventory review found no unreviewed changed-path gap; final evidence is still pending and must not be inferred from earlier phase runs.
+
+## P4 integrated fixture-isolation RCA — corrected
+
+- Initial 28-module integrated run at 5cb8794f: 542 PASS / 3 FAIL in 51.00 s. All failures entered GDN SimulationConfig after new dense config tests left process-global IS_MOE=False. Log: quality-p4-integrated.log.
+- Minimal two-node config-then-GDN command reproduced 1 PASS / 1 FAIL in 6.71 s (quality-p4-state-leak-red.log). Earlier GDN-only suites passed; the causal variable is preceding dense configuration. Required production model-consistency validation is correct and unchanged.
+- Reused global_vars.reset_global_vars in the new test module's autouse setup/teardown; no production edits or expected-number changes. Full config-plus-GDN modules now 36 PASS in 13.79 s (quality-p4-state-leak-green.log). This uses the diagnosing-bugs feedback loop; no additional instrumentation or semantic choice.
+- The concurrent fidelity harness executes isolated subprocesses and does not import this unit module; its production source remains fixed at 5cb8794f. Broader P4 and full-unit checks follow this fixture correction.
