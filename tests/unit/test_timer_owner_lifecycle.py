@@ -190,3 +190,43 @@ def test_failed_measurement_unwinds_without_retaining_sample(fake_runtime, metho
         assert exc_type is RuntimeError
         assert exc_value is failure
         assert traceback is not None
+
+
+@pytest.mark.parametrize("method,disabled", [
+    (None, False), ("device_event", False), ("perf_counter", False),
+    ("kineto", False), ("device_event", True),
+])
+def test_gdn_campaign_validates_effective_owner_before_native_work(monkeypatch, method, disabled):
+    import builtins
+    from frontier.profiling.common.model_config import ModelConfig
+    from frontier.profiling.gdn.vllm_wrapper import VllmQwen35GDNWrapper
+
+    model = ModelConfig.from_model_name("Qwen3.8-2.4T-A95B-Quark-MXFP4")
+    owner = TimerStatsStore(profile_method=method, disabled=disabled) if method else None
+    if owner:
+        owner.record_time("previous", 1.25)
+    original_import = builtins.__import__
+
+    class NativeBoundaryReached(RuntimeError):
+        pass
+
+    def stop_native(name, *args, **kwargs):
+        if name in {"torch", "triton", "vllm"}:
+            raise NativeBoundaryReached("native boundary reached")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", stop_native)
+    incompatible = disabled or method in {"perf_counter", "kineto"}
+    expected_error = ValueError if incompatible else NativeBoundaryReached
+    with pytest.raises(expected_error, match="GDN timer owner" if incompatible else "native boundary"):
+        VllmQwen35GDNWrapper(
+            frontier_model_config=model, model_path="unused", device_name="mi355x",
+            profile_method="DEVICE_EVENT",
+        )
+    effective = Singleton._instances[TimerStatsStore]
+    if owner:
+        assert effective is owner
+        assert effective.get_times() == {"previous": [1.25]}
+    else:
+        assert effective.profile_method is ProfileMethod.DEVICE_EVENT
+        assert not effective.disabled

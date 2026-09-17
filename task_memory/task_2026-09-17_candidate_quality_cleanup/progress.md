@@ -276,3 +276,7 @@ Producer emits query_len_cv and num_stateful_requests. CSV rows with explicit le
 ### R05 completed
 
 Requested model dtype is normalized through PrecisionType and compared with artifact dtype once at load. 2 FAIL / 3 PASS before -> 60 PASS, 25.49 s after. BF16 aliases remain equivalent; FP16 mismatch is explicit. One incomplete fixture now declares torch_dtype. Related output-gate variants are not silently generalized; their native equivalence is not established. Report: test_report_2026-09-17_r05_dtype.md.
+
+### R06 completed
+
+Effective TimerStatsStore method/enabled state validated before native imports; exported method comes from the validated owner. Existing singleton and samples are preserved. 4 FAIL / 1 PASS before -> 111 PASS, 9.55 s. Report: test_report_2026-09-17_r06_timer_owner.md.

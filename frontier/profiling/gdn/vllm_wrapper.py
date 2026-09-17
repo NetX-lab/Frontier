@@ -13,6 +13,7 @@ from frontier.profiling.common.device_timer import DeviceTimer
 from frontier.profiling.common.timer_stats_store import TimerStatsStore
 from frontier.profiling.gdn.inputs import GDNProfileInput, validate_profile_iterations
 from frontier.profiling.utils import (
+    normalize_profile_method,
     profile_method_to_measurement_type,
     validate_profile_method_platform,
 )
@@ -56,6 +57,17 @@ class VllmQwen35GDNWrapper:
             tensor_parallel_size=tensor_parallel_size,
         )
         self.max_model_len = max_model_len
+        requested_method = normalize_profile_method(profile_method)
+        self.timer_stats_store = TimerStatsStore(profile_method=requested_method)
+        if (self.timer_stats_store.disabled
+                or self.timer_stats_store.profile_method.value != requested_method):
+            raise ValueError(
+                "GDN timer owner must be enabled and match the requested method: "
+                f"requested={requested_method}, "
+                f"effective={self.timer_stats_store.profile_method.value}, "
+                f"disabled={self.timer_stats_store.disabled}"
+            )
+        self.profile_method = self.timer_stats_store.profile_method.value
 
         import torch
         import triton
@@ -91,8 +103,6 @@ class VllmQwen35GDNWrapper:
         self.frontier_model_config = frontier_model_config
         self.model_path = str(model_path)
         self.device_name = str(device_name)
-        self.profile_method = str(profile_method)
-        validate_profile_method_platform(self.profile_method, "rocm")
         self.max_batch_size = int(max_batch_size)
         self.tensor_parallel_size = tensor_parallel_size
         distributed_world_size = int(os.environ.get("WORLD_SIZE", "1"))
@@ -187,7 +197,6 @@ class VllmQwen35GDNWrapper:
                 self.vllm_config,
                 torch.device("cuda"),
             )
-            self.timer_stats_store = TimerStatsStore(profile_method=self.profile_method)
             self.runtime_stack_signature = ";".join(
                 (
                     f"vllm={vllm.__version__}",
