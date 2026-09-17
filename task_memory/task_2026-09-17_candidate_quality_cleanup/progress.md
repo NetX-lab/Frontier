@@ -184,3 +184,8 @@ New unresolved issues: none established.
 
 - Reconciled config/typed-registry sidecar: constructor-owned topology and speculative fields are direct; internal registered profiles expose mandatory attention_linear_ops. External metadata validation, optional roles and scheduler-dependent prefix capability remain unchanged.
 - 135 existing baseline + 30 new pre-change characterization tests PASS; combined post-change 165 PASS. Main independently cmp-verified complete 605,937-byte snapshots: 20 replica cases, nine simulation guard cases, 47 calls and 66 metadata outcomes, including unchanged rejections.
+
+## P4 M4 — completed
+
+- Removed the remaining missing-self-map recovery in manager cluster-family lookup. Kept absent-cluster behavior rather than imposing a new public error contract.
+- 54 focused PASS in 6.28 s; extracted frozen/current methods yield 24 exact value/error outcomes across all roles, CUDA/ROCm/unknown platforms and absent clusters. Sparse path overrides/aliases and SKU identity resolution remain supported boundaries, not incomplete-constructor recovery.

@@ -4344,9 +4344,7 @@ class ExecutionTimePredictionModelManager:
 
         if cluster_type != ClusterType.DECODE_ATTN:
             return False
-        cluster_config = (getattr(self, "_cluster_configs", None) or {}).get(
-            cluster_type
-        )
+        cluster_config = self._cluster_configs.get(cluster_type)
         replica_config = getattr(cluster_config, "replica_config", None)
         model_config = getattr(replica_config, "model_config", None)
         architecture_profile = _resolve_model_architecture_profile(model_config)

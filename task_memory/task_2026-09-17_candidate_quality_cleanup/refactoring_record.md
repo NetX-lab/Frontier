@@ -24,6 +24,8 @@
 
 ## Intentionally retained patterns
 
+P4 M4: cluster-family lookup reflected on the constructor-owned cluster map. Direct map access removes missing-self recovery while preserving unknown-cluster behavior. Verification: 54 PASS and 24 exact value/error outcomes. Sparse overrides and device-identity-to-SKU resolution remain supported at the shared path boundary.
+
 P4 S8: config guards and internal registry enumeration treated constructor-owned fields as optional. Direct topology/speculative/attention-linear access reuses existing dataclass and registry contracts. Verification: 165 PASS and exact full guard/metadata snapshots. Heterogeneous scheduler capability, optional roles and external profile validation remain genuine boundary checks.
 
 P4 S1: supplied-model member reflection weakened existing runtime/profiling ModelConfig contracts, and GDNTrainer retained an unread frame. Direct getters and valid shared fixtures remove that complexity without changing model=None, optional shape or selector precedence. Verification: 51 before / 53 after PASS; 56 byte-identical file pairs, 32 cross-loads, 192 exact predictions.

@@ -41,3 +41,13 @@ env PATH=/data/ycfeng/tmp/quality-review-env/bin:$PATH PYTHONPATH=. TMPDIR=/data
 ```
 
 Observed **101 PASS**, 22.19 s; `/data/ycfeng/tmp/quality-p4-manager-gdn-path-final.log`. Four new path cases compare directly with the original replacement expression: empty, plain, repeated placeholders and literal network placeholder. Existing tests verify path precedence and GDN load/mismatch behavior. The initial same-scope check passed 101 tests in 20.99 s before the helper's public rename; the final check above verifies that rename too. This is CPU path/artifact evidence, not native profiling.
+
+## M4: constructor-owned cluster map
+
+`_event_family_for_cluster` reads `_cluster_configs` directly. The constructor always owns that map; an empty map is valid, a missing map is not. Retained optional lookup of an absent cluster so this local cleanup does not change unknown-cluster outcomes.
+
+Using the common M3 environment, ran `-m pytest -q -p no:cacheprovider tests/unit/test_measurement_family_selector.py tests/unit/test_measurement_path_precedence.py tests/unit/test_device_timer_contract.py`: **54 PASS**, 6.28 s, `/data/ycfeng/tmp/quality-p4-manager-cluster-view.log`.
+
+An inline comparison extracted `_event_family_for_cluster` via AST from `git show c288a19f:frontier/execution_time_predictor/shared_prediction_model_manager.py` and executed old/current methods on the same normally constructed empty-cluster manager. For each of six ClusterType values it tested registered CUDA, ROCm and unknown platforms, then an absent cluster. **24 exact value/exception-class/message outcomes PASS**. In particular absent-cluster AttributeError behavior is unchanged; no default-to-CUDA was restored.
+
+Retained path contracts after caller review: W06 sparse override precedence, empty/None family paths and aliases are observable public inputs; `resolve_event_measurement_type` supports device identity without a materialized SKU and resolves it only through the existing SKU registry. Unknown supplied platforms still fail. These differ from constructor-owned manager state and were not mechanically tightened.
