@@ -18,6 +18,7 @@ from frontier.attention.gdn.features import (
     GDN_TASKS,
     validate_gdn_artifact_identity,
 )
+from frontier.config.precision_type import PrecisionType
 from frontier.entities.time_components import AttentionOperatorTimes, AttentionTime
 from frontier.execution_time_predictor.cache_io import dataset_fingerprint
 from frontier.logger import init_logger
@@ -187,6 +188,13 @@ class GDNPredictor:
     ) -> None:
         expected: dict[str, Any] = {}
         if model_config is not None:
+            requested_dtype = PrecisionType.from_string(str(model_config.torch_dtype))
+            artifact_dtype = PrecisionType.from_string(str(identity["model_dtype"]))
+            if requested_dtype is not artifact_dtype:
+                raise ValueError(
+                    "GDN model identity mismatch: model_dtype "
+                    f"artifact={artifact_dtype.value}, requested={requested_dtype.value}"
+                )
             expected["model_architecture_profile"] = (
                 model_config.get_model_architecture_profile().profile_id
             )

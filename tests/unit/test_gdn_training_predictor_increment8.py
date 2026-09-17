@@ -22,6 +22,7 @@ FIXTURE = Path(__file__).parents[1] / "fixtures" / "pr31_hybrid" / "gdn.csv"
 
 class _FixtureModelConfig:
     embedding_dim = 256
+    torch_dtype = "bfloat16"
 
     def get_num_gdn_layers(self):
         return 1
@@ -239,4 +240,16 @@ def test_supplied_model_identity_preserves_optional_gdn_shape(
     assert predictor.identity["hidden_size"] == model.embedding_dim
     model.embedding_dim += 1
     with pytest.raises(ValueError, match="hidden_size"):
+        GDNPredictor.from_directory(output, model_config=model)
+
+
+@pytest.mark.parametrize("dtype", ["bfloat16", "torch.bfloat16", "BF16", "float16", "torch.float16"])
+def test_receiving_model_dtype_matches_artifact(tmp_path, dtype):
+    model = _FixtureModelConfig()
+    model.torch_dtype = dtype
+    output = _train(tmp_path)
+    if dtype in {"float16", "torch.float16"}:
+        with pytest.raises(ValueError, match="model_dtype"):
+            GDNPredictor.from_directory(output, model_config=model)
+    else:
         GDNPredictor.from_directory(output, model_config=model)

@@ -272,3 +272,7 @@ Immutable generation-qualified estimator filenames plus the existing atomic mani
 ### R04 completed
 
 Producer emits query_len_cv and num_stateful_requests. CSV rows with explicit lengths derive canonical dispersion and validate supplied values; missing ambiguous ragged dispersion is rejected, while identifiable legacy uniform rows preserve zero CV. One shared calculation preserves runtime/imported exact keys. 3 red failures -> 98 PASS, 16.96 s. Report: test_report_2026-09-17_r04_features.md.
+
+### R05 completed
+
+Requested model dtype is normalized through PrecisionType and compared with artifact dtype once at load. 2 FAIL / 3 PASS before -> 60 PASS, 25.49 s after. BF16 aliases remain equivalent; FP16 mismatch is explicit. One incomplete fixture now declares torch_dtype. Related output-gate variants are not silently generalized; their native equivalence is not established. Report: test_report_2026-09-17_r05_dtype.md.
