@@ -29,7 +29,7 @@ def test_delegated_builders_complete_capture_replay_and_trace(
 
 def _exercise_replay(
     monkeypatch, name, builder_name, metadata, *, fault=None, trace=True,
-    keyword_call=False,
+    keyword_call=False, workload_form=None,
 ):
     torch = pytest.importorskip("torch")
     active_graphs = []
@@ -37,6 +37,7 @@ def _exercise_replay(
     events = []
     graphs = []
     buffers = []
+    workloads = []
     buffer_ids = {}
     replaying = False
 
@@ -99,6 +100,8 @@ def _exercise_replay(
     monkeypatch.setattr(torch.testing, "assert_close", check)
 
     def builder(*args, **kwargs):
+        if workload_form is not None:
+            workloads.append(args[1] if routed_primitive else args[3])
         output = torch.zeros(1)
         stateful = bool(metadata)
         index = len(buffers)
@@ -135,7 +138,17 @@ def _exercise_replay(
         world_size=1, cpu_group=None, rank_in_group=0,
         graph_capture=lambda: nullcontext(SimpleNamespace(stream=None)),
     )
-    if routed_primitive:
+    if workload_form is not None:
+        workload = (8, 0) if routed_primitive else (32,) * 8
+        supplied = iter(workload) if workload_form == "generator" else workload
+        argument = "physical_expert_counts" if routed_primitive else "physical_context_lens"
+        row, trace_replay = replay.profile_graph(
+            name, 8, 3, 5, SimpleNamespace(embedding_dim=16), group, 0,
+            logical_size=4, trace=trace, **{argument: supplied},
+        )
+        assert workloads == [workload] * 3
+        assert row[argument] == list(workload)
+    elif routed_primitive:
         from frontier.profiling.experimental.sglang.routed_moe_replay import profile_routed_graph
 
         row, trace_replay = profile_routed_graph(
@@ -231,3 +244,17 @@ def test_routed_graph_api_rejects_invalid_count_before_runtime_import(monkeypatc
     query["physical_size"] = 8.0
     with pytest.raises(ValueError, match="Invalid sizes"):
         routed.profile_routed_graph(query, 2, 5, None, None)
+
+
+@pytest.mark.parametrize("name,builder_name", [
+    ("attn_rope", "make_attention_primitive"),
+    ("moe_sorting", "make_moe_sorting_primitive"),
+])
+def test_one_shot_workloads_match_tuple_capture_and_metadata(monkeypatch, name, builder_name):
+    results = []
+    for form in ("tuple", "generator"):
+        with monkeypatch.context() as context:
+            results.append(_exercise_replay(
+                context, name, builder_name, ({}, {}), workload_form=form,
+            ))
+    assert results[0] == results[1]

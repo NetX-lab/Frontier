@@ -406,6 +406,10 @@ def profile_graph(
     """
 
     validate_plan((size,), (count,), repetitions, "validation")
+    if physical_context_lens is not None:
+        physical_context_lens = tuple(physical_context_lens)
+    if physical_expert_counts is not None:
+        physical_expert_counts = tuple(physical_expert_counts)
 
     import torch
     import torch.distributed as dist

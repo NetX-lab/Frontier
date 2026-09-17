@@ -292,3 +292,7 @@ MI355X attention recipe explicitly selects VLLM_ROCM; docs identify the prefill-
 ### R09 completed
 
 All three TP8 GDN documentation copies now launch eight torchrun processes. Separate TP1 example uses its own output root. Literal command contracts plus R08 dry-run: 4 PASS, 1.43 s. Report: test_report_2026-09-17_r09_distributed_recipe.md.
+
+### R10 completed
+
+Normalize optional context/expert iterables once before constructing replay calls. Generator/tuple inputs match three builder calls and complete capture/replay metadata. 2 FAIL before -> 35 PASS, 2.88 s. One nonexistent test path was corrected after a no-tests-run result. Report: test_report_2026-09-17_r10_iterables.md. All R01–R10 code/document corrections are committed after their focused checks; native hardware acceptance remains unexecuted.
