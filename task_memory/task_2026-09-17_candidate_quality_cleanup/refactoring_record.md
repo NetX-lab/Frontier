@@ -24,6 +24,8 @@
 
 ## Intentionally retained patterns
 
+P3 S5: profiling ModelConfig duplicated canonical family dispatch to accommodate a monkeypatch and overlaid already-parsed model fields. It now delegates to `resolve_runtime_attention_family` and reuses BaseModelConfig parsing. Verification: 129 PASS; all 22 model snapshot entries exactly equal. Raw model_type and linear-shape overlays remain because explicit-null/string serialization is an actual compatibility concern.
+
 Architecture identity cleanup: duplicated Qwen type/alias recognition in three gates is now owned by `model_architectures.py`; role-specific profile precedence and normalization remain explicit. Verification: 100 tests before/after, including nine identity cases. The GDN exported adapter retains a function-local import because direct re-export was observed to create an initialization cycle.
 
 | Pattern | Supported runtime state / contract | Inspected evidence |

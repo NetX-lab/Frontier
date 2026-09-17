@@ -4,7 +4,6 @@ from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
 from frontier.attention.model_binding import (
-    bind_attention_family,
     resolve_runtime_attention_family,
     resolve_attention_topology,
 )
@@ -281,13 +280,7 @@ class ModelConfig:
 
     def get_attention_family(self):
         """Return the family used by model-wide profiling cache semantics."""
-        # Preserve the homogeneous profiling seam: callers and tests may
-        # replace ``bind_attention_family`` at this module boundary.  Hybrid
-        # Qwen3.5 configs need the runtime resolver because the homogeneous
-        # binder intentionally rejects a whole-model GDN/full-attention mix.
-        if any(spec.is_gdn for spec in self.get_layer_attention_specs()):
-            return resolve_runtime_attention_family(self)
-        return bind_attention_family(self).family
+        return resolve_runtime_attention_family(self)
 
     def get_gdn_config(self) -> Optional[GatedDeltaNetConfig]:
         """Return the shape normalized together with the model-owned schedule."""
@@ -430,13 +423,6 @@ class ModelConfig:
             model_config_dict['model_type'] = json_cfg.get(
                 'model_type', model_config_dict.get('model_type')
             )
-            model_config_dict['model_architecture_profile'] = json_cfg.get(
-                'model_architecture_profile',
-                model_config_dict.get('model_architecture_profile'),
-            )
-            model_config_dict['architectures'] = tuple(
-                str(value) for value in json_cfg.get('architectures', ())
-            )
             # Explicit fused-add capability override
             explicit_fused_add_norm = json_cfg.get('uses_fused_add_norm')
             if explicit_fused_add_norm is not None:
@@ -464,8 +450,6 @@ class ModelConfig:
                 'qk_rope_head_dim',
                 'qk_head_dim',
                 'v_head_dim',
-                'layer_types',
-                'full_attention_interval',
                 'linear_conv_kernel_dim',
                 'linear_key_head_dim',
                 'linear_value_head_dim',
@@ -474,9 +458,6 @@ class ModelConfig:
             ]:
                 if field_name in json_cfg:
                     model_config_dict[field_name] = json_cfg[field_name]
-            model_config_dict['gdn_output_gate_type'] = json_cfg.get(
-                'output_gate_type', model_config_dict.get('gdn_output_gate_type', 'silu')
-            )
             if (
                 'use_mla' not in model_config_dict
                 and str(json_cfg.get('model_type', '')).lower()

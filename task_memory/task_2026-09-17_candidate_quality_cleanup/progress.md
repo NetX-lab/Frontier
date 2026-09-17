@@ -117,3 +117,10 @@ New unresolved issues: none established.
 - Source-stable integrated P2 at `8e67fc25`: 159 PASS in 69.62 s, including eight real non-dummy simulations. Compared with frozen candidate: 90 stable artifacts PASS, 106-file symmetric inventory equal, 16 explicitly nonempty summary/acceptance JSON pairs equal. Logs: `/data/ycfeng/tmp/quality-p2-integrated.log`, `/data/ycfeng/tmp/quality-p2-artifact-comparison.log`.
 - P3 S4 uses family-owned profiling schema/operation names and existing GDN_TASKS phase order; removes unreachable zero-mean handling after positive-query validation. Required columns remain the exact ordered 27-tuple, both phase task orders and the four quantization names match frozen declarations.
 - S4 focused: 184 PASS in 16.34 s; pre-change broad P3 baseline was 253 PASS. Real optional mask/physical-batch normalization and inactive-phase output zeros remain unchanged.
+
+## P3 S5 — completed
+
+- Profiling ModelConfig now uses the canonical runtime family resolver, removing the production branch that existed for a module-local monkeypatch. The test patches the actual owner and still asserts one call.
+- Removed only redundant BaseModelConfig-owned JSON overlays; preserved raw model_type and linear-shape overlays whose null/string serialization can differ.
+- Verification: 129 PASS in 10.37 s. The full 22-model snapshot is identical: 21 valid configurations and one unchanged deepseek-v3 quantization rejection. Initial raw cmp differed only in logged warning timestamps; compared complete JSON payloads explicitly, without excluding config fields.
+- Continuation reconciled HEAD and disjoint worker edits. S6 architecture and J1 ROCm workers remain active; main retains S5 and subsequent integration ownership.
