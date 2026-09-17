@@ -2,6 +2,7 @@
 
 | Date | Summary of Changes |
 | --- | --- |
+| 2026-09-17 | Recorded PR33 remediation, explicit R01-A decision and final verification status. |
 | 2026-09-17 | Recorded the new candidate code-quality task and preserved behavior boundaries. |
 
 # Requirements

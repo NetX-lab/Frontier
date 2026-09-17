@@ -2,6 +2,7 @@
 
 | Date | Summary of Changes |
 | --- | --- |
+| 2026-09-17 | Recorded PR33 remediation, explicit R01-A decision and final verification status. |
 | 2026-09-17 | Started independent diff-driven quality cleanup. |
 | 2026-09-17 | Completed all cleanup phases, final regression/timing evidence and archive reconciliation. |
 
@@ -304,3 +305,17 @@ Capacity admission uses a read-only availability property derived from the free-
 ### C02 focused verification completed
 
 Centralized execution-payload demand over existing trace/operation/full-ledger/summary flags; utilization retains callback with no payload. Disabled final-sync fixture reduces predictor calls 2 -> 1 and stage allocations 1 -> 0 with identical event/model/wall timing. 129 PASS, 6.99 s after correcting an assertion parameter index (first green 128 PASS / 1 FAIL). Summary-only EP capture now follows the same consumer demand. Report: test_report_2026-09-17_c02_reporting.md. Final broad verification follows on frozen source.
+
+### Final review validation — in progress
+
+Frozen production/test checkpoint: 35ac95eb. Started full tests/unit (JUnit XML), eight existing synthetic non-dummy cases plus R01 mixed concurrency, and the 58-case matrix against c288a19f. Raw outputs: /data/ycfeng/tmp/pr33-final-{unit,nondummy,fidelity}.log; matrix directory pr33-final-fidelity. Correctness campaigns run concurrently; paired performance waits until all exit. Only task/docs reconciliation proceeds meanwhile. Clarified legacy feature documentation to name query_lens and query_len_cv explicitly.
+
+### Final correctness verification completed
+
+Frozen 35ac95eb: full unit 3928 PASS / 18 existing FAIL / 25 existing SKIP, 167.43 s; exact failed/skipped nodes match prior JUnit, and all failure messages match after scratch-path substitution. Nine non-dummy cases PASS (81.28 s), including R01 mixed concurrency; eight existing cases preserve 90 stable artifacts, 106 symmetric metrics files and 16 supplemental nonempty JSON pairs. Fidelity 58 PASS / 0 FAIL, 304 artifacts, 122 requests per side; 902628 finite numeric pairs have zero unequal values and maximum absolute/relative differences 0.0. Source diff against 35ac95eb remains empty for frontier/tests. Started isolated 18-run paired campaign only after all correctness/check processes exited; raw output /data/ycfeng/tmp/pr33-final-paired.
+
+### Final paired timing and archive — completed
+
+18/18 measurements succeeded; all nine pairs have identical events and completions. Median paired Simulator.run changes versus c288a19f: small_dense -12.07%, longer_dense -8.84%, representative_moe -0.62%; subprocess -3.62%/-6.90%/-2.92%. Small-dense attempt 2 is +16.62% (about 5 ms), retained without rerunning/selecting samples. No universal or native speedup claim. Source remains exactly 35ac95eb for frontier/tests. Related output-gate inspection was documented with actual SGLang versus standard vLLM constructor paths; no speculative contract expansion. Re-read requirements.md and reconciled R01-A, individual commits, known failures, reports, local C03 body and English summary.
+
+Pending in-scope code tasks: none. Newly discovered unresolved code regressions: none observed. Final archive consistency checks passed: report paths and commit references resolve, durable evidence counts match the reports, no unfinished placeholders remain in the final report/PR body, git diff --check is clean, and frontier/tests equal 35ac95eb. The archive is ready for its final scoped commit. Native validation and remote PR publication remain explicitly outside the completed local execution.

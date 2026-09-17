@@ -2,9 +2,57 @@
 
 | Date | Summary of Changes |
 | --- | --- |
+| 2026-09-17 | Added the subsequent PR33 review-remediation archive and current evidence. |
 | 2026-09-17 | Archived completed diff-driven cleanup, final verification, performance measurements and explicit limits. |
 
-# Task Overview
+# Current PR33 Review Remediation
+
+This section supersedes the historical cleanup completion below for the subsequent request to fix the d43ae932 review. All R01–R10 corrections and C01/C02 improvements are implemented in separately verified commits. C03 is a local PR-description handoff; no remote publication is included.
+
+The user's explicit R01-A decision preserves the selected scheduler. A mixed batch uses prefill estimators for all GDN timing with a RuntimeWarning, while actual request phases, physical features, KV ownership and recurrent-state slots remain intact. The co-location limitation and lack of native mixed timing accuracy are documented. Native producer/training mixed rows remain rejected; full-attention still needs matching mixed profiles.
+
+Production/test checkpoint: `35ac95eb231aa3990a25cd49e24b62b034bda3a3`. Reviewed source: `d43ae93240444bd4eff9bd99f296d2e751370514`. Preservation baseline: `c288a19f59bec09529ee18d782fa57218da2c781`. Frozen main remains `0515589ac7f49ac5288a5f55b0ce38b0ede29bb2`; accepted main-to-candidate D01 changes must not be confused with cleanup parity. Subsequent changes are documentation only.
+
+## Deliverables Inventory
+
+All report paths below are relative to `task_memory/task_2026-09-17_candidate_quality_cleanup/` in the active worktree.
+
+| Item | Commit | Delivered correction | Report |
+| --- | --- | --- | --- |
+| R01 | 9f5c0c45 | Authorized mixed-to-prefill approximation, warning, docs, real concurrency/ownership regression | test_report_2026-09-17_r01_approximation.md |
+| R02 | 20b85ce7 | Canonical runtime attention-family binding for hybrid ROCm full-attention | test_report_2026-09-17_r02_binding.md |
+| R03 | 2030968d | Immutable estimator generations with atomic manifest publication | test_report_2026-09-17_r03_publication.md |
+| R04 | 336bdaf0 | Producer/import/runtime ragged-feature consistency | test_report_2026-09-17_r04_features.md |
+| R05 | e7ccd04c | Receiving-model normalized dtype validation | test_report_2026-09-17_r05_dtype.md |
+| R06 | 6e61f99f | Effective timer-owner provenance validation before native setup | test_report_2026-09-17_r06_timer_owner.md |
+| R07 | b3fc348f | Canonical shell output paths and executed postflight coverage | test_report_2026-09-17_r07_launchers.md |
+| R08 | 360c54d6 | Explicit native ROCm backend and phase coverage in recipe | test_report_2026-09-17_r08_backend_recipe.md |
+| R09 | 30ce7b28 | Eight-process TP8 launch in three docs, separate TP1 example | test_report_2026-09-17_r09_distributed_recipe.md |
+| R10 | af4fb055 | Single normalization of replay workload iterables | test_report_2026-09-17_r10_iterables.md |
+| C01 | 71c0f679 | Capacity check without diagnostic owner tuple allocation | test_report_2026-09-17_c01_capacity.md |
+| C02 | 35ac95eb | Demand-gated reporting payloads, including summary-only consumers | test_report_2026-09-17_c02_reporting.md |
+| Final verification | documentation archive | Commands, baseline classification, artifact/numeric/timing evidence | test_report_2026-09-17_review_final.md; review_final_evidence.json |
+| C03 | documentation archive | Current source/baseline/evidence/scope in reviewable local PR body | pr33_description.md |
+
+`requirements.md` preserves the raw requests and R01-A decision; `plan.md`, `progress.md`, `review_remediation_decisions.md` and `refactoring_record.md` retain implementation order, superseded proposals, failures and corrections. The mixed-batch documentation is in `docs/training/README.md` and `docs/profiling/ROCM_MI355X.md`; command copies are in `docs/profiling/README.md` and `docs/cli/README.md`.
+
+## Validation Status
+
+- Full unit: **3928 PASS / 18 existing FAIL / 25 existing SKIP**, 167.43 s. Failed/skipped node sets exactly match the previous frozen validation. Failure messages also match after replacing only the scratch-directory prefix. The suite is not all green.
+- Real non-dummy Simulator: **9 PASS**, 81.28 s. New concurrency case observes 14 batches, including two mixed batches; four requests complete with stable/reused/released GDN ownership. Eight existing cases preserve 90 stable artifacts, a symmetric 106-file inventory and 16 nonempty supplemental JSON pairs.
+- Frozen-candidate fidelity: **58 PASS / 0 FAIL**, 304 artifacts, 122 completed requests per side. Zero drift across 902628 finite numeric leaf pairs; maximum absolute and relative differences are both 0.0.
+- C01/C02 focused allocation/call evidence: no owner-tuple access during admission; disabled reporting reduces the deterministic completion fixture from two predictor calls to one and one full-stage allocation to zero, preserving event/wall/model timing and the metrics callback.
+- Final isolated timing: **18 successful measurements**, all nine event/completion-preserving pairs. Median paired Simulator.run changes: **−12.07% / −8.84% / −0.62%** for small dense / longer dense / representative MoE; subprocess changes **−3.62% / −6.90% / −2.92%**. Small-dense attempt 2 is 16.62% slower and remains in the evidence. Three reporting-disabled dummy pairs do not establish general or native performance.
+
+## Open Items / Future Extensions
+
+In-scope code corrections remaining: **none**. New unresolved code regressions: **none observed**. The existing 18 baseline failures remain classified in the final report. Native ROCm/CUDA/SGLang/GDN execution, TP8 hardware validation and production-profile numerical accuracy are not established by CPU contracts or synthetic fixtures. Related output-gate variant interchangeability remains unverified and was not generalized speculatively. The user-authorized mixed prefill approximation remains a documented accuracy limitation.
+
+The PR description is prepared locally. External PR publication, push and merge have not been performed. Broader performance studies and native campaigns require their own environment and scope. Historical evidence below is preserved without relabeling it as a run of the corrected source.
+
+# Historical Cleanup Through d43ae932
+
+## Task Overview
 
 Completed the dependency-ordered review and implementation requested for the Frontier feature worktree: runtime -> metrics -> profiling -> training/model management/configuration. The objective was explicit invariants, clear ownership and reuse of existing policy, not cosmetic formatting or a repository-wide rewrite.
 

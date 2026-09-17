@@ -2,6 +2,7 @@
 
 | Date | Summary of Changes |
 | --- | --- |
+| 2026-09-17 | Recorded PR33 remediation, explicit R01-A decision and final verification status. |
 | 2026-09-17 | Created dependency-ordered cleanup and verification plan. |
 | 2026-09-17 | Closed all phases against final correctness, artifact, inventory and isolated timing evidence. |
 
@@ -49,8 +50,20 @@ No unresolved blocker. P4 exposed and corrected a new test-global-state leak wit
 Baseline: d43ae93240444bd4eff9bd99f296d2e751370514, clean worktree.
 Dependency: reproduce R01 -> resolve phase-policy decision -> R01 fix -> R02 -> R03 -> R04 -> R05 -> R06 -> R07 -> R08 -> R09 -> R10 -> C01/C02 assessment -> integrated verification -> local C03 handoff. Independent read-only diagnosis may proceed while a decision is pending; implementation remains sequential.
 
-Each correction: reproduce the stated boundary using the real public path -> fix the root cause -> run focused regression -> record evidence -> commit. R01 requires real non-dummy Simulator concurrency; R03 requires overwrite interruption and reader interleaving; R04 requires ragged CSV round trip; R06 requires cross-campaign provenance; R07 must execute shell postflight. Use existing CPU environment and scratch root. Run the existing >=50-case fidelity matrix after runtime changes, classifying intentional GDN policy corrections separately. All R01–R10 and C01–C03 are pending.
+Each correction: reproduce the stated boundary using the real public path -> fix the root cause -> run focused regression -> record evidence -> commit. R01 requires real non-dummy Simulator concurrency; R03 requires overwrite interruption and reader interleaving; R04 requires ragged CSV round trip; R06 requires cross-campaign provenance; R07 must execute shell postflight. Use existing CPU environment and scratch root. Run the existing >=50-case fidelity matrix after runtime changes, classifying intentional GDN policy corrections separately. Initial state: all R01–R10 and C01–C03 pending; later checkpoints below record their disposition.
 
 ### R01-A accepted correction
 
 User explicitly authorizes mixed-to-prefill prediction with a warning and documented co-location limitation. Implement only at GDN runtime feature selection; preserve scheduler behavior and real phase counts. Replace phase-pure integration acceptance with observed mixed dispatch, prefill estimator selection, warning visibility, final-prefill-one-token recognition and ownership release/reuse. Native profiling and training mixed rows remain rejected. Earlier policy question is closed.
+
+### Review remediation checkpoint — 2026-09-17
+
+R01–R10 implementation and focused verification: completed in individual commits. C01 and C02 completed with allocation/predictor-call evidence. The accepted R01-A approximation governs mixed batches; native producer/training phase contracts remain strict.
+
+Current dependency: frozen source `35ac95eb` -> {full unit, nine non-dummy cases, 58-case fidelity} -> isolated paired wall-clock measurement -> C03 local PR description and final archive. The three correctness campaigns can run concurrently; timing starts only after all three exit. Production and tests remain unchanged while they run. Native hardware acceptance is not claimed. C03 publication is external and remains outside the present authorization.
+
+### Review remediation final acceptance — completed
+
+R01–R10 and C01/C02 are implemented and individually committed after focused checks. C03 is delivered locally in pr33_description.md; external publication is outside authorization. Final production/test source 35ac95eb: 3928 unit PASS, 18 exact existing failures and 25 exact existing skips; nine non-dummy PASS; eight-case reporting artifacts preserved; 58/58 fidelity PASS with zero numeric drift; 18 paired measurements preserve events/completions. One small-dense timing pair regresses 16.62%, retained alongside all other samples; no general speedup claim. Final report and durable evidence: test_report_2026-09-17_review_final.md and review_final_evidence.json.
+
+Pending in-scope implementation: none. Newly discovered unresolved code regressions: none observed. Native campaigns, the documented mixed-batch approximation and related gate-variant limits remain explicit. No source changes occurred after 35ac95eb; archive edits are documentation only.

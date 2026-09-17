@@ -243,8 +243,8 @@ num_stateful_requests
 The producer writes `query_len_cv` and `num_stateful_requests`. When importing
 rows with explicit `query_lens`, the loader derives dispersion from those lengths
 and validates any supplied `query_len_cv`; this also preserves exact feature
-keys across CSV serialization. Legacy rows may omit both fields only when the
-batch token total and maximum query length establish a uniform batch. Ragged
+keys across CSV serialization. Legacy rows may omit both `query_lens` and
+`query_len_cv` only when the batch token total and maximum query length establish a uniform batch. Ragged
 rows without either lengths or dispersion are rejected.
 
 Decode prediction does not use context length or request history as a cost

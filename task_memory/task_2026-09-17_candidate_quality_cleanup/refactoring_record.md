@@ -2,6 +2,7 @@
 
 | Date | Summary of Changes |
 | --- | --- |
+| 2026-09-17 | Recorded the subsequent R01–R10 and C01–C02 review corrections. |
 | 2026-09-17 | Reconciled completed runtime, metrics, profiling and training issues into the requested structured table; separated real retained contracts. |
 | 2026-09-17 | Linked final integrated preservation and timing evidence for all completed phases. |
 
@@ -65,3 +66,22 @@ Completed in `large_module_review.md`: all seven reviewed critical modules above
 ## Final integrated evidence
 
 All rows above are closed with their focused evidence and the final production-source checks. [Final correctness](test_report_2026-09-17_p5_final.md) records exact baseline/main failure classification, 58-scenario fidelity and reporting-enabled non-dummy artifact preservation. [Final timing](test_report_2026-09-17_p5_timing.md) preserves all 18 measurements and explicitly limits performance claims. S1 remains a separately diagnosed correctness restoration, not an asserted equality with the failing candidate trace path. No retained optionality was removed to make a test pass or to obtain the measured speed differences.
+
+## Subsequent PR33 review remediation
+
+The earlier cleanup record above is historical. The following bounded corrections respond to the d43ae932 review and the user's superseding R01-A decision. Individual reports under this task directory retain exact commands and red/green evidence.
+
+| Module / issue | Problem | Root cause | Why the previous contract was insufficient | Correction | Reused authority | Verification |
+| --- | --- | --- | --- | --- | --- | --- |
+| GDN features / R01 | Scheduler-admitted mixed batch rejected during prediction | Producer and scheduler phase contracts differ | Forcing a common scheduler policy would change selected scheduler behavior | User-authorized prefill approximation and explicit warning/docs | Actual Batch/Request features and existing prefill estimators | Real staggered-arrival non-dummy Simulator; slot identity/reuse/cleanup; selected timing regression |
+| ROCm attention / R02 | Hybrid model rejected | Homogeneous-only binder used by a layer-specific producer | Whole-model identity cannot classify a full-attention component | Resolve runtime attention family, require DENSE_KV | Canonical runtime resolver/layout enum | 25 CPU PASS; actual hybrid native cases added, hardware not run |
+| GDN trainer / R03 | Partial overwrite exposes mixed estimator generations | Per-file atomic writes overwrite files named by the old manifest | Six independent replacements are not one publication | Immutable generation filenames, then atomic manifest switch | Existing artifact references and atomic writers | Four failure/interleaving reproductions; 53 PASS |
+| GDN features / R04 | Ragged feature drift through CSV | Producer omitted dispersion; importer defaulted zero | Runtime and training selected different feature vectors | Emit/rederive/validate query_len_cv; reject ambiguous ragged legacy rows | Shared GDN feature calculation | 98 PASS including actual producer-row/CSV/trainer/runtime round trips |
+| GDN loader / R05 | Requested dtype mismatch accepted | Shape identity check omitted model precision | Equal dimensions do not imply equal kernel precision | Compare normalized model/artifact dtype at load | PrecisionType | 60 PASS; BF16 aliases accepted, FP16 mismatch rejected |
+| GDN producer / R06 | DEVICE_EVENT label can disagree with effective timer | Singleton owner overrides requested method | Constructor option alone does not establish measurement provenance | Validate owner before native setup; export validated method | TimerStatsStore and method normalization | 111 PASS; previous owner/samples retained |
+| Shell launchers / R07 | Wrong output file checked | Hardcoded unsuffixed path diverged from producer | Duplicate path policy misses method suffixes | One canonical path for display and postflight | build_profile_method_output_path | 33 PASS including real shell postflight and stale-file rejection |
+| ROCm recipe / R08 | Published attention command selects NO_OP | Native backend omitted | Output measurement label does not establish kernel execution | Explicit VLLM_ROCM and phase-coverage guidance | Existing wrapper backend option | Literal recipe dry-run PASS; native check pending hardware |
+| GDN recipes / R09 | TP8 launches one process | Python invocation lacks distributed launcher | Requested TP does not create ranks | Eight-process torchrun and separate TP1 example | Existing torchrun/world-size contract | All three documentation copies checked; 4 combined PASS |
+| Graph replay / R10 | Later invocations consume empty generators | Workload iterable converted repeatedly | One-shot iterable cannot be reread | Normalize once before call construction | Existing primitive validation and row schema | Generator/tuple orchestration and metadata equality; 35 PASS |
+| GDN capacity / C01 | Admission allocates owner tuple | Diagnostic query used for capacity | O(active owners) work for a boolean question | Read-only free-slot availability | Existing heap | Zero diagnostic access; 17 PASS |
+| Prefill reporting / C02 | Unconditional reporting prediction/allocation | Demand checked after payload construction | Disabled reporting still pays full stage/dense work | Central demand query; preserve utilization callback without payload | Existing flags and full/summary ledger predicate | 129 PASS; calls 2→1, stage allocations 1→0; enabled artifact comparison in final report |
