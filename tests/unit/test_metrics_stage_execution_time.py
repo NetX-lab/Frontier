@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from frontier.entities import ExecutionTime, StageExecutionTime
 from frontier.metrics.constants import OperationMetrics
 from frontier.metrics.metrics_store import MetricsStore
@@ -24,6 +26,7 @@ def _layer(
     family_id: str,
     op_times: dict[str, float],
     pipeline_parallel_communication_time: float = 0.0,
+    **residual_times: float,
 ) -> ExecutionTime:
     return ExecutionTime(
         num_layers_per_pipeline_stage=1,
@@ -54,6 +57,7 @@ def _layer(
         attention_family_id=family_id,
         attention_variant_id="standard" if family_id == "dense_attention" else "qwen3_5",
         op_times=op_times,
+        **residual_times,
     )
 
 
@@ -190,6 +194,89 @@ class _TraceStore:
 
     def log_event(self, event) -> None:
         self.events.append(event)
+
+
+@pytest.mark.parametrize("wrap_stage", [False, True], ids=["scalar", "stage"])
+@pytest.mark.parametrize(
+    "proposer_ms,terminal_ms", [(3.0, 0.0), (0.0, 5.0), (3.0, 5.0)],
+    ids=["proposer", "terminal", "both"],
+)
+def test_residual_traces_preserve_owner_and_physical_layer_metadata(
+    tmp_path, request, wrap_stage, proposer_ms, terminal_ms,
+) -> None:
+    from frontier.attention.families import DENSE_ATTENTION_FAMILY
+    from frontier.config import global_vars
+    from frontier.config.config import ClusterConfig, MetricsConfig, ReplicaConfig, SimulationConfig
+    from frontier.entities import BatchStage, Request
+
+    global_vars.reset_global_vars()
+    request.addfinalizer(global_vars.reset_global_vars)
+    cluster = ClusterConfig(replica_config=ReplicaConfig(
+        device="a100", network_device="a100_pairwise_nvlink",
+        model_name="meta-llama/Llama-2-7b-hf",
+    ))
+    config = SimulationConfig(cluster_config=cluster, metrics_config=MetricsConfig(
+        output_dir=str(tmp_path), write_metrics=False, store_plots=False,
+        enable_op_level_tracing=True, enable_per_layer_expansion=True,
+        num_requests_to_trace_per_layer=1,
+    ))
+    sink = _TraceStore()
+    store = MetricsStore(config, {ClusterType.MONOLITHIC: cluster}, sink)
+    attention_times = {
+        operator.name: 0.0 for operator in DENSE_ATTENTION_FAMILY.e2e_trace_ops()
+    }
+    owner = _layer(
+        7, "dense_attention", {**attention_times, "attn_prefill": 2.0},
+        decode_draft_proposer_time=proposer_ms, mtp_terminal_overshoot_time=terminal_ms,
+    )
+    execution_time = owner
+    if wrap_stage:
+        other = _layer(
+            9, "dense_attention", {**attention_times, "attn_prefill": 7.0},
+            decode_draft_proposer_time=99.0, mtp_terminal_overshoot_time=99.0,
+        )
+        execution_time = StageExecutionTime((owner, other), stage_execution_time=owner)
+    batch = BatchStage(
+        batch_id=73, replica_id=0, pipeline_stage=0,
+        execution_time=execution_time.total_time, model_execution_time=execution_time.model_time,
+        requests=[Request(arrived_at=0.0, num_prefill_tokens=8, num_decode_tokens=1)],
+        num_tokens=[8], cluster_type=ClusterType.MONOLITHIC,
+    )
+    batch.on_schedule(1.0)
+
+    store.on_replica_stage_schedule(
+        time=1.0, replica_id=0, stage_id=0, batch_stage=batch,
+        execution_time=execution_time, cluster_type=ClusterType.MONOLITHIC,
+    )
+
+    residuals = [
+        ("decode_draft_proposer", proposer_ms, "mtp_draft_proposer", "draft_proposer"),
+        ("mtp_terminal_overshoot", terminal_ms, "mtp_terminal_overshoot_compute", "terminal_overshoot"),
+    ]
+    expected_residuals = [item for item in residuals if item[1] > 0.0]
+    events = sink.events
+    assert [event.name for event in events] == [item[0] for item in expected_residuals] + [
+        "attn_prefill"
+    ] * (2 if wrap_stage else 1)
+    cursor = 1.0
+    for event, (name, duration, family, component) in zip(events, expected_residuals):
+        assert (event.name, event.type, event.layer_id) == (name, "COMPUTE", -1)
+        assert event.duration_ms == duration
+        assert event.ts_start == pytest.approx(cursor)
+        assert event.meta["residual_family"] == family
+        assert event.meta["spec_decode_component"] == component
+        cursor += duration * 1e-3
+    for event, layer_id, duration in zip(events[len(expected_residuals):], (7, 9), (2.0, 7.0)):
+        assert event.duration_ms == duration
+        assert event.ts_start == pytest.approx(cursor)
+        assert event.meta["tensor_shape"]
+        assert event.meta["tensor_size_bytes"]
+        if wrap_stage:
+            assert event.layer_id == layer_id
+            assert event.meta["global_layer_id"] == layer_id
+            assert event.meta["attention_family_id"] == "dense_attention"
+            assert event.meta["attention_variant_id"] == "standard"
+        cursor += duration * 1e-3
 
 
 def test_stage_op_level_traces_include_gdn_metadata_without_duplication() -> None:

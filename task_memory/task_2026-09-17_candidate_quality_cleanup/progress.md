@@ -83,3 +83,10 @@ New unresolved issues: none established.
 - Reviewed finalized-copy paths: repeated calls return the existing immutable snapshot, so they are not repeated deep copies. Stage scalar projections use finite declared property sets, not broad `__getattr__`. Single-layer helpers reject multi-layer stages; keep these supported interfaces.
 - P1 fidelity finished **58 PASS / 0 FAIL** at `61595325`; every requested stable artifact and ledger/request value matches the frozen candidate.
 - Subsequent L2 private-layer cleanup removes an uncalled aggregate degree of freedom from two private interfaces. Real MTP stage width is retained. 105 focused tests PASS in 7.92 s; final E2E will include this small subsequent change.
+
+## P1 timing / P2 S1 — completed
+
+- Paired run completed 18/18 successful measurements at production HEAD `b0b9683b` against `c288a19f`; only the unrelated red-regression test was dirty. No concurrent test load or production edits during timing. Median paired Simulator.run changes: small dense -17.32%, longer dense -10.12%, representative MoE -2.96%. Events/completions match in every pair. Reporting is disabled by this existing harness; no metrics-enabled or native-device performance claim follows.
+- S1 RCA reproduced six frozen-candidate failures and three native-main scalar successes: the added physical-layer metadata path conflated complete event metadata with additive identity. Restored the distinction using a keyword-only local emitter argument; residual/wait metadata bypass tensor resolution, layer identity still supplements derived tensor metadata. No resolver exception suppression or operator-name special case.
+- Verification after S1: 139 PASS in 7.30 s, including all six positive residual cases and existing reporting contracts. This is a separately documented correctness restoration, not asserted as equality with the broken candidate path.
+- Sidecar bounded scopes: Meitner owns scheduler reporting M1b/M2; Nash owns trace context M4/M5. Main owns metrics_store M1a/M3 and integrated verification. Preserve all workers' changes; stage each logical result separately.

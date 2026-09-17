@@ -619,26 +619,30 @@ class MetricsStore:
             duration_ms: float,
             layer_id: int = -1,
             extra_meta: dict = None,
+            *,
+            resolved_meta: dict | None = None,
         ):
             """Helper to emit a single trace event and advance cursor."""
             nonlocal cursor_ms
             if duration_ms <= 0:
                 return  # Skip zero-duration ops
 
-            if op_type in ("COMPUTE", "COMM"):
+            if resolved_meta is not None:
+                trace_meta = resolved_meta.copy()
+            elif op_type in ("COMPUTE", "COMM"):
                 trace_meta = compute_op_trace_meta(op_name, op_type, trace_context)
-                if extra_meta:
-                    trace_meta.update(extra_meta)
-                extra_meta = trace_meta
+            else:
+                trace_meta = {}
+            if extra_meta:
+                trace_meta.update(extra_meta)
 
-            if op_type in ("COMPUTE", "COMM") and not extra_meta:
+            if op_type in ("COMPUTE", "COMM") and not trace_meta:
                 raise ValueError(
                     f"Missing op trace metadata for op={op_name} type={op_type}"
                 )
 
             meta = base_meta.copy()
-            if extra_meta:
-                meta.update(extra_meta)
+            meta.update(trace_meta)
 
             event = TraceEvent(
                 type=op_type,
@@ -696,7 +700,7 @@ class MetricsStore:
                             wait_event_name,
                             per_layer_related_wait_ms,
                             layer_idx,
-                            {"layer_idx": layer_idx, **wait_meta},
+                            resolved_meta={"layer_idx": layer_idx, **wait_meta},
                         )
                     continue
 
@@ -707,7 +711,7 @@ class MetricsStore:
                     wait_event_name,
                     related_wait_ms,
                     -1,
-                    wait_meta,
+                    resolved_meta=wait_meta,
                 )
 
         # =====================================================================
@@ -730,7 +734,7 @@ class MetricsStore:
             "COMPUTE",
             "decode_draft_proposer",
             execution_time.decode_draft_proposer_time,
-            extra_meta={
+            resolved_meta={
                 "residual_family": "mtp_draft_proposer",
                 "spec_decode_component": "draft_proposer",
             },
@@ -739,7 +743,7 @@ class MetricsStore:
             "COMPUTE",
             "mtp_terminal_overshoot",
             execution_time.mtp_terminal_overshoot_time,
-            extra_meta={
+            resolved_meta={
                 "residual_family": "mtp_terminal_overshoot_compute",
                 "spec_decode_component": "terminal_overshoot",
             },
