@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-17 | Corrected TP8 GDN launch to use eight distributed processes. |
 | 2026-09-17 | Clarified native mixed-phase rejection versus the temporary simulator approximation. |
 | 2026-09-14 | Added the standard MI355X profiling path and the experimental SGLang boundary. |
 
@@ -89,7 +90,8 @@ not evidence that an attention kernel ran.
 For standard GDN phases, use the dedicated vLLM producer:
 
 ```bash
-python -m frontier.profiling.gdn.main \
+torchrun --standalone --nproc-per-node=8 \
+  -m frontier.profiling.gdn.main \
   --model Qwen3.8-2.4T-A95B-Quark-MXFP4 \
   --model-path /path/to/local/checkpoint \
   --device mi355x \
@@ -98,7 +100,21 @@ python -m frontier.profiling.gdn.main \
   --output-dir data/profiling
 ```
 
-The output is
+TP8 requires eight visible compatible devices and one process per rank; the
+`torchrun` command launches all eight ranks. For a standalone TP1 campaign on
+one visible device, use a separate output root:
+
+```bash
+python -m frontier.profiling.gdn.main \
+  --model Qwen3.8-2.4T-A95B-Quark-MXFP4 \
+  --model-path /path/to/local/checkpoint \
+  --device mi355x \
+  --profile-method device_event \
+  --tensor-parallel-size 1 \
+  --output-dir data/profiling-tp1
+```
+
+The TP8 output is
 `data/profiling/compute/mi355x/Qwen3.8-2.4T-A95B-Quark-MXFP4/gdn.csv`.
 Each row records the phase (`prefill` or `decode`), physical batch features,
 GDN state/layout identity, runtime backend, rank aggregation, and component

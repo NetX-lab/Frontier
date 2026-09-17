@@ -288,3 +288,7 @@ All three profiling wrappers use the canonical CPU-safe Python path helper for d
 ### R08 completed — CPU documentation contract
 
 MI355X attention recipe explicitly selects VLLM_ROCM; docs identify the prefill-only wrapper and required separate decode collection. Literal recipe dry-run defeats NO_OP environment default: 1 PASS, 1.31 s. Native evidence remains pending hardware. Report: test_report_2026-09-17_r08_backend_recipe.md.
+
+### R09 completed
+
+All three TP8 GDN documentation copies now launch eight torchrun processes. Separate TP1 example uses its own output root. Literal command contracts plus R08 dry-run: 4 PASS, 1.43 s. Report: test_report_2026-09-17_r09_distributed_recipe.md.

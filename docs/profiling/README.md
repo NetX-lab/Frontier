@@ -4,6 +4,7 @@
 
 | Date       | Summary of Changes |
 | ---------- | ------------------ |
+| 2026-09-17 | Corrected TP8 GDN launch to use eight distributed processes. |
 | 2026-09-14 | Documented standard ROCm/GDN output contracts and the experimental SGLang boundary. |
 
 ## Scope
@@ -214,7 +215,8 @@ phase-qualified CSV to the canonical compute taxonomy. ROCm runs must select
 valid row for another measurement family.
 
 ```bash
-python -m frontier.profiling.gdn.main \
+torchrun --standalone --nproc-per-node=8 \
+  -m frontier.profiling.gdn.main \
   --model Qwen3.8-2.4T-A95B-Quark-MXFP4 \
   --model-path /path/to/local/checkpoint \
   --device mi355x \
