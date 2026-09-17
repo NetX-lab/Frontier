@@ -14,8 +14,8 @@ Dependency: `P0 -> P1 -> P2 -> P3 -> P4 -> P5`. Independent Standards and Spec r
 | P1 | Runtime invariants and control/data flow | Focused contracts, pre/post real simulation outputs, >=50-case fidelity, paired run timing | completed; final integrated fidelity still required |
 | P2 | Metrics, traces, ledgers and operator ownership | Same requested artifacts/numerics/layer and lane identities; focused reporting tests | completed |
 | P3 | Standard/experimental profiling orchestration | Preserved platform/path/schema/cleanup contracts; CPU profiling suite and explicit native limits | completed |
-| P4 | Training/model-manager/configuration/artifacts | Same path precedence, selected identities, saved/loaded predictions and supported optionals | in-progress |
-| P5 | Full regression, inventory reconciliation, evidence archive | No new candidate failure/skip; all high-value reviewed issues resolved or explicit consequential decision | pending |
+| P4 | Training/model-manager/configuration/artifacts | Same path precedence, selected identities, saved/loaded predictions and supported optionals | completed; 545-test integrated PASS |
+| P5 | Full regression, inventory reconciliation, evidence archive | No new candidate failure/skip; all high-value reviewed issues resolved or explicit consequential decision | in-progress |
 
 ## Execution sub-steps
 
@@ -33,4 +33,4 @@ Initial runtime ranking: timing entities and predictor stage construction; immut
 
 ## Errors and blockers
 
-None established. A discovery command returned exit 1 because no nested AGENTS.md matched; this was a file-search result, not a test failure.
+No unresolved blocker. P4 exposed and corrected a new test-global-state leak without changing production guards; exact commands and failure evidence are in progress and the config report. Previously reproduced main/frozen-candidate environment/legacy failures remain classified separately from new regressions. Discovery-only missing-path results did not change production behavior.

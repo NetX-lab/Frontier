@@ -202,3 +202,9 @@ New unresolved issues: none established.
 - Minimal two-node config-then-GDN command reproduced 1 PASS / 1 FAIL in 6.71 s (quality-p4-state-leak-red.log). Earlier GDN-only suites passed; the causal variable is preceding dense configuration. Required production model-consistency validation is correct and unchanged.
 - Reused global_vars.reset_global_vars in the new test module's autouse setup/teardown; no production edits or expected-number changes. Full config-plus-GDN modules now 36 PASS in 13.79 s (quality-p4-state-leak-green.log). This uses the diagnosing-bugs feedback loop; no additional instrumentation or semantic choice.
 - The concurrent fidelity harness executes isolated subprocesses and does not import this unit module; its production source remains fixed at 5cb8794f. Broader P4 and full-unit checks follow this fixture correction.
+
+## P4 completed / P5 in-progress
+
+- Corrected broader P4: **545 PASS**, 56.12 s across 28 modules, no failures/skips. Source ff2b6cdf retains production from 5cb8794f. Report: test_report_2026-09-17_p4_integrated.md.
+- Full unit run, eight reporting-enabled non-dummy cases and 58-case fidelity now execute against frozen production. Only task inventory documentation is dirty; no production/test edits are permitted during these runs. Paired timing will run alone after all correctness workloads exit.
+- Main reconciled exact inventory against frozen Git numstat: 106 paths / 105 Python + one README; 38 cleaned / 68 inspected-retained, no missing/extra/duplicate paths. Read-only worker reports and retained decisions are linked per path. No new semantic choice or inspection gap.
