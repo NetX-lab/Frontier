@@ -104,3 +104,16 @@ New unresolved issues: none established.
 - Reconciled Meitner's eight-file patch with production callers: deleted only the unused dense-reference/correction helpers, migrated their tests to live helpers, used canonical mixed-layer count and direct configured model, removed unused correction arguments, and avoided an immediately discarded Stage copy. Actual dense layers remain separately predicted.
 - 110 before / 114 after focused PASS. Independently confirmed five before/after timing snapshots are byte-identical with `cmp`; scalar, dense, zero-MoE, all-MoE and mixed stages preserve numerical ownership and call identities. Detailed commands and values are in `test_report_2026-09-17_p2_scheduler.md`.
 - A broad temporary-root filename search encountered unrelated permission-denied directories; abandoned broad discovery and read only explicit task log paths. No data or permissions changed.
+
+## P2 trace context — completed
+
+- Reconciled Nash's patch and committed `8e67fc25`: canonical GDN family membership, phase-local trace context/parallel values, one token sum per traced lane and per-event flat dictionary copies. Positive-work and reporting-off gates remain; no persistent cache.
+- Final focused result: 80 PASS in 7.12 s. Direct before/after comparison covers 64 reporting cases, 80 events per revision and all four GDN operators, with exact event/metric/ledger equality. A five-operator lane constructs 3 contexts rather than 5 and sums tokens once rather than 5 times.
+- DP RCA corrected the initial fixture finding: the only production `predict_dp_moe_allreduce_times` implementation explicitly returns `(0, 0)` for the retired scope, with no override. Removed two candidate-added unreachable COMM shape labels; did not expand the registry or change the public zero-return seam. Positive synthetic DP input remains rejected identically.
+- The sidecar's exact final command wrote evidence in its report/tool output, not a guessed `.log` path. A failed attempt to tail that nonexistent log skipped a documentation patch, not code verification; this entry repairs that documentation omission. Integrated P2 tests now provide a dedicated retained log.
+
+## P2 integrated / P3 schema — completed
+
+- Source-stable integrated P2 at `8e67fc25`: 159 PASS in 69.62 s, including eight real non-dummy simulations. Compared with frozen candidate: 90 stable artifacts PASS, 106-file symmetric inventory equal, 16 explicitly nonempty summary/acceptance JSON pairs equal. Logs: `/data/ycfeng/tmp/quality-p2-integrated.log`, `/data/ycfeng/tmp/quality-p2-artifact-comparison.log`.
+- P3 S4 uses family-owned profiling schema/operation names and existing GDN_TASKS phase order; removes unreachable zero-mean handling after positive-query validation. Required columns remain the exact ordered 27-tuple, both phase task orders and the four quantization names match frozen declarations.
+- S4 focused: 184 PASS in 16.34 s; pre-change broad P3 baseline was 253 PASS. Real optional mask/physical-batch normalization and inactive-phase output zeros remain unchanged.

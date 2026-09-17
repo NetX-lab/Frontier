@@ -272,14 +272,10 @@ class GDNPredictor:
         if not isinstance(features, GDNBatchFeatures):
             features = GDNBatchFeatures.from_batch(features)
         phase = features.phase
-        names = (
-            "gdn_input_projections",
-            "gdn_core_prefill" if phase == "prefill" else "gdn_core_decode",
-            "gdn_output_projection",
-        )
         return {
             name: self._predict_one(self._get_model(name, phase), features)
-            for name in names
+            for name, task_phase in GDN_TASKS
+            if task_phase == phase
         }
 
     def predict_attention_time(

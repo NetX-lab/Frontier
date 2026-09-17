@@ -5,42 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from math import sqrt
 
-
-_GDN_FEATURE_COLUMNS = (
-    "measurement_type",
-    "model_architecture_profile",
-    "quant_signature",
-    "device",
-    "runtime_stack_signature",
-    "gdn_runtime_backend",
-    "gdn_rank_aggregation",
-    "gdn_prefill_backend",
-    "gdn_decode_backend",
-    "gqa_interleaved_layout",
-    "packed_recurrent_decode",
-    "model_dtype",
-    "conv_state_dtype",
-    "recurrent_state_dtype",
-    "num_tensor_parallel_workers",
-    "hidden_size",
-    "conv_kernel_size",
-    "key_head_dim",
-    "value_head_dim",
-    "num_key_heads",
-    "num_value_heads",
-    "batch_size",
-    "batch_num_tokens",
-    "batch_num_prefill_tokens",
-    "batch_num_decode_tokens",
-    "max_query_len",
-    "has_initial_state",
-)
+from frontier.attention.families import GATED_DELTA_NET_ATTENTION_FAMILY
 
 
 def get_required_gdn_profiling_columns() -> tuple[str, ...]:
     """Return the stable raw GDN metadata/feature schema."""
 
-    return _GDN_FEATURE_COLUMNS
+    return GATED_DELTA_NET_ATTENTION_FAMILY.required_profiling_feature_columns
 
 
 @dataclass(frozen=True)
@@ -139,8 +110,6 @@ class GDNProfileInput:
     @property
     def query_len_cv(self) -> float:
         mean = self.num_tokens / self.batch_size
-        if mean == 0:
-            return 0.0
         variance = sum((length - mean) ** 2 for length in self.query_lens) / self.batch_size
         return sqrt(variance) / mean
 

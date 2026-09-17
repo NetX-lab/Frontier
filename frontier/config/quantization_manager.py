@@ -9,6 +9,7 @@ from typing import Dict, Optional, Set, Any, List
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    GATED_DELTA_NET_ATTENTION_FAMILY,
     iter_execution_enabled_families,
 )
 from frontier.config.model_config import BaseModelConfig
@@ -73,12 +74,7 @@ class QuantizationManager:
         "moe_grouped_gemm",
     }
     _GDN_OPERATION_NAMES = frozenset(
-        {
-            "gdn_core_prefill",
-            "gdn_core_decode",
-            "gdn_input_projections",
-            "gdn_output_projection",
-        }
+        operator.name for operator in GATED_DELTA_NET_ATTENTION_FAMILY.profiling_ops()
     )
 
     def __new__(cls) -> "QuantizationManager":

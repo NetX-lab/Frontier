@@ -12,8 +12,8 @@ Dependency: `P0 -> P1 -> P2 -> P3 -> P4 -> P5`. Independent Standards and Spec r
 | --- | --- | --- | --- |
 | P0 | Pin revisions; inventory actual diff; existing decisions, environment and fresh candidate baselines | Every changed production module categorized; reproducible comparison inputs | completed |
 | P1 | Runtime invariants and control/data flow | Focused contracts, pre/post real simulation outputs, >=50-case fidelity, paired run timing | completed; final integrated fidelity still required |
-| P2 | Metrics, traces, ledgers and operator ownership | Same requested artifacts/numerics/layer and lane identities; focused reporting tests | in-progress |
-| P3 | Standard/experimental profiling orchestration | Preserved platform/path/schema/cleanup contracts; CPU profiling suite and explicit native limits | pending |
+| P2 | Metrics, traces, ledgers and operator ownership | Same requested artifacts/numerics/layer and lane identities; focused reporting tests | completed |
+| P3 | Standard/experimental profiling orchestration | Preserved platform/path/schema/cleanup contracts; CPU profiling suite and explicit native limits | in-progress |
 | P4 | Training/model-manager/configuration/artifacts | Same path precedence, selected identities, saved/loaded predictions and supported optionals | pending |
 | P5 | Full regression, inventory reconciliation, evidence archive | No new candidate failure/skip; all high-value reviewed issues resolved or explicit consequential decision | pending |
 
