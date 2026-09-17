@@ -4,7 +4,10 @@ import math
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
-from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.families import (
+    DENSE_ATTENTION_FAMILY,
+    GATED_DELTA_NET_ATTENTION_FAMILY,
+)
 from frontier.attention.memory import get_attention_runtime_kv_layout
 from frontier.attention.model_binding import bind_attention_family
 from frontier.attention.ops import AttentionOperatorRole
@@ -531,12 +534,9 @@ def compute_op_trace_meta(
                 "input": [tokens, q_heads_per_tp, v_head_dim],
                 "output": [tokens, hidden_size_per_tp],
             }
-        elif op_name in (
-            "gdn_input_projections",
-            "gdn_core_prefill",
-            "gdn_core_decode",
-            "gdn_output_projection",
-        ):
+        elif _get_family_operator_by_name(
+            GATED_DELTA_NET_ATTENTION_FAMILY, op_name
+        ) is not None:
             # GDN uses a fixed recurrent state rather than a dense KV cache.
             # The trace contract records the visible token/hidden payload at
             # this seam; detailed recurrent-state shapes belong to the native
@@ -641,8 +641,6 @@ def compute_op_trace_meta(
             "share_expert_tensor_parallel_allreduce",
             "expert_parallel_allreduce",
             "pipeline_parallel_send_recv",
-            "dp_input_allreduce",
-            "dp_output_allreduce",
         ):
             tensor_shape = {"data": [tokens, hidden_size]}
             element_count = _elements_from_shape(tensor_shape["data"])
