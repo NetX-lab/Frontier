@@ -174,8 +174,6 @@ class _DecodeSyncScheduler:
         batch,
         stage_id,
         original_execution_time,
-        actual_execution_time_ms: float,
-        original_start_time: float,
     ):
         return original_execution_time
 

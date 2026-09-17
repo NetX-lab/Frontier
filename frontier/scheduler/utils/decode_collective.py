@@ -180,7 +180,7 @@ def handle_decode_sync_collective(
         batch_stage.override_execution_time(actual_execution)
         batch_stage.override_model_execution_time(full_execution.model_time)
         corrected = scheduler._create_prefill_corrected_execution_time_for_metrics(
-            batch, stage_id, full_execution, actual_execution, original_start
+            batch, stage_id, full_execution
         )
         metrics_store.on_replica_stage_schedule(
             original_start, replica_id, stage_id, batch_stage,

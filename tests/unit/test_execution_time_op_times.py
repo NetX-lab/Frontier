@@ -856,16 +856,11 @@ def test_corrected_execution_time_copy_preserves_omitted_split_tp_legacy_fallbac
     kwargs.pop("moe_tensor_parallel_allreduce_time")
     original_execution_time = ExecutionTime(**kwargs)
 
-    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
-        BaseClusterScheduler,
+    from frontier.scheduler.utils.execution_time_metrics import (
+        build_metrics_execution_time,
     )
 
-    corrected_execution_time = BaseClusterScheduler._create_corrected_execution_time_for_metrics(
-        cast(Any, None),
-        original_execution_time,
-        actual_execution_time_ms=0.0,
-        original_start_time=0.0,
-    )
+    corrected_execution_time = build_metrics_execution_time(original_execution_time)
 
     assert corrected_execution_time._has_attn_tensor_parallel_allreduce_time is False
     assert corrected_execution_time._has_moe_tensor_parallel_allreduce_time is False
@@ -889,16 +884,11 @@ def test_corrected_execution_time_copy_preserves_explicit_zero_split_tp_override
         )
     )
 
-    from frontier.scheduler.cluster_scheduler.base_cluster_scheduler import (
-        BaseClusterScheduler,
+    from frontier.scheduler.utils.execution_time_metrics import (
+        build_metrics_execution_time,
     )
 
-    corrected_execution_time = BaseClusterScheduler._create_corrected_execution_time_for_metrics(
-        cast(Any, None),
-        original_execution_time,
-        actual_execution_time_ms=0.0,
-        original_start_time=0.0,
-    )
+    corrected_execution_time = build_metrics_execution_time(original_execution_time)
 
     assert corrected_execution_time._has_attn_tensor_parallel_allreduce_time is True
     assert corrected_execution_time._has_moe_tensor_parallel_allreduce_time is True

@@ -8,7 +8,6 @@ import pytest
 from frontier.entities import ExecutionTime, StageExecutionTime
 from frontier.scheduler.utils.dense_metrics import (
     build_prefill_metrics_execution_time,
-    predict_dense_reference,
 )
 from frontier.scheduler.utils.execution_time_metrics import (
     build_metrics_execution_time,
@@ -128,21 +127,27 @@ def test_layer_metrics_snapshot_isolated_from_later_source_edits():
 
 
 def _model():
-    return SimpleNamespace(is_moe=True, num_layers=2, get_moe_layer_ids=lambda: [1])
+    return SimpleNamespace(
+        is_moe=True, num_layers=2, get_num_moe_layers=lambda: 1,
+        is_moe_layer=lambda layer_id: layer_id == 1,
+    )
 
 
-def test_dense_reference_explicitly_unwraps_singleton_stage():
+def test_prefill_metrics_explicitly_unwraps_singleton_prediction():
     source = _layer(0)
     predictor = SimpleNamespace(
         predict_stage_execution_time=Mock(return_value=StageExecutionTime((source,)))
     )
     batch = object()
 
-    result = predict_dense_reference(
-        predictor=predictor, batch=batch, stage_id=0,
+    corrected = build_prefill_metrics_execution_time(
+        original_execution_time=StageExecutionTime((source,)),
+        predictor=predictor, sample_batch=batch, stage_id=0,
         cluster_type=ClusterType.PREFILL, model_config=_model(),
     )
 
+    assert isinstance(corrected, StageExecutionTime)
+    result = corrected.layer_execution_times[0]
     assert isinstance(result, ExecutionTime)
     assert result.global_layer_id == 0
     assert result.id == source.id
@@ -152,7 +157,7 @@ def test_dense_reference_explicitly_unwraps_singleton_stage():
     )
 
 
-def test_dense_reference_rejects_unexpected_multilayer_prediction():
+def test_prefill_metrics_reject_unexpected_multilayer_prediction():
     predictor = SimpleNamespace(
         predict_stage_execution_time=Mock(
             return_value=StageExecutionTime((_layer(0), _layer(1)))
@@ -160,8 +165,9 @@ def test_dense_reference_rejects_unexpected_multilayer_prediction():
     )
 
     with pytest.raises(ValueError, match="exactly one"):
-        predict_dense_reference(
-            predictor=predictor, batch=object(), stage_id=0,
+        build_prefill_metrics_execution_time(
+            original_execution_time=StageExecutionTime((_layer(0),)),
+            predictor=predictor, sample_batch=object(), stage_id=0,
             cluster_type=ClusterType.PREFILL, model_config=_model(),
         )
 
@@ -171,7 +177,7 @@ def test_prefill_dense_layers_preserve_scope_and_do_not_mutate_sources():
     reference = StageExecutionTime((_layer(7),))
     predictor = SimpleNamespace(predict_stage_execution_time=Mock(return_value=reference))
     model = SimpleNamespace(
-        is_moe=True, num_layers=9, get_moe_layer_ids=lambda: [8],
+        is_moe=True, num_layers=9, get_num_moe_layers=lambda: 1,
         is_moe_layer=lambda layer_id: layer_id == 8,
     )
     batch = object()
@@ -191,3 +197,34 @@ def test_prefill_dense_layers_preserve_scope_and_do_not_mutate_sources():
     )
     assert not hasattr(source, "_trace_dense_layer_id")
     assert not hasattr(reference, "_trace_dense_layer_id")
+
+
+@pytest.mark.parametrize(
+    "wrap_stage,is_moe,moe_layer_ids",
+    [(False, True, (1,)), (True, False, ()), (True, True, ()), (True, True, (0, 1))],
+    ids=["scalar", "dense", "zero-moe", "all-moe"],
+)
+def test_prefill_metrics_copy_without_predicting_outside_mixed_stages(
+    wrap_stage, is_moe, moe_layer_ids,
+):
+    layer = _layer(0, is_moe=0 in moe_layer_ids, op_times={"attn_mla_decode": 2.0})
+    original = StageExecutionTime((layer,)) if wrap_stage else layer
+    predictor = Mock()
+    model = SimpleNamespace(
+        is_moe=is_moe, num_layers=2, get_num_moe_layers=lambda: len(moe_layer_ids),
+        is_moe_layer=lambda layer_id: layer_id in moe_layer_ids,
+    )
+
+    corrected = build_prefill_metrics_execution_time(
+        original_execution_time=original, sample_batch=object(), predictor=predictor,
+        stage_id=0, cluster_type=ClusterType.PREFILL, model_config=model,
+    )
+
+    predictor.predict_stage_execution_time.assert_not_called()
+    assert corrected is not original
+    assert type(corrected) is type(original)
+    assert corrected.model_time_ms == original.model_time_ms
+    assert corrected.total_time == original.total_time
+    assert dict(corrected.op_times) == dict(original.op_times)
+    layer._replace_operator_time_values({"attn_mla_decode": 1000.0})
+    assert corrected.op_times["attn_mla_decode"] == 2.0

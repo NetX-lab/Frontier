@@ -238,8 +238,6 @@ def handle_prefill_sync_collective(
                 batch,
                 stage_id,
                 metrics_execution_time,
-                final_timing.actual_execution_time,
-                original_start_time,
             )
             metrics_store.on_replica_stage_schedule(
                 original_start_time,

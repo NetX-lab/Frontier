@@ -96,3 +96,11 @@ New unresolved issues: none established.
 - Removed orphaned `_trace_dense_*` and `_trace_execution_time_override` readers. A full production/test search finds no remaining writer except neutral annotation-isolation tests; actual mixed layers already arrive in StageExecutionTime. Removed an unused family lookup in stage tracing. Scalar timing/reporting remains supported.
 - Focused reporting checks: 69 PASS in 6.57 s, log `/data/ycfeng/tmp/quality-p2-readers.log`; the S1 suite supplied the pre-change baseline.
 - Corrected M3 reviewer proposal before implementation: FFN trace name `mlp_act` is NOT the historical metric label `mlp_activation`; `OperationMetrics(op_name)` would fail. No existing generic alias mapping exists. Retained three explicit scalar-to-metric projections rather than introducing an alias abstraction solely to shorten them. This is schema adaptation, not duplicated family ownership policy.
+- P3 pre-change CPU baseline: 253 PASS in 17.65 s, `/data/ycfeng/tmp/quality-p3-before.log`, covering GDN artifacts/profiling, architecture/MLA config, native-adapter admission and experimental replay. These are not native GPU executions. Read-only preparation found no need to alter the standard/experimental dependency boundary.
+- Discovery-only path misses: GDN shared schema lives in `frontier/attention/gdn/features.py` and `config.py`, not `frontier/gdn/`. No file edits or failed tests resulted.
+
+## P2 scheduler reporting — completed
+
+- Reconciled Meitner's eight-file patch with production callers: deleted only the unused dense-reference/correction helpers, migrated their tests to live helpers, used canonical mixed-layer count and direct configured model, removed unused correction arguments, and avoided an immediately discarded Stage copy. Actual dense layers remain separately predicted.
+- 110 before / 114 after focused PASS. Independently confirmed five before/after timing snapshots are byte-identical with `cmp`; scalar, dense, zero-MoE, all-MoE and mixed stages preserve numerical ownership and call identities. Detailed commands and values are in `test_report_2026-09-17_p2_scheduler.md`.
+- A broad temporary-root filename search encountered unrelated permission-denied directories; abandoned broad discovery and read only explicit task log paths. No data or permissions changed.

@@ -18,6 +18,7 @@
 | GDN state slot manager | Front removal and sorting on each release | Ordered allocation implemented by repeatedly sorting storage | Required policy is minimum-free-ID selection | Standard heap operations; retain ownership map and lifecycle | Python heapq | 16 tests and exact 1,000-request old/new transcript |
 | MetricsStore residual emitter (S1 correctness restoration) | Positive residual traces fail with unsupported operator errors | Complete explicit event metadata conflated with additive physical-layer identity | Unconditional derivation attempts to resolve non-tensor residuals | Explicit resolved metadata argument; preserve additive identity | Existing compute_op_trace_meta and residual event contract | Frozen 6 FAIL, native-main scalar 3 PASS, post-fix reporting 139 PASS |
 | MetricsStore trace projection | Dead private overrides and dense annotations | Stage payload replaced annotation writers without removing readers | Reflection preserves an unreachable second source of timing | Remove orphan readers and unused family lookup | StageExecutionTime physical-layer payload | 69 focused reporting PASS; phase artifact comparison follows |
+| Scheduler dense reporting | Test-only helpers, first-layer search, discarded copy, unused time arguments | Representative-layer reporting remnants survived the physical-layer transition | Model API already supplies layer counts; only live helper should define projection | Direct model/count contract; one Stage replacement; migrate tests to live helper | BaseModelConfig, StageExecutionTime and timing-copy helpers | 110 before / 114 after PASS; five byte-identical snapshots |
 
 ## Intentionally retained patterns
 
@@ -33,4 +34,4 @@ Architecture identity cleanup: duplicated Qwen type/alias recognition in three g
 
 ## Large-module analysis
 
-Pending candidate-specific inspection. Remaining large modules require concrete scope, technical reason and a functional split proposal; no repository-wide split is implied.
+Completed in `large_module_review.md`: all seven critical modules above 2,000 lines already exceeded the soft limit on main. Candidate-specific cleanup precedes any extraction. The report records retained ownership and concrete functional split sequences for base/MoE/disaggregated predictors, shared manager, metrics store, vLLM V1 scheduler and aggregate config. No broad split is required to preserve this task's bounded scope. L2 private single-layer cleanup is committed; L1 manager family reuse remains in P4.

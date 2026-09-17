@@ -128,9 +128,6 @@ from frontier.scheduler.utils.collective_timing import (
 )
 from frontier.scheduler.utils.prefill_collective import handle_prefill_sync_collective
 from frontier.scheduler.utils.decode_collective import handle_decode_sync_collective
-from frontier.scheduler.utils.execution_time_metrics import (
-    build_metrics_execution_time,
-)
 from frontier.scheduler.utils.afd_metadata import aggregate_afd_metadata
 from frontier.scheduler.utils.request_selection import collect_active_requests
 from frontier.scheduler.utils.replica_schedulers import build_replica_scheduler_maps
@@ -1143,29 +1140,16 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         sample_batch: Batch,
         stage_id: int,
         original_execution_time,
-        actual_execution_time_ms,
-        original_start_time,
     ):
         """Build full-stage attention and dense-FFN metrics for an EP wave schedule."""
-        model_config = getattr(getattr(self._config, "replica_config", None), "model_config", None)
         return build_prefill_metrics_execution_time(
             original_execution_time=original_execution_time,
             sample_batch=sample_batch,
             predictor=self._predictor,
             stage_id=stage_id,
             cluster_type=self._cluster_type,
-            model_config=model_config,
+            model_config=self._config.replica_config.model_config,
         )
-
-    def _create_corrected_execution_time_for_metrics(
-        self,
-        original_execution_time,
-        actual_execution_time_ms,
-        original_start_time,
-    ):
-        """Create corrected ExecutionTime payload used by metrics/trace emission."""
-        del actual_execution_time_ms, original_start_time
-        return build_metrics_execution_time(original_execution_time)
 
     def _record_mtp_terminal_completion_delay(
         self,

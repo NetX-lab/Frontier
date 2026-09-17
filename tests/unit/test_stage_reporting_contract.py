@@ -168,7 +168,7 @@ def test_dense_metrics_adapter_predicts_each_actual_dense_layer_and_preserves_ow
     predictor.predict_stage_execution_time.side_effect = lambda *args, **kwargs: StageExecutionTime(
         (dense_outputs[kwargs["layer_id"]],),
     )
-    model = SimpleNamespace(is_moe=True, num_layers=10, get_moe_layer_ids=lambda: [8], is_moe_layer=lambda layer_id: layer_id == 8)
+    model = SimpleNamespace(is_moe=True, num_layers=10, get_num_moe_layers=lambda: 1, is_moe_layer=lambda layer_id: layer_id == 8)
     batch = object()
 
     corrected = build_prefill_metrics_execution_time(
