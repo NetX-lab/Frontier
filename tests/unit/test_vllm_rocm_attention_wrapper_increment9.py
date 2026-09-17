@@ -59,7 +59,7 @@ def test_rocm_backend_is_explicit_and_lazy() -> None:
     assert get_attention_wrapper.__module__.endswith("backends")
 
 
-def _cpu_rocm_wrapper(monkeypatch):
+def _cpu_rocm_wrapper(monkeypatch, model=None):
     """Initialize the production wrapper with CPU native/timer stand-ins."""
     impl = SimpleNamespace(do_kv_cache_update=Mock(), forward=Mock(
         side_effect=lambda layer, query, key, value, cache, metadata, output:
@@ -71,7 +71,7 @@ def _cpu_rocm_wrapper(monkeypatch):
         RocmAttentionMetadata=lambda **kwargs: SimpleNamespace(**kwargs),
     ))
     wrapper = VllmRocmAttentionWrapper()
-    wrapper.init(ModelConfig.from_model_name("meta-llama/Llama-2-7b-hf"),
+    wrapper.init(model or ModelConfig.from_model_name("meta-llama/Llama-2-7b-hf"),
                  ParallelConfig(), 16, torch.device("cpu"))
     events = []
 
@@ -160,3 +160,34 @@ def test_rocm_wrapper_rejects_mixed_before_materializing_metadata(monkeypatch):
         ])
     assert wrapper._prefill_metadata is wrapper._decode_metadata is wrapper._slot_mapping is None
     assert events == []
+
+
+def test_rocm_wrapper_accepts_hybrid_full_attention_without_weakening_binder(monkeypatch):
+    from frontier.attention.model_binding import bind_attention_family
+
+    model = ModelConfig.from_model_name("Qwen3.8-2.4T-A95B-Quark-MXFP4")
+    assert model.get_num_gdn_layers() > 0
+    with pytest.raises(ValueError, match="explicit global layer id"):
+        bind_attention_family(model)
+    wrapper, _ = _cpu_rocm_wrapper(monkeypatch, model)
+    assert wrapper.num_q_heads == model.get_num_q_heads(ParallelConfig())
+    assert wrapper.num_kv_heads == model.get_num_kv_heads(ParallelConfig())
+
+
+@pytest.mark.parametrize("kv_heads", [32, 8, 1])
+def test_rocm_wrapper_retains_dense_head_topologies(monkeypatch, kv_heads):
+    model = ModelConfig.from_model_name("meta-llama/Llama-2-7b-hf")
+    model.num_kv_heads = kv_heads
+    wrapper, _ = _cpu_rocm_wrapper(monkeypatch, model)
+    assert wrapper.num_kv_heads == kv_heads
+
+
+def test_rocm_wrapper_rejects_latent_mla(monkeypatch):
+    model = ModelConfig.from_model_name("meta-llama/Llama-2-7b-hf")
+    model.use_mla = True
+    model.kv_lora_rank = 32
+    model.qk_nope_head_dim = 32
+    model.qk_rope_head_dim = 32
+    model.v_head_dim = 32
+    with pytest.raises(NotImplementedError, match="not latent MLA"):
+        _cpu_rocm_wrapper(monkeypatch, model)

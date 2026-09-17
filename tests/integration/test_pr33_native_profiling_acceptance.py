@@ -48,8 +48,11 @@ def attention_runtime(mi355x_torch):
             Singleton._instances[TimerStatsStore] = previous
 
 
+@pytest.mark.parametrize("model_name", [
+    "meta-llama/Llama-2-7b-hf", "Qwen3.8-2.4T-A95B-Quark-MXFP4",
+])
 @pytest.mark.parametrize("phase,prefix,length", [("prefill", 0, 16), ("decode", 16, 1)])
-def test_native_rocm_attention_matches_causal_reference(attention_runtime, phase, prefix, length):
+def test_native_rocm_attention_matches_causal_reference(attention_runtime, phase, prefix, length, model_name):
     torch, store = attention_runtime
     from frontier.profiling.attention.backends.vllm_rocm_attention_wrapper import VllmRocmAttentionWrapper
     from frontier.profiling.attention.sequence_proxy import SequenceMetadataProxy
@@ -57,7 +60,7 @@ def test_native_rocm_attention_matches_causal_reference(attention_runtime, phase
     from frontier.profiling.common.parallel_config import ParallelConfig
     from frontier.profiling.common.vllm_compat import vllm_config_context
 
-    model = ModelConfig.from_model_name("meta-llama/Llama-2-7b-hf")
+    model = ModelConfig.from_model_name(model_name)
     wrapper = VllmRocmAttentionWrapper()
     with vllm_config_context():
         wrapper.init(model, ParallelConfig(1, 1), 16, torch.device("cuda"))

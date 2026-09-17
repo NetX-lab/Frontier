@@ -260,3 +260,7 @@ The malformed tail invocation and a no-match file glob during read-only inspecti
 ### R01-A completed
 
 Eight existing non-dummy cases: 8 PASS, 79.30 s. Required fidelity: 58 PASS / 0 FAIL against c288a19f, source fixed throughout. Independently parsed all 58 results and retained verdicts with the 14 new observed batches in r01_approximation_evidence.json. Final report: test_report_2026-09-17_r01_approximation.md. R01 is closed under the user's explicit temporary-approximation decision, not under the withdrawn phase-pure scheduling proposal. Next: R02 hybrid ROCm binding, followed by R03 immutable artifact generations.
+
+### R02 completed — CPU contract verified
+
+Reused resolve_runtime_attention_family in the ROCm producer and restricted accepted layouts to DENSE_KV. Whole-model hybrid rejection remains intact. 25 PASS, 3.13 s; native prefill/decode coverage now includes the actual Qwen3.8 config and remains hardware-gated. Report: test_report_2026-09-17_r02_binding.md. No native execution claim.

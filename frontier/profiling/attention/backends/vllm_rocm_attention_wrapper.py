@@ -8,7 +8,7 @@ from typing import List, Optional
 
 import torch
 
-from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.model_binding import resolve_runtime_attention_family
 from frontier.attention.ops import AttentionMemoryLayout
 from frontier.profiling.attention.backends.base_attention_wrapper import (
     BaseAttentionWrapper,
@@ -101,11 +101,11 @@ class VllmRocmAttentionWrapper(BaseAttentionWrapper):
                 "VLLM_ROCM attention requires a ROCm-enabled PyTorch build."
             )
 
-        attention_family = bind_attention_family(model_config).family
-        if attention_family.memory_layout is AttentionMemoryLayout.LATENT_MLA:
+        attention_family = resolve_runtime_attention_family(model_config)
+        if attention_family.memory_layout is not AttentionMemoryLayout.DENSE_KV:
             raise NotImplementedError(
                 "VLLM_ROCM profiling currently supports dense paged KV cache, "
-                "not latent MLA cache layouts."
+                "not latent MLA or other non-dense cache layouts."
             )
 
         try:
