@@ -163,4 +163,4 @@ New unresolved issues: none established.
 ## P4 M1 — completed
 
 - Manager MLA classification delegates to runtime family binding; whole-model None remains supported. Measurement selector requires the replica already supplied by production and four formerly incomplete test calls.
-- 127 frozen / 127 cleaned PASS. Exact method comparison across 120 architecture/device/role/graph selections and four model families also PASS. No path precedence or estimator output changed.
+- 127 frozen / 127 cleaned PASS. The first extra comparison stopped at the expected TRANS rejection; its PASS was recorded prematurely. Corrected value/error comparison now independently PASS: 120 supported selections, 24 unchanged TRANS ValueErrors, four model families. Evidence is `quality-p4-manager-binding-exact-v2.log`; preserve the original failed probe. No production change was needed.
