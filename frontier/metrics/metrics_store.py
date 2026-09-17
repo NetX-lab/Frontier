@@ -475,15 +475,24 @@ class MetricsStore:
         return self._trace_store
 
     @property
-    def ep_wave_reporting_enabled(self) -> bool:
-        """Retain lane predictions only when a requested projection consumes them."""
+    def stage_execution_reporting_enabled(self) -> bool:
+        """Whether any enabled consumer needs an execution-time payload.
+
+        Utilization uses BatchStage timing and does not require this payload.
+        Ledger summaries consume the same physical records as full ledgers.
+        """
         return bool(
             self._config.enable_op_level_tracing
             or (self._config.write_metrics and (
                 self._config.store_operation_metrics
-                or self._config.store_frontier_stage_batch_ledger
+                or self._should_capture_frontier_stage_batch_ledger()
             ))
         )
+
+    @property
+    def ep_wave_reporting_enabled(self) -> bool:
+        """Retain lane predictions for the enabled execution-time consumers."""
+        return self.stage_execution_reporting_enabled
 
     def on_ep_wave_schedule(self, plan, *, time, replica_id, stage_id, cluster_type):
         """Report actual lane operators at their scheduled phase boundaries."""

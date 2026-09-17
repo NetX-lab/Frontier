@@ -300,3 +300,7 @@ Normalize optional context/expert iterables once before constructing replay call
 ### C01 completed
 
 Capacity admission uses a read-only availability property derived from the free-slot heap. Diagnostic owner tuple is never accessed by admission. 1 FAIL before -> 17 PASS, 6.81 s; deterministic exhaustion/reuse preserved. Report: test_report_2026-09-17_c01_capacity.md.
+
+### C02 focused verification completed
+
+Centralized execution-payload demand over existing trace/operation/full-ledger/summary flags; utilization retains callback with no payload. Disabled final-sync fixture reduces predictor calls 2 -> 1 and stage allocations 1 -> 0 with identical event/model/wall timing. 129 PASS, 6.99 s after correcting an assertion parameter index (first green 128 PASS / 1 FAIL). Summary-only EP capture now follows the same consumer demand. Report: test_report_2026-09-17_c02_reporting.md. Final broad verification follows on frozen source.
