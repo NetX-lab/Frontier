@@ -3,6 +3,7 @@
 | Date | Summary of Changes |
 | --- | --- |
 | 2026-09-17 | Reconciled completed runtime, metrics, profiling and training issues into the requested structured table; separated real retained contracts. |
+| 2026-09-17 | Linked final integrated preservation and timing evidence for all completed phases. |
 
 # Refactoring record
 
@@ -17,7 +18,7 @@
 | ExecutionTime | Unread legacy stage-size attribute | Former aggregate semantics left bookkeeping behind | No consumer uses it after physical-layer transition | Remove stored state, retain input validation | Physical-layer/stage contract | Timing tests and non-dummy parity |
 | GDN state slot manager | Front removal and sorting on each release | Ordered allocation implemented by repeatedly sorting storage | Required policy is minimum-free-ID selection | Standard heap operations; retain ownership map and lifecycle | Python heapq | 16 tests and exact 1,000-request old/new transcript |
 | MetricsStore residual emitter (S1 correctness restoration) | Positive residual traces fail with unsupported operator errors | Complete explicit event metadata conflated with additive physical-layer identity | Unconditional derivation attempts to resolve non-tensor residuals | Explicit resolved metadata argument; preserve additive identity | Existing compute_op_trace_meta and residual event contract | Frozen 6 FAIL, native-main scalar 3 PASS, post-fix reporting 139 PASS |
-| MetricsStore trace projection | Dead private overrides and dense annotations | Stage payload replaced annotation writers without removing readers | Reflection preserves an unreachable second source of timing | Remove orphan readers and unused family lookup | StageExecutionTime physical-layer payload | 69 focused reporting PASS; phase artifact comparison follows |
+| MetricsStore trace projection | Dead private overrides and dense annotations | Stage payload replaced annotation writers without removing readers | Reflection preserves an unreachable second source of timing | Remove orphan readers and unused family lookup | StageExecutionTime physical-layer payload | 69 focused reporting PASS; P2 and final eight-case artifact comparisons PASS |
 | Scheduler dense reporting | Test-only helpers, first-layer search, discarded copy, unused time arguments | Representative-layer reporting remnants survived the physical-layer transition | Model API already supplies layer counts; only live helper should define projection | Direct model/count contract; one Stage replacement; migrate tests to live helper | BaseModelConfig, StageExecutionTime and timing-copy helpers | 110 before / 114 after PASS; five byte-identical snapshots |
 | EP lane traces / GDN trace metadata | Repeated phase-invariant construction and GDN name tuple | Context built inside operator loop; registry ownership copied locally | Same context/parallel values recur within phase | Hoist local context and lane sum; query GDN family; remove unreachable retired-DP shape labels | OpTraceContext and attention family lookup | 80 focused PASS; exact 64-case event/metric/ledger and four-operator metadata comparison |
 | GDN profiling schema / precision / prediction tasks | Repeated literal field/operator lists and zero-mean fallback | Consumers copied declarative family data | Family and task registry already supply exact ordered data; query lengths are positive | Reuse registry tuples/sets and task selection; remove unreachable fallback | GATED_DELTA_NET_ATTENTION_FAMILY and GDN_TASKS | 184 focused PASS; exact 27-column, four-name and two-phase-order comparisons |
@@ -60,3 +61,7 @@
 ## Large-module analysis
 
 Completed in `large_module_review.md`: all seven reviewed critical modules above 2,000 lines already exceeded the soft limit on main. Candidate-specific cleanup precedes any extraction. The report records retained ownership and concrete functional split sequences for base/MoE/disaggregated predictors, shared manager, metrics store, vLLM V1 scheduler and aggregate config. No broad split is required to preserve this task's bounded scope. L2 private single-layer cleanup and L1 manager family reuse are committed. Full module splits remain outside this task, not hidden cleanup debt.
+
+## Final integrated evidence
+
+All rows above are closed with their focused evidence and the final production-source checks. [Final correctness](test_report_2026-09-17_p5_final.md) records exact baseline/main failure classification, 58-scenario fidelity and reporting-enabled non-dummy artifact preservation. [Final timing](test_report_2026-09-17_p5_timing.md) preserves all 18 measurements and explicitly limits performance claims. S1 remains a separately diagnosed correctness restoration, not an asserted equality with the failing candidate trace path. No retained optionality was removed to make a test pass or to obtain the measured speed differences.

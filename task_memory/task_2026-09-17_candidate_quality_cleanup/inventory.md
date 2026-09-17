@@ -5,6 +5,7 @@
 | 2026-09-17 | Enumerated every production diff path at the frozen revisions; ranked dependency and risk. |
 | 2026-09-17 | Reconciled every frozen path with inspected contracts, completed cleanup evidence, retained rationale and explicit remaining work. |
 | 2026-09-17 | Closed A5 against commit 5cb8794f and its focused report; advanced the frozen cleanup checkpoint to 38 cleaned / 68 retained paths. |
+| 2026-09-17 | Linked final P4/P5 results and closed the verification follow-up without changing any per-path disposition. |
 
 # Frozen diff inventory
 
@@ -148,7 +149,9 @@ Other original proposals are dispositioned rather than silently dropped:
 - **J1 larger state collapse / MXFP4 branch-local weights / exported replay wrappers**: inspected lower-value ideas are not required fixes. Existing lifecycle timer scopes, mutually exclusive weight ownership/random-call order, and public exported forms justify retaining the current boundaries without a larger unverified rewrite. [STD], [P3 orchestration].
 - **Positive DP trace fixture**: unsupported current runtime, not a production bug. Only unreachable shape labels were removed; zero-return scalar seam retained. [P2 trace].
 
-Verification gaps remain separate from inspection coverage: main owns final P4/P5 broad regression, final at-least-50-case fidelity, final non-dummy comparison and paired timing against the frozen cleanup source. Existing [P2 integrated] records 159 PASS, eight non-dummy cases, 90 stable artifact comparisons, 106 symmetric metric files and 16 summary pairs. Those **106 metric files are unrelated to this inventory's 106 source paths**. [P3 integrated] records 721 PASS / 5 SKIP / 2 known main-equivalent missing-FlashInfer CLI failures, not an all-green suite. CPU stand-ins and synthetic artifacts do not establish native ROCm/CUDA numerics or production-profile fidelity; [P1 timing] measures reporting-disabled Simulator.run only. No new semantic-choice blocker was found by this reconciliation.
+Final verification follow-up is complete: [P4 integrated] records 545 PASS after correcting a new test-global-state leak. [P5 final] records 3813 PASS / 18 existing FAIL / 25 existing SKIP, with exact failed nodes matching frozen candidate and main and exact skipped nodes reproduced on frozen candidate. Final non-dummy comparison has eight PASS cases, 90 stable artifacts, 106 symmetric metric files and 16 nonempty supplemental pairs; final fidelity has 58 PASS cases and zero finite numeric drift across 304 artifacts. Those **106 metric files are unrelated to this inventory's 106 source paths**. [P5 timing] records 18 successful isolated measurements and equal event/completion counts in every pair, with median paired Simulator.run changes -13.46% / -2.00% / -1.46%. Production source remains the stated checkpoint; no per-path disposition changed during verification.
+
+Evidence limits remain separate from completion: [P3 integrated] records 721 PASS / 5 SKIP / 2 known main-equivalent missing-FlashInfer CLI failures, not an all-green suite. CPU stand-ins and synthetic artifacts do not establish native ROCm/CUDA numerics or production-profile fidelity. Final timing uses a reporting-disabled dummy predictor with three pairs per case, not a general performance guarantee. No new semantic-choice blocker or pending cleanup gate remains.
 
 ## Coverage checks
 
@@ -203,3 +206,6 @@ All links below are existing task records in this directory. Original review pro
 [P4 GDN]: test_report_2026-09-17_p4_gdn.md
 [P4 config]: test_report_2026-09-17_p4_config_contracts.md
 [P4 gate defaults]: test_report_2026-09-17_p4_gate_defaults.md
+[P4 integrated]: test_report_2026-09-17_p4_integrated.md
+[P5 final]: test_report_2026-09-17_p5_final.md
+[P5 timing]: test_report_2026-09-17_p5_timing.md

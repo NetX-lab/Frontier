@@ -3,8 +3,13 @@
 | Date | Summary of Changes |
 | --- | --- |
 | 2026-09-17 | Started independent diff-driven quality cleanup. |
+| 2026-09-17 | Completed all cleanup phases, final regression/timing evidence and archive reconciliation. |
 
 # Progress
+
+## Current status — completed
+
+P0–P5 implementation, review and required verification are complete. No in-scope implementation or semantic decision remains. `summary.md` is the final archive; `plan.md`, `inventory.md` and the final reports reflect observed results. The dated entries below are chronological history, so their earlier pending/in-progress statements are superseded by later entries and this status.
 
 ## P0 — in-progress
 
@@ -208,3 +213,20 @@ New unresolved issues: none established.
 - Corrected broader P4: **545 PASS**, 56.12 s across 28 modules, no failures/skips. Source ff2b6cdf retains production from 5cb8794f. Report: test_report_2026-09-17_p4_integrated.md.
 - Full unit run, eight reporting-enabled non-dummy cases and 58-case fidelity now execute against frozen production. Only task inventory documentation is dirty; no production/test edits are permitted during these runs. Paired timing will run alone after all correctness workloads exit.
 - Main reconciled exact inventory against frozen Git numstat: 106 paths / 105 Python + one README; 38 cleaned / 68 inspected-retained, no missing/extra/duplicate paths. Read-only worker reports and retained decisions are linked per path. No new semantic choice or inspection gap.
+
+## P5 final verification — completed; archive follows
+
+- Final production remains `5cb8794f`; test source remains `ff2b6cdf`. Full unit: **3813 PASS / 18 FAIL / 25 SKIP**, 132.23 s. Both failed-node diffs against frozen candidate and pinned main are empty; all 25 final skipped nodes also skip on frozen candidate. This is no new observed failure/skip, not an all-green suite. Full commands, known failure causes and limits are in `test_report_2026-09-17_p5_final.md`.
+- Eight reporting-enabled non-dummy cases: **8 PASS**, 68.21 s; 90 stable artifacts, symmetric 106-file inventory and 16 explicitly nonempty acceptance/summary pairs match. No output exclusions or comparator tolerances were changed.
+- Final fidelity: **58 PASS / 0 FAIL**, 304 compared artifacts and 122 completed requests per revision. Additional inspection: 902,628 finite numeric leaf pairs, zero unequal pairs, maximum absolute/relative difference 0.0. This is prediction-to-prediction preservation, not hardware ground truth.
+- Final isolated timing at clean `567742f3` versus clean `c288a19f`: **18/18 successful measurements**, every one of the nine pairs has equal event/completion counts. Paired median Simulator.run changes: small dense **-13.46%**, longer dense **-2.00%**, representative MoE **-1.46%**; subprocess changes **-4.89% / -3.12% / -2.52%**. All samples, exact command and variability limits are in `test_report_2026-09-17_p5_timing.md`. Do not extrapolate three reporting-disabled dummy-predictor pairs to general or native performance.
+- Continuation directly read the final timing manifest/results/log, independently calculated paired percentages and checked source equality with `git diff --exit-code 5cb8794f HEAD -- frontier` and `git diff --exit-code ff2b6cdf HEAD -- tests`; both pass. No production/test edits or repeated suites were needed.
+- Pending implementation or consequential semantic decisions: **none**. Remaining work is archive-only: reconcile final plan/inventory/report links, write the English summary, check documentation and commit.
+
+## Final archive reconciliation — completed
+
+- Re-read final logs: full unit, non-dummy, fidelity and supplemental numeric/artifact outcomes agree with the reports. Re-ran only read-only failure-node comparisons and documentation/source checks, not completed test campaigns.
+- Exact frozen numstat versus inventory comparison passes. The 106 rows are unique; 38 cleaned paths exactly equal the production Git change set. All 34 defined inventory evidence targets and table references, all summary deliverable paths and final report links exist. Every timing pair's four values matches the raw result to the nine displayed decimal places; event/completion fields also match.
+- Two discarded one-off Markdown checks produced `AssertionError: Record` and then `AssertionError: 0`: a generic bracket regex incorrectly treated a full reference-link display label and inline code `supported_variants[0]` as citation targets. Inspection established both are valid existing document syntax. The smaller check now validates the actual evidence column plus defined targets; it passes without changing source, artifacts or expected results. No persistent checking framework was introduced.
+- Final plan, issue/retained-pattern record, inventory verification links and English summary are reconciled. Archive-only changes are ready for the final scoped commit; production remains `5cb8794f`, tests remain `ff2b6cdf`.
+- Pending requirements: **none**. Newly discovered unresolved issues: **none**. Existing main-equivalent failures, native-device evidence limits and broader out-of-scope module splits remain explicit in the summary.

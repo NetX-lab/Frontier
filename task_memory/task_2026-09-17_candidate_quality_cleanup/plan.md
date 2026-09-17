@@ -3,6 +3,7 @@
 | Date | Summary of Changes |
 | --- | --- |
 | 2026-09-17 | Created dependency-ordered cleanup and verification plan. |
+| 2026-09-17 | Closed all phases against final correctness, artifact, inventory and isolated timing evidence. |
 
 # Plan
 
@@ -11,11 +12,11 @@ Dependency: `P0 -> P1 -> P2 -> P3 -> P4 -> P5`. Independent Standards and Spec r
 | Phase | Scope | Acceptance | Status |
 | --- | --- | --- | --- |
 | P0 | Pin revisions; inventory actual diff; existing decisions, environment and fresh candidate baselines | Every changed production module categorized; reproducible comparison inputs | completed |
-| P1 | Runtime invariants and control/data flow | Focused contracts, pre/post real simulation outputs, >=50-case fidelity, paired run timing | completed; final integrated fidelity still required |
+| P1 | Runtime invariants and control/data flow | Focused contracts, pre/post real simulation outputs, >=50-case fidelity, paired run timing | completed; final 58-case fidelity and 18-run timing verified |
 | P2 | Metrics, traces, ledgers and operator ownership | Same requested artifacts/numerics/layer and lane identities; focused reporting tests | completed |
 | P3 | Standard/experimental profiling orchestration | Preserved platform/path/schema/cleanup contracts; CPU profiling suite and explicit native limits | completed |
 | P4 | Training/model-manager/configuration/artifacts | Same path precedence, selected identities, saved/loaded predictions and supported optionals | completed; 545-test integrated PASS |
-| P5 | Full regression, inventory reconciliation, evidence archive | No new candidate failure/skip; all high-value reviewed issues resolved or explicit consequential decision | in-progress |
+| P5 | Full regression, inventory reconciliation, evidence archive | No new candidate failure/skip; all high-value reviewed issues resolved or explicit consequential decision | completed |
 
 ## Execution sub-steps
 
@@ -34,3 +35,11 @@ Initial runtime ranking: timing entities and predictor stage construction; immut
 ## Errors and blockers
 
 No unresolved blocker. P4 exposed and corrected a new test-global-state leak without changing production guards; exact commands and failure evidence are in progress and the config report. Previously reproduced main/frozen-candidate environment/legacy failures remain classified separately from new regressions. Discovery-only missing-path results did not change production behavior.
+
+## Final acceptance
+
+- Inventory: 106/106 changed production-area paths reviewed; 38 cleaned and 68 intentionally retained. Every disposition is linked in `inventory.md`; issue RCA, existing owners and retained optionality are in `refactoring_record.md`.
+- Full unit: 3813 PASS / 18 existing FAIL / 25 existing SKIP. Exact failure nodes match both frozen candidate and main; exact skipped nodes also skip on frozen candidate. No new observed regression. See `test_report_2026-09-17_p5_final.md`.
+- Reporting-enabled non-dummy: 8 PASS, 90 stable artifacts, 106-file symmetric inventory and 16 nonempty supplemental pairs match. Final fidelity: 58 PASS, 304 artifacts, zero difference in 902,628 finite numeric leaf pairs.
+- Final timing: 18 successful isolated measurements, all nine pairs preserve events/completions. Median paired Simulator.run changes are -13.46% / -2.00% / -1.46% for small dense / longer dense / MoE. Three reporting-disabled dummy samples per side do not establish general/native performance. See `test_report_2026-09-17_p5_timing.md`.
+- Implementation and consequential design decisions remaining: none. English completion archive: `summary.md`. Unrelated legacy failures and native-device verification limits remain explicitly recorded, not silently repaired or declared PASS.
