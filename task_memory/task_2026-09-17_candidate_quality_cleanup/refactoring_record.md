@@ -17,6 +17,7 @@
 | ExecutionTime | Unread legacy stage-size attribute | Former aggregate semantics left bookkeeping behind | No consumer uses it after physical-layer transition | Remove stored state, retain input validation | Physical-layer/stage contract | Timing tests and non-dummy parity |
 | GDN state slot manager | Front removal and sorting on each release | Ordered allocation implemented by repeatedly sorting storage | Required policy is minimum-free-ID selection | Standard heap operations; retain ownership map and lifecycle | Python heapq | 16 tests and exact 1,000-request old/new transcript |
 | MetricsStore residual emitter (S1 correctness restoration) | Positive residual traces fail with unsupported operator errors | Complete explicit event metadata conflated with additive physical-layer identity | Unconditional derivation attempts to resolve non-tensor residuals | Explicit resolved metadata argument; preserve additive identity | Existing compute_op_trace_meta and residual event contract | Frozen 6 FAIL, native-main scalar 3 PASS, post-fix reporting 139 PASS |
+| MetricsStore trace projection | Dead private overrides and dense annotations | Stage payload replaced annotation writers without removing readers | Reflection preserves an unreachable second source of timing | Remove orphan readers and unused family lookup | StageExecutionTime physical-layer payload | 69 focused reporting PASS; phase artifact comparison follows |
 
 ## Intentionally retained patterns
 
@@ -28,6 +29,7 @@ Architecture identity cleanup: duplicated Qwen type/alias recognition in three g
 | Component copying and optional operator maps | Mutable physical-layer isolation required; unmeasured operator maps can be absent | ExecutionTime finalization tests |
 | Missing GDN config and optional max_num_seqs | Dense models have no recurrent state; only GDN reservation requires capacity | Planner constructor/reservation, dense and GDN memory tests |
 | GDN slot-manager None and rollback catch/rethrow | Non-GDN schedulers do not allocate slots; failed KV allocation must free the reserved slot and propagate the original error | Scheduler constructor, allocation transaction, failure cleanup tests |
+| Explicit dense FFN metric projections | Historical metric label `mlp_activation` differs from family trace name `mlp_act`; direct enum conversion is invalid | Reconciled M3 proposal against constants.py, FFN family and existing scalar metric emitter; preserve output schema without a new alias layer |
 
 ## Large-module analysis
 

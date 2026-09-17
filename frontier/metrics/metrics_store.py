@@ -1052,31 +1052,6 @@ class MetricsStore:
                     execution_time.mlp_all_reduce_time,
                 )
 
-            dense_trace_up = float(
-                getattr(
-                    execution_time,
-                    "_trace_dense_mlp_layer_up_proj_execution_time",
-                    0.0,
-                )
-            )
-            dense_trace_act = float(
-                getattr(
-                    execution_time,
-                    "_trace_dense_mlp_layer_act_execution_time",
-                    0.0,
-                )
-            )
-            dense_trace_down = float(
-                getattr(
-                    execution_time,
-                    "_trace_dense_mlp_layer_down_proj_execution_time",
-                    0.0,
-                )
-            )
-            if dense_trace_up > 0.0 or dense_trace_act > 0.0 or dense_trace_down > 0.0:
-                emit("COMPUTE", "mlp_up_proj", dense_trace_up)
-                emit("COMPUTE", "mlp_act", dense_trace_act)
-                emit("COMPUTE", "mlp_down_proj", dense_trace_down)
         else:
             for op_name, duration_ms in _iter_family_execution_times(
                 FFN_FAMILY,
@@ -1119,7 +1094,6 @@ class MetricsStore:
 
         for layer_idx, layer in enumerate(execution_time.layer_execution_times):
             family_id = layer.attention_family_id
-            attention_family = get_attention_family(family_id)
             layer_meta = {
                 "layer_idx": layer_idx,
                 "global_layer_id": layer.global_layer_id,
@@ -1459,42 +1433,6 @@ class MetricsStore:
                         layer_meta,
                     )
 
-                dense_layer_id = getattr(execution_time, "_trace_dense_layer_id", None)
-                dense_trace_up = float(
-                    getattr(
-                        execution_time,
-                        "_trace_dense_mlp_layer_up_proj_execution_time",
-                        0.0,
-                    )
-                )
-                dense_trace_act = float(
-                    getattr(
-                        execution_time,
-                        "_trace_dense_mlp_layer_act_execution_time",
-                        0.0,
-                    )
-                )
-                dense_trace_down = float(
-                    getattr(
-                        execution_time,
-                        "_trace_dense_mlp_layer_down_proj_execution_time",
-                        0.0,
-                    )
-                )
-                if dense_layer_id == layer_idx and (
-                    dense_trace_up > 0.0
-                    or dense_trace_act > 0.0
-                    or dense_trace_down > 0.0
-                ):
-                    emit("COMPUTE", "mlp_up_proj", dense_trace_up, layer_idx, layer_meta)
-                    emit("COMPUTE", "mlp_act", dense_trace_act, layer_idx, layer_meta)
-                    emit(
-                        "COMPUTE",
-                        "mlp_down_proj",
-                        dense_trace_down,
-                        layer_idx,
-                        layer_meta,
-                    )
             else:
                 per_layer_ffn_times = {
                     "mlp_layer_up_proj_execution_time": per_layer_mlp_up,
@@ -3872,16 +3810,11 @@ class MetricsStore:
             request_ids = (
                 [str(rid) for rid in batch_stage.request_ids] if batch_stage else []
             )
-            trace_execution_time = getattr(
-                execution_time,
-                "_trace_execution_time_override",
-                execution_time,
-            )
             self._emit_op_level_traces(
                 time=time,
                 batch_stage=batch_stage,
                 replica_id=replica_id,
-                execution_time=trace_execution_time,
+                execution_time=execution_time,
                 cluster_type=cluster_type,
                 request_ids=request_ids,
             )

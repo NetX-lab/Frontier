@@ -90,3 +90,9 @@ New unresolved issues: none established.
 - S1 RCA reproduced six frozen-candidate failures and three native-main scalar successes: the added physical-layer metadata path conflated complete event metadata with additive identity. Restored the distinction using a keyword-only local emitter argument; residual/wait metadata bypass tensor resolution, layer identity still supplements derived tensor metadata. No resolver exception suppression or operator-name special case.
 - Verification after S1: 139 PASS in 7.30 s, including all six positive residual cases and existing reporting contracts. This is a separately documented correctness restoration, not asserted as equality with the broken candidate path.
 - Sidecar bounded scopes: Meitner owns scheduler reporting M1b/M2; Nash owns trace context M4/M5. Main owns metrics_store M1a/M3 and integrated verification. Preserve all workers' changes; stage each logical result separately.
+
+## P2 M1a / M3 inspection — completed
+
+- Removed orphaned `_trace_dense_*` and `_trace_execution_time_override` readers. A full production/test search finds no remaining writer except neutral annotation-isolation tests; actual mixed layers already arrive in StageExecutionTime. Removed an unused family lookup in stage tracing. Scalar timing/reporting remains supported.
+- Focused reporting checks: 69 PASS in 6.57 s, log `/data/ycfeng/tmp/quality-p2-readers.log`; the S1 suite supplied the pre-change baseline.
+- Corrected M3 reviewer proposal before implementation: FFN trace name `mlp_act` is NOT the historical metric label `mlp_activation`; `OperationMetrics(op_name)` would fail. No existing generic alias mapping exists. Retained three explicit scalar-to-metric projections rather than introducing an alias abstraction solely to shorten them. This is schema adaptation, not duplicated family ownership policy.
