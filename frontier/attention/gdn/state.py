@@ -30,6 +30,11 @@ class GatedDeltaNetStateSlotManager:
         return self._capacity
 
     @property
+    def has_available_slot(self) -> bool:
+        """Report capacity without materializing diagnostic owner identities."""
+        return bool(self._free_slot_ids)
+
+    @property
     def active_request_ids(self) -> tuple[Hashable, ...]:
         return tuple(self._slots_by_request)
 

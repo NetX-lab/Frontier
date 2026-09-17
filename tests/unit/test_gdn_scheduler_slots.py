@@ -420,3 +420,20 @@ def test_gdn_preemption_rejects_before_slot_or_kv_mutation() -> None:
 
     assert _ownership_snapshot(scheduler, request) == before
     assert preempted == []
+
+
+def test_admission_does_not_materialize_diagnostic_owner_tuple(monkeypatch):
+    scheduler = _build_scheduler(capacity=1)
+    manager = scheduler._gdn_state_slot_manager
+
+    def reject_diagnostic_access(self):
+        raise AssertionError("Admission must not allocate the diagnostic owner tuple")
+
+    monkeypatch.setattr(type(manager), "active_request_ids", property(reject_diagnostic_access))
+    first, second = _request(), _request()
+    assert scheduler._can_allocate_request(first, 1)
+    assert manager.allocate(first.id).slot_id == 0
+    assert not scheduler._can_allocate_request(second, 1)
+    manager.release(first.id)
+    assert scheduler._can_allocate_request(second, 1)
+    assert manager.allocate(second.id).slot_id == 0

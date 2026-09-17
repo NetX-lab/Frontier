@@ -296,3 +296,7 @@ All three TP8 GDN documentation copies now launch eight torchrun processes. Sepa
 ### R10 completed
 
 Normalize optional context/expert iterables once before constructing replay calls. Generator/tuple inputs match three builder calls and complete capture/replay metadata. 2 FAIL before -> 35 PASS, 2.88 s. One nonexistent test path was corrected after a no-tests-run result. Report: test_report_2026-09-17_r10_iterables.md. All R01–R10 code/document corrections are committed after their focused checks; native hardware acceptance remains unexecuted.
+
+### C01 completed
+
+Capacity admission uses a read-only availability property derived from the free-slot heap. Diagnostic owner tuple is never accessed by admission. 1 FAIL before -> 17 PASS, 6.81 s; deterministic exhaustion/reuse preserved. Report: test_report_2026-09-17_c01_capacity.md.

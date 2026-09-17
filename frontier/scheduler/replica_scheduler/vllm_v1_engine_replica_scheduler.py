@@ -2856,7 +2856,7 @@ class VLLMv1EngineReplicaScheduler(BaseReplicaScheduler):
             gdn_slot_manager is not None
             and request.id not in self._allocation_map
             and not gdn_slot_manager.has_slot(request.id)
-            and len(gdn_slot_manager.active_request_ids) >= gdn_slot_manager.capacity
+            and not gdn_slot_manager.has_available_slot
         ):
             return False
         if self._is_prefix_caching_enabled():
