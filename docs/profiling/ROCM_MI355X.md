@@ -61,6 +61,7 @@ bash examples/profiling/profile_linear_op.sh \
   --tp-sizes "1 2 4 8"
 
 bash examples/profiling/profile_attention_chunked_prefill.sh \
+  --attention-backend VLLM_ROCM \
   --model Qwen3.8-2.4T-A95B-Quark-MXFP4 \
   --device mi355x \
   --profile-method device_event \
@@ -73,6 +74,17 @@ bash examples/profiling/profile_moe.sh \
   --tp-sizes "1 2 4 8" \
   --ep-sizes "1 2 4 8"
 ```
+
+The attention wrapper above is a **prefill-only** campaign
+(`--profile_only_prefill`). A complete simulator attention dataset also needs
+decode measurements. Collect decode separately with the direct attention
+producer and `--profile_only_decode --attention_backend VLLM_ROCM`, using a
+separate output directory, then combine and validate phase coverage before
+training. The wrapper's general-purpose `NO_OP` default remains useful for smoke
+checks; the explicit native backend above is required for measured ROCm data.
+Native acceptance checks compare actual attention output with a causal reference
+and require a recorded attention timing sample; a DEVICE_EVENT label alone is
+not evidence that an attention kernel ran.
 
 For standard GDN phases, use the dedicated vLLM producer:
 

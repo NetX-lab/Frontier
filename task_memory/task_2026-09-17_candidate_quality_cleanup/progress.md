@@ -284,3 +284,7 @@ Effective TimerStatsStore method/enabled state validated before native imports; 
 ### R07 completed
 
 All three profiling wrappers use the canonical CPU-safe Python path helper for display and postflight. Native stand-in tests reach actual postflight and reject stale unsuffixed CUDA files. 12 FAIL / 6 PASS before -> 33 PASS, 11.91 s. ROCm taxonomy now shows DEVICE_EVENT suffixes. Report: test_report_2026-09-17_r07_launchers.md.
+
+### R08 completed — CPU documentation contract
+
+MI355X attention recipe explicitly selects VLLM_ROCM; docs identify the prefill-only wrapper and required separate decode collection. Literal recipe dry-run defeats NO_OP environment default: 1 PASS, 1.31 s. Native evidence remains pending hardware. Report: test_report_2026-09-17_r08_backend_recipe.md.
