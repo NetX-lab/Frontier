@@ -24,6 +24,8 @@
 
 ## Intentionally retained patterns
 
+P3 J2: variadic profile_graph arguments and seven-position primitive tuples obscured ownership and re-derived GDN metadata. Explicit parameters and an internal named replay-call record retain the existing execution/reset/check owner and native builder contracts. Verification: 39 before / 40 after PASS; 12 byte-identical snapshots with 1,802 ordered events. Real recurrent/cache snapshots and optional trace-probe state remain.
+
 P3 S7: experimental replay duplicated Hamilton allocation and omitted the runtime normalization step. The existing owner now exposes its pure histogram operation; both callers reuse it without a second registry or irrelevant EP state. Verification: 52 frozen / 60 cleaned PASS; 893 exact replay dictionaries, 67 unchanged infeasible rejections, 2,679 exact workloads; 3,407,872 generated histogram comparisons.
 
 P3 S6: native norm/MXFP4 consumers repeated model-name classification. Exact type tuples now live in the existing architecture profiles, queried without broader profile resolution. Verification: 183 PASS and 330 exact admission/error-order comparisons. Native API/platform availability and the bootstrap-dependent local registry import are genuine boundaries and retained.

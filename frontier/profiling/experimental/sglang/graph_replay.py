@@ -11,12 +11,13 @@ from __future__ import annotations
 import json
 import math
 import os
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any, Callable, Iterable, Mapping
 
 from .attention import ATTENTION_PRIMITIVES, make_attention_primitive
 from .dense import DENSE_PRIMITIVES, dense_primitive_spec, make_dense_primitive
-from .gdn import GDN_PRIMITIVES, gdn_core_spec, make_gdn_core_primitive
+from .gdn import GDN_PRIMITIVES, make_gdn_core_primitive
 from .moe import MOE_ROUTED_PRIMITIVES, MOE_ROUTING_PRIMITIVES, make_moe_routing_primitive
 
 PRIMITIVES = (
@@ -205,25 +206,34 @@ def write_rank_artifact(
     return path
 
 
+@dataclass(frozen=True)
+class _ReplayCall:
+    """One primitive's execution, state restoration, checks and row metadata."""
+
+    fn: Callable[[], Any]
+    reset: Callable[[], None]
+    check: Callable[[Any], None]
+    backend: str
+    row_metadata: Mapping[str, Any]
+
+
 def _make_replay_call(
-    fn: Any,
+    fn: Callable[[], Any],
     reference: Any,
     mutable: Iterable[Any],
     backend: str,
-    attention_spec: Any = None,
-    attention_workload: Any = None,
-    moe_spec: Any = None,
-) -> tuple[Any, ...]:
+    *,
+    row_metadata: Mapping[str, Any],
+) -> _ReplayCall:
     """Normalize every primitive builder to the replay orchestration contract.
 
-    Native builders intentionally return shape metadata alongside their callable,
-    reference, and mutable tensors.  Replay needs reset/check callbacks in fixed
-    positions, so those builder-specific tuples are converted at this boundary.
+    Keep each native builder's independent reference and mutable-state snapshot,
+    with the already-built metadata that its profiling row publishes.
     """
 
     import torch
 
-    mutable = tuple(mutable or ())
+    mutable = tuple(mutable)
     originals = tuple(value.clone() for value in mutable)
 
     def reset() -> None:
@@ -241,7 +251,7 @@ def _make_replay_call(
             if not bool(torch.isfinite(actual).all()):
                 raise ValueError("Nonfinite primitive output")
 
-    return fn, reset, check, backend, attention_spec, attention_workload, moe_spec
+    return _ReplayCall(fn, reset, check, backend, row_metadata)
 
 
 def make_primitive(
@@ -254,7 +264,7 @@ def make_primitive(
     logical_size: int | None = None,
     physical_context_lens: Iterable[int] | None = None,
     physical_expert_counts: Iterable[int] | None = None,
-):
+) -> _ReplayCall:
     """Construct one selected native callable; imports happen at call time."""
 
     import torch
@@ -266,7 +276,6 @@ def make_primitive(
 
     mutable = []
     backend = "sglang_triton_gemma"
-    attention_spec = attention_workload = moe_spec = None
     if name in MOE_ROUTED_PRIMITIVES:
         from .moe import make_moe_experts_primitive, make_moe_sorting_primitive
 
@@ -277,29 +286,33 @@ def make_primitive(
         fn, reference, mutable, backend, spec, _ = builder(
             size, tuple(physical_expert_counts), model, group
         )
-        return _make_replay_call(fn, reference, mutable, backend, moe_spec=spec)
+        return _make_replay_call(
+            fn, reference, mutable, backend, row_metadata={"moe_routed_spec": spec},
+        )
     if name in ATTENTION_PRIMITIVES:
         if logical_size is None or physical_context_lens is None:
             raise ValueError("Attention primitive requires logical/context workload")
-        fn, reference, mutable, backend, spec, workload = make_attention_primitive(
+        fn, reference, mutable, backend, _spec, _workload = make_attention_primitive(
             name, size, logical_size, tuple(physical_context_lens), model, group, rank, random
         )
-        return _make_replay_call(fn, reference, mutable, backend, spec, workload)
+        return _make_replay_call(fn, reference, mutable, backend, row_metadata={})
     if name in GDN_PRIMITIVES:
         if logical_size is None:
             raise ValueError("GDN primitive requires logical_size")
         fn, reference, mutable, backend, spec = make_gdn_core_primitive(
             size, logical_size, model, group, random
         )
-        return _make_replay_call(fn, reference, mutable, backend, spec)
+        return _make_replay_call(
+            fn, reference, mutable, backend, row_metadata={"gdn_core_spec": spec},
+        )
     if name in MOE_ROUTING_PRIMITIVES:
-        fn, reference, mutable, backend, spec = make_moe_routing_primitive(
+        fn, reference, mutable, backend, _spec = make_moe_routing_primitive(
             name, size, model, random
         )
-        return _make_replay_call(fn, reference, mutable, backend, spec)
+        return _make_replay_call(fn, reference, mutable, backend, row_metadata={})
     if name in DENSE_PRIMITIVES:
         fn, reference, backend = make_dense_primitive(name, size, model, group, rank, random)
-        return _make_replay_call(fn, reference, (), backend)
+        return _make_replay_call(fn, reference, (), backend, row_metadata={})
     if name in {"gemma_norm", "gemma_residual_norm"}:
         from sglang.srt.layers.layernorm import (
             GemmaRMSNorm, _has_rocm_triton_gemma_rms_norm, _use_aiter,
@@ -368,12 +381,23 @@ def make_primitive(
     else:
         raise ValueError(f"Unknown primitive {name}")
 
-    return _make_replay_call(
-        fn, reference, mutable, backend, attention_spec, attention_workload, moe_spec
-    )
+    return _make_replay_call(fn, reference, mutable, backend, row_metadata={})
 
 
-def profile_graph(*args, trace: bool = False, **kwargs):
+def profile_graph(
+    name: str,
+    size: int,
+    count: int,
+    repetitions: int,
+    model: Any,
+    group: Any,
+    rank: int,
+    *,
+    logical_size: int | None = None,
+    physical_context_lens: Iterable[int] | None = None,
+    physical_expert_counts: Iterable[int] | None = None,
+    trace: bool = False,
+) -> tuple[dict[str, Any], Callable[[], None]]:
     """Capture and replay a graph on an initialized ROCm process.
 
     The implementation is intentionally callable-only; no code path reaches
@@ -381,13 +405,19 @@ def profile_graph(*args, trace: bool = False, **kwargs):
     unverified until an MI355X host is available.
     """
 
-    name, size, count, repetitions, model, group, rank = args[:7]
     validate_plan((size,), (count,), repetitions, "validation")
 
     import torch
     import torch.distributed as dist
-    calls = [make_primitive(name, size, model, group, rank, **kwargs) for _ in range(count)]
-    methods = {call[3] for call in calls}
+    calls = [
+        make_primitive(
+            name, size, model, group, rank, logical_size=logical_size,
+            physical_context_lens=physical_context_lens,
+            physical_expert_counts=physical_expert_counts,
+        )
+        for _ in range(count)
+    ]
+    methods = {call.backend for call in calls}
     if len(methods) != 1:
         raise ValueError("One graph cannot mix primitive implementations")
 
@@ -395,30 +425,30 @@ def profile_graph(*args, trace: bool = False, **kwargs):
         torch.cuda.synchronize()
         dist.barrier(group=group.cpu_group)
 
-    for fn, reset, check, *_ in (calls[0], calls[-1]):
-        reset()
-        check(fn())
+    for call in (calls[0], calls[-1]):
+        call.reset()
+        call.check(call.fn())
     for _ in range(3):
-        for fn, reset, *_ in calls:
-            reset()
-            fn()
+        for call in calls:
+            call.reset()
+            call.fn()
     barrier()
     # Builder callables may update recurrent/cache tensors during eager
     # discovery. Capture must start from the same baseline used by replay.
-    for _, reset, *_ in calls:
-        reset()
+    for call in calls:
+        call.reset()
     graph = torch.cuda.CUDAGraph()
     outputs = []
     with group.graph_capture() as context:
         with torch.cuda.graph(graph, stream=context.stream):
-            for fn, *_ in calls:
-                outputs.append(fn())
+            for call in calls:
+                outputs.append(call.fn())
     barrier()
     start, end = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
     samples = []
     for repetition in range(repetitions + 3):
-        for _, reset, *_ in calls:
-            reset()
+        for call in calls:
+            call.reset()
         barrier()
         start.record()
         graph.replay()
@@ -430,31 +460,31 @@ def profile_graph(*args, trace: bool = False, **kwargs):
         if repetition >= 3:
             samples.append(elapsed / count)
         if repetition in {0, repetitions + 2}:
-            calls[0][2](outputs[0])
-            calls[-1][2](outputs[-1])
+            calls[0].check(outputs[0])
+            calls[-1].check(outputs[-1])
 
     probe = None
     probe_outputs = []
     if trace:
         probe = torch.cuda.CUDAGraph()
-        for _, reset, *_ in (calls[0], calls[-1]):
-            reset()
+        for call in (calls[0], calls[-1]):
+            call.reset()
         with group.graph_capture() as context:
             with torch.cuda.graph(probe, stream=context.stream):
-                for fn, *_ in (calls[0], calls[-1]):
-                    probe_outputs.append(fn())
+                for call in (calls[0], calls[-1]):
+                    probe_outputs.append(call.fn())
         barrier()
 
     def trace_replay():
         if probe is None:
             raise RuntimeError("trace replay requested without a trace probe")
-        for _, reset, *_ in (calls[0], calls[-1]):
-            reset()
+        for call in (calls[0], calls[-1]):
+            call.reset()
         with torch.profiler.record_function(f"primitive:{name}:b{size}:n{count}"):
             probe.replay()
             torch.cuda.synchronize()
         for call, output in zip((calls[0], calls[-1]), probe_outputs):
-            call[2](output)
+            call.check(output)
 
     row = {
         "primitive": name,
@@ -473,14 +503,13 @@ def profile_graph(*args, trace: bool = False, **kwargs):
     if name in DENSE_PRIMITIVES:
         row["dense_spec"] = dense_primitive_spec(name, model, group.world_size)
     if name in GDN_PRIMITIVES:
-        row["logical_size"] = kwargs.get("logical_size")
-        row["gdn_core_spec"] = gdn_core_spec(model, group.world_size)
+        row["logical_size"] = logical_size
     if name in ATTENTION_PRIMITIVES:
-        row["logical_size"] = kwargs.get("logical_size")
-        row["physical_context_lens"] = list(kwargs.get("physical_context_lens", ()))
+        row["logical_size"] = logical_size
+        row["physical_context_lens"] = list(physical_context_lens)
     if name in MOE_ROUTED_PRIMITIVES:
-        row["physical_expert_counts"] = list(kwargs["physical_expert_counts"])
-        row["moe_routed_spec"] = calls[0][6]
+        row["physical_expert_counts"] = list(physical_expert_counts)
+    row.update(calls[0].row_metadata)
     return row, trace_replay
 
 

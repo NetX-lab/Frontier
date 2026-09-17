@@ -148,3 +148,9 @@ New unresolved issues: none established.
 - Shared the existing Hamilton implementation within moe_ep_workload; replay consumes the histogram contract directly, with no placeholder replica/EP state. Alias retains the existing ratio-generator entry point.
 - Immutable frozen baseline 52 PASS / cleaned 60 PASS. Discarded initial asynchronous local pre-check as baseline because its source window overlapped editing; reran on frozen checkout.
 - Exact frozen/current comparison: 893 full replay dictionaries including assignments, 67 infeasible rejections and 2,679 EP workload values match. Larger histogram-only characterization also found no difference. Runtime's normalization/arithmetic/tie order is unchanged; final fidelity/timing will include its extracted function call.
+
+## P3 J2 — completed
+
+- Reviewed the replay sidecar's explicit profile_graph parameters and internal named call contract. Removed seven-position metadata overloading and GDN spec re-derivation; native builder signatures and output row schemas remain intact. Mutable snapshots, reset/check ownership and optional trace-probe lifecycle remain necessary.
+- Focused 39 before / 40 after PASS (one added named-argument test). Main independently compared all 12 JSON snapshots: exact equality including every row/output and 1,802 ordered events. Simulated timer values do not establish GPU speed.
+- Beginning source-stable P3 integrated CPU regression; workers perform read-only P4 preparation until release.

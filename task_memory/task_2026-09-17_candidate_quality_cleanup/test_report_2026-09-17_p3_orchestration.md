@@ -4,6 +4,7 @@
 | --- | --- |
 | 2026-09-17 | Started the authorized J1/J2 orchestration inspection; production edits are held pending main's P2 E2E source-freeze release. |
 | 2026-09-17 | Main released P2 freeze. J1 completed: 5 before / 5 after tests; byte-identical metadata/output/timer snapshots; plan calls reduced from 5 to 3 over prefill, decode and empty begin. J2 remains pending main's J1 commit. |
+| 2026-09-17 | Main committed J1 as 69eb7be8 and released J2. J2 completed: 39 before / 40 after focused tests; 12 complete replay snapshots containing 1,802 ordering events compare byte-identically. |
 
 # P3 J1/J2 orchestration cleanup
 
@@ -16,7 +17,7 @@ Owner: scheduler/profiling sidecar. Authorized production paths:
 
 Related dedicated tests are in scope; shared configuration/registry tests, shared progress records and commits are not. No standard profiling dependency on experimental code may be introduced. Required lifecycle `None` states remain supported.
 
-Dependency: read-only inspection/baseline -> main releases P2 E2E source freeze -> J1 patch and focused/output/lifecycle checks -> main commits J1 -> J2 patch and focused/output/reset-order checks -> handoff. J1 is complete and ready to commit; J2 production and tests remain unmodified by this sidecar.
+Dependency: read-only inspection/baseline -> main releases P2 E2E source freeze -> J1 patch and focused/output/lifecycle checks -> main commits J1 -> J2 patch and focused/output/reset-order checks -> handoff. J1 was committed by main as `69eb7be8`. J2 is complete and ready for main's separate commit; this sidecar has not committed any changes.
 
 Initial inspected HEAD: `4f3fc597a9dc0c426be0e5486bc2e921d66ad2e1`. Existing dirty `frontier/metrics/ep_wave_metrics.py`, `frontier/metrics/op_trace_utils.py`, and untracked `tests/unit/test_ep_wave_trace_context.py` belong to another worker and remain untouched.
 
@@ -45,8 +46,8 @@ Read-only caller inventory: `frontier/profiling/experimental/sglang/routed_moe_r
 - Initial focused baseline: **35 PASS in 4.87 s**, with `/data/ycfeng/tmp/quality-review-env/bin/python` (Python 3.12.3), no conda activation, CPU-only stand-ins.
 - Log: `/data/ycfeng/tmp/quality-p3-orchestration-before-20260917.log`.
 - Expected acceptance: all existing checks remain green, output/schema/reset/timer/lifecycle comparisons remain equal, and no native-GPU claim is made from CPU tests.
-- J1 implementation: complete and verified; awaiting main commit.
-- J2 implementation: pending verified J1 handoff and main's commit signal.
+- J1 implementation: complete, verified and committed by main as `69eb7be8`.
+- J2 implementation: complete and verified; awaiting main commit.
 
 Working directory: `/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/feature-amd-sglang-gdn`.
 
@@ -163,3 +164,112 @@ cmp /data/ycfeng/tmp/quality-p3-j1-before-snapshot-20260917.json \
 - Discovery misses: guessed `tests/unit/test_attention_chunked_prefill_profiling.py` and `data/model_configs` do not exist. The existing wrapper and `frontier/config/model_config.py` supplied the needed definitions.
 - Initial snapshot output included timestamped pre-existing architecture warnings on stdout. That diagnostic-contaminated attempt is preserved as `/data/ycfeng/tmp/quality-p3-j1-before-values-20260917.json` and is not used for equality evidence. The corrected snapshot command redirects diagnostics during imports/construction to stderr; production logging is unchanged.
 - No failed focused tests or new semantic discrepancy. J1 is ready for main's separate commit. J2 implementation remains gated on that commit signal; no commit was made by this sidecar.
+
+## J2 verified handoff
+
+Main reviewed/committed J1 as `69eb7be8883ff8f400035d1cd050f9e9728fd337` and explicitly released J2. Main subsequently reserved `routed_moe_replay.py`, `moe_ep_workload.py`, and `tests/unit/test_sglang_experimental_increment13.py` for S7. This sidecar read/ran related tests but did not edit those files, shared config/registry tests, or shared progress records.
+
+J2 started at HEAD `69eb7be8883ff8f400035d1cd050f9e9728fd337`; observed HEAD after verification was `dcf66a4cc73074a30f4c0146aa6380ab10bf877c`, reflecting concurrent main/other-worker commits. Both J2 paths were clean before this sub-step and remained uncommitted during verification. This is shared-worktree focused evidence, not an isolated whole-tree or native-hardware campaign.
+
+### Exact implementation scope and preserved contracts
+
+| Path | Root cause / cleanup | Preserved behavior and verification |
+| --- | --- | --- |
+| `frontier/profiling/experimental/sglang/graph_replay.py` | `args[:7]` and arbitrary keyword forwarding concealed the supported interface. Define seven explicit parameters plus the existing keyword-only workload and trace options. | Every inspected production/native-test caller retains its existing call form. Invalid replay counts still fail before importing the GPU runtime. A new test verifies the explicit named-argument form. |
+| Same file: `_ReplayCall` / `_make_replay_call` | Seven positional fields obscured callable/reset/check ownership and put GDN/MoE-routing specs in an attention slot. Replace the internal tuple with a frozen named result containing `fn`, `reset`, `check`, `backend`, and required `row_metadata`. | Native builder return tuples are unchanged. Independent reference tensors, cloned mutable-state baselines, numerical tolerances, finite checks and reset/check closures are preserved. Required mutable collections remain iterable; no `None` substitute is needed for the inspected builders. |
+| Same file: primitive-to-row metadata | GDN metadata was already constructed by its builder, then derived again after replay; routed metadata was read by index 6. Pass the existing published specs through named row metadata. Do not retain unused attention/MoE-routing metadata in the internal replay object. | Published GDN and routed-MoE field names/values are unchanged. Dense retains its old spec derivation because its native builder returns only callable/reference/backend. No new standard-profiling dependency or row field is introduced. |
+| `tests/unit/test_sglang_graph_replay_orchestration.py` | Existing tests checked aggregate completion but not exact reset/capture/replay order. Extend the existing CPU harness rather than add another execution harness. | Six builder paths now cover trace on/off; record reset/call/check/capture/replay/barrier/event ordering and final buffers. Keep eager/replay fault rejection and exact integer comparison. Add nonempty GDN metadata and explicit named-call coverage. |
+
+The codebase-design skill informed the named internal result and testing through the live orchestration interface. The existing native builders remain the implementation seam; no replacement registry, compatibility path, runtime fallback or extra wrapper was added.
+
+Deliberately retained:
+
+- `probe = None` and its error on attempting trace replay without a trace graph are real lifecycle behavior; the returned callback is still present in both modes.
+- `logical_size`, context lengths and expert counts are genuinely primitive-dependent workload options. Existing builder admission checks remain authoritative.
+- Mutable snapshots and reset/check closures are necessary for recurrent/cache/output buffers; no snapshot, reset, barrier, warmup, correctness check or event timing scope is dropped.
+- Primitive classification continues to use the existing `DENSE_PRIMITIVES`, `GDN_PRIMITIVES`, `ATTENTION_PRIMITIVES` and MoE primitive sets.
+- No edits to native builder modules, `routed_moe_replay.py`, shared configuration/registry modules or standard profiling consumers.
+
+### Focused verification
+
+Interpreter/environment is the dedicated `/data/ycfeng/tmp/quality-review-env/bin/python`, Python 3.12.3, no conda activation; all runs are CPU-only with existing simulated graph/native-callable stand-ins.
+
+| Source / test state | Observed result | Log |
+| --- | --- | --- |
+| Original J2 source and original tests | **32 PASS in 4.86 s** | `/data/ycfeng/tmp/quality-p3-j2-original-20260917.log` |
+| Original J2 source; added trace-off and metadata/order coverage | **39 PASS in 4.90 s** | `/data/ycfeng/tmp/quality-p3-j2-before-20260917.log` |
+| Refactored J2 source; same coverage plus one explicit named-argument test | **40 PASS in 4.85 s** | `/data/ycfeng/tmp/quality-p3-j2-after-20260917.log` |
+
+No focused test failures occurred. The direct private-helper test was migrated from `call[2]` to `call.check`, supplying explicit empty row metadata; its integer mismatch assertion is unchanged. The GDN fixture's old patch of the redundant spec resolver was removed after production stopped re-deriving that spec; builder-provided metadata assertions remain unchanged. `git diff --check` on the two owned paths passed.
+
+Exact focused command, run separately with `frontier_j2_phase=original`, `before`, and `after` on the corresponding states:
+
+```bash
+frontier_j2_phase=after
+set -o pipefail
+env PATH=/data/ycfeng/tmp/quality-review-env/bin:$PATH PYTHONPATH=. \
+  TMPDIR=/data/ycfeng/tmp PYTHONDONTWRITEBYTECODE=1 WANDB_DISABLED=true \
+  VIDUR_DISABLE_WANDB=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  /data/ycfeng/tmp/quality-review-env/bin/python -m pytest \
+  tests/unit/test_sglang_graph_replay_orchestration.py \
+  tests/unit/test_sglang_replay_admission.py \
+  tests/unit/test_sglang_experimental_increment13.py \
+  -q -p no:cacheprovider --tb=short \
+  --basetemp=/data/ycfeng/tmp/quality-p3-j2-${frontier_j2_phase}-20260917 \
+  2>&1 | tee /data/ycfeng/tmp/quality-p3-j2-${frontier_j2_phase}-20260917.log
+```
+
+### Exact replay/output/reset-order comparison
+
+Compared six existing builder paths with trace both disabled and enabled: dense activation, GDN core, attention RoPE, MoE routing, routed sorting and routed experts. Nonempty GDN shape metadata is included. **All 12 complete JSON snapshots are byte-identical**, including every row field, output buffer and all **1,802 ordered events**. `cmp` exited 0.
+
+Each case keeps five retained samples of `1.0 ms` from the simulated event clock (three primitive calls per graph and `3.0 ms` simulated graph duration). Native-call counts are **38 without trace / 44 with trace** in both versions. Stateful calls have the same number of resets and begin every invocation at `[0.0]`; all final buffers are `[1.0]`. Without trace the callback still raises `RuntimeError`; with trace the first/last representative pair is replayed twice. These fixed clock values verify arithmetic/sequence preservation, not real device speed.
+
+Artifacts:
+
+- `/data/ycfeng/tmp/quality-p3-j2-before-snapshot-20260917.json`
+- `/data/ycfeng/tmp/quality-p3-j2-after-snapshot-20260917.json`
+- `/data/ycfeng/tmp/quality-p3-j2-before-snapshot-20260917.log`
+- `/data/ycfeng/tmp/quality-p3-j2-after-snapshot-20260917.log`
+
+Both snapshot logs report `snapshots=12 events=1802`. Exact command, run separately before and after the production edit:
+
+```bash
+frontier_j2_phase=after
+set -o pipefail
+env PYTHONPATH=. TMPDIR=/data/ycfeng/tmp PYTHONDONTWRITEBYTECODE=1 \
+  OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+  /data/ycfeng/tmp/quality-review-env/bin/python - <<'PY' \
+  2>/data/ycfeng/tmp/quality-p3-j2-${frontier_j2_phase}-snapshot-20260917.log \
+  | tee /data/ycfeng/tmp/quality-p3-j2-${frontier_j2_phase}-snapshot-20260917.json >/dev/null
+from contextlib import redirect_stdout
+import json
+import sys
+import pytest
+with redirect_stdout(sys.stderr):
+    from tests.unit.test_sglang_graph_replay_orchestration import _exercise_replay
+    cases = [
+        ('shared_expert_activation', 'make_dense_primitive', ()),
+        ('gdn_core_decode', 'make_gdn_core_primitive', ({'conv_state_shape': (4, 3), 'recurrent_state_shape': (2, 2, 2)},)),
+        ('attn_rope', 'make_attention_primitive', ({}, {})),
+        ('moe_routing_topk', 'make_moe_routing_primitive', ({},)),
+        ('moe_sorting', 'make_moe_sorting_primitive', ({}, {})),
+        ('moe_experts_quant_gemm_combine', 'make_moe_experts_primitive', ({}, {})),
+    ]
+    snapshots = {}
+    for name, builder, metadata in cases:
+        for trace in (False, True):
+            with pytest.MonkeyPatch.context() as patch:
+                snapshots[f'{name}:trace={trace}'] = _exercise_replay(
+                    patch, name, builder, metadata, trace=trace,
+                )
+    print(f'snapshots={len(snapshots)} events={sum(len(value["events"]) for value in snapshots.values())}')
+print(json.dumps(snapshots, sort_keys=True, indent=2))
+PY
+cmp /data/ycfeng/tmp/quality-p3-j2-before-snapshot-20260917.json \
+    /data/ycfeng/tmp/quality-p3-j2-after-snapshot-20260917.json
+```
+
+### Handoff limits
+
+J2 implementation and requested bounded verification are complete; no unresolved semantic discrepancy was found. No commit was made. Main owns integration, S7 and any broader/native regression campaign. The public experimental replay row schema and native builder contracts were preserved; this report does not claim actual SGLang/AITER/ROCm execution or performance measurements.
