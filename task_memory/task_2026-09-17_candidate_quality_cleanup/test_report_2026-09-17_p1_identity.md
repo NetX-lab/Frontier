@@ -19,3 +19,7 @@ Criteria: identical registry matching, structural identity, topology admission, 
 - Corrected after: **100 PASS**, 10.78 s; `/data/ycfeng/tmp/quality-p1-identity-after-fixed.log`. The existing exported GDN function defers import and delegates to the architecture-owned policy. No exception suppression, fallback, cache, or duplicated classification was introduced.
 
 This validates preservation and CPU import order; it does not claim a measurable runtime speedup.
+
+## Binding follow-up
+
+The next bounded change uses the registered GDN family ID, directly calls the existing homogeneous binder after proving the schedule homogeneous, and patches the actual topology lookup in the cache regression. Same command plus `tests/unit/test_mla_model_config_contracts.py`: **110 PASS**. Log: `/data/ycfeng/tmp/quality-p1-binding.log`. Family IDs, layer identities and cache object identity remain unchanged; the earlier 100-test run is the pre-change control. The cache test now rejects re-entry at the actual imported resolver, rather than patching an unused function.

@@ -11,7 +11,7 @@ from frontier.attention.gdn.config import (
     build_sequence_mixer_schedule,
     resolve_gdn_shape,
 )
-from frontier.attention.families import get_attention_family
+from frontier.attention.families import GATED_DELTA_NET_ATTENTION_FAMILY, get_attention_family
 
 
 _DSA_MODEL_TYPE_MARKERS = (
@@ -219,7 +219,7 @@ def resolve_runtime_attention_family(config: Any):
     """
 
     if not _has_hybrid_attention_schedule(config):
-        return bind_attention_family(config).family
+        return _bind_homogeneous_attention_family(config).family
 
     specs = config.get_layer_attention_specs()
     full_families = tuple(
@@ -286,7 +286,7 @@ def resolve_attention_topology(
         has_gated_delta_net=gdn_config is not None,
     )
     return tuple(
-        LayerAttentionSpec(layer_id, "gated_delta_net", "qwen3_5")
+        LayerAttentionSpec(layer_id, GATED_DELTA_NET_ATTENTION_FAMILY.family_id, "qwen3_5")
         if mixer is SequenceMixerType.GATED_DELTA_NET
         else LayerAttentionSpec(layer_id, binding.family_id, binding.variant_id)
         for layer_id, mixer in enumerate(schedule)

@@ -55,7 +55,9 @@ class LayerAttentionSpec:
 
     @property
     def is_gdn(self) -> bool:
-        return self.family_id == "gated_delta_net"
+        from frontier.attention.families import GATED_DELTA_NET_ATTENTION_FAMILY
+
+        return self.family_id == GATED_DELTA_NET_ATTENTION_FAMILY.family_id
 
     @property
     def is_full_attention(self) -> bool:

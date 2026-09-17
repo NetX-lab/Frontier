@@ -73,3 +73,4 @@ New unresolved issues: none established.
 
 - Consolidated Qwen type/exact-alias recognition in `model_architectures.py` without entering profile/topology resolution. Kept registry, structural and topology precedence/normalization differences.
 - Characterization: 100 tests PASS before (9.88 s) and after (10.78 s). Initial direct re-export triggered a verified import cycle; the existing exported GDN function now delegates with a function-local import. This adapter is required by actual import ordering, not an incomplete fixture.
+- Binding follow-up: 110 PASS; canonical GDN family identity replaces consumer literals, homogeneous runtime binding avoids repeating its already-proven guard, and topology cache regression patches the actual owner lookup.

@@ -269,13 +269,13 @@ def test_real_model_layer_specs_match_runtime_family(model_name):
 
 
 def test_hybrid_binding_reuses_normalized_schedule_and_shape(monkeypatch):
-    from frontier.attention import model_binding
+    from frontier.config import model_config
     config = BaseModelConfig.create_from_name('Qwen3.8-2.4T-A95B-Quark-MXFP4')
     specs = config.get_layer_attention_specs()
     shape = config.get_gdn_config()
     def unexpected_parse(*args, **kwargs):
         raise AssertionError('Repeated layer access parsed the schedule again')
-    monkeypatch.setattr(model_binding, 'resolve_layer_attention_specs', unexpected_parse)
+    monkeypatch.setattr(model_config, 'resolve_attention_topology', unexpected_parse)
     for spec in specs:
         assert bind_layer_attention(config, spec.global_layer_id) is spec
     assert config.get_gdn_config() is shape
