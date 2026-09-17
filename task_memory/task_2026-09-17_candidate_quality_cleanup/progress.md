@@ -154,3 +154,8 @@ New unresolved issues: none established.
 - Reviewed the replay sidecar's explicit profile_graph parameters and internal named call contract. Removed seven-position metadata overloading and GDN spec re-derivation; native builder signatures and output row schemas remain intact. Mutable snapshots, reset/check ownership and optional trace-probe lifecycle remain necessary.
 - Focused 39 before / 40 after PASS (one added named-argument test). Main independently compared all 12 JSON snapshots: exact equality including every row/output and 1,802 ordered events. Simulated timer values do not establish GPU speed.
 - Beginning source-stable P3 integrated CPU regression; workers perform read-only P4 preparation until release.
+
+## P3 integrated — completed; P4 — in-progress
+
+- Source-stable `4dd63482`: 721 PASS / 5 SKIP / 2 FAIL across 45 CPU modules. Both failures are the previously reproduced main/candidate MHA/MQA stage2 CLI nodes. Direct subprocess RCA reports missing flashinfer-python; scripts are unchanged from main. No new failure observed; do not describe this as an all-green/native-GPU suite.
+- Released P3 source freeze. P4 independent scopes: Nash GDN predictor/trainer and valid fixtures; Meitner config guards/typed registry access/default ownership in bounded substeps; main manager registries, GDN paths and family binding. Existing manager measurement/precision identities and dataset-only optionals remain fixed.
