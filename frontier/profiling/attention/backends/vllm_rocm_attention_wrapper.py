@@ -220,16 +220,12 @@ class VllmRocmAttentionWrapper(BaseAttentionWrapper):
             plan.slot_mapping, dtype=torch.long, device=self.device
         )
         self._prefill_metadata = (
-            self._materialize_metadata(
-                build_rocm_sequence_plan(prefill_sequences, self.block_size)
-            )
+            self._materialize_metadata(plan)
             if prefill_sequences
             else None
         )
         self._decode_metadata = (
-            self._materialize_metadata(
-                build_rocm_sequence_plan(decode_sequences, self.block_size)
-            )
+            self._materialize_metadata(plan)
             if decode_sequences
             else None
         )

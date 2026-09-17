@@ -124,3 +124,9 @@ New unresolved issues: none established.
 - Removed only redundant BaseModelConfig-owned JSON overlays; preserved raw model_type and linear-shape overlays whose null/string serialization can differ.
 - Verification: 129 PASS in 10.37 s. The full 22-model snapshot is identical: 21 valid configurations and one unchanged deepseek-v3 quantization rejection. Initial raw cmp differed only in logged warning timestamps; compared complete JSON payloads explicitly, without excluding config fields.
 - Continuation reconciled HEAD and disjoint worker edits. S6 architecture and J1 ROCm workers remain active; main retains S5 and subsequent integration ownership.
+
+## P3 J1 — completed
+
+- Reviewed the ROCm sidecar patch against the mixed-batch guard: successful nonempty inputs contain only one phase, so metadata reuses the first sequence plan. Required lifecycle None states and both timer scopes remain.
+- Verified stored snapshots with cmp: exact metadata/slot/output/timer equality, plan builder calls 5 -> 3 across prefill/decode/empty begins. Focused 5 before / 5 after PASS. CPU stand-ins exercise real wrapper construction, not native attention numerics.
+- Main stages only J1 production/test/report files; J2 remains disjoint and starts after this commit.
