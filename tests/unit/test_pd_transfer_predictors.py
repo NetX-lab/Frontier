@@ -17,6 +17,9 @@ class _ModelConfig:
     is_moe = False
     use_mla = False
 
+    def get_num_gdn_layers(self) -> int:
+        return 0
+
     def get_head_dim(self) -> int:
         return 8
 
@@ -47,6 +50,9 @@ class _MLAModelConfig:
     qk_rope_head_dim = 64
     qk_head_dim = 192
     v_head_dim = 128
+
+    def get_num_gdn_layers(self) -> int:
+        return 0
 
     def get_head_dim(self) -> int:
         return 192

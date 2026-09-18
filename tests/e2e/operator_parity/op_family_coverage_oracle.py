@@ -179,8 +179,8 @@ def _operator_family_by_name_for_model(
 
     architecture_profile = model_config.get_model_architecture_profile()
     for op_name in (
-        *architecture_profile.linear_attention.sharded_ops,
-        *architecture_profile.linear_attention.replicated_ops,
+        *architecture_profile.attention_linear_ops.sharded_ops,
+        *architecture_profile.attention_linear_ops.replicated_ops,
     ):
         _add_operator_family_mapping(mapping, op_name, FAMILY_ATTENTION)
 

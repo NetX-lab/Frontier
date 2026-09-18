@@ -7,7 +7,7 @@ from frontier.config import (
     MetricsConfig,
     ReplicaConfig,
 )
-from frontier.entities import Batch, ExecutionTime
+from frontier.entities import Batch, ExecutionTime, StageExecutionTime
 from frontier.types import ClusterType
 from frontier.logger import init_logger
 
@@ -52,6 +52,40 @@ class BaseExecutionTimePredictor(ABC):
         else:
             self._initialize_normal_mode()
 
+    def _assemble_stage(self, layer_times, *, first_layer_id: int) -> StageExecutionTime:
+        """Attach model-owned identities to ordered numerical layer results."""
+        specs = [
+            self._model_config.get_layer_attention_spec(first_layer_id + offset)
+            for offset in range(len(layer_times))
+        ]
+        if (
+            len(layer_times) > 1
+            and all(timing is layer_times[0] for timing in layer_times)
+            and all(
+                spec.family_id == specs[0].family_id
+                and spec.variant_id == specs[0].variant_id
+                for spec in specs
+            )
+        ):
+            source = layer_times[0].as_single_layer(
+                global_layer_id=specs[0].global_layer_id,
+                attention_family_id=specs[0].family_id,
+                attention_variant_id=specs[0].variant_id,
+                copy_components=False,
+            )
+            return StageExecutionTime.from_execution_time(
+                source, num_layers=len(layer_times), first_layer_id=first_layer_id,
+            )
+        layers = []
+        for timing, spec in zip(layer_times, specs):
+            layers.append(timing.as_single_layer(
+                global_layer_id=spec.global_layer_id,
+                attention_family_id=spec.family_id,
+                attention_variant_id=spec.variant_id,
+                copy_components=False,
+            ))
+        return StageExecutionTime(layers)
+
     def _validate_dummy_mode_config(self):
         """Validate dummy mode configuration."""
         if self._dummy_execution_time <= 0:
@@ -73,7 +107,7 @@ class BaseExecutionTimePredictor(ABC):
         base_time = self._dummy_execution_time
 
         return ExecutionTime(
-            num_layers_per_pipeline_stage=self._num_layers_per_pipeline_stage,
+            num_layers_per_pipeline_stage=1,
             attention_rope_execution_time=base_time,
             attention_kv_cache_save_execution_time=base_time,
             attention_decode_execution_time=base_time,
@@ -403,7 +437,7 @@ class BaseExecutionTimePredictor(ABC):
         include_moe: bool | None = None,
         include_ffn: bool = True,
         include_attention: bool = True,
-    ) -> ExecutionTime:
+    ) -> StageExecutionTime:
         """
         Predict aggregated execution time for one or more transformer layers.
 
@@ -429,7 +463,7 @@ class BaseExecutionTimePredictor(ABC):
                                explicitly.
 
         Returns:
-            ExecutionTime object with aggregated times
+            StageExecutionTime with ordered physical layers and stage-owned times
 
         Raises:
             NotImplementedError: If not supported for this configuration

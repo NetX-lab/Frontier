@@ -128,9 +128,6 @@ from frontier.scheduler.utils.collective_timing import (
 )
 from frontier.scheduler.utils.prefill_collective import handle_prefill_sync_collective
 from frontier.scheduler.utils.decode_collective import handle_decode_sync_collective
-from frontier.scheduler.utils.execution_time_metrics import (
-    build_single_layer_metrics_execution_time,
-)
 from frontier.scheduler.utils.afd_metadata import aggregate_afd_metadata
 from frontier.scheduler.utils.request_selection import collect_active_requests
 from frontier.scheduler.utils.replica_schedulers import build_replica_scheduler_maps
@@ -968,7 +965,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             layer_id=layer_id,
             operation_kind=operation_kind,
         )
-    def _prepare_moe_ep_wave_plan(self, *, wave_inputs, time: float, replica_id: int, stage_id: int, layer_id: int):
+    def _prepare_moe_ep_wave_plan(self, *, wave_inputs, time: float, replica_id: int, stage_id: int, layer_id: int, capture_lane_timings: bool = False):
         """Prepare shared MoE workload and timing through the utility layer."""
 
         return prepare_moe_wave_from_inputs(
@@ -987,9 +984,10 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             replica_id=replica_id,
             stage_id=stage_id,
             layer_id=layer_id,
+            capture_lane_timings=capture_lane_timings,
         )
 
-    def _on_prefill_ep_wave_ready(self, *, time: float, replica_id: int, stage_id: int, batch: Batch, layer_id: int, replica_local_id: int | None = None, cohort_batches: dict[int, Batch] | None = None) -> List:
+    def _on_prefill_ep_wave_ready(self, *, time: float, replica_id: int, stage_id: int, batch: Batch, layer_id: int, replica_local_id: int | None = None, cohort_batches: dict[int, Batch] | None = None, metrics_store=None) -> List:
         """Schedule one PREFILL layer wave through the shared utility."""
 
         return schedule_layer_wave(
@@ -1002,6 +1000,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             layer_id=layer_id,
             replica_local_id=replica_local_id,
             cohort_batches=cohort_batches,
+            metrics_store=metrics_store,
         )
 
     def _uses_shared_prefill_ep_wave(self, batch: Batch, layer_id: int) -> bool:
@@ -1040,7 +1039,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             require_moe_layer=False,
         )
 
-    def _on_decode_ep_wave_ready(self, *, time: float, replica_id: int, stage_id: int, batch: Batch, layer_id: int, replica_local_id: int | None = None, cohort_batches: dict[int, Batch] | None = None) -> List:
+    def _on_decode_ep_wave_ready(self, *, time: float, replica_id: int, stage_id: int, batch: Batch, layer_id: int, replica_local_id: int | None = None, cohort_batches: dict[int, Batch] | None = None, metrics_store=None) -> List:
         """Schedule one DECODE layer wave through the shared utility."""
 
         return schedule_layer_wave(
@@ -1053,6 +1052,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             layer_id=layer_id,
             replica_local_id=replica_local_id,
             cohort_batches=cohort_batches,
+            metrics_store=metrics_store,
         )
 
     def _uses_shared_decode_ep_wave(self, batch: Batch, layer_id: int) -> bool:
@@ -1092,10 +1092,10 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         )
 
     def on_prefill_sync(self, time: float, replica_id: int, stage_id: int, batch: Batch,
-                       replica_local_id: int | None, sync_stage: str, layer_id: int, stage_execution_time: float):
+                       replica_local_id: int | None, sync_stage: str, layer_id: int, stage_execution_time: float, *, metrics_store=None):
         return enter_prefill_sync(
             self, time, replica_id, stage_id, batch, replica_local_id,
-            sync_stage, layer_id, stage_execution_time,
+            sync_stage, layer_id, stage_execution_time, metrics_store=metrics_store,
         )
 
     def on_dense_layer_complete(
@@ -1140,29 +1140,16 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         sample_batch: Batch,
         stage_id: int,
         original_execution_time,
-        actual_execution_time_ms,
-        original_start_time,
     ):
-        """Build corrected prefill metrics payload and attach mixed-layer trace hints."""
-        model_config = getattr(getattr(self._config, "replica_config", None), "model_config", None)
+        """Build full-stage attention and dense-FFN metrics for an EP wave schedule."""
         return build_prefill_metrics_execution_time(
             original_execution_time=original_execution_time,
             sample_batch=sample_batch,
             predictor=self._predictor,
             stage_id=stage_id,
             cluster_type=self._cluster_type,
-            model_config=model_config,
+            model_config=self._config.replica_config.model_config,
         )
-
-    def _create_corrected_execution_time_for_metrics(
-        self,
-        original_execution_time,
-        actual_execution_time_ms,
-        original_start_time,
-    ):
-        """Create corrected ExecutionTime payload used by metrics/trace emission."""
-        del actual_execution_time_ms, original_start_time
-        return build_single_layer_metrics_execution_time(original_execution_time)
 
     def _record_mtp_terminal_completion_delay(
         self,
@@ -1200,6 +1187,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
         sync_stage: str,
         layer_id: int,
         stage_execution_time: float,
+        *, metrics_store=None,
     ):
         """Enter the canonical layer-local DECODE synchronization path."""
         from frontier.scheduler.utils.sync_entry import enter_decode_sync
@@ -1214,6 +1202,7 @@ class BaseClusterScheduler(SchedulerStateViews, ABC):
             sync_stage,
             layer_id,
             stage_execution_time,
+            metrics_store=metrics_store,
         )
 
     def on_decode_sync_collective(self, time: float, replica_id: int, stage_id: int, batch_global_id: int, sync_stage: str, layer_id: int, metrics_store, *, direct_batch: Optional[Batch] = None):

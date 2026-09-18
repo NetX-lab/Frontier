@@ -1622,6 +1622,7 @@ def test_stage_transfer_alignment_accepts_multi_source_ffn_aggregate() -> None:
 class _LedgerConfig:
     write_metrics = True
     enable_op_level_tracing = False
+    store_operation_metrics = False
     subsamples = None
     save_table_to_wandb = False
     store_plots = False

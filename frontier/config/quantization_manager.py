@@ -9,6 +9,7 @@ from typing import Dict, Optional, Set, Any, List
 
 from frontier.attention.families import (
     DENSE_ATTENTION_FAMILY,
+    GATED_DELTA_NET_ATTENTION_FAMILY,
     iter_execution_enabled_families,
 )
 from frontier.config.model_config import BaseModelConfig
@@ -72,6 +73,9 @@ class QuantizationManager:
         "mlp_down_proj",
         "moe_grouped_gemm",
     }
+    _GDN_OPERATION_NAMES = frozenset(
+        operator.name for operator in GATED_DELTA_NET_ATTENTION_FAMILY.profiling_ops()
+    )
 
     def __new__(cls) -> "QuantizationManager":
         with cls._instance_lock:
@@ -100,6 +104,7 @@ class QuantizationManager:
             self._warned_approximations: Set[tuple] = set()
             self._config: Dict[str, Any] = {}
             self._precision_mismatches: Set[PrecisionMismatchInfo] = set()
+            self._active_gdn_operations = False
 
             self._load_registry()
             self._initialized = True
@@ -166,6 +171,7 @@ class QuantizationManager:
             self._operation_profiling_precision = {}
             self._cluster_overrides = {}
             self._precision_mismatches = set()
+            self._active_gdn_operations = False
             self._warned_mismatches = set()
             self._warned_approximations = set()
             self._config = {}
@@ -177,6 +183,15 @@ class QuantizationManager:
         if model_config is None:
             raise ValueError("Model config is required for quantization setup.")
         with self._lock:
+            # The registry contains every execution family so lookups remain
+            # valid for model-specific profiling, but emitted metadata must
+            # describe the configured model.  In particular, dense runs must
+            # not gain hybrid-only GDN rows merely because the shared registry
+            # knows about the GDN family.
+            get_num_gdn_layers = getattr(model_config, "get_num_gdn_layers", None)
+            self._active_gdn_operations = bool(
+                get_num_gdn_layers() if get_num_gdn_layers is not None else 0
+            )
             self._config_path = "model_config"
             self._default_precision = model_config.get_default_precision()
             self._profiling_precision = self._default_precision
@@ -199,7 +214,20 @@ class QuantizationManager:
             quant_config = model_config.quantization_config
             if quant_config is not None and quant_config.quant_method is not None:
                 quant_precision = PrecisionType.from_string(quant_config.quant_method)
-                for op_name in self.MODEL_CONFIG_QUANT_OPS:
+                configured_ops = (
+                    set(quant_config.quantized_operations)
+                    if quant_config.quantized_operations is not None
+                    else set(self.MODEL_CONFIG_QUANT_OPS)
+                )
+                unsupported_configured_ops = configured_ops.difference(
+                    self.MODEL_CONFIG_QUANT_OPS
+                )
+                if unsupported_configured_ops:
+                    raise ValueError(
+                        "Model quantization config selects unsupported operations: "
+                        f"{sorted(unsupported_configured_ops)}"
+                    )
+                for op_name in configured_ops:
                     if not self._is_operation_supported(op_name):
                         registry_path = self.DEFAULT_CONFIG_DIR / self.REGISTRY_FILE
                         raise ValueError(
@@ -209,15 +237,25 @@ class QuantizationManager:
                     self._operation_precisions[op_name] = quant_precision
                     self._operation_precision_sources[op_name] = "quantization_config"
 
+            quantization_config = (
+                model_config.quantization_config.to_dict()
+                if model_config.quantization_config is not None
+                else None
+            )
+            # Keep the persisted config identity compatible for models that
+            # do not opt into the new per-operation selector.  A null optional
+            # field is semantically the historical default and must not turn
+            # every existing MoE artifact into a new fidelity result.
+            if (
+                quantization_config is not None
+                and quantization_config.get("quantized_operations") is None
+            ):
+                quantization_config.pop("quantized_operations")
             self._config = {
                 "source": "model_config",
                 "model_name": model_config.get_name(),
                 "torch_dtype": model_config.torch_dtype,
-                "quantization_config": (
-                    model_config.quantization_config.to_dict()
-                    if model_config.quantization_config is not None
-                    else None
-                ),
+                "quantization_config": quantization_config,
                 "quant_signature": model_config.get_quant_signature(),
             }
 
@@ -450,6 +488,8 @@ class QuantizationManager:
         metadata = []
         compute_ops = self._supported_operations.get("compute_operations", [])
         for op_name in sorted(compute_ops):
+            if op_name in self._GDN_OPERATION_NAMES and not self._active_gdn_operations:
+                continue
             precision = self.get_precision(op_name)
             data_source = self._operation_data_sources.get(op_name, "profiling")
             approx_factor = self._operation_approximation_factors.get(op_name)

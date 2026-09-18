@@ -1,5 +1,12 @@
 # Profiling User Guide
 
+## Modification History
+
+| Date       | Summary of Changes |
+| ---------- | ------------------ |
+| 2026-09-17 | Corrected TP8 GDN launch to use eight distributed processes. |
+| 2026-09-14 | Documented standard ROCm/GDN output contracts and the experimental SGLang boundary. |
+
 ## Scope
 
 This guide covers the user-facing profiling workflow for `pre-release-v0.3`.
@@ -41,7 +48,8 @@ All release-facing profiling examples write compute profiles under:
 data/profiling/compute/<device>/<model>/
 ├── linear_op.csv
 ├── attention.csv
-└── moe.csv
+├── moe.csv
+└── gdn.csv
 ```
 
 Keep this layout when adding new datasets. The E2E simulator and training code use these paths to locate profiling data.
@@ -53,6 +61,7 @@ Keep this layout when adding new datasets. The E2E simulator and training code u
 | `linear_op` | `examples/profiling/profile_linear_op.sh` | `linear_op.csv` | Attention projections, dense/shared FFN linear work, LayerNorm, residual add, and replicated ops. |
 | `attention` | `examples/profiling/profile_attention_chunked_prefill.sh` | `attention.csv` | Attention prefill/decode timing. The public recipe profiles prefill with Chunked Prefill settings. |
 | `moe` | `examples/profiling/profile_moe.sh` | `moe.csv` | Routed-expert gating, routing, shuffling, and grouped GEMM paths. |
+| `gdn` | `python -m frontier.profiling.gdn.main` | `gdn.csv` | Standard vLLM Qwen3.5 GDN phases measured with ROCm `DEVICE_EVENT`. |
 
 ## Dry-Run Validation
 
@@ -198,6 +207,62 @@ TP domain independently of these MoE EP values. At runtime, Step3 shared-expert
 work uses `attn_tp` in co-location/PREFILL/unified DECODE and the role-local
 `moe_tp` in DECODE_FFN.
 
+### Standard GDN on ROCm
+
+The standard GDN producer uses the vLLM Qwen3.5 module path and writes a
+phase-qualified CSV to the canonical compute taxonomy. ROCm runs must select
+`device_event`; the producer rejects CUDA event timing and does not write a
+valid row for another measurement family.
+
+```bash
+torchrun --standalone --nproc-per-node=8 \
+  -m frontier.profiling.gdn.main \
+  --model Qwen3.8-2.4T-A95B-Quark-MXFP4 \
+  --model-path /path/to/local/checkpoint \
+  --device mi355x \
+  --profile-method device_event \
+  --tensor-parallel-size 8 \
+  --output-dir data/profiling
+```
+
+The resulting file is:
+
+```text
+data/profiling/compute/mi355x/Qwen3.8-2.4T-A95B-Quark-MXFP4/gdn.csv
+```
+
+Rows contain separate `gdn_input_projections`, `gdn_core_prefill` or
+`gdn_core_decode`, and `gdn_output_projection` timings, together with the
+state/layout/runtime identity required by `GDNTrainer`. A one-token
+continuation is classified as prefill; same-batch prefill plus decode is
+rejected because it has no single phase-qualified estimator. `DEVICE_EVENT`
+is the standard ROCm measurement family. CUDA producers continue to use
+`CUDA_EVENT`, and CUDA and ROCm rows are not interchangeable.
+
+The standard trainer discovers only `gdn.csv` under the canonical taxonomy.
+SGLang graph-replay rows, rank artifacts, routed-count artifacts, and Kineto
+trace summaries are intentionally excluded from standard predictor training.
+
+### Experimental SGLang replay and traces
+
+Selected SGLang primitives live under
+`frontier/profiling/experimental/sglang/`. The replay module captures isolated
+primitive graphs and records `HIP_GRAPH_REPLAY` artifacts with explicit
+visibility, shape, rank, and correctness metadata. It does not load a full
+model, observe a live router, or emit standard Frontier `DEVICE_EVENT` rows.
+Routed replay must use Frontier's shared routing helper or an explicit
+expert-count JSON; it must not infer counts from an unrelated trace.
+
+The Kineto importer is also diagnostic. It writes
+`gdn-trace-summary.csv/json` in a caller-selected directory and labels its
+rows as `experimental_trace`; those summaries are not `gdn.csv` and are not
+automatically consumed by `GDNTrainer`. Graph replay and trace timing are
+therefore separate from standard `DEVICE_EVENT` evidence.
+
+Actual SGLang, AITER, MXFP4, RCCL, and ROCm kernel execution requires an
+MI355X host. The current CPU-only environment can run import, plan, schema,
+and metadata checks only: **SKIP: AMD/MI355X hardware unavailable**.
+
 ## Metadata Check
 
 Validate an existing profiling directory:
@@ -264,7 +329,7 @@ bash examples/profiling/smoke_simulator_moe_csv.sh \
 | `MODEL` / `--model` | Model name used in output taxonomy. |
 | `DEVICE` / `--device` | Device name used in output taxonomy. |
 | `DATA_DIR_BASE` / `--output-root` | Profiling output root. Defaults to `data/profiling`. |
-| `PROFILE_METHOD` / `--profile-method` | Measurement family. Public wrappers default to `cuda_event`. |
+| `PROFILE_METHOD` / `--profile-method` | Measurement family. Public CUDA wrappers default to `cuda_event`; standard ROCm GDN uses `device_event`. |
 | `TP_SIZES` / `--tp-sizes` | Tensor parallel sizes to profile. |
 | `PP_SIZES` / `--pp-sizes` | Pipeline parallel sizes for attention profiling. |
 | `EP_SIZES` / `--ep-sizes` | Expert parallel sizes for MoE profiling. |
@@ -283,3 +348,5 @@ separate semantic TP grids. Pass them through the public wrapper after `--`.
 | Simulator smoke fails on a missing CSV. | Required profile file is absent. | Generate the CSV or pass an explicit `--*-csv` path. |
 | MoE smoke fails on routing metadata. | The routing distribution does not match CSV metadata. | Align `moe_routing_distribution_type` with the CSV `routing_runtime_path`. |
 | E2E loading reports an architecture profile or typed contract mismatch. | The CSV was collected for a different model profile, operator owner, TP domain, or TP size. | Regenerate the profile with the target model config and matching TP-domain grids. |
+| GDN producer rejects `cuda_event` on ROCm. | ROCm timing must use the standard device event family. | Pass `--profile-method device_event`; do not alias the row to `CUDA_EVENT`. |
+| SGLang artifact is missing from standard training. | Experimental replay and Kineto outputs are deliberately outside the standard CSV taxonomy. | Use a standard vLLM producer to create `gdn.csv`, or inspect the experimental artifact directly. |

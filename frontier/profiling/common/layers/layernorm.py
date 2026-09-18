@@ -6,7 +6,9 @@ import torch
 import torch.nn as nn
 
 from frontier.profiling.common.cuda_timer import CudaTimer
+from frontier.profiling.common.vllm_compat import vllm_config_context
 
+VllmRMSNorm = None
 try:
     from vllm.model_executor.layers.layernorm import (
         GemmaRMSNorm as VllmGemmaRMSNorm,
@@ -16,8 +18,16 @@ try:
 
     HAS_VLLM_RMSNORM = True
 except ImportError:
-    HAS_VLLM_RMSNORM = False
-    VllmGemmaRMSNorm = None
+    try:
+        from vllm.model_executor.layers.layernorm import (
+            GemmaRMSNorm as VllmGemmaRMSNorm,
+            RMSNorm as VllmRMSNorm,
+        )
+
+        HAS_VLLM_RMSNORM = True
+    except ImportError:
+        HAS_VLLM_RMSNORM = False
+        VllmGemmaRMSNorm = None
     vllm_rms_norm = None
     vllm_fused_add_rms_norm = None
 
@@ -37,9 +47,21 @@ class RMSNorm(nn.Module):
         layer_id: Optional[int] = None,
     ) -> None:
         super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
+        self._impl = None
+        if VllmRMSNorm is not None:
+            with vllm_config_context():
+                self._impl = VllmRMSNorm(hidden_size, eps=eps)
+            self.register_parameter("_weight", None)
+        else:
+            self._weight = nn.Parameter(torch.ones(hidden_size))
         self.variance_epsilon = eps
         self._norm_timer = CudaTimer(norm_name, layer_id=layer_id)
+
+    @property
+    def weight(self) -> nn.Parameter:
+        if self._impl is not None:
+            return self._impl.weight
+        return self._weight
 
     def forward(
         self, x: torch.Tensor, residual: Optional[torch.Tensor] = None
@@ -51,6 +73,8 @@ class RMSNorm(nn.Module):
                     "vLLM is required for RMSNorm profiling. "
                     "Install vllm or set PYTHONPATH to the vllm source tree."
                 )
+            if self._impl is not None:
+                return self._impl(x, residual)
             if residual is None:
                 return vllm_rms_norm(x, self.weight.data, self.variance_epsilon)
             return vllm_fused_add_rms_norm(
@@ -75,7 +99,8 @@ class GemmaRMSNorm(nn.Module):
                 "vLLM is required for GemmaRMSNorm profiling. "
                 "Install vllm or set PYTHONPATH to the vllm source tree."
             )
-        self._impl = VllmGemmaRMSNorm(hidden_size, eps=eps)
+        with vllm_config_context():
+            self._impl = VllmGemmaRMSNorm(hidden_size, eps=eps)
 
     @property
     def weight(self) -> nn.Parameter:

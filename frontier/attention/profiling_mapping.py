@@ -8,6 +8,7 @@ from frontier.attention.families import (
     get_attention_family,
     iter_execution_enabled_families,
 )
+from frontier.attention.gdn.features import GDN_FEATURE_COLUMNS
 from frontier.attention.ops import (
     AttentionFamilySpec,
     AttentionMemoryLayout,
@@ -139,6 +140,7 @@ def validate_attention_profiling_dataframe(
     family: AttentionFamilySpec,
     *,
     measurement_type: str | MeasurementType | None = None,
+    identity_columns: tuple[str, ...] = (),
 ) -> None:
     family.require_enabled_for_execution()
     required_columns = get_required_profiling_columns(
@@ -171,6 +173,15 @@ def validate_attention_profiling_dataframe(
             raise ValueError(
                 "Attention profiling dataframe measurement_type mismatch: "
                 f"expected {expected.value}, got {sorted(observed_measurement_types)}"
+            )
+
+    for column in identity_columns:
+        values = df[column]
+        if values.isna().any() or values.astype(str).str.strip().eq("").any():
+            raise ValueError(f"Attention profiling selected identity has missing {column}")
+        if values.nunique(dropna=False) != 1:
+            raise ValueError(
+                f"Attention profiling selected identity mixes incompatible {column} values"
             )
 
 
@@ -272,6 +283,13 @@ def get_enabled_predictor_feature_columns(
             operator.name: imported_predictor_feature_columns
             for operator in family.predictor_ops()
         }
+    elif family.memory_layout is AttentionMemoryLayout.FIXED_STATE:
+        # GDN recurrent work is driven by the physical batch and query shape;
+        # history length is deliberately absent because state size is fixed.
+        feature_columns = {
+            operator.name: GDN_FEATURE_COLUMNS
+            for operator in family.predictor_ops()
+        }
     else:
         raise ValueError(
             f"Unsupported attention predictor memory layout: "
@@ -313,6 +331,11 @@ def get_enabled_shared_predictor_feature_columns(
         imported_predictor_feature_columns = get_imported_mla_predictor_feature_columns()
         feature_columns = {
             operator.name: imported_predictor_feature_columns
+            for operator in family.predictor_ops()
+        }
+    elif family.memory_layout is AttentionMemoryLayout.FIXED_STATE:
+        feature_columns = {
+            operator.name: GDN_FEATURE_COLUMNS
             for operator in family.predictor_ops()
         }
     else:

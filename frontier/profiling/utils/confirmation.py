@@ -173,9 +173,9 @@ def build_linear_op_config_sections(
         attn_lines.append(
             f"    - {op_name:<28}: {precision_str}, TP={attn_tp_str} (Sharded)"
         )
-    for op_name in architecture_profile.linear_attention.replicated_ops:
+    for op_name in architecture_profile.attention_linear_ops.replicated_ops:
         attn_lines.append(f"    - {op_name:<28}: {precision_str}, {replicated_note}")
-    for op_name in architecture_profile.linear_attention.additional_sharded_ops:
+    for op_name in architecture_profile.attention_linear_ops.additional_sharded_ops:
         if op_name in architecture_profile.predictor_attention_extra_ops:
             continue
         attn_lines.append(

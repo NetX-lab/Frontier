@@ -6,6 +6,7 @@ from collections import deque
 from types import SimpleNamespace
 
 from frontier.entities.request import Request
+from frontier.config.model_config import BaseModelConfig
 from frontier.scheduler.replica_scheduler.vllm_v1_engine_replica_scheduler import (
     VLLMv1EngineReplicaScheduler,
 )
@@ -30,6 +31,10 @@ def _request(request_id: int) -> SimpleNamespace:
 
 def _decode_attn_scheduler() -> VLLMv1EngineReplicaScheduler:
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
+    scheduler._replica_config = SimpleNamespace(
+        model_config=BaseModelConfig.create_from_name("llama2_7b_dense_example")
+    )
+    scheduler._gdn_state_slot_manager = None
     scheduler._cluster_type = ClusterType.DECODE_ATTN
     scheduler._scheduling_policy = "fcfs"
     scheduler._enable_preemption = True
@@ -246,6 +251,7 @@ def test_decode_attn_handoff_allocation_commits_the_preflight_block_count() -> N
     """Transferred prompt KV blocks must remain charged after admission."""
 
     scheduler = object.__new__(VLLMv1EngineReplicaScheduler)
+    scheduler._gdn_state_slot_manager = None
     scheduler._cluster_type = ClusterType.DECODE_ATTN
     scheduler._config = SimpleNamespace(num_blocks=3, block_size=16)
     scheduler._max_model_len = 64

@@ -16,7 +16,7 @@ from frontier.types import ClusterType
 logger = logging.getLogger(__name__)
 
 
-class LinearAttentionImplementation(Enum):
+class AttentionLinearOpImplementation(Enum):
     """Linear-op profiling attention implementation selected by architecture."""
 
     GENERIC = "generic"
@@ -342,10 +342,10 @@ def _default_layer_contracts() -> tuple[LayerContractSpec, ...]:
 
 
 @dataclass(frozen=True)
-class LinearAttentionProfile:
+class AttentionLinearOpProfile:
     """Declarative linear-op profiling contract for attention-related ops."""
 
-    sharded_impl: LinearAttentionImplementation
+    sharded_impl: AttentionLinearOpImplementation
     sharded_ops: tuple[str, ...]
     replicated_ops: tuple[str, ...] = ()
 
@@ -410,7 +410,7 @@ class ModelArchitectureProfile:
 
     profile_id: str
     display_name: str
-    linear_attention: LinearAttentionProfile
+    attention_linear_ops: AttentionLinearOpProfile
     expert_parallel_collective: ExpertParallelCollective
     target_embedded_mtp: bool = False
     predictor_attention_extra_ops: tuple[str, ...] = ()
@@ -422,11 +422,15 @@ class ModelArchitectureProfile:
     share_expert_tensor_parallel_allreduce_op: str | None = None
     always_supports_share_expert: bool = False
     counts_share_expert_param_memory: bool = False
+    experimental: bool = False
+    runtime_limitations: tuple[str, ...] = ()
     structural_requirements: tuple[StructuralRequirement, ...] = ()
     match: ArchitectureMatcher = field(default=lambda _config: False, repr=False, compare=False)
     layer_contracts: tuple[LayerContractSpec, ...] = field(
         default_factory=_default_layer_contracts
     )
+    gemma_rms_norm_model_types: tuple[str, ...] = ()
+    mxfp4_moe_model_types: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.profile_id:
@@ -439,17 +443,29 @@ class ModelArchitectureProfile:
                 "when provided"
             )
         unknown_predictor_ops = set(self.predictor_attention_extra_ops).difference(
-            self.linear_attention.sharded_ops
+            self.attention_linear_ops.sharded_ops
         )
         if unknown_predictor_ops:
             raise ValueError(
-                "predictor_attention_extra_ops must be declared in linear_attention.sharded_ops, "
+                "predictor_attention_extra_ops must be declared in attention_linear_ops.sharded_ops, "
                 f"got unknown ops: {sorted(unknown_predictor_ops)}"
             )
         if not self.layer_contracts:
             raise ValueError(
                 f"model architecture profile {self.profile_id!r} must declare layer contracts"
             )
+        if any(
+            not isinstance(limitation, str) or not limitation.strip()
+            for limitation in self.runtime_limitations
+        ):
+            raise ValueError(
+                "model architecture runtime_limitations must contain non-empty strings"
+            )
+        object.__setattr__(
+            self,
+            "runtime_limitations",
+            tuple(str(limitation).strip() for limitation in self.runtime_limitations),
+        )
         layer_kinds = [contract.layer_kind for contract in self.layer_contracts]
         if len(set(layer_kinds)) != len(layer_kinds):
             raise ValueError(
@@ -483,8 +499,8 @@ class ModelArchitectureProfile:
         return cls(
             profile_id=profile_id,
             display_name="Generic Transformer",
-            linear_attention=LinearAttentionProfile(
-                sharded_impl=LinearAttentionImplementation.GENERIC,
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.GENERIC,
                 sharded_ops=(
                     "attn_pre_proj",
                     "attn_rope",
@@ -492,6 +508,7 @@ class ModelArchitectureProfile:
                 ),
             ),
             expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
+            gemma_rms_norm_model_types=("qwen3_next",),
             match=match or (lambda _config: False),
         )
 
@@ -504,8 +521,8 @@ class ModelArchitectureProfile:
         return cls(
             profile_id=profile_id,
             display_name="Step2Mini",
-            linear_attention=LinearAttentionProfile(
-                sharded_impl=LinearAttentionImplementation.STEP2_MINI,
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.STEP2_MINI,
                 sharded_ops=(
                     "attn_pre_proj",
                     "attn_rope",
@@ -535,8 +552,8 @@ class ModelArchitectureProfile:
         return cls(
             profile_id=profile_id,
             display_name="Step3Text MFA",
-            linear_attention=LinearAttentionProfile(
-                sharded_impl=LinearAttentionImplementation.STEP3_TEXT,
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.STEP3_TEXT,
                 sharded_ops=(
                     "attn_pre_proj",
                     "attn_rope",
@@ -590,6 +607,42 @@ class ModelArchitectureProfile:
                     activation_predicate=_shared_layer_contract_active,
                 ),
             ),
+        )
+
+    @classmethod
+    def qwen3_5_moe(
+        cls,
+        profile_id: str = "qwen3_5_moe",
+        match: ArchitectureMatcher | None = None,
+    ) -> "ModelArchitectureProfile":
+        """Experimental Qwen3.5 hybrid GDN/full-attention profile."""
+
+        return cls(
+            profile_id=profile_id,
+            display_name="Qwen3.5 MoE Hybrid GDN",
+            attention_linear_ops=AttentionLinearOpProfile(
+                sharded_impl=AttentionLinearOpImplementation.GENERIC,
+                sharded_ops=("attn_pre_proj", "attn_rope", "attn_post_proj"),
+            ),
+            expert_parallel_collective=ExpertParallelCollective.ALLTOALL,
+            experimental=True,
+            gemma_rms_norm_model_types=("qwen3_5_moe_text",),
+            mxfp4_moe_model_types=("qwen3_5_moe_text",),
+            runtime_limitations=(
+                "prefix cache unsupported",
+                "speculative decoding and MTP unsupported",
+                "GDN P-to-D transfer unsupported",
+                "GDN end-to-end pipeline parallelism is limited to PP1",
+                "GDN execution is limited to EP1 and attention-DP1",
+                "GDN mixed-batch timing uses a temporary prefill approximation with a warning",
+                "real SGLang router replay is not automatic",
+                "MXFP4 MoE parameter memory uses a 2-byte approximation",
+            ),
+            structural_requirements=(
+                _requires_qwen3_5_profile_identity(),
+                _requires_qwen3_5_hybrid_gdn_contract(),
+            ),
+            match=match or _matches_qwen3_5_moe,
         )
 
     def validate_structural_requirements(self, config: Any) -> None:
@@ -1005,11 +1058,93 @@ def _matches_step3_text(config: Any) -> bool:
     return _normalized_attr(config, "model_type") == "step3_text"
 
 
+def _has_qwen3_5_identity(config: Any, model_type: str) -> bool:
+    """Match raw identity without resolving profiles or validating topology."""
+    if model_type:
+        return model_type == "qwen3_5_moe_text"
+    architectures = getattr(config, "architectures", None) or ()
+    return any(
+        str(value).strip().lower() == "qwen3_5moeforcausallm"
+        for value in architectures
+    )
+
+
+def _matches_qwen3_5_moe(config: Any) -> bool:
+    return _has_qwen3_5_identity(config, _normalized_attr(config, "model_type"))
+
+
+def is_qwen3_5_profile_config(config: Any) -> bool:
+    """Recognize topology identity, rejecting an explicit conflicting profile.
+
+    Topology input normalization also strips whitespace; registry matching
+    deliberately retains its existing lowercase-only normalization.
+    """
+    model_type = _normalized_attr(config, "model_type").strip()
+    profile_id = _normalized_attr(config, "model_architecture_profile").strip()
+    if profile_id == "qwen3_5_moe":
+        if model_type and not _has_qwen3_5_identity(config, model_type):
+            raise ValueError(
+                "qwen3_5_moe profile requires model_type='qwen3_5_moe_text'; "
+                f"got {model_type!r}"
+            )
+        return True
+    return _has_qwen3_5_identity(config, model_type)
+
+
+def _requires_qwen3_5_profile_identity() -> StructuralRequirement:
+    def predicate(config: Any) -> bool:
+        model_type = _normalized_attr(config, "model_type")
+        return _has_qwen3_5_identity(config, model_type) or (
+            not model_type
+            and _normalized_attr(config, "model_architecture_profile") == "qwen3_5_moe"
+        )
+
+    return StructuralRequirement(
+        name="requires_qwen3_5_profile_identity",
+        predicate=predicate,
+        message=lambda profile, config: (
+            f"{profile.display_name} profile {profile.profile_id} requires "
+            "model_type='qwen3_5_moe_text' or the exact "
+            "Qwen3_5MoeForCausalLM architecture; "
+            f"model_type={getattr(config, 'model_type', None)!r}"
+        ),
+    )
+
+
+def _requires_qwen3_5_hybrid_gdn_contract() -> StructuralRequirement:
+    def predicate(config: Any) -> bool:
+        get_gdn_config = getattr(config, "get_gdn_config", None)
+        get_num_gdn_layers = getattr(config, "get_num_gdn_layers", None)
+        get_num_full_attention_layers = getattr(
+            config, "get_num_full_attention_layers", None
+        )
+        return bool(
+            getattr(config, "is_moe", False)
+            and callable(get_gdn_config)
+            and get_gdn_config() is not None
+            and callable(get_num_gdn_layers)
+            and int(get_num_gdn_layers()) > 0
+            and callable(get_num_full_attention_layers)
+            and int(get_num_full_attention_layers()) > 0
+        )
+
+    return StructuralRequirement(
+        name="requires_qwen3_5_hybrid_gdn_contract",
+        predicate=predicate,
+        message=lambda profile, config: (
+            f"{profile.display_name} profile {profile.profile_id} requires an "
+            "MoE model with complete GDN dimensions and both GDN and "
+            f"full-attention layers; model={_model_identifier(config)}"
+        ),
+    )
+
+
 class ModelArchitectureRegistry:
     """Ordered plugin registry for model architecture profiles."""
 
     def __init__(self) -> None:
         self._profiles_by_id: OrderedDict[str, ModelArchitectureProfile] = OrderedDict()
+        self._warned_experimental_profiles: set[str] = set()
 
     def register(self, profile: ModelArchitectureProfile) -> None:
         if profile.profile_id in self._profiles_by_id:
@@ -1031,13 +1166,28 @@ class ModelArchitectureRegistry:
     def iter_profiles(self) -> tuple[ModelArchitectureProfile, ...]:
         return tuple(self._profiles_by_id.values())
 
+    def uses_gemma_rms_norm(self, model_type: str | None) -> bool:
+        """Match declared native norm types exactly, without profile resolution."""
+        return any(
+            model_type in profile.gemma_rms_norm_model_types
+            for profile in self.iter_profiles()
+        )
+
+    def supports_mxfp4_moe(self, model_type: str | None) -> bool:
+        """Match declared native MXFP4 types exactly, without normalization."""
+        return any(
+            model_type in profile.mxfp4_moe_model_types
+            for profile in self.iter_profiles()
+        )
+
     def resolve(self, config: Any) -> ModelArchitectureProfile:
         explicit_profile = getattr(config, "model_architecture_profile", None)
         if explicit_profile:
-            return self.get(str(explicit_profile).lower())
+            profile = self.get(str(explicit_profile).lower())
+            return self._announce_experimental(profile, config)
         for profile in self.iter_profiles():
             if profile.match(config):
-                return profile
+                return self._announce_experimental(profile, config)
         generic_profile = self.get("generic")
         logger.warning(
             "Model architecture profile fallback selected generic for %s",
@@ -1045,11 +1195,27 @@ class ModelArchitectureRegistry:
         )
         return generic_profile
 
+    def _announce_experimental(
+        self, profile: ModelArchitectureProfile, config: Any
+    ) -> ModelArchitectureProfile:
+        if profile.experimental and profile.profile_id not in self._warned_experimental_profiles:
+            self._warned_experimental_profiles.add(profile.profile_id)
+            limitations = "; ".join(profile.runtime_limitations)
+            logger.warning(
+                "Experimental model architecture profile selected: %s (%s). "
+                "Runtime limitations: %s",
+                profile.profile_id,
+                _model_identifier(config),
+                limitations or "none declared",
+            )
+        return profile
+
 
 MODEL_ARCHITECTURE_REGISTRY = ModelArchitectureRegistry()
 for _profile in (
     ModelArchitectureProfile.step3_text(),
     ModelArchitectureProfile.step2_mini(),
+    ModelArchitectureProfile.qwen3_5_moe(),
     ModelArchitectureProfile.generic(),
 ):
     MODEL_ARCHITECTURE_REGISTRY.register(_profile)

@@ -380,7 +380,7 @@ class AttentionTrainer(BaseTrainer):
             required_columns.append("time_stats.add.median")
 
         architecture_profile = self.model_config.get_model_architecture_profile()
-        for op_name in architecture_profile.linear_attention.sharded_ops:
+        for op_name in architecture_profile.attention_linear_ops.sharded_ops:
             column_name = f"time_stats.{op_name}.median"
             if column_name not in required_columns:
                 required_columns.append(column_name)

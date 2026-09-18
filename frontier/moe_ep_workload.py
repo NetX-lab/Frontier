@@ -9,17 +9,73 @@ request accounting.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import inspect
 from math import floor, isfinite
 from numbers import Real
 from types import MappingProxyType
 from typing import TypeAlias
 
+import numpy as np
+
 
 ExpertTokenMap: TypeAlias = Mapping[int, int]
 ExpertOwnership: TypeAlias = Mapping[int, int]
 RoutingDetails: TypeAlias = Mapping[int, Mapping[int, Mapping[int, Real]]]
+
+
+def generate_moe_routing_ratios(
+    *,
+    total_expert_num: int,
+    distribution_type: str,
+    seed: int,
+    layer_id: int,
+) -> dict[int, float]:
+    """Generate one deterministic normalized expert-routing distribution.
+
+    The helper preserves the existing predictor contract: each layer seeds
+    ``numpy.random.default_rng`` with ``seed + layer_id`` and expert IDs are
+    emitted in ascending order. It only creates the ratio source; token
+    integerization and EP ownership remain in ``materialize_layer_ep_workload``.
+    """
+
+    if type(total_expert_num) is not int or total_expert_num <= 0:
+        raise ValueError("total_expert_num must be a positive int")
+    if type(seed) is not int or seed < 0:
+        raise ValueError("seed must be a non-negative int")
+    if type(layer_id) is not int or layer_id < 0:
+        raise ValueError("layer_id must be a non-negative int")
+
+    normalized_distribution = str(distribution_type).strip().lower()
+    rng = np.random.default_rng(seed + layer_id)
+    if normalized_distribution == "balanced":
+        weights = np.ones(total_expert_num, dtype=float)
+    elif normalized_distribution == "random":
+        weights = rng.uniform(0.1, 1.0, total_expert_num)
+    elif normalized_distribution == "skewed":
+        ranks = np.arange(1, total_expert_num + 1, dtype=float)
+        weights = 1.0 / np.power(ranks, 0.35)
+    elif normalized_distribution == "zipf":
+        ranks = np.arange(1, total_expert_num + 1, dtype=float)
+        weights = 1.0 / ranks
+    else:
+        raise ValueError(
+            "Unsupported MoE routing distribution type="
+            f"{distribution_type!r}"
+        )
+
+    total_weight = float(np.sum(weights))
+    if not np.isfinite(total_weight) or total_weight <= 0.0:
+        raise ValueError(
+            "MoE routing distribution produced an invalid weight sum: "
+            f"distribution={distribution_type!r}, layer_id={layer_id}, "
+            f"sum={total_weight!r}"
+        )
+    expert_ratios = weights / total_weight
+    return {
+        expert_id: float(expert_ratios[expert_id])
+        for expert_id in range(total_expert_num)
+    }
 
 
 def _require_int(value: object, name: str, *, minimum: int | None = None) -> int:
@@ -88,6 +144,11 @@ class LayerEPWorkload:
     per_ep_routed_tokens: Mapping[int, int]
     participant_ep_ids: tuple[int, ...]
     expert_to_ep: ExpertOwnership
+    _lane_descriptors: tuple["EPLaneWorkload", ...] = field(
+        init=False,
+        repr=False,
+        compare=False,
+    )
 
     def __post_init__(self) -> None:
         target_replica_id = _require_int(
@@ -278,6 +339,20 @@ class LayerEPWorkload:
         )
         object.__setattr__(self, "expert_to_ep", _freeze_map(ownership))
         object.__setattr__(self, "participant_ep_ids", participant_ep_ids)
+        object.__setattr__(
+            self,
+            "_lane_descriptors",
+            tuple(
+                _build_lane_descriptor(
+                    ep_id=ep_id,
+                    moe_expert_parallel_size=moe_expert_parallel_size,
+                    total_expert_num=total_expert_num,
+                    per_expert_tokens=per_ep_tokens[ep_id],
+                    router_topk=router_topk,
+                )
+                for ep_id in participant_ep_ids
+            ),
+        )
 
     def lane(self, ep_id: int) -> "EPLaneWorkload":
         """Return the canonical physical workload for one materialized lane."""
@@ -288,15 +363,7 @@ class LayerEPWorkload:
             raise ValueError(
                 f"ep_id={ep_id} is not present in the materialized EP workload"
             )
-        total_expert_num = len(self.global_per_expert_tokens)
-        moe_expert_parallel_size = len(self.participant_ep_ids)
-        return _build_lane_descriptor(
-            ep_id=ep_id,
-            moe_expert_parallel_size=moe_expert_parallel_size,
-            total_expert_num=total_expert_num,
-            per_expert_tokens=self.per_ep_per_expert_tokens[ep_id],
-            router_topk=self.router_topk,
-        )
+        return self._lane_descriptors[ep_id]
 
 
 @dataclass(frozen=True)
@@ -673,6 +740,42 @@ def _validate_routing_ratios(
     return {expert_id: value / ratio_sum for expert_id, value in values.items()}
 
 
+def materialize_expert_token_counts(
+    *,
+    routing_ratios: Mapping[int, Real],
+    total_routed_assignments: int,
+    total_expert_num: int,
+) -> dict[int, int]:
+    """Allocate normalized routes by Hamilton remainder and expert-ID tie order."""
+    total_routed_assignments = _require_int(
+        total_routed_assignments, "total_routed_assignments", minimum=0
+    )
+    total_expert_num = _require_int(total_expert_num, "total_expert_num", minimum=1)
+    normalized_ratios = _validate_routing_ratios(
+        routing_ratios, total_expert_num=total_expert_num
+    )
+    quotas = {
+        expert_id: total_routed_assignments * ratio
+        for expert_id, ratio in normalized_ratios.items()
+    }
+    counts = {
+        expert_id: int(floor(quota))
+        for expert_id, quota in quotas.items()
+    }
+    remainder = total_routed_assignments - sum(counts.values())
+    if remainder < 0 or remainder >= total_expert_num:
+        raise ValueError("Hamilton remainder is outside the valid expert range")
+    ranked_experts = sorted(
+        quotas,
+        key=lambda expert_id: (-(quotas[expert_id] - counts[expert_id]), expert_id),
+    )
+    for expert_id in ranked_experts[:remainder]:
+        counts[expert_id] += 1
+    if sum(counts.values()) != total_routed_assignments:
+        raise ValueError("global expert token conservation failed")
+    return counts
+
+
 def materialize_layer_ep_workload(
     *,
     routing_ratios: Mapping[int, Real],
@@ -713,36 +816,12 @@ def materialize_layer_ep_workload(
         total_expert_num=total_expert_num,
         moe_expert_parallel_size=moe_expert_parallel_size,
     )
-    normalized_ratios = _validate_routing_ratios(
-        routing_ratios,
+    total_routed_assignments = routing_token_count * router_topk
+    global_per_expert_tokens = materialize_expert_token_counts(
+        routing_ratios=routing_ratios,
+        total_routed_assignments=total_routed_assignments,
         total_expert_num=total_expert_num,
     )
-
-    total_routed_assignments = routing_token_count * router_topk
-    quotas = {
-        expert_id: total_routed_assignments * ratio
-        for expert_id, ratio in normalized_ratios.items()
-    }
-    global_per_expert_tokens = {
-        expert_id: int(floor(quota))
-        for expert_id, quota in quotas.items()
-    }
-    remainder = total_routed_assignments - sum(global_per_expert_tokens.values())
-    if remainder < 0 or remainder >= total_expert_num:
-        raise ValueError("Hamilton remainder is outside the valid expert range")
-
-    ranked_experts = sorted(
-        quotas,
-        key=lambda expert_id: (
-            -(quotas[expert_id] - global_per_expert_tokens[expert_id]),
-            expert_id,
-        ),
-    )
-    for expert_id in ranked_experts[:remainder]:
-        global_per_expert_tokens[expert_id] += 1
-
-    if sum(global_per_expert_tokens.values()) != total_routed_assignments:
-        raise ValueError("global expert token conservation failed")
 
     per_ep_per_expert_tokens: dict[int, dict[int, int]] = {
         ep_id: {} for ep_id in range(moe_expert_parallel_size)
@@ -779,6 +858,8 @@ __all__ = [
     "LayerEPWorkload",
     "RoutingDetails",
     "build_contiguous_expert_ownership",
+    "materialize_expert_token_counts",
+    "generate_moe_routing_ratios",
     "materialize_layer_ep_workload",
     "resolve_ep_lane_workload",
     "resolve_routing_details",

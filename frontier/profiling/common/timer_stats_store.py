@@ -20,14 +20,27 @@ class TimerStatsStore(metaclass=Singleton):
     def clear_stats(self):
         self.TIMING_STATS = {}
 
-    def get_stats(self):
-        stats = {}
-        for name, times in self.TIMING_STATS.items():
-            times = [
-                (time if isinstance(time, float) else time[0].elapsed_time(time[1]))
-                for time in times
-            ]
+    def get_times(self):
+        """Materialize recorded event or wall-clock samples as milliseconds."""
 
+        return {
+            name: [
+                float(
+                    sample
+                    if isinstance(sample, (float, int, np.floating, np.integer))
+                    else sample[0].elapsed_time(sample[1])
+                )
+                for sample in samples
+            ]
+            for name, samples in self.TIMING_STATS.items()
+        }
+
+    @staticmethod
+    def get_stats_from_times(times_by_name):
+        """Summarize already-materialized timing samples."""
+
+        stats = {}
+        for name, times in times_by_name.items():
             stats[name] = {
                 "min": np.min(times),
                 "max": np.max(times),
@@ -36,5 +49,7 @@ class TimerStatsStore(metaclass=Singleton):
                 "std": np.std(times),
                 "count": len(times),
             }
-
         return stats
+
+    def get_stats(self):
+        return self.get_stats_from_times(self.get_times())

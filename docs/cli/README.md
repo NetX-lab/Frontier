@@ -1,5 +1,12 @@
 # CLI User Guide
 
+## Modification History
+
+| Date       | Summary of Changes |
+| ---------- | ------------------ |
+| 2026-09-17 | Corrected TP8 GDN launch to use eight distributed processes. |
+| 2026-09-14 | Documented standard ROCm/GDN CLI selection and experimental SGLang boundaries. |
+
 ## Scope
 
 This guide covers the public CLI surface for the `pre-release-v0.3` branch. The supported runtime architectures are `co-location`, sequential `pd-disaggregation`, and sequential `pd-af-disaggregation`.
@@ -45,6 +52,71 @@ make -j"$(nproc)"
 ```
 
 Use `--cc_backend_config_type analytical` to match the release examples. Use `--cc_backend_config_type astra_sim_analytical` when you intentionally want the ASTRA-Sim-inspired lightweight topology model.
+
+## Profiling producers and runtime boundaries
+
+The standard profiling taxonomy is shared by CLI loading, on-demand training,
+and simulator E2E checks:
+
+```text
+data/profiling/compute/<device>/<model>/
+├── linear_op.csv
+├── attention.csv
+├── moe.csv
+└── gdn.csv
+```
+
+CUDA producers use `CUDA_EVENT`. Standard ROCm producers use
+`DEVICE_EVENT`, and the two measurement families are kept separate. For a
+Qwen3.5 GDN model, invoke the dedicated producer with `device_event`:
+
+```bash
+torchrun --standalone --nproc-per-node=8 \
+  -m frontier.profiling.gdn.main \
+  --model Qwen3.8-2.4T-A95B-Quark-MXFP4 \
+  --model-path /path/to/local/checkpoint \
+  --device mi355x \
+  --profile-method device_event \
+  --tensor-parallel-size 8 \
+  --output-dir data/profiling
+```
+
+This writes
+`data/profiling/compute/mi355x/Qwen3.8-2.4T-A95B-Quark-MXFP4/gdn.csv`.
+The standard trainer and simulator discover this canonical file through
+`gdn_input_file`; they do not discover experimental trace or replay outputs.
+Generic linear, attention, and MoE wrappers use the same platform rule, for
+example `--profile-method device_event` on ROCm:
+
+```bash
+bash examples/profiling/profile_linear_op.sh \
+  --model Qwen3.8-2.4T-A95B-Quark-MXFP4 \
+  --device mi355x \
+  --profile-method device_event
+```
+
+For standalone collective evidence, use the NCCL/RCCL runner and keep its
+output separate from compute predictor CSVs:
+
+```bash
+python -m frontier.profiling.collectives.main \
+  --disable_ray --num_gpus 8 --precision BF16 \
+  --output_dir outputs/collective
+```
+
+Selected SGLang primitive replay and the Kineto GDN trace importer are
+experimental tools under `frontier/profiling/experimental/sglang/`. Replay
+records `HIP_GRAPH_REPLAY` artifacts for isolated primitives, while trace
+import writes `gdn-trace-summary.csv/json`. Neither output is a standard
+`DEVICE_EVENT` row, and neither is automatically consumed by the standard
+trainer. Routed replay uses Frontier's shared routing helper or an explicit
+expert-count JSON. It does not capture a whole model or infer a live router's
+state.
+
+Actual ROCm, AITER, MXFP4, RCCL, and SGLang kernel execution requires an
+MI355X host. CPU-only CLI checks cover import, argument, planning, and schema
+contracts: **SKIP: AMD/MI355X hardware unavailable**. See
+`docs/profiling/ROCM_MI355X.md` for the hardware runbook.
 
 ## Recommended Entry Points
 

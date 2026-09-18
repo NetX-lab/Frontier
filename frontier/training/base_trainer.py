@@ -299,6 +299,7 @@ class BaseTrainer(ABC):
             # Category 1: Profiling data paths
             'linear_op_input_file': config.linear_op_input_file,
             'atten_input_file': config.atten_input_file,
+            'gdn_input_file': getattr(config, 'gdn_input_file', ''),
             'all_reduce_input_file': config.all_reduce_input_file,
             'send_recv_input_file': config.send_recv_input_file,
             'moe_input_file': config.moe_input_file,

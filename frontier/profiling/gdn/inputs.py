@@ -1,0 +1,247 @@
+"""Workload descriptions and schema constants for standard GDN profiling."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from math import sqrt
+
+from frontier.attention.families import GATED_DELTA_NET_ATTENTION_FAMILY
+
+
+def get_required_gdn_profiling_columns() -> tuple[str, ...]:
+    """Return the stable raw GDN metadata/feature schema."""
+
+    return GATED_DELTA_NET_ATTENTION_FAMILY.required_profiling_feature_columns
+
+
+@dataclass(frozen=True)
+class GDNProfileInput:
+    """One GDN workload with explicit per-request query/context lengths."""
+
+    query_lens: tuple[int, ...]
+    context_lens: tuple[int, ...]
+    logical_phase: str
+    prefill_request_mask: tuple[bool, ...] | None = None
+    physical_batch_size: int | None = None
+
+    def __post_init__(self) -> None:
+        if not self.query_lens:
+            raise ValueError("GDN profile input must contain at least one sequence")
+        if len(self.query_lens) != len(self.context_lens):
+            raise ValueError("query_lens and context_lens must have equal length")
+        if any(type(length) is not int or length <= 0 for length in self.query_lens):
+            raise ValueError(f"query_lens must be positive ints: {self.query_lens}")
+        if any(type(length) is not int or length < 0 for length in self.context_lens):
+            raise ValueError(
+                f"context_lens must be non-negative ints: {self.context_lens}"
+            )
+        phase = str(self.logical_phase).strip().lower()
+        if phase not in {"prefill", "decode", "mixed"}:
+            raise ValueError(
+                "logical_phase must be prefill, decode, or mixed, "
+                f"got {self.logical_phase!r}"
+            )
+        object.__setattr__(self, "logical_phase", phase)
+
+        mask = self.prefill_request_mask
+        if mask is None:
+            if phase == "prefill":
+                mask = (True,) * len(self.query_lens)
+            elif phase == "decode":
+                mask = (False,) * len(self.query_lens)
+            else:
+                raise ValueError(
+                    "mixed GDN inputs require an explicit prefill_request_mask"
+                )
+        else:
+            mask = tuple(bool(value) for value in mask)
+            if len(mask) != len(self.query_lens):
+                raise ValueError(
+                    "prefill_request_mask must match query_lens length"
+                )
+        if phase == "prefill" and not all(mask):
+            raise ValueError("prefill phase requires every request to be marked prefill")
+        if phase == "decode" and any(mask):
+            raise ValueError("decode phase requires every request to be marked decode")
+        if phase == "mixed" and (all(mask) or not any(mask)):
+            raise ValueError("mixed phase requires both prefill and decode requests")
+        if any(not is_prefill and query_len != 1 for is_prefill, query_len in zip(mask, self.query_lens)):
+            raise ValueError(
+                "decode requests must carry exactly one query token; provide an "
+                "explicit prefill mask for one-token continuations"
+            )
+        object.__setattr__(self, "prefill_request_mask", mask)
+        physical_batch_size = self.physical_batch_size
+        if physical_batch_size is None:
+            physical_batch_size = len(self.query_lens)
+        if type(physical_batch_size) is not int or physical_batch_size < len(self.query_lens):
+            raise ValueError(
+                "physical_batch_size must be an int >= logical batch size, "
+                f"got {physical_batch_size!r} for batch_size={len(self.query_lens)}"
+            )
+        object.__setattr__(self, "physical_batch_size", physical_batch_size)
+
+    @property
+    def batch_size(self) -> int:
+        return len(self.query_lens)
+
+    @property
+    def num_tokens(self) -> int:
+        return sum(self.query_lens)
+
+    @property
+    def num_decode_tokens(self) -> int:
+        return sum(
+            query_len
+            for query_len, is_prefill in zip(
+                self.query_lens, self.prefill_request_mask
+            )
+            if not is_prefill
+        )
+
+    @property
+    def num_prefill_tokens(self) -> int:
+        return self.num_tokens - self.num_decode_tokens
+
+    @property
+    def max_query_len(self) -> int:
+        return max(self.query_lens)
+
+    @property
+    def query_len_cv(self) -> float:
+        mean = self.num_tokens / self.batch_size
+        variance = sum((length - mean) ** 2 for length in self.query_lens) / self.batch_size
+        return sqrt(variance) / mean
+
+    @property
+    def num_stateful_requests(self) -> int:
+        return sum(context_len > 0 for context_len in self.context_lens)
+
+    @property
+    def phase(self) -> str:
+        return self.logical_phase
+
+    @property
+    def has_initial_state(self) -> bool:
+        return self.num_stateful_requests > 0
+
+    @property
+    def prefill_mask(self) -> tuple[bool, ...]:
+        """Identify requests whose current logical work is prefill."""
+
+        return self.prefill_request_mask
+
+    @property
+    def state_init_mode(self) -> str:
+        """Record state provenance without changing the timed workload."""
+
+        return "primed_prefix" if self.has_initial_state else "zero"
+
+    @property
+    def state_block_ids(self) -> tuple[int, ...]:
+        """Return vLLM state pages, reserving page zero as the null page."""
+
+        return tuple(range(1, self.physical_batch_size + 1))
+
+    def require_supported_phase(self) -> None:
+        """Reject same-batch prefill/decode GDN execution."""
+
+        if self.phase == "mixed":
+            raise ValueError(
+                "same-batch GDN prefill/decode mixed execution is unsupported"
+            )
+
+    def validate_capacity(self, *, max_batch_size: int, max_model_len: int) -> None:
+        """Validate supported work before native allocation or execution."""
+        self.require_supported_phase()
+        if self.has_initial_state and any(context == 0 for context in self.context_lens):
+            raise ValueError("GDN carried-state profiling requires a positive prefix for every request")
+        if type(max_batch_size) is not int or max_batch_size <= 0:
+            raise ValueError("max_batch_size must be a positive int")
+        if type(max_model_len) is not int or max_model_len <= 0:
+            raise ValueError("max_model_len must be a positive int")
+        if self.physical_batch_size > max_batch_size:
+            raise ValueError("GDN physical batch exceeds max_batch_size")
+        if any(query + context > max_model_len
+               for query, context in zip(self.query_lens, self.context_lens)):
+            raise ValueError("GDN context plus current query exceeds max_model_len")
+
+    @classmethod
+    def prefill(
+        cls, *, seq_len: int, batch_size: int = 1, context_len: int = 0
+    ) -> "GDNProfileInput":
+        if int(seq_len) <= 0:
+            raise ValueError("GDN prefill seq_len must be positive")
+        if int(batch_size) <= 0:
+            raise ValueError("GDN prefill batch_size must be positive")
+        return cls(
+            query_lens=(int(seq_len),) * int(batch_size),
+            context_lens=(int(context_len),) * int(batch_size),
+            logical_phase="prefill",
+        )
+
+    @classmethod
+    def decode(cls, *, batch_size: int, context_len: int) -> "GDNProfileInput":
+        if int(batch_size) <= 0:
+            raise ValueError("GDN decode batch_size must be positive")
+        if int(context_len) <= 0:
+            raise ValueError("GDN decode context_len must be positive")
+        return cls(
+            query_lens=(1,) * int(batch_size),
+            context_lens=(int(context_len),) * int(batch_size),
+            logical_phase="decode",
+        )
+
+    @classmethod
+    def mixed(
+        cls,
+        *,
+        decode_batch_size: int,
+        decode_context_len: int,
+        prefill_seq_len: int,
+        prefill_context_len: int = 0,
+    ) -> "GDNProfileInput":
+        return cls(
+            query_lens=(1,) * int(decode_batch_size) + (int(prefill_seq_len),),
+            context_lens=(int(decode_context_len),) * int(decode_batch_size)
+            + (int(prefill_context_len),),
+            logical_phase="mixed",
+            prefill_request_mask=(False,) * int(decode_batch_size) + (True,),
+        )
+
+
+def build_profile_inputs(
+    *,
+    prefill_lengths: tuple[int, ...] = (128, 512, 2048),
+    decode_batch_sizes: tuple[int, ...] = (1, 8, 32),
+    decode_context_lengths: tuple[int, ...] = (128, 2048, 8192),
+) -> tuple[GDNProfileInput, ...]:
+    """Build deterministic cold/hot prefill and decode inputs for CPU planning."""
+
+    if len(decode_batch_sizes) != len(decode_context_lengths):
+        raise ValueError("decode batch sizes and contexts must have equal length")
+    inputs = [
+        GDNProfileInput.prefill(seq_len=int(seq_len), context_len=0)
+        for seq_len in prefill_lengths
+    ]
+    inputs.extend(
+        GDNProfileInput.prefill(seq_len=int(seq_len), context_len=int(seq_len))
+        for seq_len in prefill_lengths
+    )
+    inputs.extend(
+        GDNProfileInput.decode(
+            batch_size=int(batch_size), context_len=int(context_len)
+        )
+        for batch_size, context_len in zip(
+            decode_batch_sizes, decode_context_lengths
+        )
+    )
+    return tuple(inputs)
+
+
+def validate_profile_iterations(warmup_iterations: int, profile_iterations: int) -> None:
+    """Validate the common campaign and direct-wrapper iteration contract."""
+    if type(warmup_iterations) is not int or warmup_iterations < 0:
+        raise ValueError("warmup_iterations must be a non-negative int")
+    if type(profile_iterations) is not int or profile_iterations <= 0:
+        raise ValueError("profile_iterations must be a positive int")

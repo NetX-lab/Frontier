@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 import inspect
 from unittest.mock import MagicMock
 
 import pytest
+from predictor_cache_fixtures import CacheFixturePredictor
 
 from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
     SklearnMoEExecutionTimePredictor,
@@ -24,7 +26,7 @@ from frontier.moe_ep_workload import (
 from frontier.types import ClusterType, MeasurementType
 
 
-class _Predictor(SklearnMoEExecutionTimePredictor):
+class _Predictor(CacheFixturePredictor):
     def _get_estimator(self):
         raise AssertionError("not used")
 
@@ -34,17 +36,17 @@ class _Predictor(SklearnMoEExecutionTimePredictor):
 
 class _CountingPredictor(_Predictor):
     def __init__(self, *, model_result: float = 7.5) -> None:
+        super().__init__(ep_size=2)
         self._enable_dummy_mode = False
         self._cluster_type = ClusterType.MONOLITHIC
         self._active_measurement_type = MeasurementType.CUDA_EVENT
         self._measurement_family_name = lambda _measurement_type: "eager"
         self._router_topk = 2
         self._moe_ep_size = 2
-        self._model_config = SimpleNamespace(
+        self._model_config = replace(self._model_config,
             embedding_dim=4096,
             mlp_hidden_dim=11008,
         )
-        self._replica_config = SimpleNamespace(total_expert_num=8)
         self._supports_operation = lambda _operation: True
         self._predictions = {
             "moe_shuffling": {"_on_demand_prediction": True},
@@ -124,6 +126,46 @@ def _layer_batch(
     return SimpleNamespace(**values)
 
 
+def test_predictor_reuses_immutable_layer_workload_for_same_semantics() -> None:
+    predictor = _Predictor(total_experts=4, ep_size=2, router_topk=1)
+    predictor._monolithic_routing_details = {
+        0: {3: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
+    }
+    predictor._layer_workload_cache_capacity = 2
+    batch = SimpleNamespace(replica_id=0, total_num_tokens=4)
+
+    first = predictor._materialize_layer_ep_workload(
+        batch, ClusterType.MONOLITHIC, 3
+    )
+    second = predictor._materialize_layer_ep_workload(
+        batch, ClusterType.MONOLITHIC, 3
+    )
+
+    assert first is second
+    assert len(predictor._layer_workload_cache) == 1
+
+
+def test_predictor_layer_workload_cache_is_bounded() -> None:
+    predictor = _Predictor(total_experts=4, ep_size=2, router_topk=1)
+    predictor._monolithic_routing_details = {
+        0: {3: {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}}
+    }
+    predictor._layer_workload_cache_capacity = 2
+
+    batches = [SimpleNamespace(replica_id=0, total_num_tokens=tokens) for tokens in (4, 5, 6)]
+    first = predictor._materialize_layer_ep_workload(
+        batches[0], ClusterType.MONOLITHIC, 3
+    )
+    predictor._materialize_layer_ep_workload(batches[1], ClusterType.MONOLITHIC, 3)
+    predictor._materialize_layer_ep_workload(batches[2], ClusterType.MONOLITHIC, 3)
+
+    assert len(predictor._layer_workload_cache) == 2
+    refreshed = predictor._materialize_layer_ep_workload(
+        batches[0], ClusterType.MONOLITHIC, 3
+    )
+    assert refreshed is not first
+
+
 def test_regular_batch_uses_typed_lane_for_on_demand_shuffling() -> None:
     predictor = _CountingPredictor()
     lane = _lane(ep_id=1, ep_size=2, total_experts=8, counts=(3, 1, 0, 0))
@@ -185,11 +227,6 @@ def test_missing_moe_lane_fails_before_phase_or_model_queries() -> None:
 
     predictor = _CountingPredictor()
     predictor._moe_ep_size = 2
-    predictor._replica_config = SimpleNamespace(
-        num_pipeline_stages=1,
-        attn_tensor_parallel_size=1,
-        moe_tensor_parallel_size=1,
-    )
     predictor._model_config.supports_share_expert = lambda: False
     calls: list[str] = []
     predictor._predict_expert_parallel_phase_operator_times = lambda *args, **kwargs: (
@@ -224,11 +261,6 @@ def test_raw_moe_map_fails_before_phase_or_model_queries() -> None:
 
     predictor = _CountingPredictor()
     predictor._moe_ep_size = 2
-    predictor._replica_config = SimpleNamespace(
-        num_pipeline_stages=1,
-        attn_tensor_parallel_size=1,
-        moe_tensor_parallel_size=1,
-    )
     predictor._model_config.supports_share_expert = lambda: False
     calls: list[str] = []
     predictor._predict_expert_parallel_phase_operator_times = lambda *args, **kwargs: (

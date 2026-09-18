@@ -169,13 +169,13 @@ class _DecodeSyncScheduler:
     ) -> None:
         assert terminal_delay_s == 0.0
 
-    def _create_corrected_execution_time_for_metrics(
+    def _create_prefill_corrected_execution_time_for_metrics(
         self,
+        batch,
+        stage_id,
         original_execution_time,
-        actual_execution_time_ms: float,
-        original_start_time: float,
     ):
-        return SimpleNamespace()
+        return original_execution_time
 
     def _accumulate_monolithic_decode_shared_domain_related_wait_ms(
         self,

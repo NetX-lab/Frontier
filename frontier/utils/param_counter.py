@@ -373,6 +373,111 @@ class ParamCounter:
         )
         return num_parameters
 
+    def _get_pipeline_stage_layer_ids(self, stage_id: int) -> range:
+        first_layer_id = int(stage_id) * self._num_layers_per_pipeline_stage
+        return range(
+            first_layer_id,
+            first_layer_id + self._num_layers_per_pipeline_stage,
+        )
+
+    def get_attention_stage_layer_counts(self) -> tuple[tuple[int, int], ...]:
+        """Return ``(GDN layers, full-attention layers)`` for every PP stage."""
+
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            return ((0, 0),)
+        stage_counts = []
+        for stage_id in range(int(self._replica_config.num_pipeline_stages)):
+            gdn_count = 0
+            full_count = 0
+            for layer_id in self._get_pipeline_stage_layer_ids(stage_id):
+                if self._model_config.is_gdn_layer(layer_id):
+                    gdn_count += 1
+                else:
+                    full_count += 1
+            stage_counts.append((gdn_count, full_count))
+        return tuple(stage_counts)
+
+    def _get_attention_stage_totals(self) -> tuple[tuple[int, int], ...]:
+        """Return ``(parameter elements, parameter bytes)`` per PP stage."""
+
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            return ((0, 0),)
+        full_attention_params = self.get_num_attention_params_per_layer()
+        gdn_params = self.get_num_gdn_params_per_layer()
+        full_attention_bytes = 2 * full_attention_params
+        gdn_bytes = self.get_gdn_parameter_memory_bytes_per_layer()
+        totals = []
+        for gdn_count, full_count in self.get_attention_stage_layer_counts():
+            totals.append(
+                (
+                    gdn_count * gdn_params + full_count * full_attention_params,
+                    gdn_count * gdn_bytes + full_count * full_attention_bytes,
+                )
+            )
+        return tuple(totals)
+
+    def get_resident_attention_stage_id(self) -> int:
+        """Return the stage selected by resident attention parameter memory."""
+        totals = self._get_attention_stage_totals()
+        return max(range(len(totals)), key=lambda stage_id: totals[stage_id][1])
+
+    def get_num_attention_parameters_per_device(self) -> int:
+        """Return the largest resident attention/GDN shard across PP stages."""
+
+        return max(elements for elements, _ in self._get_attention_stage_totals())
+
+    def get_attention_parameter_memory_per_device_bytes(self) -> int:
+        """Return resident attention/GDN bytes for the largest PP stage."""
+
+        return max(memory_bytes for _, memory_bytes in self._get_attention_stage_totals())
+
+    def get_num_gdn_params_per_layer(self) -> int:
+        """Return local Qwen GDN parameter count for one layer."""
+
+        if self._cluster_type == ClusterType.DECODE_FFN:
+            return 0
+        gdn_config = self._model_config.get_gdn_config()
+        if gdn_config is None:
+            return 0
+        tp_size = self._get_attn_tp_size()
+        sharded_dimensions = (
+            gdn_config.conv_dim,
+            gdn_config.key_dim,
+            gdn_config.value_dim,
+            gdn_config.num_key_heads,
+            gdn_config.num_value_heads,
+        )
+        if any(int(dimension) % tp_size for dimension in sharded_dimensions):
+            raise ValueError(
+                "GDN dimensions must be divisible by attention TP size, "
+                f"tp={tp_size}, dimensions={sharded_dimensions}"
+            )
+
+        hidden_size = int(self._model_config.embedding_dim)
+        local_conv_dim = int(gdn_config.conv_dim) // tp_size
+        local_key_dim = int(gdn_config.key_dim) // tp_size
+        local_value_dim = int(gdn_config.value_dim) // tp_size
+        local_value_heads = int(gdn_config.num_value_heads) // tp_size
+        return (
+            local_conv_dim * int(gdn_config.conv_kernel_size)
+            + hidden_size * (2 * local_key_dim + 2 * local_value_dim)
+            + hidden_size * (2 * local_value_heads)
+            + hidden_size * local_value_dim
+            + int(gdn_config.value_head_dim)
+            + 2 * local_value_heads
+        )
+
+    def get_gdn_parameter_memory_bytes_per_layer(self) -> int:
+        """Return local GDN bytes with FP32 ``A_log`` accounted separately."""
+
+        num_parameters = self.get_num_gdn_params_per_layer()
+        if num_parameters == 0:
+            return 0
+        gdn_config = self._model_config.get_gdn_config()
+        local_value_heads = int(gdn_config.num_value_heads) // self._get_attn_tp_size()
+        # A_log is FP32; other pinned runtime GDN weights use BF16.
+        return 2 * (num_parameters - local_value_heads) + 4 * local_value_heads
+
     def get_num_mlp_params_per_layer(self) -> int:
         # For DECODE_ATTN cluster, there are no MLP parameters.
         if self._cluster_type == ClusterType.DECODE_ATTN:
@@ -394,16 +499,7 @@ class ParamCounter:
         )
 
     def get_num_parameters_per_device(self) -> int:
-        if not getattr(self._model_config, "is_moe", False):
-            num_parameters_per_layer = self.get_num_parameters_per_layer()
-            return (
-                num_parameters_per_layer * self._num_layers_per_pipeline_stage
-                + self.get_num_mtp_parameters_per_device()
-            )
-
-        num_attention_parameters = (
-            self.get_num_attention_params_per_layer() * self._num_layers_per_pipeline_stage
-        )
+        num_attention_parameters = self.get_num_attention_parameters_per_device()
         num_mlp_parameters = self.get_num_mlp_parameters_per_device()
         return (
             num_attention_parameters
@@ -445,6 +541,19 @@ class ParamCounter:
         return (
             num_non_moe_layers * dense_mlp_params
             + num_moe_layers * (routed_moe_params + share_expert_params)
+        )
+
+    def get_parameter_memory_per_device_bytes(self) -> int:
+        """Return resident parameter bytes under the accepted D57 policy."""
+
+        # Qwen3.8 routed experts physically use MXFP4, but the integration
+        # keeps the established 2-byte MLP/MoE/MTP approximation, which can
+        # overestimate resident model-weight memory. Capacity checks remain
+        # active; no MXFP4 capacity helper is introduced here.
+        return (
+            self.get_attention_parameter_memory_per_device_bytes()
+            + 2 * self.get_num_mlp_parameters_per_device()
+            + 2 * self.get_num_mtp_parameters_per_device()
         )
 
     def _get_mtp_embed_params(self, proposer_model_config) -> int:

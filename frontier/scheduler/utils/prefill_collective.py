@@ -87,7 +87,7 @@ def handle_prefill_sync_collective(
     )
 
     num_layers = scheduler._predictor._num_layers_per_pipeline_stage
-    _, stage_layer_end = scheduler.get_pipeline_stage_layer_bounds(
+    stage_layer_start, stage_layer_end = scheduler.get_pipeline_stage_layer_bounds(
         stage_id,
         num_layers,
     )
@@ -227,13 +227,20 @@ def handle_prefill_sync_collective(
             batch_stage.override_execution_time(final_timing.actual_execution_time)
             batch_stage.override_model_execution_time(actual_model_execution_time)
 
-            corrected_execution_time = scheduler._create_prefill_corrected_execution_time_for_metrics(
-                sample_batch,
-                stage_id,
-                execution_time,
-                final_timing.actual_execution_time,
-                original_start_time,
-            )
+            corrected_execution_time = None
+            if metrics_store.stage_execution_reporting_enabled:
+                # The completion predictor above describes the last layer only.
+                # Reporting needs the complete stage attention scope; EP lane work
+                # remains owned by its separate wave records.
+                metrics_execution_time = scheduler._predictor.predict_stage_execution_time(
+                    batch, stage_id, cluster_type=scheduler._cluster_type,
+                    num_layers=num_layers, layer_id=stage_layer_start, include_ffn=False,
+                )
+                corrected_execution_time = scheduler._create_prefill_corrected_execution_time_for_metrics(
+                    batch,
+                    stage_id,
+                    metrics_execution_time,
+                )
             metrics_store.on_replica_stage_schedule(
                 original_start_time,
                 replica_id,

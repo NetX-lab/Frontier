@@ -1523,21 +1523,10 @@ def _cache_training_frame() -> pd.DataFrame:
 
 
 def _bare_manager(tmp_path=None) -> ExecutionTimePredictionModelManager:
-    manager = ExecutionTimePredictionModelManager.__new__(
-        ExecutionTimePredictionModelManager
+    manager = ExecutionTimePredictionModelManager(
+        {}, SimpleNamespace(cache_dir=str(tmp_path) if tmp_path is not None else ".")
     )
     manager._all_dummy_mode = False
-    manager._active_measurement_type = MeasurementType.CUDA_EVENT
-    manager._cache_dir = str(tmp_path) if tmp_path is not None else "."
-    manager._cluster_configs = {}
-    manager._trained_models_eager = {}
-    manager._trained_models_kernel_only = {}
-    manager._models_by_precision_eager = {}
-    manager._models_by_precision_kernel_only = {}
-    manager._model_profiling_precision_eager = {}
-    manager._model_profiling_precision_kernel_only = {}
-    manager._models_by_precision = {}
-    manager._model_profiling_precision = {}
     return manager
 
 

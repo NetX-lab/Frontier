@@ -8,10 +8,11 @@ not depend on waiting rooms or scheduler state.
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 from numbers import Real
 from typing import Any, Callable, NamedTuple, Optional
 
-from frontier.entities import Batch, Request
+from frontier.entities import Batch, Request, StageExecutionTime
 from frontier.moe_ep_workload import (
     EPLaneWorkload,
     LayerEPWorkload,
@@ -54,6 +55,15 @@ class EPCombineTimingPlan(NamedTuple):
     payload_description: str
 
 
+@dataclass(frozen=True)
+class EPWaveLaneTiming:
+    """Actual lane prediction retained only for requested wave reporting."""
+
+    ep_id: int
+    batch: Batch
+    execution_time: StageExecutionTime
+
+
 class EPWavePhaseTimes(NamedTuple):
     """Immutable per-lane and aggregate phase timings for a shared EP wave."""
 
@@ -63,6 +73,7 @@ class EPWavePhaseTimes(NamedTuple):
     routed_compute_times_ms: tuple[float, ...]
     combine_times_ms: tuple[float, ...]
     post_combine_times_ms: tuple[float, ...]
+    lane_records: tuple[EPWaveLaneTiming, ...] = ()
 
 
 class EPWaveTiming(NamedTuple):
@@ -89,9 +100,11 @@ def predict_ep_wave_phase_times(
     workload_logger: Callable[..., None],
     trace_identity: Any,
     batch_id: int,
+    capture_lane_timings: bool = False,
 ) -> EPWavePhaseTimes:
     """Predict each EP lane and emit workload traces in participant order."""
     values = [[] for _ in range(6)]
+    lane_records = [] if capture_lane_timings else None
     for ep_id in layer_workload.participant_ep_ids:
         lane_batch = lane_builder(
             source_batch=source_batch,
@@ -107,6 +120,10 @@ def predict_ep_wave_phase_times(
             execution_time, cluster_type=cluster_type, batch_id=int(batch_id),
             layer_id=layer_id, ep_id=int(ep_id),
         )
+        if lane_records is not None:
+            if not isinstance(execution_time, StageExecutionTime) or execution_time.num_layers != 1:
+                raise ValueError("EP lane reporting requires one finalized stage layer")
+            lane_records.append(EPWaveLaneTiming(int(ep_id), lane_batch, execution_time))
         pre, dispatch, routed, combine, post = phases
         lane_compute = pre + routed + post
         lane_comm = dispatch + combine
@@ -121,7 +138,10 @@ def predict_ep_wave_phase_times(
             target.append(value)
     if not values[0]:
         raise ValueError("EP wave produced no participant timing")
-    return EPWavePhaseTimes(*(tuple(value) for value in values))
+    return EPWavePhaseTimes(
+        *(tuple(value) for value in values),
+        lane_records=tuple(lane_records) if lane_records is not None else (),
+    )
 
 
 def get_ep_phase_times_ms(

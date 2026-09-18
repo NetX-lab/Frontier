@@ -18,6 +18,7 @@ from frontier.logger import init_logger
 from frontier.training.moe_trainer import MoETrainer, create_moe_trainer_from_model_config
 from frontier.training.linear_op_trainer import LinearOpTrainer, create_linear_op_trainer_from_model_config
 from frontier.training.attention_trainer import AttentionTrainer, create_attention_trainer_from_model_config
+from frontier.training.gdn_trainer import GDNTrainer
 from frontier.types import MeasurementType
 from frontier.moe_gating_runtime import (
     DEFAULT_MOE_GATING_RUNTIME_CONTEXT,
@@ -329,6 +330,33 @@ Examples:
         required=True,
         help="Path to the layer profiling dataset CSV file (attention.csv)"
     )
+
+    gdn_parser = subparsers.add_parser("gdn", help="Train standard GDN models")
+    gdn_parser.add_argument("--dataset_path", type=str, required=True)
+    gdn_parser.add_argument("--output_dir", type=str, default="cache")
+    gdn_parser.add_argument(
+        "--measurement_type",
+        type=str,
+        choices=[measurement_type.value for measurement_type in MeasurementType],
+        required=True,
+    )
+    gdn_parser.add_argument("--model_name", type=str, default=None)
+    gdn_parser.add_argument("--model_architecture_profile", type=str, default=None)
+    gdn_parser.add_argument("--quant_signature", type=str, default=None)
+    gdn_parser.add_argument("--device", type=str, default=None)
+    gdn_parser.add_argument("--tensor_parallel_size", type=int, default=1)
+    gdn_parser.add_argument("--runtime_stack_signature", type=str, default=None)
+    gdn_parser.add_argument(
+        "--predictor_type",
+        type=str,
+        choices=["random_forest", "linear_regression"],
+        default="random_forest",
+    )
+    gdn_parser.add_argument("--k_fold_cv_splits", type=int, default=2)
+    gdn_parser.add_argument("--num_training_job_threads", type=int, default=1)
+    gdn_parser.add_argument("--num_estimators", type=int, nargs="+", default=[32])
+    gdn_parser.add_argument("--max_depth", type=int, nargs="+", default=[16])
+    gdn_parser.add_argument("--min_samples_split", type=int, nargs="+", default=[2])
     attention_parser.add_argument(
         "--output_dir",
         type=str,
@@ -634,6 +662,37 @@ def train_attention(args):
         return 1
 
 
+def train_gdn(args):
+    """Train the six standard GDN phase/operator estimators."""
+    if not Path(args.dataset_path).is_file():
+        logger.error("GDN dataset not found: %s", args.dataset_path)
+        return 1
+    trainer = GDNTrainer(
+        dataset_path=args.dataset_path,
+        output_dir=args.output_dir,
+        model_name=args.model_name,
+        model_architecture_profile=args.model_architecture_profile,
+        quant_signature=args.quant_signature,
+        device=args.device,
+        tensor_parallel_size=args.tensor_parallel_size,
+        measurement_type=args.measurement_type,
+        runtime_stack_signature=args.runtime_stack_signature,
+        predictor_type=args.predictor_type,
+        k_fold_cv_splits=args.k_fold_cv_splits,
+        num_training_job_threads=args.num_training_job_threads,
+        num_estimators=args.num_estimators,
+        max_depth=args.max_depth,
+        min_samples_split=args.min_samples_split,
+    )
+    try:
+        models = trainer.train()
+    except Exception:
+        logger.exception("GDN training failed")
+        return 1
+    logger.info("Trained GDN models: %s", sorted(models))
+    return 0
+
+
 def main():
     """Main entry point."""
     args = parse_args()
@@ -652,6 +711,8 @@ def main():
         return train_mlp(args)
     elif args.structure == "attention":
         return train_attention(args)
+    elif args.structure == "gdn":
+        return train_gdn(args)
     else:
         logger.error(f"Unknown structure: {args.structure}")
         sys.exit(1)

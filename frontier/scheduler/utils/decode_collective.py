@@ -146,7 +146,7 @@ def handle_decode_sync_collective(
 
     full_execution = predictor.predict_stage_execution_time(
         sample_batch, stage_id, scheduler._cluster_type,
-        num_layers=num_layers, include_ffn=False,
+        num_layers=num_layers, layer_id=stage_layer_end - num_layers, include_ffn=False,
     )
     final_timing = prepare_decode_final_timing(full_execution)
     events = []
@@ -179,10 +179,9 @@ def handle_decode_sync_collective(
         actual_execution = time + final_timing.total_time - original_start
         batch_stage.override_execution_time(actual_execution)
         batch_stage.override_model_execution_time(full_execution.model_time)
-        corrected = scheduler._create_corrected_execution_time_for_metrics(
-            full_execution, actual_execution, original_start
+        corrected = scheduler._create_prefill_corrected_execution_time_for_metrics(
+            batch, stage_id, full_execution
         )
-        corrected._trace_execution_time_override = full_execution
         metrics_store.on_replica_stage_schedule(
             original_start, replica_id, stage_id, batch_stage,
             corrected, scheduler._cluster_type, transition_identity,

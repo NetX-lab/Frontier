@@ -106,6 +106,12 @@ def dataclass_to_dict(obj):
     elif is_dataclass(obj):
         data = {}
         for field in fields(obj):
+            # Internal caches and resolved runtime snapshots are implementation
+            # details even when dataclasses declares them as fields.  Persist
+            # only public configuration values; this also keeps lazy hybrid
+            # attention specs out of JSON config artifacts.
+            if field.name.startswith("_"):
+                continue
             value = getattr(obj, field.name)
             data[field.name] = dataclass_to_dict(value)
         # Include members created in __post_init__

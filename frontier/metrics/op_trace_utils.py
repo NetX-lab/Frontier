@@ -4,7 +4,10 @@ import math
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
-from frontier.attention.families import DENSE_ATTENTION_FAMILY
+from frontier.attention.families import (
+    DENSE_ATTENTION_FAMILY,
+    GATED_DELTA_NET_ATTENTION_FAMILY,
+)
 from frontier.attention.memory import get_attention_runtime_kv_layout
 from frontier.attention.model_binding import bind_attention_family
 from frontier.attention.ops import AttentionOperatorRole
@@ -530,6 +533,17 @@ def compute_op_trace_meta(
             tensor_shape = {
                 "input": [tokens, q_heads_per_tp, v_head_dim],
                 "output": [tokens, hidden_size_per_tp],
+            }
+        elif _get_family_operator_by_name(
+            GATED_DELTA_NET_ATTENTION_FAMILY, op_name
+        ) is not None:
+            # GDN uses a fixed recurrent state rather than a dense KV cache.
+            # The trace contract records the visible token/hidden payload at
+            # this seam; detailed recurrent-state shapes belong to the native
+            # profiler and are not inferred by the simulator.
+            tensor_shape = {
+                "input": [tokens, hidden_size],
+                "output": [tokens, hidden_size],
             }
         elif op_name == "attn_post_proj":
             _, _, _, hidden_size_per_tp = _get_attention_meta()

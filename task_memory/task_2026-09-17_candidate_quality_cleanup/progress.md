@@ -1,0 +1,321 @@
+## Modification History
+
+| Date | Summary of Changes |
+| --- | --- |
+| 2026-09-17 | Recorded PR33 remediation, explicit R01-A decision and final verification status. |
+| 2026-09-17 | Started independent diff-driven quality cleanup. |
+| 2026-09-17 | Completed all cleanup phases, final regression/timing evidence and archive reconciliation. |
+
+# Progress
+
+## Current status — completed
+
+P0–P5 implementation, review and required verification are complete. No in-scope implementation or semantic decision remains. `summary.md` is the final archive; `plan.md`, `inventory.md` and the final reports reflect observed results. The dated entries below are chronological history, so their earlier pending/in-progress statements are superseded by later entries and this status.
+
+## P0 — in-progress
+
+- Read all 817 lines of AGENTS.md, prior requirements/plan/progress/current status, and relevant validation records. No nested AGENTS.md found in source/test/data/docs search.
+- Pinned `main=0515589ac7f49ac5288a5f55b0ce38b0ede29bb2`, `candidate=c288a19f59bec09529ee18d782fa57218da2c781`, identical merge-base/main. Initial tracked worktree clean; 266 changed files including substantial historical evidence.
+- Local clock confirms 2026-09-17 Asia/Hong_Kong. No new remote access or publication performed.
+- Planning-with-files applies using this task directory; code-review supplies independent Standards/Spec reviews; codebase-design informs invariants/ownership, subordinate to user scope.
+- Read-only Standards worker owns profiling/training/config review; Spec worker owns prior behavior/verification boundary check. Main owns runtime inspection and all implementation.
+- Previous task reported 18 known main-equivalent CPU failures and explicit native hardware skips. These are leads for fresh verification, not current PASS evidence.
+
+## Pending work
+
+1. Build ranked module inventory and preserve executable pre-refactor reference.
+2. Establish fresh baseline evidence and inspect runtime changed hunks.
+3. Execute P1–P5 in dependency order.
+
+New unresolved issues: none established.
+
+## P1a — completed: construction and finalized snapshot contracts
+
+- Preserved pre-refactor candidate in `../quality-baseline-c288a19f`; pinned main reference remains `../pr33-r12-baseline-20260915`.
+- Default Python 3.12.3 lacks pytest/dependencies. Consulted environment/package-mirror handbooks, then installed isolated CPU/test requirements with uv in `/data/ycfeng/tmp/quality-review-env`. No shared environment was modified.
+- Fresh full-unit collection failed on eight missing-torch imports and one missing-matplotlib import. Public CPU Torch index timed out after three retries; logs: `/data/ycfeng/tmp/quality-pre-unit-env.log`, `/data/ycfeng/tmp/quality-env-torch.log`. Matplotlib installation through the internal mirror succeeded. Torch resolution remains pending.
+- Motivation: Simulator duplicated predictor construction; ExecutionTime treated constructor-owned components as absent; StageExecutionTime repeated filtering after rejecting missing IDs.
+- Method: one predictor construction loop, direct required component access with isolated operator-map copies, uniqueness check on validated IDs. Ordinary monolithic manager/path remain None; disaggregated/hybrid sharing and physical-layer identity remain unchanged.
+- Checked CC backend lazy construction: backend factory reads cluster configuration/runtime topology; manager owns training/cache state, not backend configuration. Shared initialization remains before predictor creation.
+- Verification: frozen candidate eight non-dummy cases passed (65.34 s). Cleaned candidate 78 focused/non-dummy tests passed (71.00 s). Existing comparator found 90/90 stable artifacts equal across eight cases. Bidirectional artifact inventory and acceptance/stage-summary comparison follow the independent Spec review recommendation.
+- Editing command `apply_patch` was absent from PATH; no patch was applied on the first attempt. Resolved by invoking the installed Codex binary in its apply_patch mode, without changing system configuration.
+
+## P1b — completed: canonical memory/model contract
+
+- P1a committed as `48a4093b`; supplemental symmetric metrics inventory and acceptance/stage-summary comparisons also PASS for all eight cases (106 metric files total).
+- Removed planner-local hybrid layer scanning and used `BaseModelConfig.get_attention_family`, the same runtime KV owner as Replica/head metadata. All-GDN Qwen is already rejected by construction, so the removed zero-KV fallback represented no admitted model.
+- ParamCounter now calls the required per-layer and GDN methods directly; genuine `get_gdn_config() is None` remains supported for homogeneous models.
+- Focused before/after suites: 47 PASS / 47 PASS. Four TP/PP memory snapshots match exactly, covering weight bytes, recurrent state bytes, page size and available block count.
+- Found usable same-interpreter system Torch 2.12.0+cu132. Enabled standard system-site-packages inheritance only in the dedicated venv; no target overlay or different Python package tree was injected. Fresh full frozen-candidate unit run is in progress.
+
+## P1c — completed: GDN batch and scheduler invariants
+
+- Batch/Request expose all required feature properties; GDN feature extraction no longer fabricates missing counts/state or copies the request list. Positive query lengths establish a nonzero mean.
+- Runtime guards consume the required BaseModelConfig method. Preemption reads constructor-owned replica configuration; the incomplete PD-AF preemption fixture now provides a real non-GDN model.
+- Focused verification: 46 PASS, including feature vectors, mixed-batch rejection, admission/continuation/completion/rollback and preemption progress. Transactional exception cleanup remains unchanged.
+- Full frozen-candidate baseline initially finished 3584 PASS / 21 FAIL / 25 SKIP. Three added environment failures came from example shells resolving `/usr/bin/python`, which lacks plotly. Re-running with the dedicated venv on PATH; no production workaround added.
+
+## P1d — completed: MoE routing construction and layer state
+
+- Removed the unreferenced private routing-generator alias (only test caller updated), None-then-dict initialization, repeated validation of internally generated maps and unsupported `_cluster_num_replicas` alternate state.
+- Reused subclass `_get_cluster_replica_config` through normal override dispatch instead of reflective capability discovery. Preserved optional actual replica IDs, standalone local IDs and per-replica map isolation.
+- Removed unused ExecutionTime layer-count attributes: neither production nor tests read them; constructor argument validation remains compatible.
+- Verification: 116 focused/non-dummy PASS; 90 stable artifact comparisons PASS, symmetric 106-file metrics inventory and supplemental summaries match. No expected value changed.
+- Corrected baseline environment: 3587 PASS / 18 FAIL / 25 SKIP. The same 18 failure nodes also fail on pinned main. Source causes are missing legacy debug/analysis assets and outdated release-document expectations. README remains untouched.
+
+## P1e — completed: lowest-free-slot ownership
+
+- Replaced list front removal and full release-time sorting with the standard heap priority queue. The observable rule remains allocation of the lowest available slot ID.
+- 16 lifecycle/scheduler tests PASS; added one out-of-order release regression. A deterministic 1,000-request trace compared directly against the frozen state manager produces identical allocation/release records.
+
+## P1 full regression follow-up — completed
+
+- Full candidate run returned 3583 PASS / 22 FAIL / 25 SKIP. Four newly exposed failures are incomplete fixtures: the shared routing model omits required `is_moe`; two transfer model doubles omit `get_num_gdn_layers`. The production constructor/accessor contracts were verified before adding those members to the doubles. Expected routing and transfer values remain unchanged.
+- The remaining 18 nodes match the freshly established frozen-candidate/main failures. Detailed log: `/data/ycfeng/tmp/quality-p1-unit.log` (132.10 s).
+- Experimental routing integerization characterization completed 3,456 generated cases with zero admitted histogram mismatches. This is sampled evidence, not a proof for arbitrary ratios; unification remains under investigation.
+- Focused fixture/transfer/GDN checks now PASS: 25 tests in 5.62 s, with unchanged expectations. No production accommodation was reintroduced.
+
+## P1f — completed: centralized raw architecture identity
+
+- Consolidated Qwen type/exact-alias recognition in `model_architectures.py` without entering profile/topology resolution. Kept registry, structural and topology precedence/normalization differences.
+- Characterization: 100 tests PASS before (9.88 s) and after (10.78 s). Initial direct re-export triggered a verified import cycle; the existing exported GDN function now delegates with a function-local import. This adapter is required by actual import ordering, not an incomplete fixture.
+- Binding follow-up: 110 PASS; canonical GDN family identity replaces consumer literals, homogeneous runtime binding avoids repeating its already-proven guard, and topology cache regression patches the actual owner lookup.
+
+## Phase-boundary evidence — in-progress
+
+- Running the source-stable 58-case fidelity campaign at `61595325` against frozen `c288a19f`, with two workers. Output: `/data/ycfeng/tmp/quality-p1-fidelity`; no production edits during execution.
+- P2 pre-change reporting baseline: 129 PASS in 7.01 s; `/data/ycfeng/tmp/quality-p2-before.log`. The suite covers timing copies, full-stage scope, mixed layers, operator metadata and EP lane reporting.
+- Corrected the supplemental artifact inspection to require one actual `frontier_stage_batch_ledger_summary.json` and one `acceptance_evidence.json` per case. Both P1a and P1d compare PASS for all 16 pairs, with an explicit count assertion. Earlier prose claiming stage-summary equality is now supported by a nonempty check; the earlier filename probe alone was insufficient.
+- Reviewed finalized-copy paths: repeated calls return the existing immutable snapshot, so they are not repeated deep copies. Stage scalar projections use finite declared property sets, not broad `__getattr__`. Single-layer helpers reject multi-layer stages; keep these supported interfaces.
+- P1 fidelity finished **58 PASS / 0 FAIL** at `61595325`; every requested stable artifact and ledger/request value matches the frozen candidate.
+- Subsequent L2 private-layer cleanup removes an uncalled aggregate degree of freedom from two private interfaces. Real MTP stage width is retained. 105 focused tests PASS in 7.92 s; final E2E will include this small subsequent change.
+
+## P1 timing / P2 S1 — completed
+
+- Paired run completed 18/18 successful measurements at production HEAD `b0b9683b` against `c288a19f`; only the unrelated red-regression test was dirty. No concurrent test load or production edits during timing. Median paired Simulator.run changes: small dense -17.32%, longer dense -10.12%, representative MoE -2.96%. Events/completions match in every pair. Reporting is disabled by this existing harness; no metrics-enabled or native-device performance claim follows.
+- S1 RCA reproduced six frozen-candidate failures and three native-main scalar successes: the added physical-layer metadata path conflated complete event metadata with additive identity. Restored the distinction using a keyword-only local emitter argument; residual/wait metadata bypass tensor resolution, layer identity still supplements derived tensor metadata. No resolver exception suppression or operator-name special case.
+- Verification after S1: 139 PASS in 7.30 s, including all six positive residual cases and existing reporting contracts. This is a separately documented correctness restoration, not asserted as equality with the broken candidate path.
+- Sidecar bounded scopes: Meitner owns scheduler reporting M1b/M2; Nash owns trace context M4/M5. Main owns metrics_store M1a/M3 and integrated verification. Preserve all workers' changes; stage each logical result separately.
+
+## P2 M1a / M3 inspection — completed
+
+- Removed orphaned `_trace_dense_*` and `_trace_execution_time_override` readers. A full production/test search finds no remaining writer except neutral annotation-isolation tests; actual mixed layers already arrive in StageExecutionTime. Removed an unused family lookup in stage tracing. Scalar timing/reporting remains supported.
+- Focused reporting checks: 69 PASS in 6.57 s, log `/data/ycfeng/tmp/quality-p2-readers.log`; the S1 suite supplied the pre-change baseline.
+- Corrected M3 reviewer proposal before implementation: FFN trace name `mlp_act` is NOT the historical metric label `mlp_activation`; `OperationMetrics(op_name)` would fail. No existing generic alias mapping exists. Retained three explicit scalar-to-metric projections rather than introducing an alias abstraction solely to shorten them. This is schema adaptation, not duplicated family ownership policy.
+- P3 pre-change CPU baseline: 253 PASS in 17.65 s, `/data/ycfeng/tmp/quality-p3-before.log`, covering GDN artifacts/profiling, architecture/MLA config, native-adapter admission and experimental replay. These are not native GPU executions. Read-only preparation found no need to alter the standard/experimental dependency boundary.
+- Discovery-only path misses: GDN shared schema lives in `frontier/attention/gdn/features.py` and `config.py`, not `frontier/gdn/`. No file edits or failed tests resulted.
+
+## P2 scheduler reporting — completed
+
+- Reconciled Meitner's eight-file patch with production callers: deleted only the unused dense-reference/correction helpers, migrated their tests to live helpers, used canonical mixed-layer count and direct configured model, removed unused correction arguments, and avoided an immediately discarded Stage copy. Actual dense layers remain separately predicted.
+- 110 before / 114 after focused PASS. Independently confirmed five before/after timing snapshots are byte-identical with `cmp`; scalar, dense, zero-MoE, all-MoE and mixed stages preserve numerical ownership and call identities. Detailed commands and values are in `test_report_2026-09-17_p2_scheduler.md`.
+- A broad temporary-root filename search encountered unrelated permission-denied directories; abandoned broad discovery and read only explicit task log paths. No data or permissions changed.
+
+## P2 trace context — completed
+
+- Reconciled Nash's patch and committed `8e67fc25`: canonical GDN family membership, phase-local trace context/parallel values, one token sum per traced lane and per-event flat dictionary copies. Positive-work and reporting-off gates remain; no persistent cache.
+- Final focused result: 80 PASS in 7.12 s. Direct before/after comparison covers 64 reporting cases, 80 events per revision and all four GDN operators, with exact event/metric/ledger equality. A five-operator lane constructs 3 contexts rather than 5 and sums tokens once rather than 5 times.
+- DP RCA corrected the initial fixture finding: the only production `predict_dp_moe_allreduce_times` implementation explicitly returns `(0, 0)` for the retired scope, with no override. Removed two candidate-added unreachable COMM shape labels; did not expand the registry or change the public zero-return seam. Positive synthetic DP input remains rejected identically.
+- The sidecar's exact final command wrote evidence in its report/tool output, not a guessed `.log` path. A failed attempt to tail that nonexistent log skipped a documentation patch, not code verification; this entry repairs that documentation omission. Integrated P2 tests now provide a dedicated retained log.
+
+## P2 integrated / P3 schema — completed
+
+- Source-stable integrated P2 at `8e67fc25`: 159 PASS in 69.62 s, including eight real non-dummy simulations. Compared with frozen candidate: 90 stable artifacts PASS, 106-file symmetric inventory equal, 16 explicitly nonempty summary/acceptance JSON pairs equal. Logs: `/data/ycfeng/tmp/quality-p2-integrated.log`, `/data/ycfeng/tmp/quality-p2-artifact-comparison.log`.
+- P3 S4 uses family-owned profiling schema/operation names and existing GDN_TASKS phase order; removes unreachable zero-mean handling after positive-query validation. Required columns remain the exact ordered 27-tuple, both phase task orders and the four quantization names match frozen declarations.
+- S4 focused: 184 PASS in 16.34 s; pre-change broad P3 baseline was 253 PASS. Real optional mask/physical-batch normalization and inactive-phase output zeros remain unchanged.
+
+## P3 S5 — completed
+
+- Profiling ModelConfig now uses the canonical runtime family resolver, removing the production branch that existed for a module-local monkeypatch. The test patches the actual owner and still asserts one call.
+- Removed only redundant BaseModelConfig-owned JSON overlays; preserved raw model_type and linear-shape overlays whose null/string serialization can differ.
+- Verification: 129 PASS in 10.37 s. The full 22-model snapshot is identical: 21 valid configurations and one unchanged deepseek-v3 quantization rejection. Initial raw cmp differed only in logged warning timestamps; compared complete JSON payloads explicitly, without excluding config fields.
+- Continuation reconciled HEAD and disjoint worker edits. S6 architecture and J1 ROCm workers remain active; main retains S5 and subsequent integration ownership.
+
+## P3 J1 — completed
+
+- Reviewed the ROCm sidecar patch against the mixed-batch guard: successful nonempty inputs contain only one phase, so metadata reuses the first sequence plan. Required lifecycle None states and both timer scopes remain.
+- Verified stored snapshots with cmp: exact metadata/slot/output/timer equality, plan builder calls 5 -> 3 across prefill/decode/empty begins. Focused 5 before / 5 after PASS. CPU stand-ins exercise real wrapper construction, not native attention numerics.
+- Main stages only J1 production/test/report files; J2 remains disjoint and starts after this commit.
+
+## P3 small contract reuse — completed
+
+- GDN topology uses the family-owned singleton variant; collective Ray runner reuses the existing environment setup owner with original ordering. No new registry/helper or standard-to-experimental dependency.
+- 39 tests PASS before and after; direct normally constructed BenchmarkRunner setup against frozen candidate preserves all four environment values and device-selection call.
+- S7 investigation expanded to 3,407,872 histogram comparisons across distributions, expert counts 4–256, sizes 1–4096, top-k up to 8 and four seeds. No admitted histogram mismatch. Plan: extract the existing integerization implementation within moe_ep_workload for both consumers, avoiding irrelevant replica/EP placeholder state; compare actual replay counts/assignments and runtime workload tests before commit.
+
+## P3 S6 — completed
+
+- Reconciled exact native model-type declarations and queries in the existing architecture registry. Norm/MXFP4 consumers no longer own Qwen classifications; supplied ModelConfig fields are read directly.
+- Preserved exact matching, optional model-type value, norm/platform/API guard order and error strings. Do not broaden admission through profile aliases/normalization. Adding another native type requires one profile declaration.
+- 183 focused PASS; 240 Gemma and 90 MXFP4 gate outcomes exactly match pre-change code. An initial early registry import exposed a native import-cycle regression; function-local import after normal bootstrap fixes that new path, verified in fresh interpreters. Existing registry-first import debt remains out of scope and recorded, not hidden.
+
+## P3 S7 — completed
+
+- Shared the existing Hamilton implementation within moe_ep_workload; replay consumes the histogram contract directly, with no placeholder replica/EP state. Alias retains the existing ratio-generator entry point.
+- Immutable frozen baseline 52 PASS / cleaned 60 PASS. Discarded initial asynchronous local pre-check as baseline because its source window overlapped editing; reran on frozen checkout.
+- Exact frozen/current comparison: 893 full replay dictionaries including assignments, 67 infeasible rejections and 2,679 EP workload values match. Larger histogram-only characterization also found no difference. Runtime's normalization/arithmetic/tie order is unchanged; final fidelity/timing will include its extracted function call.
+
+## P3 J2 — completed
+
+- Reviewed the replay sidecar's explicit profile_graph parameters and internal named call contract. Removed seven-position metadata overloading and GDN spec re-derivation; native builder signatures and output row schemas remain intact. Mutable snapshots, reset/check ownership and optional trace-probe lifecycle remain necessary.
+- Focused 39 before / 40 after PASS (one added named-argument test). Main independently compared all 12 JSON snapshots: exact equality including every row/output and 1,802 ordered events. Simulated timer values do not establish GPU speed.
+- Beginning source-stable P3 integrated CPU regression; workers perform read-only P4 preparation until release.
+
+## P3 integrated — completed; P4 — in-progress
+
+- Source-stable `4dd63482`: 721 PASS / 5 SKIP / 2 FAIL across 45 CPU modules. Both failures are the previously reproduced main/candidate MHA/MQA stage2 CLI nodes. Direct subprocess RCA reports missing flashinfer-python; scripts are unchanged from main. No new failure observed; do not describe this as an all-green/native-GPU suite.
+- Released P3 source freeze. P4 independent scopes: Nash GDN predictor/trainer and valid fixtures; Meitner config guards/typed registry access/default ownership in bounded substeps; main manager registries, GDN paths and family binding. Existing manager measurement/precision identities and dataset-only optionals remain fixed.
+
+## P4 M1 — completed
+
+- Manager MLA classification delegates to runtime family binding; whole-model None remains supported. Measurement selector requires the replica already supplied by production and four formerly incomplete test calls.
+- 127 frozen / 127 cleaned PASS. The first extra comparison stopped at the expected TRANS rejection; its PASS was recorded prematurely. Corrected value/error comparison now independently PASS: 120 supported selections, 24 unchanged TRANS ValueErrors, four model families. Evidence is `quality-p4-manager-binding-exact-v2.log`; preserve the original failed probe. No production change was needed.
+
+## P4 M2 — completed
+
+- Four family selectors now use constructor-owned dictionaries without lazy None/reinitialization. Three incomplete fixture owners use real empty-cluster construction; test-only manual registry initialization is removed.
+- 181 focused PASS; twelve frozen/current selector comparisons preserve dictionary identity/mutation and create no attributes. The remaining no-default getattr selects a validated registry name, not optional state.
+
+## P4 M3 — completed
+
+- Reused the measurement-path substitution owner for GDN and read constructor-owned model/config members directly. Removed duplicated GDN default; preserved compute-only NETWORK_DEVICE literal behavior.
+- Final focused result independently read after continuation: 101 PASS in 22.19 s. Four direct comparisons use the old expression as the oracle; existing path-precedence and artifact-loading checks pass. No semantic-choice blocker.
+
+## P4 S1 — completed
+
+- Reviewed supplied-model direct getters in GDNPredictor/GDNTrainer and removed GDNTrainer's unread DataFrame state. Dataset-only model=None and absent GDN shape remain supported; profile/quant override precedence and serialized validation stay intact.
+- 51 before / 53 after focused PASS. Eight independent training campaigns produce 48 byte-identical estimator pairs and eight identical manifests; 32 cross-loads preserve 192 exact prediction dictionaries. Main independently compared all 56 files with an explicit count assertion. Report: test_report_2026-09-17_p4_gdn.md.
+
+## P4 S8 — completed
+
+- Reconciled config/typed-registry sidecar: constructor-owned topology and speculative fields are direct; internal registered profiles expose mandatory attention_linear_ops. External metadata validation, optional roles and scheduler-dependent prefix capability remain unchanged.
+- 135 existing baseline + 30 new pre-change characterization tests PASS; combined post-change 165 PASS. Main independently cmp-verified complete 605,937-byte snapshots: 20 replica cases, nine simulation guard cases, 47 calls and 66 metadata outcomes, including unchanged rejections.
+
+## P4 M4 — completed
+
+- Removed the remaining missing-self-map recovery in manager cluster-family lookup. Kept absent-cluster behavior rather than imposing a new public error contract.
+- 54 focused PASS in 6.28 s; extracted frozen/current methods yield 24 exact value/error outcomes across all roles, CUDA/ROCm/unknown platforms and absent clusters. Sparse path overrides/aliases and SKU identity resolution remain supported boundaries, not incomplete-constructor recovery.
+
+## P4 A5 — completed; integrated freeze follows
+
+- Four GDN gate defaults now reference the existing GatedDeltaNetConfig declaration; conversions, null rejection and swish normalization remain unchanged. No new policy abstraction.
+- 31 existing baseline + 43 corrected pre-change characterization cases PASS; combined after 74 PASS. Main independently verified complete 259,793-byte snapshots (54 outcomes) with cmp. Initial eight new-test failures incorrectly expected unwrapped gate errors; corrected on unchanged production to assert the existing structural error plus cause. Original failed log is preserved.
+- Source implementation is complete pending broader P4/P5 checks. Inventory review found no unreviewed changed-path gap; final evidence is still pending and must not be inferred from earlier phase runs.
+
+## P4 integrated fixture-isolation RCA — corrected
+
+- Initial 28-module integrated run at 5cb8794f: 542 PASS / 3 FAIL in 51.00 s. All failures entered GDN SimulationConfig after new dense config tests left process-global IS_MOE=False. Log: quality-p4-integrated.log.
+- Minimal two-node config-then-GDN command reproduced 1 PASS / 1 FAIL in 6.71 s (quality-p4-state-leak-red.log). Earlier GDN-only suites passed; the causal variable is preceding dense configuration. Required production model-consistency validation is correct and unchanged.
+- Reused global_vars.reset_global_vars in the new test module's autouse setup/teardown; no production edits or expected-number changes. Full config-plus-GDN modules now 36 PASS in 13.79 s (quality-p4-state-leak-green.log). This uses the diagnosing-bugs feedback loop; no additional instrumentation or semantic choice.
+- The concurrent fidelity harness executes isolated subprocesses and does not import this unit module; its production source remains fixed at 5cb8794f. Broader P4 and full-unit checks follow this fixture correction.
+
+## P4 completed / P5 in-progress
+
+- Corrected broader P4: **545 PASS**, 56.12 s across 28 modules, no failures/skips. Source ff2b6cdf retains production from 5cb8794f. Report: test_report_2026-09-17_p4_integrated.md.
+- Full unit run, eight reporting-enabled non-dummy cases and 58-case fidelity now execute against frozen production. Only task inventory documentation is dirty; no production/test edits are permitted during these runs. Paired timing will run alone after all correctness workloads exit.
+- Main reconciled exact inventory against frozen Git numstat: 106 paths / 105 Python + one README; 38 cleaned / 68 inspected-retained, no missing/extra/duplicate paths. Read-only worker reports and retained decisions are linked per path. No new semantic choice or inspection gap.
+
+## P5 final verification — completed; archive follows
+
+- Final production remains `5cb8794f`; test source remains `ff2b6cdf`. Full unit: **3813 PASS / 18 FAIL / 25 SKIP**, 132.23 s. Both failed-node diffs against frozen candidate and pinned main are empty; all 25 final skipped nodes also skip on frozen candidate. This is no new observed failure/skip, not an all-green suite. Full commands, known failure causes and limits are in `test_report_2026-09-17_p5_final.md`.
+- Eight reporting-enabled non-dummy cases: **8 PASS**, 68.21 s; 90 stable artifacts, symmetric 106-file inventory and 16 explicitly nonempty acceptance/summary pairs match. No output exclusions or comparator tolerances were changed.
+- Final fidelity: **58 PASS / 0 FAIL**, 304 compared artifacts and 122 completed requests per revision. Additional inspection: 902,628 finite numeric leaf pairs, zero unequal pairs, maximum absolute/relative difference 0.0. This is prediction-to-prediction preservation, not hardware ground truth.
+- Final isolated timing at clean `567742f3` versus clean `c288a19f`: **18/18 successful measurements**, every one of the nine pairs has equal event/completion counts. Paired median Simulator.run changes: small dense **-13.46%**, longer dense **-2.00%**, representative MoE **-1.46%**; subprocess changes **-4.89% / -3.12% / -2.52%**. All samples, exact command and variability limits are in `test_report_2026-09-17_p5_timing.md`. Do not extrapolate three reporting-disabled dummy-predictor pairs to general or native performance.
+- Continuation directly read the final timing manifest/results/log, independently calculated paired percentages and checked source equality with `git diff --exit-code 5cb8794f HEAD -- frontier` and `git diff --exit-code ff2b6cdf HEAD -- tests`; both pass. No production/test edits or repeated suites were needed.
+- Pending implementation or consequential semantic decisions: **none**. Remaining work is archive-only: reconcile final plan/inventory/report links, write the English summary, check documentation and commit.
+
+## Final archive reconciliation — completed
+
+- Re-read final logs: full unit, non-dummy, fidelity and supplemental numeric/artifact outcomes agree with the reports. Re-ran only read-only failure-node comparisons and documentation/source checks, not completed test campaigns.
+- Exact frozen numstat versus inventory comparison passes. The 106 rows are unique; 38 cleaned paths exactly equal the production Git change set. All 34 defined inventory evidence targets and table references, all summary deliverable paths and final report links exist. Every timing pair's four values matches the raw result to the nine displayed decimal places; event/completion fields also match.
+- Two discarded one-off Markdown checks produced `AssertionError: Record` and then `AssertionError: 0`: a generic bracket regex incorrectly treated a full reference-link display label and inline code `supported_variants[0]` as citation targets. Inspection established both are valid existing document syntax. The smaller check now validates the actual evidence column plus defined targets; it passes without changing source, artifacts or expected results. No persistent checking framework was introduced.
+- Final plan, issue/retained-pattern record, inventory verification links and English summary are reconciled. Archive-only changes are ready for the final scoped commit; production remains `5cb8794f`, tests remain `ff2b6cdf`.
+- Pending requirements: **none**. Newly discovered unresolved issues: **none**. Existing main-equivalent failures, native-device evidence limits and broader out-of-scope module splits remain explicit in the summary.
+
+## Review remediation — in-progress, 2026-09-17
+
+This follow-up supersedes the earlier completed status for the newly requested review defects only. Read review, prior requirements/plan/progress, applicable AGENTS and debugging/planning skills. HEAD matches reviewed d43ae932; no initial uncommitted edits. Existing CPU interpreter: /data/ycfeng/tmp/quality-review-env/bin/python (prior Python 3.12.3, no conda). R01 combines running decode and waiting prefill before predictor rejection; running partial-prefill also requires examination. R02 still uses the homogeneous-only binder despite the existing runtime full-attention-family resolver. No new tests run yet.
+
+### R01 reproduction — completed; policy selection — pending
+
+Added tests/integration/test_gdn_phase_admission.py using the existing synthetic non-dummy profiles and real Simulator. First run: 1 FAIL in 9.16 s, exact reviewed mixed-prefill/decode ValueError. Raw log: /data/ycfeng/tmp/pr33-r01-red.log. Source-only investigation confirms both running-phase selection and waiting admission need a boundary for the recommended running-first policy. Existing SGLang implements a different prefill-first policy. Asked for user selection under AGENTS Approval Gate 5; details and concrete change proposal in review_remediation_decisions.md. No production changes. R02 independent source inspection confirms an existing canonical resolver is available; implementation remains pending in review order.
+
+Second R01 run independently reproduced the exception and retained batch observation: batch 0 [(0, prefill, 16)]; batch 1 [(1, prefill, 31), (0, decode, 1)]. This establishes actual mixed dispatch. Evidence and exact commands: test_report_2026-09-17_r01_reproduction.md. Pending work: R01 policy selection/fix/validation, then R02–R10 and C01–C03. Newly discovered unresolved issues beyond the review: none. No production modifications or commits yet.
+
+### R01-A implementation and direct verification
+
+User authorized a temporary mixed-to-prefill approximation with warning/docs; the prior scheduler-policy proposals are superseded. Added runtime RuntimeWarning at GDN feature construction and retained the original physical vector; only prediction phase changes. Updated declared model limitation and native/training documentation. New parametrized regression first failed twice on the original ValueError (2 FAIL, 7.77 s), then passed with the selected prefill core (.22 ms), inactive decode core (0), total GDN operator time (.66 ms) and preserved original phase counts. Focused run: 27 PASS / 1 FAIL, 30.57 s; the remaining failure was the pre-existing acceptance fixture lacking mixed full-attention training data. Added valid synthetic mixed rows only to the new integration fixture; production full-attention guards remain unchanged. Corrected real Simulator regression: 1 PASS, 11.22 s, four requests, actual mixed dispatch preserved, one-token prefill, stable slot object identity, slot reuse and zero final KV/slot ownership. Logs: pr33-r01-approx-red.log, pr33-r01-green.log, pr33-r01-green-v2.log under /data/ycfeng/tmp.
+
+The malformed tail invocation and a no-match file glob during read-only inspection were recoverable inspection errors; reran targeted exact-path reads. No environment or production fallback was introduced. Eight prior non-dummy cases and the required 58-case fidelity matrix now run against fixed production; no production edits until those complete.
+
+### Independent regression preparation while R01 source is frozen
+
+- R02: real Qwen3.8 profiling ModelConfig with CPU native-boundary doubles fails the homogeneous binder exactly as reviewed; 1 FAIL / 9 PASS, 28.17 s (/data/ycfeng/tmp/pr33-r02-red.log). Added homogeneous MHA/GQA/MQA and explicit MLA-negative coverage. Production remains unchanged pending the R01 commit.
+- R03: new regression uses eight nonconstant rows per phase and a non-exact query that distinguishes shallow/deep estimators. Two replacement modes (changed dataset, same dataset with changed estimator settings) each fail both interrupted publication after two successful final writes and reader/writer interleaving. 4 FAIL, 13.89 s (/data/ycfeng/tmp/pr33-r03-red.log). Immutable generation-qualified filenames can reuse the manifest's existing artifact references and atomic writers; no loader schema migration is needed.
+- R04: actual producer row construction with only native execution/timing boundaries doubled fails query_len_cv assertions for (2,4), (1,7,16), and uniform (4,4). 3 FAIL, 6.43 s (/data/ycfeng/tmp/pr33-r04-red.log). Test follows production pandas normalization/CSV/trainer path once the feature exists.
+- R05 preparation: existing PrecisionType.from_string normalizes BF16/bfloat16/torch.bfloat16; requested-model load currently omits dtype. Gate type accepts silu/sigmoid but has no artifact identity column; no speculative backend/gate expansion is included in the dtype correction.
+- R06 preparation: constructor creates TimerStatsStore only after native initialization; effective store must be checked before imports/native work. Preserve singleton ownership.
+- R07 preparation: all three wrappers hardcode unsuffixed postflight paths; canonical build_profile_method_output_path already handles device_event and kernel_only aliases.
+- R10 preparation: normalize optional iterables at profile_graph boundary before all builders, preserving None versus empty.
+
+### R01-A completed
+
+Eight existing non-dummy cases: 8 PASS, 79.30 s. Required fidelity: 58 PASS / 0 FAIL against c288a19f, source fixed throughout. Independently parsed all 58 results and retained verdicts with the 14 new observed batches in r01_approximation_evidence.json. Final report: test_report_2026-09-17_r01_approximation.md. R01 is closed under the user's explicit temporary-approximation decision, not under the withdrawn phase-pure scheduling proposal. Next: R02 hybrid ROCm binding, followed by R03 immutable artifact generations.
+
+### R02 completed — CPU contract verified
+
+Reused resolve_runtime_attention_family in the ROCm producer and restricted accepted layouts to DENSE_KV. Whole-model hybrid rejection remains intact. 25 PASS, 3.13 s; native prefill/decode coverage now includes the actual Qwen3.8 config and remains hardware-gated. Report: test_report_2026-09-17_r02_binding.md. No native execution claim.
+
+### R03 completed
+
+Immutable generation-qualified estimator filenames plus the existing atomic manifest replacement remove overwrite/crash/read races without changing manifest schema. Old files remain available. 4 red reproductions -> 53 PASS, 22.46 s, including non-exact predictions for both changed source and changed estimator settings. Report: test_report_2026-09-17_r03_publication.md. R02 native collection separately completed: 4 attention cases collected (8 unrelated deselected), 0.74 s; no native execution.
+
+### R04 completed
+
+Producer emits query_len_cv and num_stateful_requests. CSV rows with explicit lengths derive canonical dispersion and validate supplied values; missing ambiguous ragged dispersion is rejected, while identifiable legacy uniform rows preserve zero CV. One shared calculation preserves runtime/imported exact keys. 3 red failures -> 98 PASS, 16.96 s. Report: test_report_2026-09-17_r04_features.md.
+
+### R05 completed
+
+Requested model dtype is normalized through PrecisionType and compared with artifact dtype once at load. 2 FAIL / 3 PASS before -> 60 PASS, 25.49 s after. BF16 aliases remain equivalent; FP16 mismatch is explicit. One incomplete fixture now declares torch_dtype. Related output-gate variants are not silently generalized; their native equivalence is not established. Report: test_report_2026-09-17_r05_dtype.md.
+
+### R06 completed
+
+Effective TimerStatsStore method/enabled state validated before native imports; exported method comes from the validated owner. Existing singleton and samples are preserved. 4 FAIL / 1 PASS before -> 111 PASS, 9.55 s. Report: test_report_2026-09-17_r06_timer_owner.md.
+
+### R07 completed
+
+All three profiling wrappers use the canonical CPU-safe Python path helper for display and postflight. Native stand-in tests reach actual postflight and reject stale unsuffixed CUDA files. 12 FAIL / 6 PASS before -> 33 PASS, 11.91 s. ROCm taxonomy now shows DEVICE_EVENT suffixes. Report: test_report_2026-09-17_r07_launchers.md.
+
+### R08 completed — CPU documentation contract
+
+MI355X attention recipe explicitly selects VLLM_ROCM; docs identify the prefill-only wrapper and required separate decode collection. Literal recipe dry-run defeats NO_OP environment default: 1 PASS, 1.31 s. Native evidence remains pending hardware. Report: test_report_2026-09-17_r08_backend_recipe.md.
+
+### R09 completed
+
+All three TP8 GDN documentation copies now launch eight torchrun processes. Separate TP1 example uses its own output root. Literal command contracts plus R08 dry-run: 4 PASS, 1.43 s. Report: test_report_2026-09-17_r09_distributed_recipe.md.
+
+### R10 completed
+
+Normalize optional context/expert iterables once before constructing replay calls. Generator/tuple inputs match three builder calls and complete capture/replay metadata. 2 FAIL before -> 35 PASS, 2.88 s. One nonexistent test path was corrected after a no-tests-run result. Report: test_report_2026-09-17_r10_iterables.md. All R01–R10 code/document corrections are committed after their focused checks; native hardware acceptance remains unexecuted.
+
+### C01 completed
+
+Capacity admission uses a read-only availability property derived from the free-slot heap. Diagnostic owner tuple is never accessed by admission. 1 FAIL before -> 17 PASS, 6.81 s; deterministic exhaustion/reuse preserved. Report: test_report_2026-09-17_c01_capacity.md.
+
+### C02 focused verification completed
+
+Centralized execution-payload demand over existing trace/operation/full-ledger/summary flags; utilization retains callback with no payload. Disabled final-sync fixture reduces predictor calls 2 -> 1 and stage allocations 1 -> 0 with identical event/model/wall timing. 129 PASS, 6.99 s after correcting an assertion parameter index (first green 128 PASS / 1 FAIL). Summary-only EP capture now follows the same consumer demand. Report: test_report_2026-09-17_c02_reporting.md. Final broad verification follows on frozen source.
+
+### Final review validation — in progress
+
+Frozen production/test checkpoint: 35ac95eb. Started full tests/unit (JUnit XML), eight existing synthetic non-dummy cases plus R01 mixed concurrency, and the 58-case matrix against c288a19f. Raw outputs: /data/ycfeng/tmp/pr33-final-{unit,nondummy,fidelity}.log; matrix directory pr33-final-fidelity. Correctness campaigns run concurrently; paired performance waits until all exit. Only task/docs reconciliation proceeds meanwhile. Clarified legacy feature documentation to name query_lens and query_len_cv explicitly.
+
+### Final correctness verification completed
+
+Frozen 35ac95eb: full unit 3928 PASS / 18 existing FAIL / 25 existing SKIP, 167.43 s; exact failed/skipped nodes match prior JUnit, and all failure messages match after scratch-path substitution. Nine non-dummy cases PASS (81.28 s), including R01 mixed concurrency; eight existing cases preserve 90 stable artifacts, 106 symmetric metrics files and 16 supplemental nonempty JSON pairs. Fidelity 58 PASS / 0 FAIL, 304 artifacts, 122 requests per side; 902628 finite numeric pairs have zero unequal values and maximum absolute/relative differences 0.0. Source diff against 35ac95eb remains empty for frontier/tests. Started isolated 18-run paired campaign only after all correctness/check processes exited; raw output /data/ycfeng/tmp/pr33-final-paired.
+
+### Final paired timing and archive — completed
+
+18/18 measurements succeeded; all nine pairs have identical events and completions. Median paired Simulator.run changes versus c288a19f: small_dense -12.07%, longer_dense -8.84%, representative_moe -0.62%; subprocess -3.62%/-6.90%/-2.92%. Small-dense attempt 2 is +16.62% (about 5 ms), retained without rerunning/selecting samples. No universal or native speedup claim. Source remains exactly 35ac95eb for frontier/tests. Related output-gate inspection was documented with actual SGLang versus standard vLLM constructor paths; no speculative contract expansion. Re-read requirements.md and reconciled R01-A, individual commits, known failures, reports, local C03 body and English summary.
+
+Pending in-scope code tasks: none. Newly discovered unresolved code regressions: none observed. Final archive consistency checks passed: report paths and commit references resolve, durable evidence counts match the reports, no unfinished placeholders remain in the final report/PR body, git diff --check is clean, and frontier/tests equal 35ac95eb. The archive is ready for its final scoped commit. Native validation and remote PR publication remain explicitly outside the completed local execution.

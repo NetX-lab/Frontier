@@ -3,7 +3,14 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
-from frontier.attention.model_binding import bind_attention_family
+from frontier.attention.model_binding import (
+    resolve_runtime_attention_family,
+    resolve_attention_topology,
+)
+from frontier.attention.gdn import (
+    GatedDeltaNetConfig,
+    LayerAttentionSpec,
+)
 from frontier.attention.ops import AttentionMemoryLayout
 from frontier.config.model_config import (
     BaseModelConfig,
@@ -51,6 +58,7 @@ class ModelConfig:
         dtype: Optional[str] = None,
         model_type: Optional[str] = None,
         model_architecture_profile: Optional[str] = None,
+        architectures: Optional[tuple[str, ...] | list[str]] = None,
         fused_add_norm_capability: Optional[bool] = None,
         # Architecture-specific structural fields
         model_arch: Optional[str] = None,
@@ -65,6 +73,14 @@ class ModelConfig:
         qk_rope_head_dim: Optional[int] = None,
         qk_head_dim: Optional[int] = None,
         v_head_dim: Optional[int] = None,
+        layer_types: Optional[tuple[str, ...] | list[str]] = None,
+        full_attention_interval: Optional[int] = None,
+        linear_conv_kernel_dim: Optional[int] = None,
+        linear_key_head_dim: Optional[int] = None,
+        linear_value_head_dim: Optional[int] = None,
+        linear_num_key_heads: Optional[int] = None,
+        linear_num_value_heads: Optional[int] = None,
+        gdn_output_gate_type: str = GatedDeltaNetConfig.output_gate_type,
         # Quantization config for metadata tracking
         quantization_config: Optional[QuantizationConfig] = None,
         # Whether lm_head shares weights with embed_tokens (HF standard field)
@@ -121,6 +137,11 @@ class ModelConfig:
             if model_architecture_profile is not None
             else None
         )
+        self.architectures = (
+            tuple(str(value) for value in architectures)
+            if architectures is not None
+            else ()
+        )
         if fused_add_norm_capability is not None and not isinstance(
             fused_add_norm_capability, bool
         ):
@@ -144,6 +165,26 @@ class ModelConfig:
         self.qk_rope_head_dim = qk_rope_head_dim
         self.qk_head_dim = qk_head_dim
         self.v_head_dim = v_head_dim
+        self.layer_types = (
+            tuple(str(value) for value in layer_types)
+            if layer_types is not None
+            else None
+        )
+        self.full_attention_interval = (
+            int(full_attention_interval)
+            if full_attention_interval is not None
+            else None
+        )
+        self.linear_conv_kernel_dim = linear_conv_kernel_dim
+        self.linear_key_head_dim = linear_key_head_dim
+        self.linear_value_head_dim = linear_value_head_dim
+        self.linear_num_key_heads = linear_num_key_heads
+        self.linear_num_value_heads = linear_num_value_heads
+        self.gdn_output_gate_type = str(gdn_output_gate_type)
+        # Keep resolution lazy to preserve the existing profiling config
+        # construction and binder validation order.
+        self._layer_attention_specs: tuple[LayerAttentionSpec, ...] | None = None
+        self._gdn_config_cache: GatedDeltaNetConfig | None = None
 
         # Quantization config for metadata tracking
         if quantization_config is not None and not isinstance(
@@ -238,8 +279,42 @@ class ModelConfig:
         return self.embedding_dim // self.num_q_heads
 
     def get_attention_family(self):
-        """Return the bound attention family for profiling runtime semantics."""
-        return bind_attention_family(self).family
+        """Return the family used by model-wide profiling cache semantics."""
+        return resolve_runtime_attention_family(self)
+
+    def get_gdn_config(self) -> Optional[GatedDeltaNetConfig]:
+        """Return the shape normalized together with the model-owned schedule."""
+        self.get_layer_attention_specs()
+        return self._gdn_config_cache
+
+    def get_layer_attention_specs(self) -> tuple[LayerAttentionSpec, ...]:
+        if self._layer_attention_specs is None:
+            self._layer_attention_specs, self._gdn_config_cache = resolve_attention_topology(self)
+        return self._layer_attention_specs
+
+    def get_layer_attention_spec(self, global_layer_id: int) -> LayerAttentionSpec:
+        if type(global_layer_id) is not int:
+            raise ValueError(
+                f"global_layer_id must be an int, got {global_layer_id!r}"
+            )
+        specs = self.get_layer_attention_specs()
+        if global_layer_id < 0 or global_layer_id >= len(specs):
+            raise ValueError(
+                f"global_layer_id {global_layer_id} out of range "
+                f"[0, {len(specs)})"
+            )
+        return specs[global_layer_id]
+
+    def get_num_gdn_layers(self) -> int:
+        return sum(spec.is_gdn for spec in self.get_layer_attention_specs())
+
+    def get_num_full_attention_layers(self) -> int:
+        return sum(
+            spec.is_full_attention for spec in self.get_layer_attention_specs()
+        )
+
+    def is_gdn_layer(self, global_layer_id: int) -> bool:
+        return self.get_layer_attention_spec(global_layer_id).is_gdn
 
     def get_runtime_num_kv_heads(self) -> int:
         """Return runtime KV heads for cache allocation."""
@@ -306,6 +381,8 @@ class ModelConfig:
         unsupported_fields = [
             '_model_name',
             '_moe_layer_ids_cache',
+            '_layer_attention_specs_cache',
+            '_gdn_config_cache',
             'norm_expert_weight',  # Expert normalization field not used in profiling
             'torch_dtype',
         ]
@@ -346,10 +423,6 @@ class ModelConfig:
             model_config_dict['model_type'] = json_cfg.get(
                 'model_type', model_config_dict.get('model_type')
             )
-            model_config_dict['model_architecture_profile'] = json_cfg.get(
-                'model_architecture_profile',
-                model_config_dict.get('model_architecture_profile'),
-            )
             # Explicit fused-add capability override
             explicit_fused_add_norm = json_cfg.get('uses_fused_add_norm')
             if explicit_fused_add_norm is not None:
@@ -377,6 +450,11 @@ class ModelConfig:
                 'qk_rope_head_dim',
                 'qk_head_dim',
                 'v_head_dim',
+                'linear_conv_kernel_dim',
+                'linear_key_head_dim',
+                'linear_value_head_dim',
+                'linear_num_key_heads',
+                'linear_num_value_heads',
             ]:
                 if field_name in json_cfg:
                     model_config_dict[field_name] = json_cfg[field_name]
@@ -554,6 +632,7 @@ class ModelConfig:
             "dtype": self._dtype_to_str(self._dtype),
             "model_type": self.model_type,
             "model_architecture_profile": self.model_architecture_profile,
+            "architectures": list(self.architectures),
             "fused_add_norm_capability": self.fused_add_norm_capability,
             # Architecture-specific structural fields
             "model_arch": self.model_arch,
@@ -568,6 +647,14 @@ class ModelConfig:
             "qk_rope_head_dim": self.qk_rope_head_dim,
             "qk_head_dim": self.qk_head_dim,
             "v_head_dim": self.v_head_dim,
+            "layer_types": list(self.layer_types) if self.layer_types is not None else None,
+            "full_attention_interval": self.full_attention_interval,
+            "linear_conv_kernel_dim": self.linear_conv_kernel_dim,
+            "linear_key_head_dim": self.linear_key_head_dim,
+            "linear_value_head_dim": self.linear_value_head_dim,
+            "linear_num_key_heads": self.linear_num_key_heads,
+            "linear_num_value_heads": self.linear_num_value_heads,
+            "gdn_output_gate_type": self.gdn_output_gate_type,
             # Quantization config
             "quantization_config": asdict(self.quantization_config) if self.quantization_config else None,
             # LM head weight sharing

@@ -61,6 +61,7 @@ class DecodeSyncEvent(BaseEvent):
             self._sync_stage,
             self._layer_id,
             self._stage_execution_time,
+            metrics_store=metrics_store,
         )
 
     def get_target_cluster(self) -> ClusterType:

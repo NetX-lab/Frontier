@@ -9,6 +9,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from predictor_cache_fixtures import CacheFixtureDisaggregationPredictor
+
 from frontier.config.model_config import BaseModelConfig
 from frontier.entities import Batch, Request
 from frontier.entities.batch import (
@@ -54,9 +56,7 @@ def test_dense_ffn_batch_group_has_no_ep_lane_identity() -> None:
     assert "get_full_stage_replica_scheduler" in scheduler_source
 
 
-class _ConcreteDisaggregationPredictor(
-    SklearnDisaggregationExecutionTimePredictor
-):
+class _ConcreteDisaggregationPredictor(CacheFixtureDisaggregationPredictor):
     def _get_estimator(self):
         return None
 
@@ -1670,8 +1670,8 @@ def test_mixed_moe_ffn_event_rejects_untyped_batch(monkeypatch) -> None:
 
 
 def _trained_predictor(model_config, *, isolate_branch: bool = True):
-    predictor = _ConcreteDisaggregationPredictor.__new__(
-        _ConcreteDisaggregationPredictor
+    predictor = _ConcreteDisaggregationPredictor(
+        model_config=model_config, total_experts=48
     )
     predictor._enable_dummy_mode = False
     predictor._cluster_type = ClusterType.DECODE_FFN
@@ -1703,8 +1703,9 @@ def _trained_predictor(model_config, *, isolate_branch: bool = True):
     predictor._select_measurement_type_for_batch = lambda _batch: "decode"
     predictor._require_predictions_for_measurement_type = lambda *_args: None
     predictor._activate_measurement_type = lambda *_args: None
-    def _get_communication_time(*_args, include_attention: bool = True):
-        del include_attention
+    def _get_communication_time(*_args, include_attention: bool = True,
+                                include_stage_owned: bool = True):
+        del include_attention, include_stage_owned
         return _ZeroAttributes()
 
     predictor._get_communication_time = _get_communication_time
@@ -1759,7 +1760,7 @@ def test_trained_decode_ffn_predictor_classifies_each_layer(
         layer_id=layer_id,
     )
 
-    assert execution_time._is_moe is expected_is_moe
+    assert execution_time.layer_execution_times[0]._is_moe is expected_is_moe
 
 
 def test_trained_prefill_dense_layer_rejects_post_attention_scope(
@@ -1828,7 +1829,7 @@ def test_trained_dense_decode_ffn_constructs_execution_time_with_one_is_moe_sour
             f"got {exc}"
         )
 
-    assert execution_time._is_moe is False
+    assert execution_time.layer_execution_times[0]._is_moe is False
 
 
 def test_trained_dense_decode_ffn_excludes_post_attention_layernorm(
@@ -1873,8 +1874,8 @@ def test_trained_moe_decode_ffn_excludes_post_attention_layernorm(
 def test_dummy_decode_ffn_predictor_reproducer_for_mixed_dense_layer(
     mixed_model_config,
 ) -> None:
-    predictor = _ConcreteDisaggregationPredictor.__new__(
-        _ConcreteDisaggregationPredictor
+    predictor = _ConcreteDisaggregationPredictor(
+        model_config=mixed_model_config, total_experts=48
     )
     predictor._enable_dummy_mode = True
     predictor._dummy_execution_time = 10.0
@@ -1896,14 +1897,14 @@ def test_dummy_decode_ffn_predictor_reproducer_for_mixed_dense_layer(
         layer_id=3,
     )
 
-    assert execution_time._is_moe is False
-    assert execution_time._moe_gating_time == pytest.approx(0.0)
-    assert execution_time._moe_shuffling_time == pytest.approx(0.0)
-    assert execution_time._moe_grouped_gemm_time == pytest.approx(0.0)
-    assert execution_time._expert_parallel_communication_time == pytest.approx(0.0)
-    assert execution_time._mlp_layer_up_proj_execution_time > 0.0
-    assert execution_time._mlp_layer_down_proj_execution_time > 0.0
-    assert execution_time._mlp_layer_act_execution_time > 0.0
+    assert execution_time.layer_execution_times[0]._is_moe is False
+    assert execution_time.moe_gating_time == pytest.approx(0.0)
+    assert execution_time.moe_shuffling_time == pytest.approx(0.0)
+    assert execution_time.moe_grouped_gemm_time == pytest.approx(0.0)
+    assert execution_time.expert_parallel_communication_time == pytest.approx(0.0)
+    assert execution_time.mlp_layer_up_proj_execution_time > 0.0
+    assert execution_time.mlp_layer_down_proj_execution_time > 0.0
+    assert execution_time.mlp_layer_act_execution_time > 0.0
     assert execution_time.moe_operator_times is None
 
 
@@ -1912,8 +1913,8 @@ def test_dummy_decode_ffn_dense_layer_uses_ffn_tp_domain(
 ) -> None:
     """Dense FFN layers retain the DECODE_FFN role's configured TP owner."""
 
-    predictor = _ConcreteDisaggregationPredictor.__new__(
-        _ConcreteDisaggregationPredictor
+    predictor = _ConcreteDisaggregationPredictor(
+        model_config=mixed_model_config, total_experts=48
     )
     predictor._enable_dummy_mode = True
     predictor._dummy_execution_time = 10.0
@@ -1935,20 +1936,20 @@ def test_dummy_decode_ffn_dense_layer_uses_ffn_tp_domain(
         layer_id=3,
     )
 
-    assert execution_time._is_moe is False
-    assert execution_time._moe_tensor_parallel_allreduce_time == pytest.approx(10.0)
+    assert execution_time.layer_execution_times[0]._is_moe is False
+    assert execution_time.communication_time_component.moe_tensor_parallel_allreduce_time == pytest.approx(10.0)
     assert execution_time.communication_time_component.total_time() == pytest.approx(
         10.0
     )
-    assert execution_time._moe_gating_time == pytest.approx(0.0)
-    assert execution_time._moe_grouped_gemm_time == pytest.approx(0.0)
+    assert execution_time.moe_gating_time == pytest.approx(0.0)
+    assert execution_time.moe_grouped_gemm_time == pytest.approx(0.0)
 
 
 def test_dummy_decode_ffn_predictor_preserves_moe_layer_semantics(
     mixed_model_config,
 ) -> None:
-    predictor = _ConcreteDisaggregationPredictor.__new__(
-        _ConcreteDisaggregationPredictor
+    predictor = _ConcreteDisaggregationPredictor(
+        model_config=mixed_model_config, total_experts=48
     )
     predictor._enable_dummy_mode = True
     predictor._dummy_execution_time = 10.0
@@ -1970,6 +1971,6 @@ def test_dummy_decode_ffn_predictor_preserves_moe_layer_semantics(
         layer_id=4,
     )
 
-    assert execution_time._is_moe is True
-    assert execution_time._moe_gating_time > 0.0
-    assert execution_time._moe_grouped_gemm_time > 0.0
+    assert execution_time.layer_execution_times[0]._is_moe is True
+    assert execution_time.moe_gating_time > 0.0
+    assert execution_time.moe_grouped_gemm_time > 0.0

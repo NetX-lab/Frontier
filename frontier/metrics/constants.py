@@ -20,6 +20,10 @@ class OperationMetrics(enum.Enum):
     ATTN_MLA_DECODE_Q_LATENT_PROJ = "attn_mla_decode_q_latent_proj"
     ATTN_MLA_DECODE = "attn_mla_decode"
     ATTN_MLA_V_UP_PROJ = "attn_mla_v_up_proj"
+    GDN_INPUT_PROJECTIONS = "gdn_input_projections"
+    GDN_CORE_PREFILL = "gdn_core_prefill"
+    GDN_CORE_DECODE = "gdn_core_decode"
+    GDN_OUTPUT_PROJECTION = "gdn_output_projection"
     ATTN_ROPE = "attn_rope"
     PIPELINE_SEND_RECV = "pipeline_send_recv"
     ADD = "add"
@@ -42,6 +46,8 @@ class OperationMetrics(enum.Enum):
     MOE_TENSOR_PARALLEL_ALLREDUCE = "moe_tensor_parallel_allreduce"
     ADD_ATTN_RESIDUAL = "add_attn_residual"
     ADD_FFN_RESIDUAL = "add_ffn_residual"
+    DP_INPUT_ALLREDUCE = "dp_input_allreduce"
+    DP_OUTPUT_ALLREDUCE = "dp_output_allreduce"
 
 
 class CpuOperationMetrics(enum.Enum):

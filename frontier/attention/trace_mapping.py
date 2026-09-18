@@ -37,15 +37,9 @@ def _get_attention_operator_time(
         execution_time.attention_operator_times is not None
         and operator.name in execution_time.attention_operator_times.op_times
     ):
-        return (
-            execution_time.attention_operator_times.get_required_time(operator.name)
-            * execution_time.num_layers
-        )
+        return execution_time.attention_operator_times.get_required_time(operator.name)
     if require_structured:
-        return (
-            execution_time.attention_operator_times.get_required_time(operator.name)
-            * execution_time.num_layers
-        )
+        return execution_time.attention_operator_times.get_required_time(operator.name)
     attr_name = operator.execution_time_attr
     if not attr_name:
         raise ValueError(

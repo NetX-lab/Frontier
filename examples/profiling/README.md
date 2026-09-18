@@ -1,5 +1,11 @@
 # Profiling Examples
 
+## Modification History
+
+| Date       | Summary of Changes |
+| ---------- | ------------------ |
+| 2026-09-14 | Documented the non-destructive profiling example migration and canonical output contracts. |
+
 ## Scope
 
 This directory is the release-facing entry point for profiling examples. The migration is **non-destructive**: the legacy internal scripts under `frontier/profiling/example` remain in place because repository rules forbid deleting or moving files without explicit approval.

@@ -112,12 +112,20 @@ if [ "$#" -gt 0 ]; then
   CMD+=("$@")
 fi
 
+OUTPUT_CSV="$("$PYTHON_BIN" -c '
+import sys
+from frontier.profiling.utils import build_profile_method_output_path
+print(build_profile_method_output_path(
+    output_root=sys.argv[1], profiling_type="compute", hardware=sys.argv[2],
+    model_name=sys.argv[3], op_name=sys.argv[4], profile_method=sys.argv[5],
+))' "$DATA_DIR_BASE" "$DEVICE" "$MODEL" "moe" "$PROFILE_METHOD")"
+
 cat <<EOF
 ============================================
   Profiling Example - MoE Operators
 ============================================
-Output taxonomy: data/profiling/compute/<device>/<model>/moe.csv
-Resolved output: $DATA_DIR_BASE/compute/$DEVICE/$MODEL/moe.csv
+Output taxonomy: data/profiling/compute/<device>/<model>/moe[<measurement suffix>].csv
+Resolved output: $OUTPUT_CSV
 Model: $MODEL
 Device: $DEVICE
 TP sizes: $TP_SIZES
@@ -139,7 +147,6 @@ fi
 cd "$REPO_ROOT"
 "${CMD[@]}"
 
-OUTPUT_CSV="$DATA_DIR_BASE/compute/$DEVICE/$MODEL/moe.csv"
 if [ ! -f "$OUTPUT_CSV" ]; then
   echo "ERROR: expected profiling output was not generated: $OUTPUT_CSV" >&2
   exit 1

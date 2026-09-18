@@ -265,15 +265,15 @@ def test_profiling_model_config_get_head_size_binds_family_once(
         def resolve_runtime_head_size(config: ModelConfig) -> int:
             return 576
 
-    def fake_bind_attention_family(config: ModelConfig) -> SimpleNamespace:
+    def fake_resolve_runtime_attention_family(config: ModelConfig) -> FakeFamily:
         nonlocal bind_calls
         bind_calls += 1
         assert config is model_config
-        return SimpleNamespace(family=FakeFamily())
+        return FakeFamily()
 
     monkeypatch.setattr(
-        "frontier.profiling.common.model_config.bind_attention_family",
-        fake_bind_attention_family,
+        "frontier.profiling.common.model_config.resolve_runtime_attention_family",
+        fake_resolve_runtime_attention_family,
     )
 
     assert model_config.get_head_size() == 576

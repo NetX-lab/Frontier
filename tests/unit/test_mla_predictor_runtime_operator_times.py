@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections import defaultdict
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
@@ -12,11 +12,11 @@ from frontier.attention.profiling_mapping import (
     get_enabled_predictor_metric_names,
 )
 from frontier.attention.trace_mapping import get_attention_trace_op_times
+from frontier.config.quantization_manager import QuantizationManager
 from frontier.execution_time_predictor.sklearn_execution_time_predictor import (
     SklearnExecutionTimePredictor,
     _build_exact_feature_lookup,
 )
-from frontier.model_architectures import ModelArchitectureProfile
 from frontier.profiling.attention.vllm_mla_profile_importer import (
     build_frontier_mla_profile_dataframe,
 )
@@ -25,6 +25,7 @@ from tests.unit.mla_h800_fixture import (
     H800_MIXED_BATCH1_TIMES_MS,
     h800_mla_mixed_rows,
 )
+from tests.unit.predictor_cache_fixtures import cache_model, predictor_fixture_config
 
 
 class _DummySklearnPredictor(SklearnExecutionTimePredictor):
@@ -35,7 +36,7 @@ class _DummySklearnPredictor(SklearnExecutionTimePredictor):
         return {}
 
 
-class _IdentityQuantizationManager:
+class _IdentityQuantizationManager(QuantizationManager):
     def adjust_compute_time(self, _op_name, value, _cluster_type):
         return value
 
@@ -157,17 +158,12 @@ def _build_imported_mla_profile_df(rows: list[dict[str, object]] | None = None):
 
 
 def _build_mla_predictor(rows: list[dict[str, object]] | None = None):
-    predictor = _DummySklearnPredictor.__new__(_DummySklearnPredictor)
-    predictor._enable_dummy_mode = False
-    predictor._cluster_type = ClusterType.MONOLITHIC
-    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
-    predictor._runtime_cache = defaultdict(lambda: defaultdict(dict))
-    predictor._block_size = 64
-    predictor._replica_config = SimpleNamespace(
-        num_pipeline_stages=1,
-        attn_tensor_parallel_size=1,
-    )
-    predictor._model_config = SimpleNamespace(
+    model_config = replace(
+        cache_model(),
+        num_layers=6,
+        is_moe=False,
+        num_experts=0,
+        num_experts_per_tok=0,
         use_mla=True,
         num_q_heads=128,
         num_kv_heads=128,
@@ -179,10 +175,14 @@ def _build_mla_predictor(rows: list[dict[str, object]] | None = None):
         kv_lora_rank=512,
         v_head_dim=128,
         max_position_embeddings=163840,
-        get_head_dim=lambda: 576,
-        get_qk_head_dim=lambda: 192,
-        get_model_architecture_profile=ModelArchitectureProfile.generic,
     )
+    inputs = predictor_fixture_config(model_config=model_config)
+    inputs.pop("actual_replica_ids")
+    inputs["replica_config"].num_pipeline_stages = 2
+    predictor = _DummySklearnPredictor(**inputs)
+    predictor._enable_dummy_mode = False
+    predictor._active_measurement_type = MeasurementType.CUDA_EVENT
+    predictor._block_size = 64
     predictor._supports_operation = lambda operation: operation == "attention"
     predictor._log_architecture_attention_shape = lambda _batch: None
     predictor._get_attention_layer_pre_proj_execution_time = lambda _batch: 0.0
@@ -341,12 +341,16 @@ def test_mla_stage_execution_time_preserves_operator_times_for_trace_mapping(
     predictor = _build_mla_predictor()
     execution_time = predictor.predict_stage_execution_time(
         batch=_DummyBatch(),
-        stage_id=0,
+        stage_id=1,
         cluster_type=ClusterType.MONOLITHIC,
         num_layers=3,
+        layer_id=3,
     )
 
     assert execution_time.attention_operator_times is not None
+    assert execution_time.global_layer_ids == (3, 4, 5)
+    assert execution_time.attention_family_ids == ("latent_mla_attention",) * 3
+    assert execution_time.attention_variant_ids == ("mla",) * 3
     op_times = get_attention_trace_op_times(
         execution_time,
         LATENT_MLA_ATTENTION_FAMILY,

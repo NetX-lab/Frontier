@@ -409,7 +409,7 @@ def test_decode_placeholder_stays_replaceable_until_idle_event_is_consumed():
     assert late_room["batches"][0].is_idle
     late_collective_events = late_events[0].handle_event(
         SimpleNamespace(get_cluster_scheduler=lambda _cluster_type: scheduler),
-        SimpleNamespace(),
+        SimpleNamespace(ep_wave_reporting_enabled=False),
     )
     assert len(late_collective_events) == 1
     assert isinstance(late_collective_events[0], DecodeSyncCollectiveEvent)

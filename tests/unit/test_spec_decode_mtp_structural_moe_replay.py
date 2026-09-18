@@ -1,13 +1,13 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
 
+from predictor_cache_fixtures import CacheFixturePredictor, cache_model
+
 from frontier.entities import Batch, Request, SpecDecodeBatchMetadata
-from frontier.execution_time_predictor.sklearn_moe_execution_time_predictor import (
-    SklearnMoEExecutionTimePredictor,
-)
 from frontier.execution_time_predictor.execution_time_predictor_registry import (
     ExecutionTimePredictorRegistry,
 )
@@ -16,7 +16,7 @@ from frontier.moe_ep_workload import EPLaneWorkload
 from frontier.types import ClusterType
 
 
-class _DummyPredictor(SklearnMoEExecutionTimePredictor):
+class _DummyPredictor(CacheFixturePredictor):
     def _get_estimator(self):
         return None
 
@@ -45,13 +45,10 @@ def _source_batch() -> Batch:
 
 
 def _predictor() -> _DummyPredictor:
-    predictor = _DummyPredictor.__new__(_DummyPredictor)
+    predictor = _DummyPredictor()
     predictor._cluster_type = ClusterType.MONOLITHIC
     predictor._moe_ep_size = 2
-    predictor._model_config = SimpleNamespace(
-        is_moe=True,
-        is_moe_layer=lambda layer_id: layer_id == 0,
-    )
+    predictor._model_config = replace(cache_model(), moe_layers_enum="0")
     predictor._replica_config = SimpleNamespace(
         total_expert_num=4,
         moe_expert_parallel_size=2,
@@ -71,7 +68,7 @@ def _predictor() -> _DummyPredictor:
 
 
 def _secondary_predictor_parent() -> _DummyPredictor:
-    predictor = _DummyPredictor.__new__(_DummyPredictor)
+    predictor = _DummyPredictor()
     predictor._mtp_secondary_predictors = {}
     predictor._replica_scheduler_provider = "vllm_v1"
     predictor._block_size = 16

@@ -31,6 +31,8 @@ from frontier.profiling.moe.moe_impl import (
 from frontier.profiling.moe.moe_vllm_kernel import (
     check_fp8_available,
     check_vllm_available,
+    validate_moe_quantization_mode,
+    validate_mxfp4_runtime,
 )
 from frontier.profiling.utils import ProfileMethod, normalize_profile_method
 from frontier.profiling.utils.record_function_tracer import RecordFunctionTracer
@@ -43,6 +45,18 @@ from frontier.moe_gating_runtime import (
 
 WARMUP_STEPS = 2
 ACTIVE_STEPS = 20
+
+
+def resolve_grouped_gemm_backend(*, use_vllm_kernel: bool, use_mxfp4: bool) -> str:
+    """Resolve the explicit standard grouped-GEMM implementation label."""
+
+    if use_mxfp4 and not use_vllm_kernel:
+        raise ValueError(
+            "MXFP4 moe_grouped_gemm requires vLLM/AITER kernel profiling."
+        )
+    if not use_vllm_kernel:
+        return "frontier_loop"
+    return "vllm_aiter_mxfp4" if use_mxfp4 else "vllm_fused"
 
 
 class MoEWrapper:
@@ -114,9 +128,17 @@ class MoEWrapper:
         self._dtype = model_config.dtype
         precision = get_operation_precision("moe_grouped_gemm")
         use_fp8_from_manager = precision == PrecisionType.FP8
-        if use_fp8_from_manager and not self.use_vllm_kernel:
+        use_mxfp4_from_manager = precision == PrecisionType.FP4
+        quantization_mode = validate_moe_quantization_mode(
+            use_fp8=use_fp8_from_manager,
+            use_mxfp4=use_mxfp4_from_manager,
+        )
+        if (
+            use_fp8_from_manager or use_mxfp4_from_manager
+        ) and not self.use_vllm_kernel:
             raise ValueError(
-                "FP8 moe_grouped_gemm requires vLLM fused kernel profiling (use_vllm_kernel=True)."
+                "Quantized moe_grouped_gemm requires vLLM fused kernel profiling "
+                "(use_vllm_kernel=True)."
             )
         if use_fp8_from_manager:
             if not check_vllm_available():
@@ -127,7 +149,11 @@ class MoEWrapper:
                 raise ImportError(
                     "vLLM FP8 quantization utilities are unavailable for moe_grouped_gemm profiling."
                 )
+        if use_mxfp4_from_manager:
+            validate_mxfp4_runtime(model_type=model_config.model_type)
         self.use_fp8 = use_fp8_from_manager
+        self.use_mxfp4 = use_mxfp4_from_manager
+        self.quantization_mode = quantization_mode
 
         # Calculate num_experts_per_device based on EP
         # EP is a distribution parameter: it determines how experts are distributed across devices
@@ -419,6 +445,7 @@ class MoEWrapper:
             **self.gating_runtime_context_metadata,
             "router_topk": self.router_topk,
             "hidden_dim": self.hidden_dim,
+            "moe_gating_linear_backend": self.gating.linear_backend,
             "num_tensor_parallel_workers": self.num_tensor_parallel_workers,
         }
         self.timer_stats_store.clear_stats()
@@ -580,20 +607,27 @@ class MoEWrapper:
         profiling_global_num_experts = routing_inputs["global_num_experts"]
         profiling_expert_map = routing_inputs["expert_map"]
 
+        native_backend = None
         if self.use_vllm_kernel:
-            time_stats = self._profile_with_vllm_kernel(
+            time_stats, native_backend = self._profile_with_vllm_kernel(
                 num_tokens=num_tokens,
                 topk_weights=topk_weights,
                 topk_ids=topk_ids,
                 global_num_experts=profiling_global_num_experts,
                 expert_map=profiling_expert_map,
             )
-            grouped_gemm_backend = "vllm_fused"
+            grouped_gemm_backend = resolve_grouped_gemm_backend(
+                use_vllm_kernel=self.use_vllm_kernel,
+                use_mxfp4=self.use_mxfp4,
+            )
         else:
             time_stats = self._profile_with_loop(
                 expert_token_counts=expert_token_counts,
             )
-            grouped_gemm_backend = "frontier_loop"
+            grouped_gemm_backend = resolve_grouped_gemm_backend(
+                use_vllm_kernel=self.use_vllm_kernel,
+                use_mxfp4=self.use_mxfp4,
+            )
 
         load_input = MoELoadImbalanceInput(
             num_tokens=num_tokens,
@@ -613,7 +647,10 @@ class MoEWrapper:
             **load_input.to_features_dict(),
             "num_tensor_parallel_workers": self.num_tensor_parallel_workers,
             "moe_grouped_gemm_backend": grouped_gemm_backend,
+            "moe_quantization_mode": self.quantization_mode,
         }
+        if native_backend is not None:
+            stats["moe_native_backend"] = native_backend
 
         return stats
     
@@ -624,7 +661,7 @@ class MoEWrapper:
         topk_ids: torch.Tensor,
         global_num_experts: Optional[int] = None,
         expert_map: Optional[torch.Tensor] = None,
-    ) -> dict:
+    ) -> tuple[dict, Optional[str]]:
         """Profile using vLLM fused MoE kernel with optional EP-local expert mapping."""
         from frontier.profiling.moe.moe_vllm_kernel import profile_fused_moe_kernel
 
@@ -641,17 +678,17 @@ class MoEWrapper:
             warmup_steps=WARMUP_STEPS,
             active_steps=ACTIVE_STEPS,
             use_fp8=self.use_fp8,
+            use_mxfp4=self.use_mxfp4,
             per_channel_quant=self.per_channel_quant,
             block_shape=self.block_shape,
             profile_method=self.profile_method,
             output_dir=self.output_dir,
             global_num_experts=global_num_experts,
             expert_map=expert_map,
+            model_type=self.model_config.model_type,
         )
-
-        return {
-            "moe_grouped_gemm": stats,
-        }
+        native_backend = stats.pop("native_backend") if self.use_mxfp4 else None
+        return {"moe_grouped_gemm": stats}, native_backend
     
     def _profile_with_loop(
         self,
