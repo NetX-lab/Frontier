@@ -413,6 +413,45 @@ def _require_fresh_frontier_import() -> None:
         )
 
 
+def _path_entry_is_within(path_entry: str, root: Path) -> bool:
+    """Return whether a sys.path entry resolves inside root."""
+
+    effective_entry = Path(path_entry or os.getcwd()).resolve(strict=False)
+    resolved_root = root.resolve(strict=False)
+    return effective_entry == resolved_root or resolved_root in effective_entry.parents
+
+
+def _build_reference_sys_path(
+    original_sys_path: Sequence[str],
+    reference_root: Path,
+) -> list[str]:
+    """Build an import path that cannot fall through into this repository."""
+
+    candidate_root = Path(__file__).resolve().parents[3]
+    retained = [
+        entry
+        for entry in original_sys_path
+        if candidate_root == reference_root
+        or not _path_entry_is_within(entry, candidate_root)
+    ]
+    return [str(reference_root), *retained]
+
+
+def _remove_new_frontier_modules(original_names: set[str]) -> None:
+    """Remove Reference modules loaded by this one-shot in-process run."""
+
+    for name in sorted(
+        (
+            module_name
+            for module_name in sys.modules
+            if module_name == "frontier" or module_name.startswith("frontier.")
+        ),
+        reverse=True,
+    ):
+        if name not in original_names:
+            sys.modules.pop(name, None)
+
+
 def _require_module_path(module: ModuleType, expected_path: Path) -> None:
     module_file = getattr(module, "__file__", None)
     if not isinstance(module_file, str):
@@ -539,6 +578,11 @@ def run_reference_with_observer(
 
     original_argv = list(sys.argv)
     original_sys_path = list(sys.path)
+    original_frontier_modules = {
+        name
+        for name in sys.modules
+        if name == "frontier" or name.startswith("frontier.")
+    }
     original_dont_write_bytecode = sys.dont_write_bytecode
     installed = False
     primary_error: BaseException | None = None
@@ -547,7 +591,7 @@ def run_reference_with_observer(
     result: object = None
     try:
         sys.dont_write_bytecode = True
-        sys.path.insert(0, str(root))
+        sys.path[:] = _build_reference_sys_path(original_sys_path, root)
         runtime = _import_reference_runtime(root)
         observer.install(
             runtime.base_cluster_scheduler_class,
@@ -570,6 +614,7 @@ def run_reference_with_observer(
                         "Reference observer uninstall also failed: "
                         f"{error!r}"
                     )
+        _remove_new_frontier_modules(original_frontier_modules)
         sys.argv[:] = original_argv
         sys.path[:] = original_sys_path
         sys.dont_write_bytecode = original_dont_write_bytecode
