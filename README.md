@@ -14,6 +14,7 @@
 <div align="left">
 
 ## Latest News 🎯
+📍[2026/09] We've added basic support for AMD accelerators, GDN, and SGLang, see [PR#33](https://github.com/NetX-lab/Frontier/pull/33) and [PR#31](https://github.com/NetX-lab/Frontier/pull/31). Frontier now does a better job expressing complex model structures.<br />
 📍[2026/08] Prefill-Decode Disaggregation (PDD) and Attention-FFN Disaggregation (AFD) support is available in the new release.<br />
 📍[2026/07] We refactored the operator registration module to improve support and integration for diverse models and attn algorithms. More examples will be provided, including how to use Frontier for end-to-end simulation of a new/customized model.<br />
 📍[2026/06] Initial version released, with support for co-located serving and modern optimizations.<br />
