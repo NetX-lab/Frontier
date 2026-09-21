@@ -10,18 +10,18 @@
 
 | Field | Value |
 | --- | --- |
-| Correctness branch | `fix/issue26-correctness-pr` (to be created from `refactor/oversized-module-split` after the refactor branch's Step 0 push) |
-| Base at creation | pending |
+| Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
+| Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | Refactor PR fidelity matrix PASS (see `task_memory/task_2026-09-21_oversized_module_split/progress.md`) |
-| Current step | Step 0 (records landed; branch creation pending) |
-| Publication | LOCAL_ONLY |
-| Next action | Create the correctness worktree from the refactor branch, push, and stop for user review (Q6=a). |
+| Current step | Step 0 complete pending user review |
+| Publication | PUSHED_VERIFIED (records) |
+| Next action | After user review: refactor task Step 1 (fidelity harness + baseline capture). Correctness Step 1 (candidate/vLLM audit, draft PR) may start in parallel because it is read-only. |
 
 ## Step status
 
 | Step | Work package | Status | Test | Publication | User review |
 | --- | --- | --- | --- | --- | --- |
-| 0 | Worktree, references, baseline | IN_PROGRESS | NOT_RUN | LOCAL_ONLY | NOT_REVIEWED |
+| 0 | Worktree, references, baseline | PASS | PASS (baseline recorded) | PUSHED_VERIFIED | NOT_REVIEWED |
 | 1 | Candidate/vLLM audit | NOT_STARTED | — | — | — |
 | 2 | RR DP rotation | NOT_STARTED | — | — | — |
 | 3 | Shared monolithic forward | NOT_STARTED | — | — | — |
