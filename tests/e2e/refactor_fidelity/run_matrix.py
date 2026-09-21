@@ -59,6 +59,7 @@ class CaseOutcome:
     artifact_dir: str | None
     artifacts: list[dict]
     error: str | None
+    log_tail: str | None = None
 
     def as_record(self) -> dict:
         record = self.case.as_record()
@@ -68,6 +69,7 @@ class CaseOutcome:
             "artifact_dir": self.artifact_dir,
             "artifacts": self.artifacts,
             "error": self.error,
+            "log_tail": self.log_tail,
         })
         return record
 
@@ -99,18 +101,44 @@ def _package_versions(python_bin: str) -> dict[str, str]:
         return {"error": result.stderr.strip()[:400]}
 
 
-def _find_artifact_dir(metrics_root: Path) -> Path | None:
-    """Locate the single normalized metrics directory a run produced."""
+ARTIFACT_DISCOVERY_RETRY_SECONDS = 10.0
 
-    candidates = sorted(path.parent for path in metrics_root.rglob("system_metrics.json"))
-    if len(candidates) == 1:
-        return candidates[0]
-    if not candidates:
-        return None
-    raise RuntimeError(
-        f"expected one metrics directory under {metrics_root}, found {len(candidates)}: "
-        + ", ".join(str(path) for path in candidates)
-    )
+
+def _find_artifact_dir(metrics_root: Path, wait_seconds: float = 0.0) -> Path | None:
+    """Locate the single normalized metrics directory a run produced.
+
+    A successful run that appears to have written nothing is retried for a
+    bounded window: the directory listing can lag the child process on a
+    networked filesystem, and reporting a spurious failure would be worse than
+    waiting.  A genuinely empty run still fails, only later.
+    """
+
+    deadline = time.monotonic() + wait_seconds
+    while True:
+        candidates = sorted(
+            path.parent for path in metrics_root.rglob("system_metrics.json")
+        )
+        if len(candidates) == 1:
+            return candidates[0]
+        if len(candidates) > 1:
+            raise RuntimeError(
+                f"expected one metrics directory under {metrics_root}, "
+                f"found {len(candidates)}: "
+                + ", ".join(str(path) for path in candidates)
+            )
+        if time.monotonic() >= deadline:
+            return None
+        time.sleep(0.5)
+
+
+def _log_tail(log_path: Path, max_lines: int = 20) -> str:
+    """Return the last lines of a run log, for a failure record."""
+
+    try:
+        lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError as error:
+        return f"<log unreadable: {error}>"
+    return "\n".join(lines[-max_lines:])
 
 
 def _run_case(
@@ -172,7 +200,10 @@ def _run_case(
     artifact_dir: Path | None = None
     artifacts: list[dict] = []
     try:
-        artifact_dir = _find_artifact_dir(metrics_root)
+        artifact_dir = _find_artifact_dir(
+            metrics_root,
+            wait_seconds=ARTIFACT_DISCOVERY_RETRY_SECONDS if returncode == 0 else 0.0,
+        )
     except RuntimeError as failure:
         error = str(failure)
     if artifact_dir is not None:
@@ -195,6 +226,9 @@ def _run_case(
         ),
         artifacts=artifacts,
         error=error,
+        # Keep the evidence with the record: a later re-run of the same case
+        # overwrites run.log, which would otherwise erase why it failed.
+        log_tail=_log_tail(log_path) if (returncode != 0 or error) else None,
     )
 
 
@@ -360,6 +394,7 @@ def compare_labels(args: argparse.Namespace) -> int:
                 "case_id": case_id,
                 "candidate_returncode": candidate_record["returncode"],
                 "candidate_error": candidate_record["error"],
+                "candidate_log_tail": candidate_record.get("log_tail"),
             })
             continue
 
@@ -422,6 +457,10 @@ def compare_labels(args: argparse.Namespace) -> int:
     for entry in candidate_only_failures:
         print(f"\nCANDIDATE-ONLY FAILURE {entry['case_id']}: rc={entry['candidate_returncode']} "
               f"{entry['candidate_error'] or ''}")
+        if entry.get("candidate_log_tail"):
+            print("  last log lines:")
+            for line in entry["candidate_log_tail"].splitlines():
+                print(f"    {line}")
     print(f"\nreport: {report_path}")
 
     failed = bool(
