@@ -367,7 +367,9 @@ def test_shared_manager_validates_moe_training_names_from_moe_family(
     monkeypatch,
     tmp_path,
 ) -> None:
-    import frontier.execution_time_predictor.shared_prediction_model_manager as manager_module
+    # MOE_FAMILY is read by _get_moe_family_model_names, which resolves it in
+    # its own module, so the patch has to target that module.
+    import frontier.execution_time_predictor.prediction_model_identity as manager_module
 
     class _StopAfterValidation(Exception):
         pass

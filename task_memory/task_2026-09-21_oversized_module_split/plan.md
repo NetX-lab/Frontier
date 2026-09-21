@@ -7,6 +7,7 @@
 | 2026-09-21 | Initial plan: scope, proposed split boundaries, sequencing, fidelity matrix design, acceptance criteria. Boundaries are proposals derived from `module_survey.md`; each is confirmed against the code before its step starts. |
 | 2026-09-21 | Recorded the boundaries actually implemented for `config.py` in section 3.1, which differ from the proposal. |
 | 2026-09-21 | Recorded the boundaries actually implemented for the vLLM V1 replica scheduler in section 3.2. |
+| 2026-09-21 | Recorded the boundaries actually implemented for the shared prediction model manager in section 3.3. |
 
 ## 1. Scope and result
 
@@ -107,7 +108,24 @@ Mechanism: helpers become plain functions or small stateless classes that take t
 
 Correctness-branch owner after split: request-load accounting for Step 4 (`waiting` / `running` counts) is added to the kept class as one accessor; no change to the helper modules.
 
-### 3.3 `frontier/execution_time_predictor/`
+### 3.3 `frontier/execution_time_predictor/` (manager implemented)
+
+| Module | Lines | Content |
+| --- | --- | --- |
+| `shared_prediction_model_manager.py` | 722 | Construction, cluster requirement analysis, measurement-family and input-file selection, the estimator and scorer factory, training orchestration, the GDN predictor, and the public API |
+| `prediction_family_trainers.py` | 1700 | `PredictionFamilyTrainers`: one method per operator family, plus the shared fitting routine |
+| `profiling_dataframe_loaders.py` | 985 | `ProfilingDataFrameLoaders`: one loader per profiling CSV, its column validation, the feature-column constants and the derived features |
+| `prediction_model_registry.py` | 587 | `PredictionModelRegistry`: cache keys, trained-model identity, the in-memory registries and the persistent cache |
+| `layer_contract_resolution.py` | 495 | `LayerContractResolution`: typed layer contract and TP/EP key resolution, the FFN contract signature, the MoE dataset contract |
+| `prediction_model_identity.py` | 324 | Module-level identity helpers with no state: operator-family names, architecture-profile resolution, layer cache identity, typed contract matching |
+
+Cleanup first, all three verified definition-only repo-wide: `get_required_capabilities`, `get_training_context` and `_get_moe_df_with_derived_features`.
+
+The seam this split has to respect is named in the stacked PR's `review.md` under W5: the routing-implementation identity is lost because `ffn_signature` carries no routing term and `trained_model_signatures` is shared across clusters. The signature therefore lands in `layer_contract_resolution.py` and the cache keys and registry in `prediction_model_registry.py`, so the later fix edits those two modules and not the loaders.
+
+Eight tests needed their patch target moved; `issues.md` I9 records why and what the one governance-allowlist change does and does not alter.
+
+### 3.3a Original proposal (superseded)
 
 | Child module | Content (survey lines) | Approx. lines |
 | --- | --- | --- |

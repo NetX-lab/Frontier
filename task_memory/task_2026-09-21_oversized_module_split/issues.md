@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-09-21 | Created with the issues found during the `config.py` split. |
 | 2026-09-21 | Added I5 to I8, the four regressions the scheduler split introduced. |
+| 2026-09-21 | Added I9, the test-binding class of change the manager split required. |
 
 ## I1 — `ClusterConfig` is constructed at runtime by a method that moved out
 
@@ -82,3 +83,14 @@ This is the reason the split is gated by the unit suites in addition to the fide
 | Symptom | The test captured zero events where it expected two |
 | Cause | The test monkeypatches `_log_frontier_vllm_v1_schedule_decision` on the main scheduler module. The prefix-cache methods now live in `vllm_v1_prefix_cache.py` and resolve the name in that module's namespace, so the patch no longer intercepts. |
 | Resolution | The patch target moved with the methods. This is the one test change in the scheduler step; the test's subject, the ledger's emitted events, is unchanged. |
+
+## I9 — Tests that patch a module-level name must follow the code that reads it
+
+| Field | Record |
+| --- | --- |
+| Found by | The unit selection, 8 failures across 6 files |
+| Symptom | A patched helper had no effect, so a test observed an empty list or the unpatched value |
+| Cause | These tests monkeypatch a module-level name on `shared_prediction_model_manager` and then drive a method that reads it. After the split the method resolves that name in the module it moved to, so the patch no longer intercepts. This is the same class as I8. |
+| Resolution | Each patch target moved to the module that now owns the method under test: five files to `prediction_family_trainers`, one to `profiling_dataframe_loaders`, and one test to `prediction_model_identity` because `MOE_FAMILY` is read by `_get_moe_family_model_names`, which resolves it in its own module. |
+
+One of the eight is different in kind and deserves separate attention in review. `test_raw_model_profile_resolution_callsites_are_allowlisted` is a governance gate: it pins the exact set of functions permitted to resolve a raw model architecture profile, and how many times each may do so. Exactly one line of that allowlist changed. The entry keeps the same function name, the same kind, and the same expected call count of 1; only the owning file goes from `shared_prediction_model_manager.py` to `prediction_model_identity.py`, and the allowlist still holds 11 entries. No entry was added, removed, or given a higher count, so the property the gate exists to protect is unchanged.

@@ -27,7 +27,7 @@
 | 2 | Cleanup pass per module, matrix re-run | IN_PROGRESS (config.py done and matrix-identical) |
 | 3 | Split `config.py` | PASS (12 modules, largest 1888 lines) |
 | 4 | Split `vllm_v1_engine_replica_scheduler.py` | PASS (8 modules, largest 1386 lines) |
-| 5 | Split `shared_prediction_model_manager.py` | NOT_STARTED |
+| 5 | Split `shared_prediction_model_manager.py` | PASS (6 modules, largest 1700 lines) |
 | 6 | Split `sklearn_moe_execution_time_predictor.py` | NOT_STARTED |
 | 7 | Full matrix, unit suites, draft PR hand-off | NOT_STARTED |
 
@@ -43,3 +43,4 @@
 - 2026-09-21: vLLM V1 replica scheduler split complete and gated. `vllm_v1_engine_replica_scheduler.py` went from 5138 lines to eight modules, largest 1386. Cleanup removed `_attach_afd_metadata_if_needed`, 65 lines with no caller that duplicated `scheduler/utils/afd_metadata.py`. Gates: CLI flag set identical; method resolution verified for every private method the four subclasses override, and for the two the base class also defines; unit selection of 73 files across `tests/unit` and `tests/integration` gives 13 failed / 1570 passed / 19 skipped / 5 errors on both sides with identical failure identities; fidelity matrix 67 identical, 0 mismatched, 0 predictor cache name differences.
 - 2026-09-21: Four regressions were introduced by that split and fixed; see `issues.md` I5 to I8. Three were names the moved or retained code loads at runtime without a runtime binding, which is now checked mechanically: a script parses each split module and reports names loaded but neither imported, defined locally, nor builtin, counting `TYPE_CHECKING` imports as unbound. Its only remaining hit is a string annotation the flat CLI generator resolves through its own lazy-import special case.
 - 2026-09-21: Independent confirmation of commit `99922d2` from a second session, measured in an isolated detached worktree at that commit rather than through the shared tree: 67/67 identical, 0 mismatched, 0 cache name differences.
+- 2026-09-21: Prediction model manager split complete. 4614 lines to six modules, largest 1700. Cleanup removed three definition-only members. Unit selection widened to the predictor tests, 2300-odd tests over both sides: identical results, including identical failure identities. Eight tests needed their patch target moved with the code they exercise; see `issues.md` I9.

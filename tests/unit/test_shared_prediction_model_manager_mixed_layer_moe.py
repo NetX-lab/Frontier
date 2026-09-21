@@ -15,7 +15,7 @@ def test_mixed_layer_moe_materializes_moe_and_dense_mlp_predictors(
     monkeypatch, tmp_path
 ) -> None:
     """Mixed-layer MoE training must expose both runtime FFN branches."""
-    import frontier.execution_time_predictor.shared_prediction_model_manager as manager_module
+    import frontier.execution_time_predictor.prediction_family_trainers as manager_module
 
     linear_file = tmp_path / "linear_op.csv"
     moe_file = tmp_path / "moe.csv"
@@ -154,7 +154,7 @@ def test_mixed_layer_dense_training_does_not_reorder_legacy_share_expert_models(
     monkeypatch, tmp_path
 ) -> None:
     """Mixed-layer additions must not perturb legacy RF training order."""
-    import frontier.execution_time_predictor.shared_prediction_model_manager as manager_module
+    import frontier.execution_time_predictor.prediction_family_trainers as manager_module
 
     linear_file = tmp_path / "linear_op.csv"
     moe_file = tmp_path / "moe.csv"
