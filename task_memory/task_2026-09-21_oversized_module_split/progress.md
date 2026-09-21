@@ -28,7 +28,7 @@
 | 3 | Split `config.py` | PASS (12 modules, largest 1888 lines) |
 | 4 | Split `vllm_v1_engine_replica_scheduler.py` | PASS (8 modules, largest 1386 lines) |
 | 5 | Split `shared_prediction_model_manager.py` | PASS (6 modules, largest 1700 lines) |
-| 6 | Split `sklearn_moe_execution_time_predictor.py` | NOT_STARTED |
+| 6 | Split `sklearn_moe_execution_time_predictor.py` | PASS (6 modules, largest 1557 lines) |
 | 7 | Full matrix, unit suites, draft PR hand-off | NOT_STARTED |
 
 ## Chronological updates
@@ -44,3 +44,5 @@
 - 2026-09-21: Four regressions were introduced by that split and fixed; see `issues.md` I5 to I8. Three were names the moved or retained code loads at runtime without a runtime binding, which is now checked mechanically: a script parses each split module and reports names loaded but neither imported, defined locally, nor builtin, counting `TYPE_CHECKING` imports as unbound. Its only remaining hit is a string annotation the flat CLI generator resolves through its own lazy-import special case.
 - 2026-09-21: Independent confirmation of commit `99922d2` from a second session, measured in an isolated detached worktree at that commit rather than through the shared tree: 67/67 identical, 0 mismatched, 0 cache name differences.
 - 2026-09-21: Prediction model manager split complete. 4614 lines to six modules, largest 1700. Cleanup removed three definition-only members. Unit selection widened to the predictor tests, 2300-odd tests over both sides: identical results, including identical failure identities. Eight tests needed their patch target moved with the code they exercise; see `issues.md` I9.
+- 2026-09-21: MoE predictor split complete. 3539 lines to six modules, largest 1557. Cleanup removed `_is_grouped_gemm_on_demand_mode`, unreferenced. Unit selection widened again to 183 files: identical on both sides at 28 failed / 3016 passed / 55 skipped / 12 errors. Three tests needed the fake operator family installed in a second module; see `issues.md` I10. The first attempt at this selection aborted at collection and was discarded; see I11.
+- 2026-09-21: Independent measurement of `3b00f16`, the manager split, from a detached checkout at that commit: 67/67 identical, 0 mismatched, and a clean predictor cache report with 0 rekeyed models. That is the direct evidence that moving the model hash, the cache keys, the registry and the FFN contract signature into different modules changed no training identity.

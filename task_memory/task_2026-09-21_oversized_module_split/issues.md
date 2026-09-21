@@ -6,7 +6,7 @@
 | --- | --- |
 | 2026-09-21 | Created with the issues found during the `config.py` split. |
 | 2026-09-21 | Added I5 to I8, the four regressions the scheduler split introduced. |
-| 2026-09-21 | Added I9, the test-binding class of change the manager split required. |
+| 2026-09-21 | Added I9 and I10, the test-binding changes the predictor splits required. |
 
 ## I1 — `ClusterConfig` is constructed at runtime by a method that moved out
 
@@ -94,3 +94,22 @@ This is the reason the split is gated by the unit suites in addition to the fide
 | Resolution | Each patch target moved to the module that now owns the method under test: five files to `prediction_family_trainers`, one to `profiling_dataframe_loaders`, and one test to `prediction_model_identity` because `MOE_FAMILY` is read by `_get_moe_family_model_names`, which resolves it in its own module. |
 
 One of the eight is different in kind and deserves separate attention in review. `test_raw_model_profile_resolution_callsites_are_allowlisted` is a governance gate: it pins the exact set of functions permitted to resolve a raw model architecture profile, and how many times each may do so. Exactly one line of that allowlist changed. The entry keeps the same function name, the same kind, and the same expected call count of 1; only the owning file goes from `shared_prediction_model_manager.py` to `prediction_model_identity.py`, and the allowlist still holds 11 entries. No entry was added, removed, or given a higher count, so the property the gate exists to protect is unchanged.
+
+## I10 — A patched name that is now read in two modules
+
+| Field | Record |
+| --- | --- |
+| Found by | `tests/unit/test_moe_share_expert_operator_families.py`, 3 failures |
+| Symptom | After repointing the patch to the module that owns the function being called, training still raised `Unsupported MoE op for TP mapping`, because part of the path still saw the real operator family |
+| Cause | `MOE_FAMILY` was one binding in one module before the split. It is now imported by both `moe_predictor_helpers` and `moe_operator_times`, and the code path under test reads it in both. |
+| Resolution | The three tests now install the fake family in both modules. This is the only place in this branch where a test gained a line instead of having one changed, and it is a direct consequence of one name becoming two bindings. |
+| Note for review | A reviewer checking that the split preserved behavior should read this as evidence that it did: the test still asserts the same thing, and it needed the second patch precisely because the production code reads the name in both places. |
+
+## I11 — A pytest selection that aborts at collection proves nothing
+
+| Field | Record |
+| --- | --- |
+| Found by | The first unit parity run for the MoE predictor split |
+| Symptom | Both sides reported the same 7 collection errors and no test results, and the comparison said IDENTICAL |
+| Cause | Widening the selection pulled in seven modules that import `torch`, which the minimal CPU environment deliberately excludes. Pytest stops at collection errors by default, so nothing ran, and comparing two empty result sets trivially agreed. |
+| Resolution | `--continue-on-collection-errors`, after which both sides run 3016 tests. The lesson is that a parity comparison has to assert that tests actually ran, not only that the two sides agree. |

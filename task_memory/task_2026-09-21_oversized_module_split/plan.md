@@ -7,7 +7,7 @@
 | 2026-09-21 | Initial plan: scope, proposed split boundaries, sequencing, fidelity matrix design, acceptance criteria. Boundaries are proposals derived from `module_survey.md`; each is confirmed against the code before its step starts. |
 | 2026-09-21 | Recorded the boundaries actually implemented for `config.py` in section 3.1, which differ from the proposal. |
 | 2026-09-21 | Recorded the boundaries actually implemented for the vLLM V1 replica scheduler in section 3.2. |
-| 2026-09-21 | Recorded the boundaries actually implemented for the shared prediction model manager in section 3.3. |
+| 2026-09-21 | Recorded the boundaries actually implemented for the shared prediction model manager in section 3.3 and the MoE predictor in 3.4. |
 
 ## 1. Scope and result
 
@@ -140,7 +140,22 @@ Cleanup first: dead `_get_moe_df_with_derived_features`, unreferenced `get_requi
 
 Correctness-branch owner after split: routing-runtime identity (Step 5) enters `layer_contract_resolution.py` (signature) and `prediction_model_cache.py` (hash) and `prediction_model_registry.py` (lookup) at one clearly named point each.
 
-### 3.4 `sklearn_moe_execution_time_predictor.py`
+### 3.4 `sklearn_moe_execution_time_predictor.py` (implemented)
+
+| Module | Lines | Content |
+| --- | --- | --- |
+| `sklearn_moe_execution_time_predictor.py` | 1557 | The class shell, dummy-mode timing, layer classification, the attention query cache, the layer and stage orchestration and the public prediction entry points |
+| `moe_operator_times.py` | 710 | `MoeOperatorTimes`: gating, routing top-k, shuffling, grouped expert GEMM, the expert-parallel collective, and the token-count resolution each needs |
+| `moe_routing_workload.py` | 583 | `MoeRoutingWorkload`: the expert-load distribution and the per-lane routed workload it produces |
+| `moe_dataset_training.py` | 438 | `MoeDatasetTraining`: dataset admission, per-operator training, and the load-imbalance feature list |
+| `moe_mtp_replay.py` | 216 | `MoeMtpReplay`: MoE time for speculative-decoding replay rows |
+| `moe_predictor_helpers.py` | 176 | The module-level helpers, in a leaf module so the mixins can use them without importing the predictor |
+
+Cleanup removed `_is_grouped_gemm_on_demand_mode`, 14 lines with no reference anywhere.
+
+Three tests needed a second patch target rather than a moved one: `MOE_FAMILY` is now read in two modules, so a fake family has to be installed in both for it to be seen end to end. That is recorded in `issues.md` I10, and it is the one case in this branch where a test gained a line rather than changing one.
+
+### 3.4a Original proposal (superseded)
 
 | Child module | Content (survey lines) | Approx. lines |
 | --- | --- | --- |
