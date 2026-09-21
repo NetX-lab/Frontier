@@ -16,7 +16,22 @@ def test_non_ffn_cluster_scheduler_uses_replica_local_dp_identity() -> None:
     non_ffn_block = source[block_start:block_end]
     assert "self._replica_scheduler_count = attn_dp" in non_ffn_block
     assert "self._replica_dp_size = attn_dp" in non_ffn_block
-    assert "dp_id = local_idx % self._replica_dp_size" in round_robin_source
+    # What this guards is the lane cardinality: a non-FFN cluster scheduler must
+    # derive the DP lane from the Replica-local DP size, not from a global or
+    # expert-parallel cardinality. Assert that property over every lane
+    # assignment rather than one literal expression, so the check survives a
+    # change to how the ordinal is computed but still fails if the lane is ever
+    # taken modulo something else.
+    lane_assignments = [
+        line.strip()
+        for line in round_robin_source.splitlines()
+        if line.strip().startswith("dp_id = ")
+    ]
+    assert lane_assignments, "the round-robin scheduler must assign a DP lane"
+    assert all(
+        assignment.endswith("% self._replica_dp_size")
+        for assignment in lane_assignments
+    ), lane_assignments
 
 
 def test_production_scheduler_surface_has_no_retired_replica_dp_size() -> None:

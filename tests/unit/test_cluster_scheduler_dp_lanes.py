@@ -4,6 +4,9 @@ from frontier.entities import Request
 from frontier.scheduler.cluster_scheduler.lor_cluster_scheduler import (
     LORClusterScheduler,
 )
+from frontier.scheduler.cluster_scheduler.round_robin_cluster_scheduler import (
+    RoundRobinClusterScheduler,
+)
 from frontier.scheduler.cluster_scheduler.random_cluster_scheduler import (
     RandomClusterScheduler,
 )
@@ -179,3 +182,119 @@ def test_stage_release_wakes_only_queued_sibling_lanes() -> None:
     assert events[0]._replica_id == 7
     assert events[0]._stage_id == 4
     assert events[0]._replica_local_id == 1
+
+
+def _round_robin_scheduler(
+    *, replica_ids: list[int], dp_size: int
+) -> RoundRobinClusterScheduler:
+    """A round-robin scheduler over the given replicas, with an empty queue."""
+
+    scheduler = RoundRobinClusterScheduler.__new__(RoundRobinClusterScheduler)
+    scheduler._cluster_type = ClusterType.MONOLITHIC
+    scheduler._num_replicas = len(replica_ids)
+    scheduler._replica_dp_size = dp_size
+    scheduler._cluster = SimpleNamespace(
+        replicas={replica_id: object() for replica_id in replica_ids}
+    )
+    scheduler._request_queue = []
+    scheduler._request_counter = 0
+    return scheduler
+
+
+def _placements_for_call_sizes(
+    *, replica_ids: list[int], dp_size: int, call_sizes: list[int]
+) -> list[tuple[int, int]]:
+    """Schedule one request stream in the given batches.
+
+    Returns the (replica id, DP lane) of each request by its position in the
+    stream. The stream is the same for every call partitioning, so the result
+    may not depend on `call_sizes`. Comparing by stream position rather than by
+    request id is what makes two separately constructed runs comparable.
+    """
+
+    scheduler = _round_robin_scheduler(replica_ids=replica_ids, dp_size=dp_size)
+    total = sum(call_sizes)
+    requests = [_request() for _ in range(total)]
+    position_of = {request.id: index for index, request in enumerate(requests)}
+    placements: dict[int, tuple[int, int]] = {}
+
+    offset = 0
+    for size in call_sizes:
+        scheduler._request_queue = requests[offset:offset + size]
+        offset += size
+        for replica_id, dp_id, request in scheduler._schedule_batch_mode():
+            position = position_of[request.id]
+            assert position not in placements, "a request was scheduled twice"
+            placements[position] = (replica_id, dp_id)
+
+    assert len(placements) == total, "every request is scheduled exactly once"
+    return [placements[position] for position in range(total)]
+
+
+def test_round_robin_dp_lane_does_not_depend_on_call_partitioning() -> None:
+    """The defect this covers: the DP lane restarted at zero on every call.
+
+    With one replica and two lanes, scheduling eight requests one at a time put
+    every request on lane 0, while scheduling them in one call alternated. The
+    lane must follow the request's position in the stream, not its position
+    within the call that happened to carry it.
+    """
+
+    one_at_a_time = _placements_for_call_sizes(
+        replica_ids=[7], dp_size=2, call_sizes=[1] * 8
+    )
+    single_burst = _placements_for_call_sizes(
+        replica_ids=[7], dp_size=2, call_sizes=[8]
+    )
+    uneven = _placements_for_call_sizes(
+        replica_ids=[7], dp_size=2, call_sizes=[3, 1, 4]
+    )
+
+    assert one_at_a_time == single_burst == uneven
+    assert one_at_a_time == [(7, 0), (7, 1)] * 4
+
+
+def test_round_robin_placement_is_stable_across_topologies() -> None:
+    """Replica ids need not be contiguous and lanes may outnumber two."""
+
+    cases = [
+        ([7], 1),
+        ([7], 4),
+        ([3, 11], 1),
+        ([3, 11], 2),
+        ([3, 11, 42], 3),
+    ]
+    for replica_ids, dp_size in cases:
+        burst = _placements_for_call_sizes(
+            replica_ids=replica_ids, dp_size=dp_size, call_sizes=[12]
+        )
+        incremental = _placements_for_call_sizes(
+            replica_ids=replica_ids, dp_size=dp_size, call_sizes=[1] * 12
+        )
+        assert burst == incremental, (replica_ids, dp_size)
+        assert {replica_id for replica_id, _ in burst} <= set(replica_ids)
+        assert all(0 <= dp_id < dp_size for _, dp_id in burst)
+
+
+def test_round_robin_survives_an_empty_scheduling_call() -> None:
+    """An empty call must neither advance the rotation nor reset it."""
+
+    with_gap = _placements_for_call_sizes(
+        replica_ids=[3, 11], dp_size=2, call_sizes=[2, 0, 2, 0, 4]
+    )
+    without_gap = _placements_for_call_sizes(
+        replica_ids=[3, 11], dp_size=2, call_sizes=[8]
+    )
+    assert with_gap == without_gap
+
+
+def test_round_robin_returns_results_grouped_by_replica() -> None:
+    """The return order groups each call's results per replica, as before."""
+
+    scheduler = _round_robin_scheduler(replica_ids=[3, 11], dp_size=2)
+    scheduler._request_queue = [_request() for _ in range(6)]
+
+    mapping = scheduler._schedule_batch_mode()
+
+    replica_order = [replica_id for replica_id, _, _ in mapping]
+    assert replica_order == [3, 3, 3, 11, 11, 11]

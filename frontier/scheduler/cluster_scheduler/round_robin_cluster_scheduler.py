@@ -362,28 +362,36 @@ class RoundRobinClusterScheduler(BaseClusterScheduler):
         Processes all requests in the queue at once using traditional round-robin.
         """
 
-        # First, distribute requests to replicas using round-robin
-        replica_requests = [[] for _ in range(self._num_replicas)]
+        # Both the replica and the DP lane come from one ordinal that persists
+        # across calls, so an identical ordered request stream lands on the same
+        # replica and the same lane however it is divided between calls. This is
+        # the rotation `_schedule_decode_lane_round_robin` already applies to the
+        # unified decode role.
+        replica_requests: List[List[Tuple[int, Request]]] = [
+            [] for _ in range(self._num_replicas)
+        ]
         replica_ids = list(self._cluster.replicas.keys())
 
         request_idx = 0
         while self._request_queue:
             request = self._request_queue.pop(0)
-            replica_idx = (self._request_counter + request_idx) % self._num_replicas
-            replica_requests[replica_idx].append(request)
+            ordinal = self._request_counter + request_idx
+            replica_idx = ordinal % self._num_replicas
+            dp_id = (ordinal // self._num_replicas) % self._replica_dp_size
+            replica_requests[replica_idx].append((dp_id, request))
             request_idx += 1
 
         self._request_counter += request_idx
 
-        # Distribute requests across logical DP lanes inside each Replica.
+        # Results stay grouped per replica, which is the order this method has
+        # always returned.
         request_mapping = []
-        for replica_idx, requests in enumerate(replica_requests):
-            if not requests:
+        for replica_idx, lane_requests in enumerate(replica_requests):
+            if not lane_requests:
                 continue
 
             replica_id = replica_ids[replica_idx]
-            for local_idx, request in enumerate(requests):
-                dp_id = local_idx % self._replica_dp_size
+            for dp_id, request in lane_requests:
                 request_mapping.append((replica_id, dp_id, request))
 
         return request_mapping
