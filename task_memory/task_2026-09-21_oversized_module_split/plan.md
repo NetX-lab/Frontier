@@ -5,6 +5,9 @@
 | Date | Change |
 | --- | --- |
 | 2026-09-21 | Initial plan: scope, proposed split boundaries, sequencing, fidelity matrix design, acceptance criteria. Boundaries are proposals derived from `module_survey.md`; each is confirmed against the code before its step starts. |
+| 2026-09-21 | Recorded the boundaries actually implemented for `config.py` in section 3.1, which differ from the proposal. |
+| 2026-09-21 | Recorded the boundaries actually implemented for the vLLM V1 replica scheduler in section 3.2. |
+| 2026-09-21 | Recorded the boundaries actually implemented for the shared prediction model manager in section 3.3 and the MoE predictor in 3.4. |
 
 ## 1. Scope and result
 
@@ -29,7 +32,32 @@ Out of scope: the other five modules above 2,000 lines (`sklearn_execution_time_
 
 ## 3. Proposed boundaries (to confirm at each step)
 
-### 3.1 `frontier/config/`
+### 3.1 `frontier/config/` (implemented)
+
+The proposal below was revised during implementation. Two things forced the change. First, `ClusterConfig` alone is 2,588 lines, so leaving it in `config.py` would have kept that file above the gate no matter which leaf families moved out. Second, `flat_dataclass` resolves string annotations in the *defining module's* namespace, so every module must carry the imports its own annotations need; that is a correctness constraint on the split, not a style choice.
+
+What was implemented:
+
+| Module | Lines | Content |
+| --- | --- | --- |
+| `config.py` | 788 | `SimulationConfig`, the lazy CC-backend import note, and the re-export block that keeps `from frontier.config[.config] import X` working for all 36 names other modules import |
+| `cluster_config.py` | 1888 | `ClusterConfig`: the flat per-role field surface, `__post_init__`, the validators, monolithic and disaggregated setup, `_validate_replica_config` |
+| `cluster_role_config.py` | 586 | `_get_cc_backend_configs` and `ClusterRoleConfigBuilder`: the 13 methods that build the per-role replica, predictor and CC-backend configurations |
+| `cluster_topology_summary.py` | 217 | `ClusterTopologySummary`: `_collect_cluster_info`, `get_server_count_metadata`, `print_cluster_statistics` |
+| `release_guards.py` | 56 | The six release-guard messages and the two disaggregated field-name tables |
+| `request_generator_config.py` | 262 | Arrival interval, request length and request generator families |
+| `replica_scheduler_config.py` | 711 | Every replica scheduler configuration, including the vLLM V1 family and its Sj2q and SGLang subclasses |
+| `metrics_config.py` | 173 | `MetricsConfig` |
+| `speculative_decoding_config.py` | 622 | `SpeculativeDecodingConfig` and its trace loaders |
+| `replica_config.py` | 250 | `ReplicaConfig` |
+| `cluster_scheduler_config.py` | 48 | The cluster scheduler configuration family |
+| `execution_time_predictor_config.py` | 314 | The predictor configuration family and its calibration scales |
+
+The two groups extracted from `ClusterConfig` are **mixins that `ClusterConfig` inherits**, not free functions taking the config. That keeps the split a pure move: the method bodies, the method names and every call site are unchanged, including the four methods that external code and tests call directly (`get_cluster_configs_for_disaggregation`, `get_server_count_metadata`, `_validate_replica_config`, `_create_replica_config_copy`). Rewriting them as free functions would have touched every line of 731 moved lines and made the diff unreviewable, with the fidelity matrix as the only remaining check.
+
+Naming note for review: `ClusterRoleConfigBuilder` and `ClusterTopologySummary` describe what each group produces. If a reviewer prefers different names, renaming them is mechanical and affects only three files.
+
+### 3.1a Original proposal (superseded)
 
 | Child module | Content (survey lines) | Approx. lines |
 | --- | --- | --- |
@@ -46,7 +74,26 @@ Cleanup first: the three duplicated `hasattr(base_config, ...)` triplets and the
 
 Correctness-branch owner after split: the opt-in DP placement config (Step 4) lands in `replica_config.py` next to the cluster scheduler configs; routing runtime override (Step 5) lands in `replica_config.py`.
 
-### 3.2 `frontier/scheduler/replica_scheduler/`
+### 3.2 `frontier/scheduler/replica_scheduler/` (implemented)
+
+Same mixin mechanism as the configuration split, for the same reason: the move stays a move, and the private methods four subclasses override keep resolving correctly because the mixins sit before `BaseReplicaScheduler` in the base list. That ordering was verified for every overridden name.
+
+| Module | Lines | Content |
+| --- | --- | --- |
+| `vllm_v1_engine_replica_scheduler.py` | 1386 | The class shell, `__init__`, batch creation and active-set bookkeeping, `complete_kv_transfer_for_requests`, `on_batch_end`, phase 1 and phase 2 scheduling, the two-phase entry point, and the public overrides |
+| `vllm_v1_mtp_wait.py` | 1142 | `TargetEmbeddedMtpWaitPolicy`: admission delay, output wait and terminal release timing for target-embedded MTP under monolithic pipeline parallelism |
+| `vllm_v1_role_schedules.py` | 858 | `DisaggregatedRoleScheduling`: the prefill-only, decode-only, decode-waiting and decode-attention entry points a disaggregated cluster drives |
+| `vllm_v1_kv_allocation.py` | 713 | `KvBlockAllocation`: token accounting, block allocation, preemption and resource release |
+| `vllm_v1_iteration_policy.py` | 597 | `IterationSchedulingPolicy`: scheduling policy, fast lanes, CUDA graph capture sizing, speculative-decoding batch metadata, decision-log emission |
+| `vllm_v1_prefix_cache.py` | 253 | `PrefixCacheAdmission`, `PrefixCacheLedger`: admission and identity events |
+| `vllm_v1_decode_attn_cohort.py` | 219 | `DecodeAttentionCohort`: cohort identity, stage slots and phase for the PD-AF decode-attention role |
+| `vllm_v1_decision_log.py` | 44 | The optional JSONL decision log and its enabled predicate |
+
+Cleanup first: removed `_attach_afd_metadata_if_needed`, 65 lines with no caller anywhere, which duplicated `frontier/scheduler/utils/afd_metadata.py`.
+
+Four regressions were introduced and fixed; `issues.md` I5 to I8 record each one, what found it, and what prevents the class of defect from recurring.
+
+### 3.2a Original proposal (superseded)
 
 | Child module | Content (survey lines) | Approx. lines |
 | --- | --- | --- |
@@ -61,7 +108,24 @@ Mechanism: helpers become plain functions or small stateless classes that take t
 
 Correctness-branch owner after split: request-load accounting for Step 4 (`waiting` / `running` counts) is added to the kept class as one accessor; no change to the helper modules.
 
-### 3.3 `frontier/execution_time_predictor/`
+### 3.3 `frontier/execution_time_predictor/` (manager implemented)
+
+| Module | Lines | Content |
+| --- | --- | --- |
+| `shared_prediction_model_manager.py` | 722 | Construction, cluster requirement analysis, measurement-family and input-file selection, the estimator and scorer factory, training orchestration, the GDN predictor, and the public API |
+| `prediction_family_trainers.py` | 1700 | `PredictionFamilyTrainers`: one method per operator family, plus the shared fitting routine |
+| `profiling_dataframe_loaders.py` | 985 | `ProfilingDataFrameLoaders`: one loader per profiling CSV, its column validation, the feature-column constants and the derived features |
+| `prediction_model_registry.py` | 587 | `PredictionModelRegistry`: cache keys, trained-model identity, the in-memory registries and the persistent cache |
+| `layer_contract_resolution.py` | 495 | `LayerContractResolution`: typed layer contract and TP/EP key resolution, the FFN contract signature, the MoE dataset contract |
+| `prediction_model_identity.py` | 324 | Module-level identity helpers with no state: operator-family names, architecture-profile resolution, layer cache identity, typed contract matching |
+
+Cleanup first, all three verified definition-only repo-wide: `get_required_capabilities`, `get_training_context` and `_get_moe_df_with_derived_features`.
+
+The seam this split has to respect is named in the stacked PR's `review.md` under W5: the routing-implementation identity is lost because `ffn_signature` carries no routing term and `trained_model_signatures` is shared across clusters. The signature therefore lands in `layer_contract_resolution.py` and the cache keys and registry in `prediction_model_registry.py`, so the later fix edits those two modules and not the loaders.
+
+Eight tests needed their patch target moved; `issues.md` I9 records why and what the one governance-allowlist change does and does not alter.
+
+### 3.3a Original proposal (superseded)
 
 | Child module | Content (survey lines) | Approx. lines |
 | --- | --- | --- |
@@ -76,7 +140,22 @@ Cleanup first: dead `_get_moe_df_with_derived_features`, unreferenced `get_requi
 
 Correctness-branch owner after split: routing-runtime identity (Step 5) enters `layer_contract_resolution.py` (signature) and `prediction_model_cache.py` (hash) and `prediction_model_registry.py` (lookup) at one clearly named point each.
 
-### 3.4 `sklearn_moe_execution_time_predictor.py`
+### 3.4 `sklearn_moe_execution_time_predictor.py` (implemented)
+
+| Module | Lines | Content |
+| --- | --- | --- |
+| `sklearn_moe_execution_time_predictor.py` | 1557 | The class shell, dummy-mode timing, layer classification, the attention query cache, the layer and stage orchestration and the public prediction entry points |
+| `moe_operator_times.py` | 710 | `MoeOperatorTimes`: gating, routing top-k, shuffling, grouped expert GEMM, the expert-parallel collective, and the token-count resolution each needs |
+| `moe_routing_workload.py` | 583 | `MoeRoutingWorkload`: the expert-load distribution and the per-lane routed workload it produces |
+| `moe_dataset_training.py` | 438 | `MoeDatasetTraining`: dataset admission, per-operator training, and the load-imbalance feature list |
+| `moe_mtp_replay.py` | 216 | `MoeMtpReplay`: MoE time for speculative-decoding replay rows |
+| `moe_predictor_helpers.py` | 176 | The module-level helpers, in a leaf module so the mixins can use them without importing the predictor |
+
+Cleanup removed `_is_grouped_gemm_on_demand_mode`, 14 lines with no reference anywhere.
+
+Three tests needed a second patch target rather than a moved one: `MOE_FAMILY` is now read in two modules, so a fake family has to be installed in both for it to be seen end to end. That is recorded in `issues.md` I10, and it is the one case in this branch where a test gained a line rather than changing one.
+
+### 3.4a Original proposal (superseded)
 
 | Child module | Content (survey lines) | Approx. lines |
 | --- | --- | --- |
