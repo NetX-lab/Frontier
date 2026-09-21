@@ -476,6 +476,72 @@ def _trained_predictor() -> list[FidelityCase]:
     ]
 
 
+def _dp_placement() -> list[FidelityCase]:
+    """Cases whose outcome depends on how requests are placed on DP lanes.
+
+    The rest of the matrix runs one attention DP lane, where lane placement
+    cannot vary, so it gives a change to DP placement almost no coverage. These
+    cases exist to give the next such change a real blast radius.
+
+    Two properties matter and are covered separately. Placement must not depend
+    on how an identical request stream is divided across scheduling calls,
+    which needs a run that enters the scheduler many times, so most of these
+    are online. And placement across replicas and across lanes interact, which
+    needs more than one replica as well as more than one lane.
+
+    Only dense co-location cases appear here, and that is a coverage limit
+    worth stating rather than a choice. The prefill role reaches the same
+    placement path as the monolithic role, but no shipped recipe can give it
+    more than one lane: a dense model in a disaggregated architecture is
+    rejected with "Dense models do not support attn data parallelism in
+    disaggregated mode", and the MoE wrappers require
+    ``ATTN_TP == MOE_TP * MOE_EP`` while the runtime requires
+    ``attn_tp * attn_dp == moe_tp * moe_ep``, which have no common solution
+    above one lane. Placement changes affecting the prefill role therefore
+    have to be validated by unit tests, not by this matrix.
+    """
+
+    rows: list[tuple[str, str, str, dict[str, str], tuple[str, ...]]] = [
+        (
+            "dp_dense_online_lanes2",
+            COLOCATION_ONLINE_DENSE,
+            "two lanes with arrivals spread over many scheduling calls",
+            {"NUM_REQUESTS": "16", "PREFILL_TOKENS": "256", "DECODE_TOKENS": "32",
+             "QPS": "2.0", "ATTN_TP": "2", "DECODE_CUDA_GRAPH_MODE": "none"},
+            ("--replica_config_attn_dp", "2"),
+        ),
+        (
+            "dp_dense_online_lanes4",
+            COLOCATION_ONLINE_DENSE,
+            "four lanes, so the lane index wraps more than once",
+            {"NUM_REQUESTS": "16", "PREFILL_TOKENS": "256", "DECODE_TOKENS": "32",
+             "QPS": "2.0", "ATTN_TP": "4", "DECODE_CUDA_GRAPH_MODE": "none"},
+            ("--replica_config_attn_dp", "4"),
+        ),
+        (
+            "dp_dense_offline_lanes2_replicas2",
+            COLOCATION_OFFLINE_DENSE,
+            "two lanes over two replicas, where the replica and lane terms interact",
+            {"NUM_REQUESTS": "16", "PREFILL_TOKENS": "256", "DECODE_TOKENS": "32",
+             "NUM_REPLICAS": "2", "ATTN_TP": "2", "DECODE_CUDA_GRAPH_MODE": "none"},
+            ("--replica_config_attn_dp", "2"),
+        ),
+        (
+            "dp_dense_online_lanes2_replicas2",
+            COLOCATION_ONLINE_DENSE,
+            "two lanes over two replicas with arrivals spread across calls",
+            {"NUM_REQUESTS": "24", "PREFILL_TOKENS": "256", "DECODE_TOKENS": "16",
+             "QPS": "4.0", "NUM_REPLICAS": "2", "ATTN_TP": "2",
+             "DECODE_CUDA_GRAPH_MODE": "none"},
+            ("--replica_config_attn_dp", "2"),
+        ),
+    ]
+    return [
+        FidelityCase(case_id, "dp_placement", script, purpose, env, extra)
+        for case_id, script, purpose, env, extra in rows
+    ]
+
+
 def build_cases() -> list[FidelityCase]:
     """Return the full ordered matrix.
 
@@ -491,6 +557,7 @@ def build_cases() -> list[FidelityCase]:
     cases.extend(_colocation_features())
     cases.extend(_pdd())
     cases.extend(_pdaf())
+    cases.extend(_dp_placement())
 
     seen: set[str] = set()
     for case in cases:
