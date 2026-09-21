@@ -242,10 +242,25 @@ Facts read from the manifests under
    comparisons and the W2 measurement in `validation.md` were made against this
    label. Their per-case conclusions are not withdrawn; the "full matrix" and
    cache-name claims must be re-established against a clean baseline.
-2. **The contaminated `candidate` label is still on disk** and its manifest is a
-   recorded proof of the concurrent-edit collision. It must not be reused; it
-   should be removed or renamed before any further comparison (deletion needs
-   authorization).
+2. **The contaminated `candidate` label.** Its manifest recorded `git_head`
+   `99922d2` against the shared `oversized-module-split` worktree with this
+   working tree state, which is the concurrent-edit collision in full:
+
+   - `M frontier/config/cluster_config.py`
+   - `M frontier/config/replica_config.py`
+   - `M frontier/scheduler/replica_scheduler/vllm_v1_engine_replica_scheduler.py`
+   - `M tests/e2e/refactor_fidelity/run_matrix.py`
+   - `?? frontier/scheduler/replica_scheduler/vllm_v1_decision_log.py`
+   - `?? frontier/scheduler/replica_scheduler/vllm_v1_decode_attn_cohort.py`
+   - `?? frontier/scheduler/replica_scheduler/vllm_v1_iteration_policy.py`
+   - `?? frontier/scheduler/replica_scheduler/vllm_v1_kv_allocation.py`
+   - `?? frontier/scheduler/replica_scheduler/vllm_v1_mtp_wait.py`
+   - `?? frontier/scheduler/replica_scheduler/vllm_v1_prefix_cache.py`
+   - `?? frontier/scheduler/replica_scheduler/vllm_v1_role_schedules.py`
+
+   The label was deleted on 2026-09-22 with the maintainer's authorization,
+   after this list was transcribed here. It must never be used as a
+   comparison side.
 3. **The W2 record is a mixed-harness measurement.** `candidate_6ab521d` ran the
    `6ab521d` source under the refactor tip's case table and comparator. This was
    disclosed, but the record does not state the harness revision as a field.
