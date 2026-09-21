@@ -433,6 +433,11 @@ def compare_labels(args: argparse.Namespace) -> int:
         cache_only_in_candidate = []
         cache_findings = []
 
+    compared = len(identical) + len(mismatched)
+    complete = (
+        set(baseline_results) == full_case_set and set(candidate_results) == full_case_set
+    )
+
     report = {
         "baseline": {
             "label": args.baseline_label,
@@ -453,12 +458,16 @@ def compare_labels(args: argparse.Namespace) -> int:
         "predictor_cache_files_only_in_candidate": cache_only_in_candidate,
         "predictor_cache_findings": [f.as_record() for f in cache_findings],
         "predictor_cache_compared": cache_comparable,
+        "cases_compared": compared,
+        "case_table_size": len(full_case_set),
+        "complete_comparison": complete,
     }
     report_path = output_root / "comparison.json"
     report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
     print(f"baseline {args.baseline_label} @ {baseline_manifest['git_head'][:12]}")
     print(f"candidate {args.candidate_label} @ {candidate_manifest['git_head'][:12]}")
+    print(f"cases compared: {compared} of {len(full_case_set)} in the case table")
     print(f"identical: {len(identical)}")
     print(f"mismatched: {len(mismatched)}")
     print(f"baseline failures (excluded): {len(baseline_failures)}")
@@ -510,15 +519,26 @@ def compare_labels(args: argparse.Namespace) -> int:
                 print(f"    {line}")
     print(f"\nreport: {report_path}")
 
-    # A partial comparison is not a pass. Cases present on only one side keep
-    # failing the verdict; the cache gate above only suppresses a cache report
-    # that would be meaningless, it never turns a partial run green.
+    # A comparison passes only when it actually compared the whole case table.
+    # Two sides that both ran nothing agree trivially, and two sides that both
+    # ran the same three cases agree on three cases; neither is evidence about
+    # the branch. Requiring completeness is what stops an empty or filtered run
+    # from being read as a pass. Use --allow-partial for a deliberate subset.
+    incomplete = not complete and not args.allow_partial
+    if incomplete:
+        print(
+            "\nINCOMPLETE: this comparison did not cover the whole case table, "
+            "so it is not evidence that the branch is unchanged. "
+            "Re-run both sides without a filter, or pass --allow-partial to "
+            "accept a deliberate subset."
+        )
     failed = bool(
         mismatched
         or candidate_only_failures
         or missing
         or cache_only_in_baseline
         or cache_only_in_candidate
+        or incomplete
     )
     return 1 if failed else 0
 
@@ -559,6 +579,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     compare_parser.add_argument("--output-root", required=True)
     compare_parser.add_argument("--baseline-label", default="baseline")
     compare_parser.add_argument("--candidate-label", default="candidate")
+    compare_parser.add_argument(
+        "--allow-partial", action="store_true",
+        help="accept a comparison that does not cover the whole case table",
+    )
     compare_parser.set_defaults(func=compare_labels)
 
     list_parser = subparsers.add_parser("list", help="print the case table")
