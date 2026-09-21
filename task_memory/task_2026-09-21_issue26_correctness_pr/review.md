@@ -7,6 +7,7 @@
 | 2026-09-21 | Created with the pinned source snapshot. |
 | 2026-09-21 | Step 1 complete: candidate and vLLM audits landed, dispositions recorded, two decision checkpoints raised. |
 | 2026-09-21 | Corrected the W3 and W4 rows: the step-id namespace is not partitioned by sync kind, only the open-step binding table is. Verified against `forward_sync_state.py` at `c18eb2c`. |
+| 2026-09-22 | Recorded the maintainer's PR #34 / PR #35 review: D1 and D2 resolved, ten review comments dispositioned, each verified against source. |
 
 ## Pinned source snapshot
 
@@ -137,3 +138,80 @@ The candidate deletes `VLLMv1EngineReplicaScheduler._get_num_waiting_reqs_for_de
 ## Final code-review findings
 
 Pending Step 8.
+
+## Maintainer decisions and review dispositions (2026-09-22)
+
+Source: `.local-draft/Frontier_PR34_PR35_Review_and_D1_D2_Decisions_2026-09-22.md`,
+maintainer review of PR #34 at `5ef96b5` and PR #35 at `33f0d5a`.
+
+### D1 — RESOLVED: W3 first, then validate the identity at the report boundary
+
+Approved as written. Order: implement and validate W3; inspect the identity at
+the **load-report emission boundary**; reuse it only where its equality and
+ordering hold; reject unsupported configurations explicitly rather than adding a
+second counter to broaden W4. Dense DP>1 is not admitted by W3 landing. DP1 is a
+tested degenerate case that does not validate cross-lane behavior.
+
+Two source-backed refinements to the reasoning, verified against
+`.real-engine/vLLM-BS` at `ea95f571`:
+
+1. **Why per-lane counters work in the reference.** `step_counter` is owned by
+   `DPEngineCoreProc` (`core.py:997`, `:1012`), so the maintainer's correction is
+   right: per-lane is not itself the defect. The reason those per-lane counters
+   are still comparable across engines is that the busy loops stay in lockstep —
+   every iteration calls `_has_global_unfinished_reqs`, which increments the
+   counter (`:1134`) and all-reduces every 32 steps (`:1135`), and every wave
+   boundary resets it to 0 (`:1129`). A Frontier per-lane counter with no
+   equivalent lockstep does not inherit that property. The conclusion (exclude
+   dense DP>1) is unchanged; the supporting reason is the missing lockstep, not
+   merely "it counts something else".
+2. **What the counter counts, and where the key is read.** The increment at
+   `:1134` happens in busy-loop step 3, *after* `_maybe_publish_request_counts()`
+   at `:1099`. The key on a report is therefore the count as of the end of the
+   previous iteration, and it counts busy-loop iterations — including iterations
+   that executed a dummy batch — not completed model forwards. This is the
+   precise reason the §2.3 instruction "literal equality with vLLM's counters is
+   unnecessary if grouping and order are preserved" is correct, and the reason
+   Frontier must not try to make the numbers match.
+
+**Addition for W4 implementation.** The coordinator keeps one shared
+`(last_stats_wave, last_stats_step)` pair across all engines
+(`coordinator.py:156-157`). A strictly newer key preserves the prior snapshot
+(`:296-300`); an **equal** key takes neither branch, which is the expected path
+for peer engines reporting the same step; an out-of-order key produces a
+**warning only** (`:301-307`) and the counts are still applied unconditionally
+(`:308-310`). W4 must therefore not add a hard runtime assertion on report order
+that the reference does not have. Key equality per shared forward is a test
+invariant, not a runtime abort condition.
+
+### D2 — RESOLVED: include the local reduction, behind a narrow versioned scope identifier
+
+Approved as written, including the compatibility and cache policy in §3.5 and the
+validation set in §3.6.
+
+The maintainer's §3.3 correction is confirmed in this tree and is a real addition
+to the earlier W6 audit:
+
+| Claim | Verification |
+| --- | --- |
+| Alignment is outside the legacy timed region | `moe_align_block_size(...)` at `frontier/profiling/moe/moe_vllm_kernel.py:897`; the legacy `_step` is defined at `:920`. Confirmed outside. |
+| The functional entry point aligns internally | Functional `_step` at `:837` calls `fused_experts` with top-k ids; vLLM 0.10.2 aligns inside. To be re-verified against the exact supported version before admitting measurements. |
+| Double counting is a live risk, not a hypothetical | `MoETime` carries `moe_shuffling_time` as a term **separate from and additive to** `moe_grouped_gemm_time`, and `total_time()` sums both (`frontier/entities/time_components.py:505`, `:508`, `:528-536`). A functional measurement that internally aligns and shuffles, charged to `moe_grouped_gemm_time` while `moe_shuffling_time` is independently predicted, counts that work twice. |
+
+Consequence adopted: adding gated SiLU and `moe_sum` does not make the legacy and
+functional scopes equal, and no record may claim that it does.
+
+### Disposition of the review comments
+
+| Comment | Verdict | Verification |
+| --- | --- | --- |
+| R34-01 false success | **ACCEPT, P1** | Both mechanisms reproduced in source. `baseline_failures` is absent from the `failed` predicate (`run_matrix.py:536-543`); `complete` tests case-ID presence only (`:432-434`). All cases failing on both sides yields `compared == 0` and exit 0, which `measure_commit.py:139` prints as `VERDICT: IDENTICAL`. Second path: `list_artifacts` returns `[]` for a missing directory (`compare.py:83-84`), so two absent directories compare equal. |
+| R34-02 provenance | **ACCEPT, P1, with one refinement** | Merge-and-overwrite confirmed (`run_matrix.py:294-308`, manifest rebuilt at `:314-327`). `measure_commit.py:82-90` reuses a checkout after checking `HEAD` only. Refinement: the manifest already records `git_dirty_paths` and `cases_executed_in_last_run`; what is missing is per-case provenance and any *check* of those fields, so the fix is a stamp plus a guard, not new machinery. A live instance existed: `.worktrees/fidelity-candidate-99922d2` carried a modified `run_matrix.py` (byte-identical to `4f11386`, so harmless) while being treated as a clean detached checkout. |
+| R34-03 evidence record | **ACCEPT, P1** | Confirmed and broader than stated: `cases.py` yields 71 cases, and the string "71" appears in no tracked document on the refactor branch. `progress.md` still reads "Current step: Step 0", Step 2 `IN_PROGRESS`, Step 7 `NOT_STARTED`. Relevant fact for the remedy: `db15e64..5ef96b5` is one commit touching only `cases.py`, so the production tree is unchanged between the last measured commit and the tip; but `candidate_db15e64` holds 67 records with zero DP cases, so the four DP cases have never run against the refactor tip. Remedy is a full 71-case run of `5ef96b5`, not a documentation argument. |
+| R34-04 retained checks | **ACCEPT, P2** | Confirmed: PR #34 adds only the four harness files; the seven touched unit files are modifications (monkeypatch retargeting). No committed test covers the CLI flag set, the public re-exports, the mixin MRO, or loading a baseline-produced estimator cache. |
+| R34-05 bounded split | **ACCEPT, P3** | Non-blocking guidance; no action beyond documenting owning class and required state at each extracted boundary. |
+| R35-01 W2 tests | **ACCEPT, P2** | Confirmed: `test_replica_identity_contract.py:25-34` selects lines beginning `dp_id = ` and asserts `endswith("% self._replica_dp_size")`. That is a source-string check and is not a behavioral placement test. |
+| R35-02 wrapper limit | **ACCEPT, P2** | The `cases.py` docstring is accurate as written — it scopes the limit to shipped recipes — but its remedy ("validated by unit tests") is too weak. Corrected remedy: a direct-construction integration fixture driving the real event loop, with deterministic durations injected only at the predictor boundary. |
+| R35-03 SGLang consumers | **ACCEPT, P1** | Confirmed live: definition at `vllm_v1_iteration_policy.py:527`, callers at `:573` and `sglang_style_replica_scheduler.py:65`. |
+| R35-04 W5 scope | **ACCEPT, P2** | Consistent with the existing W5 audit rows. |
+| R35-05 gates | **ACCEPT, P1** | This section is that tracked decision log. |
