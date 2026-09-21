@@ -19,6 +19,7 @@ import csv
 import hashlib
 import io
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Sequence
@@ -258,3 +259,81 @@ def compare_artifact_directories(
                 name, "unreadable", f"{type(error).__name__}: {error}",
             ))
     return differences
+
+
+CACHE_NAME_PATTERN = re.compile(
+    r"^(?P<stem>.*?)_?(?P<digest>[0-9a-f]{8,})(?P<suffix>[^/]*)$"
+)
+
+
+@dataclass(frozen=True)
+class CacheNameFinding:
+    """One classified difference between two sides' predictor cache files."""
+
+    kind: str
+    stem: str
+    detail: str
+
+    def as_record(self) -> dict:
+        return {"kind": self.kind, "stem": self.stem, "detail": self.detail}
+
+
+def _split_cache_name(name: str) -> tuple[str, str, str]:
+    """Split a cache file name into (stem, digest, suffix).
+
+    Model artifacts are named ``{model_name}_{hash}{suffix}`` and lock files
+    ``{hash}_{kind}_lock.file``, so a name without a stem is a lock file.
+    """
+
+    match = CACHE_NAME_PATTERN.match(name)
+    if not match:
+        return name, "", ""
+    return match.group("stem"), match.group("digest"), match.group("suffix")
+
+
+def classify_cache_differences(
+    baseline_names: Sequence[str], candidate_names: Sequence[str]
+) -> list[CacheNameFinding]:
+    """Explain why two sides' predictor cache file names differ.
+
+    The distinction that matters is between a *re-keyed* artifact, where the
+    same model name appears on both sides under a different hash, and an
+    artifact that exists on one side only.  The first means a training
+    identity or cache key changed, which a refactor must not do; the second
+    means a model started or stopped being trained.
+    """
+
+    only_baseline = sorted(set(baseline_names) - set(candidate_names))
+    only_candidate = sorted(set(candidate_names) - set(baseline_names))
+    if not only_baseline and not only_candidate:
+        return []
+
+    def by_stem(names: Sequence[str]) -> dict[str, list[str]]:
+        grouped: dict[str, list[str]] = {}
+        for name in names:
+            stem, digest, suffix = _split_cache_name(name)
+            key = f"{stem}{suffix}" if stem else f"<lock>{suffix}"
+            grouped.setdefault(key, []).append(digest)
+        return grouped
+
+    baseline_by_stem = by_stem(only_baseline)
+    candidate_by_stem = by_stem(only_candidate)
+
+    findings: list[CacheNameFinding] = []
+    for stem in sorted(set(baseline_by_stem) & set(candidate_by_stem)):
+        findings.append(CacheNameFinding(
+            "rekeyed", stem,
+            f"baseline {', '.join(sorted(baseline_by_stem[stem]))} -> "
+            f"candidate {', '.join(sorted(candidate_by_stem[stem]))}",
+        ))
+    for stem in sorted(set(baseline_by_stem) - set(candidate_by_stem)):
+        findings.append(CacheNameFinding(
+            "only_in_baseline", stem,
+            f"hashes {', '.join(sorted(baseline_by_stem[stem]))}",
+        ))
+    for stem in sorted(set(candidate_by_stem) - set(baseline_by_stem)):
+        findings.append(CacheNameFinding(
+            "only_in_candidate", stem,
+            f"hashes {', '.join(sorted(candidate_by_stem[stem]))}",
+        ))
+    return findings

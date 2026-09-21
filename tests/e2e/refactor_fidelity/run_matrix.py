@@ -41,6 +41,7 @@ from typing import Sequence
 
 from tests.e2e.refactor_fidelity.cases import FidelityCase, build_cases, group_counts
 from tests.e2e.refactor_fidelity.compare import (
+    classify_cache_differences,
     compare_artifact_directories,
     file_digest,
     list_artifacts,
@@ -416,6 +417,7 @@ def compare_labels(args: argparse.Namespace) -> int:
     candidate_cache = candidate_manifest.get("cache_files", [])
     cache_only_in_baseline = sorted(set(baseline_cache) - set(candidate_cache))
     cache_only_in_candidate = sorted(set(candidate_cache) - set(baseline_cache))
+    cache_findings = classify_cache_differences(baseline_cache, candidate_cache)
 
     report = {
         "baseline": {
@@ -435,6 +437,7 @@ def compare_labels(args: argparse.Namespace) -> int:
         "cases_missing_from_one_side": missing,
         "predictor_cache_files_only_in_baseline": cache_only_in_baseline,
         "predictor_cache_files_only_in_candidate": cache_only_in_candidate,
+        "predictor_cache_findings": [f.as_record() for f in cache_findings],
     }
     report_path = output_root / "comparison.json"
     report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -450,6 +453,22 @@ def compare_labels(args: argparse.Namespace) -> int:
         "predictor cache file names differ: "
         f"{len(cache_only_in_baseline)} baseline-only, {len(cache_only_in_candidate)} candidate-only"
     )
+    if cache_findings:
+        rekeyed = [f for f in cache_findings if f.kind == "rekeyed"]
+        if rekeyed:
+            print(
+                f"  {len(rekeyed)} artifacts kept their model name but changed hash, "
+                "which means a training identity or cache key changed:"
+            )
+            for finding in rekeyed:
+                print(f"    {finding.stem}: {finding.detail}")
+        for kind, label in (("only_in_baseline", "baseline"),
+                            ("only_in_candidate", "candidate")):
+            entries = [f for f in cache_findings if f.kind == kind]
+            if entries:
+                print(f"  {len(entries)} artifacts exist only on the {label} side:")
+                for finding in entries:
+                    print(f"    {finding.stem}: {finding.detail}")
     for entry in mismatched:
         print(f"\nMISMATCH {entry['case_id']}")
         for difference in entry["differences"]:
