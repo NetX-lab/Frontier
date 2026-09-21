@@ -1,0 +1,38 @@
+[
+  {
+    "mode": "structural_diagnostic_only",
+    "intra_server_model": "legacy_fabric",
+    "kind": "allreduce",
+    "domain": "ATTN_TP",
+    "participant_count": 4,
+    "tensor_bytes": 16777216,
+    "predicted_ms": 0.0524851
+  },
+  {
+    "mode": "structural_diagnostic_only",
+    "intra_server_model": "legacy_fabric",
+    "kind": "alltoall",
+    "domain": "MOE_EP",
+    "participant_count": 8,
+    "tensor_bytes": 16777216,
+    "predicted_ms": 0.0
+  },
+  {
+    "mode": "structural_diagnostic_only",
+    "intra_server_model": "nvlink_analytic",
+    "kind": "allreduce",
+    "domain": "ATTN_TP",
+    "participant_count": 4,
+    "tensor_bytes": 16777216,
+    "predicted_ms": 0.3729050666666667
+  },
+  {
+    "mode": "structural_diagnostic_only",
+    "intra_server_model": "nvlink_analytic",
+    "kind": "alltoall",
+    "domain": "MOE_EP",
+    "participant_count": 8,
+    "tensor_bytes": 16777216,
+    "predicted_ms": 0.044277955555555554
+  }
+]

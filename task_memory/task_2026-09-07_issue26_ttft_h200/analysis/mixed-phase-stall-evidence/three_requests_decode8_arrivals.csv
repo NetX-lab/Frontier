@@ -1,0 +1,4 @@
+arrived_at,num_prefill_tokens,num_decode_tokens
+0.0,4096,8
+0.0812080018222332,4096,8
+0.2414169437251985,4096,8

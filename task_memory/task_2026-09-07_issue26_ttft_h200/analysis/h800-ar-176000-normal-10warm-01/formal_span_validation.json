@@ -1,0 +1,138 @@
+{
+  "bounded_identity_and_drain": "PASS",
+  "warmups": 10,
+  "client_rows": 11,
+  "requests_per_replay": 1,
+  "formal": {
+    "client_completion_time_ns": 1788983169956246084,
+    "client_e2e_ms": 467389.809238,
+    "client_first_token_time_ns": 1788982703101987117,
+    "client_ttft_ms": 535.550271,
+    "completion_tokens_observed": 1024,
+    "dispatch_lag_ms": 0.2794191241264343,
+    "dispatch_monotonic_s": 33632017.66024406,
+    "max_tokens": 1024,
+    "planned_arrival_monotonic_s": 33632017.65996464,
+    "prompt_tokens": 4096,
+    "request_arrival_wall_time_ns": 1788982702566436846,
+    "request_id": "pf4096_dc1024:0",
+    "response_id": "cmpl-pf4096_dc1024:0"
+  },
+  "selected": [
+    {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "pp_rank": 0,
+      "batch_id": 5120,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 519.7991333007812,
+      "op_profile_selected": false,
+      "op_profile_selected_index": null,
+      "op_profile_request_prefix": "",
+      "op_profile_batch_limit": 0,
+      "timestamp": 1788982703.097942,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h800-ar-176000-normal-10warm-01/runtime/batch/server.batch.dp0.tp0.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "pp_rank": 0,
+      "batch_id": 5120,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 522.4105224609375,
+      "op_profile_selected": false,
+      "op_profile_selected_index": null,
+      "op_profile_request_prefix": "",
+      "op_profile_batch_limit": 0,
+      "timestamp": 1788982703.0978234,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h800-ar-176000-normal-10warm-01/runtime/batch/server.batch.dp0.tp1.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "pp_rank": 0,
+      "batch_id": 5120,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 522.5511474609375,
+      "op_profile_selected": false,
+      "op_profile_selected_index": null,
+      "op_profile_request_prefix": "",
+      "op_profile_batch_limit": 0,
+      "timestamp": 1788982703.097817,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h800-ar-176000-normal-10warm-01/runtime/batch/server.batch.dp0.tp2.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "pp_rank": 0,
+      "batch_id": 5120,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 522.0176391601562,
+      "op_profile_selected": false,
+      "op_profile_selected_index": null,
+      "op_profile_request_prefix": "",
+      "op_profile_batch_limit": 0,
+      "timestamp": 1788982703.098905,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h800-ar-176000-normal-10warm-01/runtime/batch/server.batch.dp0.tp3.pp0.jsonl"
+    }
+  ],
+  "median_ms": 522.2140808105469,
+  "rank_p90_ms": 522.5089599609374,
+  "rank_max_ms": 522.5511474609375,
+  "rank_spread_ms": 2.75201416015625,
+  "manifest_formal_requests": 100,
+  "actual_formal_requests": 1,
+  "limits": "Bounded diagnostic only. P90 is across four ranks, not repeated runs. Full standard-suite validation is separate."
+}

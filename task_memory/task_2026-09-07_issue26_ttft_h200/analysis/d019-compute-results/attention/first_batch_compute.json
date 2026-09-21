@@ -1,0 +1,186 @@
+{
+  "status": "PASS_COLLECTION_DIAGNOSTIC_ONLY",
+  "groups": [
+    "attention"
+  ],
+  "first_request_id": "cmpl-pf4096_dc1024:0-0",
+  "rank_results": [
+    {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "pp_rank": 0,
+      "batch_id": 4666,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 92.26412963867188,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 1,
+      "timestamp": 1788873828.2903633,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "group": "attention",
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_attention/operators/server.ops.dp0.tp0.pp0.jsonl",
+      "scope_totals_ms": {
+        "attn_pre_proj": 3.8700160086154938,
+        "attn_rope": 0.9396480042487383,
+        "attn_kv_cache_save": 0.5655039995908737,
+        "attn_prefill": 5.734943963587284,
+        "row_parallel_gemm": 1.4548159968107939
+      },
+      "scope_counts": {
+        "attn_pre_proj": 48,
+        "attn_rope": 48,
+        "attn_kv_cache_save": 48,
+        "attn_prefill": 48,
+        "row_parallel_gemm": 48
+      },
+      "grouped_gemm_plus_sum_by_layer": [],
+      "grouped_gemm_plus_sum_ms": null
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "pp_rank": 0,
+      "batch_id": 4666,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 92.36265563964844,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 1,
+      "timestamp": 1788873828.290347,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "group": "attention",
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_attention/operators/server.ops.dp0.tp1.pp0.jsonl",
+      "scope_totals_ms": {
+        "attn_pre_proj": 3.783008001744747,
+        "attn_rope": 0.9488639980554581,
+        "attn_kv_cache_save": 0.5680319964885712,
+        "attn_prefill": 5.635999999940395,
+        "row_parallel_gemm": 1.4460479989647865
+      },
+      "scope_counts": {
+        "attn_pre_proj": 48,
+        "attn_rope": 48,
+        "attn_kv_cache_save": 48,
+        "attn_prefill": 48,
+        "row_parallel_gemm": 48
+      },
+      "grouped_gemm_plus_sum_by_layer": [],
+      "grouped_gemm_plus_sum_ms": null
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "pp_rank": 0,
+      "batch_id": 4666,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 92.23446655273438,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 1,
+      "timestamp": 1788873828.2903419,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "group": "attention",
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_attention/operators/server.ops.dp0.tp2.pp0.jsonl",
+      "scope_totals_ms": {
+        "attn_pre_proj": 3.798048011958599,
+        "attn_rope": 0.9535360001027584,
+        "attn_kv_cache_save": 0.6458560032770038,
+        "attn_prefill": 8.420703992247581,
+        "row_parallel_gemm": 1.5467199981212616
+      },
+      "scope_counts": {
+        "attn_pre_proj": 48,
+        "attn_rope": 48,
+        "attn_kv_cache_save": 48,
+        "attn_prefill": 48,
+        "row_parallel_gemm": 48
+      },
+      "grouped_gemm_plus_sum_by_layer": [],
+      "grouped_gemm_plus_sum_ms": null
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "pp_rank": 0,
+      "batch_id": 4666,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 92.34623718261719,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 1,
+      "timestamp": 1788873828.2903278,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "group": "attention",
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_attention/operators/server.ops.dp0.tp3.pp0.jsonl",
+      "scope_totals_ms": {
+        "attn_pre_proj": 3.7734720036387444,
+        "attn_rope": 0.94115199893713,
+        "attn_kv_cache_save": 0.5641280030831695,
+        "attn_prefill": 5.673632003366947,
+        "row_parallel_gemm": 1.440831996500492
+      },
+      "scope_counts": {
+        "attn_pre_proj": 48,
+        "attn_rope": 48,
+        "attn_kv_cache_save": 48,
+        "attn_prefill": 48,
+        "row_parallel_gemm": 48
+      },
+      "grouped_gemm_plus_sum_by_layer": [],
+      "grouped_gemm_plus_sum_ms": null
+    }
+  ],
+  "limits": "Groups are separate runs and ranks are parallel. No cross-run scope sum, rank sum, or parent/child addition is performed. GG+sum pairs use sibling scopes from one run/rank/layer; 1 peer token requires scheduler evidence to identify dummy work. Physical DP metadata does not measure the peer's operations. Numerical P/S/V and CUDA-span acceptance remain separate."
+}

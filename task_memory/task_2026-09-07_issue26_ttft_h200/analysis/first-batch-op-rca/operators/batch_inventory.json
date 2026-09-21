@@ -1,0 +1,618 @@
+[
+  {
+    "dp_rank": 0,
+    "tp_rank": 0,
+    "pp_rank": 0,
+    "batch_id": 4706,
+    "batch_size": 1,
+    "batch_num_tokens": 4096,
+    "batch_num_prefill_tokens": 4096,
+    "batch_num_decode_tokens": 0,
+    "batch_execution_time_ms": 116.21014404296875,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 0,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.036003,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0"
+    ],
+    "request_num_tokens": [
+      4096
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp0.pp0.jsonl"
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 0,
+    "pp_rank": 0,
+    "batch_id": 4707,
+    "batch_size": 2,
+    "batch_num_tokens": 4097,
+    "batch_num_prefill_tokens": 4096,
+    "batch_num_decode_tokens": 1,
+    "batch_execution_time_ms": 119.9359359741211,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 1,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.1698751,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0",
+      "cmpl-pf4096_dc1024:1-0"
+    ],
+    "request_num_tokens": [
+      1,
+      4096
+    ],
+    "op_rows": 912,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp0.pp0.jsonl"
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 0,
+    "pp_rank": 0,
+    "batch_id": 4708,
+    "batch_size": 2,
+    "batch_num_tokens": 2,
+    "batch_num_prefill_tokens": 0,
+    "batch_num_decode_tokens": 2,
+    "batch_execution_time_ms": 115.39663696289062,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 2,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.297341,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0",
+      "cmpl-pf4096_dc1024:1-0"
+    ],
+    "request_num_tokens": [
+      1,
+      1
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp0.pp0.jsonl"
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 1,
+    "pp_rank": 0,
+    "batch_id": 4706,
+    "batch_size": 1,
+    "batch_num_tokens": 4096,
+    "batch_num_prefill_tokens": 4096,
+    "batch_num_decode_tokens": 0,
+    "batch_execution_time_ms": 116.38829040527344,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 0,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.0359697,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0"
+    ],
+    "request_num_tokens": [
+      4096
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp1.pp0.jsonl"
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 1,
+    "pp_rank": 0,
+    "batch_id": 4707,
+    "batch_size": 2,
+    "batch_num_tokens": 4097,
+    "batch_num_prefill_tokens": 4096,
+    "batch_num_decode_tokens": 1,
+    "batch_execution_time_ms": 120.0448989868164,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 1,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.1699662,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0",
+      "cmpl-pf4096_dc1024:1-0"
+    ],
+    "request_num_tokens": [
+      1,
+      4096
+    ],
+    "op_rows": 912,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp1.pp0.jsonl"
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 1,
+    "pp_rank": 0,
+    "batch_id": 4708,
+    "batch_size": 2,
+    "batch_num_tokens": 2,
+    "batch_num_prefill_tokens": 0,
+    "batch_num_decode_tokens": 2,
+    "batch_execution_time_ms": 115.43059539794922,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 2,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.297476,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0",
+      "cmpl-pf4096_dc1024:1-0"
+    ],
+    "request_num_tokens": [
+      1,
+      1
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp1.pp0.jsonl"
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 2,
+    "pp_rank": 0,
+    "batch_id": 4706,
+    "batch_size": 1,
+    "batch_num_tokens": 4096,
+    "batch_num_prefill_tokens": 4096,
+    "batch_num_decode_tokens": 0,
+    "batch_execution_time_ms": 116.36844635009766,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 0,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.035979,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0"
+    ],
+    "request_num_tokens": [
+      4096
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp2.pp0.jsonl"
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 2,
+    "pp_rank": 0,
+    "batch_id": 4707,
+    "batch_size": 2,
+    "batch_num_tokens": 4097,
+    "batch_num_prefill_tokens": 4096,
+    "batch_num_decode_tokens": 1,
+    "batch_execution_time_ms": 120.03945922851562,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 1,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.1699555,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0",
+      "cmpl-pf4096_dc1024:1-0"
+    ],
+    "request_num_tokens": [
+      1,
+      4096
+    ],
+    "op_rows": 912,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp2.pp0.jsonl"
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 2,
+    "pp_rank": 0,
+    "batch_id": 4708,
+    "batch_size": 2,
+    "batch_num_tokens": 2,
+    "batch_num_prefill_tokens": 0,
+    "batch_num_decode_tokens": 2,
+    "batch_execution_time_ms": 115.44195556640625,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 2,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.2974632,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0",
+      "cmpl-pf4096_dc1024:1-0"
+    ],
+    "request_num_tokens": [
+      1,
+      1
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp2.pp0.jsonl"
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 3,
+    "pp_rank": 0,
+    "batch_id": 4706,
+    "batch_size": 1,
+    "batch_num_tokens": 4096,
+    "batch_num_prefill_tokens": 4096,
+    "batch_num_decode_tokens": 0,
+    "batch_execution_time_ms": 116.41449737548828,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 0,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.0359454,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0"
+    ],
+    "request_num_tokens": [
+      4096
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp3.pp0.jsonl"
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 3,
+    "pp_rank": 0,
+    "batch_id": 4707,
+    "batch_size": 2,
+    "batch_num_tokens": 4097,
+    "batch_num_prefill_tokens": 4096,
+    "batch_num_decode_tokens": 1,
+    "batch_execution_time_ms": 120.05152130126953,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 1,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.1699288,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0",
+      "cmpl-pf4096_dc1024:1-0"
+    ],
+    "request_num_tokens": [
+      1,
+      4096
+    ],
+    "op_rows": 912,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp3.pp0.jsonl"
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 3,
+    "pp_rank": 0,
+    "batch_id": 4708,
+    "batch_size": 2,
+    "batch_num_tokens": 2,
+    "batch_num_prefill_tokens": 0,
+    "batch_num_decode_tokens": 2,
+    "batch_execution_time_ms": 115.46371459960938,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 2,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.2975132,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0",
+      "cmpl-pf4096_dc1024:1-0"
+    ],
+    "request_num_tokens": [
+      1,
+      1
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp3.pp0.jsonl"
+  },
+  {
+    "dp_rank": 1,
+    "tp_rank": 0,
+    "pp_rank": 0,
+    "batch_id": 4743,
+    "batch_size": 2,
+    "batch_num_tokens": 8192,
+    "batch_num_prefill_tokens": 8192,
+    "batch_num_decode_tokens": 0,
+    "batch_execution_time_ms": 125.19366455078125,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 0,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.2993488,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:2-0",
+      "cmpl-pf4096_dc1024:3-0"
+    ],
+    "request_num_tokens": [
+      4096,
+      4096
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp1.tp0.pp0.jsonl"
+  },
+  {
+    "dp_rank": 1,
+    "tp_rank": 0,
+    "pp_rank": 0,
+    "batch_id": 4744,
+    "batch_size": 2,
+    "batch_num_tokens": 2,
+    "batch_num_prefill_tokens": 0,
+    "batch_num_decode_tokens": 2,
+    "batch_execution_time_ms": 109.01360321044922,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 1,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.4205801,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:2-0",
+      "cmpl-pf4096_dc1024:3-0"
+    ],
+    "request_num_tokens": [
+      1,
+      1
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp1.tp0.pp0.jsonl"
+  },
+  {
+    "dp_rank": 1,
+    "tp_rank": 0,
+    "pp_rank": 0,
+    "batch_id": 4745,
+    "batch_size": 2,
+    "batch_num_tokens": 2,
+    "batch_num_prefill_tokens": 0,
+    "batch_num_decode_tokens": 2,
+    "batch_execution_time_ms": 111.5357437133789,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 2,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.5442066,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:2-0",
+      "cmpl-pf4096_dc1024:3-0"
+    ],
+    "request_num_tokens": [
+      1,
+      1
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp1.tp0.pp0.jsonl"
+  },
+  {
+    "dp_rank": 1,
+    "tp_rank": 1,
+    "pp_rank": 0,
+    "batch_id": 4743,
+    "batch_size": 2,
+    "batch_num_tokens": 8192,
+    "batch_num_prefill_tokens": 8192,
+    "batch_num_decode_tokens": 0,
+    "batch_execution_time_ms": 125.19987487792969,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 0,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.299351,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:2-0",
+      "cmpl-pf4096_dc1024:3-0"
+    ],
+    "request_num_tokens": [
+      4096,
+      4096
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp1.tp1.pp0.jsonl"
+  },
+  {
+    "dp_rank": 1,
+    "tp_rank": 1,
+    "pp_rank": 0,
+    "batch_id": 4744,
+    "batch_size": 2,
+    "batch_num_tokens": 2,
+    "batch_num_prefill_tokens": 0,
+    "batch_num_decode_tokens": 2,
+    "batch_execution_time_ms": 109.16070556640625,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 1,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.4205983,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:2-0",
+      "cmpl-pf4096_dc1024:3-0"
+    ],
+    "request_num_tokens": [
+      1,
+      1
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp1.tp1.pp0.jsonl"
+  },
+  {
+    "dp_rank": 1,
+    "tp_rank": 1,
+    "pp_rank": 0,
+    "batch_id": 4745,
+    "batch_size": 2,
+    "batch_num_tokens": 2,
+    "batch_num_prefill_tokens": 0,
+    "batch_num_decode_tokens": 2,
+    "batch_execution_time_ms": 111.35049438476562,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 2,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.5440376,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:2-0",
+      "cmpl-pf4096_dc1024:3-0"
+    ],
+    "request_num_tokens": [
+      1,
+      1
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp1.tp1.pp0.jsonl"
+  },
+  {
+    "dp_rank": 1,
+    "tp_rank": 2,
+    "pp_rank": 0,
+    "batch_id": 4743,
+    "batch_size": 2,
+    "batch_num_tokens": 8192,
+    "batch_num_prefill_tokens": 8192,
+    "batch_num_decode_tokens": 0,
+    "batch_execution_time_ms": 125.05366516113281,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 0,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.2993462,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:2-0",
+      "cmpl-pf4096_dc1024:3-0"
+    ],
+    "request_num_tokens": [
+      4096,
+      4096
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp1.tp2.pp0.jsonl"
+  },
+  {
+    "dp_rank": 1,
+    "tp_rank": 2,
+    "pp_rank": 0,
+    "batch_id": 4744,
+    "batch_size": 2,
+    "batch_num_tokens": 2,
+    "batch_num_prefill_tokens": 0,
+    "batch_num_decode_tokens": 2,
+    "batch_execution_time_ms": 109.21647644042969,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 1,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.4208798,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:2-0",
+      "cmpl-pf4096_dc1024:3-0"
+    ],
+    "request_num_tokens": [
+      1,
+      1
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp1.tp2.pp0.jsonl"
+  },
+  {
+    "dp_rank": 1,
+    "tp_rank": 2,
+    "pp_rank": 0,
+    "batch_id": 4745,
+    "batch_size": 2,
+    "batch_num_tokens": 2,
+    "batch_num_prefill_tokens": 0,
+    "batch_num_decode_tokens": 2,
+    "batch_execution_time_ms": 111.44668579101562,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 2,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.5440211,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:2-0",
+      "cmpl-pf4096_dc1024:3-0"
+    ],
+    "request_num_tokens": [
+      1,
+      1
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp1.tp2.pp0.jsonl"
+  },
+  {
+    "dp_rank": 1,
+    "tp_rank": 3,
+    "pp_rank": 0,
+    "batch_id": 4743,
+    "batch_size": 2,
+    "batch_num_tokens": 8192,
+    "batch_num_prefill_tokens": 8192,
+    "batch_num_decode_tokens": 0,
+    "batch_execution_time_ms": 125.18911743164062,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 0,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.2992814,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:2-0",
+      "cmpl-pf4096_dc1024:3-0"
+    ],
+    "request_num_tokens": [
+      4096,
+      4096
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp1.tp3.pp0.jsonl"
+  },
+  {
+    "dp_rank": 1,
+    "tp_rank": 3,
+    "pp_rank": 0,
+    "batch_id": 4744,
+    "batch_size": 2,
+    "batch_num_tokens": 2,
+    "batch_num_prefill_tokens": 0,
+    "batch_num_decode_tokens": 2,
+    "batch_execution_time_ms": 109.15939331054688,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 1,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.4205,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:2-0",
+      "cmpl-pf4096_dc1024:3-0"
+    ],
+    "request_num_tokens": [
+      1,
+      1
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp1.tp3.pp0.jsonl"
+  },
+  {
+    "dp_rank": 1,
+    "tp_rank": 3,
+    "pp_rank": 0,
+    "batch_id": 4745,
+    "batch_size": 2,
+    "batch_num_tokens": 2,
+    "batch_num_prefill_tokens": 0,
+    "batch_num_decode_tokens": 2,
+    "batch_execution_time_ms": 111.46482849121094,
+    "op_profile_selected": true,
+    "op_profile_selected_index": 2,
+    "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+    "op_profile_batch_limit": 3,
+    "timestamp": 1788861125.5440059,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:2-0",
+      "cmpl-pf4096_dc1024:3-0"
+    ],
+    "request_num_tokens": [
+      1,
+      1
+    ],
+    "op_rows": 864,
+    "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp1.tp3.pp0.jsonl"
+  }
+]

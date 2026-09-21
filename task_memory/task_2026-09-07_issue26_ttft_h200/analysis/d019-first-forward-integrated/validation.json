@@ -1,0 +1,41 @@
+{
+  "status": "PASS_SCOPED_INTEGRATION_CUDA_GATE_FAIL",
+  "actual_first_forward_ms": 59.1903543839013,
+  "previous_MoE_only_ms": 72.32753521728748,
+  "AR_before_ms": 17.8994432,
+  "AR_after_ms": 4.762262366613769,
+  "expected_boundary_ms": 59.190354383901244,
+  "boundary_absolute_reconciliation_error_ms": 5.684341886080802e-14,
+  "all_compute_queries_unchanged": true,
+  "fit_calls": 0,
+  "request_ids": [
+    0
+  ],
+  "comparisons": {
+    "batch_before": {
+      "predicted_ms": 59.1903543839013,
+      "actual_ms": 79.30735778808594,
+      "signed_error_ms": -20.117003404184636,
+      "absolute_error_ms": 20.117003404184636,
+      "signed_error_percent": -25.365872682252878,
+      "absolute_error_percent": 25.365872682252878,
+      "ten_percent_gate": "FAIL"
+    },
+    "batch_after": {
+      "predicted_ms": 59.1903543839013,
+      "actual_ms": 78.11878204345703,
+      "signed_error_ms": -18.92842765955573,
+      "absolute_error_ms": 18.92842765955573,
+      "signed_error_percent": -24.230315891287134,
+      "absolute_error_percent": 24.230315891287134,
+      "ten_percent_gate": "FAIL"
+    }
+  },
+  "limits": [
+    "F real4096 vs V physical4096+1 dummy remains explicit",
+    "ideal EP abstraction retained per D020; naive modeled protocol not added",
+    "profile context correction not yet integrated",
+    "no fullcase or officialTTFT claim; prior19.673% baseline not recomputed",
+    "small custom-AR decode not validated by this bounded case parameter"
+  ]
+}

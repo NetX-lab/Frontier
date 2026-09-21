@@ -1,0 +1,111 @@
+{
+  "status": "PASS_BOUNDED_HELDOUT_EXPERT_QUERY",
+  "model_cache": "/data/ycfeng/tmp/issue26-d019-moe-integration-01/predictor-cache/moe_grouped_gemm_bac049d1.pkl",
+  "actual_query_method": "SklearnExecutionTimePredictor._get_on_demand_prediction",
+  "training_global_m": [
+    4096
+  ],
+  "heldout_global_m": 4095,
+  "no_fitting_performed": true,
+  "query_results": [
+    {
+      "global_m": 4095,
+      "ep_rank": 0,
+      "features": {
+        "total_routed_tokens": 4096,
+        "num_experts_per_device": 16,
+        "hidden_dim": 2048,
+        "expert_hidden_dim": 768,
+        "router_topk": 8,
+        "model_expansion_ratio": 0.375,
+        "tokens_per_expert_avg": 256.0,
+        "tokens_to_experts_ratio": 256.0,
+        "expert_utilization": 1.0,
+        "min_load_ratio": 1.0,
+        "load_imbalance_cv": 0.0,
+        "max_load_ratio": 1.0,
+        "load_entropy": 4.000000000017834,
+        "load_gini_coefficient": 0.0
+      },
+      "branch": "measured_exact_duplicate_feature",
+      "prediction_ms": 0.4619448847240872,
+      "actual_mean_ms": 0.4453653295834859,
+      "actual_seed_medians_ms": [
+        0.44543999433517456,
+        0.4453760087490082,
+        0.445279985666275
+      ],
+      "absolute_error_ms": 0.016579555140601276,
+      "signed_relative_percent": 3.7226865315508038,
+      "holdout_kind": "global-shape/context only; same local feature as training"
+    },
+    {
+      "global_m": 4095,
+      "ep_rank": 1,
+      "features": {
+        "total_routed_tokens": 4096,
+        "num_experts_per_device": 16,
+        "hidden_dim": 2048,
+        "expert_hidden_dim": 768,
+        "router_topk": 8,
+        "model_expansion_ratio": 0.375,
+        "tokens_per_expert_avg": 256.0,
+        "tokens_to_experts_ratio": 256.0,
+        "expert_utilization": 1.0,
+        "min_load_ratio": 1.0,
+        "load_imbalance_cv": 0.0,
+        "max_load_ratio": 1.0,
+        "load_entropy": 4.000000000017834,
+        "load_gini_coefficient": 0.0
+      },
+      "branch": "measured_exact_duplicate_feature",
+      "prediction_ms": 0.4619448847240872,
+      "actual_mean_ms": 0.45708799362182617,
+      "actual_seed_medians_ms": [
+        0.4574719965457916,
+        0.4575999975204468,
+        0.4561919867992401
+      ],
+      "absolute_error_ms": 0.004856891102261007,
+      "signed_relative_percent": 1.0625724521391342,
+      "holdout_kind": "global-shape/context only; same local feature as training"
+    },
+    {
+      "global_m": 4095,
+      "ep_rank": 7,
+      "features": {
+        "total_routed_tokens": 4088,
+        "num_experts_per_device": 16,
+        "hidden_dim": 2048,
+        "expert_hidden_dim": 768,
+        "router_topk": 8,
+        "model_expansion_ratio": 0.375,
+        "tokens_per_expert_avg": 255.5,
+        "tokens_to_experts_ratio": 255.5,
+        "expert_utilization": 1.0,
+        "min_load_ratio": 0.9980430528375733,
+        "load_imbalance_cv": 0.0019569471624266144,
+        "max_load_ratio": 1.0019569471624266,
+        "load_entropy": 3.999997237513168,
+        "load_gini_coefficient": 0.0009784735812132794
+      },
+      "branch": "RandomForestRegressor.predict",
+      "prediction_ms": 0.4618092950008532,
+      "actual_mean_ms": 0.47360000014305115,
+      "actual_seed_medians_ms": [
+        0.4729599952697754,
+        0.47407999634742737,
+        0.4737600088119507
+      ],
+      "absolute_error_ms": 0.011790705142197933,
+      "signed_relative_percent": -2.4895914566377835,
+      "holdout_kind": "untrained local feature"
+    }
+  ],
+  "limitations": [
+    "EP0/1 are duplicate keys, not model generalization tests",
+    "EP7 is one nearby distinct local-load feature, not fullcase coverage",
+    "Nine training rows share one feature; RF has not learned a size response",
+    "No4095 E2Ecase was launched"
+  ]
+}

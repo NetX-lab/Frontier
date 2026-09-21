@@ -1,0 +1,27 @@
+{
+  "job": "yc26-h200-fresh-frontier-20260908-03",
+  "submitted_utc": "2026-09-07T19:06:35+00:00",
+  "checked_utc": "2026-09-07T19:27:23.664456+00:00",
+  "elapsed_seconds": 1248.664456,
+  "platform_status": "Pending\nRJob is queuing",
+  "command": [
+    "timeout",
+    "-k",
+    "2s",
+    "15s",
+    "/kubebrain/brainctl",
+    "get",
+    "rjob",
+    "yc26-h200-fresh-frontier-20260908-03",
+    "-n",
+    "shai-core",
+    "-o",
+    "jsonpath={.status.phase}{\"\\n\"}{.status.message}{\"\\n\"}",
+    "--request-timeout=10s",
+    "--cache-dir=/data/ycfeng/tmp/issue26-h200-brainctl-cache"
+  ],
+  "retained": true,
+  "stop_delete_resubmit_performed": false,
+  "pending_decision": "D009 dispatch-global routing counts",
+  "run_manifest": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-fresh-frontier-03/run_manifest.json"
+}

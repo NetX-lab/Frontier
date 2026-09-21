@@ -1,0 +1,1485 @@
+{
+  "status": "PASS",
+  "command": [
+    "/home/i-fengyicheng/miniconda3/envs/dev-vidur-v03-hopper-e2e/bin/python",
+    "-m",
+    "frontier.main",
+    "--simulation_mode",
+    "online",
+    "--sys_arch",
+    "co-location",
+    "--no-enable_parallel_clusters",
+    "--cc_backend_config_type",
+    "collective_sim",
+    "--collective_sim_cc_backend_config_intra_server_model",
+    "nvlink_analytic",
+    "--cluster_config_num_replicas",
+    "1",
+    "--replica_config_model_name",
+    "qwen3-a3b-30b-moe",
+    "--replica_config_device",
+    "h200",
+    "--replica_config_attn_tensor_parallel_size",
+    "4",
+    "--replica_config_attn_dp",
+    "2",
+    "--replica_config_moe_tensor_parallel_size",
+    "1",
+    "--replica_config_moe_expert_parallel_size",
+    "8",
+    "--replica_config_num_pipeline_stages",
+    "1",
+    "--replica_config_total_expert_num",
+    "128",
+    "--replica_config_router_topk",
+    "8",
+    "--replica_scheduler_config_type",
+    "vllm_v1",
+    "--decode_cuda_graph_mode",
+    "none",
+    "--no-vllm_v1_scheduler_config_enable_prefix_caching",
+    "--no-vllm_v1_scheduler_config_enable_chunked_prefill",
+    "--vllm_v1_scheduler_config_max_tokens_in_batch",
+    "16384",
+    "--vllm_v1_scheduler_config_batch_size_cap",
+    "1024",
+    "--vllm_v1_scheduler_config_block_size",
+    "16",
+    "--vllm_v1_scheduler_config_num_blocks_mode",
+    "explicit",
+    "--vllm_v1_scheduler_config_num_blocks",
+    "310809",
+    "--request_generator_config_type",
+    "trace_replay",
+    "--trace_request_generator_config_max_tokens",
+    "16384",
+    "--no-random_forrest_execution_time_predictor_config_enable_dummy_mode",
+    "--random_forrest_execution_time_predictor_config_skip_cpu_overhead_modeling",
+    "--replica_config_network_device",
+    "h200_dgx",
+    "--replica_config_moe_routing_distribution_type",
+    "balanced",
+    "--replica_config_moe_routing_seed",
+    "42",
+    "--collective_sim_cc_backend_config_cluster_servers",
+    "1",
+    "--collective_sim_cc_backend_config_cluster_gpus_per_server",
+    "8",
+    "--random_forrest_execution_time_predictor_config_linear_op_input_file",
+    "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-fresh-profiles-02/runtime/profiles/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+    "--random_forrest_execution_time_predictor_config_atten_input_file",
+    "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-fresh-profiles-02/runtime/profiles/compute/h200/qwen3-a3b-30b-moe/attention_combined.csv",
+    "--random_forrest_execution_time_predictor_config_moe_input_file",
+    "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/supplements/moe-uniform-01/moe.csv",
+    "--random_forrest_execution_time_predictor_config_prediction_max_prefill_chunk_size",
+    "4096",
+    "--random_forrest_execution_time_predictor_config_prediction_max_batch_size",
+    "128",
+    "--random_forrest_execution_time_predictor_config_prediction_max_tokens_per_request",
+    "16384",
+    "--random_forrest_execution_time_predictor_config_num_training_job_threads",
+    "8",
+    "--trace_request_generator_config_trace_file",
+    "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/dp-workflow-rca/same-run-provisional/route_arrivals.csv",
+    "--metrics_config_run_id",
+    "runtime",
+    "--metrics_config_write_metrics",
+    "--metrics_config_store_request_metrics",
+    "--metrics_config_store_batch_metrics",
+    "--metrics_config_store_token_completion_metrics",
+    "--metrics_config_enable_metrics_ground_truth_trace",
+    "--no-metrics_config_store_plots",
+    "--no-metrics_config_enable_chrome_trace",
+    "--no-metrics_config_write_json_trace",
+    "--replica_config_moe_gating_routing_runtime_path",
+    "uniform_topk",
+    "--cluster_scheduler_config_type",
+    "vllm_load_balancing",
+    "--metrics_config_output_dir",
+    "/data/ycfeng/tmp/issue26-dp-new-route-01/metrics",
+    "--metrics_config_cache_dir",
+    "/data/ycfeng/tmp/issue26-cpu-frontier-sj80zdzj/predictor-cache",
+    "--collective_sim_cc_backend_config_cache_dir",
+    "/data/ycfeng/tmp/issue26-cpu-frontier-sj80zdzj/collective-cache",
+    "--collective_sim_cc_backend_config_runner_out_dir",
+    "/data/ycfeng/tmp/issue26-cpu-frontier-sj80zdzj/htsim"
+  ],
+  "scope": "Bounded diagnostic prefix; current-task caches retained; no E2E metric.",
+  "events": [
+    {
+      "event": "route",
+      "time_s": 0.0,
+      "lane": 0,
+      "counts_before": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "last_publish_ms": -5000,
+      "request_id": "0"
+    },
+    {
+      "event": "admission",
+      "time_s": 0.0,
+      "lane": 0,
+      "batch_id": 0,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        }
+      ]
+    },
+    {
+      "event": "report",
+      "time_s": 0.06579007690374297,
+      "lane": 0,
+      "step": 47,
+      "load": [
+        0,
+        1
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.06579007690374297,
+      "lane": 0,
+      "batch_id": 433,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4096
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.11778284745306514,
+      "lane": 0,
+      "batch_id": 866,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4097
+        }
+      ]
+    },
+    {
+      "event": "route",
+      "time_s": 0.1182100530713796,
+      "lane": 0,
+      "counts_before": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "last_publish_ms": 50,
+      "request_id": "1"
+    },
+    {
+      "event": "report",
+      "time_s": 0.16977561800238788,
+      "lane": 0,
+      "step": 143,
+      "load": [
+        1,
+        1
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.16977561800238788,
+      "lane": 0,
+      "batch_id": 1299,
+      "members": [
+        {
+          "request_id": "1",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        },
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4098
+        }
+      ]
+    },
+    {
+      "event": "route",
+      "time_s": 0.2239750530570745,
+      "lane": 1,
+      "counts_before": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "engine_counts": [
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "last_publish_ms": 150,
+      "request_id": "2"
+    },
+    {
+      "event": "admission",
+      "time_s": 0.2239750530570745,
+      "lane": 1,
+      "batch_id": 1651,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        }
+      ]
+    },
+    {
+      "event": "report",
+      "time_s": 0.23696779332049406,
+      "lane": 0,
+      "step": 191,
+      "load": [
+        0,
+        2
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.23696779332049406,
+      "lane": 0,
+      "batch_id": 1733,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4099
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4096
+        }
+      ]
+    },
+    {
+      "event": "route",
+      "time_s": 0.2922342112287879,
+      "lane": 1,
+      "counts_before": [
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "last_publish_ms": 250,
+      "request_id": "3"
+    },
+    {
+      "event": "report",
+      "time_s": 0.30283563990666906,
+      "lane": 1,
+      "step": 239,
+      "load": [
+        1,
+        1
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.30283563990666906,
+      "lane": 0,
+      "batch_id": 2118,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4100
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4097
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.30283563990666906,
+      "lane": 1,
+      "batch_id": 2119,
+      "members": [
+        {
+          "request_id": "3",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        },
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4096
+        }
+      ]
+    },
+    {
+      "event": "report",
+      "time_s": 0.370053489067555,
+      "lane": 1,
+      "step": 287,
+      "load": [
+        0,
+        2
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.370053489067555,
+      "lane": 0,
+      "batch_id": 2504,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4101
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4098
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.370053489067555,
+      "lane": 1,
+      "batch_id": 2505,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4097
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4096
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.42635594388430065,
+      "lane": 0,
+      "batch_id": 2890,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4102
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4099
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.42635594388430065,
+      "lane": 1,
+      "batch_id": 2891,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4098
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4097
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.4826583987010463,
+      "lane": 0,
+      "batch_id": 3276,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4103
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4100
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.4826583987010463,
+      "lane": 1,
+      "batch_id": 3277,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4099
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4098
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.5389608535177901,
+      "lane": 0,
+      "batch_id": 3662,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4104
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4101
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.5389608535177901,
+      "lane": 1,
+      "batch_id": 3663,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4100
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4099
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.5952633083345331,
+      "lane": 0,
+      "batch_id": 4048,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4105
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4102
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.5952633083345331,
+      "lane": 1,
+      "batch_id": 4049,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4101
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4100
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.6515657631512761,
+      "lane": 0,
+      "batch_id": 4434,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4106
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4103
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.6515657631512761,
+      "lane": 1,
+      "batch_id": 4435,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4102
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4101
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.7078682179680191,
+      "lane": 0,
+      "batch_id": 4820,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4107
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4104
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.7078682179680191,
+      "lane": 1,
+      "batch_id": 4821,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4103
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4102
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.7641706727847621,
+      "lane": 0,
+      "batch_id": 5206,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4108
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4105
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.7641706727847621,
+      "lane": 1,
+      "batch_id": 5207,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4104
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4103
+        }
+      ]
+    },
+    {
+      "event": "route",
+      "time_s": 0.7820856301113963,
+      "lane": 0,
+      "counts_before": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "last_publish_ms": 550,
+      "request_id": "4"
+    },
+    {
+      "event": "report",
+      "time_s": 0.8204731276015051,
+      "lane": 0,
+      "step": 671,
+      "load": [
+        1,
+        2
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.8204731276015051,
+      "lane": 0,
+      "batch_id": 5592,
+      "members": [
+        {
+          "request_id": "4",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        },
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4109
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4106
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.8204731276015051,
+      "lane": 1,
+      "batch_id": 5593,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4105
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4104
+        }
+      ]
+    },
+    {
+      "event": "report",
+      "time_s": 0.8876879598892531,
+      "lane": 0,
+      "step": 719,
+      "load": [
+        0,
+        3
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.8876879598892531,
+      "lane": 1,
+      "batch_id": 5978,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4106
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4105
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.8876879598892531,
+      "lane": 0,
+      "batch_id": 5979,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4110
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4107
+        },
+        {
+          "request_id": "4",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4096
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.9439837928665566,
+      "lane": 1,
+      "batch_id": 6364,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4107
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4106
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 0.9439837928665566,
+      "lane": 0,
+      "batch_id": 6365,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4111
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4108
+        },
+        {
+          "request_id": "4",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4097
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 1.0002796258438604,
+      "lane": 1,
+      "batch_id": 6750,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4108
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4107
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 1.0002796258438604,
+      "lane": 0,
+      "batch_id": 6751,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4112
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4109
+        },
+        {
+          "request_id": "4",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4098
+        }
+      ]
+    },
+    {
+      "event": "route",
+      "time_s": 1.001610305160284,
+      "lane": 1,
+      "counts_before": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "last_publish_ms": 970,
+      "request_id": "5"
+    },
+    {
+      "event": "route",
+      "time_s": 1.003633517306298,
+      "lane": 0,
+      "counts_before": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "last_publish_ms": 970,
+      "request_id": "6"
+    },
+    {
+      "event": "report",
+      "time_s": 1.0565754588211693,
+      "lane": 1,
+      "step": 863,
+      "load": [
+        1,
+        2
+      ]
+    },
+    {
+      "event": "report",
+      "time_s": 1.0565754588211693,
+      "lane": 0,
+      "step": 863,
+      "load": [
+        1,
+        3
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 1.0565754588211693,
+      "lane": 1,
+      "batch_id": 7136,
+      "members": [
+        {
+          "request_id": "5",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        },
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4109
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4108
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 1.0565754588211693,
+      "lane": 0,
+      "batch_id": 7137,
+      "members": [
+        {
+          "request_id": "6",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        },
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4113
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4110
+        },
+        {
+          "request_id": "4",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4099
+        }
+      ]
+    },
+    {
+      "event": "report",
+      "time_s": 1.1453941236452405,
+      "lane": 1,
+      "step": 911,
+      "load": [
+        0,
+        3
+      ]
+    },
+    {
+      "event": "report",
+      "time_s": 1.1453941236452405,
+      "lane": 0,
+      "step": 911,
+      "load": [
+        0,
+        4
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 1.1453941236452405,
+      "lane": 1,
+      "batch_id": 7522,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4110
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4109
+        },
+        {
+          "request_id": "5",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4096
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 1.1453941236452405,
+      "lane": 0,
+      "batch_id": 7523,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4114
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4111
+        },
+        {
+          "request_id": "4",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4100
+        },
+        {
+          "request_id": "6",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4096
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 1.20053118645635,
+      "lane": 1,
+      "batch_id": 7908,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4111
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4110
+        },
+        {
+          "request_id": "5",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4097
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 1.20053118645635,
+      "lane": 0,
+      "batch_id": 7909,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4115
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4112
+        },
+        {
+          "request_id": "4",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4101
+        },
+        {
+          "request_id": "6",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4097
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 1.2556682492674593,
+      "lane": 1,
+      "batch_id": 8294,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4112
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4111
+        },
+        {
+          "request_id": "5",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4098
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 1.2556682492674593,
+      "lane": 0,
+      "batch_id": 8295,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4116
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4113
+        },
+        {
+          "request_id": "4",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4102
+        },
+        {
+          "request_id": "6",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4098
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 1.3108053120785688,
+      "lane": 1,
+      "batch_id": 8680,
+      "members": [
+        {
+          "request_id": "2",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4113
+        },
+        {
+          "request_id": "3",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4112
+        },
+        {
+          "request_id": "5",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4099
+        }
+      ]
+    },
+    {
+      "event": "admission",
+      "time_s": 1.3108053120785688,
+      "lane": 0,
+      "batch_id": 8681,
+      "members": [
+        {
+          "request_id": "0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4117
+        },
+        {
+          "request_id": "1",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4114
+        },
+        {
+          "request_id": "4",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4103
+        },
+        {
+          "request_id": "6",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4099
+        }
+      ]
+    },
+    {
+      "event": "route",
+      "time_s": 1.335147287230939,
+      "lane": 1,
+      "counts_before": [
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "last_publish_ms": 1206,
+      "request_id": "7"
+    }
+  ],
+  "routes": [
+    {
+      "event": "route",
+      "time_s": 0.0,
+      "lane": 0,
+      "counts_before": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "last_publish_ms": -5000,
+      "request_id": "0"
+    },
+    {
+      "event": "route",
+      "time_s": 0.1182100530713796,
+      "lane": 0,
+      "counts_before": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "last_publish_ms": 50,
+      "request_id": "1"
+    },
+    {
+      "event": "route",
+      "time_s": 0.2239750530570745,
+      "lane": 1,
+      "counts_before": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "engine_counts": [
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "last_publish_ms": 150,
+      "request_id": "2"
+    },
+    {
+      "event": "route",
+      "time_s": 0.2922342112287879,
+      "lane": 1,
+      "counts_before": [
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "last_publish_ms": 250,
+      "request_id": "3"
+    },
+    {
+      "event": "route",
+      "time_s": 0.7820856301113963,
+      "lane": 0,
+      "counts_before": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "last_publish_ms": 550,
+      "request_id": "4"
+    },
+    {
+      "event": "route",
+      "time_s": 1.001610305160284,
+      "lane": 1,
+      "counts_before": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "last_publish_ms": 970,
+      "request_id": "5"
+    },
+    {
+      "event": "route",
+      "time_s": 1.003633517306298,
+      "lane": 0,
+      "counts_before": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "last_publish_ms": 970,
+      "request_id": "6"
+    },
+    {
+      "event": "route",
+      "time_s": 1.335147287230939,
+      "lane": 1,
+      "counts_before": [
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "engine_counts": [
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "last_publish_ms": 1206,
+      "request_id": "7"
+    }
+  ]
+}

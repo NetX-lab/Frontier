@@ -1,0 +1,1022 @@
+{
+  "status": "PASS",
+  "experiment": "Same-run queue-input versus route-input Frontier prefix; identical operator predictions and scheduler code. Each timeline independently normalized at its first observed event.",
+  "controls": {
+    "enqueue": {
+      "status": "PASS",
+      "routes": [
+        {
+          "event": "route",
+          "time_s": 0.0,
+          "lane": 0,
+          "counts_before": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "last_publish_ms": -5000,
+          "request_id": "0",
+          "client_request_id": "pf4096_dc1024:0",
+          "vllm_dp": 0
+        },
+        {
+          "event": "route",
+          "time_s": 0.0849838019348681,
+          "lane": 0,
+          "counts_before": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "last_publish_ms": 50,
+          "request_id": "1",
+          "client_request_id": "pf4096_dc1024:1",
+          "vllm_dp": 0
+        },
+        {
+          "event": "route",
+          "time_s": 0.2493766960687935,
+          "lane": 1,
+          "counts_before": [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "last_publish_ms": 150,
+          "request_id": "2",
+          "client_request_id": "pf4096_dc1024:2",
+          "vllm_dp": 1
+        },
+        {
+          "event": "route",
+          "time_s": 0.3341550282202661,
+          "lane": 1,
+          "counts_before": [
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "last_publish_ms": 250,
+          "request_id": "3",
+          "client_request_id": "pf4096_dc1024:3",
+          "vllm_dp": 1
+        },
+        {
+          "event": "route",
+          "time_s": 0.8160966639406979,
+          "lane": 0,
+          "counts_before": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "last_publish_ms": 550,
+          "request_id": "4",
+          "client_request_id": "pf4096_dc1024:4",
+          "vllm_dp": 0
+        },
+        {
+          "event": "route",
+          "time_s": 0.981230823788792,
+          "lane": 1,
+          "counts_before": [
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "last_publish_ms": 972,
+          "request_id": "5",
+          "client_request_id": "pf4096_dc1024:6",
+          "vllm_dp": 0
+        },
+        {
+          "event": "route",
+          "time_s": 0.98127935314551,
+          "lane": 0,
+          "counts_before": [
+            [
+              0,
+              3
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "last_publish_ms": 972,
+          "request_id": "6",
+          "client_request_id": "pf4096_dc1024:5",
+          "vllm_dp": 1
+        },
+        {
+          "event": "route",
+          "time_s": 1.3071999470703304,
+          "lane": 1,
+          "counts_before": [
+            [
+              0,
+              4
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              4
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "last_publish_ms": 1172,
+          "request_id": "7",
+          "client_request_id": "pf4096_dc1024:7",
+          "vllm_dp": 1
+        }
+      ],
+      "dp_match_count": 6,
+      "observed_route_count": 8,
+      "prefill_admissions": [
+        {
+          "client_request_id": "pf4096_dc1024:0",
+          "time_s": 0.0,
+          "lane": 0,
+          "batch_id": 0,
+          "members": [
+            {
+              "request_id": "0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:0"
+            }
+          ],
+          "same_member_token_multiset": true,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:0-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        },
+        {
+          "client_request_id": "pf4096_dc1024:1",
+          "time_s": 0.11778284745306514,
+          "lane": 0,
+          "batch_id": 866,
+          "members": [
+            {
+              "request_id": "1",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:1"
+            },
+            {
+              "request_id": "0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4097,
+              "client_request_id": "pf4096_dc1024:0"
+            }
+          ],
+          "same_member_token_multiset": true,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:0-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4096
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:1-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        },
+        {
+          "client_request_id": "pf4096_dc1024:2",
+          "time_s": 0.2493766960687935,
+          "lane": 1,
+          "batch_id": 1805,
+          "members": [
+            {
+              "request_id": "2",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:2"
+            }
+          ],
+          "same_member_token_multiset": true,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:2-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        },
+        {
+          "client_request_id": "pf4096_dc1024:3",
+          "time_s": 0.3607306467545867,
+          "lane": 1,
+          "batch_id": 2552,
+          "members": [
+            {
+              "request_id": "3",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:3"
+            },
+            {
+              "request_id": "2",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4096,
+              "client_request_id": "pf4096_dc1024:2"
+            }
+          ],
+          "same_member_token_multiset": true,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:2-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4096
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:3-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        },
+        {
+          "client_request_id": "pf4096_dc1024:4",
+          "time_s": 0.8220656796326771,
+          "lane": 0,
+          "batch_id": 5639,
+          "members": [
+            {
+              "request_id": "4",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:4"
+            },
+            {
+              "request_id": "0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4109,
+              "client_request_id": "pf4096_dc1024:0"
+            },
+            {
+              "request_id": "1",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4107,
+              "client_request_id": "pf4096_dc1024:1"
+            }
+          ],
+          "same_member_token_multiset": true,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:0-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4105
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:1-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4104
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:4-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        },
+        {
+          "client_request_id": "pf4096_dc1024:6",
+          "time_s": 1.0018721778750324,
+          "lane": 1,
+          "batch_id": 6797,
+          "members": [
+            {
+              "request_id": "5",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:6"
+            },
+            {
+              "request_id": "2",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4107,
+              "client_request_id": "pf4096_dc1024:2"
+            },
+            {
+              "request_id": "3",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4106,
+              "client_request_id": "pf4096_dc1024:3"
+            }
+          ],
+          "same_member_token_multiset": false,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:0-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4107
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:1-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4106
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:4-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4097
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:6-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        },
+        {
+          "client_request_id": "pf4096_dc1024:5",
+          "time_s": 1.0018721778750324,
+          "lane": 0,
+          "batch_id": 6798,
+          "members": [
+            {
+              "request_id": "6",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:5"
+            },
+            {
+              "request_id": "0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4112,
+              "client_request_id": "pf4096_dc1024:0"
+            },
+            {
+              "request_id": "1",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4110,
+              "client_request_id": "pf4096_dc1024:1"
+            },
+            {
+              "request_id": "4",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4098,
+              "client_request_id": "pf4096_dc1024:4"
+            }
+          ],
+          "same_member_token_multiset": false,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:2-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4104
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:3-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4103
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:5-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        }
+      ],
+      "prefill_membership_match_count": 5,
+      "observed_prefill_admission_count": 7
+    },
+    "route": {
+      "status": "PASS",
+      "routes": [
+        {
+          "event": "route",
+          "time_s": 0.0,
+          "lane": 0,
+          "counts_before": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "last_publish_ms": -5000,
+          "request_id": "0",
+          "client_request_id": "pf4096_dc1024:0",
+          "vllm_dp": 0
+        },
+        {
+          "event": "route",
+          "time_s": 0.1182100530713796,
+          "lane": 0,
+          "counts_before": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "last_publish_ms": 50,
+          "request_id": "1",
+          "client_request_id": "pf4096_dc1024:1",
+          "vllm_dp": 0
+        },
+        {
+          "event": "route",
+          "time_s": 0.2239750530570745,
+          "lane": 1,
+          "counts_before": [
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "engine_counts": [
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "last_publish_ms": 150,
+          "request_id": "2",
+          "client_request_id": "pf4096_dc1024:2",
+          "vllm_dp": 1
+        },
+        {
+          "event": "route",
+          "time_s": 0.2922342112287879,
+          "lane": 1,
+          "counts_before": [
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              0
+            ]
+          ],
+          "last_publish_ms": 250,
+          "request_id": "3",
+          "client_request_id": "pf4096_dc1024:3",
+          "vllm_dp": 1
+        },
+        {
+          "event": "route",
+          "time_s": 0.7820856301113963,
+          "lane": 0,
+          "counts_before": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "last_publish_ms": 550,
+          "request_id": "4",
+          "client_request_id": "pf4096_dc1024:4",
+          "vllm_dp": 0
+        },
+        {
+          "event": "route",
+          "time_s": 1.001610305160284,
+          "lane": 1,
+          "counts_before": [
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "last_publish_ms": 970,
+          "request_id": "5",
+          "client_request_id": "pf4096_dc1024:5",
+          "vllm_dp": 1
+        },
+        {
+          "event": "route",
+          "time_s": 1.003633517306298,
+          "lane": 0,
+          "counts_before": [
+            [
+              0,
+              3
+            ],
+            [
+              1,
+              2
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              2
+            ]
+          ],
+          "last_publish_ms": 970,
+          "request_id": "6",
+          "client_request_id": "pf4096_dc1024:6",
+          "vllm_dp": 0
+        },
+        {
+          "event": "route",
+          "time_s": 1.335147287230939,
+          "lane": 1,
+          "counts_before": [
+            [
+              0,
+              4
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "engine_counts": [
+            [
+              0,
+              4
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "last_publish_ms": 1206,
+          "request_id": "7",
+          "client_request_id": "pf4096_dc1024:7",
+          "vllm_dp": 1
+        }
+      ],
+      "dp_match_count": 8,
+      "observed_route_count": 8,
+      "prefill_admissions": [
+        {
+          "client_request_id": "pf4096_dc1024:0",
+          "time_s": 0.0,
+          "lane": 0,
+          "batch_id": 0,
+          "members": [
+            {
+              "request_id": "0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:0"
+            }
+          ],
+          "same_member_token_multiset": true,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:0-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        },
+        {
+          "client_request_id": "pf4096_dc1024:1",
+          "time_s": 0.16977561800238788,
+          "lane": 0,
+          "batch_id": 1299,
+          "members": [
+            {
+              "request_id": "1",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:1"
+            },
+            {
+              "request_id": "0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4098,
+              "client_request_id": "pf4096_dc1024:0"
+            }
+          ],
+          "same_member_token_multiset": true,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:0-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4096
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:1-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        },
+        {
+          "client_request_id": "pf4096_dc1024:2",
+          "time_s": 0.2239750530570745,
+          "lane": 1,
+          "batch_id": 1651,
+          "members": [
+            {
+              "request_id": "2",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:2"
+            }
+          ],
+          "same_member_token_multiset": true,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:2-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        },
+        {
+          "client_request_id": "pf4096_dc1024:3",
+          "time_s": 0.30283563990666906,
+          "lane": 1,
+          "batch_id": 2119,
+          "members": [
+            {
+              "request_id": "3",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:3"
+            },
+            {
+              "request_id": "2",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4096,
+              "client_request_id": "pf4096_dc1024:2"
+            }
+          ],
+          "same_member_token_multiset": true,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:2-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4096
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:3-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        },
+        {
+          "client_request_id": "pf4096_dc1024:4",
+          "time_s": 0.8204731276015051,
+          "lane": 0,
+          "batch_id": 5592,
+          "members": [
+            {
+              "request_id": "4",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:4"
+            },
+            {
+              "request_id": "0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4109,
+              "client_request_id": "pf4096_dc1024:0"
+            },
+            {
+              "request_id": "1",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4106,
+              "client_request_id": "pf4096_dc1024:1"
+            }
+          ],
+          "same_member_token_multiset": true,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:0-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4105
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:1-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4104
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:4-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        },
+        {
+          "client_request_id": "pf4096_dc1024:5",
+          "time_s": 1.0565754588211693,
+          "lane": 1,
+          "batch_id": 7136,
+          "members": [
+            {
+              "request_id": "5",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:5"
+            },
+            {
+              "request_id": "2",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4109,
+              "client_request_id": "pf4096_dc1024:2"
+            },
+            {
+              "request_id": "3",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4108,
+              "client_request_id": "pf4096_dc1024:3"
+            }
+          ],
+          "same_member_token_multiset": true,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:2-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4104
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:3-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4103
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:5-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        },
+        {
+          "client_request_id": "pf4096_dc1024:6",
+          "time_s": 1.0565754588211693,
+          "lane": 0,
+          "batch_id": 7137,
+          "members": [
+            {
+              "request_id": "6",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0,
+              "client_request_id": "pf4096_dc1024:6"
+            },
+            {
+              "request_id": "0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4113,
+              "client_request_id": "pf4096_dc1024:0"
+            },
+            {
+              "request_id": "1",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4110,
+              "client_request_id": "pf4096_dc1024:1"
+            },
+            {
+              "request_id": "4",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4099,
+              "client_request_id": "pf4096_dc1024:4"
+            }
+          ],
+          "same_member_token_multiset": true,
+          "vllm_members": [
+            {
+              "request_id": "cmpl-pf4096_dc1024:0-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4107
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:1-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4106
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:4-0",
+              "tokens": 1,
+              "prior_scheduled_tokens": 4097
+            },
+            {
+              "request_id": "cmpl-pf4096_dc1024:6-0",
+              "tokens": 4096,
+              "prior_scheduled_tokens": 0
+            }
+          ]
+        }
+      ],
+      "prefill_membership_match_count": 7,
+      "observed_prefill_admission_count": 7
+    }
+  },
+  "all_formal_route_enqueue_inversions": [
+    [
+      "pf4096_dc1024:5",
+      "pf4096_dc1024:6"
+    ],
+    [
+      "pf4096_dc1024:19",
+      "pf4096_dc1024:20"
+    ],
+    [
+      "pf4096_dc1024:41",
+      "pf4096_dc1024:42"
+    ]
+  ],
+  "route_to_enqueue_ms": {
+    "mean": 37.55540111102164,
+    "min": 0.7712841033935547,
+    "max": 84.96275125071406
+  },
+  "enqueue_to_schedule_ms": {
+    "mean": 0.14553098008036613,
+    "max": 1.6969051212072372
+  },
+  "limits": "Eight routes are observed; the eighth route is the stop boundary and its admission is intentionally absent. Full100 attribution is not established. Route-input conflates routing and immediate engine visibility in the current one-arrival model; its improved DP prefix is not a production fix or E2E result. Member comparison is a multiset and does not assert order/KV equality."
+}

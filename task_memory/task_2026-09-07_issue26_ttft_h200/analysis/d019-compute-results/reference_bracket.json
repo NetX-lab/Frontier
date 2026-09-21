@@ -1,0 +1,373 @@
+{
+  "status": "PASS_FIRST_FORWARD_REFERENCE_BRACKET_DIAGNOSTIC_ONLY",
+  "reference_rank_rows": {
+    "batch_before": [
+      {
+        "dp_rank": 0,
+        "tp_rank": 0,
+        "pp_rank": 0,
+        "batch_id": 4157,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 79.30735778808594,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1788873238.4819815,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ],
+        "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/batch_before/batch/server.batch.dp0.tp0.pp0.jsonl"
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 1,
+        "pp_rank": 0,
+        "batch_id": 4157,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 79.55084991455078,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1788873238.4819763,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ],
+        "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/batch_before/batch/server.batch.dp0.tp1.pp0.jsonl"
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 2,
+        "pp_rank": 0,
+        "batch_id": 4157,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 79.5598373413086,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1788873238.4819753,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ],
+        "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/batch_before/batch/server.batch.dp0.tp2.pp0.jsonl"
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 3,
+        "pp_rank": 0,
+        "batch_id": 4157,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 79.49862670898438,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1788873238.4819748,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ],
+        "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/batch_before/batch/server.batch.dp0.tp3.pp0.jsonl"
+      }
+    ],
+    "batch_after": [
+      {
+        "dp_rank": 0,
+        "tp_rank": 0,
+        "pp_rank": 0,
+        "batch_id": 4631,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 78.11878204345703,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1788875613.6575894,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ],
+        "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/batch_after/batch/server.batch.dp0.tp0.pp0.jsonl"
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 1,
+        "pp_rank": 0,
+        "batch_id": 4631,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 78.1127700805664,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1788875613.657591,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ],
+        "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/batch_after/batch/server.batch.dp0.tp1.pp0.jsonl"
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 2,
+        "pp_rank": 0,
+        "batch_id": 4631,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 78.02169799804688,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1788875613.6575882,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ],
+        "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/batch_after/batch/server.batch.dp0.tp2.pp0.jsonl"
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 3,
+        "pp_rank": 0,
+        "batch_id": 4631,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 78.15727996826172,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1788875613.6575892,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ],
+        "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/batch_after/batch/server.batch.dp0.tp3.pp0.jsonl"
+      }
+    ]
+  },
+  "probe_comparisons": [
+    {
+      "group": "attention",
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "probe_ms": 92.26412963867188,
+      "before_ms": 79.30735778808594,
+      "after_ms": 78.11878204345703,
+      "probe_minus_before_ms": 12.956771850585938,
+      "probe_minus_before_pct": 16.337414600556,
+      "probe_minus_after_ms": 14.145347595214844,
+      "probe_minus_after_pct": 18.107486093863923
+    },
+    {
+      "group": "attention",
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "probe_ms": 92.36265563964844,
+      "before_ms": 79.55084991455078,
+      "after_ms": 78.1127700805664,
+      "probe_minus_before_ms": 12.811805725097656,
+      "probe_minus_before_pct": 16.105177680514295,
+      "probe_minus_after_ms": 14.249885559082031,
+      "probe_minus_after_pct": 18.242709283494275
+    },
+    {
+      "group": "attention",
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "probe_ms": 92.23446655273438,
+      "before_ms": 79.5598373413086,
+      "after_ms": 78.02169799804688,
+      "probe_minus_before_ms": 12.674629211425781,
+      "probe_minus_before_pct": 15.930939070491213,
+      "probe_minus_after_ms": 14.2127685546875,
+      "probe_minus_after_pct": 18.21643071013821
+    },
+    {
+      "group": "attention",
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "probe_ms": 92.34623718261719,
+      "before_ms": 79.49862670898438,
+      "after_ms": 78.15727996826172,
+      "probe_minus_before_ms": 12.847610473632812,
+      "probe_minus_before_pct": 16.16079548224556,
+      "probe_minus_after_ms": 14.188957214355469,
+      "probe_minus_after_pct": 18.154364148953682
+    },
+    {
+      "group": "moe",
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "probe_ms": 92.87619018554688,
+      "before_ms": 79.30735778808594,
+      "after_ms": 78.11878204345703,
+      "probe_minus_before_ms": 13.568832397460938,
+      "probe_minus_before_pct": 17.109172182633635,
+      "probe_minus_after_ms": 14.757408142089844,
+      "probe_minus_after_pct": 18.89098595249523
+    },
+    {
+      "group": "moe",
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "probe_ms": 92.83455657958984,
+      "before_ms": 79.55084991455078,
+      "after_ms": 78.1127700805664,
+      "probe_minus_before_ms": 13.283706665039062,
+      "probe_minus_before_pct": 16.698384340717553,
+      "probe_minus_after_ms": 14.721786499023438,
+      "probe_minus_after_pct": 18.846837058574707
+    },
+    {
+      "group": "moe",
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "probe_ms": 92.82966613769531,
+      "before_ms": 79.5598373413086,
+      "after_ms": 78.02169799804688,
+      "probe_minus_before_ms": 13.269828796386719,
+      "probe_minus_before_pct": 16.679054708796937,
+      "probe_minus_after_ms": 14.807968139648438,
+      "probe_minus_after_pct": 18.9792948879671
+    },
+    {
+      "group": "moe",
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "probe_ms": 92.2303695678711,
+      "before_ms": 79.49862670898438,
+      "after_ms": 78.15727996826172,
+      "probe_minus_before_ms": 12.731742858886719,
+      "probe_minus_before_pct": 16.01504753722729,
+      "probe_minus_after_ms": 14.073089599609375,
+      "probe_minus_after_pct": 18.006114856254207
+    },
+    {
+      "group": "detail",
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "probe_ms": 96.68460845947266,
+      "before_ms": 79.30735778808594,
+      "after_ms": 78.11878204345703,
+      "probe_minus_before_ms": 17.37725067138672,
+      "probe_minus_before_pct": 21.91127173574461,
+      "probe_minus_after_ms": 18.565826416015625,
+      "probe_minus_after_pct": 23.76614935661383
+    },
+    {
+      "group": "detail",
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "probe_ms": 96.70655822753906,
+      "before_ms": 79.55084991455078,
+      "after_ms": 78.1127700805664,
+      "probe_minus_before_ms": 17.15570831298828,
+      "probe_minus_before_pct": 21.565713416532972,
+      "probe_minus_after_ms": 18.593788146972656,
+      "probe_minus_after_pct": 23.803775141753157
+    },
+    {
+      "group": "detail",
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "probe_ms": 96.7175064086914,
+      "before_ms": 79.5598373413086,
+      "after_ms": 78.02169799804688,
+      "probe_minus_before_ms": 17.157669067382812,
+      "probe_minus_before_pct": 21.565741762111813,
+      "probe_minus_after_ms": 18.69580841064453,
+      "probe_minus_after_pct": 23.96231931675281
+    },
+    {
+      "group": "detail",
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "probe_ms": 96.6416015625,
+      "before_ms": 79.49862670898438,
+      "after_ms": 78.15727996826172,
+      "probe_minus_before_ms": 17.142974853515625,
+      "probe_minus_before_pct": 21.563862878122197,
+      "probe_minus_after_ms": 18.48432159423828,
+      "probe_minus_after_pct": 23.650159782613265
+    }
+  ],
+  "scope": "First request0 only; after mode formal completion still in progress at collection",
+  "limits": "Before and after are batch-only CUDA-event spans, not clean official TTFT. Probe/run perturbation remains material. No midpoint, rank maximum or minimum is promoted to pure kernel cost."
+}

@@ -1,0 +1,13 @@
+{
+  "source": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-historical-replay-02/clean/runtime/clean",
+  "formal_count": 100,
+  "warmup_excluded": 300,
+  "metric_statistic": "mean",
+  "official_ttft_mean_ms": 131.26863718032837,
+  "tpot_mean_ms": 79.24111335051272,
+  "request_e2e_mean_ms": 81194.85246896744,
+  "formal_window_s": 127.7589979171753,
+  "request_throughput_rps": 0.7827237347684025,
+  "token_throughput_tps": 4007.5455220142208,
+  "decode_throughput_tps": 801.5091044028442
+}

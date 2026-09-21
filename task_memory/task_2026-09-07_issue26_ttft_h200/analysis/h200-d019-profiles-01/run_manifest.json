@@ -1,0 +1,23 @@
+{
+  "status": "PARTIAL_FAILURE",
+  "created_utc": "2026-09-08T12:58:48.026771+00:00",
+  "job": "yc26-h200-d019-profiles-20260908-01",
+  "authorization": "repairs/d019_approval.json",
+  "groundtruth_commit": "4bc1bc026c91dff78bd7cf5ba6411f14d15e043d",
+  "frontier_base_commit": "388ae7a36602f86271d47a5f535c9f1985a2953c",
+  "frontier_patch": "frontier_moe_patch.diff",
+  "case": "pf4096_dc1024",
+  "modes": [
+    "numerical_parity",
+    "exact_moe",
+    "linear_repeats",
+    "exact_attention",
+    "collective_microbenchmark"
+  ],
+  "expected": "4 GPU numerical PASS without skip; exact expert counts/padding; positive finite event samples; 8rank collective correctness",
+  "placement": "separate dedicated 8H200 step_main allocation; all measurements serial, no concurrent timing on this allocation",
+  "limits": "4095 is targeted nearby profile holdout only, no additional E2E case; neither profile exit nor total cancellation closes numerical calibration",
+  "prestart_correction": "Added inference_mode to comm measurement context to match vLLM execute_model, before communication.log exists; numerical check already completed and independent MoE profile was running. Comm script had not started.",
+  "failure": "attention helper JSON serialization TypeError: AttentionBackend enum; MoE/linear completed, communication not started",
+  "exit_code": 1
+}

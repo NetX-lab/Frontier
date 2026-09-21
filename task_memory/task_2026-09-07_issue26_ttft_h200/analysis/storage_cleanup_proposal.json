@@ -1,0 +1,158 @@
+{
+  "status": "PROPOSED_NOT_DELETED",
+  "base": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1",
+  "candidate_count": 24,
+  "allocated_bytes": 42438754304,
+  "candidates": [
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/co_location_moe_n04_v04/predictor_cache_attempt-4-1786918722389125908",
+      "allocated_bytes": 1764872192,
+      "files": 72,
+      "last_modified_utc": "2026-08-16T22:28:02.998839+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/co_location_moe_n07_v07/predictor_cache_attempt-7-1786919484860742019",
+      "allocated_bytes": 1782018048,
+      "files": 72,
+      "last_modified_utc": "2026-08-16T22:40:37.406024+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/co_location_moe_n10_v10/predictor_cache_attempt-10-1786920230335906768",
+      "allocated_bytes": 1767010304,
+      "files": 75,
+      "last_modified_utc": "2026-08-16T22:53:26.065727+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/co_location_moe_n16_v04/predictor_cache_attempt-16-1786921303132679462",
+      "allocated_bytes": 1782018048,
+      "files": 72,
+      "last_modified_utc": "2026-08-16T23:10:54.701489+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/co_location_moe_n19_v07/predictor_cache_attempt-19-1786922049255380375",
+      "allocated_bytes": 1767010304,
+      "files": 75,
+      "last_modified_utc": "2026-08-16T23:23:46.703201+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/co_location_moe_n22_v10/predictor_cache_attempt-22-1786922820361584460",
+      "allocated_bytes": 1764872192,
+      "files": 72,
+      "last_modified_utc": "2026-08-16T23:36:29.802439+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/co_location_moe_n28_v04/predictor_cache_attempt-28-1786923891585488975",
+      "allocated_bytes": 1767010304,
+      "files": 75,
+      "last_modified_utc": "2026-08-16T23:54:29.857873+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/co_location_moe_n31_v07/predictor_cache_attempt-31-1786924666833002396",
+      "allocated_bytes": 1764872192,
+      "files": 72,
+      "last_modified_utc": "2026-08-17T00:07:13.497235+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/co_location_moe_n34_v10/predictor_cache_attempt-34-1786925440992144388",
+      "allocated_bytes": 1782018048,
+      "files": 72,
+      "last_modified_utc": "2026-08-17T00:19:47.360898+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/co_location_moe_n40_v04/predictor_cache_attempt-40-1786926484022661576",
+      "allocated_bytes": 1764872192,
+      "files": 72,
+      "last_modified_utc": "2026-08-17T00:37:27.903392+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/co_location_moe_n43_v07/predictor_cache_attempt-43-1786927240959932848",
+      "allocated_bytes": 1782018048,
+      "files": 72,
+      "last_modified_utc": "2026-08-17T00:49:55.510448+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/co_location_moe_n46_v10/predictor_cache_attempt-46-1786927990193016112",
+      "allocated_bytes": 1767010304,
+      "files": 75,
+      "last_modified_utc": "2026-08-17T01:02:48.414888+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/pd_disaggregation_moe_n04_v04/predictor_cache_attempt-54-1786929352034138797",
+      "allocated_bytes": 1758904320,
+      "files": 80,
+      "last_modified_utc": "2026-08-17T01:25:03.044937+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/pd_disaggregation_moe_n07_v07/predictor_cache_attempt-57-1786930141816705787",
+      "allocated_bytes": 1776082944,
+      "files": 80,
+      "last_modified_utc": "2026-08-17T01:38:14.334755+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/pd_disaggregation_moe_n10_v10/predictor_cache_attempt-60-1786930932806239298",
+      "allocated_bytes": 1760800768,
+      "files": 82,
+      "last_modified_utc": "2026-08-17T01:51:38.860381+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/pd_disaggregation_moe_n16_v04/predictor_cache_attempt-66-1786932117474849076",
+      "allocated_bytes": 1776082944,
+      "files": 80,
+      "last_modified_utc": "2026-08-17T02:10:54.342259+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/pd_disaggregation_moe_n19_v07/predictor_cache_attempt-69-1786932888976953750",
+      "allocated_bytes": 1760800768,
+      "files": 82,
+      "last_modified_utc": "2026-08-17T02:24:15.965212+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/pd_disaggregation_moe_n22_v10/predictor_cache_attempt-72-1786933691062898022",
+      "allocated_bytes": 1758904320,
+      "files": 80,
+      "last_modified_utc": "2026-08-17T02:37:19.712914+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/pd_disaggregation_moe_n28_v04/predictor_cache_attempt-78-1786934841878413972",
+      "allocated_bytes": 1760800768,
+      "files": 82,
+      "last_modified_utc": "2026-08-17T02:56:47.513810+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/pd_disaggregation_moe_n31_v07/predictor_cache_attempt-81-1786935643195717031",
+      "allocated_bytes": 1758904320,
+      "files": 80,
+      "last_modified_utc": "2026-08-17T03:09:54.214648+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/pd_disaggregation_moe_n34_v10/predictor_cache_attempt-84-1786936430136510510",
+      "allocated_bytes": 1776082944,
+      "files": 80,
+      "last_modified_utc": "2026-08-17T03:22:52.920863+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/pd_disaggregation_moe_n40_v04/predictor_cache_attempt-90-1786937577097073410",
+      "allocated_bytes": 1758904320,
+      "files": 80,
+      "last_modified_utc": "2026-08-17T03:42:05.778684+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/pd_disaggregation_moe_n43_v07/predictor_cache_attempt-93-1786938362681429514",
+      "allocated_bytes": 1776082944,
+      "files": 80,
+      "last_modified_utc": "2026-08-17T03:55:02.254348+00:00"
+    },
+    {
+      "path": "/data/ycfeng/tmp/frontier_baseline_replay_observable_v1/pd_disaggregation_moe_n46_v10/predictor_cache_attempt-96-1786939138680981345",
+      "allocated_bytes": 1760800768,
+      "files": 82,
+      "last_modified_utc": "2026-08-17T04:08:20.969663+00:00"
+    }
+  ],
+  "local_process_references": [
+    "2360660"
+  ],
+  "limits": "Local process scan only; no historical numeric contents read. Preserve parent run directories, logs, configurations, and result artifacts.",
+  "local_process_references_note": "The single observed PID was the inspection shell containing the literal path; it has exited. No persistent local process was established as using these caches.",
+  "all_candidates_modified_before_2026_08_18": true
+}

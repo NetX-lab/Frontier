@@ -1,0 +1,282 @@
+{
+  "status": "PASS",
+  "all_requests": 400,
+  "formal_requests": 100,
+  "snapshot_state_checks": 399,
+  "provisional_traces_equal_validated_traces": true,
+  "first_formal_routes": [
+    {
+      "client_id": "pf4096_dc1024:0",
+      "dp": 0,
+      "counts": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "route_offset_ms": 0.0,
+      "enqueue_offset_ms": 0.0,
+      "route_to_enqueue_ms": 39.147422183305025,
+      "enqueue_to_schedule_ms": 1.596956979483366,
+      "batch_members": [
+        {
+          "request_id": "cmpl-pf4096_dc1024:0-0",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        }
+      ]
+    },
+    {
+      "client_id": "pf4096_dc1024:1",
+      "dp": 0,
+      "counts": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "route_offset_ms": 118.21005307137966,
+      "enqueue_offset_ms": 84.9838019348681,
+      "route_to_enqueue_ms": 5.921171046793461,
+      "enqueue_to_schedule_ms": 0.06577419117093086,
+      "batch_members": [
+        {
+          "request_id": "cmpl-pf4096_dc1024:0-0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4096
+        },
+        {
+          "request_id": "cmpl-pf4096_dc1024:1-0",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        }
+      ]
+    },
+    {
+      "client_id": "pf4096_dc1024:2",
+      "dp": 1,
+      "counts": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "route_offset_ms": 223.97505305707455,
+      "enqueue_offset_ms": 249.37669606879354,
+      "route_to_enqueue_ms": 64.54906519502401,
+      "enqueue_to_schedule_ms": 1.6969051212072372,
+      "batch_members": [
+        {
+          "request_id": "cmpl-pf4096_dc1024:2-0",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        }
+      ]
+    },
+    {
+      "client_id": "pf4096_dc1024:3",
+      "dp": 1,
+      "counts": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "route_offset_ms": 292.2342112287879,
+      "enqueue_offset_ms": 334.1550282202661,
+      "route_to_enqueue_ms": 81.06823917478323,
+      "enqueue_to_schedule_ms": 0.12907059863209724,
+      "batch_members": [
+        {
+          "request_id": "cmpl-pf4096_dc1024:2-0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4096
+        },
+        {
+          "request_id": "cmpl-pf4096_dc1024:3-0",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        }
+      ]
+    },
+    {
+      "client_id": "pf4096_dc1024:4",
+      "dp": 0,
+      "counts": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "route_offset_ms": 782.0856301113963,
+      "enqueue_offset_ms": 816.0966639406979,
+      "route_to_enqueue_ms": 73.15845601260662,
+      "enqueue_to_schedule_ms": 0.09729107841849327,
+      "batch_members": [
+        {
+          "request_id": "cmpl-pf4096_dc1024:0-0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4105
+        },
+        {
+          "request_id": "cmpl-pf4096_dc1024:1-0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4104
+        },
+        {
+          "request_id": "cmpl-pf4096_dc1024:4-0",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        }
+      ]
+    },
+    {
+      "client_id": "pf4096_dc1024:5",
+      "dp": 1,
+      "counts": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "route_offset_ms": 1001.610305160284,
+      "enqueue_offset_ms": 981.27935314551,
+      "route_to_enqueue_ms": 18.81647016853094,
+      "enqueue_to_schedule_ms": 0.11024205014109612,
+      "batch_members": [
+        {
+          "request_id": "cmpl-pf4096_dc1024:2-0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4104
+        },
+        {
+          "request_id": "cmpl-pf4096_dc1024:3-0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4103
+        },
+        {
+          "request_id": "cmpl-pf4096_dc1024:5-0",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        }
+      ]
+    },
+    {
+      "client_id": "pf4096_dc1024:6",
+      "dp": 0,
+      "counts": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "route_offset_ms": 1003.633517306298,
+      "enqueue_offset_ms": 981.2308237887919,
+      "route_to_enqueue_ms": 16.744728665798903,
+      "enqueue_to_schedule_ms": 0.1021362841129303,
+      "batch_members": [
+        {
+          "request_id": "cmpl-pf4096_dc1024:0-0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4107
+        },
+        {
+          "request_id": "cmpl-pf4096_dc1024:1-0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4106
+        },
+        {
+          "request_id": "cmpl-pf4096_dc1024:4-0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4097
+        },
+        {
+          "request_id": "cmpl-pf4096_dc1024:6-0",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        }
+      ]
+    },
+    {
+      "client_id": "pf4096_dc1024:7",
+      "dp": 1,
+      "counts": [
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "route_offset_ms": 1335.1472872309387,
+      "enqueue_offset_ms": 1307.1999470703304,
+      "route_to_enqueue_ms": 11.200082022696733,
+      "enqueue_to_schedule_ms": 0.11020107194781303,
+      "batch_members": [
+        {
+          "request_id": "cmpl-pf4096_dc1024:2-0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4108
+        },
+        {
+          "request_id": "cmpl-pf4096_dc1024:3-0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4107
+        },
+        {
+          "request_id": "cmpl-pf4096_dc1024:5-0",
+          "tokens": 1,
+          "prior_scheduled_tokens": 4099
+        },
+        {
+          "request_id": "cmpl-pf4096_dc1024:7-0",
+          "tokens": 4096,
+          "prior_scheduled_tokens": 0
+        }
+      ]
+    }
+  ],
+  "first_pair": {
+    "route_6_minus_5_ms": 2.023212146013975,
+    "enqueue_5_minus_6_ms": 0.048529356718063354,
+    "actual_route_order": [
+      "pf4096_dc1024:5",
+      "pf4096_dc1024:6"
+    ],
+    "actual_enqueue_order": [
+      "pf4096_dc1024:6",
+      "pf4096_dc1024:5"
+    ]
+  },
+  "source": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/dp-workflow-rca/same-run-01/same_run_join.json"
+}

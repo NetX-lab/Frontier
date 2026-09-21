@@ -1,0 +1,272 @@
+{
+  "client_checks": {
+    "clean/runtime/clean": {
+      "client_rows": 400,
+      "warmup_rows": 300,
+      "formal_rows": 100,
+      "drain": "PASS",
+      "phase_seconds": [
+        154.0600423850119,
+        128.637874674052,
+        128.53482566960156,
+        129.02310534752905
+      ]
+    },
+    "batch/runtime/batch": {
+      "client_rows": 400,
+      "warmup_rows": 300,
+      "formal_rows": 100,
+      "drain": "PASS",
+      "phase_seconds": [
+        131.05776583589613,
+        129.92144779860973,
+        131.1082412172109,
+        131.7948918864131
+      ]
+    }
+  },
+  "new": {
+    "rows": [
+      {
+        "dp_rank": 0,
+        "tp_rank": 0,
+        "pp_rank": 0,
+        "batch_id": 4718,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 77.94070434570312,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789032754.3278809,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 1,
+        "pp_rank": 0,
+        "batch_id": 4718,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 77.91974639892578,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789032754.3278756,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 2,
+        "pp_rank": 0,
+        "batch_id": 4718,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 77.93113708496094,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789032754.327886,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 3,
+        "pp_rank": 0,
+        "batch_id": 4718,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 78.14217376708984,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789032754.3280954,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      }
+    ],
+    "median_ms": 77.93592071533203,
+    "p90_ms": 78.08173294067382,
+    "rank_max_ms": 78.14217376708984,
+    "spread_ms": 0.2224273681640625
+  },
+  "normal_reference": {
+    "rows": [
+      {
+        "dp_rank": 0,
+        "tp_rank": 0,
+        "pp_rank": 0,
+        "batch_id": 4711,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 77.48684692382812,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789021892.2945805,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 1,
+        "pp_rank": 0,
+        "batch_id": 4711,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 77.46063995361328,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789021892.294577,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 2,
+        "pp_rank": 0,
+        "batch_id": 4711,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 77.48252868652344,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789021892.2945778,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 3,
+        "pp_rank": 0,
+        "batch_id": 4711,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 77.48480224609375,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789021892.2945745,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      }
+    ],
+    "median_ms": 77.4836654663086,
+    "p90_ms": 77.48623352050781,
+    "rank_max_ms": 77.48684692382812,
+    "spread_ms": 0.02620697021484375
+  },
+  "delta": {
+    "median_ms": {
+      "ms": 0.4522552490234375,
+      "percent": 0.5836781808161717
+    },
+    "p90_ms": {
+      "ms": 0.5954994201660071,
+      "percent": 0.76852286284943
+    },
+    "rank_max_ms": {
+      "ms": 0.6553268432617188,
+      "percent": 0.8457265578323492
+    },
+    "spread_ms": {
+      "ms": 0.19622039794921875,
+      "percent": 748.7336244541485
+    }
+  },
+  "status": "PASS_STANDARD_IDENTITY_AND_DRAIN",
+  "limit": "Timing-only ablation; different-node single-run delta, not pure collective duration or repeated-run evidence. P90 is over four ranks."
+}

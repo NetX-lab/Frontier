@@ -1,0 +1,2 @@
+request_id,arrived_at,num_prefill_tokens,num_decode_tokens
+pf4096_dc1024:0,0.0,4096,1024

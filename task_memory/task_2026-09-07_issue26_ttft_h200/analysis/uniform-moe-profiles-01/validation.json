@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "python": "3.13.13 | packaged by Anaconda, Inc. | (main, Apr 14 2026, 06:19:41) [GCC 14.3.0]",
+  "merged_csv": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/supplements/moe-uniform-01/moe.csv",
+  "rows": 774,
+  "contexts": {
+    "prefill_hot": {
+      "rows": 387,
+      "token_points": 43,
+      "load_distributions": [
+        "extremely_skewed",
+        "skewed",
+        "uniform"
+      ],
+      "seeds": [
+        0,
+        1,
+        2
+      ]
+    },
+    "standalone_legacy": {
+      "rows": 387,
+      "token_points": 43,
+      "load_distributions": [
+        "extremely_skewed",
+        "skewed",
+        "uniform"
+      ],
+      "seeds": [
+        0,
+        1,
+        2
+      ]
+    }
+  },
+  "positive_finite_timing_medians": [
+    "time_stats.moe_gating_linear.median",
+    "time_stats.moe_gating_routing_topk.median",
+    "time_stats.moe_shuffling.median",
+    "time_stats.moe_grouped_gemm.median"
+  ],
+  "duplicate_identity_rows": 0,
+  "dropped_rows": [],
+  "source_row_values_preserved": true,
+  "completion_payload_integrity": "PASS",
+  "known_limitation": "Existing grouped GEMM profiler omits gated activation; no repair in this collection."
+}

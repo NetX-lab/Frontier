@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "mode": "batch",
+  "mode_predicate": {
+    "warmup_replays": 3,
+    "formal_requests": 100,
+    "batch_instrumentation": true,
+    "scheduler_diagnostics": true,
+    "operator_diagnostics": false,
+    "cpu_probes": false,
+    "official_request_metrics": false
+  },
+  "fresh_output": true,
+  "warmup_exclusion": "formal request identity is used; batch_id=0 is not selected",
+  "checkout": {
+    "path": "/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908",
+    "branch": "feature/frontier-comparison-instrumentation",
+    "commit": "4bc1bc026c91dff78bd7cf5ba6411f14d15e043d",
+    "tree_dirty": false
+  },
+  "next_action": "Run the bounded identity analyzer after complete client and worker artifacts."
+}

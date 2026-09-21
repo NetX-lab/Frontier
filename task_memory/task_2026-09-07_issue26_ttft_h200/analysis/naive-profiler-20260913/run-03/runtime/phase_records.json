@@ -1,0 +1,74 @@
+[
+  {
+    "phase": "warmup:0",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14139654.23895012,
+    "phase_end_monotonic_s": 14139809.815243335
+  },
+  {
+    "phase": "warmup:1",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14139809.815336337,
+    "phase_end_monotonic_s": 14139940.256699372
+  },
+  {
+    "phase": "warmup:2",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14139940.256728852,
+    "phase_end_monotonic_s": 14140069.897699574
+  },
+  {
+    "phase": "warmup:3",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14140069.897723235,
+    "phase_end_monotonic_s": 14140199.594332527
+  },
+  {
+    "phase": "warmup:4",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14140199.594356064,
+    "phase_end_monotonic_s": 14140329.558443047
+  },
+  {
+    "phase": "warmup:5",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14140329.558471844,
+    "phase_end_monotonic_s": 14140459.579782495
+  },
+  {
+    "phase": "warmup:6",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14140459.579804992,
+    "phase_end_monotonic_s": 14140589.521318275
+  },
+  {
+    "phase": "warmup:7",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14140589.521344287,
+    "phase_end_monotonic_s": 14140719.241973797
+  },
+  {
+    "phase": "warmup:8",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14140719.241998976,
+    "phase_end_monotonic_s": 14140849.398702925
+  },
+  {
+    "phase": "warmup:9",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14140849.39873826,
+    "phase_end_monotonic_s": 14140980.110195156
+  },
+  {
+    "event": "first_formal_first_token",
+    "request_id": "pf4096_dc1024:0",
+    "token_perf_counter_ns": 14140980642582775,
+    "profile_start_wall_ns": 1789244480054389557
+  },
+  {
+    "phase": "formal",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14140980.47555287,
+    "phase_end_monotonic_s": 14141121.889625728
+  }
+]

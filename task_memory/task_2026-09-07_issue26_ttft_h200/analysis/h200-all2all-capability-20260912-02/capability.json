@@ -1,0 +1,25 @@
+{
+  "python": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/bin/python",
+  "python_version": "3.10.16 (main, Dec 11 2024, 16:24:50) [GCC 11.2.0]",
+  "cuda_home": "/usr/local/cuda-12.8",
+  "vllm_source": "/data/ycfeng/tmp/vLLM-BS/vllm/__init__.py",
+  "vllm_version": "dev",
+  "optional_modules": {
+    "pplx_kernels": {
+      "find_spec": false,
+      "import": false,
+      "error": null,
+      "origin": null
+    },
+    "deep_ep": {
+      "find_spec": false,
+      "import": false,
+      "error": null,
+      "origin": null
+    }
+  },
+  "torch": "2.8.0+cu128",
+  "torch_cuda": "12.8",
+  "cuda_device_count": 8,
+  "status": "PASS"
+}

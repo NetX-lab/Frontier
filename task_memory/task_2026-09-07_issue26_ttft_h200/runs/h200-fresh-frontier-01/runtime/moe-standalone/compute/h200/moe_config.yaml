@@ -1,0 +1,74 @@
+block_shape: null
+device: h200
+disable_ray: true
+disable_replicated: false
+enable_load_imbalance: true
+expert_parallel_sizes:
+- 8
+extra_num_tokens: null
+gating_runtime_context: standalone_legacy
+load_distributions:
+- uniform
+- skewed
+- extremely_skewed
+max_tokens: 32768
+models:
+- qwen3-a3b-30b-moe
+num_gpus: 8
+num_samples_per_distribution: 3
+num_tensor_parallel_workers:
+- 1
+num_tokens_list:
+- 1
+- 2
+- 4
+- 8
+- 16
+- 24
+- 32
+- 48
+- 64
+- 80
+- 96
+- 100
+- 128
+- 4096
+- 4112
+- 4128
+- 4144
+- 4160
+- 4176
+- 4192
+- 4208
+- 4224
+- 8192
+- 8208
+- 8224
+- 8240
+- 8256
+- 8272
+- 8288
+- 8304
+- 8320
+- 12288
+- 12304
+- 12320
+- 12336
+- 12352
+- 12368
+- 12384
+- 12400
+- 12416
+- 16384
+- 24576
+- 32768
+output_dir: /data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-fresh-frontier-01/runtime/moe-standalone
+per_channel_quant: false
+precision: BF16
+profile_method: cuda_event
+resolved_expert_parallel_sizes_by_model:
+  qwen3-a3b-30b-moe:
+  - 8
+routing_runtime_path: standard_fused_topk
+skip_confirmation: true
+use_fp8: null

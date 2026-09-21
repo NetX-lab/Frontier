@@ -1,0 +1,10 @@
+{
+  "status": "PASS_SCOPED_INTEGRATION_CUDA_GATE_FAIL",
+  "config": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/d019-first-forward-integrated/config.json",
+  "compute": "same current-task fresh caches from Pnew query02; no prior-version data",
+  "communication": "fresh cache; existing ideal abstraction; explicit calibrated AR floor",
+  "scope": "TP4 BF16 PyNCCL RING_LL, 8-32MiB primitive range; fixed-group amortized eager floor, not independently measured CPU launch",
+  "limit": "First stage only. No decode/custom AR or fullcase accuracy claim.",
+  "independent_review": "analysis/d019-communication-fit-review.md",
+  "actual_first_forward_ms": 59.1903543839013
+}

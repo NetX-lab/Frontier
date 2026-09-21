@@ -1,0 +1,687 @@
+{
+  "status": "PASS",
+  "trace_csv": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/nsys-profiler-20260913-run03-postprocess/stats_cuda_gpu_trace.csv",
+  "control_markers": {
+    "start": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/nsys-profiler-20260913-run03-postprocess/trace_start.marker",
+    "stop": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/nsys-profiler-20260913-run03-postprocess/trace_stop.marker"
+  },
+  "window": {
+    "start_ns": 100157909,
+    "stop_ns": 200984879,
+    "control_window_ns": 100826970
+  },
+  "timestamp_alignment": {
+    "timestamp_offset_ns": 0,
+    "meaning": "adjusted_trace_timestamp = csv_timestamp + timestamp_offset_ns",
+    "marker_domain": "wall_clock_time_ns"
+  },
+  "rows": {
+    "input_rows": 24052,
+    "selected_rows_after_clip": 16687,
+    "skipped_rows": 7365,
+    "unknown_event_count": 0,
+    "unknown_duration_ns": 0
+  },
+  "devices": [
+    {
+      "device": "NVIDIA H200 (0)",
+      "device_id": 0,
+      "event_count": 4430,
+      "event_count_by_category": {
+        "compute": 2999,
+        "communication": 478,
+        "memory": 953,
+        "unknown": 0
+      },
+      "unknown_event_count": 0,
+      "heuristic_classification_count": 4157,
+      "category_union_ns": {
+        "compute": 26966553,
+        "communication": 80552705,
+        "memory": 2026577,
+        "unknown": 0
+      },
+      "category_boundaries": {
+        "compute": {
+          "start_ns": 101471032,
+          "end_ns": 200264822
+        },
+        "communication": {
+          "start_ns": 101813849,
+          "end_ns": 200984879
+        },
+        "memory": {
+          "start_ns": 101799705,
+          "end_ns": 200349206
+        },
+        "unknown": {
+          "start_ns": null,
+          "end_ns": null
+        }
+      },
+      "all_activity_union_ns": 98693027,
+      "all_kernel_or_activity_union_ns": 98693027,
+      "unknown_duration_ns": 0,
+      "activity_envelope_start_ns": 101471032,
+      "activity_envelope_end_ns": 200984879,
+      "activity_envelope_ns": 99513847,
+      "idle_or_non_activity_ns": 820820,
+      "category_overlap_ns": 10852808,
+      "top_operations": {
+        "compute": [
+          {
+            "name": "fused_moe_kernel",
+            "clipped_duration_ns": 14622483
+          },
+          {
+            "name": "void vllm::act_and_mul_kernel<c10::BFloat16, &vllm::silu_kernel<c10::BFloat16>, (bool)1>(T1 *, const T1 *, int)",
+            "clipped_duration_ns": 9816251
+          },
+          {
+            "name": "void at::native::reduce_kernel<(int)128, (int)4, at::native::ReduceOp<c10::BFloat16, at::native::func_wrapper_t<c10::BFloat16, at::native::sum_functor<c10::BFloat16, float, c10::BFloat16>::operator ()(at::TensorIterator &)::[lambda(float, float) (instance 1)]>, unsigned int, c10::BFloat16, (int)4, (int)4>>(T3)",
+            "clipped_duration_ns": 3752047
+          },
+          {
+            "name": "void flashinfer::PrefillWithKVCacheKernel<flashinfer::SparseCollectiveMainloop<PagedParams::AdditionalParams, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)1, (bool)0>, flashinfer::CollectiveEpilogue<flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>>, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)0, (bool)1, flashinfer::BatchPrefillPersistentTileScheduler<int>, (bool)0>(T1::Params, T2::Params, T6::Params)",
+            "clipped_duration_ns": 3400805
+          },
+          {
+            "name": "std::enable_if<T2>(int)0&&vllm::_typeConvert<T1>::exists, void>::type vllm::fused_add_rms_norm_kernel<c10::BFloat16, (int)8>(T1 *, long, T1 *, const T1 *, float, int, int)",
+            "clipped_duration_ns": 1271044
+          },
+          {
+            "name": "void vllm::rms_norm_kernel<c10::BFloat16>(T1 *, const T1 *, long, const T1 *, float, int, int)",
+            "clipped_duration_ns": 1141222
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long, long) (instance 1)]>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 1109635
+          },
+          {
+            "name": "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+            "clipped_duration_ns": 1024490
+          },
+          {
+            "name": "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT",
+            "clipped_duration_ns": 872193
+          },
+          {
+            "name": "void vllm::moe::moe_align_block_size_kernel<int>(const T1 *, int *, int *, int *, int, int, int, int, unsigned long, int *, int)",
+            "clipped_duration_ns": 770562
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::AUnaryFunctor<long, long, long, at::native::binary_internal::MulFunctor<long>>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 729763
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 709665
+          },
+          {
+            "name": "void vllm::rotary_embedding_kernel<c10::BFloat16, (bool)1>(const long *, T1 *, T1 *, const T1 *, int, long, long, long, int, int, int)",
+            "clipped_duration_ns": 624485
+          },
+          {
+            "name": "void at::native::index_elementwise_kernel<(int)128, (int)4, void at::native::gpu_index_kernel<void at::native::index_kernel_impl<at::native::OpaqueType<(int)4>>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>)::[lambda(char *, const char *, long) (instance 1)]>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>, const T1 &, bool)::[lambda(int) (instance 1)]>(long, T3)",
+            "clipped_duration_ns": 335137
+          },
+          {
+            "name": "void vllm::reshape_and_cache_flash_kernel<__nv_bfloat16, __nv_bfloat16, (vllm::Fp8KVCacheDataType)0>(const T1 *, const T1 *, T2 *, T2 *, const long *, long, long, long, long, long, int, int, int, const float *, const float *)",
+            "clipped_duration_ns": 258112
+          },
+          {
+            "name": "nvjet_tst_64x64_64x13_2x1_v_bz_TNT",
+            "clipped_duration_ns": 238049
+          },
+          {
+            "name": "nvjet_tst_16x64_64x16_4x1_v_bz_TNN",
+            "clipped_duration_ns": 216416
+          },
+          {
+            "name": "void vllm::moe::count_and_sort_expert_tokens_kernel<int>(const T1 *, int *, int *, unsigned long)",
+            "clipped_duration_ns": 208960
+          },
+          {
+            "name": "nvjet_tst_64x8_64x16_2x1_v_bz_TNT",
+            "clipped_duration_ns": 181056
+          },
+          {
+            "name": "nvjet_tst_64x8_64x16_4x1_v_bz_TNT",
+            "clipped_duration_ns": 169856
+          }
+        ],
+        "memory": [
+          {
+            "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 3)]::operator ()() const::[lambda(int) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+            "clipped_duration_ns": 1453350
+          },
+          {
+            "name": "[CUDA memcpy Device-to-Device]",
+            "clipped_duration_ns": 577792
+          },
+          {
+            "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 12)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+            "clipped_duration_ns": 443297
+          },
+          {
+            "name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)",
+            "clipped_duration_ns": 159392
+          }
+        ],
+        "communication": [
+          {
+            "name": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<(unsigned long)4096>)",
+            "clipped_duration_ns": 69000239
+          },
+          {
+            "name": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, (int)4>(vllm::RankData *, vllm::RankSignals, vllm::Signal *, T1 *, int, int)",
+            "clipped_duration_ns": 56160274
+          },
+          {
+            "name": "ncclDevKernel_Broadcast_RING_LL(ncclDevKernelArgsStorage<(unsigned long)4096>)",
+            "clipped_duration_ns": 23046300
+          }
+        ]
+      }
+    },
+    {
+      "device": "NVIDIA H200 (1)",
+      "device_id": 1,
+      "event_count": 4430,
+      "event_count_by_category": {
+        "compute": 2999,
+        "communication": 478,
+        "memory": 953,
+        "unknown": 0
+      },
+      "unknown_event_count": 0,
+      "heuristic_classification_count": 4157,
+      "category_union_ns": {
+        "compute": 26840382,
+        "communication": 74954120,
+        "memory": 2117973,
+        "unknown": 0
+      },
+      "category_boundaries": {
+        "compute": {
+          "start_ns": 107145965,
+          "end_ns": 200255706
+        },
+        "communication": {
+          "start_ns": 107465652,
+          "end_ns": 200984879
+        },
+        "memory": {
+          "start_ns": 107452276,
+          "end_ns": 200338266
+        },
+        "unknown": {
+          "start_ns": null,
+          "end_ns": null
+        }
+      },
+      "all_activity_union_ns": 93041120,
+      "all_kernel_or_activity_union_ns": 93041120,
+      "unknown_duration_ns": 0,
+      "activity_envelope_start_ns": 107145965,
+      "activity_envelope_end_ns": 200984879,
+      "activity_envelope_ns": 93838914,
+      "idle_or_non_activity_ns": 797794,
+      "category_overlap_ns": 10871355,
+      "top_operations": {
+        "compute": [
+          {
+            "name": "fused_moe_kernel",
+            "clipped_duration_ns": 14431445
+          },
+          {
+            "name": "void vllm::act_and_mul_kernel<c10::BFloat16, &vllm::silu_kernel<c10::BFloat16>, (bool)1>(T1 *, const T1 *, int)",
+            "clipped_duration_ns": 9820582
+          },
+          {
+            "name": "void at::native::reduce_kernel<(int)128, (int)4, at::native::ReduceOp<c10::BFloat16, at::native::func_wrapper_t<c10::BFloat16, at::native::sum_functor<c10::BFloat16, float, c10::BFloat16>::operator ()(at::TensorIterator &)::[lambda(float, float) (instance 1)]>, unsigned int, c10::BFloat16, (int)4, (int)4>>(T3)",
+            "clipped_duration_ns": 3766446
+          },
+          {
+            "name": "void flashinfer::PrefillWithKVCacheKernel<flashinfer::SparseCollectiveMainloop<PagedParams::AdditionalParams, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)1, (bool)0>, flashinfer::CollectiveEpilogue<flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>>, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)0, (bool)1, flashinfer::BatchPrefillPersistentTileScheduler<int>, (bool)0>(T1::Params, T2::Params, T6::Params)",
+            "clipped_duration_ns": 3417289
+          },
+          {
+            "name": "std::enable_if<T2>(int)0&&vllm::_typeConvert<T1>::exists, void>::type vllm::fused_add_rms_norm_kernel<c10::BFloat16, (int)8>(T1 *, long, T1 *, const T1 *, float, int, int)",
+            "clipped_duration_ns": 1266049
+          },
+          {
+            "name": "void vllm::rms_norm_kernel<c10::BFloat16>(T1 *, const T1 *, long, const T1 *, float, int, int)",
+            "clipped_duration_ns": 1138275
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long, long) (instance 1)]>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 1096772
+          },
+          {
+            "name": "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+            "clipped_duration_ns": 1039393
+          },
+          {
+            "name": "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT",
+            "clipped_duration_ns": 875331
+          },
+          {
+            "name": "void vllm::moe::moe_align_block_size_kernel<int>(const T1 *, int *, int *, int *, int, int, int, int, unsigned long, int *, int)",
+            "clipped_duration_ns": 762053
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::AUnaryFunctor<long, long, long, at::native::binary_internal::MulFunctor<long>>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 705956
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 702273
+          },
+          {
+            "name": "void vllm::rotary_embedding_kernel<c10::BFloat16, (bool)1>(const long *, T1 *, T1 *, const T1 *, int, long, long, long, int, int, int)",
+            "clipped_duration_ns": 624066
+          },
+          {
+            "name": "void at::native::index_elementwise_kernel<(int)128, (int)4, void at::native::gpu_index_kernel<void at::native::index_kernel_impl<at::native::OpaqueType<(int)4>>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>)::[lambda(char *, const char *, long) (instance 1)]>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>, const T1 &, bool)::[lambda(int) (instance 1)]>(long, T3)",
+            "clipped_duration_ns": 335616
+          },
+          {
+            "name": "void vllm::reshape_and_cache_flash_kernel<__nv_bfloat16, __nv_bfloat16, (vllm::Fp8KVCacheDataType)0>(const T1 *, const T1 *, T2 *, T2 *, const long *, long, long, long, long, long, int, int, int, const float *, const float *)",
+            "clipped_duration_ns": 258592
+          },
+          {
+            "name": "nvjet_tst_64x64_64x13_2x1_v_bz_TNT",
+            "clipped_duration_ns": 240800
+          },
+          {
+            "name": "nvjet_tst_16x64_64x16_4x1_v_bz_TNN",
+            "clipped_duration_ns": 221986
+          },
+          {
+            "name": "void vllm::moe::count_and_sort_expert_tokens_kernel<int>(const T1 *, int *, int *, unsigned long)",
+            "clipped_duration_ns": 209568
+          },
+          {
+            "name": "nvjet_tst_64x8_64x16_2x1_v_bz_TNT",
+            "clipped_duration_ns": 181889
+          },
+          {
+            "name": "nvjet_tst_64x8_64x16_4x1_v_bz_TNT",
+            "clipped_duration_ns": 168160
+          }
+        ],
+        "memory": [
+          {
+            "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 3)]::operator ()() const::[lambda(int) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+            "clipped_duration_ns": 1439685
+          },
+          {
+            "name": "[CUDA memcpy Device-to-Device]",
+            "clipped_duration_ns": 577540
+          },
+          {
+            "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 12)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+            "clipped_duration_ns": 441632
+          },
+          {
+            "name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)",
+            "clipped_duration_ns": 159744
+          }
+        ],
+        "communication": [
+          {
+            "name": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<(unsigned long)4096>)",
+            "clipped_duration_ns": 63385909
+          },
+          {
+            "name": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, (int)4>(vllm::RankData *, vllm::RankSignals, vllm::Signal *, T1 *, int, int)",
+            "clipped_duration_ns": 50844011
+          },
+          {
+            "name": "ncclDevKernel_Broadcast_RING_LL(ncclDevKernelArgsStorage<(unsigned long)4096>)",
+            "clipped_duration_ns": 23036785
+          }
+        ]
+      }
+    },
+    {
+      "device": "NVIDIA H200 (2)",
+      "device_id": 2,
+      "event_count": 3402,
+      "event_count_by_category": {
+        "compute": 2314,
+        "communication": 362,
+        "memory": 726,
+        "unknown": 0
+      },
+      "unknown_event_count": 0,
+      "heuristic_classification_count": 3212,
+      "category_union_ns": {
+        "compute": 26405825,
+        "communication": 74805444,
+        "memory": 2165310,
+        "unknown": 0
+      },
+      "category_boundaries": {
+        "compute": {
+          "start_ns": 101480988,
+          "end_ns": 200271221
+        },
+        "communication": {
+          "start_ns": 101888445,
+          "end_ns": 200984879
+        },
+        "memory": {
+          "start_ns": 130299114,
+          "end_ns": 200357225
+        },
+        "unknown": {
+          "start_ns": null,
+          "end_ns": null
+        }
+      },
+      "all_activity_union_ns": 97393666,
+      "all_kernel_or_activity_union_ns": 97393666,
+      "unknown_duration_ns": 0,
+      "activity_envelope_start_ns": 101480988,
+      "activity_envelope_end_ns": 200984879,
+      "activity_envelope_ns": 99503891,
+      "idle_or_non_activity_ns": 2110225,
+      "category_overlap_ns": 5982913,
+      "top_operations": {
+        "compute": [
+          {
+            "name": "fused_moe_kernel",
+            "clipped_duration_ns": 11289247
+          },
+          {
+            "name": "void vllm::act_and_mul_kernel<c10::BFloat16, &vllm::silu_kernel<c10::BFloat16>, (bool)1>(T1 *, const T1 *, int)",
+            "clipped_duration_ns": 7497844
+          },
+          {
+            "name": "void flashinfer::PrefillWithKVCacheKernel<flashinfer::SparseCollectiveMainloop<PagedParams::AdditionalParams, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)1, (bool)0>, flashinfer::CollectiveEpilogue<flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>>, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)0, (bool)1, flashinfer::BatchPrefillPersistentTileScheduler<int>, (bool)0>(T1::Params, T2::Params, T6::Params)",
+            "clipped_duration_ns": 3388685
+          },
+          {
+            "name": "void at::native::reduce_kernel<(int)128, (int)4, at::native::ReduceOp<c10::BFloat16, at::native::func_wrapper_t<c10::BFloat16, at::native::sum_functor<c10::BFloat16, float, c10::BFloat16>::operator ()(at::TensorIterator &)::[lambda(float, float) (instance 1)]>, unsigned int, c10::BFloat16, (int)4, (int)4>>(T3)",
+            "clipped_duration_ns": 2857030
+          },
+          {
+            "name": "std::enable_if<T2>(int)0&&vllm::_typeConvert<T1>::exists, void>::type vllm::fused_add_rms_norm_kernel<c10::BFloat16, (int)8>(T1 *, long, T1 *, const T1 *, float, int, int)",
+            "clipped_duration_ns": 1178659
+          },
+          {
+            "name": "void vllm::rms_norm_kernel<c10::BFloat16>(T1 *, const T1 *, long, const T1 *, float, int, int)",
+            "clipped_duration_ns": 1067938
+          },
+          {
+            "name": "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+            "clipped_duration_ns": 1014627
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long, long) (instance 1)]>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 876131
+          },
+          {
+            "name": "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT",
+            "clipped_duration_ns": 868771
+          },
+          {
+            "name": "void vllm::moe::moe_align_block_size_kernel<int>(const T1 *, int *, int *, int *, int, int, int, int, unsigned long, int *, int)",
+            "clipped_duration_ns": 584640
+          },
+          {
+            "name": "void vllm::rotary_embedding_kernel<c10::BFloat16, (bool)1>(const long *, T1 *, T1 *, const T1 *, int, long, long, long, int, int, int)",
+            "clipped_duration_ns": 580674
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 573986
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::AUnaryFunctor<long, long, long, at::native::binary_internal::MulFunctor<long>>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 566594
+          },
+          {
+            "name": "void vllm::reshape_and_cache_flash_kernel<__nv_bfloat16, __nv_bfloat16, (vllm::Fp8KVCacheDataType)0>(const T1 *, const T1 *, T2 *, T2 *, const long *, long, long, long, long, long, int, int, int, const float *, const float *)",
+            "clipped_duration_ns": 258242
+          },
+          {
+            "name": "void at::native::index_elementwise_kernel<(int)128, (int)4, void at::native::gpu_index_kernel<void at::native::index_kernel_impl<at::native::OpaqueType<(int)4>>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>)::[lambda(char *, const char *, long) (instance 1)]>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>, const T1 &, bool)::[lambda(int) (instance 1)]>(long, T3)",
+            "clipped_duration_ns": 257728
+          },
+          {
+            "name": "nvjet_tst_64x64_64x13_2x1_v_bz_TNT",
+            "clipped_duration_ns": 239488
+          },
+          {
+            "name": "void flashinfer::BlockSparseIndicesToVectorSparseOffsetsKernel<int>(T1 *, T1 *, T1 *, T1 *, T1 *, unsigned int, unsigned int, unsigned int, flashinfer::uint_fastdiv)",
+            "clipped_duration_ns": 176480
+          },
+          {
+            "name": "void vllm::moe::count_and_sort_expert_tokens_kernel<int>(const T1 *, int *, int *, unsigned long)",
+            "clipped_duration_ns": 159009
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)8, at::native::FillFunctor<c10::BFloat16>, std::array<char *, (unsigned long)1>>(int, T2, T3)",
+            "clipped_duration_ns": 146432
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)8, at::native::AUnaryFunctor<c10::BFloat16, c10::BFloat16, c10::BFloat16, at::native::binary_internal::MulFunctor<float>>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 141760
+          }
+        ],
+        "communication": [
+          {
+            "name": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<(unsigned long)4096>)",
+            "clipped_duration_ns": 67332374
+          },
+          {
+            "name": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, (int)4>(vllm::RankData *, vllm::RankSignals, vllm::Signal *, T1 *, int, int)",
+            "clipped_duration_ns": 14118418
+          },
+          {
+            "name": "ncclDevKernel_Broadcast_RING_LL(ncclDevKernelArgsStorage<(unsigned long)4096>)",
+            "clipped_duration_ns": 13090259
+          }
+        ],
+        "memory": [
+          {
+            "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 3)]::operator ()() const::[lambda(int) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+            "clipped_duration_ns": 1187141
+          },
+          {
+            "name": "[CUDA memcpy Device-to-Device]",
+            "clipped_duration_ns": 467586
+          },
+          {
+            "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 12)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+            "clipped_duration_ns": 441604
+          },
+          {
+            "name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)",
+            "clipped_duration_ns": 122241
+          }
+        ]
+      }
+    },
+    {
+      "device": "NVIDIA H200 (3)",
+      "device_id": 3,
+      "event_count": 4425,
+      "event_count_by_category": {
+        "compute": 2998,
+        "communication": 475,
+        "memory": 952,
+        "unknown": 0
+      },
+      "unknown_event_count": 0,
+      "heuristic_classification_count": 4153,
+      "category_union_ns": {
+        "compute": 40856500,
+        "communication": 50311749,
+        "memory": 2605993,
+        "unknown": 0
+      },
+      "category_boundaries": {
+        "compute": {
+          "start_ns": 129767925,
+          "end_ns": 200984879
+        },
+        "communication": {
+          "start_ns": 130138070,
+          "end_ns": 200984879
+        },
+        "memory": {
+          "start_ns": 130131948,
+          "end_ns": 200501371
+        },
+        "unknown": {
+          "start_ns": null,
+          "end_ns": null
+        }
+      },
+      "all_activity_union_ns": 67962372,
+      "all_kernel_or_activity_union_ns": 67962372,
+      "unknown_duration_ns": 0,
+      "activity_envelope_start_ns": 129767925,
+      "activity_envelope_end_ns": 200984879,
+      "activity_envelope_ns": 71216954,
+      "idle_or_non_activity_ns": 3254582,
+      "category_overlap_ns": 25811870,
+      "top_operations": {
+        "compute": [
+          {
+            "name": "fused_moe_kernel",
+            "clipped_duration_ns": 14881274
+          },
+          {
+            "name": "void vllm::act_and_mul_kernel<c10::BFloat16, &vllm::silu_kernel<c10::BFloat16>, (bool)1>(T1 *, const T1 *, int)",
+            "clipped_duration_ns": 9776170
+          },
+          {
+            "name": "void at::native::reduce_kernel<(int)128, (int)4, at::native::ReduceOp<c10::BFloat16, at::native::func_wrapper_t<c10::BFloat16, at::native::sum_functor<c10::BFloat16, float, c10::BFloat16>::operator ()(at::TensorIterator &)::[lambda(float, float) (instance 1)]>, unsigned int, c10::BFloat16, (int)4, (int)4>>(T3)",
+            "clipped_duration_ns": 3701514
+          },
+          {
+            "name": "void flashinfer::PrefillWithKVCacheKernel<flashinfer::SparseCollectiveMainloop<PagedParams::AdditionalParams, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)1, (bool)0>, flashinfer::CollectiveEpilogue<flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>>, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)0, (bool)1, flashinfer::BatchPrefillPersistentTileScheduler<int>, (bool)0>(T1::Params, T2::Params, T6::Params)",
+            "clipped_duration_ns": 3423341
+          },
+          {
+            "name": "std::enable_if<T2>(int)0&&vllm::_typeConvert<T1>::exists, void>::type vllm::fused_add_rms_norm_kernel<c10::BFloat16, (int)8>(T1 *, long, T1 *, const T1 *, float, int, int)",
+            "clipped_duration_ns": 1255653
+          },
+          {
+            "name": "void vllm::rms_norm_kernel<c10::BFloat16>(T1 *, const T1 *, long, const T1 *, float, int, int)",
+            "clipped_duration_ns": 1128230
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long, long) (instance 1)]>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 1095781
+          },
+          {
+            "name": "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+            "clipped_duration_ns": 1027363
+          },
+          {
+            "name": "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT",
+            "clipped_duration_ns": 872292
+          },
+          {
+            "name": "void vllm::moe::moe_align_block_size_kernel<int>(const T1 *, int *, int *, int *, int, int, int, int, unsigned long, int *, int)",
+            "clipped_duration_ns": 761414
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::AUnaryFunctor<long, long, long, at::native::binary_internal::MulFunctor<long>>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 705058
+          },
+          {
+            "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+            "clipped_duration_ns": 702307
+          },
+          {
+            "name": "void vllm::rotary_embedding_kernel<c10::BFloat16, (bool)1>(const long *, T1 *, T1 *, const T1 *, int, long, long, long, int, int, int)",
+            "clipped_duration_ns": 623076
+          },
+          {
+            "name": "void at::native::index_elementwise_kernel<(int)128, (int)4, void at::native::gpu_index_kernel<void at::native::index_kernel_impl<at::native::OpaqueType<(int)4>>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>)::[lambda(char *, const char *, long) (instance 1)]>(at::TensorIteratorBase &, c10::ArrayRef<long>, c10::ArrayRef<long>, const T1 &, bool)::[lambda(int) (instance 1)]>(long, T3)",
+            "clipped_duration_ns": 333505
+          },
+          {
+            "name": "void vllm::reshape_and_cache_flash_kernel<__nv_bfloat16, __nv_bfloat16, (vllm::Fp8KVCacheDataType)0>(const T1 *, const T1 *, T2 *, T2 *, const long *, long, long, long, long, long, int, int, int, const float *, const float *)",
+            "clipped_duration_ns": 258081
+          },
+          {
+            "name": "nvjet_tst_64x64_64x13_2x1_v_bz_TNT",
+            "clipped_duration_ns": 239776
+          },
+          {
+            "name": "nvjet_tst_16x64_64x16_4x1_v_bz_TNN",
+            "clipped_duration_ns": 221024
+          },
+          {
+            "name": "void vllm::moe::count_and_sort_expert_tokens_kernel<int>(const T1 *, int *, int *, unsigned long)",
+            "clipped_duration_ns": 209440
+          },
+          {
+            "name": "nvjet_tst_64x8_64x16_2x1_v_bz_TNT",
+            "clipped_duration_ns": 179808
+          },
+          {
+            "name": "nvjet_tst_64x8_64x16_4x1_v_bz_TNT",
+            "clipped_duration_ns": 167776
+          }
+        ],
+        "memory": [
+          {
+            "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 3)]::operator ()() const::[lambda(int) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+            "clipped_duration_ns": 1438822
+          },
+          {
+            "name": "[CUDA memcpy Device-to-Device]",
+            "clipped_duration_ns": 567713
+          },
+          {
+            "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 12)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+            "clipped_duration_ns": 440609
+          },
+          {
+            "name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)",
+            "clipped_duration_ns": 158849
+          }
+        ],
+        "communication": [
+          {
+            "name": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<(unsigned long)4096>)",
+            "clipped_duration_ns": 32244589
+          },
+          {
+            "name": "ncclDevKernel_Broadcast_RING_LL(ncclDevKernelArgsStorage<(unsigned long)4096>)",
+            "clipped_duration_ns": 27958207
+          },
+          {
+            "name": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, (int)4>(vllm::RankData *, vllm::RankSignals, vllm::Signal *, T1 *, int, int)",
+            "clipped_duration_ns": 427716
+          }
+        ]
+      }
+    }
+  ],
+  "schema": {
+    "required_columns": [
+      "Start (ns)",
+      "Duration (ns)",
+      "Device",
+      "Name"
+    ],
+    "primary_report": "cuda_gpu_trace",
+    "filter_time_semantics": "overlap selection; event durations are clipped by this parser"
+  },
+  "limits": [
+    "Device labels do not establish DP/TP/rank identity; device_id is retained only when Nsight provides it.",
+    "Communication and copy/transform classification uses operation-name heuristics and is reported as such.",
+    "cuda_api_sum and aggregate summary reports are not included in GPU interval accounting.",
+    "The control marker window is a host wall-clock boundary and may not coincide exactly with GPU event boundaries."
+  ]
+}

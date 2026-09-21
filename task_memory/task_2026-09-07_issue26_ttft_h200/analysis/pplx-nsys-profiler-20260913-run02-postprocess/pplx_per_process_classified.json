@@ -1,0 +1,349 @@
+{
+  "status": "PARTIAL_STOP_COVERAGE",
+  "rows": [
+    {
+      "pid": 1168,
+      "start_ns": 148818496,
+      "stop_observed": true,
+      "stop_ns": 843738521,
+      "kernel_count": 33027,
+      "memcpy_count": 3071,
+      "compute_union_ms": 63.620481,
+      "communication_union_ms": 215.266847,
+      "memory_union_ms": 21.094438,
+      "all_kernel_union_ms": 299.981766,
+      "activity_envelope_ms": 693.995719,
+      "idle_ms": 394.013953,
+      "compute_top_ms": [
+        {
+          "name": "void vllm::act_and_mul_kernel<c10::BFloat16, &vllm::silu_kernel<c10::BFloat16>, (bool)1>(T1 *, const T1 *, int)",
+          "ms": 24.370056
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long, long) (instance 1)]>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+          "ms": 10.975167
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::AUnaryFunctor<long, long, long, at::native::binary_internal::MulFunctor<long>>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+          "ms": 8.287908
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+          "ms": 8.016997
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)8, at::native::FillFunctor<c10::BFloat16>, std::array<char *, (unsigned long)1>>(int, T2, T3)",
+          "ms": 4.234132
+        },
+        {
+          "name": "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+          "ms": 1.446755
+        },
+        {
+          "name": "void vllm::rms_norm_kernel<c10::BFloat16>(T1 *, const T1 *, long, const T1 *, float, int, int)",
+          "ms": 1.368709
+        },
+        {
+          "name": "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT",
+          "ms": 1.231271
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)4, at::native::FillFunctor<float>, std::array<char *, (unsigned long)1>>(int, T2, T3)",
+          "ms": 0.901348
+        },
+        {
+          "name": "void <unnamed>::elementwise_kernel_with_index<int, at::native::arange_cuda_out(const c10::Scalar &, const c10::Scalar &, const c10::Scalar &, at::Tensor &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long) (instance 1)]>(T1, T2, function_traits<T2>::result_type *)",
+          "ms": 0.892771
+        }
+      ],
+      "communication_top_ms": [
+        {
+          "name": "batched_triton_kernel",
+          "ms": 161.710542
+        },
+        {
+          "name": "void <unnamed>::combineKernel<__nv_bfloat16, __nv_bfloat16, (unsigned long)32, (bool)1, (bool)1>(T2 *, unsigned long, unsigned int *, unsigned long, unsigned long, float *, unsigned long, unsigned long, T1 *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned int, unsigned int, unsigned int, unsigned long, unsigned int *, unsigned int, std::byte **, std::byte **, const unsigned int *, const unsigned int *, const unsigned int *, const unsigned int *, unsigned int *, unsigned int **, unsigned int &)",
+          "ms": 27.48016
+        },
+        {
+          "name": "void <unnamed>::dispatchKernel<(unsigned int)16, (bool)1, (bool)0>(int *, unsigned long, std::byte *, unsigned long, unsigned long, float *, unsigned long, unsigned long, unsigned long, const std::byte *, unsigned long, const float *, unsigned long, unsigned long, const unsigned int *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned int, unsigned int, unsigned int, unsigned long, unsigned long, unsigned long, unsigned int *, unsigned int, std::byte **, std::byte **, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int &)",
+          "ms": 10.255397
+        },
+        {
+          "name": "void <unnamed>::dispatchKernel<(unsigned int)16, (bool)0, (bool)1>(int *, unsigned long, std::byte *, unsigned long, unsigned long, float *, unsigned long, unsigned long, unsigned long, const std::byte *, unsigned long, const float *, unsigned long, unsigned long, const unsigned int *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned int, unsigned int, unsigned int, unsigned long, unsigned long, unsigned long, unsigned int *, unsigned int, std::byte **, std::byte **, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int &)",
+          "ms": 5.982559
+        },
+        {
+          "name": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<(unsigned long)4096>)",
+          "ms": 4.946231
+        },
+        {
+          "name": "void flashinfer::PrefillWithKVCacheKernel<flashinfer::SparseCollectiveMainloop<PagedParams::AdditionalParams, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)1, (bool)0>, flashinfer::CollectiveEpilogue<flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>>, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)0, (bool)1, flashinfer::BatchPrefillPersistentTileScheduler<int>, (bool)0>(T1::Params, T2::Params, T6::Params)",
+          "ms": 4.882806
+        },
+        {
+          "name": "void at::native::vectorized_gather_kernel<(int)16, long>(char *, char *, T2 *, int, long, long, long, long, bool)",
+          "ms": 0.009152
+        }
+      ],
+      "memory_top_ms": [
+        {
+          "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 15)]::operator ()() const::[lambda(unsigned int) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+          "ms": 12.337026
+        },
+        {
+          "name": "[CUDA memcpy]",
+          "ms": 4.809038
+        },
+        {
+          "name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 3)]::operator ()() const::[lambda(int) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)",
+          "ms": 1.74465
+        },
+        {
+          "name": "std::enable_if<T2>(int)0&&vllm::_typeConvert<T1>::exists, void>::type vllm::fused_add_rms_norm_kernel<c10::BFloat16, (int)8>(T1 *, long, T1 *, const T1 *, float, int, int)",
+          "ms": 1.560966
+        },
+        {
+          "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 12)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+          "ms": 0.623397
+        },
+        {
+          "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::<unnamed>::masked_fill_kernel(at::TensorIterator &, const c10::Scalar &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 12)]::operator ()() const::[lambda(c10::BFloat16, bool) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+          "ms": 0.019361
+        }
+      ]
+    },
+    {
+      "pid": 1170,
+      "start_ns": 148825541,
+      "stop_observed": true,
+      "stop_ns": 831033993,
+      "kernel_count": 32398,
+      "memcpy_count": 3011,
+      "compute_union_ms": 61.87234,
+      "communication_union_ms": 551.501771,
+      "memory_union_ms": 20.7331,
+      "all_kernel_union_ms": 634.107211,
+      "activity_envelope_ms": 681.306818,
+      "idle_ms": 47.199607000000015,
+      "compute_top_ms": [
+        {
+          "name": "void vllm::act_and_mul_kernel<c10::BFloat16, &vllm::silu_kernel<c10::BFloat16>, (bool)1>(T1 *, const T1 *, int)",
+          "ms": 23.200085
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long, long) (instance 1)]>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+          "ms": 10.706944
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::AUnaryFunctor<long, long, long, at::native::binary_internal::MulFunctor<long>>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+          "ms": 8.158898
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+          "ms": 7.883474
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)8, at::native::FillFunctor<c10::BFloat16>, std::array<char *, (unsigned long)1>>(int, T2, T3)",
+          "ms": 4.164588
+        },
+        {
+          "name": "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+          "ms": 1.469187
+        },
+        {
+          "name": "void vllm::rms_norm_kernel<c10::BFloat16>(T1 *, const T1 *, long, const T1 *, float, int, int)",
+          "ms": 1.407492
+        },
+        {
+          "name": "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT",
+          "ms": 1.23837
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)4, at::native::FillFunctor<float>, std::array<char *, (unsigned long)1>>(int, T2, T3)",
+          "ms": 0.873601
+        },
+        {
+          "name": "void <unnamed>::elementwise_kernel_with_index<int, at::native::arange_cuda_out(const c10::Scalar &, const c10::Scalar &, const c10::Scalar &, at::Tensor &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long) (instance 1)]>(T1, T2, function_traits<T2>::result_type *)",
+          "ms": 0.865953
+        }
+      ],
+      "communication_top_ms": [
+        {
+          "name": "void <unnamed>::dispatchKernel<(unsigned int)16, (bool)0, (bool)1>(int *, unsigned long, std::byte *, unsigned long, unsigned long, float *, unsigned long, unsigned long, unsigned long, const std::byte *, unsigned long, const float *, unsigned long, unsigned long, const unsigned int *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned int, unsigned int, unsigned int, unsigned long, unsigned long, unsigned long, unsigned int *, unsigned int, std::byte **, std::byte **, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int &)",
+          "ms": 236.971487
+        },
+        {
+          "name": "batched_triton_kernel",
+          "ms": 155.479634
+        },
+        {
+          "name": "void <unnamed>::combineKernel<__nv_bfloat16, __nv_bfloat16, (unsigned long)32, (bool)1, (bool)1>(T2 *, unsigned long, unsigned int *, unsigned long, unsigned long, float *, unsigned long, unsigned long, T1 *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned int, unsigned int, unsigned int, unsigned long, unsigned int *, unsigned int, std::byte **, std::byte **, const unsigned int *, const unsigned int *, const unsigned int *, const unsigned int *, unsigned int *, unsigned int **, unsigned int &)",
+          "ms": 127.035542
+        },
+        {
+          "name": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<(unsigned long)4096>)",
+          "ms": 15.850696
+        },
+        {
+          "name": "void <unnamed>::dispatchKernel<(unsigned int)16, (bool)1, (bool)0>(int *, unsigned long, std::byte *, unsigned long, unsigned long, float *, unsigned long, unsigned long, unsigned long, const std::byte *, unsigned long, const float *, unsigned long, unsigned long, const unsigned int *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned int, unsigned int, unsigned int, unsigned long, unsigned long, unsigned long, unsigned int *, unsigned int, std::byte **, std::byte **, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int &)",
+          "ms": 11.305557
+        },
+        {
+          "name": "void flashinfer::PrefillWithKVCacheKernel<flashinfer::SparseCollectiveMainloop<PagedParams::AdditionalParams, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)1, (bool)0>, flashinfer::CollectiveEpilogue<flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>>, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)0, (bool)1, flashinfer::BatchPrefillPersistentTileScheduler<int>, (bool)0>(T1::Params, T2::Params, T6::Params)",
+          "ms": 4.853159
+        },
+        {
+          "name": "void at::native::vectorized_gather_kernel<(int)16, long>(char *, char *, T2 *, int, long, long, long, long, bool)",
+          "ms": 0.005696
+        }
+      ],
+      "memory_top_ms": [
+        {
+          "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 15)]::operator ()() const::[lambda(unsigned int) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+          "ms": 12.126616
+        },
+        {
+          "name": "[CUDA memcpy]",
+          "ms": 4.69867
+        },
+        {
+          "name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 3)]::operator ()() const::[lambda(int) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)",
+          "ms": 1.679425
+        },
+        {
+          "name": "std::enable_if<T2>(int)0&&vllm::_typeConvert<T1>::exists, void>::type vllm::fused_add_rms_norm_kernel<c10::BFloat16, (int)8>(T1 *, long, T1 *, const T1 *, float, int, int)",
+          "ms": 1.592001
+        },
+        {
+          "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 12)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+          "ms": 0.617508
+        },
+        {
+          "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::<unnamed>::masked_fill_kernel(at::TensorIterator &, const c10::Scalar &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 12)]::operator ()() const::[lambda(c10::BFloat16, bool) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+          "ms": 0.01888
+        }
+      ]
+    },
+    {
+      "pid": 1173,
+      "start_ns": 148772438,
+      "stop_observed": true,
+      "stop_ns": 824758035,
+      "kernel_count": 32125,
+      "memcpy_count": 2987,
+      "compute_union_ms": 61.082149,
+      "communication_union_ms": 555.736634,
+      "memory_union_ms": 20.493908,
+      "all_kernel_union_ms": 637.312691,
+      "activity_envelope_ms": 675.201842,
+      "idle_ms": 37.88915100000008,
+      "compute_top_ms": [
+        {
+          "name": "void vllm::act_and_mul_kernel<c10::BFloat16, &vllm::silu_kernel<c10::BFloat16>, (bool)1>(T1 *, const T1 *, int)",
+          "ms": 22.898519
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::BUnaryFunctor<long, long, long, at::native::remainder_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long, long) (instance 1)]>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+          "ms": 10.602506
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::AUnaryFunctor<long, long, long, at::native::binary_internal::MulFunctor<long>>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+          "ms": 8.077895
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)2, at::native::CUDAFunctorOnSelf_add<long>, std::array<char *, (unsigned long)2>>(int, T2, T3)",
+          "ms": 7.813484
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)8, at::native::FillFunctor<c10::BFloat16>, std::array<char *, (unsigned long)1>>(int, T2, T3)",
+          "ms": 4.116246
+        },
+        {
+          "name": "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+          "ms": 1.421926
+        },
+        {
+          "name": "void vllm::rms_norm_kernel<c10::BFloat16>(T1 *, const T1 *, long, const T1 *, float, int, int)",
+          "ms": 1.373637
+        },
+        {
+          "name": "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT",
+          "ms": 1.205124
+        },
+        {
+          "name": "void at::native::vectorized_elementwise_kernel<(int)4, at::native::FillFunctor<float>, std::array<char *, (unsigned long)1>>(int, T2, T3)",
+          "ms": 0.862981
+        },
+        {
+          "name": "void <unnamed>::elementwise_kernel_with_index<int, at::native::arange_cuda_out(const c10::Scalar &, const c10::Scalar &, const c10::Scalar &, at::Tensor &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 4)]::operator ()() const::[lambda(long) (instance 1)]>(T1, T2, function_traits<T2>::result_type *)",
+          "ms": 0.856261
+        }
+      ],
+      "communication_top_ms": [
+        {
+          "name": "void <unnamed>::dispatchKernel<(unsigned int)16, (bool)0, (bool)1>(int *, unsigned long, std::byte *, unsigned long, unsigned long, float *, unsigned long, unsigned long, unsigned long, const std::byte *, unsigned long, const float *, unsigned long, unsigned long, const unsigned int *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned int, unsigned int, unsigned int, unsigned long, unsigned long, unsigned long, unsigned int *, unsigned int, std::byte **, std::byte **, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int &)",
+          "ms": 243.699333
+        },
+        {
+          "name": "batched_triton_kernel",
+          "ms": 152.900242
+        },
+        {
+          "name": "void <unnamed>::combineKernel<__nv_bfloat16, __nv_bfloat16, (unsigned long)32, (bool)1, (bool)1>(T2 *, unsigned long, unsigned int *, unsigned long, unsigned long, float *, unsigned long, unsigned long, T1 *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned int, unsigned int, unsigned int, unsigned long, unsigned int *, unsigned int, std::byte **, std::byte **, const unsigned int *, const unsigned int *, const unsigned int *, const unsigned int *, unsigned int *, unsigned int **, unsigned int &)",
+          "ms": 128.092491
+        },
+        {
+          "name": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<(unsigned long)4096>)",
+          "ms": 16.376738
+        },
+        {
+          "name": "void <unnamed>::dispatchKernel<(unsigned int)16, (bool)1, (bool)0>(int *, unsigned long, std::byte *, unsigned long, unsigned long, float *, unsigned long, unsigned long, unsigned long, const std::byte *, unsigned long, const float *, unsigned long, unsigned long, const unsigned int *, unsigned long, unsigned long, unsigned long, unsigned long, unsigned int, unsigned int, unsigned int, unsigned long, unsigned long, unsigned long, unsigned int *, unsigned int, std::byte **, std::byte **, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int *, unsigned int &)",
+          "ms": 9.966049
+        },
+        {
+          "name": "void flashinfer::PrefillWithKVCacheKernel<flashinfer::SparseCollectiveMainloop<PagedParams::AdditionalParams, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)1, (bool)0>, flashinfer::CollectiveEpilogue<flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>>, flashinfer::AttentionKernelTraits<(bool)0, (int)128, (int)128, (int)128, (int)96, (int)2, cutlass::bfloat16_t, cutlass::bfloat16_t, cutlass::bfloat16_t, int, flashinfer::StandardAttention>, (bool)0, (bool)1, flashinfer::BatchPrefillPersistentTileScheduler<int>, (bool)0>(T1::Params, T2::Params, T6::Params)",
+          "ms": 4.696149
+        },
+        {
+          "name": "void at::native::vectorized_gather_kernel<(int)16, long>(char *, char *, T2 *, int, long, long, long, long, bool)",
+          "ms": 0.005632
+        }
+      ],
+      "memory_top_ms": [
+        {
+          "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 15)]::operator ()() const::[lambda(unsigned int) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+          "ms": 12.004593
+        },
+        {
+          "name": "[CUDA memcpy]",
+          "ms": 4.655153
+        },
+        {
+          "name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 3)]::operator ()() const::[lambda(int) (instance 1)], std::array<char *, (unsigned long)2>, (int)4, TrivialOffsetCalculator<(int)1, unsigned int>, TrivialOffsetCalculator<(int)1, unsigned int>, at::native::memory::LoadWithCast<(int)1>, at::native::memory::StoreWithCast<(int)1>>(int, T1, T2, T4, T5, T6, T7)",
+          "ms": 1.660554
+        },
+        {
+          "name": "std::enable_if<T2>(int)0&&vllm::_typeConvert<T1>::exists, void>::type vllm::fused_add_rms_norm_kernel<c10::BFloat16, (int)8>(T1 *, long, T1 *, const T1 *, float, int, int)",
+          "ms": 1.552293
+        },
+        {
+          "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase &)::[lambda() (instance 3)]::operator ()() const::[lambda() (instance 12)]::operator ()() const::[lambda(c10::BFloat16) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+          "ms": 0.602627
+        },
+        {
+          "name": "void at::native::elementwise_kernel<(int)128, (int)4, void at::native::gpu_kernel_impl_nocast<at::native::<unnamed>::masked_fill_kernel(at::TensorIterator &, const c10::Scalar &)::[lambda() (instance 1)]::operator ()() const::[lambda() (instance 12)]::operator ()() const::[lambda(c10::BFloat16, bool) (instance 1)]>(at::TensorIteratorBase &, const T1 &)::[lambda(int) (instance 1)]>(int, T3)",
+          "ms": 0.018688
+        }
+      ]
+    },
+    {
+      "pid": 1172,
+      "start_ns": 22112817,
+      "stop_observed": false,
+      "stop_ns": null
+    }
+  ],
+  "classification": "dispatchKernel/combineKernel/batched_triton_kernel classified as communication; pure unions clipped to process-local profiler start -> stop API invocation start",
+  "limits": "PPLX Nsight capture is diagnostic; stop-drain and profiler queue effects prevent clean span equivalence."
+}

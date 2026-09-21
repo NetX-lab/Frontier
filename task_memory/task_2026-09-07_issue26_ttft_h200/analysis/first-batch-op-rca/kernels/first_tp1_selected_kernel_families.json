@@ -1,0 +1,68 @@
+[
+  {
+    "scope": "unscoped",
+    "name": "triton_poi_fused_add_bitwise_and_bitwise_not_bitwise_or_ge_lt_mul_sub_0",
+    "count": 1,
+    "duration_ms": 0.001632
+  },
+  {
+    "scope": "unscoped",
+    "name": "void at::native::vectorized_gather_kernel<16, long>(char*, char*, long*, int, long, long, long, long, bool)",
+    "count": 1,
+    "duration_ms": 0.005664
+  },
+  {
+    "scope": "unscoped",
+    "name": "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::(anonymous namespace)::masked_fill_kernel(at::TensorIterator&, c10::Scalar const&)::{lambda()#1}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16, bool)#1}>(at::TensorIteratorBase&, at::native::(anonymous namespace)::masked_fill_kernel(at::TensorIterator&, c10::Scalar const&)::{lambda()#1}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16, bool)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::(anonymous namespace)::masked_fill_kernel(at::TensorIterator&, c10::Scalar const&)::{lambda()#1}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16, bool)#1}>(at::TensorIteratorBase&, at::native::(anonymous namespace)::masked_fill_kernel(at::TensorIterator&, c10::Scalar const&)::{lambda()#1}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16, bool)#1} const&)::{lambda(int)#1})",
+    "count": 1,
+    "duration_ms": 0.018816
+  },
+  {
+    "scope": "unscoped",
+    "name": "void at::native::vectorized_elementwise_kernel<8, at::native::FillFunctor<c10::BFloat16>, std::array<char*, 1ul> >(int, at::native::FillFunctor<c10::BFloat16>, std::array<char*, 1ul>)",
+    "count": 48,
+    "duration_ms": 0.183136
+  },
+  {
+    "scope": "attn_post_proj",
+    "name": "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT",
+    "count": 48,
+    "duration_ms": 1.241378
+  },
+  {
+    "scope": "attn_post_proj",
+    "name": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+    "count": 48,
+    "duration_ms": 4.726896000000001
+  },
+  {
+    "scope": "moe_grouped_gemm",
+    "name": "fused_moe_kernel",
+    "count": 96,
+    "duration_ms": 10.201439000000006
+  },
+  {
+    "scope": "moe_grouped_gemm",
+    "name": "void vllm::act_and_mul_kernel<c10::BFloat16, &(c10::BFloat16 vllm::silu_kernel<c10::BFloat16>(c10::BFloat16 const&)), true>(c10::BFloat16*, c10::BFloat16 const*, int)",
+    "count": 48,
+    "duration_ms": 7.070356000000002
+  },
+  {
+    "scope": "unscoped",
+    "name": "void at::native::reduce_kernel<128, 4, at::native::ReduceOp<c10::BFloat16, at::native::func_wrapper_t<c10::BFloat16, at::native::sum_functor<c10::BFloat16, float, c10::BFloat16>::operator()(at::TensorIterator&)::{lambda(float, float)#1}>, unsigned int, c10::BFloat16, 4, 4> >(at::native::ReduceOp<c10::BFloat16, at::native::func_wrapper_t<c10::BFloat16, at::native::sum_functor<c10::BFloat16, float, c10::BFloat16>::operator()(at::TensorIterator&)::{lambda(float, float)#1}>, unsigned int, c10::BFloat16, 4, 4>)",
+    "count": 48,
+    "duration_ms": 2.7238830000000003
+  },
+  {
+    "scope": "expert_parallel_allreduce",
+    "name": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+    "count": 48,
+    "duration_ms": 4.6192210000000005
+  },
+  {
+    "scope": "unscoped",
+    "name": "std::enable_if<(((8)>(0)))&&vllm::_typeConvert<c10::BFloat16>::exists, void>::type vllm::fused_add_rms_norm_kernel<c10::BFloat16, 8>(c10::BFloat16*, long, c10::BFloat16*, c10::BFloat16 const*, float, int, int)",
+    "count": 1,
+    "duration_ms": 0.016448
+  }
+]

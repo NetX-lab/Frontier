@@ -1,0 +1,90 @@
+[
+  {
+    "gpu": 0,
+    "anchor_width_us": 19.824132323265076,
+    "clock_interval_gap_us": 0.0,
+    "baseline_mean_us": 68.5772392898798,
+    "recorded_mean_us": 90.41911107487977,
+    "mean_added_us": 21.841871784999967,
+    "baseline_median_us": 70.76654583215714,
+    "recorded_median_us": 84.89284664392471,
+    "record_count": 64
+  },
+  {
+    "gpu": 1,
+    "anchor_width_us": 14.854595065116882,
+    "clock_interval_gap_us": 0.0,
+    "baseline_mean_us": 70.33630390651524,
+    "recorded_mean_us": 88.31731975078583,
+    "mean_added_us": 17.981015844270587,
+    "baseline_median_us": 71.22289389371872,
+    "recorded_median_us": 84.5128670334816,
+    "record_count": 64
+  },
+  {
+    "gpu": 2,
+    "anchor_width_us": 15.679746866226196,
+    "clock_interval_gap_us": 0.0,
+    "baseline_mean_us": 69.39398008398712,
+    "recorded_mean_us": 90.05973697640002,
+    "mean_added_us": 20.6657568924129,
+    "baseline_median_us": 71.2219625711441,
+    "recorded_median_us": 85.82044392824173,
+    "record_count": 64
+  },
+  {
+    "gpu": 3,
+    "anchor_width_us": 15.249475836753845,
+    "clock_interval_gap_us": 0.0,
+    "baseline_mean_us": 66.69334834441543,
+    "recorded_mean_us": 88.7299538590014,
+    "mean_added_us": 22.036605514585972,
+    "baseline_median_us": 67.48829036951065,
+    "recorded_median_us": 85.36875247955322,
+    "record_count": 64
+  },
+  {
+    "gpu": 4,
+    "anchor_width_us": 16.672536730766296,
+    "clock_interval_gap_us": 0.0,
+    "baseline_mean_us": 69.15233097970486,
+    "recorded_mean_us": 89.64785956777632,
+    "mean_added_us": 20.495528588071465,
+    "baseline_median_us": 67.38677620887756,
+    "recorded_median_us": 86.79274469614029,
+    "record_count": 64
+  },
+  {
+    "gpu": 5,
+    "anchor_width_us": 17.406418919563293,
+    "clock_interval_gap_us": 0.0,
+    "baseline_mean_us": 70.17521420493722,
+    "recorded_mean_us": 90.49021173268557,
+    "mean_added_us": 20.314997527748346,
+    "baseline_median_us": 71.95305079221725,
+    "recorded_median_us": 86.5468755364418,
+    "record_count": 64
+  },
+  {
+    "gpu": 6,
+    "anchor_width_us": 17.352402210235596,
+    "clock_interval_gap_us": 0.0,
+    "baseline_mean_us": 71.49673183448613,
+    "recorded_mean_us": 90.6267378013581,
+    "mean_added_us": 19.130005966871977,
+    "baseline_median_us": 71.5889036655426,
+    "recorded_median_us": 87.79019117355347,
+    "record_count": 64
+  },
+  {
+    "gpu": 7,
+    "anchor_width_us": 15.80454409122467,
+    "clock_interval_gap_us": 0.0,
+    "baseline_mean_us": 69.9488737154752,
+    "recorded_mean_us": 89.74436786957085,
+    "mean_added_us": 19.79549415409565,
+    "baseline_median_us": 70.05315274000168,
+    "recorded_median_us": 86.7750495672226,
+    "record_count": 64
+  }
+]

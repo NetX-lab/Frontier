@@ -1,0 +1,616 @@
+{
+  "source": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-historical-replay-02/clean/runtime/clean/server.request_metrics.jsonl",
+  "formula": "request_model_execution_time - tpot * (decode_tokens - 1) = first_token_ts - scheduled_ts, in milliseconds",
+  "sample_count": 100,
+  "first": {
+    "request_id": "cmpl-pf4096_dc1024:0-0",
+    "official_ttft_ms": 121.48427963256836,
+    "scheduled_to_first_engine_output_ms": 81.1579111032188,
+    "ttft_minus_scheduled_to_first_ms": 40.326368529349566
+  },
+  "mean_scheduled_to_first_engine_output_ms": 88.39229965582534,
+  "mean_ttft_minus_scheduled_to_first_ms": 42.876337524503036,
+  "limits": "Algebraic reconstruction from native same-run metrics. This is a scheduler-to-engine-output interval including host/GPU/wait, not CUDA time. Remaining TTFT mixes arrival-to-schedule and engine-output-to-frontend-observation; not measured CPU-only. No cross-run CUDA subtraction.",
+  "requests": [
+    {
+      "request_id": "cmpl-pf4096_dc1024:0-0",
+      "official_ttft_ms": 121.48427963256836,
+      "scheduled_to_first_engine_output_ms": 81.1579111032188,
+      "ttft_minus_scheduled_to_first_ms": 40.326368529349566
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:1-0",
+      "official_ttft_ms": 86.77387237548828,
+      "scheduled_to_first_engine_output_ms": 84.11679416894913,
+      "ttft_minus_scheduled_to_first_ms": 2.657078206539154
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:2-0",
+      "official_ttft_ms": 138.14115524291992,
+      "scheduled_to_first_engine_output_ms": 80.55467810483242,
+      "ttft_minus_scheduled_to_first_ms": 57.5864771380875
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:3-0",
+      "official_ttft_ms": 153.69129180908203,
+      "scheduled_to_first_engine_output_ms": 84.2245351523161,
+      "ttft_minus_scheduled_to_first_ms": 69.46675665676594
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:4-0",
+      "official_ttft_ms": 127.7761459350586,
+      "scheduled_to_first_engine_output_ms": 83.20550201460719,
+      "ttft_minus_scheduled_to_first_ms": 44.5706439204514
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:6-0",
+      "official_ttft_ms": 147.9017734527588,
+      "scheduled_to_first_engine_output_ms": 87.70573325455189,
+      "ttft_minus_scheduled_to_first_ms": 60.1960401982069
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:5-0",
+      "official_ttft_ms": 150.42614936828613,
+      "scheduled_to_first_engine_output_ms": 87.4906019307673,
+      "ttft_minus_scheduled_to_first_ms": 62.935547437518835
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:7-0",
+      "official_ttft_ms": 135.93816757202148,
+      "scheduled_to_first_engine_output_ms": 84.7344771027565,
+      "ttft_minus_scheduled_to_first_ms": 51.203690469264984
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:8-0",
+      "official_ttft_ms": 131.34312629699707,
+      "scheduled_to_first_engine_output_ms": 85.82457900047302,
+      "ttft_minus_scheduled_to_first_ms": 45.51854729652405
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:9-0",
+      "official_ttft_ms": 158.47229957580566,
+      "scheduled_to_first_engine_output_ms": 84.49164591728186,
+      "ttft_minus_scheduled_to_first_ms": 73.9806536585238
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:10-0",
+      "official_ttft_ms": 133.0869197845459,
+      "scheduled_to_first_engine_output_ms": 84.85314715653658,
+      "ttft_minus_scheduled_to_first_ms": 48.23377262800932
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:11-0",
+      "official_ttft_ms": 131.77990913391113,
+      "scheduled_to_first_engine_output_ms": 84.29390704259276,
+      "ttft_minus_scheduled_to_first_ms": 47.48600209131837
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:12-0",
+      "official_ttft_ms": 94.79832649230957,
+      "scheduled_to_first_engine_output_ms": 84.08377505837416,
+      "ttft_minus_scheduled_to_first_ms": 10.714551433935412
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:13-0",
+      "official_ttft_ms": 133.75115394592285,
+      "scheduled_to_first_engine_output_ms": 85.81981295719743,
+      "ttft_minus_scheduled_to_first_ms": 47.931340988725424
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:14-0",
+      "official_ttft_ms": 135.52498817443848,
+      "scheduled_to_first_engine_output_ms": 84.81755014508963,
+      "ttft_minus_scheduled_to_first_ms": 50.70743802934885
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:15-0",
+      "official_ttft_ms": 150.01773834228516,
+      "scheduled_to_first_engine_output_ms": 85.66914405673742,
+      "ttft_minus_scheduled_to_first_ms": 64.34859428554773
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:16-0",
+      "official_ttft_ms": 159.4676971435547,
+      "scheduled_to_first_engine_output_ms": 88.12477486208081,
+      "ttft_minus_scheduled_to_first_ms": 71.34292228147388
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:17-0",
+      "official_ttft_ms": 117.28143692016602,
+      "scheduled_to_first_engine_output_ms": 88.32373609766364,
+      "ttft_minus_scheduled_to_first_ms": 28.957700822502375
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:18-0",
+      "official_ttft_ms": 157.15599060058594,
+      "scheduled_to_first_engine_output_ms": 84.18558863922954,
+      "ttft_minus_scheduled_to_first_ms": 72.9704019613564
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:19-0",
+      "official_ttft_ms": 95.84259986877441,
+      "scheduled_to_first_engine_output_ms": 85.29485482722521,
+      "ttft_minus_scheduled_to_first_ms": 10.547745041549206
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:20-0",
+      "official_ttft_ms": 141.96276664733887,
+      "scheduled_to_first_engine_output_ms": 84.0200199745741,
+      "ttft_minus_scheduled_to_first_ms": 57.94274667276477
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:21-0",
+      "official_ttft_ms": 142.33732223510742,
+      "scheduled_to_first_engine_output_ms": 84.71851609647274,
+      "ttft_minus_scheduled_to_first_ms": 57.61880613863468
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:22-0",
+      "official_ttft_ms": 132.9813003540039,
+      "scheduled_to_first_engine_output_ms": 85.39334591476654,
+      "ttft_minus_scheduled_to_first_ms": 47.587954439237365
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:23-0",
+      "official_ttft_ms": 114.95757102966309,
+      "scheduled_to_first_engine_output_ms": 86.35878888890147,
+      "ttft_minus_scheduled_to_first_ms": 28.598782140761614
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:24-0",
+      "official_ttft_ms": 122.38764762878418,
+      "scheduled_to_first_engine_output_ms": 84.57305608315801,
+      "ttft_minus_scheduled_to_first_ms": 37.81459154562617
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:26-0",
+      "official_ttft_ms": 96.89927101135254,
+      "scheduled_to_first_engine_output_ms": 88.26318802312016,
+      "ttft_minus_scheduled_to_first_ms": 8.636082988232374
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:25-0",
+      "official_ttft_ms": 160.50362586975098,
+      "scheduled_to_first_engine_output_ms": 88.06681586429477,
+      "ttft_minus_scheduled_to_first_ms": 72.43681000545621
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:27-0",
+      "official_ttft_ms": 149.6281623840332,
+      "scheduled_to_first_engine_output_ms": 85.13691602274776,
+      "ttft_minus_scheduled_to_first_ms": 64.49124636128545
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:28-0",
+      "official_ttft_ms": 96.73595428466797,
+      "scheduled_to_first_engine_output_ms": 85.32886113971472,
+      "ttft_minus_scheduled_to_first_ms": 11.40709314495325
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:29-0",
+      "official_ttft_ms": 93.51754188537598,
+      "scheduled_to_first_engine_output_ms": 85.5730869807303,
+      "ttft_minus_scheduled_to_first_ms": 7.944454904645681
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:30-0",
+      "official_ttft_ms": 161.70573234558105,
+      "scheduled_to_first_engine_output_ms": 84.64234508574009,
+      "ttft_minus_scheduled_to_first_ms": 77.06338725984097
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:31-0",
+      "official_ttft_ms": 114.15743827819824,
+      "scheduled_to_first_engine_output_ms": 86.14576002582908,
+      "ttft_minus_scheduled_to_first_ms": 28.011678252369165
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:32-0",
+      "official_ttft_ms": 159.30867195129395,
+      "scheduled_to_first_engine_output_ms": 84.22168903052807,
+      "ttft_minus_scheduled_to_first_ms": 75.08698292076588
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:33-0",
+      "official_ttft_ms": 99.43509101867676,
+      "scheduled_to_first_engine_output_ms": 84.93888797238469,
+      "ttft_minus_scheduled_to_first_ms": 14.496203046292067
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:34-0",
+      "official_ttft_ms": 118.07990074157715,
+      "scheduled_to_first_engine_output_ms": 84.05564399436116,
+      "ttft_minus_scheduled_to_first_ms": 34.024256747215986
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:35-0",
+      "official_ttft_ms": 149.07097816467285,
+      "scheduled_to_first_engine_output_ms": 84.81303602457047,
+      "ttft_minus_scheduled_to_first_ms": 64.25794214010239
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:36-0",
+      "official_ttft_ms": 135.89096069335938,
+      "scheduled_to_first_engine_output_ms": 84.78311216458678,
+      "ttft_minus_scheduled_to_first_ms": 51.10784852877259
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:37-0",
+      "official_ttft_ms": 88.21892738342285,
+      "scheduled_to_first_engine_output_ms": 86.00376732648874,
+      "ttft_minus_scheduled_to_first_ms": 2.21516005693411
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:38-0",
+      "official_ttft_ms": 114.40539360046387,
+      "scheduled_to_first_engine_output_ms": 85.34666290508176,
+      "ttft_minus_scheduled_to_first_ms": 29.05873069538211
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:39-0",
+      "official_ttft_ms": 111.85336112976074,
+      "scheduled_to_first_engine_output_ms": 84.81290703639388,
+      "ttft_minus_scheduled_to_first_ms": 27.04045409336686
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:40-0",
+      "official_ttft_ms": 147.68433570861816,
+      "scheduled_to_first_engine_output_ms": 86.38323936611414,
+      "ttft_minus_scheduled_to_first_ms": 61.301096342504025
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:42-0",
+      "official_ttft_ms": 119.88401412963867,
+      "scheduled_to_first_engine_output_ms": 89.06700694933534,
+      "ttft_minus_scheduled_to_first_ms": 30.817007180303335
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:41-0",
+      "official_ttft_ms": 137.64286041259766,
+      "scheduled_to_first_engine_output_ms": 88.80076603963971,
+      "ttft_minus_scheduled_to_first_ms": 48.842094372957945
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:43-0",
+      "official_ttft_ms": 90.99388122558594,
+      "scheduled_to_first_engine_output_ms": 85.46400303022529,
+      "ttft_minus_scheduled_to_first_ms": 5.529878195360652
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:44-0",
+      "official_ttft_ms": 100.37612915039062,
+      "scheduled_to_first_engine_output_ms": 83.94855912774801,
+      "ttft_minus_scheduled_to_first_ms": 16.427570022642612
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:45-0",
+      "official_ttft_ms": 89.8747444152832,
+      "scheduled_to_first_engine_output_ms": 87.4382802285254,
+      "ttft_minus_scheduled_to_first_ms": 2.436464186757803
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:46-0",
+      "official_ttft_ms": 87.08500862121582,
+      "scheduled_to_first_engine_output_ms": 84.6049278043356,
+      "ttft_minus_scheduled_to_first_ms": 2.4800808168802178
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:47-0",
+      "official_ttft_ms": 119.11225318908691,
+      "scheduled_to_first_engine_output_ms": 85.69297706708312,
+      "ttft_minus_scheduled_to_first_ms": 33.419276122003794
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:48-0",
+      "official_ttft_ms": 99.83348846435547,
+      "scheduled_to_first_engine_output_ms": 84.81770334765315,
+      "ttft_minus_scheduled_to_first_ms": 15.015785116702318
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:49-0",
+      "official_ttft_ms": 160.36677360534668,
+      "scheduled_to_first_engine_output_ms": 86.73472888767719,
+      "ttft_minus_scheduled_to_first_ms": 73.63204471766949
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:50-0",
+      "official_ttft_ms": 156.89921379089355,
+      "scheduled_to_first_engine_output_ms": 84.54724214971066,
+      "ttft_minus_scheduled_to_first_ms": 72.3519716411829
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:51-0",
+      "official_ttft_ms": 117.74873733520508,
+      "scheduled_to_first_engine_output_ms": 85.37943195551634,
+      "ttft_minus_scheduled_to_first_ms": 32.36930537968874
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:52-0",
+      "official_ttft_ms": 151.22151374816895,
+      "scheduled_to_first_engine_output_ms": 83.70956033468246,
+      "ttft_minus_scheduled_to_first_ms": 67.51195341348648
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:53-0",
+      "official_ttft_ms": 129.35566902160645,
+      "scheduled_to_first_engine_output_ms": 86.87999611720443,
+      "ttft_minus_scheduled_to_first_ms": 42.47567290440202
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:54-0",
+      "official_ttft_ms": 98.2663631439209,
+      "scheduled_to_first_engine_output_ms": 86.53197111561894,
+      "ttft_minus_scheduled_to_first_ms": 11.734392028301954
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:55-0",
+      "official_ttft_ms": 140.84386825561523,
+      "scheduled_to_first_engine_output_ms": 87.7811480313685,
+      "ttft_minus_scheduled_to_first_ms": 53.06272022424673
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:56-0",
+      "official_ttft_ms": 124.89128112792969,
+      "scheduled_to_first_engine_output_ms": 84.05454037709569,
+      "ttft_minus_scheduled_to_first_ms": 40.836740750834
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:57-0",
+      "official_ttft_ms": 159.7616672515869,
+      "scheduled_to_first_engine_output_ms": 86.42402663826942,
+      "ttft_minus_scheduled_to_first_ms": 73.33764061331749
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:58-0",
+      "official_ttft_ms": 130.54823875427246,
+      "scheduled_to_first_engine_output_ms": 85.11075610294938,
+      "ttft_minus_scheduled_to_first_ms": 45.43748265132308
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:59-0",
+      "official_ttft_ms": 100.4939079284668,
+      "scheduled_to_first_engine_output_ms": 85.7924371957779,
+      "ttft_minus_scheduled_to_first_ms": 14.701470732688904
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:60-0",
+      "official_ttft_ms": 106.86826705932617,
+      "scheduled_to_first_engine_output_ms": 85.2218009531498,
+      "ttft_minus_scheduled_to_first_ms": 21.646466106176376
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:61-0",
+      "official_ttft_ms": 154.313325881958,
+      "scheduled_to_first_engine_output_ms": 87.41347072647477,
+      "ttft_minus_scheduled_to_first_ms": 66.89985515548324
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:62-0",
+      "official_ttft_ms": 94.93327140808105,
+      "scheduled_to_first_engine_output_ms": 85.20795917138457,
+      "ttft_minus_scheduled_to_first_ms": 9.725312236696482
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:63-0",
+      "official_ttft_ms": 116.26029014587402,
+      "scheduled_to_first_engine_output_ms": 85.37644799798727,
+      "ttft_minus_scheduled_to_first_ms": 30.883842147886753
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:64-0",
+      "official_ttft_ms": 123.46005439758301,
+      "scheduled_to_first_engine_output_ms": 85.65938519313931,
+      "ttft_minus_scheduled_to_first_ms": 37.80066920444369
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:65-0",
+      "official_ttft_ms": 112.62297630310059,
+      "scheduled_to_first_engine_output_ms": 87.06121426075697,
+      "ttft_minus_scheduled_to_first_ms": 25.561762042343616
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:66-0",
+      "official_ttft_ms": 157.4881076812744,
+      "scheduled_to_first_engine_output_ms": 89.98347539454699,
+      "ttft_minus_scheduled_to_first_ms": 67.50463228672743
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:67-0",
+      "official_ttft_ms": 90.93666076660156,
+      "scheduled_to_first_engine_output_ms": 89.56882683560252,
+      "ttft_minus_scheduled_to_first_ms": 1.3678339309990406
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:68-0",
+      "official_ttft_ms": 147.71223068237305,
+      "scheduled_to_first_engine_output_ms": 83.57513323426247,
+      "ttft_minus_scheduled_to_first_ms": 64.13709744811058
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:69-0",
+      "official_ttft_ms": 106.60386085510254,
+      "scheduled_to_first_engine_output_ms": 86.70744393022323,
+      "ttft_minus_scheduled_to_first_ms": 19.896416924879304
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:70-0",
+      "official_ttft_ms": 133.99696350097656,
+      "scheduled_to_first_engine_output_ms": 83.60373741015792,
+      "ttft_minus_scheduled_to_first_ms": 50.393226090818644
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:72-0",
+      "official_ttft_ms": 171.21338844299316,
+      "scheduled_to_first_engine_output_ms": 127.88678472861648,
+      "ttft_minus_scheduled_to_first_ms": 43.32660371437669
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:71-0",
+      "official_ttft_ms": 191.80727005004883,
+      "scheduled_to_first_engine_output_ms": 128.11632314696908,
+      "ttft_minus_scheduled_to_first_ms": 63.69094690307975
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:73-0",
+      "official_ttft_ms": 161.06748580932617,
+      "scheduled_to_first_engine_output_ms": 128.11632314696908,
+      "ttft_minus_scheduled_to_first_ms": 32.95116266235709
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:74-0",
+      "official_ttft_ms": 126.07741355895996,
+      "scheduled_to_first_engine_output_ms": 85.07713908331061,
+      "ttft_minus_scheduled_to_first_ms": 41.00027447564935
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:76-0",
+      "official_ttft_ms": 109.15541648864746,
+      "scheduled_to_first_engine_output_ms": 93.14182726667786,
+      "ttft_minus_scheduled_to_first_ms": 16.013589221969596
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:75-0",
+      "official_ttft_ms": 157.84239768981934,
+      "scheduled_to_first_engine_output_ms": 92.96772815287113,
+      "ttft_minus_scheduled_to_first_ms": 64.8746695369482
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:77-0",
+      "official_ttft_ms": 142.76480674743652,
+      "scheduled_to_first_engine_output_ms": 85.31446335837245,
+      "ttft_minus_scheduled_to_first_ms": 57.450343389064074
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:78-0",
+      "official_ttft_ms": 159.64198112487793,
+      "scheduled_to_first_engine_output_ms": 84.69318877905607,
+      "ttft_minus_scheduled_to_first_ms": 74.94879234582186
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:79-0",
+      "official_ttft_ms": 122.1165657043457,
+      "scheduled_to_first_engine_output_ms": 85.13446943832969,
+      "ttft_minus_scheduled_to_first_ms": 36.982096266016015
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:80-0",
+      "official_ttft_ms": 130.6920051574707,
+      "scheduled_to_first_engine_output_ms": 84.95217282323574,
+      "ttft_minus_scheduled_to_first_ms": 45.73983233423496
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:81-0",
+      "official_ttft_ms": 89.36738967895508,
+      "scheduled_to_first_engine_output_ms": 86.34438924491405,
+      "ttft_minus_scheduled_to_first_ms": 3.0230004340410233
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:82-0",
+      "official_ttft_ms": 137.00056076049805,
+      "scheduled_to_first_engine_output_ms": 85.25219606234168,
+      "ttft_minus_scheduled_to_first_ms": 51.748364698156365
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:83-0",
+      "official_ttft_ms": 209.55848693847656,
+      "scheduled_to_first_engine_output_ms": 130.971924867481,
+      "ttft_minus_scheduled_to_first_ms": 78.58656207099557
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:85-0",
+      "official_ttft_ms": 180.24158477783203,
+      "scheduled_to_first_engine_output_ms": 130.971924867481,
+      "ttft_minus_scheduled_to_first_ms": 49.26965991035104
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:84-0",
+      "official_ttft_ms": 207.20791816711426,
+      "scheduled_to_first_engine_output_ms": 130.96744380891323,
+      "ttft_minus_scheduled_to_first_ms": 76.24047435820103
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:86-0",
+      "official_ttft_ms": 129.48298454284668,
+      "scheduled_to_first_engine_output_ms": 85.90489393100142,
+      "ttft_minus_scheduled_to_first_ms": 43.578090611845255
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:87-0",
+      "official_ttft_ms": 141.55006408691406,
+      "scheduled_to_first_engine_output_ms": 86.09664021059871,
+      "ttft_minus_scheduled_to_first_ms": 55.453423876315355
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:88-0",
+      "official_ttft_ms": 111.03582382202148,
+      "scheduled_to_first_engine_output_ms": 84.405611269176,
+      "ttft_minus_scheduled_to_first_ms": 26.630212552845478
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:89-0",
+      "official_ttft_ms": 139.18590545654297,
+      "scheduled_to_first_engine_output_ms": 85.06718510761857,
+      "ttft_minus_scheduled_to_first_ms": 54.1187203489244
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:90-0",
+      "official_ttft_ms": 140.71249961853027,
+      "scheduled_to_first_engine_output_ms": 84.2371028848138,
+      "ttft_minus_scheduled_to_first_ms": 56.47539673371648
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:91-0",
+      "official_ttft_ms": 124.47524070739746,
+      "scheduled_to_first_engine_output_ms": 84.8891949280951,
+      "ttft_minus_scheduled_to_first_ms": 39.58604577930237
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:92-0",
+      "official_ttft_ms": 152.22406387329102,
+      "scheduled_to_first_engine_output_ms": 90.21632792428136,
+      "ttft_minus_scheduled_to_first_ms": 62.00773594900966
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:93-0",
+      "official_ttft_ms": 128.78060340881348,
+      "scheduled_to_first_engine_output_ms": 90.01942723989487,
+      "ttft_minus_scheduled_to_first_ms": 38.76117616891861
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:94-0",
+      "official_ttft_ms": 107.56111145019531,
+      "scheduled_to_first_engine_output_ms": 84.5288983546343,
+      "ttft_minus_scheduled_to_first_ms": 23.03221309556102
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:95-0",
+      "official_ttft_ms": 139.92929458618164,
+      "scheduled_to_first_engine_output_ms": 86.1282162368152,
+      "ttft_minus_scheduled_to_first_ms": 53.801078349366435
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:96-0",
+      "official_ttft_ms": 153.9907455444336,
+      "scheduled_to_first_engine_output_ms": 86.44928503783012,
+      "ttft_minus_scheduled_to_first_ms": 67.54146050660347
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:97-0",
+      "official_ttft_ms": 102.07247734069824,
+      "scheduled_to_first_engine_output_ms": 87.45219558477402,
+      "ttft_minus_scheduled_to_first_ms": 14.620281755924225
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:98-0",
+      "official_ttft_ms": 127.00605392456055,
+      "scheduled_to_first_engine_output_ms": 83.76551885156368,
+      "ttft_minus_scheduled_to_first_ms": 43.24053507299686
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:99-0",
+      "official_ttft_ms": 160.32958030700684,
+      "scheduled_to_first_engine_output_ms": 85.44981712475419,
+      "ttft_minus_scheduled_to_first_ms": 74.87976318225265
+    }
+  ]
+}

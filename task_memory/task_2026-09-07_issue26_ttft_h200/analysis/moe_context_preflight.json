@@ -1,0 +1,15 @@
+{
+  "status": "INSUFFICIENT_EVIDENCE",
+  "observed_contexts": [
+    "prefill_hot"
+  ],
+  "missing_context": "standalone_legacy",
+  "missing_ops": [
+    "moe_gating_linear",
+    "moe_gating_routing_topk"
+  ],
+  "tp": 1,
+  "ep": 8,
+  "routing_runtime_path": "standard_fused_topk",
+  "next_action": "Fresh H200 standalone context measurement and lossless merge, then rerun the real context validator before training."
+}

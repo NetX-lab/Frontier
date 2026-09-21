@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "selection_cases": 7,
+  "sequence_mask": [
+    false,
+    true,
+    true,
+    true,
+    false
+  ],
+  "execution_call_sites_unchanged": true,
+  "limits": "Source-level diagnostic selection check; H200 runtime verification remains required."
+}

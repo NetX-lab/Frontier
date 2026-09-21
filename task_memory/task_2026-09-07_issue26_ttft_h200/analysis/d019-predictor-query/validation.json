@@ -1,0 +1,155 @@
+{
+  "status": "PASS",
+  "unique_nonzero_compute_models": 11,
+  "measured_exact_models": 9,
+  "rf_models": 2,
+  "first_stage_endpoint_ms": 65.79007690374297,
+  "comparison": [
+    {
+      "op": "attn_prefill",
+      "query_prediction_ms": 0.1463839933276176,
+      "layer_count": 48,
+      "predicted_total_ms": 7.026431679725644,
+      "previous_log_total_ms": 7.026432000000004,
+      "absolute_difference_ms": 3.2027435992176834e-07,
+      "relative_difference_percent": 4.558136475550723e-06,
+      "matching_physical_csv_lines": [
+        68,
+        82
+      ]
+    },
+    {
+      "op": "attn_pre_proj",
+      "query_prediction_ms": 0.1371679976582527,
+      "layer_count": 48,
+      "predicted_total_ms": 6.584063887596129,
+      "previous_log_total_ms": 6.584063999999999,
+      "absolute_difference_ms": 1.1240387021160814e-07,
+      "relative_difference_percent": 1.7072110813565628e-06,
+      "matching_physical_csv_lines": [
+        51
+      ]
+    },
+    {
+      "op": "attn_post_proj",
+      "query_prediction_ms": 0.0467840004712343,
+      "layer_count": 48,
+      "predicted_total_ms": 2.2456320226192465,
+      "previous_log_total_ms": 2.245632,
+      "absolute_difference_ms": 2.2619246475841237e-08,
+      "relative_difference_percent": 1.0072552615852124e-06,
+      "matching_physical_csv_lines": [
+        51
+      ]
+    },
+    {
+      "op": "attn_rope",
+      "query_prediction_ms": 0.0323360003530979,
+      "layer_count": 48,
+      "predicted_total_ms": 1.5521280169486993,
+      "previous_log_total_ms": 1.5521279999999988,
+      "absolute_difference_ms": 1.6948700443109033e-08,
+      "relative_difference_percent": 1.0919653819214037e-06,
+      "matching_physical_csv_lines": [
+        51
+      ]
+    },
+    {
+      "op": "attn_kv_cache_save",
+      "query_prediction_ms": 0.0168159995228052,
+      "layer_count": 48,
+      "predicted_total_ms": 0.8071679770946496,
+      "previous_log_total_ms": 0.807168000000001,
+      "absolute_difference_ms": 2.290535139337635e-08,
+      "relative_difference_percent": 2.837742749139748e-06,
+      "matching_physical_csv_lines": [
+        68,
+        82
+      ]
+    },
+    {
+      "op": "input_layernorm",
+      "query_prediction_ms": 0.0226080007851123,
+      "layer_count": 48,
+      "predicted_total_ms": 1.0851840376853905,
+      "previous_log_total_ms": 1.0851839999999993,
+      "absolute_difference_ms": 3.768539125204029e-08,
+      "relative_difference_percent": 3.472719027560332e-06,
+      "matching_physical_csv_lines": [
+        22
+      ]
+    },
+    {
+      "op": "moe_gating_linear",
+      "query_prediction_ms": 0.013779555550879856,
+      "layer_count": 48,
+      "predicted_total_ms": 0.6614186664422331,
+      "previous_log_total_ms": 0.6614400000000005,
+      "absolute_difference_ms": 2.133355776734458e-05,
+      "relative_difference_percent": 0.0032253201752758475,
+      "matching_physical_csv_lines": [
+        237,
+        240,
+        241,
+        247,
+        260,
+        273,
+        274,
+        309,
+        318
+      ]
+    },
+    {
+      "op": "moe_gating_routing_topk",
+      "query_prediction_ms": 0.09248533389634554,
+      "layer_count": 48,
+      "predicted_total_ms": 4.439296027024586,
+      "previous_log_total_ms": 4.4392799999999975,
+      "absolute_difference_ms": 1.6027024588360916e-05,
+      "relative_difference_percent": 0.00036102756727129004,
+      "matching_physical_csv_lines": [
+        237,
+        240,
+        241,
+        247,
+        260,
+        273,
+        274,
+        309,
+        318
+      ]
+    },
+    {
+      "op": "moe_shuffling",
+      "query_prediction_ms": 0.05294490649065479,
+      "layer_count": 48,
+      "predicted_total_ms": 2.54135551155143,
+      "previous_log_total_ms": 2.5413599999999983,
+      "absolute_difference_ms": 4.488448568373826e-06,
+      "relative_difference_percent": 0.00017661600750676132,
+      "matching_physical_csv_lines": []
+    },
+    {
+      "op": "moe_grouped_gemm",
+      "query_prediction_ms": 0.32574783652524153,
+      "layer_count": 48,
+      "predicted_total_ms": 15.635896153211593,
+      "previous_log_total_ms": 15.635904000000018,
+      "absolute_difference_ms": 7.846788424359374e-06,
+      "relative_difference_percent": 5.018442441421593e-05,
+      "matching_physical_csv_lines": []
+    },
+    {
+      "op": "post_attention_layernorm",
+      "query_prediction_ms": 0.0221119998022913,
+      "layer_count": 48,
+      "predicted_total_ms": 1.0613759905099824,
+      "previous_log_total_ms": 1.0613760000000003,
+      "absolute_difference_ms": 9.4900178826407e-09,
+      "relative_difference_percent": 8.941240316947714e-07,
+      "matching_physical_csv_lines": [
+        22
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1342 @@
+{
+  "status": "PASS_COLLECTION_DIAGNOSTIC_ONLY",
+  "groups": [
+    "moe"
+  ],
+  "first_request_id": "cmpl-pf4096_dc1024:0-0",
+  "rank_results": [
+    {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "pp_rank": 0,
+      "batch_id": 4602,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 92.87619018554688,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 1,
+      "timestamp": 1788874424.3340087,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "group": "moe",
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_moe/operators/server.ops.dp0.tp0.pp0.jsonl",
+      "scope_totals_ms": {
+        "moe_gating_linear": 0.5350400004535913,
+        "moe_gating_routing_topk": 4.364159993827343,
+        "moe_shuffling": 1.3335679974406958,
+        "moe_grouped_gemm": 16.92723199725151,
+        "moe_sum": 2.7907839976251125
+      },
+      "scope_counts": {
+        "moe_gating_linear": 48,
+        "moe_gating_routing_topk": 48,
+        "moe_shuffling": 48,
+        "moe_grouped_gemm": 48,
+        "moe_sum": 48
+      },
+      "grouped_gemm_plus_sum_by_layer": [
+        {
+          "layer_sequence": 0,
+          "grouped_gemm_ms": 0.4053120017051697,
+          "sum_ms": 0.060416001826524734,
+          "complete_expert_compute_ms": 0.4657280035316944
+        },
+        {
+          "layer_sequence": 1,
+          "grouped_gemm_ms": 0.35497599840164185,
+          "sum_ms": 0.05753599852323532,
+          "complete_expert_compute_ms": 0.41251199692487717
+        },
+        {
+          "layer_sequence": 2,
+          "grouped_gemm_ms": 0.34832000732421875,
+          "sum_ms": 0.05734400078654289,
+          "complete_expert_compute_ms": 0.40566400811076164
+        },
+        {
+          "layer_sequence": 3,
+          "grouped_gemm_ms": 0.35500800609588623,
+          "sum_ms": 0.0575999990105629,
+          "complete_expert_compute_ms": 0.4126080051064491
+        },
+        {
+          "layer_sequence": 4,
+          "grouped_gemm_ms": 0.3468160033226013,
+          "sum_ms": 0.05798399820923805,
+          "complete_expert_compute_ms": 0.40480000153183937
+        },
+        {
+          "layer_sequence": 5,
+          "grouped_gemm_ms": 0.3535679876804352,
+          "sum_ms": 0.05798399820923805,
+          "complete_expert_compute_ms": 0.41155198588967323
+        },
+        {
+          "layer_sequence": 6,
+          "grouped_gemm_ms": 0.3566400110721588,
+          "sum_ms": 0.05801599845290184,
+          "complete_expert_compute_ms": 0.41465600952506065
+        },
+        {
+          "layer_sequence": 7,
+          "grouped_gemm_ms": 0.35260799527168274,
+          "sum_ms": 0.05766399949789047,
+          "complete_expert_compute_ms": 0.4102719947695732
+        },
+        {
+          "layer_sequence": 8,
+          "grouped_gemm_ms": 0.34777599573135376,
+          "sum_ms": 0.05795200169086456,
+          "complete_expert_compute_ms": 0.4057279974222183
+        },
+        {
+          "layer_sequence": 9,
+          "grouped_gemm_ms": 0.3500480055809021,
+          "sum_ms": 0.057760000228881836,
+          "complete_expert_compute_ms": 0.40780800580978394
+        },
+        {
+          "layer_sequence": 10,
+          "grouped_gemm_ms": 0.3510400056838989,
+          "sum_ms": 0.05734400078654289,
+          "complete_expert_compute_ms": 0.4083840064704418
+        },
+        {
+          "layer_sequence": 11,
+          "grouped_gemm_ms": 0.35395199060440063,
+          "sum_ms": 0.057792000472545624,
+          "complete_expert_compute_ms": 0.41174399107694626
+        },
+        {
+          "layer_sequence": 12,
+          "grouped_gemm_ms": 0.3460479974746704,
+          "sum_ms": 0.05817599967122078,
+          "complete_expert_compute_ms": 0.4042239971458912
+        },
+        {
+          "layer_sequence": 13,
+          "grouped_gemm_ms": 0.35606399178504944,
+          "sum_ms": 0.05907199904322624,
+          "complete_expert_compute_ms": 0.4151359908282757
+        },
+        {
+          "layer_sequence": 14,
+          "grouped_gemm_ms": 0.3511680066585541,
+          "sum_ms": 0.05772799998521805,
+          "complete_expert_compute_ms": 0.4088960066437721
+        },
+        {
+          "layer_sequence": 15,
+          "grouped_gemm_ms": 0.3498240113258362,
+          "sum_ms": 0.057631999254226685,
+          "complete_expert_compute_ms": 0.40745601058006287
+        },
+        {
+          "layer_sequence": 16,
+          "grouped_gemm_ms": 0.35366401076316833,
+          "sum_ms": 0.05740800127387047,
+          "complete_expert_compute_ms": 0.4110720120370388
+        },
+        {
+          "layer_sequence": 17,
+          "grouped_gemm_ms": 0.35625600814819336,
+          "sum_ms": 0.05913599953055382,
+          "complete_expert_compute_ms": 0.4153920076787472
+        },
+        {
+          "layer_sequence": 18,
+          "grouped_gemm_ms": 0.349727988243103,
+          "sum_ms": 0.05827200040221214,
+          "complete_expert_compute_ms": 0.40799998864531517
+        },
+        {
+          "layer_sequence": 19,
+          "grouped_gemm_ms": 0.3543680012226105,
+          "sum_ms": 0.05942400172352791,
+          "complete_expert_compute_ms": 0.4137920029461384
+        },
+        {
+          "layer_sequence": 20,
+          "grouped_gemm_ms": 0.3473599851131439,
+          "sum_ms": 0.05753599852323532,
+          "complete_expert_compute_ms": 0.40489598363637924
+        },
+        {
+          "layer_sequence": 21,
+          "grouped_gemm_ms": 0.3477439880371094,
+          "sum_ms": 0.0586559996008873,
+          "complete_expert_compute_ms": 0.4063999876379967
+        },
+        {
+          "layer_sequence": 22,
+          "grouped_gemm_ms": 0.34880000352859497,
+          "sum_ms": 0.05894400179386139,
+          "complete_expert_compute_ms": 0.40774400532245636
+        },
+        {
+          "layer_sequence": 23,
+          "grouped_gemm_ms": 0.34937599301338196,
+          "sum_ms": 0.05769599974155426,
+          "complete_expert_compute_ms": 0.4070719927549362
+        },
+        {
+          "layer_sequence": 24,
+          "grouped_gemm_ms": 0.34726399183273315,
+          "sum_ms": 0.05782400071620941,
+          "complete_expert_compute_ms": 0.40508799254894257
+        },
+        {
+          "layer_sequence": 25,
+          "grouped_gemm_ms": 0.34966400265693665,
+          "sum_ms": 0.05897599831223488,
+          "complete_expert_compute_ms": 0.4086400009691715
+        },
+        {
+          "layer_sequence": 26,
+          "grouped_gemm_ms": 0.3553600013256073,
+          "sum_ms": 0.05961599946022034,
+          "complete_expert_compute_ms": 0.41497600078582764
+        },
+        {
+          "layer_sequence": 27,
+          "grouped_gemm_ms": 0.3527680039405823,
+          "sum_ms": 0.05795200169086456,
+          "complete_expert_compute_ms": 0.41072000563144684
+        },
+        {
+          "layer_sequence": 28,
+          "grouped_gemm_ms": 0.34825599193573,
+          "sum_ms": 0.05756799876689911,
+          "complete_expert_compute_ms": 0.4058239907026291
+        },
+        {
+          "layer_sequence": 29,
+          "grouped_gemm_ms": 0.35120001435279846,
+          "sum_ms": 0.059328000992536545,
+          "complete_expert_compute_ms": 0.410528015345335
+        },
+        {
+          "layer_sequence": 30,
+          "grouped_gemm_ms": 0.35417601466178894,
+          "sum_ms": 0.058240000158548355,
+          "complete_expert_compute_ms": 0.4124160148203373
+        },
+        {
+          "layer_sequence": 31,
+          "grouped_gemm_ms": 0.3535040020942688,
+          "sum_ms": 0.05894400179386139,
+          "complete_expert_compute_ms": 0.4124480038881302
+        },
+        {
+          "layer_sequence": 32,
+          "grouped_gemm_ms": 0.34911999106407166,
+          "sum_ms": 0.0575999990105629,
+          "complete_expert_compute_ms": 0.40671999007463455
+        },
+        {
+          "layer_sequence": 33,
+          "grouped_gemm_ms": 0.34966400265693665,
+          "sum_ms": 0.0578560009598732,
+          "complete_expert_compute_ms": 0.40752000361680984
+        },
+        {
+          "layer_sequence": 34,
+          "grouped_gemm_ms": 0.3538239896297455,
+          "sum_ms": 0.0575999990105629,
+          "complete_expert_compute_ms": 0.4114239886403084
+        },
+        {
+          "layer_sequence": 35,
+          "grouped_gemm_ms": 0.3528960049152374,
+          "sum_ms": 0.05718399956822395,
+          "complete_expert_compute_ms": 0.4100800044834614
+        },
+        {
+          "layer_sequence": 36,
+          "grouped_gemm_ms": 0.34694400429725647,
+          "sum_ms": 0.058079998940229416,
+          "complete_expert_compute_ms": 0.4050240032374859
+        },
+        {
+          "layer_sequence": 37,
+          "grouped_gemm_ms": 0.35395199060440063,
+          "sum_ms": 0.05951999872922897,
+          "complete_expert_compute_ms": 0.4134719893336296
+        },
+        {
+          "layer_sequence": 38,
+          "grouped_gemm_ms": 0.35420799255371094,
+          "sum_ms": 0.058720000088214874,
+          "complete_expert_compute_ms": 0.4129279926419258
+        },
+        {
+          "layer_sequence": 39,
+          "grouped_gemm_ms": 0.35471999645233154,
+          "sum_ms": 0.05804799869656563,
+          "complete_expert_compute_ms": 0.41276799514889717
+        },
+        {
+          "layer_sequence": 40,
+          "grouped_gemm_ms": 0.35574400424957275,
+          "sum_ms": 0.057440001517534256,
+          "complete_expert_compute_ms": 0.413184005767107
+        },
+        {
+          "layer_sequence": 41,
+          "grouped_gemm_ms": 0.3543680012226105,
+          "sum_ms": 0.057792000472545624,
+          "complete_expert_compute_ms": 0.4121600016951561
+        },
+        {
+          "layer_sequence": 42,
+          "grouped_gemm_ms": 0.350847989320755,
+          "sum_ms": 0.05897599831223488,
+          "complete_expert_compute_ms": 0.4098239876329899
+        },
+        {
+          "layer_sequence": 43,
+          "grouped_gemm_ms": 0.3511680066585541,
+          "sum_ms": 0.05696000158786774,
+          "complete_expert_compute_ms": 0.4081280082464218
+        },
+        {
+          "layer_sequence": 44,
+          "grouped_gemm_ms": 0.35152000188827515,
+          "sum_ms": 0.057472001761198044,
+          "complete_expert_compute_ms": 0.4089920036494732
+        },
+        {
+          "layer_sequence": 45,
+          "grouped_gemm_ms": 0.34889599680900574,
+          "sum_ms": 0.057151999324560165,
+          "complete_expert_compute_ms": 0.4060479961335659
+        },
+        {
+          "layer_sequence": 46,
+          "grouped_gemm_ms": 0.34963199496269226,
+          "sum_ms": 0.059487998485565186,
+          "complete_expert_compute_ms": 0.40911999344825745
+        },
+        {
+          "layer_sequence": 47,
+          "grouped_gemm_ms": 0.3510720133781433,
+          "sum_ms": 0.05737600103020668,
+          "complete_expert_compute_ms": 0.40844801440835
+        }
+      ],
+      "grouped_gemm_plus_sum_ms": 19.718015994876623
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "pp_rank": 0,
+      "batch_id": 4602,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 92.83455657958984,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 1,
+      "timestamp": 1788874424.3339005,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "group": "moe",
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_moe/operators/server.ops.dp0.tp1.pp0.jsonl",
+      "scope_totals_ms": {
+        "moe_gating_linear": 0.5365439997985959,
+        "moe_gating_routing_topk": 7.45792006701231,
+        "moe_shuffling": 2.5305600110441446,
+        "moe_grouped_gemm": 19.797247916460037,
+        "moe_sum": 2.839455995708704
+      },
+      "scope_counts": {
+        "moe_gating_linear": 48,
+        "moe_gating_routing_topk": 48,
+        "moe_shuffling": 48,
+        "moe_grouped_gemm": 48,
+        "moe_sum": 48
+      },
+      "grouped_gemm_plus_sum_by_layer": [
+        {
+          "layer_sequence": 0,
+          "grouped_gemm_ms": 0.45817598700523376,
+          "sum_ms": 0.059967998415231705,
+          "complete_expert_compute_ms": 0.5181439854204655
+        },
+        {
+          "layer_sequence": 1,
+          "grouped_gemm_ms": 0.3495999872684479,
+          "sum_ms": 0.05987200140953064,
+          "complete_expert_compute_ms": 0.4094719886779785
+        },
+        {
+          "layer_sequence": 2,
+          "grouped_gemm_ms": 0.3540160059928894,
+          "sum_ms": 0.05846399813890457,
+          "complete_expert_compute_ms": 0.412480004131794
+        },
+        {
+          "layer_sequence": 3,
+          "grouped_gemm_ms": 0.3497599959373474,
+          "sum_ms": 0.0594559982419014,
+          "complete_expert_compute_ms": 0.4092159941792488
+        },
+        {
+          "layer_sequence": 4,
+          "grouped_gemm_ms": 0.35014399886131287,
+          "sum_ms": 0.05753599852323532,
+          "complete_expert_compute_ms": 0.4076799973845482
+        },
+        {
+          "layer_sequence": 5,
+          "grouped_gemm_ms": 0.350271999835968,
+          "sum_ms": 0.05859199911355972,
+          "complete_expert_compute_ms": 0.40886399894952774
+        },
+        {
+          "layer_sequence": 6,
+          "grouped_gemm_ms": 0.3516800105571747,
+          "sum_ms": 0.058368001133203506,
+          "complete_expert_compute_ms": 0.4100480116903782
+        },
+        {
+          "layer_sequence": 7,
+          "grouped_gemm_ms": 0.4482559859752655,
+          "sum_ms": 0.060896001756191254,
+          "complete_expert_compute_ms": 0.5091519877314568
+        },
+        {
+          "layer_sequence": 8,
+          "grouped_gemm_ms": 0.4460799992084503,
+          "sum_ms": 0.05827200040221214,
+          "complete_expert_compute_ms": 0.5043519996106625
+        },
+        {
+          "layer_sequence": 9,
+          "grouped_gemm_ms": 0.4543359875679016,
+          "sum_ms": 0.05878400057554245,
+          "complete_expert_compute_ms": 0.5131199881434441
+        },
+        {
+          "layer_sequence": 10,
+          "grouped_gemm_ms": 0.4543359875679016,
+          "sum_ms": 0.05859199911355972,
+          "complete_expert_compute_ms": 0.5129279866814613
+        },
+        {
+          "layer_sequence": 11,
+          "grouped_gemm_ms": 0.450655996799469,
+          "sum_ms": 0.05852799862623215,
+          "complete_expert_compute_ms": 0.5091839954257011
+        },
+        {
+          "layer_sequence": 12,
+          "grouped_gemm_ms": 0.45241600275039673,
+          "sum_ms": 0.05852799862623215,
+          "complete_expert_compute_ms": 0.5109440013766289
+        },
+        {
+          "layer_sequence": 13,
+          "grouped_gemm_ms": 0.4498240053653717,
+          "sum_ms": 0.058079998940229416,
+          "complete_expert_compute_ms": 0.5079040043056011
+        },
+        {
+          "layer_sequence": 14,
+          "grouped_gemm_ms": 0.4564799964427948,
+          "sum_ms": 0.058111999183893204,
+          "complete_expert_compute_ms": 0.514591995626688
+        },
+        {
+          "layer_sequence": 15,
+          "grouped_gemm_ms": 0.447488009929657,
+          "sum_ms": 0.05907199904322624,
+          "complete_expert_compute_ms": 0.5065600089728832
+        },
+        {
+          "layer_sequence": 16,
+          "grouped_gemm_ms": 0.4511359930038452,
+          "sum_ms": 0.05849599838256836,
+          "complete_expert_compute_ms": 0.5096319913864136
+        },
+        {
+          "layer_sequence": 17,
+          "grouped_gemm_ms": 0.4533120095729828,
+          "sum_ms": 0.060127999633550644,
+          "complete_expert_compute_ms": 0.5134400092065334
+        },
+        {
+          "layer_sequence": 18,
+          "grouped_gemm_ms": 0.45020800828933716,
+          "sum_ms": 0.05827200040221214,
+          "complete_expert_compute_ms": 0.5084800086915493
+        },
+        {
+          "layer_sequence": 19,
+          "grouped_gemm_ms": 0.44790399074554443,
+          "sum_ms": 0.058720000088214874,
+          "complete_expert_compute_ms": 0.5066239908337593
+        },
+        {
+          "layer_sequence": 20,
+          "grouped_gemm_ms": 0.45078399777412415,
+          "sum_ms": 0.05942400172352791,
+          "complete_expert_compute_ms": 0.510207999497652
+        },
+        {
+          "layer_sequence": 21,
+          "grouped_gemm_ms": 0.4479680061340332,
+          "sum_ms": 0.059647999703884125,
+          "complete_expert_compute_ms": 0.5076160058379173
+        },
+        {
+          "layer_sequence": 22,
+          "grouped_gemm_ms": 0.4524480104446411,
+          "sum_ms": 0.05955199897289276,
+          "complete_expert_compute_ms": 0.5120000094175339
+        },
+        {
+          "layer_sequence": 23,
+          "grouped_gemm_ms": 0.453247994184494,
+          "sum_ms": 0.0607680007815361,
+          "complete_expert_compute_ms": 0.5140159949660301
+        },
+        {
+          "layer_sequence": 24,
+          "grouped_gemm_ms": 0.44915199279785156,
+          "sum_ms": 0.05878400057554245,
+          "complete_expert_compute_ms": 0.507935993373394
+        },
+        {
+          "layer_sequence": 25,
+          "grouped_gemm_ms": 0.4503040015697479,
+          "sum_ms": 0.059776000678539276,
+          "complete_expert_compute_ms": 0.5100800022482872
+        },
+        {
+          "layer_sequence": 26,
+          "grouped_gemm_ms": 0.44755199551582336,
+          "sum_ms": 0.05724800005555153,
+          "complete_expert_compute_ms": 0.5047999955713749
+        },
+        {
+          "layer_sequence": 27,
+          "grouped_gemm_ms": 0.4538559913635254,
+          "sum_ms": 0.0605119988322258,
+          "complete_expert_compute_ms": 0.5143679901957512
+        },
+        {
+          "layer_sequence": 28,
+          "grouped_gemm_ms": 0.44896000623703003,
+          "sum_ms": 0.05929600074887276,
+          "complete_expert_compute_ms": 0.5082560069859028
+        },
+        {
+          "layer_sequence": 29,
+          "grouped_gemm_ms": 0.44761601090431213,
+          "sum_ms": 0.05923200026154518,
+          "complete_expert_compute_ms": 0.5068480111658573
+        },
+        {
+          "layer_sequence": 30,
+          "grouped_gemm_ms": 0.4516800045967102,
+          "sum_ms": 0.05843200162053108,
+          "complete_expert_compute_ms": 0.5101120062172413
+        },
+        {
+          "layer_sequence": 31,
+          "grouped_gemm_ms": 0.45660799741744995,
+          "sum_ms": 0.06019200012087822,
+          "complete_expert_compute_ms": 0.5167999975383282
+        },
+        {
+          "layer_sequence": 32,
+          "grouped_gemm_ms": 0.45129600167274475,
+          "sum_ms": 0.05967999994754791,
+          "complete_expert_compute_ms": 0.5109760016202927
+        },
+        {
+          "layer_sequence": 33,
+          "grouped_gemm_ms": 0.44975998997688293,
+          "sum_ms": 0.05987200140953064,
+          "complete_expert_compute_ms": 0.5096319913864136
+        },
+        {
+          "layer_sequence": 34,
+          "grouped_gemm_ms": 0.451200008392334,
+          "sum_ms": 0.05833600088953972,
+          "complete_expert_compute_ms": 0.5095360092818737
+        },
+        {
+          "layer_sequence": 35,
+          "grouped_gemm_ms": 0.3683519959449768,
+          "sum_ms": 0.060864001512527466,
+          "complete_expert_compute_ms": 0.4292159974575043
+        },
+        {
+          "layer_sequence": 36,
+          "grouped_gemm_ms": 0.35174399614334106,
+          "sum_ms": 0.058400001376867294,
+          "complete_expert_compute_ms": 0.41014399752020836
+        },
+        {
+          "layer_sequence": 37,
+          "grouped_gemm_ms": 0.34835198521614075,
+          "sum_ms": 0.05926400050520897,
+          "complete_expert_compute_ms": 0.4076159857213497
+        },
+        {
+          "layer_sequence": 38,
+          "grouped_gemm_ms": 0.35152000188827515,
+          "sum_ms": 0.05942400172352791,
+          "complete_expert_compute_ms": 0.41094400361180305
+        },
+        {
+          "layer_sequence": 39,
+          "grouped_gemm_ms": 0.381087988615036,
+          "sum_ms": 0.0607680007815361,
+          "complete_expert_compute_ms": 0.4418559893965721
+        },
+        {
+          "layer_sequence": 40,
+          "grouped_gemm_ms": 0.35235199332237244,
+          "sum_ms": 0.05910399928689003,
+          "complete_expert_compute_ms": 0.41145599260926247
+        },
+        {
+          "layer_sequence": 41,
+          "grouped_gemm_ms": 0.3527359962463379,
+          "sum_ms": 0.058079998940229416,
+          "complete_expert_compute_ms": 0.4108159951865673
+        },
+        {
+          "layer_sequence": 42,
+          "grouped_gemm_ms": 0.3495360016822815,
+          "sum_ms": 0.058559998869895935,
+          "complete_expert_compute_ms": 0.40809600055217743
+        },
+        {
+          "layer_sequence": 43,
+          "grouped_gemm_ms": 0.35020801424980164,
+          "sum_ms": 0.05926400050520897,
+          "complete_expert_compute_ms": 0.4094720147550106
+        },
+        {
+          "layer_sequence": 44,
+          "grouped_gemm_ms": 0.3492160141468048,
+          "sum_ms": 0.059487998485565186,
+          "complete_expert_compute_ms": 0.40870401263237
+        },
+        {
+          "layer_sequence": 45,
+          "grouped_gemm_ms": 0.3503359854221344,
+          "sum_ms": 0.05951999872922897,
+          "complete_expert_compute_ms": 0.4098559841513634
+        },
+        {
+          "layer_sequence": 46,
+          "grouped_gemm_ms": 0.3514559864997864,
+          "sum_ms": 0.060127999633550644,
+          "complete_expert_compute_ms": 0.411583986133337
+        },
+        {
+          "layer_sequence": 47,
+          "grouped_gemm_ms": 0.35183998942375183,
+          "sum_ms": 0.05910399928689003,
+          "complete_expert_compute_ms": 0.41094398871064186
+        }
+      ],
+      "grouped_gemm_plus_sum_ms": 22.63670391216874
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "pp_rank": 0,
+      "batch_id": 4602,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 92.82966613769531,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 1,
+      "timestamp": 1788874424.333924,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "group": "moe",
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_moe/operators/server.ops.dp0.tp2.pp0.jsonl",
+      "scope_totals_ms": {
+        "moe_gating_linear": 0.5359040014445782,
+        "moe_gating_routing_topk": 4.304223999381065,
+        "moe_shuffling": 1.3848320059478283,
+        "moe_grouped_gemm": 16.918815970420837,
+        "moe_sum": 2.813696004450321
+      },
+      "scope_counts": {
+        "moe_gating_linear": 48,
+        "moe_gating_routing_topk": 48,
+        "moe_shuffling": 48,
+        "moe_grouped_gemm": 48,
+        "moe_sum": 48
+      },
+      "grouped_gemm_plus_sum_by_layer": [
+        {
+          "layer_sequence": 0,
+          "grouped_gemm_ms": 0.455487996339798,
+          "sum_ms": 0.05846399813890457,
+          "complete_expert_compute_ms": 0.5139519944787025
+        },
+        {
+          "layer_sequence": 1,
+          "grouped_gemm_ms": 0.36739200353622437,
+          "sum_ms": 0.05843200162053108,
+          "complete_expert_compute_ms": 0.42582400515675545
+        },
+        {
+          "layer_sequence": 2,
+          "grouped_gemm_ms": 0.3516159951686859,
+          "sum_ms": 0.058559998869895935,
+          "complete_expert_compute_ms": 0.41017599403858185
+        },
+        {
+          "layer_sequence": 3,
+          "grouped_gemm_ms": 0.3495039939880371,
+          "sum_ms": 0.05942400172352791,
+          "complete_expert_compute_ms": 0.408927995711565
+        },
+        {
+          "layer_sequence": 4,
+          "grouped_gemm_ms": 0.35040000081062317,
+          "sum_ms": 0.0586559996008873,
+          "complete_expert_compute_ms": 0.40905600041151047
+        },
+        {
+          "layer_sequence": 5,
+          "grouped_gemm_ms": 0.3506239950656891,
+          "sum_ms": 0.05788800120353699,
+          "complete_expert_compute_ms": 0.4085119962692261
+        },
+        {
+          "layer_sequence": 6,
+          "grouped_gemm_ms": 0.3507840037345886,
+          "sum_ms": 0.05817599967122078,
+          "complete_expert_compute_ms": 0.4089600034058094
+        },
+        {
+          "layer_sequence": 7,
+          "grouped_gemm_ms": 0.3503040075302124,
+          "sum_ms": 0.057631999254226685,
+          "complete_expert_compute_ms": 0.4079360067844391
+        },
+        {
+          "layer_sequence": 8,
+          "grouped_gemm_ms": 0.3487679958343506,
+          "sum_ms": 0.058368001133203506,
+          "complete_expert_compute_ms": 0.4071359969675541
+        },
+        {
+          "layer_sequence": 9,
+          "grouped_gemm_ms": 0.35174399614334106,
+          "sum_ms": 0.05833600088953972,
+          "complete_expert_compute_ms": 0.4100799970328808
+        },
+        {
+          "layer_sequence": 10,
+          "grouped_gemm_ms": 0.3510720133781433,
+          "sum_ms": 0.057472001761198044,
+          "complete_expert_compute_ms": 0.40854401513934135
+        },
+        {
+          "layer_sequence": 11,
+          "grouped_gemm_ms": 0.3487679958343506,
+          "sum_ms": 0.05939200147986412,
+          "complete_expert_compute_ms": 0.4081599973142147
+        },
+        {
+          "layer_sequence": 12,
+          "grouped_gemm_ms": 0.34835198521614075,
+          "sum_ms": 0.058559998869895935,
+          "complete_expert_compute_ms": 0.4069119840860367
+        },
+        {
+          "layer_sequence": 13,
+          "grouped_gemm_ms": 0.3514559864997864,
+          "sum_ms": 0.059487998485565186,
+          "complete_expert_compute_ms": 0.41094398498535156
+        },
+        {
+          "layer_sequence": 14,
+          "grouped_gemm_ms": 0.35340800881385803,
+          "sum_ms": 0.058240000158548355,
+          "complete_expert_compute_ms": 0.4116480089724064
+        },
+        {
+          "layer_sequence": 15,
+          "grouped_gemm_ms": 0.3487679958343506,
+          "sum_ms": 0.058687999844551086,
+          "complete_expert_compute_ms": 0.4074559956789017
+        },
+        {
+          "layer_sequence": 16,
+          "grouped_gemm_ms": 0.349727988243103,
+          "sum_ms": 0.05897599831223488,
+          "complete_expert_compute_ms": 0.4087039865553379
+        },
+        {
+          "layer_sequence": 17,
+          "grouped_gemm_ms": 0.3500800132751465,
+          "sum_ms": 0.0586559996008873,
+          "complete_expert_compute_ms": 0.4087360128760338
+        },
+        {
+          "layer_sequence": 18,
+          "grouped_gemm_ms": 0.35174399614334106,
+          "sum_ms": 0.05878400057554245,
+          "complete_expert_compute_ms": 0.4105279967188835
+        },
+        {
+          "layer_sequence": 19,
+          "grouped_gemm_ms": 0.348224014043808,
+          "sum_ms": 0.05961599946022034,
+          "complete_expert_compute_ms": 0.4078400135040283
+        },
+        {
+          "layer_sequence": 20,
+          "grouped_gemm_ms": 0.350816011428833,
+          "sum_ms": 0.057792000472545624,
+          "complete_expert_compute_ms": 0.40860801190137863
+        },
+        {
+          "layer_sequence": 21,
+          "grouped_gemm_ms": 0.3474560081958771,
+          "sum_ms": 0.05859199911355972,
+          "complete_expert_compute_ms": 0.4060480073094368
+        },
+        {
+          "layer_sequence": 22,
+          "grouped_gemm_ms": 0.3508799970149994,
+          "sum_ms": 0.05878400057554245,
+          "complete_expert_compute_ms": 0.40966399759054184
+        },
+        {
+          "layer_sequence": 23,
+          "grouped_gemm_ms": 0.34780800342559814,
+          "sum_ms": 0.05881600081920624,
+          "complete_expert_compute_ms": 0.4066240042448044
+        },
+        {
+          "layer_sequence": 24,
+          "grouped_gemm_ms": 0.347104012966156,
+          "sum_ms": 0.05846399813890457,
+          "complete_expert_compute_ms": 0.4055680111050606
+        },
+        {
+          "layer_sequence": 25,
+          "grouped_gemm_ms": 0.35068801045417786,
+          "sum_ms": 0.06022400036454201,
+          "complete_expert_compute_ms": 0.41091201081871986
+        },
+        {
+          "layer_sequence": 26,
+          "grouped_gemm_ms": 0.351936012506485,
+          "sum_ms": 0.0586559996008873,
+          "complete_expert_compute_ms": 0.4105920121073723
+        },
+        {
+          "layer_sequence": 27,
+          "grouped_gemm_ms": 0.3479680120944977,
+          "sum_ms": 0.058720000088214874,
+          "complete_expert_compute_ms": 0.40668801218271255
+        },
+        {
+          "layer_sequence": 28,
+          "grouped_gemm_ms": 0.3492479920387268,
+          "sum_ms": 0.05795200169086456,
+          "complete_expert_compute_ms": 0.40719999372959137
+        },
+        {
+          "layer_sequence": 29,
+          "grouped_gemm_ms": 0.35046398639678955,
+          "sum_ms": 0.0589120015501976,
+          "complete_expert_compute_ms": 0.40937598794698715
+        },
+        {
+          "layer_sequence": 30,
+          "grouped_gemm_ms": 0.349727988243103,
+          "sum_ms": 0.05967999994754791,
+          "complete_expert_compute_ms": 0.40940798819065094
+        },
+        {
+          "layer_sequence": 31,
+          "grouped_gemm_ms": 0.3481599986553192,
+          "sum_ms": 0.05926400050520897,
+          "complete_expert_compute_ms": 0.4074239991605282
+        },
+        {
+          "layer_sequence": 32,
+          "grouped_gemm_ms": 0.3505919873714447,
+          "sum_ms": 0.05756799876689911,
+          "complete_expert_compute_ms": 0.4081599861383438
+        },
+        {
+          "layer_sequence": 33,
+          "grouped_gemm_ms": 0.35065600275993347,
+          "sum_ms": 0.0589120015501976,
+          "complete_expert_compute_ms": 0.4095680043101311
+        },
+        {
+          "layer_sequence": 34,
+          "grouped_gemm_ms": 0.35040000081062317,
+          "sum_ms": 0.0578560009598732,
+          "complete_expert_compute_ms": 0.40825600177049637
+        },
+        {
+          "layer_sequence": 35,
+          "grouped_gemm_ms": 0.34969601035118103,
+          "sum_ms": 0.05798399820923805,
+          "complete_expert_compute_ms": 0.4076800085604191
+        },
+        {
+          "layer_sequence": 36,
+          "grouped_gemm_ms": 0.3487040102481842,
+          "sum_ms": 0.05795200169086456,
+          "complete_expert_compute_ms": 0.40665601193904877
+        },
+        {
+          "layer_sequence": 37,
+          "grouped_gemm_ms": 0.35097599029541016,
+          "sum_ms": 0.05936000123620033,
+          "complete_expert_compute_ms": 0.4103359915316105
+        },
+        {
+          "layer_sequence": 38,
+          "grouped_gemm_ms": 0.3521279990673065,
+          "sum_ms": 0.05897599831223488,
+          "complete_expert_compute_ms": 0.4111039973795414
+        },
+        {
+          "layer_sequence": 39,
+          "grouped_gemm_ms": 0.3484799861907959,
+          "sum_ms": 0.05910399928689003,
+          "complete_expert_compute_ms": 0.40758398547768593
+        },
+        {
+          "layer_sequence": 40,
+          "grouped_gemm_ms": 0.34937599301338196,
+          "sum_ms": 0.05795200169086456,
+          "complete_expert_compute_ms": 0.4073279947042465
+        },
+        {
+          "layer_sequence": 41,
+          "grouped_gemm_ms": 0.3516159951686859,
+          "sum_ms": 0.05817599967122078,
+          "complete_expert_compute_ms": 0.4097919948399067
+        },
+        {
+          "layer_sequence": 42,
+          "grouped_gemm_ms": 0.3497599959373474,
+          "sum_ms": 0.05929600074887276,
+          "complete_expert_compute_ms": 0.40905599668622017
+        },
+        {
+          "layer_sequence": 43,
+          "grouped_gemm_ms": 0.3479999899864197,
+          "sum_ms": 0.058559998869895935,
+          "complete_expert_compute_ms": 0.4065599888563156
+        },
+        {
+          "layer_sequence": 44,
+          "grouped_gemm_ms": 0.34889599680900574,
+          "sum_ms": 0.05897599831223488,
+          "complete_expert_compute_ms": 0.4078719951212406
+        },
+        {
+          "layer_sequence": 45,
+          "grouped_gemm_ms": 0.3493439853191376,
+          "sum_ms": 0.058111999183893204,
+          "complete_expert_compute_ms": 0.4074559845030308
+        },
+        {
+          "layer_sequence": 46,
+          "grouped_gemm_ms": 0.3510720133781433,
+          "sum_ms": 0.05833600088953972,
+          "complete_expert_compute_ms": 0.40940801426768303
+        },
+        {
+          "layer_sequence": 47,
+          "grouped_gemm_ms": 0.34863999485969543,
+          "sum_ms": 0.0589120015501976,
+          "complete_expert_compute_ms": 0.40755199640989304
+        }
+      ],
+      "grouped_gemm_plus_sum_ms": 19.73251197487116
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "pp_rank": 0,
+      "batch_id": 4602,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 92.2303695678711,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 1,
+      "timestamp": 1788874424.3339207,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "group": "moe",
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_moe/operators/server.ops.dp0.tp3.pp0.jsonl",
+      "scope_totals_ms": {
+        "moe_gating_linear": 0.6245119962841272,
+        "moe_gating_routing_topk": 14.499359965324402,
+        "moe_shuffling": 3.6054719537496567,
+        "moe_grouped_gemm": 21.80310395359993,
+        "moe_sum": 2.859296001493931
+      },
+      "scope_counts": {
+        "moe_gating_linear": 48,
+        "moe_gating_routing_topk": 48,
+        "moe_shuffling": 48,
+        "moe_grouped_gemm": 48,
+        "moe_sum": 48
+      },
+      "grouped_gemm_plus_sum_by_layer": [
+        {
+          "layer_sequence": 0,
+          "grouped_gemm_ms": 0.46115198731422424,
+          "sum_ms": 0.05920000001788139,
+          "complete_expert_compute_ms": 0.5203519873321056
+        },
+        {
+          "layer_sequence": 1,
+          "grouped_gemm_ms": 0.45206400752067566,
+          "sum_ms": 0.060095999389886856,
+          "complete_expert_compute_ms": 0.5121600069105625
+        },
+        {
+          "layer_sequence": 2,
+          "grouped_gemm_ms": 0.45337599515914917,
+          "sum_ms": 0.059776000678539276,
+          "complete_expert_compute_ms": 0.5131519958376884
+        },
+        {
+          "layer_sequence": 3,
+          "grouped_gemm_ms": 0.45212799310684204,
+          "sum_ms": 0.06060799956321716,
+          "complete_expert_compute_ms": 0.5127359926700592
+        },
+        {
+          "layer_sequence": 4,
+          "grouped_gemm_ms": 0.4503040015697479,
+          "sum_ms": 0.05974400043487549,
+          "complete_expert_compute_ms": 0.5100480020046234
+        },
+        {
+          "layer_sequence": 5,
+          "grouped_gemm_ms": 0.4517439901828766,
+          "sum_ms": 0.05920000001788139,
+          "complete_expert_compute_ms": 0.510943990200758
+        },
+        {
+          "layer_sequence": 6,
+          "grouped_gemm_ms": 0.45497599244117737,
+          "sum_ms": 0.059776000678539276,
+          "complete_expert_compute_ms": 0.5147519931197166
+        },
+        {
+          "layer_sequence": 7,
+          "grouped_gemm_ms": 0.4506880044937134,
+          "sum_ms": 0.059967998415231705,
+          "complete_expert_compute_ms": 0.5106560029089451
+        },
+        {
+          "layer_sequence": 8,
+          "grouped_gemm_ms": 0.45286399126052856,
+          "sum_ms": 0.05942400172352791,
+          "complete_expert_compute_ms": 0.5122879929840565
+        },
+        {
+          "layer_sequence": 9,
+          "grouped_gemm_ms": 0.45110398530960083,
+          "sum_ms": 0.06028800085186958,
+          "complete_expert_compute_ms": 0.5113919861614704
+        },
+        {
+          "layer_sequence": 10,
+          "grouped_gemm_ms": 0.45532798767089844,
+          "sum_ms": 0.060416001826524734,
+          "complete_expert_compute_ms": 0.5157439894974232
+        },
+        {
+          "layer_sequence": 11,
+          "grouped_gemm_ms": 0.4492799937725067,
+          "sum_ms": 0.059808000922203064,
+          "complete_expert_compute_ms": 0.5090879946947098
+        },
+        {
+          "layer_sequence": 12,
+          "grouped_gemm_ms": 0.4504320025444031,
+          "sum_ms": 0.05852799862623215,
+          "complete_expert_compute_ms": 0.5089600011706352
+        },
+        {
+          "layer_sequence": 13,
+          "grouped_gemm_ms": 0.4503360092639923,
+          "sum_ms": 0.059808000922203064,
+          "complete_expert_compute_ms": 0.5101440101861954
+        },
+        {
+          "layer_sequence": 14,
+          "grouped_gemm_ms": 0.44361600279808044,
+          "sum_ms": 0.0589120015501976,
+          "complete_expert_compute_ms": 0.502528004348278
+        },
+        {
+          "layer_sequence": 15,
+          "grouped_gemm_ms": 0.4513919949531555,
+          "sum_ms": 0.061344001442193985,
+          "complete_expert_compute_ms": 0.5127359963953495
+        },
+        {
+          "layer_sequence": 16,
+          "grouped_gemm_ms": 0.445279985666275,
+          "sum_ms": 0.05999999865889549,
+          "complete_expert_compute_ms": 0.5052799843251705
+        },
+        {
+          "layer_sequence": 17,
+          "grouped_gemm_ms": 0.45161598920822144,
+          "sum_ms": 0.05875200033187866,
+          "complete_expert_compute_ms": 0.5103679895401001
+        },
+        {
+          "layer_sequence": 18,
+          "grouped_gemm_ms": 0.4538879990577698,
+          "sum_ms": 0.05817599967122078,
+          "complete_expert_compute_ms": 0.5120639987289906
+        },
+        {
+          "layer_sequence": 19,
+          "grouped_gemm_ms": 0.4544000029563904,
+          "sum_ms": 0.06063999980688095,
+          "complete_expert_compute_ms": 0.5150400027632713
+        },
+        {
+          "layer_sequence": 20,
+          "grouped_gemm_ms": 0.45372799038887024,
+          "sum_ms": 0.059647999703884125,
+          "complete_expert_compute_ms": 0.5133759900927544
+        },
+        {
+          "layer_sequence": 21,
+          "grouped_gemm_ms": 0.45097601413726807,
+          "sum_ms": 0.0594559982419014,
+          "complete_expert_compute_ms": 0.5104320123791695
+        },
+        {
+          "layer_sequence": 22,
+          "grouped_gemm_ms": 0.4538879990577698,
+          "sum_ms": 0.05852799862623215,
+          "complete_expert_compute_ms": 0.5124159976840019
+        },
+        {
+          "layer_sequence": 23,
+          "grouped_gemm_ms": 0.4561600089073181,
+          "sum_ms": 0.058559998869895935,
+          "complete_expert_compute_ms": 0.514720007777214
+        },
+        {
+          "layer_sequence": 24,
+          "grouped_gemm_ms": 0.4490880072116852,
+          "sum_ms": 0.05951999872922897,
+          "complete_expert_compute_ms": 0.5086080059409142
+        },
+        {
+          "layer_sequence": 25,
+          "grouped_gemm_ms": 0.4505920112133026,
+          "sum_ms": 0.05939200147986412,
+          "complete_expert_compute_ms": 0.5099840126931667
+        },
+        {
+          "layer_sequence": 26,
+          "grouped_gemm_ms": 0.44915199279785156,
+          "sum_ms": 0.05987200140953064,
+          "complete_expert_compute_ms": 0.5090239942073822
+        },
+        {
+          "layer_sequence": 27,
+          "grouped_gemm_ms": 0.45238399505615234,
+          "sum_ms": 0.060127999633550644,
+          "complete_expert_compute_ms": 0.512511994689703
+        },
+        {
+          "layer_sequence": 28,
+          "grouped_gemm_ms": 0.4577920138835907,
+          "sum_ms": 0.058687999844551086,
+          "complete_expert_compute_ms": 0.5164800137281418
+        },
+        {
+          "layer_sequence": 29,
+          "grouped_gemm_ms": 0.45212799310684204,
+          "sum_ms": 0.058400001376867294,
+          "complete_expert_compute_ms": 0.5105279944837093
+        },
+        {
+          "layer_sequence": 30,
+          "grouped_gemm_ms": 0.4466559886932373,
+          "sum_ms": 0.05897599831223488,
+          "complete_expert_compute_ms": 0.5056319870054722
+        },
+        {
+          "layer_sequence": 31,
+          "grouped_gemm_ms": 0.45289599895477295,
+          "sum_ms": 0.05961599946022034,
+          "complete_expert_compute_ms": 0.5125119984149933
+        },
+        {
+          "layer_sequence": 32,
+          "grouped_gemm_ms": 0.4477120041847229,
+          "sum_ms": 0.05958399921655655,
+          "complete_expert_compute_ms": 0.5072960034012794
+        },
+        {
+          "layer_sequence": 33,
+          "grouped_gemm_ms": 0.45209598541259766,
+          "sum_ms": 0.05999999865889549,
+          "complete_expert_compute_ms": 0.5120959840714931
+        },
+        {
+          "layer_sequence": 34,
+          "grouped_gemm_ms": 0.4527040123939514,
+          "sum_ms": 0.0586559996008873,
+          "complete_expert_compute_ms": 0.5113600119948387
+        },
+        {
+          "layer_sequence": 35,
+          "grouped_gemm_ms": 0.4524480104446411,
+          "sum_ms": 0.06015999987721443,
+          "complete_expert_compute_ms": 0.5126080103218555
+        },
+        {
+          "layer_sequence": 36,
+          "grouped_gemm_ms": 0.4509440064430237,
+          "sum_ms": 0.058368001133203506,
+          "complete_expert_compute_ms": 0.5093120075762272
+        },
+        {
+          "layer_sequence": 37,
+          "grouped_gemm_ms": 0.4538879990577698,
+          "sum_ms": 0.05923200026154518,
+          "complete_expert_compute_ms": 0.513119999319315
+        },
+        {
+          "layer_sequence": 38,
+          "grouped_gemm_ms": 0.4442239999771118,
+          "sum_ms": 0.06095999851822853,
+          "complete_expert_compute_ms": 0.5051839984953403
+        },
+        {
+          "layer_sequence": 39,
+          "grouped_gemm_ms": 0.5804479718208313,
+          "sum_ms": 0.05974400043487549,
+          "complete_expert_compute_ms": 0.6401919722557068
+        },
+        {
+          "layer_sequence": 40,
+          "grouped_gemm_ms": 0.4418880045413971,
+          "sum_ms": 0.06028800085186958,
+          "complete_expert_compute_ms": 0.5021760053932667
+        },
+        {
+          "layer_sequence": 41,
+          "grouped_gemm_ms": 0.45206400752067566,
+          "sum_ms": 0.05782400071620941,
+          "complete_expert_compute_ms": 0.5098880082368851
+        },
+        {
+          "layer_sequence": 42,
+          "grouped_gemm_ms": 0.4548799991607666,
+          "sum_ms": 0.05984000116586685,
+          "complete_expert_compute_ms": 0.5147200003266335
+        },
+        {
+          "layer_sequence": 43,
+          "grouped_gemm_ms": 0.4522559940814972,
+          "sum_ms": 0.06003199890255928,
+          "complete_expert_compute_ms": 0.5122879929840565
+        },
+        {
+          "layer_sequence": 44,
+          "grouped_gemm_ms": 0.44947201013565063,
+          "sum_ms": 0.06067200005054474,
+          "complete_expert_compute_ms": 0.5101440101861954
+        },
+        {
+          "layer_sequence": 45,
+          "grouped_gemm_ms": 0.4517120122909546,
+          "sum_ms": 0.059487998485565186,
+          "complete_expert_compute_ms": 0.5112000107765198
+        },
+        {
+          "layer_sequence": 46,
+          "grouped_gemm_ms": 0.4490880072116852,
+          "sum_ms": 0.05942400172352791,
+          "complete_expert_compute_ms": 0.5085120089352131
+        },
+        {
+          "layer_sequence": 47,
+          "grouped_gemm_ms": 0.4558719992637634,
+          "sum_ms": 0.059776000678539276,
+          "complete_expert_compute_ms": 0.5156479999423027
+        }
+      ],
+      "grouped_gemm_plus_sum_ms": 24.66239995509386
+    }
+  ],
+  "limits": "Groups are separate runs and ranks are parallel. No cross-run scope sum, rank sum, or parent/child addition is performed. GG+sum pairs use sibling scopes from one run/rank/layer; 1 peer token requires scheduler evidence to identify dummy work. Physical DP metadata does not measure the peer's operations. Numerical P/S/V and CUDA-span acceptance remain separate."
+}

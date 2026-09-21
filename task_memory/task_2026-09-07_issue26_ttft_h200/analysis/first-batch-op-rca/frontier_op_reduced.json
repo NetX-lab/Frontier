@@ -1,0 +1,10802 @@
+[
+  {
+    "op_name": "add",
+    "layer_id": 0,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      126,
+      147,
+      168,
+      189,
+      210,
+      231,
+      252,
+      273
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 1,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      338,
+      359,
+      380,
+      401,
+      422,
+      443,
+      464,
+      485
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 2,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      550,
+      571,
+      592,
+      613,
+      634,
+      655,
+      676,
+      697
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 3,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      762,
+      783,
+      804,
+      825,
+      846,
+      867,
+      888,
+      909
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 4,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      974,
+      995,
+      1016,
+      1037,
+      1058,
+      1079,
+      1100,
+      1121
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 5,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      1186,
+      1207,
+      1228,
+      1249,
+      1270,
+      1291,
+      1312,
+      1333
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 6,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      1398,
+      1419,
+      1440,
+      1461,
+      1482,
+      1503,
+      1524,
+      1545
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 7,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      1610,
+      1631,
+      1652,
+      1673,
+      1694,
+      1715,
+      1736,
+      1757
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 8,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      1822,
+      1843,
+      1864,
+      1885,
+      1906,
+      1927,
+      1948,
+      1969
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 9,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2034,
+      2055,
+      2076,
+      2097,
+      2118,
+      2139,
+      2160,
+      2181
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 10,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2246,
+      2267,
+      2288,
+      2309,
+      2330,
+      2351,
+      2372,
+      2393
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 11,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2458,
+      2479,
+      2500,
+      2521,
+      2542,
+      2563,
+      2584,
+      2605
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 12,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2670,
+      2691,
+      2712,
+      2733,
+      2754,
+      2775,
+      2796,
+      2817
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 13,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2882,
+      2903,
+      2924,
+      2945,
+      2966,
+      2987,
+      3008,
+      3029
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 14,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3094,
+      3115,
+      3136,
+      3157,
+      3178,
+      3199,
+      3220,
+      3241
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 15,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3306,
+      3327,
+      3348,
+      3369,
+      3390,
+      3411,
+      3432,
+      3453
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 16,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3518,
+      3539,
+      3560,
+      3581,
+      3602,
+      3623,
+      3644,
+      3665
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 17,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3730,
+      3751,
+      3772,
+      3793,
+      3814,
+      3835,
+      3856,
+      3877
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 18,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3942,
+      3963,
+      3984,
+      4005,
+      4026,
+      4047,
+      4068,
+      4089
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 19,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      4154,
+      4175,
+      4196,
+      4217,
+      4238,
+      4259,
+      4280,
+      4301
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 20,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      4366,
+      4387,
+      4408,
+      4429,
+      4450,
+      4471,
+      4492,
+      4513
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 21,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      4578,
+      4599,
+      4620,
+      4641,
+      4662,
+      4683,
+      4704,
+      4725
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 22,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      4790,
+      4811,
+      4832,
+      4853,
+      4874,
+      4895,
+      4916,
+      4937
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 23,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5002,
+      5023,
+      5044,
+      5065,
+      5086,
+      5107,
+      5128,
+      5149
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 24,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5214,
+      5235,
+      5256,
+      5277,
+      5298,
+      5319,
+      5340,
+      5361
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 25,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5426,
+      5447,
+      5468,
+      5489,
+      5510,
+      5531,
+      5552,
+      5573
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 26,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5638,
+      5659,
+      5680,
+      5701,
+      5722,
+      5743,
+      5764,
+      5785
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 27,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5850,
+      5871,
+      5892,
+      5913,
+      5934,
+      5955,
+      5976,
+      5997
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 28,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6062,
+      6083,
+      6104,
+      6125,
+      6146,
+      6167,
+      6188,
+      6209
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 29,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6274,
+      6295,
+      6316,
+      6337,
+      6358,
+      6379,
+      6400,
+      6421
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 30,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6486,
+      6507,
+      6528,
+      6549,
+      6570,
+      6591,
+      6612,
+      6633
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 31,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6698,
+      6719,
+      6740,
+      6761,
+      6782,
+      6803,
+      6824,
+      6845
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 32,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6910,
+      6931,
+      6952,
+      6973,
+      6994,
+      7015,
+      7036,
+      7057
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 33,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7122,
+      7143,
+      7164,
+      7185,
+      7206,
+      7227,
+      7248,
+      7269
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 34,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7334,
+      7355,
+      7376,
+      7397,
+      7418,
+      7439,
+      7460,
+      7481
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 35,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7546,
+      7567,
+      7588,
+      7609,
+      7630,
+      7651,
+      7672,
+      7693
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 36,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7758,
+      7779,
+      7800,
+      7821,
+      7842,
+      7863,
+      7884,
+      7905
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 37,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7970,
+      7991,
+      8012,
+      8033,
+      8054,
+      8075,
+      8096,
+      8117
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 38,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      8182,
+      8203,
+      8224,
+      8245,
+      8266,
+      8287,
+      8308,
+      8329
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 39,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      8394,
+      8415,
+      8436,
+      8457,
+      8478,
+      8499,
+      8520,
+      8541
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 40,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      8606,
+      8627,
+      8648,
+      8669,
+      8690,
+      8711,
+      8732,
+      8753
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 41,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      8818,
+      8839,
+      8860,
+      8881,
+      8902,
+      8923,
+      8944,
+      8965
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 42,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9030,
+      9051,
+      9072,
+      9093,
+      9114,
+      9135,
+      9156,
+      9177
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 43,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9242,
+      9263,
+      9284,
+      9305,
+      9326,
+      9347,
+      9368,
+      9389
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 44,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9454,
+      9475,
+      9496,
+      9517,
+      9538,
+      9559,
+      9580,
+      9601
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 45,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9666,
+      9687,
+      9708,
+      9729,
+      9750,
+      9771,
+      9792,
+      9813
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 46,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9878,
+      9899,
+      9920,
+      9941,
+      9962,
+      9983,
+      10004,
+      10025
+    ]
+  },
+  {
+    "op_name": "add",
+    "layer_id": 47,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      10090,
+      10111,
+      10132,
+      10153,
+      10174,
+      10195,
+      10216,
+      10237
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 0,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      127,
+      148,
+      169,
+      190,
+      211,
+      232,
+      253,
+      274
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 1,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      339,
+      360,
+      381,
+      402,
+      423,
+      444,
+      465,
+      486
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 2,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      551,
+      572,
+      593,
+      614,
+      635,
+      656,
+      677,
+      698
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 3,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      763,
+      784,
+      805,
+      826,
+      847,
+      868,
+      889,
+      910
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 4,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      975,
+      996,
+      1017,
+      1038,
+      1059,
+      1080,
+      1101,
+      1122
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 5,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      1187,
+      1208,
+      1229,
+      1250,
+      1271,
+      1292,
+      1313,
+      1334
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 6,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      1399,
+      1420,
+      1441,
+      1462,
+      1483,
+      1504,
+      1525,
+      1546
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 7,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      1611,
+      1632,
+      1653,
+      1674,
+      1695,
+      1716,
+      1737,
+      1758
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 8,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      1823,
+      1844,
+      1865,
+      1886,
+      1907,
+      1928,
+      1949,
+      1970
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 9,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2035,
+      2056,
+      2077,
+      2098,
+      2119,
+      2140,
+      2161,
+      2182
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 10,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2247,
+      2268,
+      2289,
+      2310,
+      2331,
+      2352,
+      2373,
+      2394
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 11,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2459,
+      2480,
+      2501,
+      2522,
+      2543,
+      2564,
+      2585,
+      2606
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 12,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2671,
+      2692,
+      2713,
+      2734,
+      2755,
+      2776,
+      2797,
+      2818
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 13,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2883,
+      2904,
+      2925,
+      2946,
+      2967,
+      2988,
+      3009,
+      3030
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 14,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3095,
+      3116,
+      3137,
+      3158,
+      3179,
+      3200,
+      3221,
+      3242
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 15,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3307,
+      3328,
+      3349,
+      3370,
+      3391,
+      3412,
+      3433,
+      3454
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 16,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3519,
+      3540,
+      3561,
+      3582,
+      3603,
+      3624,
+      3645,
+      3666
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 17,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3731,
+      3752,
+      3773,
+      3794,
+      3815,
+      3836,
+      3857,
+      3878
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 18,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3943,
+      3964,
+      3985,
+      4006,
+      4027,
+      4048,
+      4069,
+      4090
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 19,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      4155,
+      4176,
+      4197,
+      4218,
+      4239,
+      4260,
+      4281,
+      4302
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 20,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      4367,
+      4388,
+      4409,
+      4430,
+      4451,
+      4472,
+      4493,
+      4514
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 21,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      4579,
+      4600,
+      4621,
+      4642,
+      4663,
+      4684,
+      4705,
+      4726
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 22,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      4791,
+      4812,
+      4833,
+      4854,
+      4875,
+      4896,
+      4917,
+      4938
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 23,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5003,
+      5024,
+      5045,
+      5066,
+      5087,
+      5108,
+      5129,
+      5150
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 24,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5215,
+      5236,
+      5257,
+      5278,
+      5299,
+      5320,
+      5341,
+      5362
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 25,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5427,
+      5448,
+      5469,
+      5490,
+      5511,
+      5532,
+      5553,
+      5574
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 26,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5639,
+      5660,
+      5681,
+      5702,
+      5723,
+      5744,
+      5765,
+      5786
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 27,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5851,
+      5872,
+      5893,
+      5914,
+      5935,
+      5956,
+      5977,
+      5998
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 28,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6063,
+      6084,
+      6105,
+      6126,
+      6147,
+      6168,
+      6189,
+      6210
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 29,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6275,
+      6296,
+      6317,
+      6338,
+      6359,
+      6380,
+      6401,
+      6422
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 30,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6487,
+      6508,
+      6529,
+      6550,
+      6571,
+      6592,
+      6613,
+      6634
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 31,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6699,
+      6720,
+      6741,
+      6762,
+      6783,
+      6804,
+      6825,
+      6846
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 32,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6911,
+      6932,
+      6953,
+      6974,
+      6995,
+      7016,
+      7037,
+      7058
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 33,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7123,
+      7144,
+      7165,
+      7186,
+      7207,
+      7228,
+      7249,
+      7270
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 34,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7335,
+      7356,
+      7377,
+      7398,
+      7419,
+      7440,
+      7461,
+      7482
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 35,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7547,
+      7568,
+      7589,
+      7610,
+      7631,
+      7652,
+      7673,
+      7694
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 36,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7759,
+      7780,
+      7801,
+      7822,
+      7843,
+      7864,
+      7885,
+      7906
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 37,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7971,
+      7992,
+      8013,
+      8034,
+      8055,
+      8076,
+      8097,
+      8118
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 38,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      8183,
+      8204,
+      8225,
+      8246,
+      8267,
+      8288,
+      8309,
+      8330
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 39,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      8395,
+      8416,
+      8437,
+      8458,
+      8479,
+      8500,
+      8521,
+      8542
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 40,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      8607,
+      8628,
+      8649,
+      8670,
+      8691,
+      8712,
+      8733,
+      8754
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 41,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      8819,
+      8840,
+      8861,
+      8882,
+      8903,
+      8924,
+      8945,
+      8966
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 42,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9031,
+      9052,
+      9073,
+      9094,
+      9115,
+      9136,
+      9157,
+      9178
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 43,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9243,
+      9264,
+      9285,
+      9306,
+      9327,
+      9348,
+      9369,
+      9390
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 44,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9455,
+      9476,
+      9497,
+      9518,
+      9539,
+      9560,
+      9581,
+      9602
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 45,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9667,
+      9688,
+      9709,
+      9730,
+      9751,
+      9772,
+      9793,
+      9814
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 46,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9879,
+      9900,
+      9921,
+      9942,
+      9963,
+      9984,
+      10005,
+      10026
+    ]
+  },
+  {
+    "op_name": "add_attn_residual",
+    "layer_id": 47,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      10091,
+      10112,
+      10133,
+      10154,
+      10175,
+      10196,
+      10217,
+      10238
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 0,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      128,
+      149,
+      170,
+      191,
+      212,
+      233,
+      254,
+      275
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 1,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      340,
+      361,
+      382,
+      403,
+      424,
+      445,
+      466,
+      487
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 2,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      552,
+      573,
+      594,
+      615,
+      636,
+      657,
+      678,
+      699
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 3,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      764,
+      785,
+      806,
+      827,
+      848,
+      869,
+      890,
+      911
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 4,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      976,
+      997,
+      1018,
+      1039,
+      1060,
+      1081,
+      1102,
+      1123
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 5,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      1188,
+      1209,
+      1230,
+      1251,
+      1272,
+      1293,
+      1314,
+      1335
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 6,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      1400,
+      1421,
+      1442,
+      1463,
+      1484,
+      1505,
+      1526,
+      1547
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 7,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      1612,
+      1633,
+      1654,
+      1675,
+      1696,
+      1717,
+      1738,
+      1759
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 8,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      1824,
+      1845,
+      1866,
+      1887,
+      1908,
+      1929,
+      1950,
+      1971
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 9,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2036,
+      2057,
+      2078,
+      2099,
+      2120,
+      2141,
+      2162,
+      2183
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 10,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2248,
+      2269,
+      2290,
+      2311,
+      2332,
+      2353,
+      2374,
+      2395
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 11,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2460,
+      2481,
+      2502,
+      2523,
+      2544,
+      2565,
+      2586,
+      2607
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 12,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2672,
+      2693,
+      2714,
+      2735,
+      2756,
+      2777,
+      2798,
+      2819
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 13,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      2884,
+      2905,
+      2926,
+      2947,
+      2968,
+      2989,
+      3010,
+      3031
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 14,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3096,
+      3117,
+      3138,
+      3159,
+      3180,
+      3201,
+      3222,
+      3243
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 15,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3308,
+      3329,
+      3350,
+      3371,
+      3392,
+      3413,
+      3434,
+      3455
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 16,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3520,
+      3541,
+      3562,
+      3583,
+      3604,
+      3625,
+      3646,
+      3667
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 17,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3732,
+      3753,
+      3774,
+      3795,
+      3816,
+      3837,
+      3858,
+      3879
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 18,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      3944,
+      3965,
+      3986,
+      4007,
+      4028,
+      4049,
+      4070,
+      4091
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 19,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      4156,
+      4177,
+      4198,
+      4219,
+      4240,
+      4261,
+      4282,
+      4303
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 20,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      4368,
+      4389,
+      4410,
+      4431,
+      4452,
+      4473,
+      4494,
+      4515
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 21,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      4580,
+      4601,
+      4622,
+      4643,
+      4664,
+      4685,
+      4706,
+      4727
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 22,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      4792,
+      4813,
+      4834,
+      4855,
+      4876,
+      4897,
+      4918,
+      4939
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 23,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5004,
+      5025,
+      5046,
+      5067,
+      5088,
+      5109,
+      5130,
+      5151
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 24,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5216,
+      5237,
+      5258,
+      5279,
+      5300,
+      5321,
+      5342,
+      5363
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 25,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5428,
+      5449,
+      5470,
+      5491,
+      5512,
+      5533,
+      5554,
+      5575
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 26,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5640,
+      5661,
+      5682,
+      5703,
+      5724,
+      5745,
+      5766,
+      5787
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 27,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      5852,
+      5873,
+      5894,
+      5915,
+      5936,
+      5957,
+      5978,
+      5999
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 28,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6064,
+      6085,
+      6106,
+      6127,
+      6148,
+      6169,
+      6190,
+      6211
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 29,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6276,
+      6297,
+      6318,
+      6339,
+      6360,
+      6381,
+      6402,
+      6423
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 30,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6488,
+      6509,
+      6530,
+      6551,
+      6572,
+      6593,
+      6614,
+      6635
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 31,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6700,
+      6721,
+      6742,
+      6763,
+      6784,
+      6805,
+      6826,
+      6847
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 32,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      6912,
+      6933,
+      6954,
+      6975,
+      6996,
+      7017,
+      7038,
+      7059
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 33,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7124,
+      7145,
+      7166,
+      7187,
+      7208,
+      7229,
+      7250,
+      7271
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 34,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7336,
+      7357,
+      7378,
+      7399,
+      7420,
+      7441,
+      7462,
+      7483
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 35,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7548,
+      7569,
+      7590,
+      7611,
+      7632,
+      7653,
+      7674,
+      7695
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 36,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7760,
+      7781,
+      7802,
+      7823,
+      7844,
+      7865,
+      7886,
+      7907
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 37,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      7972,
+      7993,
+      8014,
+      8035,
+      8056,
+      8077,
+      8098,
+      8119
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 38,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      8184,
+      8205,
+      8226,
+      8247,
+      8268,
+      8289,
+      8310,
+      8331
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 39,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      8396,
+      8417,
+      8438,
+      8459,
+      8480,
+      8501,
+      8522,
+      8543
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 40,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      8608,
+      8629,
+      8650,
+      8671,
+      8692,
+      8713,
+      8734,
+      8755
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 41,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      8820,
+      8841,
+      8862,
+      8883,
+      8904,
+      8925,
+      8946,
+      8967
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 42,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9032,
+      9053,
+      9074,
+      9095,
+      9116,
+      9137,
+      9158,
+      9179
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 43,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9244,
+      9265,
+      9286,
+      9307,
+      9328,
+      9349,
+      9370,
+      9391
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 44,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9456,
+      9477,
+      9498,
+      9519,
+      9540,
+      9561,
+      9582,
+      9603
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 45,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9668,
+      9689,
+      9710,
+      9731,
+      9752,
+      9773,
+      9794,
+      9815
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 46,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      9880,
+      9901,
+      9922,
+      9943,
+      9964,
+      9985,
+      10006,
+      10027
+    ]
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "layer_id": 47,
+    "predicted_ms": 0.0,
+    "lane_count": 8,
+    "source_lines": [
+      10092,
+      10113,
+      10134,
+      10155,
+      10176,
+      10197,
+      10218,
+      10239
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 0,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      96
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 1,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      308
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 2,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      520
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 3,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      732
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 4,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      944
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 5,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      1156
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 6,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      1368
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 7,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      1580
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 8,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      1792
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 9,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      2004
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 10,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      2216
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 11,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      2428
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 12,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      2640
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 13,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      2852
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 14,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      3064
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 15,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      3276
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 16,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      3488
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 17,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      3700
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 18,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      3912
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 19,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      4124
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 20,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      4336
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 21,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      4548
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 22,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      4760
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 23,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      4972
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 24,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      5184
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 25,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      5396
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 26,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      5608
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 27,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      5820
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 28,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      6032
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 29,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      6244
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 30,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      6456
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 31,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      6668
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 32,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      6880
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 33,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      7092
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 34,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      7304
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 35,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      7516
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 36,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      7728
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 37,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      7940
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 38,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      8152
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 39,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      8364
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 40,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      8576
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 41,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      8788
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 42,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      9000
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 43,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      9212
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 44,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      9424
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 45,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      9636
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 46,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      9848
+    ]
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "layer_id": 47,
+    "predicted_ms": 0.016816,
+    "lane_count": 1,
+    "source_lines": [
+      10060
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 0,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      97
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 1,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      309
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 2,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      521
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 3,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      733
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 4,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      945
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 5,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      1157
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 6,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      1369
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 7,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      1581
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 8,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      1793
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 9,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      2005
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 10,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      2217
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 11,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      2429
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 12,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      2641
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 13,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      2853
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 14,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      3065
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 15,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      3277
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 16,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      3489
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 17,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      3701
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 18,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      3913
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 19,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      4125
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 20,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      4337
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 21,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      4549
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 22,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      4761
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 23,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      4973
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 24,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      5185
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 25,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      5397
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 26,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      5609
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 27,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      5821
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 28,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      6033
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 29,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      6245
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 30,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      6457
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 31,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      6669
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 32,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      6881
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 33,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      7093
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 34,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      7305
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 35,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      7517
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 36,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      7729
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 37,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      7941
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 38,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      8153
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 39,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      8365
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 40,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      8577
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 41,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      8789
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 42,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      9001
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 43,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      9213
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 44,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      9425
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 45,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      9637
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 46,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      9849
+    ]
+  },
+  {
+    "op_name": "attn_post_proj",
+    "layer_id": 47,
+    "predicted_ms": 0.046784,
+    "lane_count": 1,
+    "source_lines": [
+      10061
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 0,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      93
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 1,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      305
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 2,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      517
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 3,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      729
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 4,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      941
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 5,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      1153
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 6,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      1365
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 7,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      1577
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 8,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      1789
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 9,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      2001
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 10,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      2213
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 11,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      2425
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 12,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      2637
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 13,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      2849
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 14,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      3061
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 15,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      3273
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 16,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      3485
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 17,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      3697
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 18,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      3909
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 19,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      4121
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 20,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      4333
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 21,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      4545
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 22,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      4757
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 23,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      4969
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 24,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      5181
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 25,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      5393
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 26,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      5605
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 27,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      5817
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 28,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      6029
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 29,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      6241
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 30,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      6453
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 31,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      6665
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 32,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      6877
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 33,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      7089
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 34,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      7301
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 35,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      7513
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 36,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      7725
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 37,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      7937
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 38,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      8149
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 39,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      8361
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 40,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      8573
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 41,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      8785
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 42,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      8997
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 43,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      9209
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 44,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      9421
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 45,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      9633
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 46,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      9845
+    ]
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "layer_id": 47,
+    "predicted_ms": 0.137168,
+    "lane_count": 1,
+    "source_lines": [
+      10057
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 0,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      95
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 1,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      307
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 2,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      519
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 3,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      731
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 4,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      943
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 5,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      1155
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 6,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      1367
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 7,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      1579
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 8,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      1791
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 9,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      2003
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 10,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      2215
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 11,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      2427
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 12,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      2639
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 13,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      2851
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 14,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      3063
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 15,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      3275
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 16,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      3487
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 17,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      3699
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 18,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      3911
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 19,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      4123
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 20,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      4335
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 21,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      4547
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 22,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      4759
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 23,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      4971
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 24,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      5183
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 25,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      5395
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 26,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      5607
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 27,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      5819
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 28,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      6031
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 29,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      6243
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 30,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      6455
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 31,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      6667
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 32,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      6879
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 33,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      7091
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 34,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      7303
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 35,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      7515
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 36,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      7727
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 37,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      7939
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 38,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      8151
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 39,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      8363
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 40,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      8575
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 41,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      8787
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 42,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      8999
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 43,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      9211
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 44,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      9423
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 45,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      9635
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 46,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      9847
+    ]
+  },
+  {
+    "op_name": "attn_prefill",
+    "layer_id": 47,
+    "predicted_ms": 0.146384,
+    "lane_count": 1,
+    "source_lines": [
+      10059
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 0,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      94
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 1,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      306
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 2,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      518
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 3,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      730
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 4,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      942
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 5,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      1154
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 6,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      1366
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 7,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      1578
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 8,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      1790
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 9,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      2002
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 10,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      2214
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 11,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      2426
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 12,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      2638
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 13,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      2850
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 14,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      3062
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 15,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      3274
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 16,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      3486
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 17,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      3698
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 18,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      3910
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 19,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      4122
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 20,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      4334
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 21,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      4546
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 22,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      4758
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 23,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      4970
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 24,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      5182
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 25,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      5394
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 26,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      5606
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 27,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      5818
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 28,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      6030
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 29,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      6242
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 30,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      6454
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 31,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      6666
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 32,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      6878
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 33,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      7090
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 34,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      7302
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 35,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      7514
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 36,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      7726
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 37,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      7938
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 38,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      8150
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 39,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      8362
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 40,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      8574
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 41,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      8786
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 42,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      8998
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 43,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      9210
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 44,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      9422
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 45,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      9634
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 46,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      9846
+    ]
+  },
+  {
+    "op_name": "attn_rope",
+    "layer_id": 47,
+    "predicted_ms": 0.032336,
+    "lane_count": 1,
+    "source_lines": [
+      10058
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 0,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      99
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 1,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      311
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 2,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      523
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 3,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      735
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 4,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      947
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 5,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      1159
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 6,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      1371
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 7,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      1583
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 8,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      1795
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 9,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      2007
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 10,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      2219
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 11,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      2431
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 12,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      2643
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 13,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      2855
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 14,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      3067
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 15,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      3279
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 16,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      3491
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 17,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      3703
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 18,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      3915
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 19,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      4127
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 20,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      4339
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 21,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      4551
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 22,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      4763
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 23,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      4975
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 24,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      5187
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 25,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      5399
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 26,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      5611
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 27,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      5823
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 28,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      6035
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 29,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      6247
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 30,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      6459
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 31,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      6671
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 32,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      6883
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 33,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      7095
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 34,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      7307
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 35,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      7519
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 36,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      7731
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 37,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      7943
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 38,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      8155
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 39,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      8367
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 40,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      8579
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 41,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      8791
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 42,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      9003
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 43,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      9215
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 44,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      9427
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 45,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      9639
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 46,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      9851
+    ]
+  },
+  {
+    "op_name": "attn_tp_allreduce",
+    "layer_id": 47,
+    "predicted_ms": 0.372905,
+    "lane_count": 1,
+    "source_lines": [
+      10063
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 0,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      92
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 1,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      304
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 2,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      516
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 3,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      728
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 4,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      940
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 5,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      1152
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 6,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      1364
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 7,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      1576
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 8,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      1788
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 9,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      2000
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 10,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      2212
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 11,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      2424
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 12,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      2636
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 13,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      2848
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 14,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      3060
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 15,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      3272
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 16,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      3484
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 17,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      3696
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 18,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      3908
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 19,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      4120
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 20,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      4332
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 21,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      4544
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 22,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      4756
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 23,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      4968
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 24,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      5180
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 25,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      5392
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 26,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      5604
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 27,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      5816
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 28,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      6028
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 29,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      6240
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 30,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      6452
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 31,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      6664
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 32,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      6876
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 33,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      7088
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 34,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      7300
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 35,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      7512
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 36,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      7724
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 37,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      7936
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 38,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      8148
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 39,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      8360
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 40,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      8572
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 41,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      8784
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 42,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      8996
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 43,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      9208
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 44,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      9420
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 45,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      9632
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 46,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      9844
+    ]
+  },
+  {
+    "op_name": "input_layernorm",
+    "layer_id": 47,
+    "predicted_ms": 0.022608,
+    "lane_count": 1,
+    "source_lines": [
+      10056
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 0,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      121,
+      142,
+      163,
+      184,
+      205,
+      226,
+      247,
+      268
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 1,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      333,
+      354,
+      375,
+      396,
+      417,
+      438,
+      459,
+      480
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 2,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      545,
+      566,
+      587,
+      608,
+      629,
+      650,
+      671,
+      692
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 3,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      757,
+      778,
+      799,
+      820,
+      841,
+      862,
+      883,
+      904
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 4,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      969,
+      990,
+      1011,
+      1032,
+      1053,
+      1074,
+      1095,
+      1116
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 5,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      1181,
+      1202,
+      1223,
+      1244,
+      1265,
+      1286,
+      1307,
+      1328
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 6,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      1393,
+      1414,
+      1435,
+      1456,
+      1477,
+      1498,
+      1519,
+      1540
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 7,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      1605,
+      1626,
+      1647,
+      1668,
+      1689,
+      1710,
+      1731,
+      1752
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 8,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      1817,
+      1838,
+      1859,
+      1880,
+      1901,
+      1922,
+      1943,
+      1964
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 9,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      2029,
+      2050,
+      2071,
+      2092,
+      2113,
+      2134,
+      2155,
+      2176
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 10,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      2241,
+      2262,
+      2283,
+      2304,
+      2325,
+      2346,
+      2367,
+      2388
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 11,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      2453,
+      2474,
+      2495,
+      2516,
+      2537,
+      2558,
+      2579,
+      2600
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 12,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      2665,
+      2686,
+      2707,
+      2728,
+      2749,
+      2770,
+      2791,
+      2812
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 13,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      2877,
+      2898,
+      2919,
+      2940,
+      2961,
+      2982,
+      3003,
+      3024
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 14,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      3089,
+      3110,
+      3131,
+      3152,
+      3173,
+      3194,
+      3215,
+      3236
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 15,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      3301,
+      3322,
+      3343,
+      3364,
+      3385,
+      3406,
+      3427,
+      3448
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 16,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      3513,
+      3534,
+      3555,
+      3576,
+      3597,
+      3618,
+      3639,
+      3660
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 17,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      3725,
+      3746,
+      3767,
+      3788,
+      3809,
+      3830,
+      3851,
+      3872
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 18,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      3937,
+      3958,
+      3979,
+      4000,
+      4021,
+      4042,
+      4063,
+      4084
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 19,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      4149,
+      4170,
+      4191,
+      4212,
+      4233,
+      4254,
+      4275,
+      4296
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 20,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      4361,
+      4382,
+      4403,
+      4424,
+      4445,
+      4466,
+      4487,
+      4508
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 21,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      4573,
+      4594,
+      4615,
+      4636,
+      4657,
+      4678,
+      4699,
+      4720
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 22,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      4785,
+      4806,
+      4827,
+      4848,
+      4869,
+      4890,
+      4911,
+      4932
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 23,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      4997,
+      5018,
+      5039,
+      5060,
+      5081,
+      5102,
+      5123,
+      5144
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 24,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      5209,
+      5230,
+      5251,
+      5272,
+      5293,
+      5314,
+      5335,
+      5356
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 25,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      5421,
+      5442,
+      5463,
+      5484,
+      5505,
+      5526,
+      5547,
+      5568
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 26,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      5633,
+      5654,
+      5675,
+      5696,
+      5717,
+      5738,
+      5759,
+      5780
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 27,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      5845,
+      5866,
+      5887,
+      5908,
+      5929,
+      5950,
+      5971,
+      5992
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 28,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      6057,
+      6078,
+      6099,
+      6120,
+      6141,
+      6162,
+      6183,
+      6204
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 29,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      6269,
+      6290,
+      6311,
+      6332,
+      6353,
+      6374,
+      6395,
+      6416
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 30,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      6481,
+      6502,
+      6523,
+      6544,
+      6565,
+      6586,
+      6607,
+      6628
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 31,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      6693,
+      6714,
+      6735,
+      6756,
+      6777,
+      6798,
+      6819,
+      6840
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 32,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      6905,
+      6926,
+      6947,
+      6968,
+      6989,
+      7010,
+      7031,
+      7052
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 33,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      7117,
+      7138,
+      7159,
+      7180,
+      7201,
+      7222,
+      7243,
+      7264
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 34,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      7329,
+      7350,
+      7371,
+      7392,
+      7413,
+      7434,
+      7455,
+      7476
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 35,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      7541,
+      7562,
+      7583,
+      7604,
+      7625,
+      7646,
+      7667,
+      7688
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 36,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      7753,
+      7774,
+      7795,
+      7816,
+      7837,
+      7858,
+      7879,
+      7900
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 37,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      7965,
+      7986,
+      8007,
+      8028,
+      8049,
+      8070,
+      8091,
+      8112
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 38,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      8177,
+      8198,
+      8219,
+      8240,
+      8261,
+      8282,
+      8303,
+      8324
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 39,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      8389,
+      8410,
+      8431,
+      8452,
+      8473,
+      8494,
+      8515,
+      8536
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 40,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      8601,
+      8622,
+      8643,
+      8664,
+      8685,
+      8706,
+      8727,
+      8748
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 41,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      8813,
+      8834,
+      8855,
+      8876,
+      8897,
+      8918,
+      8939,
+      8960
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 42,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      9025,
+      9046,
+      9067,
+      9088,
+      9109,
+      9130,
+      9151,
+      9172
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 43,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      9237,
+      9258,
+      9279,
+      9300,
+      9321,
+      9342,
+      9363,
+      9384
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 44,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      9449,
+      9470,
+      9491,
+      9512,
+      9533,
+      9554,
+      9575,
+      9596
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 45,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      9661,
+      9682,
+      9703,
+      9724,
+      9745,
+      9766,
+      9787,
+      9808
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 46,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      9873,
+      9894,
+      9915,
+      9936,
+      9957,
+      9978,
+      9999,
+      10020
+    ]
+  },
+  {
+    "op_name": "moe_gating",
+    "layer_id": 47,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      10085,
+      10106,
+      10127,
+      10148,
+      10169,
+      10190,
+      10211,
+      10232
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 0,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      122,
+      143,
+      164,
+      185,
+      206,
+      227,
+      248,
+      269
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 1,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      334,
+      355,
+      376,
+      397,
+      418,
+      439,
+      460,
+      481
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 2,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      546,
+      567,
+      588,
+      609,
+      630,
+      651,
+      672,
+      693
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 3,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      758,
+      779,
+      800,
+      821,
+      842,
+      863,
+      884,
+      905
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 4,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      970,
+      991,
+      1012,
+      1033,
+      1054,
+      1075,
+      1096,
+      1117
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 5,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      1182,
+      1203,
+      1224,
+      1245,
+      1266,
+      1287,
+      1308,
+      1329
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 6,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      1394,
+      1415,
+      1436,
+      1457,
+      1478,
+      1499,
+      1520,
+      1541
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 7,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      1606,
+      1627,
+      1648,
+      1669,
+      1690,
+      1711,
+      1732,
+      1753
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 8,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      1818,
+      1839,
+      1860,
+      1881,
+      1902,
+      1923,
+      1944,
+      1965
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 9,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      2030,
+      2051,
+      2072,
+      2093,
+      2114,
+      2135,
+      2156,
+      2177
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 10,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      2242,
+      2263,
+      2284,
+      2305,
+      2326,
+      2347,
+      2368,
+      2389
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 11,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      2454,
+      2475,
+      2496,
+      2517,
+      2538,
+      2559,
+      2580,
+      2601
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 12,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      2666,
+      2687,
+      2708,
+      2729,
+      2750,
+      2771,
+      2792,
+      2813
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 13,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      2878,
+      2899,
+      2920,
+      2941,
+      2962,
+      2983,
+      3004,
+      3025
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 14,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      3090,
+      3111,
+      3132,
+      3153,
+      3174,
+      3195,
+      3216,
+      3237
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 15,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      3302,
+      3323,
+      3344,
+      3365,
+      3386,
+      3407,
+      3428,
+      3449
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 16,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      3514,
+      3535,
+      3556,
+      3577,
+      3598,
+      3619,
+      3640,
+      3661
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 17,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      3726,
+      3747,
+      3768,
+      3789,
+      3810,
+      3831,
+      3852,
+      3873
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 18,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      3938,
+      3959,
+      3980,
+      4001,
+      4022,
+      4043,
+      4064,
+      4085
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 19,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      4150,
+      4171,
+      4192,
+      4213,
+      4234,
+      4255,
+      4276,
+      4297
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 20,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      4362,
+      4383,
+      4404,
+      4425,
+      4446,
+      4467,
+      4488,
+      4509
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 21,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      4574,
+      4595,
+      4616,
+      4637,
+      4658,
+      4679,
+      4700,
+      4721
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 22,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      4786,
+      4807,
+      4828,
+      4849,
+      4870,
+      4891,
+      4912,
+      4933
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 23,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      4998,
+      5019,
+      5040,
+      5061,
+      5082,
+      5103,
+      5124,
+      5145
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 24,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      5210,
+      5231,
+      5252,
+      5273,
+      5294,
+      5315,
+      5336,
+      5357
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 25,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      5422,
+      5443,
+      5464,
+      5485,
+      5506,
+      5527,
+      5548,
+      5569
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 26,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      5634,
+      5655,
+      5676,
+      5697,
+      5718,
+      5739,
+      5760,
+      5781
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 27,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      5846,
+      5867,
+      5888,
+      5909,
+      5930,
+      5951,
+      5972,
+      5993
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 28,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      6058,
+      6079,
+      6100,
+      6121,
+      6142,
+      6163,
+      6184,
+      6205
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 29,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      6270,
+      6291,
+      6312,
+      6333,
+      6354,
+      6375,
+      6396,
+      6417
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 30,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      6482,
+      6503,
+      6524,
+      6545,
+      6566,
+      6587,
+      6608,
+      6629
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 31,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      6694,
+      6715,
+      6736,
+      6757,
+      6778,
+      6799,
+      6820,
+      6841
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 32,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      6906,
+      6927,
+      6948,
+      6969,
+      6990,
+      7011,
+      7032,
+      7053
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 33,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      7118,
+      7139,
+      7160,
+      7181,
+      7202,
+      7223,
+      7244,
+      7265
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 34,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      7330,
+      7351,
+      7372,
+      7393,
+      7414,
+      7435,
+      7456,
+      7477
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 35,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      7542,
+      7563,
+      7584,
+      7605,
+      7626,
+      7647,
+      7668,
+      7689
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 36,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      7754,
+      7775,
+      7796,
+      7817,
+      7838,
+      7859,
+      7880,
+      7901
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 37,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      7966,
+      7987,
+      8008,
+      8029,
+      8050,
+      8071,
+      8092,
+      8113
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 38,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      8178,
+      8199,
+      8220,
+      8241,
+      8262,
+      8283,
+      8304,
+      8325
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 39,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      8390,
+      8411,
+      8432,
+      8453,
+      8474,
+      8495,
+      8516,
+      8537
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 40,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      8602,
+      8623,
+      8644,
+      8665,
+      8686,
+      8707,
+      8728,
+      8749
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 41,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      8814,
+      8835,
+      8856,
+      8877,
+      8898,
+      8919,
+      8940,
+      8961
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 42,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      9026,
+      9047,
+      9068,
+      9089,
+      9110,
+      9131,
+      9152,
+      9173
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 43,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      9238,
+      9259,
+      9280,
+      9301,
+      9322,
+      9343,
+      9364,
+      9385
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 44,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      9450,
+      9471,
+      9492,
+      9513,
+      9534,
+      9555,
+      9576,
+      9597
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 45,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      9662,
+      9683,
+      9704,
+      9725,
+      9746,
+      9767,
+      9788,
+      9809
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 46,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      9874,
+      9895,
+      9916,
+      9937,
+      9958,
+      9979,
+      10000,
+      10021
+    ]
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "layer_id": 47,
+    "predicted_ms": 0.01378,
+    "lane_count": 8,
+    "source_lines": [
+      10086,
+      10107,
+      10128,
+      10149,
+      10170,
+      10191,
+      10212,
+      10233
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 0,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      123,
+      144,
+      165,
+      186,
+      207,
+      228,
+      249,
+      270
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 1,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      335,
+      356,
+      377,
+      398,
+      419,
+      440,
+      461,
+      482
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 2,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      547,
+      568,
+      589,
+      610,
+      631,
+      652,
+      673,
+      694
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 3,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      759,
+      780,
+      801,
+      822,
+      843,
+      864,
+      885,
+      906
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 4,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      971,
+      992,
+      1013,
+      1034,
+      1055,
+      1076,
+      1097,
+      1118
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 5,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      1183,
+      1204,
+      1225,
+      1246,
+      1267,
+      1288,
+      1309,
+      1330
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 6,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      1395,
+      1416,
+      1437,
+      1458,
+      1479,
+      1500,
+      1521,
+      1542
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 7,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      1607,
+      1628,
+      1649,
+      1670,
+      1691,
+      1712,
+      1733,
+      1754
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 8,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      1819,
+      1840,
+      1861,
+      1882,
+      1903,
+      1924,
+      1945,
+      1966
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 9,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      2031,
+      2052,
+      2073,
+      2094,
+      2115,
+      2136,
+      2157,
+      2178
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 10,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      2243,
+      2264,
+      2285,
+      2306,
+      2327,
+      2348,
+      2369,
+      2390
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 11,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      2455,
+      2476,
+      2497,
+      2518,
+      2539,
+      2560,
+      2581,
+      2602
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 12,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      2667,
+      2688,
+      2709,
+      2730,
+      2751,
+      2772,
+      2793,
+      2814
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 13,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      2879,
+      2900,
+      2921,
+      2942,
+      2963,
+      2984,
+      3005,
+      3026
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 14,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      3091,
+      3112,
+      3133,
+      3154,
+      3175,
+      3196,
+      3217,
+      3238
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 15,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      3303,
+      3324,
+      3345,
+      3366,
+      3387,
+      3408,
+      3429,
+      3450
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 16,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      3515,
+      3536,
+      3557,
+      3578,
+      3599,
+      3620,
+      3641,
+      3662
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 17,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      3727,
+      3748,
+      3769,
+      3790,
+      3811,
+      3832,
+      3853,
+      3874
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 18,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      3939,
+      3960,
+      3981,
+      4002,
+      4023,
+      4044,
+      4065,
+      4086
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 19,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      4151,
+      4172,
+      4193,
+      4214,
+      4235,
+      4256,
+      4277,
+      4298
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 20,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      4363,
+      4384,
+      4405,
+      4426,
+      4447,
+      4468,
+      4489,
+      4510
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 21,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      4575,
+      4596,
+      4617,
+      4638,
+      4659,
+      4680,
+      4701,
+      4722
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 22,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      4787,
+      4808,
+      4829,
+      4850,
+      4871,
+      4892,
+      4913,
+      4934
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 23,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      4999,
+      5020,
+      5041,
+      5062,
+      5083,
+      5104,
+      5125,
+      5146
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 24,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      5211,
+      5232,
+      5253,
+      5274,
+      5295,
+      5316,
+      5337,
+      5358
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 25,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      5423,
+      5444,
+      5465,
+      5486,
+      5507,
+      5528,
+      5549,
+      5570
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 26,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      5635,
+      5656,
+      5677,
+      5698,
+      5719,
+      5740,
+      5761,
+      5782
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 27,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      5847,
+      5868,
+      5889,
+      5910,
+      5931,
+      5952,
+      5973,
+      5994
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 28,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      6059,
+      6080,
+      6101,
+      6122,
+      6143,
+      6164,
+      6185,
+      6206
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 29,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      6271,
+      6292,
+      6313,
+      6334,
+      6355,
+      6376,
+      6397,
+      6418
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 30,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      6483,
+      6504,
+      6525,
+      6546,
+      6567,
+      6588,
+      6609,
+      6630
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 31,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      6695,
+      6716,
+      6737,
+      6758,
+      6779,
+      6800,
+      6821,
+      6842
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 32,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      6907,
+      6928,
+      6949,
+      6970,
+      6991,
+      7012,
+      7033,
+      7054
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 33,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      7119,
+      7140,
+      7161,
+      7182,
+      7203,
+      7224,
+      7245,
+      7266
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 34,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      7331,
+      7352,
+      7373,
+      7394,
+      7415,
+      7436,
+      7457,
+      7478
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 35,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      7543,
+      7564,
+      7585,
+      7606,
+      7627,
+      7648,
+      7669,
+      7690
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 36,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      7755,
+      7776,
+      7797,
+      7818,
+      7839,
+      7860,
+      7881,
+      7902
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 37,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      7967,
+      7988,
+      8009,
+      8030,
+      8051,
+      8072,
+      8093,
+      8114
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 38,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      8179,
+      8200,
+      8221,
+      8242,
+      8263,
+      8284,
+      8305,
+      8326
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 39,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      8391,
+      8412,
+      8433,
+      8454,
+      8475,
+      8496,
+      8517,
+      8538
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 40,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      8603,
+      8624,
+      8645,
+      8666,
+      8687,
+      8708,
+      8729,
+      8750
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 41,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      8815,
+      8836,
+      8857,
+      8878,
+      8899,
+      8920,
+      8941,
+      8962
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 42,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      9027,
+      9048,
+      9069,
+      9090,
+      9111,
+      9132,
+      9153,
+      9174
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 43,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      9239,
+      9260,
+      9281,
+      9302,
+      9323,
+      9344,
+      9365,
+      9386
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 44,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      9451,
+      9472,
+      9493,
+      9514,
+      9535,
+      9556,
+      9577,
+      9598
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 45,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      9663,
+      9684,
+      9705,
+      9726,
+      9747,
+      9768,
+      9789,
+      9810
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 46,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      9875,
+      9896,
+      9917,
+      9938,
+      9959,
+      9980,
+      10001,
+      10022
+    ]
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "layer_id": 47,
+    "predicted_ms": 0.092485,
+    "lane_count": 8,
+    "source_lines": [
+      10087,
+      10108,
+      10129,
+      10150,
+      10171,
+      10192,
+      10213,
+      10234
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 0,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      125,
+      146,
+      167,
+      188,
+      209,
+      230,
+      251,
+      272
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 1,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      337,
+      358,
+      379,
+      400,
+      421,
+      442,
+      463,
+      484
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 2,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      549,
+      570,
+      591,
+      612,
+      633,
+      654,
+      675,
+      696
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 3,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      761,
+      782,
+      803,
+      824,
+      845,
+      866,
+      887,
+      908
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 4,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      973,
+      994,
+      1015,
+      1036,
+      1057,
+      1078,
+      1099,
+      1120
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 5,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      1185,
+      1206,
+      1227,
+      1248,
+      1269,
+      1290,
+      1311,
+      1332
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 6,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      1397,
+      1418,
+      1439,
+      1460,
+      1481,
+      1502,
+      1523,
+      1544
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 7,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      1609,
+      1630,
+      1651,
+      1672,
+      1693,
+      1714,
+      1735,
+      1756
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 8,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      1821,
+      1842,
+      1863,
+      1884,
+      1905,
+      1926,
+      1947,
+      1968
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 9,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      2033,
+      2054,
+      2075,
+      2096,
+      2117,
+      2138,
+      2159,
+      2180
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 10,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      2245,
+      2266,
+      2287,
+      2308,
+      2329,
+      2350,
+      2371,
+      2392
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 11,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      2457,
+      2478,
+      2499,
+      2520,
+      2541,
+      2562,
+      2583,
+      2604
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 12,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      2669,
+      2690,
+      2711,
+      2732,
+      2753,
+      2774,
+      2795,
+      2816
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 13,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      2881,
+      2902,
+      2923,
+      2944,
+      2965,
+      2986,
+      3007,
+      3028
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 14,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      3093,
+      3114,
+      3135,
+      3156,
+      3177,
+      3198,
+      3219,
+      3240
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 15,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      3305,
+      3326,
+      3347,
+      3368,
+      3389,
+      3410,
+      3431,
+      3452
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 16,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      3517,
+      3538,
+      3559,
+      3580,
+      3601,
+      3622,
+      3643,
+      3664
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 17,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      3729,
+      3750,
+      3771,
+      3792,
+      3813,
+      3834,
+      3855,
+      3876
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 18,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      3941,
+      3962,
+      3983,
+      4004,
+      4025,
+      4046,
+      4067,
+      4088
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 19,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      4153,
+      4174,
+      4195,
+      4216,
+      4237,
+      4258,
+      4279,
+      4300
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 20,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      4365,
+      4386,
+      4407,
+      4428,
+      4449,
+      4470,
+      4491,
+      4512
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 21,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      4577,
+      4598,
+      4619,
+      4640,
+      4661,
+      4682,
+      4703,
+      4724
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 22,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      4789,
+      4810,
+      4831,
+      4852,
+      4873,
+      4894,
+      4915,
+      4936
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 23,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      5001,
+      5022,
+      5043,
+      5064,
+      5085,
+      5106,
+      5127,
+      5148
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 24,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      5213,
+      5234,
+      5255,
+      5276,
+      5297,
+      5318,
+      5339,
+      5360
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 25,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      5425,
+      5446,
+      5467,
+      5488,
+      5509,
+      5530,
+      5551,
+      5572
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 26,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      5637,
+      5658,
+      5679,
+      5700,
+      5721,
+      5742,
+      5763,
+      5784
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 27,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      5849,
+      5870,
+      5891,
+      5912,
+      5933,
+      5954,
+      5975,
+      5996
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 28,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      6061,
+      6082,
+      6103,
+      6124,
+      6145,
+      6166,
+      6187,
+      6208
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 29,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      6273,
+      6294,
+      6315,
+      6336,
+      6357,
+      6378,
+      6399,
+      6420
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 30,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      6485,
+      6506,
+      6527,
+      6548,
+      6569,
+      6590,
+      6611,
+      6632
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 31,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      6697,
+      6718,
+      6739,
+      6760,
+      6781,
+      6802,
+      6823,
+      6844
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 32,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      6909,
+      6930,
+      6951,
+      6972,
+      6993,
+      7014,
+      7035,
+      7056
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 33,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      7121,
+      7142,
+      7163,
+      7184,
+      7205,
+      7226,
+      7247,
+      7268
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 34,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      7333,
+      7354,
+      7375,
+      7396,
+      7417,
+      7438,
+      7459,
+      7480
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 35,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      7545,
+      7566,
+      7587,
+      7608,
+      7629,
+      7650,
+      7671,
+      7692
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 36,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      7757,
+      7778,
+      7799,
+      7820,
+      7841,
+      7862,
+      7883,
+      7904
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 37,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      7969,
+      7990,
+      8011,
+      8032,
+      8053,
+      8074,
+      8095,
+      8116
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 38,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      8181,
+      8202,
+      8223,
+      8244,
+      8265,
+      8286,
+      8307,
+      8328
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 39,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      8393,
+      8414,
+      8435,
+      8456,
+      8477,
+      8498,
+      8519,
+      8540
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 40,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      8605,
+      8626,
+      8647,
+      8668,
+      8689,
+      8710,
+      8731,
+      8752
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 41,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      8817,
+      8838,
+      8859,
+      8880,
+      8901,
+      8922,
+      8943,
+      8964
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 42,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      9029,
+      9050,
+      9071,
+      9092,
+      9113,
+      9134,
+      9155,
+      9176
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 43,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      9241,
+      9262,
+      9283,
+      9304,
+      9325,
+      9346,
+      9367,
+      9388
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 44,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      9453,
+      9474,
+      9495,
+      9516,
+      9537,
+      9558,
+      9579,
+      9600
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 45,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      9665,
+      9686,
+      9707,
+      9728,
+      9749,
+      9770,
+      9791,
+      9812
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 46,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      9877,
+      9898,
+      9919,
+      9940,
+      9961,
+      9982,
+      10003,
+      10024
+    ]
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "layer_id": 47,
+    "predicted_ms": 0.325748,
+    "lane_count": 8,
+    "source_lines": [
+      10089,
+      10110,
+      10131,
+      10152,
+      10173,
+      10194,
+      10215,
+      10236
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 0,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      124,
+      145,
+      166,
+      187,
+      208,
+      229,
+      250,
+      271
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 1,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      336,
+      357,
+      378,
+      399,
+      420,
+      441,
+      462,
+      483
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 2,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      548,
+      569,
+      590,
+      611,
+      632,
+      653,
+      674,
+      695
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 3,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      760,
+      781,
+      802,
+      823,
+      844,
+      865,
+      886,
+      907
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 4,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      972,
+      993,
+      1014,
+      1035,
+      1056,
+      1077,
+      1098,
+      1119
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 5,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      1184,
+      1205,
+      1226,
+      1247,
+      1268,
+      1289,
+      1310,
+      1331
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 6,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      1396,
+      1417,
+      1438,
+      1459,
+      1480,
+      1501,
+      1522,
+      1543
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 7,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      1608,
+      1629,
+      1650,
+      1671,
+      1692,
+      1713,
+      1734,
+      1755
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 8,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      1820,
+      1841,
+      1862,
+      1883,
+      1904,
+      1925,
+      1946,
+      1967
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 9,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      2032,
+      2053,
+      2074,
+      2095,
+      2116,
+      2137,
+      2158,
+      2179
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 10,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      2244,
+      2265,
+      2286,
+      2307,
+      2328,
+      2349,
+      2370,
+      2391
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 11,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      2456,
+      2477,
+      2498,
+      2519,
+      2540,
+      2561,
+      2582,
+      2603
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 12,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      2668,
+      2689,
+      2710,
+      2731,
+      2752,
+      2773,
+      2794,
+      2815
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 13,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      2880,
+      2901,
+      2922,
+      2943,
+      2964,
+      2985,
+      3006,
+      3027
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 14,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      3092,
+      3113,
+      3134,
+      3155,
+      3176,
+      3197,
+      3218,
+      3239
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 15,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      3304,
+      3325,
+      3346,
+      3367,
+      3388,
+      3409,
+      3430,
+      3451
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 16,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      3516,
+      3537,
+      3558,
+      3579,
+      3600,
+      3621,
+      3642,
+      3663
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 17,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      3728,
+      3749,
+      3770,
+      3791,
+      3812,
+      3833,
+      3854,
+      3875
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 18,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      3940,
+      3961,
+      3982,
+      4003,
+      4024,
+      4045,
+      4066,
+      4087
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 19,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      4152,
+      4173,
+      4194,
+      4215,
+      4236,
+      4257,
+      4278,
+      4299
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 20,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      4364,
+      4385,
+      4406,
+      4427,
+      4448,
+      4469,
+      4490,
+      4511
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 21,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      4576,
+      4597,
+      4618,
+      4639,
+      4660,
+      4681,
+      4702,
+      4723
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 22,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      4788,
+      4809,
+      4830,
+      4851,
+      4872,
+      4893,
+      4914,
+      4935
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 23,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      5000,
+      5021,
+      5042,
+      5063,
+      5084,
+      5105,
+      5126,
+      5147
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 24,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      5212,
+      5233,
+      5254,
+      5275,
+      5296,
+      5317,
+      5338,
+      5359
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 25,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      5424,
+      5445,
+      5466,
+      5487,
+      5508,
+      5529,
+      5550,
+      5571
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 26,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      5636,
+      5657,
+      5678,
+      5699,
+      5720,
+      5741,
+      5762,
+      5783
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 27,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      5848,
+      5869,
+      5890,
+      5911,
+      5932,
+      5953,
+      5974,
+      5995
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 28,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      6060,
+      6081,
+      6102,
+      6123,
+      6144,
+      6165,
+      6186,
+      6207
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 29,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      6272,
+      6293,
+      6314,
+      6335,
+      6356,
+      6377,
+      6398,
+      6419
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 30,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      6484,
+      6505,
+      6526,
+      6547,
+      6568,
+      6589,
+      6610,
+      6631
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 31,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      6696,
+      6717,
+      6738,
+      6759,
+      6780,
+      6801,
+      6822,
+      6843
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 32,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      6908,
+      6929,
+      6950,
+      6971,
+      6992,
+      7013,
+      7034,
+      7055
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 33,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      7120,
+      7141,
+      7162,
+      7183,
+      7204,
+      7225,
+      7246,
+      7267
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 34,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      7332,
+      7353,
+      7374,
+      7395,
+      7416,
+      7437,
+      7458,
+      7479
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 35,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      7544,
+      7565,
+      7586,
+      7607,
+      7628,
+      7649,
+      7670,
+      7691
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 36,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      7756,
+      7777,
+      7798,
+      7819,
+      7840,
+      7861,
+      7882,
+      7903
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 37,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      7968,
+      7989,
+      8010,
+      8031,
+      8052,
+      8073,
+      8094,
+      8115
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 38,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      8180,
+      8201,
+      8222,
+      8243,
+      8264,
+      8285,
+      8306,
+      8327
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 39,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      8392,
+      8413,
+      8434,
+      8455,
+      8476,
+      8497,
+      8518,
+      8539
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 40,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      8604,
+      8625,
+      8646,
+      8667,
+      8688,
+      8709,
+      8730,
+      8751
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 41,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      8816,
+      8837,
+      8858,
+      8879,
+      8900,
+      8921,
+      8942,
+      8963
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 42,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      9028,
+      9049,
+      9070,
+      9091,
+      9112,
+      9133,
+      9154,
+      9175
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 43,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      9240,
+      9261,
+      9282,
+      9303,
+      9324,
+      9345,
+      9366,
+      9387
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 44,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      9452,
+      9473,
+      9494,
+      9515,
+      9536,
+      9557,
+      9578,
+      9599
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 45,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      9664,
+      9685,
+      9706,
+      9727,
+      9748,
+      9769,
+      9790,
+      9811
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 46,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      9876,
+      9897,
+      9918,
+      9939,
+      9960,
+      9981,
+      10002,
+      10023
+    ]
+  },
+  {
+    "op_name": "moe_shuffling",
+    "layer_id": 47,
+    "predicted_ms": 0.052945,
+    "lane_count": 8,
+    "source_lines": [
+      10088,
+      10109,
+      10130,
+      10151,
+      10172,
+      10193,
+      10214,
+      10235
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 0,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      100
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 1,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      312
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 2,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      524
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 3,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      736
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 4,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      948
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 5,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      1160
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 6,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      1372
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 7,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      1584
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 8,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      1796
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 9,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      2008
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 10,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      2220
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 11,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      2432
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 12,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      2644
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 13,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      2856
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 14,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      3068
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 15,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      3280
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 16,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      3492
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 17,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      3704
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 18,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      3916
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 19,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      4128
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 20,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      4340
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 21,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      4552
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 22,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      4764
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 23,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      4976
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 24,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      5188
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 25,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      5400
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 26,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      5612
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 27,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      5824
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 28,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      6036
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 29,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      6248
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 30,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      6460
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 31,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      6672
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 32,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      6884
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 33,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      7096
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 34,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      7308
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 35,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      7520
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 36,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      7732
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 37,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      7944
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 38,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      8156
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 39,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      8368
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 40,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      8580
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 41,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      8792
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 42,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      9004
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 43,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      9216
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 44,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      9428
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 45,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      9640
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 46,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      9852
+    ]
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "layer_id": 47,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      10064
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 0,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      120,
+      141,
+      162,
+      183,
+      204,
+      225,
+      246,
+      267
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 1,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      332,
+      353,
+      374,
+      395,
+      416,
+      437,
+      458,
+      479
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 2,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      544,
+      565,
+      586,
+      607,
+      628,
+      649,
+      670,
+      691
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 3,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      756,
+      777,
+      798,
+      819,
+      840,
+      861,
+      882,
+      903
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 4,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      968,
+      989,
+      1010,
+      1031,
+      1052,
+      1073,
+      1094,
+      1115
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 5,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      1180,
+      1201,
+      1222,
+      1243,
+      1264,
+      1285,
+      1306,
+      1327
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 6,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      1392,
+      1413,
+      1434,
+      1455,
+      1476,
+      1497,
+      1518,
+      1539
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 7,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      1604,
+      1625,
+      1646,
+      1667,
+      1688,
+      1709,
+      1730,
+      1751
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 8,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      1816,
+      1837,
+      1858,
+      1879,
+      1900,
+      1921,
+      1942,
+      1963
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 9,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      2028,
+      2049,
+      2070,
+      2091,
+      2112,
+      2133,
+      2154,
+      2175
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 10,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      2240,
+      2261,
+      2282,
+      2303,
+      2324,
+      2345,
+      2366,
+      2387
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 11,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      2452,
+      2473,
+      2494,
+      2515,
+      2536,
+      2557,
+      2578,
+      2599
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 12,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      2664,
+      2685,
+      2706,
+      2727,
+      2748,
+      2769,
+      2790,
+      2811
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 13,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      2876,
+      2897,
+      2918,
+      2939,
+      2960,
+      2981,
+      3002,
+      3023
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 14,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      3088,
+      3109,
+      3130,
+      3151,
+      3172,
+      3193,
+      3214,
+      3235
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 15,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      3300,
+      3321,
+      3342,
+      3363,
+      3384,
+      3405,
+      3426,
+      3447
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 16,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      3512,
+      3533,
+      3554,
+      3575,
+      3596,
+      3617,
+      3638,
+      3659
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 17,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      3724,
+      3745,
+      3766,
+      3787,
+      3808,
+      3829,
+      3850,
+      3871
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 18,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      3936,
+      3957,
+      3978,
+      3999,
+      4020,
+      4041,
+      4062,
+      4083
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 19,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      4148,
+      4169,
+      4190,
+      4211,
+      4232,
+      4253,
+      4274,
+      4295
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 20,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      4360,
+      4381,
+      4402,
+      4423,
+      4444,
+      4465,
+      4486,
+      4507
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 21,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      4572,
+      4593,
+      4614,
+      4635,
+      4656,
+      4677,
+      4698,
+      4719
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 22,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      4784,
+      4805,
+      4826,
+      4847,
+      4868,
+      4889,
+      4910,
+      4931
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 23,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      4996,
+      5017,
+      5038,
+      5059,
+      5080,
+      5101,
+      5122,
+      5143
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 24,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      5208,
+      5229,
+      5250,
+      5271,
+      5292,
+      5313,
+      5334,
+      5355
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 25,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      5420,
+      5441,
+      5462,
+      5483,
+      5504,
+      5525,
+      5546,
+      5567
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 26,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      5632,
+      5653,
+      5674,
+      5695,
+      5716,
+      5737,
+      5758,
+      5779
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 27,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      5844,
+      5865,
+      5886,
+      5907,
+      5928,
+      5949,
+      5970,
+      5991
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 28,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      6056,
+      6077,
+      6098,
+      6119,
+      6140,
+      6161,
+      6182,
+      6203
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 29,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      6268,
+      6289,
+      6310,
+      6331,
+      6352,
+      6373,
+      6394,
+      6415
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 30,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      6480,
+      6501,
+      6522,
+      6543,
+      6564,
+      6585,
+      6606,
+      6627
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 31,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      6692,
+      6713,
+      6734,
+      6755,
+      6776,
+      6797,
+      6818,
+      6839
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 32,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      6904,
+      6925,
+      6946,
+      6967,
+      6988,
+      7009,
+      7030,
+      7051
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 33,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      7116,
+      7137,
+      7158,
+      7179,
+      7200,
+      7221,
+      7242,
+      7263
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 34,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      7328,
+      7349,
+      7370,
+      7391,
+      7412,
+      7433,
+      7454,
+      7475
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 35,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      7540,
+      7561,
+      7582,
+      7603,
+      7624,
+      7645,
+      7666,
+      7687
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 36,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      7752,
+      7773,
+      7794,
+      7815,
+      7836,
+      7857,
+      7878,
+      7899
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 37,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      7964,
+      7985,
+      8006,
+      8027,
+      8048,
+      8069,
+      8090,
+      8111
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 38,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      8176,
+      8197,
+      8218,
+      8239,
+      8260,
+      8281,
+      8302,
+      8323
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 39,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      8388,
+      8409,
+      8430,
+      8451,
+      8472,
+      8493,
+      8514,
+      8535
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 40,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      8600,
+      8621,
+      8642,
+      8663,
+      8684,
+      8705,
+      8726,
+      8747
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 41,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      8812,
+      8833,
+      8854,
+      8875,
+      8896,
+      8917,
+      8938,
+      8959
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 42,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      9024,
+      9045,
+      9066,
+      9087,
+      9108,
+      9129,
+      9150,
+      9171
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 43,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      9236,
+      9257,
+      9278,
+      9299,
+      9320,
+      9341,
+      9362,
+      9383
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 44,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      9448,
+      9469,
+      9490,
+      9511,
+      9532,
+      9553,
+      9574,
+      9595
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 45,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      9660,
+      9681,
+      9702,
+      9723,
+      9744,
+      9765,
+      9786,
+      9807
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 46,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      9872,
+      9893,
+      9914,
+      9935,
+      9956,
+      9977,
+      9998,
+      10019
+    ]
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "layer_id": 47,
+    "predicted_ms": 0.022112,
+    "lane_count": 8,
+    "source_lines": [
+      10084,
+      10105,
+      10126,
+      10147,
+      10168,
+      10189,
+      10210,
+      10231
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 0,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      101
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 1,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      313
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 2,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      525
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 3,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      737
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 4,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      949
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 5,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      1161
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 6,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      1373
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 7,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      1585
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 8,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      1797
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 9,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      2009
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 10,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      2221
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 11,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      2433
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 12,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      2645
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 13,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      2857
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 14,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      3069
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 15,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      3281
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 16,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      3493
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 17,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      3705
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 18,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      3917
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 19,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      4129
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 20,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      4341
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 21,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      4553
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 22,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      4765
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 23,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      4977
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 24,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      5189
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 25,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      5401
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 26,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      5613
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 27,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      5825
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 28,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      6037
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 29,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      6249
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 30,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      6461
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 31,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      6673
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 32,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      6885
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 33,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      7097
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 34,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      7309
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 35,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      7521
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 36,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      7733
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 37,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      7945
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 38,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      8157
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 39,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      8369
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 40,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      8581
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 41,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      8793
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 42,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      9005
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 43,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      9217
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 44,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      9429
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 45,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      9641
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 46,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      9853
+    ]
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "layer_id": 47,
+    "predicted_ms": 0.0,
+    "lane_count": 1,
+    "source_lines": [
+      10065
+    ]
+  }
+]

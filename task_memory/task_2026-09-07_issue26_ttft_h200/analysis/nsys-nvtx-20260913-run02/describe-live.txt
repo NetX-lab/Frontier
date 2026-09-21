@@ -1,0 +1,372 @@
+Running as unit: run-r1361b9e2aef94f058d82acbdaf4a9dbc.scope; invocation ID: 7f1456968d264c6597a647fd0cffb1ad
+Name:         yc26-h200-nsys-nvtx-20260913-02
+Namespace:    shai-core
+Labels:       kubebrain.brainpp.cn/creator=i-fengyicheng
+              kubebrain.brainpp.cn/creator-id=e7163316ad76ba7266a33f9787afd70a
+              kubebrain.brainpp.cn/creator-type=user
+              kubebrain.brainpp.cn/real-creator-id=group-shai-core-step-main
+              kubebrain.brainpp.cn/resourcetype=rjob
+              logs.monitoring.basemind.com/collect=true
+              privatemachine.brainpp.cn/privatemachine=group
+              quotagroup.brainpp.cn/preemptible=no
+              quotagroup.brainpp.cn/quotagroup=step_main
+              rjob.brainpp.cn/enable-sshd=no
+              rjob.brainpp.cn/group-share=read
+              rjob.brainpp.cn/launched-by=brainctl
+              rjob.brainpp.cn/rjob-name=yc26-h200-nsys-nvtx-20260913-02
+              rjob.brainpp.cn/rjob-version=v2
+              rjob.brainpp.cn/type=interactive
+              stepmind.com/queue-status=approved
+              workspace.brainpp.cn/name=ycfeng
+              workspace.brainpp.cn/workspace=ws-56153d316be61e0f
+              workspace.brainpp.cn/workspace-namspace=shai-core
+Annotations:  kubebrain.brainpp.cn/client-working-dir: /data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907
+              rjob.brainpp.cn/enable-jobutil-config: true
+              rjob.brainpp.cn/labels: 
+              rjob.brainpp.cn/launch-command:
+                brainctl rjob launch --detach --name yc26-h200-nsys-nvtx-20260913-02 --charged-group=step_main --private-machine=group --positive-tags=h20...
+              rjob.brainpp.cn/rjob-pod-created: 2026-09-13T01:30:47.198050653Z
+              rjob.brainpp.cn/rjob-queue-approved: 2026-09-13T01:30:46.832748265Z
+              rjob.brainpp.cn/rjob-running: 2026-09-13T01:30:57.10210765Z
+              rjob.brainpp.cn/rjob-scheduled: 2026-09-13T01:30:47.31216198Z
+              rjob.brainpp.cn/worker-regulate-name: true
+              stepmind.com/estimated-resource: {"worker":{"H200":{"used":1}}}
+              stepmind.com/final-resource: {"worker":{"H200":{"used":1}}}
+              stepmind.com/queue-approved-stage: stepmind-task-stage-1
+              stepmind.com/queue-name: step-main-default
+              workspace.brainpp.cn/command:
+                /opt/nvidia/nvidia_entrypoint.sh bash tests/e2e/issue26_h200_nsys_nvtx_worker.sh /data/ycfeng/stepfun-performance-optimization/Frontier/.w...
+              workspace.brainpp.cn/comment:
+                Interactive RJob launched by brainctl: /opt/nvidia/nvidia_entrypoint.sh bash tests/e2e/issue26_h200_nsys_nvtx_worker.sh /data/ycfeng/stepf...
+API Version:  rjob.brainpp.cn/v1alpha1
+Kind:         RJob
+Metadata:
+  Creation Timestamp:  2026-09-13T01:30:44Z
+  Finalizers:
+    rjob.brainpp.cn/rjob-finalizer
+  Managed Fields:
+    API Version:  rjob.brainpp.cn/v1alpha1
+    Fields Type:  FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          .:
+          f:kubebrain.brainpp.cn/client-working-dir:
+          f:rjob.brainpp.cn/enable-jobutil-config:
+          f:rjob.brainpp.cn/launch-command:
+          f:workspace.brainpp.cn/command:
+          f:workspace.brainpp.cn/comment:
+        f:labels:
+          .:
+          f:kubebrain.brainpp.cn/creator:
+          f:kubebrain.brainpp.cn/creator-id:
+          f:kubebrain.brainpp.cn/resourcetype:
+          f:privatemachine.brainpp.cn/privatemachine:
+          f:quotagroup.brainpp.cn/preemptible:
+          f:quotagroup.brainpp.cn/quotagroup:
+          f:rjob.brainpp.cn/enable-sshd:
+          f:rjob.brainpp.cn/launched-by:
+          f:rjob.brainpp.cn/type:
+          f:workspace.brainpp.cn/name:
+          f:workspace.brainpp.cn/workspace:
+          f:workspace.brainpp.cn/workspace-namspace:
+      f:spec:
+        f:autoDeleteDuration:
+        f:backoffLimit:
+        f:taskSpecs:
+          f:worker:
+            .:
+            f:maxRunningDuration:
+            f:maxWaitDuration:
+            f:positiveTags:
+            f:qos:
+              .:
+              f:gpuQos:
+              f:localStorageQos:
+            f:replicas:
+            f:template:
+              .:
+              f:metadata:
+                .:
+                f:annotations:
+                  .:
+                  f:kubebrain.brainpp.cn/preemptible.job:
+                  f:workspace.brainpp.cn/image-mode-mount:
+                f:creationTimestamp:
+                f:labels:
+                  .:
+                  f:pool.brainpp.cn/name:
+                  f:privatemachine.brainpp.cn/privatemachine:
+                  f:quotagroup.brainpp.cn/preemptible:
+                  f:quotagroup.brainpp.cn/quotagroup:
+              f:spec:
+                .:
+                f:affinity:
+                f:containers:
+                  .:
+                  k:{"name":"worker"}:
+                    .:
+                    f:command:
+                    f:env:
+                      .:
+                      k:{"name":"ISSUE26_DIAGNOSTIC_VLLM_COMMIT"}:
+                        .:
+                        f:name:
+                        f:value:
+                      k:{"name":"ISSUE26_DIAGNOSTIC_VLLM_SOURCE"}:
+                        .:
+                        f:name:
+                        f:value:
+                      k:{"name":"ISSUE26_NSYS_BACKEND"}:
+                        .:
+                        f:name:
+                        f:value:
+                      k:{"name":"ISSUE26_WARMUPS"}:
+                        .:
+                        f:name:
+                        f:value:
+                      k:{"name":"KUBEBRAIN_NAMESPACE"}:
+                        .:
+                        f:name:
+                        f:value:
+                      k:{"name":"KUBEBRAIN_WORKSPACE_NAME"}:
+                        .:
+                        f:name:
+                        f:value:
+                      k:{"name":"LAUNCH_PUB_KEY"}:
+                        .:
+                        f:name:
+                        f:value:
+                      k:{"name":"LD_LIBRARY_PATH"}:
+                        .:
+                        f:name:
+                        f:value:
+                      k:{"name":"PATH"}:
+                        .:
+                        f:name:
+                        f:value:
+                      k:{"name":"RLAUNCH_WORKER"}:
+                        .:
+                        f:name:
+                        f:value:
+                    f:image:
+                    f:imagePullPolicy:
+                    f:name:
+                    f:resources:
+                      .:
+                      f:limits:
+                        .:
+                        f:cpu:
+                        f:memory:
+                        f:nvidia.com/gpu:
+                      f:requests:
+                        .:
+                        f:memory:
+                    f:workingDir:
+                f:restartPolicy:
+                f:securityContext:
+            f:updatePolicy:
+    Manager:      brainctl
+    Operation:    Update
+    Time:         2026-09-13T01:30:44Z
+    API Version:  rjob.brainpp.cn/v1alpha1
+    Fields Type:  FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          f:rjob.brainpp.cn/rjob-pod-created:
+          f:rjob.brainpp.cn/rjob-running:
+          f:rjob.brainpp.cn/rjob-scheduled:
+    Manager:      rjob-controller
+    Operation:    Update
+    Time:         2026-09-13T01:30:57Z
+    API Version:  rjob.brainpp.cn/v1alpha1
+    Fields Type:  FieldsV1
+    fieldsV1:
+      f:spec:
+        f:taskSpecs:
+          f:worker:
+            f:template:
+              f:metadata:
+                f:labels:
+                  f:rjob.brainpp.cn/generated-task-index:
+      f:status:
+        f:message:
+        f:phase:
+        f:reason:
+        f:taskStage:
+        f:taskStatuses:
+          .:
+          f:worker:
+            .:
+            f:active:
+            f:taskStage:
+    Manager:      rjob-controller
+    Operation:    Update
+    Subresource:  status
+    Time:         2026-09-13T01:30:57Z
+    API Version:  rjob.brainpp.cn/v1alpha1
+    Fields Type:  FieldsV1
+    fieldsV1:
+      f:metadata:
+        f:annotations:
+          f:rjob.brainpp.cn/rjob-queue-approved:
+          f:stepmind.com/estimated-resource:
+          f:stepmind.com/final-resource:
+          f:stepmind.com/queue-approved-stage:
+        f:labels:
+          f:stepmind.com/queue-status:
+    Manager:         queue-controller
+    Operation:       Update
+    Time:            2026-09-13T01:30:58Z
+  Resource Version:  1289332133
+  UID:               597f5f44-a66a-44cc-8572-57480a1d6c0b
+Spec:
+  Auto Delete Duration:  24h0m0s
+  Backoff Limit:         1
+  Selector:
+    Match Labels:
+      kubebrain.brainpp.cn/resourcetype:  rjob
+      rjob.brainpp.cn/rjob-name:          yc26-h200-nsys-nvtx-20260913-02
+  Task Specs:
+    Worker:
+      Max Running Duration:  0s
+      Max Wait Duration:     2h0m0s
+      Positive Tags:
+        h200
+      Qos:
+        Gpu Qos:            guaranteed
+        Local Storage Qos:  guaranteed
+      Replicas:             1
+      Rootfs Source:
+        Kind:  image
+        Metadata:
+          Creation Timestamp:  <nil>
+      Selector:
+        Match Labels:
+          kubebrain.brainpp.cn/resourcetype:  rjob
+          rjob.brainpp.cn/rjob-name:          yc26-h200-nsys-nvtx-20260913-02
+          rjob.brainpp.cn/rjob-task-type:     worker
+      Template:
+        Metadata:
+          Annotations:
+            kubebrain.brainpp.cn/preemptible.job:   no
+            workspace.brainpp.cn/image-mode-mount:  /data:/data
+          Creation Timestamp:                       <nil>
+          Labels:
+            kubebrain.brainpp.cn/creator:              i-fengyicheng
+            kubebrain.brainpp.cn/creator-id:           e7163316ad76ba7266a33f9787afd70a
+            kubebrain.brainpp.cn/creator-type:         user
+            kubebrain.brainpp.cn/extraresourceid:      
+            kubebrain.brainpp.cn/extraresourcetype:    
+            kubebrain.brainpp.cn/real-creator-id:      group-shai-core-step-main
+            kubebrain.brainpp.cn/resourcetype:         rjob
+            logs.monitoring.basemind.com/collect:      true
+            pool.brainpp.cn/name:                      
+            privatemachine.brainpp.cn/privatemachine:  group
+            quotagroup.brainpp.cn/preemptible:         no
+            quotagroup.brainpp.cn/quotagroup:          step_main
+            rjob.brainpp.cn/rjob-name:                 yc26-h200-nsys-nvtx-20260913-02
+            rjob.brainpp.cn/rjob-task-type:            worker
+        Spec:
+          Affinity:
+          Containers:
+            Command:
+              /kubebrain/worker-init
+              launch
+              --key-path
+              /home/i-fengyicheng/.launch/key
+              --bind
+              0.0.0.0:2222
+              --enable-workspace-exporter
+              --enable-pid-monitor
+            Env:
+              Name:   PATH
+              Value:  /usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/kubebrain:/usr/local/nvidia/bin
+              Name:   LD_LIBRARY_PATH
+              Value:  /usr/local/cuda/lib64:/usr/local/nvidia/lib64
+              Name:   RLAUNCH_WORKER
+              Value:  1
+              Name:   ISSUE26_WARMUPS
+              Value:  10
+              Name:   ISSUE26_NSYS_BACKEND
+              Value:  naive
+              Name:   ISSUE26_DIAGNOSTIC_VLLM_SOURCE
+              Value:  /data/ycfeng/tmp/vLLM-BS
+              Name:   ISSUE26_DIAGNOSTIC_VLLM_COMMIT
+              Value:  0f34fb271fd66d7dd84201ebdd4722781f829390
+              Name:   KUBEBRAIN_WORKSPACE_NAME
+              Value:  ws-56153d316be61e0f
+              Name:   LAUNCH_PUB_KEY
+              Value:  LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQkNnS0NBUUVBdzF0WVV3ak01UTdNL2dDUSttRW9DUHowaEEzNElKWkJTVnd1RW5FTTkrMk5Rb3kvaGdtaQpTL1ZNZnlKZ25pa1RQWEdPa2RCamlybFQwR3ZmNVU5aE9zaTBRZnZNUVFzS3JtcFhmalg2YXpGWUw2ZFg2ZXhGCkRYemZuSWR2RE1PR2JyTUE3ZEZtaHdJSE8rTElValhZR3F3MmFuWHdwNzVITVgrTXA4eFFmSEkxSU5aRzBnNHkKQVBnenVIVGpQOWJIWUpNRjYyZWhlSVk5SC9LKzd4QmswZGZLT2hwN09ybUFEZkxuaVRUZTF0U2dyS2htdEIwWApqSHNLYkZIMFhGV0NRTEFkQzZDUFFRNlM5TTVCd3hNeXZSdWN1Uy9BTWlpMU9ESTczcVBwOXg5dXMwU2VBNDU3CnJ6dmhxRm5GQy9CUDZGRGFvbk82cmR6QlVkNE9GUkhpcXdJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg==
+              Name:   KUBEBRAIN_NODE_NAME
+              Value From:
+                Field Ref:
+                  Field Path:  spec.nodeName
+              Name:            HOST_NETWORK
+              Value:           false
+              Name:            KUBEBRAIN_CLUSTER_ENTRY
+              Value:           https://platform.shaipower.com
+              Name:            KUBEBRAIN_QUOTA_GROUP
+              Value:           step_main
+              Name:            KUBEBRAIN_WORKSPACE_NAMESPACE
+              Value:           shai-core
+              Name:            KUBEBRAIN_NAMESPACE
+              Value:           shai-core
+              Name:            AWS_ACCESS_KEY_ID
+              Value From:
+                Secret Key Ref:
+                  Key:   accesskey_id
+                  Name:  e7163316ad76ba7266a33f9787afd70a
+              Name:      AWS_SECRET_ACCESS_KEY
+              Value From:
+                Secret Key Ref:
+                  Key:          accesskey_secret
+                  Name:         e7163316ad76ba7266a33f9787afd70a
+            Image:              hub.i.basemind.com/vllm-0.10.2/frontier-env@sha256:b97a2fdc624953679562a4835ea66e085ec22563f2086fecfe6710a9e682dbbc
+            Image Pull Policy:  IfNotPresent
+            Name:               worker
+            Resources:
+              Limits:
+                Cpu:             64
+                Memory:          400Gi
+                nvidia.com/gpu:  8
+              Requests:
+                Memory:  400Gi
+            Volume Mounts:
+              Mount Path:  /.auth/accesskey_id
+              Name:        auth-info
+              Read Only:   true
+              Sub Path:    accesskey_id
+              Mount Path:  /.auth/accesskey_secret
+              Name:        auth-info
+              Read Only:   true
+              Sub Path:    accesskey_secret
+            Working Dir:   /data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907
+          Image Pull Secrets:
+            Name:          e7163316ad76ba7266a33f9787afd70a
+          Restart Policy:  Never
+          Security Context:
+          Volumes:
+            Name:  auth-info
+            Secret:
+              Items:
+                Key:        accesskey_id
+                Path:       accesskey_id
+                Key:        accesskey_secret
+                Path:       accesskey_secret
+              Secret Name:  e7163316ad76ba7266a33f9787afd70a
+      Update Policy:        None
+Status:
+  Message:     Tasks is running: [worker]
+  Phase:       Running
+  Reason:      RJobRunning
+  Task Stage:  stepmind-task-stage-1
+  Task Statuses:
+    Worker:
+      Active:      1
+      Task Stage:  stepmind-task-stage-1
+Events:
+  Type     Reason         Age    From             Message
+  ----     ------         ----   ----             -------
+  Warning  Start replica  5m37s  rjob-controller  Start replica/yc26-h200-nsys-nvtx-20260913-02-cfcd2084

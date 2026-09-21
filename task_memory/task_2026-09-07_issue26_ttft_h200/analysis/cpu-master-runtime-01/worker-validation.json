@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "command": [
+    "/home/i-fengyicheng/miniconda3/envs/dev-vidur-v03-hopper-e2e/bin/python",
+    "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/tests/e2e/issue26_cpu_frontier_worker.py",
+    "--config",
+    "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/config/frontier_run_01.json",
+    "--output",
+    "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/cpu-master-runtime-01/prepare",
+    "--prepare-only"
+  ],
+  "prepare_returncode": 0,
+  "existing_output_returncode": 1,
+  "isolated_scratch": "/data/ycfeng/tmp/issue26-cpu-frontier-yzw61sro",
+  "simulation_executed": false,
+  "checks": [
+    "Runtime audit passes",
+    "Caches are fresh and under task scratch",
+    "Existing output rejected",
+    "Prepare-only creates no numerical metrics"
+  ]
+}

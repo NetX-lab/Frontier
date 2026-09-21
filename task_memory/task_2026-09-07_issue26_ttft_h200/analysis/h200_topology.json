@@ -1,0 +1,18 @@
+{
+  "source": "runs/h200-environment-probe-05/environment.log",
+  "node": "gpu-h200-0019.lgcm.sh.istep.fun",
+  "gpu_count": 8,
+  "memory_bytes_per_gpu": [
+    150754820096
+  ],
+  "active_links_per_gpu": 18,
+  "all_remote_types": "NVML_NVLINK_DEVICE_TYPE_SWITCH (2)",
+  "directed_peer_pairs_ok": 56,
+  "switch_pci_addresses": [
+    "00000000:03:00.0",
+    "00000000:04:00.0",
+    "00000000:05:00.0",
+    "00000000:06:00.0"
+  ],
+  "communication_timing_measured": false
+}

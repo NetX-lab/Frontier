@@ -1,0 +1,328 @@
+[
+  {
+    "gap": {
+      "start_us": 5893920266798.889,
+      "end_us": 5893920267181.033,
+      "duration_ms": 0.38214453125,
+      "next_device_event": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "next_launch_not_started_ms": 0.3723447265625
+    },
+    "cpu_activities": [
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaStreamGetCaptureInfo_v2",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920267115.747,
+        "dur": 2.097,
+        "args": {
+          "External id": 36,
+          "cbid": 409,
+          "correlation": 61
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaEventRecord",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920267160.244,
+        "dur": 4.061,
+        "args": {
+          "External id": 36,
+          "cbid": 135,
+          "correlation": 66
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaStreamWaitEvent",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920267164.583,
+        "dur": 2.486,
+        "args": {
+          "External id": 36,
+          "cbid": 147,
+          "correlation": 67
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaGetFuncBySymbol",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920267169.165,
+        "dur": 0.728,
+        "args": {
+          "External id": 36,
+          "cbid": 336,
+          "correlation": 69
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_driver",
+        "name": "cuLaunchKernelEx",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920267171.233,
+        "dur": 15.748,
+        "args": {
+          "External id": 36,
+          "cbid": 652,
+          "correlation": 70
+        }
+      }
+    ]
+  },
+  {
+    "gap": {
+      "start_us": 5893920359493.139,
+      "end_us": 5893920359781.524,
+      "duration_ms": 0.2883857421875,
+      "next_device_event": "void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int, int, int, int, unsigned long, int*, int)",
+      "next_launch_not_started_ms": 0.2776337890625
+    },
+    "cpu_activities": [
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920359770.772,
+        "dur": 9.843,
+        "args": {
+          "External id": 10115,
+          "cbid": 211,
+          "correlation": 28536
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920359781.458,
+        "dur": 4.661,
+        "args": {
+          "External id": 10115,
+          "cbid": 211,
+          "correlation": 28537
+        }
+      }
+    ]
+  },
+  {
+    "gap": {
+      "start_us": 5893920351065.884,
+      "end_us": 5893920351328.86,
+      "duration_ms": 0.2629765625,
+      "next_device_event": "void flashinfer::BlockSparseIndicesToVectorSparseOffsetsKernel<int>(int*, int*, int*, int*, int*, unsigned int, unsigned int, unsigned int, flashinfer::uint_fastdiv)",
+      "next_launch_not_started_ms": 0.25320703125
+    },
+    "cpu_activities": [
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaDeviceGetAttribute",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920351317.571,
+        "dur": 0.781,
+        "args": {
+          "External id": 9263,
+          "cbid": 200,
+          "correlation": 25930
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920351319.091,
+        "dur": 8.569,
+        "args": {
+          "External id": 9263,
+          "cbid": 211,
+          "correlation": 25931
+        }
+      }
+    ]
+  },
+  {
+    "gap": {
+      "start_us": 5893920349384.919,
+      "end_us": 5893920349640.023,
+      "duration_ms": 0.2551044921875,
+      "next_device_event": "void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int, int, int, int, unsigned long, int*, int)",
+      "next_launch_not_started_ms": 0.2457294921875
+    },
+    "cpu_activities": [
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920349630.648,
+        "dur": 7.978,
+        "args": {
+          "External id": 9155,
+          "cbid": 211,
+          "correlation": 25686
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920349639.44,
+        "dur": 5.154,
+        "args": {
+          "External id": 9155,
+          "cbid": 211,
+          "correlation": 25687
+        }
+      }
+    ]
+  },
+  {
+    "gap": {
+      "start_us": 5893920414719.411,
+      "end_us": 5893920414969.78,
+      "duration_ms": 0.250369140625,
+      "next_device_event": "void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int, int, int, int, unsigned long, int*, int)",
+      "next_launch_not_started_ms": 0.2421767578125
+    },
+    "cpu_activities": [
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920414961.588,
+        "dur": 6.38,
+        "args": {
+          "External id": 15875,
+          "cbid": 211,
+          "correlation": 46404
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920414968.748,
+        "dur": 4.842,
+        "args": {
+          "External id": 15875,
+          "cbid": 211,
+          "correlation": 46405
+        }
+      }
+    ]
+  },
+  {
+    "gap": {
+      "start_us": 5893920354964.422,
+      "end_us": 5893920355210.151,
+      "duration_ms": 0.2457294921875,
+      "next_device_event": "Memcpy DtoD (Device -> Device)",
+      "next_launch_not_started_ms": 0.1219345703125
+    },
+    "cpu_activities": [
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaMemcpyAsync",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920355086.356,
+        "dur": 122.973,
+        "args": {
+          "External id": 9624,
+          "cbid": 41,
+          "correlation": 26971
+        }
+      }
+    ]
+  },
+  {
+    "gap": {
+      "start_us": 5893920390439.821,
+      "end_us": 5893920390681.357,
+      "duration_ms": 0.2415361328125,
+      "next_device_event": "void vllm::moe::moe_align_block_size_kernel<int>(int const*, int*, int*, int*, int, int, int, int, unsigned long, int*, int)",
+      "next_launch_not_started_ms": 0.2334638671875
+    },
+    "cpu_activities": [
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920390673.285,
+        "dur": 6.597,
+        "args": {
+          "External id": 13315,
+          "cbid": 211,
+          "correlation": 38804
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920390680.667,
+        "dur": 4.521,
+        "args": {
+          "External id": 13315,
+          "cbid": 211,
+          "correlation": 38805
+        }
+      }
+    ]
+  },
+  {
+    "gap": {
+      "start_us": 5893920348183.603,
+      "end_us": 5893920348422.036,
+      "duration_ms": 0.23843359375,
+      "next_device_event": "Memcpy DtoD (Device -> Device)",
+      "next_launch_not_started_ms": 0.2219404296875
+    },
+    "cpu_activities": [
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaMemcpyAsync",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893920348405.543,
+        "dur": 15.514,
+        "args": {
+          "External id": 8984,
+          "cbid": 41,
+          "correlation": 25071
+        }
+      }
+    ]
+  }
+]

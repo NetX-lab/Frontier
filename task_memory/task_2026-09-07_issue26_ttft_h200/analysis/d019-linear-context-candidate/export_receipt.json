@@ -1,0 +1,503 @@
+{
+  "status": "DIAGNOSTIC_CANDIDATE_ONLY",
+  "source_config": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/d019-first-forward-integrated/config.json",
+  "source_csv": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-fresh-profiles-02/runtime/profiles/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+  "source_samples": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-04/runtime/timing-context",
+  "source_receipt": {
+    "status": "COMPLETE_DIAGNOSTIC",
+    "python": "3.10.16",
+    "python_executable": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/bin/python",
+    "torch": "2.8.0+cu128",
+    "cuda": "12.8",
+    "vllm": "dev",
+    "vllm_path": "/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908/vllm/__init__.py",
+    "gpu": "NVIDIA H200",
+    "tokens": 4096,
+    "tp": 4,
+    "hidden": 2048,
+    "q_heads": 32,
+    "kv_heads": 4,
+    "dtype": "torch.bfloat16",
+    "use_qk_norm": true,
+    "inference_mode": true,
+    "prefix_repeats": 20,
+    "prefix_width": 768,
+    "seed": 13,
+    "frontier_head": "3d4ca83b436a420dbe628a4a98f41303de5bee9a",
+    "profiling_plan": {
+      "tp_size": 4,
+      "attn_enabled": true,
+      "ffn_enabled": true,
+      "attn_sharded_enabled": true,
+      "ffn_sharded_enabled": false,
+      "replicated_enabled": true,
+      "disable_replicated": false,
+      "enabled_ops": [
+        "input_layernorm",
+        "post_attention_layernorm",
+        "add",
+        "emb",
+        "attn_pre_proj",
+        "attn_rope",
+        "attn_post_proj"
+      ],
+      "disabled_ops": [],
+      "replicated_ops": [
+        "input_layernorm",
+        "post_attention_layernorm",
+        "add",
+        "emb"
+      ],
+      "padded_n_embd": 2048,
+      "padded_n_expanded_embd": 768,
+      "typed_layer_contracts": [
+        {
+          "profile_id": "generic",
+          "operator_family_ids": [
+            "moe"
+          ],
+          "layer_kind": "routed",
+          "dimension_source": "routed_mlp_hidden_dim",
+          "effective_ffn_width": 768,
+          "tensor_parallel_mode": "moe_tp",
+          "expert_parallel_mode": "on",
+          "selected_expert_parallel_size": null,
+          "tensor_parallel_sizes": [
+            1
+          ],
+          "selected_tensor_parallel_size": null,
+          "selected_padded_ffn_width": null
+        }
+      ],
+      "typed_operator_contracts": {
+        "attn_pre_proj": {
+          "profile_id": "generic",
+          "operator_family_id": "dense_attention",
+          "operator_family_ids": [
+            "dense_attention"
+          ],
+          "layer_kind": null,
+          "dimension_source": null,
+          "effective_ffn_width": null,
+          "tensor_parallel_mode": "attention_tp",
+          "expert_parallel_mode": "off",
+          "selected_expert_parallel_size": null,
+          "tensor_parallel_sizes": [
+            4
+          ],
+          "selected_tensor_parallel_size": 4,
+          "selected_padded_ffn_width": null
+        },
+        "attn_rope": {
+          "profile_id": "generic",
+          "operator_family_id": "dense_attention",
+          "operator_family_ids": [
+            "dense_attention"
+          ],
+          "layer_kind": null,
+          "dimension_source": null,
+          "effective_ffn_width": null,
+          "tensor_parallel_mode": "attention_tp",
+          "expert_parallel_mode": "off",
+          "selected_expert_parallel_size": null,
+          "tensor_parallel_sizes": [
+            4
+          ],
+          "selected_tensor_parallel_size": 4,
+          "selected_padded_ffn_width": null
+        },
+        "attn_post_proj": {
+          "profile_id": "generic",
+          "operator_family_id": "dense_attention",
+          "operator_family_ids": [
+            "dense_attention"
+          ],
+          "layer_kind": null,
+          "dimension_source": null,
+          "effective_ffn_width": null,
+          "tensor_parallel_mode": "attention_tp",
+          "expert_parallel_mode": "off",
+          "selected_expert_parallel_size": null,
+          "tensor_parallel_sizes": [
+            4
+          ],
+          "selected_tensor_parallel_size": 4,
+          "selected_padded_ffn_width": null
+        },
+        "input_layernorm": {
+          "profile_id": "generic",
+          "operator_family_id": "memory",
+          "operator_family_ids": [
+            "memory"
+          ],
+          "layer_kind": null,
+          "dimension_source": null,
+          "effective_ffn_width": null,
+          "tensor_parallel_mode": "replicated",
+          "expert_parallel_mode": "off",
+          "selected_expert_parallel_size": null,
+          "tensor_parallel_sizes": [
+            1
+          ],
+          "selected_tensor_parallel_size": 1,
+          "selected_padded_ffn_width": null
+        },
+        "post_attention_layernorm": {
+          "profile_id": "generic",
+          "operator_family_id": "memory",
+          "operator_family_ids": [
+            "memory"
+          ],
+          "layer_kind": null,
+          "dimension_source": null,
+          "effective_ffn_width": null,
+          "tensor_parallel_mode": "replicated",
+          "expert_parallel_mode": "off",
+          "selected_expert_parallel_size": null,
+          "tensor_parallel_sizes": [
+            1
+          ],
+          "selected_tensor_parallel_size": 1,
+          "selected_padded_ffn_width": null
+        },
+        "add": {
+          "profile_id": "generic",
+          "operator_family_id": "memory",
+          "operator_family_ids": [
+            "memory"
+          ],
+          "layer_kind": null,
+          "dimension_source": null,
+          "effective_ffn_width": null,
+          "tensor_parallel_mode": "replicated",
+          "expert_parallel_mode": "off",
+          "selected_expert_parallel_size": null,
+          "tensor_parallel_sizes": [
+            1
+          ],
+          "selected_tensor_parallel_size": 1,
+          "selected_padded_ffn_width": null
+        },
+        "emb": {
+          "profile_id": "generic",
+          "operator_family_id": "memory",
+          "operator_family_ids": [
+            "memory"
+          ],
+          "layer_kind": null,
+          "dimension_source": null,
+          "effective_ffn_width": null,
+          "tensor_parallel_mode": "replicated",
+          "expert_parallel_mode": "off",
+          "selected_expert_parallel_size": null,
+          "tensor_parallel_sizes": [
+            1
+          ],
+          "selected_tensor_parallel_size": 1,
+          "selected_padded_ffn_width": null
+        }
+      },
+      "skip_reasons": []
+    },
+    "limits": "Context controls are synthetic, not a vLLM forward. Precreated changes Event object construction, not lazy CUDA event initialization. Kernel-profile pass is diagnostic only.",
+    "event_row_count": 72
+  },
+  "row_count": 82,
+  "matched_csv_line": 51,
+  "aggregation": "All 40 event-only samples per op, pooled median; population std.",
+  "context": "prefill_hot",
+  "timer": "original",
+  "changed_cells": [
+    [
+      49,
+      "time_stats.attn_pre_proj.min"
+    ],
+    [
+      49,
+      "time_stats.attn_pre_proj.max"
+    ],
+    [
+      49,
+      "time_stats.attn_pre_proj.mean"
+    ],
+    [
+      49,
+      "time_stats.attn_pre_proj.median"
+    ],
+    [
+      49,
+      "time_stats.attn_pre_proj.std"
+    ],
+    [
+      49,
+      "time_stats.attn_pre_proj.count"
+    ],
+    [
+      49,
+      "time_stats.attn_rope.min"
+    ],
+    [
+      49,
+      "time_stats.attn_rope.max"
+    ],
+    [
+      49,
+      "time_stats.attn_rope.mean"
+    ],
+    [
+      49,
+      "time_stats.attn_rope.median"
+    ],
+    [
+      49,
+      "time_stats.attn_rope.std"
+    ],
+    [
+      49,
+      "time_stats.attn_rope.count"
+    ],
+    [
+      49,
+      "time_stats.attn_post_proj.min"
+    ],
+    [
+      49,
+      "time_stats.attn_post_proj.max"
+    ],
+    [
+      49,
+      "time_stats.attn_post_proj.mean"
+    ],
+    [
+      49,
+      "time_stats.attn_post_proj.median"
+    ],
+    [
+      49,
+      "time_stats.attn_post_proj.std"
+    ],
+    [
+      49,
+      "time_stats.attn_post_proj.count"
+    ]
+  ],
+  "operations": {
+    "attn_pre_proj": {
+      "previous_median_ms": 0.13716799765825272,
+      "samples_ms": [
+        0.07823999971151352,
+        0.07811199873685837,
+        0.07897599786520004,
+        0.0783040001988411,
+        0.0783040001988411,
+        0.07760000228881836,
+        0.0785600021481514,
+        0.07859200239181519,
+        0.07843200117349625,
+        0.07811199873685837,
+        0.0785600021481514,
+        0.0785600021481514,
+        0.07791999727487564,
+        0.07795199751853943,
+        0.07865600287914276,
+        0.07833600044250488,
+        0.07798399776220322,
+        0.07846400141716003,
+        0.07811199873685837,
+        0.07763200253248215,
+        0.078015998005867,
+        0.07903999835252762,
+        0.07872000336647034,
+        0.07811199873685837,
+        0.07760000228881836,
+        0.07804799824953079,
+        0.07814399898052216,
+        0.07769600301980972,
+        0.07814399898052216,
+        0.07782399654388428,
+        0.07734400033950806,
+        0.0783040001988411,
+        0.07766400277614594,
+        0.07798399776220322,
+        0.07763200253248215,
+        0.0783040001988411,
+        0.07817599922418594,
+        0.07862400263547897,
+        0.07782399654388428,
+        0.07836800068616867
+      ],
+      "stats": {
+        "min": 0.07734400033950806,
+        "max": 0.07903999835252762,
+        "mean": 0.07817440014332533,
+        "median": 0.07814399898052216,
+        "std": 0.0003855935339419329,
+        "count": 40
+      }
+    },
+    "attn_rope": {
+      "previous_median_ms": 0.032336000353097916,
+      "samples_ms": [
+        0.019519999623298645,
+        0.018880000337958336,
+        0.01913600042462349,
+        0.019328000023961067,
+        0.01942400075495243,
+        0.019039999693632126,
+        0.019200000911951065,
+        0.019328000023961067,
+        0.019007999449968338,
+        0.019231999292969704,
+        0.01926399953663349,
+        0.019007999449968338,
+        0.019360000267624855,
+        0.019231999292969704,
+        0.019200000911951065,
+        0.019168000668287277,
+        0.019328000023961067,
+        0.01929599978029728,
+        0.01929599978029728,
+        0.019328000023961067,
+        0.019039999693632126,
+        0.019519999623298645,
+        0.019039999693632126,
+        0.019648000597953796,
+        0.019840000197291374,
+        0.01929599978029728,
+        0.019168000668287277,
+        0.019200000911951065,
+        0.019039999693632126,
+        0.01913600042462349,
+        0.019200000911951065,
+        0.019168000668287277,
+        0.018880000337958336,
+        0.019007999449968338,
+        0.019039999693632126,
+        0.01990400068461895,
+        0.019936000928282738,
+        0.01990400068461895,
+        0.019936000928282738,
+        0.01913600042462349
+      ],
+      "stats": {
+        "min": 0.018880000337958336,
+        "max": 0.019936000928282738,
+        "mean": 0.019290400156751274,
+        "median": 0.019216000102460384,
+        "std": 0.00028269692274440154,
+        "count": 40
+      }
+    },
+    "attn_post_proj": {
+      "previous_median_ms": 0.04678400047123432,
+      "samples_ms": [
+        0.03001599945127964,
+        0.029759999364614487,
+        0.029983999207615852,
+        0.029791999608278275,
+        0.02953599952161312,
+        0.029983999207615852,
+        0.029664000496268272,
+        0.03014400042593479,
+        0.030208000913262367,
+        0.029952000826597214,
+        0.029888000339269638,
+        0.030112000182271004,
+        0.02985600009560585,
+        0.029983999207615852,
+        0.029952000826597214,
+        0.030079999938607216,
+        0.03030399978160858,
+        0.02985600009560585,
+        0.029888000339269638,
+        0.030079999938607216,
+        0.029472000896930695,
+        0.02953599952161312,
+        0.02985600009560585,
+        0.029472000896930695,
+        0.029632000252604485,
+        0.029600000008940697,
+        0.029759999364614487,
+        0.029440000653266907,
+        0.02953599952161312,
+        0.029343999922275543,
+        0.03017600066959858,
+        0.029823999851942062,
+        0.029823999851942062,
+        0.029440000653266907,
+        0.029503999277949333,
+        0.0297279991209507,
+        0.029888000339269638,
+        0.029888000339269638,
+        0.029791999608278275,
+        0.030047999694943428
+      ],
+      "stats": {
+        "min": 0.029343999922275543,
+        "max": 0.03030399978160858,
+        "mean": 0.029820000007748603,
+        "median": 0.02985600009560585,
+        "std": 0.00023927223023185497,
+        "count": 40
+      }
+    }
+  },
+  "typed_operator_contracts": {
+    "attn_post_proj": {
+      "dimension_source": null,
+      "effective_ffn_width": null,
+      "expert_parallel_mode": "off",
+      "layer_kind": null,
+      "operator_family_id": "dense_attention",
+      "operator_family_ids": [
+        "dense_attention"
+      ],
+      "profile_id": "generic",
+      "selected_expert_parallel_size": null,
+      "selected_padded_ffn_width": null,
+      "selected_tensor_parallel_size": 4,
+      "tensor_parallel_mode": "attention_tp",
+      "tensor_parallel_sizes": [
+        4
+      ]
+    },
+    "attn_pre_proj": {
+      "dimension_source": null,
+      "effective_ffn_width": null,
+      "expert_parallel_mode": "off",
+      "layer_kind": null,
+      "operator_family_id": "dense_attention",
+      "operator_family_ids": [
+        "dense_attention"
+      ],
+      "profile_id": "generic",
+      "selected_expert_parallel_size": null,
+      "selected_padded_ffn_width": null,
+      "selected_tensor_parallel_size": 4,
+      "tensor_parallel_mode": "attention_tp",
+      "tensor_parallel_sizes": [
+        4
+      ]
+    },
+    "attn_rope": {
+      "dimension_source": null,
+      "effective_ffn_width": null,
+      "expert_parallel_mode": "off",
+      "layer_kind": null,
+      "operator_family_id": "dense_attention",
+      "operator_family_ids": [
+        "dense_attention"
+      ],
+      "profile_id": "generic",
+      "selected_expert_parallel_size": null,
+      "selected_padded_ffn_width": null,
+      "selected_tensor_parallel_size": 4,
+      "tensor_parallel_mode": "attention_tp",
+      "tensor_parallel_sizes": [
+        4
+      ]
+    }
+  },
+  "cache_policy": "Reuse current-task cache; normal dataframe content keys select changed models.",
+  "limits": "Only the bounded first forward is supported; no general runtime context selector."
+}

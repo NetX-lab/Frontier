@@ -1,0 +1,199 @@
+case_id: issue26-ttft-h200-pf4096-dc1024
+status: D017_complete_numerical_gap_D018_diagnostic_review_pending
+case_init_frozen: false
+requesting_user: YC
+frontier:
+  base_ref: main
+  base_commit: d71ad80b0800880808a0857fd30477e6d96592c6
+  branch: task/issue26-ttft-h200-20260907
+  shared_forward_repair_commit: 8ba22b496de121713f4fec8068ee962c29c012ea
+  dp_scheduler_repair_commit: a4a0c496d370c84d83a5b098d3fdd8561af1c74e
+  selected_cluster_scheduler: vllm_load_balancing
+  checkout: /data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907
+  communication_backend: collective_sim
+  submodule_commit: e564935d3874d8c71b52a554ab7c9a72e5e19f68
+  intra_server_model: nvlink_analytic
+  device: h200
+hardware:
+  gpu_type: H200
+  charged_group: step_main
+  namespace: shai-core
+  gpus: 8
+  node_count: 1
+  entry_evidence: proxy-free predict-only and RJob creation accepted
+  topology_verified: true
+  topology_evidence: analysis/h200_topology.json
+  topology_node: gpu-h200-0019.lgcm.sh.istep.fun
+  active_nvlinks_per_gpu: 18
+  nvlink_peer_pairs_ok: 56
+runtime:
+  image: hub.i.basemind.com/vllm-0.10.2/frontier-env@sha256:b97a2fdc624953679562a4835ea66e085ec22563f2086fecfe6710a9e682dbbc
+  probe_job: yc26-h200-probe-20260908-0005
+  backend_runtime_job: yc26-h200-backend-20260908-0010
+  backend_runtime_output: runs/h200-h200-backend-runtime-01
+  backend_runtime_status: PASS
+  python_version: 3.10.16
+  torch_version: 2.8.0+cu128
+  flashinfer_version: 0.3.0
+  cuda_toolkit: 12.8.93
+  driver: 570.124.06
+  probe_output: runs/h200-environment-probe-05
+workload:
+  row: pf4096_dc1024
+  prefill_tokens: 4096
+  decode_tokens: 1024
+  formal_requests: 100
+  qps: 2.0
+  arrival_process: poisson
+  warmup_replays: 3
+  dispatch_contract: replay fresh clean queue-visible arrivals with an explicit client-to-Frontier row ID map
+model:
+  model_name: qwen3-a3b-30b-moe
+  dtype: bfloat16
+  weights: dummy
+parallelism:
+  replicas: 1
+  attn_tp: 4
+  attn_dp: 2
+  moe_tp: 1
+  moe_ep: 8
+  pp: 1
+metrics:
+  primary: vllm_official_server_request_ttft
+  statistic: mean
+  unit: ms
+  relative_error_limit: 0.10
+  clean_groundtruth_producer: vllm_v1_metrics_stats_first_token_latency
+freshness:
+  historical_numeric_inputs_permitted: false
+  existing_profile_rows_permitted: false
+  existing_prediction_caches_permitted: false
+  formal_numeric_runs_started: true
+decisions:
+  - id: D001
+    subject: communication backend
+    answer: collective_sim / htsim; initialize, build, and verify H200 topology
+    reviewer: YC
+    status: confirmed
+  - id: D002
+    subject: intra-server communication model
+    recommendation: existing nvlink_analytic path with parameters checked against fresh H200 evidence
+    answer: use existing nvlink_analytic intra-server path
+    reviewer: YC
+    status: confirmed
+  - id: D003
+    subject: clean canonical TTFT producer
+    recommendation: preserve queue-visible arrival to prefill forward completion and extend existing E2E recording with validated minimal probes
+    status: confirmed
+    answer: preserve original boundary; add minimal E2E endpoint recording and validate
+    reviewer: YC
+    decision_utc: 2026-09-07T16:11:35.327147+00:00
+    recorded_utc: 2026-09-07T16:08:04.551840+00:00
+  - id: D004
+    subject: prefix caching alignment
+    recommendation: explicitly disable on both sides for complete 4096-token prefill
+    alternatives: enable both with aligned warmup cache state and hit-rate evidence
+    status: confirmed
+    answer: explicitly disable prefix caching on both sides
+    reviewer: YC
+    decision_utc: 2026-09-07T16:24:27.878334+00:00
+implementation_checkpoint:
+  frontier_commit: 9e3d1874fca51491d7f14b4788394811d3e48ffa
+  vllm_helper_commit: db3fde591
+  vllm_integration_state: verified queue metadata committed 46f7b179f; D005 worker hooks stashed
+  endpoint_clock_probe: runs/h200-endpoint-runtime-01/clock-check/clock_overhead.json
+  endpoint_clock_probe_status: PASS
+  endpoint_ab_status: FAILED_clock_mapping_order
+  endpoint_ab_job: yc26-h200-endpoint-ab-20260908-0035
+  prefix_caching: false
+
+clock_repair_decision:
+  id: D005
+  status: deferred_by_D006
+  asked_utc: 2026-09-07T16:51:41.592431+00:00
+  recommendation: per-prefill local clock anchor with measured event synchronization overhead
+  evidence: runs/h200-clock-drift-02/clock_drift.jsonl
+
+primary_metric_decision:
+  id: D006
+  status: confirmed
+  reviewer: YC
+  recorded_utc: 2026-09-07T17:06:43.083659+00:00
+  definition: official vLLM server first_token_latency
+  frontier_comparison: current TTFT plus independently measured missing critical-path work
+  client_ttft: diagnostic_only
+
+active_generations:
+  clean: runs/h200-uniform-clean-01/run_manifest.json
+  profiling: runs/h200-fresh-profiles-02/run_manifest.json
+  diagnostic: runs/h200-diagnostics-03/run_manifest.operators.json
+  frontier: runs/cpu-uniform-frontier-01/run_manifest.json
+
+diagnostic_identity_decision:
+  decision_id: D007
+  status: confirmed
+  reviewer: YC
+  definition: worker DP/TP/PP identity and isolated existing diagnostic log files
+  integration_status: operators_and_routing_worker_identity_pass
+  metadata_bug_repair: respect the existing disabled runtime_meta setting in its consumer predicate
+
+diagnostic_global_counts_decision:
+  decision_id: D009
+  status: deferred_by_D011
+  scope: dispatch-global counts from existing CPU topk IDs; preserve local counts
+  population: actual post-dispatch tokens including dummy work; not source-only real requests
+  implementation_applied: false
+
+routing_alignment_requirement:
+  decision_id: D010
+  status: trace_import_deferred_by_D011
+  reference: fresh_vllm_groundtruth
+  target: expert_count_equality_for_matched_layer_batch_and_token_population
+  existing_import_capability: absent_in_active_colocation_path
+  baseline_distribution: balanced_seed42_uniform_runtime_D011_D012
+  proposed_next_step: deferred_trace_import_feature_work
+  shared_record_design_status: deferred_by_D011
+  evidence: analysis/routing_import_capability.md
+
+uniform_calibration_decision:
+  decision_id: D011
+  status: confirmed
+  vllm_env: {VLLM_MOE_UNIFORM_ROUTING: "1"}
+  frontier_load_distribution: balanced
+  target_routing_runtime: uniform_topk
+  trace_import: deferred_feature_work
+  dual_counts_logging: deferred
+  frontier_execution_host: cpu_master
+  runtime_config_extension_decision: D012_confirmed
+
+uniform_execution_checkpoint:
+  clean_run_manifest: runs/h200-uniform-clean-01/run_manifest.json
+  clean_validation: analysis/uniform-clean-01/validation.json
+  clean_status: PASS
+  official_server_ttft_mean_ms: 127.38051176071167
+  uniform_moe_csv: supplements/moe-uniform-01/moe.csv
+  uniform_moe_rows: 774
+  uniform_moe_status: PASS
+  cpu_runtime_status: PASS
+  frontier_candidate_config: config/frontier_uniform_candidate.json
+  candidate_config_status: VERIFIED_EXECUTABLE_D012
+  frontier_numerical_run: COMPLETE_100_REQUESTS
+  frontier_run_manifest: runs/cpu-uniform-frontier-01/run_manifest.json
+  frontier_validation: analysis/uniform-frontier-01/summary.json
+  frontier_ttft_mean_ms: 103.51040122462338
+  absolute_error_of_means_ms: 23.87011053608829
+  relative_error_of_means_percent: 18.739217016908402
+  d006_formal_gate: NOT_EVALUATED_UNADJUSTED_BASELINE
+
+routing_runtime_extension_decision:
+  decision_id: D012
+  status: confirmed
+  reviewer: YC
+  implementation: verified_74_checks
+  evidence: test_report_2026-09-08_d012_routing_runtime.md
+
+activation_profile_repair_decision:
+  decision_id: D013
+  status: deferred_by_YC_D014
+  proposal: analysis/activation_profile_repair_proposal.md
+  implementation_started: false

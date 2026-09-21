@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "run_generation": "h200-diagnostics-03",
+  "source_commit": "361d941c97fcec52e544f74b7ab91c54192de9c9",
+  "submodes": [
+    "operators",
+    "routing"
+  ],
+  "checked_utc": "2026-09-07T18:18:46.432432+00:00",
+  "clean_prerequisite": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/official-clean-01/validation.json",
+  "next_action": "Execute isolated diagnostic submodes and verify actual eight-worker joins.",
+  "runtime_dependency_receipt": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/d007_runtime_dependency.json",
+  "metadata_logger_tests": "11 passed in 5.05s",
+  "fresh_runtime_assertion": true
+}

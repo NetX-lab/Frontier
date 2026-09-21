@@ -1,0 +1,22 @@
+{
+  "status": "PREPARED",
+  "runtime_path": "uniform_topk",
+  "contexts": [
+    "prefill_hot",
+    "standalone_legacy"
+  ],
+  "expected_rows_per_context": 387,
+  "expected_merged_rows": 774,
+  "token_points": 43,
+  "precision": "BF16",
+  "measurement_type": "CUDA_EVENT",
+  "TP": 1,
+  "EP": 8,
+  "load_distributions": [
+    "uniform",
+    "skewed",
+    "extremely_skewed"
+  ],
+  "seeds_per_distribution": 3,
+  "known_limitation": "Existing grouped GEMM profiler omits gated activation; no repair included."
+}

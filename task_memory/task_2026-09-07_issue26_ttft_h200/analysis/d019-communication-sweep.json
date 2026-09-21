@@ -1,0 +1,1047 @@
+{
+  "validation": "PASS",
+  "counts": {
+    "ranks": 8,
+    "operation_rows": 80,
+    "event_samples": 560,
+    "joined_kernel_launches": 40
+  },
+  "job_overall_status": "context phase failed independently; communication artifacts complete",
+  "training_sizes_MiB": [
+    8,
+    12,
+    24,
+    32
+  ],
+  "heldout_size_MiB": 16,
+  "fit_inputs": "non-profiled direct PyNCCL CUDA-event block medians; no E2E or in-context timing used in fit",
+  "source": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-03/runtime/communication",
+  "kernel_joins": [
+    {
+      "rank": 0,
+      "requested_dp0_bytes": 8388608,
+      "local_bytes": 8388608,
+      "label": "tp_runtime_8388608_bytes",
+      "correlation": 17,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        640,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 8436.414
+    },
+    {
+      "rank": 0,
+      "requested_dp0_bytes": 12582912,
+      "local_bytes": 12582912,
+      "label": "tp_runtime_12582912_bytes",
+      "correlation": 38,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 280.062
+    },
+    {
+      "rank": 0,
+      "requested_dp0_bytes": 16777216,
+      "local_bytes": 16777216,
+      "label": "tp_runtime_16777216_bytes",
+      "correlation": 59,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 97.696
+    },
+    {
+      "rank": 0,
+      "requested_dp0_bytes": 25165824,
+      "local_bytes": 25165824,
+      "label": "tp_runtime_25165824_bytes",
+      "correlation": 80,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 130.239
+    },
+    {
+      "rank": 0,
+      "requested_dp0_bytes": 33554432,
+      "local_bytes": 33554432,
+      "label": "tp_runtime_33554432_bytes",
+      "correlation": 101,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 167.038
+    },
+    {
+      "rank": 1,
+      "requested_dp0_bytes": 8388608,
+      "local_bytes": 8388608,
+      "label": "tp_runtime_8388608_bytes",
+      "correlation": 17,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        640,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 67712.334
+    },
+    {
+      "rank": 1,
+      "requested_dp0_bytes": 12582912,
+      "local_bytes": 12582912,
+      "label": "tp_runtime_12582912_bytes",
+      "correlation": 38,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 284.193
+    },
+    {
+      "rank": 1,
+      "requested_dp0_bytes": 16777216,
+      "local_bytes": 16777216,
+      "label": "tp_runtime_16777216_bytes",
+      "correlation": 59,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 97.088
+    },
+    {
+      "rank": 1,
+      "requested_dp0_bytes": 25165824,
+      "local_bytes": 25165824,
+      "label": "tp_runtime_25165824_bytes",
+      "correlation": 80,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 130.624
+    },
+    {
+      "rank": 1,
+      "requested_dp0_bytes": 33554432,
+      "local_bytes": 33554432,
+      "label": "tp_runtime_33554432_bytes",
+      "correlation": 101,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 169.281
+    },
+    {
+      "rank": 2,
+      "requested_dp0_bytes": 8388608,
+      "local_bytes": 8388608,
+      "label": "tp_runtime_8388608_bytes",
+      "correlation": 17,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        640,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 62.655
+    },
+    {
+      "rank": 2,
+      "requested_dp0_bytes": 12582912,
+      "local_bytes": 12582912,
+      "label": "tp_runtime_12582912_bytes",
+      "correlation": 38,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 82.624
+    },
+    {
+      "rank": 2,
+      "requested_dp0_bytes": 16777216,
+      "local_bytes": 16777216,
+      "label": "tp_runtime_16777216_bytes",
+      "correlation": 59,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 97.888
+    },
+    {
+      "rank": 2,
+      "requested_dp0_bytes": 25165824,
+      "local_bytes": 25165824,
+      "label": "tp_runtime_25165824_bytes",
+      "correlation": 80,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 130.336
+    },
+    {
+      "rank": 2,
+      "requested_dp0_bytes": 33554432,
+      "local_bytes": 33554432,
+      "label": "tp_runtime_33554432_bytes",
+      "correlation": 101,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 170.112
+    },
+    {
+      "rank": 3,
+      "requested_dp0_bytes": 8388608,
+      "local_bytes": 8388608,
+      "label": "tp_runtime_8388608_bytes",
+      "correlation": 17,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        640,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 6209.061
+    },
+    {
+      "rank": 3,
+      "requested_dp0_bytes": 12582912,
+      "local_bytes": 12582912,
+      "label": "tp_runtime_12582912_bytes",
+      "correlation": 38,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 277.344
+    },
+    {
+      "rank": 3,
+      "requested_dp0_bytes": 16777216,
+      "local_bytes": 16777216,
+      "label": "tp_runtime_16777216_bytes",
+      "correlation": 59,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 97.664
+    },
+    {
+      "rank": 3,
+      "requested_dp0_bytes": 25165824,
+      "local_bytes": 25165824,
+      "label": "tp_runtime_25165824_bytes",
+      "correlation": 80,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 131.424
+    },
+    {
+      "rank": 3,
+      "requested_dp0_bytes": 33554432,
+      "local_bytes": 33554432,
+      "label": "tp_runtime_33554432_bytes",
+      "correlation": 101,
+      "kernel": "ncclDevKernel_AllReduce_Sum_bf16_RING_LL(ncclDevKernelArgsStorage<4096ul>)",
+      "grid": [
+        24,
+        1,
+        1
+      ],
+      "block": [
+        544,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 166.912
+    },
+    {
+      "rank": 4,
+      "requested_dp0_bytes": 8388608,
+      "local_bytes": 4096,
+      "label": "tp_runtime_8388608_bytes",
+      "correlation": 12,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 1953.391
+    },
+    {
+      "rank": 4,
+      "requested_dp0_bytes": 12582912,
+      "local_bytes": 4096,
+      "label": "tp_runtime_12582912_bytes",
+      "correlation": 26,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 4.8
+    },
+    {
+      "rank": 4,
+      "requested_dp0_bytes": 16777216,
+      "local_bytes": 4096,
+      "label": "tp_runtime_16777216_bytes",
+      "correlation": 40,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 43.424
+    },
+    {
+      "rank": 4,
+      "requested_dp0_bytes": 25165824,
+      "local_bytes": 4096,
+      "label": "tp_runtime_25165824_bytes",
+      "correlation": 54,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 46.624
+    },
+    {
+      "rank": 4,
+      "requested_dp0_bytes": 33554432,
+      "local_bytes": 4096,
+      "label": "tp_runtime_33554432_bytes",
+      "correlation": 68,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 41.825
+    },
+    {
+      "rank": 5,
+      "requested_dp0_bytes": 8388608,
+      "local_bytes": 4096,
+      "label": "tp_runtime_8388608_bytes",
+      "correlation": 12,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 73013.729
+    },
+    {
+      "rank": 5,
+      "requested_dp0_bytes": 12582912,
+      "local_bytes": 4096,
+      "label": "tp_runtime_12582912_bytes",
+      "correlation": 26,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 5.088
+    },
+    {
+      "rank": 5,
+      "requested_dp0_bytes": 16777216,
+      "local_bytes": 4096,
+      "label": "tp_runtime_16777216_bytes",
+      "correlation": 40,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 43.328
+    },
+    {
+      "rank": 5,
+      "requested_dp0_bytes": 25165824,
+      "local_bytes": 4096,
+      "label": "tp_runtime_25165824_bytes",
+      "correlation": 54,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 46.656
+    },
+    {
+      "rank": 5,
+      "requested_dp0_bytes": 33554432,
+      "local_bytes": 4096,
+      "label": "tp_runtime_33554432_bytes",
+      "correlation": 68,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 41.728
+    },
+    {
+      "rank": 6,
+      "requested_dp0_bytes": 8388608,
+      "local_bytes": 4096,
+      "label": "tp_runtime_8388608_bytes",
+      "correlation": 12,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 3278.608
+    },
+    {
+      "rank": 6,
+      "requested_dp0_bytes": 12582912,
+      "local_bytes": 4096,
+      "label": "tp_runtime_12582912_bytes",
+      "correlation": 26,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 4.448
+    },
+    {
+      "rank": 6,
+      "requested_dp0_bytes": 16777216,
+      "local_bytes": 4096,
+      "label": "tp_runtime_16777216_bytes",
+      "correlation": 40,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 42.944
+    },
+    {
+      "rank": 6,
+      "requested_dp0_bytes": 25165824,
+      "local_bytes": 4096,
+      "label": "tp_runtime_25165824_bytes",
+      "correlation": 54,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 46.336
+    },
+    {
+      "rank": 6,
+      "requested_dp0_bytes": 33554432,
+      "local_bytes": 4096,
+      "label": "tp_runtime_33554432_bytes",
+      "correlation": 68,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 41.472
+    },
+    {
+      "rank": 7,
+      "requested_dp0_bytes": 8388608,
+      "local_bytes": 4096,
+      "label": "tp_runtime_8388608_bytes",
+      "correlation": 12,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 237.697
+    },
+    {
+      "rank": 7,
+      "requested_dp0_bytes": 12582912,
+      "local_bytes": 4096,
+      "label": "tp_runtime_12582912_bytes",
+      "correlation": 26,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 4.864
+    },
+    {
+      "rank": 7,
+      "requested_dp0_bytes": 16777216,
+      "local_bytes": 4096,
+      "label": "tp_runtime_16777216_bytes",
+      "correlation": 40,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 4.416
+    },
+    {
+      "rank": 7,
+      "requested_dp0_bytes": 25165824,
+      "local_bytes": 4096,
+      "label": "tp_runtime_25165824_bytes",
+      "correlation": 54,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 4.224
+    },
+    {
+      "rank": 7,
+      "requested_dp0_bytes": 33554432,
+      "local_bytes": 4096,
+      "label": "tp_runtime_33554432_bytes",
+      "correlation": 68,
+      "kernel": "void vllm::cross_device_reduce_1stage<__nv_bfloat16, 4>(vllm::RankData*, vllm::RankSignals, vllm::Signal*, __nv_bfloat16*, int, int)",
+      "grid": [
+        1,
+        1,
+        1
+      ],
+      "block": [
+        512,
+        1,
+        1
+      ],
+      "trace_duration_us_signature_only": 4.32
+    }
+  ],
+  "timing_summary": {
+    "runtime": {
+      "8": {
+        "min_us": 60.86133420467377,
+        "median_us": 61.47966533899307,
+        "max_us": 64.26666676998138,
+        "rank_median_us": [
+          61.50866548220316,
+          61.87266608079275,
+          61.37066582838694,
+          61.39133373896281
+        ]
+      },
+      "12": {
+        "min_us": 81.44666751225789,
+        "median_us": 81.68166627486548,
+        "max_us": 82.36200114091237,
+        "rank_median_us": [
+          81.60399893919627,
+          81.89266423384349,
+          81.66266481081645,
+          81.5500020980835
+        ]
+      },
+      "16": {
+        "min_us": 99.40733512242635,
+        "median_us": 99.75400070349376,
+        "max_us": 100.24799903233846,
+        "rank_median_us": [
+          99.59333141644795,
+          99.94199872016907,
+          99.85533356666565,
+          99.72932934761047
+        ]
+      },
+      "24": {
+        "min_us": 133.24333230654398,
+        "median_us": 133.5403323173523,
+        "max_us": 133.8093380133311,
+        "rank_median_us": [
+          133.51066907246908,
+          133.7000032265981,
+          133.53866338729858,
+          133.5373322168986
+        ]
+      },
+      "32": {
+        "min_us": 170.439342657725,
+        "median_us": 170.99600036938986,
+        "max_us": 173.310657342275,
+        "rank_median_us": [
+          170.92732588450113,
+          171.00934187571207,
+          171.13532622655234,
+          170.98732789357504
+        ]
+      }
+    },
+    "pynccl": {
+      "8": {
+        "min_us": 60.851335525512695,
+        "median_us": 61.279001335302986,
+        "max_us": 61.978002389272056,
+        "rank_median_us": [
+          61.28400067488352,
+          61.42533322175344,
+          61.18800242741903,
+          61.30733092625936
+        ]
+      },
+      "12": {
+        "min_us": 80.83866536617279,
+        "median_us": 81.17366582155228,
+        "max_us": 81.7393312851588,
+        "rank_median_us": [
+          81.19399845600128,
+          81.14466567834218,
+          81.24866584936778,
+          81.07466499010722
+        ]
+      },
+      "16": {
+        "min_us": 99.54599539438884,
+        "median_us": 99.85700249671936,
+        "max_us": 100.50800442695618,
+        "rank_median_us": [
+          99.781334400177,
+          99.99533494313557,
+          99.9179979165395,
+          99.8466710249583
+        ]
+      },
+      "24": {
+        "min_us": 133.74732931454977,
+        "median_us": 134.26833351453143,
+        "max_us": 137.61666417121887,
+        "rank_median_us": [
+          134.30800040562949,
+          134.54066713651022,
+          134.28200284639993,
+          134.11333163579306
+        ]
+      },
+      "32": {
+        "min_us": 171.9046632448832,
+        "median_us": 172.56299654642743,
+        "max_us": 174.13600285847983,
+        "rank_median_us": [
+          172.46466875076294,
+          172.6693312327067,
+          172.67733812332153,
+          172.33733336130777
+        ]
+      }
+    }
+  },
+  "fits": {
+    "runtime": {
+      "single_parameter": {
+        "fixed_slope_us_per_MiB": 4.369066666666667,
+        "floor_us": 28.912149408483508,
+        "per_step_launch_candidate_us": 4.318691568080585,
+        "predicted_us": {
+          "8": 63.86468274181684,
+          "12": 81.34094940848351,
+          "16": 98.81721607515018,
+          "24": 133.7697494084835,
+          "32": 168.72228274181685
+        },
+        "actual_us": {
+          "8": 61.47966533899307,
+          "12": 81.68166627486548,
+          "16": 99.75400070349376,
+          "24": 133.5403323173523,
+          "32": 170.99600036938986
+        },
+        "signed_error_percent": {
+          "8": 3.879359768263229,
+          "12": -0.41712771288899453,
+          "16": -0.9390947949326349,
+          "24": 0.17179610620259048,
+          "32": -1.329690532328981
+        },
+        "rank_floors_us": [
+          28.875398177925742,
+          29.106402187569934,
+          28.914563396596908,
+          28.854232320213313
+        ],
+        "repeat_floors_us": [
+          28.993648205224673,
+          29.372816323264438,
+          29.312901237630847,
+          28.822398472849528,
+          28.816398892823855,
+          29.424068246308963,
+          28.84448261462052
+        ],
+        "leave_one_training_size_out_error_percent": {
+          "8": 5.172479691017623,
+          "12": -0.5561702838519926,
+          "24": 0.22906147493680148,
+          "32": -1.772920709771986
+        },
+        "heldout_16MiB_pass": true,
+        "training_max_abs_error_percent": 3.879359768263229,
+        "loo_max_abs_error_percent": 5.172479691017623
+      },
+      "two_parameter_not_selected": {
+        "intercept_us": 26.184218297729558,
+        "slope_us_per_MiB": 4.512641988285294,
+        "effective_efficiency": 0.7745470042620096,
+        "heldout_error_percent": -1.3708829556262623
+      }
+    },
+    "pynccl": {
+      "single_parameter": {
+        "fixed_slope_us_per_MiB": 4.369066666666667,
+        "floor_us": 29.30873263778686,
+        "per_step_launch_candidate_us": 4.384788772964477,
+        "predicted_us": {
+          "8": 64.2612659711202,
+          "12": 81.73753263778687,
+          "16": 99.21379930445353,
+          "24": 134.16633263778687,
+          "32": 169.11886597112021
+        },
+        "actual_us": {
+          "8": 61.279001335302986,
+          "12": 81.17366582155228,
+          "16": 99.85700249671936,
+          "24": 134.26833351453143,
+          "32": 172.56299654642743
+        },
+        "signed_error_percent": {
+          "8": 4.866699147884317,
+          "12": 0.6946425426617636,
+          "16": -0.6441242738955248,
+          "24": -0.07596793232972507,
+          "32": -1.9958685490145522
+        },
+        "rank_floors_us": [
+          29.300400405152637,
+          29.432732650661464,
+          29.3367356449604,
+          29.195898561700183
+        ],
+        "repeat_floors_us": [
+          29.57573288582165,
+          29.387232575837764,
+          29.144065493369105,
+          29.995316057427715,
+          29.259982868059474,
+          29.303815875474612,
+          29.476150288208316
+        ],
+        "leave_one_training_size_out_error_percent": {
+          "8": 6.488932197179093,
+          "12": 0.9261900568823339,
+          "24": -0.10129057643962638,
+          "32": -2.661158065352747
+        },
+        "heldout_16MiB_pass": true,
+        "training_max_abs_error_percent": 4.866699147884317,
+        "loo_max_abs_error_percent": 6.488932197179093
+      },
+      "two_parameter_not_selected": {
+        "intercept_us": 25.026650410213698,
+        "slope_us_per_MiB": 4.5944394154863035,
+        "effective_efficiency": 0.760757301870608,
+        "heldout_error_percent": -1.3212107370919306
+      }
+    }
+  },
+  "recommended_case_parameter": {
+    "name": "nvlink_allreduce_launch_overhead_us",
+    "before": 50.0,
+    "candidate": 4.384788772964477,
+    "physical_one_way_bw_GBps": 450.0,
+    "nvlink_efficiency_unchanged": 0.8,
+    "nvlink_latency_us_unchanged": 0.5,
+    "status": "candidate only; not applied",
+    "scope": "TP4 BF16 PyNCCL RING_LL, 8-32MiB primitive range; fixed-group amortized eager floor, not independently measured CPU launch"
+  },
+  "first_forward_attention_AR_48_calls_prediction_ms": 4.762262366613769,
+  "existing_incontext_48layer_ms": [
+    5.537248,
+    5.649952,
+    5.708768,
+    5.644864
+  ],
+  "existing_incontext_signed_errors_percent": [
+    -13.995862807413188,
+    -15.71145442273192,
+    -16.579858095235796,
+    -15.63548091479672
+  ],
+  "existing_incontext_10percent_gate": "FAIL; contexts remain unmatched, residual not fitted",
+  "limits": [
+    "8MiB RING_LL launches use block640 threads; other sweep sizes block544; common kernel family does not mean identical launch geometry.",
+    "The fixed TP4 sweep identifies an aggregate floor only, not physical per-step launch time or scaling across group sizes.",
+    "Small custom AR family is excluded from fit; neither this result nor the case knob qualifies its timing.",
+    "Changing nvlink_efficiency would affect ideal EP A2A; the accepted one-parameter fit leaves efficiency unchanged.",
+    "Signature profiler creates severe wait in early captured kernels; signature durations never enter latency fits.",
+    "No naive protocol changes or CPU/workflow overhead changes."
+  ]
+}

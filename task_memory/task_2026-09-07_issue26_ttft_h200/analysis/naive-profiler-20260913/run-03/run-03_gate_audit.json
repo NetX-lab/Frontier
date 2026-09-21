@@ -1,0 +1,281 @@
+{
+  "config": {
+    "backend": "naive",
+    "client_rows": 1100,
+    "cluster": "step_main",
+    "formal_requests": 100,
+    "gpu": "H200",
+    "num_gpu_blocks_override": 310809,
+    "operator_instrumentation": false,
+    "profiler": "torch.profiler (Kineto)",
+    "source_commit": "46f7b179fd3bf42b9616dc4670cba419afdb2085",
+    "warmup_replays": 10,
+    "workload": "4096-prefill/1024-output"
+  },
+  "formal_breakdown": {
+    "dp0_tp_spans_ms": {
+      "VLLM::Worker_DP0_TP0_EP0": 113.293890625,
+      "VLLM::Worker_DP0_TP1_EP1": 110.26850390625,
+      "VLLM::Worker_DP0_TP2_EP2": 114.3390263671875,
+      "VLLM::Worker_DP0_TP3_EP3": 112.1688388671875
+    },
+    "median_ms": 112.73136474609376,
+    "p90_ms": 114.02548564453126,
+    "per_rank": {
+      "VLLM::Worker_DP0_TP0_EP0": {
+        "all_kernel_union_ms": 93.901955078125,
+        "category_overlap_us": 0.0,
+        "comm_pure_union_ms": 61.339904296875,
+        "compute_pure_union_ms": 28.7698896484375,
+        "idle_or_non_kernel_ms": 19.391935546875,
+        "kernel_counts": {
+          "comm": 382,
+          "compute": 2057,
+          "memory": 765
+        },
+        "memory_pure_union_ms": 3.7921611328125
+      },
+      "VLLM::Worker_DP0_TP1_EP1": {
+        "all_kernel_union_ms": 103.15949609375,
+        "category_overlap_us": 0.0,
+        "comm_pure_union_ms": 71.6635751953125,
+        "compute_pure_union_ms": 27.821732421875,
+        "idle_or_non_kernel_ms": 7.1090078125,
+        "kernel_counts": {
+          "comm": 368,
+          "compute": 1980,
+          "memory": 737
+        },
+        "memory_pure_union_ms": 3.6741884765625
+      },
+      "VLLM::Worker_DP0_TP2_EP2": {
+        "all_kernel_union_ms": 55.816078125,
+        "category_overlap_us": 0.0,
+        "comm_pure_union_ms": 22.931490234375,
+        "compute_pure_union_ms": 28.975673828125,
+        "idle_or_non_kernel_ms": 58.5229482421875,
+        "kernel_counts": {
+          "comm": 382,
+          "compute": 2058,
+          "memory": 765
+        },
+        "memory_pure_union_ms": 3.9089140625
+      },
+      "VLLM::Worker_DP0_TP3_EP3": {
+        "all_kernel_union_ms": 105.0841943359375,
+        "category_overlap_us": 0.0,
+        "comm_pure_union_ms": 72.9722392578125,
+        "compute_pure_union_ms": 28.3916396484375,
+        "idle_or_non_kernel_ms": 7.08464453125,
+        "kernel_counts": {
+          "comm": 377,
+          "compute": 2022,
+          "memory": 751
+        },
+        "memory_pure_union_ms": 3.7203154296875
+      }
+    },
+    "rank_max_ms": 114.3390263671875,
+    "rank_min_ms": 110.26850390625,
+    "rank_spread_ms": 4.070522460937497
+  },
+  "limitations": [
+    "Kineto and marker capture perturb clean execution; this diagnostic window is not the accepted clean 78.118782043\u201379.307357788 ms reference.",
+    "Category values are per-rank interval unions inside the selected formal marker window; rank-local comm/idle values cannot be summed across ranks.",
+    "The first-token wall mapping and marker envelope include queued device work; no host-side decomposition or no-profiler pure-kernel measurement is established."
+  ],
+  "phase_gate": {
+    "first_formal_client_rows": 1,
+    "first_formal_event": {
+      "event": "first_formal_first_token",
+      "profile_start_wall_ns": 1789244480054389557,
+      "request_id": "pf4096_dc1024:0",
+      "token_perf_counter_ns": 14140980642582775
+    },
+    "formal_phase": 100,
+    "identity_exact": true,
+    "token_counts_exact": true,
+    "warmup_phases": {
+      "warmup:0": 100,
+      "warmup:1": 100,
+      "warmup:2": 100,
+      "warmup:3": 100,
+      "warmup:4": 100,
+      "warmup:5": 100,
+      "warmup:6": 100,
+      "warmup:7": 100,
+      "warmup:8": 100,
+      "warmup:9": 100
+    }
+  },
+  "rjob_failure_cause": "post-client Bash arithmetic syntax in worker line 109; data and traces were already complete",
+  "rjob_failure_stage": "worker",
+  "rjob_phase": "Failed",
+  "status": "PASS",
+  "trace_gate": {
+    "all_dp0_present": true,
+    "all_gpu_traces_have_nccl_distributed_info": true,
+    "expected_dp0_labels": [
+      "VLLM::Worker_DP0_TP0_EP0",
+      "VLLM::Worker_DP0_TP1_EP1",
+      "VLLM::Worker_DP0_TP2_EP2",
+      "VLLM::Worker_DP0_TP3_EP3"
+    ],
+    "gpu_trace_count": 8,
+    "memcpy_events_present": true,
+    "memset_events_present": true,
+    "observed_dp0_labels": [
+      "VLLM::Worker_DP0_TP0_EP0",
+      "VLLM::Worker_DP0_TP1_EP1",
+      "VLLM::Worker_DP0_TP2_EP2",
+      "VLLM::Worker_DP0_TP3_EP3"
+    ],
+    "trace_count": 9
+  },
+  "trace_metadata": [
+    {
+      "baseTimeNanoseconds": 1782967788000000000,
+      "cuda_driver_version": 12080,
+      "cuda_runtime_version": 12080,
+      "cupti_version": 26,
+      "distributed_backend": "nccl",
+      "distributed_nccl_version": "2.27.3",
+      "distributed_rank": 4,
+      "file": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-03/torch-profiler/rjob-fb652908d4255a37-52045d57e7718f09-0_1078.1789244480624789681.pt.trace.json.gz",
+      "has_memcpy_events": true,
+      "has_memset_events": true,
+      "rank_label": "VLLM::Worker_DP1_TP0_EP4",
+      "size_bytes": 1867969,
+      "trace_events": 100069,
+      "world_size": 8
+    },
+    {
+      "baseTimeNanoseconds": 1782967788000000000,
+      "cuda_driver_version": 12080,
+      "cuda_runtime_version": 12080,
+      "cupti_version": 26,
+      "distributed_backend": "nccl",
+      "distributed_nccl_version": "2.27.3",
+      "distributed_rank": 5,
+      "file": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-03/torch-profiler/rjob-fb652908d4255a37-52045d57e7718f09-0_1079.1789244480617549961.pt.trace.json.gz",
+      "has_memcpy_events": true,
+      "has_memset_events": true,
+      "rank_label": "VLLM::Worker_DP1_TP1_EP5",
+      "size_bytes": 1867639,
+      "trace_events": 100117,
+      "world_size": 8
+    },
+    {
+      "baseTimeNanoseconds": 1782967788000000000,
+      "cuda_driver_version": 12080,
+      "cuda_runtime_version": 12080,
+      "cupti_version": 26,
+      "distributed_backend": "nccl",
+      "distributed_nccl_version": "2.27.3",
+      "distributed_rank": 6,
+      "file": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-03/torch-profiler/rjob-fb652908d4255a37-52045d57e7718f09-0_1080.1789244480624371278.pt.trace.json.gz",
+      "has_memcpy_events": true,
+      "has_memset_events": true,
+      "rank_label": "VLLM::Worker_DP1_TP2_EP6",
+      "size_bytes": 1868724,
+      "trace_events": 100069,
+      "world_size": 8
+    },
+    {
+      "baseTimeNanoseconds": 1782967788000000000,
+      "cuda_driver_version": 12080,
+      "cuda_runtime_version": 12080,
+      "cupti_version": 26,
+      "distributed_backend": "nccl",
+      "distributed_nccl_version": "2.27.3",
+      "distributed_rank": 7,
+      "file": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-03/torch-profiler/rjob-fb652908d4255a37-52045d57e7718f09-0_1081.1789244480612049114.pt.trace.json.gz",
+      "has_memcpy_events": true,
+      "has_memset_events": true,
+      "rank_label": "VLLM::Worker_DP1_TP3_EP7",
+      "size_bytes": 1865133,
+      "trace_events": 99749,
+      "world_size": 8
+    },
+    {
+      "baseTimeNanoseconds": 1782967788000000000,
+      "cuda_driver_version": 12080,
+      "cuda_runtime_version": 12080,
+      "cupti_version": 26,
+      "distributed_backend": "nccl",
+      "distributed_nccl_version": "2.27.3",
+      "distributed_rank": 0,
+      "file": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-03/torch-profiler/rjob-fb652908d4255a37-52045d57e7718f09-0_1084.1789244480624773790.pt.trace.json.gz",
+      "has_memcpy_events": true,
+      "has_memset_events": true,
+      "rank_label": "VLLM::Worker_DP0_TP0_EP0",
+      "size_bytes": 1900470,
+      "trace_events": 100440,
+      "world_size": 8
+    },
+    {
+      "baseTimeNanoseconds": 1782967788000000000,
+      "cuda_driver_version": 12080,
+      "cuda_runtime_version": 12080,
+      "cupti_version": 26,
+      "distributed_backend": "nccl",
+      "distributed_nccl_version": "2.27.3",
+      "distributed_rank": 1,
+      "file": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-03/torch-profiler/rjob-fb652908d4255a37-52045d57e7718f09-0_1085.1789244480617667269.pt.trace.json.gz",
+      "has_memcpy_events": true,
+      "has_memset_events": true,
+      "rank_label": "VLLM::Worker_DP0_TP1_EP1",
+      "size_bytes": 1908672,
+      "trace_events": 101068,
+      "world_size": 8
+    },
+    {
+      "baseTimeNanoseconds": 1782967788000000000,
+      "cuda_driver_version": 12080,
+      "cuda_runtime_version": 12080,
+      "cupti_version": 26,
+      "distributed_backend": "nccl",
+      "distributed_nccl_version": "2.27.3",
+      "distributed_rank": 2,
+      "file": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-03/torch-profiler/rjob-fb652908d4255a37-52045d57e7718f09-0_1086.1789244480625391743.pt.trace.json.gz",
+      "has_memcpy_events": true,
+      "has_memset_events": true,
+      "rank_label": "VLLM::Worker_DP0_TP2_EP2",
+      "size_bytes": 1908133,
+      "trace_events": 101098,
+      "world_size": 8
+    },
+    {
+      "baseTimeNanoseconds": 1782967788000000000,
+      "cuda_driver_version": 12080,
+      "cuda_runtime_version": 12080,
+      "cupti_version": 26,
+      "distributed_backend": "nccl",
+      "distributed_nccl_version": "2.27.3",
+      "distributed_rank": 3,
+      "file": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-03/torch-profiler/rjob-fb652908d4255a37-52045d57e7718f09-0_1087.1789244480613964000.pt.trace.json.gz",
+      "has_memcpy_events": true,
+      "has_memset_events": true,
+      "rank_label": "VLLM::Worker_DP0_TP3_EP3",
+      "size_bytes": 1907233,
+      "trace_events": 101088,
+      "world_size": 8
+    },
+    {
+      "baseTimeNanoseconds": 1782967788000000000,
+      "cuda_driver_version": 12080,
+      "cuda_runtime_version": 12080,
+      "cupti_version": 26,
+      "distributed_backend": null,
+      "distributed_nccl_version": null,
+      "distributed_rank": null,
+      "file": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-03/torch-profiler/rjob-fb652908d4255a37-52045d57e7718f09-0_400.async_llm.1789244480236798965.pt.trace.json.gz",
+      "has_memcpy_events": false,
+      "has_memset_events": false,
+      "rank_label": null,
+      "size_bytes": 1124,
+      "trace_events": 55,
+      "world_size": null
+    }
+  ]
+}

@@ -1,0 +1,210 @@
+{
+  "status": "PASS_COLLECTION_DIAGNOSTIC_ONLY",
+  "groups": [
+    "detail"
+  ],
+  "first_request_id": "cmpl-pf4096_dc1024:0-0",
+  "rank_results": [
+    {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "pp_rank": 0,
+      "batch_id": 4671,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 96.68460845947266,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 1,
+      "timestamp": 1788875014.8230755,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "group": "detail",
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_detail/operators/server.ops.dp0.tp0.pp0.jsonl",
+      "scope_totals_ms": {
+        "embedding_compute": 0.24620799720287323,
+        "input_layernorm": 0.9694400019943714,
+        "attn_output_init": 0.37484800070524216,
+        "post_attention_layernorm": 0.9519999977201223,
+        "moe_grouped_gemm_w1": 6.955360010266304,
+        "moe_activation": 6.548863977193832,
+        "moe_grouped_gemm_w2": 4.046496011316776,
+        "final_layernorm": 0.02006400004029274
+      },
+      "scope_counts": {
+        "embedding_compute": 1,
+        "input_layernorm": 48,
+        "attn_output_init": 48,
+        "post_attention_layernorm": 48,
+        "moe_grouped_gemm_w1": 48,
+        "moe_activation": 48,
+        "moe_grouped_gemm_w2": 48,
+        "final_layernorm": 1
+      },
+      "grouped_gemm_plus_sum_by_layer": [],
+      "grouped_gemm_plus_sum_ms": null
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "pp_rank": 0,
+      "batch_id": 4671,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 96.70655822753906,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 1,
+      "timestamp": 1788875014.8230429,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "group": "detail",
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_detail/operators/server.ops.dp0.tp1.pp0.jsonl",
+      "scope_totals_ms": {
+        "embedding_compute": 0.24249599874019623,
+        "input_layernorm": 0.968191996216774,
+        "attn_output_init": 0.38540800008922815,
+        "post_attention_layernorm": 0.9513280019164085,
+        "moe_grouped_gemm_w1": 6.901215985417366,
+        "moe_activation": 6.55580797791481,
+        "moe_grouped_gemm_w2": 4.00144000351429,
+        "final_layernorm": 0.020160000771284103
+      },
+      "scope_counts": {
+        "embedding_compute": 1,
+        "input_layernorm": 48,
+        "attn_output_init": 48,
+        "post_attention_layernorm": 48,
+        "moe_grouped_gemm_w1": 48,
+        "moe_activation": 48,
+        "moe_grouped_gemm_w2": 48,
+        "final_layernorm": 1
+      },
+      "grouped_gemm_plus_sum_by_layer": [],
+      "grouped_gemm_plus_sum_ms": null
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "pp_rank": 0,
+      "batch_id": 4671,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 96.7175064086914,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 1,
+      "timestamp": 1788875014.8230782,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "group": "detail",
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_detail/operators/server.ops.dp0.tp2.pp0.jsonl",
+      "scope_totals_ms": {
+        "embedding_compute": 0.25999999046325684,
+        "input_layernorm": 0.9765120055526495,
+        "attn_output_init": 0.7659199950285256,
+        "post_attention_layernorm": 0.9606720004230738,
+        "moe_grouped_gemm_w1": 11.259583994746208,
+        "moe_activation": 6.56047996878624,
+        "moe_grouped_gemm_w2": 4.046976014971733,
+        "final_layernorm": 0.019999999552965164
+      },
+      "scope_counts": {
+        "embedding_compute": 1,
+        "input_layernorm": 48,
+        "attn_output_init": 48,
+        "post_attention_layernorm": 48,
+        "moe_grouped_gemm_w1": 48,
+        "moe_activation": 48,
+        "moe_grouped_gemm_w2": 48,
+        "final_layernorm": 1
+      },
+      "grouped_gemm_plus_sum_by_layer": [],
+      "grouped_gemm_plus_sum_ms": null
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "pp_rank": 0,
+      "batch_id": 4671,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 96.6416015625,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 1,
+      "timestamp": 1788875014.8229752,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "batch_dp_token_counts": [
+        4096,
+        1
+      ],
+      "group": "detail",
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_detail/operators/server.ops.dp0.tp3.pp0.jsonl",
+      "scope_totals_ms": {
+        "embedding_compute": 0.2629759907722473,
+        "input_layernorm": 0.9716480001807213,
+        "attn_output_init": 0.3846719986759126,
+        "post_attention_layernorm": 0.9466240052133799,
+        "moe_grouped_gemm_w1": 7.017311975359917,
+        "moe_activation": 6.548639997839928,
+        "moe_grouped_gemm_w2": 4.037760019302368,
+        "final_layernorm": 0.019999999552965164
+      },
+      "scope_counts": {
+        "embedding_compute": 1,
+        "input_layernorm": 48,
+        "attn_output_init": 48,
+        "post_attention_layernorm": 48,
+        "moe_grouped_gemm_w1": 48,
+        "moe_activation": 48,
+        "moe_grouped_gemm_w2": 48,
+        "final_layernorm": 1
+      },
+      "grouped_gemm_plus_sum_by_layer": [],
+      "grouped_gemm_plus_sum_ms": null
+    }
+  ],
+  "limits": "Groups are separate runs and ranks are parallel. No cross-run scope sum, rank sum, or parent/child addition is performed. GG+sum pairs use sibling scopes from one run/rank/layer; 1 peer token requires scheduler evidence to identify dummy work. Physical DP metadata does not measure the peer's operations. Numerical P/S/V and CUDA-span acceptance remain separate."
+}

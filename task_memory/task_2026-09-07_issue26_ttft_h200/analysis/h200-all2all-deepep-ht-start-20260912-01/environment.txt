@@ -1,0 +1,7 @@
+VLLM_USE_DEEP_GEMM=0
+LD_PRELOAD=/data/ycfeng/tmp/issue26-h200-all2all-deps-preload-20260912-01/python/nvidia/nccl/lib/libnccl.so.2:/usr/local/nvidia/lib64/libcuda.so.1
+NVSHMEM_DIR=/data/ycfeng/tmp/issue26-h200-all2all-deps-preload-20260912-01/python/nvidia/nvshmem
+PYTHONPATH=/data/ycfeng/tmp/issue26-h200-all2all-deps-preload-20260912-01/python:/data/ycfeng/tmp/vLLM-BS
+LD_LIBRARY_PATH=/data/ycfeng/tmp/issue26-h200-all2all-deps-preload-20260912-01/python/nvidia/nccl/lib:/data/ycfeng/tmp/issue26-h200-all2all-deps-preload-20260912-01/python/nvidia/nvshmem/lib:/usr/local/cuda-12.8/lib64:/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/lib:/usr/local/cuda/lib64:/usr/local/nvidia/lib64
+EP_NCCL_ROOT_DIR=/data/ycfeng/tmp/issue26-h200-all2all-deps-preload-20260912-01/python/nvidia/nccl
+VLLM_ALL2ALL_BACKEND=deepep_high_throughput

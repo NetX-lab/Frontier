@@ -1,0 +1,16 @@
+frontier_op,frontier_ms,vllm_event_ms,event_gap_pct,mapping,shape,kernel_children
+input_layernorm,1.0851839999999993,1.2667200025171041,-14.331%,1:many: first RMSNorm + 47 fused add/norm,A,"K04,K36"
+attn_pre_proj,6.584063999999999,3.9272959902882576,+67.649%,1:many: GEMM + 96 copy + 96 Q/K norm kernels,A,"K05,K06,K07"
+attn_rope,1.5521279999999988,1.0290239974856377,+50.835%,1:1,A,K08
+attn_prefill,7.026432000000004,6.047232016921043,+16.193%,1:many: indices + attention + multiply,A,"K11,K12,K13"
+attn_kv_cache_save,0.807168000000001,0.7213119966909289,+11.903%,1:1 memory write,A,K10
+attn_post_proj,2.245632,missing,missing,1:1 GEMM; event parent inseparable from TP AR,A,K14
+post_attention_layernorm,1.0613760000000003,1.2444159965962172,-14.709%,1:1 fused add/norm,A,K16
+moe_gating_linear,0.6614400000000005,0.7235839972272515,-8.588%,1:1 GEMM; even moe_gating scope sequence,L,K17
+moe_gating_routing_topk,4.4392799999999975,6.306879982352257,-29.612%,1:many; odd moe_gating sequence; global M differs,M,"K20,K21,K22,K23,K24,K25,K26"
+moe_shuffling,2.5413599999999983,1.8896320015192032,+34.490%,1:many; global M/expert map differs,M,"K27,K28,K29,K30"
+moe_grouped_gemm,15.635904000000018,18.18016004562378,-13.995%,partial 1:many; profile omits SiLU and uses copy,M,"K31,K32"
+add,0,missing independent non-additive scope,missing,fused residual accounting; not missing zero,A,see existing parent rows
+add_attn_residual,0,missing independent non-additive scope,missing,fused residual accounting; not missing zero,A,see existing parent rows
+add_ffn_residual,0,missing independent non-additive scope,missing,fused residual accounting; not missing zero,A,see existing parent rows
+moe_gating,4.43928,missing independent non-additive scope,missing,routing alias,M,see existing parent rows

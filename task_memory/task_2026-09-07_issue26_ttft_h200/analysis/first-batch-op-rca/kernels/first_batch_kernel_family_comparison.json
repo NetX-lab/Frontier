@@ -1,0 +1,70 @@
+[
+  {
+    "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/first-batch-op-rca/kernels/first_dp0_tp0_kernels.jsonl",
+    "kernel_time_ms": {
+      "attention_projection": 1.227588,
+      "attention_tp_allreduce": 29.569227000000005,
+      "moe_gemm_w1_w2": 10.270075000000002,
+      "gated_silu": 7.067903,
+      "moe_sum": 2.709863000000001
+    },
+    "counts": {
+      "attention_projection": 48,
+      "attention_tp_allreduce": 48,
+      "moe_gemm_w1_w2": 96,
+      "gated_silu": 48,
+      "moe_sum": 48
+    }
+  },
+  {
+    "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/first-batch-op-rca/kernels/first_dp0_tp1_kernels.jsonl",
+    "kernel_time_ms": {
+      "attention_projection": 1.241378,
+      "attention_tp_allreduce": 4.726896000000001,
+      "moe_gemm_w1_w2": 10.201439000000006,
+      "gated_silu": 7.070356000000002,
+      "moe_sum": 2.7238830000000003
+    },
+    "counts": {
+      "attention_projection": 48,
+      "attention_tp_allreduce": 48,
+      "moe_gemm_w1_w2": 96,
+      "gated_silu": 48,
+      "moe_sum": 48
+    }
+  },
+  {
+    "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/first-batch-op-rca/kernels/first_dp0_tp2_kernels.jsonl",
+    "kernel_time_ms": {
+      "attention_projection": 1.2320970000000007,
+      "attention_tp_allreduce": 29.736275,
+      "moe_gemm_w1_w2": 10.143595999999999,
+      "gated_silu": 7.065041000000003,
+      "moe_sum": 2.714597
+    },
+    "counts": {
+      "attention_projection": 48,
+      "attention_tp_allreduce": 48,
+      "moe_gemm_w1_w2": 96,
+      "gated_silu": 48,
+      "moe_sum": 48
+    }
+  },
+  {
+    "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/first-batch-op-rca/kernels/first_dp0_tp3_kernels.jsonl",
+    "kernel_time_ms": {
+      "attention_projection": 1.233317,
+      "attention_tp_allreduce": 25.174932000000002,
+      "moe_gemm_w1_w2": 10.232249000000005,
+      "gated_silu": 7.062557000000002,
+      "moe_sum": 2.7159760000000004
+    },
+    "counts": {
+      "attention_projection": 48,
+      "attention_tp_allreduce": 48,
+      "moe_gemm_w1_w2": 96,
+      "gated_silu": 48,
+      "moe_sum": 48
+    }
+  }
+]

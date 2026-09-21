@@ -1,0 +1,48 @@
+{
+  "source": "/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab",
+  "target": "/data/ycfeng/tmp/issue26-vllm-post-moe-bypass-20260910",
+  "method": "Copy missing ignored FlashAttention runtime assets from verified normal source, unchanged",
+  "files": [
+    {
+      "file": "vllm/vllm_flash_attn/__init__.py",
+      "bytes": 337,
+      "source": "/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab/vllm/vllm_flash_attn/__init__.py"
+    },
+    {
+      "file": "vllm/vllm_flash_attn/_vllm_fa2_C.abi3.so",
+      "bytes": 195736224,
+      "source": "/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab/vllm/vllm_flash_attn/_vllm_fa2_C.abi3.so"
+    },
+    {
+      "file": "vllm/vllm_flash_attn/_vllm_fa3_C.abi3.so",
+      "bytes": 622666656,
+      "source": "/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab/vllm/vllm_flash_attn/_vllm_fa3_C.abi3.so"
+    },
+    {
+      "file": "vllm/vllm_flash_attn/flash_attn_interface.py",
+      "bytes": 25625,
+      "source": "/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab/vllm/vllm_flash_attn/flash_attn_interface.py"
+    },
+    {
+      "file": "vllm/vllm_flash_attn/layers/__init__.py",
+      "bytes": 0,
+      "source": "/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab/vllm/vllm_flash_attn/layers/__init__.py"
+    },
+    {
+      "file": "vllm/vllm_flash_attn/layers/rotary.py",
+      "bytes": 21426,
+      "source": "/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab/vllm/vllm_flash_attn/layers/rotary.py"
+    },
+    {
+      "file": "vllm/vllm_flash_attn/ops/triton/__init__.py",
+      "bytes": 1,
+      "source": "/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab/vllm/vllm_flash_attn/ops/triton/__init__.py"
+    },
+    {
+      "file": "vllm/vllm_flash_attn/ops/triton/rotary.py",
+      "bytes": 8737,
+      "source": "/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab/vllm/vllm_flash_attn/ops/triton/rotary.py"
+    }
+  ],
+  "byte_comparison": "PASS: all 8 files equal to verified normal runtime assets"
+}

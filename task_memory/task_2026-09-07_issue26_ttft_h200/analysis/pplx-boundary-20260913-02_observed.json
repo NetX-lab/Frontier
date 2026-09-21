@@ -1,0 +1,71 @@
+{
+  "status": "PASS_OBSERVED_DP_LANE",
+  "contract_status": "FAIL_REQUIRED_DP0",
+  "backend": "pplx",
+  "warmup_rounds": 10,
+  "formal_requests": 100,
+  "client_rows": 1100,
+  "first_formal_request_id": "pf4096_dc1024:0",
+  "first_formal_server_request_id": "cmpl-pf4096_dc1024:0-0",
+  "observed_dp_rank": [
+    1
+  ],
+  "required_dp_rank": [
+    0
+  ],
+  "tp_ranks": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "duration_ms_by_tp": {
+    "0": 541.9814453125,
+    "1": 542.3368530273438,
+    "2": 542.3391723632812,
+    "3": 542.3716430664062
+  },
+  "median_ms": 542.3380126953125,
+  "p90_ms": 542.3619018554688,
+  "rank_max_ms": 542.3716430664062,
+  "rank_min_ms": 541.9814453125,
+  "rank_spread_ms": 0.39019775390625,
+  "client_first_token_ttft_ms": 580.602042,
+  "boundary_files": [
+    {
+      "path": "server.boundary.dp0.tp0.pp0.jsonl",
+      "rows": 0
+    },
+    {
+      "path": "server.boundary.dp0.tp1.pp0.jsonl",
+      "rows": 0
+    },
+    {
+      "path": "server.boundary.dp0.tp2.pp0.jsonl",
+      "rows": 0
+    },
+    {
+      "path": "server.boundary.dp0.tp3.pp0.jsonl",
+      "rows": 0
+    },
+    {
+      "path": "server.boundary.dp1.tp0.pp0.jsonl",
+      "rows": 1
+    },
+    {
+      "path": "server.boundary.dp1.tp1.pp0.jsonl",
+      "rows": 1
+    },
+    {
+      "path": "server.boundary.dp1.tp2.pp0.jsonl",
+      "rows": 1
+    },
+    {
+      "path": "server.boundary.dp1.tp3.pp0.jsonl",
+      "rows": 1
+    }
+  ],
+  "source_commit": "cf1ef5de9c0c45aedec4cf9d22c8eb56caf8bf0b",
+  "event_semantics": "CUDA-event envelope on the model forward stream; may include queued device work but excludes host wall time",
+  "limits": "Observed DP1 lane is retained for protocol diagnosis. The mandatory canonical DP0 lane gate failed; this fused PPLX result is not interchangeable with native clean DP0 references and is not a Frontier correction input."
+}

@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "manifest": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/run_manifest.json",
+  "mode": "instrumented",
+  "warmup_rounds": 3,
+  "E2E": false,
+  "CPU_probe": false,
+  "op_scopes": [
+    "expert_parallel_allreduce",
+    "attn_post_proj_tp_allreduce",
+    "tensor_parallel_allreduce"
+  ],
+  "runtime_meta": false,
+  "next_action": "Execute independent communication scope diagnostic and compare probe density."
+}

@@ -1,0 +1,24 @@
+{
+  "dp_rank": 0,
+  "tp_rank": 0,
+  "pp_rank": 0,
+  "batch_id": 4706,
+  "batch_size": 1,
+  "batch_num_tokens": 4096,
+  "batch_num_prefill_tokens": 4096,
+  "batch_num_decode_tokens": 0,
+  "batch_execution_time_ms": 116.21014404296875,
+  "op_profile_selected": true,
+  "op_profile_selected_index": 0,
+  "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+  "op_profile_batch_limit": 3,
+  "timestamp": 1788861125.036003,
+  "request_ids": [
+    "cmpl-pf4096_dc1024:0-0"
+  ],
+  "request_num_tokens": [
+    4096
+  ],
+  "op_rows": 864,
+  "op_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/operators/server.ops.dp0.tp0.pp0.jsonl"
+}

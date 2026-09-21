@@ -1,0 +1,21 @@
+{
+  "issue": "New launch manifest inherited historical completion/provenance fields from template",
+  "before": {
+    "status": "PASS",
+    "artifact_created_at": "2026-09-07T17:14:30.516770+00:00",
+    "frontier_commit": "9d756e05357531c0c4a24e40f6b119401764c743",
+    "worker_snapshot": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-official-clean-01/worker.sh",
+    "completed_utc": "2026-09-07T17:36:54.750538+00:00",
+    "validation_artifact": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/official-clean-01/validation.json"
+  },
+  "after": {
+    "status": "RUNNING",
+    "artifact_created_at": "2026-09-08T00:43:14.637585+00:00",
+    "frontier_commit": "20c8adf186d6f883600d2d493606f481c5a3b8c2",
+    "worker_snapshot": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-uniform-clean-01/worker.sh",
+    "completed_utc": null,
+    "validation_artifact": null
+  },
+  "numeric_data_reused": false,
+  "status": "CORRECTED_BEFORE_RESULT_VALIDATION"
+}

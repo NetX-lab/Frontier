@@ -1,0 +1,14 @@
+{
+  "status": "PASS_INDEPENDENT_RECONSTRUCTION",
+  "request_count": 100,
+  "first": {
+    "request_id": "cmpl-pf4096_dc1024:0-0",
+    "official_ttft_ms": 121.48427963256836,
+    "schedule_to_first_output_ms": 81.1579111032188,
+    "outside_schedule_first_ms": 40.326368529349566
+  },
+  "mean_schedule_to_first_output_ms": 88.39229965582534,
+  "mean_outside_schedule_first_ms": 42.876337524503036,
+  "source": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-historical-replay-02/clean/runtime/clean/server.request_metrics.jsonl",
+  "limits": "Native same-run algebra, not CUDA time and not CPU-only residual."
+}

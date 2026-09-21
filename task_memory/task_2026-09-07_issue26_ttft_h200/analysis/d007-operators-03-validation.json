@@ -1,0 +1,281 @@
+{
+  "status": "PASS",
+  "source": "task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-diagnostics-03/runtime/operators",
+  "mode": "ops",
+  "workers": [
+    {
+      "identity": [
+        0,
+        0,
+        0
+      ],
+      "batches": 5246,
+      "detail_rows": 4540128,
+      "formal_batches": 1395,
+      "first_formal_batch": 3851,
+      "formal_scopes": {
+        "tensor_parallel_allreduce": 1395,
+        "input_layernorm": 66960,
+        "attn_pre_proj": 66960,
+        "attn_rope": 66960,
+        "attn_kv_cache_save": 66960,
+        "attn_prefill": 2304,
+        "attn_post_proj": 66960,
+        "add": 132525,
+        "post_attention_layernorm": 66960,
+        "moe_gating": 133920,
+        "expert_parallel_alltoall_dispatch": 133920,
+        "moe_shuffling": 66960,
+        "moe_grouped_gemm": 66960,
+        "expert_parallel_alltoall_combine": 133920,
+        "expert_parallel_allreduce": 66960,
+        "attn_decode": 66912
+      },
+      "local_formal_batch_phases": {
+        "prefill": 1,
+        "mixed": 47,
+        "decode": 1347
+      }
+    },
+    {
+      "identity": [
+        0,
+        1,
+        0
+      ],
+      "batches": 5246,
+      "detail_rows": 4540128,
+      "formal_batches": 1395,
+      "first_formal_batch": 3851,
+      "formal_scopes": {
+        "tensor_parallel_allreduce": 1395,
+        "input_layernorm": 66960,
+        "attn_pre_proj": 66960,
+        "attn_rope": 66960,
+        "attn_kv_cache_save": 66960,
+        "attn_prefill": 2304,
+        "attn_post_proj": 66960,
+        "add": 132525,
+        "post_attention_layernorm": 66960,
+        "moe_gating": 133920,
+        "expert_parallel_alltoall_dispatch": 133920,
+        "moe_shuffling": 66960,
+        "moe_grouped_gemm": 66960,
+        "expert_parallel_alltoall_combine": 133920,
+        "expert_parallel_allreduce": 66960,
+        "attn_decode": 66912
+      },
+      "local_formal_batch_phases": {
+        "prefill": 1,
+        "mixed": 47,
+        "decode": 1347
+      }
+    },
+    {
+      "identity": [
+        0,
+        2,
+        0
+      ],
+      "batches": 5246,
+      "detail_rows": 4540128,
+      "formal_batches": 1395,
+      "first_formal_batch": 3851,
+      "formal_scopes": {
+        "tensor_parallel_allreduce": 1395,
+        "input_layernorm": 66960,
+        "attn_pre_proj": 66960,
+        "attn_rope": 66960,
+        "attn_kv_cache_save": 66960,
+        "attn_prefill": 2304,
+        "attn_post_proj": 66960,
+        "add": 132525,
+        "post_attention_layernorm": 66960,
+        "moe_gating": 133920,
+        "expert_parallel_alltoall_dispatch": 133920,
+        "moe_shuffling": 66960,
+        "moe_grouped_gemm": 66960,
+        "expert_parallel_alltoall_combine": 133920,
+        "expert_parallel_allreduce": 66960,
+        "attn_decode": 66912
+      },
+      "local_formal_batch_phases": {
+        "prefill": 1,
+        "mixed": 47,
+        "decode": 1347
+      }
+    },
+    {
+      "identity": [
+        0,
+        3,
+        0
+      ],
+      "batches": 5246,
+      "detail_rows": 4540128,
+      "formal_batches": 1395,
+      "first_formal_batch": 3851,
+      "formal_scopes": {
+        "tensor_parallel_allreduce": 1395,
+        "input_layernorm": 66960,
+        "attn_pre_proj": 66960,
+        "attn_rope": 66960,
+        "attn_kv_cache_save": 66960,
+        "attn_prefill": 2304,
+        "attn_post_proj": 66960,
+        "add": 132525,
+        "post_attention_layernorm": 66960,
+        "moe_gating": 133920,
+        "expert_parallel_alltoall_dispatch": 133920,
+        "moe_shuffling": 66960,
+        "moe_grouped_gemm": 66960,
+        "expert_parallel_alltoall_combine": 133920,
+        "expert_parallel_allreduce": 66960,
+        "attn_decode": 66912
+      },
+      "local_formal_batch_phases": {
+        "prefill": 1,
+        "mixed": 47,
+        "decode": 1347
+      }
+    },
+    {
+      "identity": [
+        1,
+        0,
+        0
+      ],
+      "batches": 5266,
+      "detail_rows": 4557312,
+      "formal_batches": 1403,
+      "first_formal_batch": 3863,
+      "formal_scopes": {
+        "tensor_parallel_allreduce": 1403,
+        "input_layernorm": 67344,
+        "attn_pre_proj": 67344,
+        "attn_rope": 67344,
+        "attn_kv_cache_save": 67344,
+        "attn_prefill": 2304,
+        "attn_post_proj": 67344,
+        "add": 133285,
+        "post_attention_layernorm": 67344,
+        "moe_gating": 134688,
+        "expert_parallel_alltoall_dispatch": 134688,
+        "moe_shuffling": 67344,
+        "moe_grouped_gemm": 67344,
+        "expert_parallel_alltoall_combine": 134688,
+        "expert_parallel_allreduce": 67344,
+        "attn_decode": 67296
+      },
+      "local_formal_batch_phases": {
+        "prefill": 1,
+        "mixed": 47,
+        "decode": 1355
+      }
+    },
+    {
+      "identity": [
+        1,
+        1,
+        0
+      ],
+      "batches": 5266,
+      "detail_rows": 4557312,
+      "formal_batches": 1403,
+      "first_formal_batch": 3863,
+      "formal_scopes": {
+        "tensor_parallel_allreduce": 1403,
+        "input_layernorm": 67344,
+        "attn_pre_proj": 67344,
+        "attn_rope": 67344,
+        "attn_kv_cache_save": 67344,
+        "attn_prefill": 2304,
+        "attn_post_proj": 67344,
+        "add": 133285,
+        "post_attention_layernorm": 67344,
+        "moe_gating": 134688,
+        "expert_parallel_alltoall_dispatch": 134688,
+        "moe_shuffling": 67344,
+        "moe_grouped_gemm": 67344,
+        "expert_parallel_alltoall_combine": 134688,
+        "expert_parallel_allreduce": 67344,
+        "attn_decode": 67296
+      },
+      "local_formal_batch_phases": {
+        "prefill": 1,
+        "mixed": 47,
+        "decode": 1355
+      }
+    },
+    {
+      "identity": [
+        1,
+        2,
+        0
+      ],
+      "batches": 5266,
+      "detail_rows": 4557312,
+      "formal_batches": 1403,
+      "first_formal_batch": 3863,
+      "formal_scopes": {
+        "tensor_parallel_allreduce": 1403,
+        "input_layernorm": 67344,
+        "attn_pre_proj": 67344,
+        "attn_rope": 67344,
+        "attn_kv_cache_save": 67344,
+        "attn_prefill": 2304,
+        "attn_post_proj": 67344,
+        "add": 133285,
+        "post_attention_layernorm": 67344,
+        "moe_gating": 134688,
+        "expert_parallel_alltoall_dispatch": 134688,
+        "moe_shuffling": 67344,
+        "moe_grouped_gemm": 67344,
+        "expert_parallel_alltoall_combine": 134688,
+        "expert_parallel_allreduce": 67344,
+        "attn_decode": 67296
+      },
+      "local_formal_batch_phases": {
+        "prefill": 1,
+        "mixed": 47,
+        "decode": 1355
+      }
+    },
+    {
+      "identity": [
+        1,
+        3,
+        0
+      ],
+      "batches": 5266,
+      "detail_rows": 4557312,
+      "formal_batches": 1403,
+      "first_formal_batch": 3863,
+      "formal_scopes": {
+        "tensor_parallel_allreduce": 1403,
+        "input_layernorm": 67344,
+        "attn_pre_proj": 67344,
+        "attn_rope": 67344,
+        "attn_kv_cache_save": 67344,
+        "attn_prefill": 2304,
+        "attn_post_proj": 67344,
+        "add": 133285,
+        "post_attention_layernorm": 67344,
+        "moe_gating": 134688,
+        "expert_parallel_alltoall_dispatch": 134688,
+        "moe_shuffling": 67344,
+        "moe_grouped_gemm": 67344,
+        "expert_parallel_alltoall_combine": 134688,
+        "expert_parallel_allreduce": 67344,
+        "attn_decode": 67296
+      },
+      "local_formal_batch_phases": {
+        "prefill": 1,
+        "mixed": 47,
+        "decode": 1355
+      }
+    }
+  ],
+  "formal_requests": 100,
+  "limits": "Worker-local identity and batch metadata validation only. Phases describe local scheduled requests; routing num_tokens and local expert counts describe post-dispatch inputs. DP dummy rounds are unlogged, so cross-DP collective-round joins and EP-global phases are unverified. No Frontier operator parity or E2E claim."
+}

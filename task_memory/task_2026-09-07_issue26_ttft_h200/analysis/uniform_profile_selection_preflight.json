@@ -1,0 +1,9 @@
+{
+  "status": "PASS_EXPECTED_REJECTION",
+  "current_balanced_runtime": "standard_fused_topk",
+  "available_paths": [
+    "uniform_topk"
+  ],
+  "error": "No moe_gating_routing_topk profiling rows match the requested routing_runtime_path='standard_fused_topk'. Available paths: ['uniform_topk']. Source: task_memory/task_2026-09-07_issue26_ttft_h200/supplements/moe-uniform-01/moe.csv",
+  "next_action": "D012 explicit runtime selector before numerical CPU run"
+}

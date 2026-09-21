@@ -1,0 +1,54 @@
+{
+  "change_marker": "D019-MOE-ACTIVATION-REDUCTION-01",
+  "commit": "5dd5ee39",
+  "requesting_user": "YC",
+  "reviewer_identity": "YC",
+  "approval": "requirements.md: D019 execution approval \u2014 2026-09-08",
+  "approved_scope": "Proven gated SiLU and reduction coverage correction, D019 CUDA-first plan",
+  "files": [
+    "frontier/profiling/moe/moe_vllm_kernel.py",
+    "tests/unit/test_moe_fused_expert_numerical_parity.py",
+    "tests/performance/issue26_moe_exact_profile.py"
+  ],
+  "validation_status": "PASS_ISOLATED_CORRECTION",
+  "op_analysis_status": "PENDING_PAIRED_V_AND_PREDICTOR_INTEGRATION",
+  "clean_e2e_status": "PENDING",
+  "gpu_environment": {
+    "group": "step_main",
+    "device": "H200",
+    "python": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/bin/python",
+    "python_version": "3.10.16",
+    "torch": "2.8.0+cu128",
+    "image": "hub.i.basemind.com/vllm-0.10.2/frontier-env@sha256:b97a2fdc624953679562a4835ea66e085ec22563f2086fecfe6710a9e682dbbc"
+  },
+  "commands": [
+    "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/bin/python -m pytest tests/unit/test_moe_fused_expert_numerical_parity.py -q -p no:cacheprovider",
+    "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/bin/python tests/performance/issue26_moe_exact_profile.py --output-dir <task>/analysis/h200-d019-profiles-01/runtime/moe --model qwen3-a3b-30b-moe --ep-size 8 --tokens 4095 4096 4097 --ep-ranks 0 1 7 --samples 20 --seeds 0 1 2",
+    "/home/i-fengyicheng/miniconda3/envs/dev-vidur-v03-hopper-e2e/bin/python -m pytest tests/unit/test_moe_profiling_output_metadata.py -q -p no:cacheprovider"
+  ],
+  "evidence": {
+    "numerical_pytest": "4 passed in 14.64s",
+    "exact_shape_bitwise_checks": 27,
+    "profile_rows": 27,
+    "typed_operators_per_row": 4,
+    "positive_finite_component_samples": 5400,
+    "metadata_pytest": "6 passed in 0.61s",
+    "metadata_loader": "PASS normalized; raw export failed missing profiling_precision",
+    "normalized_csv": "analysis/d019-moe-normalized/moe.csv",
+    "normalized_original_columns_unchanged": true,
+    "details": "analysis/d019-moe-repair.md",
+    "machine_receipt": "analysis/d019-moe-normalized/validation.json"
+  },
+  "before_after": {
+    "old_prediction_ms_per_layer": 0.325748,
+    "new_profile_4096_ep0_ms_per_layer": 0.4493759870529175,
+    "comparison_kind": "CHANGED_IMPLEMENTATION_AND_EXACT_LAYOUT_NOT_SAME_IMPLEMENTATION_P_MINUS_S"
+  },
+  "limitations": [
+    "CPU master validation proves metadata/feature validity, not paired numerical calibration",
+    "New CSV contains prefill_hot gating only; base standalone_legacy gating still required",
+    "Corrected anchors do not cover decode/small-batch MoE",
+    "CSV default float parsing may prevent exact keys for fractional loads",
+    "No independent component-median sum is used as a full span"
+  ]
+}

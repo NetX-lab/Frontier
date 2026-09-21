@@ -1,0 +1,79 @@
+{
+  "case_id": "issue26-ttft-h200-pf4096-dc1024",
+  "run_generation": "h200-batch-repro-20260909-01",
+  "mode": "batch",
+  "status": "ARTIFACT_VALIDATION_PASS",
+  "analysis_state": "COMPLETE",
+  "platform_job": "yc26-h200-batch-repro-20260909-01",
+  "hardware": {
+    "gpu": "H200",
+    "gpu_count": 8,
+    "charged_group": "step_main",
+    "positive_tag": "h200",
+    "predict_only_nodes": [
+      "gpu-h200-0657.lgcm.sh.istep.fun",
+      "gpu-h200-0896.lgcm.sh.istep.fun",
+      "gpu-h200-0052.lgcm.sh.istep.fun"
+    ],
+    "image": "hub.i.basemind.com/vllm-0.10.2/frontier-env@sha256:b97a2fdc624953679562a4835ea66e085ec22563f2086fecfe6710a9e682dbbc"
+  },
+  "source": {
+    "frontier_checkout": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907",
+    "frontier_commit": "fb3ed7972d27dd4f9418a0ae0ecb5f7b7c951d8a",
+    "vllm_checkout": "/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908",
+    "vllm_branch": "feature/frontier-comparison-instrumentation",
+    "vllm_commit": "4bc1bc026c91dff78bd7cf5ba6411f14d15e043d",
+    "historical_recipe_vllm_commit": "361d941c97fcec52e544f74b7ab91c54192de9c9",
+    "vllm_tree_dirty": false,
+    "historical_commit_note": "The shared diagnostic checkout was preserved at 4bc1bc; the historical 361d941 pin is retained as a reference and was not silently substituted."
+  },
+  "runtime": {
+    "model": "/data/ycfeng/tmp/issue26-qwen3-dummy",
+    "served_model_name": "Qwen3-30B-A3B-Instruct-2507",
+    "dtype": "bfloat16",
+    "weights": "dummy",
+    "tensor_parallel": 4,
+    "data_parallel": 2,
+    "pipeline_parallel": 1,
+    "expert_parallel": 8,
+    "attention_backend": "FLASHINFER",
+    "all2all_backend": "naive",
+    "execution": "eager",
+    "max_model_len": 16384,
+    "max_num_batched_tokens": 16384,
+    "max_num_seqs": 1024,
+    "block_size": 16,
+    "num_gpu_blocks_override": 310809,
+    "seed": 0,
+    "chunked_prefill": false,
+    "prefix_caching": false,
+    "uniform_routing": true
+  },
+  "workload": {
+    "row": "pf4096_dc1024",
+    "prefill_tokens": 4096,
+    "decode_tokens": 1024,
+    "formal_requests": 100,
+    "warmup_replays": 3,
+    "qps": 2.0,
+    "client_seed": 20260908,
+    "formal_request_identity": "cmpl-pf4096_dc1024:0-0"
+  },
+  "instrumentation": {
+    "batch_log": true,
+    "scheduler_log": true,
+    "operator_cuda_events": false,
+    "cpu_probes": false,
+    "official_request_metrics": false,
+    "trace_skip_warmup": true,
+    "selection": "batch"
+  },
+  "artifacts": {
+    "runtime_root": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-batch-repro-20260909-01/runtime",
+    "batch_root": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-batch-repro-20260909-01/runtime/batch",
+    "batch_validation": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-batch-repro-20260909-01/batch-validation.json",
+    "predict_only_log": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-batch-repro-20260909-01/predict-only.log",
+    "launch_script": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-batch-repro-20260909-01/launch.sh"
+  },
+  "limits": "batch_execution_time_ms is the vLLM forward CUDA-event interval and can include host-induced device gaps; this diagnostic artifact is not official TTFT, operator parity, or calibration closure."
+}

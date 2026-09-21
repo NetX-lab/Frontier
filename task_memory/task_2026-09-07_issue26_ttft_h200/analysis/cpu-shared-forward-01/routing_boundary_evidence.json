@@ -1,0 +1,25 @@
+{
+  "request_5": {
+    "client_request_id": "pf4096_dc1024:5",
+    "server_request_id": "cmpl-pf4096_dc1024:5-0",
+    "server_ttft_ms": "150.42614936828613",
+    "client_ttft_ms": "156.305829",
+    "server_arrival_wall_s": "1788844393.3718233",
+    "queue_arrival_monotonic_s": "3455715.73334336",
+    "frontier_request_id": "6",
+    "arrived_at": "1.0254382868297398"
+  },
+  "request_6": {
+    "client_request_id": "pf4096_dc1024:6",
+    "server_request_id": "cmpl-pf4096_dc1024:6-0",
+    "server_ttft_ms": "147.9017734527588",
+    "client_ttft_ms": "151.083563",
+    "server_arrival_wall_s": "1788844393.3744297",
+    "queue_arrival_monotonic_s": "3455715.733142488",
+    "frontier_request_id": "5",
+    "arrived_at": "1.0252374149858952"
+  },
+  "server_arrival_6_minus_5_ms": 2.6063919067382812,
+  "engine_queue_5_minus_6_ms": 0.20087184384465218,
+  "interpretation": "Pre-engine arrival and post-routing engine-queue order differ. Actual DP routing order, routing-time snapshot and the contribution to the 22 placement mismatches are not recorded; do not infer them from either clock."
+}

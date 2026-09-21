@@ -1,0 +1,33 @@
+{
+  "linear_op.csv": {
+    "rows": 82,
+    "timing_columns_nonempty_counts": {
+      "time_stats.emb.mean": 41,
+      "time_stats.input_layernorm.mean": 41,
+      "time_stats.post_attention_layernorm.mean": 41,
+      "time_stats.attn_pre_proj.mean": 41,
+      "time_stats.attn_rope.mean": 41,
+      "time_stats.attn_post_proj.mean": 41
+    }
+  },
+  "attention_combined.csv": {
+    "rows": 2026,
+    "timing_columns_nonempty_counts": {
+      "time_stats.attn_input_reshape.mean": 2026,
+      "time_stats.attn_kv_cache_save.mean": 2026,
+      "time_stats.attn_prefill.mean": 2026,
+      "time_stats.attn_decode.mean": 2026,
+      "time_stats.attn_output_reshape.mean": 2026
+    },
+    "target_prefill_rows": 272
+  },
+  "moe.csv": {
+    "rows": 387,
+    "timing_columns_nonempty_counts": {
+      "time_stats.moe_gating_linear.mean": 387,
+      "time_stats.moe_gating_routing_topk.mean": 387,
+      "time_stats.moe_shuffling.mean": 387,
+      "time_stats.moe_grouped_gemm.mean": 387
+    }
+  }
+}

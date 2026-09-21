@@ -1,0 +1,26 @@
+{
+  "case_id": "issue26-ttft-h200-pf4096-dc1024",
+  "run_generation": "shared-forward-01",
+  "mode": "frontier",
+  "status": "PASS",
+  "recorded_at": "2026-09-08T08:38:13.869408+00:00",
+  "frontier_commit": "8ba22b496de121713f4fec8068ee962c29c012ea",
+  "checkout": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907",
+  "raw_output": "/data/ycfeng/tmp/issue26-shared-forward-numerical-01/runtime",
+  "fresh_scratch": "/data/ycfeng/tmp/issue26-cpu-frontier-sj80zdzj",
+  "groundtruth_generation": "h200-historical-replay-02",
+  "python": "/home/i-fengyicheng/miniconda3/envs/dev-vidur-v03-hopper-e2e/bin/python",
+  "python_version": "3.13.13",
+  "formal_request_count": 100,
+  "warmup_rows_in_frontier_trace": 0,
+  "command": "PYTHONPATH=$PWD PYTHONDONTWRITEBYTECODE=1 TMPDIR=/data/ycfeng/tmp FRONTIER_LOG_LEVEL=ERROR /home/i-fengyicheng/miniconda3/envs/dev-vidur-v03-hopper-e2e/bin/python tests/e2e/issue26_cpu_frontier_worker.py --config task_memory/task_2026-09-07_issue26_ttft_h200/config/frontier_dp_snapshot_candidate.json --output /data/ycfeng/tmp/issue26-shared-forward-numerical-01/runtime",
+  "completed_at": "2026-09-08T09:09:13.950637+00:00",
+  "artifact_validation": "PASS",
+  "numerical_threshold_status": "FAIL",
+  "analysis_commits": [
+    "ff8c229a",
+    "15a35242"
+  ],
+  "completed_requests": 100,
+  "next_action": "Review route/enqueue diagnostic extension; preserve current validated baseline."
+}

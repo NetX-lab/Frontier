@@ -1,0 +1,41 @@
+{
+  "package": "vllm_flash_attn",
+  "version": "2.7.2.post1",
+  "source": "/data/ycfeng/tmp/vLLM-BS/vllm/vllm_flash_attn",
+  "target": "/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908/vllm/vllm_flash_attn",
+  "purpose": "Install the same runtime dependency used by the clean checkout; no profiling/result/cache data copied",
+  "files": [
+    {
+      "relative_path": "__init__.py",
+      "size_bytes": 337
+    },
+    {
+      "relative_path": "_vllm_fa2_C.abi3.so",
+      "size_bytes": 195736224
+    },
+    {
+      "relative_path": "_vllm_fa3_C.abi3.so",
+      "size_bytes": 622666656
+    },
+    {
+      "relative_path": "flash_attn_interface.py",
+      "size_bytes": 25625
+    },
+    {
+      "relative_path": "layers/__init__.py",
+      "size_bytes": 0
+    },
+    {
+      "relative_path": "layers/rotary.py",
+      "size_bytes": 21426
+    },
+    {
+      "relative_path": "ops/triton/__init__.py",
+      "size_bytes": 1
+    },
+    {
+      "relative_path": "ops/triton/rotary.py",
+      "size_bytes": 8737
+    }
+  ]
+}

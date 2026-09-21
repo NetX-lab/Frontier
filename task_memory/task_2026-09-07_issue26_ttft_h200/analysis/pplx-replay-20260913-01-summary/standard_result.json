@@ -1,0 +1,156 @@
+{
+  "client_checks": {
+    "clean/runtime/clean": {
+      "client_rows": 1100,
+      "warmup_rows": 1000,
+      "formal_rows": 100,
+      "drain": "PASS",
+      "phase_seconds": [
+        161.92683552019298,
+        115.36703654006124,
+        115.84156366437674,
+        115.22688029147685,
+        115.24844358116388,
+        114.92771871201694,
+        115.58239367231727,
+        115.07667433284223,
+        115.21249456703663,
+        115.16781103983521,
+        115.44157571159303
+      ]
+    },
+    "batch/runtime/batch": {
+      "client_rows": 1100,
+      "warmup_rows": 1000,
+      "formal_rows": 100,
+      "drain": "PASS",
+      "phase_seconds": [
+        119.72224634699523,
+        121.53784522227943,
+        119.31121924892068,
+        118.34239867702127,
+        117.13223944790661,
+        116.98093639500439,
+        118.52727188542485,
+        117.00987468101084,
+        117.16486391983926,
+        116.95327280275524,
+        117.42602939717472
+      ]
+    }
+  },
+  "new": {
+    "rows": [
+      {
+        "dp_rank": 0,
+        "tp_rank": 0,
+        "pp_rank": 0,
+        "batch_id": 12025,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 520.513671875,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789237581.639071,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 1,
+        "pp_rank": 0,
+        "batch_id": 12025,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 520.7881469726562,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789237581.6390667,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 2,
+        "pp_rank": 0,
+        "batch_id": 12025,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 520.8036499023438,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789237581.639063,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 3,
+        "pp_rank": 0,
+        "batch_id": 12025,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 520.8007202148438,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789237581.6390653,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      }
+    ],
+    "median_ms": 520.79443359375,
+    "p90_ms": 520.8027709960937,
+    "rank_max_ms": 520.8036499023438,
+    "spread_ms": 0.28997802734375
+  },
+  "status": "PASS_STANDARD_IDENTITY_AND_DRAIN",
+  "limit": "One standard arm; P90 is over four ranks. An ablation delta requires an explicit paired reference and does not measure pure collective duration."
+}

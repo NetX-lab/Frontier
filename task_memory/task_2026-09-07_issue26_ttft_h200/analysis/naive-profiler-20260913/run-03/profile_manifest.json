@@ -1,0 +1,13 @@
+{
+  "gpu": "H200",
+  "cluster": "step_main",
+  "num_gpu_blocks_override": 310809,
+  "backend": "naive",
+  "workload": "4096-prefill/1024-output",
+  "warmup_replays": 10,
+  "formal_requests": 100,
+  "profiler": "torch.profiler (Kineto)",
+  "operator_instrumentation": false,
+  "capture_control": "vLLM /start_profile after warmup drain; /stop_profile on first formal first token",
+  "limits": "Profiler trace is diagnostic and may perturb timing; no Frontier operator logger is enabled."
+}

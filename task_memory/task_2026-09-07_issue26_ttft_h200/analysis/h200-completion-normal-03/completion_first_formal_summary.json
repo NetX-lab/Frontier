@@ -1,0 +1,140 @@
+{
+  "status": "PASS_DIAGNOSTIC_CAPTURE",
+  "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-completion-normal-03/batch/runtime/batch",
+  "batch_id": 3920,
+  "client_rows": 400,
+  "identity_validation": "PASS",
+  "formal_predicate": {
+    "dp_rank": 0,
+    "tp_rank": 0,
+    "pp_rank": 0,
+    "batch_id": 3920,
+    "batch_size": 1,
+    "batch_num_tokens": 4096,
+    "batch_num_prefill_tokens": 4096,
+    "batch_num_decode_tokens": 0,
+    "batch_execution_time_ms": 88.20601654052734,
+    "op_profile_selected": false,
+    "op_profile_selected_index": null,
+    "op_profile_request_prefix": "",
+    "op_profile_batch_limit": 0,
+    "timestamp": 1789071541.402324,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0"
+    ],
+    "request_num_tokens": [
+      4096
+    ],
+    "batch_dp_token_counts": [
+      4096,
+      1
+    ]
+  },
+  "dp0_tp_ranks": {
+    "0": {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "rows": 96,
+      "combine_rows": 48,
+      "tp_ar_rows": 48,
+      "layers": 48,
+      "combine_cuda_sum_ms": 3.950783997774124,
+      "combine_cuda_median_ms": 0.08193599805235863,
+      "tp_ar_cuda_sum_ms": 27.861599951982498,
+      "tp_ar_cuda_median_ms": 0.6190879940986633,
+      "tp_ar_cuda_max_ms": 1.199679970741272,
+      "previous_tp_ar_to_combine_event_gap_median_ms": 1.0751680135726929,
+      "previous_tp_ar_to_combine_event_gap_p90_ms": 1.3570624351501466,
+      "previous_tp_ar_to_combine_event_gap_max_ms": 1.498528003692627,
+      "combine_to_tp_ar_host_gap_median_ms": 0.0242945,
+      "combine_to_tp_ar_host_gap_max_ms": 0.027713,
+      "host_event_span_ms": 84.138217,
+      "cuda_streams": [
+        0
+      ]
+    },
+    "1": {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "rows": 96,
+      "combine_rows": 48,
+      "tp_ar_rows": 48,
+      "layers": 48,
+      "combine_cuda_sum_ms": 3.9293120056390762,
+      "combine_cuda_median_ms": 0.08177599683403969,
+      "tp_ar_cuda_sum_ms": 29.591679990291595,
+      "tp_ar_cuda_median_ms": 0.6230239868164062,
+      "tp_ar_cuda_max_ms": 1.4599360227584839,
+      "previous_tp_ar_to_combine_event_gap_median_ms": 1.0756479501724243,
+      "previous_tp_ar_to_combine_event_gap_p90_ms": 1.2203839540481567,
+      "previous_tp_ar_to_combine_event_gap_max_ms": 1.4612480401992798,
+      "combine_to_tp_ar_host_gap_median_ms": 0.0245105,
+      "combine_to_tp_ar_host_gap_max_ms": 0.036446,
+      "host_event_span_ms": 83.75053,
+      "cuda_streams": [
+        0
+      ]
+    },
+    "2": {
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "rows": 96,
+      "combine_rows": 48,
+      "tp_ar_rows": 48,
+      "layers": 48,
+      "combine_cuda_sum_ms": 3.9364160150289536,
+      "combine_cuda_median_ms": 0.08215999975800514,
+      "tp_ar_cuda_sum_ms": 28.826111972332,
+      "tp_ar_cuda_median_ms": 0.6185440123081207,
+      "tp_ar_cuda_max_ms": 1.3797760009765625,
+      "previous_tp_ar_to_combine_event_gap_median_ms": 1.0823999643325806,
+      "previous_tp_ar_to_combine_event_gap_p90_ms": 1.273971152305603,
+      "previous_tp_ar_to_combine_event_gap_max_ms": 1.4716160297393799,
+      "combine_to_tp_ar_host_gap_median_ms": 0.024,
+      "combine_to_tp_ar_host_gap_max_ms": 0.030085,
+      "host_event_span_ms": 83.380903,
+      "cuda_streams": [
+        0
+      ]
+    },
+    "3": {
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "rows": 96,
+      "combine_rows": 48,
+      "tp_ar_rows": 48,
+      "layers": 48,
+      "combine_cuda_sum_ms": 3.9383679777383804,
+      "combine_cuda_median_ms": 0.08182399719953537,
+      "tp_ar_cuda_sum_ms": 4.8021440133452415,
+      "tp_ar_cuda_median_ms": 0.10000000149011612,
+      "tp_ar_cuda_max_ms": 0.10211200267076492,
+      "previous_tp_ar_to_combine_event_gap_median_ms": 1.597983956336975,
+      "previous_tp_ar_to_combine_event_gap_p90_ms": 1.6515072107315063,
+      "previous_tp_ar_to_combine_event_gap_max_ms": 2.4170238971710205,
+      "combine_to_tp_ar_host_gap_median_ms": 0.0242465,
+      "combine_to_tp_ar_host_gap_max_ms": 0.029928,
+      "host_event_span_ms": 85.374932,
+      "cuda_streams": [
+        0
+      ]
+    }
+  },
+  "rank_start_spread_ms": {
+    "combine": {
+      "median_ms": 1.909675,
+      "max_ms": 2.222244
+    },
+    "tp_ar": {
+      "median_ms": 1.920461,
+      "max_ms": 2.22254
+    }
+  },
+  "rank3_latest_combine_all_48_layers": true,
+  "rank3_previous_gap_larger_all_48_layers": true,
+  "limits": [
+    "CUDA completion capture is diagnostic-only: one batch-level synchronize and per-forward file I/O can perturb later scheduling.",
+    "Event-to-event intervals do not alone distinguish host enqueue delay, stream idle, queued work, or NCCL internal completion.",
+    "The selected boundary has complete 48-layer rows per rank; no clean/diagnostic reconciliation or production correction is claimed."
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "status": "PASS_BOUNDED_COMMUNICATION_REVIEW",
+  "event_samples": 560,
+  "kernel_joins": 40,
+  "training_MiB": [
+    8,
+    12,
+    24,
+    32
+  ],
+  "heldout_MiB": 16,
+  "slope_us_per_MiB": 4.369066666666667,
+  "floor_us": 29.30873263778686,
+  "launch_us_per_step": 4.384788772964477,
+  "raw_medians_us": {
+    "8": 61.279001335302986,
+    "12": 81.17366582155228,
+    "16": 99.85700249671936,
+    "24": 134.26833351453143,
+    "32": 172.56299654642743
+  },
+  "signed_errors_percent": {
+    "8": 4.866699147884317,
+    "12": 0.6946425426617636,
+    "16": -0.6441242738955248,
+    "24": -0.07596793232972507,
+    "32": -1.9958685490145522
+  },
+  "actual_model_scope_check": {
+    "allreduce": {
+      "before_ms": 0.3729050666666667,
+      "after_ms": 0.09921379930445354
+    },
+    "alltoall": {
+      "before_ms": 0.044277955555555554,
+      "after_ms": 0.044277955555555554
+    }
+  },
+  "first_forward_AR48_ms": 4.76226236661377,
+  "limits": [
+    "Eager CUDA event span, not independently identified CPU overhead",
+    "Custom decode and other group sizes not calibrated",
+    "In-context communication 10% gate remains failed"
+  ],
+  "review_check_failure": "Initial checker assumed cuda_runtime launch records only; actual NCCL cuLaunchKernelEx uses cuda_driver. Corrected checker to join both CUDA API categories; no source/rawdata mutation."
+}

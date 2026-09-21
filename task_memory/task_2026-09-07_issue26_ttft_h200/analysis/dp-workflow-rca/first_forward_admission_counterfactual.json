@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "experiment": "Substitute only the measured first CUDA forward span into the current immediate-reschedule boundary; hold original arrivals fixed.",
+  "frontier_first_forward_ms": 65.79007690374297,
+  "measured_vllm_first_cuda_forward_ms": 77.1250228881836,
+  "second_request_frontier_queue_arrival_ms": 81.2080018222332,
+  "remaining_gap_before_second_arrival_ms": 4.082978934049606,
+  "first_forward_only_closes_extra_decode_admission": false,
+  "inequality": "77.1250228881836 < 81.2080018222332",
+  "scope": "Direct event inequality, no predictor scaling or production edit. Prior clean arrivals and isolated diagnostic CUDA span are different executions; this is a sufficient timing-bound check, not same-run causal attribution.",
+  "unmeasured_before_next_admission": [
+    "worker compute_logits after CUDA forward timer",
+    "worker sampling and synchronous bookkeeping",
+    "executor result transport and scheduler update_from_output",
+    "EngineCore output publication and DP count publication",
+    "conditional DP finish synchronization every32steps",
+    "next EngineCore input-queue drain"
+  ],
+  "sources": {
+    "frontier_observation": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/dp-workflow-rca/frontier_admission_observation.json",
+    "vllm_batch_validation": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/historical-replay-02-batch-validation.json",
+    "frontier_immediate_reschedule": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/frontier/events/global_batch_end_event.py:258",
+    "vllm_worker": "/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908/vllm/v1/worker/gpu_model_runner.py:2450",
+    "vllm_engine": "/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908/vllm/v1/engine/core.py:290"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "status": "PASS_FIVE_MODE_COMPLETED_COLLECTION",
+  "modes": [
+    {
+      "mode": "batch_before",
+      "status": "PASS_FULL_CASE_IDENTITY_COLLECTION",
+      "client_records": 400,
+      "warmup_rounds": {
+        "r0": 100,
+        "r1": 100,
+        "r2": 100
+      },
+      "formal_requests": 100,
+      "unique_responses": 400,
+      "prompt_tokens_per_request": 4096,
+      "completion_tokens_per_request": 1024,
+      "workers": 8,
+      "formal_prefill_batches_across_tp": 388,
+      "op_selected_real_batches": 0,
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/batch_before/batch",
+      "identity_report": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/d019-compute-results/full-suite/batch_before.json"
+    },
+    {
+      "mode": "compute_attention",
+      "status": "PASS_FULL_CASE_IDENTITY_COLLECTION",
+      "client_records": 400,
+      "warmup_rounds": {
+        "r0": 100,
+        "r1": 100,
+        "r2": 100
+      },
+      "formal_requests": 100,
+      "unique_responses": 400,
+      "prompt_tokens_per_request": 4096,
+      "completion_tokens_per_request": 1024,
+      "workers": 8,
+      "formal_prefill_batches_across_tp": 392,
+      "op_selected_real_batches": 8,
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_attention/operators",
+      "identity_report": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/d019-compute-results/full-suite/compute_attention.json"
+    },
+    {
+      "mode": "compute_moe",
+      "status": "PASS_FULL_CASE_IDENTITY_COLLECTION",
+      "client_records": 400,
+      "warmup_rounds": {
+        "r0": 100,
+        "r1": 100,
+        "r2": 100
+      },
+      "formal_requests": 100,
+      "unique_responses": 400,
+      "prompt_tokens_per_request": 4096,
+      "completion_tokens_per_request": 1024,
+      "workers": 8,
+      "formal_prefill_batches_across_tp": 388,
+      "op_selected_real_batches": 8,
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_moe/operators",
+      "identity_report": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/d019-compute-results/full-suite/compute_moe.json"
+    },
+    {
+      "mode": "compute_detail",
+      "status": "PASS_FULL_CASE_IDENTITY_COLLECTION",
+      "client_records": 400,
+      "warmup_rounds": {
+        "r0": 100,
+        "r1": 100,
+        "r2": 100
+      },
+      "formal_requests": 100,
+      "unique_responses": 400,
+      "prompt_tokens_per_request": 4096,
+      "completion_tokens_per_request": 1024,
+      "workers": 8,
+      "formal_prefill_batches_across_tp": 388,
+      "op_selected_real_batches": 8,
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/compute_detail/operators",
+      "identity_report": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/d019-compute-results/full-suite/compute_detail.json"
+    },
+    {
+      "mode": "batch_after",
+      "status": "PASS_FULL_CASE_IDENTITY_COLLECTION",
+      "client_records": 400,
+      "warmup_rounds": {
+        "r0": 100,
+        "r1": 100,
+        "r2": 100
+      },
+      "formal_requests": 100,
+      "unique_responses": 400,
+      "prompt_tokens_per_request": 4096,
+      "completion_tokens_per_request": 1024,
+      "workers": 8,
+      "formal_prefill_batches_across_tp": 376,
+      "op_selected_real_batches": 0,
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-compute-01/runtime/batch_after/batch",
+      "identity_report": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/d019-compute-results/full-suite/batch_after.json"
+    }
+  ],
+  "total_completed_requests": 2000,
+  "total_warmup_requests": 1500,
+  "total_formal_requests": 500,
+  "limits": "Collection/identity validation; diagnostic batch and op modes are not clean official-TTFT evidence. First-forward CUDA calibration remains separate."
+}

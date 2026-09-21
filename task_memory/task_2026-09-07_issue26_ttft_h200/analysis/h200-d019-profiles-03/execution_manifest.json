@@ -1,0 +1,23 @@
+{
+  "status": "PARTIAL_FAILURE",
+  "frontier_head": "6f46fe9c53e4797fdf0d905373e5fdd490fa0307",
+  "vllm_head": "4bc1bc026c91dff78bd7cf5ba6411f14d15e043d",
+  "phase": "timing_context",
+  "order": [
+    "8-rank primitive multi-size sweep; 16 MiB heldout",
+    "single-GPU timing-context diagnostic"
+  ],
+  "files": [
+    "tests/performance/issue26_h200_d019_profiles_worker.sh",
+    "tests/performance/issue26_h200_collective_microbenchmark.py",
+    "tests/performance/issue26_linear_timing_context.py"
+  ],
+  "capacity": "fresh predict-only PASS: 1083/0710/1070 each eight H200",
+  "correctness": "8 rank numerical checks, kernel family selection per real size; event sample positive/counts and launch correlations",
+  "limitations": "diagnostics only; no protocol or CPU/workflow model changes",
+  "created_utc": "2026-09-08T13:43:41.835513+00:00",
+  "job": "yc26-h200-d019-profiles-20260908-03",
+  "communication": "eight rank JSON and kernel signature files completed; formal validation ongoing",
+  "timing_context": "AssertionError: emb produced40 event pairs vs assumed20 samples; source multiplicity RCA pending",
+  "launcher_exit_code": 1
+}

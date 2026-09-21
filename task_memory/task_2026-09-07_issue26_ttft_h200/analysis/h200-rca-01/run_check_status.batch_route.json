@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "manifest": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/run_manifest.json",
+  "mode": "batch_route",
+  "e2e_runtime_metrics": false,
+  "cpu_probes": false,
+  "op_probes": false,
+  "warmup_rounds": 3,
+  "next_action": "Run isolated same-case diagnostic and verify artifacts."
+}

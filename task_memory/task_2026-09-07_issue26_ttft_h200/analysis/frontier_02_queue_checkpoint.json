@@ -1,0 +1,11 @@
+{
+  "job": "yc26-h200-fresh-frontier-20260908-02",
+  "submitted_hkt": "2026-09-08T02:20:56+08:00",
+  "checked_utc": "2026-09-07T18:41:19.727299+00:00",
+  "startup_window_minutes": 20,
+  "phase": "Pending",
+  "platform_reason": "RJob is queuing",
+  "worker_output_exists": false,
+  "action": "Retain existing RJob and do not stop/delete/resubmit. Continue independent authorized diagnostic validation; resume same job status on later checkpoint.",
+  "capacity_observation": "Predict-only reported three nodes with8 H200 but admission remains queued."
+}

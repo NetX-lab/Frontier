@@ -1,0 +1,18 @@
+{
+  "status": "PASS_CORRECTED_EXPERT_DATA_INTEGRATION",
+  "actual_receipt": "/data/ycfeng/tmp/issue26-d019-moe-integration-query-02/query_receipt.json",
+  "old_receipt": "/data/ycfeng/tmp/issue26-predictor-query-d019-01/query_receipt.json",
+  "old_grouped_ms": 0.32574783652524153,
+  "new_grouped_ms": 0.4619448847240872,
+  "new_branch": "measured_exact",
+  "matched_new_rows": 9,
+  "unchanged_other_compute_models": 10,
+  "old_boundary_ms": 65.79007690374297,
+  "new_boundary_ms": 72.32753521728748,
+  "expected_new_boundary_ms": 72.32753521728756,
+  "rf_fit_policy": {
+    "allowed": true,
+    "successful_calls_in_process": 6
+  },
+  "e2e_status": "NOT_RUN_FIRST_STAGE_STOP_ONLY"
+}

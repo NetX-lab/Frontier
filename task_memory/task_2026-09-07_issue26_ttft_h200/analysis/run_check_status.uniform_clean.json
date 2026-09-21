@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "scope": "launch admission; runtime router check remains required",
+  "decision": "D011",
+  "mode": "clean",
+  "warmups": 3,
+  "formal_requests": 100,
+  "vllm_commit": "46f7b179fd3bf42b9616dc4670cba419afdb2085",
+  "remote_tip": "ea95f571e20937c7c908c6d59ddd1cd6bf9268f1",
+  "tree_dirty": false,
+  "operator_and_cpu_probes": false,
+  "output_directory_fresh": true
+}

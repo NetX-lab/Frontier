@@ -1,0 +1,418 @@
+{
+  "status": "COMPLETE_READONLY_SEVEN_MODEL_P_S_COMPARISON",
+  "scope": "seven nonzero linear/attention compute P models; excludes MoE and communication",
+  "timing": "CUDA_EVENT P anchors and S standalone profiler medians; old V is heavily instrumented all-op CUDA-event diagnostic, not clean baseline or kernel-active time",
+  "rows": [
+    {
+      "op": "attn_pre_proj",
+      "P_ms_per_layer": 0.1371679976582527,
+      "S_repeat_medians_ms": [
+        0.14691200107336044,
+        0.1435520052909851,
+        0.14790400117635727
+      ],
+      "S_mean_of_medians_ms": 0.14612266918023428,
+      "S_minus_P_ms": 0.008954671521981594,
+      "S_minus_P_percent": 6.528251250187167,
+      "S_range_percent": 2.9783167182664956,
+      "old_V_event_ms_per_layer": 0.0818186664643387,
+      "P_minus_old_V_percent": 67.64878185595755,
+      "S_minus_old_V_percent": 78.59331555339266,
+      "samples": [
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-1/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 3,
+          "statistics_ms": {
+            "min": 0.14115199446678162,
+            "max": 0.194815993309021,
+            "mean": 0.15328799858689307,
+            "median": 0.14691200107336044,
+            "std": 0.015337084548614918,
+            "count": 20.0
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-2/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 3,
+          "statistics_ms": {
+            "min": 0.13782399892807007,
+            "max": 0.18316799402236938,
+            "mean": 0.1487247996032238,
+            "median": 0.1435520052909851,
+            "std": 0.01185681892245111,
+            "count": 20.0
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-3/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 3,
+          "statistics_ms": {
+            "min": 0.13942399621009827,
+            "max": 0.18991999328136444,
+            "mean": 0.1509919986128807,
+            "median": 0.14790400117635727,
+            "std": 0.010798511311718405,
+            "count": 20.0
+          }
+        }
+      ]
+    },
+    {
+      "op": "attn_rope",
+      "P_ms_per_layer": 0.0323360003530979,
+      "S_repeat_medians_ms": [
+        0.03308799862861633,
+        0.03283200040459633,
+        0.03388800099492073
+      ],
+      "S_mean_of_medians_ms": 0.03326933334271113,
+      "S_minus_P_ms": 0.0009333329896132267,
+      "S_minus_P_percent": 2.886358793362054,
+      "S_range_percent": 3.1740960344664004,
+      "old_V_event_ms_per_layer": 0.021437999947617453,
+      "P_minus_old_V_percent": 50.83496796393834,
+      "S_minus_old_V_percent": 55.1886063252303,
+      "samples": [
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-1/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 3,
+          "statistics_ms": {
+            "min": 0.03200000151991844,
+            "max": 0.03670400008559227,
+            "mean": 0.03338720016181469,
+            "median": 0.03308799862861633,
+            "std": 0.001219081442021871,
+            "count": 20.0
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-2/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 3,
+          "statistics_ms": {
+            "min": 0.03129599988460541,
+            "max": 0.035711999982595444,
+            "mean": 0.033094399981200694,
+            "median": 0.03283200040459633,
+            "std": 0.0010781485131259047,
+            "count": 20.0
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-3/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 3,
+          "statistics_ms": {
+            "min": 0.032735999673604965,
+            "max": 0.03699199855327606,
+            "mean": 0.03399520013481379,
+            "median": 0.03388800099492073,
+            "std": 0.0009427935759753195,
+            "count": 20.0
+          }
+        }
+      ]
+    },
+    {
+      "op": "attn_post_proj",
+      "P_ms_per_layer": 0.0467840004712343,
+      "S_repeat_medians_ms": [
+        0.04785599932074547,
+        0.04726399853825569,
+        0.04771200008690357
+      ],
+      "S_mean_of_medians_ms": 0.047610665981968246,
+      "S_minus_P_ms": 0.0008266655107339455,
+      "S_minus_P_percent": 1.7669833755286302,
+      "S_range_percent": 1.2434205031158083,
+      "old_V_event_ms_per_layer": null,
+      "P_minus_old_V_percent": null,
+      "S_minus_old_V_percent": null,
+      "samples": [
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-1/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 3,
+          "statistics_ms": {
+            "min": 0.04646399989724159,
+            "max": 0.061983998864889145,
+            "mean": 0.04888640008866787,
+            "median": 0.04785599932074547,
+            "std": 0.0035481936809983994,
+            "count": 20.0
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-2/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 3,
+          "statistics_ms": {
+            "min": 0.046592000871896744,
+            "max": 0.05484800040721893,
+            "mean": 0.04812800008803606,
+            "median": 0.04726399853825569,
+            "std": 0.0019716259674223335,
+            "count": 20.0
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-3/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 3,
+          "statistics_ms": {
+            "min": 0.04668800160288811,
+            "max": 0.05692800134420395,
+            "mean": 0.04813759978860617,
+            "median": 0.04771200008690357,
+            "std": 0.0021944889160382913,
+            "count": 20.0
+          }
+        }
+      ]
+    },
+    {
+      "op": "input_layernorm",
+      "P_ms_per_layer": 0.0226080007851123,
+      "S_repeat_medians_ms": [
+        0.023312000557780266,
+        0.023215999826788902,
+        0.023264000192284584
+      ],
+      "S_mean_of_medians_ms": 0.023264000192284584,
+      "S_minus_P_ms": 0.0006559994071722829,
+      "S_minus_P_percent": 2.901625019423504,
+      "S_range_percent": 0.41265788427564487,
+      "old_V_event_ms_per_layer": 0.02639000005243967,
+      "P_minus_old_V_percent": -14.331183250519686,
+      "S_minus_old_V_percent": -11.845395429872685,
+      "samples": [
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-1/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 2,
+          "statistics_ms": {
+            "min": 0.02236800082027912,
+            "max": 0.02505600079894066,
+            "mean": 0.023342400137335063,
+            "median": 0.023312000557780266,
+            "std": 0.0005976786440893362,
+            "count": 20.0
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-2/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 2,
+          "statistics_ms": {
+            "min": 0.02236800082027912,
+            "max": 0.024639999493956566,
+            "mean": 0.02331519974395633,
+            "median": 0.023215999826788902,
+            "std": 0.0006172268002125175,
+            "count": 20.0
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-3/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 2,
+          "statistics_ms": {
+            "min": 0.02223999984562397,
+            "max": 0.024320000782608986,
+            "mean": 0.023201600182801485,
+            "median": 0.023264000192284584,
+            "std": 0.0005114473185976482,
+            "count": 20.0
+          }
+        }
+      ]
+    },
+    {
+      "op": "post_attention_layernorm",
+      "P_ms_per_layer": 0.0221119998022913,
+      "S_repeat_medians_ms": [
+        0.022447999566793442,
+        0.022207999601960182,
+        0.02241600025445223
+      ],
+      "S_mean_of_medians_ms": 0.02235733314106862,
+      "S_minus_P_ms": 0.00024533333877731905,
+      "S_minus_P_percent": 1.1095031700927294,
+      "S_range_percent": 1.0734731343802315,
+      "old_V_event_ms_per_layer": 0.02592533326242119,
+      "P_minus_old_V_percent": -14.70890816149053,
+      "S_minus_old_V_percent": -13.76260079373558,
+      "samples": [
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-1/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 2,
+          "statistics_ms": {
+            "min": 0.02175999991595745,
+            "max": 0.023520000278949738,
+            "mean": 0.02252479987218976,
+            "median": 0.022447999566793442,
+            "std": 0.00048392022141445485,
+            "count": 20.0
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-2/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 2,
+          "statistics_ms": {
+            "min": 0.02163200080394745,
+            "max": 0.02319999970495701,
+            "mean": 0.022267199773341417,
+            "median": 0.022207999601960182,
+            "std": 0.000375816073013892,
+            "count": 20.0
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/linear-3/compute/h200/qwen3-a3b-30b-moe/linear_op.csv",
+          "csv_line": 2,
+          "statistics_ms": {
+            "min": 0.021727999672293663,
+            "max": 0.02332800067961216,
+            "mean": 0.02241600016131997,
+            "median": 0.02241600025445223,
+            "std": 0.0004072307585103926,
+            "count": 20.0
+          }
+        }
+      ]
+    },
+    {
+      "op": "attn_prefill",
+      "P_ms_per_layer": 0.1463839933276176,
+      "S_repeat_medians_ms": [
+        0.14617599546909332,
+        0.14508800208568573,
+        0.14342400431632996
+      ],
+      "S_mean_of_medians_ms": 0.144896000623703,
+      "S_minus_P_ms": -0.0014879927039145868,
+      "S_minus_P_percent": -1.016499598138676,
+      "S_range_percent": 1.899287172121698,
+      "old_V_event_ms_per_layer": 0.12598400035252175,
+      "P_minus_old_V_percent": 16.192526763726868,
+      "S_minus_old_V_percent": 15.011430196106401,
+      "samples": [
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-02/runtime/attention/samples.json",
+          "row_index": 0,
+          "statistics_ms": {
+            "min": 0.14505599439144135,
+            "max": 0.1502079963684082,
+            "mean": 0.14687999486923217,
+            "median": 0.14617599546909332,
+            "std": 0.0019451161256965987,
+            "count": 5
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-02/runtime/attention/samples.json",
+          "row_index": 1,
+          "statistics_ms": {
+            "min": 0.14431999623775482,
+            "max": 0.14560000598430634,
+            "mean": 0.14510079920291902,
+            "median": 0.14508800208568573,
+            "std": 0.0004705658878307992,
+            "count": 5
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-02/runtime/attention/samples.json",
+          "row_index": 2,
+          "statistics_ms": {
+            "min": 0.14230400323867798,
+            "max": 0.14528000354766846,
+            "mean": 0.14358400106430053,
+            "median": 0.14342400431632996,
+            "std": 0.0009867222844054404,
+            "count": 5
+          }
+        }
+      ]
+    },
+    {
+      "op": "attn_kv_cache_save",
+      "P_ms_per_layer": 0.0168159995228052,
+      "S_repeat_medians_ms": [
+        0.012319999746978283,
+        0.018400000408291817,
+        0.012191999703645706
+      ],
+      "S_mean_of_medians_ms": 0.014303999952971935,
+      "S_minus_P_ms": -0.0025119995698332648,
+      "S_minus_P_percent": -14.938152004741612,
+      "S_range_percent": 43.40045249620039,
+      "old_V_event_ms_per_layer": 0.015027333264394352,
+      "P_minus_old_V_percent": 11.902752317664378,
+      "S_minus_old_V_percent": -4.8134509210378535,
+      "samples": [
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-02/runtime/attention/samples.json",
+          "row_index": 0,
+          "statistics_ms": {
+            "min": 0.010623999871313572,
+            "max": 0.02953599952161312,
+            "mean": 0.016799999587237834,
+            "median": 0.012319999746978283,
+            "std": 0.007069697225467742,
+            "count": 5
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-02/runtime/attention/samples.json",
+          "row_index": 1,
+          "statistics_ms": {
+            "min": 0.012223999947309494,
+            "max": 0.028224000707268715,
+            "mean": 0.018080000206828116,
+            "median": 0.018400000408291817,
+            "std": 0.005710686863022364,
+            "count": 5
+          }
+        },
+        {
+          "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-02/runtime/attention/samples.json",
+          "row_index": 2,
+          "statistics_ms": {
+            "min": 0.010847999714314938,
+            "max": 0.027744000777602196,
+            "mean": 0.015065600164234638,
+            "median": 0.012191999703645706,
+            "std": 0.006362720542345772,
+            "count": 5
+          }
+        }
+      ]
+    }
+  ],
+  "unmodified_inputs": true,
+  "linear_identity_checks": {
+    "status": "PASS",
+    "selected_rows": 15,
+    "tokens": 4096,
+    "hidden": 2048,
+    "q_heads": 32,
+    "kv_heads": 4,
+    "use_qk_norm": true,
+    "BF16": true,
+    "measurement_type": "CUDA_EVENT",
+    "active_samples_per_selected_row": 20
+  },
+  "five_model_48_layer_arithmetic_delta_ms": 0.5575681328773616,
+  "attention_initial_failure": "profiles-01 attention JSON serialization failed on AttentionBackend enum after profile() calls; no recoverable samples.json; root has submitted profiles-02 continuation; profiles-02 samples recovered after enum serialization fix",
+  "attention_identity_checks": {
+    "status": "PASS",
+    "repeats": 3,
+    "active_samples_per_repeat": 5,
+    "arguments": {
+      "output": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-02/runtime/attention",
+      "model": "qwen3-a3b-30b-moe",
+      "tokens": 4096,
+      "tp": 4,
+      "blocks": 310809,
+      "max_model_len": 16384,
+      "repeats": 3
+    },
+    "dtype_source": "explicit torch.bfloat16 in saved script; JSON does not serialize dtype field",
+    "backend": "FLASHINFER"
+  },
+  "seven_model_48_layer_arithmetic_delta_ms": 0.3655685037374648,
+  "comparison_arithmetic_checks": "PASS: seven distinct operators, three positive medians each, means/percentages/48-layer delta reproduced"
+}

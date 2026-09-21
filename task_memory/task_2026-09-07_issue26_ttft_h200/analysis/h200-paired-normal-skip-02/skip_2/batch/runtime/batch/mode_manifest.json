@@ -1,0 +1,23 @@
+{
+  "mode": "batch",
+  "created_utc": "2026-09-10T18:56:37.401865+00:00",
+  "python": "3.10.16 (main, Dec 11 2024, 16:24:50) [GCC 11.2.0]",
+  "warmup_rounds": 3,
+  "formal_requests": 100,
+  "environment": {
+    "VLLM_ENV_PATH": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2",
+    "VLLM_FRONTIER_SCHED_DECISION_LOG_PATH": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-paired-normal-skip-02/skip_2/batch/runtime/batch/server.decisions.jsonl",
+    "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL": "1",
+    "VLLM_CACHE_ROOT": "/data/ycfeng/tmp/issue26-h200-runtime/runtime/vllm-cache",
+    "VLLM_ATTENTION_BACKEND": "FLASHINFER",
+    "VLLM_FRONTIER_COMPILED_PACKAGE": "/local/ycfeng/anaconda3/envs/vidur_te/lib/python3.10/site-packages/vllm",
+    "VLLM_FRONTIER_TRACE_SKIP_WARMUP": "1",
+    "PYTHONPATH": "/data/ycfeng/tmp/issue26-vllm-post-moe-bypass-20260910",
+    "VLLM_FRONTIER_SCHED_LOG_PATH": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-paired-normal-skip-02/skip_2/batch/runtime/batch/server.scheduler.log",
+    "VLLM_FRONTIER_INSTRUMENTATION": "1",
+    "VLLM_MOE_UNIFORM_ROUTING": "1",
+    "VLLM_ALL2ALL_BACKEND": "naive",
+    "VLLM_FRONTIER_BATCH_LOG_PATH": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-paired-normal-skip-02/skip_2/batch/runtime/batch/server.batch.jsonl"
+  },
+  "limits": "Instrumented diagnostics; not clean TTFT evidence."
+}

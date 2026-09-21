@@ -1,0 +1,678 @@
+{
+  "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-04/runtime/timing-context",
+  "scope_instances": [
+    {
+      "scope": "synthetic/original/attn_pre_proj",
+      "scope_cpu_start_us": 5908137617390.922,
+      "scope_cpu_duration_ms": 0.515385,
+      "kernel_count": 5,
+      "active_union_ms": 0.070880859375,
+      "device_envelope_ms": 0.2076181640625,
+      "internal_device_gap_ms": 0.1367373046875,
+      "next_launch_not_started_ms": 0.1091158359375,
+      "first_kernel_launch_to_device_ms": 0.0101767578125,
+      "kernel_names": [
+        "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)"
+      ]
+    },
+    {
+      "scope": "synthetic/original/attn_rope",
+      "scope_cpu_start_us": 5908137617918.757,
+      "scope_cpu_duration_ms": 0.09693,
+      "kernel_count": 1,
+      "active_union_ms": 0.015904296875,
+      "device_envelope_ms": 0.015904296875,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.00714453125,
+      "kernel_names": [
+        "void vllm::rotary_embedding_kernel<c10::BFloat16, true>(long const*, c10::BFloat16*, c10::BFloat16*, c10::BFloat16 const*, int, long, long, long, int, int, int)"
+      ]
+    },
+    {
+      "scope": "synthetic/original/attn_post_proj",
+      "scope_cpu_start_us": 5908137618111.078,
+      "scope_cpu_duration_ms": 0.112345,
+      "kernel_count": 1,
+      "active_union_ms": 0.02617578125,
+      "device_envelope_ms": 0.02617578125,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.0086279296875,
+      "kernel_names": [
+        "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT"
+      ]
+    },
+    {
+      "scope": "synthetic/original/attn_pre_proj",
+      "scope_cpu_start_us": 5908137618954.763,
+      "scope_cpu_duration_ms": 0.30716699999999997,
+      "kernel_count": 5,
+      "active_union_ms": 0.0713271484375,
+      "device_envelope_ms": 0.1490556640625,
+      "internal_device_gap_ms": 0.07772851562500001,
+      "next_launch_not_started_ms": 0.05333159375,
+      "first_kernel_launch_to_device_ms": 0.0082158203125,
+      "kernel_names": [
+        "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)"
+      ]
+    },
+    {
+      "scope": "synthetic/original/attn_rope",
+      "scope_cpu_start_us": 5908137619270.356,
+      "scope_cpu_duration_ms": 0.072233,
+      "kernel_count": 1,
+      "active_union_ms": 0.0162568359375,
+      "device_envelope_ms": 0.0162568359375,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.0061689453125,
+      "kernel_names": [
+        "void vllm::rotary_embedding_kernel<c10::BFloat16, true>(long const*, c10::BFloat16*, c10::BFloat16*, c10::BFloat16 const*, int, long, long, long, int, int, int)"
+      ]
+    },
+    {
+      "scope": "synthetic/original/attn_post_proj",
+      "scope_cpu_start_us": 5908137619410.375,
+      "scope_cpu_duration_ms": 0.091851,
+      "kernel_count": 1,
+      "active_union_ms": 0.0263359375,
+      "device_envelope_ms": 0.0263359375,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.00766015625,
+      "kernel_names": [
+        "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT"
+      ]
+    },
+    {
+      "scope": "synthetic/precreated/attn_pre_proj",
+      "scope_cpu_start_us": 5908137620506.492,
+      "scope_cpu_duration_ms": 0.321818,
+      "kernel_count": 5,
+      "active_union_ms": 0.0703994140625,
+      "device_envelope_ms": 0.1533115234375,
+      "internal_device_gap_ms": 0.08291210937500001,
+      "next_launch_not_started_ms": 0.058562953125000004,
+      "first_kernel_launch_to_device_ms": 0.00848828125,
+      "kernel_names": [
+        "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)"
+      ]
+    },
+    {
+      "scope": "synthetic/precreated/attn_rope",
+      "scope_cpu_start_us": 5908137620837.147,
+      "scope_cpu_duration_ms": 0.07867,
+      "kernel_count": 1,
+      "active_union_ms": 0.0162236328125,
+      "device_envelope_ms": 0.0162236328125,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.006013671875,
+      "kernel_names": [
+        "void vllm::rotary_embedding_kernel<c10::BFloat16, true>(long const*, c10::BFloat16*, c10::BFloat16*, c10::BFloat16 const*, int, long, long, long, int, int, int)"
+      ]
+    },
+    {
+      "scope": "synthetic/precreated/attn_post_proj",
+      "scope_cpu_start_us": 5908137620985.837,
+      "scope_cpu_duration_ms": 0.103645,
+      "kernel_count": 1,
+      "active_union_ms": 0.0262080078125,
+      "device_envelope_ms": 0.0262080078125,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.0072822265625,
+      "kernel_names": [
+        "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT"
+      ]
+    },
+    {
+      "scope": "synthetic/precreated/attn_pre_proj",
+      "scope_cpu_start_us": 5908137621752.483,
+      "scope_cpu_duration_ms": 0.292215,
+      "kernel_count": 5,
+      "active_union_ms": 0.07081640625,
+      "device_envelope_ms": 0.145439453125,
+      "internal_device_gap_ms": 0.074623046875,
+      "next_launch_not_started_ms": 0.0453083125,
+      "first_kernel_launch_to_device_ms": 0.0077890625,
+      "kernel_names": [
+        "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)"
+      ]
+    },
+    {
+      "scope": "synthetic/precreated/attn_rope",
+      "scope_cpu_start_us": 5908137622052.403,
+      "scope_cpu_duration_ms": 0.07286799999999999,
+      "kernel_count": 1,
+      "active_union_ms": 0.0166083984375,
+      "device_envelope_ms": 0.0166083984375,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.0066708984375,
+      "kernel_names": [
+        "void vllm::rotary_embedding_kernel<c10::BFloat16, true>(long const*, c10::BFloat16*, c10::BFloat16*, c10::BFloat16 const*, int, long, long, long, int, int, int)"
+      ]
+    },
+    {
+      "scope": "synthetic/precreated/attn_post_proj",
+      "scope_cpu_start_us": 5908137622188.045,
+      "scope_cpu_duration_ms": 0.097871,
+      "kernel_count": 1,
+      "active_union_ms": 0.0263369140625,
+      "device_envelope_ms": 0.0263369140625,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.0077255859375,
+      "kernel_names": [
+        "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT"
+      ]
+    },
+    {
+      "scope": "cold_drain/original/attn_pre_proj",
+      "scope_cpu_start_us": 5908137623327.225,
+      "scope_cpu_duration_ms": 0.314274,
+      "kernel_count": 5,
+      "active_union_ms": 0.0703037109375,
+      "device_envelope_ms": 0.1494404296875,
+      "internal_device_gap_ms": 0.07913671874999999,
+      "next_launch_not_started_ms": 0.05558346093750001,
+      "first_kernel_launch_to_device_ms": 0.00741796875,
+      "kernel_names": [
+        "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)"
+      ]
+    },
+    {
+      "scope": "cold_drain/original/attn_rope",
+      "scope_cpu_start_us": 5908137623649.868,
+      "scope_cpu_duration_ms": 0.08017400000000001,
+      "kernel_count": 1,
+      "active_union_ms": 0.0159345703125,
+      "device_envelope_ms": 0.0159345703125,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.006552734375,
+      "kernel_names": [
+        "void vllm::rotary_embedding_kernel<c10::BFloat16, true>(long const*, c10::BFloat16*, c10::BFloat16*, c10::BFloat16 const*, int, long, long, long, int, int, int)"
+      ]
+    },
+    {
+      "scope": "cold_drain/original/attn_post_proj",
+      "scope_cpu_start_us": 5908137623802.01,
+      "scope_cpu_duration_ms": 0.096286,
+      "kernel_count": 1,
+      "active_union_ms": 0.026080078125,
+      "device_envelope_ms": 0.026080078125,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.0073857421875,
+      "kernel_names": [
+        "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT"
+      ]
+    },
+    {
+      "scope": "cold_drain/original/attn_pre_proj",
+      "scope_cpu_start_us": 5908137624591.253,
+      "scope_cpu_duration_ms": 0.286707,
+      "kernel_count": 5,
+      "active_union_ms": 0.07113671875,
+      "device_envelope_ms": 0.14313671875,
+      "internal_device_gap_ms": 0.07200000000000001,
+      "next_launch_not_started_ms": 0.04836457031250001,
+      "first_kernel_launch_to_device_ms": 0.0083798828125,
+      "kernel_names": [
+        "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)"
+      ]
+    },
+    {
+      "scope": "cold_drain/original/attn_rope",
+      "scope_cpu_start_us": 5908137624886.033,
+      "scope_cpu_duration_ms": 0.076014,
+      "kernel_count": 1,
+      "active_union_ms": 0.0162236328125,
+      "device_envelope_ms": 0.0162236328125,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.00599609375,
+      "kernel_names": [
+        "void vllm::rotary_embedding_kernel<c10::BFloat16, true>(long const*, c10::BFloat16*, c10::BFloat16*, c10::BFloat16 const*, int, long, long, long, int, int, int)"
+      ]
+    },
+    {
+      "scope": "cold_drain/original/attn_post_proj",
+      "scope_cpu_start_us": 5908137625028.059,
+      "scope_cpu_duration_ms": 0.096721,
+      "kernel_count": 1,
+      "active_union_ms": 0.02684765625,
+      "device_envelope_ms": 0.02684765625,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.0070380859375,
+      "kernel_names": [
+        "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT"
+      ]
+    },
+    {
+      "scope": "cold_drain/precreated/attn_pre_proj",
+      "scope_cpu_start_us": 5908137626067.984,
+      "scope_cpu_duration_ms": 0.327,
+      "kernel_count": 5,
+      "active_union_ms": 0.0706552734375,
+      "device_envelope_ms": 0.146912109375,
+      "internal_device_gap_ms": 0.07625683593749999,
+      "next_launch_not_started_ms": 0.05244389843749999,
+      "first_kernel_launch_to_device_ms": 0.0082412109375,
+      "kernel_names": [
+        "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)"
+      ]
+    },
+    {
+      "scope": "cold_drain/precreated/attn_rope",
+      "scope_cpu_start_us": 5908137626403.876,
+      "scope_cpu_duration_ms": 0.07798000000000001,
+      "kernel_count": 1,
+      "active_union_ms": 0.0163515625,
+      "device_envelope_ms": 0.0163515625,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.0062880859375,
+      "kernel_names": [
+        "void vllm::rotary_embedding_kernel<c10::BFloat16, true>(long const*, c10::BFloat16*, c10::BFloat16*, c10::BFloat16 const*, int, long, long, long, int, int, int)"
+      ]
+    },
+    {
+      "scope": "cold_drain/precreated/attn_post_proj",
+      "scope_cpu_start_us": 5908137626551.15,
+      "scope_cpu_duration_ms": 0.106625,
+      "kernel_count": 1,
+      "active_union_ms": 0.0262724609375,
+      "device_envelope_ms": 0.0262724609375,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.007865234375,
+      "kernel_names": [
+        "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT"
+      ]
+    },
+    {
+      "scope": "cold_drain/precreated/attn_pre_proj",
+      "scope_cpu_start_us": 5908137627450.882,
+      "scope_cpu_duration_ms": 0.28937,
+      "kernel_count": 5,
+      "active_union_ms": 0.07059375,
+      "device_envelope_ms": 0.1416337890625,
+      "internal_device_gap_ms": 0.07104003906249999,
+      "next_launch_not_started_ms": 0.04804528125000001,
+      "first_kernel_launch_to_device_ms": 0.0074951171875,
+      "kernel_names": [
+        "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)"
+      ]
+    },
+    {
+      "scope": "cold_drain/precreated/attn_rope",
+      "scope_cpu_start_us": 5908137627748.318,
+      "scope_cpu_duration_ms": 0.076109,
+      "kernel_count": 1,
+      "active_union_ms": 0.0160322265625,
+      "device_envelope_ms": 0.0160322265625,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.0065732421875,
+      "kernel_names": [
+        "void vllm::rotary_embedding_kernel<c10::BFloat16, true>(long const*, c10::BFloat16*, c10::BFloat16*, c10::BFloat16 const*, int, long, long, long, int, int, int)"
+      ]
+    },
+    {
+      "scope": "cold_drain/precreated/attn_post_proj",
+      "scope_cpu_start_us": 5908137627887.718,
+      "scope_cpu_duration_ms": 0.092105,
+      "kernel_count": 1,
+      "active_union_ms": 0.0260478515625,
+      "device_envelope_ms": 0.0260478515625,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.007392578125,
+      "kernel_names": [
+        "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT"
+      ]
+    },
+    {
+      "scope": "prefill_hot/original/attn_pre_proj",
+      "scope_cpu_start_us": 5908137630561.252,
+      "scope_cpu_duration_ms": 0.311375,
+      "kernel_count": 5,
+      "active_union_ms": 0.0705927734375,
+      "device_envelope_ms": 0.149599609375,
+      "internal_device_gap_ms": 0.07900683593749999,
+      "next_launch_not_started_ms": 0.0557371640625,
+      "first_kernel_launch_to_device_ms": 0.007890625,
+      "kernel_names": [
+        "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)"
+      ]
+    },
+    {
+      "scope": "prefill_hot/original/attn_rope",
+      "scope_cpu_start_us": 5908137630881.377,
+      "scope_cpu_duration_ms": 0.076149,
+      "kernel_count": 1,
+      "active_union_ms": 0.0164482421875,
+      "device_envelope_ms": 0.0164482421875,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.006650390625,
+      "kernel_names": [
+        "void vllm::rotary_embedding_kernel<c10::BFloat16, true>(long const*, c10::BFloat16*, c10::BFloat16*, c10::BFloat16 const*, int, long, long, long, int, int, int)"
+      ]
+    },
+    {
+      "scope": "prefill_hot/original/attn_post_proj",
+      "scope_cpu_start_us": 5908137631042.665,
+      "scope_cpu_duration_ms": 0.097762,
+      "kernel_count": 1,
+      "active_union_ms": 0.026208984375,
+      "device_envelope_ms": 0.026208984375,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.00753125,
+      "kernel_names": [
+        "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT"
+      ]
+    },
+    {
+      "scope": "prefill_hot/original/attn_pre_proj",
+      "scope_cpu_start_us": 5908137633413.547,
+      "scope_cpu_duration_ms": 0.306182,
+      "kernel_count": 5,
+      "active_union_ms": 0.0705283203125,
+      "device_envelope_ms": 0.150111328125,
+      "internal_device_gap_ms": 0.0795830078125,
+      "next_launch_not_started_ms": 0.05542121093750001,
+      "first_kernel_launch_to_device_ms": 0.00758203125,
+      "kernel_names": [
+        "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)"
+      ]
+    },
+    {
+      "scope": "prefill_hot/original/attn_rope",
+      "scope_cpu_start_us": 5908137633728.17,
+      "scope_cpu_duration_ms": 0.080773,
+      "kernel_count": 1,
+      "active_union_ms": 0.016095703125,
+      "device_envelope_ms": 0.016095703125,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.005958984375,
+      "kernel_names": [
+        "void vllm::rotary_embedding_kernel<c10::BFloat16, true>(long const*, c10::BFloat16*, c10::BFloat16*, c10::BFloat16 const*, int, long, long, long, int, int, int)"
+      ]
+    },
+    {
+      "scope": "prefill_hot/original/attn_post_proj",
+      "scope_cpu_start_us": 5908137633876.921,
+      "scope_cpu_duration_ms": 0.098177,
+      "kernel_count": 1,
+      "active_union_ms": 0.0262080078125,
+      "device_envelope_ms": 0.0262080078125,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.007287109375,
+      "kernel_names": [
+        "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT"
+      ]
+    },
+    {
+      "scope": "prefill_hot/precreated/attn_pre_proj",
+      "scope_cpu_start_us": 5908137636509.94,
+      "scope_cpu_duration_ms": 0.30685700000000005,
+      "kernel_count": 5,
+      "active_union_ms": 0.0704970703125,
+      "device_envelope_ms": 0.150849609375,
+      "internal_device_gap_ms": 0.0803525390625,
+      "next_launch_not_started_ms": 0.057500359375000004,
+      "first_kernel_launch_to_device_ms": 0.00749609375,
+      "kernel_names": [
+        "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)"
+      ]
+    },
+    {
+      "scope": "prefill_hot/precreated/attn_rope",
+      "scope_cpu_start_us": 5908137636825.744,
+      "scope_cpu_duration_ms": 0.075141,
+      "kernel_count": 1,
+      "active_union_ms": 0.016255859375,
+      "device_envelope_ms": 0.016255859375,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.00610546875,
+      "kernel_names": [
+        "void vllm::rotary_embedding_kernel<c10::BFloat16, true>(long const*, c10::BFloat16*, c10::BFloat16*, c10::BFloat16 const*, int, long, long, long, int, int, int)"
+      ]
+    },
+    {
+      "scope": "prefill_hot/precreated/attn_post_proj",
+      "scope_cpu_start_us": 5908137636972.531,
+      "scope_cpu_duration_ms": 0.10079099999999999,
+      "kernel_count": 1,
+      "active_union_ms": 0.026400390625,
+      "device_envelope_ms": 0.026400390625,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.0069892578125,
+      "kernel_names": [
+        "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT"
+      ]
+    },
+    {
+      "scope": "prefill_hot/precreated/attn_pre_proj",
+      "scope_cpu_start_us": 5908137639375.67,
+      "scope_cpu_duration_ms": 0.29635199999999995,
+      "kernel_count": 5,
+      "active_union_ms": 0.070751953125,
+      "device_envelope_ms": 0.1463369140625,
+      "internal_device_gap_ms": 0.07558496093749999,
+      "next_launch_not_started_ms": 0.051828390625,
+      "first_kernel_launch_to_device_ms": 0.0076943359375,
+      "kernel_names": [
+        "nvjet_tst_320x128_64x3_1x2_h_bz_coopB_TNT",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)",
+        "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}>(at::TensorIteratorBase&, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1} const&)::{lambda(int)#1})",
+        "void vllm::rms_norm_kernel<c10::BFloat16>(c10::BFloat16*, c10::BFloat16 const*, long, c10::BFloat16 const*, float, int, int)"
+      ]
+    },
+    {
+      "scope": "prefill_hot/precreated/attn_rope",
+      "scope_cpu_start_us": 5908137639680.626,
+      "scope_cpu_duration_ms": 0.069865,
+      "kernel_count": 1,
+      "active_union_ms": 0.017087890625,
+      "device_envelope_ms": 0.017087890625,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.00605859375,
+      "kernel_names": [
+        "void vllm::rotary_embedding_kernel<c10::BFloat16, true>(long const*, c10::BFloat16*, c10::BFloat16*, c10::BFloat16 const*, int, long, long, long, int, int, int)"
+      ]
+    },
+    {
+      "scope": "prefill_hot/precreated/attn_post_proj",
+      "scope_cpu_start_us": 5908137639816.577,
+      "scope_cpu_duration_ms": 0.089095,
+      "kernel_count": 1,
+      "active_union_ms": 0.026400390625,
+      "device_envelope_ms": 0.026400390625,
+      "internal_device_gap_ms": 0.0,
+      "next_launch_not_started_ms": 0,
+      "first_kernel_launch_to_device_ms": 0.0066650390625,
+      "kernel_names": [
+        "nvjet_tst_256x128_64x4_1x2_h_bz_coopA_TNT"
+      ]
+    }
+  ],
+  "event_summary": [
+    {
+      "op": "attn_pre_proj",
+      "context": "synthetic",
+      "original": 0.13343199715018272,
+      "precreated": 0.12867999821901321,
+      "precreated_change_pct": -3.5613638652361335
+    },
+    {
+      "op": "attn_pre_proj",
+      "context": "cold_drain",
+      "original": 0.13284000009298325,
+      "precreated": 0.13125599920749664,
+      "precreated_change_pct": -1.1924125898658988
+    },
+    {
+      "op": "attn_pre_proj",
+      "context": "prefill_hot",
+      "original": 0.07819199934601784,
+      "precreated": 0.07819199934601784,
+      "precreated_change_pct": 0.0
+    },
+    {
+      "op": "attn_rope",
+      "context": "synthetic",
+      "original": 0.031783999875187874,
+      "precreated": 0.0317199993878603,
+      "precreated_change_pct": -0.2013607084662028
+    },
+    {
+      "op": "attn_rope",
+      "context": "cold_drain",
+      "original": 0.03166400082409382,
+      "precreated": 0.0317199993878603,
+      "precreated_change_pct": 0.17685245802503413
+    },
+    {
+      "op": "attn_rope",
+      "context": "prefill_hot",
+      "original": 0.019216000102460384,
+      "precreated": 0.019176000729203224,
+      "precreated_change_pct": -0.20815660410014036
+    },
+    {
+      "op": "attn_post_proj",
+      "context": "synthetic",
+      "original": 0.046752000227570534,
+      "precreated": 0.04640000034123659,
+      "precreated_change_pct": -0.7529087196709083
+    },
+    {
+      "op": "attn_post_proj",
+      "context": "cold_drain",
+      "original": 0.04679200053215027,
+      "precreated": 0.046752000227570534,
+      "precreated_change_pct": -0.08548534818948461
+    },
+    {
+      "op": "attn_post_proj",
+      "context": "prefill_hot",
+      "original": 0.029823999851942062,
+      "precreated": 0.02973600011318922,
+      "precreated_change_pct": -0.29506350318436736
+    }
+  ],
+  "interpretation": "Event-only context intervention; profiler changes queue behavior and does not establish a clean host-idle budget.",
+  "runtime_comparisons": [
+    {
+      "op": "attn_pre_proj",
+      "V_new_event_ms": 0.08062533351282279,
+      "F_synthetic_event_ms": 0.13343199715018272,
+      "F_hot_event_ms": 0.07819199934601784,
+      "synthetic_gap_ms": 0.05280666363735993,
+      "synthetic_gap_pct": 65.49636613777415,
+      "hot_gap_ms": -0.002433334166804954,
+      "hot_gap_pct": -3.0180764045062203,
+      "V_old_profiled_kernel_active_ms_per_layer": 0.0719114375,
+      "comparison_status": "DIAGNOSTIC_ONLY"
+    },
+    {
+      "op": "attn_rope",
+      "V_new_event_ms": 0.019576000088515382,
+      "F_synthetic_event_ms": 0.031783999875187874,
+      "F_hot_event_ms": 0.019216000102460384,
+      "synthetic_gap_ms": 0.012207999786672492,
+      "synthetic_gap_pct": 62.362074639724476,
+      "hot_gap_ms": -0.0003599999860549978,
+      "hot_gap_pct": -1.838986434548484,
+      "V_old_profiled_kernel_active_ms_per_layer": 0.01618408333333333,
+      "comparison_status": "DIAGNOSTIC_ONLY"
+    },
+    {
+      "op": "attn_post_proj",
+      "V_new_event_ms": 0.03030866660022487,
+      "F_synthetic_event_ms": 0.046752000227570534,
+      "F_hot_event_ms": 0.029823999851942062,
+      "synthetic_gap_ms": 0.016443333627345662,
+      "synthetic_gap_pct": 54.25291004792558,
+      "hot_gap_ms": -0.0004846667482828089,
+      "hot_gap_pct": -1.5991028397112417,
+      "V_old_profiled_kernel_active_ms_per_layer": 0.025574750000000004,
+      "comparison_status": "DIAGNOSTIC_ONLY"
+    }
+  ],
+  "kernel_identity_check": {
+    "attn_pre_proj": {
+      "status": "PASS",
+      "scopes": 12,
+      "kernels_per_scope": 5
+    },
+    "attn_rope": {
+      "status": "PASS",
+      "scopes": 12,
+      "kernels_per_scope": 1
+    },
+    "attn_post_proj": {
+      "status": "PASS",
+      "scopes": 12,
+      "kernels_per_scope": 1
+    }
+  }
+}

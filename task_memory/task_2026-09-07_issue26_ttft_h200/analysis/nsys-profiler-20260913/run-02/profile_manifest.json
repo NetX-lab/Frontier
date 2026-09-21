@@ -1,0 +1,17 @@
+{
+  "gpu": "H200",
+  "cluster": "step_main",
+  "num_gpu_blocks_override": 310809,
+  "backend": "naive",
+  "workload": "4096-prefill/1024-output",
+  "warmup_replays": 10,
+  "formal_requests": 100,
+  "profiler": "Nsight Systems CUDA/CUPTI",
+  "operator_instrumentation": false,
+  "capture_control": "cudaProfilerStart after warmup drain; cudaProfilerStop on first formal first token",
+  "nsys_runtime_tarball": "/data/ycfeng/tmp/issue26-nsys-runtime-20260913-01.tgz",
+  "nsys_runtime_sha256": "576c7a2b38d6db2d2ec69256b88346ae5adca6baf922665c8f7dc76ac335e1b4",
+  "nsys_host_runtime_tarball": "/data/ycfeng/tmp/issue26-nsys-host-runtime-20260913-01.tgz",
+  "nsys_host_runtime_sha256": "b858b6448f5aef90a1ed32ee51cb2896ea19ef5716fee7c32b527b3fa7fcfe92",
+  "limits": "Low-perturbation diagnostic decomposition; clean batch span remains the acceptance metric."
+}

@@ -1,0 +1,148 @@
+{
+  "status": "PASS_DIAGNOSTIC_CAPTURE_LOCAL_STAGE_REPEAT",
+  "batch_id": 3882,
+  "request": "cmpl-pf4096_dc1024:0-0",
+  "identity_validation": "PASS",
+  "formal_predicates": {
+    "dp_rank": 0,
+    "tp_rank": 0,
+    "pp_rank": 0,
+    "batch_id": 3882,
+    "batch_size": 1,
+    "batch_num_tokens": 4096,
+    "batch_num_prefill_tokens": 4096,
+    "batch_num_decode_tokens": 0,
+    "batch_execution_time_ms": 91.19459533691406,
+    "op_profile_selected": false,
+    "op_profile_selected_index": null,
+    "op_profile_request_prefix": "",
+    "op_profile_batch_limit": 0,
+    "timestamp": 1789075398.5265782,
+    "request_ids": [
+      "cmpl-pf4096_dc1024:0-0"
+    ],
+    "request_num_tokens": [
+      4096
+    ],
+    "batch_dp_token_counts": [
+      4096,
+      1
+    ]
+  },
+  "dp0_tp_ranks": {
+    "0": {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "rows": 144,
+      "local_rows": 48,
+      "combine_rows": 48,
+      "tp_ar_rows": 48,
+      "layers": 48,
+      "outer_batch_span_ms": 91.19459533691406,
+      "local_cuda_sum_ms": 35.018847942352295,
+      "local_cuda_median_ms": 0.5645120143890381,
+      "local_cuda_p90_ms": 0.9982367813587188,
+      "local_cuda_max_ms": 1.043455958366394,
+      "local_to_combine_cuda_gap_median_ms": 0.003008000086992979,
+      "local_to_combine_cuda_gap_p90_ms": 0.0031391998985782267,
+      "local_to_combine_cuda_gap_max_ms": 0.0033279999624937773,
+      "local_to_combine_host_gap_median_ms": 0.0314035,
+      "local_to_combine_host_gap_p90_ms": 0.032836599999999994,
+      "local_to_combine_host_gap_max_ms": 0.036309,
+      "combine_cuda_sum_ms": 3.9376639872789383,
+      "tp_ar_cuda_sum_ms": 21.707904167473316,
+      "tp_ar_cuda_median_ms": 0.6315840184688568
+    },
+    "1": {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "rows": 144,
+      "local_rows": 48,
+      "combine_rows": 48,
+      "tp_ar_rows": 48,
+      "layers": 48,
+      "outer_batch_span_ms": 91.19852447509766,
+      "local_cuda_sum_ms": 32.306527972221375,
+      "local_cuda_median_ms": 0.5262079834938049,
+      "local_cuda_p90_ms": 0.9886752128601074,
+      "local_cuda_max_ms": 1.0118720531463623,
+      "local_to_combine_cuda_gap_median_ms": 0.002976000076159835,
+      "local_to_combine_cuda_gap_p90_ms": 0.0030720001086592674,
+      "local_to_combine_cuda_gap_max_ms": 0.003135999897494912,
+      "local_to_combine_host_gap_median_ms": 0.0318185,
+      "local_to_combine_host_gap_p90_ms": 0.036745,
+      "local_to_combine_host_gap_max_ms": 0.040376,
+      "combine_cuda_sum_ms": 4.073663979768753,
+      "tp_ar_cuda_sum_ms": 25.1635520234704,
+      "tp_ar_cuda_median_ms": 0.6597599983215332
+    },
+    "2": {
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "rows": 144,
+      "local_rows": 48,
+      "combine_rows": 48,
+      "tp_ar_rows": 48,
+      "layers": 48,
+      "outer_batch_span_ms": 91.38774108886719,
+      "local_cuda_sum_ms": 47.142783999443054,
+      "local_cuda_median_ms": 0.9912639856338501,
+      "local_cuda_p90_ms": 1.0071967482566833,
+      "local_cuda_max_ms": 1.1323200464248657,
+      "local_to_combine_cuda_gap_median_ms": 0.003008000086992979,
+      "local_to_combine_cuda_gap_p90_ms": 0.0031071998877450825,
+      "local_to_combine_cuda_gap_max_ms": 0.0031999999191612005,
+      "local_to_combine_host_gap_median_ms": 0.0319065,
+      "local_to_combine_host_gap_p90_ms": 0.0336977,
+      "local_to_combine_host_gap_max_ms": 0.037653,
+      "combine_cuda_sum_ms": 3.941408008337021,
+      "tp_ar_cuda_sum_ms": 6.539872035384178,
+      "tp_ar_cuda_median_ms": 0.10028799995779991
+    },
+    "3": {
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "rows": 144,
+      "local_rows": 48,
+      "combine_rows": 48,
+      "tp_ar_rows": 48,
+      "layers": 48,
+      "outer_batch_span_ms": 91.4287338256836,
+      "local_cuda_sum_ms": 25.494016408920288,
+      "local_cuda_median_ms": 0.5242720246315002,
+      "local_cuda_p90_ms": 0.5283455967903137,
+      "local_cuda_max_ms": 0.7479360103607178,
+      "local_to_combine_cuda_gap_median_ms": 0.003103999886661768,
+      "local_to_combine_cuda_gap_p90_ms": 0.0031391998985782267,
+      "local_to_combine_cuda_gap_max_ms": 0.003456000005826354,
+      "local_to_combine_host_gap_median_ms": 0.0309135,
+      "local_to_combine_host_gap_p90_ms": 0.032598100000000005,
+      "local_to_combine_host_gap_max_ms": 0.036352,
+      "combine_cuda_sum_ms": 4.396160006523132,
+      "tp_ar_cuda_sum_ms": 32.18876802921295,
+      "tp_ar_cuda_median_ms": 0.6663200259208679
+    }
+  },
+  "layer_count": 48,
+  "latest_local_end_counts": {
+    "1": 1,
+    "0": 10,
+    "2": 37
+  },
+  "latest_combine_start_counts": {
+    "1": 1,
+    "0": 10,
+    "2": 37
+  },
+  "largest_local_to_combine_cuda_gap_counts": {
+    "2": 4,
+    "3": 28,
+    "0": 12,
+    "1": 4
+  },
+  "limits": [
+    "Completion rows were selected by their persisted batch_id=3882; the first 144 warmup-initialization rows without batch_id were excluded.",
+    "local_moe_apply is the full non-chunked quant_method.apply envelope and does not identify individual expert kernels or token populations.",
+    "CUDA event spans use event-to-event timing and diagnostic capture synchronizes and writes JSONL per forward; they are not clean baseline spans."
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "status": "FAIL",
+  "rank": 5,
+  "world_size": 8,
+  "type": "RuntimeError",
+  "message": "No backend type associated with device type cpu"
+}

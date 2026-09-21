@@ -1,0 +1,264 @@
+{
+  "status": "PASS",
+  "trace_count": 9,
+  "traces": [
+    {
+      "status": "PASS",
+      "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-02/torch-profiler/rjob-2c3914f5179f89c5-52045d57e7718f09-0_1095.1789240628881039635.pt.trace.json.gz",
+      "rank_label": "VLLM::Worker_DP1_TP0_EP4",
+      "cuda_device_ids": [
+        "0"
+      ],
+      "kernel_events": 8670,
+      "selected_kernel_events": 2791,
+      "selected_span_us": 102301.4365234375,
+      "selected_span_ms": 102.3014365234375,
+      "comp": {
+        "kernel_count": 2022,
+        "inclusive_kernel_us": 92251.144,
+        "pure_union_us": 92251.1162109375
+      },
+      "comm": {
+        "kernel_count": 240,
+        "inclusive_kernel_us": 4176.547,
+        "pure_union_us": 4176.5322265625
+      },
+      "mem": {
+        "kernel_count": 529,
+        "inclusive_kernel_us": 934.043,
+        "pure_union_us": 934.064453125
+      },
+      "any_kernel_union_us": 97361.712890625,
+      "idle_or_non_kernel_us": 4939.7236328125,
+      "category_overlap_us": 0.0,
+      "limits": "Kernel interval unions can overlap across streams; idle is the gap inside the selected GPU segment. Trace start/stop and profiler overhead are external diagnostic boundaries."
+    },
+    {
+      "status": "PASS",
+      "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-02/torch-profiler/rjob-2c3914f5179f89c5-52045d57e7718f09-0_1096.1789240628889792686.pt.trace.json.gz",
+      "rank_label": "VLLM::Worker_DP1_TP1_EP5",
+      "cuda_device_ids": [
+        "1"
+      ],
+      "kernel_events": 8670,
+      "selected_kernel_events": 2791,
+      "selected_span_us": 102307.1064453125,
+      "selected_span_ms": 102.3071064453125,
+      "comp": {
+        "kernel_count": 2022,
+        "inclusive_kernel_us": 94959.563,
+        "pure_union_us": 94959.5205078125
+      },
+      "comm": {
+        "kernel_count": 240,
+        "inclusive_kernel_us": 1384.64,
+        "pure_union_us": 1384.638671875
+      },
+      "mem": {
+        "kernel_count": 529,
+        "inclusive_kernel_us": 935.946,
+        "pure_union_us": 935.96484375
+      },
+      "any_kernel_union_us": 97280.1240234375,
+      "idle_or_non_kernel_us": 5026.982421875,
+      "category_overlap_us": 0.0,
+      "limits": "Kernel interval unions can overlap across streams; idle is the gap inside the selected GPU segment. Trace start/stop and profiler overhead are external diagnostic boundaries."
+    },
+    {
+      "status": "PASS",
+      "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-02/torch-profiler/rjob-2c3914f5179f89c5-52045d57e7718f09-0_1097.1789240628881376104.pt.trace.json.gz",
+      "rank_label": "VLLM::Worker_DP1_TP2_EP6",
+      "cuda_device_ids": [
+        "2"
+      ],
+      "kernel_events": 8670,
+      "selected_kernel_events": 2791,
+      "selected_span_us": 102220.5537109375,
+      "selected_span_ms": 102.2205537109375,
+      "comp": {
+        "kernel_count": 2022,
+        "inclusive_kernel_us": 94457.974,
+        "pure_union_us": 94457.95703125
+      },
+      "comm": {
+        "kernel_count": 240,
+        "inclusive_kernel_us": 1149.0240000000001,
+        "pure_union_us": 1149.0244140625
+      },
+      "mem": {
+        "kernel_count": 529,
+        "inclusive_kernel_us": 967.962,
+        "pure_union_us": 967.9560546875
+      },
+      "any_kernel_union_us": 96574.9375,
+      "idle_or_non_kernel_us": 5645.6162109375,
+      "category_overlap_us": 0.0,
+      "limits": "Kernel interval unions can overlap across streams; idle is the gap inside the selected GPU segment. Trace start/stop and profiler overhead are external diagnostic boundaries."
+    },
+    {
+      "status": "PASS",
+      "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-02/torch-profiler/rjob-2c3914f5179f89c5-52045d57e7718f09-0_1098.1789240628890814788.pt.trace.json.gz",
+      "rank_label": "VLLM::Worker_DP1_TP3_EP7",
+      "cuda_device_ids": [
+        "3"
+      ],
+      "kernel_events": 8670,
+      "selected_kernel_events": 2791,
+      "selected_span_us": 102109.9892578125,
+      "selected_span_ms": 102.1099892578125,
+      "comp": {
+        "kernel_count": 2022,
+        "inclusive_kernel_us": 4460.942,
+        "pure_union_us": 4460.935546875
+      },
+      "comm": {
+        "kernel_count": 240,
+        "inclusive_kernel_us": 1040.867,
+        "pure_union_us": 1040.869140625
+      },
+      "mem": {
+        "kernel_count": 529,
+        "inclusive_kernel_us": 948.406,
+        "pure_union_us": 948.4189453125
+      },
+      "any_kernel_union_us": 6450.2236328125,
+      "idle_or_non_kernel_us": 95659.765625,
+      "category_overlap_us": 0.0,
+      "limits": "Kernel interval unions can overlap across streams; idle is the gap inside the selected GPU segment. Trace start/stop and profiler overhead are external diagnostic boundaries."
+    },
+    {
+      "status": "PASS",
+      "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-02/torch-profiler/rjob-2c3914f5179f89c5-52045d57e7718f09-0_1101.1789240628887988841.pt.trace.json.gz",
+      "rank_label": "VLLM::Worker_DP0_TP0_EP0",
+      "cuda_device_ids": [
+        "0"
+      ],
+      "kernel_events": 8872,
+      "selected_kernel_events": 8872,
+      "selected_span_us": 336724.3369140625,
+      "selected_span_ms": 336.7243369140625,
+      "comp": {
+        "kernel_count": 6308,
+        "inclusive_kernel_us": 165477.371,
+        "pure_union_us": 165456.3818359375
+      },
+      "comm": {
+        "kernel_count": 868,
+        "inclusive_kernel_us": 81438.882,
+        "pure_union_us": 81438.876953125
+      },
+      "mem": {
+        "kernel_count": 1696,
+        "inclusive_kernel_us": 5933.795,
+        "pure_union_us": 5933.8447265625
+      },
+      "any_kernel_union_us": 252829.103515625,
+      "idle_or_non_kernel_us": 83895.2333984375,
+      "category_overlap_us": 0.0,
+      "limits": "Kernel interval unions can overlap across streams; idle is the gap inside the selected GPU segment. Trace start/stop and profiler overhead are external diagnostic boundaries."
+    },
+    {
+      "status": "PASS",
+      "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-02/torch-profiler/rjob-2c3914f5179f89c5-52045d57e7718f09-0_1102.1789240628890236197.pt.trace.json.gz",
+      "rank_label": "VLLM::Worker_DP0_TP1_EP1",
+      "cuda_device_ids": [
+        "1"
+      ],
+      "kernel_events": 8872,
+      "selected_kernel_events": 8872,
+      "selected_span_us": 336804.556640625,
+      "selected_span_ms": 336.804556640625,
+      "comp": {
+        "kernel_count": 6308,
+        "inclusive_kernel_us": 154911.83,
+        "pure_union_us": 154891.810546875
+      },
+      "comm": {
+        "kernel_count": 868,
+        "inclusive_kernel_us": 148508.318,
+        "pure_union_us": 148508.3125
+      },
+      "mem": {
+        "kernel_count": 1696,
+        "inclusive_kernel_us": 5674.132,
+        "pure_union_us": 5674.1845703125
+      },
+      "any_kernel_union_us": 309074.3076171875,
+      "idle_or_non_kernel_us": 27730.2490234375,
+      "category_overlap_us": 0.0,
+      "limits": "Kernel interval unions can overlap across streams; idle is the gap inside the selected GPU segment. Trace start/stop and profiler overhead are external diagnostic boundaries."
+    },
+    {
+      "status": "PASS",
+      "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-02/torch-profiler/rjob-2c3914f5179f89c5-52045d57e7718f09-0_1103.1789240628889751788.pt.trace.json.gz",
+      "rank_label": "VLLM::Worker_DP0_TP2_EP2",
+      "cuda_device_ids": [
+        "2"
+      ],
+      "kernel_events": 8872,
+      "selected_kernel_events": 8872,
+      "selected_span_us": 336739.759765625,
+      "selected_span_ms": 336.739759765625,
+      "comp": {
+        "kernel_count": 6308,
+        "inclusive_kernel_us": 167887.645,
+        "pure_union_us": 167865.9423828125
+      },
+      "comm": {
+        "kernel_count": 868,
+        "inclusive_kernel_us": 138596.451,
+        "pure_union_us": 138596.4453125
+      },
+      "mem": {
+        "kernel_count": 1696,
+        "inclusive_kernel_us": 5670.701,
+        "pure_union_us": 5670.7548828125
+      },
+      "any_kernel_union_us": 312133.142578125,
+      "idle_or_non_kernel_us": 24606.6171875,
+      "category_overlap_us": 0.0,
+      "limits": "Kernel interval unions can overlap across streams; idle is the gap inside the selected GPU segment. Trace start/stop and profiler overhead are external diagnostic boundaries."
+    },
+    {
+      "status": "PASS",
+      "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-02/torch-profiler/rjob-2c3914f5179f89c5-52045d57e7718f09-0_1104.1789240628888857260.pt.trace.json.gz",
+      "rank_label": "VLLM::Worker_DP0_TP3_EP3",
+      "cuda_device_ids": [
+        "3"
+      ],
+      "kernel_events": 8872,
+      "selected_kernel_events": 8872,
+      "selected_span_us": 336680.400390625,
+      "selected_span_ms": 336.680400390625,
+      "comp": {
+        "kernel_count": 6308,
+        "inclusive_kernel_us": 60903.589,
+        "pure_union_us": 60882.181640625
+      },
+      "comm": {
+        "kernel_count": 868,
+        "inclusive_kernel_us": 245235.995,
+        "pure_union_us": 245236.0
+      },
+      "mem": {
+        "kernel_count": 1696,
+        "inclusive_kernel_us": 5689.959,
+        "pure_union_us": 5690.0166015625
+      },
+      "any_kernel_union_us": 311808.1982421875,
+      "idle_or_non_kernel_us": 24872.2021484375,
+      "category_overlap_us": 0.0,
+      "limits": "Kernel interval unions can overlap across streams; idle is the gap inside the selected GPU segment. Trace start/stop and profiler overhead are external diagnostic boundaries."
+    },
+    {
+      "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/naive-profiler-20260913/run-02/torch-profiler/rjob-2c3914f5179f89c5-52045d57e7718f09-0_417.async_llm.1789240628510240245.pt.trace.json.gz",
+      "kernel_events": 0,
+      "status": "NO_KERNEL_EVENTS"
+    }
+  ],
+  "classification": {
+    "comm": "nccl|all.?reduce|all.?to.?all|alltoall|broadcast|reduce.?scatter|allgather|send|recv|scatter|gather|collective",
+    "mem": "memcpy|memset|copy_|copykernel|cast|convert|transpose|index_select",
+    "comp": "all remaining GPU kernel names"
+  }
+}

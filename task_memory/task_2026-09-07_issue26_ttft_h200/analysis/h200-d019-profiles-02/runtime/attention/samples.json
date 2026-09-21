@@ -1,0 +1,218 @@
+{
+  "arguments": {
+    "output": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-02/runtime/attention",
+    "model": "qwen3-a3b-30b-moe",
+    "tokens": 4096,
+    "tp": 4,
+    "blocks": 310809,
+    "max_model_len": 16384,
+    "repeats": 3
+  },
+  "measurement_type": "cuda_event",
+  "rows": [
+    {
+      "time_stats": {
+        "attn_input_reshape": {
+          "min": 0.002848000032827258,
+          "max": 0.014944000169634819,
+          "mean": 0.0052992000710219145,
+          "median": 0.0029120000544935465,
+          "std": 0.004822458443152434,
+          "count": 5
+        },
+        "attn_kv_cache_save": {
+          "min": 0.010623999871313572,
+          "max": 0.02953599952161312,
+          "mean": 0.016799999587237834,
+          "median": 0.012319999746978283,
+          "std": 0.007069697225467742,
+          "count": 5
+        },
+        "attn_prefill": {
+          "min": 0.14505599439144135,
+          "max": 0.1502079963684082,
+          "mean": 0.14687999486923217,
+          "median": 0.14617599546909332,
+          "std": 0.0019451161256965987,
+          "count": 5
+        },
+        "attn_decode": {
+          "min": 0.002816000021994114,
+          "max": 0.0029440000653266907,
+          "mean": 0.0028864000458270313,
+          "median": 0.0028800000436604023,
+          "std": 5.12000173330307e-05,
+          "count": 5
+        },
+        "attn_output_reshape": {
+          "min": 0.0028800000436604023,
+          "max": 0.0030720001086592674,
+          "mean": 0.0029632000718265773,
+          "median": 0.0029440000653266907,
+          "std": 6.27069586437898e-05,
+          "count": 5
+        }
+      },
+      "n_embd": 2048,
+      "n_q_head": 32,
+      "n_kv_head": 4,
+      "block_size": 16,
+      "num_tensor_parallel_workers": 4,
+      "max_model_len": 16384,
+      "batch_size": 1,
+      "prefill_chunk_size": 4096,
+      "kv_cache_size": 0,
+      "is_prefill": true,
+      "attention_backend": "FLASHINFER",
+      "is_mixed_batch": false,
+      "mode": "even",
+      "seq_lens": [
+        4096
+      ],
+      "total_tokens": 4096,
+      "max_seq_len": 4096,
+      "min_seq_len": 4096,
+      "avg_seq_len": 4096.0,
+      "equal_seq_len": 4096,
+      "seq_len_variance": 0.0,
+      "seq_len_std": 0.0,
+      "seq_len_cv": 0.0
+    },
+    {
+      "time_stats": {
+        "attn_input_reshape": {
+          "min": 0.002848000032827258,
+          "max": 0.015744000673294067,
+          "mean": 0.005491200182586908,
+          "median": 0.002976000076159835,
+          "std": 0.005126739809851727,
+          "count": 5
+        },
+        "attn_kv_cache_save": {
+          "min": 0.012223999947309494,
+          "max": 0.028224000707268715,
+          "mean": 0.018080000206828116,
+          "median": 0.018400000408291817,
+          "std": 0.005710686863022364,
+          "count": 5
+        },
+        "attn_prefill": {
+          "min": 0.14431999623775482,
+          "max": 0.14560000598430634,
+          "mean": 0.14510079920291902,
+          "median": 0.14508800208568573,
+          "std": 0.0004705658878307992,
+          "count": 5
+        },
+        "attn_decode": {
+          "min": 0.002848000032827258,
+          "max": 0.002976000076159835,
+          "mean": 0.00289280004799366,
+          "median": 0.0028800000436604023,
+          "std": 4.340692658679344e-05,
+          "count": 5
+        },
+        "attn_output_reshape": {
+          "min": 0.002848000032827258,
+          "max": 0.002976000076159835,
+          "mean": 0.0029184000566601755,
+          "median": 0.0029440000653266907,
+          "std": 4.703021898284236e-05,
+          "count": 5
+        }
+      },
+      "n_embd": 2048,
+      "n_q_head": 32,
+      "n_kv_head": 4,
+      "block_size": 16,
+      "num_tensor_parallel_workers": 4,
+      "max_model_len": 16384,
+      "batch_size": 1,
+      "prefill_chunk_size": 4096,
+      "kv_cache_size": 0,
+      "is_prefill": true,
+      "attention_backend": "FLASHINFER",
+      "is_mixed_batch": false,
+      "mode": "even",
+      "seq_lens": [
+        4096
+      ],
+      "total_tokens": 4096,
+      "max_seq_len": 4096,
+      "min_seq_len": 4096,
+      "avg_seq_len": 4096.0,
+      "equal_seq_len": 4096,
+      "seq_len_variance": 0.0,
+      "seq_len_std": 0.0,
+      "seq_len_cv": 0.0
+    },
+    {
+      "time_stats": {
+        "attn_input_reshape": {
+          "min": 0.002848000032827258,
+          "max": 0.015135999768972397,
+          "mean": 0.005363199999555946,
+          "median": 0.002976000076159835,
+          "std": 0.00488666706816052,
+          "count": 5
+        },
+        "attn_kv_cache_save": {
+          "min": 0.010847999714314938,
+          "max": 0.027744000777602196,
+          "mean": 0.015065600164234638,
+          "median": 0.012191999703645706,
+          "std": 0.006362720542345772,
+          "count": 5
+        },
+        "attn_prefill": {
+          "min": 0.14230400323867798,
+          "max": 0.14528000354766846,
+          "mean": 0.14358400106430053,
+          "median": 0.14342400431632996,
+          "std": 0.0009867222844054404,
+          "count": 5
+        },
+        "attn_decode": {
+          "min": 0.0025599999353289604,
+          "max": 0.002976000076159835,
+          "mean": 0.0027968000154942273,
+          "median": 0.0029120000544935465,
+          "std": 0.00018169695196309753,
+          "count": 5
+        },
+        "attn_output_reshape": {
+          "min": 0.002848000032827258,
+          "max": 0.002976000076159835,
+          "mean": 0.0028800000436604023,
+          "median": 0.002848000032827258,
+          "std": 4.957420361408975e-05,
+          "count": 5
+        }
+      },
+      "n_embd": 2048,
+      "n_q_head": 32,
+      "n_kv_head": 4,
+      "block_size": 16,
+      "num_tensor_parallel_workers": 4,
+      "max_model_len": 16384,
+      "batch_size": 1,
+      "prefill_chunk_size": 4096,
+      "kv_cache_size": 0,
+      "is_prefill": true,
+      "attention_backend": "FLASHINFER",
+      "is_mixed_batch": false,
+      "mode": "even",
+      "seq_lens": [
+        4096
+      ],
+      "total_tokens": 4096,
+      "max_seq_len": 4096,
+      "min_seq_len": 4096,
+      "avg_seq_len": 4096.0,
+      "equal_seq_len": 4096,
+      "seq_len_variance": 0.0,
+      "seq_len_std": 0.0,
+      "seq_len_cv": 0.0
+    }
+  ]
+}

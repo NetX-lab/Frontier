@@ -1,0 +1,17 @@
+{
+  "status": "PASS_REJECTED_INCOMPLETE_SIMULATION",
+  "input_generation": "h200-fresh-frontier-02",
+  "command": [
+    "/home/i-fengyicheng/miniconda3/envs/dev-vidur-v03-hopper-e2e/bin/python",
+    "tests/e2e/issue26_frontier_baseline_analysis.py",
+    "--metrics",
+    "task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-fresh-frontier-02/runtime/metrics/qwen3_a3b_30b_moe/online_serving/h200_fresh_frontier_02",
+    "--mapping",
+    "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/official-clean-01/request_id_map.csv",
+    "--output",
+    "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/frontier-baseline-02-rejected"
+  ],
+  "returncode": 1,
+  "stderr": "Traceback (most recent call last):\n  File \"/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/tests/e2e/issue26_frontier_baseline_analysis.py\", line 90, in <module>\n    analyze(args.metrics, args.mapping, args.output)\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/tests/e2e/issue26_frontier_baseline_analysis.py\", line 29, in analyze\n    assert len(records) == 200 and {r[\"event_type\"] for r in records} == {\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n        \"request_arrival\", \"request_completion\"}, \"Unexpected request event coverage\"\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Unexpected request event coverage\n",
+  "output_created": false
+}

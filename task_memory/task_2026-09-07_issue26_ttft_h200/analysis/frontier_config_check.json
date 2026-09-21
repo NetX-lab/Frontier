@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "runtime_config": {
+    "device": "h200",
+    "network_device": "h200_dgx",
+    "node_gpus": 8,
+    "attn_tp": 4,
+    "attn_dp": 2,
+    "moe_tp": 1,
+    "moe_ep": 8,
+    "sys_arch": "co-location"
+  },
+  "scope": "Configuration parsing only; no numeric profile loaded and no simulation executed."
+}

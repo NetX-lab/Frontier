@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "python": "3.13.13 | packaged by Anaconda, Inc. | (main, Apr 14 2026, 06:19:41) [GCC 14.3.0]",
+  "completed_requests": 3,
+  "token_execution_counts": {
+    "0": {
+      "4096": 1,
+      "1": 1023
+    },
+    "1": {
+      "4096": 1,
+      "1": 1023
+    },
+    "2": {
+      "4096": 1,
+      "1": 1023
+    }
+  },
+  "ledger_rows": 2050,
+  "raw_run": "/data/ycfeng/tmp/issue26-shared-forward-03req-01",
+  "numerical_acceptance": false,
+  "scope": "Original 4096/1024 first three requests; current-task diagnostic caches only."
+}

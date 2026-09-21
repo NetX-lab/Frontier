@@ -1,0 +1,277 @@
+{
+  "status": "PASS",
+  "scope": "8-rank microbenchmark identity/numerical correctness/artifact validation only",
+  "numerical_calibration": "FAIL: current ideal attention AR overprediction; no production timing repair applied",
+  "user_decision": "retain ideal EP abstraction; vllm_naive modeling deferred optional documentation",
+  "source": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-02/runtime/communication",
+  "frozen_script_matches_workspace": true,
+  "validated_ranks": 8,
+  "validated_operations_per_rank": 8,
+  "validated_samples": 448,
+  "runtime": {
+    "hostname": "rjob-037c3fa30fc78c5c-52045d57e7718f09-0",
+    "gpu": "NVIDIA H200",
+    "python": "3.10.16",
+    "torch": "2.8.0+cu128",
+    "cuda": "12.8",
+    "vllm_commit": "4bc1bc026c91dff78bd7cf5ba6411f14d15e043d"
+  },
+  "contract": {
+    "tp_size": 4,
+    "dp_tokens": [
+      4096,
+      1
+    ],
+    "world_size": 8,
+    "tp_groups": [
+      [
+        0,
+        1,
+        2,
+        3
+      ],
+      [
+        4,
+        5,
+        6,
+        7
+      ]
+    ],
+    "dp_groups": [
+      [
+        0,
+        4
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        3,
+        7
+      ]
+    ],
+    "dtype": "bfloat16",
+    "hidden_size": 2048,
+    "router_experts": 128,
+    "local_hidden_bytes": [
+      16777216,
+      4096
+    ],
+    "local_router_bytes": [
+      1048576,
+      256
+    ],
+    "global_hidden_bytes": 16781312,
+    "global_router_bytes": 1048832,
+    "timing": "CUDA events around eager blocks; no per-call synchronize",
+    "warmup_calls": 20,
+    "calls_per_sample": 48,
+    "samples": 7
+  },
+  "operations": {
+    "tp_runtime_local": {
+      "rank_median_us": [
+        99.2579956849416,
+        98.87133042017619,
+        98.90733162562053,
+        98.58133395512898,
+        16.782666246096294,
+        16.787332793076832,
+        16.46733283996582,
+        16.569333771864574
+      ],
+      "dp0_pooled_us": {
+        "min": 98.44400485356648,
+        "median": 98.90499711036682,
+        "max": 99.34799869855244
+      },
+      "dp1_pooled_us": {
+        "min": 16.13199959198634,
+        "median": 16.72566682100296,
+        "max": 18.32266648610433
+      }
+    },
+    "tp_pynccl_local": {
+      "rank_median_us": [
+        99.15999571482341,
+        98.82533550262451,
+        98.41400384902954,
+        98.51933519045512,
+        15.277333557605743,
+        14.890000224113464,
+        14.936666935682297,
+        14.823333670695623
+      ],
+      "dp0_pooled_us": {
+        "min": 98.36399555206299,
+        "median": 98.67366651693979,
+        "max": 99.41266973813374
+      },
+      "dp1_pooled_us": {
+        "min": 14.258666584889093,
+        "median": 15.122000128030777,
+        "max": 17.951333274443943
+      }
+    },
+    "dp_runtime_global": {
+      "rank_median_us": [
+        78.39066783587138,
+        78.61333092053731,
+        78.85666688283284,
+        77.99866795539856,
+        78.31599811712901,
+        78.70866854985555,
+        79.16600008805592,
+        78.02000145117442
+      ],
+      "dp0_pooled_us": {
+        "min": 77.8766671816508,
+        "median": 78.43266427516937,
+        "max": 80.67200084527333
+      },
+      "dp1_pooled_us": {
+        "min": 77.98133293787639,
+        "median": 78.51433505614598,
+        "max": 80.66399892171223
+      }
+    },
+    "naive_hidden_multicast": {
+      "rank_median_us": [
+        95.3386624654134,
+        94.83133753140767,
+        95.36799788475037,
+        95.72933117548625,
+        95.14600038528442,
+        94.82733408610027,
+        95.56333223978679,
+        95.83666920661926
+      ],
+      "dp0_pooled_us": {
+        "min": 94.48200464248657,
+        "median": 95.35333017508188,
+        "max": 95.9113339583079
+      },
+      "dp1_pooled_us": {
+        "min": 94.46332852045695,
+        "median": 95.50066788991293,
+        "max": 96.02199991544087
+      }
+    },
+    "naive_router_multicast": {
+      "rank_median_us": [
+        67.4286683400472,
+        66.44466519355774,
+        65.13000031312306,
+        65.69199760754903,
+        67.6766683657964,
+        66.80800020694733,
+        65.64066807428996,
+        65.98000228404999
+      ],
+      "dp0_pooled_us": {
+        "min": 64.8133357365926,
+        "median": 66.30233426888783,
+        "max": 124.94933605194092
+      },
+      "dp1_pooled_us": {
+        "min": 65.2593324581782,
+        "median": 66.7740007241567,
+        "max": 124.49333071708679
+      }
+    },
+    "naive_dispatch": {
+      "rank_median_us": [
+        136.34933034578958,
+        138.55733474095663,
+        134.42933559417725,
+        135.37800312042236,
+        136.1020008722941,
+        138.045996427536,
+        134.443998336792,
+        135.35199562708536
+      ],
+      "dp0_pooled_us": {
+        "min": 132.9326629638672,
+        "median": 136.69800261656445,
+        "max": 275.38132667541504
+      },
+      "dp1_pooled_us": {
+        "min": 132.8993340333303,
+        "median": 136.5203360716502,
+        "max": 276.10133091608685
+      }
+    },
+    "naive_combine": {
+      "rank_median_us": [
+        78.61733436584473,
+        79.20200129350026,
+        80.30400176843007,
+        78.59066625436147,
+        78.63666613896687,
+        79.42600051561992,
+        81.00933333237965,
+        79.00666693846385
+      ],
+      "dp0_pooled_us": {
+        "min": 78.22733124097188,
+        "median": 78.92800122499466,
+        "max": 82.28333294391632
+      },
+      "dp1_pooled_us": {
+        "min": 78.39266459147136,
+        "median": 79.06366636355719,
+        "max": 83.44599604606628
+      }
+    },
+    "naive_combine_post_tp": {
+      "rank_median_us": [
+        200.15599330266318,
+        200.48133532206217,
+        199.40666357676187,
+        199.87199703852335,
+        198.05532693862915,
+        198.55000575383505,
+        197.73866732915243,
+        197.96599944432577
+      ],
+      "dp0_pooled_us": {
+        "min": 199.19600089391074,
+        "median": 200.00266035397846,
+        "max": 202.47334241867065
+      },
+      "dp1_pooled_us": {
+        "min": 197.32733567555746,
+        "median": 197.93633619944256,
+        "max": 200.51399866739908
+      }
+    }
+  },
+  "attention_tp4_comparison": {
+    "prediction_ms_per_call": 0.3729050666666667,
+    "actual_runtime_ms_per_call": 0.09890499711036682,
+    "actual_direct_pynccl_ms_per_call": 0.09867366651693979,
+    "signed_gap_ms": 0.27400006955629985,
+    "absolute_error_ms": 0.27400006955629985,
+    "signed_relative_error_percent": 277.03359543152976,
+    "prediction_48_calls_ms": 17.8994432,
+    "actual_runtime_48_calls_ms": 4.747439861297607,
+    "absolute_error_48_calls_ms": 13.152003338702393,
+    "zero_launch_counterfactual_ms_per_call": 0.07290506666666667,
+    "zero_launch_counterfactual_signed_gap_percent": -26.28778242082871,
+    "zero_launch_counterfactual_48_calls_ms": 3.4994432,
+    "configured_launch_component_ms_per_call": 0.3,
+    "configured_launch_component_48_calls_ms": 14.4,
+    "effective_aggregate_transfer_rate_GBps_if_zero_other_costs": 254.4444136823317
+  },
+  "limitations": [
+    "Event blocks include residual submission/arrival effects, not pure wire time.",
+    "Naive composed rows overlap primitive rows and are diagnostic only.",
+    "Single real message size cannot identify separate bandwidth, fixed launch and per-step costs.",
+    "No new protocol selector, broadcast implementation or DP workflow modeling is authorized by this measurement."
+  ]
+}

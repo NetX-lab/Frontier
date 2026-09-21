@@ -1,0 +1,18 @@
+{
+  "mode": "pplx_boundary_only",
+  "created_utc": "2026-09-12T19:18:09.551683+00:00",
+  "python": "3.10.16 (main, Dec 11 2024, 16:24:50) [GCC 11.2.0]",
+  "warmup_rounds": 10,
+  "formal_requests": 100,
+  "all2all_backend": "pplx",
+  "source_commit": "cf1ef5de9c0c45aedec4cf9d22c8eb56caf8bf0b",
+  "boundary_request_prefix": "cmpl-pf4096_dc1024:0-0",
+  "instrumentation": {
+    "batch_boundary": true,
+    "per_op": false,
+    "scheduler": false,
+    "routing": false,
+    "full_diagnostic_outer_span": false
+  },
+  "limits": "One first-formal model-forward CUDA event envelope per DP0 TP rank; one post-end synchronization only to read elapsed_time."
+}

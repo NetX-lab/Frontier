@@ -1,0 +1,9 @@
+{
+  "frontier_first_stage_ms": 65.79007690374297,
+  "vllm_isolated_batch_cuda_span_ms": 77.1250228881836,
+  "stage_span_abs_gap_ms": 11.334945984440623,
+  "stage_span_relative_gap_percent": 14.696846185542285,
+  "frontier_first_ttft_ms": 65.79007690374297,
+  "vllm_clean_official_first_ttft_ms": 121.48427963256836,
+  "limits": "The local first-batch member/token vector matches. CUDA batch span is from isolated diagnostics; official TTFT is from clean. Their difference is not an independently measured CPU correction. Later route mismatches cannot alone explain the first-request gap; operator/critical-path evidence remains necessary."
+}

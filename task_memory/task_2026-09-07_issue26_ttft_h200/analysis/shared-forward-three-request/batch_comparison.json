@@ -1,0 +1,131 @@
+{
+  "status": "COMPLETE",
+  "formal_requests": 3,
+  "same_dp_count": 3,
+  "same_members_count": 3,
+  "first_request": {
+    "request_id": "pf4096_dc1024:0",
+    "same_dp": true,
+    "same_members": true,
+    "frontier": {
+      "dp": 0,
+      "batch_id": 0,
+      "start_s": 0.0,
+      "end_s": 0.06579007690374297,
+      "members": [
+        [
+          "pf4096_dc1024:0",
+          4096
+        ]
+      ]
+    },
+    "vllm": {
+      "dp": 0,
+      "batch_id": 4769,
+      "members": [
+        [
+          "pf4096_dc1024:0",
+          4096
+        ]
+      ]
+    }
+  },
+  "comparisons": [
+    {
+      "request_id": "pf4096_dc1024:0",
+      "same_dp": true,
+      "same_members": true,
+      "frontier": {
+        "dp": 0,
+        "batch_id": 0,
+        "start_s": 0.0,
+        "end_s": 0.06579007690374297,
+        "members": [
+          [
+            "pf4096_dc1024:0",
+            4096
+          ]
+        ]
+      },
+      "vllm": {
+        "dp": 0,
+        "batch_id": 4769,
+        "members": [
+          [
+            "pf4096_dc1024:0",
+            4096
+          ]
+        ]
+      }
+    },
+    {
+      "request_id": "pf4096_dc1024:1",
+      "same_dp": true,
+      "same_members": true,
+      "frontier": {
+        "dp": 0,
+        "batch_id": 866,
+        "start_s": 0.11778284745306514,
+        "end_s": 0.18497502277117123,
+        "members": [
+          [
+            "pf4096_dc1024:0",
+            1
+          ],
+          [
+            "pf4096_dc1024:1",
+            4096
+          ]
+        ]
+      },
+      "vllm": {
+        "dp": 0,
+        "batch_id": 4770,
+        "members": [
+          [
+            "pf4096_dc1024:0",
+            1
+          ],
+          [
+            "pf4096_dc1024:1",
+            4096
+          ]
+        ]
+      }
+    },
+    {
+      "request_id": "pf4096_dc1024:2",
+      "same_dp": true,
+      "same_members": true,
+      "frontier": {
+        "dp": 1,
+        "batch_id": 1742,
+        "start_s": 0.29486280016841143,
+        "end_s": 0.3607306467545867,
+        "members": [
+          [
+            "pf4096_dc1024:2",
+            4096
+          ]
+        ]
+      },
+      "vllm": {
+        "dp": 1,
+        "batch_id": 4804,
+        "members": [
+          [
+            "pf4096_dc1024:2",
+            4096
+          ]
+        ]
+      }
+    }
+  ],
+  "sources": {
+    "ledger": "/data/ycfeng/tmp/issue26-shared-forward-03req-01/metrics/qwen3_a3b_30b_moe/online_serving/runtime/frontier_stage_batch_ledger.jsonl",
+    "mapping": "/data/ycfeng/tmp/issue26-shared-forward-03req-01/request_id_map.csv",
+    "diagnostic_validation": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/historical-replay-02-batch-validation.json",
+    "clients": "task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-historical-replay-02/batch/runtime/batch/client.jsonl"
+  },
+  "limits": "vLLM batches come from an isolated diagnostic run. Clean and diagnostic arrival timing may differ. DP-local batch IDs do not identify a shared collective round; unlogged dummy rounds are excluded. Membership equality does not establish timing parity."
+}

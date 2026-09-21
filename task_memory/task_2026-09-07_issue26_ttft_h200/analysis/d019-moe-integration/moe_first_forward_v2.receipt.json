@@ -1,0 +1,20 @@
+{
+  "status": "PER_OPERATOR_TABLE_PREPARED_RUNTIME_TRAINING_PENDING",
+  "base_source": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/supplements/moe-uniform-01/moe.csv",
+  "corrected_source": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/d019-moe-normalized/moe.csv",
+  "output": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/d019-moe-integration/moe_first_forward_v2.csv",
+  "global_token_anchors": [
+    4096
+  ],
+  "retained_unchanged_rows": 774,
+  "corrected_expert_rows": 9,
+  "obsolete_expert_targets_retained": 0,
+  "holdout_rows_used_for_corrected_expert_training": 0,
+  "operation_target_counts": {
+    "time_stats.moe_gating_linear.median": 774,
+    "time_stats.moe_gating_routing_topk.median": 774,
+    "time_stats.moe_shuffling.median": 774,
+    "time_stats.moe_grouped_gemm.median": 9
+  },
+  "table_contract": "Per-operator sparse training input; not a dense canonical profiling export"
+}

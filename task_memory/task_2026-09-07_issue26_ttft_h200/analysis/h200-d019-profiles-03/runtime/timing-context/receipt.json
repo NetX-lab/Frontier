@@ -1,0 +1,198 @@
+{
+  "status": "RUNNING",
+  "python": "3.10.16",
+  "python_executable": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/bin/python",
+  "torch": "2.8.0+cu128",
+  "cuda": "12.8",
+  "vllm": "dev",
+  "vllm_path": "/data/ycfeng/tmp/issue26-vllm-diagnostics-20260908/vllm/__init__.py",
+  "gpu": "NVIDIA H200",
+  "tokens": 4096,
+  "tp": 4,
+  "hidden": 2048,
+  "q_heads": 32,
+  "kv_heads": 4,
+  "dtype": "torch.bfloat16",
+  "use_qk_norm": true,
+  "inference_mode": true,
+  "prefix_repeats": 20,
+  "prefix_width": 768,
+  "seed": 13,
+  "frontier_head": "6f46fe9c53e4797fdf0d905373e5fdd490fa0307",
+  "profiling_plan": {
+    "tp_size": 4,
+    "attn_enabled": true,
+    "ffn_enabled": true,
+    "attn_sharded_enabled": true,
+    "ffn_sharded_enabled": false,
+    "replicated_enabled": true,
+    "disable_replicated": false,
+    "enabled_ops": [
+      "input_layernorm",
+      "post_attention_layernorm",
+      "add",
+      "emb",
+      "attn_pre_proj",
+      "attn_rope",
+      "attn_post_proj"
+    ],
+    "disabled_ops": [],
+    "replicated_ops": [
+      "input_layernorm",
+      "post_attention_layernorm",
+      "add",
+      "emb"
+    ],
+    "padded_n_embd": 2048,
+    "padded_n_expanded_embd": 768,
+    "typed_layer_contracts": [
+      {
+        "profile_id": "generic",
+        "operator_family_ids": [
+          "moe"
+        ],
+        "layer_kind": "routed",
+        "dimension_source": "routed_mlp_hidden_dim",
+        "effective_ffn_width": 768,
+        "tensor_parallel_mode": "moe_tp",
+        "expert_parallel_mode": "on",
+        "selected_expert_parallel_size": null,
+        "tensor_parallel_sizes": [
+          1
+        ],
+        "selected_tensor_parallel_size": null,
+        "selected_padded_ffn_width": null
+      }
+    ],
+    "typed_operator_contracts": {
+      "attn_pre_proj": {
+        "profile_id": "generic",
+        "operator_family_id": "dense_attention",
+        "operator_family_ids": [
+          "dense_attention"
+        ],
+        "layer_kind": null,
+        "dimension_source": null,
+        "effective_ffn_width": null,
+        "tensor_parallel_mode": "attention_tp",
+        "expert_parallel_mode": "off",
+        "selected_expert_parallel_size": null,
+        "tensor_parallel_sizes": [
+          4
+        ],
+        "selected_tensor_parallel_size": 4,
+        "selected_padded_ffn_width": null
+      },
+      "attn_rope": {
+        "profile_id": "generic",
+        "operator_family_id": "dense_attention",
+        "operator_family_ids": [
+          "dense_attention"
+        ],
+        "layer_kind": null,
+        "dimension_source": null,
+        "effective_ffn_width": null,
+        "tensor_parallel_mode": "attention_tp",
+        "expert_parallel_mode": "off",
+        "selected_expert_parallel_size": null,
+        "tensor_parallel_sizes": [
+          4
+        ],
+        "selected_tensor_parallel_size": 4,
+        "selected_padded_ffn_width": null
+      },
+      "attn_post_proj": {
+        "profile_id": "generic",
+        "operator_family_id": "dense_attention",
+        "operator_family_ids": [
+          "dense_attention"
+        ],
+        "layer_kind": null,
+        "dimension_source": null,
+        "effective_ffn_width": null,
+        "tensor_parallel_mode": "attention_tp",
+        "expert_parallel_mode": "off",
+        "selected_expert_parallel_size": null,
+        "tensor_parallel_sizes": [
+          4
+        ],
+        "selected_tensor_parallel_size": 4,
+        "selected_padded_ffn_width": null
+      },
+      "input_layernorm": {
+        "profile_id": "generic",
+        "operator_family_id": "memory",
+        "operator_family_ids": [
+          "memory"
+        ],
+        "layer_kind": null,
+        "dimension_source": null,
+        "effective_ffn_width": null,
+        "tensor_parallel_mode": "replicated",
+        "expert_parallel_mode": "off",
+        "selected_expert_parallel_size": null,
+        "tensor_parallel_sizes": [
+          1
+        ],
+        "selected_tensor_parallel_size": 1,
+        "selected_padded_ffn_width": null
+      },
+      "post_attention_layernorm": {
+        "profile_id": "generic",
+        "operator_family_id": "memory",
+        "operator_family_ids": [
+          "memory"
+        ],
+        "layer_kind": null,
+        "dimension_source": null,
+        "effective_ffn_width": null,
+        "tensor_parallel_mode": "replicated",
+        "expert_parallel_mode": "off",
+        "selected_expert_parallel_size": null,
+        "tensor_parallel_sizes": [
+          1
+        ],
+        "selected_tensor_parallel_size": 1,
+        "selected_padded_ffn_width": null
+      },
+      "add": {
+        "profile_id": "generic",
+        "operator_family_id": "memory",
+        "operator_family_ids": [
+          "memory"
+        ],
+        "layer_kind": null,
+        "dimension_source": null,
+        "effective_ffn_width": null,
+        "tensor_parallel_mode": "replicated",
+        "expert_parallel_mode": "off",
+        "selected_expert_parallel_size": null,
+        "tensor_parallel_sizes": [
+          1
+        ],
+        "selected_tensor_parallel_size": 1,
+        "selected_padded_ffn_width": null
+      },
+      "emb": {
+        "profile_id": "generic",
+        "operator_family_id": "memory",
+        "operator_family_ids": [
+          "memory"
+        ],
+        "layer_kind": null,
+        "dimension_source": null,
+        "effective_ffn_width": null,
+        "tensor_parallel_mode": "replicated",
+        "expert_parallel_mode": "off",
+        "selected_expert_parallel_size": null,
+        "tensor_parallel_sizes": [
+          1
+        ],
+        "selected_tensor_parallel_size": 1,
+        "selected_padded_ffn_width": null
+      }
+    },
+    "skip_reasons": []
+  },
+  "limits": "Context controls are synthetic, not a vLLM forward. Precreated changes Event object construction, not lazy CUDA event initialization. Kernel-profile pass is diagnostic only."
+}

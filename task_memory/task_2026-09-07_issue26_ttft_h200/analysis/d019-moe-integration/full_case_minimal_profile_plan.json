@@ -1,0 +1,74 @@
+{
+  "status": "PROPOSED_NO_GPU_EXECUTION",
+  "scope": "Fresh corrected grouped-expert path only, same4096/1024 E2Ecase",
+  "training_global_tokens": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    32,
+    48,
+    64,
+    80,
+    96,
+    100,
+    4096,
+    4097,
+    4098,
+    4111,
+    4114,
+    4160,
+    4195,
+    8197,
+    8233,
+    8284,
+    12359
+  ],
+  "holdout_global_tokens": [
+    9,
+    23,
+    68,
+    92,
+    4109,
+    4141,
+    4187,
+    8208,
+    8267,
+    12371
+  ],
+  "training_shapes": 22,
+  "holdout_shapes": 10,
+  "representative_ep_ranks": [
+    0,
+    1,
+    7
+  ],
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "measurement_family": "CUDA_EVENT",
+  "runtime_context": "existing standalone grouped-expert profiler",
+  "producer": "MoEWrapper.profile_grouped_gemm(routing_inputs=exact_uniform_ids_and_local_expert_map)",
+  "selection_basis": {
+    "decode": "Log-spaced observed occupancy and size anchors through100; frequent intermediate shapes are held out",
+    "single_prefill": "Observed4096 boundary and first padding transitions, then interior/end of observed range",
+    "double_prefill": "Observed low/mid/high with two interior holdouts",
+    "triple_prefill": "Two observed sizes split into training and heldout"
+  },
+  "acceptance": {
+    "numerical_correctness": "Same-input vLLM fused_experts equality on collected layouts",
+    "prediction": "Fresh corrected-only GG training; actual feature-key/RF receipt on untouched holdouts",
+    "gate": "Report absolute ms, signed/absolute relative error, variance and frequency-weighted contribution; add samples only to a failed observed region",
+    "full_case": "Run fresh same-case with updated cost; audit any newly reached feature/shape before declaring coverage complete"
+  },
+  "caveats": [
+    "This is a bounded supplementation proposal, not all188shape exact coverage",
+    "Frozen train/holdout manifest must be applied explicitly; current exact script labels only4096/4097 anchor, so adapt only task-specific driver for future GG-only collection",
+    "No public routing schema or traced routing import extension is needed",
+    "No old incomplete-GG timing may enter training",
+    "Synthetic prefill_hot GG data is diagnostic and does not replace existing context merely for favorable agreement"
+  ]
+}

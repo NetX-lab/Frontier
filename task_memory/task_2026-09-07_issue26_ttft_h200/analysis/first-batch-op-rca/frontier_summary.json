@@ -1,0 +1,40 @@
+{
+  "endpoint_ms": 65.790076904,
+  "log_rounding_budget_ms": 0.000504,
+  "status": "PASS_FRONTIER_FIRST_PREFILL_ACCOUNTING",
+  "source": "/data/ycfeng/tmp/issue26-first-batch-op-frontier-01/runtime/frontier.log",
+  "layer_count": 48,
+  "ep_lane_rows": 384,
+  "op_totals_ms": {
+    "add": 0.0,
+    "add_attn_residual": 0.0,
+    "add_ffn_residual": 0.0,
+    "attn_kv_cache_save": 0.807168000000001,
+    "attn_post_proj": 2.245632,
+    "attn_pre_proj": 6.584063999999999,
+    "attn_prefill": 7.026432000000004,
+    "attn_rope": 1.5521279999999988,
+    "attn_tp_allreduce": 17.899439999999988,
+    "input_layernorm": 1.0851839999999993,
+    "moe_gating": 4.4392799999999975,
+    "moe_gating_linear": 0.6614400000000005,
+    "moe_gating_routing_topk": 4.4392799999999975,
+    "moe_grouped_gemm": 15.635904000000018,
+    "moe_shuffling": 2.5413599999999983,
+    "moe_tp_allreduce": 0.0,
+    "post_attention_layernorm": 1.0613760000000003,
+    "share_expert_tp_allreduce": 0.0
+  },
+  "excluded_from_sum": [
+    "add",
+    "add_attn_residual",
+    "add_ffn_residual",
+    "moe_gating",
+    "moe_tp_allreduce",
+    "share_expert_tp_allreduce"
+  ],
+  "operator_sum_ms": 61.539408,
+  "ep_communication_ms": 4.250688,
+  "total_predicted_ms": 65.790096,
+  "limits": "Current first-request diagnostic run; equal EP lane predictions reduced once. Rounded log values. No complete-request E2E claim."
+}

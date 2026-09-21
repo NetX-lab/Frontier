@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "analysis_state": "COMPLETE",
+  "checked_utc": "2026-09-08T04:55:49.839205+00:00",
+  "manifest": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-historical-replay-02/clean/run_manifest.json",
+  "checkout_verified": true,
+  "remote_tip_verified": "ea95f571e20937c7c908c6d59ddd1cd6bf9268f1",
+  "fresh_runtime_directory": true,
+  "predicates": {
+    "warmup_replays": 3,
+    "e2e_runtime_metrics": true,
+    "batch_instrumentation": false,
+    "scheduler_diagnostics": false,
+    "operator_instrumentation": false,
+    "cpu_probes": false
+  },
+  "next_action": "Run H200 topology and uniform-router preflight, then the declared worker."
+}

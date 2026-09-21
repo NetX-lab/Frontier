@@ -1,0 +1,82 @@
+{
+  "status": "PASS",
+  "requests_completed": 3,
+  "request_shape": [
+    4096,
+    1024
+  ],
+  "routes": [
+    {
+      "time": 0.0,
+      "event_type": "cluster_schedule",
+      "cluster_type": "monolithic",
+      "replica_local_set": [
+        [
+          0,
+          0
+        ]
+      ],
+      "request_mapping": [
+        [
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "time": 0.0811694245785474,
+      "event_type": "cluster_schedule",
+      "cluster_type": "monolithic",
+      "replica_local_set": [
+        [
+          0,
+          0
+        ]
+      ],
+      "request_mapping": [
+        [
+          0,
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "time": 0.2437708359211683,
+      "event_type": "cluster_schedule",
+      "cluster_type": "monolithic",
+      "replica_local_set": [
+        [
+          0,
+          1
+        ]
+      ],
+      "request_mapping": [
+        [
+          0,
+          1,
+          2
+        ]
+      ]
+    }
+  ],
+  "event_count": 159907,
+  "dummy_operator_timing": true,
+  "numerical_calibration_eligible": false,
+  "artifacts": "/data/ycfeng/tmp/issue26-dp-snapshot-validation-9jxdy2bq/runtime/metrics/qwen3_a3b_30b_moe/online_serving/runtime",
+  "callbacks_by_lane": {
+    "0": 1025,
+    "1": 1024
+  },
+  "final_engine_loads": {
+    "0": [
+      0,
+      0
+    ],
+    "1": [
+      0,
+      0
+    ]
+  }
+}

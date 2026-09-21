@@ -1,0 +1,521 @@
+{
+  "rank": 5,
+  "local_rank": 5,
+  "hostname": "rjob-037c3fa30fc78c5c-52045d57e7718f09-0",
+  "tp_ranks": [
+    4,
+    5,
+    6,
+    7
+  ],
+  "dp_ranks": [
+    1,
+    5
+  ],
+  "ep_ranks": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "gpu": "NVIDIA H200",
+  "python": "3.10.16",
+  "torch": "2.8.0+cu128",
+  "cuda": "12.8",
+  "vllm_commit": "4bc1bc026c91dff78bd7cf5ba6411f14d15e043d",
+  "contract": {
+    "tp_size": 4,
+    "dp_tokens": [
+      4096,
+      1
+    ],
+    "world_size": 8,
+    "tp_groups": [
+      [
+        0,
+        1,
+        2,
+        3
+      ],
+      [
+        4,
+        5,
+        6,
+        7
+      ]
+    ],
+    "dp_groups": [
+      [
+        0,
+        4
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        3,
+        7
+      ]
+    ],
+    "dtype": "bfloat16",
+    "hidden_size": 2048,
+    "router_experts": 128,
+    "local_hidden_bytes": [
+      16777216,
+      4096
+    ],
+    "local_router_bytes": [
+      1048576,
+      256
+    ],
+    "global_hidden_bytes": 16781312,
+    "global_router_bytes": 1048832,
+    "timing": "CUDA events around eager blocks; no per-call synchronize",
+    "warmup_calls": 20,
+    "calls_per_sample": 48,
+    "samples": 7
+  },
+  "implementation": {
+    "tp_custom_eligible": true,
+    "tp_custom_max_bytes": 8388608,
+    "tp_custom_disabled": false,
+    "tp_pynccl_disabled": false,
+    "dp_pynccl_disabled": false,
+    "tp_symm_mem_present": false,
+    "naive_manager": "NaiveAll2AllManager",
+    "tp_runtime_selected": "custom_all_reduce"
+  },
+  "correctness": "PASS",
+  "measurements": [
+    {
+      "operation": "tp_runtime_local",
+      "samples": [
+        {
+          "block_ms": 0.8198400139808655,
+          "per_call_ms": 0.017080000291268032,
+          "submit_start_monotonic_ns": 3799659680980226,
+          "submit_end_monotonic_ns": 3799659681818034
+        },
+        {
+          "block_ms": 0.8313919901847839,
+          "per_call_ms": 0.017320666462183,
+          "submit_start_monotonic_ns": 3799659686086479,
+          "submit_end_monotonic_ns": 3799659686914648
+        },
+        {
+          "block_ms": 0.8076800107955933,
+          "per_call_ms": 0.01682666689157486,
+          "submit_start_monotonic_ns": 3799659691003149,
+          "submit_end_monotonic_ns": 3799659691813751
+        },
+        {
+          "block_ms": 0.805791974067688,
+          "per_call_ms": 0.016787332793076832,
+          "submit_start_monotonic_ns": 3799659695969247,
+          "submit_end_monotonic_ns": 3799659696786115
+        },
+        {
+          "block_ms": 0.7753599882125854,
+          "per_call_ms": 0.016153333087762196,
+          "submit_start_monotonic_ns": 3799659700948365,
+          "submit_end_monotonic_ns": 3799659701736843
+        },
+        {
+          "block_ms": 0.7743359804153442,
+          "per_call_ms": 0.01613199959198634,
+          "submit_start_monotonic_ns": 3799659705896870,
+          "submit_end_monotonic_ns": 3799659706684064
+        },
+        {
+          "block_ms": 0.7819520235061646,
+          "per_call_ms": 0.01629066715637843,
+          "submit_start_monotonic_ns": 3799659710837406,
+          "submit_end_monotonic_ns": 3799659711633080
+        }
+      ],
+      "median_per_call_ms": 0.016787332793076832,
+      "min_per_call_ms": 0.01613199959198634,
+      "max_per_call_ms": 0.017320666462183
+    },
+    {
+      "operation": "tp_pynccl_local",
+      "samples": [
+        {
+          "block_ms": 0.7238399982452393,
+          "per_call_ms": 0.015079999963442484,
+          "submit_start_monotonic_ns": 3799659717821023,
+          "submit_end_monotonic_ns": 3799659718536835
+        },
+        {
+          "block_ms": 0.8616639971733093,
+          "per_call_ms": 0.017951333274443943,
+          "submit_start_monotonic_ns": 3799659722759539,
+          "submit_end_monotonic_ns": 3799659723485371
+        },
+        {
+          "block_ms": 0.754368007183075,
+          "per_call_ms": 0.015716000149647396,
+          "submit_start_monotonic_ns": 3799659727698611,
+          "submit_end_monotonic_ns": 3799659728424278
+        },
+        {
+          "block_ms": 0.6935359835624695,
+          "per_call_ms": 0.014448666324218115,
+          "submit_start_monotonic_ns": 3799659732664196,
+          "submit_end_monotonic_ns": 3799659733367297
+        },
+        {
+          "block_ms": 0.6970239877700806,
+          "per_call_ms": 0.014521333078543345,
+          "submit_start_monotonic_ns": 3799659737631023,
+          "submit_end_monotonic_ns": 3799659738343083
+        },
+        {
+          "block_ms": 0.6992639899253845,
+          "per_call_ms": 0.014567999790112177,
+          "submit_start_monotonic_ns": 3799659742516341,
+          "submit_end_monotonic_ns": 3799659743226262
+        },
+        {
+          "block_ms": 0.7147200107574463,
+          "per_call_ms": 0.014890000224113464,
+          "submit_start_monotonic_ns": 3799659747445264,
+          "submit_end_monotonic_ns": 3799659748158969
+        }
+      ],
+      "median_per_call_ms": 0.014890000224113464,
+      "min_per_call_ms": 0.014448666324218115,
+      "max_per_call_ms": 0.017951333274443943
+    },
+    {
+      "operation": "dp_runtime_global",
+      "samples": [
+        {
+          "block_ms": 3.801759958267212,
+          "per_call_ms": 0.07920333246390025,
+          "submit_start_monotonic_ns": 3799659754042836,
+          "submit_end_monotonic_ns": 3799659755051407
+        },
+        {
+          "block_ms": 3.770080089569092,
+          "per_call_ms": 0.07854333519935608,
+          "submit_start_monotonic_ns": 3799659758072802,
+          "submit_end_monotonic_ns": 3799659759061555
+        },
+        {
+          "block_ms": 3.7730560302734375,
+          "per_call_ms": 0.07860533396402995,
+          "submit_start_monotonic_ns": 3799659762136002,
+          "submit_end_monotonic_ns": 3799659763139286
+        },
+        {
+          "block_ms": 3.768320083618164,
+          "per_call_ms": 0.07850666840871175,
+          "submit_start_monotonic_ns": 3799659766182111,
+          "submit_end_monotonic_ns": 3799659767178795
+        },
+        {
+          "block_ms": 3.7832961082458496,
+          "per_call_ms": 0.07881866892178853,
+          "submit_start_monotonic_ns": 3799659770237935,
+          "submit_end_monotonic_ns": 3799659771221158
+        },
+        {
+          "block_ms": 3.7780160903930664,
+          "per_call_ms": 0.07870866854985555,
+          "submit_start_monotonic_ns": 3799659774240554,
+          "submit_end_monotonic_ns": 3799659775234663
+        },
+        {
+          "block_ms": 3.7931840419769287,
+          "per_call_ms": 0.07902466754118602,
+          "submit_start_monotonic_ns": 3799659778223844,
+          "submit_end_monotonic_ns": 3799659779210240
+        }
+      ],
+      "median_per_call_ms": 0.07870866854985555,
+      "min_per_call_ms": 0.07850666840871175,
+      "max_per_call_ms": 0.07920333246390025
+    },
+    {
+      "operation": "naive_hidden_multicast",
+      "samples": [
+        {
+          "block_ms": 4.5472002029418945,
+          "per_call_ms": 0.09473333756128947,
+          "submit_start_monotonic_ns": 3799659784425725,
+          "submit_end_monotonic_ns": 3799659787723605
+        },
+        {
+          "block_ms": 4.5517120361328125,
+          "per_call_ms": 0.09482733408610027,
+          "submit_start_monotonic_ns": 3799659789284045,
+          "submit_end_monotonic_ns": 3799659792604558
+        },
+        {
+          "block_ms": 4.534239768981934,
+          "per_call_ms": 0.09446332852045695,
+          "submit_start_monotonic_ns": 3799659794114535,
+          "submit_end_monotonic_ns": 3799659797445751
+        },
+        {
+          "block_ms": 4.552288055419922,
+          "per_call_ms": 0.09483933448791504,
+          "submit_start_monotonic_ns": 3799659798938712,
+          "submit_end_monotonic_ns": 3799659802245418
+        },
+        {
+          "block_ms": 4.563488006591797,
+          "per_call_ms": 0.09507266680399577,
+          "submit_start_monotonic_ns": 3799659803737791,
+          "submit_end_monotonic_ns": 3799659807009647
+        },
+        {
+          "block_ms": 4.570528030395508,
+          "per_call_ms": 0.09521933396657307,
+          "submit_start_monotonic_ns": 3799659808551626,
+          "submit_end_monotonic_ns": 3799659811830479
+        },
+        {
+          "block_ms": 4.547743797302246,
+          "per_call_ms": 0.0947446624437968,
+          "submit_start_monotonic_ns": 3799659813371081,
+          "submit_end_monotonic_ns": 3799659816642397
+        }
+      ],
+      "median_per_call_ms": 0.09482733408610027,
+      "min_per_call_ms": 0.09446332852045695,
+      "max_per_call_ms": 0.09521933396657307
+    },
+    {
+      "operation": "naive_router_multicast",
+      "samples": [
+        {
+          "block_ms": 5.284992218017578,
+          "per_call_ms": 0.11010400454203288,
+          "submit_start_monotonic_ns": 3799659819543970,
+          "submit_end_monotonic_ns": 3799659822831420
+        },
+        {
+          "block_ms": 3.224224090576172,
+          "per_call_ms": 0.06717133522033691,
+          "submit_start_monotonic_ns": 3799659825735282,
+          "submit_end_monotonic_ns": 3799659828974599
+        },
+        {
+          "block_ms": 3.2278079986572266,
+          "per_call_ms": 0.06724599997202556,
+          "submit_start_monotonic_ns": 3799659829169756,
+          "submit_end_monotonic_ns": 3799659832412095
+        },
+        {
+          "block_ms": 3.200767993927002,
+          "per_call_ms": 0.06668266654014587,
+          "submit_start_monotonic_ns": 3799659832622082,
+          "submit_end_monotonic_ns": 3799659835838670
+        },
+        {
+          "block_ms": 3.204832077026367,
+          "per_call_ms": 0.06676733493804932,
+          "submit_start_monotonic_ns": 3799659836055702,
+          "submit_end_monotonic_ns": 3799659839279355
+        },
+        {
+          "block_ms": 3.2067840099334717,
+          "per_call_ms": 0.06680800020694733,
+          "submit_start_monotonic_ns": 3799659839492339,
+          "submit_end_monotonic_ns": 3799659842713866
+        },
+        {
+          "block_ms": 3.182176113128662,
+          "per_call_ms": 0.06629533569018047,
+          "submit_start_monotonic_ns": 3799659842900530,
+          "submit_end_monotonic_ns": 3799659846097553
+        }
+      ],
+      "median_per_call_ms": 0.06680800020694733,
+      "min_per_call_ms": 0.06629533569018047,
+      "max_per_call_ms": 0.11010400454203288
+    },
+    {
+      "operation": "naive_dispatch",
+      "samples": [
+        {
+          "block_ms": 13.252863883972168,
+          "per_call_ms": 0.27610133091608685,
+          "submit_start_monotonic_ns": 3799659849969934,
+          "submit_end_monotonic_ns": 3799659863242720
+        },
+        {
+          "block_ms": 6.694752216339111,
+          "per_call_ms": 0.13947400450706482,
+          "submit_start_monotonic_ns": 3799659863417434,
+          "submit_end_monotonic_ns": 3799659869859082
+        },
+        {
+          "block_ms": 6.612736225128174,
+          "per_call_ms": 0.13776533802350363,
+          "submit_start_monotonic_ns": 3799659870357839,
+          "submit_end_monotonic_ns": 3799659876767503
+        },
+        {
+          "block_ms": 6.665247917175293,
+          "per_call_ms": 0.1388593316078186,
+          "submit_start_monotonic_ns": 3799659877199827,
+          "submit_end_monotonic_ns": 3799659883561043
+        },
+        {
+          "block_ms": 6.6262078285217285,
+          "per_call_ms": 0.138045996427536,
+          "submit_start_monotonic_ns": 3799659884080997,
+          "submit_end_monotonic_ns": 3799659890551986
+        },
+        {
+          "block_ms": 6.608960151672363,
+          "per_call_ms": 0.13768666982650757,
+          "submit_start_monotonic_ns": 3799659890926653,
+          "submit_end_monotonic_ns": 3799659897316455
+        },
+        {
+          "block_ms": 6.605567932128906,
+          "per_call_ms": 0.1376159985860189,
+          "submit_start_monotonic_ns": 3799659897745779,
+          "submit_end_monotonic_ns": 3799659904081209
+        }
+      ],
+      "median_per_call_ms": 0.138045996427536,
+      "min_per_call_ms": 0.1376159985860189,
+      "max_per_call_ms": 0.27610133091608685
+    },
+    {
+      "operation": "naive_combine",
+      "samples": [
+        {
+          "block_ms": 3.8172481060028076,
+          "per_call_ms": 0.07952600220839183,
+          "submit_start_monotonic_ns": 3799659906273493,
+          "submit_end_monotonic_ns": 3799659907869751
+        },
+        {
+          "block_ms": 3.812448024749756,
+          "per_call_ms": 0.07942600051561992,
+          "submit_start_monotonic_ns": 3799659910359842,
+          "submit_end_monotonic_ns": 3799659911935809
+        },
+        {
+          "block_ms": 3.7910399436950684,
+          "per_call_ms": 0.07897999882698059,
+          "submit_start_monotonic_ns": 3799659914596415,
+          "submit_end_monotonic_ns": 3799659916189308
+        },
+        {
+          "block_ms": 3.782047986984253,
+          "per_call_ms": 0.07879266639550526,
+          "submit_start_monotonic_ns": 3799659918683469,
+          "submit_end_monotonic_ns": 3799659920251621
+        },
+        {
+          "block_ms": 3.826848030090332,
+          "per_call_ms": 0.07972600062688191,
+          "submit_start_monotonic_ns": 3799659922770282,
+          "submit_end_monotonic_ns": 3799659924345871
+        },
+        {
+          "block_ms": 3.8267199993133545,
+          "per_call_ms": 0.07972333331902821,
+          "submit_start_monotonic_ns": 3799659926960228,
+          "submit_end_monotonic_ns": 3799659928550426
+        },
+        {
+          "block_ms": 3.7977919578552246,
+          "per_call_ms": 0.07912066578865051,
+          "submit_start_monotonic_ns": 3799659931222734,
+          "submit_end_monotonic_ns": 3799659932784666
+        }
+      ],
+      "median_per_call_ms": 0.07942600051561992,
+      "min_per_call_ms": 0.07879266639550526,
+      "max_per_call_ms": 0.07972600062688191
+    },
+    {
+      "operation": "naive_combine_post_tp",
+      "samples": [
+        {
+          "block_ms": 9.489664077758789,
+          "per_call_ms": 0.1977013349533081,
+          "submit_start_monotonic_ns": 3799659939357516,
+          "submit_end_monotonic_ns": 3799659941841382
+        },
+        {
+          "block_ms": 9.577183723449707,
+          "per_call_ms": 0.19952466090520224,
+          "submit_start_monotonic_ns": 3799659949123633,
+          "submit_end_monotonic_ns": 3799659951575316
+        },
+        {
+          "block_ms": 9.531904220581055,
+          "per_call_ms": 0.19858133792877197,
+          "submit_start_monotonic_ns": 3799659958979655,
+          "submit_end_monotonic_ns": 3799659961442969
+        },
+        {
+          "block_ms": 9.624671936035156,
+          "per_call_ms": 0.20051399866739908,
+          "submit_start_monotonic_ns": 3799659968899938,
+          "submit_end_monotonic_ns": 3799659971370829
+        },
+        {
+          "block_ms": 9.491840362548828,
+          "per_call_ms": 0.19774667421976724,
+          "submit_start_monotonic_ns": 3799659978844935,
+          "submit_end_monotonic_ns": 3799659981286039
+        },
+        {
+          "block_ms": 9.491616249084473,
+          "per_call_ms": 0.19774200518925986,
+          "submit_start_monotonic_ns": 3799659988617949,
+          "submit_end_monotonic_ns": 3799659991079886
+        },
+        {
+          "block_ms": 9.530400276184082,
+          "per_call_ms": 0.19855000575383505,
+          "submit_start_monotonic_ns": 3799659998380409,
+          "submit_end_monotonic_ns": 3799660000850318
+        }
+      ],
+      "median_per_call_ms": 0.19855000575383505,
+      "min_per_call_ms": 0.1977013349533081,
+      "max_per_call_ms": 0.20051399866739908
+    }
+  ],
+  "environment": {
+    "NCCL_IB_TC": "186",
+    "NCCL_IB_FIFO_TC": "192",
+    "NCCL_P2P_DISABLE": "0",
+    "NCCL_IB_PCI_RELAXED_ORDERING": "1",
+    "NCCL_RAS_ENABLE": "1",
+    "NCCL_VERSION": "2.25.1-1",
+    "NCCL_SOCKET_IFNAME": "^lo,docker0",
+    "NCCL_NVLS_ENABLE": "0",
+    "NCCL_DEBUG": "WARN",
+    "NCCL_IB_HCA": "",
+    "NCCL_RAS_ADDR": "0.0.0.0:28028",
+    "NCCL_IB_GID_INDEX": "5",
+    "NCCL_PXN_DISABLE": "1",
+    "NCCL_SET_THREAD_NAME": "1",
+    "NCCL_IB_QPS_PER_CONNECTION": "8",
+    "NCCL_IB_TIMEOUT": "18",
+    "NCCL_IB_DISABLE": "0",
+    "NCCL_IB_RETRY_CNT": "7",
+    "VLLM_ALL2ALL_BACKEND": "naive"
+  }
+}

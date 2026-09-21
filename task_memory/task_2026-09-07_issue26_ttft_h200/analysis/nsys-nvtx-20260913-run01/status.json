@@ -1,0 +1,282 @@
+{
+    "apiVersion": "rjob.brainpp.cn/v1alpha1",
+    "kind": "RJob",
+    "metadata": {
+        "annotations": {
+            "kubebrain.brainpp.cn/client-working-dir": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907",
+            "rjob.brainpp.cn/enable-jobutil-config": "true",
+            "rjob.brainpp.cn/labels": "",
+            "rjob.brainpp.cn/launch-command": "brainctl rjob launch --detach --name yc26-h200-nsys-nvtx-20260913-01 --charged-group=step_main --private-machine=group --positive-tags=h200 --set-env=ISSUE26_WARMUPS=10 --set-env=ISSUE26_NSYS_BACKEND=naive --set-env=ISSUE26_DIAGNOSTIC_VLLM_SOURCE=/data/ycfeng/tmp/vLLM-BS --set-env=ISSUE26_DIAGNOSTIC_VLLM_COMMIT=0f34fb271fd66d7dd84201ebdd4722781f829390 --gpu=8 --cpu=64 --memory=409600 --backoff-limit=1 --max-wait-duration=2h --enable-sshd=false --image hub.i.basemind.com/vllm-0.10.2/frontier-env@sha256:b97a2fdc624953679562a4835ea66e085ec22563f2086fecfe6710a9e682dbbc --volume /data:/data --workdir /data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907 -- bash tests/e2e/issue26_h200_nsys_nvtx_worker.sh /data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/nsys-nvtx-20260913-run01",
+            "rjob.brainpp.cn/rjob-pod-created": "2026-09-13T01:28:00.704283582Z",
+            "rjob.brainpp.cn/rjob-queue-approved": "2026-09-13T01:28:00.374417922Z",
+            "rjob.brainpp.cn/rjob-running": "2026-09-13T01:28:22.235301231Z",
+            "rjob.brainpp.cn/rjob-scheduled": "2026-09-13T01:28:00.866508068Z",
+            "rjob.brainpp.cn/worker-regulate-name": "true",
+            "stepmind.com/estimated-resource": "{\"worker\":{\"H200\":{\"used\":1}}}",
+            "stepmind.com/final-resource": "{}",
+            "stepmind.com/queue-approved-stage": "stepmind-task-stage-1",
+            "stepmind.com/queue-name": "step-main-default",
+            "workspace.brainpp.cn/command": "/opt/nvidia/nvidia_entrypoint.sh bash tests/e2e/issue26_h200_nsys_nvtx_worker.sh /data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/nsys-nvtx-20260913-run01",
+            "workspace.brainpp.cn/comment": "Interactive RJob launched by brainctl: /opt/nvidia/nvidia_entrypoint.sh bash tests/e2e/issue26_h200_nsys_nvtx_worker.sh /data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/nsys-nvtx-20260913-run01"
+        },
+        "creationTimestamp": "2026-09-13T01:27:59Z",
+        "finalizers": [
+            "rjob.brainpp.cn/rjob-finalizer"
+        ],
+        "labels": {
+            "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+            "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+            "kubebrain.brainpp.cn/creator-type": "user",
+            "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+            "kubebrain.brainpp.cn/resourcetype": "rjob",
+            "logs.monitoring.basemind.com/collect": "true",
+            "privatemachine.brainpp.cn/privatemachine": "group",
+            "quotagroup.brainpp.cn/preemptible": "no",
+            "quotagroup.brainpp.cn/quotagroup": "step_main",
+            "rjob.brainpp.cn/enable-sshd": "no",
+            "rjob.brainpp.cn/group-share": "read",
+            "rjob.brainpp.cn/launched-by": "brainctl",
+            "rjob.brainpp.cn/rjob-name": "yc26-h200-nsys-nvtx-20260913-01",
+            "rjob.brainpp.cn/rjob-version": "v2",
+            "rjob.brainpp.cn/type": "interactive",
+            "stepmind.com/queue-status": "closed",
+            "workspace.brainpp.cn/name": "ycfeng",
+            "workspace.brainpp.cn/workspace": "ws-56153d316be61e0f",
+            "workspace.brainpp.cn/workspace-namspace": "shai-core"
+        },
+        "name": "yc26-h200-nsys-nvtx-20260913-01",
+        "namespace": "shai-core",
+        "resourceVersion": "1289322568",
+        "uid": "b8139c08-afaf-4981-91dc-021a6f9c1f2b"
+    },
+    "spec": {
+        "autoDeleteDuration": "24h0m0s",
+        "backoffLimit": 1,
+        "selector": {
+            "matchLabels": {
+                "kubebrain.brainpp.cn/resourcetype": "rjob",
+                "rjob.brainpp.cn/rjob-name": "yc26-h200-nsys-nvtx-20260913-01"
+            }
+        },
+        "taskSpecs": {
+            "worker": {
+                "maxRunningDuration": "0s",
+                "maxWaitDuration": "2h0m0s",
+                "positiveTags": [
+                    "h200"
+                ],
+                "qos": {
+                    "gpuQos": "guaranteed",
+                    "localStorageQos": "guaranteed"
+                },
+                "replicas": 1,
+                "rootfsSource": {
+                    "kind": "image",
+                    "metadata": {
+                        "creationTimestamp": null
+                    }
+                },
+                "selector": {
+                    "matchLabels": {
+                        "kubebrain.brainpp.cn/resourcetype": "rjob",
+                        "rjob.brainpp.cn/rjob-name": "yc26-h200-nsys-nvtx-20260913-01",
+                        "rjob.brainpp.cn/rjob-task-type": "worker"
+                    }
+                },
+                "template": {
+                    "metadata": {
+                        "annotations": {
+                            "kubebrain.brainpp.cn/preemptible.job": "no",
+                            "workspace.brainpp.cn/image-mode-mount": "/data:/data"
+                        },
+                        "creationTimestamp": null,
+                        "labels": {
+                            "kubebrain.brainpp.cn/creator": "i-fengyicheng",
+                            "kubebrain.brainpp.cn/creator-id": "e7163316ad76ba7266a33f9787afd70a",
+                            "kubebrain.brainpp.cn/creator-type": "user",
+                            "kubebrain.brainpp.cn/extraresourceid": "",
+                            "kubebrain.brainpp.cn/extraresourcetype": "",
+                            "kubebrain.brainpp.cn/real-creator-id": "group-shai-core-step-main",
+                            "kubebrain.brainpp.cn/resourcetype": "rjob",
+                            "logs.monitoring.basemind.com/collect": "true",
+                            "pool.brainpp.cn/name": "",
+                            "privatemachine.brainpp.cn/privatemachine": "group",
+                            "quotagroup.brainpp.cn/preemptible": "no",
+                            "quotagroup.brainpp.cn/quotagroup": "step_main",
+                            "rjob.brainpp.cn/rjob-name": "yc26-h200-nsys-nvtx-20260913-01",
+                            "rjob.brainpp.cn/rjob-task-type": "worker"
+                        }
+                    },
+                    "spec": {
+                        "affinity": {},
+                        "containers": [
+                            {
+                                "command": [
+                                    "/kubebrain/worker-init",
+                                    "launch",
+                                    "--key-path",
+                                    "/home/i-fengyicheng/.launch/key",
+                                    "--bind",
+                                    "0.0.0.0:2222",
+                                    "--enable-workspace-exporter",
+                                    "--enable-pid-monitor"
+                                ],
+                                "env": [
+                                    {
+                                        "name": "PATH",
+                                        "value": "/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/kubebrain:/usr/local/nvidia/bin"
+                                    },
+                                    {
+                                        "name": "LD_LIBRARY_PATH",
+                                        "value": "/usr/local/cuda/lib64:/usr/local/nvidia/lib64"
+                                    },
+                                    {
+                                        "name": "RLAUNCH_WORKER",
+                                        "value": "1"
+                                    },
+                                    {
+                                        "name": "ISSUE26_WARMUPS",
+                                        "value": "10"
+                                    },
+                                    {
+                                        "name": "ISSUE26_NSYS_BACKEND",
+                                        "value": "naive"
+                                    },
+                                    {
+                                        "name": "ISSUE26_DIAGNOSTIC_VLLM_SOURCE",
+                                        "value": "/data/ycfeng/tmp/vLLM-BS"
+                                    },
+                                    {
+                                        "name": "ISSUE26_DIAGNOSTIC_VLLM_COMMIT",
+                                        "value": "0f34fb271fd66d7dd84201ebdd4722781f829390"
+                                    },
+                                    {
+                                        "name": "KUBEBRAIN_WORKSPACE_NAME",
+                                        "value": "ws-56153d316be61e0f"
+                                    },
+                                    {
+                                        "name": "LAUNCH_PUB_KEY",
+                                        "value": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQkNnS0NBUUVBdzF0WVV3ak01UTdNL2dDUSttRW9DUHowaEEzNElKWkJTVnd1RW5FTTkrMk5Rb3kvaGdtaQpTL1ZNZnlKZ25pa1RQWEdPa2RCamlybFQwR3ZmNVU5aE9zaTBRZnZNUVFzS3JtcFhmalg2YXpGWUw2ZFg2ZXhGCkRYemZuSWR2RE1PR2JyTUE3ZEZtaHdJSE8rTElValhZR3F3MmFuWHdwNzVITVgrTXA4eFFmSEkxSU5aRzBnNHkKQVBnenVIVGpQOWJIWUpNRjYyZWhlSVk5SC9LKzd4QmswZGZLT2hwN09ybUFEZkxuaVRUZTF0U2dyS2htdEIwWApqSHNLYkZIMFhGV0NRTEFkQzZDUFFRNlM5TTVCd3hNeXZSdWN1Uy9BTWlpMU9ESTczcVBwOXg5dXMwU2VBNDU3CnJ6dmhxRm5GQy9CUDZGRGFvbk82cmR6QlVkNE9GUkhpcXdJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tCg=="
+                                    },
+                                    {
+                                        "name": "KUBEBRAIN_NODE_NAME",
+                                        "valueFrom": {
+                                            "fieldRef": {
+                                                "fieldPath": "spec.nodeName"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "HOST_NETWORK",
+                                        "value": "false"
+                                    },
+                                    {
+                                        "name": "KUBEBRAIN_CLUSTER_ENTRY",
+                                        "value": "https://platform.shaipower.com"
+                                    },
+                                    {
+                                        "name": "KUBEBRAIN_QUOTA_GROUP",
+                                        "value": "step_main"
+                                    },
+                                    {
+                                        "name": "KUBEBRAIN_WORKSPACE_NAMESPACE",
+                                        "value": "shai-core"
+                                    },
+                                    {
+                                        "name": "KUBEBRAIN_NAMESPACE",
+                                        "value": "shai-core"
+                                    },
+                                    {
+                                        "name": "AWS_ACCESS_KEY_ID",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "key": "accesskey_id",
+                                                "name": "e7163316ad76ba7266a33f9787afd70a"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "AWS_SECRET_ACCESS_KEY",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "key": "accesskey_secret",
+                                                "name": "e7163316ad76ba7266a33f9787afd70a"
+                                            }
+                                        }
+                                    }
+                                ],
+                                "image": "hub.i.basemind.com/vllm-0.10.2/frontier-env@sha256:b97a2fdc624953679562a4835ea66e085ec22563f2086fecfe6710a9e682dbbc",
+                                "imagePullPolicy": "IfNotPresent",
+                                "name": "worker",
+                                "resources": {
+                                    "limits": {
+                                        "cpu": "64",
+                                        "memory": "400Gi",
+                                        "nvidia.com/gpu": "8"
+                                    },
+                                    "requests": {
+                                        "memory": "400Gi"
+                                    }
+                                },
+                                "volumeMounts": [
+                                    {
+                                        "mountPath": "/.auth/accesskey_id",
+                                        "name": "auth-info",
+                                        "readOnly": true,
+                                        "subPath": "accesskey_id"
+                                    },
+                                    {
+                                        "mountPath": "/.auth/accesskey_secret",
+                                        "name": "auth-info",
+                                        "readOnly": true,
+                                        "subPath": "accesskey_secret"
+                                    }
+                                ],
+                                "workingDir": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907"
+                            }
+                        ],
+                        "imagePullSecrets": [
+                            {
+                                "name": "e7163316ad76ba7266a33f9787afd70a"
+                            }
+                        ],
+                        "restartPolicy": "Never",
+                        "securityContext": {},
+                        "volumes": [
+                            {
+                                "name": "auth-info",
+                                "secret": {
+                                    "items": [
+                                        {
+                                            "key": "accesskey_id",
+                                            "path": "accesskey_id"
+                                        },
+                                        {
+                                            "key": "accesskey_secret",
+                                            "path": "accesskey_secret"
+                                        }
+                                    ],
+                                    "secretName": "e7163316ad76ba7266a33f9787afd70a"
+                                }
+                            }
+                        ]
+                    }
+                },
+                "updatePolicy": "None"
+            }
+        }
+    },
+    "status": {
+        "finishTime": "2026-09-13T01:28:46Z",
+        "message": "Tasks with failed status: [worker]",
+        "phase": "Failed",
+        "reason": "RJobFailed",
+        "taskStage": "stepmind-task-stage-1",
+        "taskStatuses": {
+            "worker": {
+                "failed": 1,
+                "taskStage": "stepmind-task-stage-1"
+            }
+        }
+    }
+}

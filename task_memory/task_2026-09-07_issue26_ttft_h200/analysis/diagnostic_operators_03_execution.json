@@ -1,0 +1,21 @@
+{
+  "status": "EXECUTION_COMPLETE_IDENTITY_VALIDATION_PENDING",
+  "captured_utc": "2026-09-07T18:37:20.850132+00:00",
+  "completed_requests": 400,
+  "formal_requests": 100,
+  "diagnostic_client_ttft_mean_ms": 215.85371458,
+  "clean_client_ttft_mean_ms": 120.50455297,
+  "replay_durations_s": [
+    198.87212075293064,
+    171.70069768838584,
+    172.0278714131564,
+    171.67284122481942
+  ],
+  "clean_replay_durations_s": [
+    144.52609449066222,
+    118.84003118705004,
+    118.95684555498883,
+    118.97380207804963
+  ],
+  "limitations": "Instrumentation perturbation observed; diagnostic client TTFT cannot enter official-server numeric gate. Formal batch/shape/scope comparisons remain required."
+}

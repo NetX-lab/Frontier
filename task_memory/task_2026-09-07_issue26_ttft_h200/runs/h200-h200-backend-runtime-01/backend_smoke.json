@@ -1,0 +1,6 @@
+{
+  "purpose": "structural runtime verification; defaults are not calibrated",
+  "message_bytes": 16777216,
+  "tp4_allreduce_ms": 0.3729050666666667,
+  "ep8_alltoall_ms": 0.044277955555555554
+}

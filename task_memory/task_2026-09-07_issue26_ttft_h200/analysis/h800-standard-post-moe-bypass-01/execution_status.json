@@ -1,0 +1,5 @@
+{
+  "status": "STOPPED_BEFORE_WORKER",
+  "root_cause": "Local timeout 60s interrupted rlaunch during image pull, which sent platform stop. No timing data.",
+  "replacement": "yc26-h800-post-moe-bypass-20260910-02"
+}

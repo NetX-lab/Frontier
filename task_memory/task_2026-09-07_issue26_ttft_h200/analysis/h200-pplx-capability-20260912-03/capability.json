@@ -1,0 +1,20 @@
+{
+  "status": "FAIL",
+  "pplx_spec": null,
+  "overlay": "/data/ycfeng/tmp/issue26-pplx-runtime-20260912-03",
+  "torch": "2.8.0+cu128",
+  "torch_cuda": "12.8",
+  "device_count": 8,
+  "devices": [
+    "NVIDIA H200",
+    "NVIDIA H200",
+    "NVIDIA H200",
+    "NVIDIA H200",
+    "NVIDIA H200",
+    "NVIDIA H200",
+    "NVIDIA H200",
+    "NVIDIA H200"
+  ],
+  "source_commit": "c336faf",
+  "scope": "Import capability after task-local CMake package metadata; no distributed handle created"
+}

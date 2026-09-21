@@ -1,0 +1,18 @@
+{
+  "checked_utc": "2026-09-10T09:37:51.931458+00:00",
+  "job": "yc26-h800-post-moe-bypass-20260910-03",
+  "phase": "Completed",
+  "worker_state": "terminated",
+  "node": "gpu-h800-0600",
+  "restart_count": 0,
+  "client_rows": 0,
+  "launch_log": "/data/ycfeng/tmp/issue26-h800-bypass-03-launch.log",
+  "launch_session": 82636,
+  "next_action": "Use qualified normal-scale ablation result; repeated same-node paired normal/skip and CUDA completion attribution remain pending",
+  "clean_rows": 400,
+  "clean_drain": "PASS",
+  "worker_exit_code": 0,
+  "finished_utc": "2026-09-10T09:34:52Z",
+  "batch_rows": 400,
+  "identity_validator": "PASS"
+}

@@ -1,0 +1,22 @@
+{
+  "decision_id": "D016",
+  "requesting_user": "YC",
+  "reviewer_identity": "YC",
+  "decision": "PASS",
+  "recorded_at": "2026-09-08T04:04:57.813522+00:00",
+  "analysis_artifacts": [
+    "analysis/dp_routing_repair_proposal.md",
+    "analysis/vllm_dp_load_balancing_source_research.md",
+    "test_report_2026-09-08_dp_routing_source_probe.md"
+  ],
+  "approved_scope": [
+    "independent RR continuity repair and regression",
+    "registered vLLM internal DP policy with load-state accessor and coordinator/frontend snapshot semantics",
+    "focused verification and fresh current-case replay"
+  ],
+  "change_markers": [
+    "D016_RR_CONTINUITY",
+    "D016_VLLM_DP_SNAPSHOT"
+  ],
+  "authorization": "Explicit current user message; applies to both named substeps."
+}

@@ -1,0 +1,57 @@
+{
+  "status": "MATCHED_EXPERT_SCOPE_DIAGNOSTIC_COMPARISON",
+  "v_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/d019-compute-results/moe/first_batch_compute.json",
+  "s_source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-d019-profiles-01/runtime/moe/receipts.json",
+  "rows": [
+    {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "ep_rank": 0,
+      "physical_global_m": 4097,
+      "context": "standalone",
+      "s_ms_per_layer": 0.4583359956741333,
+      "v_ms_per_layer": 0.410791999893263,
+      "delta_ms": 0.04754399578087032,
+      "signed_gap_percent": 11.573739457736222
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "ep_rank": 0,
+      "physical_global_m": 4097,
+      "context": "prefill_hot",
+      "s_ms_per_layer": 0.3996320068836212,
+      "v_ms_per_layer": 0.410791999893263,
+      "delta_ms": -0.011159993009641767,
+      "signed_gap_percent": -2.7167016428122976
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "ep_rank": 1,
+      "physical_global_m": 4097,
+      "context": "standalone",
+      "s_ms_per_layer": 0.45316798985004425,
+      "v_ms_per_layer": 0.4715979981701821,
+      "delta_ms": -0.01843000832013786,
+      "signed_gap_percent": -3.9079912110838
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "ep_rank": 1,
+      "physical_global_m": 4097,
+      "context": "prefill_hot",
+      "s_ms_per_layer": 0.4018400013446808,
+      "v_ms_per_layer": 0.4715979981701821,
+      "delta_ms": -0.06975799682550132,
+      "signed_gap_percent": -14.791834803405647
+    }
+  ],
+  "limitations": [
+    "V CUDA-event scopes use instrumented forward and retain host/event/rank context",
+    "S prefill_hot uses synthetic prefix, not exact48layer workload",
+    "Do not assign these differences to RF or clean TTFT",
+    "Current Frontier physical global M remains4096; V4097 matchedS is diagnostic only"
+  ]
+}

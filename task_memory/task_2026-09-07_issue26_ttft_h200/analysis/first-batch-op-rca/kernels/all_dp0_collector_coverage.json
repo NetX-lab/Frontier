@@ -1,0 +1,452 @@
+[
+  {
+    "batch_id": 4734,
+    "dp_rank": 0,
+    "tp_rank": 0,
+    "pid": 4302,
+    "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/kernels/frontier_profiler_traces/frontier_batch_4734_4302_1788861708517960240.json",
+    "launches": 3077,
+    "missing_device_correlations": []
+  },
+  {
+    "batch_id": 4734,
+    "dp_rank": 0,
+    "tp_rank": 1,
+    "pid": 4304,
+    "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/kernels/frontier_profiler_traces/frontier_batch_4734_4304_1788861708527480619.json",
+    "launches": 3077,
+    "missing_device_correlations": []
+  },
+  {
+    "batch_id": 4734,
+    "dp_rank": 0,
+    "tp_rank": 2,
+    "pid": 4306,
+    "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/kernels/frontier_profiler_traces/frontier_batch_4734_4306_1788861708528820439.json",
+    "launches": 3077,
+    "missing_device_correlations": []
+  },
+  {
+    "batch_id": 4734,
+    "dp_rank": 0,
+    "tp_rank": 3,
+    "pid": 4307,
+    "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/kernels/frontier_profiler_traces/frontier_batch_4734_4307_1788861708524415327.json",
+    "launches": 3077,
+    "missing_device_correlations": []
+  },
+  {
+    "batch_id": 4735,
+    "dp_rank": 0,
+    "tp_rank": 0,
+    "pid": 4302,
+    "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/kernels/frontier_profiler_traces/frontier_batch_4735_4302_1788861740550433205.json",
+    "launches": 3221,
+    "missing_device_correlations": []
+  },
+  {
+    "batch_id": 4735,
+    "dp_rank": 0,
+    "tp_rank": 1,
+    "pid": 4304,
+    "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/kernels/frontier_profiler_traces/frontier_batch_4735_4304_1788861740549052827.json",
+    "launches": 3221,
+    "missing_device_correlations": [
+      {
+        "ph": "X",
+        "cat": "cuda_driver",
+        "name": "cuLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893952242140.86,
+        "dur": 26.518,
+        "args": {
+          "External id": 16402,
+          "cbid": 307,
+          "correlation": 47230
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893952242290.839,
+        "dur": 15.085,
+        "args": {
+          "External id": 16411,
+          "cbid": 211,
+          "correlation": 47249
+        }
+      }
+    ]
+  },
+  {
+    "batch_id": 4735,
+    "dp_rank": 0,
+    "tp_rank": 2,
+    "pid": 4306,
+    "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/kernels/frontier_profiler_traces/frontier_batch_4735_4306_1788861740546508028.json",
+    "launches": 3221,
+    "missing_device_correlations": [
+      {
+        "ph": "X",
+        "cat": "cuda_driver",
+        "name": "cuLaunchKernel",
+        "pid": 4306,
+        "tid": 4306,
+        "ts": 5893952240799.688,
+        "dur": 23.873,
+        "args": {
+          "External id": 16402,
+          "cbid": 307,
+          "correlation": 47242
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4306,
+        "tid": 4306,
+        "ts": 5893952240973.749,
+        "dur": 10.274,
+        "args": {
+          "External id": 16411,
+          "cbid": 211,
+          "correlation": 47261
+        }
+      }
+    ]
+  },
+  {
+    "batch_id": 4735,
+    "dp_rank": 0,
+    "tp_rank": 3,
+    "pid": 4307,
+    "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/kernels/frontier_profiler_traces/frontier_batch_4735_4307_1788861740545243939.json",
+    "launches": 3221,
+    "missing_device_correlations": []
+  },
+  {
+    "batch_id": 4736,
+    "dp_rank": 0,
+    "tp_rank": 0,
+    "pid": 4302,
+    "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/kernels/frontier_profiler_traces/frontier_batch_4736_4302_1788861775115184124.json",
+    "launches": 3221,
+    "missing_device_correlations": [
+      {
+        "ph": "X",
+        "cat": "cuda_driver",
+        "name": "cuLaunchKernel",
+        "pid": 4302,
+        "tid": 4302,
+        "ts": 5893986785783.281,
+        "dur": 30.873,
+        "args": {
+          "External id": 33298,
+          "cbid": 307,
+          "correlation": 95991
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4302,
+        "tid": 4302,
+        "ts": 5893986786066.514,
+        "dur": 13.064,
+        "args": {
+          "External id": 33307,
+          "cbid": 211,
+          "correlation": 96010
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4302,
+        "tid": 4302,
+        "ts": 5893986786126.966,
+        "dur": 13.645,
+        "args": {
+          "External id": 33312,
+          "cbid": 211,
+          "correlation": 96018
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_driver",
+        "name": "cuLaunchKernelEx",
+        "pid": 4302,
+        "tid": 4302,
+        "ts": 5893986786760.438,
+        "dur": 15.714,
+        "args": {
+          "External id": 33316,
+          "cbid": 652,
+          "correlation": 96038
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4302,
+        "tid": 4302,
+        "ts": 5893986787323.168,
+        "dur": 16.835,
+        "args": {
+          "External id": 33322,
+          "cbid": 211,
+          "correlation": 96052
+        }
+      }
+    ]
+  },
+  {
+    "batch_id": 4736,
+    "dp_rank": 0,
+    "tp_rank": 1,
+    "pid": 4304,
+    "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/kernels/frontier_profiler_traces/frontier_batch_4736_4304_1788861775113850560.json",
+    "launches": 3221,
+    "missing_device_correlations": [
+      {
+        "ph": "X",
+        "cat": "cuda_driver",
+        "name": "cuLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893986780102.236,
+        "dur": 26.628,
+        "args": {
+          "External id": 33298,
+          "cbid": 307,
+          "correlation": 95925
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893986780279.951,
+        "dur": 11.12,
+        "args": {
+          "External id": 33307,
+          "cbid": 211,
+          "correlation": 95944
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893986780328.707,
+        "dur": 9.951,
+        "args": {
+          "External id": 33312,
+          "cbid": 211,
+          "correlation": 95952
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_driver",
+        "name": "cuLaunchKernelEx",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893986780689.893,
+        "dur": 13.686,
+        "args": {
+          "External id": 33316,
+          "cbid": 652,
+          "correlation": 95972
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4304,
+        "tid": 4304,
+        "ts": 5893986780979.522,
+        "dur": 11.008,
+        "args": {
+          "External id": 33322,
+          "cbid": 211,
+          "correlation": 95986
+        }
+      }
+    ]
+  },
+  {
+    "batch_id": 4736,
+    "dp_rank": 0,
+    "tp_rank": 2,
+    "pid": 4306,
+    "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/kernels/frontier_profiler_traces/frontier_batch_4736_4306_1788861775116601608.json",
+    "launches": 3221,
+    "missing_device_correlations": [
+      {
+        "ph": "X",
+        "cat": "cuda_driver",
+        "name": "cuLaunchKernel",
+        "pid": 4306,
+        "tid": 4306,
+        "ts": 5893986780667.438,
+        "dur": 30.205,
+        "args": {
+          "External id": 33298,
+          "cbid": 307,
+          "correlation": 95860
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4306,
+        "tid": 4306,
+        "ts": 5893986780812.97,
+        "dur": 12.205,
+        "args": {
+          "External id": 33307,
+          "cbid": 211,
+          "correlation": 95879
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4306,
+        "tid": 4306,
+        "ts": 5893986780858.947,
+        "dur": 12.877,
+        "args": {
+          "External id": 33312,
+          "cbid": 211,
+          "correlation": 95887
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_driver",
+        "name": "cuLaunchKernelEx",
+        "pid": 4306,
+        "tid": 4306,
+        "ts": 5893986781157.907,
+        "dur": 12.274,
+        "args": {
+          "External id": 33316,
+          "cbid": 652,
+          "correlation": 95907
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4306,
+        "tid": 4306,
+        "ts": 5893986781368.074,
+        "dur": 13.416,
+        "args": {
+          "External id": 33322,
+          "cbid": 211,
+          "correlation": 95921
+        }
+      }
+    ]
+  },
+  {
+    "batch_id": 4736,
+    "dp_rank": 0,
+    "tp_rank": 3,
+    "pid": 4307,
+    "trace": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-01/runtime/kernels/frontier_profiler_traces/frontier_batch_4736_4307_1788861775122982897.json",
+    "launches": 3221,
+    "missing_device_correlations": [
+      {
+        "ph": "X",
+        "cat": "cuda_driver",
+        "name": "cuLaunchKernel",
+        "pid": 4307,
+        "tid": 4307,
+        "ts": 5893986780637.09,
+        "dur": 29.844,
+        "args": {
+          "External id": 33298,
+          "cbid": 307,
+          "correlation": 95963
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4307,
+        "tid": 4307,
+        "ts": 5893986780778.03,
+        "dur": 12.402,
+        "args": {
+          "External id": 33307,
+          "cbid": 211,
+          "correlation": 95982
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4307,
+        "tid": 4307,
+        "ts": 5893986780817.809,
+        "dur": 15.164,
+        "args": {
+          "External id": 33312,
+          "cbid": 211,
+          "correlation": 95990
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_driver",
+        "name": "cuLaunchKernelEx",
+        "pid": 4307,
+        "tid": 4307,
+        "ts": 5893986781076.03,
+        "dur": 10.328,
+        "args": {
+          "External id": 33316,
+          "cbid": 652,
+          "correlation": 96010
+        }
+      },
+      {
+        "ph": "X",
+        "cat": "cuda_runtime",
+        "name": "cudaLaunchKernel",
+        "pid": 4307,
+        "tid": 4307,
+        "ts": 5893986781264.927,
+        "dur": 20.345,
+        "args": {
+          "External id": 33322,
+          "cbid": 211,
+          "correlation": 96024
+        }
+      }
+    ]
+  }
+]

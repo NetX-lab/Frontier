@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "analysis_state": "COMPLETE",
+  "manifest": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-historical-replay-01/batch/run_manifest.json",
+  "next_action": "Run environment/topology probe and exact worker; fail before measurement if runtime probe fails.",
+  "predicates": {
+    "warmup_replays": 3,
+    "e2e_runtime_metrics": false,
+    "batch_instrumentation": true,
+    "scheduler_diagnostics": true,
+    "operator_instrumentation": false,
+    "cpu_probes": false
+  }
+}

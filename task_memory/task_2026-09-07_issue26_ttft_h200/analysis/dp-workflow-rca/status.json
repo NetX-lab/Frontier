@@ -1,0 +1,15 @@
+{
+  "analysis_state": "COMPLETE",
+  "status": "FAIL",
+  "scope": "First DP inversion and first mixed-batch admission/progress RCA; workflow parity fails.",
+  "first_divergence_cause": "Engine-enqueue ordering replayed as frontend-routing ordering; demonstrated with same-run unchanged-predictor DES controls.",
+  "full_case_contribution_analysis": "INCOMPLETE",
+  "production_correction_state": "pending",
+  "next_action": "Review separate routing versus engine-visibility event semantics alongside full worker/engine-step timing evidence; do not replace arrived_at alone or add a constant CPU term.",
+  "evidence_paths": [
+    "same-run-01/same_run_join.json",
+    "fresh_same_run_evidence.json",
+    "fresh_boundary_controls.json"
+  ],
+  "same_run_evidence_collection": "COMPLETE"
+}

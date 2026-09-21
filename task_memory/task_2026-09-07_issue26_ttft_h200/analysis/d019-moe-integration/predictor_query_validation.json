@@ -1,0 +1,107 @@
+{
+  "status": "PASS_BOUNDED_CORRECTED_GG_INTEGRATION",
+  "not_cuda_closure": true,
+  "cache_generation": "Cache absent before query01; unchanged linear/attention models freshly trained before query01 MoE metadata failure; query02 continued same generation and fitted six MoE models. No prior-task cache reused.",
+  "fit_policy": {
+    "allowed": true,
+    "successful_calls_in_process": 6
+  },
+  "gg_matching_physical_csv_lines": [
+    776,
+    777,
+    778,
+    779,
+    780,
+    781,
+    782,
+    783,
+    784
+  ],
+  "gg_old_target_rows_dropped": 774,
+  "gg_new_target_rows": 9,
+  "old_first_stage_ms": 65.79007690374297,
+  "new_first_stage_ms": 72.32753521728748,
+  "expected_first_stage_ms": 72.32753521728756,
+  "absolute_reconciliation_error_ms": 8.526512829121202e-14,
+  "relative_reconciliation_error_percent": 1.1788750720601378e-13,
+  "changes": [
+    {
+      "model": "attn_prefill",
+      "old_P_ms_per_layer": 0.1463839933276176,
+      "new_P_ms_per_layer": 0.1463839933276176,
+      "signed_change_ms_per_layer": 0.0,
+      "branch": "measured_exact"
+    },
+    {
+      "model": "attn_pre_proj",
+      "old_P_ms_per_layer": 0.1371679976582527,
+      "new_P_ms_per_layer": 0.1371679976582527,
+      "signed_change_ms_per_layer": 0.0,
+      "branch": "measured_exact"
+    },
+    {
+      "model": "attn_post_proj",
+      "old_P_ms_per_layer": 0.0467840004712343,
+      "new_P_ms_per_layer": 0.0467840004712343,
+      "signed_change_ms_per_layer": 0.0,
+      "branch": "measured_exact"
+    },
+    {
+      "model": "attn_rope",
+      "old_P_ms_per_layer": 0.0323360003530979,
+      "new_P_ms_per_layer": 0.0323360003530979,
+      "signed_change_ms_per_layer": 0.0,
+      "branch": "measured_exact"
+    },
+    {
+      "model": "attn_kv_cache_save",
+      "old_P_ms_per_layer": 0.0168159995228052,
+      "new_P_ms_per_layer": 0.0168159995228052,
+      "signed_change_ms_per_layer": 0.0,
+      "branch": "measured_exact"
+    },
+    {
+      "model": "input_layernorm",
+      "old_P_ms_per_layer": 0.0226080007851123,
+      "new_P_ms_per_layer": 0.0226080007851123,
+      "signed_change_ms_per_layer": 0.0,
+      "branch": "measured_exact"
+    },
+    {
+      "model": "moe_gating_linear__prefill_hot",
+      "old_P_ms_per_layer": 0.013779555550879856,
+      "new_P_ms_per_layer": 0.013779555550879856,
+      "signed_change_ms_per_layer": 0.0,
+      "branch": "measured_exact"
+    },
+    {
+      "model": "moe_gating_routing_topk__prefill_hot",
+      "old_P_ms_per_layer": 0.09248533389634554,
+      "new_P_ms_per_layer": 0.09248533389634554,
+      "signed_change_ms_per_layer": 0.0,
+      "branch": "measured_exact"
+    },
+    {
+      "model": "moe_shuffling",
+      "old_P_ms_per_layer": 0.05294490649065479,
+      "new_P_ms_per_layer": 0.05294490649065479,
+      "signed_change_ms_per_layer": 0.0,
+      "branch": "estimator_predict"
+    },
+    {
+      "model": "moe_grouped_gemm",
+      "old_P_ms_per_layer": 0.32574783652524153,
+      "new_P_ms_per_layer": 0.4619448847240872,
+      "signed_change_ms_per_layer": 0.13619704819884565,
+      "branch": "measured_exact"
+    },
+    {
+      "model": "post_attention_layernorm",
+      "old_P_ms_per_layer": 0.0221119998022913,
+      "new_P_ms_per_layer": 0.0221119998022913,
+      "signed_change_ms_per_layer": 0.0,
+      "branch": "measured_exact"
+    }
+  ],
+  "holdout_owner": "moe_profile_repair; uses this GG estimator and M4095 features without changing simulation input"
+}

@@ -1,0 +1,21 @@
+{
+  "status": "FAIL",
+  "started_utc": "2026-09-08T05:12:50.225281+00:00",
+  "commands": [
+    {
+      "command": [
+        "/home/i-fengyicheng/miniconda3/envs/dev-vidur-v03-hopper-e2e/bin/python",
+        "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/tests/e2e/issue26_official_ttft_analysis.py",
+        "--run",
+        "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-historical-replay-02/clean/runtime/clean",
+        "--output",
+        "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/historical-replay-02-clean"
+      ],
+      "cwd": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907",
+      "start_utc": "2026-09-08T05:15:20.236778+00:00",
+      "exit_code": 1,
+      "end_utc": "2026-09-08T05:15:20.384849+00:00"
+    }
+  ],
+  "error": "CalledProcessError(1, ['/home/i-fengyicheng/miniconda3/envs/dev-vidur-v03-hopper-e2e/bin/python', '/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/tests/e2e/issue26_official_ttft_analysis.py', '--run', '/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-historical-replay-02/clean/runtime/clean', '--output', '/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/historical-replay-02-clean'], None, None)"
+}

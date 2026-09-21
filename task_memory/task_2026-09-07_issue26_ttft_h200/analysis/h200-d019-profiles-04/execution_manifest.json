@@ -1,0 +1,19 @@
+{
+  "status": "COMPLETED_DIAGNOSTIC",
+  "frontier_head": "6f46fe9c53e4797fdf0d905373e5fdd490fa0307",
+  "vllm_head": "4bc1bc026c91dff78bd7cf5ba6411f14d15e043d",
+  "phase": "linear_context",
+  "files": [
+    "tests/performance/issue26_h200_d019_profiles_worker.sh",
+    "tests/performance/issue26_linear_timing_context.py"
+  ],
+  "capacity": "profiles03 fresh preflight PASS; allocation released at exit1",
+  "recovery": "GPTModel executes two embeddings per iteration; validate runtime warmup multiplicity, retain all samples and per-call position",
+  "correctness": "target ops multiplicity=1, each label stable warmup multiplicity and correct active counts; finite positive event samples; launch correlations",
+  "created_utc": "2026-09-08T13:49:39.620459+00:00",
+  "job": "yc26-h200-d019-profiles-20260908-04",
+  "launcher_exit_code": 0,
+  "event_rows": 72,
+  "kernel_launches": 608,
+  "missing_device_correlations": 0
+}

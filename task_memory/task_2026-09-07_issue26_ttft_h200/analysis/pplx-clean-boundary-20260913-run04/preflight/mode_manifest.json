@@ -1,0 +1,20 @@
+{
+  "mode": "pplx_clean_boundary_only",
+  "created_utc": "2026-09-13T00:40:18.545727+00:00",
+  "python": "3.10.16 (main, Dec 11 2024, 16:24:50) [GCC 11.2.0]",
+  "warmup_rounds": 10,
+  "formal_requests": 100,
+  "all2all_backend": "pplx",
+  "moe_dp_chunk_size": 4096,
+  "source_commit": "448f2b65e7679ae7490114ad382b6ba79becb3c3",
+  "boundary_request_prefix": "cmpl-pf4096_dc1024:0-0",
+  "instrumentation": {
+    "batch_boundary": false,
+    "independent_clean_boundary": true,
+    "per_op": false,
+    "scheduler": false,
+    "routing": false,
+    "full_diagnostic_outer_span": false
+  },
+  "limits": "One independent first-formal model-forward CUDA event envelope per selected DP lane; one post-end synchronization only to read elapsed_time; Frontier instrumentation is disabled."
+}

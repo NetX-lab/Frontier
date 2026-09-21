@@ -1,0 +1,14 @@
+{
+  "artifact_validation": "PASS",
+  "formal_requests": 100,
+  "frontier_ttft_mean_ms": 105.44366841784294,
+  "official_server_ttft_mean_ms": 131.26863718032837,
+  "mean_signed_gap_ms": -25.824968762485426,
+  "absolute_error_of_means_ms": 25.824968762485426,
+  "relative_error_of_means_percent": 19.673373105114784,
+  "gap_definition": "Frontier mean minus official vLLM server mean",
+  "d006_formal_gate": "NOT_EVALUATED_UNADJUSTED_BASELINE",
+  "limitations": "Frontier queue-arrival-to-prefill-completion omits unaccounted official-server critical-path work. This baseline does not establish D006 parity or attribute the residual to CPU overhead.",
+  "metrics_directory": "/data/ycfeng/tmp/issue26-shared-forward-numerical-01/runtime/metrics/qwen3_a3b_30b_moe/online_serving/runtime",
+  "mapping_file": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/historical-replay-02-clean/request_id_map.csv"
+}

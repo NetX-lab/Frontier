@@ -1,0 +1,83 @@
+{
+  "status": "ARTIFACT_COMPLETE_PLATFORM_FAILED",
+  "rjob": "yc26-h200-pplx-nsys-profiler-20260913-02",
+  "platform_phase": "Failed",
+  "failure_scope": "The persistent run has no worker failure line; terminal platform status is retained as Failed. All required client and profiler artifacts were written.",
+  "config": {
+    "cluster": "step_main",
+    "gpu_tag": "h200",
+    "gpu_count": 8,
+    "num_gpu_blocks_override": 310809,
+    "backend": "pplx",
+    "workload": "4096-prefill/1024-output",
+    "warmups": 10,
+    "requests_per_phase": 100,
+    "formal_requests": 100
+  },
+  "client": {
+    "rows": 1100,
+    "warmup_rows": 1000,
+    "formal_rows": 100,
+    "all_prompt_tokens_4096": true,
+    "all_completion_tokens_1024": true,
+    "first_formal_request": "pf4096_dc1024:0"
+  },
+  "phase_records": {
+    "warmup_phase_count": 10,
+    "warmup_completed_requests": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+    ],
+    "formal_phase_count": 1,
+    "formal_completed_requests": [
+      100
+    ]
+  },
+  "capture": {
+    "start_marker": {
+      "path": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/pplx-nsys-profiler-20260913-run02-postprocess/trace_start.marker",
+      "exists": true,
+      "size": 67
+    },
+    "stop_marker": {
+      "path": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/pplx-nsys-profiler-20260913-run02-postprocess/trace_stop.marker",
+      "exists": true,
+      "size": 84
+    },
+    "nsys_report": {
+      "path": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/pplx-nsys-profiler-20260913-run02/nsys/first_formal.nsys-rep",
+      "exists": true,
+      "size": 12496496
+    },
+    "stats_csv": {
+      "stats_cuda_gpu_trace.csv": true,
+      "stats_cuda_gpu_kern_sum.csv": true,
+      "stats_cuda_gpu_mem_time_sum.csv": true,
+      "stats_cuda_api_sum.csv": true,
+      "stats_cuda_api_trace.csv": true
+    }
+  },
+  "decomposition": {
+    "per_process": "pplx_per_process_classified.json",
+    "api_window": "nsys_breakdown_api_window.json",
+    "status": "PARTIAL_STOP_COVERAGE",
+    "clean_reference_ms": [
+      78.118782043,
+      79.307357788
+    ]
+  },
+  "limits": [
+    "Nsight instrumentation and cudaProfilerStop can perturb queue timing and drain queued work.",
+    "PPLX process-to-rank mapping is unavailable in the persisted server log; PID rows are not TP labels.",
+    "Kernel totals are inclusive aggregates across processes/devices and are not serial batch latency.",
+    "Diagnostic result is not a clean span and cannot feed Frontier calibration."
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "eligible_formal_requests": 100,
+  "warmup_requests_excluded": 300,
+  "source_directory": "task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-historical-replay-02/clean/runtime/clean",
+  "server_ttft_mean_ms": 131.26863718032837,
+  "client_ttft_mean_ms": 135.40103293,
+  "queue_arrival_span_s": 47.156283407937735,
+  "metric_definition": "official vLLM server first_token_latency",
+  "trace_definition": "observed engine queue arrivals, normalized to first formal queue arrival",
+  "frontier_id_assumption": "fresh simulator process; sequential Request IDs start at zero",
+  "limitations": "This validates clean evidence, not Frontier parity. Wall and monotonic clocks are not subtracted. Missing critical-path work is not estimated from the total gap."
+}

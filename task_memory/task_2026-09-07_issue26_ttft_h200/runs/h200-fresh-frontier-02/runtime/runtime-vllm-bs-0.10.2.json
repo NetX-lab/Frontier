@@ -1,0 +1,40 @@
+{
+  "executable": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/bin/python",
+  "python": "3.10.16 (main, Dec 11 2024, 16:24:50) [GCC 11.2.0]",
+  "packages": {
+    "fasteners": {
+      "version": "0.20",
+      "path": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/lib/python3.10/site-packages/fasteners/__init__.py"
+    },
+    "numpy": {
+      "version": "2.2.6",
+      "path": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/lib/python3.10/site-packages/numpy/__init__.py"
+    },
+    "pandas": {
+      "version": "2.3.3",
+      "path": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/lib/python3.10/site-packages/pandas/__init__.py"
+    },
+    "PyYAML": {
+      "version": "6.0.3",
+      "path": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/lib/python3.10/site-packages/yaml/__init__.py"
+    },
+    "scikit-learn": {
+      "version": "1.7.2",
+      "path": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/lib/python3.10/site-packages/sklearn/__init__.py"
+    },
+    "scipy": {
+      "version": "1.15.3",
+      "path": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/lib/python3.10/site-packages/scipy/__init__.py"
+    },
+    "tqdm": {
+      "version": "4.67.1",
+      "path": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/lib/python3.10/site-packages/tqdm/__init__.py"
+    }
+  },
+  "errors": {
+    "ddsketch": "Traceback (most recent call last):\n  File \"/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/tests/e2e/issue26_simulator_runtime_check.py\", line 18, in <module>\n    imported = importlib.import_module(module)\n  File \"/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/lib/python3.10/importlib/__init__.py\", line 126, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n  File \"<frozen importlib._bootstrap>\", line 1050, in _gcd_import\n  File \"<frozen importlib._bootstrap>\", line 1027, in _find_and_load\n  File \"<frozen importlib._bootstrap>\", line 1004, in _find_and_load_unlocked\nModuleNotFoundError: No module named 'ddsketch'\n",
+    "plotly.express": "Traceback (most recent call last):\n  File \"/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/tests/e2e/issue26_simulator_runtime_check.py\", line 18, in <module>\n    imported = importlib.import_module(module)\n  File \"/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2/lib/python3.10/importlib/__init__.py\", line 126, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n  File \"<frozen importlib._bootstrap>\", line 1050, in _gcd_import\n  File \"<frozen importlib._bootstrap>\", line 1027, in _find_and_load\n  File \"<frozen importlib._bootstrap>\", line 992, in _find_and_load_unlocked\n  File \"<frozen importlib._bootstrap>\", line 241, in _call_with_frames_removed\n  File \"<frozen importlib._bootstrap>\", line 1050, in _gcd_import\n  File \"<frozen importlib._bootstrap>\", line 1027, in _find_and_load\n  File \"<frozen importlib._bootstrap>\", line 1004, in _find_and_load_unlocked\nModuleNotFoundError: No module named 'plotly'\n",
+    "simulator_and_predictor": "Traceback (most recent call last):\n  File \"/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/tests/e2e/issue26_simulator_runtime_check.py\", line 24, in <module>\n    from frontier.simulator import Simulator\n  File \"/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/frontier/simulator.py\", line 16, in <module>\n    from frontier.events import (\n  File \"/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/frontier/events/__init__.py\", line 1, in <module>\n    from frontier.events.base_event import BaseEvent\n  File \"/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/frontier/events/base_event.py\", line 5, in <module>\n    from frontier.metrics import MetricsStore\n  File \"/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/frontier/metrics/__init__.py\", line 1, in <module>\n    from frontier.metrics.metrics_store import MetricsStore\n  File \"/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/frontier/metrics/metrics_store.py\", line 7, in <module>\n    import plotly.express as px\nModuleNotFoundError: No module named 'plotly'\n"
+  },
+  "status": "FAIL"
+}

@@ -1,0 +1,27 @@
+{
+  "status": "COMPLETED_DIAGNOSTIC",
+  "created_utc": "2026-09-08T12:56:48.975703+00:00",
+  "job": "yc26-h200-d019-compute-20260908-01",
+  "authorization": "repairs/d019_approval.json",
+  "case": "pf4096_dc1024",
+  "groundtruth_commit": "4bc1bc026c91dff78bd7cf5ba6411f14d15e043d",
+  "frontier_commit": "388ae7a36602f86271d47a5f535c9f1985a2953c",
+  "modes": [
+    "batch_before",
+    "compute_attention",
+    "compute_moe",
+    "compute_detail",
+    "batch_after"
+  ],
+  "formal_requests_per_mode": 100,
+  "warmup_rounds_per_mode": 3,
+  "placement": "dedicated eight-GPU H200 step_main allocation; all five modes serial; separate from profile/microbench allocation",
+  "clean_metrics": false,
+  "profile_batch_limit": 1,
+  "cuda_graph": false,
+  "prefix_cache": false,
+  "routing": "uniform_topk",
+  "expected": "400 complete records per mode; first formal request0 pure4096 across TP ranks; complete selected scope counts and physical DP metadata",
+  "launcher_exit_code": 0,
+  "completion_evidence": "COMPUTE_SUITE_EXECUTION_COMPLETE; five client files each400; independent full-record validation ongoing"
+}

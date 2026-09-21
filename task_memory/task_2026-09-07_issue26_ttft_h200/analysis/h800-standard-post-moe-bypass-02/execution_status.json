@@ -1,0 +1,10 @@
+{
+  "status": "FAIL_BEFORE_REQUESTS",
+  "platform_phase": "Succeeded",
+  "worker_exit_code": 1,
+  "error": "ModuleNotFoundError: No module named 'vllm.vllm_flash_attn.layers'",
+  "root_cause": "git clone omitted eight ignored runtime assets, leaving only .gitkeep",
+  "client_rows": 0,
+  "fix": "Copy the identical missing runtime assets from canonical normal source; preserve one-call source diff",
+  "replacement": "yc26-h800-post-moe-bypass-20260910-03"
+}

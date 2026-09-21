@@ -1,0 +1,119 @@
+{
+  "simulation_metadata": {
+    "total_requests": 100,
+    "completed_requests": 100,
+    "system_architecture": "co-location",
+    "server_count": 1
+  },
+  "quantization_config": {
+    "config_path": "model_config",
+    "default_precision": "BF16",
+    "custom_operation_count": 0,
+    "config_hash": "e50a0fdaf6991c3ba7e32a6a4daafa99a0c46613d12ff918b6287812dcb7be20"
+  },
+  "ttft_statistics": {
+    "count": 100,
+    "mean": 105.44366841784296,
+    "median": 98.76659415212607,
+    "std": 28.17895173446103,
+    "min": 65.79007690374297,
+    "max": 206.3890389293732,
+    "p50": 98.76659415212607,
+    "p90": 136.33498130166117,
+    "p95": 163.4104807220723,
+    "p99": 206.22318512167055,
+    "unit": "ms"
+  },
+  "tpot_statistics": {
+    "count": 100,
+    "mean": 56.84539231594381,
+    "median": 57.025350990326295,
+    "std": 0.41385712879624187,
+    "min": 55.789437650612776,
+    "max": 57.255736103022585,
+    "p50": 57.025350990326295,
+    "p90": 57.23746971421633,
+    "p95": 57.24382770473701,
+    "p99": 57.252898919054026,
+    "unit": "ms",
+    "note": "TPOT is only computed for requests with num_decode_tokens > 1. Computed from 100 out of 100 requests."
+  },
+  "request_e2e_time_statistics": {
+    "count": 100,
+    "mean": 58258.28000762837,
+    "median": 58449.12632412341,
+    "std": 420.37069109435663,
+    "min": 57153.21037341981,
+    "max": 58693.894078360005,
+    "p50": 58449.12632412341,
+    "p90": 58648.17708109143,
+    "p95": 58664.88047026737,
+    "p99": 58693.71186026937,
+    "unit": "ms"
+  },
+  "throughput_metrics": {
+    "total_duration_ms": 104309.49378135755,
+    "total_duration_seconds": 104.30949378135755,
+    "requests_per_second": 0.9586855076644256,
+    "total_tokens_processed": 512000,
+    "total_decode_tokens_generated": 102400,
+    "tokens_per_second": 4908.469799241859,
+    "decode_tokens_per_second": 981.6939598483718
+  },
+  "spec_decode_statistics": {
+    "total_iterations": 0,
+    "total_accepted_drafts": 0,
+    "total_rejected_drafts": 0,
+    "total_committed_tokens": 0,
+    "acceptance_ratio": 0.0,
+    "avg_committed_tokens_per_iteration": 0.0
+  },
+  "preemption_statistics": {
+    "total_preemption_events": 0,
+    "total_preempted_requests": 0,
+    "preemption_rate": 0.0,
+    "by_cluster_type": {}
+  },
+  "model_weight_memory": {
+    "MONOLITHIC": {
+      "total_parameters": 3862953984,
+      "total_memory_bytes": 7725907968,
+      "total_memory_gb": 7.1953125,
+      "memory_utilization_percent": 5.103058510638299,
+      "breakdown": {
+        "attention_parameters": 226492416,
+        "attention_memory_bytes": 452984832,
+        "attention_memory_gb": 0.421875,
+        "ffn_parameters": 3636461568,
+        "ffn_memory_bytes": 7272923136,
+        "ffn_memory_gb": 6.7734375
+      },
+      "device_info": {
+        "device_type": "H200",
+        "total_device_memory_gb": 141.0,
+        "num_replicas": 1,
+        "expert_parallel_size": 8,
+        "moe_tensor_parallel_size": 1
+      }
+    }
+  },
+  "memory_utilization_percent": {
+    "MONOLITHIC": 5.103058510638299
+  },
+  "system_architecture_info": {
+    "system_architecture": "co-location",
+    "cluster_configurations": {
+      "MONOLITHIC": {
+        "num_replicas": 1,
+        "parallel_parameters": {
+          "PP": 1,
+          "ATTN_TP": 4,
+          "MOE_TP": 1,
+          "MOE_EP": 8
+        },
+        "device_type": "H200",
+        "model_name": "qwen3-a3b-30b-moe"
+      }
+    }
+  }
+}

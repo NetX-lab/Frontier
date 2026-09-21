@@ -1,0 +1,1 @@
+NVIDIA Nsight Systems version 2025.6.3.541-256337736014v0

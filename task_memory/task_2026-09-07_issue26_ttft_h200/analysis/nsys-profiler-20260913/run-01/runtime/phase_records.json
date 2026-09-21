@@ -1,0 +1,74 @@
+[
+  {
+    "phase": "warmup:0",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14320505.27977352,
+    "phase_end_monotonic_s": 14320679.87841685
+  },
+  {
+    "phase": "warmup:1",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14320679.878446072,
+    "phase_end_monotonic_s": 14320813.905264165
+  },
+  {
+    "phase": "warmup:2",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14320813.905286036,
+    "phase_end_monotonic_s": 14320947.668580264
+  },
+  {
+    "phase": "warmup:3",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14320947.668605128,
+    "phase_end_monotonic_s": 14321082.244461887
+  },
+  {
+    "phase": "warmup:4",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14321082.244491758,
+    "phase_end_monotonic_s": 14321217.365039008
+  },
+  {
+    "phase": "warmup:5",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14321217.36506188,
+    "phase_end_monotonic_s": 14321352.412263997
+  },
+  {
+    "phase": "warmup:6",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14321352.41229768,
+    "phase_end_monotonic_s": 14321487.604046373
+  },
+  {
+    "phase": "warmup:7",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14321487.604073033,
+    "phase_end_monotonic_s": 14321622.831094613
+  },
+  {
+    "phase": "warmup:8",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14321622.831141634,
+    "phase_end_monotonic_s": 14321757.933568936
+  },
+  {
+    "phase": "warmup:9",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14321757.933598513,
+    "phase_end_monotonic_s": 14321893.5500068
+  },
+  {
+    "event": "first_formal_first_token",
+    "request_id": "pf4096_dc1024:0",
+    "token_perf_counter_ns": 14321893785361805,
+    "profile_start_wall_ns": 1789248312724064729
+  },
+  {
+    "phase": "formal",
+    "completed_requests": 100,
+    "phase_start_monotonic_s": 14321893.617436368,
+    "phase_end_monotonic_s": 14322029.154711055
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "artifacts": [
+    {
+      "path": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/supplements/moe-context-01/moe.csv",
+      "sha256": "41e1eb309906580585666efb2992d3a297f89baa3da557a810b6469765fe7a44",
+      "size": 1837752
+    },
+    {
+      "path": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/supplements/moe-context-01/moe.summary.json",
+      "sha256": "4bb968c969e6343c98e6c03843a4282cd8f677f5f4d200dfec4404d785c0a283",
+      "size": 4161794
+    }
+  ],
+  "schema": "frontier-atomic-commit-v1",
+  "state": "COMMITTED"
+}

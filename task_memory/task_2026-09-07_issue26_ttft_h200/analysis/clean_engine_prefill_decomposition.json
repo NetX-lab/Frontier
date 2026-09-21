@@ -1,0 +1,727 @@
+{
+  "status": "PASS_ALGEBRAIC_DECOMPOSITION",
+  "formal_requests": 100,
+  "source": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-official-clean-01/runtime/clean/server.request_metrics.jsonl",
+  "mapping": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/official-clean-01/request_id_map.csv",
+  "formula": "scheduled_to_first = request_model_execution_time - tpot * (decode_tokens - 1)",
+  "source_contract": "output_processor.py:273-318 and metrics/stats.py:140-195 at vLLM46f7b179f",
+  "limits": "Official server TTFT remains primary. The remaining duration includes queue waiting plus work outside SCHEDULED-to-first-EngineCoreOutput; it is not a CPU-only measurement or an additive correction. The derived engine interval includes host and device execution; it is not pure GPU forward time. No mixed-clock timestamps are subtracted; this combines recorded duration intervals only. The subtraction of frontend wall-duration and engine monotonic-duration is not a single-clock causal partition or a microsecond-accuracy endpoint proof.",
+  "rows": [
+    {
+      "request_id": "cmpl-pf4096_dc1024:0-0",
+      "frontier_request_id": "0",
+      "official_server_ttft_ms": 102.46133804321289,
+      "scheduled_to_first_engine_output_ms": 73.16392287611961,
+      "remaining_official_interval_ms": 29.297415167093277
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:1-0",
+      "frontier_request_id": "1",
+      "official_server_ttft_ms": 127.1970272064209,
+      "scheduled_to_first_engine_output_ms": 76.62103185428714,
+      "remaining_official_interval_ms": 50.57599535213376
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:2-0",
+      "frontier_request_id": "2",
+      "official_server_ttft_ms": 94.87152099609375,
+      "scheduled_to_first_engine_output_ms": 71.70944893732667,
+      "remaining_official_interval_ms": 23.16207205876708
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:3-0",
+      "frontier_request_id": "3",
+      "official_server_ttft_ms": 101.94087028503418,
+      "scheduled_to_first_engine_output_ms": 75.80719888211752,
+      "remaining_official_interval_ms": 26.13367140291666
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:4-0",
+      "frontier_request_id": "4",
+      "official_server_ttft_ms": 99.95722770690918,
+      "scheduled_to_first_engine_output_ms": 73.69507523252105,
+      "remaining_official_interval_ms": 26.26215247438813
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:5-0",
+      "frontier_request_id": "5",
+      "official_server_ttft_ms": 102.2188663482666,
+      "scheduled_to_first_engine_output_ms": 84.87002598121762,
+      "remaining_official_interval_ms": 17.34884036704898
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:6-0",
+      "frontier_request_id": "6",
+      "official_server_ttft_ms": 98.5558032989502,
+      "scheduled_to_first_engine_output_ms": 84.66907497495413,
+      "remaining_official_interval_ms": 13.886728323996067
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:7-0",
+      "frontier_request_id": "7",
+      "official_server_ttft_ms": 114.67337608337402,
+      "scheduled_to_first_engine_output_ms": 74.06004192307591,
+      "remaining_official_interval_ms": 40.61333416029811
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:8-0",
+      "frontier_request_id": "8",
+      "official_server_ttft_ms": 99.32231903076172,
+      "scheduled_to_first_engine_output_ms": 77.4884512648132,
+      "remaining_official_interval_ms": 21.833867765948526
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:9-0",
+      "frontier_request_id": "9",
+      "official_server_ttft_ms": 96.01926803588867,
+      "scheduled_to_first_engine_output_ms": 74.25784692168236,
+      "remaining_official_interval_ms": 21.761421114206314
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:10-0",
+      "frontier_request_id": "10",
+      "official_server_ttft_ms": 110.20660400390625,
+      "scheduled_to_first_engine_output_ms": 76.14155579356884,
+      "remaining_official_interval_ms": 34.06504821033741
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:11-0",
+      "frontier_request_id": "11",
+      "official_server_ttft_ms": 124.20439720153809,
+      "scheduled_to_first_engine_output_ms": 73.65491939707135,
+      "remaining_official_interval_ms": 50.54947780446673
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:12-0",
+      "frontier_request_id": "12",
+      "official_server_ttft_ms": 109.48991775512695,
+      "scheduled_to_first_engine_output_ms": 75.07040398195386,
+      "remaining_official_interval_ms": 34.419513773173094
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:13-0",
+      "frontier_request_id": "13",
+      "official_server_ttft_ms": 125.6859302520752,
+      "scheduled_to_first_engine_output_ms": 74.78617923334241,
+      "remaining_official_interval_ms": 50.899751018732786
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:14-0",
+      "frontier_request_id": "14",
+      "official_server_ttft_ms": 119.80581283569336,
+      "scheduled_to_first_engine_output_ms": 77.87216873838042,
+      "remaining_official_interval_ms": 41.933644097312936
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:15-0",
+      "frontier_request_id": "15",
+      "official_server_ttft_ms": 135.2822780609131,
+      "scheduled_to_first_engine_output_ms": 75.26375772431493,
+      "remaining_official_interval_ms": 60.01852033659816
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:16-0",
+      "frontier_request_id": "16",
+      "official_server_ttft_ms": 151.7806053161621,
+      "scheduled_to_first_engine_output_ms": 102.22776420414448,
+      "remaining_official_interval_ms": 49.55284111201763
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:17-0",
+      "frontier_request_id": "17",
+      "official_server_ttft_ms": 109.4505786895752,
+      "scheduled_to_first_engine_output_ms": 102.22776420414448,
+      "remaining_official_interval_ms": 7.2228144854307175
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:18-0",
+      "frontier_request_id": "18",
+      "official_server_ttft_ms": 81.42900466918945,
+      "scheduled_to_first_engine_output_ms": 75.03473432734609,
+      "remaining_official_interval_ms": 6.394270341843367
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:19-0",
+      "frontier_request_id": "19",
+      "official_server_ttft_ms": 88.8214111328125,
+      "scheduled_to_first_engine_output_ms": 74.48887778446078,
+      "remaining_official_interval_ms": 14.332533348351717
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:20-0",
+      "frontier_request_id": "20",
+      "official_server_ttft_ms": 127.3500919342041,
+      "scheduled_to_first_engine_output_ms": 76.20447874070669,
+      "remaining_official_interval_ms": 51.14561319349741
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:21-0",
+      "frontier_request_id": "21",
+      "official_server_ttft_ms": 110.49985885620117,
+      "scheduled_to_first_engine_output_ms": 76.2702845968306,
+      "remaining_official_interval_ms": 34.229574259370565
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:22-0",
+      "frontier_request_id": "22",
+      "official_server_ttft_ms": 89.24746513366699,
+      "scheduled_to_first_engine_output_ms": 74.39244305714965,
+      "remaining_official_interval_ms": 14.855022076517344
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:23-0",
+      "frontier_request_id": "23",
+      "official_server_ttft_ms": 98.56128692626953,
+      "scheduled_to_first_engine_output_ms": 74.30489407853747,
+      "remaining_official_interval_ms": 24.25639284773206
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:24-0",
+      "frontier_request_id": "24",
+      "official_server_ttft_ms": 89.77818489074707,
+      "scheduled_to_first_engine_output_ms": 76.56950084492564,
+      "remaining_official_interval_ms": 13.208684045821428
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:25-0",
+      "frontier_request_id": "25",
+      "official_server_ttft_ms": 115.07177352905273,
+      "scheduled_to_first_engine_output_ms": 73.6774611286819,
+      "remaining_official_interval_ms": 41.394312400370836
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:26-0",
+      "frontier_request_id": "26",
+      "official_server_ttft_ms": 130.50580024719238,
+      "scheduled_to_first_engine_output_ms": 78.06198298929667,
+      "remaining_official_interval_ms": 52.44381725789572
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:27-0",
+      "frontier_request_id": "27",
+      "official_server_ttft_ms": 142.73715019226074,
+      "scheduled_to_first_engine_output_ms": 75.24931989610195,
+      "remaining_official_interval_ms": 67.48783029615879
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:28-0",
+      "frontier_request_id": "28",
+      "official_server_ttft_ms": 136.13176345825195,
+      "scheduled_to_first_engine_output_ms": 76.44543563947082,
+      "remaining_official_interval_ms": 59.68632781878114
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:29-0",
+      "frontier_request_id": "29",
+      "official_server_ttft_ms": 113.4181022644043,
+      "scheduled_to_first_engine_output_ms": 75.23516099900007,
+      "remaining_official_interval_ms": 38.182941265404224
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:30-0",
+      "frontier_request_id": "30",
+      "official_server_ttft_ms": 85.93010902404785,
+      "scheduled_to_first_engine_output_ms": 76.36467879638076,
+      "remaining_official_interval_ms": 9.565430227667093
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:31-0",
+      "frontier_request_id": "31",
+      "official_server_ttft_ms": 91.23706817626953,
+      "scheduled_to_first_engine_output_ms": 74.58925480023026,
+      "remaining_official_interval_ms": 16.647813376039267
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:32-0",
+      "frontier_request_id": "32",
+      "official_server_ttft_ms": 139.15610313415527,
+      "scheduled_to_first_engine_output_ms": 76.12561667336558,
+      "remaining_official_interval_ms": 63.03048646078969
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:33-0",
+      "frontier_request_id": "33",
+      "official_server_ttft_ms": 129.24909591674805,
+      "scheduled_to_first_engine_output_ms": 75.42998110875487,
+      "remaining_official_interval_ms": 53.819114807993174
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:34-0",
+      "frontier_request_id": "34",
+      "official_server_ttft_ms": 106.52947425842285,
+      "scheduled_to_first_engine_output_ms": 76.88833540305495,
+      "remaining_official_interval_ms": 29.6411388553679
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:35-0",
+      "frontier_request_id": "35",
+      "official_server_ttft_ms": 114.89987373352051,
+      "scheduled_to_first_engine_output_ms": 75.12094313278794,
+      "remaining_official_interval_ms": 39.778930600732565
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:36-0",
+      "frontier_request_id": "36",
+      "official_server_ttft_ms": 144.60206031799316,
+      "scheduled_to_first_engine_output_ms": 78.23214214293694,
+      "remaining_official_interval_ms": 66.36991817505623
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:37-0",
+      "frontier_request_id": "37",
+      "official_server_ttft_ms": 158.2193374633789,
+      "scheduled_to_first_engine_output_ms": 86.38056600464915,
+      "remaining_official_interval_ms": 71.83877145872975
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:38-0",
+      "frontier_request_id": "38",
+      "official_server_ttft_ms": 97.49984741210938,
+      "scheduled_to_first_engine_output_ms": 86.17860870435834,
+      "remaining_official_interval_ms": 11.321238707751036
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:39-0",
+      "frontier_request_id": "39",
+      "official_server_ttft_ms": 85.22987365722656,
+      "scheduled_to_first_engine_output_ms": 75.41607460007071,
+      "remaining_official_interval_ms": 9.813799057155848
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:40-0",
+      "frontier_request_id": "40",
+      "official_server_ttft_ms": 102.4179458618164,
+      "scheduled_to_first_engine_output_ms": 75.43970411644841,
+      "remaining_official_interval_ms": 26.978241745367995
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:42-0",
+      "frontier_request_id": "41",
+      "official_server_ttft_ms": 131.9570541381836,
+      "scheduled_to_first_engine_output_ms": 86.86737902462482,
+      "remaining_official_interval_ms": 45.08967511355877
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:41-0",
+      "frontier_request_id": "42",
+      "official_server_ttft_ms": 150.85983276367188,
+      "scheduled_to_first_engine_output_ms": 86.63714490830898,
+      "remaining_official_interval_ms": 64.22268785536289
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:43-0",
+      "frontier_request_id": "43",
+      "official_server_ttft_ms": 86.6539478302002,
+      "scheduled_to_first_engine_output_ms": 76.56559394673968,
+      "remaining_official_interval_ms": 10.088353883460513
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:44-0",
+      "frontier_request_id": "44",
+      "official_server_ttft_ms": 137.18318939208984,
+      "scheduled_to_first_engine_output_ms": 76.05757936835289,
+      "remaining_official_interval_ms": 61.125610023736954
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:45-0",
+      "frontier_request_id": "45",
+      "official_server_ttft_ms": 106.1544418334961,
+      "scheduled_to_first_engine_output_ms": 75.58596134187246,
+      "remaining_official_interval_ms": 30.56848049162363
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:46-0",
+      "frontier_request_id": "46",
+      "official_server_ttft_ms": 138.26298713684082,
+      "scheduled_to_first_engine_output_ms": 75.98670618608594,
+      "remaining_official_interval_ms": 62.27628095075488
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:47-0",
+      "frontier_request_id": "47",
+      "official_server_ttft_ms": 92.8044319152832,
+      "scheduled_to_first_engine_output_ms": 76.83855528011918,
+      "remaining_official_interval_ms": 15.965876635164022
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:48-0",
+      "frontier_request_id": "48",
+      "official_server_ttft_ms": 92.19074249267578,
+      "scheduled_to_first_engine_output_ms": 76.70250488446618,
+      "remaining_official_interval_ms": 15.488237608209602
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:49-0",
+      "frontier_request_id": "49",
+      "official_server_ttft_ms": 86.68375015258789,
+      "scheduled_to_first_engine_output_ms": 74.85693600028753,
+      "remaining_official_interval_ms": 11.826814152300358
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:50-0",
+      "frontier_request_id": "50",
+      "official_server_ttft_ms": 103.82390022277832,
+      "scheduled_to_first_engine_output_ms": 76.62713527679443,
+      "remaining_official_interval_ms": 27.196764945983887
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:51-0",
+      "frontier_request_id": "51",
+      "official_server_ttft_ms": 94.34795379638672,
+      "scheduled_to_first_engine_output_ms": 75.40142862126231,
+      "remaining_official_interval_ms": 18.946525175124407
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:52-0",
+      "frontier_request_id": "52",
+      "official_server_ttft_ms": 80.40976524353027,
+      "scheduled_to_first_engine_output_ms": 77.99472799524665,
+      "remaining_official_interval_ms": 2.4150372482836246
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:53-0",
+      "frontier_request_id": "53",
+      "official_server_ttft_ms": 120.0714111328125,
+      "scheduled_to_first_engine_output_ms": 77.72961212322116,
+      "remaining_official_interval_ms": 42.34179900959134
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:54-0",
+      "frontier_request_id": "54",
+      "official_server_ttft_ms": 143.86844635009766,
+      "scheduled_to_first_engine_output_ms": 79.26609786227345,
+      "remaining_official_interval_ms": 64.6023484878242
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:55-0",
+      "frontier_request_id": "55",
+      "official_server_ttft_ms": 80.45649528503418,
+      "scheduled_to_first_engine_output_ms": 76.26053411515022,
+      "remaining_official_interval_ms": 4.195961169883958
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:56-0",
+      "frontier_request_id": "56",
+      "official_server_ttft_ms": 125.56099891662598,
+      "scheduled_to_first_engine_output_ms": 77.83503597602248,
+      "remaining_official_interval_ms": 47.725962940603495
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:57-0",
+      "frontier_request_id": "57",
+      "official_server_ttft_ms": 130.47146797180176,
+      "scheduled_to_first_engine_output_ms": 75.37659490481019,
+      "remaining_official_interval_ms": 55.09487306699157
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:58-0",
+      "frontier_request_id": "58",
+      "official_server_ttft_ms": 93.11318397521973,
+      "scheduled_to_first_engine_output_ms": 75.9507250040624,
+      "remaining_official_interval_ms": 17.16245897115732
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:59-0",
+      "frontier_request_id": "59",
+      "official_server_ttft_ms": 139.62674140930176,
+      "scheduled_to_first_engine_output_ms": 74.87584510818124,
+      "remaining_official_interval_ms": 64.75089630112052
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:60-0",
+      "frontier_request_id": "60",
+      "official_server_ttft_ms": 88.22894096374512,
+      "scheduled_to_first_engine_output_ms": 76.45775424316525,
+      "remaining_official_interval_ms": 11.771186720579863
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:61-0",
+      "frontier_request_id": "61",
+      "official_server_ttft_ms": 91.08757972717285,
+      "scheduled_to_first_engine_output_ms": 74.8305949382484,
+      "remaining_official_interval_ms": 16.256984788924456
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:62-0",
+      "frontier_request_id": "62",
+      "official_server_ttft_ms": 93.65105628967285,
+      "scheduled_to_first_engine_output_ms": 77.00401404872537,
+      "remaining_official_interval_ms": 16.647042240947485
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:63-0",
+      "frontier_request_id": "63",
+      "official_server_ttft_ms": 104.86316680908203,
+      "scheduled_to_first_engine_output_ms": 74.81344370171428,
+      "remaining_official_interval_ms": 30.049723107367754
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:64-0",
+      "frontier_request_id": "64",
+      "official_server_ttft_ms": 121.2775707244873,
+      "scheduled_to_first_engine_output_ms": 77.84673618152738,
+      "remaining_official_interval_ms": 43.43083454295993
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:65-0",
+      "frontier_request_id": "65",
+      "official_server_ttft_ms": 131.17361068725586,
+      "scheduled_to_first_engine_output_ms": 77.73326709865069,
+      "remaining_official_interval_ms": 53.440343588605174
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:66-0",
+      "frontier_request_id": "66",
+      "official_server_ttft_ms": 92.33474731445312,
+      "scheduled_to_first_engine_output_ms": 77.16645300388336,
+      "remaining_official_interval_ms": 15.168294310569763
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:67-0",
+      "frontier_request_id": "67",
+      "official_server_ttft_ms": 103.24931144714355,
+      "scheduled_to_first_engine_output_ms": 77.62982090935111,
+      "remaining_official_interval_ms": 25.619490537792444
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:68-0",
+      "frontier_request_id": "68",
+      "official_server_ttft_ms": 127.09736824035645,
+      "scheduled_to_first_engine_output_ms": 77.56922300904989,
+      "remaining_official_interval_ms": 49.52814523130655
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:69-0",
+      "frontier_request_id": "69",
+      "official_server_ttft_ms": 80.60932159423828,
+      "scheduled_to_first_engine_output_ms": 76.42708206549287,
+      "remaining_official_interval_ms": 4.182239528745413
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:70-0",
+      "frontier_request_id": "70",
+      "official_server_ttft_ms": 141.39890670776367,
+      "scheduled_to_first_engine_output_ms": 76.06444507837296,
+      "remaining_official_interval_ms": 65.33446162939072
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:72-0",
+      "frontier_request_id": "73",
+      "official_server_ttft_ms": 180.05704879760742,
+      "scheduled_to_first_engine_output_ms": 125.39206584915519,
+      "remaining_official_interval_ms": 54.664982948452234
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:71-0",
+      "frontier_request_id": "71",
+      "official_server_ttft_ms": 198.99797439575195,
+      "scheduled_to_first_engine_output_ms": 125.67058019338583,
+      "remaining_official_interval_ms": 73.32739420236612
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:73-0",
+      "frontier_request_id": "72",
+      "official_server_ttft_ms": 169.96407508850098,
+      "scheduled_to_first_engine_output_ms": 125.67058019338583,
+      "remaining_official_interval_ms": 44.293494895115145
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:74-0",
+      "frontier_request_id": "74",
+      "official_server_ttft_ms": 105.95583915710449,
+      "scheduled_to_first_engine_output_ms": 78.2412220723927,
+      "remaining_official_interval_ms": 27.71461708471179
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:75-0",
+      "frontier_request_id": "75",
+      "official_server_ttft_ms": 83.56165885925293,
+      "scheduled_to_first_engine_output_ms": 76.17773581296206,
+      "remaining_official_interval_ms": 7.3839230462908745
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:76-0",
+      "frontier_request_id": "76",
+      "official_server_ttft_ms": 110.21709442138672,
+      "scheduled_to_first_engine_output_ms": 76.9593608565774,
+      "remaining_official_interval_ms": 33.257733564809314
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:77-0",
+      "frontier_request_id": "77",
+      "official_server_ttft_ms": 137.19749450683594,
+      "scheduled_to_first_engine_output_ms": 76.29384705798293,
+      "remaining_official_interval_ms": 60.90364744885301
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:78-0",
+      "frontier_request_id": "78",
+      "official_server_ttft_ms": 81.87294006347656,
+      "scheduled_to_first_engine_output_ms": 78.06288031861186,
+      "remaining_official_interval_ms": 3.8100597448647022
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:79-0",
+      "frontier_request_id": "79",
+      "official_server_ttft_ms": 143.42093467712402,
+      "scheduled_to_first_engine_output_ms": 76.51506690308452,
+      "remaining_official_interval_ms": 66.9058677740395
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:80-0",
+      "frontier_request_id": "80",
+      "official_server_ttft_ms": 115.7832145690918,
+      "scheduled_to_first_engine_output_ms": 78.01706017926335,
+      "remaining_official_interval_ms": 37.76615438982844
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:81-0",
+      "frontier_request_id": "81",
+      "official_server_ttft_ms": 130.31482696533203,
+      "scheduled_to_first_engine_output_ms": 75.67068189382553,
+      "remaining_official_interval_ms": 54.6441450715065
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:82-0",
+      "frontier_request_id": "82",
+      "official_server_ttft_ms": 90.54684638977051,
+      "scheduled_to_first_engine_output_ms": 76.88133604824543,
+      "remaining_official_interval_ms": 13.665510341525078
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:83-0",
+      "frontier_request_id": "83",
+      "official_server_ttft_ms": 160.59279441833496,
+      "scheduled_to_first_engine_output_ms": 128.37915029376745,
+      "remaining_official_interval_ms": 32.21364412456751
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:84-0",
+      "frontier_request_id": "84",
+      "official_server_ttft_ms": 160.63547134399414,
+      "scheduled_to_first_engine_output_ms": 128.35503974929452,
+      "remaining_official_interval_ms": 32.28043159469962
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:85-0",
+      "frontier_request_id": "85",
+      "official_server_ttft_ms": 131.52337074279785,
+      "scheduled_to_first_engine_output_ms": 128.35503974929452,
+      "remaining_official_interval_ms": 3.168330993503332
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:86-0",
+      "frontier_request_id": "86",
+      "official_server_ttft_ms": 123.89683723449707,
+      "scheduled_to_first_engine_output_ms": 76.43667981028557,
+      "remaining_official_interval_ms": 47.4601574242115
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:87-0",
+      "frontier_request_id": "87",
+      "official_server_ttft_ms": 106.7514419555664,
+      "scheduled_to_first_engine_output_ms": 76.3573688454926,
+      "remaining_official_interval_ms": 30.394073110073805
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:88-0",
+      "frontier_request_id": "88",
+      "official_server_ttft_ms": 121.51575088500977,
+      "scheduled_to_first_engine_output_ms": 76.86650287359953,
+      "remaining_official_interval_ms": 44.649248011410236
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:89-0",
+      "frontier_request_id": "89",
+      "official_server_ttft_ms": 117.34175682067871,
+      "scheduled_to_first_engine_output_ms": 76.49670029059052,
+      "remaining_official_interval_ms": 40.845056530088186
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:90-0",
+      "frontier_request_id": "90",
+      "official_server_ttft_ms": 94.88368034362793,
+      "scheduled_to_first_engine_output_ms": 76.40581205485796,
+      "remaining_official_interval_ms": 18.47786828876997
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:91-0",
+      "frontier_request_id": "91",
+      "official_server_ttft_ms": 137.52365112304688,
+      "scheduled_to_first_engine_output_ms": 75.26556495577097,
+      "remaining_official_interval_ms": 62.258086167275906
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:93-0",
+      "frontier_request_id": "92",
+      "official_server_ttft_ms": 122.38454818725586,
+      "scheduled_to_first_engine_output_ms": 88.35980109870434,
+      "remaining_official_interval_ms": 34.02474708855152
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:92-0",
+      "frontier_request_id": "93",
+      "official_server_ttft_ms": 145.02549171447754,
+      "scheduled_to_first_engine_output_ms": 88.12347287310695,
+      "remaining_official_interval_ms": 56.90201884137059
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:94-0",
+      "frontier_request_id": "94",
+      "official_server_ttft_ms": 126.9688606262207,
+      "scheduled_to_first_engine_output_ms": 76.59730594605207,
+      "remaining_official_interval_ms": 50.37155468016863
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:95-0",
+      "frontier_request_id": "95",
+      "official_server_ttft_ms": 133.8205337524414,
+      "scheduled_to_first_engine_output_ms": 77.05719210208918,
+      "remaining_official_interval_ms": 56.76334165035223
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:96-0",
+      "frontier_request_id": "96",
+      "official_server_ttft_ms": 139.7857666015625,
+      "scheduled_to_first_engine_output_ms": 77.75832712651754,
+      "remaining_official_interval_ms": 62.02743947504496
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:97-0",
+      "frontier_request_id": "97",
+      "official_server_ttft_ms": 135.10560989379883,
+      "scheduled_to_first_engine_output_ms": 78.65174766629934,
+      "remaining_official_interval_ms": 56.453862227499485
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:98-0",
+      "frontier_request_id": "98",
+      "official_server_ttft_ms": 95.46184539794922,
+      "scheduled_to_first_engine_output_ms": 77.6860537007451,
+      "remaining_official_interval_ms": 17.775791697204113
+    },
+    {
+      "request_id": "cmpl-pf4096_dc1024:99-0",
+      "frontier_request_id": "99",
+      "official_server_ttft_ms": 86.06195449829102,
+      "scheduled_to_first_engine_output_ms": 76.07455318792199,
+      "remaining_official_interval_ms": 9.987401310369023
+    }
+  ],
+  "official_server_ttft_ms": {
+    "mean": 115.98288059234619,
+    "min": 80.40976524353027,
+    "max": 198.99797439575195
+  },
+  "scheduled_to_first_engine_output_ms": {
+    "mean": 80.55424773599908,
+    "min": 71.70944893732667,
+    "max": 128.37915029376745
+  },
+  "remaining_official_interval_ms": {
+    "mean": 35.4286328563471,
+    "min": 2.4150372482836246,
+    "max": 73.32739420236612
+  },
+  "independent_review": "ACCEPT_DIAGNOSTIC_ONLY /root/moe_profile_contract_review"
+}

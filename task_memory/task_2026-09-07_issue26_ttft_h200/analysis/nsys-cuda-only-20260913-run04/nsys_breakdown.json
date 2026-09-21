@@ -1,0 +1,42 @@
+{
+  "status": "PASS",
+  "trace_csv": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/nsys-cuda-only-20260913-run04/nsys/stats_cuda_gpu_trace.csv",
+  "control_markers": {
+    "start": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/nsys-cuda-only-20260913-run04/nsys-control/start",
+    "stop": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/nsys-cuda-only-20260913-run04/nsys-control/stop"
+  },
+  "window": {
+    "start_ns": 1789259783075640462,
+    "stop_ns": 1789259795000682425,
+    "control_window_ns": 11925041963
+  },
+  "timestamp_alignment": {
+    "timestamp_offset_ns": 0,
+    "meaning": "adjusted_trace_timestamp = csv_timestamp + timestamp_offset_ns",
+    "marker_domain": "wall_clock_time_ns"
+  },
+  "rows": {
+    "input_rows": 25082,
+    "selected_rows_after_clip": 0,
+    "skipped_rows": 25082,
+    "unknown_event_count": 0,
+    "unknown_duration_ns": 0
+  },
+  "devices": [],
+  "schema": {
+    "required_columns": [
+      "Start (ns)",
+      "Duration (ns)",
+      "Device",
+      "Name"
+    ],
+    "primary_report": "cuda_gpu_trace",
+    "filter_time_semantics": "overlap selection; event durations are clipped by this parser"
+  },
+  "limits": [
+    "Device labels do not establish DP/TP/rank identity; device_id is retained only when Nsight provides it.",
+    "Communication and copy/transform classification uses operation-name heuristics and is reported as such.",
+    "cuda_api_sum and aggregate summary reports are not included in GPU interval accounting.",
+    "The control marker window is a host wall-clock boundary and may not coincide exactly with GPU event boundaries."
+  ]
+}

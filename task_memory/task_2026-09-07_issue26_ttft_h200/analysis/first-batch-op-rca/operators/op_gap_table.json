@@ -1,0 +1,233 @@
+[
+  {
+    "op_name": "add",
+    "frontier_ms": 0.0,
+    "vllm_ms": 1.8990080058574677,
+    "gap_ms": null,
+    "absolute_gap_ms": null,
+    "relative_gap": null,
+    "scope_count": 95,
+    "timing_mode": "cuda_event",
+    "status": "NESTED_OR_ALIAS_EXCLUDED"
+  },
+  {
+    "op_name": "add_attn_residual",
+    "frontier_ms": 0.0,
+    "vllm_ms": null,
+    "gap_ms": null,
+    "absolute_gap_ms": null,
+    "relative_gap": null,
+    "scope_count": 0,
+    "timing_mode": "cuda_event",
+    "status": "NESTED_OR_ALIAS_EXCLUDED"
+  },
+  {
+    "op_name": "add_ffn_residual",
+    "frontier_ms": 0.0,
+    "vllm_ms": null,
+    "gap_ms": null,
+    "absolute_gap_ms": null,
+    "relative_gap": null,
+    "scope_count": 0,
+    "timing_mode": "cuda_event",
+    "status": "NESTED_OR_ALIAS_EXCLUDED"
+  },
+  {
+    "op_name": "attn_kv_cache_save",
+    "frontier_ms": 0.807168000000001,
+    "vllm_ms": 0.7213119966909289,
+    "gap_ms": 0.08585600330907206,
+    "absolute_gap_ms": 0.08585600330907206,
+    "relative_gap": 0.11902755493176698,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "attn_post_proj_with_tp_allreduce",
+    "frontier_ms": 20.14507199999999,
+    "vllm_ms": 17.231616005301476,
+    "gap_ms": 2.913455994698513,
+    "absolute_gap_ms": 2.913455994698513,
+    "relative_gap": 0.16907619075321545,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "attn_pre_proj",
+    "frontier_ms": 6.584063999999999,
+    "vllm_ms": 3.9272959902882576,
+    "gap_ms": 2.656768009711741,
+    "absolute_gap_ms": 2.656768009711741,
+    "relative_gap": 0.6764878471807617,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "attn_prefill",
+    "frontier_ms": 7.026432000000004,
+    "vllm_ms": 6.047232016921043,
+    "gap_ms": 0.9791999830789608,
+    "absolute_gap_ms": 0.9791999830789608,
+    "relative_gap": 0.16192532059941067,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "attn_rope",
+    "frontier_ms": 1.5521279999999988,
+    "vllm_ms": 1.0290239974856377,
+    "gap_ms": 0.5231040025143612,
+    "absolute_gap_ms": 0.5231040025143612,
+    "relative_gap": 0.5083496631687273,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "embedding_tensor_parallel_allreduce",
+    "frontier_ms": null,
+    "vllm_ms": 0.22233599424362183,
+    "gap_ms": null,
+    "absolute_gap_ms": null,
+    "relative_gap": null,
+    "scope_count": 1,
+    "timing_mode": "cuda_event",
+    "status": "MISSING_SIDE"
+  },
+  {
+    "op_name": "expert_parallel_allreduce",
+    "frontier_ms": null,
+    "vllm_ms": 37.56316776573658,
+    "gap_ms": null,
+    "absolute_gap_ms": null,
+    "relative_gap": null,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "MISSING_SIDE"
+  },
+  {
+    "op_name": "expert_parallel_alltoall_combine",
+    "frontier_ms": 2.125344,
+    "vllm_ms": 4.196768015623093,
+    "gap_ms": -2.0714240156230925,
+    "absolute_gap_ms": 2.0714240156230925,
+    "relative_gap": 0.49357601085213876,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "expert_parallel_alltoall_dispatch",
+    "frontier_ms": 2.125344,
+    "vllm_ms": 6.981152035295963,
+    "gap_ms": -4.855808035295963,
+    "absolute_gap_ms": 4.855808035295963,
+    "relative_gap": 0.6955597028607189,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "input_layernorm",
+    "frontier_ms": 1.0851839999999993,
+    "vllm_ms": 1.2667200025171041,
+    "gap_ms": -0.1815360025171049,
+    "absolute_gap_ms": 0.1815360025171049,
+    "relative_gap": 0.14331186225556872,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "moe_gating",
+    "frontier_ms": 4.4392799999999975,
+    "vllm_ms": null,
+    "gap_ms": null,
+    "absolute_gap_ms": null,
+    "relative_gap": null,
+    "scope_count": 0,
+    "timing_mode": "cuda_event",
+    "status": "NESTED_OR_ALIAS_EXCLUDED"
+  },
+  {
+    "op_name": "moe_gating_linear",
+    "frontier_ms": 0.6614400000000005,
+    "vllm_ms": 0.7235839972272515,
+    "gap_ms": -0.06214399722725106,
+    "absolute_gap_ms": 0.06214399722725106,
+    "relative_gap": 0.08588359812459186,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "moe_gating_routing_topk",
+    "frontier_ms": 4.4392799999999975,
+    "vllm_ms": 6.306879982352257,
+    "gap_ms": -1.8675999823522593,
+    "absolute_gap_ms": 1.8675999823522593,
+    "relative_gap": 0.2961210594744355,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "moe_grouped_gemm",
+    "frontier_ms": 15.635904000000018,
+    "vllm_ms": 18.18016004562378,
+    "gap_ms": -2.5442560456237615,
+    "absolute_gap_ms": 2.5442560456237615,
+    "relative_gap": 0.13994684531042947,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "moe_shuffling",
+    "frontier_ms": 2.5413599999999983,
+    "vllm_ms": 1.8896320015192032,
+    "gap_ms": 0.6517279984807951,
+    "absolute_gap_ms": 0.6517279984807951,
+    "relative_gap": 0.3448967830544925,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "moe_tp_allreduce",
+    "frontier_ms": 0.0,
+    "vllm_ms": null,
+    "gap_ms": null,
+    "absolute_gap_ms": null,
+    "relative_gap": null,
+    "scope_count": 0,
+    "timing_mode": "cuda_event",
+    "status": "NESTED_OR_ALIAS_EXCLUDED"
+  },
+  {
+    "op_name": "post_attention_layernorm",
+    "frontier_ms": 1.0613760000000003,
+    "vllm_ms": 1.2444159965962172,
+    "gap_ms": -0.18303999659621684,
+    "absolute_gap_ms": 0.18303999659621684,
+    "relative_gap": 0.14708907398882376,
+    "scope_count": 48,
+    "timing_mode": "cuda_event",
+    "status": "DIAGNOSTIC_ONLY"
+  },
+  {
+    "op_name": "share_expert_tp_allreduce",
+    "frontier_ms": 0.0,
+    "vllm_ms": null,
+    "gap_ms": null,
+    "absolute_gap_ms": null,
+    "relative_gap": null,
+    "scope_count": 0,
+    "timing_mode": "cuda_event",
+    "status": "NESTED_OR_ALIAS_EXCLUDED"
+  }
+]

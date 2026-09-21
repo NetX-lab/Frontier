@@ -1,0 +1,973 @@
+{
+  "status": "PASS_COLLECTION_DIAGNOSTIC_ONLY",
+  "rank_batches": 24,
+  "first_formal_batch": [
+    {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "pp_rank": 0,
+      "batch_id": 4250,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 86.41203308105469,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.7467687,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.21833600103855133,
+        "attn_post_proj_tp_allreduce": 5.537248015403748,
+        "expert_parallel_allreduce": 4.792544022202492
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp0.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "pp_rank": 0,
+      "batch_id": 4250,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 86.43795013427734,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.7467525,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.30115199089050293,
+        "attn_post_proj_tp_allreduce": 5.649951986968517,
+        "expert_parallel_allreduce": 25.38441589474678
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp1.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "pp_rank": 0,
+      "batch_id": 4250,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 86.41465759277344,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.7467606,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.27561599016189575,
+        "attn_post_proj_tp_allreduce": 5.708767995238304,
+        "expert_parallel_allreduce": 28.413279965519905
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp2.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "pp_rank": 0,
+      "batch_id": 4250,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 86.44351959228516,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.746742,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.29631999135017395,
+        "attn_post_proj_tp_allreduce": 5.644864000380039,
+        "expert_parallel_allreduce": 27.39356815814972
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp3.pp0.jsonl"
+    }
+  ],
+  "selected_batches": [
+    {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "pp_rank": 0,
+      "batch_id": 4250,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 86.41203308105469,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.7467687,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.21833600103855133,
+        "attn_post_proj_tp_allreduce": 5.537248015403748,
+        "expert_parallel_allreduce": 4.792544022202492
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp0.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "pp_rank": 0,
+      "batch_id": 4251,
+      "batch_size": 2,
+      "batch_num_tokens": 4097,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 1,
+      "batch_execution_time_ms": 89.4750747680664,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 1,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.8399386,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0",
+        "cmpl-pf4096_dc1024:1-0"
+      ],
+      "request_num_tokens": [
+        1,
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.18223999440670013,
+        "attn_post_proj_tp_allreduce": 7.091839961707592,
+        "expert_parallel_allreduce": 4.809695981442928
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp0.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "pp_rank": 0,
+      "batch_id": 4252,
+      "batch_size": 2,
+      "batch_num_tokens": 2,
+      "batch_num_prefill_tokens": 0,
+      "batch_num_decode_tokens": 2,
+      "batch_execution_time_ms": 82.91785430908203,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 2,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.9254456,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0",
+        "cmpl-pf4096_dc1024:1-0"
+      ],
+      "request_num_tokens": [
+        1,
+        1
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.09158399701118469,
+        "attn_post_proj_tp_allreduce": 2.448735997080803,
+        "expert_parallel_allreduce": 2.3908480033278465
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp0.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "pp_rank": 0,
+      "batch_id": 4250,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 86.43795013427734,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.7467525,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.30115199089050293,
+        "attn_post_proj_tp_allreduce": 5.649951986968517,
+        "expert_parallel_allreduce": 25.38441589474678
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp1.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "pp_rank": 0,
+      "batch_id": 4251,
+      "batch_size": 2,
+      "batch_num_tokens": 4097,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 1,
+      "batch_execution_time_ms": 89.5064926147461,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 1,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.839934,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0",
+        "cmpl-pf4096_dc1024:1-0"
+      ],
+      "request_num_tokens": [
+        1,
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.2671999931335449,
+        "attn_post_proj_tp_allreduce": 7.654623970389366,
+        "expert_parallel_allreduce": 29.016575932502747
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp1.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "pp_rank": 0,
+      "batch_id": 4252,
+      "batch_size": 2,
+      "batch_num_tokens": 2,
+      "batch_num_prefill_tokens": 0,
+      "batch_num_decode_tokens": 2,
+      "batch_execution_time_ms": 82.85177612304688,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 2,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.9253576,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0",
+        "cmpl-pf4096_dc1024:1-0"
+      ],
+      "request_num_tokens": [
+        1,
+        1
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.12860800325870514,
+        "attn_post_proj_tp_allreduce": 21.024992048740387,
+        "expert_parallel_allreduce": 38.431008011102676
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp1.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "pp_rank": 0,
+      "batch_id": 4250,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 86.41465759277344,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.7467606,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.27561599016189575,
+        "attn_post_proj_tp_allreduce": 5.708767995238304,
+        "expert_parallel_allreduce": 28.413279965519905
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp2.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "pp_rank": 0,
+      "batch_id": 4251,
+      "batch_size": 2,
+      "batch_num_tokens": 4097,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 1,
+      "batch_execution_time_ms": 89.47142028808594,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 1,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.8399098,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0",
+        "cmpl-pf4096_dc1024:1-0"
+      ],
+      "request_num_tokens": [
+        1,
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.1884479969739914,
+        "attn_post_proj_tp_allreduce": 7.598463974893093,
+        "expert_parallel_allreduce": 26.14220803231001
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp2.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "pp_rank": 0,
+      "batch_id": 4252,
+      "batch_size": 2,
+      "batch_num_tokens": 2,
+      "batch_num_prefill_tokens": 0,
+      "batch_num_decode_tokens": 2,
+      "batch_execution_time_ms": 82.79341125488281,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 2,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.9253688,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0",
+        "cmpl-pf4096_dc1024:1-0"
+      ],
+      "request_num_tokens": [
+        1,
+        1
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.06995200365781784,
+        "attn_post_proj_tp_allreduce": 17.697471868246794,
+        "expert_parallel_allreduce": 33.919232081621885
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp2.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "pp_rank": 0,
+      "batch_id": 4250,
+      "batch_size": 1,
+      "batch_num_tokens": 4096,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 86.44351959228516,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.746742,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0"
+      ],
+      "request_num_tokens": [
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.29631999135017395,
+        "attn_post_proj_tp_allreduce": 5.644864000380039,
+        "expert_parallel_allreduce": 27.39356815814972
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp3.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "pp_rank": 0,
+      "batch_id": 4251,
+      "batch_size": 2,
+      "batch_num_tokens": 4097,
+      "batch_num_prefill_tokens": 4096,
+      "batch_num_decode_tokens": 1,
+      "batch_execution_time_ms": 89.4474868774414,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 1,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.8399003,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0",
+        "cmpl-pf4096_dc1024:1-0"
+      ],
+      "request_num_tokens": [
+        1,
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.16790400445461273,
+        "attn_post_proj_tp_allreduce": 7.563552021980286,
+        "expert_parallel_allreduce": 26.61731182038784
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp3.pp0.jsonl"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "pp_rank": 0,
+      "batch_id": 4252,
+      "batch_size": 2,
+      "batch_num_tokens": 2,
+      "batch_num_prefill_tokens": 0,
+      "batch_num_decode_tokens": 2,
+      "batch_execution_time_ms": 82.82844543457031,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 2,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862618.9253268,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:0-0",
+        "cmpl-pf4096_dc1024:1-0"
+      ],
+      "request_num_tokens": [
+        1,
+        1
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.07423999905586243,
+        "attn_post_proj_tp_allreduce": 18.368223965168,
+        "expert_parallel_allreduce": 34.38451172038913
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp0.tp3.pp0.jsonl"
+    },
+    {
+      "dp_rank": 1,
+      "tp_rank": 0,
+      "pp_rank": 0,
+      "batch_id": 4275,
+      "batch_size": 2,
+      "batch_num_tokens": 8192,
+      "batch_num_prefill_tokens": 8192,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 102.48694610595703,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862619.0319953,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:2-0",
+        "cmpl-pf4096_dc1024:3-0"
+      ],
+      "request_num_tokens": [
+        4096,
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.5856000185012817,
+        "attn_post_proj_tp_allreduce": 9.042432025074959,
+        "expert_parallel_allreduce": 9.327775985002518
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp1.tp0.pp0.jsonl"
+    },
+    {
+      "dp_rank": 1,
+      "tp_rank": 0,
+      "pp_rank": 0,
+      "batch_id": 4276,
+      "batch_size": 2,
+      "batch_num_tokens": 2,
+      "batch_num_prefill_tokens": 0,
+      "batch_num_decode_tokens": 2,
+      "batch_execution_time_ms": 82.70703887939453,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 1,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862619.117354,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:2-0",
+        "cmpl-pf4096_dc1024:3-0"
+      ],
+      "request_num_tokens": [
+        1,
+        1
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.08620800077915192,
+        "attn_post_proj_tp_allreduce": 21.20374386012554,
+        "expert_parallel_allreduce": 39.01030386984348
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp1.tp0.pp0.jsonl"
+    },
+    {
+      "dp_rank": 1,
+      "tp_rank": 0,
+      "pp_rank": 0,
+      "batch_id": 4277,
+      "batch_size": 2,
+      "batch_num_tokens": 2,
+      "batch_num_prefill_tokens": 0,
+      "batch_num_decode_tokens": 2,
+      "batch_execution_time_ms": 82.68550109863281,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 2,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862619.202858,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:2-0",
+        "cmpl-pf4096_dc1024:3-0"
+      ],
+      "request_num_tokens": [
+        1,
+        1
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.12019199877977371,
+        "attn_post_proj_tp_allreduce": 21.27884803712368,
+        "expert_parallel_allreduce": 39.496768087148666
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp1.tp0.pp0.jsonl"
+    },
+    {
+      "dp_rank": 1,
+      "tp_rank": 1,
+      "pp_rank": 0,
+      "batch_id": 4275,
+      "batch_size": 2,
+      "batch_num_tokens": 8192,
+      "batch_num_prefill_tokens": 8192,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 102.19462585449219,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862619.0320601,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:2-0",
+        "cmpl-pf4096_dc1024:3-0"
+      ],
+      "request_num_tokens": [
+        4096,
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.2978239953517914,
+        "attn_post_proj_tp_allreduce": 8.633056029677391,
+        "expert_parallel_allreduce": 9.118751972913742
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp1.tp1.pp0.jsonl"
+    },
+    {
+      "dp_rank": 1,
+      "tp_rank": 1,
+      "pp_rank": 0,
+      "batch_id": 4276,
+      "batch_size": 2,
+      "batch_num_tokens": 2,
+      "batch_num_prefill_tokens": 0,
+      "batch_num_decode_tokens": 2,
+      "batch_execution_time_ms": 82.67660522460938,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 1,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862619.1173842,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:2-0",
+        "cmpl-pf4096_dc1024:3-0"
+      ],
+      "request_num_tokens": [
+        1,
+        1
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.1441279947757721,
+        "attn_post_proj_tp_allreduce": 19.495424024760723,
+        "expert_parallel_allreduce": 34.54812804609537
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp1.tp1.pp0.jsonl"
+    },
+    {
+      "dp_rank": 1,
+      "tp_rank": 1,
+      "pp_rank": 0,
+      "batch_id": 4277,
+      "batch_size": 2,
+      "batch_num_tokens": 2,
+      "batch_num_prefill_tokens": 0,
+      "batch_num_decode_tokens": 2,
+      "batch_execution_time_ms": 82.66486358642578,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 2,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862619.202883,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:2-0",
+        "cmpl-pf4096_dc1024:3-0"
+      ],
+      "request_num_tokens": [
+        1,
+        1
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.13929599523544312,
+        "attn_post_proj_tp_allreduce": 21.412384003400803,
+        "expert_parallel_allreduce": 40.67657591402531
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp1.tp1.pp0.jsonl"
+    },
+    {
+      "dp_rank": 1,
+      "tp_rank": 2,
+      "pp_rank": 0,
+      "batch_id": 4275,
+      "batch_size": 2,
+      "batch_num_tokens": 8192,
+      "batch_num_prefill_tokens": 8192,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 102.41840362548828,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862619.0320315,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:2-0",
+        "cmpl-pf4096_dc1024:3-0"
+      ],
+      "request_num_tokens": [
+        4096,
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.47811201214790344,
+        "attn_post_proj_tp_allreduce": 8.832159981131554,
+        "expert_parallel_allreduce": 8.973728001117706
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp1.tp2.pp0.jsonl"
+    },
+    {
+      "dp_rank": 1,
+      "tp_rank": 2,
+      "pp_rank": 0,
+      "batch_id": 4276,
+      "batch_size": 2,
+      "batch_num_tokens": 2,
+      "batch_num_prefill_tokens": 0,
+      "batch_num_decode_tokens": 2,
+      "batch_execution_time_ms": 82.6995849609375,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 1,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862619.1173942,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:2-0",
+        "cmpl-pf4096_dc1024:3-0"
+      ],
+      "request_num_tokens": [
+        1,
+        1
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.0989760011434555,
+        "attn_post_proj_tp_allreduce": 18.60176007449627,
+        "expert_parallel_allreduce": 26.432831898331642
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp1.tp2.pp0.jsonl"
+    },
+    {
+      "dp_rank": 1,
+      "tp_rank": 2,
+      "pp_rank": 0,
+      "batch_id": 4277,
+      "batch_size": 2,
+      "batch_num_tokens": 2,
+      "batch_num_prefill_tokens": 0,
+      "batch_num_decode_tokens": 2,
+      "batch_execution_time_ms": 82.66044616699219,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 2,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862619.202924,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:2-0",
+        "cmpl-pf4096_dc1024:3-0"
+      ],
+      "request_num_tokens": [
+        1,
+        1
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.07088000327348709,
+        "attn_post_proj_tp_allreduce": 11.844896040856838,
+        "expert_parallel_allreduce": 15.634079977869987
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp1.tp2.pp0.jsonl"
+    },
+    {
+      "dp_rank": 1,
+      "tp_rank": 3,
+      "pp_rank": 0,
+      "batch_id": 4275,
+      "batch_size": 2,
+      "batch_num_tokens": 8192,
+      "batch_num_prefill_tokens": 8192,
+      "batch_num_decode_tokens": 0,
+      "batch_execution_time_ms": 102.35033416748047,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 0,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862619.0320199,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:2-0",
+        "cmpl-pf4096_dc1024:3-0"
+      ],
+      "request_num_tokens": [
+        4096,
+        4096
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.2993279993534088,
+        "attn_post_proj_tp_allreduce": 8.570496022701263,
+        "expert_parallel_allreduce": 8.421567976474762
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp1.tp3.pp0.jsonl"
+    },
+    {
+      "dp_rank": 1,
+      "tp_rank": 3,
+      "pp_rank": 0,
+      "batch_id": 4276,
+      "batch_size": 2,
+      "batch_num_tokens": 2,
+      "batch_num_prefill_tokens": 0,
+      "batch_num_decode_tokens": 2,
+      "batch_execution_time_ms": 82.74992370605469,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 1,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862619.117459,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:2-0",
+        "cmpl-pf4096_dc1024:3-0"
+      ],
+      "request_num_tokens": [
+        1,
+        1
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.07292799651622772,
+        "attn_post_proj_tp_allreduce": 2.448512017726898,
+        "expert_parallel_allreduce": 2.3821759931743145
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp1.tp3.pp0.jsonl"
+    },
+    {
+      "dp_rank": 1,
+      "tp_rank": 3,
+      "pp_rank": 0,
+      "batch_id": 4277,
+      "batch_size": 2,
+      "batch_num_tokens": 2,
+      "batch_num_prefill_tokens": 0,
+      "batch_num_decode_tokens": 2,
+      "batch_execution_time_ms": 82.75599670410156,
+      "op_profile_selected": true,
+      "op_profile_selected_index": 2,
+      "op_profile_request_prefix": "cmpl-pf4096_dc1024:",
+      "op_profile_batch_limit": 3,
+      "timestamp": 1788862619.2030423,
+      "request_ids": [
+        "cmpl-pf4096_dc1024:2-0",
+        "cmpl-pf4096_dc1024:3-0"
+      ],
+      "request_num_tokens": [
+        1,
+        1
+      ],
+      "scope_ms": {
+        "tensor_parallel_allreduce": 0.10310400277376175,
+        "attn_post_proj_tp_allreduce": 2.708607990294695,
+        "expert_parallel_allreduce": 2.662815999239683
+      },
+      "scope_counts": {
+        "tensor_parallel_allreduce": 1,
+        "attn_post_proj_tp_allreduce": 48,
+        "expert_parallel_allreduce": 48
+      },
+      "source": "task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-rca-comm-01/runtime/operators/server.ops.dp1.tp3.pp0.jsonl"
+    }
+  ],
+  "limits": "CUDA-event scope elapsed includes waits and submission gaps. Ranks are parallel participants, never additive. Reduced instrumentation is not a clean E2E metric."
+}

@@ -1,0 +1,14 @@
+{
+  "attention_tp4": {
+    "before_ms": 0.3729050666666667,
+    "candidate_ms": 0.09921379930445354,
+    "before_48_ms": 17.8994432,
+    "candidate_48_ms": 4.76226236661377
+  },
+  "ideal_ep8_alltoall": {
+    "before_ms": 0.044277955555555554,
+    "candidate_ms": 0.044277955555555554,
+    "before_48_ms": 2.1253418666666666,
+    "candidate_48_ms": 2.1253418666666666
+  }
+}

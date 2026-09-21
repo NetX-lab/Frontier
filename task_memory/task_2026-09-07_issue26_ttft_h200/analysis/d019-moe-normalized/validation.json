@@ -1,0 +1,97 @@
+{
+  "status": "PASS_ISOLATED_MOE_CORRECTION",
+  "commit": "5dd5ee39",
+  "pytest": "4 passed in 14.64s",
+  "metadata_tests": "6 passed in 0.61s",
+  "rows": 27,
+  "numerical_checks": 27,
+  "component_samples": 5400,
+  "raw_metadata": "FAIL missing profiling_precision; normalized using existing helper",
+  "metadata_pass": true,
+  "original_columns_unchanged": true,
+  "summary": [
+    {
+      "num_tokens": 4095,
+      "ep_rank": 0,
+      "local_assignments": 4096,
+      "local_padded_assignments": 4096,
+      "csv_full_ms": 0.4453760087490082,
+      "standalone_full_ms": 0.45019198954105377,
+      "hot_full_ms": 0.3935199975967407
+    },
+    {
+      "num_tokens": 4095,
+      "ep_rank": 1,
+      "local_assignments": 4096,
+      "local_padded_assignments": 4096,
+      "csv_full_ms": 0.4574719965457916,
+      "standalone_full_ms": 0.4617280066013336,
+      "hot_full_ms": 0.4087360054254532
+    },
+    {
+      "num_tokens": 4095,
+      "ep_rank": 7,
+      "local_assignments": 4088,
+      "local_padded_assignments": 4096,
+      "csv_full_ms": 0.4737600088119507,
+      "standalone_full_ms": 0.4772479981184006,
+      "hot_full_ms": 0.42392000555992126
+    },
+    {
+      "num_tokens": 4096,
+      "ep_rank": 0,
+      "local_assignments": 4096,
+      "local_padded_assignments": 4096,
+      "csv_full_ms": 0.4493759870529175,
+      "standalone_full_ms": 0.4504000097513199,
+      "hot_full_ms": 0.39239999651908875
+    },
+    {
+      "num_tokens": 4096,
+      "ep_rank": 1,
+      "local_assignments": 4096,
+      "local_padded_assignments": 4096,
+      "csv_full_ms": 0.4611839950084686,
+      "standalone_full_ms": 0.4628800004720688,
+      "hot_full_ms": 0.4087519943714142
+    },
+    {
+      "num_tokens": 4096,
+      "ep_rank": 7,
+      "local_assignments": 4096,
+      "local_padded_assignments": 4096,
+      "csv_full_ms": 0.4757759869098663,
+      "standalone_full_ms": 0.47763200104236603,
+      "hot_full_ms": 0.42419199645519257
+    },
+    {
+      "num_tokens": 4097,
+      "ep_rank": 0,
+      "local_assignments": 4104,
+      "local_padded_assignments": 4608,
+      "csv_full_ms": 0.4633600115776062,
+      "standalone_full_ms": 0.4583359956741333,
+      "hot_full_ms": 0.3996320068836212
+    },
+    {
+      "num_tokens": 4097,
+      "ep_rank": 1,
+      "local_assignments": 4096,
+      "local_padded_assignments": 4096,
+      "csv_full_ms": 0.4577920138835907,
+      "standalone_full_ms": 0.45316798985004425,
+      "hot_full_ms": 0.4018400013446808
+    },
+    {
+      "num_tokens": 4097,
+      "ep_rank": 7,
+      "local_assignments": 4096,
+      "local_padded_assignments": 4096,
+      "csv_full_ms": 0.4724160134792328,
+      "standalone_full_ms": 0.4657599925994873,
+      "hot_full_ms": 0.41303999722003937
+    }
+  ],
+  "first_forward_gate": "PENDING",
+  "e2e_gate": "PENDING"
+}

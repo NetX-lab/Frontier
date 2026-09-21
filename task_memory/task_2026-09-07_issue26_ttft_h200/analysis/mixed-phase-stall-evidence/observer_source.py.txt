@@ -1,0 +1,34 @@
+import json
+from pathlib import Path
+import sys
+from unittest.mock import patch
+from frontier.simulator import Simulator
+from frontier.main import main
+from frontier.entities import Batch
+
+out = Path(sys.argv[1])
+command = json.loads((out / 'command.json').read_text())
+original = Simulator._build_sequential_scheduler_state_report
+
+def encode(value):
+    if isinstance(value, dict):
+        return {str(k): encode(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [encode(v) for v in value]
+    if isinstance(value, Batch):
+        return {'batch_id': value.id, 'global_id': value.global_id, 'request_ids': value.request_ids, 'idle': value.is_idle, 'cohort': getattr(value, '_forward_cohort_id', None), 'provisional': getattr(value, '_forward_cohort_provisional_id', None)}
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    return repr(value)
+
+def observe(simulator):
+    (out / 'event_trace.json').write_text(json.dumps(encode(simulator._event_trace)))
+    for kind, scheduler in simulator._global_scheduler._cluster_schedulers.items():
+        state = {k: encode(v) for k, v in vars(scheduler).items() if 'waiting_room' in k}
+        state['forward_sync'] = encode(vars(scheduler._forward_sync_state))
+        (out / (kind.name + '_sync_state.json')).write_text(json.dumps(state, indent=2))
+    return original(simulator)
+
+sys.argv = ['frontier.main', *command[3:]]
+with patch.object(Simulator, '_build_sequential_scheduler_state_report', observe):
+    main()

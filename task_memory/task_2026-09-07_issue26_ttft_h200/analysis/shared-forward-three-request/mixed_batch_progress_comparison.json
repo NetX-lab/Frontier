@@ -1,0 +1,37 @@
+{
+  "frontier": {
+    "batch_id": 866,
+    "members": [
+      [
+        "1",
+        4096
+      ],
+      [
+        "0",
+        1
+      ]
+    ],
+    "prior_one_token_model_steps": {
+      "1": 0,
+      "0": 1
+    }
+  },
+  "vllm": {
+    "batch_id": 4770,
+    "members": [
+      [
+        "cmpl-pf4096_dc1024:0-0",
+        1
+      ],
+      [
+        "cmpl-pf4096_dc1024:1-0",
+        4096
+      ]
+    ],
+    "prior_one_token_model_steps": {
+      "cmpl-pf4096_dc1024:0-0": 0,
+      "cmpl-pf4096_dc1024:1-0": 0
+    }
+  },
+  "limits": "Observed scheduled one-token model-step counts, not raw KV allocation records. No preemption or speculative progress is inferred. The three-request Frontier reduction shares the first three arrivals; later request timing is outside this check."
+}

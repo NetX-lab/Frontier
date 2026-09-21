@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "runtime": "uniform_topk",
+  "distribution": "balanced",
+  "rows": {
+    "prefill_hot": 387,
+    "standalone_legacy": 387
+  },
+  "source": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/supplements/moe-uniform-01/moe.csv"
+}

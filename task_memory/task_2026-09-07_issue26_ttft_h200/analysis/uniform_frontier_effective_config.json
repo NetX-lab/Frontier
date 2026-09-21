@@ -1,0 +1,142 @@
+{
+  "status": "PASS_EFFECTIVE_CONFIG",
+  "config_path": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/cpu-uniform-frontier-01/runtime/metrics/qwen3_a3b_30b_moe/online_serving/runtime/config.json",
+  "checks": [
+    {
+      "field": "replica_config.attn_tensor_parallel_size",
+      "observed": 4,
+      "expected": 4
+    },
+    {
+      "field": "replica_config.attn_dp",
+      "observed": 2,
+      "expected": 2
+    },
+    {
+      "field": "replica_config.moe_tensor_parallel_size",
+      "observed": 1,
+      "expected": 1
+    },
+    {
+      "field": "replica_config.moe_expert_parallel_size",
+      "observed": 8,
+      "expected": 8
+    },
+    {
+      "field": "replica_config.num_pipeline_stages",
+      "observed": 1,
+      "expected": 1
+    },
+    {
+      "field": "replica_config.total_expert_num",
+      "observed": 128,
+      "expected": 128
+    },
+    {
+      "field": "replica_config.router_topk",
+      "observed": 8,
+      "expected": 8
+    },
+    {
+      "field": "replica_config.world_size",
+      "observed": 8,
+      "expected": 8
+    },
+    {
+      "field": "replica_config.moe_routing_distribution_type",
+      "observed": "balanced",
+      "expected": "balanced"
+    },
+    {
+      "field": "replica_config.moe_gating_routing_runtime_path",
+      "observed": "uniform_topk",
+      "expected": "uniform_topk"
+    },
+    {
+      "field": "replica_config.device",
+      "observed": "h200",
+      "expected": "h200"
+    },
+    {
+      "field": "replica_config.network_device",
+      "observed": "h200_dgx",
+      "expected": "h200_dgx"
+    },
+    {
+      "field": "replica_config.moe_routing_seed",
+      "observed": 42,
+      "expected": 42
+    },
+    {
+      "field": "replica_scheduler_config.name",
+      "observed": "vllm_v1",
+      "expected": "vllm_v1"
+    },
+    {
+      "field": "replica_scheduler_config.enable_prefix_caching",
+      "observed": false,
+      "expected": false
+    },
+    {
+      "field": "replica_scheduler_config.enable_chunked_prefill",
+      "observed": false,
+      "expected": false
+    },
+    {
+      "field": "replica_scheduler_config.num_blocks",
+      "observed": 310809,
+      "expected": 310809
+    },
+    {
+      "field": "replica_scheduler_config.block_size",
+      "observed": 16,
+      "expected": 16
+    },
+    {
+      "field": "replica_scheduler_config.max_tokens_in_batch",
+      "observed": 16384,
+      "expected": 16384
+    },
+    {
+      "field": "replica_scheduler_config.batch_size_cap",
+      "observed": 1024,
+      "expected": 1024
+    },
+    {
+      "field": "cc_backend_config.name",
+      "observed": "collective_sim",
+      "expected": "collective_sim"
+    },
+    {
+      "field": "cc_backend_config.intra_server_model",
+      "observed": "nvlink_analytic",
+      "expected": "nvlink_analytic"
+    },
+    {
+      "field": "cc_backend_config.cluster_servers",
+      "observed": 1,
+      "expected": 1
+    },
+    {
+      "field": "cc_backend_config.cluster_gpus_per_server",
+      "observed": 8,
+      "expected": 8
+    },
+    {
+      "field": "cc_backend_config.nvlink_one_way_bw_GBps",
+      "observed": 450.0,
+      "expected": 450.0
+    },
+    {
+      "field": "cc_backend_config.nvlink_efficiency",
+      "observed": 0.8,
+      "expected": 0.8
+    },
+    {
+      "field": "cc_backend_config.nvlink_latency_us",
+      "observed": 0.5,
+      "expected": 0.5
+    }
+  ],
+  "limit": "Configuration evidence, not numerical parity. Runtime-local collective layout is materialized after the serialized config snapshot."
+}

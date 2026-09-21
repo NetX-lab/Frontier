@@ -1,0 +1,297 @@
+{
+  "status": "PASS_STANDARD_REPLAY_SCALE",
+  "client_checks": {
+    "clean/runtime/clean": {
+      "client_rows": 400,
+      "warmup_rows": 300,
+      "formal_rows": 100,
+      "drain": "PASS",
+      "phase_seconds": [
+        151.6171068958938,
+        129.06059038080275,
+        126.31628833152354,
+        126.28969552740455
+      ]
+    },
+    "batch/runtime/batch": {
+      "client_rows": 400,
+      "warmup_rows": 300,
+      "formal_rows": 100,
+      "drain": "PASS",
+      "phase_seconds": [
+        130.5359993763268,
+        129.25809192471206,
+        128.57749300450087,
+        128.46307435631752
+      ]
+    }
+  },
+  "identity_validator": "PASS",
+  "routing_checks": 24,
+  "new": {
+    "rows": [
+      {
+        "dp_rank": 0,
+        "tp_rank": 0,
+        "pp_rank": 0,
+        "batch_id": 4711,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 77.48684692382812,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789021892.2945805,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 1,
+        "pp_rank": 0,
+        "batch_id": 4711,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 77.46063995361328,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789021892.294577,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 2,
+        "pp_rank": 0,
+        "batch_id": 4711,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 77.48252868652344,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789021892.2945778,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 3,
+        "pp_rank": 0,
+        "batch_id": 4711,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 77.48480224609375,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1789021892.2945745,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      }
+    ],
+    "median_ms": 77.4836654663086,
+    "p90_ms": 77.48623352050781,
+    "rank_max_ms": 77.48684692382812,
+    "spread_ms": 0.02620697021484375
+  },
+  "historical": {
+    "rows": [
+      {
+        "dp_rank": 0,
+        "tp_rank": 0,
+        "pp_rank": 0,
+        "batch_id": 4696,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 80.6409912109375,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1788970563.1121042,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 1,
+        "pp_rank": 0,
+        "batch_id": 4696,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 80.68745422363281,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1788970563.112106,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 2,
+        "pp_rank": 0,
+        "batch_id": 4696,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 80.66876983642578,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1788970563.1121073,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      },
+      {
+        "dp_rank": 0,
+        "tp_rank": 3,
+        "pp_rank": 0,
+        "batch_id": 4696,
+        "batch_size": 1,
+        "batch_num_tokens": 4096,
+        "batch_num_prefill_tokens": 4096,
+        "batch_num_decode_tokens": 0,
+        "batch_execution_time_ms": 80.5964126586914,
+        "op_profile_selected": false,
+        "op_profile_selected_index": null,
+        "op_profile_request_prefix": "",
+        "op_profile_batch_limit": 0,
+        "timestamp": 1788970563.1121073,
+        "request_ids": [
+          "cmpl-pf4096_dc1024:0-0"
+        ],
+        "request_num_tokens": [
+          4096
+        ],
+        "batch_dp_token_counts": [
+          4096,
+          1
+        ]
+      }
+    ],
+    "median_ms": 80.65488052368164,
+    "p90_ms": 80.6818489074707,
+    "rank_max_ms": 80.68745422363281,
+    "spread_ms": 0.09104156494140625
+  },
+  "delta": {
+    "median_ms": {
+      "ms": -3.171215057373047,
+      "percent": -3.9318328125747093
+    },
+    "p90_ms": {
+      "ms": -3.195615386962885,
+      "percent": -3.9607612247802515
+    },
+    "rank_max_ms": {
+      "ms": -3.2006072998046875,
+      "percent": -3.966672800128146
+    },
+    "spread_ms": {
+      "ms": -0.0648345947265625,
+      "percent": -71.21427972848404
+    }
+  },
+  "server_args_equal": true,
+  "server_args": {
+    "model_tag": "/data/ycfeng/tmp/issue26-qwen3-dummy",
+    "model": "/data/ycfeng/tmp/issue26-qwen3-dummy",
+    "dtype": "bfloat16",
+    "seed": 0,
+    "max_model_len": 16384,
+    "enforce_eager": true,
+    "skip_tokenizer_init": true,
+    "served_model_name": [
+      "Qwen3-30B-A3B-Instruct-2507"
+    ],
+    "load_format": "dummy",
+    "tensor_parallel_size": 4,
+    "data_parallel_size": 2,
+    "enable_expert_parallel": true,
+    "block_size": 16,
+    "num_gpu_blocks_override": 176000,
+    "enable_prefix_caching": false,
+    "max_num_batched_tokens": 16384,
+    "max_num_seqs": 1024,
+    "enable_chunked_prefill": false
+  },
+  "limit": "Rank P90 over four ranks; one fresh replay, not repeated-run P90 or causal attribution."
+}

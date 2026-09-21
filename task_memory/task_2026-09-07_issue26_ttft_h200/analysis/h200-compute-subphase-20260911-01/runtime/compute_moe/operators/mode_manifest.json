@@ -1,0 +1,29 @@
+{
+  "mode": "operators",
+  "created_utc": "2026-09-10T22:33:06.862016+00:00",
+  "python": "3.10.16 (main, Dec 11 2024, 16:24:50) [GCC 11.2.0]",
+  "warmup_rounds": 3,
+  "formal_requests": 100,
+  "environment": {
+    "VLLM_FRONTIER_PROFILE_REQUEST_PREFIX": "cmpl-pf4096_dc1024:",
+    "VLLM_ENV_PATH": "/local/ycfeng/anaconda3/envs/vllm-bs-0.10.2",
+    "VLLM_V1_ALLOW_NO_CHUNKED_PREFILL": "1",
+    "VLLM_CACHE_ROOT": "/data/ycfeng/tmp/issue26-h200-runtime/compute_moe/vllm-cache",
+    "VLLM_FRONTIER_OP_TIMING_MODE": "cuda_event",
+    "VLLM_FRONTIER_CUDA_EVENT_OP_SCOPES": "moe_gating,moe_shuffling,moe_grouped_gemm,moe_sum",
+    "VLLM_FRONTIER_PROFILE_BATCH_LIMIT": "1",
+    "VLLM_ATTENTION_BACKEND": "FLASHINFER",
+    "VLLM_FRONTIER_COMPILED_PACKAGE": "/local/ycfeng/anaconda3/envs/vidur_te/lib/python3.10/site-packages/vllm",
+    "VLLM_FRONTIER_TRACE_SKIP_WARMUP": "1",
+    "VLLM_FRONTIER_CUDA_EVENT_OP_LOG_PATH": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-compute-subphase-20260911-01/runtime/compute_moe/operators/server.ops.jsonl",
+    "VLLM_FRONTIER_RUNTIME_META_ENABLED": "0",
+    "VLLM_FRONTIER_CUDA_EVENT_SCOPE_MODE": "default",
+    "PYTHONPATH": "/data/ycfeng/tmp/issue26-vllm-diagnostics-ar-ab",
+    "VLLM_FRONTIER_OP_AGG_MODE": "per_scope",
+    "VLLM_FRONTIER_INSTRUMENTATION": "1",
+    "VLLM_MOE_UNIFORM_ROUTING": "1",
+    "VLLM_ALL2ALL_BACKEND": "naive",
+    "VLLM_FRONTIER_BATCH_LOG_PATH": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/h200-compute-subphase-20260911-01/runtime/compute_moe/operators/server.batch.jsonl"
+  },
+  "limits": "Instrumented diagnostics; not clean TTFT evidence."
+}

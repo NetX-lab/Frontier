@@ -1,0 +1,135 @@
+{
+  "status": "PASS_CANDIDATE_INGESTION_CUDA_GATE_FAIL",
+  "actual_boundary_ms": 54.91489841730945,
+  "expected_boundary_ms": 54.914898417309466,
+  "absolute_reconciliation_error_ms": 1.4210854715202004e-14,
+  "changed_operator_count": 3,
+  "unchanged_independent_compute_models": 8,
+  "query_checks": [
+    {
+      "model": "attn_prefill",
+      "method": "_get_on_demand_prediction",
+      "branch": "measured_exact",
+      "old_ms": 0.1463839933276176,
+      "new_ms": 0.1463839933276176,
+      "changed": false
+    },
+    {
+      "model": "attn_prefill",
+      "method": "_get_prediction_for_features",
+      "branch": "delegated",
+      "old_ms": 0.1463839933276176,
+      "new_ms": 0.1463839933276176,
+      "changed": false
+    },
+    {
+      "model": "attn_pre_proj",
+      "method": "_get_prediction_for_features",
+      "branch": "measured_exact",
+      "old_ms": 0.1371679976582527,
+      "new_ms": 0.0781439989805221,
+      "changed": true
+    },
+    {
+      "model": "attn_post_proj",
+      "method": "_get_prediction_for_features",
+      "branch": "measured_exact",
+      "old_ms": 0.0467840004712343,
+      "new_ms": 0.0298560000956058,
+      "changed": true
+    },
+    {
+      "model": "attn_rope",
+      "method": "_get_prediction_for_features",
+      "branch": "measured_exact",
+      "old_ms": 0.0323360003530979,
+      "new_ms": 0.0192160001024603,
+      "changed": true
+    },
+    {
+      "model": "attn_kv_cache_save",
+      "method": "_get_on_demand_prediction",
+      "branch": "measured_exact",
+      "old_ms": 0.0168159995228052,
+      "new_ms": 0.0168159995228052,
+      "changed": false
+    },
+    {
+      "model": "input_layernorm",
+      "method": "_get_prediction_for_features",
+      "branch": "measured_exact",
+      "old_ms": 0.0226080007851123,
+      "new_ms": 0.0226080007851123,
+      "changed": false
+    },
+    {
+      "model": "moe_gating_linear__prefill_hot",
+      "method": "_get_prediction_for_features",
+      "branch": "measured_exact",
+      "old_ms": 0.013779555550879856,
+      "new_ms": 0.013779555550879856,
+      "changed": false
+    },
+    {
+      "model": "moe_gating_routing_topk__prefill_hot",
+      "method": "_get_prediction_for_features",
+      "branch": "measured_exact",
+      "old_ms": 0.09248533389634554,
+      "new_ms": 0.09248533389634554,
+      "changed": false
+    },
+    {
+      "model": "moe_shuffling",
+      "method": "_get_on_demand_prediction",
+      "branch": "estimator_predict",
+      "old_ms": 0.05294490649065479,
+      "new_ms": 0.05294490649065479,
+      "changed": false
+    },
+    {
+      "model": "moe_grouped_gemm",
+      "method": "_get_on_demand_prediction",
+      "branch": "measured_exact",
+      "old_ms": 0.4619448847240872,
+      "new_ms": 0.4619448847240872,
+      "changed": false
+    },
+    {
+      "model": "post_attention_layernorm",
+      "method": "_get_prediction_for_features",
+      "branch": "measured_exact",
+      "old_ms": 0.0221119998022913,
+      "new_ms": 0.0221119998022913,
+      "changed": false
+    },
+    {
+      "model": "moe_shuffling",
+      "method": "_get_on_demand_prediction",
+      "branch": "runtime_cache",
+      "old_ms": 0.05294490649065479,
+      "new_ms": 0.05294490649065479,
+      "changed": false
+    }
+  ],
+  "fit_policy": {
+    "allowed": true,
+    "successful_calls_in_process": 17
+  },
+  "comparisons": {
+    "before": {
+      "actual_vllm_ms": 79.30735778808594,
+      "candidate_predicted_ms": 54.91489841730945,
+      "absolute_error_ms": 24.392459370776486,
+      "signed_error_percent": -30.756868027244856,
+      "ten_percent_gate": "FAIL"
+    },
+    "after": {
+      "actual_vllm_ms": 78.11878204345703,
+      "candidate_predicted_ms": 54.91489841730945,
+      "absolute_error_ms": 23.20388362614758,
+      "signed_error_percent": -29.70333512527038,
+      "ten_percent_gate": "FAIL"
+    }
+  },
+  "limits": "Isolated context-pinned candidate, not canonical input replacement/general context selection/fullcase accuracy."
+}

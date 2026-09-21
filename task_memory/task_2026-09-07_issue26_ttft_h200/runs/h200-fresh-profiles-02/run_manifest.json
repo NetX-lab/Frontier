@@ -1,0 +1,31 @@
+{
+  "case_id": "issue26-ttft-h200-pf4096-dc1024",
+  "run_generation": "h200-fresh-profiles-02",
+  "mode": "profiling",
+  "command": [
+    "bash",
+    "tests/performance/issue26_h200_fresh_profiles_worker.sh",
+    "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-fresh-profiles-02/runtime"
+  ],
+  "working_directory": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907",
+  "source_commit": "9d756e05357531c0c4a24e40f6b119401764c743",
+  "worker_snapshot": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-fresh-profiles-02/worker.sh",
+  "created_at": "2026-09-07T17:31:21.038357+00:00",
+  "fresh_file": true,
+  "historical_numeric_inputs": [],
+  "cache_policy": "fresh per-run CUDA and Triton caches; no predictor cache consumed",
+  "gpu_type": "H200",
+  "charged_group": "step_main",
+  "gpus": 8,
+  "expected_artifacts": [
+    "runtime/profiles/compute/h200",
+    "runtime/linear.log",
+    "runtime/attention.log",
+    "runtime/moe.log"
+  ],
+  "coverage": "Initial exact-case envelope. Formal diagnostic shapes and routing must be checked before training acceptance.",
+  "correction": "Explicit max_tokens=16384 for linear and32768 for MoE; no timing rows reused",
+  "observed_frontier_commit": "48e2f9d2f332d287e19aec7726c98db2848c932b",
+  "observed_revision_evidence": "runtime/environment.log:210",
+  "profiling_core_diff_from_prelaunch_commit": ""
+}

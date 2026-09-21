@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "case_id": "pf4096_dc1024",
+  "generation": "h200-diagnostics-03",
+  "timestamp_utc": "2026-09-07T18:57:11.070168+00:00",
+  "criteria": "Eight worker identities; three formal local phases each; complete 48-layer scope counts; positive CUDA_EVENT durations; retained sum equals raw sum minus nested inner communication and duplicated add scopes.",
+  "workers": 8,
+  "batches": 24,
+  "phase_batches": {
+    "prefill": 8,
+    "mixed": 8,
+    "decode": 8
+  },
+  "selected_operator_rows": 21120,
+  "scanned_lines": 26722952,
+  "scanned_bytes": 14227231982,
+  "selected_raw_bytes": 8920288,
+  "extraction_elapsed_seconds": 267.9344456240069,
+  "limits": "Artifact validation only; no Frontier comparability or latency gap claim."
+}

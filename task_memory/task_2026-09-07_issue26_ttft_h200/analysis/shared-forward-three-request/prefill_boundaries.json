@@ -1,0 +1,52 @@
+[
+  {
+    "request_id": "0",
+    "dp": 0,
+    "request_ids": [
+      "0"
+    ],
+    "tokens": [
+      4096
+    ],
+    "arrival_s": 0.0,
+    "stage_start_s": 0.0,
+    "stage_end_s": 0.06579007690374297,
+    "before_stage_ms": 0.0,
+    "stage_wall_ms": 65.79007690374297,
+    "ttft_ms": 65.79007690374297
+  },
+  {
+    "request_id": "1",
+    "dp": 0,
+    "request_ids": [
+      "1",
+      "0"
+    ],
+    "tokens": [
+      4096,
+      1
+    ],
+    "arrival_s": 0.0812080018222332,
+    "stage_start_s": 0.11778284745306514,
+    "stage_end_s": 0.18497502277117123,
+    "before_stage_ms": 36.57484563083194,
+    "stage_wall_ms": 67.1921753181061,
+    "ttft_ms": 103.76702094893803
+  },
+  {
+    "request_id": "2",
+    "dp": 1,
+    "request_ids": [
+      "2"
+    ],
+    "tokens": [
+      4096
+    ],
+    "arrival_s": 0.2414169437251985,
+    "stage_start_s": 0.29486280016841143,
+    "stage_end_s": 0.3607306467545867,
+    "before_stage_ms": 53.445856443212925,
+    "stage_wall_ms": 65.86784658617529,
+    "ttft_ms": 119.31370302938821
+  }
+]

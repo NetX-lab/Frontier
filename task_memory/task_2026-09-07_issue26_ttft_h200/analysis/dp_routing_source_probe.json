@@ -1,0 +1,81 @@
+{
+  "status": "PASS",
+  "python": "3.13.13 | packaged by Anaconda, Inc. | (main, Apr 14 2026, 06:19:41) [GCC 14.3.0]",
+  "frontier_rr_singleton": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "frontier_rr_burst": [
+    0,
+    1,
+    0,
+    1,
+    0,
+    1
+  ],
+  "vllm_no_snapshot_refresh": [
+    0,
+    1,
+    0,
+    1,
+    0,
+    1
+  ],
+  "vllm_fresh_empty_snapshot_each_arrival": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "load_cases": [
+    {
+      "waiting_running": [
+        [
+          0,
+          10
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "vllm": 1,
+      "frontier_lor": 0
+    },
+    {
+      "waiting_running": [
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "vllm": 1,
+      "frontier_lor": 1
+    },
+    {
+      "waiting_running": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "vllm": 0,
+      "frontier_lor": 0
+    }
+  ],
+  "scope": "Actual routing methods with controlled state; no GPU or E2E timing validation."
+}

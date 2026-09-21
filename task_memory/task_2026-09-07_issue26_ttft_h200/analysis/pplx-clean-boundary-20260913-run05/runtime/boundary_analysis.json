@@ -1,0 +1,72 @@
+{
+  "status": "PASS",
+  "run": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/analysis/pplx-clean-boundary-20260913-run05/runtime",
+  "backend": "pplx",
+  "warmup_rounds": 10,
+  "formal_requests": 100,
+  "client_rows": 1100,
+  "workers": [
+    {
+      "dp_rank": 0,
+      "tp_rank": 0,
+      "pp_rank": 0,
+      "cuda_event_elapsed_ms": 183.5067901611328,
+      "batch_dp_token_counts": null,
+      "source_commit": "448f2b65e7679ae7490114ad382b6ba79becb3c3"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 1,
+      "pp_rank": 0,
+      "cuda_event_elapsed_ms": 183.46713256835938,
+      "batch_dp_token_counts": null,
+      "source_commit": "448f2b65e7679ae7490114ad382b6ba79becb3c3"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 2,
+      "pp_rank": 0,
+      "cuda_event_elapsed_ms": 183.12240600585938,
+      "batch_dp_token_counts": null,
+      "source_commit": "448f2b65e7679ae7490114ad382b6ba79becb3c3"
+    },
+    {
+      "dp_rank": 0,
+      "tp_rank": 3,
+      "pp_rank": 0,
+      "cuda_event_elapsed_ms": 183.40541076660156,
+      "batch_dp_token_counts": null,
+      "source_commit": "448f2b65e7679ae7490114ad382b6ba79becb3c3"
+    }
+  ],
+  "first_formal_request_id": "pf4096_dc1024:0",
+  "first_formal_server_request_id": "cmpl-pf4096_dc1024:0-0",
+  "first_formal_predicates": {
+    "request_id": "cmpl-pf4096_dc1024:0-0",
+    "batch_size": 1,
+    "prefill_tokens": 4096,
+    "decode_tokens": 0,
+    "dp_rank": 0,
+    "tp_ranks": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "pp_rank": 0
+  },
+  "duration_ms_by_tp": {
+    "0": 183.5067901611328,
+    "1": 183.46713256835938,
+    "2": 183.12240600585938,
+    "3": 183.40541076660156
+  },
+  "selected_dp_rank": 0,
+  "median_ms": 183.43627166748047,
+  "p90_ms": 183.4948928833008,
+  "rank_max_ms": 183.5067901611328,
+  "rank_spread_ms": 0.3843841552734375,
+  "outer_span_delta_ms": 0.3843841552734375,
+  "event_semantics": "Independent CUDA-event envelope on the model forward stream; one synchronization only to read elapsed time",
+  "limits": "CUDA-event envelope from model-forward begin to end on each rank; it can include queued device work and excludes host wall-clock gaps. This artifact has no per-op, scheduler, routing, or full diagnostic outer-span measurements."
+}

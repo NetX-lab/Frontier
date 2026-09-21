@@ -1,0 +1,87 @@
+{
+  "cpu_contract_validation": "PASS",
+  "production_change": "none",
+  "microbenchmark_gpu_status": "not run",
+  "contract": {
+    "tp_size": 4,
+    "dp_tokens": [
+      4096,
+      1
+    ],
+    "world_size": 8,
+    "tp_groups": [
+      [
+        0,
+        1,
+        2,
+        3
+      ],
+      [
+        4,
+        5,
+        6,
+        7
+      ]
+    ],
+    "dp_groups": [
+      [
+        0,
+        4
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        3,
+        7
+      ]
+    ],
+    "dtype": "bfloat16",
+    "hidden_size": 2048,
+    "router_experts": 128,
+    "local_hidden_bytes": [
+      16777216,
+      4096
+    ],
+    "local_router_bytes": [
+      1048576,
+      256
+    ],
+    "global_hidden_bytes": 16781312,
+    "global_router_bytes": 1048832,
+    "timing": "CUDA events around eager blocks; no per-call synchronize",
+    "warmup_calls": 20,
+    "calls_per_sample": 48,
+    "samples": 7
+  },
+  "attention_tp4_backend": {
+    "per_layer_ms": 0.3729050666666667,
+    "48_layer_ms": 17.8994432,
+    "details": {
+      "intra_server_model": "nvlink_analytic",
+      "nvlink_bw_direction": "one_way",
+      "nvlink_one_way_bw_GBps": 450.0,
+      "nvlink_efficiency": 0.8,
+      "nvlink_latency_us": 0.5,
+      "nvlink_allreduce_launch_overhead_us": 50.0,
+      "nvlink_alltoall_launch_overhead_us": 0.0,
+      "effective_nvlink_bw_Bps": 360000000000.0,
+      "estimated_bytes_per_rank": 25165824.0,
+      "estimated_steps": 6,
+      "estimated_allreduce_launch_overhead_us": 300.0,
+      "estimated_alltoall_launch_overhead_us": 0.0,
+      "g_in_group": 4,
+      "num_servers": 1
+    }
+  },
+  "zero_launch_counterfactual_not_a_correction": {
+    "per_layer_ms": 0.07290506666666667,
+    "48_layer_ms": 3.4994432,
+    "removed_48_layer_ms": 14.399999999999999
+  }
+}

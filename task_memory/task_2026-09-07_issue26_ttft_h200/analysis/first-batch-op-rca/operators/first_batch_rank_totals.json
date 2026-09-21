@@ -1,0 +1,94 @@
+[
+  {
+    "dp_rank": 0,
+    "tp_rank": 0,
+    "batch_id": 4706,
+    "batch_cuda_event_ms": 116.21014404296875,
+    "inclusive_op_totals_ms": {
+      "tensor_parallel_allreduce": 0.22233599424362183,
+      "input_layernorm": 1.2667200025171041,
+      "attn_pre_proj": 3.9272959902882576,
+      "attn_rope": 1.0290239974856377,
+      "attn_kv_cache_save": 0.7213119966909289,
+      "attn_prefill": 6.047232016921043,
+      "attn_post_proj": 17.231616005301476,
+      "add": 1.8990080058574677,
+      "post_attention_layernorm": 1.2444159965962172,
+      "moe_gating": 7.030463979579508,
+      "expert_parallel_alltoall_dispatch": 13.482272021472454,
+      "moe_shuffling": 1.8896320015192032,
+      "moe_grouped_gemm": 18.18016004562378,
+      "expert_parallel_alltoall_combine": 8.109376028180122,
+      "expert_parallel_allreduce": 37.56316776573658
+    }
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 1,
+    "batch_id": 4706,
+    "batch_cuda_event_ms": 116.38829040527344,
+    "inclusive_op_totals_ms": {
+      "tensor_parallel_allreduce": 0.45475199818611145,
+      "input_layernorm": 1.2577919960021973,
+      "attn_pre_proj": 3.745216019451618,
+      "attn_rope": 0.9547200053930283,
+      "attn_kv_cache_save": 0.6261120028793812,
+      "attn_prefill": 5.9705599918961525,
+      "attn_post_proj": 18.032640010118484,
+      "add": 1.9118399992585182,
+      "post_attention_layernorm": 1.2442880030721426,
+      "moe_gating": 6.837952028028667,
+      "expert_parallel_alltoall_dispatch": 13.285631991922855,
+      "moe_shuffling": 1.874431997537613,
+      "moe_grouped_gemm": 18.309376090765,
+      "expert_parallel_alltoall_combine": 8.185439959168434,
+      "expert_parallel_allreduce": 37.88255996257067
+    }
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 2,
+    "batch_id": 4706,
+    "batch_cuda_event_ms": 116.36844635009766,
+    "inclusive_op_totals_ms": {
+      "tensor_parallel_allreduce": 0.44755199551582336,
+      "input_layernorm": 1.2616959977895021,
+      "attn_pre_proj": 4.336224012076855,
+      "attn_rope": 1.7317120004445314,
+      "attn_kv_cache_save": 1.8694080030545592,
+      "attn_prefill": 8.396448001265526,
+      "attn_post_proj": 8.63584004342556,
+      "add": 1.9494719952344894,
+      "post_attention_layernorm": 1.2990080062299967,
+      "moe_gating": 16.848704081960022,
+      "expert_parallel_alltoall_dispatch": 24.91481600701809,
+      "moe_shuffling": 3.7103679925203323,
+      "moe_grouped_gemm": 22.046304047107697,
+      "expert_parallel_alltoall_combine": 8.143776014447212,
+      "expert_parallel_allreduce": 5.652832008898258
+    }
+  },
+  {
+    "dp_rank": 0,
+    "tp_rank": 3,
+    "batch_id": 4706,
+    "batch_cuda_event_ms": 116.41449737548828,
+    "inclusive_op_totals_ms": {
+      "tensor_parallel_allreduce": 0.4676479995250702,
+      "input_layernorm": 1.248447997495532,
+      "attn_pre_proj": 3.7108800038695335,
+      "attn_rope": 0.9308479968458414,
+      "attn_kv_cache_save": 0.6561599979177117,
+      "attn_prefill": 5.988864041864872,
+      "attn_post_proj": 18.030015900731087,
+      "add": 1.8880000077188015,
+      "post_attention_layernorm": 1.231615997850895,
+      "moe_gating": 6.967647978104651,
+      "expert_parallel_alltoall_dispatch": 13.42582406103611,
+      "moe_shuffling": 1.8570240121334791,
+      "moe_grouped_gemm": 18.590880066156387,
+      "expert_parallel_alltoall_combine": 8.12422400712967,
+      "expert_parallel_allreduce": 37.67158418893814
+    }
+  }
+]

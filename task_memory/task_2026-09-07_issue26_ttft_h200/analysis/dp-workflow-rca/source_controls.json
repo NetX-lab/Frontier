@@ -1,0 +1,703 @@
+{
+  "status": "PASS",
+  "source": "/data/ycfeng/tmp/vLLM-BS/vllm/v1/engine/core_client.py",
+  "scope": "Exact source-method controls on measured Frontier states; diagnostic only.",
+  "same_state_selections": [
+    {
+      "request_id": "pf4096_dc1024:0",
+      "lane": 0,
+      "counts_before": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "time_s": 0.0,
+      "frontier_lane": 0
+    },
+    {
+      "request_id": "pf4096_dc1024:1",
+      "lane": 0,
+      "counts_before": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "time_s": 0.0812080018222332,
+      "frontier_lane": 0
+    },
+    {
+      "request_id": "pf4096_dc1024:2",
+      "lane": 1,
+      "counts_before": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "time_s": 0.2414169437251985,
+      "frontier_lane": 1
+    },
+    {
+      "request_id": "pf4096_dc1024:3",
+      "lane": 1,
+      "counts_before": [
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "time_s": 0.3220214080065489,
+      "frontier_lane": 1
+    },
+    {
+      "request_id": "pf4096_dc1024:4",
+      "lane": 0,
+      "counts_before": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "time_s": 0.7873845058493316,
+      "frontier_lane": 0
+    },
+    {
+      "request_id": "pf4096_dc1024:6",
+      "lane": 1,
+      "counts_before": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "time_s": 1.0252374149858952,
+      "frontier_lane": 1
+    },
+    {
+      "request_id": "pf4096_dc1024:5",
+      "lane": 0,
+      "counts_before": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "time_s": 1.0254382868297398,
+      "frontier_lane": 0
+    },
+    {
+      "request_id": "pf4096_dc1024:7",
+      "lane": 1,
+      "counts_before": [
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "time_s": 1.34721209295094,
+      "frontier_lane": 1
+    }
+  ],
+  "first_pair_counterfactual": {
+    "original": [
+      {
+        "request_id": "pf4096_dc1024:6",
+        "lane": 1,
+        "counts_before": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "request_id": "pf4096_dc1024:5",
+        "lane": 0,
+        "counts_before": [
+          [
+            0,
+            3
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      }
+    ],
+    "reversed_request_order": [
+      {
+        "request_id": "pf4096_dc1024:5",
+        "lane": 1,
+        "counts_before": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      {
+        "request_id": "pf4096_dc1024:6",
+        "lane": 0,
+        "counts_before": [
+          [
+            0,
+            3
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      }
+    ],
+    "reversed_order_matches_observed_vllm_owners": true,
+    "operator_durations_changed": false,
+    "report_events_between_routes": []
+  },
+  "membership_label_controls": [
+    {
+      "request_id": "pf4096_dc1024:0",
+      "original_match": true,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:1",
+      "original_match": true,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:2",
+      "original_match": true,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:3",
+      "original_match": true,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:4",
+      "original_match": true,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:6",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:5",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:7",
+      "original_match": false,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:8",
+      "original_match": false,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:9",
+      "original_match": false,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:10",
+      "original_match": false,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:11",
+      "original_match": false,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:12",
+      "original_match": false,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:13",
+      "original_match": false,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:14",
+      "original_match": false,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:15",
+      "original_match": false,
+      "match_after_label_swap": true
+    },
+    {
+      "request_id": "pf4096_dc1024:17",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:16",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:18",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:19",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:20",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:21",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:22",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:23",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:24",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:26",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:25",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:27",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:28",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:29",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:30",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:31",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:32",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:33",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:34",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:35",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:36",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:37",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:38",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:39",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:40",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:42",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:41",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:43",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:44",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:45",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:46",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:47",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:48",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:49",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:50",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:51",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:52",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:53",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:54",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:55",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:56",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:57",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:58",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:59",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:60",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:61",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:62",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:63",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:64",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:65",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:66",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:67",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:68",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:69",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:70",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:71",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:73",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:72",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:74",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:76",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:75",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:77",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:78",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:79",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:80",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:81",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:82",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:84",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:83",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:85",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:86",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:87",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:88",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:89",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:90",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:91",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:92",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:93",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:94",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:95",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:96",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:97",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:98",
+      "original_match": false,
+      "match_after_label_swap": false
+    },
+    {
+      "request_id": "pf4096_dc1024:99",
+      "original_match": false,
+      "match_after_label_swap": false
+    }
+  ],
+  "limits": "The reversed order is a counterfactual, not an observed vLLM routing order. It establishes sufficiency, not attribution of the isolated-run mismatch. Membership relabeling does not rerun admission or align KV progress. No contribution of execution-time error to later load snapshots is quantified."
+}

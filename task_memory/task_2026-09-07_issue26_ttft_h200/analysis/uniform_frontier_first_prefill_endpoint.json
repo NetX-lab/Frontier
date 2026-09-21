@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "request_id": 0,
+  "request_metrics_path": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/cpu-uniform-frontier-01/runtime/metrics/qwen3_a3b_30b_moe/online_serving/runtime/metrics_ground_truth.jsonl",
+  "ttft_ms": 65.79007690374297,
+  "prefill_completed_at_ms": 65.79007690374297,
+  "wave_end_ms": 65.790076904,
+  "endpoint_gap_ms": -2.5703172923385864e-10,
+  "component_sum_ms": 65.790074082096
+}

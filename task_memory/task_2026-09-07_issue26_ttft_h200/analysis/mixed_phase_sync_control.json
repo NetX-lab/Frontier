@@ -1,0 +1,38 @@
+[
+  {
+    "phases": [
+      "prefill",
+      "prefill"
+    ],
+    "waves_emitted": 1,
+    "expected_waves": 1,
+    "open_groups": {
+      "prefill": 0,
+      "decode": 0
+    }
+  },
+  {
+    "phases": [
+      "decode",
+      "decode"
+    ],
+    "waves_emitted": 1,
+    "expected_waves": 1,
+    "open_groups": {
+      "prefill": 0,
+      "decode": 0
+    }
+  },
+  {
+    "phases": [
+      "decode",
+      "prefill"
+    ],
+    "waves_emitted": 0,
+    "expected_waves": 1,
+    "open_groups": {
+      "prefill": 1,
+      "decode": 1
+    }
+  }
+]

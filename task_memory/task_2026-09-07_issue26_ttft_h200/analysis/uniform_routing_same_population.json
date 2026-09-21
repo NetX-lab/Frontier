@@ -1,0 +1,151 @@
+{
+  "status": "PASS",
+  "source": "/data/ycfeng/stepfun-performance-optimization/Frontier/.worktrees/issue26-ttft-h200-20260907/task_memory/task_2026-09-07_issue26_ttft_h200/runs/h200-uniform-clean-01/uniform-preflight/routing_check.json",
+  "checks": [
+    {
+      "device": 0,
+      "tokens": 1,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 0,
+      "tokens": 4096,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 0,
+      "tokens": 4097,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 1,
+      "tokens": 1,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 1,
+      "tokens": 4096,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 1,
+      "tokens": 4097,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 2,
+      "tokens": 1,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 2,
+      "tokens": 4096,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 2,
+      "tokens": 4097,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 3,
+      "tokens": 1,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 3,
+      "tokens": 4096,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 3,
+      "tokens": 4097,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 4,
+      "tokens": 1,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 4,
+      "tokens": 4096,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 4,
+      "tokens": 4097,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 5,
+      "tokens": 1,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 5,
+      "tokens": 4096,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 5,
+      "tokens": 4097,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 6,
+      "tokens": 1,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 6,
+      "tokens": 4096,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 6,
+      "tokens": 4097,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 7,
+      "tokens": 1,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 7,
+      "tokens": 4096,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    },
+    {
+      "device": 7,
+      "tokens": 4097,
+      "count_absolute_error": 0,
+      "count_relative_distortion": 0.0
+    }
+  ],
+  "scope": "Same-population real vLLM router versus real Frontier balanced materializer; not distributed scheduler parity"
+}
