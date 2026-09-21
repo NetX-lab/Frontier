@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-09-21 | Initial plan: scope, proposed split boundaries, sequencing, fidelity matrix design, acceptance criteria. Boundaries are proposals derived from `module_survey.md`; each is confirmed against the code before its step starts. |
+| 2026-09-21 | Recorded the boundaries actually implemented for `config.py` in section 3.1, which differ from the proposal. |
 
 ## 1. Scope and result
 
@@ -29,7 +30,32 @@ Out of scope: the other five modules above 2,000 lines (`sklearn_execution_time_
 
 ## 3. Proposed boundaries (to confirm at each step)
 
-### 3.1 `frontier/config/`
+### 3.1 `frontier/config/` (implemented)
+
+The proposal below was revised during implementation. Two things forced the change. First, `ClusterConfig` alone is 2,588 lines, so leaving it in `config.py` would have kept that file above the gate no matter which leaf families moved out. Second, `flat_dataclass` resolves string annotations in the *defining module's* namespace, so every module must carry the imports its own annotations need; that is a correctness constraint on the split, not a style choice.
+
+What was implemented:
+
+| Module | Lines | Content |
+| --- | --- | --- |
+| `config.py` | 788 | `SimulationConfig`, the lazy CC-backend import note, and the re-export block that keeps `from frontier.config[.config] import X` working for all 36 names other modules import |
+| `cluster_config.py` | 1888 | `ClusterConfig`: the flat per-role field surface, `__post_init__`, the validators, monolithic and disaggregated setup, `_validate_replica_config` |
+| `cluster_role_config.py` | 586 | `_get_cc_backend_configs` and `ClusterRoleConfigBuilder`: the 13 methods that build the per-role replica, predictor and CC-backend configurations |
+| `cluster_topology_summary.py` | 217 | `ClusterTopologySummary`: `_collect_cluster_info`, `get_server_count_metadata`, `print_cluster_statistics` |
+| `release_guards.py` | 56 | The six release-guard messages and the two disaggregated field-name tables |
+| `request_generator_config.py` | 262 | Arrival interval, request length and request generator families |
+| `replica_scheduler_config.py` | 711 | Every replica scheduler configuration, including the vLLM V1 family and its Sj2q and SGLang subclasses |
+| `metrics_config.py` | 173 | `MetricsConfig` |
+| `speculative_decoding_config.py` | 622 | `SpeculativeDecodingConfig` and its trace loaders |
+| `replica_config.py` | 250 | `ReplicaConfig` |
+| `cluster_scheduler_config.py` | 48 | The cluster scheduler configuration family |
+| `execution_time_predictor_config.py` | 314 | The predictor configuration family and its calibration scales |
+
+The two groups extracted from `ClusterConfig` are **mixins that `ClusterConfig` inherits**, not free functions taking the config. That keeps the split a pure move: the method bodies, the method names and every call site are unchanged, including the four methods that external code and tests call directly (`get_cluster_configs_for_disaggregation`, `get_server_count_metadata`, `_validate_replica_config`, `_create_replica_config_copy`). Rewriting them as free functions would have touched every line of 731 moved lines and made the diff unreviewable, with the fidelity matrix as the only remaining check.
+
+Naming note for review: `ClusterRoleConfigBuilder` and `ClusterTopologySummary` describe what each group produces. If a reviewer prefers different names, renaming them is mechanical and affects only three files.
+
+### 3.1a Original proposal (superseded)
 
 | Child module | Content (survey lines) | Approx. lines |
 | --- | --- | --- |
