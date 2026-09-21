@@ -102,7 +102,8 @@ One of the eight is different in kind and deserves separate attention in review.
 | Found by | `tests/unit/test_moe_share_expert_operator_families.py`, 3 failures |
 | Symptom | After repointing the patch to the module that owns the function being called, training still raised `Unsupported MoE op for TP mapping`, because part of the path still saw the real operator family |
 | Cause | `MOE_FAMILY` was one binding in one module before the split. It is now imported by both `moe_predictor_helpers` and `moe_operator_times`, and the code path under test reads it in both. |
-| Resolution | The three tests now install the fake family in both modules. This is the only place in this branch where a test gained a line instead of having one changed, and it is a direct consequence of one name becoming two bindings. |
+| Resolution | The three tests now install the fake family in both modules, one added line each. This is the only place in this branch where a test gained a line instead of having one changed, and it is a direct consequence of one name becoming two bindings. |
+| Follow-up | The first attempt at this edit inserted the added line twice in two of the three tests. The script applied a literal replacement and then a regular expression that inspected only the `setattr` block, not the line following it, so the two blocks the literal pass had already handled were extended again. The duplicates were inert, since the second call set the same attribute to the same value, but they are a copy-paste artifact in a diff whose claim is a reviewed pure move. Removed in a follow-up commit rather than by amending the pushed one. |
 | Note for review | A reviewer checking that the split preserved behavior should read this as evidence that it did: the test still asserts the same thing, and it needed the second patch precisely because the production code reads the name in both places. |
 
 ## I11 — A pytest selection that aborts at collection proves nothing

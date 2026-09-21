@@ -221,7 +221,6 @@ def test_moe_column_validation_uses_moe_family_profiling_names(monkeypatch) -> N
         ),
     )
     monkeypatch.setattr(moe_operator_module, "MOE_FAMILY", moe_module.MOE_FAMILY)
-    monkeypatch.setattr(moe_operator_module, "MOE_FAMILY", moe_module.MOE_FAMILY)
 
     with pytest.raises(ValueError, match="time_stats.moe_family_second.median"):
         moe_module._validate_moe_columns(
@@ -258,7 +257,6 @@ def test_sklearn_moe_training_uses_moe_family_profiling_names(
             )
         ),
     )
-    monkeypatch.setattr(moe_operator_module, "MOE_FAMILY", moe_module.MOE_FAMILY)
     monkeypatch.setattr(moe_operator_module, "MOE_FAMILY", moe_module.MOE_FAMILY)
 
     csv_path = tmp_path / "moe.csv"
