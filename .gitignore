@@ -168,7 +168,10 @@ cache
 settings.json
 
 # Task memory and repair receipts are local-only; do not vendor them.
-task_memory/
+# Narrow exceptions publish the review records of the two stacked PRs below.
+task_memory/*
+!task_memory/task_2026-09-21_oversized_module_split/
+!task_memory/task_2026-09-21_issue26_correctness_pr/
 repairs/
 
 # Local linked worktrees used for isolated feature implementation.
