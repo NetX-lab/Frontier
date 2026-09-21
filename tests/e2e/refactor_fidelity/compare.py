@@ -26,6 +26,7 @@ from typing import Any, Iterable, Sequence
 
 
 MAX_REPORTED_DIFFERENCES_PER_ARTIFACT = 5
+MAX_REPORTED_CACHE_FINDINGS_PER_KIND = 20
 
 
 @dataclass(frozen=True)

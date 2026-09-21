@@ -41,6 +41,7 @@ from typing import Sequence
 
 from tests.e2e.refactor_fidelity.cases import FidelityCase, build_cases, group_counts
 from tests.e2e.refactor_fidelity.compare import (
+    MAX_REPORTED_CACHE_FINDINGS_PER_KIND,
     classify_cache_differences,
     compare_artifact_directories,
     file_digest,
@@ -413,11 +414,24 @@ def compare_labels(args: argparse.Namespace) -> int:
         else:
             identical.append(case_id)
 
+    # The predictor cache is populated by the cases that actually ran, so the
+    # cache comparison only means something when both sides ran the same full
+    # matrix. A filtered or partial run would otherwise report every model the
+    # other side trained as a difference.
+    full_case_set = {case.case_id for case in build_cases()}
+    cache_comparable = (
+        set(baseline_results) == full_case_set and set(candidate_results) == full_case_set
+    )
     baseline_cache = baseline_manifest.get("cache_files", [])
     candidate_cache = candidate_manifest.get("cache_files", [])
-    cache_only_in_baseline = sorted(set(baseline_cache) - set(candidate_cache))
-    cache_only_in_candidate = sorted(set(candidate_cache) - set(baseline_cache))
-    cache_findings = classify_cache_differences(baseline_cache, candidate_cache)
+    if cache_comparable:
+        cache_only_in_baseline = sorted(set(baseline_cache) - set(candidate_cache))
+        cache_only_in_candidate = sorted(set(candidate_cache) - set(baseline_cache))
+        cache_findings = classify_cache_differences(baseline_cache, candidate_cache)
+    else:
+        cache_only_in_baseline = []
+        cache_only_in_candidate = []
+        cache_findings = []
 
     report = {
         "baseline": {
@@ -438,6 +452,7 @@ def compare_labels(args: argparse.Namespace) -> int:
         "predictor_cache_files_only_in_baseline": cache_only_in_baseline,
         "predictor_cache_files_only_in_candidate": cache_only_in_candidate,
         "predictor_cache_findings": [f.as_record() for f in cache_findings],
+        "predictor_cache_compared": cache_comparable,
     }
     report_path = output_root / "comparison.json"
     report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -449,10 +464,17 @@ def compare_labels(args: argparse.Namespace) -> int:
     print(f"baseline failures (excluded): {len(baseline_failures)}")
     print(f"candidate-only failures: {len(candidate_only_failures)}")
     print(f"cases missing from one side: {len(missing)}")
-    print(
-        "predictor cache file names differ: "
-        f"{len(cache_only_in_baseline)} baseline-only, {len(cache_only_in_candidate)} candidate-only"
-    )
+    if not cache_comparable:
+        print(
+            "predictor cache file names: not compared, because the two sides did "
+            "not both run the complete case set"
+        )
+    else:
+        print(
+            "predictor cache file names differ: "
+            f"{len(cache_only_in_baseline)} baseline-only, "
+            f"{len(cache_only_in_candidate)} candidate-only"
+        )
     if cache_findings:
         rekeyed = [f for f in cache_findings if f.kind == "rekeyed"]
         if rekeyed:
@@ -460,15 +482,21 @@ def compare_labels(args: argparse.Namespace) -> int:
                 f"  {len(rekeyed)} artifacts kept their model name but changed hash, "
                 "which means a training identity or cache key changed:"
             )
-            for finding in rekeyed:
+            for finding in rekeyed[:MAX_REPORTED_CACHE_FINDINGS_PER_KIND]:
                 print(f"    {finding.stem}: {finding.detail}")
+            if len(rekeyed) > MAX_REPORTED_CACHE_FINDINGS_PER_KIND:
+                print(f"    ... and {len(rekeyed) - MAX_REPORTED_CACHE_FINDINGS_PER_KIND} more")
         for kind, label in (("only_in_baseline", "baseline"),
                             ("only_in_candidate", "candidate")):
             entries = [f for f in cache_findings if f.kind == kind]
             if entries:
                 print(f"  {len(entries)} artifacts exist only on the {label} side:")
-                for finding in entries:
+                for finding in entries[:MAX_REPORTED_CACHE_FINDINGS_PER_KIND]:
                     print(f"    {finding.stem}: {finding.detail}")
+                if len(entries) > MAX_REPORTED_CACHE_FINDINGS_PER_KIND:
+                    print(
+                        f"    ... and {len(entries) - MAX_REPORTED_CACHE_FINDINGS_PER_KIND} more"
+                    )
     for entry in mismatched:
         print(f"\nMISMATCH {entry['case_id']}")
         for difference in entry["differences"]:
@@ -482,6 +510,9 @@ def compare_labels(args: argparse.Namespace) -> int:
                 print(f"    {line}")
     print(f"\nreport: {report_path}")
 
+    # A partial comparison is not a pass. Cases present on only one side keep
+    # failing the verdict; the cache gate above only suppresses a cache report
+    # that would be meaningless, it never turns a partial run green.
     failed = bool(
         mismatched
         or candidate_only_failures
