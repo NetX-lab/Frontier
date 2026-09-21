@@ -244,6 +244,51 @@ def _select_cases(
     return selected
 
 
+def source_provenance(repo_root: Path) -> dict:
+    """Identify the source a case was measured against.
+
+    Every case record carries this, not just the label-wide manifest, because
+    a filtered run rewrites the manifest with its own revision while keeping
+    the records of the cases it did not execute.  Without a per-case stamp
+    there is nothing left to show that those retained cases ran on the same
+    source.
+    """
+
+    return {
+        "source_revision": _git(repo_root, "rev-parse", "HEAD"),
+        "source_dirty": bool(_git(repo_root, "status", "--porcelain")),
+        "harness_revision": _git(Path(__file__).resolve().parents[3], "rev-parse", "HEAD"),
+    }
+
+
+def check_retained_records(
+    results_path: Path, provenance: dict, executed_ids: set[str], known_ids: set[str]
+) -> tuple[dict[str, dict], list[str], list[str]]:
+    """Decide which previously recorded cases this run may keep.
+
+    Returns the retained records, the case ids whose provenance conflicts with
+    this run, and the case ids that are no longer in the case table.  A
+    conflicting record is never silently dropped or silently kept: the caller
+    refuses the run so that one label always describes one source.
+    """
+
+    retained: dict[str, dict] = {}
+    if results_path.is_file():
+        for line in results_path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                record = json.loads(line)
+                retained[record["case_id"]] = record
+
+    conflicts = [
+        case_id
+        for case_id, record in sorted(retained.items())
+        if case_id not in executed_ids
+        and any(record.get(key) != value for key, value in provenance.items())
+    ]
+    stale = sorted(case_id for case_id in retained if case_id not in known_ids)
+    return retained, conflicts, stale
+
+
 def run_label(args: argparse.Namespace) -> int:
     repo_root = Path(args.repo_root).resolve()
     output_root = Path(args.output_root).resolve()
@@ -255,11 +300,47 @@ def run_label(args: argparse.Namespace) -> int:
         print("no cases selected", file=sys.stderr)
         return 2
 
+    provenance = source_provenance(repo_root)
+    results_path = label_root / "results.jsonl"
+    all_cases = build_cases()
+    retained, conflicts, stale = check_retained_records(
+        results_path,
+        provenance,
+        {case.case_id for case in cases},
+        {case.case_id for case in all_cases},
+    )
+    # Refuse before running anything rather than after, so a rejected label
+    # costs a second instead of a full matrix.
+    if conflicts:
+        print(
+            f"refusing to add to label {args.label!r}: {len(conflicts)} retained "
+            "case records describe a different source, a different harness, or "
+            "carry no provenance at all, and this run would leave the label "
+            "describing a mixture.",
+            file=sys.stderr,
+        )
+        for case_id in conflicts[:10]:
+            recorded = {key: retained[case_id].get(key) for key in provenance}
+            print(f"  {case_id}: recorded {recorded}", file=sys.stderr)
+        if len(conflicts) > 10:
+            print(f"  ... and {len(conflicts) - 10} more", file=sys.stderr)
+        print(f"  this run: {provenance}", file=sys.stderr)
+        print("  write to a new label, or re-run the whole matrix.", file=sys.stderr)
+        return 2
+    if stale:
+        print(
+            f"dropping {len(stale)} retained record(s) for case ids that are no "
+            f"longer in the case table: {', '.join(stale)}"
+        )
+
     cache_dir = repo_root / "cache"
     if args.clean_cache and cache_dir.exists():
         shutil.rmtree(cache_dir)
 
     print(f"label={args.label} repo_root={repo_root} cases={len(cases)}")
+    print(f"source {provenance['source_revision'][:12]} "
+          f"dirty={provenance['source_dirty']} "
+          f"harness {provenance['harness_revision'][:12]}")
     print(f"groups: {json.dumps(group_counts(cases), sort_keys=True)}")
 
     serial_cases = [case for case in cases if case.uses_trained_predictor]
@@ -290,22 +371,18 @@ def run_label(args: argparse.Namespace) -> int:
                 record(future.result())
 
     ordered = [outcomes[case.case_id] for case in cases]
-    results_path = label_root / "results.jsonl"
     # A filtered or partial run refreshes only the cases it executed and keeps
     # the records of the cases it skipped, so the two sides stay comparable.
-    merged: dict[str, dict] = {}
-    if results_path.is_file():
-        for line in results_path.read_text(encoding="utf-8").splitlines():
-            if line.strip():
-                record = json.loads(line)
-                merged[record["case_id"]] = record
+    # The guard above has already established that the retained records
+    # describe this same source and harness.
+    merged = dict(retained)
     for outcome in ordered:
-        merged[outcome.case.case_id] = outcome.as_record()
-    case_order = [case.case_id for case in build_cases()]
+        merged[outcome.case.case_id] = {**outcome.as_record(), **provenance}
+    case_order = [case.case_id for case in all_cases]
+    written = [case_id for case_id in case_order if case_id in merged]
     with results_path.open("w", encoding="utf-8") as handle:
-        for case_id in case_order:
-            if case_id in merged:
-                handle.write(json.dumps(merged[case_id], sort_keys=True) + "\n")
+        for case_id in written:
+            handle.write(json.dumps(merged[case_id], sort_keys=True) + "\n")
 
     cache_files = sorted(
         str(path.relative_to(cache_dir)) for path in cache_dir.rglob("*") if path.is_file()
@@ -319,8 +396,14 @@ def run_label(args: argparse.Namespace) -> int:
         "git_dirty_paths": _git(repo_root, "status", "--short"),
         "python_bin": args.python_bin,
         "package_versions": _package_versions(args.python_bin),
-        "case_count": len(merged),
+        # What the results file holds, not what the merge dictionary held: a
+        # retained record for a case id that has since left the table is
+        # dropped, and counting it here is what made an earlier label report
+        # 72 cases over 71 result lines.
+        "case_count": len(written),
         "cases_executed_in_last_run": [case.case_id for case in cases],
+        "cases_dropped_as_stale": stale,
+        **provenance,
         "case_filter": args.case_filter,
         "cache_dir": str(cache_dir),
         "cache_clean_before_run": bool(args.clean_cache),
@@ -352,6 +435,70 @@ def _load_side(output_root: Path, label: str) -> tuple[dict, dict[str, dict]]:
     return manifest, results
 
 
+PROVENANCE_KEYS = ("source_revision", "source_dirty", "harness_revision")
+
+
+def side_provenance_findings(label: str, results: dict[str, dict]) -> list[str]:
+    """Report anything that stops this label from describing one measurement."""
+
+    findings: list[str] = []
+    without = sorted(
+        case_id for case_id, record in results.items()
+        if any(key not in record for key in PROVENANCE_KEYS)
+    )
+    if without:
+        findings.append(
+            f"{label}: {len(without)} case record(s) carry no source provenance, "
+            f"so the label cannot be shown to describe one revision "
+            f"(first: {', '.join(without[:3])}). Recapture this side."
+        )
+    stamped = {
+        tuple(record[key] for key in PROVENANCE_KEYS)
+        for record in results.values()
+        if all(key in record for key in PROVENANCE_KEYS)
+    }
+    if len(stamped) > 1:
+        findings.append(
+            f"{label}: case records describe {len(stamped)} different "
+            f"source/harness combinations: {sorted(stamped)}"
+        )
+    for revision, dirty, _harness in sorted(stamped):
+        if dirty:
+            findings.append(
+                f"{label}: measured against a modified working tree at "
+                f"{revision[:12]}, which is not a commit-specific result"
+            )
+    return findings
+
+
+def missing_evidence_for(record: dict, label_root: Path) -> str | None:
+    """Return why a successful case's recorded artifacts cannot be compared.
+
+    A record that says a case succeeded is not evidence on its own.  The files
+    it named have to still be on disk, because the comparison reads the
+    directory and an absent directory otherwise reads as an empty one.
+    """
+
+    if not record.get("artifact_dir"):
+        return "the record names no artifact directory"
+    recorded = {entry["name"] for entry in record.get("artifacts", [])}
+    if not recorded:
+        return "the record lists no artifacts"
+    directory = label_root / record["artifact_dir"]
+    if not directory.is_dir():
+        return f"the recorded artifact directory is gone: {directory}"
+    on_disk = set(list_artifacts(directory))
+    if on_disk != recorded:
+        lost = sorted(recorded - on_disk)
+        extra = sorted(on_disk - recorded)
+        return (
+            f"the directory no longer matches the record "
+            f"({len(lost)} missing, {len(extra)} unexpected)"
+            + (f"; missing {lost[:3]}" if lost else "")
+        )
+    return None
+
+
 def compare_labels(args: argparse.Namespace) -> int:
     output_root = Path(args.output_root).resolve()
     baseline_manifest, baseline_results = _load_side(output_root, args.baseline_label)
@@ -371,12 +518,27 @@ def compare_labels(args: argparse.Namespace) -> int:
     baseline_failures: list[dict] = []
     candidate_only_failures: list[dict] = []
     missing: list[str] = []
+    missing_evidence: list[dict] = []
+    definition_mismatches: list[dict] = []
 
     for case_id in sorted(set(baseline_results) | set(candidate_results)):
         baseline_record = baseline_results.get(case_id)
         candidate_record = candidate_results.get(case_id)
         if baseline_record is None or candidate_record is None:
             missing.append(case_id)
+            continue
+
+        # The two sides are joined by case id, so the id has to have meant the
+        # same run on both of them.  Without this an edited case definition
+        # compares two different experiments under one name.
+        baseline_digest = baseline_record.get("case_digest")
+        candidate_digest = candidate_record.get("case_digest")
+        if baseline_digest != candidate_digest:
+            definition_mismatches.append({
+                "case_id": case_id,
+                "baseline_case_digest": baseline_digest,
+                "candidate_case_digest": candidate_digest,
+            })
             continue
 
         baseline_ok = baseline_record["returncode"] == 0 and not baseline_record["error"]
@@ -400,6 +562,18 @@ def compare_labels(args: argparse.Namespace) -> int:
             })
             continue
 
+        evidence_problems = {
+            side: reason
+            for side, reason in (
+                ("baseline", missing_evidence_for(baseline_record, baseline_root)),
+                ("candidate", missing_evidence_for(candidate_record, candidate_root)),
+            )
+            if reason is not None
+        }
+        if evidence_problems:
+            missing_evidence.append({"case_id": case_id, **evidence_problems})
+            continue
+
         differences = compare_artifact_directories(
             baseline_root / baseline_record["artifact_dir"],
             candidate_root / candidate_record["artifact_dir"],
@@ -419,8 +593,18 @@ def compare_labels(args: argparse.Namespace) -> int:
     # matrix. A filtered or partial run would otherwise report every model the
     # other side trained as a difference.
     full_case_set = {case.case_id for case in build_cases()}
+    # A cache listing is only a fair comparison when each side's cache was
+    # populated by one clean run of the whole table.  A label assembled from a
+    # filtered continuation without --clean-cache carries models trained by an
+    # earlier case selection, which is not what the other side has.
+    cache_populated_cleanly = all(
+        manifest.get("cache_clean_before_run") and not manifest.get("case_filter")
+        for manifest in (baseline_manifest, candidate_manifest)
+    )
     cache_comparable = (
-        set(baseline_results) == full_case_set and set(candidate_results) == full_case_set
+        set(baseline_results) == full_case_set
+        and set(candidate_results) == full_case_set
+        and cache_populated_cleanly
     )
     baseline_cache = baseline_manifest.get("cache_files", [])
     candidate_cache = candidate_manifest.get("cache_files", [])
@@ -433,10 +617,29 @@ def compare_labels(args: argparse.Namespace) -> int:
         cache_only_in_candidate = []
         cache_findings = []
 
-    compared = len(identical) + len(mismatched)
-    complete = (
-        set(baseline_results) == full_case_set and set(candidate_results) == full_case_set
+    # Completeness is about what was compared, not about which case ids appear
+    # in the two result tables.  A table can be full of records that all
+    # describe failed runs, and comparing none of them is not agreement.
+    compared_ids = set(identical) | {entry["case_id"] for entry in mismatched}
+    compared = len(compared_ids)
+    not_compared = sorted(full_case_set - compared_ids)
+    complete = not not_compared
+    provenance_findings = (
+        side_provenance_findings(args.baseline_label, baseline_results)
+        + side_provenance_findings(args.candidate_label, candidate_results)
     )
+    # Every case that was not compared must be accounted for by one of the
+    # specific findings above.  Anything left over means a path through this
+    # function dropped a case silently, and the gate must not pass on it.
+    explained = (
+        set(missing)
+        | {entry["case_id"] for entry in baseline_failures}
+        | {entry["case_id"] for entry in candidate_only_failures}
+        | {entry["case_id"] for entry in missing_evidence}
+        | {entry["case_id"] for entry in definition_mismatches}
+    )
+    absent_from_both = full_case_set - set(baseline_results) - set(candidate_results)
+    unexplained = sorted(set(not_compared) - explained - absent_from_both)
 
     report = {
         "baseline": {
@@ -454,6 +657,13 @@ def compare_labels(args: argparse.Namespace) -> int:
         "baseline_failures": baseline_failures,
         "candidate_only_failures": candidate_only_failures,
         "cases_missing_from_one_side": missing,
+        "cases_with_missing_evidence": missing_evidence,
+        "cases_with_differing_definitions": definition_mismatches,
+        "cases_not_compared": not_compared,
+        "cases_not_compared_without_explanation": unexplained,
+        "cases_absent_from_both_sides": sorted(absent_from_both),
+        "provenance_findings": provenance_findings,
+        "predictor_cache_populated_cleanly": cache_populated_cleanly,
         "predictor_cache_files_only_in_baseline": cache_only_in_baseline,
         "predictor_cache_files_only_in_candidate": cache_only_in_candidate,
         "predictor_cache_findings": [f.as_record() for f in cache_findings],
@@ -470,9 +680,12 @@ def compare_labels(args: argparse.Namespace) -> int:
     print(f"cases compared: {compared} of {len(full_case_set)} in the case table")
     print(f"identical: {len(identical)}")
     print(f"mismatched: {len(mismatched)}")
-    print(f"baseline failures (excluded): {len(baseline_failures)}")
+    print(f"baseline failures: {len(baseline_failures)}")
     print(f"candidate-only failures: {len(candidate_only_failures)}")
     print(f"cases missing from one side: {len(missing)}")
+    print(f"cases with missing evidence: {len(missing_evidence)}")
+    print(f"cases with differing definitions: {len(definition_mismatches)}")
+    print(f"cases not compared: {len(not_compared)}")
     if not cache_comparable:
         print(
             "predictor cache file names: not compared, because the two sides did "
@@ -517,14 +730,32 @@ def compare_labels(args: argparse.Namespace) -> int:
             print("  last log lines:")
             for line in entry["candidate_log_tail"].splitlines():
                 print(f"    {line}")
+    for entry in baseline_failures:
+        print(f"\nBASELINE FAILURE {entry['case_id']}: rc={entry['baseline_returncode']} "
+              f"{entry['baseline_error'] or ''}"
+              + (" (the candidate failed too)" if entry["candidate_also_failed"] else ""))
+    for entry in missing_evidence:
+        sides = ", ".join(f"{side}: {reason}" for side, reason in entry.items()
+                          if side != "case_id")
+        print(f"\nMISSING EVIDENCE {entry['case_id']}: {sides}")
+    for entry in definition_mismatches:
+        print(f"\nDIFFERENT DEFINITION {entry['case_id']}: "
+              f"baseline {entry['baseline_case_digest']} != "
+              f"candidate {entry['candidate_case_digest']}")
+    for finding in provenance_findings:
+        print(f"\nPROVENANCE {finding}")
+    if unexplained:
+        print(f"\nUNEXPLAINED: {len(unexplained)} case(s) were neither compared "
+              f"nor reported as a specific finding: {', '.join(unexplained[:10])}")
     print(f"\nreport: {report_path}")
 
     # A comparison passes only when it actually compared the whole case table.
-    # Two sides that both ran nothing agree trivially, and two sides that both
-    # ran the same three cases agree on three cases; neither is evidence about
-    # the branch. Requiring completeness is what stops an empty or filtered run
-    # from being read as a pass. Use --allow-partial for a deliberate subset.
-    incomplete = not complete and not args.allow_partial
+    # Two sides that both ran nothing agree trivially, and two sides whose runs
+    # all failed have no artifacts to disagree about; neither is evidence about
+    # the branch. Every reason a case was not compared is therefore a failure
+    # in its own right, and --allow-partial waives exactly one of them: cases
+    # nobody attempted on either side.
+    incomplete = bool(absent_from_both) and not args.allow_partial
     if incomplete:
         print(
             "\nINCOMPLETE: this comparison did not cover the whole case table, "
@@ -534,8 +765,13 @@ def compare_labels(args: argparse.Namespace) -> int:
         )
     failed = bool(
         mismatched
+        or baseline_failures
         or candidate_only_failures
         or missing
+        or missing_evidence
+        or definition_mismatches
+        or unexplained
+        or provenance_findings
         or cache_only_in_baseline
         or cache_only_in_candidate
         or incomplete
