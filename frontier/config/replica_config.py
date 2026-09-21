@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 from frontier.config.device_sku_config import BaseDeviceSKUConfig
 from frontier.config.model_config import BaseModelConfig

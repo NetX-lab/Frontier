@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-09-21 | Initial plan: scope, proposed split boundaries, sequencing, fidelity matrix design, acceptance criteria. Boundaries are proposals derived from `module_survey.md`; each is confirmed against the code before its step starts. |
 | 2026-09-21 | Recorded the boundaries actually implemented for `config.py` in section 3.1, which differ from the proposal. |
+| 2026-09-21 | Recorded the boundaries actually implemented for the vLLM V1 replica scheduler in section 3.2. |
 
 ## 1. Scope and result
 
@@ -72,7 +73,26 @@ Cleanup first: the three duplicated `hasattr(base_config, ...)` triplets and the
 
 Correctness-branch owner after split: the opt-in DP placement config (Step 4) lands in `replica_config.py` next to the cluster scheduler configs; routing runtime override (Step 5) lands in `replica_config.py`.
 
-### 3.2 `frontier/scheduler/replica_scheduler/`
+### 3.2 `frontier/scheduler/replica_scheduler/` (implemented)
+
+Same mixin mechanism as the configuration split, for the same reason: the move stays a move, and the private methods four subclasses override keep resolving correctly because the mixins sit before `BaseReplicaScheduler` in the base list. That ordering was verified for every overridden name.
+
+| Module | Lines | Content |
+| --- | --- | --- |
+| `vllm_v1_engine_replica_scheduler.py` | 1386 | The class shell, `__init__`, batch creation and active-set bookkeeping, `complete_kv_transfer_for_requests`, `on_batch_end`, phase 1 and phase 2 scheduling, the two-phase entry point, and the public overrides |
+| `vllm_v1_mtp_wait.py` | 1142 | `TargetEmbeddedMtpWaitPolicy`: admission delay, output wait and terminal release timing for target-embedded MTP under monolithic pipeline parallelism |
+| `vllm_v1_role_schedules.py` | 858 | `DisaggregatedRoleScheduling`: the prefill-only, decode-only, decode-waiting and decode-attention entry points a disaggregated cluster drives |
+| `vllm_v1_kv_allocation.py` | 713 | `KvBlockAllocation`: token accounting, block allocation, preemption and resource release |
+| `vllm_v1_iteration_policy.py` | 597 | `IterationSchedulingPolicy`: scheduling policy, fast lanes, CUDA graph capture sizing, speculative-decoding batch metadata, decision-log emission |
+| `vllm_v1_prefix_cache.py` | 253 | `PrefixCacheAdmission`, `PrefixCacheLedger`: admission and identity events |
+| `vllm_v1_decode_attn_cohort.py` | 219 | `DecodeAttentionCohort`: cohort identity, stage slots and phase for the PD-AF decode-attention role |
+| `vllm_v1_decision_log.py` | 44 | The optional JSONL decision log and its enabled predicate |
+
+Cleanup first: removed `_attach_afd_metadata_if_needed`, 65 lines with no caller anywhere, which duplicated `frontier/scheduler/utils/afd_metadata.py`.
+
+Four regressions were introduced and fixed; `issues.md` I5 to I8 record each one, what found it, and what prevents the class of defect from recurring.
+
+### 3.2a Original proposal (superseded)
 
 | Child module | Content (survey lines) | Approx. lines |
 | --- | --- | --- |

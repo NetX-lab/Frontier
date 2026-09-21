@@ -10,7 +10,7 @@ per-role configurations lives in `cluster_role_config`, topology reporting in
 from __future__ import annotations
 
 from dataclasses import MISSING, dataclass, field
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from frontier.config.cluster_role_config import (
     ClusterRoleConfigBuilder,
