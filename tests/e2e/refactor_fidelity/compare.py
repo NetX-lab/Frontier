@@ -229,13 +229,29 @@ def compare_artifact_directories(
 
     A file present on one side only is a difference; so is any content
     difference that survives path substitution.
+
+    An absent directory is reported rather than treated as an empty one.
+    ``list_artifacts`` returns an empty list for a path that does not exist, so
+    without this check two deleted artifact directories would produce two equal
+    empty inventories and the case would be recorded as identical.  A
+    comparison with nothing to compare is missing evidence, not agreement.
     """
+
+    differences: list[ArtifactDifference] = []
+    for side, directory in (("baseline", baseline_dir), ("candidate", candidate_dir)):
+        if not directory.is_dir():
+            differences.append(ArtifactDifference(
+                directory.name,
+                "missing_directory",
+                f"the {side} artifact directory does not exist: {directory}",
+            ))
+    if differences:
+        return differences
 
     ignored = set(ignored_artifacts)
     baseline_names = [name for name in list_artifacts(baseline_dir) if name not in ignored]
     candidate_names = [name for name in list_artifacts(candidate_dir) if name not in ignored]
 
-    differences: list[ArtifactDifference] = []
     for name in sorted(set(baseline_names) - set(candidate_names)):
         differences.append(ArtifactDifference(name, "missing_in_candidate", "produced only by the baseline"))
     for name in sorted(set(candidate_names) - set(baseline_names)):

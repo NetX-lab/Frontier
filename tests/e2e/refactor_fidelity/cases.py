@@ -12,6 +12,8 @@ configuration each case pins.
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass, field
 from typing import Mapping, Sequence
 
@@ -79,7 +81,29 @@ class FidelityCase:
             "env": dict(self.env),
             "extra_args": list(self.extra_args),
             "uses_trained_predictor": self.uses_trained_predictor,
+            "case_digest": self.definition_digest(),
         }
+
+    def definition_digest(self) -> str:
+        """Digest the fields that decide what this case actually runs.
+
+        Two sides are only comparable when the same ``case_id`` meant the same
+        run on both of them.  The digest covers the wrapper, the environment
+        overrides, the extra arguments and the serial/parallel classification,
+        and deliberately omits ``group`` and ``purpose``, which are
+        documentation and change nothing about the subprocess.
+        """
+
+        payload = json.dumps(
+            {
+                "script": self.script,
+                "env": dict(self.env),
+                "extra_args": list(self.extra_args),
+                "uses_trained_predictor": self.uses_trained_predictor,
+            },
+            sort_keys=True,
+        )
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
 def _colocation_dense_offline() -> list[FidelityCase]:

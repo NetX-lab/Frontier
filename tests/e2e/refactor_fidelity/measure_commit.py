@@ -44,6 +44,25 @@ def _main_worktree(start: Path) -> Path:
     return common_dir.parent
 
 
+def reuse_blocked_reason(checkout: Path, full_sha: str) -> str | None:
+    """Return why an existing checkout may not be reused, or None if it may.
+
+    A detached worktree is not read-only.  Matching HEAD says which commit was
+    checked out, not what is on disk now, and this driver's whole claim is that
+    the measurement belongs to one commit.
+    """
+
+    existing = _git("rev-parse", "HEAD", cwd=checkout)
+    if existing != full_sha:
+        return f"it is at {existing}, not {full_sha}"
+    dirty = _git("status", "--porcelain", cwd=checkout)
+    if dirty:
+        return "its working tree has been modified:\n" + "\n".join(
+            f"  {line}" for line in dirty.splitlines()
+        )
+    return None
+
+
 def _run(command: Sequence[str], cwd: Path) -> int:
     print(f"\n$ {' '.join(command)}", flush=True)
     return subprocess.run(command, cwd=str(cwd), check=False).returncode
@@ -80,10 +99,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"checkout {checkout}")
 
     if checkout.exists():
-        existing = _git("rev-parse", "HEAD", cwd=checkout)
-        if existing != full_sha:
+        # Report and stop; do not clean the modifications away to make the
+        # check pass, because whoever made them has not been asked.
+        blocked = reuse_blocked_reason(checkout, full_sha)
+        if blocked is not None:
+            print(f"refusing to reuse {checkout}: {blocked}", file=sys.stderr)
             print(
-                f"refusing to reuse {checkout}: it is at {existing}, not {full_sha}",
+                "  restore the checkout yourself, or remove it and let this "
+                "driver create a fresh one.",
                 file=sys.stderr,
             )
             return 2

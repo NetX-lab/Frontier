@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-09-21 | Step 0: worktree and branch created, records landed, module surveys collected, baseline pending. |
+| 2026-09-22 | Status header corrected (it still described Step 0 after Steps 1-6 had landed). Checkpoints A and B recorded. |
 
 ## Status
 
@@ -14,9 +15,9 @@
 | Base | `1f694f7c549aa3aeeb7c5bbae04e119c09167a77` (`origin/main`, fetched 2026-09-21) |
 | Worktree | `/data/ycfeng/Frontier/.worktrees/oversized-module-split` |
 | Python | `/data/ycfeng/envs/frontier-py310/bin/python` |
-| Current step | Step 0 (baseline recorded) |
-| Publication | PUSHED_VERIFIED through the Step 0 records; Step 1 and 2 pending |
-| Next action | Commit `.gitignore` + records, push, create the correctness worktree from this branch, push it, stop for user review (Q6=a). |
+| Current step | Checkpoints A and B complete. PR #34 ready for re-review. |
+| Publication | PUSHED_VERIFIED through Checkpoint B; PR #34 description synchronized |
+| Next action | Checkpoint C, on the correctness branch: rebase PR #35 onto the corrected harness, re-measure W2 with source and harness at one revision, and strengthen the W2 placement tests (R35-01). Coordinate first: that worktree is shared with the W3 owner. |
 
 ## Steps
 
@@ -24,14 +25,22 @@
 | --- | --- | --- |
 | 0 | Worktree, records, environment, baseline | PASS |
 | 1 | Fidelity matrix harness and main baseline capture | PASS (67 cases, baseline 67/67) |
-| 2 | Cleanup pass per module, matrix re-run | IN_PROGRESS (config.py done and matrix-identical) |
+| 2 | Cleanup pass per module, matrix re-run | PASS (all four modules) |
 | 3 | Split `config.py` | PASS (12 modules, largest 1888 lines) |
 | 4 | Split `vllm_v1_engine_replica_scheduler.py` | PASS (8 modules, largest 1386 lines) |
 | 5 | Split `shared_prediction_model_manager.py` | PASS (6 modules, largest 1700 lines) |
 | 6 | Split `sklearn_moe_execution_time_predictor.py` | PASS (6 modules, largest 1557 lines) |
-| 7 | Full matrix, unit suites, draft PR hand-off | NOT_STARTED |
+| 7 | Full matrix, unit suites, draft PR hand-off | PASS (final record in the Checkpoint B report) |
+| A | Review comments R34-01 / R34-02: fidelity gate correctness and provenance | PASS |
+| B | Review comment R34-03 / R34-04: final evidence record and retained checks | PASS |
 
 ## Chronological updates
+
+- 2026-09-22: Checkpoint B. The review's cheaper remedy for R34-03 was checked and is not available: `db15e64..5ef96b5` touches only `cases.py`, so the production tree was unchanged at the tip, but `candidate_db15e64` held 67 records with no DP case, and the old `baseline` label was an assembled partial run. Both sides were therefore recaptured as single clean full 71-case runs from detached checkouts, driven by the harness committed at `bb582a4`: baseline_v2 at `1f694f7` and candidate_bb582a4 at `bb582a4`, both clean, unfiltered, cache-cleaned, 71 executed, 426 cache files each. Result: 71 of 71 compared, 71 identical, 0 mismatched, 0 failures of any kind, 0 missing evidence, 0 definition differences, no provenance findings, and the predictor cache names compared and matched. Whole `tests/unit`: 84 failed / 3679 passed / 49 skipped here against 84 / 3644 / 49 on `1f694f7`, with the 84 failure identities byte-identical and the 35 extra passes being exactly the tests added in Checkpoints A and B; ten modules are excluded on both sides for missing `torch` or `matplotlib`. R34-04 landed as 13 tests in `tests/unit/test_module_split_boundaries.py`. Separately, all 142 estimators in the baseline-produced cache unpickle and run under the split code. See `test_report_2026-09-22_checkpoint_b_final_evidence.md`.
+- 2026-09-22: One finding pinned rather than fixed. `typing.get_type_hints(ClusterConfig)` raises `NameError: BaseCCBackendConfig`, because the annotation names a class the module does not import at runtime. Verified to fail identically on `1f694f7`, so it predates the split; the generated CLI is unaffected. Recorded in `KNOWN_UNRESOLVED_CONFIG_ANNOTATIONS` so a new occurrence fails the test.
+
+- 2026-09-22: Checkpoint A. The fidelity gate could return 0 without comparing anything: `baseline_failures` was absent from the failure predicate and completeness tested case-id presence rather than successful comparison, and `list_artifacts` made two deleted artifact directories compare equal. Completeness now means compared; every reason a case was not compared is a failure; an absent directory is reported; each case record carries `source_revision`, `source_dirty`, `harness_revision` and a case-definition digest; a continuation whose retained records disagree is refused before any case runs; `measure_commit` refuses a dirty reused checkout without cleaning it. Four false successes reproduced against the pre-fix harness and none against the fixed one, with both controls unchanged. 22 new tests in `tests/unit/test_refactor_fidelity_gate.py`; 30 passed across every test that mentions the harness. No file under `frontier/` was touched. See `test_report_2026-09-22_checkpoint_a_fidelity_gate.md`.
+- 2026-09-22: Consequence to carry into Checkpoint B: the provenance stamp is new, so every label captured before today fails the gate for want of provenance, and the `baseline` label was in any case an assembled partial run (last execution a filtered `dp_` run of four cases merged onto 67 without a cache clean, `case_count` 72 over 71 result lines). Both sides must be recaptured as single clean full runs.
 
 - 2026-09-21: Branch created from `1f694f7`. `.gitignore` narrowed to `task_memory/*` with exceptions for the two task directories. Structural surveys of the four modules collected into `module_survey.md` (read-only inspection, grep-backed).
 - 2026-09-21: Environment `/data/ycfeng/envs/frontier-py310` created (CPython 3.10.6). Baseline: 84 passed / 10 failed (all in `test_colocation_release_review_contracts.py`, caused by debug scripts absent from main and a bare `python` executable missing on PATH); co-location and PDD dense dummy smokes PASS. See `test_report_2026-09-21_step0_baseline.md`.
