@@ -37,6 +37,8 @@ VLLM_VERSION = None
 VLLM_API_VERSION = None
 FP8_QUANT_AVAILABLE = False
 _functional_fused_experts = None
+# Bound only by the low-level import below, like `_functional_fused_experts`.
+_vllm_custom_ops = None
 _FUNCTIONAL_MXFP4_STATES: Dict[Tuple[Any, ...], Dict[str, Any]] = {}
 
 
@@ -126,6 +128,11 @@ try:
             try_get_optimal_moe_config,
             get_config_dtype_str,
         )
+        # The gated activation and the local top-k reduction belong to the same
+        # low-level API as the two kernel invocations. Importing them here means
+        # a build without them selects the functional path instead of running an
+        # incomplete expert computation.
+        from vllm import _custom_ops as _vllm_custom_ops
 
         VLLM_API_VERSION = "0.10.x"
     except ImportError:
@@ -368,6 +375,8 @@ def _run_fused_moe_iteration(
     w2: torch.Tensor,
     intermediate_cache1: torch.Tensor,
     intermediate_cache2: torch.Tensor,
+    intermediate_cache3: torch.Tensor,
+    out_hidden_states: torch.Tensor,
     topk_weights: torch.Tensor,
     sorted_token_ids: torch.Tensor,
     expert_ids: torch.Tensor,
@@ -383,6 +392,24 @@ def _run_fused_moe_iteration(
     per_channel_quant: bool = False,
     block_shape: Optional[List[int]] = None,
 ) -> None:
+    """Run one complete local expert computation, as vLLM's own path does.
+
+    Reference: `fused_experts_impl` in vLLM 0.10.x `fused_moe.py`, which runs
+    the first expert GEMM, a gated activation, the optional activation
+    quantization, the second expert GEMM with the routing weights, and a local
+    reduction of the top-k expert outputs. The buffers follow the same naming:
+
+    ```text
+    intermediate_cache1  (M, top_k, 2 * E)  first GEMM output, gate | up
+    intermediate_cache2  (M * top_k, E)     gated activation output
+    intermediate_cache3  (M, top_k, H)      second GEMM output, per expert
+    out_hidden_states    (M, H)             local top-k reduction
+    ```
+
+    The reduction is a local sum over the `top_k` expert outputs of one token.
+    It is not a collective and adds no communication cost.
+    """
+
     _invoke_kernel(
         A=A.contiguous(),
         B=w1.contiguous(),
@@ -401,8 +428,15 @@ def _run_fused_moe_iteration(
         block_shape=block_shape,
     )
 
-    intermediate_cache1_flat = intermediate_cache1.view(-1, intermediate_cache1.shape[-1])
-    intermediate_cache2_input = intermediate_cache1_flat[:, :expert_hidden_dim_per_partition].contiguous()
+    # Gated SiLU over the two halves of the first projection. Taking the gate
+    # half alone would skip this kernel and feed the wrong operand to the second
+    # GEMM. The caller always materializes `w1` with `2 * E` rows, so the gated
+    # layout is the only one this path can produce.
+    torch.ops._C.silu_and_mul(
+        intermediate_cache2,
+        intermediate_cache1.view(-1, intermediate_cache1.shape[-1]),
+    )
+    intermediate_cache2_input = intermediate_cache2
 
     intermediate_A_scale = None
     if use_fp8:
@@ -415,7 +449,7 @@ def _run_fused_moe_iteration(
     _invoke_kernel(
         A=intermediate_cache2_input,
         B=w2.contiguous(),
-        C=intermediate_cache2.contiguous(),
+        C=intermediate_cache3.contiguous(),
         topk_weights=topk_weights.contiguous(),
         sorted_token_ids=sorted_token_ids.contiguous(),
         expert_ids=expert_ids.contiguous(),
@@ -429,6 +463,9 @@ def _run_fused_moe_iteration(
         per_channel_quant=per_channel_quant,
         block_shape=block_shape,
     )
+
+    # Local reduction of one token's top-k expert outputs.
+    _vllm_custom_ops.moe_sum(intermediate_cache3, out_hidden_states)
 
 
 def _run_functional_fused_experts_iteration(
@@ -910,8 +947,20 @@ def profile_fused_moe_kernel(
         dtype=output_dtype,
     )
     intermediate_cache2 = torch.empty(
+        num_tokens * top_k,
+        expert_hidden_dim_per_partition,
+        device=device,
+        dtype=output_dtype,
+    )
+    intermediate_cache3 = torch.empty(
         num_tokens,
         top_k,
+        hidden_dim,
+        device=device,
+        dtype=output_dtype,
+    )
+    out_hidden_states = torch.empty(
+        num_tokens,
         hidden_dim,
         device=device,
         dtype=output_dtype,
@@ -924,6 +973,8 @@ def profile_fused_moe_kernel(
             w2=w2,
             intermediate_cache1=intermediate_cache1,
             intermediate_cache2=intermediate_cache2,
+            intermediate_cache3=intermediate_cache3,
+            out_hidden_states=out_hidden_states,
             topk_weights=topk_weights,
             sorted_token_ids=sorted_token_ids,
             expert_ids=expert_ids,

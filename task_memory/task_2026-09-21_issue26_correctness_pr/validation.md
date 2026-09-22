@@ -444,3 +444,19 @@ Each tree is the delivered source and tests with exactly one edit.
   load-sensitive, not latency-realistic.
 - The online divergence is one arrival pattern. The test asserts the direction
   — fewer requests on the busy lane — not the exact sequence.
+
+## Step 6 — legacy fused-MoE expert arithmetic (2026-09-22)
+
+Full record: `test_report_2026-09-22_w6_fused_expert_arithmetic.md`.
+
+| Item | Result |
+| --- | --- |
+| Reachability | Confirmed. The repaired path is selected when vLLM exposes the low-level API, which the pinned reference v0.10.2 and the `environment_profiling.yml` pin `vllm>=0.10,<0.11` both do. Neither Torch environment on this host reproduces it (vLLM 0.11.0 and 0.28.0 both select the functional path). |
+| Magnitude, stated before implementing | Estimated 16.5% of the corrected `moe_grouped_gemm` time at 4096 tokens on `a800/qwen3-a3b-30b-moe`; 6.8% median, 26.3% max over its rows; 1.1-1.4% on the two 64-token h800 datasets. Analytical, at 80% of peak HBM. |
+| CPU tests | `tests/unit/test_moe_fused_expert_arithmetic.py`, 7 new tests, all passing under `/data/ycfeng/envs/openmopd-py312/bin/python` (Torch 2.8.0, vLLM 0.11.0). Composition only: the native calls are replaced by plain-Torch references, and the file says so. |
+| Discriminating check | `test_a_gated_activation_is_not_the_first_half_of_the_projection` computes the old slice-only arithmetic and asserts the repaired result differs, so the reference-equality test cannot pass against the unrepaired path. |
+| Regression, Torch environment | Against a detached worktree at `HEAD` (`bbbfcaa`), same four existing files: 1 failed / 136 passed at HEAD, 1 failed / 143 passed with the repair. Same failure identity on both sides — `test_functional_vllm_kernel_exposes_mxfp4_switch_without_importing_vllm` needs Torch without vLLM, which no local environment provides. |
+| Regression, default environment | `pytest tests/unit --continue-on-collection-errors` under `frontier-py310`: 84 failed, 3778 passed, 49 skipped, 11 errors — the W4 baseline of 84 failures and 3778 passing, unchanged. Collection errors 10 -> 11 because the new file imports Torch at module level, as the seven existing profiling test files in that list already do; verified by re-collecting with it ignored. |
+| Fidelity matrix | Not run, deliberately. The change is confined to a module the simulator cannot import (it requires Torch, absent from the simulator environment), and the matrix consumes checked-in CSVs rather than fresh profiling. The unchanged default-environment suite is the evidence. The repair changes what a future profiling run measures, not any simulation from existing data. |
+| Native GPU parity | **NOT_RUN.** Requires a worker with `vllm>=0.10,<0.11`. The FP8 path is affected by the repair and belongs in the same matrix. |
+| Artifact identity | **OPEN**, raised for decision; see `review.md`. Existing rows cannot be classified as complete or incomplete from their metadata. |

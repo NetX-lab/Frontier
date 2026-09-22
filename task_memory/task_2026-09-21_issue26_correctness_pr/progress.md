@@ -9,6 +9,7 @@
 | 2026-09-22 | Checkpoint D first half: W3, the shared monolithic forward lifecycle, implemented, tested against four deliberate-defect controls, and committed as `65ed8a7`. |
 | 2026-09-22 | W3 fidelity matrix measured: 71 of 71 identical against the expectation recorded before the run. Step 3 closed. |
 | 2026-09-22 | Checkpoint D second half: W4, the opt-in vLLM-style DP placement policy, implemented and committed as `10dd474`; measured against five deliberate-defect controls and a 71-of-71 identical fidelity matrix. Step 4 closed. |
+| 2026-09-22 | Checkpoint E second half: W6 arithmetic repaired and CPU-validated; measurement ownership decided; native GPU validation and artifact identity left open. |
 | 2026-09-22 | Checkpoint E first half: W5 closed as NOT PORTED by user decision after the premise check showed the collision unreachable on main; the drafted implementation was reverted before commit and archived as a patch. |
 
 ## Status
@@ -18,9 +19,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Step 5 closed without source changes (NOT PORTED, user decision); records written |
+| Current step | Step 6 source and CPU validation complete; native GPU validation NOT_RUN and artifact identity OPEN |
 | Publication | PUSHED_VERIFIED (records) |
-| Next action | Checkpoint E second half: the D2-scoped W6 legacy fused-MoE profiling arithmetic (`frontier/profiling/moe/moe_vllm_kernel.py`), then Checkpoint F's conditional W7. |
+| Next action | Two user decisions on W6 (artifact identity metadata; whether to run the native GPU parity matrix), then Checkpoint F's conditional W7. |
 
 ## Step status
 
@@ -32,7 +33,7 @@
 | 3 | Shared monolithic forward | PASS | unit PASS (23 new, 3717 total, failure set identical to the parent); integration PASS (real event loop, 4 mixed-phase cohorts); four deliberate-defect controls each fail for their own reason; matrix PASS, 71 of 71 identical against the stated expectation | PUSHED_VERIFIED | NOT_REVIEWED |
 | 4 | Opt-in vLLM DP placement | PASS | unit PASS (61 new, 3778 total, failure set identical to the parent); integration PASS (3 cases in the real event loop, including a placement that diverges from round-robin); five deliberate-defect controls each fail for their own reason; matrix PASS, 71 of 71 identical against the stated expectation | PUSHED_VERIFIED | NOT_REVIEWED |
 | 5 | Routing implementation identity | CLOSED, NOT PORTED (user decision 2026-09-22) | n/a: no source change; restored files re-run, failure set identical to the parent (torch-missing only) | PUSHED_VERIFIED (records + PR 35 section) | REVIEWED (user chose to keep the single global field) |
-| 6 | Legacy fused-MoE profiling | NOT_STARTED | — | — | — |
+| 6 | Legacy fused-MoE profiling | PARTIAL: arithmetic and measurement ownership done; native validation NOT_RUN, artifact identity OPEN | CPU PASS (7 new tests; HEAD comparison shows the same single environment-dependent failure; default-environment suite unchanged at 84/3778) | pending | — |
 | 7 | Optional zero-payload backend | NOT_STARTED (facts in `plan.md` A7) | — | — | — |
 | 8 | Combined regression, PR hand-off | NOT_STARTED | — | — | — |
 
@@ -78,6 +79,11 @@
 - 2026-09-22: W5 closed as NOT PORTED. After the explanation of the collision case, of what `uniform_topk` is (the profiler's round-robin routing path, `moe_impl.py:75-103`), and of the three options, the user decided to keep the current contract: one global `moe_routing_distribution_type`, one derived path per run. The twelve drafted source/test files were restored with `git checkout` after saving the diff to `w5_reverted_moe_routing_runtime_path.patch` (745 lines). `review.md` W5 rows corrected and closed; `requirements.md` records the decision verbatim; `plan.md` section 11 is kept as specified with a closure note. No `frontier/` change, so no fidelity matrix run for this step.
 
 - 2026-09-22: W5 closure published. `de2bee8` pushed to `origin/fix/issue26-correctness-pr`; PR #35 gained a "W5, which is not in this PR, and why" section carrying the reachability correction with its `cluster_role_config.py:58-63` citation, what the module decides (`moe_impl.py:75-103`, `:195-225`), the three-dataset magnitude table, and the explicit statement that the reverted override's own fidelity effect was zero by construction. The Status line now reads "W6 onward is still to come". PR #35 stays draft. Verified the published body matches what was sent (the one-byte difference is the trailing newline `gh --jq` adds).
+
+- 2026-09-22: W6 reachability and magnitude, checked before implementing, following the rule the W5 revert established. The repaired path is live: `moe_vllm_kernel` selects `_run_fused_moe_iteration` whenever vLLM exposes the low-level API, and all five imported names resolve in the pinned reference v0.10.2, which is what `environment_profiling.yml` pins. Magnitude estimated analytically from the checked-in datasets: 16.5% of the corrected `moe_grouped_gemm` time at 4096 tokens on `a800/qwen3-a3b-30b-moe` (6.8% median, 26.3% max), 1.1-1.4% on the two h800 datasets that stop at 64 tokens. Well above the 0.5% bar, and the repair adds no configuration surface, so it was implemented.
+- 2026-09-22: W6 implemented. `silu_and_mul` into a preallocated activation buffer, then `moe_sum` into a preallocated output, matching vLLM's `fused_experts_impl` operand for operand. Two buffers added at the allocation site, outside the timed step. No gated/non-gated branch: `profile_fused_moe_kernel` only ever materializes `w1` with `2 * E` rows, so a conditional would be unreachable. Two recorded adaptations were deliberately not followed — the `_custom_ops` import sits inside the low-level `try` (it cannot fail where that API exists, and this way a build lacking it takes the functional path), and main's `SiluAndMul` wrapper was not reused because its `forward` allocates on every call, which would land inside the timed region. Both deviations and their reasons are in `review.md`.
+- 2026-09-22: W6 CPU validation. 7 tests in `tests/unit/test_moe_fused_expert_arithmetic.py` under the Torch environment, covering the arithmetic against a written-out reference, the discriminating comparison with the old slice, call order and operand provenance, routing-weight placement, the local reduction, FP8 quantizer input, workspace reuse across steps, and allocation-site dimensions under TP=2. Regression against a detached `HEAD` worktree: same single environment-dependent failure both sides. Default-environment suite unchanged at 84 failed / 3778 passed. No fidelity matrix: the simulator cannot import the changed module.
+- 2026-09-22: W6 left two items open rather than deciding them unilaterally. Artifact identity — `resolve_grouped_gemm_backend` labels both the legacy and the functional path `vllm_fused`, so no checked-in row can be classified as a complete or an incomplete measurement, and `profiling_patch_tag` turns out to exist only in one CSV and nowhere in the source. Native GPU parity — the repaired path is selected only under `vllm>=0.10,<0.11`, and both local Torch environments carry newer vLLM.
 
 ## Step 3 scoping, as recorded before implementation
 
