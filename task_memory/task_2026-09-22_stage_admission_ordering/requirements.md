@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-23 | R-5: round-1 plan review verified and applied to the records; execution deferred. |
 | 2026-09-23 | R-4: D-1..D-5 adopted; push and draft PR authorized. |
 | 2026-09-22 | Created from the Step 9 finding W9-01 in `task_2026-09-21_issue26_correctness_pr`; recorded the user's scope decision and the request for a reviewable plan. |
 
@@ -26,6 +27,11 @@ a recommendation to fix it as a separate correctness item):
 
 > 先给出"共享 admission 排序问题"的修复计划,将具体的计划落地到文档，由我审阅
 
+`[Original Request]` (2026-09-23, after the first external review of PR 36 at
+`a6ec6a6`; the pasted review is recorded finding by finding in `review.md`):
+
+> 以下是最新review结果，请你核实每个comments，采纳高价值和必要决策，修复完善docs，暂不执行。
+
 Quality gates the user repeated for every core-module change in this line of
 work, carried over verbatim:
 
@@ -39,6 +45,7 @@ work, carried over verbatim:
 | R-2 | Branch `fix/stage-admission-ordering` from `origin/main` `1f694f7`, worktree `/data/ycfeng/Frontier/.worktrees/stage-admission-ordering`. | agent, under R-1 |
 | R-3 | No source change before the user reviews `plan.md` and `design.md`. | user, 2026-09-22 |
 | R-4 | Plan decisions D-1..D-5 adopted as recommended. Push the branch and open a draft PR so the review happens on the remote; the reviewer resumes from a prepared prompt. | user, 2026-09-23 |
+| R-5 | Verify every review finding against the source, adopt the high-value and necessary corrections into the records (dispositions in `review.md`, new decisions D-6 and D-7 in `plan.md`), and do not execute: no P0 run, no source change. The docs commit is pushed to the draft PR under R-4. | user, 2026-09-23 |
 
 ## Constraints carried from the parent task
 

@@ -1,23 +1,34 @@
 # Resume prompt for the reviewing agent
 
+## Modification History
+
+| Date | Change |
+| --- | --- |
+| 2026-09-23 | Round 2: the prompt now asks the reviewer to verify the round-1 dispositions in `review.md` and the corrected plan. |
+| 2026-09-23 | Created for round 1. |
+
 Copy everything below the line into the review agent's first message.
 
 ---
 
-You are reviewing draft PR https://github.com/NetX-lab/Frontier/pull/36 on `NetX-lab/Frontier`, branch `fix/stage-admission-ordering`, base `main` at `1f694f7`. Start with the repository's `AGENTS.md`, then read, in this order, under `task_memory/task_2026-09-22_stage_admission_ordering/`: `requirements.md`, `design.md`, `plan.md`, `progress.md`.
+You are continuing the review of draft PR https://github.com/NetX-lab/Frontier/pull/36 on `NetX-lab/Frontier`, branch `fix/stage-admission-ordering`, base `main` at `1f694f7`. This is round 2. In round 1 you reviewed the plan at `a6ec6a6` and gave a conditional GO for option B, with ten findings. The owner had every finding verified against the source and the records corrected. Nothing was executed: no P0 run, no source change.
 
-Context. Frontier is a discrete-event LLM inference simulator. One `StageExecutionContext` (`frontier/scheduler/replica_stage_scheduler/stage_execution_context.py`) owns each physical `(replica, stage)` and is shared by that stage's attention-DP lanes, each of which has its own `ReplicaStageScheduler` (`replica_stage_schduler.py`) with its own batch heap and `_is_busy` flag. `add_batch` mints a `StageAdmissionTicket` at batch arrival into the shared `_ready_fifo`; `pop_batch_if_not_busy` later asks `try_acquire` for the lane's heap head, which is refused unless the ticket is the strict FIFO head (after the EP-active, capacity and forward-group-seal checks). `full_stage_capacity` equals `attn_dp` for `MONOLITHIC`, `PREFILL` and `DECODE`, so the lanes of one forward co-own the stage; MoE lanes then meet in a sync room (`frontier/scheduler/utils/sync_entry.py`), which stands in an idle batch for a missing lane only when that lane has no queued work or the group is sealed (`_can_supply_idle_lane`).
+Start with the repository's `AGENTS.md`. Then read, under `task_memory/task_2026-09-22_stage_admission_ordering/`, in this order: `review.md` (your findings, the source re-check, the disposition of each, and three new facts found during the re-check), `design.md`, `plan.md`, `requirements.md` (R-5), `progress.md`.
 
-The defect, reproduced on `main`: with `num_pipeline_stages > 1`, `BaseReplicaScheduler.on_schedule` admits up to `num_pipeline_stages` batches per lane per round, so a lane holds several queued tickets while consuming one. The FIFO head can then be a ticket whose lane is busy inside the sync room; the other lane is refused although capacity is free; the room does not stand it in because it has work and the group is open. MoE `attn_dp∈{2,4}, PP=2` drains with requests unfinished; dense completes but serializes its lanes; every `PP=1` shape and every capacity-1 context completes. `design.md` has the drain-state table (FIFO, active owners, lane heaps, sync room).
+Background, briefly. One `StageExecutionContext` (`frontier/scheduler/replica_stage_scheduler/stage_execution_context.py`) owns each physical `(replica, stage)` and is shared by that stage's attention-DP lanes. Today `try_acquire` admits only the strict FIFO head. At `PP > 1` a lane holds several queued tickets while it consumes one, so a busy lane's queued ticket at the head can block an idle lane that its own sync room is waiting for. Option B, adopted as D-1: a full-stage ticket is refused only by an EP wave queued ahead of it; EP waves keep the strict head rule; the admitted ticket leaves the FIFO by `remove(ticket)`.
 
-The plan is at the review-before-code stage: the PR has records only, no source change yet. The recommended rule (option B, adopted by the owner as D-1) changes one predicate in `try_acquire`: a full-stage ticket is refused only when an EP wave is queued ahead of it; EP waves keep the strict head rule; capacity, seal and EP-active checks are unchanged. Option A (lane-aware skip of tickets whose lane already holds an active ticket) was rejected because the DES wakes sibling lanes only at release (`frontier/scheduler/utils/stage_wakeup.py`, called from `BatchStageEndEvent`), not at a peer's acquisition, so A leaves a stranded-lane state after the first cohort releases; `design.md` traces that sequence. Decisions D-2 (dense `attn_dp>1, PP>1` timelines may change because lanes now overlap), D-4 (byte-comparison baseline is `main` `1f694f7`) and D-5 (records tracked on the branch through a narrow `.gitignore` exception) are also adopted.
+What to check, in priority order:
 
-What to review, in priority order:
+1. For each of the ten findings in `review.md`: is the disposition faithful to what you asked, and is it applied where the table says? Flag anything weakened, misread or missing.
+2. The three new facts in `review.md`. Check each against the source:
+   - Queued EP waves exist only on `DECODE_FFN`, because `enqueue_ep_wave`'s sole caller is `round_robin_cluster_scheduler.py:1052`.
+   - Sibling wake-ups follow lane-key order (`stage_wakeup.py:30-32`), which makes `PP=1, attn_dp=4` an expected-unchanged class rather than a guaranteed one.
+   - The stage ledger is written only with `write_metrics=True`.
 
-1. The diagnosis in `design.md`: does the source support the circular wait exactly as stated? Check `try_acquire`, `pop_batch_if_not_busy`, `_can_supply_idle_lane`, the admission loop in `base_replica_scheduler.py`, and the wake-up path.
-2. The recommended rule: is there any code path where two full-stage tickets from different lanes must stay in arrival order? Look at `DECODE_FFN` (capacity 1, shared sibling tickets, `DenseFFNBatchGroup` in `round_robin_cluster_scheduler.py`) and at `tests/unit/test_stage_execution_context.py`, `tests/unit/test_shared_forward_group_admission.py`, `tests/unit/test_mixed_layer_decode_ffn_scheduling.py`. The plan asserts all existing tests pass unchanged (C4); say whether you agree from reading them.
-3. The rejection of option A: confirm or refute the stranded-lane trace using the event classes under `frontier/events/`.
-4. The fidelity expectation and the 72-scenario matrix in `plan.md` §4: are the "byte-identical" classes correctly bounded, and is the dense overlap change (C3) measurable with existing outputs?
-5. Fit with the owner's core-module gates: readability, no hard-coding, no temporary patches, no over-defensive branches, no redundant mechanisms, plain domain names.
+   Also check one correction made during the re-check: the first draft's dense "lanes serialized" label is withdrawn, because from source the base already overlaps lanes after the first release. P2(c)'s dense assertion was changed to a same-start condition for that reason.
+3. `design.md` "Where behaviour is expected to stay unchanged". Is the caller-level condition correct and sufficient for `DECODE_FFN` and `DECODE_ATTN`, and is it stated with the right strength?
+4. `plan.md` §4: fixture, case list, outcome classes and signature, acceptance paths U/L/T, the ledger metric, and the test-identity comparison. Can P0 run from this text alone? Are the base hypotheses and paths consistent with C1–C4? Is any stop condition missing?
+5. P2(a), (a′), (b) and (c). Does each test fail on the base for the stated reason and pass after P1? Is any of them redundant with an existing test?
+6. Fit with the owner's core-module gates: readability, no hard-coding, no temporary patches, no over-defensive branches, no redundant mechanisms, plain domain names. This covers the planned harness `tests/e2e/stage_admission_matrix.py` as well as the one-file rule change.
 
-Report findings as a numbered list with a source anchor (`path:line`) and a verdict per item (agree / disagree / needs evidence), then a one-paragraph recommendation on whether P1 may start as planned. Do not change source or push; the owner decides.
+Report findings as a numbered list with a source or record anchor (`path:line`) and a verdict per item (agree / disagree / needs evidence). End with a one-paragraph recommendation on whether P0 may start as written. Do not change source or push; the owner decides.
