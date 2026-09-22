@@ -37,6 +37,7 @@ from frontier.config import (
     VllmLoadBalancingClusterSchedulerConfig,
     VllmV1SchedulerConfig,
 )
+from frontier.config import global_vars
 from frontier.config.cluster_scheduler_config import BaseClusterSchedulerConfig
 from frontier.config.flat_dataclass import create_flat_dataclass
 from frontier.config.utils import get_all_subclasses
@@ -73,6 +74,20 @@ from frontier.types import (
     ClusterType,
     NormType,
 )
+
+
+@pytest.fixture(autouse=True)
+def reset_simulation_globals():
+    """Keep the process-global model latch out of it.
+
+    Building a `SimulationConfig` latches `IS_MOE` for the whole process, and
+    this file builds both dense and MoE shapes. Resetting on both sides is what
+    `tests/unit/test_config_owned_contracts.py` already does.
+    """
+
+    global_vars.reset_global_vars()
+    yield
+    global_vars.reset_global_vars()
 
 
 # --------------------------------------------------------------------------

@@ -9,6 +9,7 @@
 | 2026-09-21 | Step 2 recorded: unit sensitivity and the fidelity measurement against a stated expectation. |
 | 2026-09-22 | Step 2 re-measured with harness and source at one revision, after the gate corrections. Same expectation, same result, recorded provenance. |
 | 2026-09-22 | Step 3 recorded: the shared monolithic forward, its direct-construction runtime evidence, four deliberate-defect controls, and a 71-of-71 identical fidelity matrix. |
+| 2026-09-22 | Step 4 recorded: the opt-in vLLM-style DP placement policy, its real-runtime wiring evidence including a divergence from round-robin, five deliberate-defect controls, and a 71-of-71 identical fidelity matrix. |
 
 ## Environment
 
@@ -333,3 +334,113 @@ list. That gap between the two groups is the deadlock, isolated.
   source-attributable, not trained numerical parity.
 - I8, the per-source decode component ledger, is deliberately out of scope; see
   the scope table in `design.md`.
+
+## Step 4 — opt-in vLLM-style DP request placement (2026-09-22)
+
+### What the fidelity matrix can and cannot show here
+
+The policy is opt-in and no case in the 71-case table selects it; every case
+uses the default `round_robin`. **The matrix therefore answers one question
+only — did anything else move — and a null result is the pass condition, not
+evidence about the policy.** The policy's own evidence is the balancer unit
+suite, the real-runtime integration cases, and five deliberate-defect controls.
+
+Three edits are reachable from the existing matrix paths, and all three are
+inert there: `BaseClusterScheduler.schedule_at` defaults to `schedule()`,
+`on_replica_batch_end` returns `None` on every policy the matrix selects, and
+`get_request_load()` rebuilds the decision-log payload from the same two
+accessors it replaced.
+
+### Setup
+
+Both sides ran from clean detached worktrees, driven by one harness revision.
+
+```bash
+# harness = the candidate checkout, for both sides
+PYTHONPATH=/data/ycfeng/Frontier/.worktrees/w4-candidate \
+  python /data/ycfeng/Frontier/.worktrees/w4-candidate/tests/e2e/refactor_fidelity/run_matrix.py run \
+  --repo-root /data/ycfeng/Frontier/.worktrees/w4-<side> --label <side> \
+  --output-root /data/ycfeng/tmp/issue26-correctness-pr/w4-fidelity \
+  --python-bin /data/ycfeng/envs/frontier-py310/bin/python --jobs 8 --clean-cache
+
+python tests/e2e/refactor_fidelity/run_matrix.py compare \
+  --output-root /data/ycfeng/tmp/issue26-correctness-pr/w4-fidelity \
+  --baseline-label baseline --candidate-label candidate
+```
+
+| Side | `source_revision` | `source_dirty` | `git_dirty_paths` | `harness_revision` | Executed | Cache files |
+| --- | --- | --- | --- | --- | --- | --- |
+| baseline | `cdfcdf54b545` (this commit's parent) | `False` | empty | `10dd4745b9a7` | 71 of 71 | 426 |
+| candidate | `10dd4745b9a7` | `False` | empty | `10dd4745b9a7` | 71 of 71 | 426 |
+
+### The expectation, recorded in `design.md` before measuring
+
+> **Prediction: all 71 fidelity cases stay exactly equal.** … W4 has no
+> reachable fidelity fix, so a single mismatch falsifies the change rather than
+> confirming it.
+
+| Metric | Value |
+| --- | --- |
+| cases compared / identical / mismatched | 71 of 71 / **71** / 0 |
+| baseline failures / candidate-only failures | 0 / 0 |
+| missing from one side / missing evidence / differing definitions | 0 / 0 / 0 |
+| provenance findings / predictor-cache findings | 0 / 0 |
+| `complete_comparison`, `predictor_cache_populated_cleanly` | `True`, `True` |
+
+Prediction held. Report:
+`/data/ycfeng/tmp/issue26-correctness-pr/w4-fidelity/comparison.json`.
+
+### Runtime evidence for the policy itself
+
+Each case runs one configuration twice — under `vllm_load_balancing` and under
+`round_robin` — in a single child process, with the dummy predictor so both
+policies see identical durations.
+
+| Evidence | `moe_dp2` | `moe_dp2_online` | `dense_dp1` |
+| --- | --- | --- | --- |
+| routing times == cluster schedule times | `[0.0]` | `[0.0, 0.4, 0.6, 0.8, 1.0]` | `[0.0]` |
+| placements, policy vs round-robin | `[0,1,0,1]` / `[0,1,0,1]` | **`[0,1,1,0,1,1]` / `[0,1,0,1,0,1]`** | `[0,0,0,0]` / `[0,0,0,0]` |
+| report keys | `3,3,7,7,…,19,19` | `3,3,7,…,159` (44) | `0,1,2,3,4,5,6` |
+| ordered / no repeated lane per key | yes / yes | yes / yes | yes / yes |
+| reports after the lane's release | 10 of 10 | 44 of 44 | 7 of 7 |
+| matching post-step / pre-step load | 10 / 6 | 44 / 38 | 7 / 3 |
+| event types vs round-robin | equal | equal | equal |
+
+The online row is the discriminating one: identical arrivals, durations and
+lane capacity, and the policy still places strictly fewer requests on the lane
+draining the one long request. Round-robin cannot, because it cannot see load.
+
+### Controls
+
+Each tree is the delivered source and tests with exactly one edit.
+
+| Control | Fails | Where |
+| --- | --- | --- |
+| `baseline` | 0 of 64 | — |
+| `no-time-plumbing` (`schedule()` restored in the event) | 3 | integration |
+| `pre-step-report` (hook moved above `on_batch_end`) | 2 | integration; `reports_after_the_lane_released_the_batch` is `0 == 10` |
+| `unweighted-waiting` (`WAITING_SCORE_WEIGHT = 1`) | 2 | unit |
+| `no-local-reservation` (`select` stops reserving) | 6 | 4 unit + 2 integration |
+| `no-dense-lane-guard` (guard deleted) | 1 | unit, the `dense_multi_lane` case |
+
+### Regression comparison
+
+| Suite | Baseline `cdfcdf5` | Candidate `10dd474` | Verdict |
+| --- | --- | --- | --- |
+| `tests/unit` | 84 failed / 3717 passed | 84 failed / 3778 passed | identical failure identities; +61 are the new tests |
+| `tests/integration` | 5 errors / 12 passed | 5 errors / 15 passed | identical errors (PD-AF Reference checkout absent on this host); +3 are the new tests |
+| focused set, 46 files | — | 51 failed / 1432 passed | all 51 are in the known 84-failure baseline |
+
+### Limits
+
+- No vLLM equivalence is claimed or measured. Every constant is cited against
+  vLLM v0.10.2 source; nothing was compared against a running deployment. IPC
+  latency, multiple frontends, elastic scaling and the coordinator's warm-start
+  phase are deliberately absent.
+- The dense `attn_dp=1` restriction rests on one probe per shape (recorded in
+  `design.md`), which is why the constructor rejects the shape instead of the
+  code relying on the observation holding everywhere.
+- Integration placements are dummy-mode placements: deterministic and
+  load-sensitive, not latency-realistic.
+- The online divergence is one arrival pattern. The test asserts the direction
+  — fewer requests on the busy lane — not the exact sequence.
