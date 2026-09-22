@@ -7,6 +7,7 @@ Date: 2026-09-22. Branch `fix/issue26-correctness-pr`, worktree
 
 | Date | Change |
 | --- | --- |
+| 2026-09-22 | Corrected FP8 case re-run natively: `exp-0922-202645-561899` (`codesign` / H800, `gpu-h800-0095`), 8 passed in 14.27 s, exit 0. Section 8 records the run. |
 | 2026-09-22 | Created: reachability check, magnitude estimate, source repair, CPU validation. Native GPU validation NOT_RUN. |
 | 2026-09-22 | Artifact identity decided as document-only. Native parity test added and submitted to an H800 worker as `exp-0922-140423-075005`; result pending. |
 | 2026-09-22 | Native parity PASS on H800 under `codesign`: `exp-0922-145047-660565`, 8 of 8 at `rtol=0, atol=0`. Three earlier attempts and their causes recorded in section 8. |
@@ -295,8 +296,22 @@ run above did not exercise the production block-quantized invocation. Corrected
 2026-09-22: the test now passes `block_shape`, and
 `tests/unit/test_moe_fused_expert_arithmetic.py` pins on CPU that both GEMM
 invocations receive the block shape (and `None` when it is omitted). The
-corrected native check has **not** been re-run: `NOT_RUN`, one H800 under
-`codesign`, awaiting the user's go.
+corrected native check was re-run on 2026-09-22 with the user's authorization:
+
+| Field | Value |
+| --- | --- |
+| Job | `exp-0922-202645-561899`, creator `i-fengyicheng`, `codesign` / `H800`, 1 GPU / 8 CPU / 64000Mi, RJob `Succeeded` |
+| Node | `gpu-h800-0095.host.platform.shaipower.com`, `NVIDIA H800`, torch 2.8.0+cu128, vLLM 0.10.2 (`VLLM_API_VERSION=0.10.x`, `FP8_AVAILABLE=True`), Python 3.12.11 |
+| Image / mount | `artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2`; `100.96.128.195:/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr` at the same path, worktree clean at `c231322` (test source `ca1b9b6`) |
+| Command | `python3 -m pytest -q -rA -p no:cacheprovider --no-header tests/integration/test_moe_fused_expert_numerical_parity.py` (same launcher as the run above; unchanged since it) |
+| Result | **8 passed in 14.27 s**, `W6:PARITY_EXIT=0`, worker exit 0. The same eight test ids as the table above, including `test_fp8_path_runs_on_the_gated_activation`, now executed with `block_shape=[128, 64]` reaching both expert GEMM invocations. |
+| Log | `/data/ycfeng/tmp/issue26-correctness-pr/w6_native_fp8_rerun_exp-0922-202645-561899.log` (retrieved through `logs_replica`; `logs_rjob` returned nothing, as before) |
+
+What this establishes: the block-quantized FP8 invocation that `profile_fused_moe_kernel`
+uses runs on the gated activation and returns finite output of the expected shape on
+the real kernels. What it still does not establish: FP8 numerical equivalence, because
+the FP8 case compares against no reference. The seven zero-tolerance comparisons
+passed again unchanged.
 
 ### Attempts
 

@@ -82,3 +82,11 @@ Reading: read the external review in full, verify each finding against the sourc
 | GPU | The corrected FP8 native check (package C) was **not** re-run on a worker; it needs one H800 under `codesign` and a fresh go from the user. Recorded as `NOT_RUN`. |
 | Publication | PR34 correction committed and pushed first, then merged (not rebased) into PR35; PR35 commits pushed; both PR bodies updated through the API. Draft state of PR35 untouched. |
 
+## [Original Request] 2026-09-22 — FP8 native rerun authorization and second Step 9 plan review
+
+> 授权：FP8 native 重跑（1×H800 codesign）；再次review plan §18，review的核心为： 确保当前计划的代码模块的实现/改动/重构是基于整体codebase的，记住，对frontier 核心模块的代码的修改和实现上，确保可读性和可维护，任何引入的修改和实现都应该是高价值的（要么对fidelity有收益，要么与模拟功能直接相关，不可替代），禁止hard-coding，禁止临时补丁，禁止过度防御，禁止冗余性设计和实现，禁止使用ai味命名函数和变量。
+
+| Item | Decision / outcome |
+| --- | --- |
+| FP8 native rerun | Authorized and executed: `exp-0922-202645-561899`, `codesign` / 1×H800, 8 passed in 14.27 s, exit 0 (W6 report §8). |
+| Plan §18 second review | Performed against `c231322` with the stated gates; findings R9-01..R9-08 in `plan.md` §18.12, amendments to D9-1, D9-2, P1, §18.10, §18.11 and `design.md`. Records only; no Step 9 source change; execution still awaits the user's start signal. |

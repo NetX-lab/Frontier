@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-22 | Second Step 9 plan review at the user's direction (quality gates for core-module changes): findings R9-01..R9-08 recorded with dispositions; plan §18.12, design.md. |
 | 2026-09-21 | Created with the pinned source snapshot. |
 | 2026-09-21 | Step 1 complete: candidate and vLLM audits landed, dispositions recorded, two decision checkpoints raised. |
 | 2026-09-21 | Corrected the W3 and W4 rows: the step-id namespace is not partitioned by sync kind, only the open-step binding table is. Verified against `forward_sync_state.py` at `c18eb2c`. |
@@ -422,7 +423,7 @@ Reviewed revisions: PR34 `6ef0a3c`, PR35 `0137269`. Each finding was checked aga
 | C34-01 cache comparison eligibility ignores `cases_executed_in_last_run` | Confirmed: `compare_labels` read only `cache_clean_before_run` and `case_filter`; `--start`/`--limit` leave no filter | FIXED | PR34 `2310417` (runner + 4 gate tests), merged as `0d025f8`; Checkpoint B verdict re-derived, unchanged (`task_2026-09-21_oversized_module_split/test_report_2026-09-22_cache_eligibility_correction.md`) |
 | C35-01 decoding request in a prefill-mode mixed batch uncredited at a dense layer | Confirmed by call path: `complete_dense_layer(phase="prefill")` → `handle_prefill_sync_collective`, which credits nothing; only the shared forward and decode helpers credit | FIXED | `advance_decode_layer` helper (validate then increment) used by all three completion paths; dense prefill-mode source credits its decoding members. Unit: mixed source at a dense layer +1 for the decoder, 0 for the prefiller, pure-prefill control credits nothing; `MoE -> dense -> MoE` credits 1, 2, 3. Real loop: hybrid `moe_layers_enum="0,2,3"`, 4 mixed dense completions, 10 decode tokens all peaking at 4 layers; the pre-fix source peaks 4 of them at 3 |
 | C35-02 W6 report claims legacy scope equals functional scope | Confirmed: the functional entry aligns inside `fused_experts` (vLLM 0.10.2 `fused_moe.py:1718`), the legacy path aligns before `_step`; shuffling and grouped GEMM are additive in both accounting paths | FIXED (records) | W6 report §5 scope table; `docs/profiling/README.md`; `summary.md`; PR35 body. Live double count for functional datasets: not verified, not claimed |
-| C35-03 FP8 test omits `block_shape`; "8 of 8 at `rtol=0, atol=0`" overstates | Confirmed: `block_dims` was passed, `block_shape` was not; the FP8 test asserts shape and finiteness only | FIXED (test + wording); native rerun OPEN | `block_shape=block_shape` added; CPU test pins both GEMM invocations receive it (`[128, 64]`) and `None` when omitted; report §8, `summary.md`, PR35 body restated as seven comparisons plus one structural check. Native rerun on one H800 under `codesign`: `NOT_RUN`, awaiting the user's go |
+| C35-03 FP8 test omits `block_shape`; "8 of 8 at `rtol=0, atol=0`" overstates | Confirmed: `block_dims` was passed, `block_shape` was not; the FP8 test asserts shape and finiteness only | FIXED (test + wording + native rerun) | `block_shape=block_shape` added; CPU test pins both GEMM invocations receive it (`[128, 64]`) and `None` when omitted; report §8, `summary.md`, PR35 body restated as seven comparisons plus one structural check. Native rerun authorized and executed 2026-09-22: `exp-0922-202645-561899`, 8 passed in 14.27 s, exit 0 (W6 report §8) |
 | C35-04 unconditional `import torch` adds a collection error | Confirmed: 11 collection errors in the minimal environment versus 10 on the base | FIXED | `pytest.importorskip("torch")` before importing the profiler module; minimal env: `1 skipped`; torch env: 9 passed; unit suite errors back to 10 |
 | C35-05 records inconsistent (D2 metadata rule vs documentation-only; W2-checkpoint diff claim; blanket vLLM-comparison exclusion; PR34 "Draft") | Confirmed on all four points | FIXED (records) | D2 heading marked SUPERSEDED in part with a link to the dated decision; PR35 body scopes the `ceac2b4` diff claim to the W2 checkpoint and amends the exclusion for the authorized scheduler-level comparison; `progress.md` status table current; PR34 body says "open for review" |
 | Review's "PR35 mergeable=false" | Stale: GitHub reports `MERGEABLE` for both PRs; PR34 `isDraft=false` | ACCEPTED_LIMITATION (of the review) | `gh pr view` 2026-09-22 |
@@ -434,3 +435,19 @@ Reviewed revisions: PR34 `6ef0a3c`, PR35 `0137269`. Each finding was checked aga
 | P9-06 work graph and acceptance language | Accepted | FIXED (plan) | §18.5 graph, §18.1 C1–C5 |
 | Package F (W9 implementation) | — | OPEN by instruction | Not started (user: 暂不开启 new subtask) |
 
+## Second plan review 2026-09-22 — user-directed quality gates for Step 9
+
+Reviewer: this session, against `c231322`, at the user's direction ("确保当前计划的代码模块的实现/改动/重构是基于整体codebase的 ... 禁止hard-coding，禁止临时补丁，禁止过度防御，禁止冗余性设计和实现，禁止使用ai味命名函数和变量"). Inspected: `vllm_load_balancing_cluster_scheduler.py`, `vllm_dp_load_balancer.py`, `base_cluster_scheduler.py:417-470`, `base_replica_scheduler.py:36-60, 440-480, 1048-1063`, `forward_sync_state.py`, `global_batch_end_event.py:150-215`, `replica_schedule_event.py:80-175`, `vllm_v1_iteration_policy.py:533-545`, both DP-placement test modules, `AGENTS.md:620`, reference `core.py:318-372, 1075-1137`, `coordinator.py:280-312`. Full text in `plan.md` §18.12.
+
+| Id | Gate | Finding | Disposition |
+| --- | --- | --- | --- |
+| R9-01 | redundancy / over-design | Readiness classification and `pipeline_room_remaining` have no DES counterpart; only the admission-only row is new | Plan amended: hook payload = completion hook signature |
+| R9-02 | grounded in codebase | Completion key `get_step_id(batch)` names the scheduling iteration; correct only at PP=1 | D9-2 amended: key both kinds by the observing iteration; C2 verifies PP=1 |
+| R9-03 | reuse before inventing | `ForwardSyncState._next_step_id_by_replica` meets I1–I4, I6; I5 gap measured, not assumed | P1 tests it first; decision at the checkpoint |
+| R9-04 | over-defense / layering | Constructor-required `_cluster_scheduler`; do not repeat the `getattr`/`hasattr` reach-ups | D9-1 wording; asymmetry recorded in `design.md` |
+| R9-05 | redundancy | Oracle must not re-implement the balancer's coordinator/frontend | P1(a) narrowed to the engine loop |
+| R9-06 | naming / test surface | Plain names; existing key assertions remain valid under I1–I2 | P3/P4 wording |
+| R9-07 | value / size | Frontier change is small and user-requested; validation must not leak into `frontier/` | Boundary stated |
+| R9-08 | reference precision | DP engines not iteration-lockstep (all-reduce every 32 steps) | §18.2 row amended; G5 first-cause label |
+
+No source change results from this review; Step 9 execution remains unstarted pending the user's start signal.

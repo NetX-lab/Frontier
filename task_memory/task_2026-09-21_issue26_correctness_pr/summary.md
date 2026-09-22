@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-22 | FP8 native rerun with the corrected `block_shape` wiring PASS (`exp-0922-202645-561899`, 8 passed). Step 9 plan reviewed a second time against the user's quality gates (plan §18.12); still not started. |
 | 2026-09-21 | Placeholder created at Step 0. |
 | 2026-09-22 | Completion archive written at Step 8. |
 | 2026-09-22 | External review corrections: W3 dense-layer credit for decoding requests in a mixed batch (C35-01); W6 native result restated as seven comparisons plus one FP8 structural check, FP8 `block_shape` wiring corrected (C35-02/03); optional-torch skip (C35-04); records aligned (C35-05). Step 9 remains planned, not started. |

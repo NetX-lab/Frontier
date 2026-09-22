@@ -4,6 +4,7 @@
 
 | Date | Change |
 | --- | --- |
+| 2026-09-22 | C4 executed: corrected FP8 native case passed on H800 (`exp-0922-202645-561899`). Limits updated. |
 | 2026-09-22 | Created: verification of the review corrections applied on `fix/issue26-correctness-pr`. Package A is reported in the PR34 task directory (`test_report_2026-09-22_cache_eligibility_correction.md`). |
 
 ## Scope
@@ -67,7 +68,7 @@ failure set, but the suite has no PREFILL-role hybrid-layer case).
 | C1 | Arithmetic boundary tests under torch | `openmopd-py312 python -m pytest tests/unit/test_moe_fused_expert_arithmetic.py -q -p no:cacheprovider` | 7 existing + 2 new pass | 9 passed in 6.31 s | PASS |
 | C2 | Minimal environment collection | `frontier-py310 python -m pytest tests/unit/test_moe_fused_expert_arithmetic.py -q -p no:cacheprovider` | module skips instead of erroring | 1 skipped in 0.06 s | PASS |
 | C3 | Unit-suite collection errors | B8 | 10 (the base's count), not 11 | 10 errors | PASS |
-| C4 | Corrected FP8 native check on the approved worker | not run | — | `NOT_RUN`: needs one H800 under `codesign` and the user's go | NOT_RUN |
+| C4 | Corrected FP8 native check on the approved worker | StepMind `RJobBackend`, `codesign` / H800, image `vllm/vllm-openai:v0.10.2`, `pytest -q -rA tests/integration/test_moe_fused_expert_numerical_parity.py` | 8 passed, exit 0; FP8 case runs with `block_shape=[128, 64]` | `exp-0922-202645-561899`, `gpu-h800-0095`, **8 passed in 14.27 s**, exit 0; details in the W6 report §8 | PASS |
 
 The native run recorded in the W6 report (`exp-0922-145047-660565`) stands as
 evidence for the arithmetic repair: seven reference comparisons at
@@ -88,7 +89,7 @@ API; PR35 stays draft.
 
 ## Limits
 
-- The corrected FP8 native check has not been re-run on a GPU.
+- The corrected FP8 native check passed on a GPU; it remains a structural check (shape and finiteness), so FP8 numerical equivalence is still not established.
 - The real-loop hybrid case uses constant synthetic profiling rows and a
   four-layer synthetic MoE model, as the W3 runtime test does; it proves the
   accounting, not latency fidelity.

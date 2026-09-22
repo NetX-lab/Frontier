@@ -7,6 +7,7 @@ scope decisions and the pre-measurement expectation for that package.
 
 | Date | Change |
 | --- | --- |
+| 2026-09-22 | W9 second review (user-directed quality gates): section "What the code already provides" added; planned-edits rows for the hook payload, the call site and the CPU oracle amended; plan §18.12 R9-01..R9-08. |
 | 2026-09-22 | Created. Source-backed design for Checkpoint D's W3 half, with the scope decisions and their evidence. |
 | 2026-09-22 | Restructured into per-work-package sections and added the W4 design, with the report-key identity measured at the emission boundary. |
 | 2026-09-22 | Added the W9 design: vLLM 0.10.2 count publication under pipeline parallelism, the equivalence argument, the schedule-only gap, the report-key options, and the discriminating scenario. Analysis only; implementation pending. |
@@ -383,6 +384,60 @@ completes owns one report decision; (4) suppressed unchanged reports create no
 fictitious messages; (5) PP3 allows consecutive admission-only iterations
 without spacing constants; (6) bookkeeping is released with the in-flight work.
 
+## What the code already provides (second review, 2026-09-22)
+
+Read against `c231322` with the user's gates for core-module changes (plan
+§18.12). Three facts narrow the design.
+
+**A completion is atomic in the DES.** `GlobalBatchEndEvent` runs
+`replica_scheduler.on_batch_end` and then `cluster_scheduler.on_replica_batch_end`
+at the batch's end time, and the lane's next `ReplicaScheduleEvent` follows at
+the same time. There is no "oldest output ready but not yet applied" state, so
+the hook has nothing to classify: it carries `(time, replica_id,
+replica_local_id, batch)` exactly as the completion hook does, and the policy
+scheduler reads the post-admission load through `get_request_load()`, which
+already reflects the admission because `_running_requests` grows inside
+`_get_next_batch`. The zero-token iteration publishes nothing in the reference
+(`_maybe_publish_request_counts` emits only changed counts) and needs no
+observation here. Of the five reference rows only the admission-only row is new.
+
+**The completion key names the wrong iteration at PP>1.** `on_replica_batch_end`
+keys by `ForwardSyncState.get_step_id(batch)`, assigned when the batch's own
+forward opened. The reference publishes a completion under the iteration that
+applied the output, which at depth `P` is `P-1` iterations later. At PP=1 the
+two are the same iteration; at PP>1 the batch key would order every completion
+before the admissions emitted while it ran. The key rule therefore applies to
+both observation kinds and is read at the observation boundary.
+
+**A Replica-scoped, monotonic, lane-equal value already exists.**
+`ForwardSyncState._next_step_id_by_replica[replica_id]` is the id the next
+forward on the Replica will take: equal for all lanes between room openings,
+strictly greater than every open or completed step, advanced only by
+`resolve_step`/`close_step`. As the key for both kinds it meets invariants 1–4
+and 6 with no new bookkeeping. Its gap is invariant 5: several admissions on
+one lane while stage 0 is busy read one value, where the reference gives
+strictly increasing steps and latches the intermediate state for one publish
+interval. P1 measures whether that case occurs in the target scenario (one
+admission per lane) and whether the reference actually keeps peer steps equal
+there — `_has_global_unfinished_reqs` all-reduces every 32 steps, so it may
+not. The decision stays at the design checkpoint; if a derived identity is
+needed, the reason is this measurement, not a preference.
+
+**Call site and layering.** `self._cluster_scheduler` is constructor-required
+(`TypeError` when `None`), so the call in `on_schedule` is unconditional; the
+two existing `getattr(self, "_cluster_scheduler", None)` reach-ups in
+`_create_batch` are the pattern not to repeat. The completion hook is invoked
+by an event and the admission hook by the replica scheduler; the asymmetry is
+deliberate, because the per-admission state after the first of two admissions
+in one call is visible only inside the loop.
+
+**The CPU oracle models the engine loop only.** `VllmDPLoadBalancer` already
+reproduces the coordinator latch/publish and the frontend score with cited
+constants; `reference_loop.py` scripts the `step_with_batch_queue` conjunction,
+the changed-count emission and the per-iteration step counter, and feeds the
+real balancer. Comparing a Frontier-driven balancer against it isolates the
+one mapping W9 changes.
+
 ## The discriminating scenario, derived
 
 Let engine `e` receive `k_e` requests in a burst and admit `a_e` of them in
@@ -422,10 +477,10 @@ and can only report that rejection.
 
 | File | Edit |
 | --- | --- |
-| `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py` | `on_replica_batch_scheduled(...)`, inert default; its payload is one observation of the engine iteration classified by the state table (fields fixed at the design checkpoint), not `pipeline_room_remaining` alone. |
-| `frontier/scheduler/replica_scheduler/base_replica_scheduler.py` | Call the hook in the MONOLITHIC/PREFILL admission loop where the state changes; readiness of the oldest output is read from existing DES completion state. |
-| `frontier/scheduler/cluster_scheduler/vllm_load_balancing_cluster_scheduler.py` | Drop the PP1 clause of the guard and its error text; keep the publish decision here; key rule per the design checkpoint, satisfying invariants 1–6. |
-| `tests/comparison/dp_placement_pp/reference_loop.py` | Independent CPU reference-loop oracle (scripted admissions, empty schedules, completions, controllable readiness) — not a copy of the hook. |
+| `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py` | `on_replica_batch_scheduled(time, replica_id, replica_local_id, batch)`, the completion hook's signature, inert default. No readiness field or observation record (second review, R9-01). |
+| `frontier/scheduler/replica_scheduler/base_replica_scheduler.py` | Call the hook once per admitted batch in the MONOLITHIC/PREFILL admission loop, after `_num_running_batches += 1`, through the constructor-required `self._cluster_scheduler` without `getattr`/`hasattr` (R9-04). |
+| `frontier/scheduler/cluster_scheduler/vllm_load_balancing_cluster_scheduler.py` | Drop the PP1 clause of the guard and its error text; implement `on_replica_batch_scheduled`; key both observation kinds by the observing iteration per the design checkpoint (first candidate: the Replica's next forward id through a plain `ForwardSyncState` accessor), satisfying invariants 1–6. |
+| `tests/comparison/dp_placement_pp/reference_loop.py` | CPU oracle of the engine iteration only (scripted admissions, empty schedules, completions, controllable readiness; conjunction, changed-count emission, step counter), feeding the real `VllmDPLoadBalancer`; not a second coordinator/frontend model (R9-05). |
 | `tests/unit/test_vllm_dp_load_balancer.py`, `tests/integration/test_vllm_dp_placement_runtime.py` | Guard case inverted; the plan §18.11 behavioral matrix (PP2 both callback orders, oldest-ready, PP3 consecutive admission-only iterations on a 6- or 12-layer fixture, full queue, empty schedule, drain, idle peers, bounded bookkeeping); the discriminating scenario against the test-only control; the C35-01 hybrid-layer credit case at PP2. |
 | `.real-engine/vLLM-BS` (local branch only, D-b) | Case-gated event chain: iteration result, emitted report, coordinator receive/publish with snapshot id, frontend application, frontend routing; named `waiting`/`running`; correlation ids; buffered per-process JSONL. |
 | `AGENTS.md:620`, this file, `plan.md`, `progress.md`, `validation.md`, `review.md` | Wording and records. |
