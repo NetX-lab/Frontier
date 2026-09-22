@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from frontier.entities import Request
 from frontier.scheduler.cluster_scheduler.lor_cluster_scheduler import (
     LORClusterScheduler,
@@ -37,9 +39,9 @@ class _BareReplicaScheduler(BaseReplicaScheduler):
         return None
 
 
-def _request(*, session_id: int | None = None) -> Request:
+def _request(*, session_id: int | None = None, arrived_at: float = 0.0) -> Request:
     return Request(
-        arrived_at=0.0,
+        arrived_at=arrived_at,
         num_prefill_tokens=4,
         num_decode_tokens=2,
         session_id=session_id,
@@ -184,13 +186,22 @@ def test_stage_release_wakes_only_queued_sibling_lanes() -> None:
     assert events[0]._replica_local_id == 1
 
 
+#: The cluster roles whose public ``schedule()`` reaches the fixed placement
+#: helper. Both fall through to ``_schedule_batch_mode``; the point of running
+#: both is that the dispatch in ``schedule()`` says so, not that this list does.
+BATCH_MODE_CLUSTER_TYPES = [ClusterType.MONOLITHIC, ClusterType.PREFILL]
+
+
 def _round_robin_scheduler(
-    *, replica_ids: list[int], dp_size: int
+    *,
+    replica_ids: list[int],
+    dp_size: int,
+    cluster_type: ClusterType = ClusterType.MONOLITHIC,
 ) -> RoundRobinClusterScheduler:
     """A round-robin scheduler over the given replicas, with an empty queue."""
 
     scheduler = RoundRobinClusterScheduler.__new__(RoundRobinClusterScheduler)
-    scheduler._cluster_type = ClusterType.MONOLITHIC
+    scheduler._cluster_type = cluster_type
     scheduler._num_replicas = len(replica_ids)
     scheduler._replica_dp_size = dp_size
     scheduler._cluster = SimpleNamespace(
@@ -202,7 +213,11 @@ def _round_robin_scheduler(
 
 
 def _placements_for_call_sizes(
-    *, replica_ids: list[int], dp_size: int, call_sizes: list[int]
+    *,
+    replica_ids: list[int],
+    dp_size: int,
+    call_sizes: list[int],
+    cluster_type: ClusterType = ClusterType.MONOLITHIC,
 ) -> list[tuple[int, int]]:
     """Schedule one request stream in the given batches.
 
@@ -210,11 +225,18 @@ def _placements_for_call_sizes(
     stream. The stream is the same for every call partitioning, so the result
     may not depend on `call_sizes`. Comparing by stream position rather than by
     request id is what makes two separately constructed runs comparable.
+
+    This drives the public `schedule()`, so the cluster-type dispatch inside it
+    is part of what each case exercises. Arrival times increase along the
+    stream, so the `sort_requests()` that `schedule()` performs first orders the
+    queue on its own rather than relying on a stable sort over equal keys.
     """
 
-    scheduler = _round_robin_scheduler(replica_ids=replica_ids, dp_size=dp_size)
+    scheduler = _round_robin_scheduler(
+        replica_ids=replica_ids, dp_size=dp_size, cluster_type=cluster_type
+    )
     total = sum(call_sizes)
-    requests = [_request() for _ in range(total)]
+    requests = [_request(arrived_at=float(index)) for index in range(total)]
     position_of = {request.id: index for index, request in enumerate(requests)}
     placements: dict[int, tuple[int, int]] = {}
 
@@ -222,7 +244,7 @@ def _placements_for_call_sizes(
     for size in call_sizes:
         scheduler._request_queue = requests[offset:offset + size]
         offset += size
-        for replica_id, dp_id, request in scheduler._schedule_batch_mode():
+        for replica_id, dp_id, request in scheduler.schedule():
             position = position_of[request.id]
             assert position not in placements, "a request was scheduled twice"
             placements[position] = (replica_id, dp_id)
@@ -231,7 +253,80 @@ def _placements_for_call_sizes(
     return [placements[position] for position in range(total)]
 
 
-def test_round_robin_dp_lane_does_not_depend_on_call_partitioning() -> None:
+#: One full rotation, written out, for topologies where both dimensions move.
+#: The replica advances on every request; the lane advances once the replica
+#: rotation wraps; the pair repeats after `num_replicas * dp_size` requests.
+#: These sequences are derived by hand from the intended placement rule, not
+#: read back from the implementation.
+EXPECTED_ROTATIONS = [
+    (
+        [3, 11],
+        2,
+        [(3, 0), (11, 0), (3, 1), (11, 1)] * 2,
+    ),
+    (
+        [3, 11, 42],
+        3,
+        [
+            (3, 0), (11, 0), (42, 0),
+            (3, 1), (11, 1), (42, 1),
+            (3, 2), (11, 2), (42, 2),
+            (3, 0), (11, 0), (42, 0),
+        ],
+    ),
+    (
+        [5, 9],
+        3,
+        [(5, 0), (9, 0), (5, 1), (9, 1), (5, 2), (9, 2)] * 2,
+    ),
+]
+
+
+@pytest.mark.parametrize("cluster_type", BATCH_MODE_CLUSTER_TYPES, ids=lambda t: t.name)
+@pytest.mark.parametrize(
+    "replica_ids, dp_size, expected",
+    EXPECTED_ROTATIONS,
+    ids=lambda value: "x".join(map(str, value)) if isinstance(value, list) else str(value),
+)
+def test_round_robin_places_a_stream_on_the_expected_replica_and_lane(
+    replica_ids: list[int],
+    dp_size: int,
+    expected: list[tuple[int, int]],
+    cluster_type: ClusterType,
+) -> None:
+    """The placement sequence itself, through the public scheduling entry.
+
+    The other round-robin tests below compare one run against another, which
+    establishes that placement is independent of how the stream is divided but
+    would also hold for a wrong rule applied consistently. This one states where
+    each request must land, over a full rotation and past its wraparound, for
+    topologies where the replica and the lane both advance.
+
+    Both cluster roles that reach batch-mode placement are covered, so the
+    dispatch inside `schedule()` is exercised rather than assumed.
+    """
+
+    burst = _placements_for_call_sizes(
+        replica_ids=replica_ids,
+        dp_size=dp_size,
+        call_sizes=[len(expected)],
+        cluster_type=cluster_type,
+    )
+    assert burst == expected
+
+    incremental = _placements_for_call_sizes(
+        replica_ids=replica_ids,
+        dp_size=dp_size,
+        call_sizes=[1] * len(expected),
+        cluster_type=cluster_type,
+    )
+    assert incremental == expected
+
+
+@pytest.mark.parametrize("cluster_type", BATCH_MODE_CLUSTER_TYPES, ids=lambda t: t.name)
+def test_round_robin_dp_lane_does_not_depend_on_call_partitioning(
+    cluster_type: ClusterType,
+) -> None:
     """The defect this covers: the DP lane restarted at zero on every call.
 
     With one replica and two lanes, scheduling eight requests one at a time put
@@ -241,20 +336,23 @@ def test_round_robin_dp_lane_does_not_depend_on_call_partitioning() -> None:
     """
 
     one_at_a_time = _placements_for_call_sizes(
-        replica_ids=[7], dp_size=2, call_sizes=[1] * 8
+        replica_ids=[7], dp_size=2, call_sizes=[1] * 8, cluster_type=cluster_type
     )
     single_burst = _placements_for_call_sizes(
-        replica_ids=[7], dp_size=2, call_sizes=[8]
+        replica_ids=[7], dp_size=2, call_sizes=[8], cluster_type=cluster_type
     )
     uneven = _placements_for_call_sizes(
-        replica_ids=[7], dp_size=2, call_sizes=[3, 1, 4]
+        replica_ids=[7], dp_size=2, call_sizes=[3, 1, 4], cluster_type=cluster_type
     )
 
     assert one_at_a_time == single_burst == uneven
     assert one_at_a_time == [(7, 0), (7, 1)] * 4
 
 
-def test_round_robin_placement_is_stable_across_topologies() -> None:
+@pytest.mark.parametrize("cluster_type", BATCH_MODE_CLUSTER_TYPES, ids=lambda t: t.name)
+def test_round_robin_placement_is_stable_across_topologies(
+    cluster_type: ClusterType,
+) -> None:
     """Replica ids need not be contiguous and lanes may outnumber two."""
 
     cases = [
@@ -266,35 +364,54 @@ def test_round_robin_placement_is_stable_across_topologies() -> None:
     ]
     for replica_ids, dp_size in cases:
         burst = _placements_for_call_sizes(
-            replica_ids=replica_ids, dp_size=dp_size, call_sizes=[12]
+            replica_ids=replica_ids,
+            dp_size=dp_size,
+            call_sizes=[12],
+            cluster_type=cluster_type,
         )
         incremental = _placements_for_call_sizes(
-            replica_ids=replica_ids, dp_size=dp_size, call_sizes=[1] * 12
+            replica_ids=replica_ids,
+            dp_size=dp_size,
+            call_sizes=[1] * 12,
+            cluster_type=cluster_type,
         )
         assert burst == incremental, (replica_ids, dp_size)
         assert {replica_id for replica_id, _ in burst} <= set(replica_ids)
         assert all(0 <= dp_id < dp_size for _, dp_id in burst)
 
 
-def test_round_robin_survives_an_empty_scheduling_call() -> None:
+@pytest.mark.parametrize("cluster_type", BATCH_MODE_CLUSTER_TYPES, ids=lambda t: t.name)
+def test_round_robin_survives_an_empty_scheduling_call(
+    cluster_type: ClusterType,
+) -> None:
     """An empty call must neither advance the rotation nor reset it."""
 
     with_gap = _placements_for_call_sizes(
-        replica_ids=[3, 11], dp_size=2, call_sizes=[2, 0, 2, 0, 4]
+        replica_ids=[3, 11],
+        dp_size=2,
+        call_sizes=[2, 0, 2, 0, 4],
+        cluster_type=cluster_type,
     )
     without_gap = _placements_for_call_sizes(
-        replica_ids=[3, 11], dp_size=2, call_sizes=[8]
+        replica_ids=[3, 11], dp_size=2, call_sizes=[8], cluster_type=cluster_type
     )
     assert with_gap == without_gap
 
 
-def test_round_robin_returns_results_grouped_by_replica() -> None:
+@pytest.mark.parametrize("cluster_type", BATCH_MODE_CLUSTER_TYPES, ids=lambda t: t.name)
+def test_round_robin_returns_results_grouped_by_replica(
+    cluster_type: ClusterType,
+) -> None:
     """The return order groups each call's results per replica, as before."""
 
-    scheduler = _round_robin_scheduler(replica_ids=[3, 11], dp_size=2)
-    scheduler._request_queue = [_request() for _ in range(6)]
+    scheduler = _round_robin_scheduler(
+        replica_ids=[3, 11], dp_size=2, cluster_type=cluster_type
+    )
+    scheduler._request_queue = [
+        _request(arrived_at=float(index)) for index in range(6)
+    ]
 
-    mapping = scheduler._schedule_batch_mode()
+    mapping = scheduler.schedule()
 
     replica_order = [replica_id for replica_id, _, _ in mapping]
     assert replica_order == [3, 3, 3, 11, 11, 11]

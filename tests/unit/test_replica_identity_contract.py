@@ -2,6 +2,16 @@ from pathlib import Path
 
 
 def test_non_ffn_cluster_scheduler_uses_replica_local_dp_identity() -> None:
+    """A governance check on the source text. It does not establish behavior.
+
+    Reading source cannot tell a correct expression from an equivalent one it
+    does not recognize, so this test can only say that no lane assignment takes
+    a modulus of something other than the Replica-local DP size. Placement
+    correctness is carried by `tests/unit/test_cluster_scheduler_dp_lanes.py`,
+    which drives the public `schedule()` and asserts where each request lands.
+    Do not reword a correct expression to satisfy this check.
+    """
+
     source = Path(
         "frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py"
     ).read_text(encoding="utf-8")

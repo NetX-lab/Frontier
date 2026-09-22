@@ -521,8 +521,16 @@ def _dp_placement() -> list[FidelityCase]:
     disaggregated mode", and the MoE wrappers require
     ``ATTN_TP == MOE_TP * MOE_EP`` while the runtime requires
     ``attn_tp * attn_dp == moe_tp * moe_ep``, which have no common solution
-    above one lane. Placement changes affecting the prefill role therefore
-    have to be validated by unit tests, not by this matrix.
+    above one lane.
+
+    That is a limit of the shipped wrappers, not of the runtime. The prefill
+    role's placement is covered at the scheduler level by
+    ``tests/unit/test_cluster_scheduler_dp_lanes.py``, which drives the public
+    ``schedule()`` for both the monolithic and prefill roles. Covering it
+    through the real event loop needs a fixture that builds a valid runtime
+    configuration directly instead of going through a wrapper, with
+    deterministic durations injected at the predictor boundary; that fixture
+    belongs with the mixed-lane MoE work, not here.
     """
 
     rows: list[tuple[str, str, str, dict[str, str], tuple[str, ...]]] = [
