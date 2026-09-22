@@ -275,3 +275,42 @@ Facts read from the manifests under
    the maintainer's instruction; the review that followed requests changes
    with three P1 items. Whether it returns to draft until A and B close is the
    maintainer's call.
+
+## Remediation record
+
+One row per accepted comment, with the artifact that closes it. A row is only
+marked closed when the evidence for it is committed, not when the change is.
+
+| Comment | State | Closed by |
+| --- | --- | --- |
+| R34-01 false success | **CLOSED** | `tests/e2e/refactor_fidelity/{run_matrix,compare}.py`; `tests/unit/test_refactor_fidelity_gate.py` (22 tests). Before/after reproduction against the pre-fix harness: four scenarios returned exit 0 and now fail; both controls unchanged. `test_report_2026-09-22_checkpoint_a_fidelity_gate.md` section 3. |
+| R34-02 provenance | **CLOSED** | Per-case `source_revision` / `source_dirty` / `harness_revision`; `check_retained_records` refuses a conflicting continuation before running anything; `case_count` counts written lines; cache names compared only for clean unfiltered full runs; `measure_commit.reuse_blocked_reason` reports and refuses a dirty checkout rather than cleaning it. |
+| R34-03 evidence record | **CLOSED** | Both sides recaptured as single clean full 71-case runs, one harness revision: 71 of 71 compared, 71 identical, no failures, no missing evidence, no provenance findings, 0 cache differences. `test_report_2026-09-22_checkpoint_b_final_evidence.md`. Status header, `summary.md` and the PR #34 description synchronized. |
+| R34-04 retained checks | **CLOSED** | `tests/unit/test_module_split_boundaries.py` (13 tests). Beyond the ask: all 142 baseline-produced pickled estimators load under the split code and 86 predict, which cache-name equality could not show. One pre-existing `NameError` on `ClusterConfig` annotations is pinned, not fixed, and verified to fail identically on `1f694f7`. |
+| R34-05 bounded split | **CLOSED** | Guidance applied while writing the new tests; an unused import removed. |
+| R35-01 W2 tests | **CLOSED** | `tests/unit/test_cluster_scheduler_dp_lanes.py`: three topologies with the full rotation written out by hand past its wraparound, driven through the public `schedule()`, each run for both MONOLITHIC and PREFILL. The source-text guard is kept with a docstring stating it is governance only. Negative control against the pre-fix method: 12 of 22 fail, controls pass. |
+| R35-02 wrapper limit | **PARTIAL** | The `cases.py` remedy wording is corrected: the wrapper limit is not a runtime limit, and the fixture it calls for builds a runtime configuration directly with durations injected at the predictor boundary. The fixture itself is W3 acceptance work and is not written yet. |
+| R35-03 SGLang consumers | OPEN | W4. |
+| R35-04 W5 scope | OPEN | W5. |
+| R35-05 gates | **CLOSED** | This document. |
+
+### What the W2 negative control showed beyond pass/fail
+
+Re-running the strengthened tests against the pre-fix `_schedule_batch_mode`,
+taken verbatim from `6ab521d^`, is more informative than a failure count. In all
+three topologies the old code produces the **expected sequence exactly** when the
+whole stream arrives in one call, and collapses onto lane 0 only when requests
+arrive one at a time:
+
+| Topology | Expected, and pre-fix in one burst | Pre-fix, one request at a time |
+| --- | --- | --- |
+| replicas `[3, 11]`, 2 lanes | `(3,0) (11,0) (3,1) (11,1)` repeating | `(3,0) (11,0)` repeating — every request on lane 0 |
+| replicas `[3, 11, 42]`, 3 lanes | lane advances once per replica cycle | every request on lane 0 |
+| replicas `[5, 9]`, 3 lanes | `(5,0) (9,0) (5,1) (9,1) (5,2) (9,2)` repeating | every request on lane 0 |
+
+So the hand-derived expectation agrees with the rotation the code already
+performed for a single call. The fix did not introduce a placement policy; it
+made incremental arrival reach the placement that batch arrival already had.
+That is the strongest available statement that W2 is a bug fix rather than a
+behavior change, and it is why the matrix is expected to move only the cases
+that enter the scheduler many times.

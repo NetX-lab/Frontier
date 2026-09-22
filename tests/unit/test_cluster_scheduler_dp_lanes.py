@@ -1,3 +1,4 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -187,9 +188,42 @@ def test_stage_release_wakes_only_queued_sibling_lanes() -> None:
 
 
 #: The cluster roles whose public ``schedule()`` reaches the fixed placement
-#: helper. Both fall through to ``_schedule_batch_mode``; the point of running
-#: both is that the dispatch in ``schedule()`` says so, not that this list does.
+#: helper. ``DECODE``, ``DECODE_ATTN`` and ``DECODE_FFN`` each take their own
+#: branch; ``TRANS`` also falls through, but it is declared and never
+#: constructed anywhere in ``frontier/``, so these two are the reachable set.
+#: `test_the_batch_mode_roles_are_the_ones_that_fall_through` keeps that true.
 BATCH_MODE_CLUSTER_TYPES = [ClusterType.MONOLITHIC, ClusterType.PREFILL]
+
+
+def test_the_batch_mode_roles_are_the_ones_that_fall_through() -> None:
+    """A new role must not reach batch-mode placement untested.
+
+    The placement tests below claim to cover every role that reaches the shared
+    helper. That claim is only worth as much as this check: if a role is added,
+    or an existing branch is removed, the role either gains its own dispatch or
+    it lands here and must be added to the list above.
+    """
+
+    dispatched_elsewhere = {
+        ClusterType.DECODE,
+        ClusterType.DECODE_ATTN,
+        ClusterType.DECODE_FFN,
+    }
+    never_constructed = {ClusterType.TRANS}
+    falls_through = set(ClusterType) - dispatched_elsewhere - never_constructed
+    assert falls_through == set(BATCH_MODE_CLUSTER_TYPES), sorted(
+        role.name for role in falls_through.symmetric_difference(
+            BATCH_MODE_CLUSTER_TYPES
+        )
+    )
+
+    source = Path(
+        "frontier/scheduler/cluster_scheduler/round_robin_cluster_scheduler.py"
+    ).read_text(encoding="utf-8")
+    for role in never_constructed:
+        assert f"ClusterType.{role.name}" not in source, (
+            f"{role.name} is now referenced; decide whether it places requests"
+        )
 
 
 def _round_robin_scheduler(

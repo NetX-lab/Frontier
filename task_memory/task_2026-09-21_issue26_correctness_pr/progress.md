@@ -5,6 +5,7 @@
 | Date | Change |
 | --- | --- |
 | 2026-09-21 | Step 0 started: records landed, environment created, baseline pending. |
+| 2026-09-22 | Maintainer review dispositions recorded; Checkpoint C closed: parent merged, W2 tests strengthened, W2 re-measured with one harness revision. |
 
 ## Status
 
@@ -12,10 +13,10 @@
 | --- | --- |
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
-| Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate; the split measured 67 of 67 fidelity cases identical with no predictor cache name differences. |
-| Current step | Step 2 complete; Step 3 scoped, not started |
+| Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
+| Current step | Step 2 complete and re-measured (Checkpoint C); Step 3 scoped, not started |
 | Publication | PUSHED_VERIFIED (records) |
-| Next action | Step 3: the shared monolithic forward lifecycle. Scoped below; not started. |
+| Next action | Checkpoint D / Step 3: the shared monolithic forward lifecycle, with the direct-construction integration fixture R35-02 requires. Scoped below; not started. |
 
 ## Step status
 
@@ -23,7 +24,7 @@
 | --- | --- | --- | --- | --- | --- |
 | 0 | Worktree, references, baseline | PASS | PASS (baseline recorded) | PUSHED_VERIFIED | NOT_REVIEWED |
 | 1 | Candidate/vLLM audit | PASS | n/a (source audit) | LOCAL_ONLY | NOT_REVIEWED |
-| 2 | RR DP rotation | PASS | unit PASS; matrix PASS against a stated expectation | PUSHED_VERIFIED | NOT_REVIEWED |
+| 2 | RR DP rotation | PASS | unit PASS (23 tests); matrix PASS against a stated expectation, re-measured 2026-09-22 with one harness revision | PUSHED_VERIFIED | REVIEWED (R35-01 closed) |
 | 3 | Shared monolithic forward | NOT_STARTED | — | — | — |
 | 4 | Opt-in vLLM DP placement | NOT_STARTED | — | — | — |
 | 5 | Routing implementation identity | NOT_STARTED | — | — | — |
@@ -32,6 +33,11 @@
 | 8 | Combined regression, PR hand-off | NOT_STARTED | — | — | — |
 
 ## Chronological updates
+
+- 2026-09-22: Checkpoint C. Merged the corrected parent (`bb582a4`, `7dd5982`, `6ef0a3c`) into this branch by merge rather than rebase, so the published review anchors stay valid and no commit is discarded. New base/head relationship: PR #35 head `fix/issue26-correctness-pr`, base `refactor/oversized-module-split` at `6ef0a3c`.
+- 2026-09-22: R35-01 addressed. The placement tests now state where each request lands: three topologies with the full rotation written out by hand past its wraparound, driven through the public `schedule()` rather than `_schedule_batch_mode`, each run for both roles that reach batch-mode placement. A guard keeps that role list honest, since `TRANS` also falls through the dispatch but is declared and never constructed anywhere in `frontier/`. The source-text check is kept as governance only and says so. Negative control against the pre-fix method: 12 of 23 fail, controls pass, and the old code turns out to produce the expected sequence exactly for a single burst -- so the fix restored an existing rotation for incremental arrival rather than introducing a policy.
+- 2026-09-22: W2 re-measured with harness and source at one revision: baseline `6ef0a3c` against candidate `ceac2b4`, both clean detached checkouts, one harness at `ceac2b4`, no filter, clean cache, 71 executed and 426 cache files each. 71 of 71 compared, 68 identical, and the mismatch set is exactly the three predicted cases, with no provenance findings and no cache differences. Lane occupancy reproduces the first measurement number for number. Full record in `validation.md`.
+- 2026-09-22: The `cases.py` remedy wording was corrected. It said prefill placement "has to be validated by unit tests", which understates R35-02: the wrapper limit is not a runtime limit, and full coverage needs a fixture that builds a runtime configuration directly with durations injected at the predictor boundary. That fixture is W3 acceptance work.
 
 - 2026-09-21: Baseline on the shared base recorded in the refactor task's Step 0 report; vLLM reference cloned (no tags in the fork; upstream `v0.10.2` comparison deferred to Step 1).
 - 2026-09-21: Draft specification analyzed; eleven facts verified against main, the candidate, the submodule remote, and the host; planning interview settled twelve decisions (see `requirements.md`). Records landed under `task_memory/`, `.gitignore` narrowed, `plan.md` carries the Amendments table.

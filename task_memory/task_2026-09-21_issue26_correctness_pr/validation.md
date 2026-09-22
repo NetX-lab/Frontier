@@ -7,6 +7,7 @@
 | 2026-09-21 | Created. Environment recorded; baseline results recorded in the refactor task's Step 0 report because both branches share the same base commit. |
 | 2026-09-21 | Step 1 recorded: audit spot checks and the vLLM reference identity check. |
 | 2026-09-21 | Step 2 recorded: unit sensitivity and the fidelity measurement against a stated expectation. |
+| 2026-09-22 | Step 2 re-measured with harness and source at one revision, after the gate corrections. Same expectation, same result, recorded provenance. |
 
 ## Environment
 
@@ -94,3 +95,116 @@ Sensitivity was verified by stashing the fix and rerunning, not by reasoning. Th
 ### Limits
 
 The prefill role reaches the same placement path, but **no shipped recipe can give it more than one lane**, so the matrix cannot cover that half. A dense model in a disaggregated architecture is rejected outright, and the MoE wrappers enforce `ATTN_TP == MOE_TP * MOE_EP` while the runtime enforces `attn_tp * attn_dp == moe_tp * moe_ep`, which have no common solution above one lane. Both routes were attempted and both were rejected, so this is measured rather than inferred. The unit test is the only evidence for the prefill half of this fix, and the PR says so.
+
+## Step 2 re-measured — harness and source at one revision (2026-09-22)
+
+### Why it was repeated
+
+The original W2 measurement ran the `6ab521d` source against the refactor tip's
+case table and comparator, and it was taken with the pre-correction harness.
+Two things were wrong with that as a record, neither of them a defect in the
+result: the harness revision was disclosed in prose but not recorded as a field,
+and the harness itself could report success without comparing anything
+(review comments R34-01, R34-02). Repeating it is cheaper than arguing about it.
+
+### Setup
+
+Both sides were driven by one harness, running from the candidate checkout, with
+each side's production tree supplied as `--repo-root` from its own clean
+detached checkout.
+
+```bash
+# from .worktrees/w2-candidate-ceac2b4, PYTHONPATH=$PWD
+OUT=/data/ycfeng/tmp/issue26-correctness-pr/w2-remeasure
+python tests/e2e/refactor_fidelity/run_matrix.py run \
+  --repo-root .worktrees/w2-baseline-6ef0a3c  --label w2_baseline_6ef0a3c \
+  --output-root "$OUT" --jobs 6 --clean-cache --continue-on-failure
+python tests/e2e/refactor_fidelity/run_matrix.py run \
+  --repo-root .worktrees/w2-candidate-ceac2b4 --label w2_candidate_ceac2b4 \
+  --output-root "$OUT" --jobs 6 --clean-cache --continue-on-failure
+python tests/e2e/refactor_fidelity/run_matrix.py compare --output-root "$OUT" \
+  --baseline-label w2_baseline_6ef0a3c --candidate-label w2_candidate_ceac2b4
+```
+
+| Field | Baseline | Candidate |
+| --- | --- | --- |
+| Source revision | `6ef0a3c` (refactor tip, no W2) | `ceac2b4` (this branch, with W2) |
+| Source working tree | clean | clean |
+| Harness revision | `ceac2b4` | `ceac2b4` |
+| Case filter | none | none |
+| Cases executed | 71 | 71 |
+| `case_count` / result lines | 71 / 71 | 71 / 71 |
+| Cache cleaned first | yes | yes |
+| Cache files produced | 426 | 426 |
+
+### The expectation, unchanged from the first measurement
+
+Exactly three cases move: `dp_dense_online_lanes2`, `dp_dense_online_lanes4`,
+`dp_dense_online_lanes2_replicas2`. The two offline DP cases and the remaining
+66 do not. A result of zero mismatches would mean the fix never reached the
+path; a mismatch anywhere else would mean it reached more than the path.
+
+### Result
+
+| Measure | Expected | Actual | Result |
+| --- | --- | --- | --- |
+| Cases compared | 71 | **71** | PASS |
+| Identical | 68 | **68** | PASS |
+| Mismatched | the 3 named above | **exactly those 3** | PASS |
+| Expected to move but did not | none | **none** | PASS |
+| Moved but was not expected to | none | **none** | PASS |
+| Baseline failures | 0 | **0** | PASS |
+| Candidate-only failures | 0 | **0** | PASS |
+| Missing / missing evidence / differing definitions | 0 | **0 / 0 / 0** | PASS |
+| Cases not compared | 0 | **0** | PASS |
+| Provenance findings | none | **none** | PASS |
+| Predictor cache differences | 0 | **0**, compared cleanly | PASS |
+
+Comparison exit code 1, which is correct here: the gate reports inequality, and
+the acceptance criterion is the stated expectation, not exit 0.
+
+### Direction, from the stage ledger's `replica_local_id`
+
+| Case | Baseline | Candidate | |
+| --- | --- | --- | --- |
+| `dp_dense_online_lanes2` | `{0: 45}` | `{0: 44, 1: 45}` | moved |
+| `dp_dense_online_lanes4` | `{0: 45}` | `{0: 43, 1: 43, 2: 44, 3: 45}` | moved |
+| `dp_dense_online_lanes2_replicas2` | `{0: 56}` | `{0: 55, 1: 56}` | moved |
+| `dp_dense_offline_lanes2_replicas2` | `{0: 70, 1: 70}` | `{0: 70, 1: 70}` | control, unchanged |
+| `coloc_dense_offline_attn_dp2` | `{0: 39, 1: 39}` | `{0: 39, 1: 39}` | control, unchanged |
+
+Every number reproduces the first measurement exactly. The re-measurement
+changed the provenance of the evidence, not the evidence.
+
+### Relationship between the measured commit and the branch tip
+
+The candidate measured is `ceac2b4`. Commits after it on this branch touch only
+`tests/` and `task_memory/`; `git diff --stat ceac2b4..HEAD -- frontier/` is
+empty, so the production tree that produced these artifacts is the branch tip's
+production tree. This is the "prove the relationship" path the review prefers to
+a rerun, and here it is genuinely available because no production file changed.
+
+### Unit evidence for the strengthened tests
+
+`tests/unit/test_cluster_scheduler_dp_lanes.py`, 23 tests, all passing. Against
+the pre-fix `_schedule_batch_mode` taken verbatim from `6ab521d^` and installed
+in memory, 12 of 23 fail; the grouping control and the eight unrelated lane
+tests still pass. What the failures show is recorded in `review.md`: the old
+code produces the expected sequence exactly for a single burst and collapses to
+lane 0 only for incremental arrival, so the fix restored a rotation that already
+existed rather than introducing one.
+
+Related modules, whole files: 51 failed / 1356 passed / 19 skipped, and all 51
+failures are `test_pdaf_parity_reference_observer_bootstrap.py`, which needs the
+pinned PD-AF reference checkout that is absent on this host. That count matches
+the inherited-failure inventory recorded for the refactor branch.
+
+### Limits
+
+- The matrix still validates only the monolithic half of W2. The prefill role is
+  now covered at the scheduler level, through the public `schedule()`, for both
+  roles that reach batch-mode placement; that is a scheduler test, not a run of
+  the event loop. Full runtime coverage needs the direct-construction fixture
+  described under R35-02, which is W3 acceptance work.
+- Lane occupancy is read from the stage ledger, which records scheduled stage
+  executions. It shows where work was placed, not that placement is optimal.
