@@ -16,6 +16,7 @@
 | 2026-09-22 | W7 facts re-verified: the candidate gitlink is unpublished, the three payload defects are confirmed by execution against the published backend, and the fix needs companion-repository authorization. |
 | 2026-09-22 | W5 closed without source changes. Corrected the Mechanism A premise: the routing distribution has no per-role override on main, so both W5 mechanisms are unreachable from any released configuration. The user chose to keep the single global field; the drafted implementation was reverted and archived as a patch. |
 | 2026-09-22 | Step 8 §14.2 recorded: final self-review of the whole branch diff at `d881357`, with the method stated and one deferred pre-existing defect. |
+| 2026-09-22 | External review of PR34/PR35 (`.local-draft/Frontier_PR34_PR35_Current_Code_and_PP_Extension_Review_2026-09-22.md`) verified finding by finding; D2's scope-identifier clause marked SUPERSEDED; disposition table added at the end. |
 
 ## Pinned source snapshot
 
@@ -236,10 +237,18 @@ unconditionally (`:308-310`). W4 must not add a hard runtime assertion on
 report order that the reference does not have. Key equality per shared forward
 is a test invariant, not a runtime abort condition.
 
-### D2 — RESOLVED: include the local reduction, behind a narrow versioned scope identifier
+### D2 — RESOLVED: include the local reduction (the scope-identifier clause is SUPERSEDED)
 
-Approved as written, including the compatibility and cache policy in §3.5 and the
-validation set in §3.6.
+**Superseded in part, 2026-09-22.** The "narrow versioned scope identifier" and
+its §3.5 compatibility/cache policy were overtaken by the user's later decision,
+recorded in the W6 table above under "Decided: artifact identity": 不改
+metadata，只记录限制 — document the limitation, change no metadata. The
+inclusion of the local reduction, the §3.3 verification table and the
+"Consequence adopted" paragraph below remain in force. Only one rule is active:
+the documentation-only decision (external review C35-05).
+
+Approved as written at the time, including the compatibility and cache policy in
+§3.5 and the validation set in §3.6.
 
 The maintainer's §3.3 correction is confirmed in this tree:
 
@@ -403,3 +412,25 @@ which exists here or on `origin/main`; the same missing tree causes 10 of the 84
 baseline unit failures. Reproduced on the base, reported as a baseline failure,
 and recorded in `future.md` rather than repaired, because the correct fix is a
 decision about the published test surface and is unrelated to Issue 26.
+
+## External review 2026-09-22 — findings disposition
+
+Reviewed revisions: PR34 `6ef0a3c`, PR35 `0137269`. Each finding was checked against source before any edit. Statuses: `FIXED` (code or record changed and verified), `ACCEPTED_LIMITATION` (true, recorded, not changed), `SUPERSEDED` (overtaken by a dated decision), `OPEN` (still to do). Commit SHAs are in the branch log; the evidence file is `test_report_2026-09-22_review_corrections.md` unless stated.
+
+| Finding | Verified as | Status | Where / evidence |
+| --- | --- | --- | --- |
+| C34-01 cache comparison eligibility ignores `cases_executed_in_last_run` | Confirmed: `compare_labels` read only `cache_clean_before_run` and `case_filter`; `--start`/`--limit` leave no filter | FIXED | PR34 `2310417` (runner + 4 gate tests), merged as `0d025f8`; Checkpoint B verdict re-derived, unchanged (`task_2026-09-21_oversized_module_split/test_report_2026-09-22_cache_eligibility_correction.md`) |
+| C35-01 decoding request in a prefill-mode mixed batch uncredited at a dense layer | Confirmed by call path: `complete_dense_layer(phase="prefill")` → `handle_prefill_sync_collective`, which credits nothing; only the shared forward and decode helpers credit | FIXED | `advance_decode_layer` helper (validate then increment) used by all three completion paths; dense prefill-mode source credits its decoding members. Unit: mixed source at a dense layer +1 for the decoder, 0 for the prefiller, pure-prefill control credits nothing; `MoE -> dense -> MoE` credits 1, 2, 3. Real loop: hybrid `moe_layers_enum="0,2,3"`, 4 mixed dense completions, 10 decode tokens all peaking at 4 layers; the pre-fix source peaks 4 of them at 3 |
+| C35-02 W6 report claims legacy scope equals functional scope | Confirmed: the functional entry aligns inside `fused_experts` (vLLM 0.10.2 `fused_moe.py:1718`), the legacy path aligns before `_step`; shuffling and grouped GEMM are additive in both accounting paths | FIXED (records) | W6 report §5 scope table; `docs/profiling/README.md`; `summary.md`; PR35 body. Live double count for functional datasets: not verified, not claimed |
+| C35-03 FP8 test omits `block_shape`; "8 of 8 at `rtol=0, atol=0`" overstates | Confirmed: `block_dims` was passed, `block_shape` was not; the FP8 test asserts shape and finiteness only | FIXED (test + wording); native rerun OPEN | `block_shape=block_shape` added; CPU test pins both GEMM invocations receive it (`[128, 64]`) and `None` when omitted; report §8, `summary.md`, PR35 body restated as seven comparisons plus one structural check. Native rerun on one H800 under `codesign`: `NOT_RUN`, awaiting the user's go |
+| C35-04 unconditional `import torch` adds a collection error | Confirmed: 11 collection errors in the minimal environment versus 10 on the base | FIXED | `pytest.importorskip("torch")` before importing the profiler module; minimal env: `1 skipped`; torch env: 9 passed; unit suite errors back to 10 |
+| C35-05 records inconsistent (D2 metadata rule vs documentation-only; W2-checkpoint diff claim; blanket vLLM-comparison exclusion; PR34 "Draft") | Confirmed on all four points | FIXED (records) | D2 heading marked SUPERSEDED in part with a link to the dated decision; PR35 body scopes the `ceac2b4` diff claim to the W2 checkpoint and amends the exclusion for the authorized scheduler-level comparison; `progress.md` status table current; PR34 body says "open for review" |
+| Review's "PR35 mergeable=false" | Stale: GitHub reports `MERGEABLE` for both PRs; PR34 `isDraft=false` | ACCEPTED_LIMITATION (of the review) | `gh pr view` 2026-09-22 |
+| P9-01 room-only hook rule; "steady state needs no change" | Accepted: the reference branch is a three-way conjunction; depth-`P` completes `B_(k-P+1)` | FIXED (plan) | `plan.md` §18.3, D9-1, §18.11 state table; `design.md` W9 |
+| P9-02 K3 as written breaks peer-key equality | Reproduced on this branch's balancer: equal keys → lane 0; fresh key → partial snapshot `[(0,3),(0,0)]`, lane 1 | FIXED (plan) | K1, K3-as-written, stride rejected as acceptance basis; invariants I1–I6; rule deferred to the design checkpoint after P1 establishes iteration membership |
+| P9-03 emission log alone cannot show the placement path | Accepted | FIXED (plan) | Instrumentation chain (iteration, emission, coordinator receive/publish with snapshot id, frontend application, routing), named fields, correlation ids, changed-file list under G1, T2 `SCENARIO_NOT_REACHED` rule |
+| P9-04 boundary index is not alignment; unmodified PP2 baseline cannot run | Accepted; constructor rejects PP>1 at `0137269` | FIXED (plan) | CPU reference-loop oracle, causal join, first-cause labels, controls table (rejected production / test-only guard-lifted / corrected / round-robin optional) |
+| P9-05 PP3 needs a valid layer count; behavioral matrix | Accepted: tiny Qwen has 8 layers, `_model()` fixture 4, `num_layers % PP == 0` enforced | FIXED (plan) | PP3 CPU fixture with 6 or 12 layers; matrix in §18.11 |
+| P9-06 work graph and acceptance language | Accepted | FIXED (plan) | §18.5 graph, §18.1 C1–C5 |
+| Package F (W9 implementation) | — | OPEN by instruction | Not started (user: 暂不开启 new subtask) |
+

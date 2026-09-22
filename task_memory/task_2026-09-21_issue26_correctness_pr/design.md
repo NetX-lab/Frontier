@@ -10,6 +10,7 @@ scope decisions and the pre-measurement expectation for that package.
 | 2026-09-22 | Created. Source-backed design for Checkpoint D's W3 half, with the scope decisions and their evidence. |
 | 2026-09-22 | Restructured into per-work-package sections and added the W4 design, with the report-key identity measured at the emission boundary. |
 | 2026-09-22 | Added the W9 design: vLLM 0.10.2 count publication under pipeline parallelism, the equivalence argument, the schedule-only gap, the report-key options, and the discriminating scenario. Analysis only; implementation pending. |
+| 2026-09-22 | W9 corrected per the external review (P9-01..P9-06): the steady-state claim withdrawn in favor of stated preconditions and the engine-iteration state table; K1, K3-as-written and stride keys rejected as acceptance basis, with the reproduced counterexample and six invariants; the discriminating scenario qualified as a conditional witness; planned edits extended (observation record, instrumentation chain, PP3 fixture, CPU reference loop, controls). Still analysis only. |
 
 # W3 — one shared monolithic forward
 
@@ -268,7 +269,7 @@ than confirming it.
 
 # W9 — schedule-time reports under pipeline parallelism
 
-Analysis recorded before implementation (plan §17). Everything here is read from
+Analysis recorded before implementation (plan §18; corrected 2026-09-22 per the external review, see plan §18.11). Everything here is read from
 the pinned checkout `.real-engine/vLLM-BS` at `ea95f571e` and from the current
 branch; nothing has been measured on a GPU yet.
 
@@ -293,27 +294,54 @@ branch; nothing has been measured on a GPU yet.
 | At admission a batch carries the provisional per-lane creation counter; the Replica-scoped key is assigned when the sync room opens during execution. | `base_replica_scheduler.py:460-467`, `forward_sync_state.py:152-158` |
 | The only report boundary today is `on_replica_batch_end`, keyed by `ForwardSyncState.get_step_id(batch)`. | `vllm_load_balancing_cluster_scheduler.py`; W4 above |
 
-## Why the steady state already matches
+## Where the steady state matches, and on what conditions
 
-With a full batch queue of depth `PP`, vLLM iteration `k` schedules `B_k`,
-then completes `B_(k-1)`, then publishes. Frontier admits `B_k` when
-`B_(k-2)` ends (the counter drops below `PP`) and reports when `B_(k-1)` ends,
-with `B_k` already admitted. Both sides therefore publish the state "after
-`B_k` admission and `B_(k-1)` completion" at the completion of `B_(k-1)`. The
-same holds for the populations: admission moves requests into `running` on both
-sides, completion removes finished ones. **No change is needed for the steady
-state**, and the current PP=1 equivalence is the degenerate case `PP=1`.
+(Corrected 2026-09-22, P9-01. The earlier text here said "no change is needed
+for the steady state"; that sentence is withdrawn.)
 
-## The gap: schedule-only iterations
+The reference decides each engine iteration by a conjunction, not by queue room:
 
-When the queue is empty (after idle, or after an empty-batch iteration) the
-first admission returns without completing anything and vLLM publishes it
-immediately: `waiting -n, running +n`, score `-3n`, with a key strictly greater
-than the last completion's. Frontier stays silent until that batch ends, and
-when a single `on_schedule` call admits two batches it never exposes the state
-after the first. At PP=1 `step()` is atomic, so this cannot occur; the PP=1
-path is unaffected by construction, which is what makes a byte-identical PP=1
-fidelity check the right acceptance test.
+```python
+model_executed = scheduler_output.total_num_scheduled_tokens > 0
+if (model_executed
+        and len(batch_queue) < batch_queue_size
+        and not batch_queue[-1][0].done()):
+    return None, True          # admission-only iteration
+# otherwise: pop the oldest output, wait, update_from_output, then publish
+```
+
+With queue depth `P`, appending `B_k` to a queue holding `P-1` earlier outputs
+completes `B_(k-P+1)`; the `B_(k-1)` algebra of the first draft is the `P=2`
+case. Frontier's completion report at `B_(k-P+1)`'s end shows the same combined
+state only when `B_k` was admitted at `B_(k-P)`'s end, no empty iteration
+intervened and no completion became visible between the two boundaries. Equal
+queue occupancy does not prove equal `waiting`/`running` populations; request
+membership, empty schedules, completions and their visibility times must
+correspond. Those preconditions are a test table (plan §18.11), not an
+assumption, and the PP=1 equivalence remains the degenerate case in which the
+conjunction is never true because `step()` is atomic.
+
+## The gap: iterations the completion report cannot represent
+
+| State after a scheduling attempt | Reference | W9 must represent |
+| --- | --- | --- |
+| Nonzero tokens, room remains, oldest not ready | Return, publish changed counts | Admission-only observation |
+| Nonzero tokens, room remains, oldest already ready | Apply oldest, publish | One combined observation, not an extra admission-only report |
+| Nonzero tokens, queue full | Wait/apply oldest, publish | Completion-path observation |
+| Zero-token schedule, work queued | No early return | Explicit mapping of the empty iteration |
+| No new work, output queued | Drain, publish | Completion-only observation |
+
+The admission-only row is the visible one: after idle (or an empty-batch
+iteration) vLLM publishes `waiting -n, running +n`, score `-3n`, with a key
+strictly greater than the last completion's, while Frontier stays silent until
+that batch ends and, when a single `on_schedule` call admits two batches, never
+exposes the state after the first. But `pipeline_room_remaining` tests only the
+second conjunct, so a hook keyed on it has no representation for the other
+rows; the hook (name fixed by D-d) must pass an observation classified by this
+table, captured where the state changes, with the publish decision kept in the
+existing load-report owner. At PP=1 none of these iterations occur, which is
+what makes a byte-identical PP=1 fidelity check the right acceptance test for
+the unchanged path.
 
 ## The report key at the admission boundary
 
@@ -322,15 +350,38 @@ id and distinct forwards are strictly increasing. That id does not exist yet at
 admission — only the provisional per-lane counter does, and the dense
 multi-lane row in W4 shows what per-lane counters do to the latch. Options:
 
-| Option | Rule | Reference fidelity | Cost |
-| --- | --- | --- | --- |
-| K1 | Schedule-time report reuses `last_report_step` (equal key). | Applies counts; never latches. Misses the reference latch of the pre-admission state when the previous completion is still unpublished (resume from idle within 100 ms). | None. |
-| K3 (recommended) | The cluster scheduler relabels keys in emission order: a completion mints a label on first sight of its cohort (both lanes share it); a schedule-only admission mints a fresh label. | Strictly increasing in emission order, equal only for peer lanes of one cohort — the reference's "(wave, step) strictly increasing; peer engines share a step". | A dict and a counter inside the module; no interface change. Only comparisons are used, so PP=1 results are unchanged. |
-| Stride keys (`2*cohort±1`) | Arithmetic room between completion keys. | Arbitrary factor; no room for two consecutive schedule-only admissions at PP≥3. | Rejected. |
+| Option | Rule | Verdict (2026-09-22, P9-02) |
+| --- | --- | --- |
+| K1 | Schedule-time report reuses `last_report_step` (equal key). | Rejected as acceptance basis: applies counts but never latches, so it misses the reference latch of the pre-admission state when the previous completion is still unpublished. |
+| K3 as written | A completion mints a label on first sight of its cohort; every schedule-only admission mints a fresh label. | Rejected as written: a fresh label per admission *callback* equates callback order with iteration order and gives two peer lanes of one logical iteration different keys. Counterexample below. If "fresh label" was meant per shared logical iteration, the rule must first say how that iteration is identified. |
+| Stride keys (`2*cohort±1`) | Arithmetic room between completion keys. | Rejected: arbitrary factor; no room for consecutive admission-only iterations at PP≥3. |
 
-The probe planned as P1 records `(lane, boundary, provisional id, resolved id,
-load)` at PP=2 for four shapes and fixes the rule from evidence, the same way
-W4's table did.
+**Counterexample, reproduced on this branch's `VllmDPLoadBalancer`** (zero
+initial counts; lane 0 reports `waiting=0, running=3` at 10 ms, lane 1 reports
+the same at 20 ms; a request is placed at 80 ms):
+
+| Key assignment | Frontend snapshot before the 80 ms placement | Last publication | Selected lane |
+| --- | --- | --- | --- |
+| One key for both reports | `[(0,3), (0,3)]` | 70 ms | 0 (first minimum) |
+| Fresh key for the second report | `[(0,3), (0,0)]` — the partial snapshot latched at 20 ms | 20 ms | 1 |
+
+Identical inputs and loads, different published state. A second interleaving
+must also be handled: one lane completes cohort `C`, proceeds to an
+admission-only observation, and the peer's completion of `C` arrives later;
+reusing `C`'s old label after minting the next one breaks strict emission
+order, and the native coordinator's out-of-order warning is evidence to
+analyze, not something to suppress by inventing newer identities.
+
+The rule is chosen at the design checkpoint (plan §18.5) after the P1 probes
+establish logical-iteration membership: first identify the reference-equivalent
+engine iteration, then reuse an existing scheduler iteration/forward identity if
+it represents it, else a derived identity or a small report-state field. It
+must satisfy: (1) peer observations of one logical iteration compare equal in
+any callback order; (2) a new iteration orders after the previous one, with the
+key captured at the observation boundary; (3) an iteration that schedules and
+completes owns one report decision; (4) suppressed unchanged reports create no
+fictitious messages; (5) PP3 allows consecutive admission-only iterations
+without spacing constants; (6) bookkeeping is released with the in-flight work.
 
 ## The discriminating scenario, derived
 
@@ -353,22 +404,38 @@ chunk budget and prompt length; Frontier: `dummy_execution_time_ms`, decision
 D-e). Three warmups and an idle gap of at least 5 s precede the burst so both
 systems start from the quiet state the argument assumes.
 
+**Conditional witness (2026-09-22, P9-04).** The algebra holds for a state with
+`k_e` assigned, `a_e` admitted, no intervening completion and no further
+published state; `k=(3,2), a=(3,1)` is the target, not a guaranteed live
+outcome. The trace must show the actual routing order of the burst, the
+admissions, the in-flight requests, later scheduling attempts and the snapshot
+applied at the frontend before `r6` was routed; otherwise the slice is
+`SCENARIO_NOT_REACHED`, not a scheduler mismatch. HTTP concurrency does not fix
+engine-receipt order, so request ids, dispatch order and receipt order are
+recorded and qualified. Chunk sizes and decode lengths are frozen explicit
+values; the balancer's constants are never tuned to make the witness occur. The
+pre-change control for `r6` is the explicit test-only completion-reporting
+baseline (guard lifted only), because the unmodified constructor rejects PP2
+and can only report that rejection.
+
 ## Planned edits
 
 | File | Edit |
 | --- | --- |
-| `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py` | `on_replica_batch_scheduled(time, replica_id, replica_local_id, batch, pipeline_room_remaining)`, inert default. |
-| `frontier/scheduler/replica_scheduler/base_replica_scheduler.py` | Call the hook in the MONOLITHIC/PREFILL admission loop after `self._num_running_batches += 1`, with `pipeline_room_remaining = self._num_running_batches < self._num_stages`. |
-| `frontier/scheduler/cluster_scheduler/vllm_load_balancing_cluster_scheduler.py` | Drop the PP1 clause of the guard and its error text; report `lane.get_request_load()` at the hook when room remains; K1 or K3 key rule per P1. |
-| `tests/unit/test_vllm_dp_load_balancer.py`, `tests/integration/test_vllm_dp_placement_runtime.py` | Guard case inverted; schedule-time report semantics; PP=2 dense and MoE cases; the discriminating scenario. |
+| `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py` | `on_replica_batch_scheduled(...)`, inert default; its payload is one observation of the engine iteration classified by the state table (fields fixed at the design checkpoint), not `pipeline_room_remaining` alone. |
+| `frontier/scheduler/replica_scheduler/base_replica_scheduler.py` | Call the hook in the MONOLITHIC/PREFILL admission loop where the state changes; readiness of the oldest output is read from existing DES completion state. |
+| `frontier/scheduler/cluster_scheduler/vllm_load_balancing_cluster_scheduler.py` | Drop the PP1 clause of the guard and its error text; keep the publish decision here; key rule per the design checkpoint, satisfying invariants 1–6. |
+| `tests/comparison/dp_placement_pp/reference_loop.py` | Independent CPU reference-loop oracle (scripted admissions, empty schedules, completions, controllable readiness) — not a copy of the hook. |
+| `tests/unit/test_vllm_dp_load_balancer.py`, `tests/integration/test_vllm_dp_placement_runtime.py` | Guard case inverted; the plan §18.11 behavioral matrix (PP2 both callback orders, oldest-ready, PP3 consecutive admission-only iterations on a 6- or 12-layer fixture, full queue, empty schedule, drain, idle peers, bounded bookkeeping); the discriminating scenario against the test-only control; the C35-01 hybrid-layer credit case at PP2. |
+| `.real-engine/vLLM-BS` (local branch only, D-b) | Case-gated event chain: iteration result, emitted report, coordinator receive/publish with snapshot id, frontend application, frontend routing; named `waiting`/`running`; correlation ids; buffered per-process JSONL. |
 | `AGENTS.md:620`, this file, `plan.md`, `progress.md`, `validation.md`, `review.md` | Wording and records. |
 
 ## Fidelity expectation, stated before measuring
 
 - Every PP=1 `vllm_load_balancing` scenario: `request_metrics.csv` value-identical and `system_metrics.json` identical after removing timestamps and run ids.
 - Every scenario of every other cluster scheduler: identical (the hook's default is inert; the only added work is one method call per admission).
-- PP=2 with `vllm_load_balancing`: runs complete; placements differ from round-robin where the published load says they should; the discriminating request moves from `e1` to `e0`.
-- Ground truth: T1 publication sequences match by boundary index; T2 placement of the discriminating request matches the fixed module and not the current one.
+- PP=2 and PP=3 with `vllm_load_balancing`: runs complete with request/token/owner conservation; on the qualified discriminating scenario the corrected module sends `r6` to `e0` while the test-only completion-reporting control sends it to `e1` (round-robin inequality alone proves nothing, since PP1 `vllm_load_balancing` already differs from round-robin).
+- Ground truth: on a controlled or causally matched history, emitted loads, key equality/order, coordinator snapshots and frontend-visible counts agree with the reference; natural divergence is labeled by first cause; T2 matches the corrected module in a trace-qualified slice or is recorded as `SCENARIO_NOT_REACHED`.
 
 ## What this adds, and what it is not
 

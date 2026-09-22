@@ -45,7 +45,7 @@ The draft specification is landed verbatim in `plan.md` together with an Amendme
 
 "添加需求：我需要在当前pr中补全 vllm_load_balancing_cluster_scheduler.py 的模拟支持，使得其不被限制在pp=1；你需要基于frontier 和vllm的codebase进行充分调研（codebase design skill)和设计，并且运行vllm v0.10.2进行实际调度结果的对比（pp>1情况下的dp 调度策略；调用calibration来确保参数设定一致）。请你先设计落地该子任务的plan，在我批准之前暂不执行"
 
-Reading: (a) remove the PP1 restriction of `VllmLoadBalancingClusterScheduler` inside PR 35; (b) research both codebases and design first; (c) compare against a real vLLM v0.10.2 PP>1 DP-scheduling run, using the `frontier-calibration` skill to keep settings consistent; (d) deliver the plan first and do not execute before approval. Plan: `plan.md` §17 (Step 9) and amendment A12.
+Reading: (a) remove the PP1 restriction of `VllmLoadBalancingClusterScheduler` inside PR 35; (b) research both codebases and design first; (c) compare against a real vLLM v0.10.2 PP>1 DP-scheduling run, using the `frontier-calibration` skill to keep settings consistent; (d) deliver the plan first and do not execute before approval. Plan: `plan.md` §18 (Step 9) and amendment A12.
 
 ## [Original Request] 2026-09-22 — GPU charged group
 
@@ -59,12 +59,26 @@ Rule: every GPU submission uses `charged_group="codesign"`; `steptron_ci` is sus
 
 | Id | Question | Decision | Recorded in |
 | --- | --- | --- | --- |
-| D-a | Calibration helper archive absent. | Follow `frontier-calibration` v2 as written. The case path (`parity-run` → `workflow-gap-analysis`) binds no pinned helper; entries that do (`e2e-metrics-gap`, `op-supplement`, `dispatch-align-trace`) are off-path and would be `FAIL` if needed. | `plan.md` §17.7, §17.9 |
+| D-a | Calibration helper archive absent. | Follow `frontier-calibration` v2 as written. The case path (`parity-run` → `workflow-gap-analysis`) binds no pinned helper; entries that do (`e2e-metrics-gap`, `op-supplement`, `dispatch-align-trace`) are off-path and would be `FAIL` if needed. | `plan.md` §18.7, §18.9 |
 | D-b | vLLM-BS instrumentation. | Authorized: local commit on `feature/frontier-comparison-instrumentation` (engine identity in schedule rows; per-engine publication log). Push not requested. | `plan.md` G1 |
-| D-c | Model and tokenizer. | Tiny Qwen3-MoE config, dummy weights, tokenizer skipped. | `plan.md` §17.6 |
+| D-c | Model and tokenizer. | Tiny Qwen3-MoE config, dummy weights, tokenizer skipped. | `plan.md` §18.6 |
 | D-d | Hook name and key rule. | `on_replica_batch_scheduled`. Key rule left to the P1 probe (K3 recommended). | `plan.md` D9-1, D9-2 |
-| D-e | Frontier timing for the placement check. | Dummy mode first; switch to H800 profiling mode only on an unresolvable blocker. | `plan.md` §17.6, §17.7 |
-| D-f | Worker mount. | `code_mount_point=/data/ycfeng/Frontier`. | `plan.md` §17.6 |
-| D-g | "codebase design skill". | The `codebase-design` skill at the path above; applied in `plan.md` §17.10 and `design.md` W9. | `plan.md` §17.10 |
+| D-e | Frontier timing for the placement check. | Dummy mode first; switch to H800 profiling mode only on an unresolvable blocker. | `plan.md` §18.6, §18.7 |
+| D-f | Worker mount. | `code_mount_point=/data/ycfeng/Frontier`. | `plan.md` §18.6 |
+| D-g | "codebase design skill". | The `codebase-design` skill at the path above; applied in `plan.md` §18.10 and `design.md` W9. | `plan.md` §18.10 |
 
 Also requested: update the records so the execution plan, reasoning, and observations are clearly recorded, then commit and push. Not yet given: an explicit start signal for P1/G1.
+
+## [Original Request] 2026-09-22 — External review corrections
+
+"充分阅读理解/data/ycfeng/Frontier/.local-draft/Frontier_PR34_PR35_Current_Code_and_PP_Extension_Review_2026-09-22.md，逐条校对，采纳正确和高价值建议，修正补充代码和docs。暂不开启new subtask的执行。"
+
+Reading: read the external review in full, verify each finding against the source, adopt the correct and high-value ones, and fix or supplement code and docs. Do **not** start the new sub-task, i.e. the Step 9 / W9 implementation (the review's package F).
+
+| Item | Decision / disposition |
+| --- | --- |
+| Scope | Review packages A (PR34 cache eligibility), B (mixed-batch dense-layer credit), C (FP8 test wiring, optional-torch skip), D (evidence wording, records consistency, PR bodies) and E (Step 9 plan corrections, records only) are adopted. Package F (W9 implementation) is excluded by the user's instruction; no W9 source change and no GPU submission. |
+| Findings verified before editing | C34-01, C35-01..05 confirmed from source; P9-01..P9-06 accepted (P9-02 reproduced on the real balancer; P9-05 divisibility guard and layer counts confirmed). The review's "PR35 mergeable=false" was stale: both PRs report `MERGEABLE`; PR34 is not a draft on GitHub. |
+| GPU | The corrected FP8 native check (package C) was **not** re-run on a worker; it needs one H800 under `codesign` and a fresh go from the user. Recorded as `NOT_RUN`. |
+| Publication | PR34 correction committed and pushed first, then merged (not rebased) into PR35; PR35 commits pushed; both PR bodies updated through the API. Draft state of PR35 untouched. |
+

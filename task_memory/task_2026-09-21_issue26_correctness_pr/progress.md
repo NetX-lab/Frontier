@@ -17,6 +17,7 @@
 | 2026-09-22 | W7 authorized and delivered: companion fix published as `eb7bc4f` with draft PR 1, Frontier gitlink moved, Frontier-side test added, and the governance scans narrowed to Frontier-owned sources. Step 7 closed. |
 | 2026-09-22 | Step 8 §14.1 run: unit and integration suites at the baseline failure set, 16 architecture examples, four PP=2 cases, and a cold-then-warm predictor-cache pair. `tests/debug/` pointer defect found, deferred to `future.md`. |
 | 2026-09-22 | Step 8 closed: §14.2 review recorded, PR 35 body updated with the Step 8 results and record links, `summary.md` written. Task technically complete; PR stays draft for user review. |
+| 2026-09-22 | External review of PR34/PR35 applied (packages A–E; F excluded by the user): C34-01 merged in from the PR34 branch; C35-01 fixed with unit and real-loop hybrid-layer coverage and a negative control; C35-03/04 test wiring and optional-torch skip; C35-02/05 wording and record consistency; P9-01..06 folded into `plan.md` §18 and `design.md` W9. Step 9 remains planned, not started. See `test_report_2026-09-22_review_corrections.md` and the disposition table in `review.md`. |
 
 ## Status
 
@@ -25,9 +26,9 @@
 | Correctness branch | `fix/issue26-correctness-pr` (worktree `/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`) |
 | Base at creation | `refactor/oversized-module-split` @ `41dabfb9d5ef3b51cdf3009d486450515d9a8d2d` (itself on `origin/main` `1f694f7`) |
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
-| Current step | Step 8 closed. All eight steps complete; `summary.md` is the completion archive. |
-| Publication | PUSHED_VERIFIED. Draft PR 35 body carries the W6 and W7 sections; still draft. |
-| Next action | **User review.** Technical acceptance is complete; PR 35 remains draft and nothing was merged. Two follow-ups carried forward, both in `future.md`: re-point the collective-sim gitlink at `main` once companion PR 1 merges, and repair the `tests/debug/` pointers that 10 baseline unit failures share. Retargeting PR 35's base to `main` waits on PR 34. |
+| Current step | Step 8 closed; external review corrections A–E applied 2026-09-22 (`test_report_2026-09-22_review_corrections.md`). Step 9 is planned (`plan.md` §18, corrected per the review) and **not started**. |
+| Publication | PUSHED_VERIFIED (SHAs in the commit log; PR34 correction `2310417` merged in as `0d025f8`). Draft PR 35 body synchronized with the corrections; still draft. |
+| Next action | **User decisions.** (1) Go/no-go for re-running the corrected FP8 native check on one H800 under `codesign` (`NOT_RUN`). (2) Start signal for Step 9, at the first node of the `plan.md` §18.5 graph. PR 35 remains draft and nothing was merged. Carried forward in `future.md`: re-point the collective-sim gitlink at `main` once companion PR 1 merges, and repair the `tests/debug/` pointers that 10 baseline unit failures share. Retargeting PR 35's base to `main` waits on PR 34. |
 
 ## Step status
 
@@ -41,7 +42,9 @@
 | 5 | Routing implementation identity | CLOSED, NOT PORTED (user decision 2026-09-22) | n/a: no source change; restored files re-run, failure set identical to the parent (torch-missing only) | PUSHED_VERIFIED (records + PR 35 section) | REVIEWED (user chose to keep the single global field) |
 | 6 | Legacy fused-MoE profiling | PASS | CPU PASS (7 new tests; HEAD comparison shows the same single environment-dependent failure; default-environment suite unchanged at 84/3778). Native PASS: 8 of 8 in `tests/integration/test_moe_fused_expert_numerical_parity.py` at `rtol=0, atol=0` on H800, job `exp-0922-145047-660565` under `codesign` | PUSHED_VERIFIED (source, tests, docs, records, PR 35 section) | — |
 | 7 | Optional zero-payload backend | PASS. Companion fix published as `fwyc0573/frontier-htsim` `eb7bc4f` with draft PR 1; Frontier gitlink moved from `b8518af`; no Frontier source change | Companion 9 passed, negative control 6 of 9 fail on pristine sources. Frontier 4 passed, negative control 3 of 4 fail at the old gitlink. Clean checkout resolves `eb7bc4f` from the published remote, builds, and passes. Suite back to the 84-failure baseline with 3782 passing after narrowing three governance scans to Frontier-owned sources | PUSHED_VERIFIED | — |
-| 8 | Combined regression, PR hand-off | PASS | unit 84 failed / 3782 passed with a `FAILED` set identical to the `origin/main` baseline; integration 15 passed / 22 skipped / 5 errors, the errors environmental and identical on the base; 16 of 16 architecture examples pass; 4 of 4 `PP=2` cases pass; cold and warm predictor-cache runs byte-identical | PUSHED_VERIFIED (records + PR 35 body carrying the Step 8 results, the record links and the implementation commits) | NOT_REVIEWED |
+| 8 | Combined regression, PR hand-off | PASS | unit 84 failed / 3782 passed with a `FAILED` set identical to the `origin/main` baseline; integration 15 passed / 22 skipped / 5 errors, the errors environmental and identical on the base; 16 of 16 architecture examples pass; 4 of 4 `PP=2` cases pass; cold and warm predictor-cache runs byte-identical | PUSHED_VERIFIED (records + PR 35 body carrying the Step 8 results, the record links and the implementation commits) | REVIEWED (external review 2026-09-22; corrections below) |
+| 8+ | External review corrections A–E | PASS | unit 84 failed / 3789 passed / 50 skipped / 10 errors with the `FAILED` set identical to the baseline (+7 passes are the new tests, +1 skip and −1 error are the optional-torch module); mixed-forward unit 26 passed; real-loop hybrid-layer case 2 passed with the negative control failing on the pre-fix source; arithmetic 9 passed under torch | PUSHED_VERIFIED | NOT_REVIEWED |
+| 9 | PP>1 support for `vllm_load_balancing` | PLANNED — plan corrected per the external review (`plan.md` §18.11); **not started** | n/a | PUSHED_VERIFIED (records only) | awaiting the user's start signal |
 
 ## Chronological updates
 
@@ -181,9 +184,23 @@ files; the 110 tracked files under `outputs/` are all still present.
   for byte as sent. Nothing was merged, force-pushed, marked ready, or closed.
 - `summary.md` written as the completion archive.
 
+## External review corrections (2026-09-22)
+
+Review document: `.local-draft/Frontier_PR34_PR35_Current_Code_and_PP_Extension_Review_2026-09-22.md` (local). Finding-by-finding disposition: `review.md`, "External review 2026-09-22 — findings disposition". Evidence: `test_report_2026-09-22_review_corrections.md`.
+
+| Package | Finding | Where | State |
+| --- | --- | --- | --- |
+| A | C34-01 predictor-cache eligibility by executed case list | PR34 branch `2310417`, merged here as `0d025f8` | completed |
+| B | C35-01 decode credit at a dense layer for a mixed source | `collective_timing.advance_decode_layer`, `dense_metrics.complete_dense_layer`; unit + real-loop tests | completed |
+| C | C35-03 FP8 `block_shape` wiring + CPU boundary test; C35-04 optional-torch skip | `tests/integration/test_moe_fused_expert_numerical_parity.py`, `tests/unit/test_moe_fused_expert_arithmetic.py` | completed; native rerun `NOT_RUN` |
+| D | C35-02 scope table; C35-03 seven-plus-one wording; C35-05 records consistency and PR bodies | W6 report §5/§8, `docs/profiling/README.md`, `summary.md`, `review.md` D2, this file, PR34/PR35 bodies | completed |
+| E | P9-01..P9-06 plan corrections | `plan.md` §18 (renumbered from §17) and §18.11, `design.md` W9 | completed (records only) |
+| F | W9 implementation | — | **not started** (user: 暂不开启) |
+
 ## Step 9 — PP>1 support for `vllm_load_balancing` (pending)
 
 | Date | State | Note |
 | --- | --- | --- |
-| 2026-09-22 | pending | Plan drafted in `plan.md` §17 with amendment A12 and `requirements.md` rows; awaiting user approval and the D-a..D-g answers. No source, GPU, or publication action taken. |
-| 2026-09-22 | in-progress (planning closed) | User answered D-a..D-g; `plan.md` §17 finalized (decisions, G1–G5 ground-truth packages, calibration case binding, `codebase-design` vocabulary), `design.md` W9 written, `requirements.md` updated. Records committed and pushed (SHA in the commit log). No source edit, no GPU submission; next action: P1 probe + G1/G2 once the user confirms the start. |
+| 2026-09-22 | pending | Plan drafted in `plan.md` §18 with amendment A12 and `requirements.md` rows; awaiting user approval and the D-a..D-g answers. No source, GPU, or publication action taken. |
+| 2026-09-22 | in-progress (planning closed) | User answered D-a..D-g; `plan.md` §18 finalized (decisions, G1–G5 ground-truth packages, calibration case binding, `codebase-design` vocabulary), `design.md` W9 written, `requirements.md` updated. Records committed and pushed (SHA in the commit log). No source edit, no GPU submission; next action: P1 probe + G1/G2 once the user confirms the start. |
+| 2026-09-22 | in-progress (planning corrected) | External review P9-01..P9-06 applied: `plan.md` §17 → §18 (duplicate number), state table and preconditions replace the room-only hook rule and the steady-state claim, K1/K3/stride rejected as acceptance basis with invariants I1–I6, instrumentation chain and T2 qualification, CPU reference-loop oracle and valid controls, PP3 fixture with a valid layer count, revised graph and C1–C5 (`plan.md` §18.11, `design.md` W9). Records only; execution still awaits the user's start signal. |

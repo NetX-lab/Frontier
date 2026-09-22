@@ -6,6 +6,7 @@
 | --- | --- |
 | 2026-09-21 | Placeholder created at Step 0. |
 | 2026-09-22 | Completion archive written at Step 8. |
+| 2026-09-22 | External review corrections: W3 dense-layer credit for decoding requests in a mixed batch (C35-01); W6 native result restated as seven comparisons plus one FP8 structural check, FP8 `block_shape` wiring corrected (C35-02/03); optional-torch skip (C35-04); records aligned (C35-05). Step 9 remains planned, not started. |
 
 ## Overview
 
@@ -30,7 +31,7 @@ of scope throughout. Issue 26 stays open. All three PRs are draft.
 | # | Fix | Outcome |
 | --- | --- | --- |
 | W2 | Round-robin DP placement keeps rotating across scheduling calls | Landed. `6ab521d`, tests strengthened in `ceac2b4`. |
-| W3 | A monolithic Replica completes one shared forward across mixed prefill and decode source lanes | Landed. `65ed8a7`. |
+| W3 | A monolithic Replica completes one shared forward across mixed prefill and decode source lanes | Landed. `65ed8a7`. A decoding request inside a prefill-mode mixed batch was still missing its credit at a dense layer; repaired 2026-09-22 (C35-01, `test_report_2026-09-22_review_corrections.md`). |
 | W4 | Opt-in vLLM-style DP request placement, off by default and bounded in its constructor | Landed. `10dd474`. |
 | W5 | Routing implementation identity separated from expert-load distribution | **Closed, not ported**, by user decision after the premise check showed the collision unreachable from any released configuration. Drafted implementation reverted before commit and archived as `w5_reverted_moe_routing_runtime_path.patch`. |
 | W6 | Legacy fused-MoE profiling performs the real gated expert computation | Landed. `7269bac`, native parity test `697f219`, identity limits documented in `79f599a`. |
@@ -89,7 +90,7 @@ recorded in `validation.md`), and `w5_reverted_moe_routing_runtime_path.patch`.
 | W3 fidelity matrix | 71 of 71 cases identical, against an expectation recorded before the run. |
 | W4 fidelity matrix | 71 of 71 cases identical, against an expectation recorded before the run. |
 | W4 placement | Measured to place differently from round-robin under the same load, so the policy is not a renamed default. |
-| W6 native parity | 8 of 8 at `rtol=0, atol=0` on an H800 (`exp-0922-145047-660565`, charged group `codesign`), vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`. |
+| W6 native parity | Eight native tests passed on an H800 (`exp-0922-145047-660565`, charged group `codesign`, vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`): seven reference-output comparisons at `rtol=0, atol=0` and one FP8 structural/finite-output check. FP8 numerical equivalence is not established. The FP8 check as run omitted the production `block_shape`; corrected 2026-09-22 (C35-03), native rerun NOT_RUN. |
 | W7 companion | 9 passed on the fix; 6 of 9 fail against pristine sources. |
 | W7 Frontier | 4 passed; 3 of 4 fail at the old gitlink. A fresh clone resolves `eb7bc4f` from the published remote, builds, and passes. |
 | Negative controls | W2 12 of 23, W3 four trees, W4 five trees, W6 one discriminating test, W7 both sides — each fails for its own stated reason on the unrepaired source. |
