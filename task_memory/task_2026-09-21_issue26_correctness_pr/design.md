@@ -397,7 +397,13 @@ the hook has nothing to classify: it carries `(time, replica_id,
 replica_local_id, batch)` exactly as the completion hook does, and the policy
 scheduler reads the post-admission load through `get_request_load()`, which
 already reflects the admission because `_running_requests` grows inside
-`_get_next_batch`. The zero-token iteration publishes nothing in the reference
+`_get_next_batch`. The reference's other conjunct, room in the batch queue, is
+real and is the lane's `num_running_batches < num_pipeline_stages` after the
+admission; the policy reads both from existing getters and publishes the
+admission on its own only while room remains, otherwise the admission is
+folded into the completion the engine then blocks on. At PP=1 the single slot
+is always filled, so this one rule reproduces today's completion-only
+reporting without a PP special case. The zero-token iteration publishes nothing in the reference
 (`_maybe_publish_request_counts` emits only changed counts) and needs no
 observation here. Of the five reference rows only the admission-only row is new.
 
@@ -479,7 +485,7 @@ and can only report that rejection.
 | --- | --- |
 | `frontier/scheduler/cluster_scheduler/base_cluster_scheduler.py` | `on_replica_batch_scheduled(time, replica_id, replica_local_id, batch)`, the completion hook's signature, inert default. No readiness field or observation record (second review, R9-01). |
 | `frontier/scheduler/replica_scheduler/base_replica_scheduler.py` | Call the hook once per admitted batch in the MONOLITHIC/PREFILL admission loop, after `_num_running_batches += 1`, through the constructor-required `self._cluster_scheduler` without `getattr`/`hasattr` (R9-04). |
-| `frontier/scheduler/cluster_scheduler/vllm_load_balancing_cluster_scheduler.py` | Drop the PP1 clause of the guard and its error text; implement `on_replica_batch_scheduled`; key both observation kinds by the observing iteration per the design checkpoint (first candidate: the Replica's next forward id through a plain `ForwardSyncState` accessor), satisfying invariants 1–6. |
+| `frontier/scheduler/cluster_scheduler/vllm_load_balancing_cluster_scheduler.py` | Drop the PP1 clause of the guard and its error text; implement `on_replica_batch_scheduled`, publishing an admission on its own only while `num_running_batches < num_pipeline_stages` (existing getters); key both observation kinds by the observing iteration per the design checkpoint (first candidate: the Replica's next forward id through a plain `ForwardSyncState` accessor), satisfying invariants 1–6. |
 | `tests/comparison/dp_placement_pp/reference_loop.py` | CPU oracle of the engine iteration only (scripted admissions, empty schedules, completions, controllable readiness; conjunction, changed-count emission, step counter), feeding the real `VllmDPLoadBalancer`; not a second coordinator/frontend model (R9-05). |
 | `tests/unit/test_vllm_dp_load_balancer.py`, `tests/integration/test_vllm_dp_placement_runtime.py` | Guard case inverted; the plan §18.11 behavioral matrix (PP2 both callback orders, oldest-ready, PP3 consecutive admission-only iterations on a 6- or 12-layer fixture, full queue, empty schedule, drain, idle peers, bounded bookkeeping); the discriminating scenario against the test-only control; the C35-01 hybrid-layer credit case at PP2. |
 | `.real-engine/vLLM-BS` (local branch only, D-b) | Case-gated event chain: iteration result, emitted report, coordinator receive/publish with snapshot id, frontend application, frontend routing; named `waiting`/`running`; correlation ids; buffered per-process JSONL. |

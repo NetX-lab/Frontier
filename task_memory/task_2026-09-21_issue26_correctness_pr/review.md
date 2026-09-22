@@ -441,7 +441,7 @@ Reviewer: this session, against `c231322`, at the user's direction ("确保当�
 
 | Id | Gate | Finding | Disposition |
 | --- | --- | --- | --- |
-| R9-01 | redundancy / over-design | Readiness classification and `pipeline_room_remaining` have no DES counterpart; only the admission-only row is new | Plan amended: hook payload = completion hook signature |
+| R9-01 | redundancy / over-design | Readiness classification has no DES counterpart; the room test is real but computed by the policy from the lane's existing `num_running_batches`; only the admission-only row is new; one rule for all PP | Plan amended: hook payload = completion hook signature |
 | R9-02 | grounded in codebase | Completion key `get_step_id(batch)` names the scheduling iteration; correct only at PP=1 | D9-2 amended: key both kinds by the observing iteration; C2 verifies PP=1 |
 | R9-03 | reuse before inventing | `ForwardSyncState._next_step_id_by_replica` meets I1–I4, I6; I5 gap measured, not assumed | P1 tests it first; decision at the checkpoint |
 | R9-04 | over-defense / layering | Constructor-required `_cluster_scheduler`; do not repeat the `getattr`/`hasattr` reach-ups | D9-1 wording; asymmetry recorded in `design.md` |
