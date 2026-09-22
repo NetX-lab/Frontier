@@ -12,6 +12,7 @@
 | 2026-09-22 | Checkpoint E second half: W6 arithmetic repaired and CPU-validated; measurement ownership decided; native GPU validation and artifact identity left open. |
 | 2026-09-22 | Checkpoint E first half: W5 closed as NOT PORTED by user decision after the premise check showed the collision unreachable on main; the drafted implementation was reverted before commit and archived as a patch. |
 | 2026-09-22 | W6 artifact identity decided as document-only and written into the profiling guide; native parity test added and submitted to an H800 worker as `exp-0922-140423-075005`. |
+| 2026-09-22 | W7 investigated while the GPU job queued: candidate gitlink unpublished, three payload defects confirmed by execution, companion-repository decision pending. |
 
 ## Status
 
@@ -22,7 +23,7 @@
 | Prerequisite | MET. All four modules this PR edits are under the 2,000-line gate. The split's final record is 71 of 71 fidelity cases identical with no predictor cache differences, taken with the corrected gate; see the refactor task's Checkpoint B report. |
 | Current step | Step 6 source, CPU validation and artifact-identity documentation complete; native GPU parity job `exp-0922-140423-075005` submitted, result pending |
 | Publication | PUSHED_VERIFIED (records) |
-| Next action | Record the native parity result, then Checkpoint F's conditional W7. |
+| Next action | Record the native parity result. W7 needs one user decision: authorize a companion-repository branch in `fwyc0573/frontier-htsim`, or record W7 as `EXCLUDED`. |
 
 ## Step status
 
@@ -35,7 +36,7 @@
 | 4 | Opt-in vLLM DP placement | PASS | unit PASS (61 new, 3778 total, failure set identical to the parent); integration PASS (3 cases in the real event loop, including a placement that diverges from round-robin); five deliberate-defect controls each fail for their own reason; matrix PASS, 71 of 71 identical against the stated expectation | PUSHED_VERIFIED | NOT_REVIEWED |
 | 5 | Routing implementation identity | CLOSED, NOT PORTED (user decision 2026-09-22) | n/a: no source change; restored files re-run, failure set identical to the parent (torch-missing only) | PUSHED_VERIFIED (records + PR 35 section) | REVIEWED (user chose to keep the single global field) |
 | 6 | Legacy fused-MoE profiling | PARTIAL: arithmetic, measurement ownership and artifact-identity documentation done; native parity job submitted, result pending | CPU PASS (7 new tests; HEAD comparison shows the same single environment-dependent failure; default-environment suite unchanged at 84/3778). Native: 8 cases in `tests/integration/test_moe_fused_expert_numerical_parity.py`, submitted as `exp-0922-140423-075005` | pending | — |
-| 7 | Optional zero-payload backend | NOT_STARTED (facts in `plan.md` A7) | — | — | — |
+| 7 | Optional zero-payload backend | INVESTIGATED, BLOCKED on a companion-repository decision. Candidate gitlink `e564935d` is unpublished, not inaccessible; the three payload defects are confirmed by execution against the published backend; the fix is companion-side only | Published runner exercised directly: explicit zero and missing field give the same `exit=2`, `-1` passes validation, CLI `0` loses to a positive spec value | — | — |
 | 8 | Combined regression, PR hand-off | NOT_STARTED | — | — | — |
 
 ## Chronological updates
@@ -89,6 +90,8 @@
 - 2026-09-22: W6 artifact identity decided by the user: do not change the profiling metadata, record the limitation only. `docs/profiling/README.md` now states what `moe_grouped_gemm` measures, the size of the pre-repair gap, and that `moe_grouped_gemm_backend` and `profiling_patch_tag` cannot date a row, so the remedy is to re-profile. Confirmed while writing it that `profiling_patch_tag` holds three historical free-text values in one CSV and is written nowhere in the source. No column added, no admission gate.
 - 2026-09-22: W6 native parity test added. `tests/integration/test_moe_fused_expert_numerical_parity.py`, 8 cases, adapted from the donor and extended to the plan's required matrix: Qwen3-A3B-30B shapes read from the checked-in model config at 4096 and 4097 tokens on EP ranks 0 and 1; a 257-token, 16-expert case at top-k 2 and 4 with popularity-weighted routing that leaves two local experts empty; repeated invocation with different inputs; and the FP8 path as a structural check. It drives `_run_fused_moe_iteration` with the same buffers, config and alignment `profile_fused_moe_kernel` uses and compares the output tensor against `fused_experts` at `rtol=0, atol=0`. Skips unless CUDA is present and `VLLM_API_VERSION == "0.10.x"`; verified to collect and skip cleanly locally. `expert_hidden_dim_per_partition` was dropped from the iteration signature in the same commit, since the gated activation reads the whole projection and the parameter selected nothing.
 - 2026-09-22: W6 native parity submitted. StepMind Python `RJobBackend` from the local host, job `exp-0922-140423-075005`, creator `i-fengyicheng`, `steptron_ci` / `H800`, 1 GPU, image `artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2` (the official Docker Hub build through the company docker.io proxy), NFS source `100.96.128.195:/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr`. The instrumented benchmark repo was not mounted and the `frontier-calibration` skill was not invoked: this compares tensors from vLLM's own `fused_experts` inside one process, which needs neither serving instrumentation nor an E2E calibration workflow.
+
+- 2026-09-22: W7 investigated while the parity job queued. `fwyc0573/frontier-htsim` is public and readable, its only branch `main` is exactly the gitlink Frontier already pins, and the candidate's `e564935d` returns HTTP 422 with no local object store on this host containing it — an unpublished commit, not an access problem. The fix is entirely companion-side. Confirmed all three payload defects by running the published runner rather than reading it: an explicit `tensor_bytes = 0` and a deleted field produce the identical `missing required fields: ['tensor_bytes']` exit 2; `-1` passes validation and reaches the simulator invocation; and `set_if_none_or_zero` replaces an explicit CLI `0` with a positive spec value. Reachable from Frontier because `_validate_data_size` accepts zero and `moe_operator_times.py:512` computes the EP all-to-all payload as `embedding_dim * 2 * routed_tokens`, which is zero for an empty local lane. Frontier cannot fix it alone: a zero-byte collective still costs the intra-server latency, so short-circuiting would change the backend's semantics. Blocked on the user's decision about the second repository; nothing was created or pushed there.
 
 ## Step 3 scoping, as recorded before implementation
 

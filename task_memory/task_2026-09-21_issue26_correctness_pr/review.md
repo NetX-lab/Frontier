@@ -12,6 +12,7 @@
 | 2026-09-22 | Self-review of that record: corrected the lockstep mechanism and counter semantics under D1, the line references under R34-01, the R34-03 remedy (the baseline label is itself an assembled partial run), and added the omissions listed under "Found on re-review". |
 | 2026-09-22 | W6 arithmetic delivered with CPU validation; two deviations from the recorded adaptations justified; artifact identity raised as an open decision; native GPU validation NOT_RUN. |
 | 2026-09-22 | W6 artifact identity decided as document-only; native parity test added and submitted to an H800 worker. |
+| 2026-09-22 | W7 facts re-verified: the candidate gitlink is unpublished, the three payload defects are confirmed by execution against the published backend, and the fix needs companion-repository authorization. |
 | 2026-09-22 | W5 closed without source changes. Corrected the Mechanism A premise: the routing distribution has no per-role override on main, so both W5 mechanisms are unreachable from any released configuration. The user chose to keep the single global field; the drafted implementation was reverted and archived as a patch. |
 
 ## Pinned source snapshot
@@ -109,6 +110,23 @@ Claims in those reports that this PR depends on were re-verified directly agains
 | Native validation | Test added: `tests/integration/test_moe_fused_expert_numerical_parity.py`, 8 cases, skipping unless CUDA is present and `VLLM_API_VERSION == "0.10.x"`. It drives `_run_fused_moe_iteration` with the buffer shapes, kernel config and alignment `profile_fused_moe_kernel` uses and compares the output tensor against `fused_experts` at `rtol=0, atol=0`. Neither Torch environment on this host selects the repaired path (vLLM 0.11.0 and 0.28.0), so it runs on an H800 worker under the official `vllm/vllm-openai:v0.10.2` image. Result recorded in `test_report_2026-09-22_w6_fused_expert_arithmetic.md`. |
 | Measured scope today | The whole `_step` body, timed either with per-iteration CUDA events and a synchronize (`:603-626`) or through `record_function("vidur_moe_grouped_gemm")` (`:629-653`). All buffers are allocated outside the timed region. |
 | Disposition | **PORT** the gated-activation repair. **BLOCKED** on the local output reduction; see D2 below. |
+
+### W7 — Optional zero-payload collective-sim backend
+
+Facts re-verified 2026-09-22, superseding the specification-time record in `plan.md` A7.
+
+| Item | Finding |
+| --- | --- |
+| Repository access | Not a problem. `fwyc0573/frontier-htsim` is public and readable, `pushed_at` 2026-06-08, one branch `main` at `b8518afcc310f0fe0e3ce52ba6b4f0bf57a3be04`, which is exactly the gitlink this branch and main already pin. |
+| Candidate commit | **Unpublished, not inaccessible.** `e564935d3874d8c71b52a554ab7c9a72e5e19f68` returns HTTP 422 `No commit found for SHA`. No local object store on this host contains it: the submodule directory is empty in every checkout, and `git cat-file -t` fails in the main repository. The candidate's own branch still records it as its gitlink. |
+| Where the fix lives | Entirely in the companion repository. The donor test drives `collective_sim_core.predictor.predict_collective_time` and `htsim_runner.py`, both inside the submodule. Frontier's side of this package is the gitlink and nothing else. |
+| Defect 1, confirmed by execution | An explicit zero payload is rejected as a missing field. `htsim_runner.py:2349` tests `getattr(args, k) in (None, "", 0)` over a required-field list that includes `tensor_bytes`. Running the published `main` runner with `tensor_bytes = 0` and with the field deleted produces the identical `exit=2, Error: missing required fields: ['tensor_bytes']`. |
+| Defect 2, confirmed by execution | A negative payload is accepted. `--tensor-bytes` is a bare `type=int` with no lower bound and no schema check, so `-1` passes validation and reaches the simulator invocation. |
+| Defect 3, confirmed by execution | An explicit CLI zero loses to a positive spec value. `set_if_none_or_zero` (`htsim_runner.py:1398-1406`) overwrites the CLI value when it is `0`, so `--tensor-bytes 0` against a spec of 32768 yields 32768. |
+| Reachability from Frontier | Real. `base_cc_backend._validate_data_size` rejects only negative sizes, so Frontier passes zero through. `moe_operator_times.py:512` computes `data_size_bytes = embedding_dim * 2 * routed_tokens` and hands it to `predict_all_to_all`; an EP lane with no routed tokens in a step makes that zero. `predict_reduce_scatter` additionally floor-divides by the device count. A MoE EP run under `--cc_backend_config_type collective_sim` therefore aborts on a legitimate empty collective. |
+| Why Frontier cannot fix it alone | A zero-byte collective is not a zero-cost collective. The donor test asserts the intra-server latency term survives at payload 0 (`7 x 0.5 us`, `network_ms == 0`), which is also the plan's requirement. Short-circuiting to `0.0` in Frontier would change the backend's synchronization semantics rather than accept the input. |
+| Cost of the fix | Three small edits in the companion repository: drop `tensor_bytes` from the zero-means-missing list while keeping it required, add a `>= 0` check, and make the CLI precedence distinguish "unset" from "explicitly zero". No Frontier source change; Frontier moves its gitlink and gains the donor's CPU test. |
+| Blocker | Publishing to a second repository. The plan requires the user's decision on companion-repository scope before creating or pushing anything there, and `EXCLUDED` is the alternative. Neither option was taken unilaterally. |
 
 ## Decision checkpoints for the user
 
