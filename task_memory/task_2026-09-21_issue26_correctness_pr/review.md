@@ -12,6 +12,7 @@
 | 2026-09-22 | Self-review of that record: corrected the lockstep mechanism and counter semantics under D1, the line references under R34-01, the R34-03 remedy (the baseline label is itself an assembled partial run), and added the omissions listed under "Found on re-review". |
 | 2026-09-22 | W6 arithmetic delivered with CPU validation; two deviations from the recorded adaptations justified; artifact identity raised as an open decision; native GPU validation NOT_RUN. |
 | 2026-09-22 | W6 artifact identity decided as document-only; native parity test added and submitted to an H800 worker. |
+| 2026-09-22 | W6 native parity PASS: 8 of 8 at `rtol=0, atol=0` on H800. W7 authorized and delivered; its blocker row closed and the delivery recorded. |
 | 2026-09-22 | W7 facts re-verified: the candidate gitlink is unpublished, the three payload defects are confirmed by execution against the published backend, and the fix needs companion-repository authorization. |
 | 2026-09-22 | W5 closed without source changes. Corrected the Mechanism A premise: the routing distribution has no per-role override on main, so both W5 mechanisms are unreachable from any released configuration. The user chose to keep the single global field; the drafted implementation was reverted and archived as a patch. |
 
@@ -126,7 +127,18 @@ Facts re-verified 2026-09-22, superseding the specification-time record in `plan
 | Reachability from Frontier | Real. `base_cc_backend._validate_data_size` rejects only negative sizes, so Frontier passes zero through. `moe_operator_times.py:512` computes `data_size_bytes = embedding_dim * 2 * routed_tokens` and hands it to `predict_all_to_all`; an EP lane with no routed tokens in a step makes that zero. `predict_reduce_scatter` additionally floor-divides by the device count. A MoE EP run under `--cc_backend_config_type collective_sim` therefore aborts on a legitimate empty collective. |
 | Why Frontier cannot fix it alone | A zero-byte collective is not a zero-cost collective. The donor test asserts the intra-server latency term survives at payload 0 (`7 x 0.5 us`, `network_ms == 0`), which is also the plan's requirement. Short-circuiting to `0.0` in Frontier would change the backend's synchronization semantics rather than accept the input. |
 | Cost of the fix | Three small edits in the companion repository: drop `tensor_bytes` from the zero-means-missing list while keeping it required, add a `>= 0` check, and make the CLI precedence distinguish "unset" from "explicitly zero". No Frontier source change; Frontier moves its gitlink and gains the donor's CPU test. |
-| Blocker | Publishing to a second repository. The plan requires the user's decision on companion-repository scope before creating or pushing anything there, and `EXCLUDED` is the alternative. Neither option was taken unilaterally. |
+| Blocker | **CLEARED 2026-09-22.** The user authorized the companion-repository option ("1.授权"). Publication order as proposed: the backend commit first, Frontier's gitlink after. |
+
+### W7 delivery
+
+| Item | Outcome |
+| --- | --- |
+| Companion commit | `fwyc0573/frontier-htsim` branch `fix/zero-payload-input-handling`, `eb7bc4f`, companion **draft** PR 1. Three source edits plus a narrowed `.gitignore`; no change to flow generation, topology modelling or latency arithmetic. |
+| Design choice worth flagging | The required-field check became a table of `(field, zero_is_valid)` rather than a special case for `tensor_bytes`, per the AGENTS.md rule that a growing category gets a table. A first draft added a fourth merge helper; it was collapsed into the existing `set_if_none_or_empty`, whose semantics are already exactly right for this field, rather than left as a near-duplicate. |
+| Frontier change | Gitlink `b8518af` -> `eb7bc4f` and one new test module. No Frontier source file changed, which matches the candidate branch: its own `collective_sim_cc_backend.py` is byte-identical to this branch's. |
+| Frontier test scope | The donor test re-drove the runner CLI and the submodule predictor. That is now the companion repository's own coverage, so the Frontier module tests the Frontier boundary instead: `CollectiveSimCCBackend.predict_all_to_all` and `predict_reduce_scatter` on the canonical `TP=4 x DP=2, EP=8` pod. |
+| Defect found while validating | The gitlink bump made three repository-governance scans read 38 vendored files as Frontier's own, and one of them stopped parsing. Repaired with `tests/frontier_sources.iter_frontier_sources()`. Pre-existing and reachable by anyone who initializes the optional submodule; not caused by the backend fix. |
+| Carried forward | Frontier's gitlink points at a commit on an unmerged companion branch. `git submodule update --init`, the documented command, resolves it; `git submodule update --remote` would follow `.gitmodules`' `branch = main` and drop the fix. Re-point the gitlink at `main` once companion PR 1 merges. |
 
 ## Decision checkpoints for the user
 

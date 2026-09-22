@@ -9,6 +9,7 @@ Date: 2026-09-22. Branch `fix/issue26-correctness-pr`, worktree
 | --- | --- |
 | 2026-09-22 | Created: reachability check, magnitude estimate, source repair, CPU validation. Native GPU validation NOT_RUN. |
 | 2026-09-22 | Artifact identity decided as document-only. Native parity test added and submitted to an H800 worker as `exp-0922-140423-075005`; result pending. |
+| 2026-09-22 | Native parity PASS on H800 under `codesign`: `exp-0922-145047-660565`, 8 of 8 at `rtol=0, atol=0`. Three earlier attempts and their causes recorded in section 8. |
 
 ## 1. Is the defect reachable
 
@@ -227,14 +228,57 @@ and both report `functional_fused_experts`. The pinned profiling range is
 | Field | Value |
 | --- | --- |
 | Submission host | `kun-workspace-vgen2` (local), StepMind Python `RJobBackend`, `STEPMIND_BACKEND=rjob` |
-| Job name | `exp-0922-140423-075005` |
+| Job name | `exp-0922-145047-660565` (the run that produced the result; see the attempt log below) |
 | Creator | `i-fengyicheng` |
-| Charged group / tag | `steptron_ci` / `H800` |
+| Charged group / tag | `codesign` / `H800`, per the user's instruction on 2026-09-22 |
+| Node | `gpu-h800-0110.host.platform.shaipower.com`, `NVIDIA H800` |
 | Shape | 1 GPU, 8 CPU, 64000Mi |
 | Image | `artifactory.stepfun-inc.com/docker-public/vllm/vllm-openai:v0.10.2`, the official Docker Hub `vllm/vllm-openai:v0.10.2` through the company docker.io proxy |
 | NFS mount | `100.96.128.195:/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr:/data/ycfeng/Frontier/.worktrees/issue26-correctness-pr` |
-| Command | `python3 -m pytest -v -rA -p no:cacheprovider --no-header tests/integration/test_moe_fused_expert_numerical_parity.py`, after printing `nvidia-smi`, the Torch/vLLM/`fused_moe` source paths and `VLLM_API_VERSION` |
-| Status | **PENDING** at the time of writing. Result and per-case outcomes are appended below when the job reaches a terminal state. |
+| Worker environment | Python 3.12.11, torch 2.8.0+cu128 (`cuda_available=True`), vLLM 0.10.2, `VLLM_API_VERSION=0.10.x`, `FP8_AVAILABLE=True`, pytest 9.1.1 and pandas 3.0.6 installed on the worker from the internal PyPI mirror |
+| Command | `python3 -m pytest -q -rA -p no:cacheprovider --no-header tests/integration/test_moe_fused_expert_numerical_parity.py` |
+| Status | **PASS. 8 passed in 13.70 s.** |
+
+### Result
+
+| Case | Outcome |
+| --- | --- |
+| `test_production_shaped_expert_output_matches_vllm[0-4096]` | PASSED |
+| `test_production_shaped_expert_output_matches_vllm[0-4097]` | PASSED |
+| `test_production_shaped_expert_output_matches_vllm[1-4096]` | PASSED |
+| `test_production_shaped_expert_output_matches_vllm[1-4097]` | PASSED |
+| `test_uneven_expert_occupancy_matches_vllm[2]` | PASSED |
+| `test_uneven_expert_occupancy_matches_vllm[4]` | PASSED |
+| `test_repeated_invocations_do_not_reuse_a_stale_result` | PASSED |
+| `test_fp8_path_runs_on_the_gated_activation` | PASSED |
+
+All eight compare at `rtol=0, atol=0`, so the repaired profiling path reproduces
+vLLM 0.10.2's `fused_experts` output bit for bit on the production Qwen-A3B-30B
+shapes at 4096 and 4097 tokens for two EP ranks, on the uneven-occupancy
+boundary case at two top-k values, across repeated invocations, and on the FP8
+path.
+
+### Attempts
+
+| Job | Charged group | Outcome | Cause |
+| --- | --- | --- | --- |
+| `exp-0922-140423-075005` | `steptron_ci` | stopped after ~20 min Pending | no free capacity in that pool; the user then directed this task to `codesign` |
+| `exp-0922-142415-796404` | `codesign` | Failed | `pytest` absent from the image, and the `deploy.i.shaipower.com/httpproxy` recipe returns `407 Proxy Authentication Required` for pip; separately `libcuda.so.1` was not on the loader path, so vLLM fell back to `UnspecifiedPlatform` |
+| `exp-0922-144336-056798` | `codesign` | Failed | pytest installed from the internal PyPI mirror and `LD_LIBRARY_PATH` repaired from `/usr/local/nvidia/lib64`, so torch saw the H800; 2 of 8 passed and 6 failed on `ModuleNotFoundError: No module named 'pandas'`, which `frontier/profiling/common/utils.py` imports at module scope |
+| `exp-0922-145047-660565` | `codesign` | **Succeeded** | `pandas` added to the worker install |
+
+Two image facts worth recording for the next native run: the
+`vllm/vllm-openai:v0.10.2` image ships neither `pytest` nor `nvidia-smi`, and
+its injected driver lives at `/usr/local/nvidia/lib64` without being on the
+loader path, so a worker command must prepend that directory to
+`LD_LIBRARY_PATH` before importing Torch. Worker packages install from
+`http://mirrors.i.basemind.com/pypi/simple/` with
+`--extra-index-url http://pypi.i.basemind.com/brain/dev/+simple`; the
+`httpproxy` recipe does not authenticate for pip.
+
+The platform retains only a tail of the worker log, and `logs_rjob` returns an
+empty string for these jobs. Use `get_rjob_infos(job)` to get the replica name
+and `logs_replica(replica)`, whose JSON rows carry the container lines.
 
 The instrumented benchmark repository was not mounted. This test compares
 tensors from vLLM's own `fused_experts` inside one process, so it needs no
